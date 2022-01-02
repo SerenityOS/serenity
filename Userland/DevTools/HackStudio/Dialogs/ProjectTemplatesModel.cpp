@@ -11,7 +11,7 @@
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Variant.h>
-#include <LibGfx/TextAlignment.h>
+#include <LibGfx/Alignment.h>
 #include <stdio.h>
 
 namespace HackStudio {
@@ -74,8 +74,8 @@ GUI::Variant ProjectTemplatesModel::data(const GUI::ModelIndex& index, GUI::Mode
     if (static_cast<size_t>(index.row()) >= m_mapping.size())
         return {};
 
-    if (role == GUI::ModelRole::TextAlignment)
-        return Gfx::TextAlignment::CenterLeft;
+    if (role == GUI::ModelRole::Alignment)
+        return Gfx::Alignment::CenterLeft;
 
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {

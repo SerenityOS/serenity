@@ -89,7 +89,7 @@ void ImageBox::paint(PaintContext& context, PaintPhase phase)
             auto alt = image_element.alt();
             if (alt.is_empty())
                 alt = image_element.src();
-            context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
+            context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::Alignment::Center, computed_values().color(), Gfx::TextElision::Right);
         } else if (auto bitmap = m_image_loader.bitmap(m_image_loader.current_frame_index())) {
             context.painter().draw_scaled_bitmap(rounded_int_rect(absolute_rect()), *bitmap, bitmap->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
         }

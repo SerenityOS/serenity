@@ -419,7 +419,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
                 if (auto value = meta_obj.get("format"); value.is_string())
                     meta.format = value.as_string();
                 if (auto value = meta_obj.get("alignment"); value.is_string()) {
-                    auto alignment = Gfx::text_alignment_from_string(value.as_string());
+                    auto alignment = Gfx::alignment_from_string(value.as_string());
                     if (alignment.has_value())
                         meta.alignment = alignment.value();
                 }

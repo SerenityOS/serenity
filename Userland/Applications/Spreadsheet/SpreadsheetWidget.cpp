@@ -83,7 +83,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     m_inline_documentation_label = inline_widget.add<GUI::Label>();
     m_inline_documentation_label->set_fill_with_background_color(true);
     m_inline_documentation_label->set_autosize(false);
-    m_inline_documentation_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    m_inline_documentation_label->set_text_alignment(Gfx::Alignment::CenterLeft);
 
     if (!m_workbook->has_sheets() && should_add_sheet_if_empty)
         m_workbook->add_sheet("Sheet 1");

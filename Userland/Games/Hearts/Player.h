@@ -53,7 +53,7 @@ public:
     Gfx::IntPoint first_card_position;
     Gfx::IntPoint card_offset;
     Gfx::IntRect name_position;
-    Gfx::TextAlignment name_alignment;
+    Gfx::Alignment name_alignment;
     Gfx::IntPoint taken_cards_target;
     String name;
     bool is_human { false };

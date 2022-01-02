@@ -29,11 +29,11 @@ CoverWizardPage::CoverWizardPage()
 
     m_header_label = m_content_widget->add<Label>();
     m_header_label->set_font(Gfx::FontDatabase::the().get("Pebbleton", 14, 700));
-    m_header_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
+    m_header_label->set_text_alignment(Gfx::Alignment::TopLeft);
     m_header_label->set_fixed_height(48);
 
     m_body_label = m_content_widget->add<Label>();
-    m_body_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
+    m_body_label->set_text_alignment(Gfx::Alignment::TopLeft);
 }
 
 void CoverWizardPage::set_header_text(const String& text)

@@ -8,9 +8,9 @@
 
 #include <AK/Function.h>
 #include <LibGUI/AbstractButton.h>
+#include <LibGfx/Alignment.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/StylePainter.h>
-#include <LibGfx/TextAlignment.h>
 
 namespace GUI {
 
@@ -24,8 +24,8 @@ public:
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
     Gfx::Bitmap* icon() { return m_icon.ptr(); }
 
-    void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }
-    Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
+    void set_text_alignment(Gfx::Alignment text_alignment) { m_text_alignment = text_alignment; }
+    Gfx::Alignment text_alignment() const { return m_text_alignment; }
 
     Function<void(unsigned modifiers)> on_click;
     Function<void(ContextMenuEvent&)> on_context_menu_request;
@@ -57,7 +57,7 @@ private:
     RefPtr<Gfx::Bitmap> m_icon;
     RefPtr<GUI::Menu> m_menu;
     Gfx::ButtonStyle m_button_style { Gfx::ButtonStyle::Normal };
-    Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
+    Gfx::Alignment m_text_alignment { Gfx::Alignment::Center };
     WeakPtr<Action> m_action;
     int m_icon_spacing { 4 };
 };

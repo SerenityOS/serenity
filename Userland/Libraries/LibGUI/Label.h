@@ -7,7 +7,7 @@
 #pragma once
 
 #include <LibGUI/Frame.h>
-#include <LibGfx/TextAlignment.h>
+#include <LibGfx/Alignment.h>
 #include <LibGfx/TextWrapping.h>
 
 namespace GUI {
@@ -25,8 +25,8 @@ public:
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
     Gfx::Bitmap* icon() { return m_icon.ptr(); }
 
-    Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
-    void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }
+    Gfx::Alignment text_alignment() const { return m_text_alignment; }
+    void set_text_alignment(Gfx::Alignment text_alignment) { m_text_alignment = text_alignment; }
 
     Gfx::TextWrapping text_wrapping() const { return m_text_wrapping; }
     void set_text_wrapping(Gfx::TextWrapping text_wrapping) { m_text_wrapping = text_wrapping; }
@@ -52,7 +52,7 @@ private:
 
     String m_text;
     RefPtr<Gfx::Bitmap> m_icon;
-    Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
+    Gfx::Alignment m_text_alignment { Gfx::Alignment::Center };
     Gfx::TextWrapping m_text_wrapping { Gfx::TextWrapping::Wrap };
     bool m_should_stretch_icon { false };
     bool m_autosize { false };

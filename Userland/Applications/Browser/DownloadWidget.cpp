@@ -71,18 +71,18 @@ DownloadWidget::DownloadWidget(const URL& url)
     animation_layout.add_spacer();
 
     auto& source_label = add<GUI::Label>(String::formatted("From: {}", url));
-    source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    source_label.set_text_alignment(Gfx::Alignment::CenterLeft);
     source_label.set_fixed_height(16);
 
     m_progressbar = add<GUI::Progressbar>();
     m_progressbar->set_fixed_height(20);
 
     m_progress_label = add<GUI::Label>();
-    m_progress_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    m_progress_label->set_text_alignment(Gfx::Alignment::CenterLeft);
     m_progress_label->set_fixed_height(16);
 
     auto& destination_label = add<GUI::Label>(String::formatted("To: {}", m_destination_path));
-    destination_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    destination_label.set_text_alignment(Gfx::Alignment::CenterLeft);
     destination_label.set_fixed_height(16);
 
     m_close_on_finish_checkbox = add<GUI::CheckBox>("Close when finished");

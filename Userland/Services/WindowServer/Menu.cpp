@@ -217,9 +217,9 @@ void Menu::draw()
         bool can_go_up = m_scroll_offset > 0;
         bool can_go_down = m_scroll_offset < m_max_scroll_offset;
         Gfx::IntRect up_indicator_rect { frame_thickness(), frame_thickness(), content_width(), item_height() };
-        painter.draw_text(up_indicator_rect, "\xE2\xAC\x86", Gfx::TextAlignment::Center, can_go_up ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
+        painter.draw_text(up_indicator_rect, "\xE2\xAC\x86", Gfx::Alignment::Center, can_go_up ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
         Gfx::IntRect down_indicator_rect { frame_thickness(), menu_window()->height() - item_height() - frame_thickness(), content_width(), item_height() };
-        painter.draw_text(down_indicator_rect, "\xE2\xAC\x87", Gfx::TextAlignment::Center, can_go_down ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
+        painter.draw_text(down_indicator_rect, "\xE2\xAC\x87", Gfx::Alignment::Center, can_go_down ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
     }
 
     int visible_item_count = this->visible_item_count();
@@ -286,9 +286,9 @@ void Menu::draw(MenuItem const& item, bool is_drawing_all)
         auto& previous_font = painter.font();
         if (item.is_default())
             painter.set_font(previous_font.bold_variant());
-        painter.draw_ui_text(text_rect, item.text(), painter.font(), Gfx::TextAlignment::CenterLeft, text_color);
+        painter.draw_ui_text(text_rect, item.text(), painter.font(), Gfx::Alignment::CenterLeft, text_color);
         if (!item.shortcut_text().is_empty()) {
-            painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), Gfx::TextAlignment::CenterRight, text_color);
+            painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), Gfx::Alignment::CenterRight, text_color);
         }
         painter.set_font(previous_font);
         if (item.is_submenu()) {

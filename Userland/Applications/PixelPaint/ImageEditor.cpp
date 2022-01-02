@@ -165,7 +165,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
             const int editor_x = image_position_to_editor_position({ x, 0 }).x();
             painter.draw_line({ editor_x, 0 }, { editor_x, m_ruler_thickness }, ruler_fg_color);
-            painter.draw_text({ { editor_x + 2, 0 }, { m_ruler_thickness, m_ruler_thickness - 2 } }, String::formatted("{}", x), painter.font(), Gfx::TextAlignment::CenterLeft, ruler_text_color);
+            painter.draw_text({ { editor_x + 2, 0 }, { m_ruler_thickness, m_ruler_thickness - 2 } }, String::formatted("{}", x), painter.font(), Gfx::Alignment::CenterLeft, ruler_text_color);
         }
 
         // Vertical ruler
@@ -182,7 +182,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
             const int editor_y = image_position_to_editor_position({ 0, y }).y();
             painter.draw_line({ 0, editor_y }, { m_ruler_thickness, editor_y }, ruler_fg_color);
-            painter.draw_text({ { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, String::formatted("{}", y), painter.font(), Gfx::TextAlignment::BottomRight, ruler_text_color);
+            painter.draw_text({ { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, String::formatted("{}", y), painter.font(), Gfx::Alignment::BottomRight, ruler_text_color);
         }
 
         // Mouse position indicator

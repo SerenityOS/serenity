@@ -43,7 +43,7 @@ void LevelSelectDialog::build()
     auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins(4);
 
-    main_widget.add<GUI::Label>("Choose a level").set_text_alignment(Gfx::TextAlignment::Center);
+    main_widget.add<GUI::Label>("Choose a level").set_text_alignment(Gfx::Alignment::Center);
 
     auto& level_list = main_widget.add<GUI::Widget>();
     auto& scroll_layout = level_list.set_layout<GUI::VerticalBoxLayout>();

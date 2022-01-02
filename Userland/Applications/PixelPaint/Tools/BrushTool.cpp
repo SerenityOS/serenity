@@ -147,7 +147,7 @@ GUI::Widget* BrushTool::get_properties_widget()
         size_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& size_label = size_container.add<GUI::Label>("Size:");
-        size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        size_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         size_label.set_fixed_size(80, 20);
 
         auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
@@ -164,7 +164,7 @@ GUI::Widget* BrushTool::get_properties_widget()
         hardness_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& hardness_label = hardness_container.add<GUI::Label>("Hardness:");
-        hardness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        hardness_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         hardness_label.set_fixed_size(80, 20);
 
         auto& hardness_slider = hardness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");

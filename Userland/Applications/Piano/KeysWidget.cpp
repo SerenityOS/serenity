@@ -177,7 +177,7 @@ void KeysWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(rect, Color::Black);
         if (i < white_key_labels_count) {
             rect.set_height(rect.height() * 1.5);
-            painter.draw_text(rect, white_key_labels[i], Gfx::TextAlignment::Center, Color::Black);
+            painter.draw_text(rect, white_key_labels[i], Gfx::Alignment::Center, Color::Black);
         }
 
         note += white_key_note_accumulator[i % white_keys_per_octave];
@@ -199,7 +199,7 @@ void KeysWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(rect, Color::Black);
         if (i < black_key_labels_count) {
             rect.set_height(rect.height() * 1.5);
-            painter.draw_text(rect, black_key_labels[i], Gfx::TextAlignment::Center, Color::White);
+            painter.draw_text(rect, black_key_labels[i], Gfx::Alignment::Center, Color::White);
         }
 
         note += black_key_note_accumulator[i % black_keys_per_octave];

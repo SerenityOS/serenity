@@ -17,7 +17,7 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextRange.h>
-#include <LibGfx/TextAlignment.h>
+#include <LibGfx/Alignment.h>
 #include <LibSyntax/Forward.h>
 #include <LibSyntax/HighlighterClient.h>
 
@@ -81,8 +81,8 @@ public:
     bool is_wrapping_enabled() const { return m_wrapping_mode != WrappingMode::NoWrap; }
     void set_wrapping_mode(WrappingMode);
 
-    Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
-    void set_text_alignment(Gfx::TextAlignment);
+    Gfx::Alignment text_alignment() const { return m_text_alignment; }
+    void set_text_alignment(Gfx::Alignment);
 
     Type type() const { return m_type; }
     bool is_single_line() const { return m_type == SingleLine; }
@@ -337,7 +337,7 @@ private:
     Mode m_mode { Editable };
 
     TextPosition m_cursor;
-    Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::CenterLeft };
+    Gfx::Alignment m_text_alignment { Gfx::Alignment::CenterLeft };
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     bool m_ruler_visible { false };

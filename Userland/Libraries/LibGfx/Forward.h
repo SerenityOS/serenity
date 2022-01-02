@@ -53,7 +53,7 @@ using FloatSize = Size<float>;
 
 enum class BitmapFormat;
 enum class ColorRole;
-enum class TextAlignment;
+enum class Alignment;
 
 }
 

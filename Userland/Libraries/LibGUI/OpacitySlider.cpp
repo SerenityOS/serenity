@@ -91,8 +91,8 @@ void OpacitySlider::paint_event(PaintEvent& event)
 
     // Text label
     auto percent_text = String::formatted("{}%", (int)((float)value() / (float)max() * 100.0f));
-    painter.draw_text(inner_rect.translated(1, 1), percent_text, Gfx::TextAlignment::Center, Color::Black);
-    painter.draw_text(inner_rect, percent_text, Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text(inner_rect.translated(1, 1), percent_text, Gfx::Alignment::Center, Color::Black);
+    painter.draw_text(inner_rect, percent_text, Gfx::Alignment::Center, Color::White);
 
     // Frame
     Gfx::StylePainter::paint_frame(painter, rect(), palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);

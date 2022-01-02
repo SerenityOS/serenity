@@ -88,7 +88,7 @@ void DiffViewer::draw_line(GUI::Painter& painter, const String& line, size_t y_o
     auto color = palette().color(foreground_role());
 
     if (line_position == LinePosition::Left || line_position == LinePosition::Both) {
-        painter.draw_text(left_line_rect, line, Gfx::TextAlignment::TopLeft, color);
+        painter.draw_text(left_line_rect, line, Gfx::Alignment::TopLeft, color);
         if (line_type != LineType::Normal) {
             Gfx::IntRect outline = { (int)left_side_x_offset, ((int)y_offset) - 2, separator_rect().x() - (int)(padding * 2), (int)line_height() };
             if (line_type == LineType::Diff) {
@@ -104,7 +104,7 @@ void DiffViewer::draw_line(GUI::Painter& painter, const String& line, size_t y_o
         }
     }
     if (line_position == LinePosition::Right || line_position == LinePosition::Both) {
-        painter.draw_text(right_line_rect, line, Gfx::TextAlignment::TopLeft, color);
+        painter.draw_text(right_line_rect, line, Gfx::Alignment::TopLeft, color);
         if (line_type != LineType::Normal) {
             Gfx::IntRect outline = { (int)right_side_x_offset, ((int)y_offset) - 2, frame_inner_rect().width() - separator_rect().x() - (int)(padding * 2) - 10, (int)line_height() };
             if (line_type == LineType::Diff) {

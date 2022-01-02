@@ -145,7 +145,7 @@ void FlameGraphView::paint_event(GUI::PaintEvent& event)
                 bar.rect.shrunken(bar_padding, 0),
                 label,
                 painter.font(),
-                Gfx::TextAlignment::CenterLeft,
+                Gfx::Alignment::CenterLeft,
                 Gfx::Color::Black,
                 Gfx::TextElision::Right);
         }

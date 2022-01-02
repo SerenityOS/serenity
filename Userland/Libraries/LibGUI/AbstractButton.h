@@ -53,7 +53,7 @@ protected:
     virtual void focusout_event(GUI::FocusEvent&) override;
     virtual void change_event(Event&) override;
 
-    void paint_text(Painter&, const Gfx::IntRect&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextWrapping = Gfx::TextWrapping::DontWrap);
+    void paint_text(Painter&, const Gfx::IntRect&, const Gfx::Font&, Gfx::Alignment, Gfx::TextWrapping = Gfx::TextWrapping::DontWrap);
 
 private:
     String m_text;

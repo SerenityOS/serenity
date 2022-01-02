@@ -21,7 +21,7 @@ CalculatorWidget::CalculatorWidget()
 
     m_entry = *find_descendant_of_type_named<GUI::TextBox>("entry_textbox");
     m_entry->set_relative_rect(5, 5, 244, 26);
-    m_entry->set_text_alignment(Gfx::TextAlignment::CenterRight);
+    m_entry->set_text_alignment(Gfx::Alignment::CenterRight);
 
     m_label = *find_descendant_of_type_named<GUI::Label>("label");
 
@@ -148,7 +148,7 @@ void CalculatorWidget::update_display()
 
 void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
 {
-    //Clear button selection when we are typing
+    // Clear button selection when we are typing
     m_equals_button->set_focus(true);
     m_equals_button->set_focus(false);
 

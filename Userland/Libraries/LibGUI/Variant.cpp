@@ -45,10 +45,8 @@ const char* to_string(Variant::Type type)
         return "Rect";
     case Variant::Type::Font:
         return "Font";
-    case Variant::Type::TextAlignment:
-        return "Alignment";
     case Variant::Type::Alignment:
-        return "TextAlignment";
+        return "Alignment";
     case Variant::Type::ColorRole:
         return "ColorRole";
     case Variant::Type::AlignmentRole:
@@ -96,12 +94,6 @@ Variant::Variant(Gfx::Alignment value)
     : m_type(Type::Alignment)
 {
     m_value.as_alignment = value;
-}
-
-Variant::Variant(Gfx::TextAlignment value)
-    : m_type(Type::TextAlignment)
-{
-    m_value.as_text_alignment = value;
 }
 
 Variant::Variant(Gfx::ColorRole value)
@@ -369,8 +361,6 @@ void Variant::copy_from(const Variant& other)
     case Type::Alignment:
         m_value.as_alignment = other.m_value.as_alignment;
         break;
-    case Type::TextAlignment:
-        m_value.as_text_alignment = other.m_value.as_text_alignment;
         break;
     case Type::ColorRole:
         m_value.as_color_role = other.m_value.as_color_role;
@@ -427,8 +417,6 @@ bool Variant::operator==(const Variant& other) const
         return &as_font() == &other.as_font();
     case Type::Alignment:
         return m_value.as_alignment == other.m_value.as_alignment;
-    case Type::TextAlignment:
-        return m_value.as_text_alignment == other.m_value.as_text_alignment;
     case Type::ColorRole:
         return m_value.as_color_role == other.m_value.as_color_role;
     case Type::AlignmentRole:
@@ -477,7 +465,6 @@ bool Variant::operator<(const Variant& other) const
     case Type::Rect:
     case Type::Font:
     case Type::Alignment:
-    case Type::TextAlignment:
     case Type::ColorRole:
     case Type::AlignmentRole:
     case Type::FlagRole:
@@ -526,31 +513,30 @@ String Variant::to_string() const
         switch (m_value.as_alignment) {
         case Gfx::Alignment::Center:
             return "Gfx::Alignment::Center";
+        case Gfx::Alignment::CenterTop:
+            return "Gfx::Alignment::CenterTop";
+        case Gfx::Alignment::CenterBottom:
+            return "Gfx::Alignment::CenterBottom";
+        case Gfx::Alignment::CenterLeft:
+            return "Gfx::Alignment::CenterLeft";
+        case Gfx::Alignment::CenterRight:
+            return "Gfx::Alignment::CenterRight";
         case Gfx::Alignment::Left:
             return "Gfx::Alignment::Left";
         case Gfx::Alignment::Right:
             return "Gfx::Alignment::Right";
         case Gfx::Alignment::Bottom:
             return "Gfx::Alignment::Bottom";
+        case Gfx::Alignment::BottomLeft:
+            return "Gfx::Alignment::BottomLeft";
+        case Gfx::Alignment::BottomRight:
+            return "Gfx::Alignment::BottomRight";
         case Gfx::Alignment::Top:
             return "Gfx::Alignment::Top";
-        default:
-            VERIFY_NOT_REACHED();
-        }
-        return "";
-    }
-    case Type::TextAlignment: {
-        switch (m_value.as_text_alignment) {
-        case Gfx::TextAlignment::Center:
-            return "Gfx::TextAlignment::Center";
-        case Gfx::TextAlignment::CenterLeft:
-            return "Gfx::TextAlignment::CenterLeft";
-        case Gfx::TextAlignment::CenterRight:
-            return "Gfx::TextAlignment::CenterRight";
-        case Gfx::TextAlignment::TopLeft:
-            return "Gfx::TextAlignment::TopLeft";
-        case Gfx::TextAlignment::TopRight:
-            return "Gfx::TextAlignment::TopRight";
+        case Gfx::Alignment::TopLeft:
+            return "Gfx::Alignment::TopLeft";
+        case Gfx::Alignment::TopRight:
+            return "Gfx::Alignment::TopRight";
         default:
             VERIFY_NOT_REACHED();
         }

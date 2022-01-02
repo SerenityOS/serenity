@@ -571,7 +571,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             side_offset_rect,
             line,
             is_current_line ? font().bold_variant() : font(),
-            Gfx::TextAlignment::TopLeft,
+            Gfx::Alignment::TopLeft,
             is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
     }
 
@@ -608,7 +608,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
 
             const u8 cell_value = m_document->get(byte_position).value;
             auto line = String::formatted("{:02X}", cell_value);
-            painter.draw_text(hex_display_rect, line, Gfx::TextAlignment::TopLeft, text_color);
+            painter.draw_text(hex_display_rect, line, Gfx::Alignment::TopLeft, text_color);
 
             if (m_edit_mode == EditMode::Hex) {
                 if (byte_position == m_position && m_cursor_blink_active) {
@@ -641,7 +641,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             }
 
             painter.fill_rect(text_display_rect, background_color);
-            painter.draw_text(text_display_rect, String::formatted("{:c}", isprint(cell_value) ? cell_value : '.'), Gfx::TextAlignment::TopLeft, text_color);
+            painter.draw_text(text_display_rect, String::formatted("{:c}", isprint(cell_value) ? cell_value : '.'), Gfx::Alignment::TopLeft, text_color);
 
             if (m_edit_mode == EditMode::Text) {
                 if (byte_position == m_position && m_cursor_blink_active) {

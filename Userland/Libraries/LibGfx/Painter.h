@@ -9,13 +9,13 @@
 #include <AK/Forward.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
+#include <LibGfx/Alignment.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
-#include <LibGfx/TextAlignment.h>
 #include <LibGfx/TextDirection.h>
 #include <LibGfx/TextElision.h>
 #include <LibGfx/TextWrapping.h>
@@ -70,14 +70,14 @@ public:
     void blit_offset(IntPoint const&, Gfx::Bitmap const&, IntRect const& src_rect, IntPoint const&);
     void blit_disabled(IntPoint const&, Gfx::Bitmap const&, IntRect const&, Palette const&);
     void blit_tiled(IntRect const&, Gfx::Bitmap const&, IntRect const& src_rect);
-    void draw_text(IntRect const&, StringView, Font const&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(IntRect const&, StringView, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(IntRect const&, Utf32View const&, Font const&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(IntRect const&, Utf32View const&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(Function<void(IntRect const&, u32)>, IntRect const&, StringView, Font const&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(Function<void(IntRect const&, u32)>, IntRect const&, Utf8View const&, Font const&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_text(Function<void(IntRect const&, u32)>, IntRect const&, Utf32View const&, Font const&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
-    void draw_ui_text(Gfx::IntRect const&, StringView, Gfx::Font const&, TextAlignment, Gfx::Color);
+    void draw_text(IntRect const&, StringView, Font const&, Alignment = Alignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(IntRect const&, StringView, Alignment = Alignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(IntRect const&, Utf32View const&, Font const&, Alignment = Alignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(IntRect const&, Utf32View const&, Alignment = Alignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(Function<void(IntRect const&, u32)>, IntRect const&, StringView, Font const&, Alignment = Alignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(Function<void(IntRect const&, u32)>, IntRect const&, Utf8View const&, Font const&, Alignment = Alignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_text(Function<void(IntRect const&, u32)>, IntRect const&, Utf32View const&, Font const&, Alignment = Alignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);
+    void draw_ui_text(Gfx::IntRect const&, StringView, Gfx::Font const&, Alignment, Gfx::Color);
     void draw_glyph(IntPoint const&, u32, Color);
     void draw_glyph(IntPoint const&, u32, Font const&, Color);
     void draw_emoji(IntPoint const&, Gfx::Bitmap const&, Font const&);
@@ -174,7 +174,7 @@ private:
     Vector<DirectionalRun> split_text_into_directional_runs(Utf8View const&, TextDirection initial_direction);
     bool text_contains_bidirectional_text(Utf8View const&, TextDirection);
     template<typename DrawGlyphFunction>
-    void do_draw_text(IntRect const&, Utf8View const& text, Font const&, TextAlignment, TextElision, TextWrapping, DrawGlyphFunction);
+    void do_draw_text(IntRect const&, Utf8View const& text, Font const&, Alignment, TextElision, TextWrapping, DrawGlyphFunction);
 };
 
 class PainterStateSaver {

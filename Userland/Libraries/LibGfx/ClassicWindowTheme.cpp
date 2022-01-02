@@ -75,6 +75,7 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
 
     auto title_alignment = palette.title_alignment();
+    auto text_alignment = Alignment::CenterLeft;
 
     int stripe_right = leftmost_button_rect.left() - 3;
     if (stripes_color.alpha() > 0) {
@@ -90,12 +91,14 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
             break;
         }
         case Gfx::Alignment::Right: {
+            text_alignment = Gfx::Alignment::CenterRight;
             for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
                 painter.draw_line({ titlebar_inner_rect.left(), titlebar_inner_rect.y() + i }, { stripe_right - titlebar_title_rect.width() - 3, titlebar_inner_rect.y() + i }, stripes_color);
             }
             break;
         }
         case Gfx::Alignment::Center: {
+            text_alignment = Gfx::Alignment::Center;
             auto stripe_width = (leftmost_button_rect.left() / 2 - titlebar_title_rect.width() / 2) - titlebar_icon_rect.width() - 3;
 
             for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
@@ -104,8 +107,6 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
             }
             break;
         }
-        case Gfx::Alignment::Top:
-        case Gfx::Alignment::Bottom:
         default:
             dbgln("Unhandled title alignment!");
         }
@@ -114,9 +115,9 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     auto clipped_title_rect = titlebar_title_rect;
     clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
-        painter.draw_text(clipped_title_rect.translated(1, 2), window_title, title_font, Gfx::text_alignment_from_alignment(title_alignment), shadow_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(1, 2), window_title, title_font, text_alignment, shadow_color, Gfx::TextElision::Right);
         // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
-        painter.draw_text(clipped_title_rect.translated(0, 1), window_title, title_font, Gfx::text_alignment_from_alignment(title_alignment), title_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(0, 1), window_title, title_font, text_alignment, title_color, Gfx::TextElision::Right);
     }
 
     painter.draw_scaled_bitmap(titlebar_icon_rect, icon, icon.rect());
@@ -147,9 +148,9 @@ void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState w
     auto clipped_title_rect = titlebar_title_rect;
     clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
-        painter.draw_text(clipped_title_rect.translated(1, 2), title_text, title_font, Gfx::TextAlignment::CenterLeft, shadow_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(1, 2), title_text, title_font, Gfx::Alignment::CenterLeft, shadow_color, Gfx::TextElision::Right);
         // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
-        painter.draw_text(clipped_title_rect.translated(0, 1), title_text, title_font, Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(0, 1), title_text, title_font, Gfx::Alignment::CenterLeft, title_color, Gfx::TextElision::Right);
     }
 }
 

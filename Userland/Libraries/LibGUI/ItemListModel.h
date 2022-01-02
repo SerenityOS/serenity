@@ -65,8 +65,8 @@ public:
 
     virtual Variant data(ModelIndex const& index, ModelRole role) const override
     {
-        if (role == ModelRole::TextAlignment)
-            return Gfx::TextAlignment::CenterLeft;
+        if (role == ModelRole::Alignment)
+            return Gfx::Alignment::CenterLeft;
         if (role == ModelRole::Display) {
             if constexpr (IsTwoDimensional)
                 return m_data.at(index.row()).at(index.column());

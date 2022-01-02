@@ -125,7 +125,7 @@ void TextEditor::update_content_size()
         content_height += line.visual_rect.height();
     }
     content_width += m_horizontal_content_padding * 2;
-    if (is_right_text_alignment(m_text_alignment))
+    if (is_right_alignment(m_text_alignment))
         content_width = max(frame_inner_rect().width(), content_width);
 
     set_content_size({ content_width, content_height });
@@ -159,7 +159,7 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint const& 
 
     size_t column_index = 0;
     switch (m_text_alignment) {
-    case Gfx::TextAlignment::CenterLeft:
+    case Gfx::Alignment::CenterLeft:
         for_each_visual_line(line_index, [&](Gfx::IntRect const& rect, auto& view, size_t start_of_line, [[maybe_unused]] bool is_last_visual_line) {
             if (is_multi_line() && !rect.contains_vertically(position.y()) && !is_last_visual_line)
                 return IterationDecision::Continue;
@@ -180,7 +180,7 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint const& 
             return IterationDecision::Break;
         });
         break;
-    case Gfx::TextAlignment::CenterRight:
+    case Gfx::Alignment::CenterRight:
         // FIXME: Support right-aligned line wrapping, I guess.
         VERIFY(!is_wrapping_enabled());
         column_index = (position.x() - content_x_for_position({ line_index, 0 }) + fixed_glyph_width() / 2) / fixed_glyph_width();
@@ -401,7 +401,7 @@ void TextEditor::paint_event(PaintEvent& event)
 
     // NOTE: This lambda and TextEditor::text_width_for_font() are used to substitute all glyphs with m_substitution_code_point if necessary.
     //       Painter::draw_text() and Gfx::Font::width() should not be called directly, but using this lambda and TextEditor::text_width_for_font().
-    auto draw_text = [&](Gfx::IntRect const& rect, auto const& raw_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Gfx::Color color, bool substitue = true) {
+    auto draw_text = [&](Gfx::IntRect const& rect, auto const& raw_text, Gfx::Font const& font, Gfx::Alignment alignment, Gfx::Color color, bool substitue = true) {
         if (m_substitution_code_point && substitue) {
             painter.draw_text(rect, substitution_code_point_view(raw_text.length()), font, alignment, color);
         } else {
@@ -456,7 +456,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 ruler_line_rect.shrunken(2, 0).translated(0, m_line_spacing / 2),
                 String::number(i + 1),
                 is_current_line ? font().bold_variant() : font(),
-                Gfx::TextAlignment::TopRight,
+                Gfx::Alignment::TopRight,
                 is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
         }
     }
@@ -704,7 +704,7 @@ void TextEditor::paint_event(PaintEvent& event)
                             end_of_selection_within_visual_line - start_of_selection_within_visual_line
                         };
 
-                        draw_text(selection_rect, visual_selected_text, font(), Gfx::TextAlignment::CenterLeft, text_color);
+                        draw_text(selection_rect, visual_selected_text, font(), Gfx::Alignment::CenterLeft, text_color);
                     }
                 }
             }
@@ -1040,7 +1040,7 @@ int TextEditor::content_x_for_position(TextPosition const& position) const
     auto& line = this->line(position.line());
     int x_offset = 0;
     switch (m_text_alignment) {
-    case Gfx::TextAlignment::CenterLeft:
+    case Gfx::Alignment::CenterLeft:
         for_each_visual_line(position.line(), [&](Gfx::IntRect const&, auto& visual_line_view, size_t start_of_visual_line, bool is_last_visual_line) {
             size_t offset_in_visual_line = position.column() - start_of_visual_line;
             auto before_line_end = is_last_visual_line ? (offset_in_visual_line <= visual_line_view.length()) : (offset_in_visual_line < visual_line_view.length());
@@ -1056,7 +1056,7 @@ int TextEditor::content_x_for_position(TextPosition const& position) const
             return IterationDecision::Continue;
         });
         return m_horizontal_content_padding + ((is_single_line() && icon()) ? (icon_size() + icon_padding()) : 0) + x_offset;
-    case Gfx::TextAlignment::CenterRight:
+    case Gfx::Alignment::CenterRight:
         // FIXME
         VERIFY(!is_wrapping_enabled());
         return content_width() - m_horizontal_content_padding - (line.length() * fixed_glyph_width()) + (position.column() * fixed_glyph_width());
@@ -1616,7 +1616,7 @@ void TextEditor::context_menu_event(ContextMenuEvent& event)
     m_context_menu->popup(event.screen_position());
 }
 
-void TextEditor::set_text_alignment(Gfx::TextAlignment alignment)
+void TextEditor::set_text_alignment(Gfx::Alignment alignment)
 {
     if (m_text_alignment == alignment)
         return;
@@ -1763,7 +1763,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
             text_width_for_font(visual_line_view, font()) + font().glyph_spacing(),
             line_height()
         };
-        if (is_right_text_alignment(text_alignment()))
+        if (is_right_alignment(text_alignment()))
             visual_line_rect.set_right_without_resize(editor_visible_text_rect.right());
         if (is_single_line()) {
             visual_line_rect.center_vertically_within(editor_visible_text_rect);

@@ -30,9 +30,9 @@ WizardPage::WizardPage(const String& title_text, const String& subtitle_text)
     m_title_label = header_widget.add<Label>(title_text);
     m_title_label->set_font(Gfx::FontDatabase::default_font().bold_variant());
     m_title_label->set_fixed_height(m_title_label->font().glyph_height() + 2);
-    m_title_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
+    m_title_label->set_text_alignment(Gfx::Alignment::TopLeft);
     m_subtitle_label = header_widget.add<Label>(subtitle_text);
-    m_subtitle_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
+    m_subtitle_label->set_text_alignment(Gfx::Alignment::TopLeft);
     m_subtitle_label->set_fixed_height(m_subtitle_label->font().glyph_height());
     header_widget.layout()->add_spacer();
 

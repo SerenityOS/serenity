@@ -55,8 +55,8 @@ public:
 
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
-        if (role == GUI::ModelRole::TextAlignment)
-            return Gfx::TextAlignment::CenterLeft;
+        if (role == GUI::ModelRole::Alignment)
+            return Gfx::Alignment::CenterLeft;
         if (role == GUI::ModelRole::Font) {
             if (index.column() == Column::MatchedText)
                 return Gfx::FontDatabase::default_fixed_width_font();

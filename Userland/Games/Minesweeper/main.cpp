@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto flag_label = TRY(container->try_add<GUI::Label>());
     flag_label->set_autosize(true);
-    flag_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    flag_label->set_text_alignment(Gfx::Alignment::CenterLeft);
 
     container->layout()->add_spacer();
 
@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto time_label = TRY(container->try_add<GUI::Label>());
     time_label->set_fixed_width(50);
-    time_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    time_label->set_text_alignment(Gfx::Alignment::CenterLeft);
 
     container->layout()->add_spacer();
 

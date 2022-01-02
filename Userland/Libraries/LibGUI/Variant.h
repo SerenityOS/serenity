@@ -35,7 +35,6 @@ public:
     Variant(const Gfx::IntRect&);
     Variant(const Gfx::Font&);
     Variant(const Gfx::Alignment);
-    Variant(const Gfx::TextAlignment);
     Variant(const Gfx::ColorRole);
     Variant(const Gfx::AlignmentRole);
     Variant(const Gfx::FlagRole);
@@ -70,7 +69,6 @@ public:
         Rect,
         Font,
         Alignment,
-        TextAlignment,
         ColorRole,
         AlignmentRole,
         FlagRole,
@@ -94,7 +92,6 @@ public:
     bool is_rect() const { return m_type == Type::Rect; }
     bool is_font() const { return m_type == Type::Font; }
     bool is_alignment() const { return m_type == Type::Alignment; }
-    bool is_text_alignment() const { return m_type == Type::TextAlignment; }
     bool is_color_role() const { return m_type == Type::ColorRole; }
     bool is_alignment_role() const { return m_type == Type::AlignmentRole; }
     bool is_flag_role() const { return m_type == Type::FlagRole; }
@@ -254,13 +251,6 @@ public:
         return m_value.as_alignment;
     }
 
-    Gfx::TextAlignment to_text_alignment(Gfx::TextAlignment default_value) const
-    {
-        if (type() != Type::TextAlignment)
-            return default_value;
-        return m_value.as_text_alignment;
-    }
-
     Gfx::ColorRole to_color_role() const
     {
         if (type() != Type::ColorRole)
@@ -345,7 +335,6 @@ private:
         float as_float;
         Gfx::RGBA32 as_color;
         Gfx::Alignment as_alignment;
-        Gfx::TextAlignment as_text_alignment;
         Gfx::ColorRole as_color_role;
         Gfx::AlignmentRole as_alignment_role;
         Gfx::FlagRole as_flag_role;

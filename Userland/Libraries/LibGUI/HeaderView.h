@@ -29,8 +29,8 @@ public:
     int default_section_size(int section) const;
     bool is_default_section_size_initialized(int section) const;
 
-    Gfx::TextAlignment section_alignment(int section) const;
-    void set_section_alignment(int section, Gfx::TextAlignment);
+    Gfx::Alignment section_alignment(int section) const;
+    void set_section_alignment(int section, Gfx::Alignment);
 
     bool is_section_visible(int section) const;
     void set_section_visible(int section, bool);
@@ -77,7 +77,7 @@ private:
         bool has_initialized_default_size { false };
         bool visibility { true };
         RefPtr<Action> visibility_action;
-        Gfx::TextAlignment alignment { Gfx::TextAlignment::CenterLeft };
+        Gfx::Alignment alignment { Gfx::Alignment::CenterLeft };
     };
     SectionData& section_data(int section) const;
 

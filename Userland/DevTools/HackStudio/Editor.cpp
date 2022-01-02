@@ -162,12 +162,12 @@ void Editor::paint_event(GUI::PaintEvent& event)
                         continue;
                     }
                     char const* sign = (line_offset < deletions) ? "!" : "+";
-                    painter.draw_text(gutter_icon_rect(line), sign, font(), Gfx::TextAlignment::Center);
+                    painter.draw_text(gutter_icon_rect(line), sign, font(), Gfx::Alignment::Center);
                 }
                 if (additions < deletions) {
                     auto deletions_line = min(finish_line, line_count() - 1);
                     if (deletions_line <= last_visible_line) {
-                        painter.draw_text(gutter_icon_rect(deletions_line), "-", font(), Gfx::TextAlignment::Center);
+                        painter.draw_text(gutter_icon_rect(deletions_line), "-", font(), Gfx::Alignment::Center);
                     }
                 }
             }

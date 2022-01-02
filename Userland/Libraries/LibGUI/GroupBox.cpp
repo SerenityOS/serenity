@@ -48,7 +48,7 @@ void GroupBox::paint_event(PaintEvent& event)
     if (!m_title.is_empty()) {
         Gfx::IntRect text_rect { 6, 1, font().width(m_title) + 6, font().glyph_height() };
         painter.fill_rect(text_rect, palette().button());
-        painter.draw_text(text_rect, m_title, Gfx::TextAlignment::Center, palette().button_text());
+        painter.draw_text(text_rect, m_title, Gfx::Alignment::Center, palette().button_text());
     }
 }
 

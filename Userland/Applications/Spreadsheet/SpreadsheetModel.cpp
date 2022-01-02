@@ -72,7 +72,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
     if (role == GUI::ModelRole::MimeData)
         return Position { (size_t)index.column(), (size_t)index.row() }.to_url(m_sheet).to_string();
 
-    if (role == GUI::ModelRole::TextAlignment) {
+    if (role == GUI::ModelRole::Alignment) {
         const auto* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
             return {};

@@ -15,7 +15,6 @@
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/Alignment.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/TextAlignment.h>
 
 namespace Gfx {
 

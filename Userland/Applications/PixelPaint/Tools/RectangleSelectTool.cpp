@@ -154,7 +154,7 @@ GUI::Widget* RectangleSelectTool::get_properties_widget()
 
     auto& feather_label = feather_container.add<GUI::Label>();
     feather_label.set_text("Feather:");
-    feather_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    feather_label.set_text_alignment(Gfx::Alignment::CenterLeft);
     feather_label.set_fixed_size(80, 20);
 
     const int feather_slider_max = 100;
@@ -173,7 +173,7 @@ GUI::Widget* RectangleSelectTool::get_properties_widget()
 
     auto& mode_label = mode_container.add<GUI::Label>();
     mode_label.set_text("Mode:");
-    mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    mode_label.set_text_alignment(Gfx::Alignment::CenterLeft);
     mode_label.set_fixed_size(80, 20);
 
     for (int i = 0; i < (int)Selection::MergeMode::__Count; i++) {

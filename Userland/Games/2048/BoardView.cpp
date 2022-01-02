@@ -233,7 +233,7 @@ void BoardView::paint_event(GUI::PaintEvent& event)
             auto rect = Gfx::IntRect::centered_on(center, tile_size);
 
             painter.fill_rect(rect, background_color_for_cell(sliding_tile.value_from));
-            painter.draw_text(rect, String::number(sliding_tile.value_from), font(), Gfx::TextAlignment::Center, text_color_for_cell(sliding_tile.value_from));
+            painter.draw_text(rect, String::number(sliding_tile.value_from), font(), Gfx::Alignment::Center, text_color_for_cell(sliding_tile.value_from));
         }
     } else {
         for (size_t column = 0; column < columns(); ++column) {
@@ -248,7 +248,7 @@ void BoardView::paint_event(GUI::PaintEvent& event)
                 auto entry = tiles[row][column];
                 painter.fill_rect(rect, background_color_for_cell(entry));
                 if (entry > 0)
-                    painter.draw_text(rect, String::number(entry), font(), Gfx::TextAlignment::Center, text_color_for_cell(entry));
+                    painter.draw_text(rect, String::number(entry), font(), Gfx::Alignment::Center, text_color_for_cell(entry));
             }
         }
     }

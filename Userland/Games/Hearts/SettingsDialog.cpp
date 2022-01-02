@@ -30,7 +30,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, String player_name)
     input_layout.set_spacing(4);
 
     auto& name_label = name_box.add<GUI::Label>("Name:");
-    name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    name_label.set_text_alignment(Gfx::Alignment::CenterLeft);
 
     auto& textbox = name_box.add<GUI::TextBox>();
     textbox.set_text(m_player_name);

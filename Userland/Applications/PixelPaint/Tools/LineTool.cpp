@@ -134,7 +134,7 @@ GUI::Widget* LineTool::get_properties_widget()
         thickness_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& thickness_label = thickness_container.add<GUI::Label>("Thickness:");
-        thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        thickness_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         thickness_label.set_fixed_size(80, 20);
 
         auto& thickness_slider = thickness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");

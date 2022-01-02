@@ -27,7 +27,7 @@ EditorWrapper::EditorWrapper()
     label_wrapper.layout()->set_margins({ 0, 2 });
 
     m_filename_label = label_wrapper.add<GUI::Label>(untitled_label);
-    m_filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    m_filename_label->set_text_alignment(Gfx::Alignment::CenterLeft);
     m_filename_label->set_fixed_height(14);
 
     m_editor = add<Editor>();

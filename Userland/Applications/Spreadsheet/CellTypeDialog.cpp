@@ -66,41 +66,57 @@ const Vector<String> g_horizontal_alignments { "Left", "Center", "Right" };
 const Vector<String> g_vertical_alignments { "Top", "Center", "Bottom" };
 Vector<String> g_types;
 
-constexpr static CellTypeDialog::VerticalAlignment vertical_alignment_from(Gfx::TextAlignment alignment)
+constexpr static CellTypeDialog::VerticalAlignment vertical_alignment_from(Gfx::Alignment alignment)
 {
     switch (alignment) {
-    case Gfx::TextAlignment::CenterRight:
-    case Gfx::TextAlignment::CenterLeft:
-    case Gfx::TextAlignment::Center:
+    case Gfx::Alignment::CenterRight:
+    case Gfx::Alignment::CenterLeft:
+    case Gfx::Alignment::CenterTop:
+    case Gfx::Alignment::Center:
         return CellTypeDialog::VerticalAlignment::Center;
 
-    case Gfx::TextAlignment::TopRight:
-    case Gfx::TextAlignment::TopLeft:
+    case Gfx::Alignment::TopRight:
+    case Gfx::Alignment::TopLeft:
+    case Gfx::Alignment::Top:
         return CellTypeDialog::VerticalAlignment::Top;
 
-    case Gfx::TextAlignment::BottomLeft:
-    case Gfx::TextAlignment::BottomRight:
+    case Gfx::Alignment::BottomLeft:
+    case Gfx::Alignment::BottomRight:
+    case Gfx::Alignment::CenterBottom:
+    case Gfx::Alignment::Bottom:
         return CellTypeDialog::VerticalAlignment::Bottom;
+
+    case Gfx::Alignment::Left:
+    case Gfx::Alignment::Right:
+        VERIFY_NOT_REACHED();
     }
 
     return CellTypeDialog::VerticalAlignment::Center;
 }
 
-constexpr static CellTypeDialog::HorizontalAlignment horizontal_alignment_from(Gfx::TextAlignment alignment)
+constexpr static CellTypeDialog::HorizontalAlignment horizontal_alignment_from(Gfx::Alignment alignment)
 {
     switch (alignment) {
-    case Gfx::TextAlignment::Center:
+    case Gfx::Alignment::Center:
         return CellTypeDialog::HorizontalAlignment::Center;
 
-    case Gfx::TextAlignment::TopRight:
-    case Gfx::TextAlignment::CenterRight:
-    case Gfx::TextAlignment::BottomRight:
+    case Gfx::Alignment::TopRight:
+    case Gfx::Alignment::CenterRight:
+    case Gfx::Alignment::BottomRight:
+    case Gfx::Alignment::Right:
         return CellTypeDialog::HorizontalAlignment::Right;
 
-    case Gfx::TextAlignment::TopLeft:
-    case Gfx::TextAlignment::CenterLeft:
-    case Gfx::TextAlignment::BottomLeft:
+    case Gfx::Alignment::TopLeft:
+    case Gfx::Alignment::CenterLeft:
+    case Gfx::Alignment::BottomLeft:
+    case Gfx::Alignment::Left:
         return CellTypeDialog::HorizontalAlignment::Left;
+
+    case Gfx::Alignment::Top:
+    case Gfx::Alignment::Bottom:
+    case Gfx::Alignment::CenterTop:
+    case Gfx::Alignment::CenterBottom:
+        VERIFY_NOT_REACHED();
     }
 
     return CellTypeDialog::HorizontalAlignment::Right;
@@ -203,7 +219,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
             horizontal_alignment_selection_container.set_fixed_height(22);
 
             auto& horizontal_alignment_label = horizontal_alignment_selection_container.add<GUI::Label>();
-            horizontal_alignment_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+            horizontal_alignment_label.set_text_alignment(Gfx::Alignment::CenterLeft);
             horizontal_alignment_label.set_text("Horizontal text alignment");
 
             auto& horizontal_combobox = alignment_tab.add<GUI::ComboBox>();
@@ -235,7 +251,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
             vertical_alignment_container.set_fixed_height(22);
 
             auto& vertical_alignment_label = vertical_alignment_container.add<GUI::Label>();
-            vertical_alignment_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+            vertical_alignment_label.set_text_alignment(Gfx::Alignment::CenterLeft);
             vertical_alignment_label.set_text("Vertical text alignment");
 
             auto& vertical_combobox = alignment_tab.add<GUI::ComboBox>();
@@ -277,7 +293,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                 foreground_container.set_shrink_to_fit(true);
 
                 auto& foreground_label = foreground_container.add<GUI::Label>();
-                foreground_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+                foreground_label.set_text_alignment(Gfx::Alignment::CenterLeft);
                 foreground_label.set_text("Static foreground color");
 
                 auto& foreground_selector = foreground_container.add<GUI::ColorInput>();
@@ -297,7 +313,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                 background_container.set_shrink_to_fit(true);
 
                 auto& background_label = background_container.add<GUI::Label>();
-                background_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+                background_label.set_text_alignment(Gfx::Alignment::CenterLeft);
                 background_label.set_text("Static background color");
 
                 auto& background_selector = background_container.add<GUI::ColorInput>();
@@ -340,39 +356,39 @@ CellTypeMetadata CellTypeDialog::metadata() const
     case VerticalAlignment::Top:
         switch (m_horizontal_alignment) {
         case HorizontalAlignment::Left:
-            metadata.alignment = Gfx::TextAlignment::TopLeft;
+            metadata.alignment = Gfx::Alignment::TopLeft;
             break;
         case HorizontalAlignment::Center:
-            metadata.alignment = Gfx::TextAlignment::Center; // TopCenter?
+            metadata.alignment = Gfx::Alignment::Center; // TopCenter?
             break;
         case HorizontalAlignment::Right:
-            metadata.alignment = Gfx::TextAlignment::TopRight;
+            metadata.alignment = Gfx::Alignment::TopRight;
             break;
         }
         break;
     case VerticalAlignment::Center:
         switch (m_horizontal_alignment) {
         case HorizontalAlignment::Left:
-            metadata.alignment = Gfx::TextAlignment::CenterLeft;
+            metadata.alignment = Gfx::Alignment::CenterLeft;
             break;
         case HorizontalAlignment::Center:
-            metadata.alignment = Gfx::TextAlignment::Center;
+            metadata.alignment = Gfx::Alignment::Center;
             break;
         case HorizontalAlignment::Right:
-            metadata.alignment = Gfx::TextAlignment::CenterRight;
+            metadata.alignment = Gfx::Alignment::CenterRight;
             break;
         }
         break;
     case VerticalAlignment::Bottom:
         switch (m_horizontal_alignment) {
         case HorizontalAlignment::Left:
-            metadata.alignment = Gfx::TextAlignment::CenterLeft; // BottomLeft?
+            metadata.alignment = Gfx::Alignment::CenterLeft; // BottomLeft?
             break;
         case HorizontalAlignment::Center:
-            metadata.alignment = Gfx::TextAlignment::Center;
+            metadata.alignment = Gfx::Alignment::Center;
             break;
         case HorizontalAlignment::Right:
-            metadata.alignment = Gfx::TextAlignment::BottomRight;
+            metadata.alignment = Gfx::Alignment::BottomRight;
             break;
         }
         break;

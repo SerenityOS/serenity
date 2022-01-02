@@ -90,14 +90,14 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
         if (text_transform == CSS::TextTransform::Lowercase)
             text = m_text_for_rendering.to_lowercase();
 
-        painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, computed_values().color());
+        painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::Alignment::CenterLeft, computed_values().color());
 
         auto selection_rect = fragment.selection_rect(font());
         if (!selection_rect.is_empty()) {
             painter.fill_rect(enclosing_int_rect(selection_rect), context.palette().selection());
             Gfx::PainterStateSaver saver(painter);
             painter.add_clip_rect(enclosing_int_rect(selection_rect));
-            painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, context.palette().selection_text());
+            painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::Alignment::CenterLeft, context.palette().selection_text());
         }
 
         paint_cursor_if_needed(context, fragment);

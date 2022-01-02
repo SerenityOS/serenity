@@ -490,20 +490,20 @@ Variant FileSystemModel::data(ModelIndex const& index, ModelRole role) const
 {
     VERIFY(index.is_valid());
 
-    if (role == ModelRole::TextAlignment) {
+    if (role == ModelRole::Alignment) {
         switch (index.column()) {
         case Column::Icon:
-            return Gfx::TextAlignment::Center;
+            return Gfx::Alignment::Center;
         case Column::Size:
         case Column::Inode:
-            return Gfx::TextAlignment::CenterRight;
+            return Gfx::Alignment::CenterRight;
         case Column::Name:
         case Column::User:
         case Column::Group:
         case Column::ModificationTime:
         case Column::Permissions:
         case Column::SymlinkTarget:
-            return Gfx::TextAlignment::CenterLeft;
+            return Gfx::Alignment::CenterLeft;
         default:
             VERIFY_NOT_REACHED();
         }

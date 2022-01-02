@@ -49,7 +49,7 @@ GUI::Widget* PenTool::get_properties_widget()
         size_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& size_label = size_container.add<GUI::Label>("Thickness:");
-        size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        size_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         size_label.set_fixed_size(80, 20);
 
         auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");

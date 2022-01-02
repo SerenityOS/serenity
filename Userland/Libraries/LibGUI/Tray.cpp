@@ -101,7 +101,7 @@ void Tray::paint_event(GUI::PaintEvent& event)
             painter.blit(icon_rect.location(), *item.bitmap, item.bitmap->rect());
 
         auto const& font = is_checked ? this->font().bold_variant() : this->font();
-        painter.draw_text(text_rect, item.text, font, Gfx::TextAlignment::CenterLeft, palette().color(Gfx::ColorRole::TrayText));
+        painter.draw_text(text_rect, item.text, font, Gfx::Alignment::CenterLeft, palette().color(Gfx::ColorRole::TrayText));
     }
 }
 

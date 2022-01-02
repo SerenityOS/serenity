@@ -34,7 +34,7 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     auto& input_layout = board_size_box.set_layout<GUI::HorizontalBoxLayout>();
     input_layout.set_spacing(4);
 
-    board_size_box.add<GUI::Label>("Board size").set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    board_size_box.add<GUI::Label>("Board size").set_text_alignment(Gfx::Alignment::CenterLeft);
     auto& spinbox = board_size_box.add<GUI::SpinBox>();
 
     auto& target_box = main_widget.add<GUI::Widget>();
@@ -43,9 +43,9 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     spinbox.set_min(2);
     spinbox.set_value(m_board_size);
 
-    target_box.add<GUI::Label>("Target tile").set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    target_box.add<GUI::Label>("Target tile").set_text_alignment(Gfx::Alignment::CenterLeft);
     auto& tile_value_label = target_box.add<GUI::Label>(String::number(target_tile()));
-    tile_value_label.set_text_alignment(Gfx::TextAlignment::CenterRight);
+    tile_value_label.set_text_alignment(Gfx::Alignment::CenterRight);
     auto& target_spinbox = target_box.add<GUI::SpinBox>();
     target_spinbox.set_max(Game::max_power_for_board(m_board_size));
     target_spinbox.set_min(3);

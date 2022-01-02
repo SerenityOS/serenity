@@ -121,7 +121,7 @@ Rect<T> Rect<T>::constrained_to(Rect<T> const& constrain_rect) const
 }
 
 template<typename T>
-Rect<T> Rect<T>::aligned_within(Size<T> const& rect_size, Point<T> const& align_at, TextAlignment alignment) const
+Rect<T> Rect<T>::aligned_within(Size<T> const& rect_size, Point<T> const& align_at, Alignment alignment) const
 {
     if (rect_size.is_empty())
         return {};
@@ -132,27 +132,34 @@ Rect<T> Rect<T>::aligned_within(Size<T> const& rect_size, Point<T> const& align_
 
     Rect<T> rect;
     switch (alignment) {
-    case TextAlignment::TopLeft:
+    case Alignment::TopLeft:
         rect = { align_at, rect_size };
         break;
-    case TextAlignment::CenterLeft:
+    case Alignment::Left:
+    case Alignment::CenterLeft:
         rect = { { align_at.x(), align_at.y() - rect_size.height() / 2 }, rect_size };
         break;
-    case TextAlignment::Center:
+    case Alignment::Center:
         rect = { { align_at.x() - rect_size.width() / 2, align_at.y() - rect_size.height() / 2 }, rect_size };
         break;
-    case TextAlignment::CenterRight:
+    case Alignment::Right:
+    case Alignment::CenterRight:
         rect = { { align_at.x() - rect_size.width() / 2, align_at.y() }, rect_size };
         break;
-    case TextAlignment::TopRight:
+    case Alignment::TopRight:
         rect = { { align_at.x() - rect_size.width(), align_at.y() }, rect_size };
         break;
-    case TextAlignment::BottomLeft:
+    case Alignment::BottomLeft:
         rect = { { align_at.x(), align_at.y() - rect_size.width() }, rect_size };
         break;
-    case TextAlignment::BottomRight:
+    case Alignment::BottomRight:
         rect = { { align_at.x() - rect_size.width(), align_at.y() - rect_size.width() }, rect_size };
         break;
+    case Alignment::Bottom:
+    case Alignment::CenterBottom:
+    case Alignment::Top:
+    case Alignment::CenterTop:
+        TODO();
     }
     return rect.constrained_to(*this);
 }
@@ -264,35 +271,42 @@ Vector<Rect<T>, 4> Rect<T>::shatter(Rect<T> const& hammer) const
 }
 
 template<typename T>
-void Rect<T>::align_within(Rect<T> const& other, TextAlignment alignment)
+void Rect<T>::align_within(Rect<T> const& other, Alignment alignment)
 {
     switch (alignment) {
-    case TextAlignment::Center:
+    case Alignment::Center:
         center_within(other);
         return;
-    case TextAlignment::TopLeft:
+    case Alignment::TopLeft:
         set_location(other.location());
         return;
-    case TextAlignment::TopRight:
+    case Alignment::TopRight:
         set_x(other.x() + other.width() - width());
         set_y(other.y());
         return;
-    case TextAlignment::CenterLeft:
+    case Alignment::Left:
+    case Alignment::CenterLeft:
         set_x(other.x());
         center_vertically_within(other);
         return;
-    case TextAlignment::CenterRight:
+    case Alignment::Right:
+    case Alignment::CenterRight:
         set_x(other.x() + other.width() - width());
         center_vertically_within(other);
         return;
-    case TextAlignment::BottomLeft:
+    case Alignment::BottomLeft:
         set_x(other.x());
         set_y(other.y() + other.height() - height());
         return;
-    case TextAlignment::BottomRight:
+    case Alignment::BottomRight:
         set_x(other.x() + other.width() - width());
         set_y(other.y() + other.height() - height());
         return;
+    case Alignment::Bottom:
+    case Alignment::CenterBottom:
+    case Alignment::Top:
+    case Alignment::CenterTop:
+        TODO();
     }
 }
 

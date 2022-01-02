@@ -66,8 +66,8 @@ public:
     void activate_next_tab();
     void activate_previous_tab();
 
-    void set_text_alignment(Gfx::TextAlignment alignment) { m_text_alignment = alignment; }
-    Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
+    void set_text_alignment(Gfx::Alignment alignment) { m_text_alignment = alignment; }
+    Gfx::Alignment text_alignment() const { return m_text_alignment; }
 
     bool uniform_tabs() const { return m_uniform_tabs; }
     void set_uniform_tabs(bool uniform_tabs) { m_uniform_tabs = uniform_tabs; }
@@ -126,7 +126,7 @@ private:
     Optional<size_t> m_hovered_close_button_index;
     Optional<size_t> m_pressed_close_button_index;
     GUI::Margins m_container_margins { 2, 2, 2, 2 };
-    Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
+    Gfx::Alignment m_text_alignment { Gfx::Alignment::Center };
     bool m_uniform_tabs { false };
     bool m_bar_visible { true };
     bool m_close_button_enabled { false };

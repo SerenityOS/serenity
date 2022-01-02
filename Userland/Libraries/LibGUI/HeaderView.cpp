@@ -384,12 +384,12 @@ void HeaderView::leave_event(Core::Event& event)
     set_hovered_section(-1);
 }
 
-Gfx::TextAlignment HeaderView::section_alignment(int section) const
+Gfx::Alignment HeaderView::section_alignment(int section) const
 {
     return section_data(section).alignment;
 }
 
-void HeaderView::set_section_alignment(int section, Gfx::TextAlignment alignment)
+void HeaderView::set_section_alignment(int section, Gfx::Alignment alignment)
 {
     section_data(section).alignment = alignment;
 }

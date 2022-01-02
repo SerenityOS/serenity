@@ -9,10 +9,10 @@
 
 #include <AK/Format.h>
 #include <LibGfx/AffineTransform.h>
+#include <LibGfx/Alignment.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
-#include <LibGfx/TextAlignment.h>
 #include <math.h>
 
 namespace Gfx {
@@ -480,7 +480,7 @@ public:
     [[nodiscard]] Vector<Point<T>, 2> closest_outside_center_points(Rect<T> const&) const;
     [[nodiscard]] float outside_center_point_distance_to(Rect<T> const&) const;
     [[nodiscard]] Rect<T> constrained_to(Rect<T> const&) const;
-    [[nodiscard]] Rect<T> aligned_within(Size<T> const&, Point<T> const&, TextAlignment = TextAlignment::Center) const;
+    [[nodiscard]] Rect<T> aligned_within(Size<T> const&, Point<T> const&, Alignment = Alignment::Center) const;
     [[nodiscard]] Point<T> closest_to(Point<T> const&) const;
 
     class RelativeLocation {
@@ -664,7 +664,7 @@ public:
     [[nodiscard]] Point<T> bottom_left() const { return { left(), bottom() }; }
     [[nodiscard]] Point<T> bottom_right() const { return { right(), bottom() }; }
 
-    void align_within(Rect<T> const&, TextAlignment);
+    void align_within(Rect<T> const&, Alignment);
 
     void center_within(Rect<T> const& other)
     {

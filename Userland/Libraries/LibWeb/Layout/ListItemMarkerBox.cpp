@@ -114,7 +114,7 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
     case CSS::ListStyleType::UpperRoman:
         if (m_text.is_null())
             break;
-        context.painter().draw_text(enclosing, m_text, Gfx::TextAlignment::Center);
+        context.painter().draw_text(enclosing, m_text, Gfx::Alignment::Center);
         break;
     case CSS::ListStyleType::None:
         return;

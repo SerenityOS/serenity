@@ -66,7 +66,7 @@ void ScoreCard::paint_event(GUI::PaintEvent& event)
         dbgln("text_rect: {}", cell_rect(player_index, 0));
         painter.draw_text(cell_rect(player_index, 0),
             player.name,
-            font, Gfx::TextAlignment::Center,
+            font, Gfx::Alignment::Center,
             text_color);
         for (int score_index = 0; score_index < (int)player.scores.size(); score_index++) {
             auto text_rect = cell_rect(player_index, 1 + score_index);
@@ -80,7 +80,7 @@ void ScoreCard::paint_event(GUI::PaintEvent& event)
             }
             painter.draw_text(text_rect,
                 score_text,
-                font, Gfx::TextAlignment::Center,
+                font, Gfx::Alignment::Center,
                 text_color);
         }
     }

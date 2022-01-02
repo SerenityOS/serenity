@@ -41,10 +41,16 @@ TaskbarSettingsMainWidget::TaskbarSettingsMainWidget()
     case Gfx::Alignment::Right:
         taskbar_right_radio.set_checked(true);
         break;
-    case Gfx::Alignment::TopCenter:
-    case Gfx::Alignment::BottomCenter:
     case Gfx::Alignment::Center:
-        dbgln("Taskbar location can't be center!");
+    case Gfx::Alignment::CenterTop:
+    case Gfx::Alignment::CenterLeft:
+    case Gfx::Alignment::CenterRight:
+    case Gfx::Alignment::CenterBottom:
+    case Gfx::Alignment::BottomRight:
+    case Gfx::Alignment::BottomLeft:
+    case Gfx::Alignment::TopLeft:
+    case Gfx::Alignment::TopRight:
+        dbgln("Invalid taskbar location!");
         VERIFY_NOT_REACHED();
     }
 

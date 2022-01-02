@@ -129,7 +129,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
 {
     VERIFY(is_within_range(index));
 
-    if (role == GUI::ModelRole::TextAlignment) {
+    if (role == GUI::ModelRole::Alignment) {
         switch (index.column()) {
         case Column::Icon:
         case Column::Name:
@@ -137,7 +137,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         case Column::User:
         case Column::Pledge:
         case Column::Veil:
-            return Gfx::TextAlignment::CenterLeft;
+            return Gfx::Alignment::CenterLeft;
         case Column::PID:
         case Column::TID:
         case Column::PPID:
@@ -162,7 +162,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         case Column::UnixSocketWriteBytes:
         case Column::IPv4SocketReadBytes:
         case Column::IPv4SocketWriteBytes:
-            return Gfx::TextAlignment::CenterRight;
+            return Gfx::Alignment::CenterRight;
         default:
             VERIFY_NOT_REACHED();
         }

@@ -317,7 +317,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     time.set_visible(false);
     time.set_foreground_role(ColorRole::HoverHighlight);
     time.set_relative_rect({ 0, 8, 100, 10 });
-    time.set_text_alignment(Gfx::TextAlignment::CenterRight);
+    time.set_text_alignment(Gfx::Alignment::CenterRight);
     time.set_x(widget.width() - time.width() - 6);
     widget.set_stat_label(time);
 

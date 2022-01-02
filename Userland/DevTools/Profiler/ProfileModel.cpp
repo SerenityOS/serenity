@@ -97,9 +97,9 @@ String ProfileModel::column_name(int column) const
 GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     auto* node = static_cast<ProfileNode*>(index.internal_data());
-    if (role == GUI::ModelRole::TextAlignment) {
+    if (role == GUI::ModelRole::Alignment) {
         if (index.column() == Column::SampleCount || index.column() == Column::SelfCount)
-            return Gfx::TextAlignment::CenterRight;
+            return Gfx::Alignment::CenterRight;
     }
     if (role == GUI::ModelRole::Icon) {
         if (index.column() == Column::StackFrame) {

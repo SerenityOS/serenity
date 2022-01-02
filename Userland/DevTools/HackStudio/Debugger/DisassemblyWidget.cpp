@@ -19,7 +19,7 @@ void UnavailableDisassemblyWidget::paint_event(GUI::PaintEvent& event)
         return;
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
-    painter.draw_text(frame_inner_rect(), reason(), Gfx::TextAlignment::Center, palette().window_text(), Gfx::TextElision::Right);
+    painter.draw_text(frame_inner_rect(), reason(), Gfx::Alignment::Center, palette().window_text(), Gfx::TextElision::Right);
 }
 
 DisassemblyWidget::DisassemblyWidget()

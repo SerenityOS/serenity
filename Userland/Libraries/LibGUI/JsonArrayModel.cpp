@@ -95,7 +95,7 @@ Variant JsonArrayModel::data(const ModelIndex& index, ModelRole role) const
     auto& field_spec = m_fields[index.column()];
     auto& object = m_array.at(index.row()).as_object();
 
-    if (role == ModelRole::TextAlignment) {
+    if (role == ModelRole::Alignment) {
         return field_spec.text_alignment;
     }
 

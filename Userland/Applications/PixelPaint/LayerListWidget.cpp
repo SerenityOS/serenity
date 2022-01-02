@@ -114,10 +114,10 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_scaled_bitmap(thumbnail_rect, layer.bitmap(), layer.bitmap().rect());
 
         if (layer.is_visible()) {
-            painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());
+            painter.draw_text(text_rect, layer.name(), Gfx::Alignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());
             painter.draw_rect(thumbnail_rect, palette().color(ColorRole::BaseText));
         } else {
-            painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, palette().color(ColorRole::DisabledText));
+            painter.draw_text(text_rect, layer.name(), Gfx::Alignment::CenterLeft, palette().color(ColorRole::DisabledText));
             painter.draw_rect(thumbnail_rect, palette().color(ColorRole::DisabledText));
         }
     };

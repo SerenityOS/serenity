@@ -378,7 +378,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
             22);
         y_offset += year_only_rect.height();
         painter.fill_rect(year_only_rect, palette().hover_highlight());
-        painter.draw_text(year_only_rect, formatted_date(YearOnly), medium_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
+        painter.draw_text(year_only_rect, formatted_date(YearOnly), medium_font->bold_variant(), Gfx::Alignment::Center, palette().base_text());
         painter.draw_line({ 0, y_offset }, { frame_inner_rect().width(), y_offset }, (!m_show_month_tiles ? palette().threed_shadow1() : palette().threed_shadow2()), 1);
         y_offset += 1;
         if (!m_show_month_tiles) {
@@ -393,9 +393,9 @@ void Calendar::paint_event(GUI::PaintEvent& event)
             22);
         painter.fill_rect(month_year_rect, palette().hover_highlight());
         month_year_rect.set_width(frame_inner_rect().width() / 2);
-        painter.draw_text(month_year_rect, formatted_date(MonthOnly), medium_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
+        painter.draw_text(month_year_rect, formatted_date(MonthOnly), medium_font->bold_variant(), Gfx::Alignment::Center, palette().base_text());
         month_year_rect.set_x(month_year_rect.width() + (frame_inner_rect().width() % 2 ? 1 : 0));
-        painter.draw_text(month_year_rect, formatted_date(YearOnly), medium_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
+        painter.draw_text(month_year_rect, formatted_date(YearOnly), medium_font->bold_variant(), Gfx::Alignment::Center, palette().base_text());
         y_offset += 22;
         painter.draw_line({ 0, y_offset }, { frame_inner_rect().width(), y_offset }, palette().threed_shadow1(), 1);
         y_offset += 1;
@@ -423,7 +423,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     m_months[i].is_hovered,
                     false, true, false);
                 set_font(small_font);
-                painter.draw_text(month_tile_rect, m_months[i].name, font(), Gfx::TextAlignment::Center, palette().base_text());
+                painter.draw_text(month_tile_rect, m_months[i].name, font(), Gfx::Alignment::Center, palette().base_text());
                 i++;
             }
             y_offset += m_months[i - 1].height;
@@ -446,7 +446,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                 y_offset,
                 m_days[i].width,
                 16);
-            painter.draw_text(day_rect, m_days[i].name, small_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
+            painter.draw_text(day_rect, m_days[i].name, small_font->bold_variant(), Gfx::Alignment::Center, palette().base_text());
         }
         y_offset += days_of_the_week_rect.height();
         painter.draw_line({ 0, y_offset }, { frame_inner_rect().width(), y_offset }, palette().threed_shadow2(), 1);
@@ -473,7 +473,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                 else
                     painter.fill_rect(tile_rect, palette().base());
 
-                auto text_alignment = Gfx::TextAlignment::TopRight;
+                auto text_alignment = Gfx::Alignment::TopRight;
                 auto text_rect = Gfx::IntRect(
                     x_offset,
                     y_offset + 4,
@@ -490,7 +490,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     set_font(small_font);
                 } else {
                     set_font(small_font);
-                    text_alignment = Gfx::TextAlignment::Center;
+                    text_alignment = Gfx::Alignment::Center;
                     text_rect = Gfx::IntRect(tile_rect);
                 }
 
@@ -518,7 +518,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                 m_month_size[i].width(),
                 19);
             painter.fill_rect(month_rect, palette().hover_highlight());
-            painter.draw_text(month_rect, long_month_names[i], medium_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
+            painter.draw_text(month_rect, long_month_names[i], medium_font->bold_variant(), Gfx::Alignment::Center, palette().base_text());
             if (i > 0 && i < 4) {
                 painter.draw_line({ x_month_offset - 1, y_offset - 1 }, { x_month_offset - 1, y_offset + 18 }, palette().threed_shadow2(), 1);
                 painter.draw_line({ x_month_offset, y_offset - 1 }, { x_month_offset, y_offset + 18 }, palette().threed_highlight(), 1);
@@ -556,7 +556,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                         m_month_size[i].width(),
                         19);
                     painter.fill_rect(month_rect, palette().hover_highlight());
-                    painter.draw_text(month_rect, long_month_names[i], medium_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
+                    painter.draw_text(month_rect, long_month_names[i], medium_font->bold_variant(), Gfx::Alignment::Center, palette().base_text());
                     if (i > (l == 4 ? 4 : 8) && i < (l == 4 ? 8 : 12)) {
                         painter.draw_line({ x_month_offset - 1, y_offset - 1 }, { x_month_offset - 1, y_offset + 18 }, palette().threed_shadow2(), 1);
                         painter.draw_line({ x_month_offset, y_offset - 1 }, { x_month_offset, y_offset + 18 }, palette().threed_highlight(), 1);
@@ -608,9 +608,9 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                         painter.draw_rect(tile_rect, palette().base_text());
 
                     if (m_tiles[l][i].is_today && !m_tiles[l][i].is_outside_selected_month) {
-                        painter.draw_text(tile_rect, display_date, font().bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
+                        painter.draw_text(tile_rect, display_date, font().bold_variant(), Gfx::Alignment::Center, palette().base_text());
                     } else if (!m_tiles[l][i].is_outside_selected_month) {
-                        painter.draw_text(tile_rect, display_date, font(), Gfx::TextAlignment::Center, palette().base_text());
+                        painter.draw_text(tile_rect, display_date, font(), Gfx::Alignment::Center, palette().base_text());
                     }
                     i++;
                 }

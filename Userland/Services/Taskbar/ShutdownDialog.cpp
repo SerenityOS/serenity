@@ -70,7 +70,7 @@ ShutdownDialog::ShutdownDialog()
     right_container.layout()->set_margins({ 12, 12, 8, 0 });
 
     auto& label = right_container.add<GUI::Label>("What would you like to do?");
-    label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    label.set_text_alignment(Gfx::Alignment::CenterLeft);
     label.set_fixed_height(22);
     label.set_font(Gfx::FontDatabase::default_font().bold_variant());
 

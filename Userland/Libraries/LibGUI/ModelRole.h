@@ -17,7 +17,7 @@ enum class ModelRole {
     IconOpacity,
     Font,
     MimeData,
-    TextAlignment,
+    Alignment,
     Search,
     Custom = 0x100, // Applications are free to use roles above this number as they please
 };

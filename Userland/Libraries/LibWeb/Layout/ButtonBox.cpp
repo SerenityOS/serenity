@@ -47,7 +47,7 @@ void ButtonBox::paint(PaintContext& context, PaintPhase phase)
         auto text_rect = enclosing_int_rect(absolute_rect());
         if (m_being_pressed)
             text_rect.translate_by(1, 1);
-        context.painter().draw_text(text_rect, dom_node().value(), font(), Gfx::TextAlignment::Center, context.palette().button_text());
+        context.painter().draw_text(text_rect, dom_node().value(), font(), Gfx::Alignment::Center, context.palette().button_text());
     }
 }
 

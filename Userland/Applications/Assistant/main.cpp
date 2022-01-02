@@ -53,7 +53,7 @@ public:
         }
         if (!m_subtitle) {
             m_subtitle = m_label_container->add<GUI::Label>();
-            m_subtitle->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+            m_subtitle->set_text_alignment(Gfx::Alignment::CenterLeft);
         }
         m_subtitle->set_text(move(text));
     }
@@ -82,7 +82,7 @@ private:
         m_label_container->set_fixed_height(30);
 
         m_title = m_label_container->add<GUI::Label>();
-        m_title->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        m_title->set_text_alignment(Gfx::Alignment::CenterLeft);
 
         set_shrink_to_fit(true);
         set_fill_with_background_color(true);

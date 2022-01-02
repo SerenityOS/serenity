@@ -70,10 +70,10 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
             auto shrunken_rect = tile_rect;
             shrunken_rect.shrink(4, 4);
             if (sq.rank == coord_rank_file)
-                painter.draw_text(shrunken_rect, coord.substring_view(0, 1), coordinate_font, Gfx::TextAlignment::BottomRight, text_color);
+                painter.draw_text(shrunken_rect, coord.substring_view(0, 1), coordinate_font, Gfx::Alignment::BottomRight, text_color);
 
             if (sq.file == coord_rank_file)
-                painter.draw_text(shrunken_rect, coord.substring_view(1, 1), coordinate_font, Gfx::TextAlignment::TopLeft, text_color);
+                painter.draw_text(shrunken_rect, coord.substring_view(1, 1), coordinate_font, Gfx::Alignment::TopLeft, text_color);
         }
 
         for (auto& m : m_board_markings) {

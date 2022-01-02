@@ -42,8 +42,8 @@ public:
     virtual int minimum_column_width(int column);
     virtual int minimum_row_height(int row);
 
-    Gfx::TextAlignment column_header_alignment(int column) const;
-    void set_column_header_alignment(int column, Gfx::TextAlignment);
+    Gfx::Alignment column_header_alignment(int column) const;
+    void set_column_header_alignment(int column, Gfx::Alignment);
 
     void set_column_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>);
 

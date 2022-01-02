@@ -47,24 +47,16 @@ private:
         painter.add_clip_rect(event.rect());
         painter.fill_rect(rect(), palette().button());
 
-        switch (m_location) {
-        case Gfx::Alignment::Bottom:
+        if (m_location == Gfx::Alignment::Bottom)
             painter.draw_line({ 0, 1 }, { width() - 1, 1 }, palette().threed_highlight());
-            break;
-        case Gfx::Alignment::Top:
+        else if (m_location == Gfx::Alignment::Top)
             painter.draw_line({ 0, 1 }, { width() - 1, 1 }, palette().threed_highlight());
-            break;
-        case Gfx::Alignment::Left:
+        else if (m_location == Gfx::Alignment::Left)
             painter.draw_line({ width() - 2, 0 }, { width() - 2, height() }, palette().threed_highlight());
-            break;
-        case Gfx::Alignment::Right:
+        else if (m_location == Gfx::Alignment::Right)
             painter.draw_line({ 0, 1 }, { 0, height() }, palette().threed_highlight());
-            break;
-        case Gfx::Alignment::TopCenter:
-        case Gfx::Alignment::BottomCenter:
-        case Gfx::Alignment::Center:
+        else
             VERIFY_NOT_REACHED();
-        }
     }
 
     virtual void did_layout() override
@@ -183,24 +175,16 @@ void TaskbarWindow::on_screen_rects_change(const Vector<Gfx::IntRect, 4>& rects,
     const auto& rect = rects[main_screen_index];
     Gfx::IntRect new_rect;
 
-    switch (m_location) {
-    case Gfx::Alignment::Bottom:
+    if (m_location == Gfx::Alignment::Bottom)
         new_rect = { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
-        break;
-    case Gfx::Alignment::Left:
+    else if (m_location == Gfx::Alignment::Left)
         new_rect = { rect.x(), rect.top(), taskbar_width(), rect.height() };
-        break;
-    case Gfx::Alignment::Top:
+    else if (m_location == Gfx::Alignment::Top)
         new_rect = { rect.x(), rect.top() - 1, rect.width(), taskbar_height() };
-        break;
-    case Gfx::Alignment::Right:
+    else if (m_location == Gfx::Alignment::Right)
         new_rect = { rect.right() - taskbar_width() + 1, rect.top(), taskbar_width(), rect.height() };
-        break;
-    case Gfx::Alignment::TopCenter:
-    case Gfx::Alignment::BottomCenter:
-    case Gfx::Alignment::Center:
+    else
         VERIFY_NOT_REACHED();
-    }
 
     set_rect(new_rect);
     update_applet_area();
@@ -230,7 +214,7 @@ NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& 
         button.set_min_size(20, 21);
         button.set_max_size(140, 21);
     }
-    button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    button.set_text_alignment(Gfx::Alignment::CenterLeft);
     button.set_icon(*m_default_icon);
     return button;
 }

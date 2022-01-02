@@ -103,7 +103,7 @@ Card::Card(Type type, uint8_t value)
     paint_rect.shrink(10, 6);
 
     auto text_rect = Gfx::IntRect { 4, 6, font.width("10"), font.glyph_height() };
-    painter.draw_text(text_rect, label, font, Gfx::TextAlignment::Center, color());
+    painter.draw_text(text_rect, label, font, Gfx::Alignment::Center, color());
 
     NonnullRefPtr<Gfx::CharacterBitmap> symbol = s_diamond;
     switch (m_type) {

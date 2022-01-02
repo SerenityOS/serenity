@@ -304,7 +304,7 @@ void TreeView::paint_event(PaintEvent& event)
                             painter.blit(cell_rect.location(), *bitmap, bitmap->rect(), opacity);
                         }
                     } else {
-                        auto text_alignment = cell_index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
+                        auto text_alignment = cell_index.data(ModelRole::Alignment).to_alignment(Gfx::Alignment::CenterLeft);
                         draw_item_text(painter, cell_index, is_selected_row, cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, Gfx::TextElision::Right);
                     }
                 }
@@ -332,7 +332,7 @@ void TreeView::paint_event(PaintEvent& event)
                         }
                     }
                 }
-                draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::CenterLeft, Gfx::TextElision::Right);
+                draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::Alignment::CenterLeft, Gfx::TextElision::Right);
 
                 if (selection_behavior() == SelectionBehavior::SelectItems && is_focused() && index == cursor_index()) {
                     painter.draw_rect(background_rect, palette().color(background_role()));

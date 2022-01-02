@@ -156,7 +156,7 @@ void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, O
     // FIXME: painter only supports integer rects for text right now, so this effectively chops off any fractional position
     auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? max_width.value() : painter->font().width(text), painter->font().glyph_height());
     auto transformed_rect = m_drawing_state.transform.map(text_rect);
-    painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, m_drawing_state.fill_style);
+    painter->draw_text(transformed_rect, text, Gfx::Alignment::TopLeft, m_drawing_state.fill_style);
     did_draw(transformed_rect.to_type<float>());
 }
 

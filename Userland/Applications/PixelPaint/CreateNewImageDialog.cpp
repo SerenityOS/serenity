@@ -27,7 +27,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     layout.set_margins(4);
 
     auto& name_label = main_widget.add<GUI::Label>("Name:");
-    name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    name_label.set_text_alignment(Gfx::Alignment::CenterLeft);
 
     m_name_textbox = main_widget.add<GUI::TextBox>();
     m_name_textbox->on_change = [this] {
@@ -35,12 +35,12 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     };
 
     auto& width_label = main_widget.add<GUI::Label>("Width:");
-    width_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    width_label.set_text_alignment(Gfx::Alignment::CenterLeft);
 
     auto& width_spinbox = main_widget.add<GUI::SpinBox>();
 
     auto& height_label = main_widget.add<GUI::Label>("Height:");
-    height_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    height_label.set_text_alignment(Gfx::Alignment::CenterLeft);
 
     auto& height_spinbox = main_widget.add<GUI::SpinBox>();
 

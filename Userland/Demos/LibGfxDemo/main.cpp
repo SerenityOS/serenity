@@ -138,26 +138,26 @@ void Canvas::draw()
     painter.draw_rect({ 20, 260, 480, 320 }, Color::DarkGray);
 
     painter.draw_rect({ 520, 260, 240, 80 }, Color::DarkGray);
-    painter.draw_text({ 520, 260, 240, 80 }, "CenterLeft", Gfx::TextAlignment::CenterLeft, Color::White);
-    painter.draw_text({ 520, 260, 240, 80 }, "Center", Gfx::TextAlignment::Center, Color::White);
-    painter.draw_text({ 520, 260, 240, 80 }, "CenterRight", Gfx::TextAlignment::CenterRight, Color::White);
-    painter.draw_text({ 520, 260, 240, 80 }, "TopLeft", Gfx::TextAlignment::TopLeft, Color::White);
-    painter.draw_text({ 520, 260, 240, 80 }, "TopRight", Gfx::TextAlignment::TopRight, Color::White);
-    painter.draw_text({ 520, 260, 240, 80 }, "BottomLeft", Gfx::TextAlignment::BottomLeft, Color::White);
-    painter.draw_text({ 520, 260, 240, 80 }, "BottomRight", Gfx::TextAlignment::BottomRight, Color::White);
+    painter.draw_text({ 520, 260, 240, 80 }, "CenterLeft", Gfx::Alignment::CenterLeft, Color::White);
+    painter.draw_text({ 520, 260, 240, 80 }, "Center", Gfx::Alignment::Center, Color::White);
+    painter.draw_text({ 520, 260, 240, 80 }, "CenterRight", Gfx::Alignment::CenterRight, Color::White);
+    painter.draw_text({ 520, 260, 240, 80 }, "TopLeft", Gfx::Alignment::TopLeft, Color::White);
+    painter.draw_text({ 520, 260, 240, 80 }, "TopRight", Gfx::Alignment::TopRight, Color::White);
+    painter.draw_text({ 520, 260, 240, 80 }, "BottomLeft", Gfx::Alignment::BottomLeft, Color::White);
+    painter.draw_text({ 520, 260, 240, 80 }, "BottomRight", Gfx::Alignment::BottomRight, Color::White);
 
     painter.draw_rect({ 520, 360, 240, 30 }, Color::DarkGray);
-    painter.draw_text({ 520, 360, 240, 30 }, "Emojis! 🙂😂🐞🦄", Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text({ 520, 360, 240, 30 }, "Emojis! 🙂😂🐞🦄", Gfx::Alignment::Center, Color::White);
 
     painter.draw_rect({ 520, 410, 240, 80 }, Color::DarkGray);
-    painter.draw_text({ 520, 415, 240, 20 }, "Normal text", Gfx::FontDatabase::default_font(), Gfx::TextAlignment::CenterLeft, Color::Red);
-    painter.draw_text({ 520, 430, 240, 20 }, "Bold text", Gfx::FontDatabase::default_font().bold_variant(), Gfx::TextAlignment::CenterLeft, Color::Green);
-    painter.draw_text({ 520, 450, 240, 20 }, "Normal text (fixed width)", Gfx::FontDatabase::default_fixed_width_font(), Gfx::TextAlignment::CenterLeft, Color::Blue);
-    painter.draw_text({ 520, 465, 240, 20 }, "Bold text (fixed width)", Gfx::FontDatabase::default_fixed_width_font().bold_variant(), Gfx::TextAlignment::CenterLeft, Color::Yellow);
+    painter.draw_text({ 520, 415, 240, 20 }, "Normal text", Gfx::FontDatabase::default_font(), Gfx::Alignment::CenterLeft, Color::Red);
+    painter.draw_text({ 520, 430, 240, 20 }, "Bold text", Gfx::FontDatabase::default_font().bold_variant(), Gfx::Alignment::CenterLeft, Color::Green);
+    painter.draw_text({ 520, 450, 240, 20 }, "Normal text (fixed width)", Gfx::FontDatabase::default_fixed_width_font(), Gfx::Alignment::CenterLeft, Color::Blue);
+    painter.draw_text({ 520, 465, 240, 20 }, "Bold text (fixed width)", Gfx::FontDatabase::default_fixed_width_font().bold_variant(), Gfx::Alignment::CenterLeft, Color::Yellow);
 
     auto font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonBold14.font");
     painter.draw_rect({ 520, 510, 240, 30 }, Color::DarkGray);
-    painter.draw_text({ 520, 510, 240, 30 }, "Hello friends! :^)", *font, Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text({ 520, 510, 240, 30 }, "Hello friends! :^)", *font, Gfx::Alignment::Center, Color::White);
 
     painter.fill_rect({ 520, 560, 10, 20 }, Color::White);
     painter.fill_rect({ 530, 560, 10, 20 }, Color::WarmGray);

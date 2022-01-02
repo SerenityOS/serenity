@@ -22,7 +22,6 @@
 #include <LibGUI/Variant.h>
 #include <LibGfx/Alignment.h>
 #include <LibGfx/Forward.h>
-#include <LibGfx/TextAlignment.h>
 
 namespace GUI {
 

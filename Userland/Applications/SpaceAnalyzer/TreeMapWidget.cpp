@@ -98,11 +98,11 @@ void TreeMapWidget::paint_cell_frame(GUI::Painter& painter, const TreeMapNode& n
         painter.clear_clip_rect();
         painter.add_clip_rect(text_rect);
         if (node_is_leaf(node)) {
-            painter.draw_text(text_rect, node.name(), font(), Gfx::TextAlignment::TopLeft, Color::Black);
+            painter.draw_text(text_rect, node.name(), font(), Gfx::Alignment::TopLeft, Color::Black);
             text_rect.take_from_top(font().presentation_size() + 1);
-            painter.draw_text(text_rect, human_readable_size(node.area()), font(), Gfx::TextAlignment::TopLeft, Color::Black);
+            painter.draw_text(text_rect, human_readable_size(node.area()), font(), Gfx::Alignment::TopLeft, Color::Black);
         } else {
-            painter.draw_text(text_rect, String::formatted("{} - {}", node.name(), human_readable_size(node.area())), font(), Gfx::TextAlignment::TopLeft, Color::Black);
+            painter.draw_text(text_rect, String::formatted("{} - {}", node.name(), human_readable_size(node.area())), font(), Gfx::Alignment::TopLeft, Color::Black);
         }
         painter.clear_clip_rect();
     }

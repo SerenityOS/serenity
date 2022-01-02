@@ -38,7 +38,7 @@ void SpeechBubble::paint_event(GUI::PaintEvent&)
     painter.draw_line(connector_top_right, connector_bottom, palette().active_window_border1());
 
     auto message = messages[get_random<u8>() % messages.size()];
-    painter.draw_text(text_area, message, Gfx::TextAlignment::Center);
+    painter.draw_text(text_area, message, Gfx::Alignment::Center);
 }
 
 void SpeechBubble::mousedown_event(GUI::MouseEvent& event)

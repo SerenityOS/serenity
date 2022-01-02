@@ -134,7 +134,7 @@ void WelcomeWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     static auto font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular24.font");
-    painter.draw_text({ 12, 4, 1, 30 }, "Welcome to ", *font, Gfx::TextAlignment::CenterLeft, palette().base_text());
-    painter.draw_text({ 12 + font->width("Welcome to "), 4, 1, 30 }, "Serenity", font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().base_text());
-    painter.draw_text({ 12 + font->width("Welcome to ") + font->bold_variant().width("Serenity"), 4, 1, 30 }, "OS", font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().base() == palette().window() ? palette().base_text() : palette().base());
+    painter.draw_text({ 12, 4, 1, 30 }, "Welcome to ", *font, Gfx::Alignment::CenterLeft, palette().base_text());
+    painter.draw_text({ 12 + font->width("Welcome to "), 4, 1, 30 }, "Serenity", font->bold_variant(), Gfx::Alignment::CenterLeft, palette().base_text());
+    painter.draw_text({ 12 + font->width("Welcome to ") + font->bold_variant().width("Serenity"), 4, 1, 30 }, "OS", font->bold_variant(), Gfx::Alignment::CenterLeft, palette().base() == palette().window() ? palette().base_text() : palette().base());
 }

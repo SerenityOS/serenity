@@ -41,9 +41,9 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
         container.set_fixed_size(275, 12);
         auto& description_label = container.add<GUI::Label>(description);
         description_label.set_font(Gfx::FontDatabase::default_font().bold_variant());
-        description_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        description_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         auto& label = container.add<GUI::Label>();
-        label.set_text_alignment(Gfx::TextAlignment::CenterRight);
+        label.set_text_alignment(Gfx::Alignment::CenterRight);
         return label;
     };
 

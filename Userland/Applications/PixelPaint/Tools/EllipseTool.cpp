@@ -133,7 +133,7 @@ GUI::Widget* EllipseTool::get_properties_widget()
         thickness_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& thickness_label = thickness_container.add<GUI::Label>("Thickness:");
-        thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        thickness_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         thickness_label.set_fixed_size(80, 20);
 
         auto& thickness_slider = thickness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
@@ -149,7 +149,7 @@ GUI::Widget* EllipseTool::get_properties_widget()
         mode_container.set_fixed_height(46);
         mode_container.set_layout<GUI::HorizontalBoxLayout>();
         auto& mode_label = mode_container.add<GUI::Label>("Mode:");
-        mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        mode_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         mode_label.set_fixed_size(80, 20);
 
         auto& mode_radio_container = mode_container.add<GUI::Widget>();
@@ -171,7 +171,7 @@ GUI::Widget* EllipseTool::get_properties_widget()
         aspect_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& aspect_label = aspect_container.add<GUI::Label>("Aspect Ratio:");
-        aspect_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        aspect_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         aspect_label.set_fixed_size(80, 20);
 
         m_aspect_w_textbox = aspect_container.add<GUI::TextBox>();
@@ -188,7 +188,7 @@ GUI::Widget* EllipseTool::get_properties_widget()
         };
 
         auto& multiply_label = aspect_container.add<GUI::Label>("x");
-        multiply_label.set_text_alignment(Gfx::TextAlignment::Center);
+        multiply_label.set_text_alignment(Gfx::Alignment::Center);
         multiply_label.set_fixed_size(10, 20);
 
         m_aspect_h_textbox = aspect_container.add<GUI::TextBox>();

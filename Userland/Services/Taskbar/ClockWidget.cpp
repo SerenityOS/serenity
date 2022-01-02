@@ -173,23 +173,15 @@ void ClockWidget::paint_event(GUI::PaintEvent& event)
 
     // Seconds won't fit in vertical mode
     String time_text;
-    Gfx::TextAlignment align;
-    switch (m_location) {
-    case Gfx::Alignment::Bottom:
-    case Gfx::Alignment::Top:
+    Gfx::Alignment align;
+    if (m_location == Gfx::Alignment::Bottom || m_location == Gfx::Alignment::Top) {
         time_text = Core::DateTime::now().to_string("%T");
-        align = Gfx::TextAlignment::CenterLeft;
-        break;
-    case Gfx::Alignment::Left:
-    case Gfx::Alignment::Right:
+        align = Gfx::Alignment::CenterLeft;
+    } else if (m_location == Gfx::Alignment::Left || m_location == Gfx::Alignment::Right) {
         time_text = Core::DateTime::now().to_string("%H:%M");
-        align = Gfx::TextAlignment::Center;
-        break;
-    case Gfx::Alignment::TopCenter:
-    case Gfx::Alignment::BottomCenter:
-    case Gfx::Alignment::Center:
+        align = Gfx::Alignment::Center;
+    } else
         VERIFY_NOT_REACHED();
-    }
 
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());

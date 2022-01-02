@@ -30,7 +30,7 @@ PlaylistWidget::PlaylistWidget()
 
 GUI::Variant PlaylistModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    if (role == GUI::ModelRole::TextAlignment)
+    if (role == GUI::ModelRole::Alignment)
         return "CenterLeft";
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
@@ -50,7 +50,7 @@ GUI::Variant PlaylistModel::data(const GUI::ModelIndex& index, GUI::ModelRole ro
     }
     if (role == GUI::ModelRole::Sort)
         return data(index, GUI::ModelRole::Display);
-    if (role == static_cast<GUI::ModelRole>(PlaylistModelCustomRole::FilePath)) //path
+    if (role == static_cast<GUI::ModelRole>(PlaylistModelCustomRole::FilePath)) // path
         return m_playlist_items[index.row()].path;
 
     return {};

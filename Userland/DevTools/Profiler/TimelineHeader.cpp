@@ -55,7 +55,7 @@ void TimelineHeader::paint_event(GUI::PaintEvent& event)
 
     auto const& font = m_selected ? painter.font().bold_variant() : painter.font();
     auto color = m_selected ? palette().selection_text() : palette().button_text();
-    painter.draw_text(text_rect, m_text, font, Gfx::TextAlignment::CenterLeft, color);
+    painter.draw_text(text_rect, m_text, font, Gfx::Alignment::CenterLeft, color);
 }
 
 void TimelineHeader::update_selection()

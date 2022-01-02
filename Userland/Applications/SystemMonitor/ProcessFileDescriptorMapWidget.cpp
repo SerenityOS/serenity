@@ -17,23 +17,23 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget()
     m_table_view = add<GUI::TableView>();
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_fds_fields;
-    pid_fds_fields.empend("fd", "FD", Gfx::TextAlignment::CenterRight);
-    pid_fds_fields.empend("class", "Class", Gfx::TextAlignment::CenterLeft);
-    pid_fds_fields.empend("offset", "Offset", Gfx::TextAlignment::CenterRight);
-    pid_fds_fields.empend("absolute_path", "Path", Gfx::TextAlignment::CenterLeft);
-    pid_fds_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    pid_fds_fields.empend("fd", "FD", Gfx::Alignment::CenterRight);
+    pid_fds_fields.empend("class", "Class", Gfx::Alignment::CenterLeft);
+    pid_fds_fields.empend("offset", "Offset", Gfx::Alignment::CenterRight);
+    pid_fds_fields.empend("absolute_path", "Path", Gfx::Alignment::CenterLeft);
+    pid_fds_fields.empend("Access", Gfx::Alignment::CenterLeft, [](auto& object) {
         return object.get("seekable").to_bool() ? "Seekable" : "Sequential";
     });
-    pid_fds_fields.empend("Blocking", Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    pid_fds_fields.empend("Blocking", Gfx::Alignment::CenterLeft, [](auto& object) {
         return object.get("blocking").to_bool() ? "Blocking" : "Nonblocking";
     });
-    pid_fds_fields.empend("On exec", Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    pid_fds_fields.empend("On exec", Gfx::Alignment::CenterLeft, [](auto& object) {
         return object.get("cloexec").to_bool() ? "Close" : "Keep";
     });
-    pid_fds_fields.empend("Can read", Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    pid_fds_fields.empend("Can read", Gfx::Alignment::CenterLeft, [](auto& object) {
         return object.get("can_read").to_bool() ? "Yes" : "No";
     });
-    pid_fds_fields.empend("Can write", Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    pid_fds_fields.empend("Can write", Gfx::Alignment::CenterLeft, [](auto& object) {
         return object.get("can_write").to_bool() ? "Yes" : "No";
     });
 

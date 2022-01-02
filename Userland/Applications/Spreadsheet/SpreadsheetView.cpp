@@ -172,7 +172,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             auto last_column_index = m_sheet->column_count() - 1;
             m_table_view->set_column_width(last_column_index, 50);
             m_table_view->set_default_column_width(last_column_index, 50);
-            m_table_view->set_column_header_alignment(last_column_index, Gfx::TextAlignment::Center);
+            m_table_view->set_column_header_alignment(last_column_index, Gfx::Alignment::Center);
             m_table_view->set_column_painting_delegate(last_column_index, make<TableCellPainter>(*m_table_view));
         }
         update_with_model();
@@ -185,7 +185,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         m_table_view->set_column_painting_delegate(i, make<TableCellPainter>(*m_table_view));
         m_table_view->set_column_width(i, 50);
         m_table_view->set_default_column_width(i, 50);
-        m_table_view->set_column_header_alignment(i, Gfx::TextAlignment::Center);
+        m_table_view->set_column_header_alignment(i, Gfx::Alignment::Center);
     }
 
     m_table_view->set_alternating_row_colors(false);
@@ -338,7 +338,7 @@ void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, const Gfx::
 
     auto text_color = index.data(GUI::ModelRole::ForegroundColor).to_color(palette.color(m_table_view.foreground_role()));
     auto data = index.data();
-    auto text_alignment = index.data(GUI::ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterRight);
+    auto text_alignment = index.data(GUI::ModelRole::Alignment).to_alignment(Gfx::Alignment::CenterRight);
     painter.draw_text(rect, data.to_string(), m_table_view.font_for_index(index), text_alignment, text_color, Gfx::TextElision::Right);
 }
 

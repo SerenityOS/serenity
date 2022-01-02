@@ -79,7 +79,7 @@ private:
             return;
         GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
-        painter.draw_text(frame_inner_rect(), text(), Gfx::TextAlignment::Center, palette().window_text(), Gfx::TextElision::Right);
+        painter.draw_text(frame_inner_rect(), text(), Gfx::Alignment::Center, palette().window_text(), Gfx::TextElision::Right);
     }
 
     String m_text;
@@ -431,7 +431,7 @@ NonnullRefPtr<GUI::Window> build_process_window(pid_t pid)
 
     auto& process_name_label = hero_container.add<GUI::Label>();
     process_name_label.set_font(Gfx::FontDatabase::default_font().bold_variant());
-    process_name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    process_name_label.set_text_alignment(Gfx::Alignment::CenterLeft);
     process_name_label.set_text(String::formatted("{} (PID {})",
         process_index.sibling_at_column(ProcessModel::Column::Name).data().to_string(),
         pid));
@@ -472,11 +472,11 @@ NonnullRefPtr<GUI::Widget> build_storage_widget()
         auto& fs_table_view = self.add<GUI::TableView>();
 
         Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
-        df_fields.empend("mount_point", "Mount point", Gfx::TextAlignment::CenterLeft);
-        df_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
-        df_fields.empend("source", "Source", Gfx::TextAlignment::CenterLeft);
+        df_fields.empend("mount_point", "Mount point", Gfx::Alignment::CenterLeft);
+        df_fields.empend("class_name", "Class", Gfx::Alignment::CenterLeft);
+        df_fields.empend("source", "Source", Gfx::Alignment::CenterLeft);
         df_fields.empend(
-            "Size", Gfx::TextAlignment::CenterRight,
+            "Size", Gfx::Alignment::CenterRight,
             [](const JsonObject& object) {
                 StringBuilder size_builder;
                 size_builder.append(" ");
@@ -497,7 +497,7 @@ NonnullRefPtr<GUI::Widget> build_storage_widget()
                 return percentage;
             });
         df_fields.empend(
-            "Used", Gfx::TextAlignment::CenterRight,
+            "Used", Gfx::Alignment::CenterRight,
             [](const JsonObject& object) {
             auto total_blocks = object.get("total_block_count").to_u64();
             auto free_blocks = object.get("free_block_count").to_u64();
@@ -510,19 +510,19 @@ NonnullRefPtr<GUI::Widget> build_storage_widget()
                 return used_blocks * object.get("block_size").to_u64();
             });
         df_fields.empend(
-            "Available", Gfx::TextAlignment::CenterRight,
+            "Available", Gfx::Alignment::CenterRight,
             [](const JsonObject& object) {
                 return human_readable_size(object.get("free_block_count").to_u64() * object.get("block_size").to_u64());
             },
             [](const JsonObject& object) {
                 return object.get("free_block_count").to_u64() * object.get("block_size").to_u64();
             });
-        df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
+        df_fields.empend("Access", Gfx::Alignment::CenterLeft, [](const JsonObject& object) {
             bool readonly = object.get("readonly").to_bool();
             int mount_flags = object.get("mount_flags").to_int();
             return readonly || (mount_flags & MS_RDONLY) ? "Read-only" : "Read/Write";
         });
-        df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
+        df_fields.empend("Mount flags", Gfx::Alignment::CenterLeft, [](const JsonObject& object) {
             int mount_flags = object.get("mount_flags").to_int();
             StringBuilder builder;
             bool first = true;
@@ -543,11 +543,11 @@ NonnullRefPtr<GUI::Widget> build_storage_widget()
                 return String("defaults");
             return builder.to_string();
         });
-        df_fields.empend("free_block_count", "Free blocks", Gfx::TextAlignment::CenterRight);
-        df_fields.empend("total_block_count", "Total blocks", Gfx::TextAlignment::CenterRight);
-        df_fields.empend("free_inode_count", "Free inodes", Gfx::TextAlignment::CenterRight);
-        df_fields.empend("total_inode_count", "Total inodes", Gfx::TextAlignment::CenterRight);
-        df_fields.empend("block_size", "Block size", Gfx::TextAlignment::CenterRight);
+        df_fields.empend("free_block_count", "Free blocks", Gfx::Alignment::CenterRight);
+        df_fields.empend("total_block_count", "Total blocks", Gfx::Alignment::CenterRight);
+        df_fields.empend("free_inode_count", "Free inodes", Gfx::Alignment::CenterRight);
+        df_fields.empend("total_inode_count", "Total inodes", Gfx::Alignment::CenterRight);
+        df_fields.empend("block_size", "Block size", Gfx::Alignment::CenterRight);
 
         fs_table_view.set_model(MUST(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/df", move(df_fields)))));
 
@@ -572,10 +572,10 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
             cpu_group_box.layout()->set_margins(6);
 
             Vector<GUI::JsonArrayModel::FieldSpec> processors_field;
-            processors_field.empend("processor", "Processor", Gfx::TextAlignment::CenterRight);
-            processors_field.empend("cpuid", "CPUID", Gfx::TextAlignment::CenterLeft);
-            processors_field.empend("brandstr", "Brand", Gfx::TextAlignment::CenterLeft);
-            processors_field.empend("Features", Gfx::TextAlignment::CenterLeft, [](auto& object) {
+            processors_field.empend("processor", "Processor", Gfx::Alignment::CenterRight);
+            processors_field.empend("cpuid", "CPUID", Gfx::Alignment::CenterLeft);
+            processors_field.empend("brandstr", "Brand", Gfx::Alignment::CenterLeft);
+            processors_field.empend("Features", Gfx::Alignment::CenterLeft, [](auto& object) {
                 StringBuilder builder;
                 auto features = object.get("features").as_array();
                 for (auto& feature : features.values()) {
@@ -584,10 +584,10 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
                 }
                 return GUI::Variant(builder.to_string());
             });
-            processors_field.empend("family", "Family", Gfx::TextAlignment::CenterRight);
-            processors_field.empend("model", "Model", Gfx::TextAlignment::CenterRight);
-            processors_field.empend("stepping", "Stepping", Gfx::TextAlignment::CenterRight);
-            processors_field.empend("type", "Type", Gfx::TextAlignment::CenterRight);
+            processors_field.empend("family", "Family", Gfx::Alignment::CenterRight);
+            processors_field.empend("model", "Model", Gfx::Alignment::CenterRight);
+            processors_field.empend("stepping", "Stepping", Gfx::Alignment::CenterRight);
+            processors_field.empend("type", "Type", Gfx::Alignment::CenterRight);
 
             auto& processors_table_view = cpu_group_box.add<GUI::TableView>();
             auto json_model = GUI::JsonArrayModel::create("/proc/cpuinfo", move(processors_field));
@@ -610,7 +610,7 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
 
             Vector<GUI::JsonArrayModel::FieldSpec> pci_fields;
             pci_fields.empend(
-                "Address", Gfx::TextAlignment::CenterLeft,
+                "Address", Gfx::Alignment::CenterLeft,
                 [](const JsonObject& object) {
                     auto seg = object.get("seg").to_u32();
                     auto bus = object.get("bus").to_u32();
@@ -619,21 +619,21 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
                     return String::formatted("{:04x}:{:02x}:{:02x}.{}", seg, bus, device, function);
                 });
             pci_fields.empend(
-                "Class", Gfx::TextAlignment::CenterLeft,
+                "Class", Gfx::Alignment::CenterLeft,
                 [db](const JsonObject& object) {
                     auto class_id = object.get("class").to_u32();
                     String class_name = db ? db->get_class(class_id) : nullptr;
                     return class_name.is_empty() ? String::formatted("{:04x}", class_id) : class_name;
                 });
             pci_fields.empend(
-                "Vendor", Gfx::TextAlignment::CenterLeft,
+                "Vendor", Gfx::Alignment::CenterLeft,
                 [db](const JsonObject& object) {
                     auto vendor_id = object.get("vendor_id").to_u32();
                     String vendor_name = db ? db->get_vendor(vendor_id) : nullptr;
                     return vendor_name.is_empty() ? String::formatted("{:02x}", vendor_id) : vendor_name;
                 });
             pci_fields.empend(
-                "Device", Gfx::TextAlignment::CenterLeft,
+                "Device", Gfx::Alignment::CenterLeft,
                 [db](const JsonObject& object) {
                     auto vendor_id = object.get("vendor_id").to_u32();
                     auto device_id = object.get("device_id").to_u32();
@@ -641,7 +641,7 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
                     return device_name.is_empty() ? String::formatted("{:02x}", device_id) : device_name;
                 });
             pci_fields.empend(
-                "Revision", Gfx::TextAlignment::CenterRight,
+                "Revision", Gfx::Alignment::CenterRight,
                 [](const JsonObject& object) {
                     auto revision_id = object.get("revision_id").to_u32();
                     return String::formatted("{:02x}", revision_id);

@@ -189,14 +189,14 @@ int AbstractTableView::minimum_row_height(int)
     return 2;
 }
 
-Gfx::TextAlignment AbstractTableView::column_header_alignment(int column_index) const
+Gfx::Alignment AbstractTableView::column_header_alignment(int column_index) const
 {
     if (!model())
-        return Gfx::TextAlignment::CenterLeft;
+        return Gfx::Alignment::CenterLeft;
     return m_column_header->section_alignment(column_index);
 }
 
-void AbstractTableView::set_column_header_alignment(int column, Gfx::TextAlignment alignment)
+void AbstractTableView::set_column_header_alignment(int column, Gfx::Alignment alignment)
 {
     column_header().set_section_alignment(column, alignment);
 }

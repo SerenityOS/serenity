@@ -41,7 +41,7 @@ GUI::Widget* ZoomTool::get_properties_widget()
         sensitivity_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& sensitivity_label = sensitivity_container.add<GUI::Label>("Sensitivity:");
-        sensitivity_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        sensitivity_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         sensitivity_label.set_fixed_size(80, 20);
 
         auto& sensitivity_slider = sensitivity_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");

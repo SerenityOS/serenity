@@ -228,7 +228,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     backtrace_tab->layout()->set_margins(4);
 
     auto backtrace_label = TRY(backtrace_tab->try_add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:"));
-    backtrace_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    backtrace_label->set_text_alignment(Gfx::Alignment::CenterLeft);
     backtrace_label->set_fixed_height(16);
 
     auto backtrace_tab_widget = TRY(backtrace_tab->try_add<GUI::TabWidget>());
@@ -239,7 +239,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     cpu_registers_tab->layout()->set_margins(4);
 
     auto cpu_registers_label = TRY(cpu_registers_tab->try_add<GUI::Label>("The CPU register state for each thread alive during the crash is listed below:"));
-    cpu_registers_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    cpu_registers_label->set_text_alignment(Gfx::Alignment::CenterLeft);
     cpu_registers_label->set_fixed_height(16);
 
     auto cpu_registers_tab_widget = TRY(cpu_registers_tab->try_add<GUI::TabWidget>());

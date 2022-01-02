@@ -157,8 +157,8 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
         GUI::Painter text_painter(*text_bitmap);
         text_painter.set_font(painter.font());
 
-        text_painter.draw_text({}, displayed_resolution_string, Gfx::TextAlignment::BottomRight, Color::Black);
-        text_painter.draw_text({}, displayed_resolution_string, Gfx::TextAlignment::TopLeft, Color::White);
+        text_painter.draw_text({}, displayed_resolution_string, Gfx::Alignment::BottomRight, Color::Black);
+        text_painter.draw_text({}, displayed_resolution_string, Gfx::Alignment::TopLeft, Color::White);
 
         Gfx::IntRect text_rect = text_bitmap->rect();
         text_rect.set_width(text_rect.width() * m_desktop_scale_factor);

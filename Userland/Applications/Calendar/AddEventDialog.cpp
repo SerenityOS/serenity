@@ -42,7 +42,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     top_container.layout()->set_margins(4);
 
     auto& add_label = top_container.add<GUI::Label>("Add title & date:");
-    add_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    add_label.set_text_alignment(Gfx::Alignment::CenterLeft);
     add_label.set_fixed_height(14);
     add_label.set_font(Gfx::FontDatabase::default_font().bold_variant());
 

@@ -139,11 +139,11 @@ void Game::paint_event(GUI::PaintEvent& event)
             painter.fill_rect(enclosing_int_rect(brick.rect), brick.color);
     }
 
-    painter.draw_text(lives_left_rect(), String::formatted("Lives: {}", m_lives), Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text(lives_left_rect(), String::formatted("Lives: {}", m_lives), Gfx::Alignment::Center, Color::White);
 
     if (m_paused) {
         const char* msg = m_cheater ? "C H E A T E R" : "P A U S E D";
-        painter.draw_text(pause_rect(), msg, Gfx::TextAlignment::Center, Color::White);
+        painter.draw_text(pause_rect(), msg, Gfx::Alignment::Center, Color::White);
     }
 }
 

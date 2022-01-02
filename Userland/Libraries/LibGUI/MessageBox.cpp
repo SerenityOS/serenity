@@ -109,7 +109,7 @@ void MessageBox::build()
     auto& label = message_container.add<Label>(m_text);
     label.set_fixed_height(total_text_height);
     if (m_type != Type::None)
-        label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        label.set_text_alignment(Gfx::Alignment::CenterLeft);
 
     auto& button_container = widget.add<Widget>();
     button_container.set_layout<HorizontalBoxLayout>();

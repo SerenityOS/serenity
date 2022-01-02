@@ -320,7 +320,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     html_container.set_fixed_height(22);
 
     auto& html_label = html_container.add<GUI::Label>();
-    html_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    html_label.set_text_alignment(Gfx::Alignment::CenterLeft);
     html_label.set_fixed_width(48);
     html_label.set_text("HTML:");
 
@@ -349,7 +349,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
         rgb_container.set_fixed_height(22);
 
         auto& rgb_label = rgb_container.add<GUI::Label>();
-        rgb_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        rgb_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         rgb_label.set_fixed_width(48);
 
         auto& spinbox = rgb_container.add<SpinBox>();

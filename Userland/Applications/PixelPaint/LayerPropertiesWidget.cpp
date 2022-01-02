@@ -32,7 +32,7 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     name_container.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& name_label = name_container.add<GUI::Label>("Name:");
-    name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    name_label.set_text_alignment(Gfx::Alignment::CenterLeft);
     name_label.set_fixed_size(80, 20);
 
     m_name_textbox = name_container.add<GUI::TextBox>();
@@ -47,7 +47,7 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     opacity_container.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& opacity_label = opacity_container.add<GUI::Label>("Opacity:");
-    opacity_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    opacity_label.set_text_alignment(Gfx::Alignment::CenterLeft);
     opacity_label.set_fixed_size(80, 20);
 
     m_opacity_slider = opacity_container.add<GUI::OpacitySlider>();

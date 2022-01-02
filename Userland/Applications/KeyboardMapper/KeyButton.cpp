@@ -38,9 +38,9 @@ void KeyButton::paint_event(GUI::PaintEvent& event)
 
     if (!text().is_empty()) {
         Gfx::IntRect text_rect { 0, 0, font.width(text()), font.glyph_height() };
-        text_rect.align_within({ cont_rect.x() + 7, cont_rect.y() + 4, cont_rect.width() - 14, cont_rect.height() - 14 }, Gfx::TextAlignment::Center);
+        text_rect.align_within({ cont_rect.x() + 7, cont_rect.y() + 4, cont_rect.width() - 14, cont_rect.height() - 14 }, Gfx::Alignment::Center);
 
-        painter.draw_text(text_rect, text(), font, Gfx::TextAlignment::Center, Color::Black, Gfx::TextElision::Right);
+        painter.draw_text(text_rect, text(), font, Gfx::Alignment::Center, Color::Black, Gfx::TextElision::Right);
         if (is_focused())
             painter.draw_rect(text_rect.inflated(6, 4), palette().focus_outline());
     }

@@ -206,10 +206,10 @@ void WindowSwitcher::draw()
             painter.draw_scaled_bitmap(thumbnail_rect, *window.backing_store(), window.backing_store()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
         Gfx::IntRect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
-        painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0).translated(1, 1), window.computed_title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color.inverted());
-        painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.computed_title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color);
+        painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0).translated(1, 1), window.computed_title(), WindowManager::the().window_title_font(), Gfx::Alignment::CenterLeft, text_color.inverted());
+        painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.computed_title(), WindowManager::the().window_title_font(), Gfx::Alignment::CenterLeft, text_color);
         auto window_details = m_windows_on_multiple_stacks ? String::formatted("{} on {}:{}", window.rect().to_string(), window.window_stack().row() + 1, window.window_stack().column() + 1) : window.rect().to_string();
-        painter.draw_text(item_rect, window_details, Gfx::TextAlignment::CenterRight, rect_text_color);
+        painter.draw_text(item_rect, window_details, Gfx::Alignment::CenterRight, rect_text_color);
     }
 }
 

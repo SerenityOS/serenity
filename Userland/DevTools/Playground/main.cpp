@@ -56,7 +56,7 @@ void UnregisteredWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Gfx::Color::DarkRed);
-    painter.draw_text(rect(), m_text, Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text(rect(), m_text, Gfx::Alignment::Center, Color::White);
 }
 
 }

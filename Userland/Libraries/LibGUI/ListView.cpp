@@ -127,7 +127,7 @@ void ListView::paint_list_item(Painter& painter, int row_index, int painted_item
         auto text_rect = row_rect;
         text_rect.translate_by(horizontal_padding(), 0);
         text_rect.set_width(text_rect.width() - horizontal_padding() * 2);
-        auto text_alignment = index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
+        auto text_alignment = index.data(ModelRole::Alignment).to_alignment(Gfx::Alignment::CenterLeft);
         draw_item_text(painter, index, is_selected_row, text_rect, data.to_string(), font, text_alignment, Gfx::TextElision::None);
     }
 }

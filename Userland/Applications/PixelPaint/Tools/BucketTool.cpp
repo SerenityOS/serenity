@@ -105,7 +105,7 @@ GUI::Widget* BucketTool::get_properties_widget()
         threshold_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& threshold_label = threshold_container.add<GUI::Label>("Threshold:");
-        threshold_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        threshold_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         threshold_label.set_fixed_size(80, 20);
 
         auto& threshold_slider = threshold_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");

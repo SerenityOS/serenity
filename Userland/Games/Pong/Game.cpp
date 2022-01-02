@@ -65,8 +65,8 @@ void Game::paint_event(GUI::PaintEvent& event)
     if (m_cursor_paddle_target_y.has_value())
         painter.fill_ellipse(cursor_paddle_target_rect(), Color::Blue);
 
-    painter.draw_text(player_1_score_rect(), String::formatted("{}", m_player_1_score), Gfx::TextAlignment::TopLeft, Color::White);
-    painter.draw_text(player_2_score_rect(), String::formatted("{}", m_player_2_score), Gfx::TextAlignment::TopLeft, Color::White);
+    painter.draw_text(player_1_score_rect(), String::formatted("{}", m_player_1_score), Gfx::Alignment::TopLeft, Color::White);
+    painter.draw_text(player_2_score_rect(), String::formatted("{}", m_player_2_score), Gfx::Alignment::TopLeft, Color::White);
 }
 
 void Game::keyup_event(GUI::KeyEvent& event)

@@ -374,14 +374,14 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
 
 #define REGISTER_TEXT_ALIGNMENT_PROPERTY(property_name, getter, setter) \
     REGISTER_ENUM_PROPERTY(                                             \
-        property_name, getter, setter, Gfx::TextAlignment,              \
-        { Gfx::TextAlignment::Center, "Center" },                       \
-        { Gfx::TextAlignment::CenterLeft, "CenterLeft" },               \
-        { Gfx::TextAlignment::CenterRight, "CenterRight" },             \
-        { Gfx::TextAlignment::TopLeft, "TopLeft" },                     \
-        { Gfx::TextAlignment::TopRight, "TopRight" },                   \
-        { Gfx::TextAlignment::BottomLeft, "BottomLeft" },               \
-        { Gfx::TextAlignment::BottomRight, "BottomRight" })
+        property_name, getter, setter, Gfx::Alignment,                  \
+        { Gfx::Alignment::Center, "Center" },                           \
+        { Gfx::Alignment::CenterLeft, "CenterLeft" },                   \
+        { Gfx::Alignment::CenterRight, "CenterRight" },                 \
+        { Gfx::Alignment::TopLeft, "TopLeft" },                         \
+        { Gfx::Alignment::TopRight, "TopRight" },                       \
+        { Gfx::Alignment::BottomLeft, "BottomLeft" },                   \
+        { Gfx::Alignment::BottomRight, "BottomRight" })
 
 #define REGISTER_FONT_WEIGHT_PROPERTY(property_name, getter, setter) \
     REGISTER_ENUM_PROPERTY(                                          \

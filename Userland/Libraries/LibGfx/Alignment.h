@@ -8,18 +8,24 @@
 
 #include <AK/Optional.h>
 #include <AK/StringView.h>
-#include <LibGfx/TextAlignment.h>
+#include <LibGfx/Alignment.h>
 
 namespace Gfx {
 
 #define GFX_ENUMERATE_ALIGNMENTS(M) \
     M(Center)                       \
-    M(TopCenter)                    \
-    M(BottomCenter)                 \
+    M(CenterTop)                    \
+    M(CenterBottom)                 \
+    M(CenterLeft)                   \
+    M(CenterRight)                  \
     M(Left)                         \
     M(Right)                        \
     M(Bottom)                       \
-    M(Top)
+    M(BottomRight)                  \
+    M(BottomLeft)                   \
+    M(Top)                          \
+    M(TopLeft)                      \
+    M(TopRight)
 
 enum class Alignment {
 #define __ENUMERATE(x) x,
@@ -27,20 +33,41 @@ enum class Alignment {
 #undef __ENUMERATE
 };
 
-inline Gfx::TextAlignment text_alignment_from_alignment(Alignment alignment)
+inline bool is_right_alignment(Alignment alignment)
 {
     switch (alignment) {
-    case Alignment::Center:
-        return TextAlignment::Center;
-    case Alignment::Left:
-        return TextAlignment::CenterLeft;
+    case Alignment::CenterRight:
+    case Alignment::TopRight:
+    case Alignment::BottomRight:
     case Alignment::Right:
-        return TextAlignment::CenterRight;
-    case Alignment::Bottom:
-    case Alignment::Top:
-        VERIFY_NOT_REACHED();
+        return true;
     default:
-        return {};
+        return false;
+    }
+}
+
+inline bool is_left_alignment(Alignment alignment)
+{
+    switch (alignment) {
+    case Alignment::CenterLeft:
+    case Alignment::TopLeft:
+    case Alignment::BottomLeft:
+    case Alignment::Left:
+        return true;
+    default:
+        return false;
+    }
+}
+
+inline bool is_vertically_centered_alignment(Alignment alignment)
+{
+    switch (alignment) {
+    case Alignment::CenterLeft:
+    case Alignment::CenterRight:
+    case Alignment::Center:
+        return true;
+    default:
+        return false;
     }
 }
 

@@ -39,8 +39,8 @@ public:
 
     virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
     {
-        if (role == GUI::ModelRole::TextAlignment)
-            return Gfx::TextAlignment::CenterLeft;
+        if (role == GUI::ModelRole::Alignment)
+            return Gfx::Alignment::CenterLeft;
         if (role == GUI::ModelRole::Display) {
             if (index.column() == 0)
                 return m_color_schemes[index.row()].title;
@@ -92,8 +92,8 @@ BrowserSettingsWidget::BrowserSettingsWidget()
     };
 
     Vector<GUI::JsonArrayModel::FieldSpec> search_engine_fields;
-    search_engine_fields.empend("title", "Title", Gfx::TextAlignment::CenterLeft);
-    search_engine_fields.empend("url_format", "Url format", Gfx::TextAlignment::CenterLeft);
+    search_engine_fields.empend("title", "Title", Gfx::Alignment::CenterLeft);
+    search_engine_fields.empend("url_format", "Url format", Gfx::Alignment::CenterLeft);
     auto search_engines_model = GUI::JsonArrayModel::create(String::formatted("{}/SearchEngines.json", Core::StandardPaths::config_directory()), move(search_engine_fields));
     search_engines_model->invalidate();
     Vector<JsonValue> custom_search_engine;

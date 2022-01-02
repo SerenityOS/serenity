@@ -42,7 +42,7 @@ Game::Game()
         (width - player_deck_width) / 2 - 50, height - outer_border_size - text_height - text_offset,
         50 - text_offset, text_height
     };
-    m_players[0].name_alignment = Gfx::TextAlignment::BottomRight;
+    m_players[0].name_alignment = Gfx::Alignment::BottomRight;
     m_players[0].name = "Gunnar";
     m_players[0].is_human = true;
     m_players[0].taken_cards_target = { width / 2 - Card::width / 2, height };
@@ -53,7 +53,7 @@ Game::Game()
         outer_border_size, (height - player_deck_height) / 2 - text_height - text_offset,
         Card::width, text_height
     };
-    m_players[1].name_alignment = Gfx::TextAlignment::BottomLeft;
+    m_players[1].name_alignment = Gfx::Alignment::BottomLeft;
     m_players[1].name = "Paul";
     m_players[1].taken_cards_target = { -Card::width, height / 2 - Card::height / 2 };
 
@@ -63,7 +63,7 @@ Game::Game()
         width - (width - player_deck_width) / 2 + text_offset, outer_border_size + text_offset,
         Card::width, text_height
     };
-    m_players[2].name_alignment = Gfx::TextAlignment::TopLeft;
+    m_players[2].name_alignment = Gfx::Alignment::TopLeft;
     m_players[2].name = "Simon";
     m_players[2].taken_cards_target = { width / 2 - Card::width / 2, -Card::height };
 
@@ -73,7 +73,7 @@ Game::Game()
         width - outer_border_size - Card::width, height - (height - player_deck_height) / 2 + text_offset,
         Card::width, text_height
     };
-    m_players[3].name_alignment = Gfx::TextAlignment::TopRight;
+    m_players[3].name_alignment = Gfx::Alignment::TopRight;
     m_players[3].name = "Lisa";
     m_players[3].taken_cards_target = { width, height / 2 - Card::height / 2 };
 

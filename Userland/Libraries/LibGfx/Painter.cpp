@@ -1258,21 +1258,21 @@ void Painter::draw_glyph_or_emoji(IntPoint const& point, u32 code_point, Font co
 }
 
 template<typename DrawGlyphFunction>
-void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& font, TextAlignment alignment, TextDirection direction, DrawGlyphFunction draw_glyph)
+void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& font, Alignment alignment, TextDirection direction, DrawGlyphFunction draw_glyph)
 {
     auto rect = a_rect;
 
     switch (alignment) {
-    case TextAlignment::TopLeft:
-    case TextAlignment::CenterLeft:
-    case TextAlignment::BottomLeft:
+    case Alignment::TopLeft:
+    case Alignment::CenterLeft:
+    case Alignment::BottomLeft:
         break;
-    case TextAlignment::TopRight:
-    case TextAlignment::CenterRight:
-    case TextAlignment::BottomRight:
+    case Alignment::TopRight:
+    case Alignment::CenterRight:
+    case Alignment::BottomRight:
         rect.set_x(rect.right() - font.width(text));
         break;
-    case TextAlignment::Center: {
+    case Alignment::Center: {
         auto shrunken_rect = rect;
         shrunken_rect.set_width(font.width(text));
         shrunken_rect.center_within(rect);
@@ -1283,7 +1283,7 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
         VERIFY_NOT_REACHED();
     }
 
-    if (is_vertically_centered_text_alignment(alignment)) {
+    if (is_vertically_centered_alignment(alignment)) {
         int distance_from_baseline_to_bottom = (font.glyph_height() - 1) - font.baseline();
         rect.translate_by(0, distance_from_baseline_to_bottom / 2);
     }
@@ -1472,7 +1472,7 @@ bool Painter::text_contains_bidirectional_text(Utf8View const& text, TextDirecti
 }
 
 template<typename DrawGlyphFunction>
-void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping, DrawGlyphFunction draw_glyph)
+void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const& font, Alignment alignment, TextElision elision, TextWrapping wrapping, DrawGlyphFunction draw_glyph)
 {
     if (draw_text_get_length(text) == 0)
         return;
@@ -1486,25 +1486,25 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
     auto bounding_rect = layout.bounding_rect(wrapping, line_spacing);
 
     switch (alignment) {
-    case TextAlignment::TopLeft:
+    case Alignment::TopLeft:
         bounding_rect.set_location(rect.location());
         break;
-    case TextAlignment::TopRight:
+    case Alignment::TopRight:
         bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.y() });
         break;
-    case TextAlignment::CenterLeft:
+    case Alignment::CenterLeft:
         bounding_rect.set_location({ rect.x(), rect.center().y() - (bounding_rect.height() / 2) });
         break;
-    case TextAlignment::CenterRight:
+    case Alignment::CenterRight:
         bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.center().y() - (bounding_rect.height() / 2) });
         break;
-    case TextAlignment::Center:
+    case Alignment::Center:
         bounding_rect.center_within(rect);
         break;
-    case TextAlignment::BottomLeft:
+    case Alignment::BottomLeft:
         bounding_rect.set_location({ rect.x(), (rect.bottom() + 1) - bounding_rect.height() });
         break;
-    case TextAlignment::BottomRight:
+    case Alignment::BottomRight:
         bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), (rect.bottom() + 1) - bounding_rect.height() });
         break;
     default:
@@ -1546,17 +1546,17 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
     }
 }
 
-void Painter::draw_text(IntRect const& rect, StringView text, TextAlignment alignment, Color color, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(IntRect const& rect, StringView text, Alignment alignment, Color color, TextElision elision, TextWrapping wrapping)
 {
     draw_text(rect, text, font(), alignment, color, elision, wrapping);
 }
 
-void Painter::draw_text(IntRect const& rect, Utf32View const& text, TextAlignment alignment, Color color, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(IntRect const& rect, Utf32View const& text, Alignment alignment, Color color, TextElision elision, TextWrapping wrapping)
 {
     draw_text(rect, text, font(), alignment, color, elision, wrapping);
 }
 
-void Painter::draw_text(IntRect const& rect, StringView raw_text, Font const& font, TextAlignment alignment, Color color, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(IntRect const& rect, StringView raw_text, Font const& font, Alignment alignment, Color color, TextElision elision, TextWrapping wrapping)
 {
     Utf8View text { raw_text };
     do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, u32 code_point) {
@@ -1564,7 +1564,7 @@ void Painter::draw_text(IntRect const& rect, StringView raw_text, Font const& fo
     });
 }
 
-void Painter::draw_text(IntRect const& rect, Utf32View const& raw_text, Font const& font, TextAlignment alignment, Color color, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(IntRect const& rect, Utf32View const& raw_text, Font const& font, Alignment alignment, Color color, TextElision elision, TextWrapping wrapping)
 {
     // FIXME: UTF-32 should eventually be completely removed, but for the time
     // being some places might depend on it, so we do some internal conversion.
@@ -1576,7 +1576,7 @@ void Painter::draw_text(IntRect const& rect, Utf32View const& raw_text, Font con
     });
 }
 
-void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, Utf8View const& text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, Utf8View const& text, Font const& font, Alignment alignment, TextElision elision, TextWrapping wrapping)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
@@ -1585,7 +1585,7 @@ void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntR
     });
 }
 
-void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, StringView raw_text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, StringView raw_text, Font const& font, Alignment alignment, TextElision elision, TextWrapping wrapping)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
@@ -1595,7 +1595,7 @@ void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntR
     });
 }
 
-void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, Utf32View const& raw_text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, Utf32View const& raw_text, Font const& font, Alignment alignment, TextElision elision, TextWrapping wrapping)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
@@ -2163,7 +2163,7 @@ String parse_ampersand_string(StringView raw_text, Optional<size_t>* underline_o
     return builder.to_string();
 }
 
-void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::Font const& font, Gfx::TextAlignment text_alignment, Gfx::Color color)
+void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::Font const& font, Gfx::Alignment text_alignment, Gfx::Color color)
 {
     Optional<size_t> underline_offset;
     auto name_to_draw = parse_ampersand_string(text, &underline_offset);

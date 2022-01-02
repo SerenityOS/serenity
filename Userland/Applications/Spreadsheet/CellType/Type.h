@@ -10,8 +10,8 @@
 #include "../Forward.h"
 #include <AK/Forward.h>
 #include <AK/String.h>
+#include <LibGfx/Alignment.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/TextAlignment.h>
 #include <LibJS/Forward.h>
 
 namespace Spreadsheet {
@@ -19,7 +19,7 @@ namespace Spreadsheet {
 struct CellTypeMetadata {
     int length { -1 };
     String format;
-    Gfx::TextAlignment alignment { Gfx::TextAlignment::CenterRight };
+    Gfx::Alignment alignment { Gfx::Alignment::CenterRight };
     Format static_format;
 };
 

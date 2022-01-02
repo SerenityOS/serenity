@@ -194,7 +194,7 @@ GUI::Widget* GuideTool::get_properties_widget()
         snapping_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& snapping_label = snapping_container.add<GUI::Label>("Snap offset:");
-        snapping_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        snapping_label.set_text_alignment(Gfx::Alignment::CenterLeft);
         snapping_label.set_fixed_size(80, 20);
         snapping_label.set_tooltip("Press Shift to snap");
 

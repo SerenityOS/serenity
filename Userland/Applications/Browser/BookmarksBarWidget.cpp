@@ -151,8 +151,8 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
         this));
 
     Vector<GUI::JsonArrayModel::FieldSpec> fields;
-    fields.empend("title", "Title", Gfx::TextAlignment::CenterLeft);
-    fields.empend("url", "Url", Gfx::TextAlignment::CenterRight);
+    fields.empend("title", "Title", Gfx::Alignment::CenterLeft);
+    fields.empend("url", "Url", Gfx::Alignment::CenterRight);
     set_model(GUI::JsonArrayModel::create(bookmarks_file, move(fields)));
     model()->invalidate();
 }

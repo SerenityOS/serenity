@@ -130,7 +130,7 @@ void ColumnsView::paint_event(PaintEvent& event)
                 icon_rect.right() + 1 + icon_spacing(), row * item_height(),
                 column.width - icon_spacing() - icon_size() - icon_spacing() - icon_spacing() - s_arrow_bitmap_width - icon_spacing(), item_height()
             };
-            draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::CenterLeft, Gfx::TextElision::None);
+            draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::Alignment::CenterLeft, Gfx::TextElision::None);
 
             if (is_focused() && index == cursor_index()) {
                 painter.draw_rect(row_rect, palette().color(background_role()));

@@ -335,8 +335,8 @@ void ClassicStylePainter::paint_progressbar(Painter& painter, IntRect const& rec
     painter.fill_rect_with_gradient(orientation, rect, start_color, end_color);
 
     if (!text.is_null()) {
-        painter.draw_text(rect.translated(1, 1), text, TextAlignment::Center, palette.base_text());
-        painter.draw_text(rect, text, TextAlignment::Center, palette.base_text().inverted());
+        painter.draw_text(rect.translated(1, 1), text, Alignment::Center, palette.base_text());
+        painter.draw_text(rect, text, Alignment::Center, palette.base_text().inverted());
     }
 
     float range_size = max - min;
@@ -359,7 +359,7 @@ void ClassicStylePainter::paint_progressbar(Painter& painter, IntRect const& rec
 
     painter.add_clip_rect(hole_rect);
     if (!text.is_null())
-        painter.draw_text(rect.translated(0, 0), text, TextAlignment::Center, palette.base_text());
+        painter.draw_text(rect.translated(0, 0), text, Alignment::Center, palette.base_text());
 }
 
 static RefPtr<Gfx::Bitmap> s_unfilled_circle_bitmap;

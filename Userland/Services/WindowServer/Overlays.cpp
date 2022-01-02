@@ -207,7 +207,7 @@ Gfx::Font const& ScreenNumberOverlay::font()
 
 void ScreenNumberOverlay::render_overlay_bitmap(Gfx::Painter& painter)
 {
-    painter.draw_text({ {}, rect().size() }, String::formatted("{}", m_screen.index() + 1), font(), Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text({ {}, rect().size() }, String::formatted("{}", m_screen.index() + 1), font(), Gfx::Alignment::Center, Color::White);
 }
 
 Gfx::IntRect ScreenNumberOverlay::calculate_content_rect_for_screen(Screen& screen)
@@ -258,7 +258,7 @@ void WindowGeometryOverlay::update_rect()
 
 void WindowGeometryOverlay::render_overlay_bitmap(Gfx::Painter& painter)
 {
-    painter.draw_text({ {}, rect().size() }, m_label, WindowManager::the().font(), Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text({ {}, rect().size() }, m_label, WindowManager::the().font(), Gfx::Alignment::Center, Color::White);
 }
 
 void WindowGeometryOverlay::window_rect_changed()
@@ -306,7 +306,7 @@ RefPtr<Gfx::Bitmap> DndOverlay::create_bitmap(int scale_factor)
         auto text_rect = bitmap_rect;
         if (m_bitmap)
             text_rect.translate_by(m_bitmap->width() + 8, 0);
-        bitmap_painter.draw_text(text_rect, m_text, Gfx::TextAlignment::CenterLeft, wm.palette().selection_text());
+        bitmap_painter.draw_text(text_rect, m_text, Gfx::Alignment::CenterLeft, wm.palette().selection_text());
     }
     if (m_bitmap)
         bitmap_painter.blit(bitmap_rect.top_left().translated(4, 4), *m_bitmap, m_bitmap->rect());
