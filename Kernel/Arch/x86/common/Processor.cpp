@@ -1222,7 +1222,7 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     tss_descriptor.operation_size64 = 0;
     tss_descriptor.operation_size32 = 1;
     tss_descriptor.descriptor_type = 0;
-    tss_descriptor.type = 9;
+    tss_descriptor.type = Descriptor::SystemType::AvailableTSS;
     write_gdt_entry(GDT_SELECTOR_TSS, tss_descriptor); // tss
 
 #if ARCH(X86_64)
