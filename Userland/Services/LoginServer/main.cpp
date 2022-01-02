@@ -61,6 +61,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/shadow", "r"));
     TRY(Core::System::unveil("/etc/group", "r"));
     TRY(Core::System::unveil("/bin/SystemServer", "x"));
+    TRY(Core::System::unveil("/bin/reboot", "x"));
+    TRY(Core::System::unveil("/bin/shutdown", "x"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

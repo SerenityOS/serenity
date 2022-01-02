@@ -9,6 +9,7 @@ compile_gml(LoginWindow.gml LoginWindowGML.h login_window_gml)
 set(SOURCES
     LoginWindowGML.h
     LoginWindow.cpp
+    ../Taskbar/ShutdownDialog.cpp
     main.cpp
 )
 

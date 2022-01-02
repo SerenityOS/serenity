@@ -33,6 +33,12 @@
                 text: "Log in"
                 fixed_width: 60
             }
+
+            @GUI::Button {
+                name: "power"
+                text: "Power..."
+                fixed_width: 60
+            }
         }
     }
 }
