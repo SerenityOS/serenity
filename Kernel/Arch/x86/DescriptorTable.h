@@ -66,7 +66,7 @@ union [[gnu::packed]] Descriptor {
         u32 high;
     };
 
-    enum Type {
+    enum SystemType {
         Invalid = 0,
         AvailableTSS_16bit = 0x1,
         LDT = 0x2,
@@ -75,11 +75,11 @@ union [[gnu::packed]] Descriptor {
         TaskGate = 0x5,
         InterruptGate_16bit = 0x6,
         TrapGate_16bit = 0x7,
-        AvailableTSS_32bit = 0x9,
-        BusyTSS_32bit = 0xb,
-        CallGate_32bit = 0xc,
-        InterruptGate_32bit = 0xe,
-        TrapGate_32bit = 0xf,
+        AvailableTSS = 0x9,
+        BusyTSS = 0xb,
+        CallGate = 0xc,
+        InterruptGate = 0xe,
+        TrapGate = 0xf,
     };
 
     VirtualAddress base() const
