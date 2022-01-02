@@ -237,6 +237,8 @@ public:
 
     void copy_physical_page(PhysicalPage&, u8 page_buffer[PAGE_SIZE]);
 
+    IterationDecision for_each_physical_memory_range(Function<IterationDecision(PhysicalMemoryRange const&)>);
+
 private:
     MemoryManager();
     ~MemoryManager();
