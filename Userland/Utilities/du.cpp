@@ -35,7 +35,7 @@ struct DuOption {
 };
 
 static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option, int& max_depth);
-static ErrorOr<void> print_space_usage(const String& path, const DuOption& du_option, int max_depth);
+static ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int max_depth);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -56,7 +56,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     bool summarize = false;
     const char* pattern = nullptr;
     const char* exclude_from = nullptr;
-    Vector<const char*> files_to_process;
+    Vector<StringView> files_to_process;
 
     Core::ArgsParser::Option time_option {
         true,
@@ -107,7 +107,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
         }
     }
 
-    for (auto* file : files_to_process) {
+    for (auto const& file : files_to_process) {
         files.append(file);
     }
 
@@ -118,10 +118,12 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     return {};
 }
 
-ErrorOr<void> print_space_usage(const String& path, const DuOption& du_option, int max_depth)
+ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int max_depth)
 {
     struct stat path_stat = TRY(Core::System::lstat(path.characters()));
-    if (--max_depth >= 0 && S_ISDIR(path_stat.st_mode)) {
+    off_t directory_size = 0;
+    const bool is_directory = S_ISDIR(path_stat.st_mode);
+    if (--max_depth >= 0 && is_directory) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error()) {
             outln("du: cannot read directory '{}': {}", path, di.error_string());
@@ -130,31 +132,35 @@ ErrorOr<void> print_space_usage(const String& path, const DuOption& du_option, i
 
         while (di.has_next()) {
             const auto child_path = di.next_full_path();
-            if (du_option.all || Core::File::is_directory(child_path)) {
-                TRY(print_space_usage(child_path, du_option, max_depth));
-            }
+            directory_size += TRY(print_space_usage(child_path, du_option, max_depth));
         }
     }
 
     const auto basename = LexicalPath::basename(path);
     for (const auto& pattern : du_option.excluded_patterns) {
         if (basename.matches(pattern, CaseSensitivity::CaseSensitive))
-            return {};
+            return { 0 };
     }
 
     off_t size = path_stat.st_size;
     if (du_option.apparent_size) {
-        const auto block_size = 512;
+        constexpr auto block_size = 512;
         size = path_stat.st_blocks * block_size;
     }
 
+    if (!du_option.all && !is_directory)
+        return size;
+
+    if (is_directory)
+        size = directory_size;
+
     if ((du_option.threshold > 0 && size < du_option.threshold) || (du_option.threshold < 0 && size > -du_option.threshold))
-        return {};
+        return { 0 };
 
     if (du_option.human_readable) {
         out("{}", human_readable_size(size));
     } else {
-        const long long block_size = 1024;
+        constexpr long long block_size = 1024;
         size = size / block_size + (size % block_size != 0);
         out("{}", size);
     }
@@ -178,5 +184,5 @@ ErrorOr<void> print_space_usage(const String& path, const DuOption& du_option, i
         outln("\t{}\t{}", formatted_time, path);
     }
 
-    return {};
+    return { size };
 }
