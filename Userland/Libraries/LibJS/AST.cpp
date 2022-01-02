@@ -104,7 +104,7 @@ Value FunctionBody::execute(Interpreter& interpreter, GlobalObject& global_objec
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    // Note: Scoping should have already been setup by whoever is calling this FunctionBody.
+    // Note: Scoping should have already been set up by whoever is calling this FunctionBody.
     auto function_result = evaluate_statements(interpreter, global_object);
 
     if (interpreter.exception())
@@ -797,7 +797,7 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
             // 5. Let exprValue be ? GetValue(exprRef).
             state.rhs_value = rhs.execute(interpreter, global_object);
 
-            // Note that since a reference stores it's environment it doesn't matter we only reset
+            // Note that since a reference stores its environment it doesn't matter we only reset
             // this after step 5. (Also we have no way of separating these steps at this point)
             // 4. Set the running execution context's LexicalEnvironment to oldEnv.
         } else {
