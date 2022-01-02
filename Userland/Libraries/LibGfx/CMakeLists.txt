@@ -31,6 +31,7 @@ set(SOURCES
     PPMLoader.cpp
     Point.cpp
     QOILoader.cpp
+    QOIWriter.cpp
     Rect.cpp
     ShareableBitmap.cpp
     Size.cpp
