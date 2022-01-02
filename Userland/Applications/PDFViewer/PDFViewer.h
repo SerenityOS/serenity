@@ -49,6 +49,10 @@ public:
 
     Function<void(u32 new_page)> on_page_change;
 
+    void zoom_in();
+    void zoom_out();
+    void reset_zoom();
+
 protected:
     PDFViewer();
 
@@ -59,9 +63,6 @@ protected:
 private:
     RefPtr<Gfx::Bitmap> get_rendered_page(u32 index);
     RefPtr<Gfx::Bitmap> render_page(const PDF::Page&);
-
-    void zoom_in();
-    void zoom_out();
 
     RefPtr<PDF::Document> m_document;
     u32 m_current_page_index { 0 };
