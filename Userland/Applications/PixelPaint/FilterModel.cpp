@@ -9,6 +9,7 @@
 #include "FilterParams.h"
 #include "Filters/BoxBlur3.h"
 #include "Filters/BoxBlur5.h"
+#include "Filters/FastBoxBlur.h"
 #include "Filters/GaussBlur3.h"
 #include "Filters/GaussBlur5.h"
 #include "Filters/Grayscale.h"
@@ -29,6 +30,7 @@ FilterModel::FilterModel(ImageEditor* editor)
     auto laplace_diagonal_filter = FilterInfo::create_filter<Filters::LaplaceDiagonal>(editor, edge_detect_category);
 
     auto blur_category = FilterInfo::create_category("Blur & Sharpen", spatial_category);
+    auto fast_box_filter = FilterInfo::create_filter<Filters::FastBoxBlur>(editor, blur_category);
     auto gaussian_blur_filter_3 = FilterInfo::create_filter<Filters::GaussBlur3>(editor, blur_category);
     auto gaussian_blur_filter_5 = FilterInfo::create_filter<Filters::GaussBlur5>(editor, blur_category);
     auto box_blur_filter_3 = FilterInfo::create_filter<Filters::BoxBlur3>(editor, blur_category);
