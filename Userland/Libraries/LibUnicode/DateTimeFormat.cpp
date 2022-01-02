@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -53,6 +53,14 @@ CalendarPatternStyle calendar_pattern_style_from_string(StringView style)
         return CalendarPatternStyle::Numeric;
     if (style == "2-digit"sv)
         return CalendarPatternStyle::TwoDigit;
+    if (style == "shortOffset"sv)
+        return CalendarPatternStyle::ShortOffset;
+    if (style == "longOffset"sv)
+        return CalendarPatternStyle::LongOffset;
+    if (style == "shortGeneric"sv)
+        return CalendarPatternStyle::ShortGeneric;
+    if (style == "longGeneric"sv)
+        return CalendarPatternStyle::LongGeneric;
     VERIFY_NOT_REACHED();
 }
 
@@ -69,6 +77,14 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style)
         return "numeric"sv;
     case CalendarPatternStyle::TwoDigit:
         return "2-digit"sv;
+    case CalendarPatternStyle::ShortOffset:
+        return "shortOffset"sv;
+    case CalendarPatternStyle::LongOffset:
+        return "longOffset"sv;
+    case CalendarPatternStyle::ShortGeneric:
+        return "shortGeneric"sv;
+    case CalendarPatternStyle::LongGeneric:
+        return "longGeneric"sv;
     default:
         VERIFY_NOT_REACHED();
     }

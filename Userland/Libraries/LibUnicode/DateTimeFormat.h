@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -71,6 +71,10 @@ enum class CalendarPatternStyle : u8 {
     Long,
     Numeric,
     TwoDigit,
+    ShortOffset,
+    LongOffset,
+    ShortGeneric,
+    LongGeneric,
 };
 
 struct CalendarPattern {
