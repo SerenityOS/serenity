@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Filters/Filter.h"
 #include "ImageEditor.h"
 #include <AK/NonnullRefPtr.h>
 #include <LibGUI/Model.h>
@@ -24,19 +25,21 @@ public:
 
         String text;
 
-        Function<void()> apply_filter;
+        Filter* filter { nullptr };
 
         NonnullRefPtrVector<FilterInfo> children;
         FilterInfo* parent;
 
-        static NonnullRefPtr<FilterInfo> create_filter(String const& text, Function<void()> apply_filter, FilterInfo* parent = nullptr)
+        template<typename FilterType>
+        static NonnullRefPtr<FilterInfo> create_filter(ImageEditor* editor, FilterInfo* parent = nullptr)
         {
-            auto filter = adopt_ref(*new FilterInfo(Type::Filter, text, parent));
-            filter->ref();
-            filter->apply_filter = move(apply_filter);
+            auto filter = static_cast<Filter*>(new FilterType(editor));
+            auto filter_info = adopt_ref(*new FilterInfo(Type::Filter, filter->filter_name(), parent));
+            filter_info->filter = filter;
+            filter_info->ref();
             if (parent)
-                parent->children.append(filter);
-            return filter;
+                parent->children.append(filter_info);
+            return filter_info;
         }
 
         static NonnullRefPtr<FilterInfo> create_category(String const& text, FilterInfo* parent = nullptr)

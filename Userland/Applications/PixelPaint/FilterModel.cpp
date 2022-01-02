@@ -7,144 +7,39 @@
 
 #include "FilterModel.h"
 #include "FilterParams.h"
+#include "Filters/BoxBlur3.h"
+#include "Filters/BoxBlur5.h"
+#include "Filters/GaussBlur3.h"
+#include "Filters/GaussBlur5.h"
+#include "Filters/Grayscale.h"
+#include "Filters/Invert.h"
+#include "Filters/LaplaceCardinal.h"
+#include "Filters/LaplaceDiagonal.h"
+#include "Filters/Sharpen.h"
 #include "Layer.h"
 #include <LibGUI/FileIconProvider.h>
-#include <LibGfx/Filters/LaplacianFilter.h>
 
 namespace PixelPaint {
 FilterModel::FilterModel(ImageEditor* editor)
 {
     auto spatial_category = FilterInfo::create_category("Spatial");
 
-    auto edge_detect_category = FilterInfo::create_category("Edge Detect", spatial_category);
-    auto laplace_cardinal_filter = FilterInfo::create_filter(
-        "Laplacian (Cardinal)", [editor]() {
-            if (!editor)
-                return;
-            if (auto* layer = editor->active_layer()) {
-                Gfx::LaplacianFilter filter;
-                if (auto parameters = PixelPaint::FilterParameters<Gfx::LaplacianFilter>::get(false)) {
-                    filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                    layer->did_modify_bitmap(layer->rect());
-                    editor->did_complete_action();
-                }
-            }
-        },
-        edge_detect_category);
-    auto laplace_diagonal_filter = FilterInfo::create_filter(
-        "Laplacian (Diagonal)", [editor]() {
-            if (!editor)
-                return;
-            if (auto* layer = editor->active_layer()) {
-                Gfx::LaplacianFilter filter;
-                if (auto parameters = PixelPaint::FilterParameters<Gfx::LaplacianFilter>::get(true)) {
-                    filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                    layer->did_modify_bitmap(layer->rect());
-                    editor->did_complete_action();
-                }
-            }
-        },
-        edge_detect_category);
+    auto edge_detect_category = FilterInfo::create_category("Edge Detection", spatial_category);
+    auto laplace_cardinal_filter = FilterInfo::create_filter<Filters::LaplaceCardinal>(editor, edge_detect_category);
+    auto laplace_diagonal_filter = FilterInfo::create_filter<Filters::LaplaceDiagonal>(editor, edge_detect_category);
 
     auto blur_category = FilterInfo::create_category("Blur & Sharpen", spatial_category);
-    auto gaussian_blur_filter_3 = FilterInfo::create_filter(
-        "Gaussian Blur (3x3)", [editor]() {
-            if (!editor)
-                return;
-            if (auto* layer = editor->active_layer()) {
-                Gfx::SpatialGaussianBlurFilter<3> filter;
-                if (auto parameters = PixelPaint::FilterParameters<Gfx::SpatialGaussianBlurFilter<3>>::get()) {
-                    filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                    layer->did_modify_bitmap(layer->rect());
-                    editor->did_complete_action();
-                }
-            }
-        },
-        blur_category);
-    auto gaussian_blur_filter_5 = FilterInfo::create_filter(
-        "Gaussian Blur (5x5)", [editor]() {
-            if (!editor)
-                return;
-            if (auto* layer = editor->active_layer()) {
-                Gfx::SpatialGaussianBlurFilter<5> filter;
-                if (auto parameters = PixelPaint::FilterParameters<Gfx::SpatialGaussianBlurFilter<3>>::get()) {
-                    filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                    layer->did_modify_bitmap(layer->rect());
-                    editor->did_complete_action();
-                }
-            }
-        },
-        blur_category);
-    auto box_blur_filter_3 = FilterInfo::create_filter(
-        "Box Blur (3x3)", [editor]() {
-            if (!editor)
-                return;
-            if (auto* layer = editor->active_layer()) {
-                Gfx::BoxBlurFilter<3> filter;
-                if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<3>>::get()) {
-                    filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                    layer->did_modify_bitmap(layer->rect());
-                    editor->did_complete_action();
-                }
-            }
-        },
-        blur_category);
-    auto box_blur_filter_5 = FilterInfo::create_filter(
-        "Box Blur (5x5)", [editor]() {
-            if (!editor)
-                return;
-            if (auto* layer = editor->active_layer()) {
-                Gfx::BoxBlurFilter<5> filter;
-                if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<3>>::get()) {
-                    filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                    layer->did_modify_bitmap(layer->rect());
-                    editor->did_complete_action();
-                }
-            }
-        },
-        blur_category);
-    auto sharpen_filter = FilterInfo::create_filter(
-        "Sharpen", [editor]() {
-            if (!editor)
-                return;
-            if (auto* layer = editor->active_layer()) {
-                Gfx::SharpenFilter filter;
-                if (auto parameters = PixelPaint::FilterParameters<Gfx::SharpenFilter>::get()) {
-                    filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                    layer->did_modify_bitmap(layer->rect());
-                    editor->did_complete_action();
-                }
-            }
-        },
-        blur_category);
+    auto gaussian_blur_filter_3 = FilterInfo::create_filter<Filters::GaussBlur3>(editor, blur_category);
+    auto gaussian_blur_filter_5 = FilterInfo::create_filter<Filters::GaussBlur5>(editor, blur_category);
+    auto box_blur_filter_3 = FilterInfo::create_filter<Filters::BoxBlur3>(editor, blur_category);
+    auto box_blur_filter_5 = FilterInfo::create_filter<Filters::BoxBlur5>(editor, blur_category);
+    auto sharpen_filter = FilterInfo::create_filter<Filters::Sharpen>(editor, blur_category);
 
     m_filters.append(spatial_category);
 
     auto color_category = FilterInfo::create_category("Color");
-    auto grayscale_filter = FilterInfo::create_filter(
-        "Grayscale", [editor]() {
-            if (!editor)
-                return;
-            if (auto* layer = editor->active_layer()) {
-                Gfx::GrayscaleFilter filter;
-                filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect());
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
-            }
-        },
-        color_category);
-    auto invert_filter = FilterInfo::create_filter(
-        "Invert", [editor]() {
-            if (!editor)
-                return;
-            if (auto* layer = editor->active_layer()) {
-                Gfx::InvertFilter filter;
-                filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect());
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
-            }
-        },
-        color_category);
+    auto grayscale_filter = FilterInfo::create_filter<Filters::Grayscale>(editor, color_category);
+    auto invert_filter = FilterInfo::create_filter<Filters::Invert>(editor, color_category);
 
     m_filters.append(color_category);
 
