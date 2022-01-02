@@ -29,6 +29,7 @@ int main(int argc, char** argv)
     bool verbose = false;
     bool gzip = false;
     const char* archive_file = nullptr;
+    const char* directory = nullptr;
     Vector<const char*> paths;
 
     Core::ArgsParser args_parser;
@@ -36,7 +37,8 @@ int main(int argc, char** argv)
     args_parser.add_option(extract, "Extract archive", "extract", 'x');
     args_parser.add_option(list, "List contents", "list", 't');
     args_parser.add_option(verbose, "Print paths", "verbose", 'v');
-    args_parser.add_option(gzip, "compress or uncompress file using gzip", "gzip", 'z');
+    args_parser.add_option(gzip, "Compress or decompress file using gzip", "gzip", 'z');
+    args_parser.add_option(directory, "Directory to extract to/create from", "directory", 'C', "DIRECTORY");
     args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE");
     args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
@@ -56,6 +58,13 @@ int main(int argc, char** argv)
                 return 1;
             }
             file = maybe_file.value();
+        }
+
+        if (directory) {
+            if (chdir(directory) < 0) {
+                perror("chdir");
+                return 1;
+            }
         }
 
         Core::InputFileStream file_stream(file);
@@ -158,6 +167,13 @@ int main(int argc, char** argv)
                 return 1;
             }
             file = maybe_file.value();
+        }
+
+        if (directory) {
+            if (chdir(directory) < 0) {
+                perror("chdir");
+                return 1;
+            }
         }
 
         Core::OutputFileStream file_stream(file);
