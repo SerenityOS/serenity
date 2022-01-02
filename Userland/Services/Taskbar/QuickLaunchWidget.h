@@ -10,6 +10,7 @@
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Frame.h>
+#include <LibGfx/Alignment.h>
 
 namespace Taskbar {
 
@@ -26,7 +27,7 @@ public:
     virtual void drop_event(GUI::DropEvent&) override;
 
 private:
-    QuickLaunchWidget();
+    QuickLaunchWidget(Gfx::Orientation);
     void add_or_adjust_button(String const&, NonnullRefPtr<Desktop::AppFile>);
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Action> m_context_menu_default_action;

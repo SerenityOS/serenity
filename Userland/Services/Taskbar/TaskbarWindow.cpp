@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Spencer Dixon <spencercdixon@gmail.com>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include "QuickLaunchWidget.h"
 #include "TaskbarButton.h"
 #include <AK/Debug.h>
+#include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -33,14 +35,35 @@ public:
     virtual ~TaskbarWidget() override { }
 
 private:
-    TaskbarWidget() { }
+    TaskbarWidget(Gfx::Alignment location)
+        : m_location(move(location))
+    {
+    }
 
     virtual void paint_event(GUI::PaintEvent& event) override
     {
         GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
         painter.fill_rect(rect(), palette().button());
-        painter.draw_line({ 0, 1 }, { width() - 1, 1 }, palette().threed_highlight());
+
+        switch (m_location) {
+        case Gfx::Alignment::Bottom:
+            painter.draw_line({ 0, 1 }, { width() - 1, 1 }, palette().threed_highlight());
+            break;
+        case Gfx::Alignment::Top:
+            painter.draw_line({ 0, 1 }, { width() - 1, 1 }, palette().threed_highlight());
+            break;
+        case Gfx::Alignment::Left:
+            painter.draw_line({ width() - 2, 0 }, { width() - 2, height() }, palette().threed_highlight());
+            break;
+        case Gfx::Alignment::Right:
+            painter.draw_line({ 0, 1 }, { 0, height() }, palette().threed_highlight());
+            break;
+        case Gfx::Alignment::TopCenter:
+        case Gfx::Alignment::BottomCenter:
+        case Gfx::Alignment::Center:
+            VERIFY_NOT_REACHED();
+        }
     }
 
     virtual void did_layout() override
@@ -50,32 +73,54 @@ private:
                 static_cast<TaskbarButton*>(button)->update_taskbar_rect();
         });
     }
+
+    Gfx::Alignment m_location;
 };
 
-TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
+TaskbarWindow::TaskbarWindow(Gfx::Alignment location, NonnullRefPtr<GUI::Menu> start_menu)
     : m_start_menu(move(start_menu))
+    , m_location(move(location))
 {
     set_window_type(GUI::WindowType::Taskbar);
     set_title("Taskbar");
 
+    m_orientation = Gfx::Orientation::Horizontal;
+    if (m_location == Gfx::Alignment::Left || m_location == Gfx::Alignment::Right)
+        m_orientation = Gfx::Orientation::Vertical;
+
     on_screen_rects_change(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
 
-    auto& main_widget = set_main_widget<TaskbarWidget>();
-    main_widget.set_layout<GUI::HorizontalBoxLayout>();
-    main_widget.layout()->set_margins({ 3, 1, 1, 3 });
+    auto& main_widget = set_main_widget<TaskbarWidget>(m_location);
+    if (m_orientation == Gfx::Orientation::Vertical) {
+        main_widget.set_layout<GUI::VerticalBoxLayout>();
+        main_widget.layout()->set_margins({ 1, 3, 3, 1 });
+    } else {
+        main_widget.set_layout<GUI::HorizontalBoxLayout>();
+        main_widget.layout()->set_margins({ 3, 1, 1, 3 });
+    }
 
     m_start_button = GUI::Button::construct("Serenity");
     set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
     m_start_button->set_icon_spacing(0);
     auto app_icon = GUI::Icon::default_icon("ladyball");
+    m_start_button->set_tooltip("Start menu");
     m_start_button->set_icon(app_icon.bitmap_for_size(16));
     m_start_button->set_menu(m_start_menu);
+    if (m_orientation == Gfx::Orientation::Vertical) {
+        m_start_button->set_min_size(37, 37);
+        m_start_button->set_max_size(37, 37);
+        m_start_button->set_text("");
+    }
 
     main_widget.add_child(*m_start_button);
-    main_widget.add<Taskbar::QuickLaunchWidget>();
+    main_widget.add<Taskbar::QuickLaunchWidget>(m_orientation);
 
     m_task_button_container = main_widget.add<GUI::Widget>();
-    m_task_button_container->set_layout<GUI::HorizontalBoxLayout>();
+    if (m_orientation == Gfx::Orientation::Vertical)
+        m_task_button_container->set_layout<GUI::VerticalBoxLayout>();
+    else
+        m_task_button_container->set_layout<GUI::HorizontalBoxLayout>();
+
     m_task_button_container->layout()->set_spacing(3);
 
     m_default_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png").release_value_but_fixme_should_propagate_errors();
@@ -85,14 +130,21 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_applet_area_container->set_frame_shape(Gfx::FrameShape::Box);
     m_applet_area_container->set_frame_shadow(Gfx::FrameShadow::Sunken);
 
-    main_widget.add<Taskbar::ClockWidget>();
+    auto& clock_widget = main_widget.add<Taskbar::ClockWidget>(m_location);
+    if (m_orientation == Gfx::Orientation::Vertical) {
+        clock_widget.set_max_size(37, 37);
+    }
 
     m_show_desktop_button = GUI::Button::construct();
     m_show_desktop_button->set_tooltip("Show Desktop");
     m_show_desktop_button->set_icon(GUI::Icon::default_icon("desktop").bitmap_for_size(16));
     m_show_desktop_button->set_button_style(Gfx::ButtonStyle::Coolbar);
-    m_show_desktop_button->set_fixed_size(24, 24);
     m_show_desktop_button->on_click = TaskbarWindow::show_desktop_button_clicked;
+    if (m_orientation == Gfx::Orientation::Vertical) {
+        m_show_desktop_button->set_fixed_size(37, 37);
+    } else {
+        m_show_desktop_button->set_fixed_size(24, 24);
+    }
     main_widget.add_child(*m_show_desktop_button);
 
     auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Assistant.af");
@@ -111,7 +163,27 @@ void TaskbarWindow::show_desktop_button_clicked(unsigned)
 void TaskbarWindow::on_screen_rects_change(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
 {
     const auto& rect = rects[main_screen_index];
-    Gfx::IntRect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
+    Gfx::IntRect new_rect;
+
+    switch (m_location) {
+    case Gfx::Alignment::Bottom:
+        new_rect = { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
+        break;
+    case Gfx::Alignment::Left:
+        new_rect = { rect.x(), rect.top(), taskbar_width(), rect.height() };
+        break;
+    case Gfx::Alignment::Top:
+        new_rect = { rect.x(), rect.top() - 1, rect.width(), taskbar_height() };
+        break;
+    case Gfx::Alignment::Right:
+        new_rect = { rect.right() - taskbar_width() + 1, rect.top(), taskbar_width(), rect.height() };
+        break;
+    case Gfx::Alignment::TopCenter:
+    case Gfx::Alignment::BottomCenter:
+    case Gfx::Alignment::Center:
+        VERIFY_NOT_REACHED();
+    }
+
     set_rect(new_rect);
     update_applet_area();
 }
@@ -130,8 +202,15 @@ void TaskbarWindow::update_applet_area()
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
     auto& button = m_task_button_container->add<TaskbarButton>(identifier);
-    button.set_min_size(20, 21);
-    button.set_max_size(140, 21);
+    if (m_orientation == Gfx::Orientation::Vertical) {
+        button.set_min_size(33, 20);
+        button.set_max_size(33, 33);
+        button.set_icon_spacing(0);
+        button.set_text("");
+    } else {
+        button.set_min_size(20, 21);
+        button.set_max_size(140, 21);
+    }
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     button.set_icon(*m_default_icon);
     return button;
@@ -174,7 +253,10 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     auto* button = window.button();
     if (!button)
         return;
-    button->set_text(window.title());
+
+    if (m_orientation == Gfx::Orientation::Horizontal)
+        button->set_text(window.title());
+
     button->set_tooltip(window.title());
     button->set_checked(show_as_active);
     button->set_visible(is_window_on_current_workspace(window));
@@ -347,6 +429,23 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
 void TaskbarWindow::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
 {
     on_screen_rects_change(event.rects(), event.main_screen_index());
+}
+
+void TaskbarWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+{
+    if (domain == "Taskbar" && group == "Appearance" && key == "Location") {
+        Gfx::Orientation new_orientation;
+        if (value == "Bottom" || value == "Top")
+            new_orientation = Gfx::Orientation::Horizontal;
+        else
+            new_orientation = Gfx::Orientation::Vertical;
+
+        // Kill ourselves to force a complete reflow. :^)
+        // FIXME: This is currently needed due to a lot of reasons,
+        //        but mainly to ensure all positions and sizes are correct.
+        if (new_orientation != m_orientation)
+            exit(0);
+    }
 }
 
 bool TaskbarWindow::is_window_on_current_workspace(::Window& window) const

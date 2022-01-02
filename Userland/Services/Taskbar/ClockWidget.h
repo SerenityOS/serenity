@@ -14,6 +14,7 @@
 #include <LibGUI/Calendar.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Label.h>
+#include <LibGfx/Alignment.h>
 #include <time.h>
 
 namespace Taskbar {
@@ -25,7 +26,7 @@ public:
     virtual ~ClockWidget() override;
 
 private:
-    ClockWidget();
+    ClockWidget(Gfx::Alignment location);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -46,6 +47,7 @@ private:
     RefPtr<GUI::Button> m_jump_to_button;
     RefPtr<GUI::Button> m_calendar_launcher;
     RefPtr<Core::Timer> m_timer;
+    Gfx::Alignment m_location;
     int m_time_width { 0 };
 };
 

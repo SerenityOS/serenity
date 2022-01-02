@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ClockWidget.h"
+#include <LibConfig/Client.h>
 #include <LibCore/Process.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SeparatorWidget.h>
@@ -14,14 +16,14 @@
 
 namespace Taskbar {
 
-ClockWidget::ClockWidget()
+ClockWidget::ClockWidget(Gfx::Alignment location)
+    : m_location(move(location))
 {
     set_frame_shape(Gfx::FrameShape::Box);
     set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(1);
 
     m_time_width = font().width("22:22:22");
-
     set_fixed_size(m_time_width + 20, 21);
 
     m_timer = add<Core::Timer>(1000, [this] {
@@ -168,7 +170,27 @@ ClockWidget::~ClockWidget()
 void ClockWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
-    auto time_text = Core::DateTime::now().to_string("%T");
+
+    // Seconds won't fit in vertical mode
+    String time_text;
+    Gfx::TextAlignment align;
+    switch (m_location) {
+    case Gfx::Alignment::Bottom:
+    case Gfx::Alignment::Top:
+        time_text = Core::DateTime::now().to_string("%T");
+        align = Gfx::TextAlignment::CenterLeft;
+        break;
+    case Gfx::Alignment::Left:
+    case Gfx::Alignment::Right:
+        time_text = Core::DateTime::now().to_string("%H:%M");
+        align = Gfx::TextAlignment::Center;
+        break;
+    case Gfx::Alignment::TopCenter:
+    case Gfx::Alignment::BottomCenter:
+    case Gfx::Alignment::Center:
+        VERIFY_NOT_REACHED();
+    }
+
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
 
@@ -181,7 +203,7 @@ void ClockWidget::paint_event(GUI::PaintEvent& event)
     const int widget_width = max_width();
     const int translation_x = (widget_width - ideal_width) / 2 - frame_width;
 
-    painter.draw_text(frame_inner_rect().translated(translation_x, frame_width), time_text, font, Gfx::TextAlignment::CenterLeft, palette().window_text());
+    painter.draw_text(frame_inner_rect().translated(m_location == Gfx::Alignment::Bottom || m_location == Gfx::Alignment::Top ? translation_x : 0, frame_width), time_text, font, align, palette().window_text());
 }
 
 void ClockWidget::mousedown_event(GUI::MouseEvent& event)
@@ -210,9 +232,19 @@ void ClockWidget::close()
 
 void ClockWidget::position_calendar_window()
 {
+    int top = screen_relative_rect().top() - m_calendar_window->height() - 3;
+    int left = screen_relative_rect().right() - m_calendar_window->width() + 4;
+
+    if (m_location == Gfx::Alignment::Top)
+        top = screen_relative_rect().top() + 27;
+    else if (m_location == Gfx::Alignment::Left)
+        left = screen_relative_rect().left() + 37;
+    else if (m_location == Gfx::Alignment::Right)
+        left -= 37;
+
     m_calendar_window->set_rect(
-        screen_relative_rect().right() - m_calendar_window->width() + 4,
-        screen_relative_rect().top() - m_calendar_window->height() - 3,
+        left,
+        top,
         152,
         186);
 }

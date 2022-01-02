@@ -51,10 +51,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
 
+    auto location_str = Config::read_string("Taskbar", "Appearance", "Location");
+    Gfx::Alignment location;
+    if (location_str == "Bottom")
+        location = Gfx::Alignment::Bottom;
+    else if (location_str == "Left")
+        location = Gfx::Alignment::Left;
+    else if (location_str == "Top")
+        location = Gfx::Alignment::Top;
+    else if (location_str == "Right")
+        location = Gfx::Alignment::Right;
+    else
+        VERIFY_NOT_REACHED();
+
     auto menu = TRY(build_system_menu());
     menu->realize_menu_if_needed();
 
-    auto window = TRY(TaskbarWindow::try_create(move(menu)));
+    auto window = TRY(TaskbarWindow::try_create(move(location), move(menu)));
     window->show();
 
     window->make_window_manager(

@@ -9,6 +9,7 @@
 #include <LibCore/MimeData.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Menu.h>
+#include <LibGfx/Alignment.h>
 #include <serenity.h>
 
 namespace Taskbar {
@@ -16,13 +17,19 @@ namespace Taskbar {
 constexpr auto quick_launch = "QuickLaunch"sv;
 constexpr int quick_launch_button_size = 24;
 
-QuickLaunchWidget::QuickLaunchWidget()
+QuickLaunchWidget::QuickLaunchWidget(Gfx::Orientation orientation)
 {
     set_shrink_to_fit(true);
-    set_layout<GUI::HorizontalBoxLayout>();
+    if (orientation == Gfx::Orientation::Horizontal) {
+        set_layout<GUI::HorizontalBoxLayout>();
+        set_fixed_height(24);
+    } else {
+        set_layout<GUI::VerticalBoxLayout>();
+        set_fixed_width(38);
+    }
+
     layout()->set_spacing(0);
     set_frame_thickness(0);
-    set_fixed_height(24);
 
     m_context_menu = GUI::Menu::construct();
     m_context_menu_default_action = GUI::Action::create("&Remove", [this](auto&) {
