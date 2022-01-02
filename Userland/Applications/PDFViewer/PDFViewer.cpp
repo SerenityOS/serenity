@@ -29,7 +29,7 @@ void PDFViewer::set_document(RefPtr<PDF::Document> document)
 
     m_rendered_page_list.ensure_capacity(document->get_page_count());
     for (u32 i = 0; i < document->get_page_count(); i++)
-        m_rendered_page_list.unchecked_append(HashMap<u32, RefPtr<Gfx::Bitmap>>());
+        m_rendered_page_list.unchecked_append(HashMap<u32, RenderedPage>());
 
     update();
 }
@@ -38,11 +38,11 @@ RefPtr<Gfx::Bitmap> PDFViewer::get_rendered_page(u32 index)
 {
     auto& rendered_page_map = m_rendered_page_list[index];
     auto existing_rendered_page = rendered_page_map.get(m_zoom_level);
-    if (existing_rendered_page.has_value())
-        return existing_rendered_page.value();
+    if (existing_rendered_page.has_value() && existing_rendered_page.value().rotation == m_rotations)
+        return existing_rendered_page.value().bitmap;
 
     auto rendered_page = render_page(m_document->get_page(index));
-    rendered_page_map.set(m_zoom_level, rendered_page);
+    rendered_page_map.set(m_zoom_level, { rendered_page, m_rotations });
     return rendered_page;
 }
 
@@ -167,6 +167,12 @@ void PDFViewer::reset_zoom()
     update();
 }
 
+void PDFViewer::rotate(int degrees)
+{
+    m_rotations = (m_rotations + degrees + 360) % 360;
+    update();
+}
+
 RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
 {
     auto zoom_scale_factor = static_cast<float>(zoom_levels[m_zoom_level]) / 100.0f;
@@ -181,8 +187,8 @@ RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
 
     PDF::Renderer::render(*m_document, page, bitmap);
 
-    if (page.rotate != 0) {
-        int rotation_count = (page.rotate / 90) % 4;
+    if (page.rotate + m_rotations != 0) {
+        int rotation_count = ((page.rotate + m_rotations) / 90) % 4;
         if (rotation_count == 3) {
             bitmap = bitmap->rotated(Gfx::RotationDirection::CounterClockwise).release_value_but_fixme_should_propagate_errors();
         } else {

@@ -130,13 +130,25 @@ void PDFViewerWidget::create_toolbar()
         m_viewer->reset_zoom();
     });
 
+    m_rotate_counterclockwise_action = GUI::CommonActions::make_rotate_counterclockwise_action([&](auto&) {
+        m_viewer->rotate(-90);
+    });
+
+    m_rotate_clockwise_action = GUI::CommonActions::make_rotate_clockwise_action([&](auto&) {
+        m_viewer->rotate(90);
+    });
+
     m_zoom_in_action->set_enabled(false);
     m_zoom_out_action->set_enabled(false);
     m_reset_zoom_action->set_enabled(false);
+    m_rotate_counterclockwise_action->set_enabled(false);
+    m_rotate_clockwise_action->set_enabled(false);
 
     toolbar.add_action(*m_zoom_in_action);
     toolbar.add_action(*m_zoom_out_action);
     toolbar.add_action(*m_reset_zoom_action);
+    toolbar.add_action(*m_rotate_counterclockwise_action);
+    toolbar.add_action(*m_rotate_clockwise_action);
 }
 
 void PDFViewerWidget::open_file(int fd, String const& path)
@@ -167,6 +179,8 @@ void PDFViewerWidget::open_file(int fd, String const& path)
     m_zoom_in_action->set_enabled(true);
     m_zoom_out_action->set_enabled(true);
     m_reset_zoom_action->set_enabled(true);
+    m_rotate_counterclockwise_action->set_enabled(true);
+    m_rotate_clockwise_action->set_enabled(true);
 
     if (document->outline()) {
         auto outline = document->outline();
