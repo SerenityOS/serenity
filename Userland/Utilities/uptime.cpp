@@ -5,15 +5,14 @@
  */
 
 #include <AK/Format.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     FILE* fp = fopen("/proc/uptime", "r");
     if (!fp) {
@@ -21,10 +20,7 @@ int main(int, char**)
         return 1;
     }
 
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio"));
 
     char buffer[BUFSIZ];
     auto* p = fgets(buffer, sizeof(buffer), fp);
