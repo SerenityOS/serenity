@@ -55,8 +55,7 @@ public:
     {
         if (!m_elements)
             return;
-        for (size_t i = 0; i < m_size; ++i)
-            m_elements[i].~T();
+        Transfer::destroy(m_elements, m_size);
         kfree_sized(m_elements, sizeof(T) * m_size);
         m_elements = nullptr;
         m_size = 0;

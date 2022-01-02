@@ -64,6 +64,17 @@ public:
         move_impl(destination, source, count, [](T* destination, auto* source) { construct_at(destination, std::move(*source)); });
     }
 
+    static void destroy(T* destination, size_t count)
+    {
+        for_each(destination, count, destroy_at);
+    }
+
+    static void destroy_at(T* destination)
+    {
+        if constexpr (!Traits<T>::is_trivial()) // FIXME: is_trivially_destructible
+            destination->~T();
+    }
+
     static bool equals(const T* a, const T* b, size_t count)
     {
         if (count == 0)

@@ -371,11 +371,10 @@ public:
         VERIFY(index + count > index);
         VERIFY(index + count <= m_size);
 
+        TypedTransfer<StorageType>::destroy(slot(index), count);
         if constexpr (Traits<StorageType>::is_trivial()) {
             Transfer::uninitialized_copy(slot(index), slot(index + count), m_size - index - count);
         } else {
-            for (size_t i = index; i < index + count; i++)
-                at(i).~StorageType();
             for (size_t i = index + count; i < m_size; ++i) {
                 new (slot(i - count)) StorageType(move(at(i)));
                 at(i).~StorageType();
@@ -664,8 +663,7 @@ public:
             return;
         }
 
-        for (size_t i = new_size; i < size(); ++i)
-            at(i).~StorageType();
+        TypedTransfer<StorageType>::destroy(slot(new_size), size() - new_size);
         m_size = new_size;
     }
 
