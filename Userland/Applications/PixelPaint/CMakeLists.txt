@@ -17,6 +17,7 @@ set(SOURCES
     FilterGallery.cpp
     FilterGalleryGML.h
     FilterModel.cpp
+    Filters/Filter.cpp
     Image.cpp
     ImageEditor.cpp
     Layer.cpp
