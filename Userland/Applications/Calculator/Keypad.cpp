@@ -71,7 +71,7 @@ void Keypad::type_decimal_point()
     }
 }
 
-void Keypad::type_backspace()
+ErrorOr<void> Keypad::type_backspace()
 {
     switch (m_state) {
     case State::External:
@@ -93,10 +93,12 @@ void Keypad::type_backspace()
         VERIFY(m_frac_value.value() == 0);
         VERIFY(m_frac_length == 0);
         m_int_value /= 10;
-        if (m_int_value.value() == 0)
+        if (TRY(WIP_HELPER(m_int_value.try_value())) == 0)
             m_negative = false;
         break;
     }
+
+    return {};
 }
 
 KeypadValue Keypad::value() const
@@ -109,27 +111,35 @@ KeypadValue Keypad::value() const
     return res;
 }
 
-void Keypad::set_value(KeypadValue value)
+ErrorOr<void> Keypad::set_value(KeypadValue value)
 {
     m_state = State::External;
 
-    if (value.m_value < 0) {
+    if (TRY(WIP_HELPER(value.m_value.try_value())) < 0) {
         m_negative = true;
         value = -value;
     } else
         m_negative = false;
 
-    m_int_value = value.m_value / (u64)AK::pow(10.0, (double)value.m_decimal_places);
-    m_frac_value = value.m_value % (u64)AK::pow(10.0, (double)value.m_decimal_places);
-    m_frac_length = value.m_decimal_places;
+    auto const exponent = Checked<u64>(TRY(WIP_HELPER(value.m_decimal_places.try_value())));
+    m_int_value = Checked<u64>(TRY(WIP_HELPER(value.m_value.try_value()))) / TRY(WIP_HELPER(pow<u64>(Checked<u64>(10), exponent).try_value()));
+
+    m_frac_value = Checked<u64>(TRY(WIP_HELPER(value.m_value.try_value()))) % TRY(WIP_HELPER(pow<u64>(Checked<u64>(10), exponent).try_value()));
+
+    m_frac_length = TRY(WIP_HELPER(value.m_decimal_places.try_value()));
+
+    TRY(WIP_HELPER(m_int_value.try_value()));
+    TRY(WIP_HELPER(m_frac_value.try_value()));
+
+    return {};
 }
 
-String Keypad::to_string() const
+ErrorOr<String> Keypad::to_string() const
 {
     StringBuilder builder;
     if (m_negative)
         builder.append("-");
-    builder.appendff("{}", m_int_value.value());
+    builder.appendff("{}", TRY(WIP_HELPER(m_int_value.try_value())));
 
     // NOTE: This is so the decimal point appears on screen as soon as you type it.
     if (m_frac_length > 0 || m_state == State::TypingDecimal)
@@ -138,7 +148,7 @@ String Keypad::to_string() const
     if (m_frac_length > 0) {
         // FIXME: This disables the compiletime format string check since we can't parse '}}' here correctly.
         //        remove the 'StringView { }' when that's fixed.
-        builder.appendff("{:0{}}"sv, m_frac_value.value(), m_frac_length);
+        builder.appendff("{:0{}}"sv, TRY(WIP_HELPER(m_frac_value.try_value())), m_frac_length);
     }
 
     return builder.to_string();

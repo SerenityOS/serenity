@@ -21,12 +21,12 @@ public:
 
     void type_digit(int digit);
     void type_decimal_point();
-    void type_backspace();
+    ErrorOr<void> type_backspace();
 
     KeypadValue value() const;
-    void set_value(KeypadValue);
+    ErrorOr<void> set_value(KeypadValue);
 
-    String to_string() const;
+    ErrorOr<String> to_string() const;
 
 private:
     // Internal representation of the current decimal value.

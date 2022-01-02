@@ -14,6 +14,12 @@ KeypadValue::KeypadValue(i64 value, u8 decimal_places)
 {
 }
 
+KeypadValue::KeypadValue(Checked<i64> value, Checked<u8> decimal_places)
+    : m_value(value)
+    , m_decimal_places(decimal_places)
+{
+}
+
 KeypadValue::KeypadValue(i64 value)
     : m_value(value)
 {
@@ -21,7 +27,7 @@ KeypadValue::KeypadValue(i64 value)
 
 KeypadValue::KeypadValue(StringView sv)
 {
-    String str = sv.to_string(); //TODO: Once we have a StringView equivalent for this C API, we won't need to create a copy for this anymore.
+    String str = sv.to_string(); // TODO: Once we have a StringView equivalent for this C API, we won't need to create a copy for this anymore.
     size_t first_index = 0;
     char* dot_ptr;
     i64 int_part = strtoll(&str[first_index], &dot_ptr, 10);
@@ -58,14 +64,14 @@ KeypadValue KeypadValue::operator*(KeypadValue const& rhs)
     return operator_helper<KeypadValue>(*this, rhs, [](KeypadValue const& less_decimal_places, KeypadValue const& more_decimal_places, i64, i64, bool) -> KeypadValue {
         return {
             less_decimal_places.m_value * more_decimal_places.m_value,
-            (u8)(less_decimal_places.m_decimal_places + more_decimal_places.m_decimal_places)
+            less_decimal_places.m_decimal_places + more_decimal_places.m_decimal_places
         };
     });
 }
 
 KeypadValue KeypadValue::operator-(void) const
 {
-    return { -m_value, m_decimal_places };
+    return { -m_value.value(), m_decimal_places.value() };
 }
 
 KeypadValue KeypadValue::sqrt(void) const
@@ -118,8 +124,8 @@ ALWAYS_INLINE T KeypadValue::operator_helper(KeypadValue const& lhs, KeypadValue
     KeypadValue const& less_decimal_places = (lhs.m_decimal_places < rhs.m_decimal_places) ? lhs : rhs;
     KeypadValue const& more_decimal_places = (lhs.m_decimal_places < rhs.m_decimal_places) ? rhs : lhs;
 
-    i64 more_decimal_places_equalized = more_decimal_places.m_value;
-    i64 less_decimal_places_equalized = (i64)AK::pow(10.0, (double)(more_decimal_places.m_decimal_places - less_decimal_places.m_decimal_places)) * less_decimal_places.m_value;
+    i64 more_decimal_places_equalized = more_decimal_places.m_value.value();
+    i64 less_decimal_places_equalized = (AK::pow<i64>(Checked<i64>(10), Checked<i64>((i64)(more_decimal_places.m_decimal_places - less_decimal_places.m_decimal_places).value())) * less_decimal_places.m_value).value();
 
     bool lhs_is_less = (lhs.m_decimal_places < rhs.m_decimal_places);
 
@@ -148,7 +154,7 @@ KeypadValue::KeypadValue(double d)
         if (current_pow < 0)
             m_decimal_places += 1;
         current_pow -= 1;
-        if (m_decimal_places > 6)
+        if (m_decimal_places > (u8)6)
             break;
     }
     m_value = negative ? (-m_value) : m_value;
@@ -156,6 +162,6 @@ KeypadValue::KeypadValue(double d)
 
 KeypadValue::operator double() const
 {
-    double res = (double)m_value / AK::pow(10.0, (double)m_decimal_places);
+    double res = (double)m_value.value() / AK::pow(10.0, (double)m_decimal_places.value());
     return res;
 }

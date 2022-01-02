@@ -48,20 +48,23 @@ CalculatorWidget::CalculatorWidget()
 
     m_clear_button = *find_descendant_of_type_named<GUI::Button>("clear_button");
     m_clear_button->on_click = [this](auto) {
-        m_keypad.set_value(0.0);
+        if (m_keypad.set_value(0.0).is_error())
+            m_has_overflown = true;
         m_calculator.clear_operation();
         update_display();
     };
 
     m_clear_error_button = *find_descendant_of_type_named<GUI::Button>("clear_error_button");
     m_clear_error_button->on_click = [this](auto) {
-        m_keypad.set_value(0.0);
+        if (m_keypad.set_value(0.0).is_error())
+            m_has_overflown = true;
         update_display();
     };
 
     m_backspace_button = *find_descendant_of_type_named<GUI::Button>("backspace_button");
     m_backspace_button->on_click = [this](auto) {
-        m_keypad.type_backspace();
+        if (m_keypad.type_backspace().is_error())
+            m_has_overflown = true;
         update_display();
     };
 
@@ -99,7 +102,8 @@ CalculatorWidget::CalculatorWidget()
     m_equals_button->on_click = [this](auto) {
         KeypadValue argument = m_keypad.value();
         KeypadValue res = m_calculator.finish_operation(argument);
-        m_keypad.set_value(res);
+        if (m_keypad.set_value(res).is_error())
+            m_has_overflown = true;
         update_display();
     };
 }
@@ -113,7 +117,8 @@ void CalculatorWidget::add_operation_button(GUI::Button& button, Calculator::Ope
     button.on_click = [this, operation](auto) {
         KeypadValue argument = m_keypad.value();
         KeypadValue res = m_calculator.begin_operation(operation, argument);
-        m_keypad.set_value(res);
+        if (m_keypad.set_value(res).is_error())
+            m_has_overflown = true;
         update_display();
     };
 }
@@ -133,36 +138,46 @@ String CalculatorWidget::get_entry()
 
 void CalculatorWidget::set_entry(KeypadValue value)
 {
-    m_keypad.set_value(value);
+    if (m_keypad.set_value(value).is_error())
+        m_has_overflown = true;
     update_display();
 }
 
 void CalculatorWidget::update_display()
 {
-    m_entry->set_text(m_keypad.to_string());
-    if (m_calculator.has_error())
+    auto const res = m_keypad.to_string();
+    if (res.is_error())
+        m_has_overflown = true;
+
+    if (m_calculator.has_error() or m_has_overflown) {
         m_label->set_text("E");
-    else
+        m_has_overflown = false;
+    } else {
         m_label->set_text("");
+        m_entry->set_text(res.value());
+    }
 }
 
 void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
 {
-    //Clear button selection when we are typing
+    // Clear button selection when we are typing
     m_equals_button->set_focus(true);
     m_equals_button->set_focus(false);
 
     if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Equal) {
-        m_keypad.set_value(m_calculator.finish_operation(m_keypad.value()));
+        if (m_keypad.set_value(m_calculator.finish_operation(m_keypad.value())).is_error())
+            m_has_overflown = true;
     } else if (event.code_point() >= '0' && event.code_point() <= '9') {
         m_keypad.type_digit(event.code_point() - '0');
     } else if (event.code_point() == '.') {
         m_keypad.type_decimal_point();
     } else if (event.key() == KeyCode::Key_Escape) {
-        m_keypad.set_value(0.0);
+        if (m_keypad.set_value(0.0).is_error())
+            m_has_overflown = true;
         m_calculator.clear_operation();
     } else if (event.key() == KeyCode::Key_Backspace) {
-        m_keypad.type_backspace();
+        if (m_keypad.type_backspace().is_error())
+            m_has_overflown = true;
     } else {
         Calculator::Operation operation;
 
@@ -186,7 +201,8 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
             return;
         }
 
-        m_keypad.set_value(m_calculator.begin_operation(operation, m_keypad.value()));
+        if (m_keypad.set_value(m_calculator.begin_operation(operation, m_keypad.value())).is_error())
+            m_has_overflown = true;
     }
 
     update_display();

@@ -32,6 +32,8 @@ private:
     Calculator m_calculator;
     Keypad m_keypad;
 
+    bool m_has_overflown = false;
+
     RefPtr<GUI::TextBox> m_entry;
     RefPtr<GUI::Label> m_label;
 
