@@ -1,6 +1,6 @@
 ## Name
 
-Eyes
+### ![Icon](/res/icons/16x16/app-eyes.png) Eyes
 
 ## Synopsis
 

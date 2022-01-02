@@ -1,6 +1,6 @@
 ## Name
 
-Image Viewer - SerenityOS image viewer
+### ![Icon](/res/icons/16x16/filetype-image.png) ImageViewer - SerenityOS image viewer
 
 ## Synopsis
 

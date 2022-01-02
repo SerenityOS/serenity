@@ -1,6 +1,6 @@
 ## Name
 
-Playground - GUI Markup Language (GML) editor
+### ![Icon](/res/icons/16x16/app-playground.png) Playground - GUI Markup Language (GML) editor
 
 ## Synopsis
 

@@ -1,6 +1,6 @@
 ## Name
 
-Help
+### ![Icon](/res/icons/16x16/app-help.png) Help
 
 ## Synopsis
 
@@ -59,5 +59,5 @@ this man page should be located at `/usr/share/man/man1/Help.md`.
 
 ## See Also
 
-* [`man`(1)](man.md) To read these same man pages from the terminal
+* [`man`(1)](help://man/1/man) To read these same man pages from the terminal
 
