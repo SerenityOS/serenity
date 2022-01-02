@@ -36,6 +36,7 @@ public:
 
     explicit EventLoop(MakeInspectable = MakeInspectable::No);
     ~EventLoop();
+    static void initialize_wake_pipes();
 
     int exec();
 
@@ -123,6 +124,7 @@ private:
     int m_exit_code { 0 };
 
     static thread_local int s_wake_pipe_fds[2];
+    static thread_local bool s_wake_pipe_initialized;
 
     struct Private;
     NonnullOwnPtr<Private> m_private;
