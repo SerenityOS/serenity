@@ -16,7 +16,7 @@ class Board final : public GUI::Widget {
     C_OBJECT(Board);
 
 public:
-    bool make_move(uint8_t, Game::Player);
+    bool do_move(uint8_t, Game::Player);
     void highlight_cell(uint8_t);
     void clear();
 
