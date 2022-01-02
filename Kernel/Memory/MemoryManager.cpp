@@ -174,6 +174,17 @@ UNMAP_AFTER_INIT void MemoryManager::protect_ksyms_after_init()
     dmesgln("Write-protected kernel symbols after init.");
 }
 
+IterationDecision MemoryManager::for_each_physical_memory_range(Function<IterationDecision(PhysicalMemoryRange const&)> callback)
+{
+    VERIFY(!m_physical_memory_ranges.is_empty());
+    for (auto& current_range : m_physical_memory_ranges) {
+        IterationDecision decision = callback(current_range);
+        if (decision != IterationDecision::Continue)
+            return decision;
+    }
+    return IterationDecision::Continue;
+}
+
 UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
 {
     VERIFY(!m_physical_memory_ranges.is_empty());
