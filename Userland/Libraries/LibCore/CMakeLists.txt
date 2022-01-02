@@ -13,6 +13,7 @@ set(SOURCES
     File.cpp
     FilePermissionsMask.cpp
     GetPassword.cpp
+    Group.cpp
     IODevice.cpp
     LocalServer.cpp
     LocalSocket.cpp
