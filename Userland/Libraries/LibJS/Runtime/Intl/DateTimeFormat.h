@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -216,7 +216,7 @@ ThrowCompletionOr<void> for_each_calendar_field(GlobalObject& global_object, Uni
     constexpr auto narrow_short_long = AK::Array { "narrow"sv, "short"sv, "long"sv };
     constexpr auto two_digit_numeric = AK::Array { "2-digit"sv, "numeric"sv };
     constexpr auto two_digit_numeric_narrow_short_long = AK::Array { "2-digit"sv, "numeric"sv, "narrow"sv, "short"sv, "long"sv };
-    constexpr auto short_long = AK::Array { "short"sv, "long"sv };
+    constexpr auto time_zone = AK::Array { "short"sv, "long"sv, "shortOffset"sv, "longOffset"sv, "shortGeneric"sv, "longGeneric"sv };
 
     // Table 4: Components of date and time formats, https://tc39.es/ecma402/#table-datetimeformat-components
     TRY(callback(pattern.weekday, vm.names.weekday, narrow_short_long));
@@ -229,7 +229,7 @@ ThrowCompletionOr<void> for_each_calendar_field(GlobalObject& global_object, Uni
     TRY(callback(pattern.minute, vm.names.minute, two_digit_numeric));
     TRY(callback(pattern.second, vm.names.second, two_digit_numeric));
     TRY(callback(pattern.fractional_second_digits, vm.names.fractionalSecondDigits, Empty {}));
-    TRY(callback(pattern.time_zone_name, vm.names.timeZoneName, short_long));
+    TRY(callback(pattern.time_zone_name, vm.names.timeZoneName, time_zone));
 
     return {};
 }
