@@ -31,7 +31,9 @@ FastBoxBlurFilter::FastBoxBlurFilter(Bitmap& bitmap)
 void FastBoxBlurFilter::apply_single_pass(int radius)
 {
     VERIFY(radius >= 0);
-    VERIFY(m_bitmap.format() == BitmapFormat::BGRA8888);
+
+    auto format = m_bitmap.format();
+    VERIFY(format == BitmapFormat::BGRA8888 || format == BitmapFormat::BGRx8888);
 
     int height = m_bitmap.height();
     int width = m_bitmap.width();
@@ -57,7 +59,11 @@ void FastBoxBlurFilter::apply_single_pass(int radius)
 
         // Setup sliding window
         for (int i = -radius; i <= radius; ++i) {
-            auto color_at_px = m_bitmap.get_pixel<StorageFormat::BGRA8888>(clamp(i, 0, width - 1), y);
+            Color color_at_px;
+            if (format == BitmapFormat::BGRA8888)
+                color_at_px = m_bitmap.get_pixel<StorageFormat::BGRA8888>(clamp(i, 0, width - 1), y);
+            else if (format == BitmapFormat::BGRx8888)
+                color_at_px = m_bitmap.get_pixel<StorageFormat::BGRx8888>(clamp(i, 0, width - 1), y);
             sum_red += red_value(color_at_px);
             sum_green += green_value(color_at_px);
             sum_blue += blue_value(color_at_px);
@@ -73,8 +79,16 @@ void FastBoxBlurFilter::apply_single_pass(int radius)
             auto leftmost_x_coord = max(x - radius, 0);
             auto rightmost_x_coord = min(x + radius + 1, width - 1);
 
-            auto leftmost_x_color = m_bitmap.get_pixel<StorageFormat::BGRA8888>(leftmost_x_coord, y);
-            auto rightmost_x_color = m_bitmap.get_pixel<StorageFormat::BGRA8888>(rightmost_x_coord, y);
+            Color leftmost_x_color;
+            Color rightmost_x_color;
+
+            if (format == BitmapFormat::BGRA8888) {
+                leftmost_x_color = m_bitmap.get_pixel<StorageFormat::BGRA8888>(leftmost_x_coord, y);
+                rightmost_x_color = m_bitmap.get_pixel<StorageFormat::BGRA8888>(rightmost_x_coord, y);
+            } else if (format == BitmapFormat::BGRx8888) {
+                leftmost_x_color = m_bitmap.get_pixel<StorageFormat::BGRx8888>(leftmost_x_coord, y);
+                rightmost_x_color = m_bitmap.get_pixel<StorageFormat::BGRx8888>(rightmost_x_coord, y);
+            }
 
             sum_red -= red_value(leftmost_x_color);
             sum_red += red_value(rightmost_x_color);
@@ -110,7 +124,10 @@ void FastBoxBlurFilter::apply_single_pass(int radius)
                 sum_blue / div,
                 sum_alpha / div);
 
-            m_bitmap.set_pixel<StorageFormat::BGRA8888>(x, y, color);
+            if (format == BitmapFormat::BGRA8888)
+                m_bitmap.set_pixel<StorageFormat::BGRA8888>(x, y, color);
+            else if (format == BitmapFormat::BGRx8888)
+                m_bitmap.set_pixel<StorageFormat::BGRx8888>(x, y, color);
 
             auto topmost_y_coord = max(y - radius, 0);
             auto bottommost_y_coord = min(y + radius + 1, height - 1);
