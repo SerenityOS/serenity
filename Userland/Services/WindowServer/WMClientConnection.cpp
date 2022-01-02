@@ -50,6 +50,23 @@ void WMClientConnection::set_applet_area_position(Gfx::IntPoint const& position)
     });
 }
 
+void WMClientConnection::set_applet_orientation(bool is_vertical)
+{
+    if (m_window_id < 0) {
+        did_misbehave("SetAppletIsVertical: WM didn't assign window as manager yet");
+        // FIXME: return ok boolean?
+        return;
+    }
+
+    AppletManager::the().set_vertical(is_vertical);
+
+    WindowServer::ClientConnection::for_each_client([](auto& connection) {
+        if (auto result = connection.post_message(Messages::WindowClient::AppletOrientationChanged(AppletManager::the().is_vertical())); result.is_error()) {
+            dbgln("WMClientConnection::set_applet_orientation: {}", result.error());
+        }
+    });
+}
+
 void WMClientConnection::set_active_window(i32 client_id, i32 window_id)
 {
     auto* client = WindowServer::ClientConnection::from_client_id(client_id);

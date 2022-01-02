@@ -41,6 +41,11 @@ void AppletManager::set_position(const Gfx::IntPoint& position)
     m_window->set_visible(true);
 }
 
+void AppletManager::set_vertical(bool is_vertical)
+{
+    m_vertical = is_vertical;
+}
+
 void AppletManager::set_hovered_applet(Window* applet)
 {
     if (m_hovered_applet == applet)
@@ -166,6 +171,13 @@ void AppletManager::remove_applet(Window& applet)
 
 void AppletManager::draw()
 {
+    // FIXME: We don't currently support a vertical layout,
+    //        so let's not even bother rendering.
+    if (m_vertical) {
+        m_window->set_visible(false);
+        return;
+    }
+
     for (auto& applet : m_applets) {
         if (!applet)
             continue;

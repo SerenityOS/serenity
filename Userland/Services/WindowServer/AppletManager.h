@@ -25,8 +25,10 @@ public:
     void draw();
     void invalidate_applet(const Window& applet, const Gfx::IntRect& rect);
     void relayout();
+    bool is_vertical() const { return m_vertical; }
 
     void set_position(const Gfx::IntPoint&);
+    void set_vertical(bool);
 
     Window* window() { return m_window; }
     const Window* window() const { return m_window; }
@@ -43,6 +45,7 @@ private:
     Vector<WeakPtr<Window>> m_applets;
     RefPtr<Window> m_window;
     WeakPtr<Window> m_hovered_applet;
+    bool m_vertical = false;
 };
 
 }

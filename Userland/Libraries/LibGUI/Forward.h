@@ -14,6 +14,7 @@ class AbstractView;
 class Action;
 class ActionGroup;
 class AppletAreaRectChangeEvent;
+class AppletOrientationChangeEvent;
 class Application;
 class AutocompleteBox;
 class AutocompleteProvider;

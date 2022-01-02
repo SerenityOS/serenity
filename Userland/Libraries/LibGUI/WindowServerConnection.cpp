@@ -329,6 +329,13 @@ void WindowServerConnection::applet_area_rect_changed(Gfx::IntRect const& rect)
     });
 }
 
+void WindowServerConnection::applet_orientation_changed(bool is_vertical)
+{
+    Window::for_each_window({}, [&](auto& window) {
+        Core::EventLoop::current().post_event(window, make<AppletOrientationChangeEvent>(is_vertical));
+    });
+}
+
 void WindowServerConnection::set_wallpaper_finished(bool)
 {
     // This is handled manually by Desktop::set_wallpaper().

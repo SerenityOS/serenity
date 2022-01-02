@@ -307,6 +307,8 @@ void Widget::event(Core::Event& event)
         return context_menu_event(static_cast<ContextMenuEvent&>(event));
     case Event::AppletAreaRectChange:
         return applet_area_rect_change_event(static_cast<AppletAreaRectChangeEvent&>(event));
+    case Event::AppletOrientationChange:
+        return applet_orientation_change_event(static_cast<AppletOrientationChangeEvent&>(event));
     default:
         return Core::Object::event(event);
     }
@@ -582,6 +584,10 @@ void Widget::screen_rects_change_event(ScreenRectsChangeEvent&)
 }
 
 void Widget::applet_area_rect_change_event(AppletAreaRectChangeEvent&)
+{
+}
+
+void Widget::applet_orientation_change_event(AppletOrientationChangeEvent&)
 {
 }
 

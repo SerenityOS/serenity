@@ -28,6 +28,7 @@ public:
     virtual void popup_window_menu(i32, i32, Gfx::IntPoint const&) override;
     virtual void set_window_taskbar_rect(i32, i32, Gfx::IntRect const&) override;
     virtual void set_applet_area_position(Gfx::IntPoint const&) override;
+    virtual void set_applet_orientation(bool) override;
     virtual void set_event_mask(u32) override;
     virtual void set_manager_window(i32) override;
     virtual void set_workspace(u32, u32) override;

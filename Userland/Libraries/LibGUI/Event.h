@@ -57,6 +57,7 @@ public:
         ActionEnter,
         ActionLeave,
         AppletAreaRectChange,
+        AppletOrientationChange,
 
         __Begin_WM_Events,
         WM_WindowRemoved,
@@ -64,6 +65,7 @@ public:
         WM_WindowRectChanged,
         WM_WindowIconBitmapChanged,
         WM_AppletAreaSizeChanged,
+        WM_AppletOrientationChanged,
         WM_SuperKeyPressed,
         WM_SuperSpaceKeyPressed,
         WM_WorkspaceChanged,
@@ -126,6 +128,20 @@ public:
 
 private:
     Gfx::IntSize m_size;
+};
+
+class WMAppletOrientationChangedEvent : public WMEvent {
+public:
+    explicit WMAppletOrientationChangedEvent(bool is_vertical)
+        : WMEvent(Event::Type::WM_AppletOrientationChanged, 0, 0)
+        , m_vertical(is_vertical)
+    {
+    }
+
+    bool is_vertical() const { return m_vertical; }
+
+private:
+    bool m_vertical;
 };
 
 class WMWindowRemovedEvent : public WMEvent {
@@ -477,6 +493,20 @@ public:
 
 private:
     Gfx::IntRect const m_rect;
+};
+
+class AppletOrientationChangeEvent final : public Event {
+public:
+    explicit AppletOrientationChangeEvent(bool is_vertical)
+        : Event(Type::AppletOrientationChange)
+        , m_vertical(is_vertical)
+    {
+    }
+
+    bool is_vertical() const { return m_vertical; }
+
+private:
+    bool const m_vertical;
 };
 
 class FocusEvent final : public Event {

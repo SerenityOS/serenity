@@ -132,6 +132,9 @@ TaskbarWindow::TaskbarWindow(Gfx::Alignment location, NonnullRefPtr<GUI::Menu> s
 
     auto& clock_widget = main_widget.add<Taskbar::ClockWidget>(m_location);
     if (m_orientation == Gfx::Orientation::Vertical) {
+        // FIXME: add vertical layout support to AppletManager.
+        m_applet_area_container->set_visible(false);
+
         clock_widget.set_max_size(37, 37);
     }
 
@@ -197,6 +200,7 @@ void TaskbarWindow::update_applet_area()
     main_widget()->do_layout();
     auto new_rect = Gfx::IntRect({}, m_applet_area_size).centered_within(m_applet_area_container->screen_relative_rect());
     GUI::WindowManagerServerConnection::the().async_set_applet_area_position(new_rect.location());
+    GUI::WindowManagerServerConnection::the().async_set_applet_orientation(m_location == Gfx::Alignment::Left || m_location == Gfx::Alignment::Right);
 }
 
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)

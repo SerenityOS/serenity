@@ -568,6 +568,22 @@ void Window::handle_applet_area_rect_change_event(AppletAreaRectChangeEvent& eve
     applet_area_rect_change_event(event);
 }
 
+void Window::handle_applet_orientation_change_event(AppletOrientationChangeEvent& event)
+{
+    if (!m_main_widget)
+        return;
+    auto dispatch_applet_orientation_change = [&](auto& widget, auto recursive) {
+        widget.dispatch_event(event, this);
+        widget.for_each_child_widget([&](auto& widget) -> IterationDecision {
+            widget.dispatch_event(event, this);
+            recursive(widget, recursive);
+            return IterationDecision::Continue;
+        });
+    };
+    dispatch_applet_orientation_change(*m_main_widget.ptr(), dispatch_applet_orientation_change);
+    applet_orientation_change_event(event);
+}
+
 void Window::handle_drag_move_event(DragEvent& event)
 {
     if (!m_main_widget)
@@ -893,6 +909,10 @@ void Window::screen_rects_change_event(ScreenRectsChangeEvent&)
 }
 
 void Window::applet_area_rect_change_event(AppletAreaRectChangeEvent&)
+{
+}
+
+void Window::applet_orientation_change_event(AppletOrientationChangeEvent&)
 {
 }
 

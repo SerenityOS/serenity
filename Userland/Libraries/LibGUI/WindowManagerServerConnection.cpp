@@ -33,6 +33,12 @@ void WindowManagerServerConnection::applet_area_size_changed(i32 wm_id, const Gf
         Core::EventLoop::current().post_event(*window, make<WMAppletAreaSizeChangedEvent>(size));
 }
 
+void WindowManagerServerConnection::applet_orientation_changed(i32 wm_id, bool is_vertical)
+{
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMAppletOrientationChangedEvent>(is_vertical));
+}
+
 void WindowManagerServerConnection::window_rect_changed(i32 wm_id, i32 client_id, i32 window_id, Gfx::IntRect const& rect)
 {
     if (auto* window = Window::from_window_id(wm_id))
