@@ -8,7 +8,6 @@
 
     @GUI::GroupBox {
         title: "Taskbar Appearance"
-        shrink_to_fit: false
         fixed_height: 85
 
         layout: @GUI::VerticalBoxLayout {
@@ -17,7 +16,7 @@
         }
 
         @GUI::Label {
-            text: "Location of taskbar on screen"
+            text: "Location of taskbar on screen."
             text_alignment: "TopLeft"
         }
 
@@ -47,6 +46,28 @@
                 name: "taskbar_right_radio"
                 text: "Right"
             }
+        }
+    }
+
+    @GUI::GroupBox {
+        title: "Preview desktop"
+        fixed_height: 115
+
+        layout: @GUI::VerticalBoxLayout {
+            margins: [16, 8, 8]
+            spacing: 16
+        }
+
+        @GUI::Label {
+            text: "Peek the desktop when you press the preview desktop button at the end of the taskbar."
+            text_alignment: "TopLeft"
+            shrink_to_fit: false
+            word_wrap: true
+        }
+
+        @GUI::CheckBox {
+            name: "preview_desktop_checkbox"
+            text: "Enable desktop preview"
         }
     }
 }

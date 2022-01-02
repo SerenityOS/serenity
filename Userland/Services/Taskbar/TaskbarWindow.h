@@ -27,7 +27,7 @@ public:
     static int taskbar_icon_size() { return 16; }
 
 private:
-    explicit TaskbarWindow(Gfx::Alignment location, NonnullRefPtr<GUI::Menu> start_menu, NonnullRefPtr<GUI::Menu> taskbar_menu);
+    explicit TaskbarWindow(Gfx::Alignment location, bool show_preview_button, NonnullRefPtr<GUI::Menu> start_menu, NonnullRefPtr<GUI::Menu> taskbar_menu);
     static void show_desktop_button_clicked(unsigned);
     void set_quick_launch_button_data(GUI::Button&, String const&, NonnullRefPtr<Desktop::AppFile>);
     void on_screen_rects_change(const Vector<Gfx::IntRect, 4>&, size_t);
@@ -41,6 +41,7 @@ private:
     virtual void wm_event(GUI::WMEvent&) override;
     virtual void screen_rects_change_event(GUI::ScreenRectsChangeEvent&) override;
     virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
+    virtual void config_bool_did_change(String const&, String const&, String const&, bool) override;
 
     void update_applet_area();
 
@@ -63,6 +64,7 @@ private:
 
     Gfx::Orientation m_orientation {};
     Gfx::Alignment m_location {};
+    bool m_show_preview_button {};
     unsigned m_current_workspace_row { 0 };
     unsigned m_current_workspace_column { 0 };
 };

@@ -24,5 +24,8 @@ private:
     static String location_to_string(Gfx::Alignment location);
 
     Gfx::Alignment m_taskbar_location = Gfx::Alignment::Bottom;
+    bool m_preview_desktop = true;
+
     Gfx::Alignment m_original_taskbar_location;
+    bool m_original_preview_desktop;
 };

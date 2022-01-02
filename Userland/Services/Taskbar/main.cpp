@@ -51,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
 
-    auto location_str = Config::read_string("Taskbar", "Appearance", "Location");
+    auto location_str = Config::read_string("Taskbar", "Appearance", "Location", "Bottom");
     Gfx::Alignment location;
     if (location_str == "Bottom")
         location = Gfx::Alignment::Bottom;
@@ -64,6 +64,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     else
         VERIFY_NOT_REACHED();
 
+    auto show_preview_button = Config::read_bool("Taskbar", "Appearance", "PreviewDesktop", true);
+
     auto menu = TRY(build_system_menu());
     menu->realize_menu_if_needed();
 
@@ -74,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto taskbar_context_menu = TRY(GUI::Menu::try_create());
     TRY(taskbar_context_menu->try_add_action(*open_settings_action));
 
-    auto window = TRY(TaskbarWindow::try_create(move(location), move(menu), move(taskbar_context_menu)));
+    auto window = TRY(TaskbarWindow::try_create(move(location), move(show_preview_button), move(menu), move(taskbar_context_menu)));
     window->show();
 
     window->make_window_manager(

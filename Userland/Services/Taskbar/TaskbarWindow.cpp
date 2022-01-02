@@ -84,10 +84,11 @@ private:
     Gfx::Alignment m_location;
 };
 
-TaskbarWindow::TaskbarWindow(Gfx::Alignment location, NonnullRefPtr<GUI::Menu> start_menu, NonnullRefPtr<GUI::Menu> taskbar_menu)
+TaskbarWindow::TaskbarWindow(Gfx::Alignment location, bool show_preview_button, NonnullRefPtr<GUI::Menu> start_menu, NonnullRefPtr<GUI::Menu> taskbar_menu)
     : m_start_menu(move(start_menu))
     , m_taskbar_menu(move(taskbar_menu))
     , m_location(move(location))
+    , m_show_preview_button(move(show_preview_button))
 {
     set_window_type(GUI::WindowType::Taskbar);
     set_title("Taskbar");
@@ -159,7 +160,10 @@ TaskbarWindow::TaskbarWindow(Gfx::Alignment location, NonnullRefPtr<GUI::Menu> s
     } else {
         m_show_desktop_button->set_fixed_size(24, 24);
     }
+
     main_widget.add_child(*m_show_desktop_button);
+    if (!m_show_preview_button)
+        m_show_desktop_button->set_visible(false);
 
     auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Assistant.af");
     m_assistant_app_file = Desktop::AppFile::open(af_path);
@@ -460,6 +464,18 @@ void TaskbarWindow::config_string_did_change(String const& domain, String const&
         //        but mainly to ensure all positions and sizes are correct.
         if (new_orientation != m_orientation)
             exit(0);
+    }
+}
+
+void TaskbarWindow::config_bool_did_change(String const& domain, String const& group, String const& key, bool value)
+{
+    if (domain == "Taskbar" && group == "Appearance" && key == "PreviewDesktop") {
+        if (m_show_preview_button == value)
+            return;
+
+        m_show_preview_button = value;
+        m_show_desktop_button->set_visible(value);
+        update_applet_area();
     }
 }
 

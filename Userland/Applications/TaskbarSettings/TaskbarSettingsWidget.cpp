@@ -9,6 +9,7 @@
 #include <Applications/TaskbarSettings/TaskbarSettingsMainGML.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/SpinBox.h>
@@ -24,7 +25,7 @@ TaskbarSettingsMainWidget::TaskbarSettingsMainWidget()
     auto& taskbar_top_radio = *find_descendant_of_type_named<GUI::RadioButton>("taskbar_top_radio");
     auto& taskbar_right_radio = *find_descendant_of_type_named<GUI::RadioButton>("taskbar_right_radio");
 
-    m_taskbar_location = string_to_location(Config::read_string("Taskbar", "Appearance", "Location"));
+    m_taskbar_location = string_to_location(Config::read_string("Taskbar", "Appearance", "Location", "Bottom"));
     m_original_taskbar_location = m_taskbar_location;
 
     switch (m_taskbar_location) {
@@ -63,6 +64,15 @@ TaskbarSettingsMainWidget::TaskbarSettingsMainWidget()
         m_taskbar_location = Gfx::Alignment::Right;
         Config::write_string("Taskbar", "Appearance", "Location", location_to_string(m_taskbar_location));
     };
+
+    auto& preview_desktop_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("preview_desktop_checkbox");
+    m_preview_desktop = Config::read_bool("Taskbar", "Appearance", "PreviewDesktop", true);
+
+    preview_desktop_checkbox.on_checked = [&](bool checked) {
+        Config::write_bool("Taskbar", "Appearance", "PreviewDesktop", checked);
+    };
+
+    preview_desktop_checkbox.set_checked(m_preview_desktop);
 }
 
 Gfx::Alignment TaskbarSettingsMainWidget::string_to_location(StringView location)
@@ -94,11 +104,13 @@ String TaskbarSettingsMainWidget::location_to_string(Gfx::Alignment location)
 void TaskbarSettingsMainWidget::apply_settings()
 {
     m_original_taskbar_location = m_taskbar_location;
+    m_original_preview_desktop = m_preview_desktop;
     write_back_settings();
 }
 void TaskbarSettingsMainWidget::write_back_settings() const
 {
     Config::write_string("Taskbar", "Appearance", "Location", location_to_string(m_original_taskbar_location));
+    Config::write_bool("Taskbar", "Appearance", "PreviewDesktop", m_original_preview_desktop);
 }
 
 void TaskbarSettingsMainWidget::cancel_settings()
