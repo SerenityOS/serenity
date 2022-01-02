@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -587,20 +587,23 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
     // 6. Let shortMorePenalty be 3.
     constexpr int short_more_penalty = 3;
 
-    // 7. Let bestScore be -Infinity.
+    // 7. Let offsetPenalty be 1.
+    constexpr int offset_penalty = 1;
+
+    // 8. Let bestScore be -Infinity.
     int best_score = NumericLimits<int>::min();
 
-    // 8. Let bestFormat be undefined.
+    // 9. Let bestFormat be undefined.
     Optional<Unicode::CalendarPattern> best_format;
 
-    // 9. Assert: Type(formats) is List.
-    // 10. For each element format of formats, do
+    // 10. Assert: Type(formats) is List.
+    // 11. For each element format of formats, do
     for (auto& format : formats) {
         // a. Let score be 0.
         int score = 0;
 
         // b. For each property name property shown in Table 4, do
-        format.for_each_calendar_field_zipped_with(options, [&](auto const& format_prop, auto const& options_prop, auto) {
+        format.for_each_calendar_field_zipped_with(options, [&](auto const& format_prop, auto const& options_prop, auto type) {
             using ValueType = typename RemoveReference<decltype(options_prop)>::ValueType;
 
             // i. If options has a field [[<property>]], let optionsProp be options.[[<property>]]; else let optionsProp be undefined.
@@ -614,7 +617,62 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
             else if (options_prop.has_value() && !format_prop.has_value()) {
                 score -= removal_penalty;
             }
-            // v. Else if optionsProp ≠ formatProp, then
+            // v. Else if property is "timeZoneName", then
+            else if (type == Unicode::CalendarPattern::Field::TimeZoneName) {
+                // This is needed to avoid a compile error. Although we only enter this branch for TimeZoneName,
+                // the lambda we are in will be generated with property types other than CalendarPatternStyle.
+                auto compare_prop = [](auto prop, auto test) { return prop == static_cast<ValueType>(test); };
+
+                // 1. If optionsProp is "short" or "shortGeneric", then
+                if (compare_prop(options_prop, Unicode::CalendarPatternStyle::Short) || compare_prop(options_prop, Unicode::CalendarPatternStyle::ShortGeneric)) {
+                    // a. If formatProp is "shortOffset", decrease score by offsetPenalty.
+                    if (compare_prop(format_prop, Unicode::CalendarPatternStyle::ShortOffset))
+                        score -= offset_penalty;
+                    // b. Else if formatProp is "longOffset", decrease score by (offsetPenalty + shortMorePenalty).
+                    else if (compare_prop(format_prop, Unicode::CalendarPatternStyle::LongOffset))
+                        score -= offset_penalty + short_more_penalty;
+                    // c. Else if optionsProp is "short" and formatProp is "long", decrease score by shortMorePenalty.
+                    else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::Short) || compare_prop(format_prop, Unicode::CalendarPatternStyle::Long))
+                        score -= short_more_penalty;
+                    // d. Else if optionsProp is "shortGeneric" and formatProp is "longGeneric", decrease score by shortMorePenalty.
+                    else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::ShortGeneric) || compare_prop(format_prop, Unicode::CalendarPatternStyle::LongGeneric))
+                        score -= short_more_penalty;
+                    // e. Else if optionsProp ≠ formatProp, decrease score by removalPenalty.
+                    else if (options_prop != format_prop)
+                        score -= removal_penalty;
+                }
+                // 2. Else if optionsProp is "shortOffset" and formatProp is "longOffset", decrease score by shortMorePenalty.
+                else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::ShortOffset) || compare_prop(format_prop, Unicode::CalendarPatternStyle::LongOffset)) {
+                    score -= short_more_penalty;
+                }
+                // 3. Else if optionsProp is "long" or "longGeneric", then
+                else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::Long) || compare_prop(options_prop, Unicode::CalendarPatternStyle::LongGeneric)) {
+                    // a. If formatProp is "longOffset", decrease score by offsetPenalty.
+                    if (compare_prop(format_prop, Unicode::CalendarPatternStyle::LongOffset))
+                        score -= offset_penalty;
+                    // b. Else if formatProp is "shortOffset", decrease score by (offsetPenalty + longLessPenalty).
+                    else if (compare_prop(format_prop, Unicode::CalendarPatternStyle::ShortOffset))
+                        score -= offset_penalty + long_less_penalty;
+                    // c. Else if optionsProp is "long" and formatProp is "short", decrease score by longLessPenalty.
+                    else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::Long) || compare_prop(format_prop, Unicode::CalendarPatternStyle::Short))
+                        score -= long_less_penalty;
+                    // d. Else if optionsProp is "longGeneric" and formatProp is "shortGeneric", decrease score by longLessPenalty.
+                    else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::LongGeneric) || compare_prop(format_prop, Unicode::CalendarPatternStyle::ShortGeneric))
+                        score -= long_less_penalty;
+                    // e. Else if optionsProp ≠ formatProp, decrease score by removalPenalty.
+                    else if (options_prop != format_prop)
+                        score -= removal_penalty;
+                }
+                // 4. Else if optionsProp is "longOffset" and formatProp is "shortOffset", decrease score by longLessPenalty.
+                else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::LongOffset) || compare_prop(format_prop, Unicode::CalendarPatternStyle::ShortOffset)) {
+                    score -= long_less_penalty;
+                }
+                // 5. Else if optionsProp ≠ formatProp, decrease score by removalPenalty.
+                else if (options_prop != format_prop) {
+                    score -= removal_penalty;
+                }
+            }
+            // vi. Else if optionsProp ≠ formatProp, then
             else if (options_prop != format_prop) {
                 using ValuesType = Conditional<IsIntegral<ValueType>, AK::Array<u8, 3>, AK::Array<Unicode::CalendarPatternStyle, 5>>;
                 ValuesType values {};
@@ -701,7 +759,7 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
         }
     });
 
-    // 11. Return bestFormat.
+    // 12. Return bestFormat.
     return best_format;
 }
 
@@ -881,7 +939,9 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
             // ii. Let v be dateTimeFormat.[[TimeZone]].
             auto const& value = date_time_format.time_zone();
 
-            // iii. Let fv be a String value representing v in the form given by f; the String value depends upon the implementation and the effective locale. The String value may also depend on the value of the [[InDST]] field of tm. If the implementation does not have a localized representation of f, then use the String value of v itself.
+            // iii. Let fv be a String value representing v in the form given by f; the String value depends upon the implementation and the effective locale of dateTimeFormat.
+            //      The String value may also depend on the value of the [[InDST]] field of tm if f is "short", "long", "shortOffset", or "longOffset".
+            //      If the implementation does not have a localized representation of f, then use the String value of v itself.
             // FIXME: This should take [[InDST]] into account.
             auto formatted_value = Unicode::get_time_zone_name(data_locale, value, style).value_or(value);
 
@@ -973,6 +1033,9 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
                 formatted_value = symbol.value_or(String::number(value));
                 break;
             }
+
+            default:
+                VERIFY_NOT_REACHED();
             }
 
             // xi. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
