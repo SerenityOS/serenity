@@ -45,6 +45,8 @@ constexpr T&& move(T& arg)
 }
 
 }
+#else
+#include <utility>
 #endif
 // clang-format on
 
