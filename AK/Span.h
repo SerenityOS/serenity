@@ -152,13 +152,15 @@ public:
     ALWAYS_INLINE constexpr size_t copy_to(Span<RemoveConst<T>> other) const
     {
         VERIFY(other.size() >= size());
-        return decltype(other)::Transfer::copy(other.data(), data(), size());
+        decltype(other)::Transfer::copy(other.data(), data(), size());
+        return size();
     }
 
     ALWAYS_INLINE constexpr size_t copy_trimmed_to(Span<RemoveConst<T>> other) const
     {
         auto const count = min(size(), other.size());
-        return decltype(other)::Transfer::copy(other.data(), data(), count);
+        decltype(other)::Transfer::copy(other.data(), data(), count);
+        return count;
     }
 
     ALWAYS_INLINE constexpr size_t fill(T const& value)
