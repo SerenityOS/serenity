@@ -1339,7 +1339,7 @@ private:
     SignalBlockerSet m_signal_blocker_set;
     FlatPtr m_kernel_stack_base { 0 };
     FlatPtr m_kernel_stack_top { 0 };
-    OwnPtr<Memory::Region> m_kernel_stack_region;
+    NonnullOwnPtr<Memory::Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
     Optional<Memory::VirtualRange> m_thread_specific_range;
     Array<SignalActionData, NSIG> m_signal_action_data;
