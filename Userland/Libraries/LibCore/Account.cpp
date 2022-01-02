@@ -65,7 +65,7 @@ ErrorOr<Account> Account::from_passwd(const passwd& pwd, const spwd& spwd)
     return account;
 }
 
-ErrorOr<Account> Account::self(Read options)
+ErrorOr<Account> Account::self([[maybe_unused]] Read options)
 {
     Vector<gid_t> extra_gids = TRY(Core::System::getgroups());
 
@@ -86,7 +86,7 @@ ErrorOr<Account> Account::self(Read options)
     return Account(*pwd, spwd, extra_gids);
 }
 
-ErrorOr<Account> Account::from_name(const char* username, Read options)
+ErrorOr<Account> Account::from_name(const char* username, [[maybe_unused]] Read options)
 {
     auto pwd = TRY(Core::System::getpwnam(username));
     if (!pwd.has_value())
@@ -104,7 +104,7 @@ ErrorOr<Account> Account::from_name(const char* username, Read options)
     return from_passwd(*pwd, spwd);
 }
 
-ErrorOr<Account> Account::from_uid(uid_t uid, Read options)
+ErrorOr<Account> Account::from_uid(uid_t uid, [[maybe_unused]] Read options)
 {
     auto pwd = TRY(Core::System::getpwuid(uid));
     if (!pwd.has_value())
