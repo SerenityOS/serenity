@@ -17,7 +17,16 @@ set(SOURCES
     FilterGallery.cpp
     FilterGalleryGML.h
     FilterModel.cpp
+    Filters/BoxBlur3.cpp
+    Filters/BoxBlur5.cpp
     Filters/Filter.cpp
+    Filters/GaussBlur3.cpp
+    Filters/GaussBlur5.cpp
+    Filters/Grayscale.cpp
+    Filters/Invert.cpp
+    Filters/LaplaceCardinal.cpp
+    Filters/LaplaceDiagonal.cpp
+    Filters/Sharpen.cpp
     Image.cpp
     ImageEditor.cpp
     Layer.cpp
