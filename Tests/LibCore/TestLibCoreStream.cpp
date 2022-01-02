@@ -325,6 +325,8 @@ TEST_CASE(local_socket_read)
     //       connected.
     auto background_action = Threading::BackgroundAction<int>::construct(
         [](auto&) {
+            Core::EventLoop event_loop;
+
             auto maybe_client_socket = Core::Stream::LocalSocket::connect("/tmp/test-socket");
             EXPECT(!maybe_client_socket.is_error());
             auto client_socket = maybe_client_socket.release_value();

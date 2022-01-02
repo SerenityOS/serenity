@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,10 +19,13 @@
 #include <LibCore/DeferredInvocationContext.h>
 #include <LibCore/Event.h>
 #include <LibCore/Forward.h>
+#include <LibThreading/MutexProtected.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
 namespace Core {
+
+static Threading::MutexProtected<EventLoop*> s_main_event_loop;
 
 class EventLoop {
 public:
@@ -48,7 +52,14 @@ public:
 
     void post_event(Object& receiver, NonnullOwnPtr<Event>&&);
 
-    static EventLoop& main();
+    template<typename Callback>
+    static decltype(auto) with_main_locked(Callback callback)
+    {
+        return s_main_event_loop.with_locked([&callback](auto*& event_loop) {
+            VERIFY(event_loop != nullptr);
+            return callback(event_loop);
+        });
+    }
     static EventLoop& current();
 
     bool was_exit_requested() const { return m_exit_requested; }
@@ -111,7 +122,7 @@ private:
     bool m_exit_requested { false };
     int m_exit_code { 0 };
 
-    static int s_wake_pipe_fds[2];
+    static thread_local int s_wake_pipe_fds[2];
 
     struct Private;
     NonnullOwnPtr<Private> m_private;
