@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "BMPLoader.h"
 #include <AK/BuiltinWrappers.h>
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibGfx/BMPLoader.h>
 
 namespace Gfx {
 

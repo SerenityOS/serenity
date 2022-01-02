@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "QOILoader.h"
 #include <AK/Endian.h>
 #include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/QOILoader.h>
 
 namespace Gfx {
 

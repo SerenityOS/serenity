@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/BMPWriter.h>
+#include "BMPWriter.h"
 #include <LibGfx/Bitmap.h>
 
 namespace Gfx {

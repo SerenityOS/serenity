@@ -3,33 +3,33 @@ set(SOURCES
     AntiAliasingPainter.cpp
     Bitmap.cpp
     BitmapFont.cpp
-    BMPLoader.cpp
-    BMPWriter.cpp
     CharacterBitmap.cpp
     ClassicStylePainter.cpp
     ClassicWindowTheme.cpp
     Color.cpp
     CursorParams.cpp
-    DDSLoader.cpp
     DisjointRectSet.cpp
     Emoji.cpp
     Filters/ColorBlindnessFilter.cpp
     Filters/FastBoxBlurFilter.cpp
     FontDatabase.cpp
-    GIFLoader.cpp
-    ICOLoader.cpp
+    Formats/BMP/BMPLoader.cpp
+    Formats/BMP/BMPWriter.cpp
+    Formats/DDS/DDSLoader.cpp
+    Formats/GIF/GIFLoader.cpp
+    Formats/ICO/ICOLoader.cpp
+    Formats/JPG/JPGLoader.cpp
+    Formats/PBM/PBMLoader.cpp
+    Formats/PGM/PGMLoader.cpp
+    Formats/PNG/PNGLoader.cpp
+    Formats/PNG/PNGWriter.cpp
+    Formats/PPM/PPMLoader.cpp
+    Formats/QOI/QOILoader.cpp
     ImageDecoder.cpp
-    JPGLoader.cpp
     Painter.cpp
     Palette.cpp
     Path.cpp
-    PBMLoader.cpp
-    PGMLoader.cpp
-    PNGLoader.cpp
-    PNGWriter.cpp
-    PPMLoader.cpp
     Point.cpp
-    QOILoader.cpp
     Rect.cpp
     ShareableBitmap.cpp
     Size.cpp
