@@ -44,6 +44,7 @@ void MonitorSettingsWidget::create_resolution_list()
     m_resolutions.append({ 2048, 1152 });
     m_resolutions.append({ 2560, 1080 });
     m_resolutions.append({ 2560, 1440 });
+    m_resolutions.append({ 3440, 1440 });
 }
 
 void MonitorSettingsWidget::create_frame()
