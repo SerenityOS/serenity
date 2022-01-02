@@ -51,6 +51,8 @@ private:
 
 public:
     using ValueType = T;
+    using Transfer = TypedTransfer<StorageType>;
+
     Vector()
         : m_capacity(inline_capacity)
     {
@@ -84,7 +86,7 @@ public:
     Vector(Vector const& other)
     {
         ensure_capacity(other.size());
-        TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
+        Transfer::copy(data(), other.data(), other.size());
         m_size = other.size();
     }
 
@@ -92,7 +94,7 @@ public:
     Vector(Vector<T, other_inline_capacity> const& other)
     {
         ensure_capacity(other.size());
-        TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
+        Transfer::copy(data(), other.data(), other.size());
         m_size = other.size();
     }
 
@@ -179,7 +181,7 @@ public:
     {
         if (m_size != other.size())
             return false;
-        return TypedTransfer<StorageType>::compare(data(), other.data(), size());
+        return Transfer::compare(data(), other.data(), size());
     }
 
     bool contains_slow(T const& value) const
@@ -258,7 +260,7 @@ public:
         if (count == 0)
             return;
         VERIFY((size() + count) <= capacity());
-        TypedTransfer<StorageType>::copy(slot(m_size), values, count);
+        Transfer::copy(slot(m_size), values, count);
         m_size += count;
     }
 
@@ -312,7 +314,7 @@ public:
         if (this != &other) {
             clear();
             ensure_capacity(other.size());
-            TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
+            Transfer::copy(data(), other.data(), other.size());
             m_size = other.size();
         }
         return *this;
@@ -323,7 +325,7 @@ public:
     {
         clear();
         ensure_capacity(other.size());
-        TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
+        Transfer::copy(data(), other.data(), other.size());
         m_size = other.size();
         return *this;
     }
@@ -350,7 +352,7 @@ public:
         VERIFY(index < m_size);
 
         if constexpr (Traits<StorageType>::is_trivial()) {
-            TypedTransfer<StorageType>::copy(slot(index), slot(index + 1), m_size - index - 1);
+            Transfer::copy(slot(index), slot(index + 1), m_size - index - 1);
         } else {
             at(index).~StorageType();
             for (size_t i = index + 1; i < m_size; ++i) {
@@ -370,7 +372,7 @@ public:
         VERIFY(index + count <= m_size);
 
         if constexpr (Traits<StorageType>::is_trivial()) {
-            TypedTransfer<StorageType>::copy(slot(index), slot(index + count), m_size - index - count);
+            Transfer::copy(slot(index), slot(index + count), m_size - index - count);
         } else {
             for (size_t i = index; i < index + count; i++)
                 at(i).~StorageType();
@@ -458,7 +460,7 @@ public:
         TRY(try_grow_capacity(size() + 1));
         ++m_size;
         if constexpr (Traits<StorageType>::is_trivial()) {
-            TypedTransfer<StorageType>::move(slot(index + 1), slot(index), m_size - index - 1);
+            Transfer::move(slot(index + 1), slot(index), m_size - index - 1);
         } else {
             for (size_t i = size() - 1; i > index; --i) {
                 new (slot(i)) StorageType(move(at(i - 1)));
@@ -498,7 +500,7 @@ public:
         auto other_size = other.size();
         Vector tmp = move(other);
         TRY(try_grow_capacity(size() + other_size));
-        TypedTransfer<StorageType>::move(data() + m_size, tmp.data(), other_size);
+        Transfer::move(data() + m_size, tmp.data(), other_size);
         m_size += other_size;
         return {};
     }
@@ -506,7 +508,7 @@ public:
     ErrorOr<void> try_extend(Vector const& other)
     {
         TRY(try_grow_capacity(size() + other.size()));
-        TypedTransfer<StorageType>::copy(data() + m_size, other.data(), other.size());
+        Transfer::copy(data() + m_size, other.data(), other.size());
         m_size += other.m_size;
         return {};
     }
@@ -532,7 +534,7 @@ public:
         if (count == 0)
             return {};
         TRY(try_grow_capacity(size() + count));
-        TypedTransfer<StorageType>::copy(slot(m_size), values, count);
+        Transfer::copy(slot(m_size), values, count);
         m_size += count;
         return {};
     }
@@ -571,7 +573,7 @@ public:
         }
 
         Vector tmp = move(other);
-        TypedTransfer<StorageType>::move(slot(0), tmp.data(), tmp.size());
+        Transfer::move(slot(0), tmp.data(), tmp.size());
         m_size += other_size;
         return {};
     }
@@ -581,8 +583,8 @@ public:
         if (count == 0)
             return {};
         TRY(try_grow_capacity(size() + count));
-        TypedTransfer<StorageType>::move(slot(count), slot(0), m_size);
-        TypedTransfer<StorageType>::copy(slot(0), values, count);
+        Transfer::move(slot(count), slot(0), m_size);
+        Transfer::copy(slot(0), values, count);
         m_size += count;
         return {};
     }
@@ -604,7 +606,7 @@ public:
             return Error::from_errno(ENOMEM);
 
         if constexpr (Traits<StorageType>::is_trivial()) {
-            TypedTransfer<StorageType>::copy(new_buffer, data(), m_size);
+            Transfer::copy(new_buffer, data(), m_size);
         } else {
             for (size_t i = 0; i < m_size; ++i) {
                 new (&new_buffer[i]) StorageType(move(at(i)));

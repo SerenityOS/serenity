@@ -90,6 +90,8 @@ protected:
 template<typename T>
 class Span : public Detail::Span<T> {
 public:
+    using Transfer = TypedTransfer<T>;
+
     using Detail::Span<T>::Span;
 
     constexpr Span() = default;
@@ -150,13 +152,13 @@ public:
     ALWAYS_INLINE constexpr size_t copy_to(Span<RemoveConst<T>> other) const
     {
         VERIFY(other.size() >= size());
-        return TypedTransfer<RemoveConst<T>>::copy(other.data(), data(), size());
+        return decltype(other)::Transfer::copy(other.data(), data(), size());
     }
 
     ALWAYS_INLINE constexpr size_t copy_trimmed_to(Span<RemoveConst<T>> other) const
     {
         auto const count = min(size(), other.size());
-        return TypedTransfer<RemoveConst<T>>::copy(other.data(), data(), count);
+        return decltype(other)::Transfer::copy(other.data(), data(), count);
     }
 
     ALWAYS_INLINE constexpr size_t fill(T const& value)
@@ -181,7 +183,7 @@ public:
         if (size() < other.size())
             return false;
 
-        return TypedTransfer<T>::compare(data(), other.data(), other.size());
+        return Transfer::compare(data(), other.data(), other.size());
     }
 
     [[nodiscard]] ALWAYS_INLINE constexpr T const& at(size_t index) const
@@ -211,7 +213,7 @@ public:
         if (size() != other.size())
             return false;
 
-        return TypedTransfer<T>::compare(data(), other.data(), size());
+        return Transfer::compare(data(), other.data(), size());
     }
 
     ALWAYS_INLINE constexpr operator Span<T const>() const

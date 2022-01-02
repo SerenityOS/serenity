@@ -8,6 +8,7 @@
 
 #include <AK/Iterator.h>
 #include <AK/Span.h>
+#include <AK/TypedTransfer.h>
 #include <AK/kmalloc.h>
 
 namespace AK {
@@ -15,6 +16,8 @@ namespace AK {
 template<typename T>
 class FixedArray {
 public:
+    using Transfer = TypedTransfer<T>;
+
     FixedArray() = default;
     explicit FixedArray(size_t size)
         : m_size(size)
@@ -35,8 +38,7 @@ public:
     {
         if (m_size != 0) {
             m_elements = static_cast<T*>(kmalloc_array(m_size, sizeof(T)));
-            for (size_t i = 0; i < m_size; ++i)
-                new (&m_elements[i]) T(other[i]);
+            Transfer::copy(data(), other.data(), other.size());
         }
     }
 
