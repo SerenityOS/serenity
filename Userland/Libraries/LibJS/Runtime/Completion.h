@@ -80,7 +80,7 @@ public:
     }
 
     // 6.2.3.4 UpdateEmpty ( completionRecord, value ), https://tc39.es/ecma262/#sec-updateempty
-    Completion update_empty(Value value) const
+    Completion update_empty(Optional<Value> value) const
     {
         // 1. Assert: If completionRecord.[[Type]] is either return or throw, then completionRecord.[[Value]] is not empty.
         if (m_type == Type::Return || m_type == Type::Throw)
@@ -91,7 +91,7 @@ public:
             return *this;
 
         // 3. Return Completion { [[Type]]: completionRecord.[[Type]], [[Value]]: value, [[Target]]: completionRecord.[[Target]] }.
-        return { m_type, value, m_target };
+        return { m_type, move(value), m_target };
     }
 
 private:
