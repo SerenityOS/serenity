@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -117,13 +117,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
         // TODO: Optionally use bytecode interpreter?
         // FIXME: We need to use evaluate_statements() here because Program::execute() calls global_declaration_instantiation() when it shouldn't
         // a. Set result to the result of evaluating body.
-        auto result_value = program->evaluate_statements(vm.interpreter(), eval_realm.global_object());
-        if (auto* exception = vm.exception())
-            result = throw_completion(exception->value());
-        else if (!result_value.is_empty())
-            result = normal_completion(result_value);
-        else
-            result = Completion {}; // Normal completion with no value
+        result = program->evaluate_statements(vm.interpreter(), eval_realm.global_object());
     }
 
     // 21. If result.[[Type]] is normal and result.[[Value]] is empty, then

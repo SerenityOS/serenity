@@ -54,9 +54,7 @@ ThrowCompletionOr<Object*> AsyncGeneratorFunctionConstructor::construct(Function
     }
 
     VM::InterpreterExecutionScope scope(*interpreter);
-    auto result = function->execute(*interpreter, global_object());
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto result = TRY(function->execute(*interpreter, global_object())).release_value();
     VERIFY(result.is_object() && is<ECMAScriptFunctionObject>(result.as_object()));
     return &result.as_object();
 }
