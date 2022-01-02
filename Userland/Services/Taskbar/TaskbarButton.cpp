@@ -96,9 +96,6 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
 
     Gfx::StylePainter::paint_button(painter, rect(), palette(), button_style(), is_being_pressed(), is_hovered(), is_checked(), is_enabled());
 
-    if (text().is_empty())
-        return;
-
     auto content_rect = rect().shrunken(8, 2);
     auto icon_location = content_rect.center().translated(-(icon.width() / 2), -(icon.height() / 2));
     if (!text().is_empty())
