@@ -17,7 +17,7 @@ public:
     virtual void apply() const = 0;
     virtual RefPtr<GUI::Widget> get_settings_widget();
 
-    static StringView filter_name() { return ""sv; }
+    virtual StringView filter_name() = 0;
 
     virtual ~Filter() {};
 
@@ -26,7 +26,6 @@ public:
 
 protected:
     ImageEditor* m_editor { nullptr };
-    StringView m_filter_name;
     RefPtr<GUI::Widget> m_settings_widget { nullptr };
 };
 
