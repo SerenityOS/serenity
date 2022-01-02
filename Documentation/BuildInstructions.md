@@ -33,16 +33,17 @@ Note that you might need additional dev packages:
 sudo apt install libgtk-3-dev libpixman-1-dev libsdl2-dev libspice-server-dev
 ```
 
-### Windows
-
-If you're on Windows you can use WSL2 to build SerenityOS. Please have a look at the [Windows guide](BuildInstructionsWindows.md)
-for details.
-
 ### Arch Linux / Manjaro
 
 ```console
 sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra ccache rsync unzip
 ```
+
+### Windows
+
+If you're on Windows you can use WSL2 to build SerenityOS. Please have a look at the [Windows guide](BuildInstructionsWindows.md)
+for details.
+
 
 ### Other systems
 
