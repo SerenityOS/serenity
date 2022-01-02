@@ -34,6 +34,7 @@ public:
     Variant(const Gfx::IntSize&);
     Variant(const Gfx::IntRect&);
     Variant(const Gfx::Font&);
+    Variant(const Gfx::Alignment);
     Variant(const Gfx::TextAlignment);
     Variant(const Gfx::ColorRole);
     Variant(const Gfx::AlignmentRole);
@@ -68,6 +69,7 @@ public:
         Size,
         Rect,
         Font,
+        Alignment,
         TextAlignment,
         ColorRole,
         AlignmentRole,
@@ -91,6 +93,7 @@ public:
     bool is_size() const { return m_type == Type::Size; }
     bool is_rect() const { return m_type == Type::Rect; }
     bool is_font() const { return m_type == Type::Font; }
+    bool is_alignment() const { return m_type == Type::Alignment; }
     bool is_text_alignment() const { return m_type == Type::TextAlignment; }
     bool is_color_role() const { return m_type == Type::ColorRole; }
     bool is_alignment_role() const { return m_type == Type::AlignmentRole; }
@@ -244,6 +247,13 @@ public:
         return *m_value.as_font;
     }
 
+    Gfx::Alignment to_alignment(Gfx::Alignment default_value) const
+    {
+        if (type() != Type::Alignment)
+            return default_value;
+        return m_value.as_alignment;
+    }
+
     Gfx::TextAlignment to_text_alignment(Gfx::TextAlignment default_value) const
     {
         if (type() != Type::TextAlignment)
@@ -334,6 +344,7 @@ private:
         u64 as_u64;
         float as_float;
         Gfx::RGBA32 as_color;
+        Gfx::Alignment as_alignment;
         Gfx::TextAlignment as_text_alignment;
         Gfx::ColorRole as_color_role;
         Gfx::AlignmentRole as_alignment_role;

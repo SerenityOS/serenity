@@ -79,7 +79,7 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     int stripe_right = leftmost_button_rect.left() - 3;
     if (stripes_color.alpha() > 0) {
         switch (title_alignment) {
-        case Gfx::TextAlignment::CenterLeft: {
+        case Gfx::Alignment::Left: {
             int stripe_left = titlebar_title_rect.right() + 5;
 
             if (stripe_left && stripe_right && stripe_left < stripe_right) {
@@ -89,13 +89,13 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
             }
             break;
         }
-        case Gfx::TextAlignment::CenterRight: {
+        case Gfx::Alignment::Right: {
             for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
                 painter.draw_line({ titlebar_inner_rect.left(), titlebar_inner_rect.y() + i }, { stripe_right - titlebar_title_rect.width() - 3, titlebar_inner_rect.y() + i }, stripes_color);
             }
             break;
         }
-        case Gfx::TextAlignment::Center: {
+        case Gfx::Alignment::Center: {
             auto stripe_width = (leftmost_button_rect.left() / 2 - titlebar_title_rect.width() / 2) - titlebar_icon_rect.width() - 3;
 
             for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
@@ -104,6 +104,8 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
             }
             break;
         }
+        case Gfx::Alignment::Top:
+        case Gfx::Alignment::Bottom:
         default:
             dbgln("Unhandled title alignment!");
         }
@@ -112,9 +114,9 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     auto clipped_title_rect = titlebar_title_rect;
     clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
-        painter.draw_text(clipped_title_rect.translated(1, 2), window_title, title_font, title_alignment, shadow_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(1, 2), window_title, title_font, Gfx::text_alignment_from_alignment(title_alignment), shadow_color, Gfx::TextElision::Right);
         // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
-        painter.draw_text(clipped_title_rect.translated(0, 1), window_title, title_font, title_alignment, title_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(0, 1), window_title, title_font, Gfx::text_alignment_from_alignment(title_alignment), title_color, Gfx::TextElision::Right);
     }
 
     painter.draw_scaled_bitmap(titlebar_icon_rect, icon, icon.rect());

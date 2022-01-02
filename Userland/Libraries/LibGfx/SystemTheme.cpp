@@ -51,22 +51,22 @@ Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
         if (alignment.is_empty()) {
             switch (role) {
             case (int)AlignmentRole::TitleAlignment:
-                return Gfx::TextAlignment::CenterLeft;
+                return Gfx::Alignment::Left;
             default:
                 dbgln("Alignment {} has no fallback value!", name);
-                return Gfx::TextAlignment::CenterLeft;
+                return Gfx::Alignment::Left;
             }
         }
 
         if (alignment == "left" || alignment == "centerleft")
-            return Gfx::TextAlignment::CenterLeft;
+            return Gfx::Alignment::Left;
         else if (alignment == "right" || alignment == "centerright")
-            return Gfx::TextAlignment::CenterRight;
+            return Gfx::Alignment::Right;
         else if (alignment == "center")
-            return Gfx::TextAlignment::Center;
+            return Gfx::Alignment::Center;
 
         dbgln("Alignment {} has an invalid value!", name);
-        return Gfx::TextAlignment::CenterLeft;
+        return Gfx::Alignment::Left;
     };
 
     auto get_metric = [&](auto& name, auto role) {

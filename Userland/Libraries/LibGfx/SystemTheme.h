@@ -13,6 +13,7 @@
 #include <AK/Types.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/ConfigFile.h>
+#include <LibGfx/Alignment.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/TextAlignment.h>
 
@@ -253,7 +254,7 @@ inline const char* to_string(PathRole role)
 
 struct SystemTheme {
     RGBA32 color[(int)ColorRole::__Count];
-    Gfx::TextAlignment alignment[(int)AlignmentRole::__Count];
+    Gfx::Alignment alignment[(int)AlignmentRole::__Count];
     bool flag[(int)FlagRole::__Count];
     int metric[(int)MetricRole::__Count];
     char path[(int)PathRole::__Count][256]; // TODO: PATH_MAX?

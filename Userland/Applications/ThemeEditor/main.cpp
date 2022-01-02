@@ -53,7 +53,7 @@ public:
 
 struct AlignmentValue {
     String title;
-    Gfx::TextAlignment setting_value;
+    Gfx::Alignment setting_value;
 };
 
 class AlignmentModel final : public GUI::Model {
@@ -61,9 +61,9 @@ class AlignmentModel final : public GUI::Model {
 public:
     AlignmentModel()
     {
-        m_alignments.empend("Center", Gfx::TextAlignment::Center);
-        m_alignments.empend("Left", Gfx::TextAlignment::CenterLeft);
-        m_alignments.empend("Right", Gfx::TextAlignment::CenterRight);
+        m_alignments.empend("Center", Gfx::Alignment::Center);
+        m_alignments.empend("Left", Gfx::Alignment::Left);
+        m_alignments.empend("Right", Gfx::Alignment::Right);
     }
 
     virtual ~AlignmentModel() = default;
@@ -268,7 +268,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto role = alignment_combo_box.model()->index(alignment_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_alignment_role();
         auto preview_palette = preview_widget.preview_palette();
 
-        preview_palette.set_alignment(role, index.data(GUI::ModelRole::Custom).to_text_alignment(Gfx::TextAlignment::CenterLeft));
+        preview_palette.set_alignment(role, index.data(GUI::ModelRole::Custom).to_alignment(Gfx::Alignment::Left));
         preview_widget.set_preview_palette(preview_palette);
     };
 
