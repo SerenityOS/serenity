@@ -431,9 +431,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 } else if (parameter.default_value) {
                     // FIXME: Support default arguments in the bytecode world!
                     if (interpreter)
-                        argument_value = parameter.default_value->execute(*interpreter, global_object());
-                    if (auto* exception = vm.exception())
-                        return throw_completion(exception->value());
+                        argument_value = TRY(parameter.default_value->execute(*interpreter, global_object())).release_value();
                 } else {
                     argument_value = js_undefined();
                 }
@@ -715,27 +713,26 @@ void ECMAScriptFunctionObject::async_block_start(PromiseCapability const& promis
         // c. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
         vm.pop_execution_context();
 
-        // NOTE: Running the AST node should eventually return a completion.
-        // Until it does, we assume "return" and include the undefined fallback from the call site.
+        // NOTE: Eventually we'll distinguish between normal and return completion.
+        // For now, we assume "return" and include the undefined fallback from the call site.
         // d. If result.[[Type]] is normal, then
         if (false) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « undefined »).
             MUST(call(global_object, promise_capability.resolve, js_undefined(), js_undefined()));
         }
         // e. Else if result.[[Type]] is return, then
-        else if (!vm.exception()) {
+        else if (result.type() == Completion::Type::Return || result.type() == Completion::Type::Normal) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « result.[[Value]] »).
-            MUST(call(global_object, promise_capability.resolve, js_undefined(), result.value_or(js_undefined())));
+            MUST(call(global_object, promise_capability.resolve, js_undefined(), result.value().value_or(js_undefined())));
         }
         // f. Else,
         else {
             // i. Assert: result.[[Type]] is throw.
 
             // ii. Perform ! Call(promiseCapability.[[Reject]], undefined, « result.[[Value]] »).
-            auto reason = vm.exception()->value();
             vm.clear_exception();
             vm.stop_unwind();
-            MUST(call(global_object, promise_capability.reject, js_undefined(), reason));
+            MUST(call(global_object, promise_capability.reject, js_undefined(), *result.value()));
         }
         // g. Return.
         return js_undefined();
@@ -823,11 +820,9 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         if (m_kind == FunctionKind::Regular) {
             TRY(function_declaration_instantiation(ast_interpreter));
 
-            auto result = m_ecmascript_code->execute(*ast_interpreter, global_object());
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
-            // NOTE: Running the AST node should eventually return a completion.
-            // Until it does, we assume "return" and include the undefined fallback from the call site.
+            auto result = TRY(m_ecmascript_code->execute(*ast_interpreter, global_object()));
+            // NOTE: Once 'return' completions are being used, we can just return the completion from execute() directly.
+            // For now, we assume "return" and include the undefined fallback from the call site.
             return { Completion::Type::Return, result.value_or(js_undefined()), {} };
         } else if (m_kind == FunctionKind::Async) {
             // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
