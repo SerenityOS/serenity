@@ -176,7 +176,8 @@ void MessageBox::build()
     int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;
     width = max(width, text_width + icon_width + 56);
 
-    set_rect(x(), y(), width, 80 + label.max_height());
+    // FIXME: Use shrink from new layout system
+    set_rect(x(), y(), width, 80 + label.preferred_height());
     set_resizable(false);
 }
 

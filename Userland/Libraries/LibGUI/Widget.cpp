@@ -49,14 +49,17 @@ Widget::Widget()
     REGISTER_BOOL_PROPERTY("enabled", is_enabled, set_enabled);
     REGISTER_STRING_PROPERTY("tooltip", tooltip, set_tooltip);
 
-    REGISTER_SIZE_PROPERTY("min_size", min_size, set_min_size);
-    REGISTER_SIZE_PROPERTY("max_size", max_size, set_max_size);
+    REGISTER_UI_SIZE_PROPERTY("min_size", min_size, set_min_size);
+    REGISTER_UI_SIZE_PROPERTY("max_size", max_size, set_max_size);
+    REGISTER_UI_SIZE_PROPERTY("preferred_size", preferred_size, set_preferred_size);
     REGISTER_INT_PROPERTY("width", width, set_width);
-    REGISTER_INT_PROPERTY("min_width", min_width, set_min_width);
-    REGISTER_INT_PROPERTY("max_width", max_width, set_max_width);
-    REGISTER_INT_PROPERTY("min_height", min_height, set_min_height);
+    REGISTER_UI_DIMENSION_PROPERTY("min_width", min_width, set_min_width);
+    REGISTER_UI_DIMENSION_PROPERTY("max_width", max_width, set_max_width);
+    REGISTER_UI_DIMENSION_PROPERTY("preferred_width", preferred_width, set_preferred_width);
     REGISTER_INT_PROPERTY("height", height, set_height);
-    REGISTER_INT_PROPERTY("max_height", max_height, set_max_height);
+    REGISTER_UI_DIMENSION_PROPERTY("min_height", min_height, set_min_height);
+    REGISTER_UI_DIMENSION_PROPERTY("max_height", max_height, set_max_height);
+    REGISTER_UI_DIMENSION_PROPERTY("preferred_height", preferred_height, set_preferred_height);
 
     REGISTER_INT_PROPERTY("fixed_width", dummy_fixed_width, set_fixed_width);
     REGISTER_INT_PROPERTY("fixed_height", dummy_fixed_height, set_fixed_height);
@@ -780,20 +783,48 @@ void Widget::set_font_fixed_width(bool fixed_width)
         set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family(), m_font->presentation_size(), m_font->weight(), m_font->slope()));
 }
 
-void Widget::set_min_size(Gfx::IntSize const& size)
+void Widget::set_min_size(UISize const& size)
 {
+    VERIFY(size.width().is_one_of({ GUI::SpecialDimension::Regular, GUI::SpecialDimension::Shrink }));
     if (m_min_size == size)
         return;
     m_min_size = size;
     invalidate_layout();
 }
 
-void Widget::set_max_size(Gfx::IntSize const& size)
+void Widget::set_max_size(UISize const& size)
 {
+    VERIFY(size.width().is_one_of({ GUI::SpecialDimension::Regular, GUI::SpecialDimension::Grow }));
     if (m_max_size == size)
         return;
     m_max_size = size;
     invalidate_layout();
+}
+
+void Widget::set_preferred_size(UISize const& size)
+{
+    if (m_preferred_size == size)
+        return;
+    m_preferred_size = size;
+    invalidate_layout();
+}
+
+Optional<UISize> Widget::calculated_preferred_size() const
+{
+    if (layout())
+        return { layout()->preferred_size() };
+    return {};
+}
+
+Optional<UISize> Widget::calculated_min_size() const
+{
+    if (layout())
+        return { layout()->min_size() };
+    // Fall back to at least displaying the margins, so the Widget is not 0 size.
+    auto m = content_margins();
+    if (!m.is_null())
+        return UISize { m.left() + m.right(), m.top() + m.bottom() };
+    return {};
 }
 
 void Widget::invalidate_layout()
@@ -1173,10 +1204,8 @@ bool Widget::has_focus_within() const
 
 void Widget::set_shrink_to_fit(bool b)
 {
-    if (m_shrink_to_fit == b)
-        return;
-    m_shrink_to_fit = b;
-    invalidate_layout();
+    if (b)
+        set_preferred_size(SpecialDimension::Fit);
 }
 
 bool Widget::has_pending_drop() const
