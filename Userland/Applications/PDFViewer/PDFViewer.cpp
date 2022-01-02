@@ -109,9 +109,8 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
                 scrollbar.decrease_slider_by(20);
             }
         }
+        update();
     }
-
-    update();
 }
 
 void PDFViewer::timer_event(Core::TimerEvent&)
@@ -125,14 +124,24 @@ void PDFViewer::timer_event(Core::TimerEvent&)
 
 void PDFViewer::zoom_in()
 {
-    if (m_zoom_level < number_of_zoom_levels - 1)
+    if (m_zoom_level < number_of_zoom_levels - 1) {
         m_zoom_level++;
+        update();
+    }
 }
 
 void PDFViewer::zoom_out()
 {
-    if (m_zoom_level > 0)
+    if (m_zoom_level > 0) {
         m_zoom_level--;
+        update();
+    }
+}
+
+void PDFViewer::reset_zoom()
+{
+    m_zoom_level = initial_zoom_level;
+    update();
 }
 
 RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)

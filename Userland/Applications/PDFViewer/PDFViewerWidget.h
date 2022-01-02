@@ -35,6 +35,10 @@ private:
     RefPtr<GUI::Action> m_go_to_prev_page_action;
     RefPtr<GUI::Action> m_go_to_next_page_action;
     RefPtr<GUI::Action> m_toggle_sidebar_action;
+    RefPtr<GUI::Action> m_zoom_in_action;
+    RefPtr<GUI::Action> m_zoom_out_action;
+    RefPtr<GUI::Action> m_reset_zoom_action;
+
     bool m_sidebar_open { false };
     ByteBuffer m_buffer;
 };
