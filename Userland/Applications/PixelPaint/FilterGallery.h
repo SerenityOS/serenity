@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Filters/Filter.h"
 #include "ImageEditor.h"
 #include <LibGUI/Dialog.h>
 
@@ -16,6 +17,10 @@ class FilterGallery final : public GUI::Dialog {
 
 private:
     FilterGallery(GUI::Window* parent_window, ImageEditor*);
+    GUI::TreeView* m_filter_tree { nullptr };
+    GUI::Widget* m_config_widget { nullptr };
+    RefPtr<GUI::Widget> m_selected_filter_config_widget { nullptr };
+    Filter* m_selected_filter { nullptr };
 };
 
 }
