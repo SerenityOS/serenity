@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -159,7 +159,7 @@ ThrowCompletionOr<Value> await(GlobalObject&, Value);
 // 6.2.3.2 NormalCompletion ( value ), https://tc39.es/ecma262/#sec-normalcompletion
 inline Completion normal_completion(Optional<Value> value)
 {
-    return { Completion::Type::Normal, value, {} };
+    return { Completion::Type::Normal, move(value), {} };
 }
 
 // 6.2.3.3 ThrowCompletion ( value ), https://tc39.es/ecma262/#sec-throwcompletion
