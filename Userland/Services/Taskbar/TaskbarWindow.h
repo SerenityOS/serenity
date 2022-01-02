@@ -27,7 +27,7 @@ public:
     static int taskbar_icon_size() { return 16; }
 
 private:
-    explicit TaskbarWindow(Gfx::Alignment location, NonnullRefPtr<GUI::Menu> start_menu);
+    explicit TaskbarWindow(Gfx::Alignment location, NonnullRefPtr<GUI::Menu> start_menu, NonnullRefPtr<GUI::Menu> taskbar_menu);
     static void show_desktop_button_clicked(unsigned);
     void set_quick_launch_button_data(GUI::Button&, String const&, NonnullRefPtr<Desktop::AppFile>);
     void on_screen_rects_change(const Vector<Gfx::IntRect, 4>&, size_t);
@@ -50,6 +50,7 @@ private:
     void set_start_button_font(Gfx::Font const&);
 
     NonnullRefPtr<GUI::Menu> m_start_menu;
+    NonnullRefPtr<GUI::Menu> m_taskbar_menu;
     RefPtr<GUI::Widget> m_task_button_container;
     RefPtr<Gfx::Bitmap> m_default_icon;
 

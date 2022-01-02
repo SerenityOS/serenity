@@ -33,6 +33,7 @@ class TaskbarWidget final : public GUI::Widget {
 
 public:
     virtual ~TaskbarWidget() override { }
+    Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
 
 private:
     TaskbarWidget(Gfx::Alignment location)
@@ -74,11 +75,18 @@ private:
         });
     }
 
+    virtual void context_menu_event(GUI::ContextMenuEvent& context_menu_event) override
+    {
+        if (on_context_menu_request)
+            on_context_menu_request(context_menu_event);
+    }
+
     Gfx::Alignment m_location;
 };
 
-TaskbarWindow::TaskbarWindow(Gfx::Alignment location, NonnullRefPtr<GUI::Menu> start_menu)
+TaskbarWindow::TaskbarWindow(Gfx::Alignment location, NonnullRefPtr<GUI::Menu> start_menu, NonnullRefPtr<GUI::Menu> taskbar_menu)
     : m_start_menu(move(start_menu))
+    , m_taskbar_menu(move(taskbar_menu))
     , m_location(move(location))
 {
     set_window_type(GUI::WindowType::Taskbar);
@@ -98,6 +106,9 @@ TaskbarWindow::TaskbarWindow(Gfx::Alignment location, NonnullRefPtr<GUI::Menu> s
         main_widget.set_layout<GUI::HorizontalBoxLayout>();
         main_widget.layout()->set_margins({ 3, 1, 1, 3 });
     }
+    main_widget.on_context_menu_request = [&](GUI::ContextMenuEvent& event) {
+        m_taskbar_menu->popup(event.screen_position());
+    };
 
     m_start_button = GUI::Button::construct("Serenity");
     set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());

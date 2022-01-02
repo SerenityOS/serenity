@@ -67,7 +67,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto menu = TRY(build_system_menu());
     menu->realize_menu_if_needed();
 
-    auto window = TRY(TaskbarWindow::try_create(move(location), move(menu)));
+    auto open_settings_action = GUI::CommonActions::make_properties_action([&](auto&) {
+        Core::Process::spawn("/bin/TaskbarSettings");
+    });
+
+    auto taskbar_context_menu = TRY(GUI::Menu::try_create());
+    TRY(taskbar_context_menu->try_add_action(*open_settings_action));
+
+    auto window = TRY(TaskbarWindow::try_create(move(location), move(menu), move(taskbar_context_menu)));
     window->show();
 
     window->make_window_manager(
