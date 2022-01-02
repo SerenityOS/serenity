@@ -133,7 +133,13 @@ void SysFSUSBBusDirectory::plug(USB::Device& new_device)
     SpinlockLocker lock(m_lock);
     auto device_node = device_node_for(new_device);
     VERIFY(!device_node);
-    m_device_nodes.append(SysFSUSBDeviceInformation::create(new_device));
+    auto sysfs_usb_device_or_error = SysFSUSBDeviceInformation::create(new_device);
+    if (sysfs_usb_device_or_error.is_error()) {
+        dbgln("Failed to create SysFSUSBDevice for device id {}", new_device.address());
+        return;
+    }
+
+    m_device_nodes.append(sysfs_usb_device_or_error.release_value());
 }
 
 void SysFSUSBBusDirectory::unplug(USB::Device& deleted_device)
@@ -162,10 +168,10 @@ UNMAP_AFTER_INIT void SysFSUSBBusDirectory::initialize()
     s_procfs_usb_bus_directory = directory;
 }
 
-NonnullRefPtr<SysFSUSBDeviceInformation> SysFSUSBDeviceInformation::create(USB::Device& device)
+ErrorOr<NonnullRefPtr<SysFSUSBDeviceInformation>> SysFSUSBDeviceInformation::create(USB::Device& device)
 {
-    auto device_name = KString::must_create(String::number(device.address()));
-    return adopt_ref(*new SysFSUSBDeviceInformation(move(device_name), device));
+    auto device_name = TRY(KString::try_create(String::number(device.address())));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSUSBDeviceInformation(move(device_name), device));
 }
 
 }
