@@ -12,6 +12,15 @@
     
         @GUI::TreeView {
             name: "tree_view"
+            fixed_width: 200
+        }
+
+        @GUI::Widget {
+            name: "config_widget"
+
+            layout:@GUI::VerticalBoxLayout {
+                margins: [4]
+            }
         }
 
     }

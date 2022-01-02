@@ -18,7 +18,7 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
 {
     set_title("Filter Gallery");
     set_icon(parent_window->icon());
-    resize(200, 250);
+    resize(400, 250);
     set_resizable(true);
 
     auto& main_widget = set_main_widget<GUI::Widget>();
@@ -28,10 +28,12 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     auto filter_tree = main_widget.find_descendant_of_type_named<GUI::TreeView>("tree_view");
     auto apply_button = main_widget.find_descendant_of_type_named<GUI::Button>("apply_button");
     auto cancel_button = main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+    auto config_widget = main_widget.find_descendant_of_type_named<GUI::Widget>("config_widget");
 
     VERIFY(filter_tree);
     VERIFY(apply_button);
     VERIFY(cancel_button);
+    VERIFY(config_widget);
 
     auto filter_model = FilterModel::create(editor);
     filter_tree->set_model(filter_model);
