@@ -77,7 +77,7 @@ struct MultiHashDigestVariant {
     DigestVariant m_digest {};
 };
 
-class Manager final : public HashFunction<0, MultiHashDigestVariant> {
+class Manager final : public HashFunction<0, 0, MultiHashDigestVariant> {
 public:
     using HashFunction::update;
 
