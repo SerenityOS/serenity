@@ -198,11 +198,8 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     add_compile_options(-Wno-user-defined-literals)
     add_compile_options(-Wno-atomic-alignment)
     add_compile_options(-Wno-implicit-const-int-float-conversion)
-    add_compile_options(-Wno-null-pointer-subtraction)
-    add_compile_options(-Wno-unneeded-internal-declaration)
     add_compile_options(-Wno-unused-const-variable)
     add_compile_options(-Wno-unused-private-field)
-    add_compile_options(-fno-aligned-allocation)
     add_compile_options(-fconstexpr-steps=16777216)
 
     # Clang doesn't add compiler_rt to the search path when compiling with -nostdlib.
