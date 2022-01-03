@@ -152,9 +152,9 @@ void Game::do_machine_move()
         do_move(cell_index);
 
     } else {
-        uint8_t board[s_max_moves];
-        memcpy(board, m_board, s_max_moves);
-        do_move(minimax(board, Game::Maximize::Yes, m_difficulty, 0).cell_index);
+        uint8_t virtual_board[s_max_moves];
+        memcpy(virtual_board, m_board, s_max_moves);
+        do_move(minimax(virtual_board, Game::Maximize::Yes, m_difficulty, 0).cell_index);
     }
 }
 
@@ -182,13 +182,11 @@ Game::BestMove Game::minimax(uint8_t board[], Game::Maximize maximize, uint8_t m
         if (board[cell_index])
             continue;
 
-        uint8_t next_move_board[s_max_moves];
-        memcpy(next_move_board, board, s_max_moves);
-
-        next_move_board[cell_index] = is_maximizing ? Game::Player::O : Game::Player::X;
+        board[cell_index] = is_maximizing ? Game::Player::O : Game::Player::X;
         Game::Maximize next_maximize = is_maximizing ? Game::Maximize::No : Game::Maximize::Yes;
+        auto possible_best_move = minimax(board, next_maximize, max_depth, depth + 1);
+        board[cell_index] = 0;
 
-        auto possible_best_move = minimax(next_move_board, next_maximize, max_depth, depth + 1);
         best_score = is_maximizing
             ? max(best_score, possible_best_move.score)
             : min(best_score, possible_best_move.score);
