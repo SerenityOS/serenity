@@ -173,6 +173,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             m_table_view->set_column_width(last_column_index, 50);
             m_table_view->set_default_column_width(last_column_index, 50);
             m_table_view->set_column_header_alignment(last_column_index, Gfx::TextAlignment::Center);
+            m_table_view->set_column_painting_delegate(last_column_index, make<TableCellPainter>(*m_table_view));
         }
         update_with_model();
     };
