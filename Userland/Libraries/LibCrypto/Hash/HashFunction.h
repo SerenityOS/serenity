@@ -13,11 +13,24 @@
 namespace Crypto {
 namespace Hash {
 
-template<size_t BlockS, typename DigestT>
+template<size_t DigestS>
+struct Digest {
+    static_assert(DigestS % 8 == 0);
+    constexpr static size_t Size = DigestS / 8;
+    u8 data[Size];
+
+    [[nodiscard]] ALWAYS_INLINE const u8* immutable_data() const { return data; }
+    [[nodiscard]] ALWAYS_INLINE size_t data_length() const { return Size; }
+};
+
+template<size_t BlockS, size_t DigestS, typename DigestT = Digest<DigestS>>
 class HashFunction {
 public:
+    static_assert(BlockS % 8 == 0);
     static constexpr auto BlockSize = BlockS / 8;
-    static constexpr auto DigestSize = DigestT::Size;
+
+    static_assert(DigestS % 8 == 0);
+    static constexpr auto DigestSize = DigestS / 8;
 
     using DigestType = DigestT;
 

@@ -13,14 +13,6 @@
 namespace Crypto {
 namespace Hash {
 
-struct MD5Digest {
-    constexpr static size_t Size = 16;
-    u8 data[Size];
-
-    const u8* immutable_data() const { return data; }
-    size_t data_length() const { return Size; }
-};
-
 namespace MD5Constants {
 
 constexpr u32 init_A = 0x67452301;
@@ -53,7 +45,7 @@ constexpr u8 PADDING[] = {
 
 }
 
-class MD5 final : public HashFunction<512, MD5Digest> {
+class MD5 final : public HashFunction<512, 128> {
 public:
     using HashFunction::update;
 

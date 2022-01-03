@@ -25,16 +25,7 @@ constexpr static u32 RoundConstants[4] {
 
 }
 
-template<size_t Bytes>
-struct SHA1Digest {
-    u8 data[Bytes];
-    constexpr static size_t Size = Bytes;
-
-    const u8* immutable_data() const { return data; }
-    size_t data_length() const { return Bytes; }
-};
-
-class SHA1 final : public HashFunction<512, SHA1Digest<160 / 8>> {
+class SHA1 final : public HashFunction<512, 160> {
 public:
     using HashFunction::update;
 
