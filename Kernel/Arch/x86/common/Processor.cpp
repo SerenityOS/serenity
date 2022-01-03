@@ -461,10 +461,9 @@ void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
     m_gdt[i].high = high;
 
     // clear selectors we may have skipped
-    while (i < prev_gdt_length) {
-        m_gdt[i].low = 0;
-        m_gdt[i].high = 0;
-        i++;
+    for (auto j = prev_gdt_length; j < i; ++j) {
+        m_gdt[j].low = 0;
+        m_gdt[j].high = 0;
     }
 }
 
