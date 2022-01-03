@@ -48,11 +48,7 @@ Scrollbar::Scrollbar(Orientation orientation)
 {
     m_automatic_scrolling_timer = add<Core::Timer>();
 
-    if (orientation == Orientation::Vertical) {
-        set_fixed_width(16);
-    } else {
-        set_fixed_height(16);
-    }
+    set_preferred_size({ SpecialDimension::Fit });
 
     m_automatic_scrolling_timer->set_interval(100);
     m_automatic_scrolling_timer->on_timeout = [this] {
@@ -419,6 +415,22 @@ void Scrollbar::update_animated_scroll()
     double new_distance = initial_distance * ease_percent;
     int new_value = m_start_value + (int)round(new_distance);
     AbstractSlider::set_value(new_value);
+}
+
+Optional<UISize> Scrollbar::calculated_min_size() const
+{
+    if (orientation() == Gfx::Orientation::Vertical)
+        return { { default_button_size(), 2 * default_button_size() } };
+    else
+        return { { 2 * default_button_size(), default_button_size() } };
+}
+
+Optional<UISize> Scrollbar::calculated_preferred_size() const
+{
+    if (orientation() == Gfx::Orientation::Vertical)
+        return { { SpecialDimension::Shrink, SpecialDimension::Grow } };
+    else
+        return { { SpecialDimension::Grow, SpecialDimension::Shrink } };
 }
 
 }
