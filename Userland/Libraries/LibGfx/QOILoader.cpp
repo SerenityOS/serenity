@@ -141,8 +141,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
     auto bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRA8888, { width, height }));
 
     u8 run = 0;
-    Color pixel = { 0, 0, 0, 255 };
-    Color previous_pixels[64] {};
+    QOIState state;
 
     for (u32 y = 0; y < height; ++y) {
         for (u32 x = 0; x < width; ++x) {
@@ -153,23 +152,21 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
                 if (stream.handle_any_error())
                     return Error::from_string_literal("Invalid QOI image: end of stream while reading chunk tag"sv);
                 if (tag == QOI_OP_RGB)
-                    pixel = TRY(decode_qoi_op_rgb(stream, pixel));
+                    state.set_previous_pixel(TRY(decode_qoi_op_rgb(stream, state.previous_pixel())));
                 else if (tag == QOI_OP_RGBA)
-                    pixel = TRY(decode_qoi_op_rgba(stream));
+                    state.set_previous_pixel(TRY(decode_qoi_op_rgba(stream)));
                 else if ((tag & QOI_MASK_2) == QOI_OP_INDEX)
-                    pixel = previous_pixels[TRY(decode_qoi_op_index(stream))];
+                    state.set_previous_pixel(state.previously_seen_pixel(TRY(decode_qoi_op_index(stream))));
                 else if ((tag & QOI_MASK_2) == QOI_OP_DIFF)
-                    pixel = TRY(decode_qoi_op_diff(stream, pixel));
+                    state.set_previous_pixel(TRY(decode_qoi_op_diff(stream, state.previous_pixel())));
                 else if ((tag & QOI_MASK_2) == QOI_OP_LUMA)
-                    pixel = TRY(decode_qoi_op_luma(stream, pixel));
+                    state.set_previous_pixel(TRY(decode_qoi_op_luma(stream, state.previous_pixel())));
                 else if ((tag & QOI_MASK_2) == QOI_OP_RUN)
                     run = TRY(decode_qoi_op_run(stream));
                 else
                     return Error::from_string_literal("Invalid QOI image: unknown chunk tag"sv);
             }
-            auto index_position = (pixel.red() * 3 + pixel.green() * 5 + pixel.blue() * 7 + pixel.alpha() * 11) % 64;
-            previous_pixels[index_position] = pixel;
-            bitmap->set_pixel(x, y, pixel);
+            bitmap->set_pixel(x, y, state.previous_pixel());
         }
     }
     TRY(decode_qoi_end_marker(stream));

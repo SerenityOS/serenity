@@ -8,8 +8,10 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/Assertions.h>
 #include <AK/Math.h>
 #include <AK/Types.h>
+#include <LibGfx/Color.h>
 
 namespace Gfx {
 
@@ -42,5 +44,36 @@ ALWAYS_INLINE static constexpr bool qoi_is_valid_run(u8 run)
 {
     return AK::is_in_bounds(run, QOI_RUN_MIN, QOI_RUN_MAX);
 }
+
+class QOIState {
+public:
+    static constexpr u8 PREVIOUSLY_SEEN_PIXELS_SIZE = 64;
+
+    static inline u8 index_position(Color pixel)
+    {
+        return (pixel.red() * 3 + pixel.green() * 5 + pixel.blue() * 7 + pixel.alpha() * 11) % PREVIOUSLY_SEEN_PIXELS_SIZE;
+    }
+
+    void set_previous_pixel(Color pixel)
+    {
+        m_previous_pixel = pixel;
+        m_previously_seen_pixels[index_position(pixel)] = pixel;
+    }
+
+    Color previous_pixel() const
+    {
+        return m_previous_pixel;
+    }
+
+    Color previously_seen_pixel(u8 index)
+    {
+        VERIFY(index < PREVIOUSLY_SEEN_PIXELS_SIZE);
+        return m_previously_seen_pixels[index];
+    }
+
+protected:
+    Color m_previous_pixel { 0, 0, 0, 255 };
+    Color m_previously_seen_pixels[PREVIOUSLY_SEEN_PIXELS_SIZE] {};
+};
 
 }
