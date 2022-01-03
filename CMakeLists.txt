@@ -16,6 +16,20 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "SerenityOS")
             "Please re-read the BuildInstructions documentation, and use the superbuild configuration\n")
 endif()
 
+# Check for toolchain mismatch, user might need to rebuild toolchain
+set(GCC_VERSION "11.2.0")
+set(LLVM_VERSION "13.0.0")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(EXPECTED_COMPILER_VERSION "${GCC_VERSION}")
+else()
+    set(EXPECTED_COMPILER_VERSION "${LLVM_VERSION}")
+endif()
+if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "${EXPECTED_COMPILER_VERSION}")
+    message(FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} version (${CMAKE_CXX_COMPILER_VERSION}) does not match "
+            "expected compiler version (${EXPECTED_COMPILER_VERSION}).\n"
+            "Please rebuild the ${CMAKE_CXX_COMPILER_ID} Toolchain\n")
+endif()
+
 set(CMAKE_INSTALL_MESSAGE NEVER)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
