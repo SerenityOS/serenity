@@ -8,6 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <Kernel/Bus/USB/USBPipe.h>
 
 namespace Kernel::USB {
@@ -41,6 +42,8 @@ public:
 
     const USBDeviceDescriptor& device_descriptor() const { return m_device_descriptor; }
 
+    ErrorOr<const USBConfigurationDescriptor*> configuration_descriptor(u8 descriptor_index) const;
+
     USBController& controller() { return *m_controller; }
     USBController const& controller() const { return *m_controller; }
 
@@ -52,9 +55,11 @@ protected:
     u8 m_address { 0 };         // USB address assigned to this device
 
     // Device description
-    u16 m_vendor_id { 0 };                   // This device's vendor ID assigned by the USB group
-    u16 m_product_id { 0 };                  // This device's product ID assigned by the USB group
-    USBDeviceDescriptor m_device_descriptor; // Device Descriptor obtained from USB Device
+    u16 m_vendor_id { 0 };  // This device's vendor ID assigned by the USB group
+    u16 m_product_id { 0 }; // This device's product ID assigned by the USB group
+
+    USBDeviceDescriptor m_device_descriptor;                        // Device Descriptor obtained from USB Device
+    Vector<USBConfigurationDescriptor> m_configuration_descriptors; // List of configuration descriptors for Device Descriptor
 
     NonnullRefPtr<USBController> m_controller;
     NonnullOwnPtr<Pipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration

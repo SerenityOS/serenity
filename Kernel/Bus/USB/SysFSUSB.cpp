@@ -43,6 +43,22 @@ ErrorOr<void> SysFSUSBDeviceInformation::try_generate(KBufferBuilder& builder)
     obj.add("product_string_descriptor_index", m_device->device_descriptor().product_string_descriptor_index);
     obj.add("serial_number_descriptor_index", m_device->device_descriptor().serial_number_descriptor_index);
     obj.add("num_configurations", m_device->device_descriptor().num_configurations);
+
+    auto configuration_descriptor_array = obj.add_array("configuration_descriptors");
+    for (auto index = 0; index < m_device->device_descriptor().num_configurations; index++) {
+        const auto* const configuration_descriptor = TRY(m_device->configuration_descriptor(index));
+        auto configuration_descriptor_element = configuration_descriptor_array.add_object();
+
+        configuration_descriptor_element.add("total_length", configuration_descriptor->total_length);
+        configuration_descriptor_element.add("number_of_interfaces", configuration_descriptor->number_of_interfaces);
+        configuration_descriptor_element.add("configuration_value", configuration_descriptor->configuration_value);
+        configuration_descriptor_element.add("configuration_string_descriptor_index", configuration_descriptor->configuration_string_descriptor_index);
+        configuration_descriptor_element.add("attributes_bitmap", configuration_descriptor->attributes_bitmap);
+        configuration_descriptor_element.add("max_power_in_ma", configuration_descriptor->max_power_in_ma);
+        configuration_descriptor_element.finish();
+    }
+    configuration_descriptor_array.finish();
+
     obj.finish();
     array.finish();
     return {};

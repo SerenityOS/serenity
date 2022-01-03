@@ -55,6 +55,14 @@ Device::~Device()
 {
 }
 
+ErrorOr<const USBConfigurationDescriptor*> Device::configuration_descriptor(u8 descriptor_index) const
+{
+    if (descriptor_index >= m_configuration_descriptors.size())
+        return Error::from_string_literal("Invalid configuration descriptor id!");
+
+    return &m_configuration_descriptors.at(descriptor_index);
+}
+
 ErrorOr<void> Device::enumerate_device()
 {
     USBDeviceDescriptor dev_descriptor {};
@@ -117,6 +125,20 @@ ErrorOr<void> Device::enumerate_device()
     dbgln_if(USB_DEBUG, "USB Device: Set address to {}", m_address);
 
     memcpy(&m_device_descriptor, &dev_descriptor, sizeof(USBDeviceDescriptor));
+
+    // Get all configuration descriptors and cache them
+    for (auto i = 0; i < m_device_descriptor.num_configurations; i++) {
+        USBConfigurationDescriptor configuration_descriptor;
+        transfer_length = TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8), 0, sizeof(USBConfigurationDescriptor), &configuration_descriptor));
+
+        if (transfer_length < sizeof(USBConfigurationDescriptor)) {
+            dbgln("USB Device: Unexpected configuration descriptor length. Expected {}, got {}.", sizeof(USBDeviceDescriptor), transfer_length);
+            return EIO;
+        }
+
+        TRY(m_configuration_descriptors.try_append(configuration_descriptor));
+    }
+
     return {};
 }
 
