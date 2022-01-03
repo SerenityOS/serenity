@@ -16,6 +16,7 @@ set(SOURCES
     Emoji.cpp
     Filters/ColorBlindnessFilter.cpp
     Filters/FastBoxBlurFilter.cpp
+    Filters/LumaFilter.cpp
     FontDatabase.cpp
     GIFLoader.cpp
     ICOLoader.cpp
