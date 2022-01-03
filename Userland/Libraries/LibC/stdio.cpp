@@ -63,8 +63,9 @@ bool FILE::flush()
     }
     if (m_mode & O_RDONLY) {
         // When open for reading, just drop the buffered data.
-        VERIFY(m_buffer.buffered_size() <= NumericLimits<off_t>::max());
-        off_t had_buffered = m_buffer.buffered_size();
+        if constexpr (sizeof(size_t) >= sizeof(off_t))
+            VERIFY(m_buffer.buffered_size() <= NumericLimits<off_t>::max());
+        off_t had_buffered = static_cast<off_t>(m_buffer.buffered_size());
         m_buffer.drop();
         // Attempt to reset the underlying file position to what the user
         // expects.
