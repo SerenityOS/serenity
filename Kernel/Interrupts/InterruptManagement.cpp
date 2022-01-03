@@ -214,11 +214,11 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
             ByteReader::load<u32>(reinterpret_cast<u8 const*>(&interrupt_override_entry->global_system_interrupt), global_system_interrupt);
             u16 flags = 0;
             ByteReader::load<u16>(reinterpret_cast<u8 const*>(&interrupt_override_entry->flags), flags);
-            m_isa_interrupt_overrides.empend(
+            MUST(m_isa_interrupt_overrides.try_empend(
                 interrupt_override_entry->bus,
                 interrupt_override_entry->source,
                 global_system_interrupt,
-                flags);
+                flags));
 
             dbgln("Interrupts: Overriding INT {:#x} with GSI {}, for bus {:#x}",
                 interrupt_override_entry->source,

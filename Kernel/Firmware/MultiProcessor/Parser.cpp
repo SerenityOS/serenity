@@ -119,13 +119,13 @@ UNMAP_AFTER_INIT Vector<PCIInterruptOverrideMetadata> MultiProcessorParser::get_
                     entry.source_bus_irq,
                     entry.destination_ioapic_id,
                     entry.destination_ioapic_intin_pin);
-                overrides.empend(
+                MUST(overrides.try_empend(
                     entry.source_bus_id,
                     entry.polarity,
                     entry.trigger_mode,
                     entry.source_bus_irq,
                     entry.destination_ioapic_id,
-                    entry.destination_ioapic_intin_pin);
+                    entry.destination_ioapic_intin_pin));
             }
         }
     }
