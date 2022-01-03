@@ -592,6 +592,21 @@ ErrorOr<void> mkdir(StringView path, mode_t mode)
 #endif
 }
 
+ErrorOr<void> chdir(StringView path)
+{
+    if (path.is_null())
+        return Error::from_errno(EFAULT);
+#ifdef __serenity__
+    int rc = syscall(SC_chdir, path.characters_without_null_termination(), path.length());
+    HANDLE_SYSCALL_RETURN_VALUE("chdir"sv, rc, {});
+#else
+    String path_string = path;
+    if (::chdir(path_string.characters()) < 0)
+        return Error::from_syscall("chdir"sv, -errno);
+    return {};
+#endif
+}
+
 ErrorOr<pid_t> fork()
 {
     pid_t pid = ::fork();
