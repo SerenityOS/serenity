@@ -488,10 +488,10 @@ void WebSocket::send_frame(WebSocket::OpCode op_code, ReadonlyBytes payload, boo
     m_impl->send(ReadonlyBytes(frame_head, 1));
     // Section 5.1 : a client MUST mask all frames that it sends to the server
     bool has_mask = true;
-    if (payload.size() > NumericLimits<u64>::max()) {
-        // FIXME: We can technically stream this via non-final packets.
-        TODO();
-    } else if (payload.size() > NumericLimits<u16>::max()) {
+    // FIXME: If the payload has a size > size_t max on a 32-bit platform, we could
+    //     technically stream it via non-final packets. However, the size was already
+    //     truncated earlier in the call stack when stuffing into a ReadonlyBytes
+    if (payload.size() > NumericLimits<u16>::max()) {
         // Send (the 'mask' flag + 127) + the 8-byte payload length
         if constexpr (sizeof(size_t) >= 8) {
             u8 payload_length[9] = {
