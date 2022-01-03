@@ -27,28 +27,6 @@ public:
     {
     }
 
-    template<size_t size>
-    ALWAYS_INLINE constexpr Span(T (&values)[size])
-        : m_values(values)
-        , m_size(size)
-    {
-    }
-
-    template<size_t size>
-    ALWAYS_INLINE constexpr Span(Array<T, size>& array)
-        : m_values(array.data())
-        , m_size(size)
-    {
-    }
-
-    template<size_t size>
-    requires(IsConst<T>)
-        ALWAYS_INLINE constexpr Span(Array<T, size> const& array)
-        : m_values(array.data())
-        , m_size(size)
-    {
-    }
-
 protected:
     T* m_values { nullptr };
     size_t m_size { 0 };
@@ -109,6 +87,25 @@ public:
     using Detail::Span<T>::Span;
 
     constexpr Span() = default;
+
+    template<size_t size>
+    ALWAYS_INLINE constexpr Span(T (&values)[size])
+        : Span(values, size)
+    {
+    }
+
+    template<size_t size>
+    ALWAYS_INLINE constexpr Span(Array<T, size>& array)
+        : Span(array.data(), size)
+    {
+    }
+
+    template<size_t size>
+    requires(IsConst<T>)
+        ALWAYS_INLINE constexpr Span(Array<T, size> const& array)
+        : Span(array.data(), size)
+    {
+    }
 
     [[nodiscard]] ALWAYS_INLINE constexpr T const* data() const { return this->m_values; }
     [[nodiscard]] ALWAYS_INLINE constexpr T* data() { return this->m_values; }
@@ -248,6 +245,9 @@ struct Traits<Span<T>> : public GenericTraits<Span<T>> {
         return hash;
     }
 };
+
+template<typename T, size_t N>
+Span(T (&array)[N]) -> Span<T>;
 
 using ReadonlyBytes = Span<u8 const>;
 using Bytes = Span<u8>;

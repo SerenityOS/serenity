@@ -27,7 +27,7 @@ TEST_CASE(implicit_conversion_to_const)
 TEST_CASE(span_works_with_constant_types)
 {
     static constexpr u8 buffer[4] { 1, 2, 3, 4 };
-    constexpr ReadonlyBytes bytes { buffer, 4 };
+    constexpr ReadonlyBytes bytes { buffer };
 
     static_assert(IsConst<RemoveReference<decltype(bytes[1])>>);
     static_assert(bytes[2] == 3);
@@ -36,7 +36,7 @@ TEST_CASE(span_works_with_constant_types)
 TEST_CASE(span_works_with_mutable_types)
 {
     u8 buffer[4] { 1, 2, 3, 4 };
-    Bytes bytes { buffer, 4 };
+    Bytes bytes { buffer };
 
     EXPECT_EQ(bytes[2], 3);
     ++bytes[2];
@@ -50,7 +50,7 @@ TEST_CASE(iterator_behaves_like_loop)
         buffer[idx] = static_cast<u8>(idx);
     }
 
-    Bytes bytes { buffer, 256 };
+    Bytes bytes { buffer };
     size_t idx = 0;
     for (auto iter = bytes.begin(); iter < bytes.end(); ++iter) {
         EXPECT_EQ(*iter, buffer[idx]);
@@ -64,7 +64,7 @@ TEST_CASE(modifying_is_possible)
     int values_before[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
     int values_after[8] = { 7, 6, 5, 4, 3, 2, 1, 0 };
 
-    Span<int> span { values_before, 8 };
+    Span<int> span { values_before };
     for (auto& value : span) {
         value = 8 - value;
     }
@@ -81,7 +81,7 @@ TEST_CASE(at_and_index_operator_return_same_value)
         buffer[idx] = static_cast<u8>(idx);
     }
 
-    Bytes bytes { buffer, 256 };
+    Bytes bytes { buffer };
     for (int idx = 0; idx < 256; ++idx) {
         EXPECT_EQ(buffer[idx], bytes[idx]);
         EXPECT_EQ(bytes[idx], bytes.at(idx));
@@ -91,7 +91,7 @@ TEST_CASE(at_and_index_operator_return_same_value)
 TEST_CASE(can_subspan_whole_span)
 {
     static constexpr u8 buffer[16] {};
-    constexpr ReadonlyBytes bytes { buffer, 16 };
+    constexpr ReadonlyBytes bytes { buffer };
 
     constexpr auto slice = bytes.slice(0, 16);
 
@@ -103,7 +103,7 @@ TEST_CASE(can_subspan_as_intended)
 {
     static constexpr u16 buffer[8] { 1, 2, 3, 4, 5, 6, 7, 8 };
 
-    constexpr Span<const u16> span { buffer, 8 };
+    constexpr Span<const u16> span { buffer };
     constexpr auto slice = span.slice(3, 2);
 
     static_assert(slice.size() == 2u);
@@ -136,6 +136,6 @@ TEST_CASE(starts_with)
     EXPECT(!bytes.starts_with(nah_bytes));
 
     const u8 hey_array[3] = { 'H', 'e', 'y' };
-    ReadonlyBytes hey_bytes_u8 { hey_array, 3 };
+    ReadonlyBytes hey_bytes_u8 { hey_array };
     EXPECT(bytes.starts_with(hey_bytes_u8));
 }
