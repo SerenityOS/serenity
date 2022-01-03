@@ -63,11 +63,13 @@ void Statusbar::set_text(size_t index, String text)
     update_label(index);
 }
 
-void Statusbar::set_width(int width) {
+void Statusbar::set_width(int width)
+{
     set_width(0, width);
 }
 
-void Statusbar::set_width(size_t index, int width) {
+void Statusbar::set_width(size_t index, int width)
+{
     m_segments.at(index).label->set_fixed_width(width);
     update_label(index);
 }
