@@ -27,10 +27,17 @@ public:
         HumanVsMachine
     };
 
+    enum Difficulty {
+        Easy = 2,
+        Normal = 3,
+        Hard = 0
+    };
+
     bool do_move(uint8_t);
-    void do_machine_move();
     void start_new_game();
     Player current_player() { return m_current_player; };
+    Difficulty difficulty() { return m_difficulty; }
+    void set_difficulty(Difficulty difficulty) { m_difficulty = difficulty; }
     Mode mode() { return m_mode; }
     void set_mode(Mode mode);
     uint16_t moves_remaining() { return m_moves_remaining; }
@@ -61,6 +68,7 @@ private:
     WinnerCheckResult check_if_current_player_won();
     WinnerCheckResult check_if_player_won(uint8_t const board[], Game::Player const);
     uint8_t row_col_to_cell_index(uint8_t row, uint8_t col);
+    void do_machine_move();
     BestMove minimax(uint8_t board[], Maximize, uint8_t max_depth, uint8_t depth);
 
     Player m_current_player { Player::O };
@@ -70,6 +78,7 @@ private:
     uint16_t m_o_victories { 0 };
     uint16_t m_ties { 0 };
     Mode m_mode { Mode::HumanVsMachine };
+    Difficulty m_difficulty { Difficulty::Normal };
 };
 
 }
