@@ -236,11 +236,13 @@ if [ -z "$SERENITY_MACHINE" ]; then
     fi
 fi
 
-if [ "$NATIVE_WINDOWS_QEMU" -ne "1" ]; then
+# Enable QEMU QMP protocol only if we want to profile the kernel
+# via QMP. Enabling this otherwise removes the QEMU monitor, which
+# is required to debug things like USB
+if [ "$NATIVE_WINDOWS_QEMU" -ne "1" ] && [ "$SERENITY_PROFILE_KERNEL_QMP" -eq "1" ]; then
     SERENITY_MACHINE="$SERENITY_MACHINE
     -qmp unix:qmp-sock,server,nowait"
 fi
-
 
 
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
