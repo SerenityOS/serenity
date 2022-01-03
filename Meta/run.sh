@@ -1,6 +1,8 @@
 #!/bin/sh
 # shellcheck disable=SC2086 # FIXME: fix these globing warnings
 
+export PATH=$PATH:/sbin
+
 set -e
 
 die() {
