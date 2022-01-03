@@ -201,13 +201,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::at)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::every)
 {
     auto result = true;
-    for_each_item(vm, global_object, "every", [&](auto, auto, auto callback_result) {
+    TRY(for_each_item(vm, global_object, "every", [&](auto, auto, auto callback_result) {
         if (!callback_result.to_boolean()) {
             result = false;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
-    });
+    }));
     return Value(result);
 }
 
@@ -261,13 +261,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find)
 {
     auto result = js_undefined();
-    for_each_item(vm, global_object, "find", [&](auto, auto value, auto callback_result) {
+    TRY(for_each_item(vm, global_object, "find", [&](auto, auto value, auto callback_result) {
         if (callback_result.to_boolean()) {
             result = value;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
-    });
+    }));
     return result;
 }
 
@@ -275,13 +275,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_index)
 {
     auto result_index = -1;
-    for_each_item(vm, global_object, "findIndex", [&](auto index, auto, auto callback_result) {
+    TRY(for_each_item(vm, global_object, "findIndex", [&](auto index, auto, auto callback_result) {
         if (callback_result.to_boolean()) {
             result_index = index;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
-    });
+    }));
     return Value(result_index);
 }
 
@@ -289,13 +289,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_index)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_last)
 {
     auto result = js_undefined();
-    for_each_item_from_last(vm, global_object, "findLast", [&](auto, auto value, auto callback_result) {
+    TRY(for_each_item_from_last(vm, global_object, "findLast", [&](auto, auto value, auto callback_result) {
         if (callback_result.to_boolean()) {
             result = value;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
-    });
+    }));
     return result;
 }
 
@@ -303,22 +303,22 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_last)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_last_index)
 {
     auto result_index = -1;
-    for_each_item_from_last(vm, global_object, "findLastIndex", [&](auto index, auto, auto callback_result) {
+    TRY(for_each_item_from_last(vm, global_object, "findLastIndex", [&](auto index, auto, auto callback_result) {
         if (callback_result.to_boolean()) {
             result_index = index;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
-    });
+    }));
     return Value(result_index);
 }
 
 // 23.2.3.13 %TypedArray%.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
 {
-    for_each_item(vm, global_object, "forEach", [](auto, auto, auto) {
+    TRY(for_each_item(vm, global_object, "forEach", [](auto, auto, auto) {
         return IterationDecision::Continue;
-    });
+    }));
     return js_undefined();
 }
 
@@ -510,13 +510,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::some)
 {
     auto result = false;
-    for_each_item(vm, global_object, "some", [&](auto, auto, auto callback_result) {
+    TRY(for_each_item(vm, global_object, "some", [&](auto, auto, auto callback_result) {
         if (callback_result.to_boolean()) {
             result = true;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
-    });
+    }));
     return Value(result);
 }
 
