@@ -13,10 +13,10 @@ class AutoSlider final : public GUI::Slider {
 public:
     ~AutoSlider() override = default;
     Function<void(int)> on_knob_released;
-    void set_value(int value)
+    virtual void set_value(int value, GUI::AllowCallback allow_callback = GUI::AllowCallback::Yes) override
     {
         if (!knob_dragging() && !mouse_is_down())
-            GUI::Slider::set_value(value);
+            GUI::Slider::set_value(value, allow_callback);
     }
 
     bool mouse_is_down() const { return m_mouse_is_down; }

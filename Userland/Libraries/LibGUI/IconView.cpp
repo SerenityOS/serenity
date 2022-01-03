@@ -682,7 +682,7 @@ void IconView::toggle_selection(ItemData& item_data)
     if (!item_data.selected)
         add_selection(item_data);
     else
-        remove_selection(item_data);
+        remove_item_selection(item_data);
 }
 
 void IconView::toggle_selection(const ModelIndex& new_index)
@@ -692,7 +692,7 @@ void IconView::toggle_selection(const ModelIndex& new_index)
     toggle_selection(get_item_data(item_index));
 }
 
-void IconView::remove_selection(ItemData& item_data)
+void IconView::remove_item_selection(ItemData& item_data)
 {
     if (!item_data.selected)
         return;
