@@ -170,7 +170,7 @@ ErrorOr<void> FramebufferDevice::create_framebuffer()
 
     NonnullRefPtrVector<Memory::PhysicalPage> pages;
     for (auto i = 0u; i < num_needed_pages; ++i) {
-        pages.append(write_sink_page);
+        TRY(pages.try_append(write_sink_page));
     }
     m_framebuffer_sink_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_physical_pages(pages.span()));
 

@@ -125,8 +125,8 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions() const
                 continue;
             // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
             auto disk_partition = DiskPartition::create(const_cast<StorageDevice&>(device), (partition_index + (16 * device_index)), partition_metadata.value());
-            partitions.append(disk_partition);
-            const_cast<StorageDevice&>(device).m_partitions.append(disk_partition);
+            MUST(partitions.try_append(disk_partition));
+            MUST(const_cast<StorageDevice&>(device).m_partitions.try_append(disk_partition));
         }
         device_index++;
     }
