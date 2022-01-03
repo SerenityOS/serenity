@@ -52,17 +52,17 @@ RunWindow::RunWindow()
         m_ok_button->click();
     };
 
-    m_ok_button = *main_widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+    m_ok_button = *main_widget.find_descendant_of_type_named<GUI::DialogButton>("ok_button");
     m_ok_button->on_click = [this](auto) {
         do_run();
     };
 
-    m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::DialogButton>("cancel_button");
     m_cancel_button->on_click = [this](auto) {
         close();
     };
 
-    m_browse_button = *find_descendant_of_type_named<GUI::Button>("browse_button");
+    m_browse_button = *find_descendant_of_type_named<GUI::DialogButton>("browse_button");
     m_browse_button->on_click = [this](auto) {
         Optional<String> path = GUI::FilePicker::get_open_filepath(this, {}, Core::StandardPaths::home_directory(), false, GUI::Dialog::ScreenPosition::Center);
         if (path.has_value())

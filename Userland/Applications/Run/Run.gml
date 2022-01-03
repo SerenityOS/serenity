@@ -38,28 +38,28 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {}
-        fixed_height: 22
+        layout: @GUI::HorizontalBoxLayout {
+            spacing: 6
+        }
+
+        preferred_height: "shrink"
 
         // HACK: using an empty widget as a spacer
         @GUI::Widget {}
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "ok_button"
             text: "OK"
-            fixed_width: 80
         }
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "cancel_button"
             text: "Cancel"
-            fixed_width: 80
         }
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "browse_button"
             text: "Browse..."
-            fixed_width: 80
         }
     }
 }

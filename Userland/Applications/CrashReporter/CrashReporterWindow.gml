@@ -82,13 +82,12 @@
         fixed_height: 32
         layout: @GUI::HorizontalBoxLayout {}
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "debug_button"
             text: "Debug in Hack Studio"
-            fixed_width: 150
         }
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "save_backtrace_button"
             text: "Save Backtrace"
             fixed_width: 150
@@ -97,10 +96,9 @@
         // HACK: We need something like Layout::add_spacer() in GML! :^)
         @GUI::Widget {}
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "close_button"
             text: "Close"
-            fixed_width: 70
         }
     }
 }
