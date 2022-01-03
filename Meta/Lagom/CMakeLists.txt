@@ -498,7 +498,7 @@ if (BUILD_LAGOM)
 
         add_executable(shell_lagom ../../Userland/Shell/main.cpp)
         set_target_properties(shell_lagom PROPERTIES OUTPUT_NAME shell)
-        target_link_libraries(shell_lagom LagomCore LagomShell)
+        target_link_libraries(shell_lagom LagomCore LagomShell LagomMain)
 
         add_executable(wasm_lagom ../../Userland/Utilities/wasm.cpp)
         set_target_properties(wasm_lagom PROPERTIES OUTPUT_NAME wasm)

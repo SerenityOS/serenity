@@ -24,7 +24,7 @@ set(SOURCES
         )
 
 serenity_bin(Shell)
-target_link_libraries(Shell LibShell)
+target_link_libraries(Shell LibShell LibMain)
 
 install(DIRECTORY Tests/ DESTINATION usr/Tests/Shell
         PATTERN "Tests/*"
