@@ -13,7 +13,7 @@
 #include <LibCore/FileStream.h>
 #include <LibCrypto/Checksum/CRC32.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     const char* zip_path;
     Vector<StringView> source_paths;
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(source_paths, "Input files to be archived", "files", Core::ArgsParser::Required::Yes);
     args_parser.add_option(recurse, "Travel the directory structure recursively", "recurse-paths", 'r');
     args_parser.add_option(force, "Overwrite existing zip file", "force", 'f');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     String zip_file_path { zip_path };
     if (Core::File::exists(zip_file_path)) {
@@ -37,15 +37,10 @@ int main(int argc, char** argv)
         }
     }
 
-    auto file_stream_or_error = Core::OutputFileStream::open(zip_file_path);
-    if (file_stream_or_error.is_error()) {
-        warnln("Failed to open zip file: {}", file_stream_or_error.error());
-        return 1;
-    }
+    auto file_stream = TRY(Core::OutputFileStream::open(zip_file_path));
 
     outln("Archive: {}", zip_file_path);
 
-    auto file_stream = file_stream_or_error.value();
     Archive::ZipOutputStream zip_stream { file_stream };
 
     auto add_file = [&](String path) {
