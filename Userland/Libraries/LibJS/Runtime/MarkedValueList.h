@@ -15,26 +15,18 @@
 namespace JS {
 
 class MarkedValueList : public Vector<Value, 32> {
-    AK_MAKE_NONCOPYABLE(MarkedValueList);
-
 public:
     explicit MarkedValueList(Heap&);
+    MarkedValueList(MarkedValueList const&);
     MarkedValueList(MarkedValueList&&);
     ~MarkedValueList();
 
-    MarkedValueList& operator=(MarkedValueList&&) = delete;
-
     Vector<Value, 32>& values() { return *this; }
 
-    MarkedValueList copy() const
-    {
-        MarkedValueList copy { m_heap };
-        copy.extend(*this);
-        return copy;
-    }
+    MarkedValueList& operator=(JS::MarkedValueList const& other);
 
 private:
-    Heap& m_heap;
+    Heap* m_heap;
 
     IntrusiveListNode<MarkedValueList> m_list_node;
 

@@ -24,7 +24,7 @@ struct ExecutionContext {
 
     [[nodiscard]] ExecutionContext copy() const
     {
-        ExecutionContext copy { arguments.copy() };
+        ExecutionContext copy { arguments };
 
         copy.function = function;
         copy.realm = realm;
