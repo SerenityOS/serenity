@@ -69,10 +69,10 @@ public:
         auto& gcf_params = static_cast<const GenericConvolutionFilter::Parameters&>(parameters);
 
         ApplyCache apply_cache;
-        apply(target_bitmap, target_rect, source_bitmap, source_rect, gcf_params, apply_cache);
+        apply_with_cache(target_bitmap, target_rect, source_bitmap, source_rect, gcf_params, apply_cache);
     }
 
-    void apply(Bitmap& target, IntRect target_rect, const Bitmap& source, const IntRect& source_rect, const GenericConvolutionFilter::Parameters& parameters, ApplyCache& apply_cache)
+    void apply_with_cache(Bitmap& target, IntRect target_rect, const Bitmap& source, const IntRect& source_rect, const GenericConvolutionFilter::Parameters& parameters, ApplyCache& apply_cache)
     {
         // The target area (where the filter is applied) must be entirely
         // contained by the source area. source_rect should be describing
