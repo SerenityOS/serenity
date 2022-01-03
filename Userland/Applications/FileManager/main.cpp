@@ -55,7 +55,7 @@
 using namespace FileManager;
 
 static ErrorOr<int> run_in_desktop_mode();
-static ErrorOr<int> run_in_windowed_mode(String initial_location, String entry_focused_on_init);
+static ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& entry_focused_on_init);
 static void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation);
 static void do_paste(String const& target_directory, GUI::Window* window);
 static void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* window);
@@ -520,7 +520,7 @@ ErrorOr<int> run_in_desktop_mode()
     return GUI::Application::the()->exec();
 }
 
-ErrorOr<int> run_in_windowed_mode(String initial_location, String entry_focused_on_init)
+ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& entry_focused_on_init)
 {
     auto window = TRY(GUI::Window::try_create());
     window->set_title("File Manager");
