@@ -48,6 +48,8 @@ public:
 
     NonnullRefPtrVector<DiskPartition> const& partitions() const { return m_partitions; }
 
+    void add_partition(NonnullRefPtr<DiskPartition> disk_partition) { MUST(m_partitions.try_append(disk_partition)); }
+
     virtual CommandSet command_set() const = 0;
 
     // ^File
