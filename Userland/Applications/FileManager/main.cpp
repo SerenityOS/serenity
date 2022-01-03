@@ -951,6 +951,10 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     directory_view->set_should_show_dotfiles(show_dotfiles);
     action_show_dotfiles->set_checked(show_dotfiles);
 
+    auto const initial_location_contains_dotfile = initial_location.contains("/."sv);
+    action_show_dotfiles->set_checked(initial_location_contains_dotfile);
+    action_show_dotfiles->on_activation(action_show_dotfiles);
+
     auto view_menu = TRY(window->try_add_menu("&View"));
     auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"));
     TRY(layout_menu->try_add_action(*layout_toolbar_action));
