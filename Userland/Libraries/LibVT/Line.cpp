@@ -74,7 +74,7 @@ void Line::push_cells_into_next_line(size_t new_length, Line* next_line, bool cu
         }
     }
 
-    next_line->m_cells.prepend(m_cells.span().slice_from_end(cells_to_push_into_next_line).data(), cells_to_push_into_next_line);
+    MUST(next_line->m_cells.try_prepend(m_cells.span().slice_from_end(cells_to_push_into_next_line).data(), cells_to_push_into_next_line));
     m_cells.remove(m_cells.size() - cells_to_push_into_next_line, cells_to_push_into_next_line);
     if (m_terminated_at.has_value())
         m_terminated_at = m_terminated_at.value() - cells_to_push_into_next_line;
@@ -110,7 +110,7 @@ void Line::take_cells_from_next_line(size_t new_length, Line* next_line, bool cu
                 cursor->column -= cells_to_grab_from_next_line;
             }
         }
-        m_cells.append(next_line->m_cells.data(), cells_to_grab_from_next_line);
+        MUST(m_cells.try_append(next_line->m_cells.data(), cells_to_grab_from_next_line));
         next_line->m_cells.remove(0, cells_to_grab_from_next_line);
     }
 
