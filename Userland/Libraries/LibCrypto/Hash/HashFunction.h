@@ -21,15 +21,15 @@ public:
 
     using DigestType = DigestT;
 
-    constexpr static size_t block_size() { return BlockSize; };
-    constexpr static size_t digest_size() { return DigestSize; };
+    constexpr static size_t block_size() { return BlockSize; }
+    constexpr static size_t digest_size() { return DigestSize; }
 
     virtual void update(const u8*, size_t) = 0;
 
-    void update(Bytes buffer) { update(buffer.data(), buffer.size()); };
-    void update(ReadonlyBytes buffer) { update(buffer.data(), buffer.size()); };
-    void update(const ByteBuffer& buffer) { update(buffer.data(), buffer.size()); };
-    void update(StringView string) { update((const u8*)string.characters_without_null_termination(), string.length()); };
+    void update(Bytes buffer) { update(buffer.data(), buffer.size()); }
+    void update(ReadonlyBytes buffer) { update(buffer.data(), buffer.size()); }
+    void update(const ByteBuffer& buffer) { update(buffer.data(), buffer.size()); }
+    void update(StringView string) { update((const u8*)string.characters_without_null_termination(), string.length()); }
 
     virtual DigestType peek() = 0;
     virtual DigestType digest() = 0;
