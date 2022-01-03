@@ -21,7 +21,7 @@ public:
         if (m_stack.size() >= stack_size)
             return false;
 
-        m_stack.append(item);
+        m_stack.unchecked_append(item);
         return true;
     }
 
@@ -30,7 +30,7 @@ public:
         if (m_stack.size() >= stack_size)
             return false;
 
-        m_stack.append(move(item));
+        m_stack.unchecked_append(move(item));
         return true;
     }
 
