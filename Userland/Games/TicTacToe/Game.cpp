@@ -143,12 +143,18 @@ void Game::do_machine_move()
     if (!m_moves_remaining)
         return;
 
-    if (m_moves_remaining == s_max_moves)
-        do_move(get_random_uniform(s_max_moves));
-    else {
+    // For Hard difficulty only the first round uses a random move.
+    uint8_t max_moves_for_random_move = m_difficulty == Game::Difficulty::Hard ? s_max_moves : s_max_moves - 2;
+    if (m_moves_remaining >= max_moves_for_random_move) {
+        uint8_t cell_index;
+        while (m_board[cell_index])
+            cell_index = get_random_uniform(s_max_moves);
+        do_move(cell_index);
+
+    } else {
         uint8_t board[s_max_moves];
         memcpy(board, m_board, s_max_moves);
-        do_move(minimax(board, Game::Maximize::Yes, 0, 0).cell_index);
+        do_move(minimax(board, Game::Maximize::Yes, m_difficulty, 0).cell_index);
     }
 }
 

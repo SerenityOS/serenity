@@ -87,6 +87,29 @@ ErrorOr<void> try_create_app_menu(GUI::Application& app, GUI::Window& window, Ti
     human_vs_human_action->set_checked(game->mode() == TicTacToe::Game::Mode::HumanVsHuman);
     game_modes->add_action(human_vs_human_action);
 
+    // Game difficulty
+    auto game_difficulties = new GUI::ActionGroup();
+    game_difficulties = move(game_difficulties);
+    game_difficulties->set_exclusive(true);
+
+    auto easy_difficulty_action = GUI::Action::create_checkable("&Easy", [game](auto&) {
+        game->set_difficulty(TicTacToe::Game::Difficulty::Easy);
+    });
+    easy_difficulty_action->set_checked(game->difficulty() == TicTacToe::Game::Difficulty::Easy);
+    game_difficulties->add_action(easy_difficulty_action);
+
+    auto normal_difficulty_action = GUI::Action::create_checkable("&Normal", [game](auto&) {
+        game->set_difficulty(TicTacToe::Game::Difficulty::Normal);
+    });
+    normal_difficulty_action->set_checked(game->difficulty() == TicTacToe::Game::Difficulty::Normal);
+    game_difficulties->add_action(normal_difficulty_action);
+
+    auto hard_difficulty_action = GUI::Action::create_checkable("&Insane", [game](auto&) {
+        game->set_difficulty(TicTacToe::Game::Difficulty::Hard);
+    });
+    hard_difficulty_action->set_checked(game->difficulty() == TicTacToe::Game::Difficulty::Hard);
+    game_difficulties->add_action(hard_difficulty_action);
+
     // Game menu
     auto game_menu = TRY(window.try_add_menu("&Game"));
     TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [game](auto&) {
@@ -97,6 +120,11 @@ ErrorOr<void> try_create_app_menu(GUI::Application& app, GUI::Window& window, Ti
     TRY(game_menu->try_add_action(human_vs_human_action));
     TRY(game_menu->try_add_separator());
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([&app](auto&) { app.quit(); })));
+
+    auto game_difficulty = TRY(window.try_add_menu("&Difficulty"));
+    TRY(game_difficulty->try_add_action(easy_difficulty_action));
+    TRY(game_difficulty->try_add_action(normal_difficulty_action));
+    TRY(game_difficulty->try_add_action(hard_difficulty_action));
 
     return {};
 }
