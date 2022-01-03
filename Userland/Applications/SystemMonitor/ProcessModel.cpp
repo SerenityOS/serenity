@@ -334,7 +334,6 @@ void ProcessModel::update()
     auto all_processes = Core::ProcessStatisticsReader::get_all(m_proc_all);
 
     HashTable<int> live_tids;
-    u64 sum_time_scheduled = 0, sum_time_scheduled_kernel = 0;
     u64 total_time_scheduled_diff = 0;
     if (all_processes.has_value()) {
         if (m_has_total_scheduled_time)
@@ -382,8 +381,6 @@ void ProcessModel::update()
                 state.cpu_percent = 0;
                 state.priority = thread.priority;
                 state.state = thread.state;
-                sum_time_scheduled += thread.time_user + thread.time_kernel;
-                sum_time_scheduled_kernel += thread.time_kernel;
                 auto& thread_data = *m_threads.ensure(thread.tid, [] { return make<Thread>(); });
                 thread_data.previous_state = move(thread_data.current_state);
                 thread_data.current_state = move(state);
