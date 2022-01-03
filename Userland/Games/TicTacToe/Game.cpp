@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Leonardo Nicolas <leonicolas@gmail.com>
+ * Copyright (c) 2021-2022, Leonardo Nicolas <leonicolas@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */

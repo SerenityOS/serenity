@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Leonardo Nicolas <leonicolas@gmail.com>
+ * Copyright (c) 2021-2022, Leonardo Nicolas <leonicolas@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,20 +30,21 @@
 
 GUI::Statusbar* initialize_and_get_statusbar(GUI::Widget&);
 void initialize_game(TicTacToe::Board&, GUI::Statusbar&);
-ErrorOr<NonnullRefPtr<GUI::Window>> try_create_window();
-ErrorOr<void> try_create_app_menu(GUI::Application&, GUI::Window&, TicTacToe::Board&, GUI::Statusbar&);
+ErrorOr<NonnullRefPtr<GUI::Window>> try_create_window(GUI::Icon&);
+ErrorOr<void> try_create_app_menu(GUI::Application&, GUI::Icon&, GUI::Window&, TicTacToe::Board&, GUI::Statusbar&);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto window = TRY(try_create_window());
+    auto app_icon = GUI::Icon::default_icon("app-tictactoe");
 
     TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
+    auto window = TRY(try_create_window(app_icon));
     auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
     widget->load_from_gml(tictactoe_gml);
 
@@ -54,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     initialize_game(*board, *statusbar);
 
-    TRY(try_create_app_menu(*app, *window, *board, *statusbar));
+    TRY(try_create_app_menu(*app, app_icon, *window, *board, *statusbar));
 
     window->resize(TicTacToe::Game::width, TicTacToe::Game::height + statusbar->max_height());
     window->show();
@@ -62,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return app->exec();
 }
 
-ErrorOr<void> try_create_app_menu(GUI::Application& app, GUI::Window& window, TicTacToe::Board& board, GUI::Statusbar& statusbar)
+ErrorOr<void> try_create_app_menu(GUI::Application& app, GUI::Icon& app_icon, GUI::Window& window, TicTacToe::Board& board, GUI::Statusbar& statusbar)
 {
     auto game = &TicTacToe::Game::the();
 
@@ -126,17 +127,18 @@ ErrorOr<void> try_create_app_menu(GUI::Application& app, GUI::Window& window, Ti
     TRY(game_difficulty->try_add_action(normal_difficulty_action));
     TRY(game_difficulty->try_add_action(hard_difficulty_action));
 
+    auto help_menu = TRY(window.try_add_menu("&Help"));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Tic Tac Toe", app_icon, &window));
+
     return {};
 }
 
-ErrorOr<NonnullRefPtr<GUI::Window>> try_create_window()
+ErrorOr<NonnullRefPtr<GUI::Window>> try_create_window(GUI::Icon& app_icon)
 {
     auto window = TRY(GUI::Window::try_create());
     window->set_double_buffering_enabled(false);
     window->set_title("Tic Tac Toe");
     window->set_resizable(false);
-
-    auto app_icon = GUI::Icon::default_icon("app-tictactoe");
     window->set_icon(app_icon.bitmap_for_size(16));
     return window;
 }
