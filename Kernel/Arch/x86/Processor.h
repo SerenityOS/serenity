@@ -68,7 +68,7 @@ class Processor {
 #endif
 
     DescriptorTablePointer m_gdtr;
-    Descriptor m_gdt[256];
+    alignas(Descriptor) Descriptor m_gdt[256];
     u32 m_gdt_length;
 
     u32 m_cpu;
