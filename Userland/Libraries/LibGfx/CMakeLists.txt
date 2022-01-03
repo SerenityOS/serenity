@@ -2,6 +2,7 @@ set(SOURCES
     AffineTransform.cpp
     AntiAliasingPainter.cpp
     Bitmap.cpp
+    BitmapMixer.cpp
     BitmapFont.cpp
     BMPLoader.cpp
     BMPWriter.cpp
