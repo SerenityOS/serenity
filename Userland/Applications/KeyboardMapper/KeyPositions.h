@@ -21,6 +21,11 @@ struct KeyPosition {
 
 #define KEY_COUNT 63
 
+#ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wc99-designator"
+#endif
+
 struct KeyPosition keys[KEY_COUNT] = {
     // clang-format off
     [ 0] = {     0,   0,  0,   0,   0, false,  0, ""},
@@ -93,3 +98,7 @@ struct KeyPosition keys[KEY_COUNT] = {
     [62] = {0xE01D, 689, 208,  74,  50, false,  0, "right ctrl"}
     // clang-format on
 };
+
+#ifdef __clang__
+#    pragma clang diagnostic pop
+#endif

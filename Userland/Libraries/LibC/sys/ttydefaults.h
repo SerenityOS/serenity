@@ -46,6 +46,11 @@
 #    endif
 #    include <sys/cdefs.h>
 
+#    ifdef __clang__
+#        pragma clang diagnostic push
+#        pragma clang diagnostic ignored "-Wc99-designator"
+#    endif
+
 __BEGIN_DECLS
 static const cc_t ttydefchars[NCCS] = {
     [VINTR] = CINTR,
@@ -66,5 +71,10 @@ static const cc_t ttydefchars[NCCS] = {
     [VLNEXT] = CLNEXT,
     [VEOL2] = CEOL2
 };
+
+#    ifdef __clang__
+#        pragma clang diagnostic pop
+#    endif
+
 __END_DECLS
 #endif
