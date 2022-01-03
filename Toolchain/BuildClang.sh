@@ -104,6 +104,37 @@ buildstep_ninja() {
     env NINJA_STATUS=$'\e[34m['"${NAME}"$']\e[39m [%f/%t] ' "$@"
 }
 
+should_patch() {
+    # first argument is the directoryname of the package to patch
+    # second argument is the path to the patch
+    if [ -e "$1/.patch.applied" ]; then
+        patch_md5="$($MD5SUM "$2" | cut -f1 -d' ')"
+        applied_md5="$(cat "$1/.patch.applied")"
+        
+        if [ "$patch_md5" == "$applied_md5" ]; then
+            # if they are equal we shouldn't patch
+            return 1
+        fi
+    fi
+    return 0
+}
+
+apply_patch() {
+    # first argument is the directoryname of the package to patch
+    # second argument is the path to the patch
+    pushd "$1"
+        if [ "$dev" = "1" ]; then
+            git init > /dev/null
+            git add . > /dev/null
+            git commit -am "BASE" > /dev/null
+            git apply "$2" > /dev/null
+        else
+            patch -p1 < "$2" > /dev/null
+        fi
+        $MD5SUM "$2" > .patch.applied
+    popd
+}
+
 # === DEPENDENCIES ===
 
 buildstep dependencies echo "Checking whether 'make' is available..."
@@ -194,26 +225,28 @@ pushd "$DIR/Tarballs"
         echo "Skipped downloading LLVM"
     fi
 
-    if [ -d "$LLVM_NAME" ]; then
-        # Drop the previously patched extracted dir
-        rm -rf "${LLVM_NAME}"
-        # Also drop the build dir
-        rm -rf "$DIR/Build/clang"
-    fi
-    echo "Extracting LLVM..."
-    tar -xJf "$LLVM_PKG"
+    if should_patch "$LLVM_NAME" "$DIR/Patches/llvm.patch"; then
+        echo "Applying patch to LLVM"
 
-    pushd "$LLVM_NAME"
-        if [ "$dev" = "1" ]; then
-            git init > /dev/null
-            git add . > /dev/null
-            git commit -am "BASE" > /dev/null
-            git apply "$DIR"/Patches/llvm.patch > /dev/null
-        else
-            patch -p1 < "$DIR/Patches/llvm.patch" > /dev/null
+        if [ -d "$LLVM_NAME" ]; then
+            # Drop the previously patched extracted dir
+            rm -rf "${LLVM_NAME}"
+            # Also drop the build dir
+            rm -rf "$DIR/Build/clang"
         fi
-        $MD5SUM "$DIR/Patches/llvm.patch" > .patch.applied
-    popd
+        echo "Extracting LLVM..."
+        tar -xJf "$LLVM_PKG"
+
+        echo "Patching LLVM..."
+        apply_patch "$LLVM_NAME" "$DIR/Patches/llvm.patch"
+
+    else
+        echo "Skipped patch application for LLVM"
+        # Drop the build dir
+        if [ -d "$DIR/Build/clang" ]; then
+            rm -rf "$DIR/Build/clang"
+        fi
+    fi
 
     md5=""
     if [ -e "$BINUTILS_PKG" ]; then
@@ -228,25 +261,28 @@ pushd "$DIR/Tarballs"
         echo "Skipped downloading GNU binutils"
     fi
 
-    if [ -d "$BINUTILS_NAME" ]; then
-        rm -rf "$BINUTILS_NAME"
-        rm -rf "$DIR/Build/clang/binutils"
-    fi
-    echo "Extracting GNU binutils"
+    if should_patch "$BINUTILS_NAME" "$DIR/Patches/binutils.patch"; then
+        echo "Applying patch to binutils"
 
-
-    tar -xzf "$BINUTILS_PKG"
-    pushd "$BINUTILS_NAME"
-        if [ "$dev" = "1" ]; then
-            git init > /dev/null
-            git add . > /dev/null
-            git commit -am "BASE" > /dev/null
-            git apply "$DIR"/Patches/binutils.patch > /dev/null
-        else
-            patch -p1 < "$DIR/Patches/binutils.patch" > /dev/null
+        if [ -d "$BINUTILS_NAME" ]; then
+            rm -rf "$BINUTILS_NAME"
+            rm -rf "$DIR/Build/clang/binutils"
         fi
-         $MD5SUM "$DIR/Patches/binutils.patch" > .patch.applied
-    popd
+
+        echo "Extracting GNU binutils"
+        tar -xzf "$BINUTILS_PKG"
+
+        echo "Patching GNU binutils"        
+        apply_patch "$BINUTILS_NAME" "$DIR/Patches/binutils.patch"
+
+    else
+        echo "Skipped patch application for binutils"
+        # Drop the build dir
+        if [ -d "$DIR/Build/clang/binutils" ]; then
+            rm -rf "$DIR/Build/clang/binutils"
+        fi
+
+    fi
 popd
 
 # === COPY HEADERS ===
