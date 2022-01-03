@@ -8,6 +8,8 @@
 #include <AK/Format.h>
 #include <AK/Random.h>
 
+#define MAX_POINTS INT_MAX / 2
+
 namespace TicTacToe {
 
 static Game* s_the;
@@ -46,11 +48,17 @@ bool Game::do_move(uint8_t cell_index)
 
     if (m_moves_remaining) {
         m_current_player = next_player;
-        if (m_second_plater == Game::SecondPlayer::Machine && next_player == Player::O)
+        if (m_mode == Game::Mode::HumanVsMachine && next_player == Player::O)
             do_machine_move();
     }
 
     return true;
+}
+
+void Game::set_mode(Game::Mode mode)
+{
+    m_mode = mode;
+    m_moves_remaining = 0;
 }
 
 void Game::start_new_game()
@@ -58,10 +66,11 @@ void Game::start_new_game()
     m_current_player = m_current_player == Player::X ? Player::O : Player::X;
     m_moves_remaining = sizeof(m_board);
     memset(m_board, 0, m_moves_remaining);
+
     if (on_new_game)
         on_new_game();
 
-    if (m_current_player == Player::O)
+    if (m_mode == Game::Mode::HumanVsMachine && m_current_player == Player::O)
         do_machine_move();
 }
 
@@ -142,8 +151,6 @@ void Game::do_machine_move()
         do_move(minimax(board, Game::Maximize::Yes, 0, 0).cell_index);
     }
 }
-
-#define MAX_POINTS INT_MAX - 1
 
 Game::BestMove Game::minimax(uint8_t board[], Game::Maximize maximize, uint8_t max_depth, uint8_t depth)
 {

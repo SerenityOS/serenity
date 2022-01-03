@@ -22,17 +22,17 @@ public:
         O = 2
     };
 
-    enum SecondPlayer {
-        Human,
-        Machine
+    enum Mode {
+        HumanVsHuman,
+        HumanVsMachine
     };
 
     bool do_move(uint8_t);
     void do_machine_move();
     void start_new_game();
     Player current_player() { return m_current_player; };
-    SecondPlayer second_player() { return m_second_plater; }
-    void set_second_player(SecondPlayer second_plater) { m_second_plater = second_plater; }
+    Mode mode() { return m_mode; }
+    void set_mode(Mode mode);
     uint16_t moves_remaining() { return m_moves_remaining; }
 
     Function<void()> on_new_game;
@@ -69,7 +69,7 @@ private:
     uint16_t m_x_victories { 0 };
     uint16_t m_o_victories { 0 };
     uint16_t m_ties { 0 };
-    SecondPlayer m_second_plater { SecondPlayer::Machine };
+    Mode m_mode { Mode::HumanVsMachine };
 };
 
 }

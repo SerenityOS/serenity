@@ -16,9 +16,10 @@ class Board final : public GUI::Widget {
     C_OBJECT(Board);
 
 public:
-    bool do_move(uint8_t, Game::Player);
-    void highlight_cell(uint8_t);
     void clear();
+    bool do_move(uint8_t, Game::Player);
+    void draw_presentation_pattern();
+    void highlight_cell(uint8_t);
 
 private:
     RefPtr<Cell> get_cell(uint8_t);

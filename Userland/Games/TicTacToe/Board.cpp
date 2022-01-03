@@ -37,12 +37,23 @@ void Board::highlight_cell(uint8_t cell_index)
     get_cell(cell_index)->highlight();
 }
 
+void Board::draw_presentation_pattern()
+{
+    Cell::Content content = Cell::Content::X;
+    for (uint8_t cell_index = 0; cell_index < 9; cell_index++) {
+        auto cell = get_cell(cell_index);
+        cell->reset_background();
+        cell->set_content(content);
+        content = content == Cell::Content::X ? Cell::Content::O : Cell::Content::X;
+    }
+}
+
 void Board::clear()
 {
-    for (uint8_t i = 0; i < 9; i++) {
-        auto cell = get_cell(i);
-        cell->set_content(Cell::Content::Empty);
+    for (uint8_t cell_index = 0; cell_index < 9; cell_index++) {
+        auto cell = get_cell(cell_index);
         cell->reset_background();
+        cell->set_content(Cell::Content::Empty);
     }
 }
 
