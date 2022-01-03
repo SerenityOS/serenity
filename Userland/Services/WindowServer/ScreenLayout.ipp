@@ -230,7 +230,7 @@ bool ScreenLayout::normalize()
 bool ScreenLayout::load_config(const Core::ConfigFile& config_file, String* error_msg)
 {
     screens.clear_with_capacity();
-    main_screen_index = config_file.read_num_entry("Screens", "DefaultScreen", 0);
+    main_screen_index = config_file.read_num_entry("Screens", "MainScreen", 0);
     for (size_t index = 0;; index++) {
         auto group_name = String::formatted("Screen{}", index);
         if (!config_file.has_group(group_name))
@@ -249,7 +249,7 @@ bool ScreenLayout::load_config(const Core::ConfigFile& config_file, String* erro
 
 bool ScreenLayout::save_config(Core::ConfigFile& config_file, bool sync) const
 {
-    config_file.write_num_entry("Screens", "DefaultScreen", main_screen_index);
+    config_file.write_num_entry("Screens", "MainScreen", main_screen_index);
 
     size_t index = 0;
     while (index < screens.size()) {
