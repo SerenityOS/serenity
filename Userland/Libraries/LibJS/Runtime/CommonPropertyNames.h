@@ -468,6 +468,7 @@ namespace JS {
     P(toPlainMonthDay)                       \
     P(toPlainTime)                           \
     P(toPlainYearMonth)                      \
+    P(toPrecision)                           \
     P(toString)                              \
     P(total)                                 \
     P(toTemporalInstant)                     \
