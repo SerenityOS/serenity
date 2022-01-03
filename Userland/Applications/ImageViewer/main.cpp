@@ -149,15 +149,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             app->quit();
         });
 
-    auto rotate_left_action = GUI::Action::create("Rotate &Left", { Mod_None, Key_L },
-        [&](auto&) {
-            widget->rotate(Gfx::RotationDirection::CounterClockwise);
-        });
+    auto rotate_counterclockwise_action = GUI::CommonActions::make_rotate_counterclockwise_action([&](auto&) {
+        widget->rotate(Gfx::RotationDirection::CounterClockwise);
+    });
 
-    auto rotate_right_action = GUI::Action::create("Rotate &Right", { Mod_None, Key_R },
-        [&](auto&) {
-            widget->rotate(Gfx::RotationDirection::Clockwise);
-        });
+    auto rotate_clockwise_action = GUI::CommonActions::make_rotate_clockwise_action([&](auto&) {
+        widget->rotate(Gfx::RotationDirection::Clockwise);
+    });
 
     auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V },
         [&](auto&) {
@@ -247,8 +245,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         bool should_enable_forward_actions = (widget->is_next_available() && should_enable_image_actions);
         bool should_enable_backward_actions = (widget->is_previous_available() && should_enable_image_actions);
         delete_action->set_enabled(should_enable_image_actions);
-        rotate_left_action->set_enabled(should_enable_image_actions);
-        rotate_right_action->set_enabled(should_enable_image_actions);
+        rotate_counterclockwise_action->set_enabled(should_enable_image_actions);
+        rotate_clockwise_action->set_enabled(should_enable_image_actions);
         vertical_flip_action->set_enabled(should_enable_image_actions);
         horizontal_flip_action->set_enabled(should_enable_image_actions);
         desktop_wallpaper_action->set_enabled(should_enable_image_actions);
@@ -285,8 +283,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(file_menu->try_add_action(quit_action));
 
     auto image_menu = TRY(window->try_add_menu("&Image"));
-    TRY(image_menu->try_add_action(rotate_left_action));
-    TRY(image_menu->try_add_action(rotate_right_action));
+    TRY(image_menu->try_add_action(rotate_counterclockwise_action));
+    TRY(image_menu->try_add_action(rotate_clockwise_action));
     TRY(image_menu->try_add_action(vertical_flip_action));
     TRY(image_menu->try_add_action(horizontal_flip_action));
     TRY(image_menu->try_add_separator());

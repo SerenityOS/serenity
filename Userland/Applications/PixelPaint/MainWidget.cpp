@@ -455,15 +455,17 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->image().flip(Gfx::Orientation::Horizontal);
         }));
     image_menu.add_separator();
-    image_menu.add_action(GUI::Action::create(
-        "Rotate &Left", [&](auto&) {
+
+    image_menu.add_action(GUI::CommonActions::make_rotate_counterclockwise_action(
+        [&](auto&) {
             auto* editor = current_image_editor();
             if (!editor)
                 return;
             editor->image().rotate(Gfx::RotationDirection::CounterClockwise);
         }));
-    image_menu.add_action(GUI::Action::create(
-        "Rotate &Right", [&](auto&) {
+
+    image_menu.add_action(GUI::CommonActions::make_rotate_clockwise_action(
+        [&](auto&) {
             auto* editor = current_image_editor();
             if (!editor)
                 return;
