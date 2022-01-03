@@ -1174,7 +1174,7 @@ ErrorOr<void> Ext2FSInode::add_child(Inode& child, StringView name, mode_t mode)
 
     TRY(child.increment_link_count());
 
-    entries.empend(name, child.index(), to_ext2_file_type(mode));
+    TRY(entries.try_empend(name, child.index(), to_ext2_file_type(mode)));
 
     TRY(write_directory(entries));
     TRY(populate_lookup_cache());
@@ -1470,8 +1470,8 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::create_directory(Ext2FSInode& parent_inode
     dbgln_if(EXT2_DEBUG, "Ext2FS: create_directory: created new directory named '{} with inode {}", name, inode->index());
 
     Vector<Ext2FSDirectoryEntry> entries;
-    entries.empend(".", inode->index(), static_cast<u8>(EXT2_FT_DIR));
-    entries.empend("..", parent_inode.index(), static_cast<u8>(EXT2_FT_DIR));
+    TRY(entries.try_empend(".", inode->index(), static_cast<u8>(EXT2_FT_DIR)));
+    TRY(entries.try_empend("..", parent_inode.index(), static_cast<u8>(EXT2_FT_DIR)));
 
     TRY(static_cast<Ext2FSInode&>(*inode).write_directory(entries));
     TRY(parent_inode.increment_link_count());

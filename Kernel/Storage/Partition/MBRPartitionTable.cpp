@@ -60,7 +60,7 @@ MBRPartitionTable::MBRPartitionTable(const StorageDevice& device, u32 start_lba)
         if (entry.offset == 0x00) {
             continue;
         }
-        m_partitions.empend(entry.offset, (entry.offset + entry.length), entry.type);
+        MUST(m_partitions.try_empend(entry.offset, (entry.offset + entry.length), entry.type));
     }
     m_valid = true;
 }
@@ -79,7 +79,7 @@ MBRPartitionTable::MBRPartitionTable(const StorageDevice& device)
         if (entry.offset == 0x00) {
             continue;
         }
-        m_partitions.empend(entry.offset, (entry.offset + entry.length), entry.type);
+        MUST(m_partitions.try_empend(entry.offset, (entry.offset + entry.length), entry.type));
     }
     m_valid = true;
 }
