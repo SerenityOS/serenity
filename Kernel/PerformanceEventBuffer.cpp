@@ -38,7 +38,7 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
 {
     Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> backtrace;
     if (ip != 0)
-        backtrace.append(ip);
+        backtrace.unchecked_append(ip);
     FlatPtr stack_ptr_copy;
     FlatPtr stack_ptr = bp;
     // FIXME: Figure out how to remove this SmapDisabler without breaking profile stacks.
@@ -63,7 +63,7 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
             break;
         if (retaddr == 0)
             break;
-        backtrace.append(retaddr);
+        backtrace.unchecked_append(retaddr);
         if (backtrace.size() == PerformanceEvent::max_stack_frame_count)
             break;
         stack_ptr = stack_ptr_copy;
