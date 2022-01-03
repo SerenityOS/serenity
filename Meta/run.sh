@@ -226,7 +226,9 @@ if [ -z "$SERENITY_MACHINE" ]; then
         $SERENITY_AUDIO_BACKEND
         $SERENITY_AUDIO_HW
         -device ac97,audiodev=snd0
-        -device pci-bridge,chassis_nr=1,id=bridge1 -device $SERENITY_ETHERNET_DEVICE_TYPE,bus=bridge1
+        -device pci-bridge,chassis_nr=1,id=bridge1
+        -net nic,model=virtio,macaddr=00:11:22:33:44:55
+        -net user
         -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
         -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
         -device ich9-ahci,bus=bridge3
@@ -387,14 +389,6 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
         -append "${SERENITY_KERNEL_CMDLINE}"
 else
     # Meta/run.sh: qemu with user networking
-    if [ "$SERENITY_ARCH" = "aarch64" ]; then
-        SERENITY_NETFLAGS=
-    else
-        SERENITY_NETFLAGS="
-        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23,hostfwd=tcp:127.0.0.1:8000-10.0.2.15:8000,hostfwd=tcp:127.0.0.1:2222-10.0.2.15:22 \
-        -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh \
-        "
-    fi
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \

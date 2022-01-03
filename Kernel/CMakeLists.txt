@@ -172,6 +172,7 @@ set(KERNEL_SOURCES
     Net/NE2000/NetworkAdapter.cpp
     Net/Realtek/RTL8139NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
+    Net/VirtIO/VirtIONetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp

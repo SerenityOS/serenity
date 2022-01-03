@@ -343,7 +343,8 @@
 #endif
 
 #ifndef VIRTIO_DEBUG
-#cmakedefine01 VIRTIO_DEBUG
+#define VIRTIO_DEBUG true
+//#cmakedefine01 VIRTIO_DEBUG
 #endif
 
 #ifndef VIRTUAL_CONSOLE_DEBUG

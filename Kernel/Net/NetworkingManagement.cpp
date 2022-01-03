@@ -18,6 +18,7 @@
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Realtek/RTL8139NetworkAdapter.h>
 #include <Kernel/Net/Realtek/RTL8168NetworkAdapter.h>
+#include <Kernel/Net/VirtIO/VirtIONetworkAdapter.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -94,6 +95,8 @@ UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_
     if (auto candidate = RTL8168NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
     if (auto candidate = NE2000NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
+        return candidate;
+    if (auto candidate = VirtIONetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
         return candidate;
     return {};
 }
