@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/BuiltinWrappers.h>
 #include <AK/Concepts.h>
 #include <AK/StdLibExtraDetails.h>
@@ -521,5 +522,21 @@ constexpr T pow(T x, T y)
 }
 
 #undef CONSTEXPR_STATE
+
+// Check that `value` is in `[min,max]`
+template<typename T>
+constexpr bool is_in_bounds(T const& value, T const& min, T const& max)
+{
+    VERIFY(min <= max);
+    return min <= value && value <= max;
+}
+
+// Check that `value` is in `[min,max)`
+template<typename T>
+constexpr bool is_in_range(T const& value, T const& min, T const& max)
+{
+    VERIFY(min <= max);
+    return min <= value && value < max;
+}
 
 }
