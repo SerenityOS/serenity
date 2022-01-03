@@ -111,11 +111,9 @@ static ErrorOr<u8> decode_qoi_op_run(InputMemoryStream& stream)
     // The run-length is stored with a bias of -1.
     run += 1;
 
-    // Note that the run-lengths 63 and 64 (b111110 and b111111) are illegal as they are occupied by the QOI_OP_RGB and QOI_OP_RGBA tags.
-    if (run == QOI_OP_RGB || run == QOI_OP_RGBA)
+    if (!qoi_is_valid_run(run))
         return Error::from_string_literal("Invalid QOI image: illegal run length"sv);
 
-    VERIFY(run >= 1 && run <= 62);
     return run;
 }
 

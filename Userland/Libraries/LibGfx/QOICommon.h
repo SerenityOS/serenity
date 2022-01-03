@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/Math.h>
 #include <AK/Types.h>
 
 namespace Gfx {
@@ -22,6 +23,10 @@ static constexpr u8 QOI_OP_INDEX = 0b00000000;
 static constexpr u8 QOI_OP_DIFF = 0b01000000;
 static constexpr u8 QOI_OP_LUMA = 0b10000000;
 static constexpr u8 QOI_OP_RUN = 0b11000000;
+// Note that the run-lengths 63 and 64 encoded as (b111110 and b111111) are illegal
+// as they are occupied by the QOI_OP_RGB and QOI_OP_RGBA tags.
+static constexpr u8 QOI_RUN_MIN = 1;
+static constexpr u8 QOI_RUN_MAX = 62;
 static constexpr u8 QOI_MASK_2 = 0b11000000;
 static constexpr ReadonlyByteArray<8> QOI_END_MARKER { 0, 0, 0, 0, 0, 0, 0, 1 };
 
@@ -32,5 +37,10 @@ struct [[gnu::packed]] QOIHeader {
     u8 channels;
     u8 colorspace;
 };
+
+ALWAYS_INLINE static constexpr bool qoi_is_valid_run(u8 run)
+{
+    return AK::is_in_bounds(run, QOI_RUN_MIN, QOI_RUN_MAX);
+}
 
 }
