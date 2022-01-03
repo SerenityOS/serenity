@@ -110,10 +110,9 @@ UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_par
     return {};
 }
 
-UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions() const
+UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
 {
     VERIFY(!m_storage_devices.is_empty());
-    NonnullRefPtrVector<DiskPartition> partitions;
     size_t device_index = 0;
     for (auto& device : m_storage_devices) {
         auto partition_table = try_to_initialize_partition_table(device);
@@ -124,9 +123,8 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions() const
             if (!partition_metadata.has_value())
                 continue;
             // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
-            auto disk_partition = DiskPartition::create(const_cast<StorageDevice&>(device), (partition_index + (16 * device_index)), partition_metadata.value());
-            MUST(partitions.try_append(disk_partition));
-            MUST(const_cast<StorageDevice&>(device).m_partitions.try_append(disk_partition));
+            auto disk_partition = DiskPartition::create(device, (partition_index + (16 * device_index)), partition_metadata.value());
+            device.add_partition(disk_partition);
         }
         device_index++;
     }
