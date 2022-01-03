@@ -285,6 +285,7 @@ pushd "$DIR/Build/clang"
             -DSERENITY_x86_64-pc-serenity_SYSROOT="$BUILD/x86_64clang/Root" \
             -DSERENITY_aarch64-pc-serenity_SYSROOT="$BUILD/aarch64clang/Root" \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+            -DSERENITY_MODULE_PATH="$DIR/CMake" \
             -C "$DIR/CMake/LLVMConfig.cmake" \
             ${dev:+"-DLLVM_CCACHE_BUILD=ON"} \
             ${ci:+"-DLLVM_CCACHE_BUILD=ON"} \
@@ -318,6 +319,7 @@ pushd "$DIR/Build/clang"
                 -DSERENITY_TOOLCHAIN_ARCH="$arch" \
                 -DSERENITY_TOOLCHAIN_ROOT="$PREFIX" \
                 -DSERENITY_BUILD_DIR="$BUILD/${arch}clang/" \
+                -DSERENITY_MODULE_PATH="$DIR/CMake" \
                 -DCMAKE_INSTALL_PREFIX="$PREFIX" \
                 -C "$DIR/CMake/LLVMRuntimesConfig.cmake"
 
