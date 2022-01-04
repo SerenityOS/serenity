@@ -80,6 +80,7 @@ void UndoStack::set_current_unmodified()
         return;
 
     m_clean_index = m_stack_index;
+    m_last_unmodified_timestamp = Time::now_monotonic();
 
     if (on_state_change)
         on_state_change();
