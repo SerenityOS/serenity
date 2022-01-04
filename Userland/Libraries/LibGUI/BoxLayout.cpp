@@ -151,6 +151,7 @@ void BoxLayout::run(Widget& widget)
     };
 
     Vector<Item, 32> items;
+    int spacer_count = 0;
     int opportunistic_growth_item_count = 0;
     int opportunistic_growth_items_base_size_total = 0;
 
@@ -158,6 +159,7 @@ void BoxLayout::run(Widget& widget)
         auto& entry = m_entries[i];
         if (entry.type == Entry::Type::Spacer) {
             items.append(Item { nullptr, { SpecialDimension::Shrink }, { SpecialDimension::Grow }, { SpecialDimension::Grow } });
+            spacer_count++;
             continue;
         }
         if (!entry.widget)
@@ -188,9 +190,9 @@ void BoxLayout::run(Widget& widget)
 
     Gfx::IntRect content_rect = widget.content_rect();
     int uncommitted_size = content_rect.size().primary_size_for_orientation(orientation())
-        - spacing() * (items.size() - 1)
+        - spacing() * (items.size() - 1 - spacer_count)
         - margins().primary_total_for_orientation(orientation());
-    int unfinished_regular_items = items.size() - opportunistic_growth_item_count;
+    int unfinished_regular_items = items.size() - spacer_count - opportunistic_growth_item_count;
     int max_amongst_the_min_sizes = 0;
     int max_amongst_the_min_sizes_of_opportunistically_growing_items = 0;
     int regular_items_to_layout = 0;
@@ -347,6 +349,12 @@ void BoxLayout::run(Widget& widget)
         }
     }
 
+    // Determine size of the spacers, according to the still uncommitted size
+    int spacer_width = 0;
+    if (spacer_count > 0 && uncommitted_size > 0) {
+        spacer_width = uncommitted_size / spacer_count;
+    }
+
     // Pass 6: Place the widgets.
     int current_x = margins().left() + content_rect.x();
     int current_y = margins().top() + content_rect.y();
@@ -380,12 +388,17 @@ void BoxLayout::run(Widget& widget)
                 rect.center_horizontally_within(widget_rect_with_margins_subtracted);
 
             item.widget->set_relative_rect(rect);
-        }
 
-        if (orientation() == Gfx::Orientation::Horizontal)
-            current_x += rect.width() + spacing();
-        else
-            current_y += rect.height() + spacing();
+            if (orientation() == Gfx::Orientation::Horizontal)
+                current_x += rect.width() + spacing();
+            else
+                current_y += rect.height() + spacing();
+        } else {
+            if (orientation() == Gfx::Orientation::Horizontal)
+                current_x += spacer_width;
+            else
+                current_y += spacer_width;
+        }
     }
 }
 
