@@ -47,6 +47,36 @@ static String decimal_digits_to_string(double number)
     return builder.build().reverse();
 }
 
+static size_t compute_fraction_digits(double number, int exponent)
+{
+    double integral_part = 0;
+    double fraction_part = modf(number, &integral_part);
+
+    auto fraction = String::number(fraction_part);
+    size_t fraction_digits = 0;
+
+    if (integral_part != 0)
+        fraction_digits = exponent;
+
+    if (auto decimal_index = fraction.find('.'); decimal_index.has_value()) {
+        fraction_digits += fraction.length() - *decimal_index - 1;
+
+        if (integral_part == 0) {
+            --fraction_digits;
+
+            for (size_t i = *decimal_index + 1; (i < fraction.length()) && (fraction[i] == '0'); ++i)
+                --fraction_digits;
+        }
+    } else if (integral_part != 0) {
+        auto integral = decimal_digits_to_string(integral_part);
+
+        for (size_t i = integral.length(); (i > 0) && (integral[i - 1] == '0'); --i)
+            --fraction_digits;
+    }
+
+    return fraction_digits;
+}
+
 NumberPrototype::NumberPrototype(GlobalObject& global_object)
     : NumberObject(0, *global_object.object_prototype())
 {
@@ -57,6 +87,7 @@ void NumberPrototype::initialize(GlobalObject& object)
     auto& vm = this->vm();
     Object::initialize(object);
     u8 attr = Attribute::Configurable | Attribute::Writable;
+    define_native_function(vm.names.toExponential, to_exponential, 1, attr);
     define_native_function(vm.names.toFixed, to_fixed, 1, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.toPrecision, to_precision, 1, attr);
@@ -87,6 +118,127 @@ static ThrowCompletionOr<Value> this_number_value(GlobalObject& global_object, V
 
     // 3. Throw a TypeError exception.
     return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Number");
+}
+
+// 21.1.3.2 Number.prototype.toExponential ( fractionDigits ), https://tc39.es/ecma262/#sec-number.prototype.toexponential
+JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
+{
+    auto fraction_digits_value = vm.argument(0);
+
+    // 1. Let x be ? thisNumberValue(this value).
+    auto number_value = TRY(this_number_value(global_object, vm.this_value(global_object)));
+
+    // 2. Let f be ? ToIntegerOrInfinity(fractionDigits).
+    auto fraction_digits = TRY(fraction_digits_value.to_integer_or_infinity(global_object));
+
+    // 3. Assert: If fractionDigits is undefined, then f is 0.
+    VERIFY(!fraction_digits_value.is_undefined() || (fraction_digits == 0));
+
+    // 4. If x is not finite, return ! Number::toString(x).
+    if (!number_value.is_finite_number())
+        return js_string(vm, MUST(number_value.to_string(global_object)));
+
+    // 5. If f < 0 or f > 100, throw a RangeError exception.
+    if (fraction_digits < 0 || fraction_digits > 100)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFractionDigits);
+
+    // 6. Set x to ℝ(x).
+    auto number = number_value.as_double();
+
+    // 7. Let s be the empty String.
+    auto sign = ""sv;
+
+    String number_string;
+    int exponent = 0;
+
+    // 8. If x < 0, then
+    if (number < 0) {
+        // a. Set s to "-".
+        sign = "-"sv;
+
+        // b. Set x to -x.
+        number = -number;
+    }
+
+    // 9. If x = 0, then
+    if (number == 0) {
+        // a. Let m be the String value consisting of f + 1 occurrences of the code unit 0x0030 (DIGIT ZERO).
+        number_string = String::repeated('0', fraction_digits + 1);
+
+        // b. Let e be 0.
+        exponent = 0;
+    }
+    // 10. Else,
+    else {
+        // FIXME: The computations below fall apart for large values of 'f'. A double typically has 52 mantissa bits, which gives us
+        //        up to 2^52 before loss of precision. However, the largest value of 'f' may be 100, resulting in numbers on the order
+        //        of 10^100, thus we lose precision in these computations.
+
+        // a. If fractionDigits is not undefined, then
+        //     i. Let e and n be integers such that 10^f ≤ n < 10^(f+1) and for which n × 10^(e-f) - x is as close to zero as possible.
+        //        If there are two such sets of e and n, pick the e and n for which n × 10^(e-f) is larger.
+        // b. Else,
+        //     i. Let e, n, and f be integers such that f ≥ 0, 10^f ≤ n < 10^(f+1), 𝔽(n × 10^(e-f)) is 𝔽(x), and f is as small as possible.
+        //        Note that the decimal representation of n has f + 1 digits, n is not divisible by 10, and the least significant digit of n is not necessarily uniquely determined by these criteria.
+        exponent = static_cast<int>(floor(log10(number)));
+
+        if (fraction_digits_value.is_undefined())
+            fraction_digits = compute_fraction_digits(number, exponent);
+
+        number = round(number / pow(10, exponent - fraction_digits));
+
+        // c. Let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
+        number_string = decimal_digits_to_string(number);
+    }
+
+    // 11. If f ≠ 0, then
+    if (fraction_digits != 0) {
+        // a. Let a be the first code unit of m.
+        auto first = number_string.substring_view(0, 1);
+
+        // b. Let b be the other f code units of m.
+        auto second = number_string.substring_view(1);
+
+        // c. Set m to the string-concatenation of a, ".", and b.
+        number_string = String::formatted("{}.{}", first, second);
+    }
+
+    char exponent_sign = 0;
+    String exponent_string;
+
+    // 12. If e = 0, then
+    if (exponent == 0) {
+        // a. Let c be "+".
+        exponent_sign = '+';
+
+        // b. Let d be "0".
+        exponent_string = "0"sv;
+    }
+    // 13. Else,
+    else {
+        // a. If e > 0, let c be "+".
+        if (exponent > 0) {
+            exponent_sign = '+';
+        }
+        // b. Else,
+        else {
+            // i. Assert: e < 0.
+            VERIFY(exponent < 0);
+
+            // ii. Let c be "-".
+            exponent_sign = '-';
+
+            // iii. Set e to -e.
+            exponent = -exponent;
+        }
+
+        // c. Let d be the String value consisting of the digits of the decimal representation of e (in order, with no leading zeroes).
+        exponent_string = String::number(exponent);
+    }
+
+    // 14. Set m to the string-concatenation of m, "e", c, and d.
+    // 15. Return the string-concatenation of s and m.
+    return js_string(vm, String::formatted("{}{}e{}{}", sign, number_string, exponent_sign, exponent_string));
 }
 
 // 21.1.3.3 Number.prototype.toFixed ( fractionDigits ), https://tc39.es/ecma262/#sec-number.prototype.tofixed

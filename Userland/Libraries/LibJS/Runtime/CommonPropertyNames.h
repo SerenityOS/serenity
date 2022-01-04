@@ -452,6 +452,7 @@ namespace JS {
     P(timeZone)                              \
     P(timeZoneName)                          \
     P(toDateString)                          \
+    P(toExponential)                         \
     P(toFixed)                               \
     P(toGMTString)                           \
     P(toInstant)                             \
