@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto fullpath = Core::find_executable_in_path(filename);
-    if (fullpath.is_null()) {
+    if (fullpath.is_empty()) {
         warnln("no '{}' in path", filename);
         return 1;
     }
