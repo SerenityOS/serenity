@@ -252,7 +252,7 @@ MainWidget::MainWidget()
 
     m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [this](GUI::Action const&) {
         if (editor().document().is_modified()) {
-            auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path);
+            auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
             if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && editor().document().is_modified())
@@ -274,7 +274,7 @@ MainWidget::MainWidget()
         }
 
         if (editor().document().is_modified()) {
-            auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path);
+            auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
             if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && editor().document().is_modified())
@@ -719,7 +719,7 @@ bool MainWidget::request_close()
 {
     if (!editor().document().is_modified())
         return true;
-    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path);
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
 
     if (result == GUI::MessageBox::ExecYes) {
         m_save_action->activate();
