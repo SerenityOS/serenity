@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Time.h>
 #include <LibGUI/Dialog.h>
 
 namespace GUI {
@@ -32,7 +33,7 @@ public:
 
     static int show(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
     static int show_error(Window* parent_window, StringView text);
-    static int ask_about_unsaved_changes(Window* parent_window, StringView path);
+    static int ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp = {});
 
 private:
     explicit MessageBox(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);

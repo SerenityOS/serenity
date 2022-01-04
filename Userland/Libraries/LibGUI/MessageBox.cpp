@@ -27,15 +27,22 @@ int MessageBox::show_error(Window* parent_window, StringView text)
     return show(parent_window, text, "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
 }
 
-int MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path)
+int MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp)
 {
-    String text;
+    StringBuilder builder;
+    builder.append("Save changes to ");
     if (path.is_empty())
-        text = "Save changes to untitled document before closing?";
+        builder.append("untitled document");
     else
-        text = String::formatted("Save changes to '{}' before closing?", LexicalPath::basename(path));
+        builder.appendff("\"{}\"", LexicalPath::basename(path));
+    builder.append(" before closing?");
 
-    auto box = MessageBox::construct(parent_window, text, "Unsaved changes", Type::Warning, InputType::YesNoCancel);
+    if (last_unmodified_timestamp.has_value()) {
+        auto age = (Time::now_monotonic() - *last_unmodified_timestamp).to_seconds();
+        builder.appendff("\nLast saved {} second{} ago.", age, age == 1 ? "" : "s");
+    }
+
+    auto box = MessageBox::construct(parent_window, builder.string_view(), "Unsaved changes", Type::Warning, InputType::YesNoCancel);
     if (parent_window)
         box->set_icon(parent_window->icon());
 
