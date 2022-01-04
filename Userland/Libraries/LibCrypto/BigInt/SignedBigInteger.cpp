@@ -292,6 +292,13 @@ FLATTEN SignedDivisionResult SignedBigInteger::divided_by(SignedBigInteger const
     };
 }
 
+FLATTEN SignedBigInteger SignedBigInteger::negated_value() const
+{
+    auto result { *this };
+    result.negate();
+    return result;
+}
+
 u32 SignedBigInteger::hash() const
 {
     return m_unsigned_data.hash() * (1 - (2 * m_sign));
