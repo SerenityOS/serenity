@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ImageWidget.h>
@@ -24,6 +25,25 @@ int MessageBox::show(Window* parent_window, StringView text, StringView title, T
 int MessageBox::show_error(Window* parent_window, StringView text)
 {
     return show(parent_window, text, "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+}
+
+int MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path)
+{
+    String text;
+    if (path.is_empty())
+        text = "Save changes to untitled document before closing?";
+    else
+        text = String::formatted("Save changes to '{}' before closing?", LexicalPath::basename(path));
+
+    auto box = MessageBox::construct(parent_window, text, "Unsaved changes", Type::Warning, InputType::YesNoCancel);
+    if (parent_window)
+        box->set_icon(parent_window->icon());
+
+    box->m_yes_button->set_text(path.is_empty() ? "Save As..." : "Save");
+    box->m_no_button->set_text("Close");
+    box->m_cancel_button->set_text("Cancel");
+
+    return box->exec();
 }
 
 MessageBox::MessageBox(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
@@ -119,7 +139,7 @@ void MessageBox::build()
     constexpr int button_width = 80;
     int button_count = 0;
 
-    auto add_button = [&](String label, Dialog::ExecResult result) {
+    auto add_button = [&](String label, Dialog::ExecResult result) -> GUI::Button& {
         auto& button = button_container.add<Button>();
         button.set_fixed_width(button_width);
         button.set_text(label);
@@ -127,17 +147,18 @@ void MessageBox::build()
             done(result);
         };
         ++button_count;
+        return button;
     };
 
     button_container.layout()->add_spacer();
     if (should_include_ok_button())
-        add_button("OK", Dialog::ExecOK);
+        m_ok_button = add_button("OK", Dialog::ExecOK);
     if (should_include_yes_button())
-        add_button("Yes", Dialog::ExecYes);
+        m_yes_button = add_button("Yes", Dialog::ExecYes);
     if (should_include_no_button())
-        add_button("No", Dialog::ExecNo);
+        m_no_button = add_button("No", Dialog::ExecNo);
     if (should_include_cancel_button())
-        add_button("Cancel", Dialog::ExecCancel);
+        m_cancel_button = add_button("Cancel", Dialog::ExecCancel);
     button_container.layout()->add_spacer();
 
     int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;
