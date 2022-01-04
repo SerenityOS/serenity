@@ -8,6 +8,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -85,12 +86,9 @@ static Count get_total_count(const Vector<Count>& counts)
     return total_count;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     Vector<const char*> file_specifiers;
 
@@ -99,7 +97,7 @@ int main(int argc, char** argv)
     args_parser.add_option(g_output_byte, "Output byte count", "bytes", 'c');
     args_parser.add_option(g_output_word, "Output word count", "words", 'w');
     args_parser.add_positional_argument(file_specifiers, "File to process", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!g_output_line && !g_output_byte && !g_output_word)
         g_output_line = g_output_byte = g_output_word = true;
@@ -108,10 +106,7 @@ int main(int argc, char** argv)
     for (const auto& file_specifier : file_specifiers)
         counts.append(get_count(file_specifier));
 
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio"));
 
     if (file_specifiers.is_empty())
         counts.append(get_count("-"));
