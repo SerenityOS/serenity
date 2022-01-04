@@ -17,6 +17,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <sys/wait.h>
 #include <termios.h>
 #include <time.h>
@@ -97,6 +98,7 @@ ErrorOr<int> mkstemp(Span<char> pattern);
 ErrorOr<void> fchmod(int fd, mode_t mode);
 ErrorOr<void> rename(StringView old_path, StringView new_path);
 ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
+ErrorOr<struct utsname> uname();
 ErrorOr<Array<int, 2>> pipe2(int flags);
 
 ErrorOr<int> socket(int domain, int type, int protocol);

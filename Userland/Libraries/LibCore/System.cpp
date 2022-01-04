@@ -648,6 +648,19 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf> maybe_buf)
 #endif
 }
 
+ErrorOr<struct utsname> uname()
+{
+    utsname uts;
+#ifdef __serenity__
+    int rc = syscall(SC_uname, &uts);
+    HANDLE_SYSCALL_RETURN_VALUE("uname"sv, rc, uts);
+#else
+    if (::uname(&uts) < 0)
+        return Error::from_syscall("uname"sv, -errno);
+#endif
+    return uts;
+}
+
 ErrorOr<int> socket(int domain, int type, int protocol)
 {
     auto fd = ::socket(domain, type, protocol);
