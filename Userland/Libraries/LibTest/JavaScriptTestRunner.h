@@ -235,16 +235,12 @@ inline AK::Result<NonnullRefPtr<JS::SourceTextModule>, ParserError> parse_module
     return script_or_errors.release_value();
 }
 
-inline Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
+inline ErrorOr<JsonValue> get_test_results(JS::Interpreter& interpreter)
 {
     auto results = MUST(interpreter.global_object().get("__TestResults__"));
-    auto json_string = TRY_OR_DISCARD(JS::JSONObject::stringify_impl(interpreter.global_object(), results, JS::js_undefined(), JS::js_undefined()));
+    auto json_string = MUST(JS::JSONObject::stringify_impl(interpreter.global_object(), results, JS::js_undefined(), JS::js_undefined()));
 
-    auto json = JsonValue::from_string(json_string);
-    if (json.is_error())
-        return {};
-
-    return json.value();
+    return JsonValue::from_string(json_string);
 }
 
 inline void TestRunner::do_run_single_test(const String& test_path, size_t, size_t)
@@ -365,7 +361,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         g_vm->clear_exception();
 
     auto test_json = get_test_results(*interpreter);
-    if (!test_json.has_value()) {
+    if (test_json.is_error()) {
         warnln("Received malformed JSON from test \"{}\"", test_path);
         cleanup_and_exit();
     }
