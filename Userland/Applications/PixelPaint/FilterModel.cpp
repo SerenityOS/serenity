@@ -7,6 +7,7 @@
 
 #include "FilterModel.h"
 #include "FilterParams.h"
+#include "Filters/Bloom.h"
 #include "Filters/BoxBlur3.h"
 #include "Filters/BoxBlur5.h"
 #include "Filters/FastBoxBlur.h"
@@ -23,6 +24,11 @@
 namespace PixelPaint {
 FilterModel::FilterModel(ImageEditor* editor)
 {
+    auto artistic_category = FilterInfo::create_category("Artistic");
+    auto bloom_filter = FilterInfo::create_filter<Filters::Bloom>(editor, artistic_category);
+
+    m_filters.append(artistic_category);
+
     auto spatial_category = FilterInfo::create_category("Spatial");
 
     auto edge_detect_category = FilterInfo::create_category("Edge Detection", spatial_category);

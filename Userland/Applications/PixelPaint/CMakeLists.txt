@@ -17,6 +17,7 @@ set(SOURCES
     FilterGallery.cpp
     FilterGalleryGML.h
     FilterModel.cpp
+    Filters/Bloom.cpp
     Filters/BoxBlur3.cpp
     Filters/BoxBlur5.cpp
     Filters/Filter.cpp
