@@ -1426,12 +1426,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             switch (mode) {
             case CompleteProperty: {
-                Optional<JS::Value> maybe_value;
-                auto maybe_variable = TRY_OR_DISCARD(vm->resolve_binding(variable_name, &global_environment));
-                maybe_value = TRY_OR_DISCARD(maybe_variable.get_value(interpreter->global_object()));
-                VERIFY(!maybe_value->is_empty());
+                auto reference_or_error = vm->resolve_binding(variable_name, &global_environment);
+                if (reference_or_error.is_error())
+                    return {};
+                auto value_or_error = reference_or_error.value().get_value(interpreter->global_object());
+                if (value_or_error.is_error())
+                    return {};
+                auto variable = value_or_error.value();
+                VERIFY(!variable.is_empty());
 
-                auto variable = *maybe_value;
                 if (!variable.is_object())
                     break;
 
