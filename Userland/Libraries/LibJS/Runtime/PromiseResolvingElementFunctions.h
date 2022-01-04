@@ -51,7 +51,7 @@ public:
 protected:
     explicit PromiseResolvingElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
 
-    virtual Value resolve_element() = 0;
+    virtual ThrowCompletionOr<Value> resolve_element() = 0;
 
     size_t m_index { 0 };
     PromiseValueList& m_values;
@@ -75,7 +75,7 @@ public:
     virtual ~PromiseAllResolveElementFunction() override = default;
 
 private:
-    virtual Value resolve_element() override;
+    virtual ThrowCompletionOr<Value> resolve_element() override;
 };
 
 // 27.2.4.2.2 Promise.allSettled Resolve Element Functions, https://tc39.es/ecma262/#sec-promise.allsettled-resolve-element-functions
@@ -89,7 +89,7 @@ public:
     virtual ~PromiseAllSettledResolveElementFunction() override = default;
 
 private:
-    virtual Value resolve_element() override;
+    virtual ThrowCompletionOr<Value> resolve_element() override;
 };
 
 // 27.2.4.2.3 Promise.allSettled Reject Element Functions, https://tc39.es/ecma262/#sec-promise.allsettled-reject-element-functions
@@ -103,7 +103,7 @@ public:
     virtual ~PromiseAllSettledRejectElementFunction() override = default;
 
 private:
-    virtual Value resolve_element() override;
+    virtual ThrowCompletionOr<Value> resolve_element() override;
 };
 
 // 27.2.4.3.2 Promise.any Reject Element Functions, https://tc39.es/ecma262/#sec-promise.any-reject-element-functions
@@ -117,7 +117,7 @@ public:
     virtual ~PromiseAnyRejectElementFunction() override = default;
 
 private:
-    virtual Value resolve_element() override;
+    virtual ThrowCompletionOr<Value> resolve_element() override;
 };
 
 }
