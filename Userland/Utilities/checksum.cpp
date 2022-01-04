@@ -64,8 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         while (!file->eof() && !file->has_error())
             hash.update(file->read(PAGE_SIZE));
-        auto digest = hash.digest();
-        outln("{:hex-dump}  {}", ReadonlyBytes(digest.immutable_data(), digest.data_length()), path);
+        outln("{:hex-dump}  {}", hash.digest().bytes(), path);
     }
     return has_error ? 1 : 0;
 }

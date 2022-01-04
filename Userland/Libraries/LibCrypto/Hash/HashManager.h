@@ -73,6 +73,13 @@ struct MultiHashDigestVariant {
             [&](const auto& value) { return value.data_length(); });
     }
 
+    [[nodiscard]] ReadonlyBytes bytes() const
+    {
+        return m_digest.visit(
+            [&](const Empty&) -> ReadonlyBytes { VERIFY_NOT_REACHED(); },
+            [&](const auto& value) { return value.bytes(); });
+    }
+
     using DigestVariant = Variant<Empty, MD5::DigestType, SHA1::DigestType, SHA256::DigestType, SHA384::DigestType, SHA512::DigestType>;
     DigestVariant m_digest {};
 };
