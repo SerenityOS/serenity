@@ -56,7 +56,7 @@
             margins: [0, 8]
         }
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Scrollbar {
             name: "enabled_scrollbar"
@@ -66,18 +66,18 @@
             value: 50
         }
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::HorizontalSeparator {}
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Scrollbar {
             name: "disabled_scrollbar"
             fixed_height: 16
         }
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
     }
 
     @GUI::GroupBox {

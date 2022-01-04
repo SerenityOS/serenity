@@ -93,8 +93,7 @@
             fixed_width: 150
         }
 
-        // HACK: We need something like Layout::add_spacer() in GML! :^)
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::DialogButton {
             name: "close_button"
