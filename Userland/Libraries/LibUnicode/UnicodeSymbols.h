@@ -38,32 +38,6 @@ struct Symbols {
     bool (*code_point_has_script)(u32, Script) { nullptr };
     bool (*code_point_has_script_extension)(u32, Script) { nullptr };
 
-    // Loaded from UnicodeLocale.cpp:
-
-    Optional<Locale> (*locale_from_string)(StringView) { nullptr };
-
-    Optional<StringView> (*get_locale_language_mapping)(StringView, StringView) { nullptr };
-    Optional<StringView> (*get_locale_territory_mapping)(StringView, StringView) { nullptr };
-    Optional<StringView> (*get_locale_script_tag_mapping)(StringView, StringView) { nullptr };
-    Optional<StringView> (*get_locale_long_currency_mapping)(StringView, StringView) { nullptr };
-    Optional<StringView> (*get_locale_short_currency_mapping)(StringView, StringView) { nullptr };
-    Optional<StringView> (*get_locale_narrow_currency_mapping)(StringView, StringView) { nullptr };
-    Optional<StringView> (*get_locale_numeric_currency_mapping)(StringView, StringView) { nullptr };
-    Optional<StringView> (*get_locale_key_mapping)(StringView, StringView) { nullptr };
-
-    Optional<ListPatterns> (*get_locale_list_pattern_mapping)(StringView, StringView, StringView) { nullptr };
-
-    Optional<StringView> (*resolve_language_alias)(StringView) { nullptr };
-    Optional<StringView> (*resolve_territory_alias)(StringView) { nullptr };
-    Optional<StringView> (*resolve_script_tag_alias)(StringView) { nullptr };
-    Optional<StringView> (*resolve_variant_alias)(StringView) { nullptr };
-    Optional<StringView> (*resolve_subdivision_alias)(StringView) { nullptr };
-
-    void (*resolve_complex_language_aliases)(LanguageID&);
-
-    Optional<LanguageID> (*add_likely_subtags)(LanguageID const&);
-    Optional<String> (*resolve_most_likely_territory)(LanguageID const&);
-
 private:
     Symbols() = default;
 };

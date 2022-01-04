@@ -11,7 +11,6 @@
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
-#include <LibUnicode/UnicodeSymbols.h>
 
 namespace Unicode {
 
@@ -568,8 +567,6 @@ void canonicalize_unicode_extension_values(StringView key, String& value, bool r
 
 static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
 {
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-
     auto canonicalize_language = [&](LanguageID& language_id, bool force_lowercase) {
         language_id.language = language_id.language->to_lowercase();
         if (language_id.script.has_value())
@@ -579,7 +576,7 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
         for (auto& variant : language_id.variants)
             variant = variant.to_lowercase();
 
-        symbols.resolve_complex_language_aliases(language_id);
+        resolve_complex_language_aliases(language_id);
 
         if (auto alias = resolve_language_alias(*language_id.language); alias.has_value()) {
             auto language_alias = parse_unicode_language_id(*alias);
@@ -601,7 +598,7 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
 
         if (language_id.region.has_value()) {
             if (auto alias = resolve_territory_alias(*language_id.region); alias.has_value())
-                language_id.region = resolve_most_likely_territory(language_id, *alias);
+                language_id.region = resolve_most_likely_territory_alias(language_id, *alias);
         }
 
         quick_sort(language_id.variants);
@@ -744,49 +741,41 @@ bool is_locale_available(StringView locale)
     return locale_from_string(locale).has_value();
 }
 
-Optional<Locale> locale_from_string(StringView locale)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.locale_from_string(locale);
-}
-
-Optional<StringView> get_locale_language_mapping(StringView locale, StringView language)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_locale_language_mapping(locale, language);
-}
-
-Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_locale_territory_mapping(locale, territory);
-}
-
-Optional<StringView> get_locale_script_mapping(StringView locale, StringView script)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_locale_script_tag_mapping(locale, script);
-}
+Optional<Locale> __attribute__((weak)) locale_from_string(StringView) { return {}; }
+Optional<Language> __attribute__((weak)) language_from_string(StringView) { return {}; }
+Optional<Territory> __attribute__((weak)) territory_from_string(StringView) { return {}; }
+Optional<ScriptTag> __attribute__((weak)) script_tag_from_string(StringView) { return {}; }
+Optional<Currency> __attribute__((weak)) currency_from_string(StringView) { return {}; }
+Optional<Key> __attribute__((weak)) key_from_string(StringView) { return {}; }
+Optional<ListPatternType> __attribute__((weak)) list_pattern_type_from_string(StringView) { return {}; }
+Optional<ListPatternStyle> __attribute__((weak)) list_pattern_style_from_string(StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_language_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_territory_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_script_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_long_currency_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_short_currency_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_narrow_currency_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_numeric_currency_mapping(StringView, StringView) { return {}; }
 
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency, Style style)
 {
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-
     switch (style) {
     case Style::Long:
-        return symbols.get_locale_long_currency_mapping(locale, currency);
+        return get_locale_long_currency_mapping(locale, currency);
     case Style::Short:
-        return symbols.get_locale_short_currency_mapping(locale, currency);
+        return get_locale_short_currency_mapping(locale, currency);
     case Style::Narrow:
-        return symbols.get_locale_narrow_currency_mapping(locale, currency);
+        return get_locale_narrow_currency_mapping(locale, currency);
     case Style::Numeric:
-        return symbols.get_locale_numeric_currency_mapping(locale, currency);
+        return get_locale_numeric_currency_mapping(locale, currency);
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-Vector<StringView> get_locale_key_mapping(StringView locale, StringView keyword)
+Optional<StringView> __attribute__((weak)) get_locale_key_mapping(StringView, StringView) { return {}; }
+
+Vector<StringView> get_locale_key_mapping_list(StringView locale, StringView keyword)
 {
     if (keyword == "hc"sv) {
         auto hour_cycles = get_locale_hour_cycles(locale);
@@ -800,55 +789,20 @@ Vector<StringView> get_locale_key_mapping(StringView locale, StringView keyword)
         return values;
     }
 
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-
-    if (auto values = symbols.get_locale_key_mapping(locale, keyword); values.has_value())
+    if (auto values = get_locale_key_mapping(locale, keyword); values.has_value())
         return values->split_view(',');
 
     return {};
 }
 
-Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, StringView style)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_locale_list_pattern_mapping(locale, type, style);
-}
-
-Optional<StringView> resolve_language_alias(StringView language)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.resolve_language_alias(language);
-}
-
-Optional<StringView> resolve_territory_alias(StringView territory)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.resolve_territory_alias(territory);
-}
-
-Optional<StringView> resolve_script_tag_alias(StringView script_tag)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.resolve_script_tag_alias(script_tag);
-}
-
-Optional<StringView> resolve_variant_alias(StringView variant)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.resolve_variant_alias(variant);
-}
-
-Optional<StringView> resolve_subdivision_alias(StringView subdivision)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.resolve_subdivision_alias(subdivision);
-}
-
-Optional<LanguageID> add_likely_subtags(LanguageID const& language_id)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.add_likely_subtags(language_id);
-}
+Optional<ListPatterns> __attribute__((weak)) get_locale_list_patterns(StringView, StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) resolve_language_alias(StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) resolve_territory_alias(StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) resolve_script_tag_alias(StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) resolve_variant_alias(StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) resolve_subdivision_alias(StringView) { return {}; }
+void __attribute__((weak)) resolve_complex_language_aliases(LanguageID&) { }
+Optional<LanguageID> __attribute__((weak)) add_likely_subtags(LanguageID const&) { return {}; }
 
 Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id)
 {
@@ -892,13 +846,14 @@ Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id)
     return return_language_and_variants(maximized.release_value(), move(variants));
 }
 
-String resolve_most_likely_territory(LanguageID const& language_id, StringView territory_alias)
+Optional<String> __attribute__((weak)) resolve_most_likely_territory(LanguageID const&) { return {}; }
+
+String resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias)
 {
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
     auto aliases = territory_alias.split_view(' ');
 
     if (aliases.size() > 1) {
-        auto territory = symbols.resolve_most_likely_territory(language_id);
+        auto territory = resolve_most_likely_territory(language_id);
         if (territory.has_value() && aliases.contains_slow(*territory))
             return territory.release_value();
     }
