@@ -108,16 +108,12 @@ FloatVector4 Sampler::sample_2d(FloatVector2 const& uv) const
         t3 = (i1 < 0 || i1 >= w || j1 < 0 || j1 >= h) ? m_config.border_color : image.texel(layer, level, i1, j1, 0);
     }
 
-    float alpha = fracf(u - 0.5f);
-    float beta = fracf(v - 0.5f);
+    float const alpha = fracf(u - 0.5f);
+    float const beta = fracf(v - 0.5f);
 
-    float one_minus_alpha = 1 - alpha;
-    float one_minus_beta = 1 - beta;
-
-    auto lerp_0 = t0 * one_minus_alpha + t1 * alpha;
-    auto lerp_1 = t2 * one_minus_alpha + t3 * alpha;
-
-    return lerp_0 * one_minus_beta + lerp_1 * beta;
+    auto const lerp_0 = mix(t0, t1, alpha);
+    auto const lerp_1 = mix(t2, t3, alpha);
+    return mix(lerp_0, lerp_1, beta);
 }
 
 }
