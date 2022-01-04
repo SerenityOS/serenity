@@ -56,6 +56,14 @@ ErrorOr<void> StringBuilder::try_append(char ch)
     return {};
 }
 
+ErrorOr<void> StringBuilder::try_append_repeated(char ch, size_t n)
+{
+    TRY(will_append(n));
+    for (size_t i = 0; i < n; ++i)
+        TRY(try_append(ch));
+    return {};
+}
+
 void StringBuilder::append(StringView string)
 {
     MUST(try_append(string));
@@ -82,6 +90,11 @@ void StringBuilder::appendvf(char const* fmt, va_list ap)
         append(ch);
     },
         nullptr, fmt, ap);
+}
+
+void StringBuilder::append_repeated(char ch, size_t n)
+{
+    MUST(try_append_repeated(ch, n));
 }
 
 ByteBuffer StringBuilder::to_byte_buffer() const
