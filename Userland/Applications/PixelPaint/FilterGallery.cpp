@@ -56,8 +56,10 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     };
 
     apply_button->on_click = [this](auto) {
-        if (!m_selected_filter)
+        if (!m_selected_filter) {
             done(ExecResult::ExecAborted);
+            return;
+        }
 
         m_selected_filter->apply();
         done(ExecResult::ExecOK);
