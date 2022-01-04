@@ -15,7 +15,6 @@
 #    endif
 #else
 #    include <AK/Function.h>
-#    include <LibUnicode/DateTimeFormat.h>
 #    include <LibUnicode/Locale.h>
 #endif
 
@@ -110,21 +109,6 @@ Symbols const& Symbols::ensure_loaded()
     load_symbol(symbols.resolve_complex_language_aliases, "unicode_resolve_complex_language_aliases");
     load_symbol(symbols.add_likely_subtags, "unicode_add_likely_subtags");
     load_symbol(symbols.resolve_most_likely_territory, "unicode_resolve_most_likely_territory");
-
-    load_symbol(symbols.get_regional_hour_cycles, "unicode_get_regional_hour_cycles");
-    load_symbol(symbols.get_calendar_date_format, "unicode_get_calendar_date_format");
-    load_symbol(symbols.get_calendar_time_format, "unicode_get_calendar_time_format");
-    load_symbol(symbols.get_calendar_date_time_format, "unicode_get_calendar_date_time_format");
-    load_symbol(symbols.get_calendar_available_formats, "unicode_get_calendar_available_formats");
-    load_symbol(symbols.get_calendar_default_range_format, "unicode_get_calendar_default_range_format");
-    load_symbol(symbols.get_calendar_range_formats, "unicode_get_calendar_range_formats");
-    load_symbol(symbols.get_calendar_range12_formats, "unicode_get_calendar_range12_formats");
-    load_symbol(symbols.get_calendar_era_symbol, "unicode_get_calendar_era_symbol");
-    load_symbol(symbols.get_calendar_month_symbol, "unicode_get_calendar_month_symbol");
-    load_symbol(symbols.get_calendar_weekday_symbol, "unicode_get_calendar_weekday_symbol");
-    load_symbol(symbols.get_calendar_day_period_symbol, "unicode_get_calendar_day_period_symbol");
-    load_symbol(symbols.get_calendar_day_period_symbol_for_hour, "unicode_get_calendar_day_period_symbol_for_hour");
-    load_symbol(symbols.get_time_zone_name, "unicode_get_time_zone_name");
 
     initialized = true;
     return symbols;

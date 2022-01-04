@@ -789,7 +789,7 @@ Optional<StringView> get_locale_currency_mapping(StringView locale, StringView c
 Vector<StringView> get_locale_key_mapping(StringView locale, StringView keyword)
 {
     if (keyword == "hc"sv) {
-        auto hour_cycles = get_regional_hour_cycles(locale);
+        auto hour_cycles = get_locale_hour_cycles(locale);
 
         Vector<StringView> values;
         values.ensure_capacity(hour_cycles.size());
