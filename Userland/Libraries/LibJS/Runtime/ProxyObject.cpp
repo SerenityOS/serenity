@@ -699,8 +699,10 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
 
     // 16. For each element key of targetKeys, do
     for (auto& key : target_keys) {
+        auto property_key = MUST(PropertyKey::from_value(global_object, key));
+
         // a. Let desc be ? target.[[GetOwnProperty]](key).
-        auto descriptor = TRY(m_target.internal_get_own_property(PropertyKey::from_value(global_object, key)));
+        auto descriptor = TRY(m_target.internal_get_own_property(property_key));
 
         // b. If desc is not undefined and desc.[[Configurable]] is false, then
         if (descriptor.has_value() && !*descriptor->configurable) {
