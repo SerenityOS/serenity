@@ -124,9 +124,6 @@ public:
     void put(u32 index, Value value, PropertyAttributes attributes = default_attributes);
     void remove(u32 index);
 
-    ValueAndAttributes take_first(Object* this_object);
-    ValueAndAttributes take_last(Object* this_object);
-
     void append(Value value, PropertyAttributes attributes = default_attributes) { put(array_like_size(), value, attributes); }
 
     IndexedPropertyIterator begin(bool skip_empty = true) const { return IndexedPropertyIterator(*this, 0, skip_empty); };

@@ -233,22 +233,6 @@ void IndexedProperties::remove(u32 index)
     m_storage->remove(index);
 }
 
-ValueAndAttributes IndexedProperties::take_first(Object* this_object)
-{
-    auto first = m_storage->take_first();
-    if (first.value.is_accessor())
-        return { first.value.as_accessor().call_getter(this_object), first.attributes };
-    return first;
-}
-
-ValueAndAttributes IndexedProperties::take_last(Object* this_object)
-{
-    auto last = m_storage->take_last();
-    if (last.value.is_accessor())
-        return { last.value.as_accessor().call_getter(this_object), last.attributes };
-    return last;
-}
-
 bool IndexedProperties::set_array_like_size(size_t new_size)
 {
     auto current_array_like_size = array_like_size();
