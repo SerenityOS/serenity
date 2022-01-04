@@ -35,12 +35,6 @@ constexpr static T interpolate(const T& v0, const T& v1, const T& v2, const Floa
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
 
-template<typename T>
-constexpr static T mix(const T& x, const T& y, float interp)
-{
-    return x * (1 - interp) + y * interp;
-}
-
 ALWAYS_INLINE constexpr static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
 {
     auto clamped = v.clamped(0, 1);
@@ -821,10 +815,9 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
                 break;
             case TextureEnvMode::Decal: {
                 float src_alpha = fragment.w();
-                float one_minus_src_alpha = 1 - src_alpha;
-                fragment.set_x(texel.x() * src_alpha + fragment.x() * one_minus_src_alpha);
-                fragment.set_y(texel.y() * src_alpha + fragment.y() * one_minus_src_alpha);
-                fragment.set_z(texel.z() * src_alpha + fragment.z() * one_minus_src_alpha);
+                fragment.set_x(mix(fragment.x(), texel.x(), src_alpha));
+                fragment.set_y(mix(fragment.y(), texel.y(), src_alpha));
+                fragment.set_z(mix(fragment.z(), texel.z(), src_alpha));
                 break;
             }
             default:
