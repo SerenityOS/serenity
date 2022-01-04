@@ -8,7 +8,6 @@
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
-#include <LibUnicode/UnicodeSymbols.h>
 
 #if ENABLE_UNICODE_DATA
 #    include <LibUnicode/UnicodeData.h>
@@ -16,35 +15,11 @@
 
 namespace Unicode {
 
-Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_number_system_symbol(locale, system, symbol);
-}
-
-Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_number_system_groupings(locale, system);
-}
-
-Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_standard_number_system_format(locale, system, type);
-}
-
-Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_compact_number_system_formats(locale, system, type);
-}
-
-Vector<NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_unit_formats(locale, unit, style);
-}
+Optional<StringView> __attribute__((weak)) get_number_system_symbol(StringView, StringView, NumericSymbol) { return {}; }
+Optional<NumberGroupings> __attribute__((weak)) get_number_system_groupings(StringView, StringView) { return {}; }
+Optional<NumberFormat> __attribute__((weak)) get_standard_number_system_format(StringView, StringView, StandardNumberFormatType) { return {}; }
+Vector<NumberFormat> __attribute__((weak)) get_compact_number_system_formats(StringView, StringView, CompactNumberFormatType) { return {}; }
+Vector<NumberFormat> __attribute__((weak)) get_unit_formats(StringView, StringView, Style) { return {}; }
 
 Optional<NumberFormat> select_pattern_with_plurality(Vector<NumberFormat> const& formats, double number)
 {

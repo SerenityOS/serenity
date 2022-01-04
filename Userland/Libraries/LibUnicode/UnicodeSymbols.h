@@ -64,14 +64,6 @@ struct Symbols {
     Optional<LanguageID> (*add_likely_subtags)(LanguageID const&);
     Optional<String> (*resolve_most_likely_territory)(LanguageID const&);
 
-    // Loaded from UnicodeNumberFormat.cpp:
-
-    Optional<StringView> (*get_number_system_symbol)(StringView, StringView, NumericSymbol);
-    Optional<NumberGroupings> (*get_number_system_groupings)(StringView, StringView);
-    Optional<NumberFormat> (*get_standard_number_system_format)(StringView, StringView, StandardNumberFormatType);
-    Vector<NumberFormat> (*get_compact_number_system_formats)(StringView, StringView, CompactNumberFormatType);
-    Vector<NumberFormat> (*get_unit_formats)(StringView, StringView, Style);
-
     // Loaded from UnicodeDateTimeFormat.cpp:
 
     Vector<HourCycle> (*get_regional_hour_cycles)(StringView) { nullptr };

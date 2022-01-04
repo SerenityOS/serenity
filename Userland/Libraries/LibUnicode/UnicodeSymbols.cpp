@@ -17,7 +17,6 @@
 #    include <AK/Function.h>
 #    include <LibUnicode/DateTimeFormat.h>
 #    include <LibUnicode/Locale.h>
-#    include <LibUnicode/NumberFormat.h>
 #endif
 
 namespace Unicode::Detail {
@@ -111,12 +110,6 @@ Symbols const& Symbols::ensure_loaded()
     load_symbol(symbols.resolve_complex_language_aliases, "unicode_resolve_complex_language_aliases");
     load_symbol(symbols.add_likely_subtags, "unicode_add_likely_subtags");
     load_symbol(symbols.resolve_most_likely_territory, "unicode_resolve_most_likely_territory");
-
-    load_symbol(symbols.get_number_system_symbol, "unicode_get_number_system_symbol");
-    load_symbol(symbols.get_number_system_groupings, "unicode_get_number_system_groupings");
-    load_symbol(symbols.get_standard_number_system_format, "unicode_get_standard_number_system_format");
-    load_symbol(symbols.get_compact_number_system_formats, "unicode_get_compact_number_system_formats");
-    load_symbol(symbols.get_unit_formats, "unicode_get_unit_formats");
 
     load_symbol(symbols.get_regional_hour_cycles, "unicode_get_regional_hour_cycles");
     load_symbol(symbols.get_calendar_date_format, "unicode_get_calendar_date_format");
