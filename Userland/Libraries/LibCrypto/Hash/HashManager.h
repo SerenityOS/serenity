@@ -59,14 +59,14 @@ struct MultiHashDigestVariant {
     {
     }
 
-    const u8* immutable_data() const
+    [[nodiscard]] const u8* immutable_data() const
     {
         return m_digest.visit(
             [&](const Empty&) -> const u8* { VERIFY_NOT_REACHED(); },
             [&](const auto& value) { return value.immutable_data(); });
     }
 
-    size_t data_length()
+    [[nodiscard]] size_t data_length() const
     {
         return m_digest.visit(
             [&](const Empty&) -> size_t { VERIFY_NOT_REACHED(); },
