@@ -145,9 +145,28 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         editor->image().set_path(*save_result.chosen_file);
     });
 
+    m_save_image_action = GUI::CommonActions::make_save_action([&](auto&) {
+        auto* editor = current_image_editor();
+        if (!editor)
+            return;
+        if (editor->image().path().is_empty()) {
+            m_save_image_as_action->activate();
+            return;
+        }
+        auto response = FileSystemAccessClient::Client::the().request_file(window.window_id(), editor->image().path(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        if (response.error != 0)
+            return;
+        auto result = editor->save_project_to_fd_and_close(*response.fd);
+        if (result.is_error()) {
+            GUI::MessageBox::show_error(&window, String::formatted("Could not save {}: {}", *response.chosen_file, result.error()));
+            return;
+        }
+    });
+
     file_menu.add_action(*m_new_image_action);
     file_menu.add_action(*m_new_image_from_clipboard_action);
     file_menu.add_action(*m_open_image_action);
+    file_menu.add_action(*m_save_image_action);
     file_menu.add_action(*m_save_image_as_action);
 
     auto& export_submenu = file_menu.add_submenu("&Export");
