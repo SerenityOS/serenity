@@ -25,7 +25,7 @@ public:
 
     virtual const FlyString& name() const = 0;
 
-    BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
+    ThrowCompletionOr<BoundFunction*> bind(Value bound_this_value, Vector<Value> arguments);
 
     virtual bool is_strict_mode() const { return false; }
 
