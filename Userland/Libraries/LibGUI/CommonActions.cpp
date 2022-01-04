@@ -100,6 +100,7 @@ NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)> callback, C
 {
     auto action = Action::create("&Fullscreen", { Mod_None, Key_F11 }, move(callback), parent);
     action->set_status_tip("Enter fullscreen mode");
+    action->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/fullscreen.png").release_value_but_fixme_should_propagate_errors());
     return action;
 }
 

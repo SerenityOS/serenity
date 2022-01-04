@@ -332,7 +332,7 @@ Tab::Tab(BrowserWindow& window)
     m_tab_context_menu->add_action(GUI::CommonActions::make_close_tab_action([this](auto&) {
         on_tab_close_request(*this);
     }));
-    m_tab_context_menu->add_action(GUI::Action::create("&Duplicate Tab", [this](auto&) {
+    m_tab_context_menu->add_action(GUI::Action::create("&Duplicate Tab", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/duplicate-tab.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         on_tab_open_request(url());
     }));
     m_tab_context_menu->add_action(GUI::Action::create("Close &Other Tabs", [this](auto&) {
