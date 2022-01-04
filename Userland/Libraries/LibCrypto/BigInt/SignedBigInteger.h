@@ -117,6 +117,13 @@ public:
     SignedBigInteger multiplied_by(SignedBigInteger const& other) const;
     SignedDivisionResult divided_by(SignedBigInteger const& divisor) const;
 
+    inline SignedBigInteger negated_value() const
+    {
+        auto tmp { *this };
+        tmp.negate();
+        return tmp;
+    }
+
     SignedBigInteger plus(UnsignedBigInteger const& other) const;
     SignedBigInteger minus(UnsignedBigInteger const& other) const;
     SignedBigInteger multiplied_by(UnsignedBigInteger const& other) const;
