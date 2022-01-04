@@ -121,6 +121,8 @@ public:
     [[nodiscard]] SignedBigInteger multiplied_by(UnsignedBigInteger const& other) const;
     [[nodiscard]] SignedDivisionResult divided_by(UnsignedBigInteger const& divisor) const;
 
+    [[nodiscard]] SignedBigInteger negated_value() const;
+
     [[nodiscard]] u32 hash() const;
 
     void set_bit_inplace(size_t bit_index);
