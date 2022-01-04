@@ -8,18 +8,21 @@
 
 #include <AK/Forward.h>
 #include <AK/Optional.h>
+#include <AK/Span.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibUnicode/Forward.h>
 
 namespace Unicode {
 
+Optional<String> code_point_display_name(u32 code_point);
+u32 canonical_combining_class(u32 code_point);
+Span<SpecialCasing const* const> special_case_mapping(u32 code_point);
+
 // Note: The single code point case conversions only perform simple case folding.
 // Use the full-string transformations for full case folding.
 u32 to_unicode_lowercase(u32 code_point);
 u32 to_unicode_uppercase(u32 code_point);
-
-Optional<String> code_point_display_name(u32 code_point);
 
 String to_unicode_lowercase_full(StringView, Optional<StringView> locale = {});
 String to_unicode_uppercase_full(StringView, Optional<StringView> locale = {});
