@@ -29,11 +29,6 @@ public:
 
     int glyph() const { return m_glyph; }
     void set_glyph(int);
-
-    void cut_glyph();
-    void copy_glyph();
-    void paste_glyph();
-    void delete_glyph();
     bool is_glyph_empty();
 
     void rotate_90(Direction);

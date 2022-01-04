@@ -6,10 +6,43 @@
  */
 
 #include "GlyphMapWidget.h"
+#include <AK/MemoryStream.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Emoji.h>
 #include <LibGfx/Palette.h>
+
+GlyphMapWidget::Selection GlyphMapWidget::Selection::normalized() const
+{
+    if (m_size > 0)
+        return *this;
+    return { m_start + m_size, -m_size + 1 };
+}
+
+void GlyphMapWidget::Selection::resize_by(int i)
+{
+    m_size += i;
+    if (m_size == 0) {
+        if (i < 0)
+            m_size--;
+        else
+            m_size++;
+    }
+}
+
+bool GlyphMapWidget::Selection::contains(int i) const
+{
+    auto this_normalized = normalized();
+    return i >= this_normalized.m_start && i < this_normalized.m_start + this_normalized.m_size;
+}
+
+void GlyphMapWidget::Selection::extend_to(int glyph)
+{
+    m_size = glyph - m_start;
+    if (m_size > 0)
+        m_size++;
+}
 
 GlyphMapWidget::GlyphMapWidget()
 {
@@ -27,7 +60,7 @@ void GlyphMapWidget::initialize(Gfx::BitmapFont& mutable_font)
         return;
     m_font = mutable_font;
     vertical_scrollbar().set_step(font().glyph_height() + m_vertical_spacing);
-    set_selected_glyph('A');
+    set_active_glyph('A');
 }
 
 void GlyphMapWidget::resize_event(GUI::ResizeEvent& event)
@@ -45,18 +78,22 @@ void GlyphMapWidget::resize_event(GUI::ResizeEvent& event)
     int content_height = rows() * (font().glyph_height() + m_vertical_spacing) + frame_thickness();
     set_content_size({ content_width, content_height });
 
-    scroll_to_glyph(m_selected_glyph);
+    scroll_to_glyph(m_active_glyph);
 
     AbstractScrollableWidget::resize_event(event);
 }
 
-void GlyphMapWidget::set_selected_glyph(int glyph)
+void GlyphMapWidget::set_active_glyph(int glyph, ShouldResetSelection should_reset_selection)
 {
-    if (m_selected_glyph == glyph)
+    if (m_active_glyph == glyph)
         return;
-    m_selected_glyph = glyph;
-    if (on_glyph_selected)
-        on_glyph_selected(glyph);
+    m_active_glyph = glyph;
+    if (should_reset_selection == ShouldResetSelection::Yes) {
+        m_selection.set_start(glyph);
+        m_selection.set_size(1);
+    }
+    if (on_active_glyph_changed)
+        on_active_glyph_changed(glyph);
     update();
 }
 
@@ -99,7 +136,7 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
             outer_rect.y() + m_vertical_spacing / 2,
             font().max_glyph_width(),
             font().glyph_height());
-        if (glyph == m_selected_glyph) {
+        if (m_selection.contains(glyph)) {
             painter.fill_rect(outer_rect, is_focused() ? palette().selection() : palette().inactive_selection());
             if (m_font->contains_raw_glyph(glyph))
                 painter.draw_glyph(inner_rect.location(), glyph, is_focused() ? palette().selection_text() : palette().inactive_selection_text());
@@ -113,6 +150,7 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
             painter.draw_emoji(inner_rect.location(), *emoji, *m_font);
         }
     }
+    painter.draw_focus_rect(get_outer_rect(m_active_glyph), Gfx::Color::Black);
 }
 
 void GlyphMapWidget::mousedown_event(GUI::MouseEvent& event)
@@ -125,7 +163,13 @@ void GlyphMapWidget::mousedown_event(GUI::MouseEvent& event)
     auto row = (map_position.y() - 1) / ((font().glyph_height() + m_vertical_spacing));
     auto glyph = row * columns() + col;
     if (row >= 0 && row < rows() && col >= 0 && col < columns() && glyph < m_glyph_count) {
-        set_selected_glyph(glyph);
+        if (event.shift())
+            m_selection.extend_to(glyph);
+        else {
+            m_selection.set_size(1);
+            m_selection.set_start(glyph);
+        }
+        set_active_glyph(glyph, ShouldResetSelection::No);
     }
 }
 
@@ -133,53 +177,76 @@ void GlyphMapWidget::keydown_event(GUI::KeyEvent& event)
 {
     GUI::Frame::keydown_event(event);
 
+    if (!event.ctrl() && !event.shift()) {
+        m_selection.set_size(1);
+        m_selection.set_start(m_active_glyph);
+    }
+
     if (event.key() == KeyCode::Key_Up) {
-        if (selected_glyph() >= m_columns) {
-            set_selected_glyph(selected_glyph() - m_columns);
-            scroll_to_glyph(selected_glyph());
+        if (m_selection.start() >= m_columns) {
+            if (event.shift())
+                m_selection.resize_by(-m_columns);
+            else
+                m_selection.set_start(m_selection.start() - m_columns);
+            set_active_glyph(m_active_glyph - m_columns, ShouldResetSelection::No);
+            scroll_to_glyph(m_active_glyph);
             return;
         }
     }
     if (event.key() == KeyCode::Key_Down) {
-        if (selected_glyph() < m_glyph_count - m_columns) {
-            set_selected_glyph(selected_glyph() + m_columns);
-            scroll_to_glyph(selected_glyph());
+        if (m_selection.start() < m_glyph_count - m_columns) {
+            if (event.shift())
+                m_selection.resize_by(m_columns);
+            else
+                m_selection.set_start(m_selection.start() + m_columns);
+            set_active_glyph(m_active_glyph + m_columns, ShouldResetSelection::No);
+            scroll_to_glyph(m_active_glyph);
             return;
         }
     }
     if (event.key() == KeyCode::Key_Left) {
-        if (selected_glyph() > 0) {
-            set_selected_glyph(selected_glyph() - 1);
-            scroll_to_glyph(selected_glyph());
+        if (m_selection.start() > 0) {
+            if (event.shift())
+                m_selection.resize_by(-1);
+            else
+                m_selection.set_start(m_selection.start() - 1);
+            set_active_glyph(m_active_glyph - 1, ShouldResetSelection::No);
+            scroll_to_glyph(m_active_glyph);
             return;
         }
     }
     if (event.key() == KeyCode::Key_Right) {
-        if (selected_glyph() < m_glyph_count - 1) {
-            set_selected_glyph(selected_glyph() + 1);
-            scroll_to_glyph(selected_glyph());
+        if (m_selection.start() < m_glyph_count - 1) {
+            if (event.shift())
+                m_selection.resize_by(1);
+            else
+                m_selection.set_start(m_selection.start() + 1);
+            set_active_glyph(m_active_glyph + 1, ShouldResetSelection::No);
+            scroll_to_glyph(m_active_glyph);
             return;
         }
     }
+
+    // FIXME: Support selection for these.
     if (event.ctrl() && event.key() == KeyCode::Key_Home) {
-        set_selected_glyph(0);
-        scroll_to_glyph(selected_glyph());
+        set_active_glyph(0);
+        scroll_to_glyph(m_active_glyph);
         return;
     }
     if (event.ctrl() && event.key() == KeyCode::Key_End) {
-        set_selected_glyph(m_glyph_count - 1);
-        scroll_to_glyph(selected_glyph());
+        set_active_glyph(m_glyph_count - 1);
+        scroll_to_glyph(m_active_glyph);
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
-        set_selected_glyph(selected_glyph() / m_columns * m_columns);
+        set_active_glyph(m_active_glyph / m_columns * m_columns);
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_End) {
-        int new_selection = selected_glyph() / m_columns * m_columns + (m_columns - 1);
+        int new_selection = m_active_glyph / m_columns * m_columns + (m_columns - 1);
         int max = m_glyph_count - 1;
         new_selection = clamp(new_selection, 0, max);
-        set_selected_glyph(new_selection);
+        set_active_glyph(new_selection);
         return;
     }
 }
