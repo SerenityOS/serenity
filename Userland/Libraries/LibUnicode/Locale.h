@@ -140,13 +140,26 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID&);
 
 String const& default_locale();
 bool is_locale_available(StringView locale);
+
 Optional<Locale> locale_from_string(StringView locale);
+Optional<Language> language_from_string(StringView language);
+Optional<Territory> territory_from_string(StringView territory);
+Optional<ScriptTag> script_tag_from_string(StringView script_tag);
+Optional<Currency> currency_from_string(StringView currency);
+Optional<Key> key_from_string(StringView key);
+Optional<ListPatternType> list_pattern_type_from_string(StringView list_pattern_type);
+Optional<ListPatternStyle> list_pattern_style_from_string(StringView list_pattern_style);
 
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
 Optional<StringView> get_locale_script_mapping(StringView locale, StringView script);
+Optional<StringView> get_locale_long_currency_mapping(StringView locale, StringView currency);
+Optional<StringView> get_locale_short_currency_mapping(StringView locale, StringView currency);
+Optional<StringView> get_locale_narrow_currency_mapping(StringView locale, StringView currency);
+Optional<StringView> get_locale_numeric_currency_mapping(StringView locale, StringView currency);
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency, Style style);
-Vector<StringView> get_locale_key_mapping(StringView locale, StringView keyword);
+Optional<StringView> get_locale_key_mapping(StringView locale, StringView keyword);
+Vector<StringView> get_locale_key_mapping_list(StringView locale, StringView keyword);
 
 Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, StringView style);
 
@@ -155,9 +168,12 @@ Optional<StringView> resolve_territory_alias(StringView territory);
 Optional<StringView> resolve_script_tag_alias(StringView script_tag);
 Optional<StringView> resolve_variant_alias(StringView variant);
 Optional<StringView> resolve_subdivision_alias(StringView subdivision);
+void resolve_complex_language_aliases(LanguageID& language_id);
 
 Optional<LanguageID> add_likely_subtags(LanguageID const& language_id);
 Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id);
-String resolve_most_likely_territory(LanguageID const& language_id, StringView territory_alias);
+
+Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& language_id);
+String resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias);
 
 }
