@@ -6,6 +6,7 @@
 
 #include <AK/RefPtr.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,19 +37,16 @@ static FILE* get_stream(const char* filepath, const char* perms)
     return ret;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath wpath cpath", nullptr) > 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
     const char* inpath = nullptr;
     const char* outpath = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(inpath, "Input file", "input", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(outpath, "Output file", "output", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     FILE* infile = get_stream(inpath, "r");
     FILE* outfile = get_stream(outpath, "w");
