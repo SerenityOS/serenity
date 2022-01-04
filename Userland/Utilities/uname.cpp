@@ -8,16 +8,14 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <stdio.h>
 #include <sys/utsname.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio"));
 
     bool flag_system = false;
     bool flag_node = false;
@@ -31,7 +29,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_release, "Print the system release", nullptr, 'r');
     args_parser.add_option(flag_machine, "Print the machine hardware name", nullptr, 'm');
     args_parser.add_option(flag_all, "Print all information (same as -snrm)", nullptr, 'a');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (flag_all)
         flag_system = flag_node = flag_release = flag_machine = true;
@@ -39,12 +37,7 @@ int main(int argc, char** argv)
     if (!flag_system && !flag_node && !flag_release && !flag_machine)
         flag_system = true;
 
-    utsname uts;
-    int rc = uname(&uts);
-    if (rc < 0) {
-        perror("uname() failed");
-        return 0;
-    }
+    utsname uts = TRY(Core::System::uname());
 
     Vector<String> parts;
     if (flag_system)
