@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     auto fullpath = Core::find_executable_in_path(filename);
-    if (fullpath.is_null()) {
+    if (fullpath.is_empty()) {
         warnln("no '{}' in path", filename);
         return 1;
     }

@@ -227,7 +227,7 @@ int Shell::builtin_type(int argc, const char** argv)
 
         // check if its an executable in PATH
         auto fullpath = Core::find_executable_in_path(command);
-        if (!fullpath.is_null()) {
+        if (!fullpath.is_empty()) {
             printf("%s is %s\n", command, escape_token(fullpath).characters());
             continue;
         }
