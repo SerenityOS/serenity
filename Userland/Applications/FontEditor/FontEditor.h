@@ -55,6 +55,11 @@ private:
     void set_scale(i32);
     void set_scale_and_save(i32);
 
+    void copy_selected_glyphs();
+    void cut_selected_glyphs();
+    void paste_glyphs();
+    void delete_selected_glyphs();
+
     RefPtr<Gfx::BitmapFont> m_edited_font;
 
     RefPtr<GlyphMapWidget> m_glyph_map_widget;
