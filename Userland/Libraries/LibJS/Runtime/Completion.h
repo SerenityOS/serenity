@@ -15,17 +15,6 @@
 
 namespace JS {
 
-// Temporary helper akin to TRY(), but returning a default-constructed type (e.g. empty JS::Value)
-// instead of the throw completion record. Use this as the bridge between functions that have
-// already been updated to use completions and functions that haven't.
-#define TRY_OR_DISCARD(expression)             \
-    ({                                         \
-        auto _temporary_result = (expression); \
-        if (_temporary_result.is_error())      \
-            return {};                         \
-        _temporary_result.release_value();     \
-    })
-
 // 6.2.3 The Completion Record Specification Type, https://tc39.es/ecma262/#sec-completion-record-specification-type
 class [[nodiscard]] Completion {
 public:
