@@ -345,59 +345,6 @@ Optional<@return_type@> @method_name@(StringView key)
 )~~~");
 }
 
-template<typename ValueType>
-void generate_value_from_string_for_dynamic_loading(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, HashValueMap<ValueType> hashes, Optional<StringView> return_type = {}, StringView return_format = "{}"sv)
-{
-    ensure_from_string_types_are_generated(generator);
-
-    generator.set("method_name", String::formatted(method_name_format, value_name));
-    generator.set("value_type", value_type);
-    generator.set("value_name", value_name);
-    generator.set("return_type", return_type.has_value() ? *return_type : value_type);
-    generator.set("size", String::number(hashes.size()));
-
-    generator.append(R"~~~(
-Optional<@return_type@> @method_name@(StringView key) asm("unicode_@method_name@");
-Optional<@return_type@> @method_name@(StringView key)
-{
-    constexpr Array<HashValuePair<@value_type@>, @size@> hash_pairs { {
-        )~~~");
-
-    auto hash_keys = hashes.keys();
-    quick_sort(hash_keys);
-
-    constexpr size_t max_values_per_row = 10;
-    size_t values_in_current_row = 0;
-
-    for (auto hash_key : hash_keys) {
-        if (values_in_current_row++ > 0)
-            generator.append(" ");
-
-        if constexpr (IsIntegral<ValueType>)
-            generator.set("value"sv, String::number(hashes.get(hash_key).value()));
-        else
-            generator.set("value"sv, String::formatted("{}::{}", value_type, hashes.get(hash_key).value()));
-
-        generator.set("hash"sv, String::number(hash_key));
-        generator.append("{ @hash@U, @value@ },"sv);
-
-        if (values_in_current_row == max_values_per_row) {
-            generator.append("\n        ");
-            values_in_current_row = 0;
-        }
-    }
-
-    generator.set("return_statement", String::formatted(return_format, "value->value"sv));
-    generator.append(R"~~~(
-    } };
-
-    if (auto const* value = binary_search(hash_pairs, key.hash(), nullptr, HashValueComparator<@value_type@> {}))
-        return @return_statement@;
-    return {};
-}
-)~~~");
-}
-
 template<typename IdentifierFormatter>
 void generate_enum(SourceGenerator& generator, IdentifierFormatter&& format_identifier, StringView name, StringView default_, Vector<String>& values, Vector<Alias> aliases = {})
 {
