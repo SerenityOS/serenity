@@ -742,19 +742,19 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 #include <LibUnicode/NumberFormat.h>
 #include <LibUnicode/UnicodeNumberFormat.h>
 
-namespace Unicode::Detail {
+namespace Unicode {
 )~~~");
 
     locale_data.unique_strings.generate(generator);
 
     generator.append(R"~~~(
-struct NumberFormat {
-    Unicode::NumberFormat to_unicode_number_format() const {
-        Unicode::NumberFormat number_format {};
+struct NumberFormatImpl {
+    NumberFormat to_unicode_number_format() const {
+        NumberFormat number_format {};
 
         number_format.magnitude = magnitude;
         number_format.exponent = exponent;
-        number_format.plurality = static_cast<Unicode::NumberFormat::Plurality>(plurality);
+        number_format.plurality = static_cast<NumberFormat::Plurality>(plurality);
         number_format.zero_format = s_string_list[zero_format];
         number_format.positive_format = s_string_list[positive_format];
         number_format.negative_format = s_string_list[negative_format];
@@ -803,7 +803,7 @@ struct Unit {
 };
 )~~~");
 
-    locale_data.unique_formats.generate(generator, "NumberFormat"sv, "s_number_formats"sv, 10);
+    locale_data.unique_formats.generate(generator, "NumberFormatImpl"sv, "s_number_formats"sv, 10);
     locale_data.unique_format_lists.generate(generator, s_number_format_index_type, "s_number_format_lists"sv);
     locale_data.unique_symbols.generate(generator, s_string_index_type, "s_numeric_symbol_lists"sv);
     locale_data.unique_systems.generate(generator, "NumberSystem"sv, "s_number_systems"sv, 10);
@@ -850,8 +850,7 @@ static NumberSystem const* find_number_system(StringView locale, StringView syst
     return nullptr;
 }
 
-Optional<StringView> get_number_system_symbol(StringView locale, StringView system, Unicode::NumericSymbol symbol) asm("unicode_get_number_system_symbol");
-Optional<StringView> get_number_system_symbol(StringView locale, StringView system, Unicode::NumericSymbol symbol)
+Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol)
 {
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
         auto symbols = s_numeric_symbol_lists.at(number_system->symbols);
@@ -866,7 +865,6 @@ Optional<StringView> get_number_system_symbol(StringView locale, StringView syst
     return {};
 }
 
-Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system) asm("unicode_get_number_system_groupings");
 Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system)
 {
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr)
@@ -874,8 +872,7 @@ Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringV
     return {};
 }
 
-Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type) asm("unicode_get_standard_number_system_format");
-Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
+Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
 {
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
         @number_format_index_type@ format_index = 0;
@@ -904,10 +901,9 @@ Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView loc
     return {};
 }
 
-Vector<Unicode::NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type) asm("unicode_get_compact_number_system_formats");
-Vector<Unicode::NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type)
+Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type)
 {
-    Vector<Unicode::NumberFormat> formats;
+    Vector<NumberFormat> formats;
 
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
         @number_format_list_index_type@ number_format_list_index { 0 };
@@ -956,10 +952,9 @@ static Unit const* find_units(StringView locale, StringView unit)
     return nullptr;
 }
 
-Vector<Unicode::NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style) asm("unicode_get_unit_formats");
-Vector<Unicode::NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style)
+Vector<NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style)
 {
-    Vector<Unicode::NumberFormat> formats;
+    Vector<NumberFormat> formats;
 
     if (auto const* units = find_units(locale, unit); units != nullptr) {
         @number_format_list_index_type@ number_format_list_index { 0 };
