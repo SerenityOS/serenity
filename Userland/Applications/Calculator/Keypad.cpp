@@ -110,6 +110,17 @@ void Keypad::set_value(KeypadValue value)
     m_int_value = res.quotient.unsigned_value();
     m_frac_value = res.remainder.unsigned_value();
     m_frac_length = value.m_decimal_places;
+
+    // A multiple of 10 will just lead to display useless zero after the comma.
+    for (auto division_result = res.remainder.divided_by(Crypto::UnsignedBigInteger { 10 });
+         division_result.remainder == Crypto::UnsignedBigInteger { 0 } && division_result.quotient != Crypto::UnsignedBigInteger { 0 };
+         division_result = division_result.quotient.divided_by(Crypto::UnsignedBigInteger { 10 })) {
+        m_frac_value = division_result.quotient.unsigned_value();
+        m_frac_length.set_to(m_frac_length.minus(1));
+    }
+
+    if (m_frac_value == 0)
+        m_frac_length.set_to_0();
 }
 
 void Keypad::set_to_0()
