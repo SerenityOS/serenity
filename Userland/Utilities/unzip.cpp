@@ -95,7 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     //        but it would be significantly faster and less syscall heavy than seek()/read() at every read.
     if (st.st_size >= map_size_limit) {
         warnln("unzip warning: Refusing to map file since it is larger than {}, pass '--map-size-limit {}' to get around this",
-            human_readable_size(map_size_limit).characters(),
+            human_readable_size(map_size_limit),
             round_up_to_power_of_two(st.st_size, 16));
         return 1;
     }
