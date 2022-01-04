@@ -19,6 +19,7 @@
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
+#include <LibGfx/QOIWriter.h>
 #include <LibImageDecoderClient/Client.h>
 #include <stdio.h>
 
@@ -202,6 +203,18 @@ ErrorOr<void> Image::export_png_to_file(Core::File& file, bool preserve_alpha_ch
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
     auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
+    if (!file.write(encoded_data.data(), encoded_data.size()))
+        return Error::from_errno(file.error());
+
+    return {};
+}
+
+ErrorOr<void> Image::export_qoi_to_file(Core::File& file, bool preserve_alpha_channel)
+{
+    auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
+    auto bitmap = TRY(try_compose_bitmap(bitmap_format));
+
+    auto encoded_data = TRY(Gfx::QOIWriter::encode(*bitmap));
     if (!file.write(encoded_data.data(), encoded_data.size()))
         return Error::from_errno(file.error());
 

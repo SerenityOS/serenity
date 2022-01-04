@@ -188,6 +188,19 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                     GUI::MessageBox::show_error(&window, String::formatted("Export to PNG failed: {}", result.error()));
             }));
 
+    m_export_submenu->add_action(
+        GUI::Action::create(
+            "As &QOI", [&](auto&) {
+                auto* editor = current_image_editor();
+                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "qoi");
+                if (response.is_error())
+                    return;
+                auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+                auto result = editor->image().export_qoi_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecYes);
+                if (result.is_error())
+                    GUI::MessageBox::show_error(&window, String::formatted("Export to QOI failed: {}", result.error()));
+            }));
+
     file_menu.add_separator();
 
     m_close_image_action = GUI::Action::create("&Close Image", { Mod_Ctrl, Key_W }, g_icon_bag.close_image, [&](auto&) {
