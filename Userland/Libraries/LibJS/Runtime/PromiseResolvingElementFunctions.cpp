@@ -58,7 +58,7 @@ PromiseAllResolveElementFunction::PromiseAllResolveElementFunction(size_t index,
 {
 }
 
-Value PromiseAllResolveElementFunction::resolve_element()
+ThrowCompletionOr<Value> PromiseAllResolveElementFunction::resolve_element()
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -73,7 +73,7 @@ Value PromiseAllResolveElementFunction::resolve_element()
         auto* values_array = Array::create_from(global_object, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return TRY_OR_DISCARD(vm.call(*m_capability.resolve, js_undefined(), values_array));
+        return vm.call(*m_capability.resolve, js_undefined(), values_array);
     }
 
     // 11. Return undefined.
@@ -90,7 +90,7 @@ PromiseAllSettledResolveElementFunction::PromiseAllSettledResolveElementFunction
 {
 }
 
-Value PromiseAllSettledResolveElementFunction::resolve_element()
+ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_element()
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -114,7 +114,7 @@ Value PromiseAllSettledResolveElementFunction::resolve_element()
         auto* values_array = Array::create_from(global_object, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return TRY_OR_DISCARD(vm.call(*m_capability.resolve, js_undefined(), values_array));
+        return vm.call(*m_capability.resolve, js_undefined(), values_array);
     }
 
     // 15. Return undefined.
@@ -131,7 +131,7 @@ PromiseAllSettledRejectElementFunction::PromiseAllSettledRejectElementFunction(s
 {
 }
 
-Value PromiseAllSettledRejectElementFunction::resolve_element()
+ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element()
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -155,7 +155,7 @@ Value PromiseAllSettledRejectElementFunction::resolve_element()
         auto values_array = Array::create_from(global_object, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return TRY_OR_DISCARD(vm.call(*m_capability.resolve, js_undefined(), values_array));
+        return vm.call(*m_capability.resolve, js_undefined(), values_array);
     }
 
     // 15. Return undefined.
@@ -172,7 +172,7 @@ PromiseAnyRejectElementFunction::PromiseAnyRejectElementFunction(size_t index, P
 {
 }
 
-Value PromiseAnyRejectElementFunction::resolve_element()
+ThrowCompletionOr<Value> PromiseAnyRejectElementFunction::resolve_element()
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -191,7 +191,7 @@ Value PromiseAnyRejectElementFunction::resolve_element()
         MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
         // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
-        return TRY_OR_DISCARD(vm.call(*m_capability.reject, js_undefined(), error));
+        return vm.call(*m_capability.reject, js_undefined(), error);
     }
 
     return js_undefined();
