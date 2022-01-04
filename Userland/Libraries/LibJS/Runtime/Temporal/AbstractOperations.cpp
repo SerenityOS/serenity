@@ -810,7 +810,7 @@ ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject& global_object
 
     // 3. For each element nextKey of keys, do
     for (auto& key : keys) {
-        auto next_key = PropertyKey::from_value(global_object, key);
+        auto next_key = MUST(PropertyKey::from_value(global_object, key));
 
         // a. Let propValue be ? Get(options, nextKey).
         auto prop_value = TRY(options.get(next_key));

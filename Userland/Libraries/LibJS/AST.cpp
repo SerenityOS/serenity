@@ -1286,9 +1286,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
 
         TRY(require_object_coercible(global_object, base_value));
 
-        property_name = PropertyKey::from_value(global_object, value);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
+        property_name = TRY(PropertyKey::from_value(global_object, value));
     } else if (is<PrivateIdentifier>(*m_property)) {
         auto& private_identifier = static_cast<PrivateIdentifier const&>(*m_property);
         return make_private_reference(interpreter.vm(), base_value, private_identifier.string());
@@ -1380,9 +1378,7 @@ static ThrowCompletionOr<ClassElement::ClassElementName> class_key_to_property_n
     if (prop_key.is_object())
         prop_key = TRY(prop_key.to_primitive(global_object, Value::PreferredType::String));
 
-    auto property_key = PropertyKey::from_value(global_object, prop_key);
-    if (auto* exception = interpreter.exception())
-        return throw_completion(exception->value());
+    auto property_key = TRY(PropertyKey::from_value(global_object, prop_key));
     return ClassElement::ClassElementName { property_key };
 }
 
@@ -2858,14 +2854,14 @@ Completion ObjectExpression::execute(Interpreter& interpreter, GlobalObject& glo
         switch (property.type()) {
         case ObjectProperty::Type::Getter:
             VERIFY(value.is_function());
-            object->define_direct_accessor(PropertyKey::from_value(global_object, key), &value.as_function(), nullptr, Attribute::Configurable | Attribute::Enumerable);
+            object->define_direct_accessor(TRY(PropertyKey::from_value(global_object, key)), &value.as_function(), nullptr, Attribute::Configurable | Attribute::Enumerable);
             break;
         case ObjectProperty::Type::Setter:
             VERIFY(value.is_function());
-            object->define_direct_accessor(PropertyKey::from_value(global_object, key), nullptr, &value.as_function(), Attribute::Configurable | Attribute::Enumerable);
+            object->define_direct_accessor(TRY(PropertyKey::from_value(global_object, key)), nullptr, &value.as_function(), Attribute::Configurable | Attribute::Enumerable);
             break;
         case ObjectProperty::Type::KeyValue:
-            object->define_direct_property(PropertyKey::from_value(global_object, key), value, JS::default_attributes);
+            object->define_direct_property(TRY(PropertyKey::from_value(global_object, key)), value, JS::default_attributes);
             break;
         case ObjectProperty::Type::Spread:
         default:

@@ -26,15 +26,15 @@ public:
         No,
     };
 
-    static PropertyKey from_value(GlobalObject& global_object, Value value)
+    static ThrowCompletionOr<PropertyKey> from_value(GlobalObject& global_object, Value value)
     {
         if (value.is_empty())
-            return {};
+            return PropertyKey {};
         if (value.is_symbol())
-            return value.as_symbol();
+            return PropertyKey { value.as_symbol() };
         if (value.is_integral_number() && value.as_double() >= 0 && value.as_double() < NumericLimits<u32>::max())
             return value.as_u32();
-        return TRY_OR_DISCARD(value.to_string(global_object));
+        return TRY(value.to_string(global_object));
     }
 
     PropertyKey() { }
