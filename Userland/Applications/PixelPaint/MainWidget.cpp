@@ -143,6 +143,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             return;
         }
         editor->image().set_path(*save_result.chosen_file);
+        editor->undo_stack().set_current_unmodified();
     });
 
     m_save_image_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -161,6 +162,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             GUI::MessageBox::show_error(&window, String::formatted("Could not save {}: {}", *response.chosen_file, result.error()));
             return;
         }
+        editor->undo_stack().set_current_unmodified();
     });
 
     file_menu.add_action(*m_new_image_action);
@@ -748,10 +750,12 @@ bool MainWidget::request_close()
     if (m_tab_widget->children().is_empty())
         return true;
 
-    auto result = GUI::MessageBox::show(window(), "Save before closing?", "Save changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+    VERIFY(current_image_editor());
+
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), current_image_editor()->image().path(), current_image_editor()->undo_stack().last_unmodified_timestamp());
 
     if (result == GUI::MessageBox::ExecYes) {
-        m_save_image_as_action->activate();
+        m_save_image_action->activate();
         return true;
     }
 

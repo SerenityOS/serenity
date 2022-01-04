@@ -43,6 +43,8 @@ public:
     bool undo();
     bool redo();
 
+    auto& undo_stack() { return *m_undo_stack; }
+
     void add_guide(NonnullRefPtr<Guide> guide) { m_guides.append(guide); }
     void remove_guide(Guide const& guide)
     {
