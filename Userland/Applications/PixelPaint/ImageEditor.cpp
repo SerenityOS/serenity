@@ -23,12 +23,10 @@ namespace PixelPaint {
 
 ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     : m_image(move(image))
-    , m_undo_stack(make<GUI::UndoStack>())
     , m_selection(*this)
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
-    m_undo_stack = make<GUI::UndoStack>();
-    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image));
     m_image->add_client(*this);
 
     m_pixel_grid_threshold = (float)Config::read_i32("PixelPaint", "PixelGrid", "Threshold", 15);
@@ -45,12 +43,12 @@ ImageEditor::~ImageEditor()
 
 void ImageEditor::did_complete_action()
 {
-    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image));
 }
 
 bool ImageEditor::undo()
 {
-    if (!m_undo_stack->can_undo())
+    if (!m_undo_stack.can_undo())
         return false;
 
     /* Without this you need to undo twice to actually start undoing stuff.
@@ -63,19 +61,19 @@ bool ImageEditor::undo()
      * This works because UndoStack::undo first decrements the stack pointer and then restores the snapshot,
      * while UndoStack::redo first restores the snapshot and then increments the stack pointer.
      */
-    m_undo_stack->undo();
-    m_undo_stack->undo();
-    m_undo_stack->redo();
+    m_undo_stack.undo();
+    m_undo_stack.undo();
+    m_undo_stack.redo();
     layers_did_change();
     return true;
 }
 
 bool ImageEditor::redo()
 {
-    if (!m_undo_stack->can_redo())
+    if (!m_undo_stack.can_redo())
         return false;
 
-    m_undo_stack->redo();
+    m_undo_stack.redo();
     layers_did_change();
     return true;
 }

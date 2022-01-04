@@ -43,7 +43,7 @@ public:
     bool undo();
     bool redo();
 
-    auto& undo_stack() { return *m_undo_stack; }
+    auto& undo_stack() { return m_undo_stack; }
 
     void add_guide(NonnullRefPtr<Guide> guide) { m_guides.append(guide); }
     void remove_guide(Guide const& guide)
@@ -153,7 +153,7 @@ private:
 
     NonnullRefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
-    OwnPtr<GUI::UndoStack> m_undo_stack;
+    GUI::UndoStack m_undo_stack;
 
     NonnullRefPtrVector<Guide> m_guides;
     bool m_show_guides { true };
