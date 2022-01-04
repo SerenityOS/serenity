@@ -1131,27 +1131,36 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
     object->for_each_child_object_interruptible([&](auto child_data) {
         auto class_name = child_data->name();
 
-        RefPtr<Core::Object> child;
-        if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
-            child = registration->construct();
-            if (!child || !registration->is_derived_from(widget_class)) {
-                dbgln("Invalid widget class: '{}'", class_name);
+        // It is very questionable if this pseudo object should exist, but it works fine like this for now.
+        if (class_name == "GUI::Layout::Spacer") {
+            if (!this->layout()) {
+                dbgln("Specified GUI::Layout::Spacer in GML, but the parent has no Layout.");
                 return IterationDecision::Break;
             }
+            this->layout()->add_spacer();
         } else {
-            child = unregistered_child_handler(class_name);
-        }
-        if (!child)
-            return IterationDecision::Break;
+            RefPtr<Core::Object> child;
+            if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
+                child = registration->construct();
+                if (!child || !registration->is_derived_from(widget_class)) {
+                    dbgln("Invalid widget class: '{}'", class_name);
+                    return IterationDecision::Break;
+                }
+            } else {
+                child = unregistered_child_handler(class_name);
+            }
+            if (!child)
+                return IterationDecision::Break;
+            add_child(*child);
 
-        add_child(*child);
-        // This is possible as we ensure that Widget is a base class above.
-        static_ptr_cast<Widget>(child)->load_from_gml_ast(child_data, unregistered_child_handler);
+            // This is possible as we ensure that Widget is a base class above.
+            static_ptr_cast<Widget>(child)->load_from_gml_ast(child_data, unregistered_child_handler);
 
-        if (is_tab_widget) {
-            // FIXME: We need to have the child added before loading it so that it can access us. But the TabWidget logic requires the child to not be present yet.
-            remove_child(*child);
-            reinterpret_cast<TabWidget*>(this)->add_widget(*static_ptr_cast<Widget>(child));
+            if (is_tab_widget) {
+                // FIXME: We need to have the child added before loading it so that it can access us. But the TabWidget logic requires the child to not be present yet.
+                remove_child(*child);
+                reinterpret_cast<TabWidget*>(this)->add_widget(*static_ptr_cast<Widget>(child));
+            }
         }
 
         return IterationDecision::Continue;

@@ -80,7 +80,7 @@
                 fixed_height: 22
                 layout: @GUI::HorizontalBoxLayout {}
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
 
                 @GUI::Button {
                     name: "cancel_button"

@@ -85,7 +85,7 @@
                 text: "Next Tip"
             }
 
-            @GUI::Widget {}
+            @GUI::Layout::Spacer {}
 
             @GUI::HorizontalSeparator {
                 fixed_height: 2
@@ -107,7 +107,7 @@
             autosize: true
         }
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Button {
             name: "close_button"

@@ -68,7 +68,7 @@
             }
         }
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Widget {
             shrink_to_fit: true
