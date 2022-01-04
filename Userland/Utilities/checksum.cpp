@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
@@ -15,7 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath", nullptr));
 
-    auto program_name = arguments.strings[0];
+    auto program_name = LexicalPath::basename(arguments.strings[0]);
     auto hash_kind = Crypto::Hash::HashKind::None;
 
     if (program_name == "md5sum")
