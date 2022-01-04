@@ -74,6 +74,14 @@ static Gfx::Bitmap& pin_icon()
     return *s_icon;
 }
 
+static Gfx::Bitmap& move_icon()
+{
+    static RefPtr<Gfx::Bitmap> s_icon;
+    if (!s_icon)
+        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/move.png").release_value_but_fixme_should_propagate_errors();
+    return *s_icon;
+}
+
 Window::Window(Core::Object& parent, WindowType type)
     : Core::Object(&parent)
     , m_type(type)
@@ -795,6 +803,7 @@ void Window::ensure_window_menu()
 
         auto move_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::Move, "&Move");
         m_window_menu_move_item = move_item.ptr();
+        m_window_menu_move_item->set_icon(&move_icon());
         m_window_menu->add_item(move(move_item));
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
