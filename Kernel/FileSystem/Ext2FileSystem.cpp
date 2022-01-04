@@ -49,11 +49,6 @@ static u8 to_ext2_file_type(mode_t mode)
     return EXT2_FT_UNKNOWN;
 }
 
-static unsigned divide_rounded_up(unsigned a, unsigned b)
-{
-    return (a / b) + (a % b != 0);
-}
-
 ErrorOr<NonnullRefPtr<Ext2FS>> Ext2FS::try_create(OpenFileDescription& file_description)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FS(file_description));
@@ -190,15 +185,15 @@ Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
 
     shape.doubly_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block);
     shape.meta_blocks += 1;
-    shape.meta_blocks += divide_rounded_up(shape.doubly_indirect_blocks, entries_per_block);
+    shape.meta_blocks += ceil_div(shape.doubly_indirect_blocks, entries_per_block);
     blocks_remaining -= shape.doubly_indirect_blocks;
     if (!blocks_remaining)
         return shape;
 
     shape.triply_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block * entries_per_block);
     shape.meta_blocks += 1;
-    shape.meta_blocks += divide_rounded_up(shape.triply_indirect_blocks, entries_per_block * entries_per_block);
-    shape.meta_blocks += divide_rounded_up(shape.triply_indirect_blocks, entries_per_block);
+    shape.meta_blocks += ceil_div(shape.triply_indirect_blocks, entries_per_block * entries_per_block);
+    shape.meta_blocks += ceil_div(shape.triply_indirect_blocks, entries_per_block);
     blocks_remaining -= shape.triply_indirect_blocks;
     VERIFY(blocks_remaining == 0);
     return shape;
@@ -228,8 +223,8 @@ ErrorOr<void> Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::Bloc
 {
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
-    const auto old_indirect_blocks_length = divide_rounded_up(old_blocks_length, entries_per_block);
-    const auto new_indirect_blocks_length = divide_rounded_up(blocks_indices.size(), entries_per_block);
+    const auto old_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_block);
+    const auto new_indirect_blocks_length = ceil_div(blocks_indices.size(), entries_per_block);
     VERIFY(blocks_indices.size() > 0);
     VERIFY(blocks_indices.size() > old_blocks_length);
     VERIFY(blocks_indices.size() <= entries_per_doubly_indirect_block);
@@ -271,8 +266,8 @@ ErrorOr<void> Ext2FSInode::shrink_doubly_indirect_block(BlockBasedFileSystem::Bl
 {
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
-    const auto old_indirect_blocks_length = divide_rounded_up(old_blocks_length, entries_per_block);
-    const auto new_indirect_blocks_length = divide_rounded_up(new_blocks_length, entries_per_block);
+    const auto old_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_block);
+    const auto new_indirect_blocks_length = ceil_div(new_blocks_length, entries_per_block);
     VERIFY(old_blocks_length > 0);
     VERIFY(old_blocks_length >= new_blocks_length);
     VERIFY(new_blocks_length <= entries_per_doubly_indirect_block);
@@ -307,8 +302,8 @@ ErrorOr<void> Ext2FSInode::grow_triply_indirect_block(BlockBasedFileSystem::Bloc
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
     const auto entries_per_triply_indirect_block = entries_per_block * entries_per_block;
-    const auto old_doubly_indirect_blocks_length = divide_rounded_up(old_blocks_length, entries_per_doubly_indirect_block);
-    const auto new_doubly_indirect_blocks_length = divide_rounded_up(blocks_indices.size(), entries_per_doubly_indirect_block);
+    const auto old_doubly_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_doubly_indirect_block);
+    const auto new_doubly_indirect_blocks_length = ceil_div(blocks_indices.size(), entries_per_doubly_indirect_block);
     VERIFY(blocks_indices.size() > 0);
     VERIFY(blocks_indices.size() > old_blocks_length);
     VERIFY(blocks_indices.size() <= entries_per_triply_indirect_block);
@@ -353,7 +348,7 @@ ErrorOr<void> Ext2FSInode::shrink_triply_indirect_block(BlockBasedFileSystem::Bl
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
     const auto entries_per_triply_indirect_block = entries_per_doubly_indirect_block * entries_per_block;
-    const auto old_triply_indirect_blocks_length = divide_rounded_up(old_blocks_length, entries_per_doubly_indirect_block);
+    const auto old_triply_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_doubly_indirect_block);
     const auto new_triply_indirect_blocks_length = new_blocks_length / entries_per_doubly_indirect_block;
     VERIFY(old_blocks_length > 0);
     VERIFY(old_blocks_length >= new_blocks_length);
