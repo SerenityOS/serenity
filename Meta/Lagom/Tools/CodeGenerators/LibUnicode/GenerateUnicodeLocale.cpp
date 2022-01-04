@@ -1068,7 +1068,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
         for (auto const& alias : aliases)
             hashes.set(alias.alias.hash(), format_identifier(enum_title, alias.alias));
 
-        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
+        generate_value_from_string_for_dynamic_loading(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
     };
 
     auto append_alias_search = [&](StringView enum_snake, auto const& aliases) {
@@ -1078,7 +1078,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
         for (auto const& alias : aliases)
             hashes.set(alias.key.hash(), alias.value);
 
-        generate_value_from_string(generator, "resolve_{}_alias"sv, s_string_index_type, enum_snake, move(hashes), "StringView"sv, "s_string_list[{}]"sv);
+        generate_value_from_string_for_dynamic_loading(generator, "resolve_{}_alias"sv, s_string_index_type, enum_snake, move(hashes), "StringView"sv, "s_string_list[{}]"sv);
     };
 
     append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys(), locale_data.locale_aliases);
