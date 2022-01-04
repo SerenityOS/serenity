@@ -12,7 +12,7 @@
 
 KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argument)
 {
-    KeypadValue res = 0;
+    KeypadValue res {};
 
     switch (operation) {
     case Operation::None:
@@ -27,7 +27,7 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
         return argument;
 
     case Operation::Sqrt:
-        if (argument < 0) {
+        if (argument < KeypadValue {}) {
             m_has_error = true;
             return argument;
         }
@@ -35,7 +35,7 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
         clear_operation();
         break;
     case Operation::Inverse:
-        if (argument == 0) {
+        if (argument == KeypadValue {}) {
             m_has_error = true;
             return argument;
         }
@@ -50,7 +50,7 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
         break;
 
     case Operation::MemClear:
-        m_mem = 0;
+        m_mem.set_to_0();
         res = argument;
         break;
     case Operation::MemRecall:
@@ -74,7 +74,7 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
 
 KeypadValue Calculator::finish_operation(KeypadValue argument)
 {
-    KeypadValue res = 0;
+    KeypadValue res {};
 
     switch (m_operation_in_progress) {
     case Operation::None:
@@ -90,7 +90,7 @@ KeypadValue Calculator::finish_operation(KeypadValue argument)
         res = m_saved_argument * argument;
         break;
     case Operation::Divide:
-        if (argument == 0) {
+        if (argument == KeypadValue {}) {
             m_has_error = true;
             return argument;
         }
@@ -118,7 +118,7 @@ KeypadValue Calculator::finish_operation(KeypadValue argument)
 void Calculator::clear_operation()
 {
     m_operation_in_progress = Operation::None;
-    m_saved_argument = 0;
+    m_saved_argument.set_to_0();
     clear_error();
 }
 
@@ -133,16 +133,17 @@ bool Calculator::should_be_rounded(KeypadValue value)
 void Calculator::round(KeypadValue& value)
 {
     while (value.m_decimal_places > rounding_threshold) {
-        bool const need_increment = value.m_value % 10 > 4;
+        auto const result = value.m_value.divided_by(Crypto::UnsignedBigInteger { 10 });
+        bool const need_increment = result.remainder.to_u64() > 4;
 
-        value.m_value /= 10;
+        value.m_value = result.quotient;
         if (need_increment)
-            value.m_value++;
+            value.m_value.set_to(value.m_value.plus(Crypto::UnsignedBigInteger { 1 }));
 
-        value.m_decimal_places--;
+        value.m_decimal_places.set_to(value.m_decimal_places.minus(Crypto::UnsignedBigInteger { 1 }));
 
-        if (value.m_value == 0) {
-            value = 0;
+        if (value.m_value == Crypto::UnsignedBigInteger { 0 }) {
+            value.set_to_0();
             return;
         }
     }

@@ -50,14 +50,14 @@ CalculatorWidget::CalculatorWidget()
 
     m_clear_button = *find_descendant_of_type_named<GUI::Button>("clear_button");
     m_clear_button->on_click = [this](auto) {
-        m_keypad.set_value(0.0);
+        m_keypad.set_to_0();
         m_calculator.clear_operation();
         update_display();
     };
 
     m_clear_error_button = *find_descendant_of_type_named<GUI::Button>("clear_error_button");
     m_clear_error_button->on_click = [this](auto) {
-        m_keypad.set_value(0.0);
+        m_keypad.set_to_0();
         update_display();
     };
 
@@ -167,7 +167,7 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
         m_keypad.type_decimal_point();
         mimic_pressed_button(m_decimal_point_button);
     } else if (event.key() == KeyCode::Key_Escape || event.key() == KeyCode::Key_Delete) {
-        m_keypad.set_value(0.0);
+        m_keypad.set_to_0();
         m_calculator.clear_operation();
         mimic_pressed_button(m_clear_button);
     } else if (event.key() == KeyCode::Key_Backspace) {

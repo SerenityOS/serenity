@@ -65,7 +65,7 @@ private:
     ();
 
     Operation m_operation_in_progress { Operation::None };
-    KeypadValue m_saved_argument { (i64)0 };
-    KeypadValue m_mem { (i64)0 };
+    KeypadValue m_saved_argument {};
+    KeypadValue m_mem {};
     bool m_has_error { false };
 };

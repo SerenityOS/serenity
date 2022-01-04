@@ -9,14 +9,16 @@
 #include <AK/Math.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <LibCrypto/BigInt/SignedBigInteger.h>
 
 class KeypadValue {
     friend class Keypad;
     friend class Calculator;
 
 public:
-    KeypadValue(i64, u8);
-    KeypadValue(i64);
+    KeypadValue() = default;
+    KeypadValue(Crypto::SignedBigInteger);
+    KeypadValue(Crypto::SignedBigInteger value, Crypto::UnsignedBigInteger decimal_places);
 
     explicit KeypadValue(StringView);
 
@@ -31,6 +33,8 @@ public:
     KeypadValue invert() const;
     KeypadValue operator/(KeypadValue const&) const;
 
+    void set_to_0();
+
 private:
     explicit KeypadValue(double);
     explicit operator double() const;
@@ -43,6 +47,6 @@ private:
     // m_decimal_places would be 2, because when you shift -12355 2 digits to the right, you get -123.55.
     // This way, most operations don't have to be performed on doubles, but can be performed without loss of
     // precision on this class.
-    i64 m_value { 0 };
-    u8 m_decimal_places { 0 };
+    Crypto::SignedBigInteger m_value { 0 };
+    Crypto::UnsignedBigInteger m_decimal_places { 0 };
 };

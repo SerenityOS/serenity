@@ -15,4 +15,4 @@ set(SOURCES
 )
 
 serenity_app(Calculator ICON app-calculator)
-target_link_libraries(Calculator LibGUI LibMain)
+target_link_libraries(Calculator LibGUI LibMain LibCrypto)

@@ -8,15 +8,16 @@
 #include <AK/IntegralMath.h>
 #include <AK/Math.h>
 #include <AK/String.h>
+#include <LibCrypto/NumberTheory/ModularFunctions.h>
 
-KeypadValue::KeypadValue(i64 value, u8 decimal_places)
-    : m_value(value)
-    , m_decimal_places(value == 0 ? 0 : decimal_places)
+KeypadValue::KeypadValue(Crypto::SignedBigInteger value, Crypto::UnsignedBigInteger decimal_places)
+    : m_value(move(value))
+    , m_decimal_places(m_value == Crypto::SignedBigInteger { 0 } ? 0 : move(decimal_places))
 {
 }
 
-KeypadValue::KeypadValue(i64 value)
-    : m_value(value)
+KeypadValue::KeypadValue(Crypto::SignedBigInteger value)
+    : m_value(move(value))
 {
 }
 
@@ -25,14 +26,14 @@ KeypadValue::KeypadValue(StringView sv)
     String str = sv.to_string(); // TODO: Once we have a StringView equivalent for this C API, we won't need to create a copy for this anymore.
     size_t first_index = 0;
     char* dot_ptr;
-    i64 int_part = strtoll(&str[first_index], &dot_ptr, 10);
+    auto const int_part = Crypto::SignedBigInteger::create_from(strtoll(&str[first_index], &dot_ptr, 10));
     size_t dot_index = dot_ptr - str.characters();
     if ((dot_index < str.length()) && (str[dot_index] == '.')) {
         size_t second_index = dot_index + 1;
         char* end_ptr;
-        i64 frac_part = strtoll(&str[second_index], &end_ptr, 10);
+        auto const frac_part = Crypto::SignedBigInteger::create_from(strtoll(&str[second_index], &end_ptr, 10));
         size_t end_index = end_ptr - str.characters();
-        u8 frac_length = end_index - second_index;
+        auto const frac_length = Crypto::UnsignedBigInteger::create_from(end_index - second_index);
         *this = KeypadValue { int_part } + KeypadValue { frac_part, frac_length };
     } else {
         *this = KeypadValue { int_part };
@@ -41,9 +42,9 @@ KeypadValue::KeypadValue(StringView sv)
 
 KeypadValue KeypadValue::operator+(KeypadValue const& rhs) const
 {
-    return operator_helper<KeypadValue>(*this, rhs, [](KeypadValue const&, KeypadValue const& more_decimal_places, i64 less_decimal_places_equalized, i64 more_decimal_places_equalized, bool) -> KeypadValue {
+    return operator_helper<KeypadValue>(*this, rhs, [](KeypadValue const&, KeypadValue const& more_decimal_places, Crypto::SignedBigInteger const& less_decimal_places_equalized, Crypto::SignedBigInteger const& more_decimal_places_equalized, bool) -> KeypadValue {
         return {
-            more_decimal_places_equalized + less_decimal_places_equalized,
+            more_decimal_places_equalized.plus(less_decimal_places_equalized),
             more_decimal_places.m_decimal_places
         };
     });
@@ -56,17 +57,17 @@ KeypadValue KeypadValue::operator-(KeypadValue const& rhs) const
 
 KeypadValue KeypadValue::operator*(KeypadValue const& rhs) const
 {
-    return operator_helper<KeypadValue>(*this, rhs, [](KeypadValue const& less_decimal_places, KeypadValue const& more_decimal_places, i64, i64, bool) -> KeypadValue {
+    return operator_helper<KeypadValue>(*this, rhs, [](KeypadValue const& less_decimal_places, KeypadValue const& more_decimal_places, Crypto::SignedBigInteger const&, Crypto::SignedBigInteger const&, bool) -> KeypadValue {
         return {
-            less_decimal_places.m_value * more_decimal_places.m_value,
-            (u8)(less_decimal_places.m_decimal_places + more_decimal_places.m_decimal_places)
+            less_decimal_places.m_value.multiplied_by(more_decimal_places.m_value),
+            less_decimal_places.m_decimal_places.plus(more_decimal_places.m_decimal_places)
         };
     });
 }
 
 KeypadValue KeypadValue::operator-(void) const
 {
-    return { -m_value, m_decimal_places };
+    return { m_value.negated_value(), m_decimal_places };
 }
 
 KeypadValue KeypadValue::sqrt(void) const
@@ -86,7 +87,7 @@ KeypadValue KeypadValue::operator/(KeypadValue const& rhs) const
 
 bool KeypadValue::operator<(KeypadValue const& rhs) const
 {
-    return operator_helper<bool>(*this, rhs, [](KeypadValue const&, KeypadValue const&, i64 less_decimal_places_equalized, i64 more_decimal_places_equalized, bool lhs_is_less) {
+    return operator_helper<bool>(*this, rhs, [](KeypadValue const&, KeypadValue const&, Crypto::SignedBigInteger const& less_decimal_places_equalized, Crypto::SignedBigInteger const& more_decimal_places_equalized, bool lhs_is_less) {
         if (lhs_is_less)
             return (less_decimal_places_equalized < more_decimal_places_equalized);
         else
@@ -96,7 +97,7 @@ bool KeypadValue::operator<(KeypadValue const& rhs) const
 
 bool KeypadValue::operator==(KeypadValue const& rhs) const
 {
-    return operator_helper<bool>(*this, rhs, [](KeypadValue const&, KeypadValue const&, i64 less_decimal_places_equalized, i64 more_decimal_places_equalized, bool) {
+    return operator_helper<bool>(*this, rhs, [](KeypadValue const&, KeypadValue const&, Crypto::SignedBigInteger const& less_decimal_places_equalized, Crypto::SignedBigInteger const& more_decimal_places_equalized, bool) {
         return less_decimal_places_equalized == more_decimal_places_equalized;
     });
 }
@@ -119,8 +120,10 @@ ALWAYS_INLINE T KeypadValue::operator_helper(KeypadValue const& lhs, KeypadValue
     KeypadValue const& less_decimal_places = (lhs.m_decimal_places < rhs.m_decimal_places) ? lhs : rhs;
     KeypadValue const& more_decimal_places = (lhs.m_decimal_places < rhs.m_decimal_places) ? rhs : lhs;
 
-    i64 more_decimal_places_equalized = more_decimal_places.m_value;
-    i64 less_decimal_places_equalized = AK::pow<i64>(10, more_decimal_places.m_decimal_places - less_decimal_places.m_decimal_places) * less_decimal_places.m_value;
+    Crypto::SignedBigInteger more_decimal_places_equalized = more_decimal_places.m_value;
+    Crypto::SignedBigInteger less_decimal_places_equalized = less_decimal_places.m_value.multiplied_by(
+        Crypto::NumberTheory::Power(Crypto::UnsignedBigInteger { 10 },
+            more_decimal_places.m_decimal_places.minus(less_decimal_places.m_decimal_places)));
 
     bool lhs_is_less = (lhs.m_decimal_places < rhs.m_decimal_places);
 
@@ -142,21 +145,28 @@ KeypadValue::KeypadValue(double d)
     current_pow -= 1;
     double epsilon = 1e-6;
     while (d >= epsilon || current_pow >= 0) {
-        m_value *= 10;
+        m_value.set_to(m_value.multiplied_by(Crypto::SignedBigInteger { 10 }));
         i8 digit = (u64)(d * AK::pow(0.1, (double)current_pow)) % 10;
-        m_value += digit;
+        m_value.set_to(m_value.plus(Crypto::UnsignedBigInteger::create_from(digit)));
         d -= digit * AK::pow(10.0, (double)current_pow);
         if (current_pow < 0)
-            m_decimal_places += 1;
+            m_decimal_places.set_to(m_decimal_places.plus(Crypto::UnsignedBigInteger { 1 }));
         current_pow -= 1;
         if (m_decimal_places > 6)
             break;
     }
-    m_value = negative ? (-m_value) : m_value;
+    m_value.set_to(negative ? (m_value.negated_value()) : m_value);
 }
 
 KeypadValue::operator double() const
 {
-    double res = (double)m_value / AK::pow(10.0, (double)m_decimal_places);
-    return res;
+    auto const divisor = Crypto::NumberTheory::Power(Crypto::UnsignedBigInteger { 10 }, m_decimal_places);
+    auto const res = m_value.divided_by(divisor);
+    return res.quotient.to_double() + res.remainder.to_double() / divisor.to_double();
+}
+
+void KeypadValue::set_to_0()
+{
+    m_value.set_to_0();
+    m_decimal_places.set_to_0();
 }
