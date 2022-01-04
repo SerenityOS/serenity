@@ -37,7 +37,7 @@ int MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path
         builder.appendff("\"{}\"", LexicalPath::basename(path));
     builder.append(" before closing?");
 
-    if (last_unmodified_timestamp.has_value()) {
+    if (!path.is_empty() && last_unmodified_timestamp.has_value()) {
         auto age = (Time::now_monotonic() - *last_unmodified_timestamp).to_seconds();
         builder.appendff("\nLast saved {} second{} ago.", age, age == 1 ? "" : "s");
     }
