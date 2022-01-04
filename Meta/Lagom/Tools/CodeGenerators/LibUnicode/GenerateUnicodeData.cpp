@@ -921,7 +921,7 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
         for (auto const& alias : aliases)
             hashes.set(alias.alias.hash(), alias.alias);
 
-        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
+        generate_value_from_string_for_dynamic_loading(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
     };
 
     append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv);
