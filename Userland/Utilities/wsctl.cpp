@@ -8,17 +8,16 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/WindowServerConnection.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments);
 
     int flash_flush = -1;
     Core::ArgsParser args_parser;
     args_parser.add_option(flash_flush, "Flash flush (repaint) rectangles", "flash-flush", 'f', "0/1");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    if (flash_flush != -1) {
+    if (flash_flush != -1)
         GUI::WindowServerConnection::the().async_set_flash_flush(flash_flush);
-    }
     return 0;
 }
