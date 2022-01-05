@@ -700,34 +700,19 @@ void Ext2FS::flush_writes()
         // Uncache Inodes that are only kept alive by the index-to-inode lookup cache.
         // We don't uncache Inodes that are being watched by at least one InodeWatcher.
 
-        Optional<InodeIndex> last_index {};
-        auto remove_previous_entry_from_cache = [&]() {
-            if (last_index.has_value()) {
-                m_inode_cache.remove(last_index.value());
-                last_index.clear();
-            }
-        };
-
         // FIXME: It would be better to keep a capped number of Inodes around.
         //        The problem is that they are quite heavy objects, and use a lot of heap memory
         //        for their (child name lookup) and (block list) caches.
-        for (auto& it : m_inode_cache) {
-            remove_previous_entry_from_cache();
 
+        m_inode_cache.remove_all_matching([](InodeIndex, RefPtr<Ext2FSInode> const& cached_inode) {
             // NOTE: If we're asked to look up an inode by number (via get_inode) and it turns out
             //       to not exist, we remember the fact that it doesn't exist by caching a nullptr.
             //       This seems like a reasonable time to uncache ideas about unknown inodes, so do that.
-            if (!it.value) {
-                last_index = it.key;
-                continue;
-            }
-            if (it.value->ref_count() != 1)
-                continue;
-            if (it.value->has_watchers())
-                continue;
-            last_index = it.key;
-        }
-        remove_previous_entry_from_cache();
+            if (cached_inode == nullptr)
+                return true;
+
+            return cached_inode->ref_count() == 1 && !cached_inode->has_watchers();
+        });
     }
 
     BlockBasedFileSystem::flush_writes();
