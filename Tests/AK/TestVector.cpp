@@ -270,16 +270,16 @@ TEST_CASE(remove_all_matching)
 
     EXPECT_EQ(ints.size(), 4u);
 
-    EXPECT_EQ(ints.remove_all_matching([&](int value) { return value > 2; }), true);
-    EXPECT_EQ(ints.remove_all_matching([&](int) { return false; }), false);
+    EXPECT_EQ(ints.remove_all_matching([](int value) { return value > 2; }), 2u);
+    EXPECT_EQ(ints.remove_all_matching([](int) { return false; }), 0u);
 
     EXPECT_EQ(ints.size(), 2u);
 
-    EXPECT_EQ(ints.remove_all_matching([&](int) { return true; }), true);
+    EXPECT_EQ(ints.remove_all_matching([](int) { return true; }), 2u);
 
     EXPECT(ints.is_empty());
 
-    EXPECT_EQ(ints.remove_all_matching([&](int) { return true; }), false);
+    EXPECT_EQ(ints.remove_all_matching([](int) { return true; }), 0u);
 }
 
 TEST_CASE(nonnullownptrvector)

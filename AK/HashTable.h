@@ -419,18 +419,18 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    bool remove_all_matching(TUnaryPredicate predicate)
+    size_t remove_all_matching(TUnaryPredicate predicate)
     {
-        bool something_was_removed = false;
+        size_t entries_removed = 0;
         for (auto it = begin(); it != end();) {
             if (predicate(*it)) {
                 it = remove(it);
-                something_was_removed = true;
+                ++entries_removed;
             } else {
                 ++it;
             }
         }
-        return something_was_removed;
+        return entries_removed;
     }
 
 private:

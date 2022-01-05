@@ -405,18 +405,18 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    bool remove_all_matching(TUnaryPredicate predicate)
+    size_t remove_all_matching(TUnaryPredicate predicate)
     {
-        bool something_was_removed = false;
+        size_t entries_removed = 0;
         for (size_t i = 0; i < size();) {
             if (predicate(at(i))) {
                 remove(i);
-                something_was_removed = true;
+                ++entries_removed;
             } else {
                 ++i;
             }
         }
-        return something_was_removed;
+        return entries_removed;
     }
 
     ALWAYS_INLINE T take_last()
