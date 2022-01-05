@@ -242,6 +242,7 @@ namespace JS {
     P(globalThis)                            \
     P(group)                                 \
     P(groupBy)                               \
+    P(groupByToMap)                          \
     P(groupCollapsed)                        \
     P(groupEnd)                              \
     P(groups)                                \

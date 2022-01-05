@@ -317,4 +317,28 @@ describe("ability to work with generic non-array objects", () => {
         expect(result.false).toEqual(["foo", undefined, undefined]);
         expect(result.true).toEqual(["bar", "baz"]);
     });
+
+    test("groupByToMap", () => {
+        const visited = [];
+        const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
+        const falseObject = { false: false };
+        const trueObject = { true: true };
+        const result = Array.prototype.groupByToMap.call(o, (value, _, object) => {
+            expect(object).toBe(o);
+            visited.push(value);
+            return value !== undefined
+                ? value.startsWith("b")
+                    ? trueObject
+                    : falseObject
+                : falseObject;
+        });
+        expect(visited).toEqual(["foo", "bar", undefined, "baz", undefined]);
+        expect(result).toBeInstanceOf(Map);
+
+        const falseResult = result.get(falseObject);
+        expect(falseResult).toEqual(["foo", undefined, undefined]);
+
+        const trueResult = result.get(trueObject);
+        expect(trueResult).toEqual(["bar", "baz"]);
+    });
 });
