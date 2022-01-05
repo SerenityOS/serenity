@@ -99,12 +99,12 @@ private:
             // Avoid reallocating, just overwrite the key.
             m_key.overwrite(0, digest.immutable_data(), digest.data_length());
         } else {
-            auto buffer_result = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
+            auto buffer_or_error = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
             // If there's no memory left to copy this into, bail out.
-            if (!buffer_result.has_value())
+            if (buffer_or_error.is_error()) // FIXME: Propagate error with ErrorOr.
                 return;
 
-            m_key = buffer_result.release_value();
+            m_key = buffer_or_error.release_value();
         }
 
         m_reseed_number++;

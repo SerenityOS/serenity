@@ -192,12 +192,12 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
         *(u16*)random_bytes = AK::convert_between_host_and_network_endian((u16)Version::V12);
     }
 
-    auto premaster_key_result = ByteBuffer::copy(random_bytes, bytes);
-    if (!premaster_key_result.has_value()) {
+    auto premaster_key_or_error = ByteBuffer::copy(random_bytes, bytes);
+    if (premaster_key_or_error.is_error()) { // FIXME: Propagate error with ErrorOr.
         dbgln("RSA premaster key generation failed, not enough memory");
         return;
     }
-    m_context.premaster_key = premaster_key_result.release_value();
+    m_context.premaster_key = premaster_key_or_error.release_value();
 
     const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
     if (!certificate_option.has_value()) {

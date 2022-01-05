@@ -714,7 +714,7 @@ static void aes_cbc_test_decrypt()
 {
     auto test_it = [](auto& cipher, auto& result, auto result_len) {
         auto true_value = "This is a test! This is another test!";
-        auto in = ByteBuffer::copy(result, result_len).release_value();
+        auto in = MUST(ByteBuffer::copy(result, result_len));
         auto out = cipher.create_aligned_buffer(in.size()).release_value();
         auto iv = MUST(ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size()));
         auto out_span = out.bytes();

@@ -12,7 +12,7 @@
 
 static ByteBuffer operator""_b(const char* string, size_t length)
 {
-    return ByteBuffer::copy(string, length).release_value();
+    return MUST(ByteBuffer::copy(string, length)); // FIXME: Propagate error with ErrorOr.
 }
 
 TEST_CASE(test_RSA_raw_encrypt)

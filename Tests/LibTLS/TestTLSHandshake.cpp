@@ -18,7 +18,7 @@ constexpr const char* DEFAULT_SERVER { "www.google.com" };
 
 static ByteBuffer operator""_b(const char* string, size_t length)
 {
-    return ByteBuffer::copy(string, length).release_value();
+    return MUST(ByteBuffer::copy(string, length)); // FIXME: Propagate error with ErrorOr.
 }
 
 Vector<Certificate> load_certificates();

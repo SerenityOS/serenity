@@ -292,18 +292,19 @@ ByteBuffer TLSv12::hmac_message(ReadonlyBytes buf, const Optional<ReadonlyBytes>
         hmac.update(buf2.value());
     }
     auto digest = hmac.digest();
-    auto mac_result = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
-    if (!mac_result.has_value()) {
+    auto mac_or_error = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
+    if (mac_or_error.is_error()) { // FIXME: Propagate error with ErrorOr.
         dbgln("Failed to calculate message HMAC: Not enough memory");
         return {};
     }
+    auto mac = mac_or_error.release_value();
 
     if constexpr (TLS_DEBUG) {
         dbgln("HMAC of the block for sequence number {}", sequence_number);
-        print_buffer(*mac_result);
+        print_buffer(mac);
     }
 
-    return mac_result.release_value();
+    return mac;
 }
 
 ssize_t TLSv12::handle_message(ReadonlyBytes buffer)

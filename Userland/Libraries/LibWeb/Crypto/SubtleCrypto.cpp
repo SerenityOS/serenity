@@ -63,14 +63,15 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     hash.update(*data_buffer);
 
     auto digest = hash.digest();
-    auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
-    if (!result_buffer.has_value()) {
+    auto result_buffer_or_error = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
+    if (result_buffer_or_error.is_error()) {
         auto* error = wrap(wrapper()->global_object(), DOM::OperationError::create("Failed to create result buffer"));
         promise->reject(error);
         return promise;
     }
+    auto result_buffer = result_buffer_or_error.release_value();
 
-    auto* result = JS::ArrayBuffer::create(global_object, result_buffer.release_value());
+    auto* result = JS::ArrayBuffer::create(global_object, result_buffer);
 
     // 9. Resolve promise with result.
     promise->fulfill(result);

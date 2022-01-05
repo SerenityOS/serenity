@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
+ * Copyright (c) 2022, Rasmus Nylander <RasmusNylander.SerenityOS@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -79,12 +80,9 @@ public:
         return buffer;
     }
 
-    [[nodiscard]] static Optional<ByteBuffer> copy(void const* data, size_t size)
+    [[nodiscard]] static ErrorOr<ByteBuffer> copy(void const* data, size_t size)
     {
-        auto maybe_buffer = create_uninitialized(size);
-        if (maybe_buffer.is_error())
-            return {};
-        auto buffer = maybe_buffer.release_value();
+        auto buffer = TRY(create_uninitialized(size));
         if (size != 0)
             __builtin_memcpy(buffer.data(), data, size);
         return buffer;
@@ -92,11 +90,7 @@ public:
 
     [[nodiscard]] static ErrorOr<ByteBuffer> copy(ReadonlyBytes bytes)
     {
-        auto maybe_buffer = copy(bytes.data(), bytes.size());
-        if (!maybe_buffer.has_value())
-            return Error::from_errno(ENOMEM);
-        auto buffer = maybe_buffer.release_value();
-        return buffer;
+        return TRY(copy(bytes.data(), bytes.size()));
     }
 
     template<size_t other_inline_capacity>
@@ -147,7 +141,7 @@ public:
         // I cannot hand you a slice I don't have
         VERIFY(offset + size <= this->size());
 
-        return copy(offset_pointer(offset), size).release_value();
+        return MUST(copy(offset_pointer(offset), size));
     }
 
     void clear()

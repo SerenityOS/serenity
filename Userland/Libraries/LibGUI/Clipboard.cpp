@@ -53,15 +53,16 @@ Clipboard& Clipboard::the()
 Clipboard::DataAndType Clipboard::fetch_data_and_type() const
 {
     auto response = connection().get_clipboard_data();
-    if (!response.data().is_valid())
+    if (!response.data().is_valid()) // FIXME: Propagate error with ErrorOr.
         return {};
-    auto data = ByteBuffer::copy(response.data().data<void>(), response.data().size());
-    if (!data.has_value())
+    auto data_or_error = ByteBuffer::copy(response.data().data<void>(), response.data().size());
+    if (data_or_error.is_error()) // FIXME: Propagate error with ErrorOr.
         return {};
+    auto data = data_or_error.release_value();
 
     auto type = response.mime_type();
     auto metadata = response.metadata().entries();
-    return { data.release_value(), type, metadata };
+    return { data, type, metadata };
 }
 
 RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const

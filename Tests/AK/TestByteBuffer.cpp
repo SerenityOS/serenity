@@ -10,10 +10,10 @@
 
 TEST_CASE(equality_operator)
 {
-    ByteBuffer a = ByteBuffer::copy("Hello, world", 7).release_value();
-    ByteBuffer b = ByteBuffer::copy("Hello, friend", 7).release_value();
+    ByteBuffer a = MUST(ByteBuffer::copy("Hello, world", 7));
+    ByteBuffer b = MUST(ByteBuffer::copy("Hello, friend", 7));
     // `a` and `b` are both "Hello, ".
-    ByteBuffer c = ByteBuffer::copy("asdf", 4).release_value();
+    ByteBuffer c = MUST(ByteBuffer::copy("asdf", 4));
     ByteBuffer d;
     EXPECT_EQ(a == a, true);
     EXPECT_EQ(a == b, true);

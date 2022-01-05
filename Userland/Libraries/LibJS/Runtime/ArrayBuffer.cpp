@@ -61,12 +61,13 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_objec
     auto* obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(global_object, constructor, &GlobalObject::array_buffer_prototype, nullptr));
 
     // 2. Let block be ? CreateByteDataBlock(byteLength).
-    auto block = ByteBuffer::create_zeroed(byte_length);
-    if (block.is_error())
+    auto block_or_error = ByteBuffer::create_zeroed(byte_length);
+    if (block_or_error.is_error())
         return global_object.vm().throw_completion<RangeError>(global_object, ErrorType::NotEnoughMemoryToAllocate, byte_length);
+    auto block = block_or_error.release_value();
 
     // 3. Set obj.[[ArrayBufferData]] to block.
-    obj->set_buffer(move(*block));
+    obj->set_buffer(move(block));
 
     // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
 
