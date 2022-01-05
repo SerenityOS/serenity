@@ -55,6 +55,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(entries);
     JS_DECLARE_NATIVE_FUNCTION(copy_within);
     JS_DECLARE_NATIVE_FUNCTION(group_by);
+    JS_DECLARE_NATIVE_FUNCTION(group_by_to_map);
 };
 
 }
