@@ -84,7 +84,7 @@ TEST_CASE(table_remove)
     EXPECT(strings.find("Two") != strings.end());
 }
 
-TEST_CASE(table_remove_all_matching)
+TEST_CASE(remove_all_matching)
 {
     HashTable<int> ints;
 
@@ -99,6 +99,9 @@ TEST_CASE(table_remove_all_matching)
     EXPECT_EQ(ints.remove_all_matching([&](int) { return false; }), false);
 
     EXPECT_EQ(ints.size(), 2u);
+
+    EXPECT(ints.contains(1));
+    EXPECT(ints.contains(2));
 
     EXPECT_EQ(ints.remove_all_matching([&](int) { return true; }), true);
 
