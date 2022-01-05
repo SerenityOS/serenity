@@ -12,16 +12,8 @@ namespace GUI {
 
 void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
 {
-    Vector<ModelIndex> to_remove;
-    for (auto& index : m_indices) {
-        if (filter(index))
-            to_remove.append(index);
-    }
-    if (!to_remove.is_empty()) {
-        for (auto& index : to_remove)
-            m_indices.remove(index);
+    if (m_indices.remove_all_matching([&](ModelIndex const& index) { return filter(index); }))
         notify_selection_changed();
-    }
 }
 
 void ModelSelection::set(const ModelIndex& index)
