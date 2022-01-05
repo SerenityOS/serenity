@@ -61,6 +61,11 @@ inline int years_to_days_since_epoch(int year)
     return days;
 }
 
+inline int days_since_epoch(int year, int month, int day)
+{
+    return years_to_days_since_epoch(year) + day_of_year(year, month, day);
+}
+
 /*
  * Represents a time amount in a "safe" way.
  * Minimum: 0 seconds, 0 nanoseconds
@@ -301,6 +306,7 @@ using AK::day_of_week;
 using AK::day_of_year;
 using AK::days_in_month;
 using AK::days_in_year;
+using AK::days_since_epoch;
 using AK::is_leap_year;
 using AK::Time;
 using AK::timespec_add;
