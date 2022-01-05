@@ -3564,7 +3564,7 @@ Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
 
     switch (m_name) {
     case '?':
-        return { resolve_slices(shell, String::number(shell->last_return_code), m_slices) };
+        return { resolve_slices(shell, String::number(shell->last_return_code.value_or(0)), m_slices) };
     case '$':
         return { resolve_slices(shell, String::number(getpid()), m_slices) };
     case '*':

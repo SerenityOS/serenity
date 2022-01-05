@@ -212,7 +212,7 @@ public:
     char hostname[HostNameSize];
 
     uid_t uid;
-    int last_return_code { 0 };
+    Optional<int> last_return_code;
     Vector<String> directory_stack;
     CircularQueue<String, 8> cd_history; // FIXME: have a configurable cd history length
     HashMap<u64, NonnullRefPtr<Job>> jobs;

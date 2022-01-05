@@ -1059,7 +1059,7 @@ int Shell::builtin_not(int argc, const char** argv)
     }
     // In case it was a function.
     if (!found_a_job)
-        exit_code = last_return_code;
+        exit_code = last_return_code.value_or(0);
     return exit_code == 0 ? 1 : 0;
 }
 
