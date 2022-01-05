@@ -276,12 +276,16 @@ void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_ho
     Gfx::IntRect rect;
     switch (selection_behavior()) {
     case SelectionBehavior::SelectItems:
-        rect = cell_rect(index.row(), index.column());
+        rect = content_rect(index);
+        if (row_header().is_visible())
+            rect.set_left(rect.left() - row_header().width());
         break;
     case SelectionBehavior::SelectRows:
         rect = row_rect(index.row());
         break;
     }
+    if (column_header().is_visible())
+        rect.set_top(rect.top() - column_header().height());
     AbstractScrollableWidget::scroll_into_view(rect, scroll_horizontally, scroll_vertically);
 }
 
@@ -322,17 +326,6 @@ Gfx::IntRect AbstractTableView::content_rect(int row, int column) const
 Gfx::IntRect AbstractTableView::content_rect(const ModelIndex& index) const
 {
     return content_rect(index.row(), index.column());
-}
-
-Gfx::IntRect AbstractTableView::cell_rect(int row, int column) const
-{
-    auto cell_rect = this->content_rect(row, column);
-    if (row_header().is_visible())
-        cell_rect.set_left(cell_rect.left() - row_header().width());
-    if (column_header().is_visible())
-        cell_rect.set_top(cell_rect.top() - column_header().height());
-
-    return cell_rect;
 }
 
 Gfx::IntRect AbstractTableView::row_rect(int item_index) const

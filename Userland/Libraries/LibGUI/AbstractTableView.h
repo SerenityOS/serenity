@@ -51,7 +51,6 @@ public:
 
     virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
     Gfx::IntRect content_rect(int row, int column) const;
-    Gfx::IntRect cell_rect(int row, int column) const;
     Gfx::IntRect row_rect(int item_index) const;
 
     virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const& index) const override;
