@@ -651,7 +651,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     toolbar.add_action(*m_new_image_action);
     toolbar.add_action(*m_open_image_action);
-    toolbar.add_action(*m_save_image_as_action);
+    toolbar.add_action(*m_save_image_action);
     toolbar.add_separator();
     toolbar.add_action(*m_copy_action);
     toolbar.add_action(*m_paste_action);
