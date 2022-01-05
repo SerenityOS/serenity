@@ -2043,9 +2043,15 @@ Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, 
     auto day_periods = s_day_period_lists[day_periods_index];
 
     for (auto day_period_index : day_periods) {
-        auto const& day_period = s_day_periods[day_period_index];
+        auto day_period = s_day_periods[day_period_index];
+        auto h = hour;
 
-        if ((day_period.begin <= hour) && (hour < day_period.end)) {
+        if (day_period.begin > day_period.end) {
+            day_period.end += 24;
+            h += 24;
+        }
+
+        if ((day_period.begin <= h) && (h < day_period.end)) {
             auto period = static_cast<DayPeriod>(day_period.day_period);
             return get_calendar_day_period_symbol(locale, calendar, style, period);
         }
