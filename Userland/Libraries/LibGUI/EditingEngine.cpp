@@ -275,18 +275,17 @@ void EditingEngine::move_to_logical_line_end()
 void EditingEngine::move_one_up(const KeyEvent& event)
 {
     if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
-        if (event.ctrl() && event.shift()) {
-            move_selected_lines_up();
-            return;
-        }
         TextPosition new_cursor;
-        if (m_editor->is_wrapping_enabled()) {
+        if (m_editor->is_wrapping_enabled() && !event.ctrl()) {
             auto position_above = m_editor->cursor_content_rect().location().translated(0, -m_editor->line_height());
             new_cursor = m_editor->text_position_at_content_position(position_above);
         } else {
             size_t new_line = m_editor->cursor().line() - 1;
             size_t new_column = min(m_editor->cursor().column(), m_editor->line(new_line).length());
             new_cursor = { new_line, new_column };
+        }
+        if (event.ctrl()) {
+            new_cursor.set_column(0);
         }
         m_editor->set_cursor(new_cursor);
     }
@@ -295,18 +294,17 @@ void EditingEngine::move_one_up(const KeyEvent& event)
 void EditingEngine::move_one_down(const KeyEvent& event)
 {
     if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
-        if (event.ctrl() && event.shift()) {
-            move_selected_lines_down();
-            return;
-        }
         TextPosition new_cursor;
-        if (m_editor->is_wrapping_enabled()) {
+        if (m_editor->is_wrapping_enabled() && !event.ctrl()) {
             auto position_below = m_editor->cursor_content_rect().location().translated(0, m_editor->line_height());
             new_cursor = m_editor->text_position_at_content_position(position_below);
         } else {
             size_t new_line = m_editor->cursor().line() + 1;
             size_t new_column = min(m_editor->cursor().column(), m_editor->line(new_line).length());
             new_cursor = { new_line, new_column };
+        }
+        if (event.ctrl()) {
+            new_cursor.set_column(m_editor->line(new_cursor.line()).length());
         }
         m_editor->set_cursor(new_cursor);
     }
