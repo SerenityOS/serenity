@@ -624,55 +624,6 @@ void EditingEngine::move_to_beginning_of_previous_word()
     m_editor->set_cursor(find_beginning_of_previous_word());
 }
 
-void EditingEngine::move_selected_lines_up()
-{
-    if (!m_editor->is_editable())
-        return;
-    size_t first_line;
-    size_t last_line;
-    get_selection_line_boundaries(first_line, last_line);
-
-    if (first_line == 0)
-        return;
-
-    auto& lines = m_editor->document().lines();
-    lines.insert((int)last_line, lines.take((int)first_line - 1));
-    m_editor->set_cursor({ first_line - 1, 0 });
-
-    if (m_editor->has_selection()) {
-        m_editor->selection().set_start({ first_line - 1, 0 });
-        m_editor->selection().set_end({ last_line - 1, m_editor->line(last_line - 1).length() });
-    }
-
-    m_editor->did_change();
-    m_editor->update();
-}
-
-void EditingEngine::move_selected_lines_down()
-{
-    if (!m_editor->is_editable())
-        return;
-    size_t first_line;
-    size_t last_line;
-    get_selection_line_boundaries(first_line, last_line);
-
-    auto& lines = m_editor->document().lines();
-    VERIFY(lines.size() != 0);
-    if (last_line >= lines.size() - 1)
-        return;
-
-    lines.insert((int)first_line, lines.take((int)last_line + 1));
-    m_editor->set_cursor({ first_line + 1, 0 });
-
-    if (m_editor->has_selection()) {
-        m_editor->selection().set_start({ first_line + 1, 0 });
-        m_editor->selection().set_end({ last_line + 1, m_editor->line(last_line + 1).length() });
-    }
-
-    m_editor->did_change();
-    m_editor->update();
-}
-
 void EditingEngine::delete_char()
 {
     if (!m_editor->is_editable())

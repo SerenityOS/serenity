@@ -80,6 +80,7 @@ public:
     void remove_line(size_t line_index);
     void remove_all_lines();
     void insert_line(size_t line_index, NonnullOwnPtr<TextDocumentLine>);
+    void swap_lines(size_t a, size_t b);
 
     void register_client(Client&);
     void unregister_client(Client&);
@@ -234,4 +235,19 @@ private:
     TextRange m_range;
 };
 
+class MoveLinesTextCommand : public TextDocumentUndoCommand {
+public:
+    MoveLinesTextCommand(TextDocument&, const TextRange&, const bool);
+    virtual void undo() override;
+    virtual void redo() override;
+    const TextRange& range() const { return m_range; }
+    virtual bool merge_with(GUI::Command const&) override;
+    virtual String action_text() const override;
+
+private:
+    virtual bool do_swap_lines(bool forward);
+    virtual void do_set_selection();
+    TextRange m_range;
+    const bool m_forward;
+};
 }

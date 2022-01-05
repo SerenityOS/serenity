@@ -271,6 +271,18 @@ void TextDocument::insert_line(size_t line_index, NonnullOwnPtr<TextDocumentLine
     }
 }
 
+void TextDocument::swap_lines(size_t a, size_t b)
+{
+    auto tmp = m_lines[(int)a];
+    m_lines[(int)a] = m_lines[(int)b];
+    m_lines[(int)b] = tmp;
+
+    if (m_client_notifications_enabled) {
+        for (auto* client : m_clients)
+            client->document_did_change();
+    }
+}
+
 void TextDocument::remove_line(size_t line_index)
 {
     lines().remove((int)line_index);
@@ -848,6 +860,7 @@ void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
 void InsertTextCommand::redo()
 {
     auto new_cursor = m_document.insert_at(m_range.start(), m_text, m_client);
+    // NOTE: this comment isn't true
     // NOTE: We don't know where the range ends until after doing redo().
     //       This is okay since we always do redo() after adding this to the undo stack.
     m_range.set_end(new_cursor);
@@ -900,6 +913,74 @@ void RemoveTextCommand::undo()
 {
     auto new_cursor = m_document.insert_at(m_range.start(), m_text);
     m_document.set_all_cursors(new_cursor);
+}
+
+MoveLinesTextCommand::MoveLinesTextCommand(TextDocument& document, const TextRange& range, const bool forward)
+    : TextDocumentUndoCommand(document)
+    , m_range(range)
+    , m_forward(forward)
+{
+}
+
+String MoveLinesTextCommand::action_text() const
+{
+    return "Move Lines";
+}
+
+bool MoveLinesTextCommand::merge_with(GUI::Command const& other)
+{
+    if (!is<MoveLinesTextCommand>(other))
+        return false;
+    // TODO: not sure if it's worth
+    //       if it shows up high on the profiler, it probably is :)
+    return false;
+}
+
+void MoveLinesTextCommand::redo()
+{
+    if (do_swap_lines(m_forward))
+        do_set_selection();
+}
+
+void MoveLinesTextCommand::undo()
+{
+    if (do_swap_lines(!m_forward))
+        do_set_selection();
+}
+
+bool MoveLinesTextCommand::do_swap_lines(bool forward)
+{
+    size_t start = m_range.start().line();
+    size_t end = m_range.end().line();
+
+    if (forward) {
+        if (end >= m_document.line_count() - 1)
+            return false;
+        // iterates from end to start included (hack because unsigned)
+        for (size_t i = end + 1; i-- > start;) {
+            m_document.swap_lines(i, i + 1);
+        }
+    } else {
+        if (start <= 0)
+            return false;
+        for (size_t i = start; i <= end; i++) {
+            m_document.swap_lines(i - 1, i);
+        }
+    }
+    size_t shift = forward ? 1 : -1;
+    m_range.start().set_line(m_range.start().line() + shift);
+    m_range.end().set_line(m_range.end().line() + shift);
+    return true;
+}
+
+void MoveLinesTextCommand::do_set_selection()
+{
+    if (m_range.is_valid()) {
+        m_document.set_all_selections(m_range);
+    } else {
+        VERIFY(m_range.start().is_valid() && m_range.end().is_valid());
+        m_document.set_all_cursors(m_range.start());
+    }
 }
 
 TextPosition TextDocument::insert_at(const TextPosition& position, StringView text, const Client* client)

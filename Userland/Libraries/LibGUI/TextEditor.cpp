@@ -815,6 +815,12 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
     }
 
+    if (event.modifiers() == (Mod_Shift | Mod_Ctrl) && (event.key() == KeyCode::Key_Up || event.key() == KeyCode::Key_Down)) {
+        int forward = event.key() == Key_Down;
+        move_lines(forward);
+        return;
+    }
+
     if (m_editing_engine->on_key(event))
         return;
 
@@ -1427,6 +1433,21 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
         set_cursor(original_cursor_position);
     }
+}
+
+void TextEditor::move_lines(bool forward)
+{
+    if (!is_editable())
+        return;
+
+    TextRange range;
+    if (has_selection()) {
+        range = normalized_selection();
+    } else {
+        range.set_start(m_cursor);
+        range.set_end(m_cursor);
+    }
+    execute<MoveLinesTextCommand>(range, forward);
 }
 
 void TextEditor::cut()
