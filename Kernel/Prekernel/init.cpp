@@ -167,7 +167,7 @@ extern "C" [[noreturn]] void init()
         return (decltype(ptr))((FlatPtr)ptr + kernel_mapping_base);
     };
 
-    BootInfo info;
+    BootInfo info {};
     info.start_of_prekernel_image = (PhysicalPtr)start_of_prekernel_image;
     info.end_of_prekernel_image = (PhysicalPtr)end_of_prekernel_image;
     info.physical_to_virtual_offset = kernel_load_base - kernel_physical_base;
@@ -188,12 +188,14 @@ extern "C" [[noreturn]] void init()
     info.multiboot_memory_map_count = multiboot_info_ptr->mmap_length / sizeof(multiboot_memory_map_t);
     info.multiboot_modules = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mods_addr);
     info.multiboot_modules_count = multiboot_info_ptr->mods_count;
-    info.multiboot_framebuffer_addr = multiboot_info_ptr->framebuffer_addr;
-    info.multiboot_framebuffer_pitch = multiboot_info_ptr->framebuffer_pitch;
-    info.multiboot_framebuffer_width = multiboot_info_ptr->framebuffer_width;
-    info.multiboot_framebuffer_height = multiboot_info_ptr->framebuffer_height;
-    info.multiboot_framebuffer_bpp = multiboot_info_ptr->framebuffer_bpp;
-    info.multiboot_framebuffer_type = multiboot_info_ptr->framebuffer_type;
+    if ((multiboot_info_ptr->flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) != 0) {
+        info.multiboot_framebuffer_addr = multiboot_info_ptr->framebuffer_addr;
+        info.multiboot_framebuffer_pitch = multiboot_info_ptr->framebuffer_pitch;
+        info.multiboot_framebuffer_width = multiboot_info_ptr->framebuffer_width;
+        info.multiboot_framebuffer_height = multiboot_info_ptr->framebuffer_height;
+        info.multiboot_framebuffer_bpp = multiboot_info_ptr->framebuffer_bpp;
+        info.multiboot_framebuffer_type = multiboot_info_ptr->framebuffer_type;
+    }
 
     asm(
 #if ARCH(I386)

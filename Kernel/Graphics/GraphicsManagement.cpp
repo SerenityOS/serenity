@@ -88,7 +88,13 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     RefPtr<GenericGraphicsAdapter> adapter;
 
     auto create_bootloader_framebuffer_device = [&]() {
-        if (multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+        if (multiboot_framebuffer_addr.is_null()) {
+            // Prekernel sets the framebuffer address to 0 if MULTIBOOT_INFO_FRAMEBUFFER_INFO
+            // is not present, as there is likely never a valid framebuffer at this physical address.
+            dmesgln("Graphics: Bootloader did not set up a framebuffer, ignoring fbdev argument");
+        } else if (multiboot_framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+            dmesgln("Graphics: The framebuffer set up by the bootloader is not RGB, ignoring fbdev argument");
+        } else {
             dmesgln("Graphics: Using a preset resolution from the bootloader");
             adapter = VGACompatibleAdapter::initialize_with_preset_resolution(device_identifier,
                 multiboot_framebuffer_addr,
