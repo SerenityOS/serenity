@@ -112,6 +112,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto& editor = create_new_editor(*image);
                 auto image_title = dialog->image_name().trim_whitespace();
                 editor.set_title(image_title.is_empty() ? "Untitled" : image_title);
+                editor.undo_stack().set_current_unmodified();
 
                 m_layer_list_widget->set_image(image);
                 m_layer_list_widget->set_selected_layer(bg_layer);
@@ -728,6 +729,7 @@ void MainWidget::create_default_image()
 
     auto& editor = create_new_editor(*image);
     editor.set_active_layer(bg_layer);
+    editor.undo_stack().set_current_unmodified();
 }
 
 void MainWidget::create_image_from_clipboard()
