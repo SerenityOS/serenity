@@ -712,6 +712,7 @@ void MainWidget::open_image_fd(int fd, String const& path)
     auto& image = *m_loader.release_image();
     auto& editor = create_new_editor(image);
     editor.set_path(path);
+    editor.undo_stack().set_current_unmodified();
     m_layer_list_widget->set_image(&image);
 }
 
