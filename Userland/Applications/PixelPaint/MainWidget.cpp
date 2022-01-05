@@ -755,6 +755,10 @@ bool MainWidget::request_close()
 
     VERIFY(current_image_editor());
 
+    if (!current_image_editor()->undo_stack().is_current_modified()) {
+        return true;
+    }
+
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), current_image_editor()->path(), current_image_editor()->undo_stack().last_unmodified_timestamp());
 
     if (result == GUI::MessageBox::ExecYes) {
