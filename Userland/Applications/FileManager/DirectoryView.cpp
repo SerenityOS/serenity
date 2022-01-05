@@ -519,14 +519,18 @@ void DirectoryView::do_delete(bool should_confirm)
     delete_paths(paths, should_confirm, window());
 }
 
+bool DirectoryView::can_modify_current_selection()
+{
+    return !current_view().selection().is_empty() && access(path().characters(), W_OK) == 0;
+}
+
 void DirectoryView::handle_selection_change()
 {
     update_statusbar();
 
-    bool can_modify = !current_view().selection().is_empty() && access(path().characters(), W_OK) == 0;
+    bool can_modify = can_modify_current_selection();
     m_delete_action->set_enabled(can_modify);
     m_force_delete_action->set_enabled(can_modify);
-    m_rename_action->set_enabled(can_modify);
 
     if (on_selection_change)
         on_selection_change(current_view());
@@ -578,7 +582,8 @@ void DirectoryView::setup_actions()
 
     m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) { do_delete(true); }, window());
     m_rename_action = GUI::CommonActions::make_rename_action([this](auto&) {
-        current_view().begin_editing(current_view().cursor_index());
+        if (can_modify_current_selection())
+            current_view().begin_editing(current_view().cursor_index());
     },
         window());
 

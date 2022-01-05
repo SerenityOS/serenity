@@ -158,6 +158,7 @@ private:
 
     void set_status_message(StringView);
     void update_statusbar();
+    bool can_modify_current_selection();
 
     Mode m_mode { Mode::Normal };
     ViewMode m_view_mode { Invalid };
