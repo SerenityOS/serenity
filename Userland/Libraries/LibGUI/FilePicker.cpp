@@ -79,7 +79,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         break;
     case Mode::Save:
         set_title("Save as");
-        set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png").release_value_but_fixme_should_propagate_errors());
+        set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save-as.png").release_value_but_fixme_should_propagate_errors());
         break;
     }
     resize(560, 320);
