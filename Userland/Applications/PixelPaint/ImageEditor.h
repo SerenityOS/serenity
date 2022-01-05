@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
- * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2021-2022, Mustafa Quraish <mustafa@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,6 +44,12 @@ public:
     bool redo();
 
     auto& undo_stack() { return m_undo_stack; }
+
+    String const& path() const { return m_path; }
+    void set_path(String);
+
+    String const& title() const { return m_title; }
+    void set_title(String);
 
     void add_guide(NonnullRefPtr<Guide> guide) { m_guides.append(guide); }
     void remove_guide(Guide const& guide)
@@ -90,7 +96,7 @@ public:
 
     Function<void(Layer*)> on_active_layer_change;
 
-    Function<void(String const&)> on_image_title_change;
+    Function<void(String const&)> on_title_change;
 
     Function<void(Gfx::IntPoint const&)> on_image_mouse_position_change;
 
@@ -139,7 +145,6 @@ private:
     virtual void image_did_change(Gfx::IntRect const&) override;
     virtual void image_did_change_rect(Gfx::IntRect const&) override;
     virtual void image_select_layer(Layer*) override;
-    virtual void image_did_change_title(String const&) override;
 
     GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
@@ -154,6 +159,9 @@ private:
     NonnullRefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
     GUI::UndoStack m_undo_stack;
+
+    String m_path;
+    String m_title;
 
     NonnullRefPtrVector<Guide> m_guides;
     bool m_show_guides { true };

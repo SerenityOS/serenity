@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2021-2022, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -38,7 +38,6 @@ public:
     virtual void image_did_change(Gfx::IntRect const&) { }
     virtual void image_did_change_rect(Gfx::IntRect const&) { }
     virtual void image_select_layer(Layer*) { }
-    virtual void image_did_change_title(String const&) { }
 
 protected:
     virtual ~ImageClient() = default;
@@ -93,12 +92,6 @@ public:
 
     size_t index_of(Layer const&) const;
 
-    String const& path() const { return m_path; }
-    void set_path(String);
-
-    String const& title() const { return m_title; }
-    void set_title(String);
-
     void flip(Gfx::Orientation orientation);
     void rotate(Gfx::RotationDirection direction);
     void crop(Gfx::IntRect const& rect);
@@ -111,9 +104,6 @@ private:
     void did_change(Gfx::IntRect const& modified_rect = {});
     void did_change_rect(Gfx::IntRect const& modified_rect = {});
     void did_modify_layer_stack();
-
-    String m_path;
-    String m_title;
 
     Gfx::IntSize m_size;
     NonnullRefPtrVector<Layer> m_layers;
