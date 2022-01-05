@@ -91,6 +91,22 @@ public:
     u32 to_u32(u32 default_value = 0) const { return to_number<u32>(default_value); }
     u64 to_u64(u64 default_value = 0) const { return to_number<u64>(default_value); }
 
+    String to_bcd(u32 default_value = 0) const
+    {
+        StringBuilder bcd_result;
+        u32 as_u32 = to_number<u32>(default_value);
+
+        while (as_u32 != 0) {
+            u8 nybble = (as_u32 & 0xf);
+            bcd_result.append(nybble + '0');
+            as_u32 >>= 4;
+            if (as_u32 != 0)
+                bcd_result.append('.');
+        }
+
+        return bcd_result.to_string().reverse();
+    }
+
     FlatPtr to_addr(FlatPtr default_value = 0) const
     {
 #ifdef __LP64__
