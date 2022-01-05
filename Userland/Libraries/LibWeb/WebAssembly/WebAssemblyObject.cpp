@@ -162,7 +162,6 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     if (buffer_or_error.is_error()) {
         rejection_value = *buffer_or_error.throw_completion().value();
         vm.clear_exception();
-        vm.stop_unwind();
     }
     auto promise = JS::Promise::create(global_object);
     if (!rejection_value.is_empty()) {
@@ -327,7 +326,6 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     if (buffer_or_error.is_error()) {
         auto rejection_value = *buffer_or_error.throw_completion().value();
         vm.clear_exception();
-        vm.stop_unwind();
         promise->reject(rejection_value);
         return promise;
     }

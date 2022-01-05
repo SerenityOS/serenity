@@ -468,7 +468,6 @@ ThrowCompletionOr<void> VM::initialize_instance_elements(Object& object, ECMAScr
 void VM::throw_exception(Exception& exception)
 {
     set_exception(exception);
-    unwind(ScopeType::Try);
 }
 
 // 9.4.4 ResolveThisBinding ( ), https://tc39.es/ecma262/#sec-resolvethisbinding
@@ -547,7 +546,6 @@ void VM::run_queued_promise_jobs()
         // exceptions when running Promise jobs. See the commit where these two lines were initially
         // added for a much more detailed explanation.
         clear_exception();
-        stop_unwind();
 
         if (pushed_execution_context)
             pop_execution_context();

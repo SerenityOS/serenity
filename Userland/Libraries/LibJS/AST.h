@@ -120,9 +120,11 @@ protected:
     Vector<FlyString> m_labels;
 };
 
-class IterationStatement : public LabelableStatement {
+class IterationStatement : public Statement {
 public:
-    using LabelableStatement::LabelableStatement;
+    using Statement::Statement;
+
+    virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const = 0;
 };
 
 class EmptyStatement final : public Statement {
@@ -183,7 +185,7 @@ public:
     }
 };
 
-class ScopeNode : public LabelableStatement {
+class ScopeNode : public Statement {
 public:
     template<typename T, typename... Args>
     T& append(SourceRange range, Args&&... args)
@@ -227,7 +229,7 @@ public:
 
 protected:
     explicit ScopeNode(SourceRange source_range)
-        : LabelableStatement(source_range)
+        : Statement(source_range)
     {
     }
 
@@ -681,6 +683,7 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
@@ -702,6 +705,7 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
@@ -747,6 +751,7 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
@@ -772,6 +777,7 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -795,6 +801,7 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -814,6 +821,7 @@ public:
     }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -1786,10 +1794,10 @@ private:
     NonnullRefPtr<BlockStatement> m_body;
 };
 
-class TryStatement final : public LabelableStatement {
+class TryStatement final : public Statement {
 public:
     TryStatement(SourceRange source_range, NonnullRefPtr<BlockStatement> block, RefPtr<CatchClause> handler, RefPtr<BlockStatement> finalizer)
-        : LabelableStatement(source_range)
+        : Statement(source_range)
         , m_block(move(block))
         , m_handler(move(handler))
         , m_finalizer(move(finalizer))
@@ -1803,7 +1811,6 @@ public:
     virtual void dump(int indent) const override;
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
-    void add_label(FlyString string) override;
 
 private:
     NonnullRefPtr<BlockStatement> m_block;
@@ -1858,6 +1865,7 @@ public:
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
+    Completion execute_impl(Interpreter&, GlobalObject&) const;
     void add_case(NonnullRefPtr<SwitchCase> switch_case) { m_cases.append(move(switch_case)); }
 
 private:

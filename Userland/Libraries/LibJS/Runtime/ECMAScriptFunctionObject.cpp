@@ -171,8 +171,6 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 
     // 9. ReturnIfAbrupt(result).
     if (result.is_abrupt()) {
-        // NOTE: I'm not sure if EvaluateBody can return a completion other than Normal, Return, or Throw.
-        // We're far from using completions in the AST anyway; in the meantime assume Throw.
         VERIFY(result.is_error());
         return result;
     }
@@ -266,9 +264,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVa
             return vm.throw_completion<TypeError>(global_object, ErrorType::DerivedConstructorReturningInvalidValue);
     }
     // 11. Else, ReturnIfAbrupt(result).
-    else {
-        // NOTE: I'm not sure if EvaluateBody can return a completion other than Normal, Return, or Throw.
-        // We're far from using completions in the AST anyway; in the meantime assume Throw.
+    else if (result.is_abrupt()) {
         VERIFY(result.is_error());
         return result;
     }
@@ -713,25 +709,23 @@ void ECMAScriptFunctionObject::async_block_start(PromiseCapability const& promis
         // c. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
         vm.pop_execution_context();
 
-        // NOTE: Eventually we'll distinguish between normal and return completion.
-        // For now, we assume "return" and include the undefined fallback from the call site.
         // d. If result.[[Type]] is normal, then
-        if (false) {
+        if (result.type() == Completion::Type::Normal) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « undefined »).
             MUST(call(global_object, promise_capability.resolve, js_undefined(), js_undefined()));
         }
         // e. Else if result.[[Type]] is return, then
-        else if (result.type() == Completion::Type::Return || result.type() == Completion::Type::Normal) {
+        else if (result.type() == Completion::Type::Return) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « result.[[Value]] »).
-            MUST(call(global_object, promise_capability.resolve, js_undefined(), result.value().value_or(js_undefined())));
+            MUST(call(global_object, promise_capability.resolve, js_undefined(), *result.value()));
         }
         // f. Else,
         else {
             // i. Assert: result.[[Type]] is throw.
+            VERIFY(result.type() == Completion::Type::Throw);
 
             // ii. Perform ! Call(promiseCapability.[[Reject]], undefined, « result.[[Value]] »).
             vm.clear_exception();
-            vm.stop_unwind();
             MUST(call(global_object, promise_capability.reject, js_undefined(), *result.value()));
         }
         // g. Return.
@@ -756,6 +750,7 @@ void ECMAScriptFunctionObject::async_block_start(PromiseCapability const& promis
 }
 
 // 10.2.1.4 OrdinaryCallEvaluateBody ( F, argumentsList ), https://tc39.es/ecma262/#sec-ordinarycallevaluatebody
+// 15.8.4 Runtime Semantics: EvaluateAsyncFunctionBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatefunctionbody
 Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 {
     auto& vm = this->vm();
@@ -817,14 +812,16 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
         VM::InterpreterExecutionScope scope(*ast_interpreter);
 
+        // FunctionBody : FunctionStatementList
         if (m_kind == FunctionKind::Regular) {
+            // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
             TRY(function_declaration_instantiation(ast_interpreter));
 
-            auto result = TRY(m_ecmascript_code->execute(*ast_interpreter, global_object()));
-            // NOTE: Once 'return' completions are being used, we can just return the completion from execute() directly.
-            // For now, we assume "return" and include the undefined fallback from the call site.
-            return { Completion::Type::Return, result.value_or(js_undefined()), {} };
-        } else if (m_kind == FunctionKind::Async) {
+            // 2. Return the result of evaluating FunctionStatementList.
+            return m_ecmascript_code->execute(*ast_interpreter, global_object());
+        }
+        // AsyncFunctionBody : FunctionBody
+        else if (m_kind == FunctionKind::Async) {
             // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
             auto promise_capability = MUST(new_promise_capability(global_object(), global_object().promise_constructor()));
 

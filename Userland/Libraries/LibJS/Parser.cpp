@@ -822,7 +822,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         /* might_need_arguments_object */ false, contains_direct_call_to_eval, /* is_arrow_function */ true);
 }
 
-RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction allow_function)
+RefPtr<LabelledStatement> Parser::try_parse_labelled_statement(AllowLabelledFunction allow_function)
 {
     {
         // NOTE: This is a fast path where we try to fail early to avoid the expensive save_state+load_state.
@@ -873,7 +873,7 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
     if (m_state.labels_in_scope.contains(identifier))
         syntax_error(String::formatted("Label '{}' has already been declared", identifier));
 
-    RefPtr<Statement> labelled_statement;
+    RefPtr<Statement> labelled_item;
 
     auto is_iteration_statement = false;
 
@@ -887,16 +887,16 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
         if (function_declaration->kind() == FunctionKind::Async)
             syntax_error("Async functions cannot be defined in labelled statements");
 
-        labelled_statement = move(function_declaration);
+        labelled_item = move(function_declaration);
     } else {
         m_state.labels_in_scope.set(identifier, {});
-        labelled_statement = parse_statement(allow_function);
-        if (is<IterationStatement>(*labelled_statement)) {
+        labelled_item = parse_statement(allow_function);
+        // Extract the innermost statement from a potentially nested chain of LabelledStatements.
+        auto statement = labelled_item;
+        while (is<LabelledStatement>(*statement))
+            statement = static_cast<LabelledStatement&>(*statement).labelled_item();
+        if (is<IterationStatement>(*statement))
             is_iteration_statement = true;
-            static_cast<IterationStatement&>(*labelled_statement).add_label(identifier);
-        } else if (is<LabelableStatement>(*labelled_statement)) {
-            static_cast<LabelableStatement&>(*labelled_statement).add_label(identifier);
-        }
     }
 
     if (!is_iteration_statement) {
@@ -906,7 +906,7 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
 
     m_state.labels_in_scope.remove(identifier);
 
-    return labelled_statement.release_nonnull();
+    return create_ast_node<LabelledStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, identifier, labelled_item.release_nonnull());
 }
 
 RefPtr<MetaProperty> Parser::try_parse_new_target_expression()
@@ -1286,7 +1286,10 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             auto super_call = create_ast_node<SuperCall>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
                 Vector { CallExpression::Argument { create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, "args"), true } });
-            constructor_body->append(create_ast_node<ExpressionStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(super_call)));
+            // NOTE: While the JS approximation above doesn't do `return super(...args)`, the
+            // abstract closure is expected to capture and return the result, so we do need a
+            // return statement here to create the correct completion.
+            constructor_body->append(create_ast_node<ReturnStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(super_call)));
 
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),

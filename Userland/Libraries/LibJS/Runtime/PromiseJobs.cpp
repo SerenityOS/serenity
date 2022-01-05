@@ -84,7 +84,6 @@ ThrowCompletionOr<Value> PromiseReactionJob::call()
     // h. If handlerResult is an abrupt completion, then
     if (handler_result.is_abrupt()) {
         vm.clear_exception();
-        vm.stop_unwind();
 
         // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
         auto* reject_function = promise_capability.value().reject;
@@ -139,7 +138,6 @@ ThrowCompletionOr<Value> PromiseResolveThenableJob::call()
     // c. If thenCallResult is an abrupt completion, then
     if (then_call_result.is_error()) {
         vm.clear_exception();
-        vm.stop_unwind();
 
         // i. Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
         dbgln_if(PROMISE_DEBUG, "[PromiseResolveThenableJob @ {}]: then_call_result is an abrupt completion, calling reject function with value {}", this, *then_call_result.throw_completion().value());

@@ -120,8 +120,6 @@ static Completion iterator_close_(Object& iterator, Completion completion, Itera
         if (!return_method)
             return completion;
 
-        vm.stop_unwind();
-
         // c. Set innerResult to Call(return, iterator).
         auto result_or_error = vm.call(*return_method, &iterator);
         if (result_or_error.is_error()) {
