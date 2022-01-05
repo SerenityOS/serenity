@@ -97,7 +97,11 @@ Optional<ByteBuffer> decode_base64(StringView input)
             output.append(out2);
     }
 
-    return ByteBuffer::copy(output);
+    auto buffer_or_error = ByteBuffer::copy(output);
+    if (buffer_or_error.is_error())
+        return {}; // FIXME: Propagate error with ErrorOr
+    auto buffer = buffer_or_error.release_value();
+    return buffer;
 }
 
 String encode_base64(ReadonlyBytes input)

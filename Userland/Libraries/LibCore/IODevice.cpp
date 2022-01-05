@@ -148,9 +148,9 @@ ByteBuffer IODevice::read_all()
         data.append((const u8*)read_buffer, nread);
     }
 
-    auto result = ByteBuffer::copy(data);
-    if (result.has_value())
-        return result.release_value();
+    auto buffer_or_error = ByteBuffer::copy(data);
+    if (!buffer_or_error.is_error())
+        return buffer_or_error.release_value();
 
     set_error(ENOMEM);
     return {};

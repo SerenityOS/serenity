@@ -74,10 +74,10 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& clie
     request.set_url(url);
     request.set_headers(headers);
 
-    auto allocated_body_result = ByteBuffer::copy(body);
-    if (!allocated_body_result.has_value())
+    auto allocated_body_or_error = ByteBuffer::copy(body);
+    if (allocated_body_or_error.is_error()) // FIXME: Propagate error with ErrorOr
         return {};
-    request.set_body(allocated_body_result.release_value());
+    request.set_body(allocated_body_or_error.release_value());
 
     auto output_stream = make<OutputFileStream>(pipe_result.value().write_fd);
     output_stream->make_unbuffered();

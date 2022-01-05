@@ -119,8 +119,10 @@ Optional<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
         for (int i = 0; i < 4; i++)
             buff.append(reinterpret_cast<u8*>(&number)[3 - i]);
     }
-
-    return ByteBuffer::copy(buff.span());
+    auto data_or_error = ByteBuffer::copy(buff.span());
+    if (data_or_error.is_error()) // FIXME: Propagate error with ErrorOr
+        return {};
+    return data_or_error.release_value();
 };
 
 Optional<ByteBuffer> Filter::decode_lzw(ReadonlyBytes)

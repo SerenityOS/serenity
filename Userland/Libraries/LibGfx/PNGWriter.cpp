@@ -222,7 +222,7 @@ ByteBuffer PNGWriter::encode(Gfx::Bitmap const& bitmap)
     writer.add_IDAT_chunk(bitmap);
     writer.add_IEND_chunk();
     // FIXME: Handle OOM failure.
-    return ByteBuffer::copy(writer.m_data).release_value();
+    return MUST(ByteBuffer::copy(writer.m_data));
 }
 
 }

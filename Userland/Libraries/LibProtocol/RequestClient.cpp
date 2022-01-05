@@ -27,11 +27,12 @@ RefPtr<Request> RequestClient::start_request(String const& method, URL const& ur
     for (auto& it : request_headers)
         header_dictionary.add(it.key, it.value);
 
-    auto body_result = ByteBuffer::copy(request_body);
-    if (!body_result.has_value())
+    auto body_or_error = ByteBuffer::copy(request_body);
+    if (body_or_error.is_error()) // FIXME: Propagate error with ErrorOr
         return nullptr;
+    auto body = body_or_error.release_value();
 
-    auto response = IPCProxy::start_request(method, url, header_dictionary, body_result.release_value());
+    auto response = IPCProxy::start_request(method, url, header_dictionary, body);
     auto request_id = response.request_id();
     if (request_id < 0 || !response.response_fd().has_value())
         return nullptr;

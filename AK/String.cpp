@@ -177,7 +177,7 @@ ByteBuffer String::to_byte_buffer() const
     if (!m_impl)
         return {};
     // FIXME: Handle OOM failure.
-    return ByteBuffer::copy(bytes()).release_value();
+    return MUST(ByteBuffer::copy(bytes()));
 }
 
 template<typename T>

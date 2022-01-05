@@ -69,7 +69,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
 {
     VERIFY(!m_loaded);
     // FIXME: Handle OOM failure.
-    m_encoded_data = ByteBuffer::copy(data).release_value();
+    m_encoded_data = MUST(ByteBuffer::copy(data));
     m_response_headers = headers;
     m_status_code = move(status_code);
     m_loaded = true;

@@ -163,14 +163,15 @@ ErrorOr<void> ConnectionBase::drain_messages_from_peer()
         // Sometimes we might receive a partial message. That's okay, just stash away
         // the unprocessed bytes and we'll prepend them to the next incoming message
         // in the next run of this function.
-        auto maybe_remaining_bytes = ByteBuffer::copy(bytes.span().slice(index));
-        if (!maybe_remaining_bytes.has_value())
-            return Error::from_string_literal("drain_messages_from_peer: Failed to allocate buffer"sv);
         if (!m_unprocessed_bytes.is_empty()) {
             shutdown();
             return Error::from_string_literal("drain_messages_from_peer: Already have unprocessed bytes"sv);
         }
-        m_unprocessed_bytes = maybe_remaining_bytes.release_value();
+
+        auto remaining_bytes_or_error = ByteBuffer::copy(bytes.span().slice(index));
+        if (remaining_bytes_or_error.is_error())
+            return Error::from_string_literal("drain_messages_from_peer: Failed to allocate buffer"sv);
+        m_unprocessed_bytes = remaining_bytes_or_error.release_value();
     }
 
     if (!m_unprocessed_messages.is_empty()) {

@@ -27,9 +27,8 @@ void WebSocket::send(ByteBuffer binary_or_text_message, bool is_text)
 
 void WebSocket::send(StringView text_message)
 {
-    auto data_result = ByteBuffer::copy(text_message.bytes());
-    VERIFY(data_result.has_value());
-    send(data_result.release_value(), true);
+    auto data = MUST(ByteBuffer::copy(text_message.bytes())); // FIXME: Propagate error with ErrorOr
+    send(data, true);
 }
 
 void WebSocket::close(u16 code, String reason)

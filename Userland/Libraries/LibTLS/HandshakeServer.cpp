@@ -240,30 +240,30 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
 {
     auto dh_p_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(3)));
     auto dh_p = buffer.slice(5, dh_p_length);
-    auto p_result = ByteBuffer::copy(dh_p);
-    if (!p_result.has_value()) {
+    auto p_or_error = ByteBuffer::copy(dh_p);
+    if (p_or_error.is_error()) { // FIXME: Propagate error with ErrorOr
         dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
         return 0;
     }
-    m_context.server_diffie_hellman_params.p = p_result.release_value();
+    m_context.server_diffie_hellman_params.p = p_or_error.release_value();
 
     auto dh_g_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(5 + dh_p_length)));
     auto dh_g = buffer.slice(7 + dh_p_length, dh_g_length);
-    auto g_result = ByteBuffer::copy(dh_g);
-    if (!g_result.has_value()) {
+    auto g_or_error = ByteBuffer::copy(dh_g);
+    if (g_or_error.is_error()) { // FIXME: Propagate error with ErrorOr
         dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
         return 0;
     }
-    m_context.server_diffie_hellman_params.g = g_result.release_value();
+    m_context.server_diffie_hellman_params.g = g_or_error.release_value();
 
     auto dh_Ys_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(7 + dh_p_length + dh_g_length)));
     auto dh_Ys = buffer.slice(9 + dh_p_length + dh_g_length, dh_Ys_length);
-    auto Ys_result = ByteBuffer::copy(dh_Ys);
-    if (!Ys_result.has_value()) {
+    auto Ys_or_error = ByteBuffer::copy(dh_Ys);
+    if (Ys_or_error.is_error()) { // FIXME: Propagate error with ErrorOr
         dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
         return 0;
     }
-    m_context.server_diffie_hellman_params.Ys = Ys_result.release_value();
+    m_context.server_diffie_hellman_params.Ys = Ys_or_error.release_value();
 
     if constexpr (TLS_DEBUG) {
         dbgln("dh_p: {:hex-dump}", dh_p);

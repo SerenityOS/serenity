@@ -66,14 +66,14 @@ public:
 
     void encrypt(ReadonlyBytes in, Bytes out, ReadonlyBytes iv_in, ReadonlyBytes aad, Bytes tag)
     {
-        auto iv_buf_result = ByteBuffer::copy(iv_in);
+        auto iv_buffer_or_error = ByteBuffer::copy(iv_in);
         // Not enough memory to figure out :shrug:
-        if (!iv_buf_result.has_value()) {
+        if (iv_buffer_or_error.is_error()) { // FIXME: Propagate error with ErrorOr
             dbgln("GCM::encrypt: Not enough memory to allocate {} bytes for IV", iv_in.size());
             return;
         }
 
-        auto iv = iv_buf_result->bytes();
+        auto iv = iv_buffer_or_error.release_value().bytes();
 
         // Increment the IV for block 0
         CTR<T>::increment(iv);
@@ -96,12 +96,12 @@ public:
 
     VerificationConsistency decrypt(ReadonlyBytes in, Bytes out, ReadonlyBytes iv_in, ReadonlyBytes aad, ReadonlyBytes tag)
     {
-        auto iv_buf_result = ByteBuffer::copy(iv_in);
+        auto iv_buffer_or_error = ByteBuffer::copy(iv_in);
         // Not enough memory to figure out :shrug:
-        if (!iv_buf_result.has_value())
+        if (iv_buffer_or_error.is_error()) // FIXME: Propagate error with ErrorOr
             return VerificationConsistency::Inconsistent;
 
-        auto iv = iv_buf_result->bytes();
+        auto iv = iv_buffer_or_error.release_value().bytes();
 
         // Increment the IV for block 0
         CTR<T>::increment(iv);

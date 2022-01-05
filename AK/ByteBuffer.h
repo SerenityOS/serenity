@@ -90,9 +90,13 @@ public:
         return buffer;
     }
 
-    [[nodiscard]] static Optional<ByteBuffer> copy(ReadonlyBytes bytes)
+    [[nodiscard]] static ErrorOr<ByteBuffer> copy(ReadonlyBytes bytes)
     {
-        return copy(bytes.data(), bytes.size());
+        auto maybe_buffer = copy(bytes.data(), bytes.size());
+        if (!maybe_buffer.has_value())
+            return Error::from_errno(ENOMEM);
+        auto buffer = maybe_buffer.release_value();
+        return buffer;
     }
 
     template<size_t other_inline_capacity>
