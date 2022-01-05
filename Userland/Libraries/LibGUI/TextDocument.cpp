@@ -320,9 +320,18 @@ void TextDocument::notify_did_change()
 
 void TextDocument::set_all_cursors(const TextPosition& position)
 {
+    VERIFY(position.is_valid());
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
-            client->document_did_set_cursor(position);
+            client->document_did_set_selection(TextRange::from_position(position));
+    }
+}
+
+void TextDocument::set_all_selections(const TextRange& range)
+{
+    if (m_client_notifications_enabled) {
+        for (auto* client : m_clients)
+            client->document_did_set_selection(range);
     }
 }
 

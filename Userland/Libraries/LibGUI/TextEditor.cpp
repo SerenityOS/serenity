@@ -1868,9 +1868,14 @@ void TextEditor::document_did_set_text(AllowCallback allow_callback)
     document_did_change(allow_callback);
 }
 
-void TextEditor::document_did_set_cursor(TextPosition const& position)
+void TextEditor::document_did_set_selection(TextRange const& range)
 {
-    set_cursor(position);
+    VERIFY(range.start().is_valid() && range.end().is_valid());
+    if (range.is_valid()) {
+        set_selection(range);
+    } else {
+        set_cursor(range.start());
+    }
 }
 
 void TextEditor::cursor_did_change()

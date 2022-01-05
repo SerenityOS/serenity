@@ -249,7 +249,7 @@ private:
     virtual void document_did_remove_all_lines() override;
     virtual void document_did_change(AllowCallback = AllowCallback::Yes) override;
     virtual void document_did_set_text(AllowCallback = AllowCallback::Yes) override;
-    virtual void document_did_set_cursor(TextPosition const&) override;
+    virtual void document_did_set_selection(TextRange const&) override;
     virtual void document_did_update_undo_stack() override;
 
     // ^Syntax::HighlighterClient

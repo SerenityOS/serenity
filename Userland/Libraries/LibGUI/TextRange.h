@@ -19,6 +19,11 @@ public:
     {
     }
 
+    static TextRange from_position(const TextPosition& position)
+    {
+        return TextRange(position, position);
+    }
+
     bool is_valid() const { return m_start.is_valid() && m_end.is_valid() && m_start != m_end; }
     void clear()
     {

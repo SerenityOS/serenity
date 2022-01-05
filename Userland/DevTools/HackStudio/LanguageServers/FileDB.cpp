@@ -103,7 +103,7 @@ public:
     virtual void document_did_remove_all_lines() override {};
     virtual void document_did_change(GUI::AllowCallback) override {};
     virtual void document_did_set_text(GUI::AllowCallback) override {};
-    virtual void document_did_set_cursor(const GUI::TextPosition&) override {};
+    virtual void document_did_set_selection(const GUI::TextRange&) override {};
     virtual void document_did_update_undo_stack() override { }
 
     virtual bool is_automatic_indentation_enabled() const override { return false; }

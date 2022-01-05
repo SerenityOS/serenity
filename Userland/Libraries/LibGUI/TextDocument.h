@@ -47,7 +47,8 @@ public:
         virtual void document_did_remove_all_lines() = 0;
         virtual void document_did_change(AllowCallback = AllowCallback::Yes) = 0;
         virtual void document_did_set_text(AllowCallback = AllowCallback::Yes) = 0;
-        virtual void document_did_set_cursor(const TextPosition&) = 0;
+        // to communicate cursor position, use a range with start() == end() == cursor
+        virtual void document_did_set_selection(const TextRange&) = 0;
         virtual void document_did_update_undo_stack() = 0;
 
         virtual bool is_automatic_indentation_enabled() const = 0;
@@ -120,6 +121,7 @@ public:
 
     void notify_did_change();
     void set_all_cursors(const TextPosition&);
+    void set_all_selections(const TextRange&);
 
     TextPosition insert_at(const TextPosition&, u32, const Client* = nullptr);
     TextPosition insert_at(const TextPosition&, StringView, const Client* = nullptr);
