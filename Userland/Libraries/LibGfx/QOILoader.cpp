@@ -142,7 +142,7 @@ static ErrorOr<void> decode_qoi_end_marker(InputMemoryStream& stream)
     return {};
 }
 
-static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream, u32 width, u32 height)
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream, u32 width, u32 height, BitmapFormat format)
 {
     // FIXME: Why is Gfx::Bitmap's size signed? Makes no sense whatsoever.
     if (width > NumericLimits<int>::max())
@@ -150,7 +150,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
     if (height > NumericLimits<int>::max())
         return Error::from_string_literal("Cannot create bitmap for QOI image of valid size, height exceeds maximum Gfx::Bitmap height"sv);
 
-    auto bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRA8888, { width, height }));
+    auto bitmap = TRY(Bitmap::try_create(format, { width, height }));
 
     u8 run = 0;
     Color pixel = { 0, 0, 0, 255 };
@@ -188,11 +188,12 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
     return { move(bitmap) };
 }
 
-QOIImageDecoderPlugin::QOIImageDecoderPlugin(u8 const* data, size_t size)
+QOIImageDecoderPlugin::QOIImageDecoderPlugin(u8 const* data, size_t size, Optional<u8> channels_override)
 {
     m_context = make<QOILoadingContext>();
     m_context->data = data;
     m_context->data_size = size;
+    m_context->channels_override = channels_override;
 }
 
 IntSize QOIImageDecoderPlugin::size()
@@ -271,7 +272,20 @@ ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(InputMemor
 ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context(InputMemoryStream& stream)
 {
     VERIFY(m_context->state < QOILoadingContext::State::ImageDecoded);
-    auto error_or_bitmap = decode_qoi_image(stream, m_context->header.width, m_context->header.height);
+
+    BitmapFormat format;
+    switch (m_context->channels_override.value_or(m_context->header.channels)) {
+    case 3:
+        format = BitmapFormat::BGRx8888;
+        break;
+    case 4:
+        format = BitmapFormat::BGRA8888;
+        break;
+    default:
+        return Error::from_string_literal("Invalid QOI format"sv);
+    }
+
+    auto error_or_bitmap = decode_qoi_image(stream, m_context->header.width, m_context->header.height, format);
     if (error_or_bitmap.is_error()) {
         m_context->state = QOILoadingContext::State::Error;
         m_context->error = error_or_bitmap.release_error();

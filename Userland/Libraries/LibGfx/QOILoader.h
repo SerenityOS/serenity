@@ -33,6 +33,7 @@ struct QOILoadingContext {
     State state { State::NotDecoded };
     u8 const* data { nullptr };
     size_t data_size { 0 };
+    Optional<u8> channels_override;
     QOIHeader header {};
     RefPtr<Bitmap> bitmap;
     Optional<Error> error;
@@ -41,7 +42,7 @@ struct QOILoadingContext {
 class QOIImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     virtual ~QOIImageDecoderPlugin() override = default;
-    QOIImageDecoderPlugin(u8 const*, size_t);
+    QOIImageDecoderPlugin(u8 const*, size_t, Optional<u8> channels_override = {});
 
     virtual IntSize size() override;
     virtual void set_volatile() override;
