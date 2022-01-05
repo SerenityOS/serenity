@@ -2,7 +2,7 @@
 port=libjpeg
 version=9d
 useconfigure=true
-files="https://ijg.org/files/jpegsrc.v${version}.tar.gz jpeg-${version}.tar.gz 6c434a3be59f8f62425b2e3c077e785c9ce30ee5874ea1c270e843f273ba71ee"
+files="https://ijg.org/files/jpegsrc.v${version}.tar.gz jpeg-${version}.tar.gz 2303a6acfb6cc533e0e86e8a9d29f7e6079e118b9de3f96e07a71a11c082fa6a"
 auth_type=sha256
 workdir="jpeg-$version"
 
