@@ -39,6 +39,8 @@ using AK::SIMD::maskcount;
 using AK::SIMD::none;
 using AK::SIMD::store4_masked;
 using AK::SIMD::to_f32x4;
+using AK::SIMD::to_u32x4;
+using AK::SIMD::u32x4;
 
 constexpr static int edge_function(const IntVector2& a, const IntVector2& b, const IntVector2& c)
 {
@@ -56,24 +58,25 @@ constexpr static auto interpolate(const T& v0, const T& v1, const T& v2, const V
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
 
-ALWAYS_INLINE constexpr static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
+ALWAYS_INLINE static u32x4 to_rgba32(const Vector4<f32x4>& v)
 {
-    auto clamped = v.clamped(0, 1);
-    u8 r = clamped.x() * 255;
-    u8 g = clamped.y() * 255;
-    u8 b = clamped.z() * 255;
-    u8 a = clamped.w() * 255;
+    auto clamped = v.clamped(expand4(0.0f), expand4(1.0f));
+    auto r = to_u32x4(clamped.x() * 255);
+    auto g = to_u32x4(clamped.y() * 255);
+    auto b = to_u32x4(clamped.z() * 255);
+    auto a = to_u32x4(clamped.w() * 255);
+
     return a << 24 | r << 16 | g << 8 | b;
 }
 
-static FloatVector4 to_vec4(Gfx::RGBA32 rgba)
+static Vector4<f32x4> to_vec4(u32x4 rgba)
 {
-    auto constexpr one_over_255 = 1.0f / 255;
+    auto constexpr one_over_255 = expand4(1.0f / 255);
     return {
-        ((rgba >> 16) & 0xff) * one_over_255,
-        ((rgba >> 8) & 0xff) * one_over_255,
-        (rgba & 0xff) * one_over_255,
-        ((rgba >> 24) & 0xff) * one_over_255,
+        to_f32x4((rgba >> 16) & 0xff) * one_over_255,
+        to_f32x4((rgba >> 8) & 0xff) * one_over_255,
+        to_f32x4(rgba & 0xff) * one_over_255,
+        to_f32x4((rgba >> 24) & 0xff) * one_over_255,
     };
 }
 
@@ -428,26 +431,16 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                 &render_target.scanline(by + 1)[bx + 1],
             };
 
-            int bits = maskbits(quad.mask);
+            u32x4 dst_u32;
+            if (options.enable_blending || options.color_mask != 0xffffffff)
+                dst_u32 = load4_masked(color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
 
             if (options.enable_blending) {
                 INCREASE_STATISTICS_COUNTER(g_num_pixels_blended, maskcount(quad.mask));
 
                 // Blend color values from pixel_staging into render_target
-                FloatVector4 dst_aos[4] {
-                    bits & 1 ? to_vec4(*color_ptrs[0]) : FloatVector4 { 0, 0, 0, 0 },
-                    bits & 2 ? to_vec4(*color_ptrs[1]) : FloatVector4 { 0, 0, 0, 0 },
-                    bits & 4 ? to_vec4(*color_ptrs[2]) : FloatVector4 { 0, 0, 0, 0 },
-                    bits & 8 ? to_vec4(*color_ptrs[3]) : FloatVector4 { 0, 0, 0, 0 },
-                };
-
-                auto dst = Vector4<f32x4> {
-                    f32x4 { dst_aos[0].x(), dst_aos[1].x(), dst_aos[2].x(), dst_aos[3].x() },
-                    f32x4 { dst_aos[0].y(), dst_aos[1].y(), dst_aos[2].y(), dst_aos[3].y() },
-                    f32x4 { dst_aos[0].z(), dst_aos[1].z(), dst_aos[2].z(), dst_aos[3].z() },
-                    f32x4 { dst_aos[0].w(), dst_aos[1].w(), dst_aos[2].w(), dst_aos[3].w() },
-                };
                 Vector4<f32x4> const& src = quad.out_color;
+                auto dst = to_vec4(dst_u32);
 
                 auto src_factor = expand4(src_constant)
                     + src * src_factor_src_color
@@ -464,14 +457,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                 quad.out_color = src * src_factor + dst * dst_factor;
             }
 
-            if (bits & 1)
-                *color_ptrs[0] = to_rgba32(FloatVector4 { quad.out_color.x()[0], quad.out_color.y()[0], quad.out_color.z()[0], quad.out_color.w()[0] });
-            if (bits & 2)
-                *color_ptrs[1] = to_rgba32(FloatVector4 { quad.out_color.x()[1], quad.out_color.y()[1], quad.out_color.z()[1], quad.out_color.w()[1] });
-            if (bits & 4)
-                *color_ptrs[2] = to_rgba32(FloatVector4 { quad.out_color.x()[2], quad.out_color.y()[2], quad.out_color.z()[2], quad.out_color.w()[2] });
-            if (bits & 8)
-                *color_ptrs[3] = to_rgba32(FloatVector4 { quad.out_color.x()[3], quad.out_color.y()[3], quad.out_color.z()[3], quad.out_color.w()[3] });
+            if (options.color_mask == 0xffffffff)
+                store4_masked(to_rgba32(quad.out_color), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
+            else
+                store4_masked((to_rgba32(quad.out_color) & options.color_mask) | (dst_u32 & ~options.color_mask), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
         }
     }
 }
