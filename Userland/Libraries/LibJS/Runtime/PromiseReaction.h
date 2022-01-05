@@ -26,7 +26,6 @@ struct PromiseCapability {
         /* 1. If value is an abrupt completion, then */                                                                 \
         if (_temporary_try_or_reject_result.is_error()) {                                                               \
             vm.clear_exception();                                                                                       \
-            vm.stop_unwind();                                                                                           \
                                                                                                                         \
             /* a. Perform ? Call(capability.[[Reject]], undefined, « value.[[Value]] »). */                           \
             TRY(vm.call(*capability.reject, js_undefined(), *_temporary_try_or_reject_result.release_error().value())); \

@@ -1,4 +1,4 @@
-test("labeled plain scope", () => {
+test("labelled plain scope", () => {
     notused: test: alsonotused: {
         let o = 1;
         expect(o).toBe(1);
@@ -16,7 +16,7 @@ test("break on plain scope from inner scope", () => {
     }
 });
 
-test("labeled for loop with break", () => {
+test("labelled for loop with break", () => {
     let counter = 0;
     notused: outer: alsonotused: for (a of [1, 2, 3]) {
         for (b of [4, 5, 6]) {
@@ -27,7 +27,7 @@ test("labeled for loop with break", () => {
     expect(counter).toBe(4);
 });
 
-test("labeled for loop with continue", () => {
+test("labelled for loop with continue", () => {
     let counter = 0;
     notused: outer: alsonotused: for (a of [1, 2, 3]) {
         for (b of [4, 5, 6]) {
@@ -36,6 +36,32 @@ test("labeled for loop with continue", () => {
         }
     }
     expect(counter).toBe(6);
+});
+
+test("continue label statement is not an iteration statement", () => {
+    expect(() =>
+        eval(`
+outer: outer2: {
+    for (;;) {
+        continue outer;
+    }
+}`)
+    ).toThrowWithMessage(
+        SyntaxError,
+        "labelled continue statement cannot use non iterating statement (line: 4, column: 18)"
+    );
+
+    expect(() =>
+        eval(`
+for (;;) {
+    outer: outer2: {
+        continue outer;
+    }
+}`)
+    ).toThrowWithMessage(
+        SyntaxError,
+        "labelled continue statement cannot use non iterating statement (line: 4, column: 18)"
+    );
 });
 
 test("break on try catch statement", () => {
