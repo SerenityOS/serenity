@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2021-2022, Mustafa Quraish <mustafa@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,6 +36,8 @@ public:
 
     void open_image_fd(int fd, String const& path);
     void create_default_image();
+
+    bool request_close_editor();
     bool request_close();
 
 private:
