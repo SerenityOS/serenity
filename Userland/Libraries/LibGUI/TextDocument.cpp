@@ -630,11 +630,11 @@ Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(const Te
     }
     // Skip skippable spans
     for (; i < m_spans.size(); ++i) {
-        if (m_spans[i].is_skippable)
+        if (!m_spans[i].is_skippable)
             break;
     }
     if (i < m_spans.size())
-        return m_spans[i + 1];
+        return m_spans[i];
     return {};
 }
 
