@@ -75,14 +75,18 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    void remove_all_matching(TUnaryPredicate predicate)
+    bool remove_all_matching(TUnaryPredicate predicate)
     {
+        bool something_was_removed = false;
         for (auto it = begin(); it != end();) {
-            if (predicate(it->key, it->value))
+            if (predicate(it->key, it->value)) {
                 it = remove(it);
-            else
+                something_was_removed = true;
+            } else {
                 ++it;
+            }
         }
+        return something_was_removed;
     }
 
     using HashTableType = HashTable<Entry, EntryTraits, IsOrdered>;

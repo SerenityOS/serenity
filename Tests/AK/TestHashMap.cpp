@@ -82,17 +82,18 @@ TEST_CASE(remove_all_matching)
 
     EXPECT_EQ(map.size(), 4u);
 
-    map.remove_all_matching([&](int key, String const& value) {
-        return key == 1 || value == "Two";
-    });
+    EXPECT_EQ(map.remove_all_matching([&](int key, String const& value) { return key == 1 || value == "Two"; }), true);
 
     EXPECT_EQ(map.size(), 2u);
     EXPECT(map.contains(3));
     EXPECT(map.contains(4));
 
-    map.remove_all_matching([&](int, String const&) { return true; });
+    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return true; }), true);
+    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return false; }), false);
 
     EXPECT(map.is_empty());
+
+    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return true; }), false);
 }
 
 TEST_CASE(case_insensitive)

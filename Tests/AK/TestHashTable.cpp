@@ -95,13 +95,16 @@ TEST_CASE(table_remove_all_matching)
 
     EXPECT_EQ(ints.size(), 4u);
 
-    ints.remove_all_matching([&](int value) { return value > 2; });
+    EXPECT_EQ(ints.remove_all_matching([&](int value) { return value > 2; }), true);
+    EXPECT_EQ(ints.remove_all_matching([&](int) { return false; }), false);
 
     EXPECT_EQ(ints.size(), 2u);
 
-    ints.remove_all_matching([&](int) { return true; });
+    EXPECT_EQ(ints.remove_all_matching([&](int) { return true; }), true);
 
     EXPECT(ints.is_empty());
+
+    EXPECT_EQ(ints.remove_all_matching([&](int) { return true; }), false);
 }
 
 TEST_CASE(case_insensitive)
