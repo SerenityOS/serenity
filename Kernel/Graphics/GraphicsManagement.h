@@ -36,7 +36,8 @@ public:
     unsigned allocate_minor_device_number() { return m_current_minor_number++; };
     GraphicsManagement();
 
-    bool framebuffer_devices_allowed() const;
+    bool framebuffer_devices_console_only() const;
+    bool framebuffer_devices_use_bootloader_framebuffer() const;
     bool framebuffer_devices_exist() const;
 
     Spinlock& main_vga_lock() { return m_main_vga_lock; }
