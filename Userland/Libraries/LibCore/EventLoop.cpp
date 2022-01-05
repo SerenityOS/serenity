@@ -379,7 +379,7 @@ void EventLoop::spin_until(Function<bool()> goal_condition)
         pump();
 }
 
-void EventLoop::pump(WaitMode mode)
+size_t EventLoop::pump(WaitMode mode)
 {
     wait_for_event(mode);
 
@@ -389,6 +389,7 @@ void EventLoop::pump(WaitMode mode)
         events = move(m_queued_events);
     }
 
+    size_t processed_events = 0;
     for (size_t i = 0; i < events.size(); ++i) {
         auto& queued_event = events.at(i);
         auto receiver = queued_event.receiver.strong_ref();
@@ -400,7 +401,6 @@ void EventLoop::pump(WaitMode mode)
             switch (event.type()) {
             case Event::Quit:
                 VERIFY_NOT_REACHED();
-                return;
             default:
                 dbgln_if(EVENTLOOP_DEBUG, "Event type {} with no receiver :(", event.type());
                 break;
@@ -412,6 +412,7 @@ void EventLoop::pump(WaitMode mode)
             NonnullRefPtr<Object> protector(*receiver);
             receiver->dispatch_event(event);
         }
+        ++processed_events;
 
         if (m_exit_requested) {
             Threading::MutexLocker locker(m_private->lock);
@@ -422,9 +423,11 @@ void EventLoop::pump(WaitMode mode)
                 new_event_queue.unchecked_append(move(events[i]));
             new_event_queue.extend(move(m_queued_events));
             m_queued_events = move(new_event_queue);
-            return;
+            break;
         }
     }
+
+    return processed_events;
 }
 
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
