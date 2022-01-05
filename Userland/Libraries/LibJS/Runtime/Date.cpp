@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Time.h>
 #include <LibCore/DateTime.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
@@ -356,24 +357,18 @@ Value make_day(GlobalObject& global_object, Value year, Value month, Value date)
     // 4. Let dt be 𝔽(! ToIntegerOrInfinity(date)).
     auto dt = MUST(date.to_integer_or_infinity(global_object));
     // 5. Let ym be y + 𝔽(floor(ℝ(m) / 12)).
-    auto ym = Value(y + floor(m / 12));
+    auto ym = y + floor(m / 12);
     // 6. If ym is not finite, return NaN.
-    if (!ym.is_finite_number())
+    if (!Value(ym).is_finite_number())
         return js_nan();
     // 7. Let mn be 𝔽(ℝ(m) modulo 12).
-    // NOTE: This calculation has no side-effects and is unused, so we omit it
+    auto mn = modulo(m, 12);
 
     // 8. Find a finite time value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn and DateFromTime(t) is 1𝔽; but if this is not possible (because some argument is out of range), return NaN.
-    if (!AK::is_within_range<int>(y) || !AK::is_within_range<int>(m + 1))
+    if (!AK::is_within_range<int>(ym) || !AK::is_within_range<int>(mn + 1))
         return js_nan();
-    // FIXME: Core::DateTime assumes the argument values are in local time, which is not the case here.
-    //        Let mktime() think local time is UTC by temporarily overwriting the TZ environment variable,
-    //        so that the values are not adjusted. Core::DateTime should probably learn to deal with both
-    //        local time and UTC time itself.
-    auto* tz = getenv("TZ");
-    VERIFY(setenv("TZ", "UTC", 1) == 0);
-    auto t = Core::DateTime::create(static_cast<int>(y), static_cast<int>(m + 1), 1).timestamp() * 1000;
-    tz ? setenv("TZ", tz, 1) : unsetenv("TZ");
+    auto t = days_since_epoch(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * MS_PER_DAY;
+
     // 9. Return Day(t) + dt - 1𝔽.
     return Value(day(static_cast<double>(t)) + dt - 1);
 }
