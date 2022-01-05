@@ -375,12 +375,14 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
             quad.uv = interpolate(expand4(vertex0.tex_coord), expand4(vertex1.tex_coord), expand4(vertex2.tex_coord), quad.barycentrics);
 
-            // Calculate depth of fragment for fog
-            //
-            // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
-            // eye-coordinate distance from the eye to each fragment center by |Ze|."
+            if (options.fog_enabled) {
+                // Calculate depth of fragment for fog
+                //
+                // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
+                // eye-coordinate distance from the eye to each fragment center by |Ze|."
 
-            quad.fog_depth = interpolate(expand4(vertex0_eye_absz), expand4(vertex1_eye_absz), expand4(vertex2_eye_absz), quad.barycentrics);
+                quad.fog_depth = interpolate(expand4(vertex0_eye_absz), expand4(vertex1_eye_absz), expand4(vertex2_eye_absz), quad.barycentrics);
+            }
 
             pixel_shader(quad);
 
