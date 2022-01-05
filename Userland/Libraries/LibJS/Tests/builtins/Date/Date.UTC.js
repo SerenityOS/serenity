@@ -1,3 +1,7 @@
+test("length is 7", () => {
+    expect(Date.UTC).toHaveLength(7);
+});
+
 test("basic functionality", () => {
     expect(Date.UTC(2020)).toBe(1577836800000);
     expect(Date.UTC(2000, 10)).toBe(973036800000);
