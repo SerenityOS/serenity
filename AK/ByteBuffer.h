@@ -153,11 +153,6 @@ public:
         m_size = 0;
     }
 
-    ALWAYS_INLINE void ensure_capacity(size_t new_capacity)
-    {
-        MUST(try_ensure_capacity(new_capacity));
-    }
-
     ErrorOr<void> try_resize(size_t new_size)
     {
         if (new_size <= m_size) {
