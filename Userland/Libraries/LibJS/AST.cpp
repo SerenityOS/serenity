@@ -66,6 +66,11 @@ String ASTNode::class_name() const
     return demangle(typeid(*this).name()).substring(4);
 }
 
+static void print_indent(int indent)
+{
+    out("{}", String::repeated(' ', indent * 2));
+}
+
 static void update_function_name(Value value, FlyString const& name)
 {
     if (!value.is_function())
@@ -102,6 +107,110 @@ Completion ScopeNode::evaluate_statements(Interpreter& interpreter, GlobalObject
             break;
     }
     return completion;
+}
+
+// 14.13.4 Runtime Semantics: LabelledEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-labelledevaluation
+// BreakableStatement : IterationStatement
+static Completion labelled_evaluation(Interpreter& interpreter, GlobalObject& global_object, IterationStatement const& statement, Vector<FlyString> const& label_set)
+{
+    // 1. Let stmtResult be LoopEvaluation of IterationStatement with argument labelSet.
+    auto result = statement.loop_evaluation(interpreter, global_object, label_set);
+
+    // 2. If stmtResult.[[Type]] is break, then
+    if (result.type() == Completion::Type::Break) {
+        // a. If stmtResult.[[Target]] is empty, then
+        if (!result.target().has_value()) {
+            // i. If stmtResult.[[Value]] is empty, set stmtResult to NormalCompletion(undefined).
+            // ii. Else, set stmtResult to NormalCompletion(stmtResult.[[Value]]).
+            result = normal_completion(result.value().value_or(js_undefined()));
+        }
+    }
+
+    // 3. Return Completion(stmtResult).
+    return result;
+}
+
+// 14.13.4 Runtime Semantics: LabelledEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-labelledevaluation
+// BreakableStatement : SwitchStatement
+static Completion labelled_evaluation(Interpreter& interpreter, GlobalObject& global_object, SwitchStatement const& statement, Vector<FlyString> const&)
+{
+    // 1. Let stmtResult be the result of evaluating SwitchStatement.
+    auto result = statement.execute_impl(interpreter, global_object);
+
+    // 2. If stmtResult.[[Type]] is break, then
+    if (result.type() == Completion::Type::Break) {
+        // a. If stmtResult.[[Target]] is empty, then
+        if (!result.target().has_value()) {
+            // i. If stmtResult.[[Value]] is empty, set stmtResult to NormalCompletion(undefined).
+            // ii. Else, set stmtResult to NormalCompletion(stmtResult.[[Value]]).
+            result = normal_completion(result.value().value_or(js_undefined()));
+        }
+    }
+
+    // 3. Return Completion(stmtResult).
+    return result;
+}
+
+// 14.13.4 Runtime Semantics: LabelledEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-labelledevaluation
+// LabelledStatement : LabelIdentifier : LabelledItem
+static Completion labelled_evaluation(Interpreter& interpreter, GlobalObject& global_object, LabelledStatement const& statement, Vector<FlyString> const& label_set)
+{
+    auto const& labelled_item = *statement.labelled_item();
+
+    // 1. Let label be the StringValue of LabelIdentifier.
+    auto const& label = statement.label();
+
+    // 2. Let newLabelSet be the list-concatenation of labelSet and « label ».
+    // Optimization: Avoid vector copy if possible.
+    Optional<Vector<FlyString>> new_label_set;
+    if (is<IterationStatement>(labelled_item) || is<SwitchStatement>(labelled_item) || is<LabelledStatement>(labelled_item)) {
+        new_label_set = label_set;
+        new_label_set->append(label);
+    }
+
+    // 3. Let stmtResult be LabelledEvaluation of LabelledItem with argument newLabelSet.
+    Completion result;
+    if (is<IterationStatement>(labelled_item))
+        result = labelled_evaluation(interpreter, global_object, static_cast<IterationStatement const&>(labelled_item), *new_label_set);
+    else if (is<SwitchStatement>(labelled_item))
+        result = labelled_evaluation(interpreter, global_object, static_cast<SwitchStatement const&>(labelled_item), *new_label_set);
+    else if (is<LabelledStatement>(labelled_item))
+        result = labelled_evaluation(interpreter, global_object, static_cast<LabelledStatement const&>(labelled_item), *new_label_set);
+    else
+        result = labelled_item.execute(interpreter, global_object);
+
+    // 4. If stmtResult.[[Type]] is break and SameValue(stmtResult.[[Target]], label) is true, then
+    if (result.type() == Completion::Type::Break && result.target() == label) {
+        // a. Set stmtResult to NormalCompletion(stmtResult.[[Value]]).
+        result = normal_completion(result.value());
+    }
+
+    // 5. Return Completion(stmtResult).
+    return result;
+}
+
+// 14.13.3 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-evaluation
+Completion LabelledStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    InterpreterNodeScope node_scope { interpreter, *this };
+
+    // 1. Let newLabelSet be a new empty List.
+    // 2. Return LabelledEvaluation of this LabelledStatement with argument newLabelSet.
+    return labelled_evaluation(interpreter, global_object, *this, {});
+}
+
+void LabelledStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent + 1);
+    outln("(Label)");
+    print_indent(indent + 2);
+    outln("\"{}\"", m_label);
+
+    print_indent(indent + 1);
+    outln("(Labelled item)");
+    m_labelled_item->dump(indent + 2);
 }
 
 // 10.2.1.3 Runtime Semantics: EvaluateBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatebody
@@ -1762,11 +1871,6 @@ ThrowCompletionOr<Value> ClassDeclaration::binding_class_declaration_evaluation(
 
     // 6. Return value.
     return value;
-}
-
-static void print_indent(int indent)
-{
-    out("{}", String::repeated(' ', indent * 2));
 }
 
 void ASTNode::dump(int indent) const

@@ -86,6 +86,29 @@ public:
     }
 };
 
+// 14.13 Labelled Statements, https://tc39.es/ecma262/#sec-labelled-statements
+class LabelledStatement : public Statement {
+public:
+    LabelledStatement(SourceRange source_range, FlyString label, NonnullRefPtr<Statement> labelled_item)
+        : Statement(source_range)
+        , m_label(move(label))
+        , m_labelled_item(move(labelled_item))
+    {
+    }
+
+    virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+    FlyString const& label() const { return m_label; }
+    FlyString& label() { return m_label; }
+    NonnullRefPtr<Statement> const& labelled_item() const { return m_labelled_item; }
+    NonnullRefPtr<Statement>& labelled_item() { return m_labelled_item; }
+
+private:
+    FlyString m_label;
+    NonnullRefPtr<Statement> m_labelled_item;
+};
+
 class LabelableStatement : public Statement {
 public:
     using Statement::Statement;
