@@ -1,0 +1,11 @@
+--- liboggz-1.1.1/config.sub.orig	2022-01-05 23:56:43.372206851 +0100
++++ liboggz-1.1.1/config.sub	2022-01-05 23:57:54.265540213 +0100
+@@ -1266,7 +1266,7 @@
+ 	# The portable systems comes first.
+ 	# Each alternative MUST END IN A *, to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+-	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -serenity* | -irix* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -solaris* | -sym* \
+ 	      | -kopensolaris* \
