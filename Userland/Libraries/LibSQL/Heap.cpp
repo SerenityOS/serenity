@@ -111,7 +111,7 @@ ErrorOr<void> Heap::write_block(u32 block, ByteBuffer& buffer)
     }
     auto sz = buffer.size();
     if (sz < BLOCKSIZE) {
-        if (buffer.try_resize(BLOCKSIZE).is_error()) {
+        if (buffer.resize(BLOCKSIZE).is_error()) {
             warnln("Heap({})::write_block({}): Could not align block of size {} to {}"sv, name(), block, buffer.size(), BLOCKSIZE);
             return Error::from_string_literal("Heap()::write_block(): Could not align block"sv);
         }

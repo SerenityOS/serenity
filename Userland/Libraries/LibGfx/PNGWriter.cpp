@@ -21,7 +21,7 @@ public:
     explicit PNGChunk(String);
     auto const& data() const { return m_data; };
     String const& type() const { return m_type; };
-    void reserve(size_t bytes) { MUST(m_data.try_ensure_capacity(bytes)); } // FIXME: Handle error
+    void reserve(size_t bytes) { MUST(m_data.ensure_capacity(bytes)); } // FIXME: Handle error
 
     template<typename T>
     void add_as_big_endian(T);

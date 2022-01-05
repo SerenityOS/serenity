@@ -76,7 +76,7 @@ public:
         m_current_length += bytes;
 
         if (m_packet_data.size() < m_current_length) {
-            MUST(m_packet_data.try_resize(m_current_length)); // FIXME: Propagate error
+            MUST(m_packet_data.resize(m_current_length)); // FIXME: Propagate error
         }
 
         m_packet_data.overwrite(old_length, data, bytes);

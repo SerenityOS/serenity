@@ -739,7 +739,7 @@ ParseResult<CustomSection> CustomSection::parse(InputStream& stream)
         return name.error();
 
     ByteBuffer data_buffer;
-    if (data_buffer.try_resize(64).is_error())
+    if (data_buffer.resize(64).is_error())
         return ParseError::OutOfMemory;
 
     while (!stream.has_any_error() && !stream.unreliable_eof()) {

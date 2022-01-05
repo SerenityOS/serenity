@@ -29,7 +29,7 @@ public:
 
     ByteBuffer(ByteBuffer const& other)
     {
-        MUST(try_resize(other.size()));
+        MUST(resize(other.size()));
         VERIFY(m_size == other.size());
         __builtin_memcpy(data(), other.data(), other.size());
     }
@@ -55,7 +55,7 @@ public:
             if (other.size() <= m_size) {
                 trim_unchecked(other.size(), true);
             } else {
-                MUST(try_resize(other.size()));
+                MUST(resize(other.size()));
             }
             __builtin_memcpy(data(), other.data(), other.size());
         }
@@ -65,7 +65,7 @@ public:
     [[nodiscard]] static ErrorOr<ByteBuffer> create_uninitialized(size_t size)
     {
         auto buffer = ByteBuffer();
-        TRY(buffer.try_resize(size));
+        TRY(buffer.resize(size));
         return buffer;
     }
 
@@ -153,22 +153,22 @@ public:
         m_size = 0;
     }
 
-    ErrorOr<void> try_resize(size_t new_size)
+    ErrorOr<void> resize(size_t new_size)
     {
         if (new_size <= m_size) {
             trim_unchecked(new_size, false);
             return {};
         }
-        TRY(try_ensure_capacity(new_size));
+        TRY(ensure_capacity(new_size));
         m_size = new_size;
         return {};
     }
 
-    ErrorOr<void> try_ensure_capacity(size_t new_capacity)
+    ErrorOr<void> ensure_capacity(size_t new_capacity)
     {
         if (new_capacity <= capacity())
             return {};
-        return try_ensure_capacity_slowpath(new_capacity);
+        return ensure_capacity_slowpath(new_capacity);
     }
 
     ErrorOr<void> append(ReadonlyBytes bytes)
@@ -182,7 +182,7 @@ public:
             return {};
         VERIFY(data != nullptr);
         int old_size = size();
-        TRY(try_resize(size() + data_size));
+        TRY(resize(size() + data_size));
         __builtin_memcpy(this->data() + old_size, data, data_size);
         return {};
     }
@@ -244,7 +244,7 @@ private:
         m_inline = true;
     }
 
-    NEVER_INLINE ErrorOr<void> try_ensure_capacity_slowpath(size_t new_capacity)
+    NEVER_INLINE ErrorOr<void> ensure_capacity_slowpath(size_t new_capacity)
     {
         new_capacity = kmalloc_good_size(new_capacity);
         auto* new_buffer = (u8*)kmalloc(new_capacity);

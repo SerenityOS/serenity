@@ -28,13 +28,13 @@ inline ErrorOr<void> StringBuilder::will_append(size_t size)
     Checked<size_t> expanded_capacity = needed_capacity;
     expanded_capacity *= 2;
     VERIFY(!expanded_capacity.has_overflow());
-    TRY(m_buffer.try_ensure_capacity(expanded_capacity.value()));
+    TRY(m_buffer.ensure_capacity(expanded_capacity.value()));
     return {};
 }
 
 StringBuilder::StringBuilder(size_t initial_capacity)
 {
-    MUST(m_buffer.try_ensure_capacity(initial_capacity)); // FIXME: Handle error
+    MUST(m_buffer.ensure_capacity(initial_capacity)); // FIXME: Handle error
 }
 
 ErrorOr<void> StringBuilder::try_append(StringView string)

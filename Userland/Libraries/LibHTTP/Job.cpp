@@ -342,7 +342,7 @@ void Job::on_socket_connected()
             if (m_content_length.has_value()) {
                 auto length = m_content_length.value();
                 if (m_received_size + payload.size() >= length) {
-                    MUST(payload.try_resize(length - m_received_size)); // FIXME: Propagate error
+                    MUST(payload.resize(length - m_received_size)); // FIXME: Propagate error
                     read_everything = true;
                 }
             }
