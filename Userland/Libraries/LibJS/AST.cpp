@@ -590,6 +590,29 @@ Completion WithStatement::execute(Interpreter& interpreter, GlobalObject& global
     return result.update_empty(js_undefined());
 }
 
+// 14.7.1.1 LoopContinues ( completion, labelSet ), https://tc39.es/ecma262/#sec-loopcontinues
+static bool loop_continues(Completion const& completion, Vector<FlyString> const& label_set)
+{
+    // 1. If completion.[[Type]] is normal, return true.
+    if (completion.type() == Completion::Type::Normal)
+        return true;
+
+    // 2. If completion.[[Type]] is not continue, return false.
+    if (completion.type() != Completion::Type::Continue)
+        return false;
+
+    // 3. If completion.[[Target]] is empty, return true.
+    if (!completion.target().has_value())
+        return true;
+
+    // 4. If completion.[[Target]] is an element of labelSet, return true.
+    if (label_set.contains_slow(*completion.target()))
+        return true;
+
+    // 5. Return false.
+    return false;
+}
+
 // 14.7.3.2 Runtime Semantics: WhileLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-whileloopevaluation
 Completion WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
