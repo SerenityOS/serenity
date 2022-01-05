@@ -30,15 +30,6 @@ namespace JS {
 class Identifier;
 struct BindingPattern;
 
-enum class ScopeType {
-    None,
-    Function,
-    Block,
-    Try,
-    Breakable,
-    Continuable,
-};
-
 class VM : public RefCounted<VM> {
 public:
     struct CustomData {
@@ -169,29 +160,6 @@ public:
     u32 execution_generation() const { return m_execution_generation; }
     void finish_execution_generation() { ++m_execution_generation; }
 
-    void unwind(ScopeType type, FlyString label = {})
-    {
-        m_unwind_until = type;
-        m_unwind_until_label = move(label);
-    }
-    void stop_unwind()
-    {
-        m_unwind_until = ScopeType::None;
-        m_unwind_until_label = {};
-    }
-    bool should_unwind_until(ScopeType type, Vector<FlyString> const& labels) const
-    {
-        if (m_unwind_until_label.is_null())
-            return m_unwind_until == type;
-        return m_unwind_until == type && any_of(labels.begin(), labels.end(), [&](FlyString const& label) {
-            return m_unwind_until_label == label;
-        });
-    }
-    bool should_unwind() const { return m_unwind_until != ScopeType::None; }
-
-    ScopeType unwind_until() const { return m_unwind_until; }
-    FlyString unwind_until_label() const { return m_unwind_until_label; }
-
     ThrowCompletionOr<Reference> resolve_binding(FlyString const&, Environment* = nullptr);
     ThrowCompletionOr<Reference> get_identifier_reference(Environment*, FlyString, bool strict, size_t hops = 0);
 
@@ -294,8 +262,6 @@ private:
     Vector<Vector<ExecutionContext*>> m_saved_execution_context_stacks;
 
     Value m_last_value;
-    ScopeType m_unwind_until { ScopeType::None };
-    FlyString m_unwind_until_label;
 
     StackInfo m_stack_info;
 
