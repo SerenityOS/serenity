@@ -29,10 +29,11 @@ public:
     Optional<ByteBuffer> create_aligned_buffer(size_t input_size) const
     {
         size_t remainder = (input_size + T::block_size()) % T::block_size();
-        if (remainder == 0)
-            return ByteBuffer::create_uninitialized(input_size);
-        else
-            return ByteBuffer::create_uninitialized(input_size + T::block_size() - remainder);
+        size_t buffer_size = input_size + (remainder == 0 ? 0 : T::block_size() - remainder);
+        auto buffer = ByteBuffer::create_uninitialized(buffer_size);
+        if (buffer.is_error()) // FIXME: Propagate error
+            return {};
+        return buffer.release_value();
     }
 
     virtual String class_name() const = 0;

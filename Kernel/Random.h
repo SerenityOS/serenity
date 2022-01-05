@@ -31,7 +31,7 @@ public:
 
     // FIXME: Do something other than VERIFY()'ing inside Optional in case of OOM.
     FortunaPRNG()
-        : m_counter(ByteBuffer::create_zeroed(BlockType::block_size()).release_value())
+        : m_counter(MUST(ByteBuffer::create_zeroed(BlockType::block_size())))
     {
     }
 

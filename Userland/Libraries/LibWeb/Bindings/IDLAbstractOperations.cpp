@@ -108,14 +108,15 @@ Optional<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
         return ByteBuffer {};
 
     // 8. Let bytes be a new byte sequence of length equal to length.
-    auto bytes = ByteBuffer::create_zeroed(length);
-    if (!bytes.has_value())
+    auto bytes_or_error = ByteBuffer::create_zeroed(length);
+    if (bytes_or_error.is_error()) // FIXME: Propagate error
         return {};
+    auto bytes = bytes_or_error.release_value();
 
     // 9. For i in the range offset to offset + length − 1, inclusive, set bytes[i − offset] to ! GetValueFromBuffer(esArrayBuffer, i, Uint8, true, Unordered).
     for (u64 i = offset; i <= offset + length - 1; ++i) {
         auto value = es_array_buffer->get_value<u8>(i, true, JS::ArrayBuffer::Unordered);
-        (*bytes)[i - offset] = (u8)value.as_u32();
+        bytes[i - offset] = (u8)value.as_u32();
     }
 
     // 10. Return bytes.

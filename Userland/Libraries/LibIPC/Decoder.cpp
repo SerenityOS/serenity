@@ -116,20 +116,12 @@ ErrorOr<void> Decoder::decode(ByteBuffer& value)
     i32 length;
     TRY(decode(length));
 
-    if (length < 0) {
-        value = {};
-        return {};
-    }
-    if (length == 0) {
+    if (length <= 0) {
         value = {};
         return {};
     }
 
-    if (auto buffer_result = ByteBuffer::create_uninitialized(length); buffer_result.has_value())
-        value = buffer_result.release_value();
-    else
-        return Error::from_errno(ENOMEM);
-
+    value = TRY(ByteBuffer::create_uninitialized(length));
     m_stream >> value.bytes();
     return m_stream.try_handle_any_error();
 }

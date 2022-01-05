@@ -1645,7 +1645,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                         }
                 } else {
                     auto entry_result = ByteBuffer::create_uninitialized(line_end + ifs.length());
-                    if (!entry_result.has_value()) {
+                    if (entry_result.is_error()) {
                         loop.quit(Break);
                         notifier->set_enabled(false);
                         return Break;
@@ -1737,7 +1737,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
 
             if (!stream.eof()) {
                 auto entry_result = ByteBuffer::create_uninitialized(stream.size());
-                if (!entry_result.has_value()) {
+                if (entry_result.is_error()) {
                     shell->raise_error(Shell::ShellError::OutOfMemory, {}, position());
                     return;
                 }

@@ -71,7 +71,7 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
         pcm_bits_per_sample(m_sample_format), sample_format_name(m_sample_format));
 
     auto sample_data_result = ByteBuffer::create_zeroed(bytes_to_read);
-    if (!sample_data_result.has_value())
+    if (sample_data_result.is_error())
         return LoaderError { LoaderError::Category::IO, static_cast<size_t>(m_loaded_samples), "Couldn't allocate sample buffer" };
     auto sample_data = sample_data_result.release_value();
     m_stream->read_or_error(sample_data.bytes());

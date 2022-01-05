@@ -270,7 +270,7 @@ bool Parser::initialize_hint_tables()
         auto total_size = primary_size + overflow_size;
 
         auto buffer_result = ByteBuffer::create_uninitialized(total_size);
-        if (!buffer_result.has_value())
+        if (buffer_result.is_error()) // FIXME: Propagate error
             return false;
         possible_merged_stream_buffer = buffer_result.release_value();
         auto ok = !possible_merged_stream_buffer.try_append(primary_hint_stream->bytes()).is_error();

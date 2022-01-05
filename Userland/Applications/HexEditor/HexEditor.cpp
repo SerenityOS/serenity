@@ -28,7 +28,7 @@
 
 HexEditor::HexEditor()
     : m_blink_timer(Core::Timer::construct())
-    , m_document(make<HexDocumentMemory>(ByteBuffer::create_zeroed(0).release_value()))
+    , m_document(make<HexDocumentMemory>(MUST(ByteBuffer::create_zeroed(0)))) // FIXME: Do something sensible if this fails because of OOM.
 {
     set_should_hide_unnecessary_scrollbars(true);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
@@ -60,7 +60,7 @@ void HexEditor::set_readonly(bool readonly)
 bool HexEditor::open_new_file(size_t size)
 {
     auto maybe_buffer = ByteBuffer::create_zeroed(size);
-    if (!maybe_buffer.has_value()) {
+    if (maybe_buffer.is_error()) { // FIXME: Propagate error
         return false;
     }
 

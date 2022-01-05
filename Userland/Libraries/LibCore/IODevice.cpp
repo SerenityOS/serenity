@@ -49,7 +49,7 @@ ByteBuffer IODevice::read(size_t max_size)
 
     auto size = min(max_size, m_buffered_data.size());
     auto buffer_result = ByteBuffer::create_uninitialized(size);
-    if (!buffer_result.has_value()) {
+    if (buffer_result.is_error()) { // FIXME: Propagate error
         dbgln("IODevice::read: Not enough memory to allocate a buffer of {} bytes", size);
         return {};
     }
@@ -174,7 +174,7 @@ String IODevice::read_line(size_t max_size)
         return line;
     }
     auto line_result = ByteBuffer::create_uninitialized(max_size + 1);
-    if (!line_result.has_value()) {
+    if (line_result.is_error()) { // FIXME: Propagate error
         dbgln("IODevice::read_line: Not enough memory to allocate a buffer of {} bytes", max_size + 1);
         return {};
     }
@@ -202,7 +202,7 @@ bool IODevice::populate_read_buffer(size_t size) const
         return false;
 
     auto buffer_result = ByteBuffer::create_uninitialized(size);
-    if (!buffer_result.has_value()) {
+    if (buffer_result.is_error()) { // FIXME: Propagate error
         dbgln("IODevice::populate_read_buffer: Not enough memory to allocate a buffer of {} bytes", size);
         return {};
     }

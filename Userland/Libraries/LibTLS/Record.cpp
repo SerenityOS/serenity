@@ -104,7 +104,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
             if (m_context.crypto.created == 1) {
                 // `buffer' will continue to be encrypted
                 auto buffer_result = ByteBuffer::create_uninitialized(length);
-                if (!buffer_result.has_value()) {
+                if (buffer_result.is_error()) { // FIXME: Propagate error
                     dbgln("LibTLS: Failed to allocate enough memory");
                     VERIFY_NOT_REACHED();
                 }
@@ -124,7 +124,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         VERIFY(is_aead());
                         // We need enough space for a header, the data, a tag, and the IV
                         auto ct_buffer_result = ByteBuffer::create_uninitialized(length + header_size + iv_size + 16);
-                        if (!ct_buffer_result.has_value()) {
+                        if (ct_buffer_result.is_error()) { // FIXME: Propagate error
                             dbgln("LibTLS: Failed to allocate enough memory for the ciphertext");
                             VERIFY_NOT_REACHED();
                         }
@@ -178,7 +178,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         VERIFY(!is_aead());
                         // We need enough space for a header, iv_length bytes of IV and whatever the packet contains
                         auto ct_buffer_result = ByteBuffer::create_uninitialized(length + header_size + iv_size);
-                        if (!ct_buffer_result.has_value()) {
+                        if (ct_buffer_result.is_error()) { // FIXME: Propagate error
                             dbgln("LibTLS: Failed to allocate enough memory for the ciphertext");
                             VERIFY_NOT_REACHED();
                         }
@@ -201,7 +201,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         VERIFY(buffer_position == buffer.size());
 
                         auto iv_buffer_result = ByteBuffer::create_uninitialized(iv_size);
-                        if (!iv_buffer_result.has_value()) {
+                        if (iv_buffer_result.is_error()) { // FIXME: Propagate error
                             dbgln("LibTLS: Failed to allocate memory for IV");
                             VERIFY_NOT_REACHED();
                         }
@@ -367,7 +367,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 auto packet_length = length - iv_length() - 16;
                 auto payload = plain;
                 auto decrypted_result = ByteBuffer::create_uninitialized(packet_length);
-                if (!decrypted_result.has_value()) {
+                if (decrypted_result.is_error()) {
                     dbgln("Failed to allocate memory for the packet");
                     return_value = Error::DecryptionFailed;
                     return;

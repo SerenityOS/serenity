@@ -927,7 +927,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
         return false;
     }
     auto buffer_result = ByteBuffer::create_zeroed(buffer_size);
-    if (!buffer_result.has_value()) {
+    if (buffer_result.is_error()) { // FIXME: Propagate error
         dbgln("Not enough memory for buffer allocation");
         return false;
     }

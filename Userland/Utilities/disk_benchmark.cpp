@@ -95,11 +95,12 @@ int main(int argc, char** argv)
             if (block_size > file_size)
                 continue;
 
-            auto buffer_result = ByteBuffer::create_uninitialized(block_size);
-            if (!buffer_result.has_value()) {
+            auto buffer_or_error = ByteBuffer::create_uninitialized(block_size);
+            if (buffer_or_error.is_error()) { // FIXME: Propagate error
                 warnln("Not enough memory to allocate space for block size = {}", block_size);
                 continue;
             }
+            auto buffer = buffer_or_error.release_value();
             Vector<Result> results;
 
             outln("Running: file_size={} block_size={}", file_size, block_size);
@@ -107,7 +108,7 @@ int main(int argc, char** argv)
             while (timer.elapsed() < time_per_benchmark * 1000) {
                 out(".");
                 fflush(stdout);
-                auto result = benchmark(filename, file_size, block_size, *buffer_result, allow_cache);
+                auto result = benchmark(filename, file_size, block_size, buffer, allow_cache);
                 if (!result.has_value())
                     return 1;
                 results.append(result.release_value());

@@ -61,7 +61,7 @@ TEST_CASE(file_read_bytes)
     auto file = maybe_file.release_value();
 
     auto maybe_buffer = ByteBuffer::create_uninitialized(131);
-    EXPECT(maybe_buffer.has_value());
+    EXPECT(!maybe_buffer.is_error());
     auto buffer = maybe_buffer.release_value();
 
     auto result = file.read(buffer);
@@ -85,7 +85,7 @@ TEST_CASE(file_seeking_around)
     EXPECT_EQ(file.size().release_value(), 8702);
 
     auto maybe_buffer = ByteBuffer::create_uninitialized(16);
-    EXPECT(maybe_buffer.has_value());
+    EXPECT(!maybe_buffer.is_error());
     auto buffer = maybe_buffer.release_value();
 
     StringView buffer_contents { buffer.bytes() };
@@ -118,7 +118,7 @@ TEST_CASE(file_adopt_fd)
     EXPECT_EQ(file.size().release_value(), 8702);
 
     auto maybe_buffer = ByteBuffer::create_uninitialized(16);
-    EXPECT(maybe_buffer.has_value());
+    EXPECT(!maybe_buffer.is_error());
     auto buffer = maybe_buffer.release_value();
 
     StringView buffer_contents { buffer.bytes() };
@@ -169,8 +169,7 @@ TEST_CASE(tcp_socket_read)
     EXPECT(client_socket.can_read_without_blocking(100).release_value());
     EXPECT_EQ(client_socket.pending_bytes().release_value(), sent_data.length());
 
-    auto maybe_receive_buffer = ByteBuffer::create_uninitialized(64);
-    auto receive_buffer = maybe_receive_buffer.release_value();
+    auto receive_buffer = MUST(ByteBuffer::create_uninitialized(64));
     auto maybe_nread = client_socket.read(receive_buffer);
     EXPECT(!maybe_nread.is_error());
     auto nread = maybe_nread.release_value();
@@ -201,7 +200,7 @@ TEST_CASE(tcp_socket_write)
     EXPECT(client_socket.write_or_error({ sent_data.characters_without_null_termination(), sent_data.length() }));
     client_socket.close();
 
-    auto receive_buffer = ByteBuffer::create_uninitialized(64).release_value();
+    auto receive_buffer = MUST(ByteBuffer::create_uninitialized(64));
     auto maybe_nread = server_socket.read(receive_buffer);
     EXPECT(!maybe_nread.is_error());
     auto nread = maybe_nread.release_value();
@@ -235,8 +234,7 @@ TEST_CASE(tcp_socket_eof)
     EXPECT(client_socket.can_read_without_blocking(100).release_value());
     EXPECT_EQ(client_socket.pending_bytes().release_value(), 0ul);
 
-    auto maybe_receive_buffer = ByteBuffer::create_uninitialized(1);
-    auto receive_buffer = maybe_receive_buffer.release_value();
+    auto receive_buffer = MUST(ByteBuffer::create_uninitialized(1));
     EXPECT_EQ(client_socket.read(receive_buffer).release_value(), 0ul);
     EXPECT(client_socket.is_eof());
 }
@@ -278,11 +276,10 @@ TEST_CASE(udp_socket_read_write)
     EXPECT_EQ(client_socket.pending_bytes().release_value(), udp_reply_data.length());
 
     // Testing that supplying a smaller buffer than required causes a failure.
-    auto small_buffer = ByteBuffer::create_uninitialized(8).release_value();
+    auto small_buffer = MUST(ByteBuffer::create_uninitialized(8));
     EXPECT_EQ(client_socket.read(small_buffer).error().code(), EMSGSIZE);
 
-    auto maybe_client_receive_buffer = ByteBuffer::create_uninitialized(64);
-    auto client_receive_buffer = maybe_client_receive_buffer.release_value();
+    auto client_receive_buffer = MUST(ByteBuffer::create_uninitialized(64));
     auto maybe_nread = client_socket.read(client_receive_buffer);
     EXPECT(!maybe_nread.is_error());
     auto nread = maybe_nread.release_value();
@@ -322,8 +319,7 @@ TEST_CASE(local_socket_read)
             EXPECT(client_socket.can_read_without_blocking(100).release_value());
             EXPECT_EQ(client_socket.pending_bytes().release_value(), sent_data.length());
 
-            auto maybe_receive_buffer = ByteBuffer::create_uninitialized(64);
-            auto receive_buffer = maybe_receive_buffer.release_value();
+            auto receive_buffer = MUST(ByteBuffer::create_uninitialized(64));
             auto maybe_nread = client_socket.read(receive_buffer);
             EXPECT(!maybe_nread.is_error());
             auto nread = maybe_nread.release_value();
@@ -388,7 +384,7 @@ TEST_CASE(buffered_long_file_read)
     EXPECT(!maybe_buffered_file.is_error());
     auto file = maybe_buffered_file.release_value();
 
-    auto buffer = ByteBuffer::create_uninitialized(4096).release_value();
+    auto buffer = MUST(ByteBuffer::create_uninitialized(4096));
     EXPECT(!file.seek(255, Core::Stream::SeekMode::SetPosition).is_error());
     EXPECT(file.can_read_line().release_value());
     auto maybe_nread = file.read_line(buffer);
@@ -418,7 +414,7 @@ TEST_CASE(buffered_small_file_read)
     };
 
     // Testing that we don't read out of bounds when the entire file fits into the buffer
-    auto buffer = ByteBuffer::create_uninitialized(4096).release_value();
+    auto buffer = MUST(ByteBuffer::create_uninitialized(4096));
     for (auto const& line : expected_lines) {
         VERIFY(file.can_read_line().release_value());
         auto maybe_nread = file.read_line(buffer);
@@ -459,7 +455,7 @@ TEST_CASE(buffered_tcp_socket_read)
 
     EXPECT(client_socket.can_read_without_blocking(100).release_value());
 
-    auto receive_buffer = ByteBuffer::create_uninitialized(64).release_value();
+    auto receive_buffer = MUST(ByteBuffer::create_uninitialized(64));
 
     auto maybe_first_nread = client_socket.read_line(receive_buffer);
     EXPECT(!maybe_first_nread.is_error());

@@ -61,31 +61,32 @@ public:
         return *this;
     }
 
-    [[nodiscard]] static Optional<ByteBuffer> create_uninitialized(size_t size)
+    [[nodiscard]] static ErrorOr<ByteBuffer> create_uninitialized(size_t size)
     {
         auto buffer = ByteBuffer();
-        if (buffer.try_resize(size).is_error())
-            return {};
-        return { move(buffer) };
+        TRY(buffer.try_resize(size));
+        return buffer;
     }
 
-    [[nodiscard]] static Optional<ByteBuffer> create_zeroed(size_t size)
+    [[nodiscard]] static ErrorOr<ByteBuffer> create_zeroed(size_t size)
     {
-        auto buffer_result = create_uninitialized(size);
-        if (!buffer_result.has_value())
-            return {};
-
-        auto& buffer = buffer_result.value();
+        auto buffer = TRY(create_uninitialized(size));
         buffer.zero_fill();
-        VERIFY(size == 0 || (buffer[0] == 0 && buffer[size - 1] == 0));
-        return buffer_result;
+
+        if (size != 0 && !(buffer[0] == 0 && buffer[size - 1] == 0))
+            return Error::from_string_literal("ByteBuffer: could not zero out buffer");
+
+        return buffer;
     }
 
     [[nodiscard]] static Optional<ByteBuffer> copy(void const* data, size_t size)
     {
-        auto buffer = create_uninitialized(size);
-        if (buffer.has_value() && size != 0)
-            __builtin_memcpy(buffer->data(), data, size);
+        auto maybe_buffer = create_uninitialized(size);
+        if (maybe_buffer.is_error())
+            return {};
+        auto buffer = maybe_buffer.release_value();
+        if (size != 0)
+            __builtin_memcpy(buffer.data(), data, size);
         return buffer;
     }
 

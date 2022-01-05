@@ -243,7 +243,7 @@ void Heap::update_zero_block()
     }
 
     // FIXME: Handle an OOM failure here.
-    auto buffer = ByteBuffer::create_zeroed(BLOCKSIZE).release_value();
+    auto buffer = MUST(ByteBuffer::create_zeroed(BLOCKSIZE));
     buffer.overwrite(0, FILE_ID.characters_without_null_termination(), FILE_ID.length());
     buffer.overwrite(VERSION_OFFSET, &m_version, sizeof(u32));
     buffer.overwrite(SCHEMAS_ROOT_OFFSET, &m_schemas_root, sizeof(u32));

@@ -45,8 +45,8 @@ Optional<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
     // FIXME: Integrate this padding into AK/Hex?
 
     auto output_result = ByteBuffer::create_zeroed(bytes.size() / 2 + 1);
-    if (!output_result.has_value())
-        return output_result;
+    if (output_result.is_error()) // FIXME: Propagate error
+        return {};
 
     auto output = output_result.release_value();
 

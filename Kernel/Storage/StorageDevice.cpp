@@ -62,10 +62,7 @@ ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKern
     off_t pos = whole_blocks * block_size();
 
     if (remaining > 0) {
-        auto data_result = ByteBuffer::create_uninitialized(block_size());
-        if (!data_result.has_value())
-            return ENOMEM;
-        auto data = data_result.release_value();
+        auto data = TRY(ByteBuffer::create_uninitialized(block_size()));
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
         auto read_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size()));
         auto result = read_request->wait();
@@ -133,7 +130,7 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
     // then write the whole block back to the disk.
     if (remaining > 0) {
         // FIXME: Do something sensible with this OOM scenario.
-        auto data = ByteBuffer::create_zeroed(block_size()).release_value();
+        auto data = TRY(ByteBuffer::create_zeroed(block_size()));
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
 
         {

@@ -527,11 +527,9 @@ public:
         if (!stream.is_open())
             return ENOTCONN;
 
-        auto maybe_buffer = ByteBuffer::create_uninitialized(buffer_size);
-        if (!maybe_buffer.has_value())
-            return ENOMEM;
+        auto buffer = TRY(ByteBuffer::create_uninitialized(buffer_size));
 
-        return BufferedType<T> { move(stream), maybe_buffer.release_value() };
+        return BufferedType<T> { move(stream), buffer };
     }
 
     T& stream() { return m_stream; }

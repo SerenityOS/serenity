@@ -55,7 +55,8 @@ static bool test_single(const Testcase& testcase)
     }
 
     // Setup
-    ByteBuffer actual = ByteBuffer::create_uninitialized(SANDBOX_CANARY_SIZE + testcase.dest_n + SANDBOX_CANARY_SIZE).release_value();
+    // FIXME: Handle possible OOM
+    ByteBuffer actual = MUST(ByteBuffer::create_uninitialized(SANDBOX_CANARY_SIZE + testcase.dest_n + SANDBOX_CANARY_SIZE));
     fill_with_random(actual.data(), actual.size());
     ByteBuffer expected = actual;
     VERIFY(actual.offset_pointer(0) != expected.offset_pointer(0));

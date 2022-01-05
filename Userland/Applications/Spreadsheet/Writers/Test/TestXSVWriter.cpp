@@ -18,7 +18,7 @@ TEST_CASE(can_write)
         { 7, 8, 9 },
     };
 
-    auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
+    auto buffer = MUST(ByteBuffer::create_uninitialized(1024));
     OutputMemoryStream stream { buffer };
 
     Writer::CSV csv(stream, data);
@@ -39,7 +39,7 @@ TEST_CASE(can_write_with_header)
         { 7, 8, 9 },
     };
 
-    auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
+    auto buffer = MUST(ByteBuffer::create_uninitialized(1024));
     OutputMemoryStream stream { buffer };
 
     Writer::CSV csv(stream, data, { "A", "B\"", "C" });
@@ -60,7 +60,7 @@ TEST_CASE(can_write_with_different_behaviors)
         { "We\"ll", "Hello,", "   Friends" },
     };
 
-    auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
+    auto buffer = MUST(ByteBuffer::create_uninitialized(1024));
     OutputMemoryStream stream { buffer };
 
     Writer::CSV csv(stream, data, { "A", "B\"", "C" }, Writer::WriterBehavior::QuoteOnlyInFieldStart | Writer::WriterBehavior::WriteHeaders);

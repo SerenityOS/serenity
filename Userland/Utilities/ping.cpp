@@ -128,7 +128,7 @@ int main(int argc, char** argv)
 
     for (;;) {
         auto ping_packet_result = ByteBuffer::create_zeroed(sizeof(struct icmphdr) + payload_size);
-        if (!ping_packet_result.has_value()) {
+        if (ping_packet_result.is_error()) {
             warnln("failed to allocate a large enough buffer for the ping packet");
             return 1;
         }
@@ -163,8 +163,8 @@ int main(int argc, char** argv)
         for (;;) {
             // FIXME: IPv4 headers are not actually fixed-size, handle other sizes.
             auto pong_packet_result = ByteBuffer::create_uninitialized(sizeof(struct ip) + sizeof(struct icmphdr) + payload_size);
-            if (!pong_packet_result.has_value()) {
-                warnln("failed to allocate a large enough buffer for the pong packet");
+            if (pong_packet_result.is_error()) { // FIXME: Propagate error
+                warnln("Failed to allocate a large enough buffer for the pong packet");
                 return 1;
             }
             auto& pong_packet = pong_packet_result.value();

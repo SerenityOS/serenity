@@ -123,7 +123,7 @@ ErrorOr<void> NVMeController::identify_and_init_namespaces()
 
     RefPtr<Memory::PhysicalPage> prp_dma_buffer;
     OwnPtr<Memory::Region> prp_dma_region;
-    auto namespace_data_struct = ByteBuffer::create_zeroed(NVMe_IDENTIFY_SIZE).release_value();
+    auto namespace_data_struct = TRY(ByteBuffer::create_zeroed(NVMe_IDENTIFY_SIZE));
     u32 active_namespace_list[NVMe_IDENTIFY_SIZE / sizeof(u32)];
 
     {

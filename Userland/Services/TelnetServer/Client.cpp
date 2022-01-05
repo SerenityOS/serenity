@@ -72,10 +72,7 @@ ErrorOr<void> Client::drain_socket()
 {
     NonnullRefPtr<Client> protect(*this);
 
-    auto maybe_buffer = ByteBuffer::create_uninitialized(1024);
-    if (!maybe_buffer.has_value())
-        return ENOMEM;
-    auto buffer = maybe_buffer.release_value();
+    auto buffer = TRY(ByteBuffer::create_uninitialized(1024));
 
     while (TRY(m_socket.can_read_without_blocking())) {
         auto nread = TRY(m_socket.read(buffer));
@@ -195,10 +192,8 @@ ErrorOr<void> Client::send_command(Command command)
 
 ErrorOr<void> Client::send_commands(Vector<Command> commands)
 {
-    auto maybe_buffer = ByteBuffer::create_uninitialized(commands.size() * 3);
-    if (!maybe_buffer.has_value())
-        return ENOMEM;
-    auto buffer = maybe_buffer.release_value();
+    auto buffer = TRY(ByteBuffer::create_uninitialized(commands.size() * 3));
+
     OutputMemoryStream stream { buffer };
 
     for (auto& command : commands)

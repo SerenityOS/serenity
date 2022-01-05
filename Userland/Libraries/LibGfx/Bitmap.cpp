@@ -241,7 +241,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_from_serialized_byte_buffer(By
 ByteBuffer Bitmap::serialize_to_byte_buffer() const
 {
     // FIXME: Somehow handle possible OOM situation here.
-    auto buffer = ByteBuffer::create_uninitialized(sizeof(size_t) + 4 * sizeof(unsigned) + sizeof(BitmapFormat) + sizeof(RGBA32) * palette_size(m_format) + size_in_bytes()).release_value();
+    auto buffer = MUST(ByteBuffer::create_uninitialized(sizeof(size_t) + 4 * sizeof(unsigned) + sizeof(BitmapFormat) + sizeof(RGBA32) * palette_size(m_format) + size_in_bytes()));
     OutputMemoryStream stream { buffer };
 
     auto write = [&]<typename T>(T value) {
