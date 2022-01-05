@@ -12,6 +12,7 @@
 #include <LibTest/TestRunner.h>
 #include <signal.h>
 #include <spawn.h>
+#include <stdlib.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -255,6 +256,7 @@ FileResult TestRunner::run_test_file(const String& test_path)
 
 int main(int argc, char** argv)
 {
+
     auto program_name = LexicalPath::basename(argv[0]);
 
 #ifdef SIGINFO
@@ -274,6 +276,7 @@ int main(int argc, char** argv)
 #endif
     bool print_json = false;
     bool print_all_output = false;
+    bool run_benchmarks = false;
     const char* specified_test_root = nullptr;
     String test_glob;
     String exclude_pattern;
@@ -297,6 +300,7 @@ int main(int argc, char** argv)
     });
     args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
     args_parser.add_option(print_all_output, "Show all test output", "verbose", 'v');
+    args_parser.add_option(run_benchmarks, "Run benchmarks as well", "benchmarks", 'b');
     args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
     args_parser.add_option(exclude_pattern, "Regular expression to use to exclude paths from being considered tests", "exclude-pattern", 'e', "pattern");
     args_parser.add_option(config_file, "Configuration file to use", "config-file", 'c', "filename");
@@ -308,6 +312,12 @@ int main(int argc, char** argv)
     if (getenv("DISABLE_DBG_OUTPUT")) {
         AK::set_debug_enabled(false);
     }
+
+    // Make UBSAN deadly for all tests we run by default.
+    setenv("UBSAN_OPTIONS", "halt_on_error=1", true);
+
+    if (!run_benchmarks)
+        setenv("TESTS_ONLY", "1", true);
 
     String test_root;
 
