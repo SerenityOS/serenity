@@ -74,6 +74,17 @@ public:
         return false;
     }
 
+    template<typename TUnaryPredicate>
+    void remove_all_matching(TUnaryPredicate predicate)
+    {
+        for (auto it = begin(); it != end();) {
+            if (predicate(it->key, it->value))
+                it = remove(it);
+            else
+                ++it;
+        }
+    }
+
     using HashTableType = HashTable<Entry, EntryTraits, IsOrdered>;
     using IteratorType = typename HashTableType::Iterator;
     using ConstIteratorType = typename HashTableType::ConstIterator;
@@ -180,9 +191,9 @@ public:
         return find(value) != end();
     }
 
-    void remove(IteratorType it)
+    IteratorType remove(IteratorType it)
     {
-        m_table.remove(it);
+        return m_table.remove(it);
     }
 
     V& ensure(const K& key)
