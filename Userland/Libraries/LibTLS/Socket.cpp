@@ -28,13 +28,23 @@ Optional<ByteBuffer> TLSv12::read()
 
 ByteBuffer TLSv12::read(size_t max_size)
 {
-    if (m_context.application_buffer.size()) {
-        auto length = min(m_context.application_buffer.size(), max_size);
-        auto buf = m_context.application_buffer.slice(0, length);
-        m_context.application_buffer = m_context.application_buffer.slice(length, m_context.application_buffer.size() - length);
-        return buf;
-    }
-    return {};
+    if (!m_context.application_buffer.size())
+        return {};
+
+    auto length = min(m_context.application_buffer.size(), max_size);
+
+    auto buffer_or_error = m_context.application_buffer.slice(0, length);
+    if (buffer_or_error.is_error()) // FIXME: Propagate error with ErrorOr.
+        return {};
+    auto buffer = buffer_or_error.release_value();
+
+    auto new_application_buffer_or_error = m_context.application_buffer.slice(length, m_context.application_buffer.size() - length);
+    if (new_application_buffer_or_error.is_error()) // FIXME: Propagate error with ErrorOr.
+        return {};
+    auto new_application_buffer = new_application_buffer_or_error.release_value();
+
+    m_context.application_buffer = new_application_buffer;
+    return buffer;
 }
 
 String TLSv12::read_line(size_t max_size)
@@ -52,7 +62,13 @@ String TLSv12::read_line(size_t max_size)
         return {};
 
     String line { bit_cast<char const*>(start), offset, Chomp };
-    m_context.application_buffer = m_context.application_buffer.slice(offset + 1, m_context.application_buffer.size() - offset - 1);
+
+    auto new_application_buffer_or_error = m_context.application_buffer.slice(offset + 1, m_context.application_buffer.size() - offset - 1);
+    if (new_application_buffer_or_error.is_error()) // FIXME: Propagate error with ErrorOr.
+        return {};
+    auto new_application_buffer = new_application_buffer_or_error.release_value();
+
+    m_context.application_buffer = new_application_buffer;
 
     return line;
 }

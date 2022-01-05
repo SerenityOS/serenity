@@ -34,7 +34,7 @@ void Job::flush_received_buffers()
             continue;
         }
         VERIFY(written < payload.size());
-        payload = payload.slice(written, payload.size() - written);
+        payload = MUST(payload.slice(written, payload.size() - written)); // FIXME: Handle error
         return;
     }
 }

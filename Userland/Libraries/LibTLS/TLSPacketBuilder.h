@@ -85,7 +85,7 @@ public:
     {
         auto length = m_current_length;
         m_current_length = 0;
-        return m_packet_data.slice(0, length);
+        return MUST(m_packet_data.slice(0, length)); // FIXME: Propagate error
     }
     inline void set(size_t offset, u8 value)
     {

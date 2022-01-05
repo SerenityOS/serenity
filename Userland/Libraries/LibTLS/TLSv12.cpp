@@ -90,7 +90,7 @@ void TLSv12::consume(ReadonlyBytes record)
     }
 
     if (index) {
-        m_context.message_buffer = m_context.message_buffer.slice(index, m_context.message_buffer.size() - index);
+        m_context.message_buffer = MUST(m_context.message_buffer.slice(index, m_context.message_buffer.size() - index)); // FIXME: Handle error
     }
 }
 

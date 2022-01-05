@@ -98,7 +98,7 @@ void Job::flush_received_buffers()
             continue;
         }
         VERIFY(written < payload.size());
-        payload = payload.slice(written, payload.size() - written);
+        payload = MUST(payload.slice(written, payload.size() - written)); // FIXME: Handle error
         break;
     }
     dbgln_if(JOB_DEBUG, "Job: Flushing received buffers done: have {} bytes in {} buffers for {}", m_buffered_size, m_received_buffers.size(), m_request.url());

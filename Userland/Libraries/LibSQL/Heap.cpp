@@ -202,7 +202,7 @@ constexpr static int USER_VALUES_OFFSET = 32;
 ErrorOr<void> Heap::read_zero_block()
 {
     auto buffer = TRY(read_block(0));
-    auto file_id_buffer = buffer.slice(0, FILE_ID.length());
+    auto file_id_buffer = TRY(buffer.slice(0, FILE_ID.length()));
     auto file_id = StringView(file_id_buffer);
     if (file_id != FILE_ID) {
         warnln("{}: Zero page corrupt. This is probably not a {} heap file"sv, name(), FILE_ID);

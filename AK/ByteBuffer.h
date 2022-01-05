@@ -135,13 +135,13 @@ public:
     [[nodiscard]] void* end_pointer() { return data() + m_size; }
     [[nodiscard]] void const* end_pointer() const { return data() + m_size; }
 
-    // FIXME: Make this function handle failures too.
-    [[nodiscard]] ByteBuffer slice(size_t offset, size_t size) const
+    [[nodiscard]] ErrorOr<ByteBuffer> slice(size_t offset, size_t size) const
     {
         // I cannot hand you a slice I don't have
-        VERIFY(offset + size <= this->size());
+        if (offset + size > this->size())
+            return Error::from_string_literal("ByteBuffer: slice out of bounds");
 
-        return MUST(copy(offset_pointer(offset), size));
+        return TRY(copy(offset_pointer(offset), size));
     }
 
     void clear()
