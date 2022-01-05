@@ -245,9 +245,14 @@ PanicMode CommandLine::panic_mode(Validate should_validate) const
     return PanicMode::Halt;
 }
 
-UNMAP_AFTER_INIT bool CommandLine::are_framebuffer_devices_enabled() const
+UNMAP_AFTER_INIT auto CommandLine::are_framebuffer_devices_enabled() const -> FrameBufferDevices
 {
-    return lookup("fbdev"sv).value_or("on"sv) == "on"sv;
+    const auto fbdev_value = lookup("fbdev"sv).value_or("on"sv);
+    if (fbdev_value == "on"sv)
+        return FrameBufferDevices::Enabled;
+    if (fbdev_value == "bootloader"sv)
+        return FrameBufferDevices::BootloaderOnly;
+    return FrameBufferDevices::ConsoleOnly;
 }
 
 StringView CommandLine::userspace_init() const

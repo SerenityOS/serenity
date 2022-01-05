@@ -36,9 +36,14 @@ UNMAP_AFTER_INIT GraphicsManagement::GraphicsManagement()
 {
 }
 
-bool GraphicsManagement::framebuffer_devices_allowed() const
+bool GraphicsManagement::framebuffer_devices_use_bootloader_framebuffer() const
 {
-    return kernel_command_line().are_framebuffer_devices_enabled();
+    return kernel_command_line().are_framebuffer_devices_enabled() == CommandLine::FrameBufferDevices::BootloaderOnly;
+}
+
+bool GraphicsManagement::framebuffer_devices_console_only() const
+{
+    return kernel_command_line().are_framebuffer_devices_enabled() == CommandLine::FrameBufferDevices::ConsoleOnly;
 }
 
 void GraphicsManagement::deactivate_graphical_mode()
@@ -73,7 +78,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
     auto add_and_configure_adapter = [&](GenericGraphicsAdapter& graphics_device) {
         m_graphics_devices.append(graphics_device);
-        if (!framebuffer_devices_allowed()) {
+        if (framebuffer_devices_console_only()) {
             graphics_device.enable_consoles();
             return;
         }
@@ -81,52 +86,63 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     };
 
     RefPtr<GenericGraphicsAdapter> adapter;
-    switch (device_identifier.hardware_id().vendor_id) {
-    case PCI::VendorID::QEMUOld:
-        if (device_identifier.hardware_id().device_id == 0x1111)
-            adapter = BochsGraphicsAdapter::initialize(device_identifier);
-        break;
-    case PCI::VendorID::VirtualBox:
-        if (device_identifier.hardware_id().device_id == 0xbeef)
-            adapter = BochsGraphicsAdapter::initialize(device_identifier);
-        break;
-    case PCI::VendorID::Intel:
-        adapter = IntelNativeGraphicsAdapter::initialize(device_identifier);
-        break;
-    case PCI::VendorID::VirtIO:
-        dmesgln("Graphics: Using VirtIO console");
-        adapter = Graphics::VirtIOGPU::GraphicsAdapter::initialize(device_identifier);
-        break;
-    default:
-        if (!is_vga_compatible_pci_device(device_identifier))
-            break;
-        // Note: Although technically possible that a system has a
-        // non-compatible VGA graphics device that was initialized by the
-        // Multiboot bootloader to provide a framebuffer, in practice we
-        // probably want to support these devices natively instead of
-        // initializing them as some sort of a generic GenericGraphicsAdapter. For now,
-        // the only known example of this sort of device is qxl in QEMU. For VGA
-        // compatible devices we don't have a special driver for (e.g. ati-vga,
-        // qxl-vga, cirrus-vga, vmware-svga in QEMU), it's much more likely that
-        // these devices will be supported by the Multiboot loader that will
-        // utilize VESA BIOS extensions (that we don't currently) of these cards
-        // support, so we want to utilize the provided framebuffer of these
-        // devices, if possible.
-        if (!m_vga_adapter && PCI::is_io_space_enabled(device_identifier.address())) {
-            if (multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
-                dmesgln("Graphics: Using a preset resolution from the bootloader");
-                adapter = VGACompatibleAdapter::initialize_with_preset_resolution(device_identifier,
-                    multiboot_framebuffer_addr,
-                    multiboot_framebuffer_width,
-                    multiboot_framebuffer_height,
-                    multiboot_framebuffer_pitch);
-            }
-        } else {
-            dmesgln("Graphics: Using a VGA compatible generic adapter");
-            adapter = VGACompatibleAdapter::initialize(device_identifier);
+
+    auto create_bootloader_framebuffer_device = [&]() {
+        if (multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+            dmesgln("Graphics: Using a preset resolution from the bootloader");
+            adapter = VGACompatibleAdapter::initialize_with_preset_resolution(device_identifier,
+                multiboot_framebuffer_addr,
+                multiboot_framebuffer_width,
+                multiboot_framebuffer_height,
+                multiboot_framebuffer_pitch);
         }
-        break;
+    };
+
+    if (framebuffer_devices_use_bootloader_framebuffer())
+        create_bootloader_framebuffer_device();
+
+    if (!adapter) {
+        switch (device_identifier.hardware_id().vendor_id) {
+        case PCI::VendorID::QEMUOld:
+            if (device_identifier.hardware_id().device_id == 0x1111)
+                adapter = BochsGraphicsAdapter::initialize(device_identifier);
+            break;
+        case PCI::VendorID::VirtualBox:
+            if (device_identifier.hardware_id().device_id == 0xbeef)
+                adapter = BochsGraphicsAdapter::initialize(device_identifier);
+            break;
+        case PCI::VendorID::Intel:
+            adapter = IntelNativeGraphicsAdapter::initialize(device_identifier);
+            break;
+        case PCI::VendorID::VirtIO:
+            dmesgln("Graphics: Using VirtIO console");
+            adapter = Graphics::VirtIOGPU::GraphicsAdapter::initialize(device_identifier);
+            break;
+        default:
+            if (!is_vga_compatible_pci_device(device_identifier))
+                break;
+            //  Note: Although technically possible that a system has a
+            //  non-compatible VGA graphics device that was initialized by the
+            //  Multiboot bootloader to provide a framebuffer, in practice we
+            //  probably want to support these devices natively instead of
+            //  initializing them as some sort of a generic GenericGraphicsAdapter. For now,
+            //  the only known example of this sort of device is qxl in QEMU. For VGA
+            //  compatible devices we don't have a special driver for (e.g. ati-vga,
+            //  qxl-vga, cirrus-vga, vmware-svga in QEMU), it's much more likely that
+            //  these devices will be supported by the Multiboot loader that will
+            //  utilize VESA BIOS extensions (that we don't currently) of these cards
+            //  support, so we want to utilize the provided framebuffer of these
+            //  devices, if possible.
+            if (!m_vga_adapter && PCI::is_io_space_enabled(device_identifier.address())) {
+                create_bootloader_framebuffer_device();
+            } else {
+                dmesgln("Graphics: Using a VGA compatible generic adapter");
+                adapter = VGACompatibleAdapter::initialize(device_identifier);
+            }
+            break;
+        }
     }
+
     if (!adapter)
         return false;
     add_and_configure_adapter(*adapter);
@@ -179,8 +195,10 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      * be created, so SystemServer will not try to initialize WindowServer.
      */
 
-    if (!framebuffer_devices_allowed())
-        dbgln("Forcing non-initialization of framebuffer devices");
+    if (framebuffer_devices_console_only())
+        dbgln("Forcing non-initialization of framebuffer devices (console only)");
+    else if (framebuffer_devices_use_bootloader_framebuffer())
+        dbgln("Forcing use of framebuffer set up by the bootloader");
 
     PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
         // Note: Each graphics controller will try to set its native screen resolution

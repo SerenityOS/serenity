@@ -52,6 +52,12 @@ public:
         No,
     };
 
+    enum class FrameBufferDevices {
+        Enabled,
+        ConsoleOnly,
+        BootloaderOnly
+    };
+
     [[nodiscard]] const String& string() const { return m_string; }
     Optional<StringView> lookup(StringView key) const;
     [[nodiscard]] bool contains(StringView key) const;
@@ -65,7 +71,7 @@ public:
     [[nodiscard]] bool is_vmmouse_enabled() const;
     [[nodiscard]] PCIAccessLevel pci_access_level() const;
     [[nodiscard]] bool is_legacy_time_enabled() const;
-    [[nodiscard]] bool are_framebuffer_devices_enabled() const;
+    [[nodiscard]] FrameBufferDevices are_framebuffer_devices_enabled() const;
     [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] StringView system_mode() const;
