@@ -241,6 +241,7 @@ namespace JS {
     P(global)                                \
     P(globalThis)                            \
     P(group)                                 \
+    P(groupBy)                               \
     P(groupCollapsed)                        \
     P(groupEnd)                              \
     P(groups)                                \
