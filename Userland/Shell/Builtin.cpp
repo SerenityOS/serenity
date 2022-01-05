@@ -1028,13 +1028,20 @@ int Shell::builtin_unset(int argc, const char** argv)
     if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
+    bool did_touch_path = false;
     for (auto& value : vars) {
+        if (!did_touch_path && value == "PATH"sv)
+            did_touch_path = true;
+
         if (lookup_local_variable(value)) {
             unset_local_variable(value);
         } else {
             unsetenv(value);
         }
     }
+
+    if (did_touch_path)
+        cache_path();
 
     return 0;
 }
