@@ -35,7 +35,7 @@ SecretString::SecretString(ByteBuffer&& buffer)
     // append a NUL terminator here if there isn't already one.
     if (m_secure_buffer.is_empty() || (m_secure_buffer[m_secure_buffer.size() - 1] != 0)) {
         u8 nul = '\0';
-        m_secure_buffer.append(&nul, 1);
+        MUST(m_secure_buffer.append(&nul, 1));
     }
 }
 

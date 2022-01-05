@@ -34,7 +34,7 @@ inline ErrorOr<void> StringBuilder::will_append(size_t size)
 
 StringBuilder::StringBuilder(size_t initial_capacity)
 {
-    m_buffer.ensure_capacity(initial_capacity);
+    MUST(m_buffer.try_ensure_capacity(initial_capacity)); // FIXME: Handle error
 }
 
 ErrorOr<void> StringBuilder::try_append(StringView string)
@@ -42,14 +42,14 @@ ErrorOr<void> StringBuilder::try_append(StringView string)
     if (string.is_empty())
         return {};
     TRY(will_append(string.length()));
-    TRY(m_buffer.try_append(string.characters_without_null_termination(), string.length()));
+    TRY(m_buffer.append(string.characters_without_null_termination(), string.length()));
     return {};
 }
 
 ErrorOr<void> StringBuilder::try_append(char ch)
 {
     TRY(will_append(1));
-    TRY(m_buffer.try_append(&ch, 1));
+    TRY(m_buffer.append(&ch, 1));
     return {};
 }
 

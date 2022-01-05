@@ -141,7 +141,7 @@ private:
     {
         if constexpr (SQL_DEBUG)
             dump(ptr, sz, "(out) =>");
-        m_buffer.append(ptr, sz);
+        MUST(m_buffer.append(ptr, sz)); // FIXME: Propagate error
         m_current_offset += sz;
     }
 

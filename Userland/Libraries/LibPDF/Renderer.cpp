@@ -69,12 +69,12 @@ void Renderer::render()
         auto contents = object_cast<ArrayObject>(m_page.contents);
         for (auto& ref : *contents) {
             auto bytes = m_document->resolve_to<StreamObject>(ref)->bytes();
-            byte_buffer.append(bytes.data(), bytes.size());
+            MUST(byte_buffer.append(bytes.data(), bytes.size())); // FIXME: Propagate error
         }
     } else {
         VERIFY(m_page.contents->is_stream());
         auto bytes = object_cast<StreamObject>(m_page.contents)->bytes();
-        byte_buffer.append(bytes.data(), bytes.size());
+        MUST(byte_buffer.append(bytes.data(), bytes.size())); // FIXME: Propagate error
     }
 
     auto commands = Parser::parse_graphics_commands(byte_buffer);

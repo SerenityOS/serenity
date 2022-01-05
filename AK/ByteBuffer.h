@@ -181,19 +181,12 @@ public:
         return try_ensure_capacity_slowpath(new_capacity);
     }
 
-    void append(ReadonlyBytes bytes)
+    ErrorOr<void> append(ReadonlyBytes bytes)
     {
-        MUST(try_append(bytes));
+        return append(bytes.data(), bytes.size());
     }
 
-    void append(void const* data, size_t data_size) { append({ data, data_size }); }
-
-    ErrorOr<void> try_append(ReadonlyBytes bytes)
-    {
-        return try_append(bytes.data(), bytes.size());
-    }
-
-    ErrorOr<void> try_append(void const* data, size_t data_size)
+    ErrorOr<void> append(void const* data, size_t data_size)
     {
         if (data_size == 0)
             return {};
@@ -206,7 +199,7 @@ public:
 
     void operator+=(ByteBuffer const& other)
     {
-        MUST(try_append(other.data(), other.size()));
+        MUST(append(other.data(), other.size()));
     }
 
     void overwrite(size_t offset, void const* data, size_t data_size)

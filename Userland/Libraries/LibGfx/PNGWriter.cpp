@@ -21,7 +21,7 @@ public:
     explicit PNGChunk(String);
     auto const& data() const { return m_data; };
     String const& type() const { return m_type; };
-    void reserve(size_t bytes) { m_data.ensure_capacity(bytes); }
+    void reserve(size_t bytes) { MUST(m_data.try_ensure_capacity(bytes)); } // FIXME: Handle error
 
     template<typename T>
     void add_as_big_endian(T);
@@ -72,7 +72,7 @@ PNGChunk::PNGChunk(String type)
 
 void PNGChunk::store_type()
 {
-    m_data.append(type().bytes());
+    MUST(m_data.append(type().bytes())); // FIXME: Handle error
 }
 
 void PNGChunk::store_data_length()
@@ -90,13 +90,13 @@ u32 PNGChunk::crc()
 template<typename T>
 requires(IsUnsigned<T>) void PNGChunk::add(T data)
 {
-    m_data.append(&data, sizeof(T));
+    MUST(m_data.append(&data, sizeof(T))); // FIXME: Handle error
 }
 
 template<typename T>
 void PNGChunk::add(T* data, size_t size)
 {
-    m_data.append(data, size);
+    MUST(m_data.append(data, size)); // FIXME: Handle error
 }
 
 template<typename T>

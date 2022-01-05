@@ -68,7 +68,7 @@ TEST_CASE(test_regression)
             size_t size = fread(chunk, sizeof(char), sizeof(chunk), input_stream);
             if (size == 0)
                 break;
-            buffer.append(chunk, size);
+            MUST(buffer.append(chunk, size));
         }
 
         fclose(input_stream);

@@ -280,11 +280,11 @@ void Client::send_next_command()
     auto tag = AK::String::formatted("A{} ", m_current_command);
     buffer += tag.to_byte_buffer();
     auto command_type = command_byte_buffer(command.type);
-    buffer.append(command_type.data(), command_type.size());
+    MUST(buffer.append(command_type.data(), command_type.size()));
 
     for (auto& arg : command.args) {
-        buffer.append(" ", 1);
-        buffer.append(arg.bytes().data(), arg.length());
+        MUST(buffer.append(" ", 1));
+        MUST(buffer.append(arg.bytes().data(), arg.length()));
     }
 
     send_raw(buffer);

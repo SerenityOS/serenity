@@ -57,7 +57,7 @@ String InspectableProcess::wait_for_response()
         auto packet = m_socket->read(remaining_bytes);
         if (packet.size() == 0)
             break;
-        if (auto result = data.try_append(packet.data(), packet.size()); result.is_error()) {
+        if (auto result = data.append(packet.data(), packet.size()); result.is_error()) {
             dbgln("Failed to append {} bytes to data buffer: {}", packet.size(), result.error());
             break;
         }

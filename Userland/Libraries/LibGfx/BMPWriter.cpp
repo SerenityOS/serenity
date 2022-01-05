@@ -143,7 +143,7 @@ ByteBuffer BMPWriter::dump(const RefPtr<Bitmap> bitmap, DibHeader dib_header)
         }
     }
 
-    if (auto result = buffer.try_append(pixel_data.data(), pixel_data.size()); result.is_error())
+    if (auto result = buffer.append(pixel_data.data(), pixel_data.size()); result.is_error())
         dbgln("Failed to write {} bytes of pixel data to buffer: {}", pixel_data.size(), result.error());
     return buffer;
 }

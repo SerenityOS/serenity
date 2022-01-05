@@ -153,7 +153,7 @@ public:
         for (size_t counter = 0; counter < length / HashFunction::DigestSize - 1; ++counter) {
             hash_fn.update(seed);
             hash_fn.update((u8*)&counter, 4);
-            if (auto result = T.try_append(hash_fn.digest().data, HashFunction::DigestSize); result.is_error()) {
+            if (auto result = T.append(hash_fn.digest().data, HashFunction::DigestSize); result.is_error()) {
                 dbgln("EMSA_PSS: MGF1 digest failed: {}", result.error());
                 return;
             }

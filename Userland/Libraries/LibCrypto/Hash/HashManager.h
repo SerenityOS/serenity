@@ -163,7 +163,7 @@ public:
                 [&](auto& hash) { hash.update(m_pre_init_buffer); });
         }
         m_algorithm.visit(
-            [&](Empty&) { m_pre_init_buffer.append(data, length); },
+            [&](Empty&) { MUST(m_pre_init_buffer.append(data, length)); },
             [&](auto& hash) { hash.update(data, length); });
         if (size && m_kind != HashKind::None)
             m_pre_init_buffer.clear();
