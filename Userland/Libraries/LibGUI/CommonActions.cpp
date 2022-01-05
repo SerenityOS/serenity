@@ -41,7 +41,7 @@ NonnullRefPtr<Action> make_save_action(Function<void(Action&)> callback, Core::O
 
 NonnullRefPtr<Action> make_save_as_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    auto action = Action::create("Save &As...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    auto action = Action::create("Save &As...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save-as.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
     action->set_status_tip("Save the current file with a new name");
     return action;
 }
