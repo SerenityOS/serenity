@@ -199,7 +199,7 @@ int main(int, char**)
         VERIFY(read(REPRL_CRFD, &script_size, 8) == 8);
         VERIFY(script_size < REPRL_MAX_DATA_SIZE);
         ByteBuffer data_buffer;
-        data_buffer.resize(script_size);
+        MUST(data_buffer.resize(script_size));
         VERIFY(data_buffer.size() >= script_size);
         memcpy(data_buffer.data(), reprl_input, script_size);
 

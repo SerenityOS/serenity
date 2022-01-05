@@ -187,7 +187,7 @@ String IODevice::read_line(size_t max_size)
             Vector<u8> new_buffered_data;
             new_buffered_data.append(m_buffered_data.data() + line_index, m_buffered_data.size() - line_index);
             m_buffered_data = move(new_buffered_data);
-            line.resize(line_index);
+            MUST(line.try_resize(line_index));
             return String::copy(line, Chomp);
         }
     }

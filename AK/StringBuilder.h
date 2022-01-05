@@ -61,7 +61,7 @@ public:
 
     [[nodiscard]] size_t length() const { return m_buffer.size(); }
     [[nodiscard]] bool is_empty() const { return m_buffer.is_empty(); }
-    void trim(size_t count) { m_buffer.resize(m_buffer.size() - count); }
+    void trim(size_t count) { MUST(m_buffer.try_resize(m_buffer.size() - count)); } // FIXME: Propagate error
 
     template<class SeparatorType, class CollectionType>
     void join(SeparatorType const& separator, CollectionType const& collection)

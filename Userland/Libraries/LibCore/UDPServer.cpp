@@ -72,7 +72,7 @@ ByteBuffer UDPServer::receive(size_t size, sockaddr_in& in)
         return {};
     }
 
-    buf.resize(rlen);
+    MUST(buf.try_resize(rlen)); // FIXME: Propagate error
     return buf;
 }
 
