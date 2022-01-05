@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2021-2022, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -13,7 +13,6 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
-#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/MappedFile.h>
 #include <LibGUI/Painter.h>
@@ -36,8 +35,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_with_size(Gfx::IntSize const& si
 }
 
 Image::Image(Gfx::IntSize const& size)
-    : m_title("Untitled")
-    , m_size(size)
+    : m_size(size)
 {
 }
 
@@ -466,19 +464,6 @@ void ImageUndoCommand::undo()
 void ImageUndoCommand::redo()
 {
     undo();
-}
-
-void Image::set_title(String title)
-{
-    m_title = move(title);
-    for (auto* client : m_clients)
-        client->image_did_change_title(m_title);
-}
-
-void Image::set_path(String path)
-{
-    m_path = move(path);
-    set_title(LexicalPath::basename(m_path));
 }
 
 void Image::flip(Gfx::Orientation orientation)

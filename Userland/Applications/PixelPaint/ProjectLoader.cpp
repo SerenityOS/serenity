@@ -35,7 +35,6 @@ ErrorOr<void> ProjectLoader::try_load_from_fd_and_close(int fd, StringView path)
         auto bitmap = TRY(Image::try_decode_bitmap(mapped_file->bytes()));
         auto image = TRY(Image::try_create_from_bitmap(move(bitmap)));
 
-        image->set_path(path);
         m_image = image;
         return {};
     }
@@ -43,8 +42,6 @@ ErrorOr<void> ProjectLoader::try_load_from_fd_and_close(int fd, StringView path)
     close(fd);
     auto& json = json_or_error.value().as_object();
     auto image = TRY(Image::try_create_from_pixel_paint_json(json));
-
-    image->set_path(path);
 
     if (json.has("guides"))
         m_json_metadata = json.get("guides").as_array();

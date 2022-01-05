@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2021-2022, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2021-2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -108,10 +108,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto bg_layer = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
                 image->add_layer(*bg_layer);
                 bg_layer->bitmap().fill(Color::White);
-                auto image_title = dialog->image_name().trim_whitespace();
-                image->set_title(image_title.is_empty() ? "Untitled" : image_title);
 
-                create_new_editor(*image);
+                auto& editor = create_new_editor(*image);
+                auto image_title = dialog->image_name().trim_whitespace();
+                editor.set_title(image_title.is_empty() ? "Untitled" : image_title);
+
                 m_layer_list_widget->set_image(image);
                 m_layer_list_widget->set_selected_layer(bg_layer);
             }
@@ -142,7 +143,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             GUI::MessageBox::show_error(&window, String::formatted("Could not save {}: {}", *save_result.chosen_file, result.error()));
             return;
         }
-        editor->image().set_path(*save_result.chosen_file);
+        editor->set_path(*save_result.chosen_file);
         editor->undo_stack().set_current_unmodified();
     });
 
@@ -150,11 +151,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         auto* editor = current_image_editor();
         if (!editor)
             return;
-        if (editor->image().path().is_empty()) {
+        if (editor->path().is_empty()) {
             m_save_image_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().request_file(window.window_id(), editor->image().path(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window.window_id(), editor->path(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
         if (response.error != 0)
             return;
         auto result = editor->save_project_to_fd_and_close(*response.fd);
@@ -709,7 +710,8 @@ void MainWidget::open_image_fd(int fd, String const& path)
     }
 
     auto& image = *m_loader.release_image();
-    create_new_editor(image);
+    auto& editor = create_new_editor(image);
+    editor.set_path(path);
     m_layer_list_widget->set_image(&image);
 }
 
@@ -738,9 +740,10 @@ void MainWidget::create_image_from_clipboard()
     auto image = PixelPaint::Image::try_create_with_size(bitmap->size()).release_value_but_fixme_should_propagate_errors();
     auto layer = PixelPaint::Layer::try_create_with_bitmap(image, *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
     image->add_layer(*layer);
-    image->set_title("Untitled");
 
-    create_new_editor(*image);
+    auto& editor = create_new_editor(*image);
+    editor.set_title("Untitled");
+
     m_layer_list_widget->set_image(image);
     m_layer_list_widget->set_selected_layer(layer);
 }
@@ -752,7 +755,7 @@ bool MainWidget::request_close()
 
     VERIFY(current_image_editor());
 
-    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), current_image_editor()->image().path(), current_image_editor()->undo_stack().last_unmodified_timestamp());
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), current_image_editor()->path(), current_image_editor()->undo_stack().last_unmodified_timestamp());
 
     if (result == GUI::MessageBox::ExecYes) {
         m_save_image_action->activate();
@@ -783,7 +786,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         m_layer_properties_widget->set_layer(layer);
     };
 
-    image_editor.on_image_title_change = [&](auto const& title) {
+    image_editor.on_title_change = [&](auto const& title) {
         m_tab_widget->set_tab_title(image_editor, title);
     };
 
@@ -808,9 +811,6 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
     image_editor.on_set_ruler_visibility = [&](bool show_rulers) {
         m_show_rulers_action->set_checked(show_rulers);
     };
-
-    // NOTE: We invoke the above hook directly here to make sure the tab title is set up.
-    image_editor.on_image_title_change(image->title());
 
     image_editor.on_scale_changed = [this](float scale) {
         m_zoom_combobox->set_text(String::formatted("{}%", roundf(scale * 100)));
