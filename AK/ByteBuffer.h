@@ -52,8 +52,8 @@ public:
     ByteBuffer& operator=(ByteBuffer const& other)
     {
         if (this != &other) {
-            if (m_size > other.size()) {
-                trim(other.size(), true);
+            if (other.size() <= m_size) {
+                trim_unchecked(other.size(), true);
             } else {
                 MUST(try_resize(other.size()));
             }
@@ -156,7 +156,7 @@ public:
     ErrorOr<void> try_resize(size_t new_size)
     {
         if (new_size <= m_size) {
-            trim(new_size, false);
+            trim_unchecked(new_size, false);
             return {};
         }
         TRY(try_ensure_capacity(new_size));
@@ -225,9 +225,9 @@ private:
         other.m_inline = true;
     }
 
-    void trim(size_t size, bool may_discard_existing_data)
+    void trim_unchecked(size_t size, bool may_discard_existing_data)
     {
-        VERIFY(size <= m_size);
+        // VERIFY(size <= m_size);
         if (!m_inline && size <= inline_capacity)
             shrink_into_inline_buffer(size, may_discard_existing_data);
         m_size = size;
