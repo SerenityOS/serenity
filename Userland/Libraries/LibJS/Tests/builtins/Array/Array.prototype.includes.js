@@ -16,3 +16,13 @@ test("basic functionality", () => {
     expect(array.includes(2, -100)).toBeTrue();
     expect(array.includes("friends", 100)).toBeFalse();
 });
+
+test("is unscopable", () => {
+    expect(Array.prototype[Symbol.unscopables].includes).toBeTrue();
+    const array = [];
+    with (array) {
+        expect(() => {
+            includes;
+        }).toThrowWithMessage(ReferenceError, "'includes' is not defined");
+    }
+});

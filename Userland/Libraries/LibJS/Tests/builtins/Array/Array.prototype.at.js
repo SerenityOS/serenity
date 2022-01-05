@@ -13,3 +13,13 @@ test("basic functionality", () => {
     expect(array.at(-4)).toBeUndefined();
     expect(array.at(-Infinity)).toBeUndefined();
 });
+
+test("is unscopable", () => {
+    expect(Array.prototype[Symbol.unscopables].at).toBeTrue();
+    const array = [];
+    with (array) {
+        expect(() => {
+            at;
+        }).toThrowWithMessage(ReferenceError, "'at' is not defined");
+    }
+});

@@ -69,3 +69,13 @@ describe("normal behavior", () => {
         expect(called).toBeFalse();
     });
 });
+
+test("is unscopable", () => {
+    expect(Array.prototype[Symbol.unscopables].flatMap).toBeTrue();
+    const array = [];
+    with (array) {
+        expect(() => {
+            flatMap;
+        }).toThrowWithMessage(ReferenceError, "'flatMap' is not defined");
+    }
+});

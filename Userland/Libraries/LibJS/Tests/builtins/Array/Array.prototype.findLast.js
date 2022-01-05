@@ -59,3 +59,13 @@ describe("normal behavior", () => {
         expect(callbackCalled).toBe(2);
     });
 });
+
+test("is unscopable", () => {
+    expect(Array.prototype[Symbol.unscopables].findLast).toBeTrue();
+    const array = [];
+    with (array) {
+        expect(() => {
+            findLast;
+        }).toThrowWithMessage(ReferenceError, "'findLast' is not defined");
+    }
+});

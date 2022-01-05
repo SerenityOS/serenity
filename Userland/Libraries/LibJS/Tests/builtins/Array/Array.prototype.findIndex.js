@@ -57,3 +57,13 @@ describe("normal behavior", () => {
         expect(callbackCalled).toBe(2);
     });
 });
+
+test("is unscopable", () => {
+    expect(Array.prototype[Symbol.unscopables].findIndex).toBeTrue();
+    const array = [];
+    with (array) {
+        expect(() => {
+            findIndex;
+        }).toThrowWithMessage(ReferenceError, "'findIndex' is not defined");
+    }
+});

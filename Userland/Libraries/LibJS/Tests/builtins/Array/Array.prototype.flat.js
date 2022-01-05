@@ -51,3 +51,13 @@ describe("normal behavior", () => {
         expect(array1.flat({ depth: 2 })).toEqual([1, 2, [3, 4, [5, 6, [7, 8]]]]);
     });
 });
+
+test("is unscopable", () => {
+    expect(Array.prototype[Symbol.unscopables].flat).toBeTrue();
+    const array = [];
+    with (array) {
+        expect(() => {
+            flat;
+        }).toThrowWithMessage(ReferenceError, "'flat' is not defined");
+    }
+});

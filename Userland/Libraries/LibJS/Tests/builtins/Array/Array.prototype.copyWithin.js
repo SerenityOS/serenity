@@ -43,3 +43,13 @@ describe("normal behavior", () => {
         expect(array).toEqual([1, 2, 1]);
     });
 });
+
+test("is unscopable", () => {
+    expect(Array.prototype[Symbol.unscopables].copyWithin).toBeTrue();
+    const array = [];
+    with (array) {
+        expect(() => {
+            copyWithin;
+        }).toThrowWithMessage(ReferenceError, "'copyWithin' is not defined");
+    }
+});

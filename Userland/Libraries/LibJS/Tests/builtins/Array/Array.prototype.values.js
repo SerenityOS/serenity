@@ -42,3 +42,13 @@ test("item added to array after exhaustion is inaccessible", () => {
     a.push(3);
     expect(it.next()).toEqual({ value: undefined, done: true });
 });
+
+test("is unscopable", () => {
+    expect(Array.prototype[Symbol.unscopables].values).toBeTrue();
+    const array = [];
+    with (array) {
+        expect(() => {
+            values;
+        }).toThrowWithMessage(ReferenceError, "'values' is not defined");
+    }
+});
