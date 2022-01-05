@@ -302,24 +302,40 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 // 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
 {
-    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<i32> {
-        return vm.argument_count() > i ? vm.argument(i).to_i32(global_object) : fallback;
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
+        return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
     };
-    int year = TRY(vm.argument(0).to_i32(global_object));
-    if (year >= 0 && year <= 99)
-        year += 1900;
 
-    struct tm tm = {};
-    tm.tm_year = year - 1900;
-    tm.tm_mon = TRY(arg_or(1, 0)); // 0-based in both tm and JavaScript
-    tm.tm_mday = TRY(arg_or(2, 1));
-    tm.tm_hour = TRY(arg_or(3, 0));
-    tm.tm_min = TRY(arg_or(4, 0));
-    tm.tm_sec = TRY(arg_or(5, 0));
-    // timegm() doesn't read tm.tm_wday and tm.tm_yday, no need to fill them in.
+    // 1. Let y be ? ToNumber(year).
+    auto year = TRY(vm.argument(0).to_number(global_object));
+    // 2. If month is present, let m be ? ToNumber(month); else let m be +0𝔽.
+    auto month = TRY(arg_or(1, 0));
+    // 3. If date is present, let dt be ? ToNumber(date); else let dt be 1𝔽.
+    auto date = TRY(arg_or(2, 1));
+    // 4. If hours is present, let h be ? ToNumber(hours); else let h be +0𝔽.
+    auto hours = TRY(arg_or(3, 0));
+    // 5. If minutes is present, let min be ? ToNumber(minutes); else let min be +0𝔽.
+    auto minutes = TRY(arg_or(4, 0));
+    // 6. If seconds is present, let s be ? ToNumber(seconds); else let s be +0𝔽.
+    auto seconds = TRY(arg_or(5, 0));
+    // 7. If ms is present, let milli be ? ToNumber(ms); else let milli be +0𝔽.
+    auto milliseconds = TRY(arg_or(6, 0));
 
-    int milliseconds = TRY(arg_or(6, 0));
-    return Value(1000.0 * timegm(&tm) + milliseconds);
+    // 8. If y is NaN, let yr be NaN.
+    // 9. Else,
+    if (!year.is_nan()) {
+        // a. Let yi be ! ToIntegerOrInfinity(y).
+        auto year_double = MUST(year.to_integer_or_infinity(global_object));
+
+        // b. If 0 ≤ yi ≤ 99, let yr be 1900𝔽 + 𝔽(yi); otherwise, let yr be y.
+        if (0 <= year_double && year_double <= 99)
+            year = Value(1900 + year_double);
+    }
+
+    // 10. Return TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli))).
+    auto day = make_day(global_object, year, month, date);
+    auto time = make_time(global_object, hours, minutes, seconds, milliseconds);
+    return time_clip(global_object, make_date(day, time));
 }
 
 }
