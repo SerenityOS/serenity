@@ -42,7 +42,29 @@ static inline String human_readable_size_long(u64 size)
         return String::formatted("{} ({} bytes)", human_readable_size(size), size);
 }
 
+static inline String human_readable_time(i64 time_in_seconds)
+{
+    auto hours = time_in_seconds / 3600;
+    time_in_seconds = time_in_seconds % 3600;
+
+    auto minutes = time_in_seconds / 60;
+    time_in_seconds = time_in_seconds % 60;
+
+    StringBuilder builder;
+
+    if (hours > 0)
+        builder.appendff("{} hour{} ", hours, hours == 1 ? "" : "s");
+
+    if (minutes > 0)
+        builder.appendff("{} minute{} ", minutes, minutes == 1 ? "" : "s");
+
+    builder.appendff("{} second{}", time_in_seconds, time_in_seconds == 1 ? "" : "s");
+
+    return builder.to_string();
+}
+
 }
 
 using AK::human_readable_size;
 using AK::human_readable_size_long;
+using AK::human_readable_time;
