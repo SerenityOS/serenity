@@ -5,6 +5,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/NumberFormat.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ImageWidget.h>
@@ -39,7 +40,8 @@ int MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path
 
     if (!path.is_empty() && last_unmodified_timestamp.has_value()) {
         auto age = (Time::now_monotonic() - *last_unmodified_timestamp).to_seconds();
-        builder.appendff("\nLast saved {} second{} ago.", age, age == 1 ? "" : "s");
+        auto readable_time = human_readable_time(age);
+        builder.appendff("\nLast saved {} ago.", readable_time);
     }
 
     auto box = MessageBox::construct(parent_window, builder.string_view(), "Unsaved changes", Type::Warning, InputType::YesNoCancel);
