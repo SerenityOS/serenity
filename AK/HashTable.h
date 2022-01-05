@@ -384,7 +384,7 @@ public:
         return false;
     }
 
-    void remove(Iterator iterator)
+    Iterator remove(Iterator iterator)
     {
         VERIFY(iterator.m_bucket);
         auto& bucket = *iterator.m_bucket;
@@ -393,6 +393,9 @@ public:
 
         if constexpr (!IsOrdered)
             VERIFY(!bucket.end);
+
+        auto next_iterator = iterator;
+        ++next_iterator;
 
         bucket.slot()->~T();
         bucket.used = false;
@@ -410,6 +413,19 @@ public:
                 bucket.next->previous = bucket.previous;
             else
                 m_collection_data.tail = bucket.previous;
+        }
+
+        return next_iterator;
+    }
+
+    template<typename TUnaryPredicate>
+    void remove_all_matching(TUnaryPredicate predicate)
+    {
+        for (auto it = begin(); it != end();) {
+            if (predicate(*it))
+                it = remove(it);
+            else
+                ++it;
         }
     }
 
