@@ -68,13 +68,25 @@ String Table::render_for_terminal(size_t view_width) const
 
 String Table::render_to_html(bool) const
 {
+    auto alignment_string = [](Alignment alignment) {
+        switch (alignment) {
+        case Alignment::Center:
+            return "center"sv;
+        case Alignment::Left:
+            return "left"sv;
+        case Alignment::Right:
+            return "right"sv;
+        }
+        VERIFY_NOT_REACHED();
+    };
+
     StringBuilder builder;
 
     builder.append("<table>");
     builder.append("<thead>");
     builder.append("<tr>");
     for (auto& column : m_columns) {
-        builder.append("<th>");
+        builder.appendff("<th style='text-align: {}'>", alignment_string(column.alignment));
         builder.append(column.header.render_to_html());
         builder.append("</th>");
     }
@@ -85,7 +97,7 @@ String Table::render_to_html(bool) const
         builder.append("<tr>");
         for (auto& column : m_columns) {
             VERIFY(i < column.rows.size());
-            builder.append("<td>");
+            builder.appendff("<td style='text-align: {}'>", alignment_string(column.alignment));
             builder.append(column.rows[i].render_to_html());
             builder.append("</td>");
         }
