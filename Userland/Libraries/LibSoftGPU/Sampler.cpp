@@ -4,43 +4,55 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SIMDExtras.h>
+#include <AK/SIMDMath.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Image.h>
+#include <LibSoftGPU/SIMD.h>
 #include <LibSoftGPU/Sampler.h>
 #include <math.h>
 
 namespace SoftGPU {
 
-static constexpr float fracf(float value)
+using AK::SIMD::f32x4;
+using AK::SIMD::i32x4;
+using AK::SIMD::u32x4;
+
+using AK::SIMD::clamp;
+using AK::SIMD::expand4;
+using AK::SIMD::floor_int_range;
+using AK::SIMD::frac_int_range;
+using AK::SIMD::maskbits;
+using AK::SIMD::to_f32x4;
+using AK::SIMD::to_i32x4;
+using AK::SIMD::to_u32x4;
+using AK::SIMD::truncate_int_range;
+
+static f32x4 wrap_repeat(f32x4 value)
 {
-    return value - floorf(value);
+    return frac_int_range(value);
 }
 
-static constexpr float wrap_repeat(float value)
+[[maybe_unused]] static f32x4 wrap_clamp(f32x4 value)
 {
-    return fracf(value);
+    return clamp(value, expand4(0.0f), expand4(1.0f));
 }
 
-[[maybe_unused]] static constexpr float wrap_clamp(float value)
+static f32x4 wrap_clamp_to_edge(f32x4 value, u32x4 num_texels)
 {
-    return clamp(value, 0.0f, 1.0f);
-}
-
-static constexpr float wrap_clamp_to_edge(float value, unsigned num_texels)
-{
-    float const clamp_limit = 1.f / (2 * num_texels);
+    f32x4 const clamp_limit = 1.f / to_f32x4(2 * num_texels);
     return clamp(value, clamp_limit, 1.0f - clamp_limit);
 }
 
-static constexpr float wrap_mirrored_repeat(float value, unsigned num_texels)
+static f32x4 wrap_mirrored_repeat(f32x4 value, u32x4 num_texels)
 {
-    float integer = floorf(value);
-    float frac = value - integer;
-    bool iseven = fmodf(integer, 2.0f) == 0.0f;
-    return wrap_clamp_to_edge(iseven ? frac : 1 - frac, num_texels);
+    f32x4 integer = floor_int_range(value);
+    f32x4 frac = value - integer;
+    auto is_odd = to_i32x4(integer) & 1;
+    return wrap_clamp_to_edge(is_odd ? 1 - frac : frac, num_texels);
 }
 
-static constexpr float wrap(float value, TextureWrapMode mode, unsigned num_texels)
+static f32x4 wrap(f32x4 value, TextureWrapMode mode, u32x4 num_texels)
 {
     switch (mode) {
     case TextureWrapMode::Repeat:
@@ -60,59 +72,103 @@ static constexpr float wrap(float value, TextureWrapMode mode, unsigned num_texe
     }
 }
 
-FloatVector4 Sampler::sample_2d(FloatVector2 const& uv) const
+ALWAYS_INLINE static Vector4<f32x4> texel4(Image const& image, u32x4 layer, u32x4 level, u32x4 x, u32x4 y, u32x4 z)
+{
+    auto t0 = image.texel(layer[0], level[0], x[0], y[0], z[0]);
+    auto t1 = image.texel(layer[1], level[1], x[1], y[1], z[1]);
+    auto t2 = image.texel(layer[2], level[2], x[2], y[2], z[2]);
+    auto t3 = image.texel(layer[3], level[3], x[3], y[3], z[3]);
+
+    return Vector4<f32x4> {
+        f32x4 { t0.x(), t1.x(), t2.x(), t3.x() },
+        f32x4 { t0.y(), t1.y(), t2.y(), t3.y() },
+        f32x4 { t0.z(), t1.z(), t2.z(), t3.z() },
+        f32x4 { t0.w(), t1.w(), t2.w(), t3.w() },
+    };
+}
+
+ALWAYS_INLINE static Vector4<f32x4> texel4border(Image const& image, u32x4 layer, u32x4 level, u32x4 x, u32x4 y, u32x4 z, FloatVector4 const& border, u32x4 w, u32x4 h)
+{
+    auto border_mask = maskbits(x < 0 || x >= w || y < 0 || y >= h);
+
+    auto t0 = border_mask & 1 ? border : image.texel(layer[0], level[0], x[0], y[0], z[0]);
+    auto t1 = border_mask & 2 ? border : image.texel(layer[1], level[1], x[1], y[1], z[1]);
+    auto t2 = border_mask & 4 ? border : image.texel(layer[2], level[2], x[2], y[2], z[2]);
+    auto t3 = border_mask & 8 ? border : image.texel(layer[3], level[3], x[3], y[3], z[3]);
+
+    return Vector4<f32x4> {
+        f32x4 { t0.x(), t1.x(), t2.x(), t3.x() },
+        f32x4 { t0.y(), t1.y(), t2.y(), t3.y() },
+        f32x4 { t0.z(), t1.z(), t2.z(), t3.z() },
+        f32x4 { t0.w(), t1.w(), t2.w(), t3.w() },
+    };
+}
+
+Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) const
 {
     if (m_config.bound_image.is_null())
-        return { 0, 0, 0, 1 };
+        return expand4(FloatVector4 { 1, 0, 0, 1 });
 
     auto const& image = *m_config.bound_image;
 
-    unsigned const layer = 0;
+    u32x4 const layer = expand4(0u);
     // FIXME: calculate actual mipmap level  to use
-    unsigned const level = 0;
+    u32x4 const level = expand4(0u);
 
-    unsigned width = image.level_width(level);
-    unsigned height = image.level_height(level);
+    u32x4 const width = {
+        image.level_width(level[0]),
+        image.level_width(level[1]),
+        image.level_width(level[2]),
+        image.level_width(level[3]),
+    };
+    u32x4 const height = {
+        image.level_height(level[0]),
+        image.level_height(level[1]),
+        image.level_height(level[2]),
+        image.level_height(level[3]),
+    };
 
-    float s = wrap(uv.x(), m_config.texture_wrap_u, width);
-    float t = wrap(uv.y(), m_config.texture_wrap_v, height);
+    f32x4 s = wrap(uv.x(), m_config.texture_wrap_u, width);
+    f32x4 t = wrap(uv.y(), m_config.texture_wrap_v, height);
 
-    float u = s * width;
-    float v = t * height;
+    f32x4 u = s * to_f32x4(width);
+    f32x4 v = t * to_f32x4(height);
 
     if (m_config.texture_mag_filter == TextureFilter::Nearest) {
-        unsigned i = min(static_cast<unsigned>(u), width - 1);
-        unsigned j = min(static_cast<unsigned>(v), height - 1);
-        return image.texel(layer, level, i, j, 0);
+        u32x4 i = to_i32x4(u) % width;
+        u32x4 j = to_i32x4(v) % height;
+        u32x4 k = expand4(0u);
+
+        return texel4(image, layer, level, i, j, k);
     }
 
     u -= 0.5f;
     v -= 0.5f;
 
-    int i0 = m_config.texture_wrap_u == TextureWrapMode::Repeat ? static_cast<unsigned>(floorf(u)) % width : floorf(u);
-    int j0 = m_config.texture_wrap_v == TextureWrapMode::Repeat ? static_cast<unsigned>(floorf(v)) % height : floorf(v);
+    i32x4 i0 = m_config.texture_wrap_u == TextureWrapMode::Repeat ? to_i32x4(to_u32x4(floor_int_range(u)) % width) : to_i32x4(floor_int_range(u));
+    i32x4 j0 = m_config.texture_wrap_v == TextureWrapMode::Repeat ? to_i32x4(to_u32x4(floor_int_range(v)) % height) : to_i32x4(floor_int_range(v));
 
-    int i1 = m_config.texture_wrap_u == TextureWrapMode::Repeat ? (i0 + 1) % width : i0 + 1;
-    int j1 = m_config.texture_wrap_v == TextureWrapMode::Repeat ? (j0 + 1) % height : j0 + 1;
+    i32x4 i1 = m_config.texture_wrap_u == TextureWrapMode::Repeat ? to_i32x4((i0 + 1) % width) : i0 + 1;
+    i32x4 j1 = m_config.texture_wrap_v == TextureWrapMode::Repeat ? to_i32x4((j0 + 1) % height) : j0 + 1;
 
-    FloatVector4 t0, t1, t2, t3;
+    u32x4 k = expand4(0u);
+
+    Vector4<f32x4> t0, t1, t2, t3;
 
     if (m_config.texture_wrap_u == TextureWrapMode::Repeat && m_config.texture_wrap_v == TextureWrapMode::Repeat) {
-        t0 = image.texel(layer, level, i0, j0, 0);
-        t1 = image.texel(layer, level, i1, j0, 0);
-        t2 = image.texel(layer, level, i0, j1, 0);
-        t3 = image.texel(layer, level, i1, j1, 0);
+        t0 = texel4(image, layer, level, to_u32x4(i0), to_u32x4(j0), k);
+        t1 = texel4(image, layer, level, to_u32x4(i1), to_u32x4(j0), k);
+        t2 = texel4(image, layer, level, to_u32x4(i0), to_u32x4(j1), k);
+        t3 = texel4(image, layer, level, to_u32x4(i1), to_u32x4(j1), k);
     } else {
-        int w = static_cast<int>(width);
-        int h = static_cast<int>(height);
-        t0 = (i0 < 0 || i0 >= w || j0 < 0 || j0 >= h) ? m_config.border_color : image.texel(layer, level, i0, j0, 0);
-        t1 = (i1 < 0 || i1 >= w || j0 < 0 || j0 >= h) ? m_config.border_color : image.texel(layer, level, i1, j0, 0);
-        t2 = (i0 < 0 || i0 >= w || j1 < 0 || j1 >= h) ? m_config.border_color : image.texel(layer, level, i0, j1, 0);
-        t3 = (i1 < 0 || i1 >= w || j1 < 0 || j1 >= h) ? m_config.border_color : image.texel(layer, level, i1, j1, 0);
+        t0 = texel4border(image, layer, level, to_u32x4(i0), to_u32x4(j0), k, m_config.border_color, width, height);
+        t1 = texel4border(image, layer, level, to_u32x4(i1), to_u32x4(j0), k, m_config.border_color, width, height);
+        t2 = texel4border(image, layer, level, to_u32x4(i0), to_u32x4(j1), k, m_config.border_color, width, height);
+        t3 = texel4border(image, layer, level, to_u32x4(i1), to_u32x4(j1), k, m_config.border_color, width, height);
     }
 
-    float const alpha = fracf(u);
-    float const beta = fracf(v);
+    f32x4 const alpha = frac_int_range(u);
+    f32x4 const beta = frac_int_range(v);
 
     auto const lerp_0 = mix(t0, t1, alpha);
     auto const lerp_1 = mix(t2, t3, alpha);
