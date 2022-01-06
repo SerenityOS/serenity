@@ -35,6 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/clipboard", "rw"));
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/portal/image", "rw"));
+    TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-pixel-paint");
