@@ -135,18 +135,17 @@ static constexpr void setup_blend_factors(BlendFactor mode, FloatVector4& consta
     }
 }
 
-template<typename PS>
-static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, const Triangle& triangle, PS pixel_shader)
+void Device::rasterize_triangle(const Triangle& triangle)
 {
     INCREASE_STATISTICS_COUNTER(g_num_rasterized_triangles, 1);
 
     // Since the algorithm is based on blocks of uniform size, we need
-    // to ensure that our render_target size is actually a multiple of the block size
-    VERIFY((render_target.width() % 2) == 0);
-    VERIFY((render_target.height() % 2) == 0);
+    // to ensure that our m_render_target size is actually a multiple of the block size
+    VERIFY((m_render_target->width() % 2) == 0);
+    VERIFY((m_render_target->height() % 2) == 0);
 
     // Return if alpha testing is a no-op
-    if (options.enable_alpha_test && options.alpha_test_func == AlphaTestFunction::Never)
+    if (m_options.enable_alpha_test && m_options.alpha_test_func == AlphaTestFunction::Never)
         return;
 
     // Vertices
@@ -179,9 +178,9 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     float dst_factor_src_color = 0;
     float dst_factor_dst_color = 0;
 
-    if (options.enable_blending) {
+    if (m_options.enable_blending) {
         setup_blend_factors(
-            options.blend_source_factor,
+            m_options.blend_source_factor,
             src_constant,
             src_factor_src_alpha,
             src_factor_dst_alpha,
@@ -189,7 +188,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             src_factor_dst_color);
 
         setup_blend_factors(
-            options.blend_destination_factor,
+            m_options.blend_destination_factor,
             dst_constant,
             dst_factor_src_alpha,
             dst_factor_dst_alpha,
@@ -197,9 +196,9 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             dst_factor_dst_color);
     }
 
-    auto render_bounds = render_target.rect();
-    auto window_scissor_rect = scissor_box_to_window_coordinates(options.scissor_box, render_target.rect());
-    if (options.scissor_enabled)
+    auto render_bounds = m_render_target->rect();
+    auto window_scissor_rect = scissor_box_to_window_coordinates(m_options.scissor_box, m_render_target->rect());
+    if (m_options.scissor_enabled)
         render_bounds.intersect(window_scissor_rect);
 
     // Obey top-left rule:
@@ -268,7 +267,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
             // Generate triangle coverage mask
             quad.mask = test_point4(edge_values);
-            if (options.scissor_enabled) {
+            if (m_options.scissor_enabled) {
                 quad.mask &= test_scissor4(quad.screen_coordinates);
             }
 
@@ -286,21 +285,21 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             } * one_over_area;
 
             float* depth_ptrs[4] = {
-                &depth_buffer.scanline(by)[bx],
-                &depth_buffer.scanline(by)[bx + 1],
-                &depth_buffer.scanline(by + 1)[bx],
-                &depth_buffer.scanline(by + 1)[bx + 1],
+                &m_depth_buffer->scanline(by)[bx],
+                &m_depth_buffer->scanline(by)[bx + 1],
+                &m_depth_buffer->scanline(by + 1)[bx],
+                &m_depth_buffer->scanline(by + 1)[bx + 1],
             };
 
             // AND the depth mask onto the coverage mask
-            if (options.enable_depth_test) {
+            if (m_options.enable_depth_test) {
                 auto depth = load4_masked(depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
 
                 quad.depth = interpolate(vertex0.window_coordinates.z(), vertex1.window_coordinates.z(), vertex2.window_coordinates.z(), quad.barycentrics);
                 // FIXME: Also apply depth_offset_factor which depends on the depth gradient
-                quad.depth += options.depth_offset_constant * NumericLimits<float>::epsilon();
+                quad.depth += m_options.depth_offset_constant * NumericLimits<float>::epsilon();
 
-                switch (options.depth_func) {
+                switch (m_options.depth_func) {
                 case DepthTestFunction::Always:
                     break;
                 case DepthTestFunction::Never:
@@ -370,7 +369,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             quad.barycentrics = quad.barycentrics * w_coordinates * interpolated_w;
 
             // FIXME: make this more generic. We want to interpolate more than just color and uv
-            if (options.shade_smooth) {
+            if (m_options.shade_smooth) {
                 quad.vertex_color = interpolate(expand4(vertex0.color), expand4(vertex1.color), expand4(vertex2.color), quad.barycentrics);
             } else {
                 quad.vertex_color = expand4(vertex0.color);
@@ -378,7 +377,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
             quad.uv = interpolate(expand4(vertex0.tex_coord), expand4(vertex1.tex_coord), expand4(vertex2.tex_coord), quad.barycentrics);
 
-            if (options.fog_enabled) {
+            if (m_options.fog_enabled) {
                 // Calculate depth of fragment for fog
                 //
                 // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
@@ -387,27 +386,27 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                 quad.fog_depth = interpolate(expand4(vertex0_eye_absz), expand4(vertex1_eye_absz), expand4(vertex2_eye_absz), quad.barycentrics);
             }
 
-            pixel_shader(quad);
+            shade_fragments(quad);
 
-            if (options.enable_alpha_test && options.alpha_test_func != AlphaTestFunction::Always) {
-                switch (options.alpha_test_func) {
+            if (m_options.enable_alpha_test && m_options.alpha_test_func != AlphaTestFunction::Always) {
+                switch (m_options.alpha_test_func) {
                 case AlphaTestFunction::Less:
-                    quad.mask &= quad.out_color.w() < options.alpha_test_ref_value;
+                    quad.mask &= quad.out_color.w() < m_options.alpha_test_ref_value;
                     break;
                 case AlphaTestFunction::Equal:
-                    quad.mask &= quad.out_color.w() == options.alpha_test_ref_value;
+                    quad.mask &= quad.out_color.w() == m_options.alpha_test_ref_value;
                     break;
                 case AlphaTestFunction::LessOrEqual:
-                    quad.mask &= quad.out_color.w() <= options.alpha_test_ref_value;
+                    quad.mask &= quad.out_color.w() <= m_options.alpha_test_ref_value;
                     break;
                 case AlphaTestFunction::Greater:
-                    quad.mask &= quad.out_color.w() > options.alpha_test_ref_value;
+                    quad.mask &= quad.out_color.w() > m_options.alpha_test_ref_value;
                     break;
                 case AlphaTestFunction::NotEqual:
-                    quad.mask &= quad.out_color.w() != options.alpha_test_ref_value;
+                    quad.mask &= quad.out_color.w() != m_options.alpha_test_ref_value;
                     break;
                 case AlphaTestFunction::GreaterOrEqual:
-                    quad.mask &= quad.out_color.w() >= options.alpha_test_ref_value;
+                    quad.mask &= quad.out_color.w() >= m_options.alpha_test_ref_value;
                     break;
                 case AlphaTestFunction::Never:
                 case AlphaTestFunction::Always:
@@ -416,29 +415,29 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             }
 
             // Write to depth buffer
-            if (options.enable_depth_test && options.enable_depth_write) {
+            if (m_options.enable_depth_test && m_options.enable_depth_write) {
                 store4_masked(quad.depth, depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
             }
 
             // We will not update the color buffer at all
-            if (!options.color_mask || !options.enable_color_write)
+            if (!m_options.color_mask || !m_options.enable_color_write)
                 continue;
 
             Gfx::RGBA32* color_ptrs[4] = {
-                &render_target.scanline(by)[bx],
-                &render_target.scanline(by)[bx + 1],
-                &render_target.scanline(by + 1)[bx],
-                &render_target.scanline(by + 1)[bx + 1],
+                &m_render_target->scanline(by)[bx],
+                &m_render_target->scanline(by)[bx + 1],
+                &m_render_target->scanline(by + 1)[bx],
+                &m_render_target->scanline(by + 1)[bx + 1],
             };
 
             u32x4 dst_u32;
-            if (options.enable_blending || options.color_mask != 0xffffffff)
+            if (m_options.enable_blending || m_options.color_mask != 0xffffffff)
                 dst_u32 = load4_masked(color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
 
-            if (options.enable_blending) {
+            if (m_options.enable_blending) {
                 INCREASE_STATISTICS_COUNTER(g_num_pixels_blended, maskcount(quad.mask));
 
-                // Blend color values from pixel_staging into render_target
+                // Blend color values from pixel_staging into m_render_target
                 Vector4<f32x4> const& src = quad.out_color;
                 auto dst = to_vec4(dst_u32);
 
@@ -457,10 +456,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                 quad.out_color = src * src_factor + dst * dst_factor;
             }
 
-            if (options.color_mask == 0xffffffff)
+            if (m_options.color_mask == 0xffffffff)
                 store4_masked(to_rgba32(quad.out_color), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
             else
-                store4_masked((to_rgba32(quad.out_color) & options.color_mask) | (dst_u32 & ~options.color_mask), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
+                store4_masked((to_rgba32(quad.out_color) & m_options.color_mask) | (dst_u32 & ~m_options.color_mask), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
         }
     }
 }
@@ -567,6 +566,8 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     // 4.   Each element of the vertex is then divided by w to bring the positions into NDC (Normalized Device Coordinates)
     // 5.   The vertices are sorted (for the rasterizer, how are we doing this? 3Dfx did this top to bottom in terms of vertex y coordinates)
     // 6.   The vertices are then sent off to the rasterizer and drawn to the screen
+
+    m_enabled_texture_units = enabled_texture_units;
 
     float scr_width = m_render_target->width();
     float scr_height = m_render_target->height();
@@ -737,72 +738,70 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         triangle.vertices[1].tex_coord = texture_transform * triangle.vertices[1].tex_coord;
         triangle.vertices[2].tex_coord = texture_transform * triangle.vertices[2].tex_coord;
 
-        submit_triangle(triangle, enabled_texture_units);
+        rasterize_triangle(triangle);
     }
 }
 
-void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& enabled_texture_units)
+ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
 {
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &enabled_texture_units](PixelQuad& quad) {
-        quad.out_color = quad.vertex_color;
+    quad.out_color = quad.vertex_color;
 
-        for (size_t i : enabled_texture_units) {
-            // FIXME: implement GL_TEXTURE_1D, GL_TEXTURE_3D and GL_TEXTURE_CUBE_MAP
-            auto const& sampler = m_samplers[i];
+    for (size_t i : m_enabled_texture_units) {
+        // FIXME: implement GL_TEXTURE_1D, GL_TEXTURE_3D and GL_TEXTURE_CUBE_MAP
+        auto const& sampler = m_samplers[i];
 
-            auto texel = sampler.sample_2d({ quad.uv.x(), quad.uv.y() });
-            INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
+        auto texel = sampler.sample_2d({ quad.uv.x(), quad.uv.y() });
+        INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
 
-            // FIXME: Implement more blend modes
-            switch (sampler.config().fixed_function_texture_env_mode) {
-            case TextureEnvMode::Modulate:
-                quad.out_color = quad.out_color * texel;
-                break;
-            case TextureEnvMode::Replace:
-                quad.out_color = texel;
-                break;
-            case TextureEnvMode::Decal: {
-                auto src_alpha = quad.out_color.w();
-                quad.out_color.set_x(mix(quad.out_color.x(), texel.x(), src_alpha));
-                quad.out_color.set_y(mix(quad.out_color.y(), texel.y(), src_alpha));
-                quad.out_color.set_z(mix(quad.out_color.z(), texel.z(), src_alpha));
-                break;
-            }
-            default:
-                VERIFY_NOT_REACHED();
-            }
+        // FIXME: Implement more blend modes
+        switch (sampler.config().fixed_function_texture_env_mode) {
+        case TextureEnvMode::Modulate:
+            quad.out_color = quad.out_color * texel;
+            break;
+        case TextureEnvMode::Replace:
+            quad.out_color = texel;
+            break;
+        case TextureEnvMode::Decal: {
+            auto src_alpha = quad.out_color.w();
+            quad.out_color.set_x(mix(quad.out_color.x(), texel.x(), src_alpha));
+            quad.out_color.set_y(mix(quad.out_color.y(), texel.y(), src_alpha));
+            quad.out_color.set_z(mix(quad.out_color.z(), texel.z(), src_alpha));
+            break;
+        }
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    // Calculate fog
+    // Math from here: https://opengl-notes.readthedocs.io/en/latest/topics/texturing/aliasing.html
+
+    // FIXME: exponential fog is not vectorized, we should add a SIMD exp function that calculates an approximation.
+    if (m_options.fog_enabled) {
+        auto factor = expand4(0.0f);
+        switch (m_options.fog_mode) {
+        case FogMode::Linear:
+            factor = (m_options.fog_end - quad.fog_depth) / (m_options.fog_end - m_options.fog_start);
+            break;
+        case FogMode::Exp: {
+            auto argument = -m_options.fog_density * quad.fog_depth;
+            factor = exp(argument);
+        } break;
+        case FogMode::Exp2: {
+            auto argument = m_options.fog_density * quad.fog_depth;
+            argument *= -argument;
+            factor = exp(argument);
+        } break;
+        default:
+            VERIFY_NOT_REACHED();
         }
 
-        // Calculate fog
-        // Math from here: https://opengl-notes.readthedocs.io/en/latest/topics/texturing/aliasing.html
-
-        // FIXME: exponential fog is not vectorized, we should add a SIMD exp function that calculates an approximation.
-        if (m_options.fog_enabled) {
-            auto factor = expand4(0.0f);
-            switch (m_options.fog_mode) {
-            case FogMode::Linear:
-                factor = (m_options.fog_end - quad.fog_depth) / (m_options.fog_end - m_options.fog_start);
-                break;
-            case FogMode::Exp: {
-                auto argument = -m_options.fog_density * quad.fog_depth;
-                factor = exp(argument);
-            } break;
-            case FogMode::Exp2: {
-                auto argument = m_options.fog_density * quad.fog_depth;
-                argument *= -argument;
-                factor = exp(argument);
-            } break;
-            default:
-                VERIFY_NOT_REACHED();
-            }
-
-            // Mix texel's RGB with fog's RBG - leave alpha alone
-            auto fog_color = expand4(m_options.fog_color);
-            quad.out_color.set_x(mix(fog_color.x(), quad.out_color.x(), factor));
-            quad.out_color.set_y(mix(fog_color.y(), quad.out_color.y(), factor));
-            quad.out_color.set_z(mix(fog_color.z(), quad.out_color.z(), factor));
-        }
-    });
+        // Mix texel's RGB with fog's RBG - leave alpha alone
+        auto fog_color = expand4(m_options.fog_color);
+        quad.out_color.set_x(mix(fog_color.x(), quad.out_color.x(), factor));
+        quad.out_color.set_y(mix(fog_color.y(), quad.out_color.y(), factor));
+        quad.out_color.set_z(mix(fog_color.z(), quad.out_color.z(), factor));
+    }
 }
 
 void Device::resize(const Gfx::IntSize& min_size)
