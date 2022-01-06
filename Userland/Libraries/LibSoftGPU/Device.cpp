@@ -6,12 +6,16 @@
  */
 
 #include <AK/Function.h>
+#include <AK/SIMDExtras.h>
+#include <AK/SIMDMath.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Device.h>
+#include <LibSoftGPU/PixelQuad.h>
+#include <LibSoftGPU/SIMD.h>
 
 namespace SoftGPU {
 
@@ -24,13 +28,17 @@ static long long g_num_sampler_calls;
 using IntVector2 = Gfx::Vector2<int>;
 using IntVector3 = Gfx::Vector3<int>;
 
+using AK::SIMD::exp;
+using AK::SIMD::expand4;
+using AK::SIMD::f32x4;
+
 constexpr static int edge_function(const IntVector2& a, const IntVector2& b, const IntVector2& c)
 {
     return ((c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x()));
 }
 
-template<typename T>
-constexpr static T interpolate(const T& v0, const T& v1, const T& v2, const FloatVector3& barycentric_coords)
+template<typename T, typename U>
+constexpr static auto interpolate(const T& v0, const T& v1, const T& v2, const Vector3<U>& barycentric_coords)
 {
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
@@ -369,47 +377,56 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
             // Draw the pixels according to the previously generated mask
             auto coords = b0;
-            for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++, coords += step_y) {
-                if (pixel_mask[y] == 0) {
-                    coords += dbdx * RASTERIZER_BLOCK_SIZE;
-                    continue;
-                }
+            for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y += 2, coords += step_y + dbdy) {
+                for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x += 2, coords += dbdx + dbdx) {
 
-                auto* pixel = pixel_staging[y];
-                for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx, pixel++) {
-                    if (~pixel_mask[y] & (1 << x))
-                        continue;
+                    PixelQuad quad;
+
+                    auto a = coords;
+                    auto b = coords + dbdx;
+                    auto c = coords + dbdy;
+                    auto d = coords + dbdx + dbdy;
 
                     // Perspective correct barycentric coordinates
-                    auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                    auto const w_coordinates = FloatVector3 {
-                        vertex0.window_coordinates.w(),
-                        vertex1.window_coordinates.w(),
-                        vertex2.window_coordinates.w(),
+                    auto barycentric = Vector3<f32x4> {
+                        f32x4 { float(a.x()), float(b.x()), float(c.x()), float(d.x()) },
+                        f32x4 { float(a.y()), float(b.y()), float(c.y()), float(d.y()) },
+                        f32x4 { float(a.z()), float(b.z()), float(c.z()), float(d.z()) },
+                    } * one_over_area;
+
+                    auto const w_coordinates = Vector3<f32x4> {
+                        expand4(vertex0.window_coordinates.w()),
+                        expand4(vertex1.window_coordinates.w()),
+                        expand4(vertex2.window_coordinates.w()),
                     };
-                    float const interpolated_reciprocal_w = interpolate(w_coordinates.x(), w_coordinates.y(), w_coordinates.z(), barycentric);
-                    float const interpolated_w = 1 / interpolated_reciprocal_w;
+
+                    auto const interpolated_reciprocal_w = interpolate(w_coordinates.x(), w_coordinates.y(), w_coordinates.z(), barycentric);
+                    auto const interpolated_w = 1.0f / interpolated_reciprocal_w;
                     barycentric = barycentric * w_coordinates * interpolated_w;
 
                     // FIXME: make this more generic. We want to interpolate more than just color and uv
-                    FloatVector4 vertex_color;
                     if (options.shade_smooth) {
-                        vertex_color = interpolate(vertex0.color, vertex1.color, vertex2.color, barycentric);
+                        quad.vertex_color = interpolate(expand4(vertex0.color), expand4(vertex1.color), expand4(vertex2.color), barycentric);
                     } else {
-                        vertex_color = vertex0.color;
+                        quad.vertex_color = expand4(vertex0.color);
                     }
 
-                    auto uv = interpolate(vertex0.tex_coord, vertex1.tex_coord, vertex2.tex_coord, barycentric);
+                    quad.uv = interpolate(expand4(vertex0.tex_coord), expand4(vertex1.tex_coord), expand4(vertex2.tex_coord), barycentric);
 
                     // Calculate depth of fragment for fog
                     //
                     // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
                     // eye-coordinate distance from the eye to each fragment center by |Ze|."
 
-                    float fog_fragment_depth = interpolate(vertex0_eye_absz, vertex1_eye_absz, vertex2_eye_absz, barycentric);
+                    quad.fog_depth = interpolate(expand4(vertex0_eye_absz), expand4(vertex1_eye_absz), expand4(vertex2_eye_absz), barycentric);
 
-                    *pixel = pixel_shader(uv, vertex_color, fog_fragment_depth);
+                    pixel_shader(quad);
+
                     INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, 1);
+                    pixel_staging[y][x] = { quad.out_color.x()[0], quad.out_color.y()[0], quad.out_color.z()[0], quad.out_color.w()[0] };
+                    pixel_staging[y][x + 1] = { quad.out_color.x()[1], quad.out_color.y()[1], quad.out_color.z()[1], quad.out_color.w()[1] };
+                    pixel_staging[y + 1][x] = { quad.out_color.x()[2], quad.out_color.y()[2], quad.out_color.z()[2], quad.out_color.w()[2] };
+                    pixel_staging[y + 1][x + 1] = { quad.out_color.x()[3], quad.out_color.y()[3], quad.out_color.z()[3], quad.out_color.w()[3] };
                 }
             }
 
@@ -797,29 +814,29 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
 void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& enabled_texture_units)
 {
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &enabled_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float fog_depth) -> FloatVector4 {
-        FloatVector4 fragment = color;
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &enabled_texture_units](PixelQuad& quad) {
+        quad.out_color = quad.vertex_color;
 
         for (size_t i : enabled_texture_units) {
             // FIXME: implement GL_TEXTURE_1D, GL_TEXTURE_3D and GL_TEXTURE_CUBE_MAP
             auto const& sampler = m_samplers[i];
 
-            FloatVector4 texel = sampler.sample_2d({ uv.x(), uv.y() });
+            auto texel = sampler.sample_2d({ quad.uv.x(), quad.uv.y() });
             INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
 
             // FIXME: Implement more blend modes
             switch (sampler.config().fixed_function_texture_env_mode) {
             case TextureEnvMode::Modulate:
-                fragment = fragment * texel;
+                quad.out_color = quad.out_color * texel;
                 break;
             case TextureEnvMode::Replace:
-                fragment = texel;
+                quad.out_color = texel;
                 break;
             case TextureEnvMode::Decal: {
-                float src_alpha = fragment.w();
-                fragment.set_x(mix(fragment.x(), texel.x(), src_alpha));
-                fragment.set_y(mix(fragment.y(), texel.y(), src_alpha));
-                fragment.set_z(mix(fragment.z(), texel.z(), src_alpha));
+                auto src_alpha = quad.out_color.w();
+                quad.out_color.set_x(mix(quad.out_color.x(), texel.x(), src_alpha));
+                quad.out_color.set_y(mix(quad.out_color.y(), texel.y(), src_alpha));
+                quad.out_color.set_z(mix(quad.out_color.z(), texel.z(), src_alpha));
                 break;
             }
             default:
@@ -829,29 +846,33 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
 
         // Calculate fog
         // Math from here: https://opengl-notes.readthedocs.io/en/latest/topics/texturing/aliasing.html
+
+        // FIXME: exponential fog is not vectorized, we should add a SIMD exp function that calculates an approximation.
         if (m_options.fog_enabled) {
-            float factor = 0.0f;
+            auto factor = expand4(0.0f);
             switch (m_options.fog_mode) {
             case FogMode::Linear:
-                factor = (m_options.fog_end - fog_depth) / (m_options.fog_end - m_options.fog_start);
+                factor = (m_options.fog_end - quad.fog_depth) / (m_options.fog_end - m_options.fog_start);
                 break;
-            case FogMode::Exp:
-                factor = expf(-m_options.fog_density * fog_depth);
-                break;
-            case FogMode::Exp2:
-                factor = expf(-((m_options.fog_density * fog_depth) * (m_options.fog_density * fog_depth)));
-                break;
+            case FogMode::Exp: {
+                auto argument = -m_options.fog_density * quad.fog_depth;
+                factor = exp(argument);
+            } break;
+            case FogMode::Exp2: {
+                auto argument = m_options.fog_density * quad.fog_depth;
+                argument *= -argument;
+                factor = exp(argument);
+            } break;
             default:
                 VERIFY_NOT_REACHED();
             }
 
             // Mix texel's RGB with fog's RBG - leave alpha alone
-            fragment.set_x(mix(m_options.fog_color.x(), fragment.x(), factor));
-            fragment.set_y(mix(m_options.fog_color.y(), fragment.y(), factor));
-            fragment.set_z(mix(m_options.fog_color.z(), fragment.z(), factor));
+            auto fog_color = expand4(m_options.fog_color);
+            quad.out_color.set_x(mix(fog_color.x(), quad.out_color.x(), factor));
+            quad.out_color.set_y(mix(fog_color.y(), quad.out_color.y(), factor));
+            quad.out_color.set_z(mix(fog_color.z(), quad.out_color.z(), factor));
         }
-
-        return fragment;
     });
 }
 

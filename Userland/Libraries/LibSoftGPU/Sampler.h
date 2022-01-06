@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <AK/SIMD.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Image.h>
@@ -52,7 +53,7 @@ struct SamplerConfig final {
 
 class Sampler final {
 public:
-    FloatVector4 sample_2d(FloatVector2 const& uv) const;
+    Vector4<AK::SIMD::f32x4> sample_2d(Vector2<AK::SIMD::f32x4> const& uv) const;
 
     void set_config(SamplerConfig const& config) { m_config = config; }
     SamplerConfig const& config() const { return m_config; }
