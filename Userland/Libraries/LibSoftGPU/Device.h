@@ -14,6 +14,7 @@
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector4.h>
+#include <LibSoftGPU/AlphaBlendFactors.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/DepthBuffer.h>
@@ -95,6 +96,7 @@ private:
     void draw_statistics_overlay(Gfx::Bitmap&);
 
     void rasterize_triangle(const Triangle& triangle);
+    void setup_blend_factors();
     void shade_fragments(PixelQuad&);
 
 private:
@@ -107,6 +109,7 @@ private:
     Vector<Vertex> m_clipped_vertices;
     Array<Sampler, NUM_SAMPLERS> m_samplers;
     Vector<size_t> m_enabled_texture_units;
+    AlphaBlendFactors m_alpha_blend_factors;
 };
 
 }

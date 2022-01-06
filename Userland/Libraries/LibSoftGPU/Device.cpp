@@ -85,51 +85,94 @@ static Gfx::IntRect scissor_box_to_window_coordinates(Gfx::IntRect const& scisso
     return scissor_box.translated(0, window_rect.height() - 2 * scissor_box.y() - scissor_box.height());
 }
 
-static constexpr void setup_blend_factors(BlendFactor mode, FloatVector4& constant, float& src_alpha, float& dst_alpha, float& src_color, float& dst_color)
+void Device::setup_blend_factors()
 {
-    constant = { 0.0f, 0.0f, 0.0f, 0.0f };
-    src_alpha = 0;
-    dst_alpha = 0;
-    src_color = 0;
-    dst_color = 0;
+    m_alpha_blend_factors.src_constant = { 0.0f, 0.0f, 0.0f, 0.0f };
+    m_alpha_blend_factors.src_factor_src_alpha = 0;
+    m_alpha_blend_factors.src_factor_dst_alpha = 0;
+    m_alpha_blend_factors.src_factor_src_color = 0;
+    m_alpha_blend_factors.src_factor_dst_color = 0;
 
-    switch (mode) {
+    switch (m_options.blend_source_factor) {
     case BlendFactor::Zero:
         break;
     case BlendFactor::One:
-        constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         break;
     case BlendFactor::SrcColor:
-        src_color = 1;
+        m_alpha_blend_factors.src_factor_src_color = 1;
         break;
     case BlendFactor::OneMinusSrcColor:
-        constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        src_color = -1;
+        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_alpha_blend_factors.src_factor_src_color = -1;
         break;
     case BlendFactor::SrcAlpha:
-        src_alpha = 1;
+        m_alpha_blend_factors.src_factor_src_alpha = 1;
         break;
     case BlendFactor::OneMinusSrcAlpha:
-        constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        src_alpha = -1;
+        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_alpha_blend_factors.src_factor_src_alpha = -1;
         break;
     case BlendFactor::DstAlpha:
-        dst_alpha = 1;
+        m_alpha_blend_factors.src_factor_dst_alpha = 1;
         break;
     case BlendFactor::OneMinusDstAlpha:
-        constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        dst_alpha = -1;
+        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_alpha_blend_factors.src_factor_dst_alpha = -1;
         break;
     case BlendFactor::DstColor:
-        dst_color = 1;
+        m_alpha_blend_factors.src_factor_dst_color = 1;
         break;
     case BlendFactor::OneMinusDstColor:
-        constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        dst_color = -1;
+        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_alpha_blend_factors.src_factor_dst_color = -1;
         break;
     case BlendFactor::SrcAlphaSaturate:
-        // FIXME: How do we implement this?
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_alpha_blend_factors.dst_constant = { 0.0f, 0.0f, 0.0f, 0.0f };
+    m_alpha_blend_factors.dst_factor_src_alpha = 0;
+    m_alpha_blend_factors.dst_factor_dst_alpha = 0;
+    m_alpha_blend_factors.dst_factor_src_color = 0;
+    m_alpha_blend_factors.dst_factor_dst_color = 0;
+
+    switch (m_options.blend_destination_factor) {
+    case BlendFactor::Zero:
         break;
+    case BlendFactor::One:
+        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        break;
+    case BlendFactor::SrcColor:
+        m_alpha_blend_factors.dst_factor_src_color = 1;
+        break;
+    case BlendFactor::OneMinusSrcColor:
+        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_alpha_blend_factors.dst_factor_src_color = -1;
+        break;
+    case BlendFactor::SrcAlpha:
+        m_alpha_blend_factors.dst_factor_src_alpha = 1;
+        break;
+    case BlendFactor::OneMinusSrcAlpha:
+        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_alpha_blend_factors.dst_factor_src_alpha = -1;
+        break;
+    case BlendFactor::DstAlpha:
+        m_alpha_blend_factors.dst_factor_dst_alpha = 1;
+        break;
+    case BlendFactor::OneMinusDstAlpha:
+        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_alpha_blend_factors.dst_factor_dst_alpha = -1;
+        break;
+    case BlendFactor::DstColor:
+        m_alpha_blend_factors.dst_factor_dst_color = 1;
+        break;
+    case BlendFactor::OneMinusDstColor:
+        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_alpha_blend_factors.dst_factor_dst_color = -1;
+        break;
+    case BlendFactor::SrcAlphaSaturate:
     default:
         VERIFY_NOT_REACHED();
     }
@@ -165,36 +208,6 @@ void Device::rasterize_triangle(const Triangle& triangle)
         return;
 
     auto const one_over_area = 1.0f / area;
-
-    FloatVector4 src_constant {};
-    float src_factor_src_alpha = 0;
-    float src_factor_dst_alpha = 0;
-    float src_factor_src_color = 0;
-    float src_factor_dst_color = 0;
-
-    FloatVector4 dst_constant {};
-    float dst_factor_src_alpha = 0;
-    float dst_factor_dst_alpha = 0;
-    float dst_factor_src_color = 0;
-    float dst_factor_dst_color = 0;
-
-    if (m_options.enable_blending) {
-        setup_blend_factors(
-            m_options.blend_source_factor,
-            src_constant,
-            src_factor_src_alpha,
-            src_factor_dst_alpha,
-            src_factor_src_color,
-            src_factor_dst_color);
-
-        setup_blend_factors(
-            m_options.blend_destination_factor,
-            dst_constant,
-            dst_factor_src_alpha,
-            dst_factor_dst_alpha,
-            dst_factor_src_color,
-            dst_factor_dst_color);
-    }
 
     auto render_bounds = m_render_target->rect();
     auto window_scissor_rect = scissor_box_to_window_coordinates(m_options.scissor_box, m_render_target->rect());
@@ -441,17 +454,17 @@ void Device::rasterize_triangle(const Triangle& triangle)
                 Vector4<f32x4> const& src = quad.out_color;
                 auto dst = to_vec4(dst_u32);
 
-                auto src_factor = expand4(src_constant)
-                    + src * src_factor_src_color
-                    + Vector4<f32x4> { src.w(), src.w(), src.w(), src.w() } * src_factor_src_alpha
-                    + dst * src_factor_dst_color
-                    + Vector4<f32x4> { dst.w(), dst.w(), dst.w(), dst.w() } * src_factor_dst_alpha;
+                auto src_factor = expand4(m_alpha_blend_factors.src_constant)
+                    + src * m_alpha_blend_factors.src_factor_src_color
+                    + Vector4<f32x4> { src.w(), src.w(), src.w(), src.w() } * m_alpha_blend_factors.src_factor_src_alpha
+                    + dst * m_alpha_blend_factors.src_factor_dst_color
+                    + Vector4<f32x4> { dst.w(), dst.w(), dst.w(), dst.w() } * m_alpha_blend_factors.src_factor_dst_alpha;
 
-                auto dst_factor = expand4(dst_constant)
-                    + src * dst_factor_src_color
-                    + Vector4<f32x4> { src.w(), src.w(), src.w(), src.w() } * dst_factor_src_alpha
-                    + dst * dst_factor_dst_color
-                    + Vector4<f32x4> { dst.w(), dst.w(), dst.w(), dst.w() } * dst_factor_dst_alpha;
+                auto dst_factor = expand4(m_alpha_blend_factors.dst_constant)
+                    + src * m_alpha_blend_factors.dst_factor_src_color
+                    + Vector4<f32x4> { src.w(), src.w(), src.w(), src.w() } * m_alpha_blend_factors.dst_factor_src_alpha
+                    + dst * m_alpha_blend_factors.dst_factor_dst_color
+                    + Vector4<f32x4> { dst.w(), dst.w(), dst.w(), dst.w() } * m_alpha_blend_factors.dst_factor_dst_alpha;
 
                 quad.out_color = src * src_factor + dst * dst_factor;
             }
@@ -935,6 +948,9 @@ void Device::set_options(const RasterizerOptions& options)
     wait_for_all_threads();
 
     m_options = options;
+
+    if (m_options.enable_blending)
+        setup_blend_factors();
 
     // FIXME: Recreate or reinitialize render threads here when multithreading is being implemented
 }
