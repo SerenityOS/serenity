@@ -98,6 +98,7 @@ private:
     void rasterize_triangle(const Triangle& triangle);
     void setup_blend_factors();
     void shade_fragments(PixelQuad&);
+    bool test_alpha(PixelQuad&);
 
 private:
     RefPtr<Gfx::Bitmap> m_render_target;
