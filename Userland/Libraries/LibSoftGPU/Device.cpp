@@ -29,6 +29,7 @@ static long long g_num_quads;
 using IntVector2 = Gfx::Vector2<int>;
 using IntVector3 = Gfx::Vector3<int>;
 
+using AK::SIMD::any;
 using AK::SIMD::exp;
 using AK::SIMD::expand4;
 using AK::SIMD::f32x4;
@@ -401,30 +402,8 @@ void Device::rasterize_triangle(const Triangle& triangle)
 
             shade_fragments(quad);
 
-            if (m_options.enable_alpha_test && m_options.alpha_test_func != AlphaTestFunction::Always) {
-                switch (m_options.alpha_test_func) {
-                case AlphaTestFunction::Less:
-                    quad.mask &= quad.out_color.w() < m_options.alpha_test_ref_value;
-                    break;
-                case AlphaTestFunction::Equal:
-                    quad.mask &= quad.out_color.w() == m_options.alpha_test_ref_value;
-                    break;
-                case AlphaTestFunction::LessOrEqual:
-                    quad.mask &= quad.out_color.w() <= m_options.alpha_test_ref_value;
-                    break;
-                case AlphaTestFunction::Greater:
-                    quad.mask &= quad.out_color.w() > m_options.alpha_test_ref_value;
-                    break;
-                case AlphaTestFunction::NotEqual:
-                    quad.mask &= quad.out_color.w() != m_options.alpha_test_ref_value;
-                    break;
-                case AlphaTestFunction::GreaterOrEqual:
-                    quad.mask &= quad.out_color.w() >= m_options.alpha_test_ref_value;
-                    break;
-                case AlphaTestFunction::Never:
-                case AlphaTestFunction::Always:
-                    VERIFY_NOT_REACHED();
-                }
+            if (m_options.enable_alpha_test && m_options.alpha_test_func != AlphaTestFunction::Always && !test_alpha(quad)) {
+                continue;
             }
 
             // Write to depth buffer
@@ -815,6 +794,39 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
         quad.out_color.set_y(mix(fog_color.y(), quad.out_color.y(), factor));
         quad.out_color.set_z(mix(fog_color.z(), quad.out_color.z(), factor));
     }
+}
+
+ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)
+{
+    auto const alpha = quad.out_color.w();
+    auto const ref_value = expand4(m_options.alpha_test_ref_value);
+
+    switch (m_options.alpha_test_func) {
+    case AlphaTestFunction::Less:
+        quad.mask &= alpha < ref_value;
+        break;
+    case AlphaTestFunction::Equal:
+        quad.mask &= alpha == ref_value;
+        break;
+    case AlphaTestFunction::LessOrEqual:
+        quad.mask &= alpha <= ref_value;
+        break;
+    case AlphaTestFunction::Greater:
+        quad.mask &= alpha > ref_value;
+        break;
+    case AlphaTestFunction::NotEqual:
+        quad.mask &= alpha != ref_value;
+        break;
+    case AlphaTestFunction::GreaterOrEqual:
+        quad.mask &= alpha >= ref_value;
+        break;
+    case AlphaTestFunction::Never:
+    case AlphaTestFunction::Always:
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    return any(quad.mask);
 }
 
 void Device::resize(const Gfx::IntSize& min_size)
