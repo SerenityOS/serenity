@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -824,31 +824,81 @@ bool ISO8601Parser::parse_time_zone_utc_offset_name()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-TimeZoneIANAName
-bool ISO8601Parser::parse_time_zone_iana_name()
+// https://tc39.es/proposal-temporal/#prod-TZLeadingChar
+bool ISO8601Parser::parse_tz_leading_char()
 {
     // TZLeadingChar :
     //     Alpha
     //     .
     //     _
+    if (m_state.lexer.next_is(is_ascii_alpha)) {
+        m_state.lexer.consume();
+        return true;
+    }
+    return m_state.lexer.consume_specific('.')
+        || m_state.lexer.consume_specific('_');
+}
+
+// https://tc39.es/proposal-temporal/#prod-TZChar
+bool ISO8601Parser::parse_tz_char()
+{
     // TZChar :
     //     Alpha
     //     .
     //     -
     //     _
+    if (m_state.lexer.next_is(is_ascii_alpha)) {
+        m_state.lexer.consume();
+        return true;
+    }
+    return m_state.lexer.consume_specific('.')
+        || m_state.lexer.consume_specific('-')
+        || m_state.lexer.consume_specific('_');
+}
+
+// https://tc39.es/proposal-temporal/#prod-TimeZoneIANANameComponent
+bool ISO8601Parser::parse_time_zone_iana_component()
+{
     // TimeZoneIANANameComponent :
     //     TZLeadingChar TZChar[opt] TZChar[opt] TZChar[opt] TZChar[opt] TZChar[opt] TZChar[opt] TZChar[opt] TZChar[opt] TZChar[opt] TZChar[opt] TZChar[opt] TZChar[opt] TZChar[opt] but not one of . or ..
+    StateTransaction transaction { *this };
+    if (!parse_tz_leading_char())
+        return false;
+    for (size_t i = 0; i < 13; ++i) {
+        if (!parse_tz_char())
+            break;
+    }
+    if (transaction.parsed_string_view().is_one_of("."sv, ".."sv))
+        return false;
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-TimeZoneIANANameTail
+bool ISO8601Parser::parse_time_zone_iana_name_tail()
+{
     // TimeZoneIANANameTail :
     //     TimeZoneIANANameComponent
     //     TimeZoneIANANameComponent / TimeZoneIANANameTail
+    StateTransaction transaction { *this };
+    if (!parse_time_zone_iana_component())
+        return false;
+    while (m_state.lexer.next_is('/')) {
+        m_state.lexer.consume();
+        if (!parse_time_zone_iana_component())
+            return false;
+    }
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-TimeZoneIANAName
+bool ISO8601Parser::parse_time_zone_iana_name()
+{
     // TimeZoneIANAName :
     //     TimeZoneIANANameTail
     StateTransaction transaction { *this };
-    // TODO: Implement the full production. Currently, anything other than "UTC" would get rejected as unknown anyway.
-    auto success = (m_state.lexer.consume_specific('U') || m_state.lexer.consume_specific('u'))
-        && (m_state.lexer.consume_specific('T') || m_state.lexer.consume_specific('t'))
-        && (m_state.lexer.consume_specific('C') || m_state.lexer.consume_specific('c'));
-    if (!success)
+    if (!parse_time_zone_iana_name_tail())
         return false;
     m_state.parse_result.time_zone_iana_name = transaction.parsed_string_view();
     transaction.commit();
