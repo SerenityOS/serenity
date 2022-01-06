@@ -17,8 +17,9 @@ TEST_CASE(int_hash)
 
 TEST_CASE(double_hash)
 {
-    static_assert(double_hash(42) == 524450u);
-    static_assert(double_hash(0) == 12384u);
+    static_assert(double_hash(666) == 171644115u);
+    static_assert(double_hash(0) == 1189591134u);
+    static_assert(double_hash(0xBA5EDB01) == 0u);
 }
 
 TEST_CASE(pair_int_hash)

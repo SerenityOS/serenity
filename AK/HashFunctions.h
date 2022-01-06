@@ -21,11 +21,15 @@ constexpr unsigned int_hash(u32 key)
 
 constexpr unsigned double_hash(u32 key)
 {
-    key = ~key + (key >> 23);
-    key ^= (key << 12);
-    key ^= (key >> 7);
-    key ^= (key << 2);
-    key ^= (key >> 20);
+    const unsigned magic = 0xBA5EDB01;
+    if (key == magic)
+        return 0u;
+    if (key == 0u)
+        key = magic;
+
+    key ^= key << 13;
+    key ^= key >> 17;
+    key ^= key << 5;
     return key;
 }
 
