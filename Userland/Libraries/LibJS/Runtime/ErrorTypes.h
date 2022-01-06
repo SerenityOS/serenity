@@ -240,7 +240,7 @@
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeString, "Invalid time string '{}'")                                                                            \
     M(TemporalInvalidTimeStringUTCDesignator, "Invalid time string '{}': must not contain a UTC designator")                            \
-    M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
+    M(TemporalInvalidTimeZoneName, "Invalid time zone name '{}'")                                                                       \
     M(TemporalInvalidTimeZoneString, "Invalid time zone string '{}'")                                                                   \
     M(TemporalInvalidUnitRange, "Invalid unit range, {} is larger than {}")                                                             \
     M(TemporalInvalidYearMonthString, "Invalid year month string '{}'")                                                                 \
