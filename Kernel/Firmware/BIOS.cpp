@@ -86,7 +86,7 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_32_bit_entry_initialization_va
     auto smbios_entry = Memory::map_typed<SMBIOS::EntryPoint32bit>(m_dmi_entry_point, SMBIOS_SEARCH_AREA_SIZE);
     m_smbios_structure_table = PhysicalAddress(smbios_entry.ptr()->legacy_structure.smbios_table_ptr);
     m_dmi_entry_point_length = smbios_entry.ptr()->length;
-    m_smbios_structure_table_length = smbios_entry.ptr()->legacy_structure.smboios_table_length;
+    m_smbios_structure_table_length = smbios_entry.ptr()->legacy_structure.smbios_table_length;
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<BIOSSysFSDirectory> BIOSSysFSDirectory::must_create(FirmwareSysFSDirectory& firmware_directory)

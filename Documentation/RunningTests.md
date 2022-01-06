@@ -47,7 +47,7 @@ classes of common C++ errors, including memory leaks, out of bounds access to st
 signed integer overflow. For more info on the sanitizers, check out the Address Sanitizer [wiki page](https://github.com/google/sanitizers/wiki),
 or the Undefined Sanitizer [documentation](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html) from clang.
 
-Note that a sanitizer build will take significantly longer than a non-santizer build, and will mess with caches in tools such as `ccache`.
+Note that a sanitizer build will take significantly longer than a non-sanitizer build, and will mess with caches in tools such as `ccache`.
 The sanitizers can be enabled with the `-DENABLE_FOO_SANITIZER` set of flags. For the Serenity target, only the Undefined Sanitizers is supported.
 
 ```sh

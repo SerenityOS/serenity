@@ -180,10 +180,10 @@ bool DeflateDecompressor::UncompressedBlock::try_read_more()
     if (m_bytes_remaining == 0)
         return false;
 
-    const auto nread = min(m_bytes_remaining, m_decompressor.m_output_stream.remaining_contigous_space());
+    const auto nread = min(m_bytes_remaining, m_decompressor.m_output_stream.remaining_contiguous_space());
     m_bytes_remaining -= nread;
 
-    m_decompressor.m_input_stream >> m_decompressor.m_output_stream.reserve_contigous_space(nread);
+    m_decompressor.m_input_stream >> m_decompressor.m_output_stream.reserve_contiguous_space(nread);
 
     return true;
 }

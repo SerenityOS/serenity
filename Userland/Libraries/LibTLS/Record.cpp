@@ -187,7 +187,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         // copy the header over
                         ct.overwrite(0, packet.data(), header_size - 2);
 
-                        // get the appropricate HMAC value for the entire packet
+                        // get the appropriate HMAC value for the entire packet
                         auto mac = hmac_message(packet, {}, mac_size, true);
 
                         // write the MAC

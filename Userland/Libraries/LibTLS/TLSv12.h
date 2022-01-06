@@ -295,7 +295,7 @@ struct Context {
     // message flags
     u8 handshake_messages[11] { 0 };
     ByteBuffer user_data;
-    Vector<Certificate> root_ceritificates;
+    Vector<Certificate> root_certificates;
 
     Vector<String> alpn;
     StringView negotiated_alpn;

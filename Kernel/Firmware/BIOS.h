@@ -23,7 +23,7 @@ namespace Kernel::SMBIOS {
 struct [[gnu::packed]] LegacyEntryPoint32bit {
     char legacy_sig[5];
     u8 checksum2;
-    u16 smboios_table_length;
+    u16 smbios_table_length;
     u32 smbios_table_ptr;
     u16 smbios_tables_count;
     u8 smbios_bcd_revision;

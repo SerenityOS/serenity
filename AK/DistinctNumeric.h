@@ -129,7 +129,7 @@ public:
         return !this->m_value;
     }
     // Intentionally don't define `operator bool() const` here. C++ is a bit
-    // overzealos, and whenever there would be a type error, C++ instead tries
+    // overzealous, and whenever there would be a type error, C++ instead tries
     // to convert to a common int-ish type first. `bool` is int-ish, so
     // `operator bool() const` would defy the entire point of this class.
 

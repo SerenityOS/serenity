@@ -1038,7 +1038,7 @@ void WindowManager::start_menu_doubleclick(Window& window, MouseEvent const& eve
     // This is a special case. Basically, we're trying to determine whether
     // double clicking on the window menu icon happened. In this case, the
     // WindowFrame only receives a MouseDown event, and since the window
-    // menu popus up, it does not see the MouseUp event. But, if they subsequently
+    // menu pops up, it does not see the MouseUp event. But, if they subsequently
     // click there again, the menu is closed and we receive a MouseUp event.
     // So, in order to be able to detect a double click when a menu is being
     // opened by the MouseDown event, we need to consider the MouseDown event

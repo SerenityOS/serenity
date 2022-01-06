@@ -106,8 +106,8 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
     //     validity                     Validity,
     //     subject                      Name,
     //     subject_public_key_info      SubjectPublicKeyInfo,
-    //     issuer_unique_id         (1) IMPLICIT UniqueIdentifer OPTIONAL (if present, version > v1),
-    //     subject_unique_id        (2) IMPLICIT UniqueIdentiier OPTIONAL (if present, version > v1),
+    //     issuer_unique_id         (1) IMPLICIT UniqueIdentifier OPTIONAL (if present, version > v1),
+    //     subject_unique_id        (2) IMPLICIT UniqueIdentifier OPTIONAL (if present, version > v1),
     //     extensions               (3) EXPLICIT Extensions OPTIONAL      (if present, version > v2)
     // }
     ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate");
@@ -413,7 +413,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                             case 3:
                                 // x400Address
                                 // We don't know how to use this.
-                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::X400Adress");
+                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::X400Address");
                                 break;
                             case 4:
                                 // Directory name

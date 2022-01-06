@@ -88,7 +88,7 @@ These extensions can be used as-is, but you need to point them to the custom Ser
 ```
 </details>
 
-Most nonsentical errors from the extension also involve not finding methods, types etc.
+Most nonsensical errors from the extension also involve not finding methods, types etc.
 
 ### DSL syntax highlighting
 
@@ -337,7 +337,7 @@ The following snippet may be useful if you want to quickly generate a license he
             " * SPDX-License-Identifier: BSD-2-Clause",
             " */"
         ],
-        "description": "Licence header"
+        "description": "License header"
     }
 }
 ```

@@ -176,13 +176,13 @@ void ServerConnectionWrapper::on_crash()
         dbgln("LanguageServer crash frequency is too high");
         m_respawn_allowed = false;
 
-        show_frequenct_crashes_notification();
+        show_frequent_crashes_notification();
     } else {
         m_last_crash_timer.start();
         try_respawn_connection();
     }
 }
-void ServerConnectionWrapper::show_frequenct_crashes_notification() const
+void ServerConnectionWrapper::show_frequent_crashes_notification() const
 {
     auto notification = GUI::Notification::construct();
     notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png").release_value_but_fixme_should_propagate_errors());

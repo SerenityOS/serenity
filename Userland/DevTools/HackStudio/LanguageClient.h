@@ -78,7 +78,7 @@ public:
 private:
     void create_connection();
     void show_crash_notification() const;
-    void show_frequenct_crashes_notification() const;
+    void show_frequent_crashes_notification() const;
 
     Language m_language;
     Function<NonnullRefPtr<ServerConnection>()> m_connection_creator;

@@ -161,7 +161,7 @@ void PIC::remap(u8 offset)
     IO::out8(PIC0_CTL, ICW1_INIT | ICW1_ICW4);
     IO::out8(PIC1_CTL, ICW1_INIT | ICW1_ICW4);
 
-    /* ICW2 (upper 5 bits specify ISR indices, lower 3 idunno) */
+    /* ICW2 (upper 5 bits specify ISR indices, lower 3 don't specify anything) */
     IO::out8(PIC0_CMD, offset);
     IO::out8(PIC1_CMD, offset + 0x08);
 
@@ -188,7 +188,7 @@ UNMAP_AFTER_INIT void PIC::initialize()
     IO::out8(PIC0_CTL, ICW1_INIT | ICW1_ICW4);
     IO::out8(PIC1_CTL, ICW1_INIT | ICW1_ICW4);
 
-    /* ICW2 (upper 5 bits specify ISR indices, lower 3 idunno) */
+    /* ICW2 (upper 5 bits specify ISR indices, lower 3 don't specify anything) */
     IO::out8(PIC0_CMD, IRQ_VECTOR_BASE);
     IO::out8(PIC1_CMD, IRQ_VECTOR_BASE + 0x08);
 

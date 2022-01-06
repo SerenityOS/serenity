@@ -142,7 +142,7 @@ void UnsignedBigIntegerAlgorithms::almost_montgomery_multiplication_without_allo
         UnsignedBigInteger::Word t = z.m_words[i] * k;
         UnsignedBigInteger::Word carry_2 = montgomery_fragment(z, i, modulo, t, num_words);
 
-        // Compute the carry by combining all of the carrys of the previous computations
+        // Compute the carry by combining all of the carries of the previous computations
         // Put it "right after" the range that we computed above
         UnsignedBigInteger::Word temp_carry = previous_double_carry + carry_1;
         UnsignedBigInteger::Word overall_carry = temp_carry + carry_2;

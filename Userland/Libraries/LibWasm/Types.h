@@ -619,8 +619,8 @@ public:
 public:
     static constexpr u8 section_id = 5;
 
-    explicit MemorySection(Vector<Memory> memorys)
-        : m_memories(move(memorys))
+    explicit MemorySection(Vector<Memory> memories)
+        : m_memories(move(memories))
     {
     }
 

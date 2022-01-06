@@ -430,7 +430,7 @@ void EventLoop::pump(WaitMode mode)
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
     Threading::MutexLocker lock(m_private->lock);
-    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::post_event: ({}) << receivier={}, event={}", m_queued_events.size(), receiver, event);
+    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::post_event: ({}) << receiver={}, event={}", m_queued_events.size(), receiver, event);
     m_queued_events.empend(receiver, move(event));
 }
 
@@ -517,7 +517,7 @@ void EventLoop::handle_signal(int signo)
     VERIFY(signo != 0);
     // We MUST check if the current pid still matches, because there
     // is a window between fork() and exec() where a signal delivered
-    // to our fork could be inadvertedly routed to the parent process!
+    // to our fork could be inadvertently routed to the parent process!
     if (getpid() == s_pid) {
         int nwritten = write(s_wake_pipe_fds[1], &signo, sizeof(signo));
         if (nwritten < 0) {

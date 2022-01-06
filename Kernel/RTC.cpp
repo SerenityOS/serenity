@@ -99,17 +99,17 @@ time_t now()
     };
 
     unsigned year, month, day, hour, minute, second;
-    bool did_read_rtc_sucessfully = false;
+    bool did_read_rtc_successfully = false;
     for (size_t attempt = 0; attempt < 5; attempt++) {
         if (!try_to_read_registers(year, month, day, hour, minute, second))
             break;
         if (check_registers_against_preloaded_values(year, month, day, hour, minute, second)) {
-            did_read_rtc_sucessfully = true;
+            did_read_rtc_successfully = true;
             break;
         }
     }
 
-    dmesgln("RTC: {} Year: {}, month: {}, day: {}, hour: {}, minute: {}, second: {}", (did_read_rtc_sucessfully ? "" : "(failed to read)"), year, month, day, hour, minute, second);
+    dmesgln("RTC: {} Year: {}, month: {}, day: {}, hour: {}, minute: {}, second: {}", (did_read_rtc_successfully ? "" : "(failed to read)"), year, month, day, hour, minute, second);
 
     time_t days_since_epoch = years_to_days_since_epoch(year) + day_of_year(year, month, day);
     return ((days_since_epoch * 24 + hour) * 60 + minute) * 60 + second;

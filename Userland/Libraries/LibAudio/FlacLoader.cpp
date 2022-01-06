@@ -366,10 +366,10 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
         Sample frame = { left[i] / sample_rescale, right[i] / sample_rescale };
         target_vector[i] = frame;
     }
-    // move superflous data into the class buffer instead
+    // move superfluous data into the class buffer instead
     auto result = m_unread_data.try_grow_capacity(m_current_frame->sample_count - samples_to_directly_copy);
     if (result.is_error())
-        return LoaderError { LoaderError::Category::Internal, static_cast<size_t>(samples_to_directly_copy + m_current_sample_or_frame), "Couldn't allocate sample buffer for superflous data" };
+        return LoaderError { LoaderError::Category::Internal, static_cast<size_t>(samples_to_directly_copy + m_current_sample_or_frame), "Couldn't allocate sample buffer for superfluous data" };
 
     for (size_t i = samples_to_directly_copy; i < m_current_frame->sample_count; ++i) {
         Sample frame = { left[i] / sample_rescale, right[i] / sample_rescale };
@@ -630,7 +630,7 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
         for (size_t t = 0; t < subframe.order; ++t) {
             // It's really important that we compute in 64-bit land here.
             // Even though FLAC operates at a maximum bit depth of 32 bits, modern encoders use super-large coefficients for maximum compression.
-            // These will easily overflow 32 bits and cause strange white noise that apruptly stops intermittently (at the end of a frame).
+            // These will easily overflow 32 bits and cause strange white noise that abruptly stops intermittently (at the end of a frame).
             // The simple fix of course is to do intermediate computations in 64 bits.
             sample += static_cast<i64>(coefficients[t]) * static_cast<i64>(decoded[i - t - 1]);
         }

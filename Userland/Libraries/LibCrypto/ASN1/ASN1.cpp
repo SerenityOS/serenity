@@ -183,7 +183,7 @@ done_parsing:;
     if (offset_hours.has_value() || offset_minutes.has_value())
         dbgln("FIXME: Implement GeneralizedTime with offset!");
 
-    // Unceremonially drop the milliseconds on the floor.
+    // Unceremoniously drop the milliseconds on the floor.
     return Core::DateTime::create(year.value(), month.value(), day.value(), hour.value(), minute.value_or(0), seconds.value_or(0));
 }
 

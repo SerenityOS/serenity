@@ -19,7 +19,7 @@ Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> MBRPartitionTabl
 {
     auto table = make<MBRPartitionTable>(device);
     if (table->contains_ebr())
-        return { PartitionTable::Error::ConatinsEBR };
+        return { PartitionTable::Error::ContainsEBR };
     if (table->is_protective_mbr())
         return { PartitionTable::Error::MBRProtective };
     if (!table->is_valid())

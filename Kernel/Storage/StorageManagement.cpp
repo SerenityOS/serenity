@@ -101,7 +101,7 @@ UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_par
             return {};
         return move(gpt_table_or_result.value());
     }
-    if (mbr_table_or_result.error() == PartitionTable::Error::ConatinsEBR) {
+    if (mbr_table_or_result.error() == PartitionTable::Error::ContainsEBR) {
         auto ebr_table_or_result = EBRPartitionTable::try_to_initialize(device);
         if (ebr_table_or_result.is_error())
             return {};
