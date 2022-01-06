@@ -72,6 +72,7 @@ private:
     void ensure_top_card_is_visible(NonnullRefPtr<CardStack> stack);
     void detect_full_stacks();
     void detect_victory();
+    void move_focused_cards(CardStack& stack);
 
     ALWAYS_INLINE CardStack& stack(StackLocation location)
     {
