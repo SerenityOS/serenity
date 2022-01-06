@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <time.h>
 
-static const char* secret_key = "WellHelloFreinds";
+static const char* secret_key = "WellHelloFriends";
 static const char* suite = nullptr;
 static const char* filename = nullptr;
 static const char* server = nullptr;
