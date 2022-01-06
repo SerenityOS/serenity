@@ -1,0 +1,24 @@
+diff -ruN npiet-1.3f/Makefile.in npiet-1.3f.patched/Makefile.in
+--- npiet-1.3f/Makefile.in	2014-12-04 15:59:51.000000000 -0500
++++ npiet-1.3f.patched/Makefile.in	2022-01-05 13:40:37.959967837 -0500
+@@ -67,7 +67,7 @@
+ ##
+ ## How to build the target:
+ ##
+-all:		npiet npiet-foogol html
++all:		npiet npiet-foogol
+ 
+ npiet:		npiet.o
+ 	$(CC) $(LDFLAGS) $(PROF) -o npiet npiet.o $(LIBS)
+diff -ruN npiet-1.3f/npiet-foogol.c npiet-1.3f.patched/npiet-foogol.c
+--- npiet-1.3f/npiet-foogol.c	2020-08-09 09:18:46.000000000 -0400
++++ npiet-1.3f.patched/npiet-foogol.c	2022-01-05 13:39:49.922931168 -0500
+@@ -108,7 +108,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+-#include <malloc.h>
++// #include <malloc.h>
+ #include <limits.h>
+ #include <time.h>
+ 
