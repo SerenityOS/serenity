@@ -36,6 +36,6 @@ describe("errors", () => {
 
         expect(() => {
             zonedDateTime.withTimeZone("UTCfoobar");
-        }).toThrowWithMessage(RangeError, "Invalid time zone string 'UTCfoobar'");
+        }).toThrowWithMessage(RangeError, "Invalid time zone name 'UTCfoobar'");
     });
 });

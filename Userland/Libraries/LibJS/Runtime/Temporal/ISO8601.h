@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -131,6 +131,10 @@ public:
     [[nodiscard]] bool parse_time_zone_numeric_utc_offset_not_ambiguous();
     [[nodiscard]] bool parse_time_zone_numeric_utc_offset_not_ambiguous_allowed_negative_hour();
     [[nodiscard]] bool parse_time_zone_utc_offset_name();
+    [[nodiscard]] bool parse_tz_leading_char();
+    [[nodiscard]] bool parse_tz_char();
+    [[nodiscard]] bool parse_time_zone_iana_component();
+    [[nodiscard]] bool parse_time_zone_iana_name_tail();
     [[nodiscard]] bool parse_time_zone_iana_name();
     [[nodiscard]] bool parse_time_zone_bracketed_name();
     [[nodiscard]] bool parse_time_zone_bracketed_annotation();
