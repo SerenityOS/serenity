@@ -59,6 +59,8 @@ static Vector<EventLoop&>* s_event_loop_stack;
 static NeverDestroyed<IDAllocator> s_id_allocator;
 static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 static HashTable<Notifier*>* s_notifiers;
+static Threading::Mutex s_notifiers_mutex;
+
 int EventLoop::s_wake_pipe_fds[2];
 static RefPtr<InspectorServerConnection> s_inspector_server_connection;
 
@@ -605,13 +607,17 @@ retry:
     int max_fd_added = -1;
     add_fd_to_set(s_wake_pipe_fds[0], rfds);
     max_fd = max(max_fd, max_fd_added);
-    for (auto& notifier : *s_notifiers) {
-        if (notifier->event_mask() & Notifier::Read)
-            add_fd_to_set(notifier->fd(), rfds);
-        if (notifier->event_mask() & Notifier::Write)
-            add_fd_to_set(notifier->fd(), wfds);
-        if (notifier->event_mask() & Notifier::Exceptional)
-            VERIFY_NOT_REACHED();
+
+    {
+        Threading::MutexLocker locker(s_notifiers_mutex);
+        for (auto& notifier : *s_notifiers) {
+            if (notifier->event_mask() & Notifier::Read)
+                add_fd_to_set(notifier->fd(), rfds);
+            if (notifier->event_mask() & Notifier::Write)
+                add_fd_to_set(notifier->fd(), wfds);
+            if (notifier->event_mask() & Notifier::Exceptional)
+                VERIFY_NOT_REACHED();
+        }
     }
 
     bool queued_events_is_empty;
@@ -698,6 +704,7 @@ try_select_again:
     if (!marked_fd_count)
         return;
 
+    Threading::MutexLocker locker(s_notifiers_mutex);
     for (auto& notifier : *s_notifiers) {
         if (FD_ISSET(notifier->fd(), &rfds)) {
             if (notifier->event_mask() & Notifier::Event::Read)
@@ -763,11 +770,13 @@ bool EventLoop::unregister_timer(int timer_id)
 
 void EventLoop::register_notifier(Badge<Notifier>, Notifier& notifier)
 {
+    Threading::MutexLocker locker(s_notifiers_mutex);
     s_notifiers->set(&notifier);
 }
 
 void EventLoop::unregister_notifier(Badge<Notifier>, Notifier& notifier)
 {
+    Threading::MutexLocker locker(s_notifiers_mutex);
     s_notifiers->remove(&notifier);
 }
 
