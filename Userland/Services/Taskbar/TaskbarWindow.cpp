@@ -111,7 +111,13 @@ void TaskbarWindow::show_desktop_button_clicked(unsigned)
 void TaskbarWindow::on_screen_rects_change(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
 {
     const auto& rect = rects[main_screen_index];
-    Gfx::IntRect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
+    auto width = 0;
+    for (size_t i = 0; i < rects.size(); i++) {
+        const auto& screen = rects[i];
+        width += screen.width();
+    }
+
+    Gfx::IntRect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, width, taskbar_height() };
     set_rect(new_rect);
     update_applet_area();
 }
