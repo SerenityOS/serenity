@@ -1,5 +1,6 @@
 set(TEST_SOURCES
     TestUnicodeCharacterTypes.cpp
+    TestUnicodeDateTimeFormat.cpp
     TestUnicodeLocale.cpp
 )
 
