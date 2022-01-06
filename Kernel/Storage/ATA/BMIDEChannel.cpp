@@ -40,18 +40,14 @@ UNMAP_AFTER_INIT void BMIDEChannel::initialize()
     VERIFY(m_io_group.bus_master_base().has_value());
     // Let's try to set up DMA transfers.
     PCI::enable_bus_mastering(m_parent_controller->pci_address());
-    m_prdt_page = MM.allocate_supervisor_physical_page();
-    m_dma_buffer_page = MM.allocate_supervisor_physical_page();
-    if (m_dma_buffer_page.is_null() || m_prdt_page.is_null())
-        return;
     {
-        auto region_or_error = MM.allocate_kernel_region(m_prdt_page->paddr(), PAGE_SIZE, "IDE PRDT", Memory::Region::Access::ReadWrite);
+        auto region_or_error = MM.allocate_dma_buffer_page("IDE PRDT", Memory::Region::Access::ReadWrite, m_prdt_page);
         if (region_or_error.is_error())
             TODO();
         m_prdt_region = region_or_error.release_value();
     }
     {
-        auto region_or_error = MM.allocate_kernel_region(m_dma_buffer_page->paddr(), PAGE_SIZE, "IDE DMA region", Memory::Region::Access::ReadWrite);
+        auto region_or_error = MM.allocate_dma_buffer_page("IDE DMA region", Memory::Region::Access::ReadWrite, m_dma_buffer_page);
         if (region_or_error.is_error())
             TODO();
         m_dma_buffer_region = region_or_error.release_value();
