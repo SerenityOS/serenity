@@ -12,16 +12,16 @@
 
 namespace SoftGPU {
 
-Vertex Clipper::clip_intersection_point(const Vertex& p1, const Vertex& p2, ClipPlane plane)
+Vertex Clipper::clip_intersection_point(Vertex const& p1, Vertex const& p2, ClipPlane plane)
 {
     // See https://www.microsoft.com/en-us/research/wp-content/uploads/1978/01/p245-blinn.pdf
     // "Clipping Using Homogeneous Coordinates" Blinn/Newell, 1978
 
-    float w1 = p1.clip_coordinates.w();
-    float w2 = p2.clip_coordinates.w();
-    float x1 = clip_plane_normals[static_cast<u8>(plane)].dot(p1.clip_coordinates);
-    float x2 = clip_plane_normals[static_cast<u8>(plane)].dot(p2.clip_coordinates);
-    float a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
+    float const w1 = p1.clip_coordinates.w();
+    float const w2 = p2.clip_coordinates.w();
+    float const x1 = clip_plane_normals[static_cast<u8>(plane)].dot(p1.clip_coordinates);
+    float const x2 = clip_plane_normals[static_cast<u8>(plane)].dot(p2.clip_coordinates);
+    float const a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
 
     Vertex out;
     out.position = mix(p1.position, p2.position, a);

@@ -47,10 +47,10 @@ public:
     void clip_triangle_against_frustum(Vector<Vertex>& input_vecs);
 
 private:
-    Vertex clip_intersection_point(const Vertex& vec, const Vertex& prev_vec, ClipPlane plane);
+    Vertex clip_intersection_point(Vertex const& vec, Vertex const& prev_vec, ClipPlane plane);
 
     template<ClipPlane plane>
-    constexpr bool point_within_clip_plane(const FloatVector4& vertex)
+    constexpr bool point_within_clip_plane(FloatVector4 const& vertex)
     {
         if constexpr (plane == ClipPlane::LEFT) {
             return vertex.x() >= -vertex.w();
@@ -75,17 +75,17 @@ private:
         write_to->clear_with_capacity();
 
         for (size_t i = 0; i < read_from->size(); i++) {
-            const auto& curr_vec = read_from->at((i + 1) % read_from->size());
-            const auto& prev_vec = read_from->at(i);
+            auto const& curr_vec = read_from->at((i + 1) % read_from->size());
+            auto const& prev_vec = read_from->at(i);
 
             if (point_within_clip_plane<plane>(curr_vec.clip_coordinates)) {
                 if (!point_within_clip_plane<plane>(prev_vec.clip_coordinates)) {
-                    auto intersect = clip_intersection_point(prev_vec, curr_vec, plane);
+                    auto const intersect = clip_intersection_point(prev_vec, curr_vec, plane);
                     write_to->append(intersect);
                 }
                 write_to->append(curr_vec);
             } else if (point_within_clip_plane<plane>(prev_vec.clip_coordinates)) {
-                auto intersect = clip_intersection_point(prev_vec, curr_vec, plane);
+                auto const intersect = clip_intersection_point(prev_vec, curr_vec, plane);
                 write_to->append(intersect);
             }
         }
