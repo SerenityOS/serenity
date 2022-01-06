@@ -1164,7 +1164,7 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
                 }
             },
             [&](NonnullRefPtr<BindingPattern> const&) {
-                // FIXME: Implement this path when the above DeclrativeEnvironment issue is dealt with.
+                // FIXME: Implement this path when the above DeclarativeEnvironment issue is dealt with.
                 TODO();
             });
 

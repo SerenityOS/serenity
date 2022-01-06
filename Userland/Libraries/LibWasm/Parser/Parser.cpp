@@ -849,10 +849,10 @@ ParseResult<MemorySection::Memory> MemorySection::Memory::parse(InputStream& str
 ParseResult<MemorySection> MemorySection::parse(InputStream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("MemorySection");
-    auto memorys = parse_vector<Memory>(stream);
-    if (memorys.is_error())
-        return memorys.error();
-    return MemorySection { memorys.release_value() };
+    auto memories = parse_vector<Memory>(stream);
+    if (memories.is_error())
+        return memories.error();
+    return MemorySection { memories.release_value() };
 }
 
 ParseResult<Expression> Expression::parse(InputStream& stream)

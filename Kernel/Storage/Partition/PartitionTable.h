@@ -19,7 +19,7 @@ public:
     enum class Error {
         Invalid,
         MBRProtective,
-        ConatinsEBR,
+        ContainsEBR,
     };
 
 public:

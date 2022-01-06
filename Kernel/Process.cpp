@@ -710,7 +710,7 @@ ErrorOr<void> Process::send_signal(u8 signal, Process* sender)
     // If the main thread has died, there may still be other threads:
     if (!receiver_thread) {
         // The first one should be good enough.
-        // Neither kill(2) nor kill(3) specify any selection precedure.
+        // Neither kill(2) nor kill(3) specify any selection procedure.
         for_each_thread([&receiver_thread](Thread& thread) -> IterationDecision {
             receiver_thread = &thread;
             return IterationDecision::Break;

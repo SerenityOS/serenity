@@ -247,7 +247,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         m_basic_block = true;
         break;
     }
-    case StandardOpcodes::SetProlougeEnd: {
+    case StandardOpcodes::SetPrologueEnd: {
         m_prologue_end = true;
         break;
     }

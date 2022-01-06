@@ -714,7 +714,7 @@ static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
         return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see an IHDR chunk."sv);
 
     if (context.color_type == 3 && context.palette_data.is_empty())
-        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palettized image, or it was empty."sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palletized image, or it was empty."sv);
 
     auto result = Compress::Zlib::decompress_all(context.compressed_data.span());
     if (!result.has_value()) {

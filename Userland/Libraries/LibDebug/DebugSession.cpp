@@ -104,7 +104,7 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command,
         return {};
     }
 
-    // We want to continue until the exit from the 'execve' sycsall.
+    // We want to continue until the exit from the 'execve' syscall.
     // This ensures that when we start debugging the process
     // it executes the target image, and not the forked image of the tracing process.
     // NOTE: we only need to do this when we are debugging a new process (i.e not attaching to a process that's already running!)

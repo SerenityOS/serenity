@@ -174,7 +174,7 @@ void TLSv12::try_disambiguate_error() const
 
 void TLSv12::set_root_certificates(Vector<Certificate> certificates)
 {
-    if (!m_context.root_ceritificates.is_empty())
+    if (!m_context.root_certificates.is_empty())
         dbgln("TLS warn: resetting root certificates!");
 
     for (auto& cert : certificates) {
@@ -182,7 +182,7 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
             dbgln("Certificate for {} by {} is invalid, things may or may not work!", cert.subject.subject, cert.issuer.subject);
         // FIXME: Figure out what we should do when our root certs are invalid.
     }
-    m_context.root_ceritificates = move(certificates);
+    m_context.root_certificates = move(certificates);
 }
 
 bool Context::verify_chain() const
@@ -202,7 +202,7 @@ bool Context::verify_chain() const
     HashMap<String, String> chain;
     HashTable<String> roots;
     // First, walk the root certs.
-    for (auto& cert : root_ceritificates) {
+    for (auto& cert : root_certificates) {
         roots.set(cert.subject.subject);
         chain.set(cert.subject.subject, cert.issuer.subject);
     }
