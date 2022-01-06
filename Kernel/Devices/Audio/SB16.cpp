@@ -252,12 +252,7 @@ void SB16::wait_for_irq()
 ErrorOr<size_t> SB16::write(OpenFileDescription&, u64, UserOrKernelBuffer const& data, size_t length)
 {
     if (!m_dma_region) {
-        auto page = MM.allocate_supervisor_physical_page();
-        if (!page)
-            return ENOMEM;
-        auto nonnull_page = page.release_nonnull();
-        auto vmobject = TRY(Memory::AnonymousVMObject::try_create_with_physical_pages({ &nonnull_page, 1 }));
-        m_dma_region = TRY(MM.allocate_kernel_region_with_vmobject(move(vmobject), PAGE_SIZE, "SB16 DMA buffer", Memory::Region::Access::Write));
+        m_dma_region = TRY(MM.allocate_dma_buffer_page("SB16 DMA buffer", Memory::Region::Access::Write));
     }
 
     dbgln_if(SB16_DEBUG, "SB16: Writing buffer of {} bytes", length);

@@ -37,13 +37,9 @@ AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters&
         return;
     }
 
-    m_command_list_page = MM.allocate_supervisor_physical_page();
     m_fis_receive_page = MM.allocate_supervisor_physical_page();
-    if (m_command_list_page.is_null() || m_fis_receive_page.is_null())
+    if (m_fis_receive_page.is_null())
         return;
-
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list page at {}", representative_port_index(), m_command_list_page->paddr());
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: FIS receive page at {}", representative_port_index(), m_command_list_page->paddr());
 
     for (size_t index = 0; index < 1; index++) {
         m_dma_buffers.append(MM.allocate_supervisor_physical_page().release_nonnull());
@@ -52,7 +48,11 @@ AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters&
         m_command_table_pages.append(MM.allocate_supervisor_physical_page().release_nonnull());
     }
 
-    auto region_or_error = MM.allocate_kernel_region(m_command_list_page->paddr(), PAGE_SIZE, "AHCI Port Command List", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
+    auto region_or_error = MM.allocate_dma_buffer_page("AHCI Port Command List", Memory::Region::Access::ReadWrite, m_command_list_page);
+
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list page at {}", representative_port_index(), m_command_list_page->paddr());
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: FIS receive page at {}", representative_port_index(), m_fis_receive_page->paddr());
+
     if (region_or_error.is_error())
         TODO();
     m_command_list_region = region_or_error.release_value();
