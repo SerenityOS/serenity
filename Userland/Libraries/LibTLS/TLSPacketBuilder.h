@@ -79,7 +79,7 @@ public:
             MUST(m_packet_data.resize(m_current_length)); // FIXME: Propagate error
         }
 
-        m_packet_data.overwrite(old_length, data, bytes);
+        MUST(m_packet_data.overwrite(old_length, data, bytes)); // FIXME: Handle error
     }
     inline ByteBuffer build()
     {

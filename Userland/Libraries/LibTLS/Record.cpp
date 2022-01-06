@@ -113,7 +113,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 auto iv_size = iv_length();
 
                 // copy the packet, sans the header
-                buffer.overwrite(buffer_position, packet.offset_pointer(header_size), packet.size() - header_size);
+                MUST(buffer.overwrite(buffer_position, packet.offset_pointer(header_size), packet.size() - header_size)); // FIXME: Handle error
                 buffer_position += packet.size() - header_size;
 
                 ByteBuffer ct;
@@ -131,7 +131,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         ct = ct_buffer_result.release_value();
 
                         // copy the header over
-                        ct.overwrite(0, packet.data(), header_size - 2);
+                        MUST(ct.overwrite(0, packet.data(), header_size - 2)); // FIXME: Handle error
 
                         // AEAD AAD (13)
                         // Seq. no (8)
@@ -185,13 +185,13 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         ct = ct_buffer_result.release_value();
 
                         // copy the header over
-                        ct.overwrite(0, packet.data(), header_size - 2);
+                        MUST(ct.overwrite(0, packet.data(), header_size - 2)); // FIXME: Handle error
 
                         // get the appropricate HMAC value for the entire packet
                         auto mac = hmac_message(packet, {}, mac_size, true);
 
                         // write the MAC
-                        buffer.overwrite(buffer_position, mac.data(), mac.size());
+                        MUST(buffer.overwrite(buffer_position, mac.data(), mac.size())); // FIXME: Handle error
                         buffer_position += mac.size();
 
                         // Apply the padding (a packet MUST always be padded)
@@ -209,7 +209,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         fill_with_random(iv.data(), iv.size());
 
                         // write it into the ciphertext portion of the message
-                        ct.overwrite(header_size, iv.data(), iv.size());
+                        MUST(ct.overwrite(header_size, iv.data(), iv.size())); // FIXME: Handle error
 
                         VERIFY(header_size + iv_size + length == ct.size());
                         VERIFY(length % block_size == 0);

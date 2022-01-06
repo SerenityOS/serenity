@@ -244,13 +244,13 @@ void Heap::update_zero_block()
 
     // FIXME: Handle an OOM failure here.
     auto buffer = MUST(ByteBuffer::create_zeroed(BLOCKSIZE));
-    buffer.overwrite(0, FILE_ID.characters_without_null_termination(), FILE_ID.length());
-    buffer.overwrite(VERSION_OFFSET, &m_version, sizeof(u32));
-    buffer.overwrite(SCHEMAS_ROOT_OFFSET, &m_schemas_root, sizeof(u32));
-    buffer.overwrite(TABLES_ROOT_OFFSET, &m_tables_root, sizeof(u32));
-    buffer.overwrite(TABLE_COLUMNS_ROOT_OFFSET, &m_table_columns_root, sizeof(u32));
-    buffer.overwrite(FREE_LIST_OFFSET, &m_free_list, sizeof(u32));
-    buffer.overwrite(USER_VALUES_OFFSET, m_user_values.data(), m_user_values.size() * sizeof(u32));
+    MUST(buffer.overwrite(0, FILE_ID.characters_without_null_termination(), FILE_ID.length()));
+    MUST(buffer.overwrite(VERSION_OFFSET, &m_version, sizeof(u32)));
+    MUST(buffer.overwrite(SCHEMAS_ROOT_OFFSET, &m_schemas_root, sizeof(u32)));
+    MUST(buffer.overwrite(TABLES_ROOT_OFFSET, &m_tables_root, sizeof(u32)));
+    MUST(buffer.overwrite(TABLE_COLUMNS_ROOT_OFFSET, &m_table_columns_root, sizeof(u32)));
+    MUST(buffer.overwrite(FREE_LIST_OFFSET, &m_free_list, sizeof(u32)));
+    MUST(buffer.overwrite(USER_VALUES_OFFSET, m_user_values.data(), m_user_values.size() * sizeof(u32)));
 
     add_to_wal(0, buffer);
 }

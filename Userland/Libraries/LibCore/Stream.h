@@ -555,7 +555,7 @@ public:
             buffer_nread += amount_to_take;
 
             if (amount_to_take < m_buffered_size) {
-                m_buffer.overwrite(0, slice_to_shift.data(), m_buffered_size - amount_to_take);
+                MUST(m_buffer.overwrite(0, slice_to_shift.data(), m_buffered_size - amount_to_take)); // FIXME: Handle error
             }
             m_buffered_size -= amount_to_take;
         }
@@ -636,7 +636,7 @@ public:
                 auto buffer_to_shift = m_buffer.span().slice(offset + longest_match);
 
                 buffer_to_take.copy_to(buffer);
-                m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size());
+                MUST(m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size())); // FIXME: Handle error
 
                 m_buffered_size -= offset + longest_match;
 
@@ -652,7 +652,7 @@ public:
         auto buffer_to_shift = m_buffer.span().slice(readable_size);
 
         buffer_to_take.copy_to(buffer);
-        m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size());
+        MUST(m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size())); // FIXME: Handle error
 
         m_buffered_size -= readable_size;
 

@@ -58,8 +58,8 @@ static bool test_single(const Testcase& testcase)
     fill_with_random(actual.data(), actual.size());
     ByteBuffer expected = actual;
     VERIFY(actual.offset_pointer(0) != expected.offset_pointer(0));
-    actual.overwrite(SANDBOX_CANARY_SIZE, testcase.dest, testcase.dest_n);
-    expected.overwrite(SANDBOX_CANARY_SIZE, testcase.dest_expected, testcase.dest_expected_n);
+    MUST(actual.overwrite(SANDBOX_CANARY_SIZE, testcase.dest, testcase.dest_n));                     // FIXME: Handle error
+    MUST(expected.overwrite(SANDBOX_CANARY_SIZE, testcase.dest_expected, testcase.dest_expected_n)); // FIXME: Handle error
     // "unsigned char" != "char", so we have to convince the compiler to allow this.
     char* dst = reinterpret_cast<char*>(actual.offset_pointer(SANDBOX_CANARY_SIZE));
 

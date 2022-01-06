@@ -204,7 +204,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
             return keypair;
         }
         auto padded_data = padded_data_result.release_value();
-        padded_data.overwrite(0, data.data(), data.size_in_bytes());
+        MUST(padded_data.overwrite(0, data.data(), data.size_in_bytes())); // FIXME: Handle error
 
         return parse_rsa_key(padded_data.bytes());
     }

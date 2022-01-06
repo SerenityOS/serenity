@@ -192,11 +192,14 @@ public:
         MUST(append(other.data(), other.size()));
     }
 
-    void overwrite(size_t offset, void const* data, size_t data_size)
+    ErrorOr<void> overwrite(size_t offset, void const* data, size_t data_size)
     {
         // make sure we're not told to write past the end
-        VERIFY(offset + data_size <= size());
+        if (offset + data_size > size())
+            return Error::from_string_literal("ByteBuffer::overwrite: out of bounds");
+
         __builtin_memmove(this->data() + offset, data, data_size);
+        return {};
     }
 
     void zero_fill()

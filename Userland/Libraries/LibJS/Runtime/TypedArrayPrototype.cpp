@@ -670,7 +670,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
 
         if (source_typed_array.element_size() == typed_array->element_size()) {
             // FIXME: SharedBuffers use a different mechanism, implement that when SharedBuffers are implemented.
-            target_buffer->buffer().overwrite(target_byte_index, source_buffer->buffer().data(), limit - target_byte_index);
+            MUST(target_buffer->buffer().overwrite(target_byte_index, source_buffer->buffer().data(), limit - target_byte_index)); // FIXME: Handle error
         } else {
             while (target_byte_index < limit) {
                 auto value = source_typed_array.get_value_from_buffer(source_byte_index, ArrayBuffer::Unordered);
