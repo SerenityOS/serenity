@@ -68,6 +68,7 @@ private:
     String m_extension;
     RefPtr<GUI::Action> m_new_action;
     RefPtr<GUI::Action> m_open_action;
+    RefPtr<GUI::Action> m_revert_action;
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
     RefPtr<GUI::Action> m_find_replace_action;

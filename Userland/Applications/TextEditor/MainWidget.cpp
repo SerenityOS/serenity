@@ -266,6 +266,28 @@ MainWidget::MainWidget()
         read_file(*response.value());
     });
 
+    m_revert_action = GUI::CommonActions::make_revert_action([this](auto&) {
+        if (m_path.is_empty())
+            return;
+
+        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), m_path);
+        if (response.is_error())
+            return;
+
+        if (editor().document().is_modified()) {
+            auto revert_result = GUI::MessageBox::ask_about_revert_file(window(), m_path);
+            if (revert_result == GUI::Dialog::ExecResult::No) {
+                m_save_action->activate();
+                return;
+            }
+            if (revert_result == GUI::Dialog::ExecResult::Cancel) {
+                return;
+            }
+        }
+
+        read_file(*response.value());
+    });
+
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         auto response = FileSystemAccessClient::Client::the().try_save_file(window(), m_name, m_extension);
         if (response.is_error())
@@ -340,6 +362,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     auto& file_menu = window.add_menu("&File");
     file_menu.add_action(*m_new_action);
     file_menu.add_action(*m_open_action);
+    file_menu.add_action(*m_revert_action);
     file_menu.add_action(*m_save_action);
     file_menu.add_action(*m_save_as_action);
     file_menu.add_separator();
