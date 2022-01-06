@@ -149,6 +149,13 @@ NonnullRefPtr<Action> make_reload_action(Function<void(Action&)> callback, Core:
     return Action::create("&Reload", { Mod_Ctrl, Key_R }, Key_F5, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
 }
 
+NonnullRefPtr<Action> make_revert_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    auto action = Action::create("&Revert", { Mod_Ctrl, Key_R }, Key_F5, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    action->set_status_tip("Reload current file from disk");
+    return action;
+}
+
 NonnullRefPtr<Action> make_select_all_action(Function<void(Action&)> callback, Core::Object* parent)
 {
     return Action::create("Select &All", { Mod_Ctrl, Key_A }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/select-all.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
