@@ -2098,12 +2098,6 @@ static TimeZoneData const* find_time_zone_data(StringView locale, StringView tim
 
 Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style)
 {
-    // FIXME: This becomes more complicated when time zones other than UTC are supported. We will need to know the GMT offset
-    //        of each time zone (which must be parsed from the time zone database, not the CLDR). For now, assuming UTC means
-    //        we can assume a GMT offset of 0, for which the CLDR has a specific format string for the offset styles. Further,
-    //        we will need to parse the "generic" time zone names from timeZoneNames.json.
-    VERIFY(time_zone == "UTC"sv);
-
     if ((style == CalendarPatternStyle::Long) || (style == CalendarPatternStyle::Short)) {
         if (auto const* data = find_time_zone_data(locale, time_zone); data != nullptr) {
             auto time_zone_index = style == CalendarPatternStyle::Long ? data->long_name : data->short_name;
@@ -2111,6 +2105,12 @@ Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone,
                 return s_string_list[time_zone_index];
         }
     } else {
+        // FIXME: This becomes more complicated when time zones other than UTC are supported. We will need to know the GMT offset
+        //        of each time zone (which must be parsed from the time zone database, not the CLDR). For now, assuming UTC means
+        //        we can assume a GMT offset of 0, for which the CLDR has a specific format string for the offset styles. Further,
+        //        we will need to parse the "generic" time zone names from timeZoneNames.json.
+        VERIFY(time_zone == "UTC"sv);
+
         if (auto const* formats = find_time_zone_formats(locale); formats != nullptr)
             return s_string_list[formats->gmt_zero_format];
     }
