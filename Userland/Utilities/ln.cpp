@@ -6,15 +6,13 @@
 
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments argmuments)
 {
-    if (pledge("stdio cpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio cpath"));
 
     bool force = false;
     bool symbolic = false;
@@ -26,7 +24,7 @@ int main(int argc, char** argv)
     args_parser.add_option(symbolic, "Create a symlink", "symbolic", 's');
     args_parser.add_positional_argument(target, "Link target", "target");
     args_parser.add_positional_argument(path, "Link path", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(argmuments);
 
     String path_buffer;
     if (!path) {
