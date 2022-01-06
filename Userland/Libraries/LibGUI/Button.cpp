@@ -29,6 +29,8 @@ Button::Button(String text)
         "button_style", button_style, set_button_style, Gfx::ButtonStyle,
         { Gfx::ButtonStyle::Normal, "Normal" },
         { Gfx::ButtonStyle::Coolbar, "Coolbar" });
+
+    REGISTER_STRING_PROPERTY("icon", icon, set_icon_from_path);
 }
 
 Button::~Button()
@@ -138,6 +140,16 @@ void Button::set_icon(RefPtr<Gfx::Bitmap>&& icon)
         return;
     m_icon = move(icon);
     update();
+}
+
+void Button::set_icon_from_path(String const& path)
+{
+    auto maybe_bitmap = Gfx::Bitmap::try_load_from_file(path);
+    if (maybe_bitmap.is_error()) {
+        dbgln("Unable to load bitmap `{}` for button icon", path);
+        return;
+    }
+    set_icon(maybe_bitmap.release_value());
 }
 
 bool Button::is_uncheckable() const
