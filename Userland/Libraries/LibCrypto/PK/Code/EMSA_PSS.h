@@ -80,7 +80,7 @@ public:
         auto count = (8 - (em_length * 8 - em_bits));
         DB_data[0] &= (0xff >> count) << count;
 
-        MUST(out.overwrite(0, DB.data(), DB.size()));                  // FIXME: Handle error
+        MUST(out.overwrite(0, DB));                                    // FIXME: Handle error
         MUST(out.overwrite(DB.size(), hash.data, hash_fn.DigestSize)); // FIXME: Handle error
         out[DB.size() + hash_fn.DigestSize] = 0xbc;
     }

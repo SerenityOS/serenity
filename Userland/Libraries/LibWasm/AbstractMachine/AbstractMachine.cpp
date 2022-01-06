@@ -351,7 +351,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                         }
                         if (instance->size() < data.init.size() + offset)
                             instance->grow(data.init.size() + offset - instance->size());
-                        MUST(instance->data().overwrite(offset, data.init.data(), data.init.size())); // FIXME: Handle error
+                        MUST(instance->data().overwrite(offset, data.init)); // FIXME: Handle error
                     }
                 },
                 [&](DataSection::Data::Passive const& passive) {

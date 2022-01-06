@@ -191,7 +191,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         auto mac = hmac_message(packet, {}, mac_size, true);
 
                         // write the MAC
-                        MUST(buffer.overwrite(buffer_position, mac.data(), mac.size())); // FIXME: Handle error
+                        MUST(buffer.overwrite(buffer_position, mac)); // FIXME: Handle error
                         buffer_position += mac.size();
 
                         // Apply the padding (a packet MUST always be padded)
@@ -209,7 +209,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         fill_with_random(iv.data(), iv.size());
 
                         // write it into the ciphertext portion of the message
-                        MUST(ct.overwrite(header_size, iv.data(), iv.size())); // FIXME: Handle error
+                        MUST(ct.overwrite(header_size, iv)); // FIXME: Handle error
 
                         VERIFY(header_size + iv_size + length == ct.size());
                         VERIFY(length % block_size == 0);

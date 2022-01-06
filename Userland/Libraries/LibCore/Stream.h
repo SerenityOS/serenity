@@ -636,7 +636,7 @@ public:
                 auto buffer_to_shift = m_buffer.span().slice(offset + longest_match);
 
                 buffer_to_take.copy_to(buffer);
-                MUST(m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size())); // FIXME: Handle error
+                MUST(m_buffer.overwrite(0, buffer_to_shift)); // FIXME: Handle error
 
                 m_buffered_size -= offset + longest_match;
 
@@ -652,7 +652,7 @@ public:
         auto buffer_to_shift = m_buffer.span().slice(readable_size);
 
         buffer_to_take.copy_to(buffer);
-        MUST(m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size())); // FIXME: Handle error
+        MUST(m_buffer.overwrite(0, buffer_to_shift)); // FIXME: Handle error
 
         m_buffered_size -= readable_size;
 

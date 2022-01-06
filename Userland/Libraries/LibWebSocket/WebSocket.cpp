@@ -98,7 +98,7 @@ void WebSocket::close(u16 code, String const& message)
     auto message_bytes = message.bytes();
     auto close_payload = MUST(ByteBuffer::create_uninitialized(message_bytes.size() + 2)); // FIXME: Handle possible OOM situation.
     MUST(close_payload.overwrite(0, (u8*)&code, 2));                                       // FIXME: Handle error
-    MUST(close_payload.overwrite(2, message_bytes.data(), message_bytes.size()));          // FIXME: Handle error
+    MUST(close_payload.overwrite(2, message_bytes));                                       // FIXME: Handle error
     send_frame(WebSocket::OpCode::ConnectionClose, close_payload, true);
 }
 
@@ -437,7 +437,7 @@ void WebSocket::read_frame()
             return;
         }
         // We read at most "actual_length - read" bytes, so this is safe to do.
-        MUST(payload.overwrite(read_length, payload_part.data(), payload_part.size()));
+        MUST(payload.overwrite(read_length, payload_part));
         read_length -= payload_part.size();
     }
 

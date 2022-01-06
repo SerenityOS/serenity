@@ -202,6 +202,11 @@ public:
         return {};
     }
 
+    ErrorOr<void> overwrite(size_t offset, ReadonlyBytes replacement)
+    {
+        return overwrite(offset, replacement.data(), replacement.size());
+    }
+
     void zero_fill()
     {
         __builtin_memset(data(), 0, m_size);
