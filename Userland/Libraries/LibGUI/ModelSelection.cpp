@@ -29,10 +29,8 @@ void ModelSelection::set(const ModelIndex& index)
 void ModelSelection::add(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indices.contains(index))
-        return;
-    m_indices.set(index);
-    notify_selection_changed();
+    if (m_indices.set(index) == AK::HashSetResult::InsertedNewEntry)
+        notify_selection_changed();
 }
 
 void ModelSelection::add_all(const Vector<ModelIndex>& indices)
