@@ -519,7 +519,7 @@ struct UnicodeLocaleData {
     HashMap<String, HourCycleListIndexType> hour_cycles;
     Vector<String> hour_cycle_regions;
 
-    HashMap<String, String> meta_zones;
+    HashMap<String, Vector<String>> meta_zones;
     Vector<String> time_zones { "UTC"sv };
 
     Vector<String> calendars;
@@ -618,11 +618,12 @@ static ErrorOr<void> parse_meta_zones(String core_path, UnicodeLocaleData& local
         auto const& meta_zone = mapping.as_object().get("_other"sv);
         auto const& golden_zone = mapping.as_object().get("_type"sv);
 
-        locale_data.meta_zones.set(meta_zone.as_string(), golden_zone.as_string());
+        auto& golden_zones = locale_data.meta_zones.ensure(meta_zone.as_string());
+        golden_zones.append(golden_zone.as_string());
     });
 
     // UTC does not appear in metaZones.json. Define it for convenience so other parsers don't need to check for its existence.
-    locale_data.meta_zones.set("UTC"sv, "UTC"sv);
+    locale_data.meta_zones.set("UTC"sv, { "UTC"sv });
 
     return {};
 };
@@ -1402,7 +1403,7 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
     time_zone_formats.gmt_zero_format = locale_data.unique_strings.ensure(gmt_zero_format_string.as_string());
 
     auto parse_time_zone = [&](StringView meta_zone, JsonObject const& meta_zone_object) {
-        auto const& golden_zone = locale_data.meta_zones.find(meta_zone)->value;
+        auto const& golden_zones = locale_data.meta_zones.find(meta_zone)->value;
         TimeZone time_zone {};
 
         if (auto long_name = parse_name("long"sv, meta_zone_object); long_name.has_value())
@@ -1410,15 +1411,19 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
         if (auto short_name = parse_name("short"sv, meta_zone_object); short_name.has_value())
             time_zone.short_name = short_name.value();
 
-        auto time_zone_index = locale_data.time_zones.find_first_index(golden_zone).value();
-        time_zones[time_zone_index] = locale_data.unique_time_zones.ensure(move(time_zone));
+        for (auto const& golden_zone : golden_zones) {
+            auto time_zone_index = locale_data.time_zones.find_first_index(golden_zone).value();
+            time_zones[time_zone_index] = locale_data.unique_time_zones.ensure(move(time_zone));
+        }
     };
 
     meta_zone_object.as_object().for_each_member([&](auto const& meta_zone, JsonValue const&) {
-        auto const& golden_zone = locale_data.meta_zones.find(meta_zone)->value;
+        auto const& golden_zones = locale_data.meta_zones.find(meta_zone)->value;
 
-        if (!locale_data.time_zones.contains_slow(golden_zone))
-            locale_data.time_zones.append(golden_zone);
+        for (auto const& golden_zone : golden_zones) {
+            if (!locale_data.time_zones.contains_slow(golden_zone))
+                locale_data.time_zones.append(golden_zone);
+        }
     });
 
     time_zones.resize(locale_data.time_zones.size());
