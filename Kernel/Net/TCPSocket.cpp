@@ -160,10 +160,6 @@ TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, N
 
 TCPSocket::~TCPSocket()
 {
-    sockets_by_tuple().with_exclusive([&](auto& table) {
-        table.remove(tuple());
-    });
-
     dequeue_for_retransmit();
 
     dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));
