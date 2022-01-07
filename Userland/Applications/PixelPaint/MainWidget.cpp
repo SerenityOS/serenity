@@ -133,38 +133,13 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_save_image_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        auto save_result = FileSystemAccessClient::Client::the().save_file(window.window_id(), "untitled", "pp");
-        if (save_result.error != 0)
-            return;
-        auto result = editor->save_project_to_fd_and_close(*save_result.fd);
-        if (result.is_error()) {
-            GUI::MessageBox::show_error(&window, String::formatted("Could not save {}: {}", *save_result.chosen_file, result.error()));
-            return;
-        }
-        editor->set_path(*save_result.chosen_file);
-        editor->undo_stack().set_current_unmodified();
+        if (auto* editor = current_image_editor())
+            editor->save_project_as();
     });
 
     m_save_image_action = GUI::CommonActions::make_save_action([&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        if (editor->path().is_empty()) {
-            m_save_image_as_action->activate();
-            return;
-        }
-        auto response = FileSystemAccessClient::Client::the().request_file(window.window_id(), editor->path(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
-        if (response.error != 0)
-            return;
-        auto result = editor->save_project_to_fd_and_close(*response.fd);
-        if (result.is_error()) {
-            GUI::MessageBox::show_error(&window, String::formatted("Could not save {}: {}", *response.chosen_file, result.error()));
-            return;
-        }
-        editor->undo_stack().set_current_unmodified();
+        if (auto* editor = current_image_editor())
+            editor->save_project();
     });
 
     file_menu.add_action(*m_new_image_action);
