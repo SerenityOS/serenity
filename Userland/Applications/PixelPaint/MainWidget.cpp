@@ -68,7 +68,7 @@ MainWidget::MainWidget()
         if (image_editor.request_close()) {
             m_tab_widget->deferred_invoke([&] {
                 m_tab_widget->remove_tab(image_editor);
-                if (m_tab_widget->children().size() == 1) {
+                if (m_tab_widget->children().size() == 0) {
                     m_layer_list_widget->set_image(nullptr);
                     m_layer_properties_widget->set_layer(nullptr);
                 }
