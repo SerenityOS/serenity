@@ -106,7 +106,7 @@ port="foo"
 version="1.2.3"
 useconfigure="true"
 files="https://example.com/foo-${version}.tar.gz foo-${version}.tar.gz"
-depends="bar baz"
+depends=("bar" "baz")
 ```
 
 The script in the shebang, [`.port_include.sh`](./.port_include.sh), is where
@@ -160,8 +160,14 @@ Defaults to `configure`.
 
 #### `depends`
 
-A space-separated list of other SerenityOS ports the port depends on and which
-will be installed during the `installdepends` step.
+An array of other SerenityOS ports the port depends on and which will be
+installed during the `installdepends` step.
+
+For example:
+
+```bash
+depends=("ncurses" "gettext")
+```
 
 #### `files`
 
