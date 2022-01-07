@@ -1,37 +1,33 @@
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/MessageBox.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix"));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_title("Form1");
     window->resize(96, 44);
     window->set_resizable(false);
 
-    auto& main_widget = window->set_main_widget<GUI::Widget>();
-    main_widget.set_fill_with_background_color(true);
+    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    main_widget->set_fill_with_background_color(true);
 
-    auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins(16);
+    auto layout = TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    layout->set_margins(16);
 
-    auto& button = main_widget.add<GUI::Button>("Click me!");
-    button.on_click = [&](auto) {
+    auto button = TRY(main_widget->try_add<GUI::Button>("Click me!"));
+    button->on_click = [&](auto) {
         GUI::MessageBox::show(window, "Hello friends!", ":^)");
     };
 
