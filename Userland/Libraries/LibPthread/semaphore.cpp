@@ -16,24 +16,28 @@
 // threads.
 static constexpr u32 POST_WAKES = 1 << 31;
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_open.html
 sem_t* sem_open(const char*, int, ...)
 {
     errno = ENOSYS;
     return nullptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_close.html
 int sem_close(sem_t*)
 {
     errno = ENOSYS;
     return -1;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_unlink.html
 int sem_unlink(const char*)
 {
     errno = ENOSYS;
     return -1;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_init.html
 int sem_init(sem_t* sem, int shared, unsigned int value)
 {
     if (shared) {
@@ -50,11 +54,13 @@ int sem_init(sem_t* sem, int shared, unsigned int value)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_destroy.html
 int sem_destroy(sem_t*)
 {
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_getvalue.html
 int sem_getvalue(sem_t* sem, int* sval)
 {
     u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
@@ -62,6 +68,7 @@ int sem_getvalue(sem_t* sem, int* sval)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_post.html
 int sem_post(sem_t* sem)
 {
     u32 value = AK::atomic_fetch_add(&sem->value, 1u, AK::memory_order_release);
@@ -81,6 +88,7 @@ int sem_post(sem_t* sem)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_trywait.html
 int sem_trywait(sem_t* sem)
 {
     u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
@@ -96,11 +104,13 @@ int sem_trywait(sem_t* sem)
         return EAGAIN;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_wait.html
 int sem_wait(sem_t* sem)
 {
     return sem_timedwait(sem, nullptr);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_timedwait.html
 int sem_timedwait(sem_t* sem, const struct timespec* abstime)
 {
     u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
