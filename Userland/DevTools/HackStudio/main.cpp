@@ -63,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (argument_absolute_path.is_null() || mode_coredump)
         project_path = Core::File::real_path_for(".");
 
-    s_hack_studio_widget = window->set_main_widget<HackStudioWidget>(project_path);
+    s_hack_studio_widget = TRY(window->try_set_main_widget<HackStudioWidget>(project_path));
 
     window->set_title(String::formatted("{} - Hack Studio", s_hack_studio_widget->project().name()));
 
