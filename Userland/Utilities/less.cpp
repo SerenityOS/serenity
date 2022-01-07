@@ -428,6 +428,11 @@ private:
 
     void calculate_end()
     {
+        if (m_lines.is_empty()) {
+            m_end_line = 0;
+            m_end_subline = 0;
+            return;
+        }
         size_t end_line = m_lines.size() - 1;
         size_t end_subline = sublines(end_line).size() - 1;
         line_subline_add(end_line, end_subline, -(m_height - 1), false);
