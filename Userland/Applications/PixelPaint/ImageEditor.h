@@ -109,6 +109,8 @@ public:
     Gfx::FloatPoint image_position_to_editor_position(Gfx::IntPoint const&) const;
     Gfx::FloatPoint editor_position_to_image_position(Gfx::IntPoint const&) const;
 
+    bool request_close();
+
     void save_project_as();
     void save_project();
 

@@ -700,6 +700,24 @@ void ImageEditor::image_select_layer(Layer* layer)
     set_active_layer(layer);
 }
 
+bool ImageEditor::request_close()
+{
+    if (!undo_stack().is_current_modified())
+        return true;
+
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), path(), undo_stack().last_unmodified_timestamp());
+
+    if (result == GUI::MessageBox::ExecYes) {
+        save_project();
+        return true;
+    }
+
+    if (result == GUI::MessageBox::ExecNo)
+        return true;
+
+    return false;
+}
+
 void ImageEditor::save_project()
 {
     if (path().is_empty()) {
