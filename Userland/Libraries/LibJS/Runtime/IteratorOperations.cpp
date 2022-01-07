@@ -120,8 +120,6 @@ static Completion iterator_close_(Object& iterator, Completion completion, Itera
         if (!return_method)
             return completion;
 
-        vm.stop_unwind();
-
         // c. Set innerResult to Call(return, iterator).
         auto result_or_error = vm.call(*return_method, &iterator);
         if (result_or_error.is_error()) {
@@ -180,7 +178,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject& global_object,
     auto& vm = global_object.vm();
     MarkedValueList values(vm.heap());
 
-    TRY(get_iterator_values(
+    (void)TRY(get_iterator_values(
         global_object, iterable, [&](auto value) -> Optional<Completion> {
             values.append(value);
             return {};

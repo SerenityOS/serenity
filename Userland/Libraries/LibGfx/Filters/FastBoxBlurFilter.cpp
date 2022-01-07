@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Function.h>
 #include <AK/Vector.h>
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
 
@@ -31,7 +32,24 @@ FastBoxBlurFilter::FastBoxBlurFilter(Bitmap& bitmap)
 void FastBoxBlurFilter::apply_single_pass(int radius)
 {
     VERIFY(radius >= 0);
-    VERIFY(m_bitmap.format() == BitmapFormat::BGRA8888);
+
+    auto format = m_bitmap.format();
+    VERIFY(format == BitmapFormat::BGRA8888 || format == BitmapFormat::BGRx8888);
+
+    Function<Color(int, int)> get_pixel_function;
+    Function<void(int, int, Color)> set_pixel_function;
+    switch (format) {
+    case BitmapFormat::BGRx8888:
+        get_pixel_function = [&](int x, int y) { return m_bitmap.get_pixel<StorageFormat::BGRx8888>(x, y); };
+        set_pixel_function = [&](int x, int y, Color color) { return m_bitmap.set_pixel<StorageFormat::BGRx8888>(x, y, color); };
+        break;
+    case BitmapFormat::BGRA8888:
+        get_pixel_function = [&](int x, int y) { return m_bitmap.get_pixel<StorageFormat::BGRA8888>(x, y); };
+        set_pixel_function = [&](int x, int y, Color color) { return m_bitmap.set_pixel<StorageFormat::BGRA8888>(x, y, color); };
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 
     int height = m_bitmap.height();
     int width = m_bitmap.width();
@@ -57,7 +75,7 @@ void FastBoxBlurFilter::apply_single_pass(int radius)
 
         // Setup sliding window
         for (int i = -radius; i <= radius; ++i) {
-            auto color_at_px = m_bitmap.get_pixel<StorageFormat::BGRA8888>(clamp(i, 0, width - 1), y);
+            auto color_at_px = get_pixel_function(clamp(i, 0, width - 1), y);
             sum_red += red_value(color_at_px);
             sum_green += green_value(color_at_px);
             sum_blue += blue_value(color_at_px);
@@ -73,8 +91,8 @@ void FastBoxBlurFilter::apply_single_pass(int radius)
             auto leftmost_x_coord = max(x - radius, 0);
             auto rightmost_x_coord = min(x + radius + 1, width - 1);
 
-            auto leftmost_x_color = m_bitmap.get_pixel<StorageFormat::BGRA8888>(leftmost_x_coord, y);
-            auto rightmost_x_color = m_bitmap.get_pixel<StorageFormat::BGRA8888>(rightmost_x_coord, y);
+            auto leftmost_x_color = get_pixel_function(leftmost_x_coord, y);
+            auto rightmost_x_color = get_pixel_function(rightmost_x_coord, y);
 
             sum_red -= red_value(leftmost_x_color);
             sum_red += red_value(rightmost_x_color);
@@ -110,7 +128,7 @@ void FastBoxBlurFilter::apply_single_pass(int radius)
                 sum_blue / div,
                 sum_alpha / div);
 
-            m_bitmap.set_pixel<StorageFormat::BGRA8888>(x, y, color);
+            set_pixel_function(x, y, color);
 
             auto topmost_y_coord = max(y - radius, 0);
             auto bottommost_y_coord = min(y + radius + 1, height - 1);

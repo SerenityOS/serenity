@@ -730,16 +730,16 @@ ErrorOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKernel
     StringView data;
 
     // Try readlink first.
-    bool readlink_succeded = false;
+    bool readlink_succeeded = false;
     if (fs().m_remote_protocol_version >= Plan9FS::ProtocolVersion::v9P2000L && offset == 0) {
         message << fid();
         if (auto result = fs().post_message_and_wait_for_a_reply(message); !result.is_error()) {
-            readlink_succeded = true;
+            readlink_succeeded = true;
             message >> data;
         }
     }
 
-    if (!readlink_succeded) {
+    if (!readlink_succeeded) {
         message = Plan9FS::Message { fs(), Plan9FS::Message::Type::Tread };
         message << fid() << (u64)offset << (u32)size;
         TRY(fs().post_message_and_wait_for_a_reply(message));

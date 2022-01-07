@@ -19,6 +19,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/Value.h>
@@ -72,6 +73,8 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.keys, keys, 0, attr);
     define_native_function(vm.names.entries, entries, 0, attr);
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
+    define_native_function(vm.names.groupBy, group_by, 1, attr);
+    define_native_function(vm.names.groupByToMap, group_by_to_map, 1, attr);
 
     // Use define_direct_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -80,7 +83,8 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
 
     // 23.1.3.35 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-    // With proposal, https://tc39.es/proposal-array-find-from-last/#sec-array.prototype-@@unscopables
+    // With find from last proposal, https://tc39.es/proposal-array-find-from-last/#sec-array.prototype-@@unscopables
+    // With array grouping proposal, https://tc39.es/proposal-array-grouping/#sec-array.prototype-@@unscopables
     auto* unscopable_list = Object::create(global_object, nullptr);
     MUST(unscopable_list->create_data_property_or_throw(vm.names.at, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true)));
@@ -92,6 +96,8 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     MUST(unscopable_list->create_data_property_or_throw(vm.names.findLastIndex, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.flat, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.flatMap, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.groupBy, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.groupByToMap, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.includes, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.keys, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.values, Value(true)));
@@ -1663,6 +1669,159 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
     if (index.has_overflow() || index.value() >= length)
         return js_undefined();
     return TRY(this_object->get(index.value()));
+}
+
+// 2.3 AddValueToKeyedGroup ( groups, key, value ), https://tc39.es/proposal-array-grouping/#sec-add-value-to-keyed-group
+template<typename GroupsType, typename KeyType>
+static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& groups, KeyType key, Value value)
+{
+    // 1. For each Record { [[Key]], [[Elements]] } g of groups, do
+    //      a. If ! SameValue(g.[[Key]], key) is true, then
+    //      NOTE: This is performed in KeyedGroupTraits::equals for groupByToMap and Traits<JS::PropertyKey>::equals for groupBy.
+    auto existing_elements_iterator = groups.find(key);
+    if (existing_elements_iterator != groups.end()) {
+        // i. Assert: exactly one element of groups meets this criteria.
+        // NOTE: This is done on insertion into the hash map, as only `set` tells us if we overrode an entry.
+
+        // ii. Append value as the last element of g.[[Elements]].
+        existing_elements_iterator->value.append(value);
+
+        // iii. Return.
+        return;
+    }
+
+    // 2. Let group be the Record { [[Key]]: key, [[Elements]]: « value » }.
+    MarkedValueList new_elements { global_object.heap() };
+    new_elements.append(value);
+
+    // 3. Append group as the last element of groups.
+    auto result = groups.set(key, move(new_elements));
+    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+}
+
+// 2.1 Array.prototype.groupBy ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupby
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by)
+{
+    auto callback_function = vm.argument(0);
+    auto this_arg = vm.argument(1);
+
+    // 1. Let O be ? ToObject(this value).
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 2. Let len be ? LengthOfArrayLike(O).
+    auto length = TRY(length_of_array_like(global_object, *this_object));
+
+    // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
+    if (!callback_function.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+
+    // 5. Let groups be a new empty List.
+    OrderedHashMap<PropertyKey, MarkedValueList> groups;
+
+    // 4. Let k be 0.
+    // 6. Repeat, while k < len
+    for (size_t index = 0; index < length; ++index) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        auto index_property = PropertyKey { index };
+
+        // b. Let kValue be ? Get(O, Pk).
+        auto k_value = TRY(this_object->get(index_property));
+
+        // c. Let propertyKey be ? ToPropertyKey(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
+        auto property_key_value = TRY(vm.call(callback_function.as_function(), this_arg, k_value, Value(index), this_object));
+        auto property_key = TRY(property_key_value.to_property_key(global_object));
+
+        // d. Perform ! AddValueToKeyedGroup(groups, propertyKey, kValue).
+        add_value_to_keyed_group(global_object, groups, property_key, k_value);
+
+        // e. Set k to k + 1.
+    }
+
+    // 7. Let obj be ! OrdinaryObjectCreate(null).
+    auto* object = Object::create(global_object, nullptr);
+
+    // 8. For each Record { [[Key]], [[Elements]] } g of groups, do
+    for (auto& group : groups) {
+        // a. Let elements be ! CreateArrayFromList(g.[[Elements]]).
+        auto* elements = Array::create_from(global_object, group.value);
+
+        // b. Perform ! CreateDataPropertyOrThrow(obj, g.[[Key]], elements).
+        MUST(object->create_data_property_or_throw(group.key, elements));
+    }
+
+    // 9. Return obj.
+    return object;
+}
+
+// 2.2 Array.prototype.groupByToMap ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupbymap
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by_to_map)
+{
+    auto callback_function = vm.argument(0);
+    auto this_arg = vm.argument(1);
+
+    // 1. Let O be ? ToObject(this value).
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 2. Let len be ? LengthOfArrayLike(O).
+    auto length = TRY(length_of_array_like(global_object, *this_object));
+
+    // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
+    if (!callback_function.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+
+    struct KeyedGroupTraits : public Traits<Handle<Value>> {
+        static unsigned hash(Handle<Value> const& value_handle)
+        {
+            return ValueTraits::hash(value_handle.value());
+        }
+
+        static bool equals(Handle<Value> const& a, Handle<Value> const& b)
+        {
+            // AddValueToKeyedGroup uses SameValue on the keys on Step 1.a.
+            return same_value(a.value(), b.value());
+        }
+    };
+
+    // 5. Let groups be a new empty List.
+    OrderedHashMap<Handle<Value>, MarkedValueList, KeyedGroupTraits> groups;
+
+    // 4. Let k be 0.
+    // 6. Repeat, while k < len
+    for (size_t index = 0; index < length; ++index) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        auto index_property = PropertyKey { index };
+
+        // b. Let kValue be ? Get(O, Pk).
+        auto k_value = TRY(this_object->get(index_property));
+
+        // c. Let key be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
+        auto key = TRY(vm.call(callback_function.as_function(), this_arg, k_value, Value(index), this_object));
+
+        // d. If key is -0𝔽, set key to +0𝔽.
+        if (key.is_negative_zero())
+            key = Value(0);
+
+        // e. Perform ! AddValueToKeyedGroup(groups, key, kValue).
+        add_value_to_keyed_group(global_object, groups, make_handle(key), k_value);
+
+        // f. Set k to k + 1.
+    }
+
+    // 7. Let map be ! Construct(%Map%).
+    auto* map = Map::create(global_object);
+
+    // 8. For each Record { [[Key]], [[Elements]] } g of groups, do
+    for (auto& group : groups) {
+        // a. Let elements be ! CreateArrayFromList(g.[[Elements]]).
+        auto* elements = Array::create_from(global_object, group.value);
+
+        // b. Let entry be the Record { [[Key]]: g.[[Key]], [[Value]]: elements }.
+        // c. Append entry as the last element of map.[[MapData]].
+        map->entries().set(group.key.value(), elements);
+    }
+
+    // 9. Return map.
+    return map;
 }
 
 }

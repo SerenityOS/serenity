@@ -654,6 +654,8 @@ TextPosition TextDocument::first_word_break_before(const TextPosition& position,
     if (target.column() == line.length())
         modifier = 1;
 
+    while (target.column() > 0 && is_ascii_blank(line.code_points()[target.column() - modifier]))
+        target.set_column(target.column() - 1);
     auto is_start_alphanumeric = is_ascii_alphanumeric(line.code_points()[target.column() - modifier]);
 
     while (target.column() > 0) {
@@ -678,6 +680,8 @@ TextPosition TextDocument::first_word_break_after(const TextPosition& position) 
         return TextPosition(position.line() + 1, 0);
     }
 
+    while (target.column() < line.length() && is_ascii_space(line.code_points()[target.column()]))
+        target.set_column(target.column() + 1);
     auto is_start_alphanumeric = is_ascii_alphanumeric(line.code_points()[target.column()]);
 
     while (target.column() < line.length()) {

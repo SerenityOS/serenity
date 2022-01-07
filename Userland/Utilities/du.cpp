@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/String.h>
@@ -14,8 +12,9 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <limits.h>
-#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -35,32 +34,29 @@ struct DuOption {
     Vector<String> excluded_patterns;
 };
 
-static int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option, int& max_depth);
-static int print_space_usage(const String& path, const DuOption& du_option, int max_depth);
+static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option, int& max_depth);
+static ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int max_depth);
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Vector<String> files;
     DuOption du_option;
     int max_depth = INT_MAX;
 
-    if (parse_args(argc, argv, files, du_option, max_depth))
-        return 1;
+    TRY(parse_args(arguments, files, du_option, max_depth));
 
-    for (const auto& file : files) {
-        if (print_space_usage(file, du_option, max_depth))
-            return 1;
-    }
+    for (const auto& file : files)
+        TRY(print_space_usage(file, du_option, max_depth));
 
     return 0;
 }
 
-int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option, int& max_depth)
+ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option, int& max_depth)
 {
     bool summarize = false;
     const char* pattern = nullptr;
     const char* exclude_from = nullptr;
-    Vector<const char*> files_to_process;
+    Vector<StringView> files_to_process;
 
     Core::ArgsParser::Option time_option {
         true,
@@ -69,12 +65,12 @@ int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option
         "time",
         0,
         "time-type",
-        [&du_option](const char* s) {
-            if (!strcmp(s, "mtime") || !strcmp(s, "modification"))
+        [&du_option](StringView s) {
+            if (s == "mtime"sv || s == "modification"sv)
                 du_option.time_type = DuOption::TimeType::Modification;
-            else if (!strcmp(s, "ctime") || !strcmp(s, "status") || !strcmp(s, "use"))
+            else if (s == "ctime"sv || s == "status"sv || s == "use"sv)
                 du_option.time_type = DuOption::TimeType::Status;
-            else if (!strcmp(s, "atime") || !strcmp(s, "access"))
+            else if (s == "atime"sv || s == "access"sv)
                 du_option.time_type = DuOption::TimeType::Access;
             else
                 return false;
@@ -95,7 +91,7 @@ int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option
     args_parser.add_option(pattern, "Exclude files that match pattern", "exclude", 0, "pattern");
     args_parser.add_option(exclude_from, "Exclude files that match any pattern in file", "exclude_from", 'X', "file");
     args_parser.add_positional_argument(files_to_process, "File to process", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (summarize)
         max_depth = 0;
@@ -103,9 +99,7 @@ int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option
     if (pattern)
         du_option.excluded_patterns.append(pattern);
     if (exclude_from) {
-        auto file = Core::File::construct(exclude_from);
-        bool success = file->open(Core::OpenMode::ReadOnly);
-        VERIFY(success);
+        auto file = TRY(Core::File::open(exclude_from, Core::OpenMode::ReadOnly));
         const auto buff = file->read_all();
         if (!buff.is_empty()) {
             String patterns = String::copy(buff, Chomp);
@@ -113,7 +107,7 @@ int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option
         }
     }
 
-    for (auto* file : files_to_process) {
+    for (auto const& file : files_to_process) {
         files.append(file);
     }
 
@@ -121,53 +115,52 @@ int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option
         files.append(".");
     }
 
-    return 0;
+    return {};
 }
 
-int print_space_usage(const String& path, const DuOption& du_option, int max_depth)
+ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int max_depth)
 {
-    struct stat path_stat;
-    if (lstat(path.characters(), &path_stat) < 0) {
-        perror("lstat");
-        return 1;
-    }
-
-    int ret = 0;
-
-    if (--max_depth >= 0 && S_ISDIR(path_stat.st_mode)) {
+    struct stat path_stat = TRY(Core::System::lstat(path.characters()));
+    off_t directory_size = 0;
+    const bool is_directory = S_ISDIR(path_stat.st_mode);
+    if (--max_depth >= 0 && is_directory) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error()) {
-            warnln("du: cannot read directory '{}': {}", path, di.error_string());
-            ret = 1;
+            outln("du: cannot read directory '{}': {}", path, di.error_string());
+            return Error::from_string_literal("An error occurred. See previous error."sv);
         }
+
         while (di.has_next()) {
             const auto child_path = di.next_full_path();
-            if (du_option.all || Core::File::is_directory(child_path)) {
-                if (print_space_usage(child_path, du_option, max_depth))
-                    return 1;
-            }
+            directory_size += TRY(print_space_usage(child_path, du_option, max_depth));
         }
     }
 
     const auto basename = LexicalPath::basename(path);
     for (const auto& pattern : du_option.excluded_patterns) {
         if (basename.matches(pattern, CaseSensitivity::CaseSensitive))
-            return 0;
+            return { 0 };
     }
 
     off_t size = path_stat.st_size;
     if (du_option.apparent_size) {
-        const auto block_size = 512;
+        constexpr auto block_size = 512;
         size = path_stat.st_blocks * block_size;
     }
 
+    if (!du_option.all && !is_directory)
+        return size;
+
+    if (is_directory)
+        size = directory_size;
+
     if ((du_option.threshold > 0 && size < du_option.threshold) || (du_option.threshold < 0 && size > -du_option.threshold))
-        return 0;
+        return { 0 };
 
     if (du_option.human_readable) {
         out("{}", human_readable_size(size));
     } else {
-        const long long block_size = 1024;
+        constexpr long long block_size = 1024;
         size = size / block_size + (size % block_size != 0);
         out("{}", size);
     }
@@ -191,5 +184,5 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
         outln("\t{}\t{}", formatted_time, path);
     }
 
-    return ret;
+    return { size };
 }

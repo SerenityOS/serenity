@@ -423,7 +423,7 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
         end_delete_rows();
 
         for_each_view([&](AbstractView& view) {
-            view.selection().remove_matching([&](auto& selection_index) {
+            view.selection().remove_all_matching([&](auto& selection_index) {
                 return selection_index.internal_data() == index.internal_data();
             });
             if (view.cursor_index().internal_data() == index.internal_data()) {

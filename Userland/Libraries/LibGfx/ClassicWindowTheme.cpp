@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -73,22 +74,47 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
 
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
 
+    auto title_alignment = palette.title_alignment();
+
     int stripe_right = leftmost_button_rect.left() - 3;
     if (stripes_color.alpha() > 0) {
-        int stripe_left = titlebar_title_rect.right() + 5;
-        if (stripe_left && stripe_right && stripe_left < stripe_right) {
-            for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
-                painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, stripes_color);
+        switch (title_alignment) {
+        case Gfx::TextAlignment::CenterLeft: {
+            int stripe_left = titlebar_title_rect.right() + 5;
+
+            if (stripe_left && stripe_right && stripe_left < stripe_right) {
+                for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
+                    painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, stripes_color);
+                }
             }
+            break;
+        }
+        case Gfx::TextAlignment::CenterRight: {
+            for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
+                painter.draw_line({ titlebar_inner_rect.left(), titlebar_inner_rect.y() + i }, { stripe_right - titlebar_title_rect.width() - 3, titlebar_inner_rect.y() + i }, stripes_color);
+            }
+            break;
+        }
+        case Gfx::TextAlignment::Center: {
+            auto stripe_width = (leftmost_button_rect.left() / 2 - titlebar_title_rect.width() / 2) - titlebar_icon_rect.width() - 3;
+
+            for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
+                painter.draw_line({ titlebar_inner_rect.left(), titlebar_inner_rect.y() + i }, { titlebar_inner_rect.left() + stripe_width, titlebar_inner_rect.y() + i }, stripes_color);
+                painter.draw_line({ stripe_right - stripe_width, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, stripes_color);
+            }
+            break;
+        }
+        default:
+            dbgln("Unhandled title alignment!");
         }
     }
 
     auto clipped_title_rect = titlebar_title_rect;
     clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
-        painter.draw_text(clipped_title_rect.translated(1, 2), window_title, title_font, Gfx::TextAlignment::CenterLeft, shadow_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(1, 2), window_title, title_font, title_alignment, shadow_color, Gfx::TextElision::Right);
         // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
-        painter.draw_text(clipped_title_rect.translated(0, 1), window_title, title_font, Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(0, 1), window_title, title_font, title_alignment, title_color, Gfx::TextElision::Right);
     }
 
     painter.draw_scaled_bitmap(titlebar_icon_rect, icon, icon.rect());
@@ -129,7 +155,7 @@ IntRect ClassicWindowTheme::menubar_rect(WindowType window_type, const IntRect& 
 {
     if (window_type != WindowType::Normal)
         return {};
-    return { 4, 3 + titlebar_height(window_type, palette) + 2, window_rect.width(), menubar_height * menu_row_count };
+    return { palette.window_border_thickness(), palette.window_border_thickness() - 1 + titlebar_height(window_type, palette) + 2, window_rect.width(), menubar_height * menu_row_count };
 }
 
 IntRect ClassicWindowTheme::titlebar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
@@ -141,7 +167,7 @@ IntRect ClassicWindowTheme::titlebar_rect(WindowType window_type, const IntRect&
 
     if (window_type == WindowType::Notification)
         return { window_rect.width() + 3, total_vertical_padding / 2 - 1, window_titlebar_height, window_rect.height() };
-    return { 4, 4, window_rect.width(), window_titlebar_height };
+    return { palette.window_border_thickness(), palette.window_border_thickness(), window_rect.width(), window_titlebar_height };
 }
 
 ClassicWindowTheme::FrameColors ClassicWindowTheme::compute_frame_colors(WindowState state, const Palette& palette) const
@@ -183,15 +209,16 @@ void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRec
 IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const IntRect& window_rect, const Gfx::Palette& palette, int menu_row_count) const
 {
     auto window_titlebar_height = titlebar_height(window_type, palette);
+    auto border_thickness = palette.window_border_thickness();
 
     switch (window_type) {
     case WindowType::Normal:
     case WindowType::ToolWindow:
         return {
-            window_rect.x() - 4,
-            window_rect.y() - window_titlebar_height - 5 - menu_row_count * menubar_height,
-            window_rect.width() + 8,
-            window_rect.height() + 9 + window_titlebar_height + menu_row_count * menubar_height
+            window_rect.x() - border_thickness,
+            window_rect.y() - window_titlebar_height - border_thickness - 1 - menu_row_count * menubar_height,
+            window_rect.width() + (border_thickness * 2),
+            window_rect.height() + (border_thickness * 2) + 1 + window_titlebar_height + menu_row_count * menubar_height
         };
     case WindowType::Notification:
         return {

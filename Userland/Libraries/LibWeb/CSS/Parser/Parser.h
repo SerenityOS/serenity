@@ -235,9 +235,11 @@ private:
     Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
 
     NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<MediaQuery::MediaCondition> consume_media_condition(TokenStream<StyleComponentValueRule>&);
-    Optional<MediaQuery::MediaFeature> consume_media_feature(TokenStream<StyleComponentValueRule>&);
-    Optional<MediaQuery::MediaType> consume_media_type(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<MediaCondition> parse_media_condition(TokenStream<StyleComponentValueRule>&, MediaCondition::AllowOr allow_or);
+    Optional<MediaFeature> parse_media_feature(TokenStream<StyleComponentValueRule>&);
+    Optional<MediaQuery::MediaType> parse_media_type(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<MediaCondition> parse_media_in_parens(TokenStream<StyleComponentValueRule>&);
+    Optional<MediaFeatureValue> parse_media_feature_value(TokenStream<StyleComponentValueRule>&);
 
     OwnPtr<Supports::Condition> parse_supports_condition(TokenStream<StyleComponentValueRule>&);
     Optional<Supports::InParens> parse_supports_in_parens(TokenStream<StyleComponentValueRule>&);

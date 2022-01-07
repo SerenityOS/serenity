@@ -16,6 +16,8 @@ MD5SUM="md5sum"
 REALPATH="realpath"
 MAKE="make"
 NPROC="nproc"
+INSTALL="install"
+SED="sed"
 
 SYSTEM_NAME="$(uname -s)"
 
@@ -31,6 +33,13 @@ elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     MD5SUM="md5 -q"
     MAKE="gmake"
     NPROC="sysctl -n hw.ncpu"
+elif [ "$SYSTEM_NAME" = "Darwin" ]; then
+    MD5SUM="md5 -q"
+    MAKE="make"
+    NPROC="sysctl -n hw.ncpu"
+    REALPATH="grealpath"  # GNU coreutils
+    INSTALL="ginstall"    # GNU coreutils
+    SED="gsed"            # GNU sed
 fi
 
 if [ -z "$MAKEJOBS" ]; then
@@ -81,7 +90,7 @@ BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
 buildstep() {
     NAME=$1
     shift
-    "$@" 2>&1 | sed $'s|^|\e[34m['"${NAME}"$']\e[39m |'
+    "$@" 2>&1 | "$SED" $'s|^|\e[34m['"${NAME}"$']\e[39m |'
 }
 
 buildstep_ninja() {
@@ -250,8 +259,8 @@ for arch in $ARCHS; do
     pushd "$BUILD/${arch}clang"
         mkdir -p Root/usr/include/
         for header in $FILES; do
-            target=$(echo "$header" | sed -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Userland/Libraries/LibM@@" -e "s@$SRC_ROOT/Userland/Libraries/LibPthread@@" -e "s@$SRC_ROOT/Userland/Libraries/LibDl@@" -e "s@$SRC_ROOT/Kernel/@Kernel/@")
-            buildstep "system_headers" install -D "$header" "Root/usr/include/$target"
+            target=$(echo "$header" | "$SED" -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Userland/Libraries/LibM@@" -e "s@$SRC_ROOT/Userland/Libraries/LibPthread@@" -e "s@$SRC_ROOT/Userland/Libraries/LibDl@@" -e "s@$SRC_ROOT/Kernel/@Kernel/@")
+            buildstep "system_headers" "$INSTALL" -D "$header" "Root/usr/include/$target"
         done
     popd
 done
@@ -285,6 +294,7 @@ pushd "$DIR/Build/clang"
             -DSERENITY_x86_64-pc-serenity_SYSROOT="$BUILD/x86_64clang/Root" \
             -DSERENITY_aarch64-pc-serenity_SYSROOT="$BUILD/aarch64clang/Root" \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+            -DSERENITY_MODULE_PATH="$DIR/CMake" \
             -C "$DIR/CMake/LLVMConfig.cmake" \
             ${dev:+"-DLLVM_CCACHE_BUILD=ON"} \
             ${ci:+"-DLLVM_CCACHE_BUILD=ON"} \
@@ -298,7 +308,7 @@ pushd "$DIR/Build/clang"
     mkdir -p binutils
     pushd binutils
         buildstep "binutils/configure" "$DIR/Tarballs/$BINUTILS_NAME/configure" --prefix="$PREFIX" \
-            --enable-targets="$(echo "$ARCHS" | sed -E "s@(\S)(\s|$)@\1-pc-serenity,@g")" \
+            --enable-targets="$(echo "$ARCHS" | "$SED" -E "s@(\S)(\s|$)@\1-pc-serenity,@g")" \
             --program-prefix="gnu-" \
             --disable-nls \
             --disable-gas \
@@ -318,6 +328,7 @@ pushd "$DIR/Build/clang"
                 -DSERENITY_TOOLCHAIN_ARCH="$arch" \
                 -DSERENITY_TOOLCHAIN_ROOT="$PREFIX" \
                 -DSERENITY_BUILD_DIR="$BUILD/${arch}clang/" \
+                -DSERENITY_MODULE_PATH="$DIR/CMake" \
                 -DCMAKE_INSTALL_PREFIX="$PREFIX" \
                 -C "$DIR/CMake/LLVMRuntimesConfig.cmake"
 

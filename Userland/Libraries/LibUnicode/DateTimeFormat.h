@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -71,6 +71,10 @@ enum class CalendarPatternStyle : u8 {
     Long,
     Numeric,
     TwoDigit,
+    ShortOffset,
+    LongOffset,
+    ShortGeneric,
+    LongGeneric,
 };
 
 struct CalendarPattern {
@@ -164,21 +168,35 @@ enum class CalendarSymbol : u8 {
 
 HourCycle hour_cycle_from_string(StringView hour_cycle);
 StringView hour_cycle_to_string(HourCycle hour_cycle);
+
 CalendarPatternStyle calendar_pattern_style_from_string(StringView style);
 StringView calendar_pattern_style_to_string(CalendarPatternStyle style);
-Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView locale);
+
+Optional<Calendar> calendar_from_string(StringView calendar);
+Optional<HourCycleRegion> hour_cycle_region_from_string(StringView hour_cycle_region);
+Optional<TimeZone> time_zone_from_string(StringView time_zone);
+
+Vector<HourCycle> get_regional_hour_cycles(StringView region);
+Vector<Unicode::HourCycle> get_locale_hour_cycles(StringView locale);
 Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale);
+
 String combine_skeletons(StringView first, StringView second);
+
+Optional<CalendarFormat> get_calendar_date_format(StringView locale, StringView calendar);
+Optional<CalendarFormat> get_calendar_time_format(StringView locale, StringView calendar);
+Optional<CalendarFormat> get_calendar_date_time_format(StringView locale, StringView calendar);
 Optional<CalendarFormat> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type);
 Vector<CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar);
 Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format(StringView locale, StringView calendar);
 Vector<Unicode::CalendarRangePattern> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton);
 Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton);
+
 Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Era value);
 Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value);
 Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value);
 Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value);
 Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour);
+
 Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style);
 
 }

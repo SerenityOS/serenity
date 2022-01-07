@@ -226,9 +226,8 @@ static String folder_image_data()
 {
     static String cache;
     if (cache.is_empty()) {
-        auto file_or_error = Core::MappedFile::map("/res/icons/16x16/filetype-folder.png");
-        VERIFY(!file_or_error.is_error());
-        cache = encode_base64(file_or_error.value()->bytes());
+        auto file = Core::MappedFile::map("/res/icons/16x16/filetype-folder.png").release_value_but_fixme_should_propagate_errors();
+        cache = encode_base64(file->bytes());
     }
     return cache;
 }
@@ -237,9 +236,8 @@ static String file_image_data()
 {
     static String cache;
     if (cache.is_empty()) {
-        auto file_or_error = Core::MappedFile::map("/res/icons/16x16/filetype-unknown.png");
-        VERIFY(!file_or_error.is_error());
-        cache = encode_base64(file_or_error.value()->bytes());
+        auto file = Core::MappedFile::map("/res/icons/16x16/filetype-unknown.png").release_value_but_fixme_should_propagate_errors();
+        cache = encode_base64(file->bytes());
     }
     return cache;
 }

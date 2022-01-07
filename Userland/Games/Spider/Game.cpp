@@ -110,6 +110,7 @@ void Game::draw_cards()
     update_score(-1);
 
     m_draw_animation = true;
+    m_original_stock_rect = stock_pile.bounding_box();
     start_timer(s_timer_interval_ms);
 }
 
@@ -394,7 +395,7 @@ void Game::timer_event(Core::TimerEvent&)
             ++m_draw_animation_pile;
 
             if (m_draw_animation_pile == piles.size()) {
-                update(stock_pile.bounding_box());
+                update(m_original_stock_rect);
                 detect_full_stacks();
 
                 m_draw_animation = false;

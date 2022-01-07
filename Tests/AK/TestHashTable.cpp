@@ -84,6 +84,32 @@ TEST_CASE(table_remove)
     EXPECT(strings.find("Two") != strings.end());
 }
 
+TEST_CASE(remove_all_matching)
+{
+    HashTable<int> ints;
+
+    ints.set(1);
+    ints.set(2);
+    ints.set(3);
+    ints.set(4);
+
+    EXPECT_EQ(ints.size(), 4u);
+
+    EXPECT_EQ(ints.remove_all_matching([&](int value) { return value > 2; }), true);
+    EXPECT_EQ(ints.remove_all_matching([&](int) { return false; }), false);
+
+    EXPECT_EQ(ints.size(), 2u);
+
+    EXPECT(ints.contains(1));
+    EXPECT(ints.contains(2));
+
+    EXPECT_EQ(ints.remove_all_matching([&](int) { return true; }), true);
+
+    EXPECT(ints.is_empty());
+
+    EXPECT_EQ(ints.remove_all_matching([&](int) { return true; }), false);
+}
+
 TEST_CASE(case_insensitive)
 {
     HashTable<String, CaseInsensitiveStringTraits> casetable;

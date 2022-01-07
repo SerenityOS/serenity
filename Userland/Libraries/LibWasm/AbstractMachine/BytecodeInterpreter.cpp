@@ -245,7 +245,7 @@ void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruct
         dbgln("LibWasm: Memory access out of bounds (expected 0 <= {} and {} <= {})", instance_address, instance_address + data.size(), memory->size());
         return;
     }
-    dbgln_if(WASM_TRACE_DEBUG, "tempoaray({}b) -> store({})", data.size(), instance_address);
+    dbgln_if(WASM_TRACE_DEBUG, "temporary({}b) -> store({})", data.size(), instance_address);
     data.copy_to(memory->data().bytes().slice(instance_address, data.size()));
 }
 

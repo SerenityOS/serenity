@@ -261,11 +261,19 @@ describe("dayPeriod", () => {
             expect(as.format(d1)).toBe(d.as1);
         });
     });
+
+    test("flexible day period rolls over midnight", () => {
+        // For the en locale, this time (05:00) falls in the flexible day period range of [21:00, 06:00).
+        const date = Date.UTC(2017, 11, 12, 5, 0, 0, 0);
+
+        const en = new Intl.DateTimeFormat("en", { dayPeriod: "short", timeZone: "UTC" });
+        expect(en.format(date)).toBe("5 at night");
+    });
 });
 
 describe("hour", () => {
     // prettier-ignore
-    // FIXME: The 2-digit results are supposed to include {ampm}. These results are acheived from the "HH"
+    // FIXME: The 2-digit results are supposed to include {ampm}. These results are achieved from the "HH"
     //        pattern, which should only be applied to 24-hour cycles.
     const data = [
         { hour: "2-digit", en0: "05", en1: "07", ar0: "٠٥", ar1: "٠٧" },
@@ -377,6 +385,10 @@ describe("timeZoneName", () => {
     const data = [
         { timeZoneName: "short", en0: "12/7/2021, 5:40 PM UTC", en1: "1/23/1989, 7:08 AM UTC", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م UTC", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص UTC" },
         { timeZoneName: "long", en0: "12/7/2021, 5:40 PM Coordinated Universal Time", en1: "1/23/1989, 7:08 AM Coordinated Universal Time", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م التوقيت العالمي المنسق", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص التوقيت العالمي المنسق" },
+        { timeZoneName: "shortOffset", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZoneName: "longOffset", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZoneName: "shortGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZoneName: "longGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
     ];
 
     test("all", () => {

@@ -15,6 +15,7 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Clipper.h>
+#include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/DepthBuffer.h>
 #include <LibSoftGPU/DeviceInfo.h>
 #include <LibSoftGPU/Enums.h>
@@ -66,8 +67,6 @@ struct RasterizerOptions {
     Array<TexCoordGenerationConfig, 4> texcoord_generation_config {};
 };
 
-inline static constexpr size_t const num_samplers = 32;
-
 class Device final {
 public:
     Device(const Gfx::IntSize& min_size);
@@ -92,6 +91,7 @@ public:
 
 private:
     void submit_triangle(Triangle const& triangle, Vector<size_t> const& enabled_texture_units);
+    void draw_statistics_overlay(Gfx::Bitmap&);
 
 private:
     RefPtr<Gfx::Bitmap> m_render_target;
@@ -101,7 +101,7 @@ private:
     Vector<Triangle> m_triangle_list;
     Vector<Triangle> m_processed_triangles;
     Vector<Vertex> m_clipped_vertices;
-    Array<Sampler, num_samplers> m_samplers;
+    Array<Sampler, NUM_SAMPLERS> m_samplers;
 };
 
 }

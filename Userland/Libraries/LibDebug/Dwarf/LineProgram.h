@@ -153,7 +153,7 @@ private:
         SetBasicBlock,
         ConstAddPc,
         FixAdvancePc,
-        SetProlougeEnd,
+        SetPrologueEnd,
         SetEpilogueBegin,
         SetIsa
     };

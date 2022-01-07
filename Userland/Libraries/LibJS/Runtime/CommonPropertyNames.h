@@ -241,6 +241,8 @@ namespace JS {
     P(global)                                \
     P(globalThis)                            \
     P(group)                                 \
+    P(groupBy)                               \
+    P(groupByToMap)                          \
     P(groupCollapsed)                        \
     P(groupEnd)                              \
     P(groups)                                \
@@ -452,6 +454,7 @@ namespace JS {
     P(timeZone)                              \
     P(timeZoneName)                          \
     P(toDateString)                          \
+    P(toExponential)                         \
     P(toFixed)                               \
     P(toGMTString)                           \
     P(toInstant)                             \
@@ -468,6 +471,7 @@ namespace JS {
     P(toPlainMonthDay)                       \
     P(toPlainTime)                           \
     P(toPlainYearMonth)                      \
+    P(toPrecision)                           \
     P(toString)                              \
     P(total)                                 \
     P(toTemporalInstant)                     \

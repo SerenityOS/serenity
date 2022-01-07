@@ -135,32 +135,32 @@ public:
         return m_low || m_high;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator==(const T& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator==(const U& other) const
     {
         return !m_high && m_low == other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator!=(const T& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator!=(const U& other) const
     {
         return m_high || m_low != other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator>(const T& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator>(const U& other) const
     {
         return m_high || m_low > other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator<(const T& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator<(const U& other) const
     {
         return !m_high && m_low < other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator>=(const T& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator>=(const U& other) const
     {
         return *this == other || *this > other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator<=(const T& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator<=(const U& other) const
     {
         return *this == other || *this < other;
     }

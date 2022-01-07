@@ -71,6 +71,34 @@ TEST_CASE(map_remove)
     EXPECT(number_to_string.find(2) != number_to_string.end());
 }
 
+TEST_CASE(remove_all_matching)
+{
+    HashMap<int, String> map;
+
+    map.set(1, "One");
+    map.set(2, "Two");
+    map.set(3, "Three");
+    map.set(4, "Four");
+
+    EXPECT_EQ(map.size(), 4u);
+
+    EXPECT_EQ(map.remove_all_matching([&](int key, String const& value) { return key == 1 || value == "Two"; }), true);
+    EXPECT_EQ(map.size(), 2u);
+
+    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return false; }), false);
+    EXPECT_EQ(map.size(), 2u);
+
+    EXPECT(map.contains(3));
+    EXPECT(map.contains(4));
+
+    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return true; }), true);
+    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return false; }), false);
+
+    EXPECT(map.is_empty());
+
+    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return true; }), false);
+}
+
 TEST_CASE(case_insensitive)
 {
     HashMap<String, int, CaseInsensitiveStringTraits> casemap;

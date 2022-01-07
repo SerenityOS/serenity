@@ -49,23 +49,36 @@ public:
 
     Function<void(u32 new_page)> on_page_change;
 
+    void zoom_in();
+    void zoom_out();
+    void reset_zoom();
+    void rotate(int degrees);
+
 protected:
     PDFViewer();
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
 
 private:
+    struct RenderedPage {
+        RefPtr<Gfx::Bitmap> bitmap;
+        int rotation;
+    };
+
     RefPtr<Gfx::Bitmap> get_rendered_page(u32 index);
     RefPtr<Gfx::Bitmap> render_page(const PDF::Page&);
 
-    void zoom_in();
-    void zoom_out();
-
     RefPtr<PDF::Document> m_document;
     u32 m_current_page_index { 0 };
-    Vector<HashMap<u32, RefPtr<Gfx::Bitmap>>> m_rendered_page_list;
+    Vector<HashMap<u32, RenderedPage>> m_rendered_page_list;
 
     u8 m_zoom_level { initial_zoom_level };
+
+    Gfx::IntPoint m_pan_starting_position;
+    int m_rotations { 0 };
 };

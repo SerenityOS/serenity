@@ -24,19 +24,19 @@ public:
     void refresh();
     void set_view_diff_callback(ViewDiffCallback callback);
     bool initialized() const { return !m_git_repo.is_null(); };
-    void change_repo(LexicalPath const& repo_root);
+    void change_repo(String const& repo_root);
 
 private:
-    explicit GitWidget(const LexicalPath& repo_root);
+    explicit GitWidget(String const& repo_root);
 
     bool initialize();
     bool initialize_if_needed();
-    void stage_file(const LexicalPath&);
-    void unstage_file(const LexicalPath&);
+    void stage_file(String const&);
+    void unstage_file(String const&);
     void commit();
-    void show_diff(const LexicalPath&);
+    void show_diff(String const&);
 
-    LexicalPath m_repo_root;
+    String m_repo_root;
     RefPtr<GitFilesView> m_unstaged_files;
     RefPtr<GitFilesView> m_staged_files;
     RefPtr<GitRepo> m_git_repo;

@@ -212,9 +212,9 @@ int posix_spawnattr_getschedparam(const posix_spawnattr_t* attr, struct sched_pa
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawnattr_getschedpolicy.html
-int posix_spawnattr_getschedpolicy(const posix_spawnattr_t* attr, int* out_schedpolicty)
+int posix_spawnattr_getschedpolicy(const posix_spawnattr_t* attr, int* out_schedpolicy)
 {
-    *out_schedpolicty = attr->schedpolicy;
+    *out_schedpolicy = attr->schedpolicy;
     return 0;
 }
 

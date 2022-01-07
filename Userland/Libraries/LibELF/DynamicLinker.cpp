@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2022, Jesse Buhagiar <jooster669@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -52,6 +53,7 @@ static __pthread_mutex_t s_loader_lock = __PTHREAD_MUTEX_INITIALIZER;
 
 static bool s_allowed_to_check_environment_variables { false };
 static bool s_do_breakpoint_trap_before_entry { false };
+static StringView s_ld_library_path;
 
 static Result<void, DlErrorMessage> __dlclose(void* handle);
 static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags);
@@ -108,6 +110,18 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
         return map_library(name, fd);
     }
 
+    // Scan the LD_LIBRARY_PATH environment variable if applicable
+    if (s_ld_library_path != nullptr) {
+        for (const auto& search_path : s_ld_library_path.split_view(':')) {
+            LexicalPath library_path(search_path);
+            int fd = open(library_path.append(name).string().characters(), O_RDONLY);
+            if (fd < 0)
+                continue;
+            return map_library(name, fd);
+        }
+    }
+
+    // Now check the default paths.
     // TODO: Do we want to also look for libs in other paths too?
     const char* search_paths[] = { "/usr/lib/{}", "/usr/local/lib/{}" };
     for (auto& search_path : search_paths) {
@@ -494,8 +508,14 @@ static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info)
 static void read_environment_variables()
 {
     for (char** env = s_envp; *env; ++env) {
-        if (StringView { *env } == "_LOADER_BREAKPOINT=1"sv) {
+        StringView env_string { *env };
+        if (env_string == "_LOADER_BREAKPOINT=1"sv) {
             s_do_breakpoint_trap_before_entry = true;
+        }
+
+        constexpr auto library_path_string = "LD_LIBRARY_PATH="sv;
+        if (env_string.starts_with(library_path_string)) {
+            s_ld_library_path = env_string.substring_view(library_path_string.length());
         }
     }
 }

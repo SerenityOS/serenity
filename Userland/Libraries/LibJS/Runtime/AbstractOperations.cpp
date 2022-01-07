@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -564,7 +564,7 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
 
     TemporaryChange scope_change_strict(vm.running_execution_context().is_strict_mode, strict_eval);
 
-    Value eval_result;
+    Optional<Value> eval_result;
 
     if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
         auto executable = JS::Bytecode::Generator::generate(program);
@@ -572,16 +572,16 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
         if (JS::Bytecode::g_dump_bytecode)
             executable.dump();
         eval_result = TRY(bytecode_interpreter->run(executable));
+        // Turn potentially empty JS::Value from the bytecode interpreter into an empty Optional
+        if (eval_result.has_value() && eval_result->is_empty())
+            eval_result = {};
     } else {
         auto& ast_interpreter = vm.interpreter();
         // FIXME: We need to use evaluate_statements() here because Program::execute() calls global_declaration_instantiation() when it shouldn't
-        eval_result = program->evaluate_statements(ast_interpreter, caller_realm);
+        eval_result = TRY(program->evaluate_statements(ast_interpreter, caller_realm));
     }
 
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    else
-        return eval_result.value_or(js_undefined());
+    return eval_result.value_or(js_undefined());
 }
 
 // 19.2.1.3 EvalDeclarationInstantiation ( body, varEnv, lexEnv, privateEnv, strict ), https://tc39.es/ecma262/#sec-evaldeclarationinstantiation

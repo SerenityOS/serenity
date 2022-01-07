@@ -346,7 +346,7 @@ public:
     {
         if (size_to_grow == 0)
             return true;
-        auto new_size = m_data.size() + size_to_grow;
+        u64 new_size = m_data.size() + size_to_grow;
         // Can't grow past 2^16 pages.
         if (new_size >= Constants::page_size * 65536)
             return false;

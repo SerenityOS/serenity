@@ -795,7 +795,6 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         if (prototype_or_error.has_value() && prototype_or_error.value() == object.global_object().error_prototype())
             return print_error(object, seen_objects);
         vm->clear_exception();
-        vm->stop_unwind();
 
         if (is<JS::RegExpObject>(object))
             return print_regexp_object(object, seen_objects);
@@ -942,7 +941,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
                 auto result = bytecode_interpreter.run(executable);
                 // Since all the error handling code uses vm.exception() we just rethrow any exception we got here.
                 if (result.is_error())
-                    vm->throw_exception(interpreter.global_object(), result.throw_completion().value());
+                    vm->throw_exception(interpreter.global_object(), *result.throw_completion().value());
             } else {
                 return true;
             }
@@ -1426,12 +1425,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             switch (mode) {
             case CompleteProperty: {
-                Optional<JS::Value> maybe_value;
-                auto maybe_variable = TRY_OR_DISCARD(vm->resolve_binding(variable_name, &global_environment));
-                maybe_value = TRY_OR_DISCARD(maybe_variable.get_value(interpreter->global_object()));
-                VERIFY(!maybe_value->is_empty());
+                auto reference_or_error = vm->resolve_binding(variable_name, &global_environment);
+                if (reference_or_error.is_error())
+                    return {};
+                auto value_or_error = reference_or_error.value().get_value(interpreter->global_object());
+                if (value_or_error.is_error())
+                    return {};
+                auto variable = value_or_error.value();
+                VERIFY(!variable.is_empty());
 
-                auto variable = *maybe_value;
                 if (!variable.is_object())
                     break;
 

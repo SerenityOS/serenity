@@ -55,7 +55,7 @@
 using namespace FileManager;
 
 static ErrorOr<int> run_in_desktop_mode();
-static ErrorOr<int> run_in_windowed_mode(String initial_location, String entry_focused_on_init);
+static ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& entry_focused_on_init);
 static void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation);
 static void do_paste(String const& target_directory, GUI::Window* window);
 static void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* window);
@@ -520,7 +520,7 @@ ErrorOr<int> run_in_desktop_mode()
     return GUI::Application::the()->exec();
 }
 
-ErrorOr<int> run_in_windowed_mode(String initial_location, String entry_focused_on_init)
+ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& entry_focused_on_init)
 {
     auto window = TRY(GUI::Window::try_create());
     window->set_title("File Manager");
@@ -950,6 +950,10 @@ ErrorOr<int> run_in_windowed_mode(String initial_location, String entry_focused_
     auto show_dotfiles = Config::read_bool("FileManager", "DirectoryView", "ShowDotFiles", false);
     directory_view->set_should_show_dotfiles(show_dotfiles);
     action_show_dotfiles->set_checked(show_dotfiles);
+
+    auto const initial_location_contains_dotfile = initial_location.contains("/."sv);
+    action_show_dotfiles->set_checked(initial_location_contains_dotfile);
+    action_show_dotfiles->on_activation(action_show_dotfiles);
 
     auto view_menu = TRY(window->try_add_menu("&View"));
     auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"));

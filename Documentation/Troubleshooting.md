@@ -16,7 +16,7 @@ install it. You can also build it using the `Toolchain/BuildQemu.sh` script.
 
 ### GCC is missing or is outdated
 
-Ensure your gcc version is >= 10 with `gcc --version`. Otherwise, install it. If your gcc binary is not
+Ensure your gcc version is >= 11 with `gcc --version`. Otherwise, install it. If your gcc binary is not
 called `gcc` you have to specify the names of your C and C++ compiler when you run cmake, e.g.
 `cmake ../.. -GNinja -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11`.
 

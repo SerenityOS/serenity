@@ -15,6 +15,8 @@
 struct timeval;
 struct timespec;
 
+namespace AK {
+
 // Concept to detect types which look like timespec without requiring the type.
 template<typename T>
 concept TimeSpecType = requires(T t)
@@ -22,10 +24,6 @@ concept TimeSpecType = requires(T t)
     t.tv_sec;
     t.tv_nsec;
 };
-
-// FIXME: remove once Clang formats these properly.
-// clang-format off
-namespace AK {
 
 // Month and day start at 1. Month must be >= 1 and <= 12.
 // The return value is 0-indexed, that is 0 is Sunday, 1 is Monday, etc.
@@ -61,6 +59,11 @@ inline int years_to_days_since_epoch(int year)
     for (int current_year = year; current_year < 1970; ++current_year)
         days -= days_in_year(current_year);
     return days;
+}
+
+inline int days_since_epoch(int year, int month, int day)
+{
+    return years_to_days_since_epoch(year) + day_of_year(year, month, day);
 }
 
 /*
@@ -298,12 +301,12 @@ inline bool operator!=(const T& a, const T& b)
 }
 
 }
-// clang-format on
 
 using AK::day_of_week;
 using AK::day_of_year;
 using AK::days_in_month;
 using AK::days_in_year;
+using AK::days_since_epoch;
 using AK::is_leap_year;
 using AK::Time;
 using AK::timespec_add;

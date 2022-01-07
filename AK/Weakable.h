@@ -73,7 +73,7 @@ public:
     {
         auto current_consumers = m_consumers.fetch_or(1u, AK::MemoryOrder::memory_order_relaxed);
         VERIFY(!(current_consumers & 1u));
-        // We flagged revokation, now wait until everyone trying to obtain
+        // We flagged revocation, now wait until everyone trying to obtain
         // a strong reference is done
         while (current_consumers > 0) {
 #ifdef KERNEL
@@ -94,7 +94,7 @@ private:
     {
     }
     mutable Atomic<void*> m_ptr;
-    mutable Atomic<unsigned> m_consumers; // LSB indicates revokation in progress
+    mutable Atomic<unsigned> m_consumers; // LSB indicates revocation in progress
 };
 
 template<typename T>

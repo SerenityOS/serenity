@@ -67,16 +67,6 @@ static inline u64 page_count_to_bytes(size_t count)
     return count * 4096;
 }
 
-static inline u64 page_count_to_kb(u64 count)
-{
-    return page_count_to_bytes(count) / 1024;
-}
-
-static inline u64 bytes_to_kb(u64 bytes)
-{
-    return bytes / 1024;
-}
-
 void MemoryStatsWidget::refresh()
 {
     auto proc_memstat = Core::File::construct("/proc/memstat");

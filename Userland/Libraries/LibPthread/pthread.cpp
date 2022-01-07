@@ -171,12 +171,14 @@ int pthread_detach(pthread_t thread)
     __RETURN_PTHREAD_ERROR(rc);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_sigmask.html
 int pthread_sigmask(int how, const sigset_t* set, sigset_t* old_set)
 {
     if (sigprocmask(how, set, old_set))
         return errno;
     return 0;
 }
+
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_init.html
 int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
 {
@@ -513,7 +515,6 @@ int pthread_setspecific(pthread_key_t key, const void* value)
     return __pthread_setspecific(key, value);
 }
 
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setname_np.html
 int pthread_setname_np(pthread_t thread, const char* name)
 {
     if (!name)
@@ -522,7 +523,6 @@ int pthread_setname_np(pthread_t thread, const char* name)
     __RETURN_PTHREAD_ERROR(rc);
 }
 
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_getname_np.html
 int pthread_getname_np(pthread_t thread, char* buffer, size_t buffer_size)
 {
     int rc = syscall(SC_get_thread_name, thread, buffer, buffer_size);

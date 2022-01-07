@@ -81,7 +81,7 @@ bool Mailbox::send_queue(void* queue, u32 queue_size) const
 
     auto& mmio = MMIO::the();
 
-    // The mailbox interface has a FIFO for message deliverly in both directions.
+    // The mailbox interface has a FIFO for message delivery in both directions.
     // Responses can be delivered out of order to requests, but we currently ever only send on request at once.
     // It'd be nice to have an async interface here where we send a message, then return immediately, and read the response when an interrupt arrives.
     // But for now, this is synchronous.

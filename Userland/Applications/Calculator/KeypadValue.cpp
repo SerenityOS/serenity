@@ -10,7 +10,7 @@
 
 KeypadValue::KeypadValue(i64 value, u8 decimal_places)
     : m_value(value)
-    , m_decimal_places(decimal_places)
+    , m_decimal_places(value == 0 ? 0 : decimal_places)
 {
 }
 

@@ -174,6 +174,17 @@ UNMAP_AFTER_INIT void MemoryManager::protect_ksyms_after_init()
     dmesgln("Write-protected kernel symbols after init.");
 }
 
+IterationDecision MemoryManager::for_each_physical_memory_range(Function<IterationDecision(PhysicalMemoryRange const&)> callback)
+{
+    VERIFY(!m_physical_memory_ranges.is_empty());
+    for (auto& current_range : m_physical_memory_ranges) {
+        IterationDecision decision = callback(current_range);
+        if (decision != IterationDecision::Continue)
+            return decision;
+    }
+    return IterationDecision::Continue;
+}
+
 UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
 {
     VERIFY(!m_physical_memory_ranges.is_empty());
@@ -200,7 +211,6 @@ UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
 
 bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_address, VirtualRange const& range) const
 {
-    VERIFY(!m_reserved_memory_ranges.is_empty());
     // Note: Guard against overflow in case someone tries to mmap on the edge of
     // the RAM
     if (start_address.offset_addition_would_overflow(range.size()))
@@ -731,6 +741,25 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
     auto vmobject = TRY(AnonymousVMObject::try_create_physically_contiguous_with_size(size));
     auto range = TRY(kernel_page_directory().range_allocator().try_allocate_anywhere(size));
     return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
+}
+
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page)
+{
+    dma_buffer_page = allocate_supervisor_physical_page();
+    if (dma_buffer_page.is_null())
+        return ENOMEM;
+    auto region_or_error = allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access);
+    return region_or_error;
+}
+
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages)
+{
+    VERIFY(!(size % PAGE_SIZE));
+    dma_buffer_pages = allocate_contiguous_supervisor_physical_pages(size);
+    if (dma_buffer_pages.is_empty())
+        return ENOMEM;
+    auto region_or_error = allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access);
+    return region_or_error;
 }
 
 ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)

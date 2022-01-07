@@ -329,7 +329,6 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
     // 10. If completion is an abrupt completion, then
     if (auto* exception = vm.exception()) {
         vm.clear_exception();
-        vm.stop_unwind();
 
         // a. Perform ? Call(resolvingFunctions.[[Reject]], undefined, « completion.[[Value]] »).
         TRY(vm.call(reject_function, js_undefined(), exception->value()));

@@ -810,7 +810,7 @@ ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject& global_object
 
     // 3. For each element nextKey of keys, do
     for (auto& key : keys) {
-        auto next_key = PropertyKey::from_value(global_object, key);
+        auto next_key = MUST(PropertyKey::from_value(global_object, key));
 
         // a. Let propValue be ? Get(options, nextKey).
         auto prop_value = TRY(options.get(next_key));
@@ -1684,7 +1684,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     if (name_part.has_value()) {
         // a. If ! IsValidTimeZoneName(name) is false, throw a RangeError exception.
         if (!is_valid_time_zone_name(*name_part))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName);
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, *name_part);
 
         // b. Set name to ! CanonicalizeTimeZoneName(name).
         name = canonicalize_time_zone_name(*name_part);

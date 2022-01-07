@@ -400,6 +400,8 @@ struct SC_chown_params {
     StringArgument path;
     u32 uid;
     u32 gid;
+    int dirfd;
+    int follow_symlinks;
 };
 
 struct SC_mknod_params {

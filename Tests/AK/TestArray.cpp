@@ -17,7 +17,7 @@ static constexpr int constexpr_sum(const Span<const int> span)
     return sum;
 }
 
-TEST_CASE(compile_time_contructible)
+TEST_CASE(compile_time_constructible)
 {
     constexpr Array<int, 4> array = { 0, 1, 2, 3 };
     static_assert(array.size() == 4);

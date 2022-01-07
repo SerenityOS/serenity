@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,7 +8,6 @@
 #include <AK/StringBuilder.h>
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
-#include <LibUnicode/UnicodeSymbols.h>
 
 namespace Unicode {
 
@@ -53,6 +52,14 @@ CalendarPatternStyle calendar_pattern_style_from_string(StringView style)
         return CalendarPatternStyle::Numeric;
     if (style == "2-digit"sv)
         return CalendarPatternStyle::TwoDigit;
+    if (style == "shortOffset"sv)
+        return CalendarPatternStyle::ShortOffset;
+    if (style == "longOffset"sv)
+        return CalendarPatternStyle::LongOffset;
+    if (style == "shortGeneric"sv)
+        return CalendarPatternStyle::ShortGeneric;
+    if (style == "longGeneric"sv)
+        return CalendarPatternStyle::LongGeneric;
     VERIFY_NOT_REACHED();
 }
 
@@ -69,20 +76,31 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style)
         return "numeric"sv;
     case CalendarPatternStyle::TwoDigit:
         return "2-digit"sv;
+    case CalendarPatternStyle::ShortOffset:
+        return "shortOffset"sv;
+    case CalendarPatternStyle::LongOffset:
+        return "longOffset"sv;
+    case CalendarPatternStyle::ShortGeneric:
+        return "shortGeneric"sv;
+    case CalendarPatternStyle::LongGeneric:
+        return "longGeneric"sv;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-// https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
-Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView locale)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
+Optional<Calendar> __attribute__((weak)) calendar_from_string(StringView) { return {}; }
+Optional<HourCycleRegion> __attribute__((weak)) hour_cycle_region_from_string(StringView) { return {}; }
+Optional<TimeZone> __attribute__((weak)) time_zone_from_string(StringView) { return {}; }
+Vector<HourCycle> __attribute__((weak)) get_regional_hour_cycles(StringView) { return {}; }
 
-    if (auto hour_cycles = symbols.get_regional_hour_cycles(locale); !hour_cycles.is_empty())
+// https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+Vector<Unicode::HourCycle> get_locale_hour_cycles(StringView locale)
+{
+    if (auto hour_cycles = get_regional_hour_cycles(locale); !hour_cycles.is_empty())
         return hour_cycles;
 
-    auto return_default_hour_cycles = [&]() { return symbols.get_regional_hour_cycles("001"sv); };
+    auto return_default_hour_cycles = [&]() { return get_regional_hour_cycles("001"sv); };
 
     auto language = parse_unicode_language_id(locale);
     if (!language.has_value())
@@ -93,7 +111,7 @@ Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView locale)
     if (!language.has_value() || !language->region.has_value())
         return return_default_hour_cycles();
 
-    if (auto hour_cycles = symbols.get_regional_hour_cycles(*language->region); !hour_cycles.is_empty())
+    if (auto hour_cycles = get_regional_hour_cycles(*language->region); !hour_cycles.is_empty())
         return hour_cycles;
 
     return return_default_hour_cycles();
@@ -101,7 +119,7 @@ Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView locale)
 
 Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale)
 {
-    if (auto hour_cycles = get_regional_hour_cycles(locale); !hour_cycles.is_empty())
+    if (auto hour_cycles = get_locale_hour_cycles(locale); !hour_cycles.is_empty())
         return hour_cycles.first();
     return {};
 }
@@ -147,80 +165,33 @@ String combine_skeletons(StringView first, StringView second)
     return builder.build();
 }
 
+Optional<CalendarFormat> __attribute__((weak)) get_calendar_date_format(StringView, StringView) { return {}; }
+Optional<CalendarFormat> __attribute__((weak)) get_calendar_time_format(StringView, StringView) { return {}; }
+Optional<CalendarFormat> __attribute__((weak)) get_calendar_date_time_format(StringView, StringView) { return {}; }
+
 Optional<CalendarFormat> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type)
 {
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-
     switch (type) {
     case CalendarFormatType::Date:
-        return symbols.get_calendar_date_format(locale, calendar);
+        return get_calendar_date_format(locale, calendar);
     case CalendarFormatType::Time:
-        return symbols.get_calendar_time_format(locale, calendar);
+        return get_calendar_time_format(locale, calendar);
     case CalendarFormatType::DateTime:
-        return symbols.get_calendar_date_time_format(locale, calendar);
+        return get_calendar_date_time_format(locale, calendar);
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-Vector<CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_calendar_available_formats(locale, calendar);
-}
-
-Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format(StringView locale, StringView calendar)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_calendar_default_range_format(locale, calendar);
-}
-
-Vector<Unicode::CalendarRangePattern> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_calendar_range_formats(locale, calendar, skeleton);
-}
-
-Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_calendar_range12_formats(locale, calendar, skeleton);
-}
-
-Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Era value)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_calendar_era_symbol(locale, calendar, style, value);
-}
-
-Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_calendar_month_symbol(locale, calendar, style, value);
-}
-
-Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_calendar_weekday_symbol(locale, calendar, style, value);
-}
-
-Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_calendar_day_period_symbol(locale, calendar, style, value);
-}
-
-Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_calendar_day_period_symbol_for_hour(locale, calendar, style, hour);
-}
-
-Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.get_time_zone_name(locale, time_zone, style);
-}
+Vector<CalendarPattern> __attribute__((weak)) get_calendar_available_formats(StringView, StringView) { return {}; }
+Optional<CalendarRangePattern> __attribute__((weak)) get_calendar_default_range_format(StringView, StringView) { return {}; }
+Vector<CalendarRangePattern> __attribute__((weak)) get_calendar_range_formats(StringView, StringView, StringView) { return {}; }
+Vector<CalendarRangePattern> __attribute__((weak)) get_calendar_range12_formats(StringView, StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_calendar_era_symbol(StringView, StringView, CalendarPatternStyle, Era) { return {}; }
+Optional<StringView> __attribute__((weak)) get_calendar_month_symbol(StringView, StringView, CalendarPatternStyle, Month) { return {}; }
+Optional<StringView> __attribute__((weak)) get_calendar_weekday_symbol(StringView, StringView, CalendarPatternStyle, Weekday) { return {}; }
+Optional<StringView> __attribute__((weak)) get_calendar_day_period_symbol(StringView, StringView, CalendarPatternStyle, DayPeriod) { return {}; }
+Optional<StringView> __attribute__((weak)) get_calendar_day_period_symbol_for_hour(StringView, StringView, CalendarPatternStyle, u8) { return {}; }
+Optional<StringView> __attribute__((weak)) get_time_zone_name(StringView, StringView, CalendarPatternStyle) { return {}; }
 
 }

@@ -15,6 +15,7 @@
 #include <Kernel/Panic.h>
 #include <Kernel/Storage/ATA/AHCIController.h>
 #include <Kernel/Storage/ATA/IDEController.h>
+#include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
@@ -45,20 +46,31 @@ bool StorageManagement::boot_argument_contains_partition_uuid()
 UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
 {
     VERIFY(m_controllers.is_empty());
+
+    using SubclassID = PCI::MassStorage::SubclassID;
     if (!kernel_command_line().disable_physical_storage()) {
-        if (kernel_command_line().is_ide_enabled()) {
-            PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
-                if (device_identifier.class_code().value() == to_underlying(PCI::ClassID::MassStorage)
-                    && device_identifier.subclass_code().value() == to_underlying(PCI::MassStorage::SubclassID::IDEController)) {
-                    m_controllers.append(IDEController::initialize(device_identifier, force_pio));
-                }
-            });
-        }
+
         PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
-            if (device_identifier.class_code().value() == to_underlying(PCI::ClassID::MassStorage)
-                && device_identifier.subclass_code().value() == to_underlying(PCI::MassStorage::SubclassID::SATAController)
+            if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::MassStorage)) {
+                return;
+            }
+
+            auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());
+            if (subclass_code == SubclassID::IDEController && kernel_command_line().is_ide_enabled()) {
+                m_controllers.append(IDEController::initialize(device_identifier, force_pio));
+            }
+
+            if (subclass_code == SubclassID::SATAController
                 && device_identifier.prog_if().value() == to_underlying(PCI::MassStorage::SATAProgIF::AHCI)) {
                 m_controllers.append(AHCIController::initialize(device_identifier));
+            }
+            if (subclass_code == SubclassID::NVMeController) {
+                auto controller = NVMeController::try_initialize(device_identifier);
+                if (controller.is_error()) {
+                    dmesgln("Unable to initialize NVMe controller: {}", controller.error());
+                } else {
+                    m_controllers.append(controller.release_value());
+                }
             }
         });
     }
@@ -89,7 +101,7 @@ UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_par
             return {};
         return move(gpt_table_or_result.value());
     }
-    if (mbr_table_or_result.error() == PartitionTable::Error::ConatinsEBR) {
+    if (mbr_table_or_result.error() == PartitionTable::Error::ContainsEBR) {
         auto ebr_table_or_result = EBRPartitionTable::try_to_initialize(device);
         if (ebr_table_or_result.is_error())
             return {};
@@ -113,8 +125,8 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions() const
                 continue;
             // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
             auto disk_partition = DiskPartition::create(const_cast<StorageDevice&>(device), (partition_index + (16 * device_index)), partition_metadata.value());
-            partitions.append(disk_partition);
-            const_cast<StorageDevice&>(device).m_partitions.append(disk_partition);
+            MUST(partitions.try_append(disk_partition));
+            MUST(const_cast<StorageDevice&>(device).m_partitions.try_append(disk_partition));
         }
         device_index++;
     }
@@ -130,9 +142,20 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
                 m_boot_block_device = storage_device;
                 break;
             }
-            auto start_storage_name = storage_name.substring_view(0, min(storage_device.early_storage_name().length(), storage_name.length()));
 
-            if (storage_device.early_storage_name().starts_with(start_storage_name)) {
+            // If the early storage name's last character is a digit (e.g. in the case of NVMe where the last
+            // number in the device name indicates the node, e.g. /dev/nvme0n1 we need to append a "p" character
+            // so that we can properly distinguish the partition index from the device itself
+            char storage_name_last_char = *(storage_device.early_storage_name().end() - 1);
+            String early_storage_name;
+            if (storage_name_last_char >= '0' && storage_name_last_char <= '9')
+                early_storage_name = String::formatted("{}p", storage_device.early_storage_name());
+            else
+                early_storage_name = storage_device.early_storage_name();
+
+            auto start_storage_name = storage_name.substring_view(0, min(early_storage_name.length(), storage_name.length()));
+
+            if (early_storage_name.starts_with(start_storage_name)) {
                 StringView partition_sign = storage_name.substring_view(start_storage_name.length());
                 auto possible_partition_number = partition_sign.to_uint<size_t>();
                 if (!possible_partition_number.has_value())

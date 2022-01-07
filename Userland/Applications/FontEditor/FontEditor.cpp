@@ -335,11 +335,11 @@ FontEditorWidget::FontEditorWidget()
     glyph_mode_toolbar.add_action(*m_paint_glyph_action);
     glyph_mode_toolbar.add_action(*m_move_glyph_action);
 
-    m_rotate_counterclockwise_action = GUI::Action::create("Rotate Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_Z }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_rotate_counterclockwise_action = GUI::CommonActions::make_rotate_counterclockwise_action([&](auto&) {
         m_glyph_editor_widget->rotate_90(GlyphEditorWidget::Counterclockwise);
     });
 
-    m_rotate_clockwise_action = GUI::Action::create("Rotate Clockwise", { Mod_Ctrl | Mod_Shift, Key_X }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_rotate_clockwise_action = GUI::CommonActions::make_rotate_clockwise_action([&](auto&) {
         m_glyph_editor_widget->rotate_90(GlyphEditorWidget::Clockwise);
     });
 
@@ -613,6 +613,7 @@ bool FontEditorWidget::save_as(String const& path)
         return false;
     }
     m_path = path;
+    m_undo_stack->set_current_unmodified();
     window()->set_modified(false);
     update_title();
     return true;
@@ -686,7 +687,7 @@ bool FontEditorWidget::request_close()
 {
     if (!window()->is_modified())
         return true;
-    auto result = GUI::MessageBox::show(window(), "Save changes to the current font?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, m_undo_stack->last_unmodified_timestamp());
     if (result == GUI::MessageBox::ExecYes) {
         m_save_action->activate();
         if (!window()->is_modified())

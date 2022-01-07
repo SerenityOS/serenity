@@ -53,7 +53,7 @@ public:
     IndexType ensure(StorageType value)
     {
         // We maintain a set of unique values in two structures: a vector which stores the values in
-        // the order they are added, and a hash map which maps that value to its index in the vetor.
+        // the order they are added, and a hash map which maps that value to its index in the vector.
         // The vector is to ensure the values are generated in an easily known order, and the map is
         // to allow quickly deciding if a value is actually unique (otherwise, we'd have to linearly
         // search the vector for each value).
@@ -305,7 +305,6 @@ void generate_value_from_string(SourceGenerator& generator, StringView method_na
     generator.set("size", String::number(hashes.size()));
 
     generator.append(R"~~~(
-Optional<@return_type@> @method_name@(StringView key) asm("unicode_@method_name@");
 Optional<@return_type@> @method_name@(StringView key)
 {
     constexpr Array<HashValuePair<@value_type@>, @size@> hash_pairs { {

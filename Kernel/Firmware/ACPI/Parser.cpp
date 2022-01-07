@@ -388,7 +388,28 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_rsdp()
     auto rsdp = map_ebda().find_chunk_starting_with(signature, 16);
     if (rsdp.has_value())
         return rsdp;
-    return map_bios().find_chunk_starting_with(signature, 16);
+    rsdp = map_bios().find_chunk_starting_with(signature, 16);
+    if (rsdp.has_value())
+        return rsdp;
+
+    // On some systems the RSDP may be located in ACPI NVS or reclaimable memory regions
+    MM.for_each_physical_memory_range([&](auto& memory_range) {
+        if (!(memory_range.type == Memory::PhysicalMemoryRangeType::ACPI_NVS || memory_range.type == Memory::PhysicalMemoryRangeType::ACPI_Reclaimable))
+            return IterationDecision::Continue;
+
+        Memory::MappedROM mapping;
+        mapping.region = MM.allocate_kernel_region(memory_range.start, Memory::page_round_up(memory_range.length).release_value_but_fixme_should_propagate_errors(), {}, Memory::Region::Access::Read).release_value();
+        mapping.offset = memory_range.start.offset_in_page();
+        mapping.size = memory_range.length;
+        mapping.paddr = memory_range.start;
+
+        rsdp = mapping.find_chunk_starting_with(signature, 16);
+        if (rsdp.has_value())
+            return IterationDecision::Break;
+
+        return IterationDecision::Continue;
+    });
+    return rsdp;
 }
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_table(PhysicalAddress rsdp_address, StringView signature)

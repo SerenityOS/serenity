@@ -319,7 +319,7 @@ void flush_delayed_tcp_acks()
     for (auto& socket : *delayed_ack_sockets) {
         MutexLocker locker(socket->mutex());
         if (socket->should_delay_next_ack()) {
-            remaining_sockets.append(socket);
+            MUST(remaining_sockets.try_append(socket));
             continue;
         }
         [[maybe_unused]] auto result = socket->send_ack();

@@ -12,8 +12,16 @@ PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ClientConnection> connecti
     m_timer = Core::Timer::construct(PlaybackManager::update_rate_ms, [&]() {
         if (!m_loader)
             return;
-        next_buffer();
+        // Make sure that we have some buffers queued up at all times: an audio dropout is the last thing we want.
+        if (m_enqueued_buffers.size() < always_enqueued_buffer_count)
+            next_buffer();
     });
+    m_connection->on_finish_playing_buffer = [this](auto finished_buffer) {
+        auto last_buffer_in_queue = m_enqueued_buffers.dequeue();
+        // A fail here would mean that the server skipped one of our buffers, which is BAD.
+        VERIFY(last_buffer_in_queue == finished_buffer);
+        next_buffer();
+    };
     m_timer->stop();
     m_device_sample_rate = connection->get_sample_rate();
 }
@@ -117,7 +125,7 @@ void PlaybackManager::next_buffer()
         return;
     }
 
-    if (audio_server_remaining_samples < m_device_samples_per_buffer) {
+    if (audio_server_remaining_samples < m_device_samples_per_buffer * always_enqueued_buffer_count) {
         auto maybe_buffer = m_loader->get_more_samples(m_source_buffer_size_bytes);
         if (!maybe_buffer.is_error()) {
             m_current_buffer = maybe_buffer.release_value();
@@ -126,6 +134,7 @@ void PlaybackManager::next_buffer()
             // FIXME: Handle OOM better.
             m_current_buffer = MUST(Audio::resample_buffer(m_resampler.value(), *m_current_buffer));
             m_connection->enqueue(*m_current_buffer);
+            m_enqueued_buffers.enqueue(m_current_buffer->id());
         }
     }
 }

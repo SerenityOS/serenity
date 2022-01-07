@@ -29,6 +29,21 @@ void TCPSocket::for_each(Function<void(const TCPSocket&)> callback)
     });
 }
 
+bool TCPSocket::unref() const
+{
+    bool did_hit_zero = sockets_by_tuple().with_exclusive([&](auto& table) {
+        if (deref_base())
+            return false;
+        table.remove(tuple());
+        return true;
+    });
+    if (did_hit_zero) {
+        const_cast<TCPSocket&>(*this).will_be_destroyed();
+        delete this;
+    }
+    return did_hit_zero;
+}
+
 void TCPSocket::set_state(State new_state)
 {
     dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket({}) state moving from {} to {}", this, to_string(m_state), to_string(new_state));
@@ -145,10 +160,6 @@ TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, N
 
 TCPSocket::~TCPSocket()
 {
-    sockets_by_tuple().with_exclusive([&](auto& table) {
-        table.remove(tuple());
-    });
-
     dequeue_for_retransmit();
 
     dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));

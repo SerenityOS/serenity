@@ -43,7 +43,8 @@ class Trie {
         explicit ConstIterator(const Trie& node)
         {
             m_current_node = &node;
-            m_state.empend(false, node.m_children.begin(), node.m_children.end());
+            // FIXME: Figure out how to OOM harden this iterator.
+            MUST(m_state.try_empend(false, node.m_children.begin(), node.m_children.end()));
         }
 
     private:
@@ -58,7 +59,9 @@ class Trie {
                 return pop_and_get_next();
 
             m_current_node = &*(*current_state.it).value;
-            m_state.empend(false, m_current_node->m_children.begin(), m_current_node->m_children.end());
+
+            // FIXME: Figure out how to OOM harden this iterator.
+            MUST(m_state.try_empend(false, m_current_node->m_children.begin(), m_current_node->m_children.end()));
         }
         void pop_and_get_next()
         {

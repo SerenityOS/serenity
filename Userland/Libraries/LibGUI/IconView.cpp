@@ -484,11 +484,11 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Fo
         item_data.text_rect.center_horizontally_within(item_rect);
         item_data.text_rect.intersect(item_rect);
         item_data.text_rect.set_height(font.glyph_height() * item_data.wrapped_text_lines.size());
-        item_data.text_rect.inflate(6, 4);
+        item_data.text_rect.inflate(6, 6);
         item_data.text_rect_wrapped = item_data.text_rect;
     } else {
         item_data.text_rect.set_width(unwrapped_text_width);
-        item_data.text_rect.inflate(6, 4);
+        item_data.text_rect.inflate(6, 6);
         if (item_data.text_rect.width() > available_width)
             item_data.text_rect.set_width(available_width);
         item_data.text_rect.center_horizontally_within(item_rect);
@@ -583,7 +583,7 @@ void IconView::paint_event(PaintEvent& event)
                 line_rect.set_width(text_rect.width());
                 line_rect.set_height(font->glyph_height());
                 line_rect.center_horizontally_within(item_data.text_rect);
-                line_rect.set_y(2 + item_data.text_rect.y() + line_index * font->glyph_height());
+                line_rect.set_y(3 + item_data.text_rect.y() + line_index * font->glyph_height());
                 line_rect.inflate(6, 0);
 
                 // Shrink the line_rect on the last line to apply elision if there are more lines.
@@ -682,7 +682,7 @@ void IconView::toggle_selection(ItemData& item_data)
     if (!item_data.selected)
         add_selection(item_data);
     else
-        remove_selection(item_data);
+        remove_item_selection(item_data);
 }
 
 void IconView::toggle_selection(const ModelIndex& new_index)
@@ -692,7 +692,7 @@ void IconView::toggle_selection(const ModelIndex& new_index)
     toggle_selection(get_item_data(item_index));
 }
 
-void IconView::remove_selection(ItemData& item_data)
+void IconView::remove_item_selection(ItemData& item_data)
 {
     if (!item_data.selected)
         return;

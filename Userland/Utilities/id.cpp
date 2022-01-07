@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         else
             account = TRY(Core::Account::from_name(user_str.characters(), Core::Account::Read::PasswdOnly));
     } else {
-        account = Core::Account::self(Core::Account::Read::PasswdOnly);
+        account = TRY(Core::Account::self(Core::Account::Read::PasswdOnly));
     }
 
     return print_id_objects(account.value());

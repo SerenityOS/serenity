@@ -138,7 +138,7 @@ struct ext2_group_desc {
     __u16 bg_flags;
     __u32 bg_reserved[2];
     __u16 bg_itable_unused; /* Unused inodes count */
-    __u16 bg_checksum;      /* crc16(s_uuid+grouo_num+group_desc)*/
+    __u16 bg_checksum;      /* crc16(s_uuid+group_num+group_desc)*/
 };
 
 struct ext4_group_desc {
@@ -151,7 +151,7 @@ struct ext4_group_desc {
     __u16 bg_flags;
     __u32 bg_reserved[2];
     __u16 bg_itable_unused;        /* Unused inodes count */
-    __u16 bg_checksum;             /* crc16(s_uuid+grouo_num+group_desc)*/
+    __u16 bg_checksum;             /* crc16(s_uuid+group_num+group_desc)*/
     __u32 bg_block_bitmap_hi;      /* Blocks bitmap block MSB */
     __u32 bg_inode_bitmap_hi;      /* Inodes bitmap block MSB */
     __u32 bg_inode_table_hi;       /* Inodes table block MSB */

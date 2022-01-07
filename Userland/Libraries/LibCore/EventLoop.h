@@ -42,7 +42,7 @@ public:
 
     // processe events, generally called by exec() in a loop.
     // this should really only be used for integrating with other event loops
-    void pump(WaitMode = WaitMode::WaitForEvents);
+    size_t pump(WaitMode = WaitMode::WaitForEvents);
 
     void spin_until(Function<bool()>);
 

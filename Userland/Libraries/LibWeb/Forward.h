@@ -208,6 +208,7 @@ class MessagePort;
 class PageTransitionEvent;
 class PromiseRejectionEvent;
 class SubmitEvent;
+class TextMetrics;
 class WebSocket;
 }
 
@@ -439,6 +440,7 @@ class SVGGraphicsElementWrapper;
 class SVGPathElementWrapper;
 class SVGSVGElementWrapper;
 class TextEncoderWrapper;
+class TextMetricsWrapper;
 class TextWrapper;
 class UIEventWrapper;
 class URLConstructor;

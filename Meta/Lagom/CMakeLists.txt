@@ -8,9 +8,9 @@ project(
     LANGUAGES C CXX
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "10.2")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "11")
   message(FATAL_ERROR
-      "A GCC version less than 10.2 was detected (${CMAKE_CXX_COMPILER_VERSION}), this is unsupported.\n"
+      "A GCC version less than 11 was detected (${CMAKE_CXX_COMPILER_VERSION}), this is unsupported.\n"
       "Please re-read the build instructions documentation, and upgrade your host compiler.\n")
 endif()
 
@@ -293,7 +293,7 @@ if (BUILD_LAGOM)
 
     # ELF
     file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
-    # There's no way we can reliably make the dymamic loading classes cross platform
+    # There's no way we can reliably make the dynamic loading classes cross platform
     list(FILTER LIBELF_SOURCES EXCLUDE REGEX ".*Dynamic.*.cpp$")
     lagom_lib(ELF elf
         SOURCES ${LIBELF_SOURCES}
@@ -316,9 +316,9 @@ if (BUILD_LAGOM)
 
     # GL
     file(GLOB LIBGL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/*.cpp")
-    file(GLOB LIBGL_TEX_SCOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/Tex/*.cpp")
+    file(GLOB LIBGL_TEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/Tex/*.cpp")
     lagom_lib(GL gl
-        SOURCES ${LIBGL_SOURCES} ${LIBGL_TEX_SCOURCES}
+        SOURCES ${LIBGL_SOURCES} ${LIBGL_TEX_SOURCES}
         LIBS m LagomGfx LagomSoftGPU)
 
     # GUI-GML
@@ -409,6 +409,7 @@ if (BUILD_LAGOM)
     list(REMOVE_ITEM LIBSQL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibSQL/SQLClient.cpp")
     lagom_lib(SQL sql
         SOURCES ${LIBSQL_SOURCES}
+        LIBS LagomRegex
     )
 
     # TextCodec

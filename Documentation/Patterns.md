@@ -234,7 +234,7 @@ See: https://en.cppreference.com/w/cpp/utility/source_location
 `AK::SourceLocation` is the implementation of this feature in
 SerenityOS. It's become the idiomatic way to capture the location
 when adding extra debugging instrumentation, without resorting to
-litering the code with preprocessor macros.
+littering the code with preprocessor macros.
 
 To use it, you can add the `AK::SourceLocation` as a default argument
 to any function, using `AK::SourceLocation::current()` to initialize the

@@ -55,14 +55,14 @@ UNMAP_AFTER_INIT void MultiProcessorParser::parse_configuration_table()
             entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::ProcessorEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::Bus):
-            m_bus_entries.append(*(const MultiProcessor::BusEntry*)entry);
+            MUST(m_bus_entries.try_append(*(const MultiProcessor::BusEntry*)entry));
             entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::BusEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::IOAPIC):
             entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::IOAPICEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::IO_Interrupt_Assignment):
-            m_io_interrupt_assignment_entries.append(*(const MultiProcessor::IOInterruptAssignmentEntry*)entry);
+            MUST(m_io_interrupt_assignment_entries.try_append(*(const MultiProcessor::IOInterruptAssignmentEntry*)entry));
             entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::IOInterruptAssignmentEntry);
             break;
         case ((u8)MultiProcessor::ConfigurationTableEntryType::Local_Interrupt_Assignment):
@@ -119,13 +119,13 @@ UNMAP_AFTER_INIT Vector<PCIInterruptOverrideMetadata> MultiProcessorParser::get_
                     entry.source_bus_irq,
                     entry.destination_ioapic_id,
                     entry.destination_ioapic_intin_pin);
-                overrides.empend(
+                MUST(overrides.try_empend(
                     entry.source_bus_id,
                     entry.polarity,
                     entry.trigger_mode,
                     entry.source_bus_irq,
                     entry.destination_ioapic_id,
-                    entry.destination_ioapic_intin_pin);
+                    entry.destination_ioapic_intin_pin));
             }
         }
     }

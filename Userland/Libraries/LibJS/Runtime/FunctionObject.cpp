@@ -6,6 +6,7 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/BoundFunction.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
@@ -20,7 +21,7 @@ FunctionObject::~FunctionObject()
 {
 }
 
-BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> arguments)
+ThrowCompletionOr<BoundFunction*> FunctionObject::bind(Value bound_this_value, Vector<Value> arguments)
 {
     auto& vm = this->vm();
     FunctionObject& target_function = is<BoundFunction>(*this) ? static_cast<BoundFunction&>(*this).bound_target_function() : *this;
@@ -38,15 +39,15 @@ BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> argume
             return TRY(bound_this_value.to_object(global_object()));
         }
     };
-    auto bound_this_object = TRY_OR_DISCARD(get_bound_this_object());
+    auto bound_this_object = TRY(get_bound_this_object());
 
     i32 computed_length = 0;
-    auto length_property = TRY_OR_DISCARD(get(vm.names.length));
+    auto length_property = TRY(get(vm.names.length));
     if (length_property.is_number())
         computed_length = max(0, length_property.as_i32() - static_cast<i32>(arguments.size()));
 
     Object* constructor_prototype = nullptr;
-    auto prototype_property = TRY_OR_DISCARD(target_function.get(vm.names.prototype));
+    auto prototype_property = TRY(target_function.get(vm.names.prototype));
     if (prototype_property.is_object())
         constructor_prototype = &prototype_property.as_object();
 

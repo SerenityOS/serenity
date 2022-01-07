@@ -245,9 +245,14 @@ PanicMode CommandLine::panic_mode(Validate should_validate) const
     return PanicMode::Halt;
 }
 
-UNMAP_AFTER_INIT bool CommandLine::are_framebuffer_devices_enabled() const
+UNMAP_AFTER_INIT auto CommandLine::are_framebuffer_devices_enabled() const -> FrameBufferDevices
 {
-    return lookup("fbdev"sv).value_or("on"sv) == "on"sv;
+    const auto fbdev_value = lookup("fbdev"sv).value_or("on"sv);
+    if (fbdev_value == "on"sv)
+        return FrameBufferDevices::Enabled;
+    if (fbdev_value == "bootloader"sv)
+        return FrameBufferDevices::BootloaderOnly;
+    return FrameBufferDevices::ConsoleOnly;
 }
 
 StringView CommandLine::userspace_init() const
@@ -261,7 +266,7 @@ NonnullOwnPtrVector<KString> CommandLine::userspace_init_args() const
 
     auto init_args = lookup("init_args"sv).value_or(""sv).split_view(';');
     if (!init_args.is_empty())
-        args.prepend(KString::must_create(userspace_init()));
+        MUST(args.try_prepend(KString::must_create(userspace_init())));
     for (auto& init_arg : init_args)
         args.append(KString::must_create(init_arg));
     return args;

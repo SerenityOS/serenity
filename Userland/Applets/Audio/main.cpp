@@ -23,10 +23,31 @@
 #include <LibMain/Main.h>
 
 class AudioWidget final : public GUI::Widget {
-    C_OBJECT(AudioWidget)
+    C_OBJECT_ABSTRACT(AudioWidget)
+
+private:
+    struct VolumeBitmapPair {
+        int volume_threshold { 0 };
+        NonnullRefPtr<Gfx::Bitmap> bitmap;
+    };
+
 public:
-    AudioWidget()
+    static ErrorOr<NonnullRefPtr<AudioWidget>> try_create()
+    {
+        Vector<VolumeBitmapPair, 5> volume_level_bitmaps = {
+            { 66, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-high.png")) },
+            { 33, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-medium.png")) },
+            { 1, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-low.png")) },
+            { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png")) },
+            { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png")) }
+        };
+        return adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(volume_level_bitmaps)));
+    }
+
+private:
+    AudioWidget(Vector<VolumeBitmapPair, 5> volume_level_bitmaps)
         : m_audio_client(Audio::ClientConnection::construct())
+        , m_volume_level_bitmaps(move(volume_level_bitmaps))
         , m_show_percent(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false))
     {
         m_audio_volume = static_cast<int>(m_audio_client->get_main_mix_volume() * 100);
@@ -47,12 +68,6 @@ public:
             if (!m_audio_muted)
                 update();
         };
-
-        m_volume_level_bitmaps.append({ 66, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-high.png").release_value_but_fixme_should_propagate_errors() });
-        m_volume_level_bitmaps.append({ 33, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-medium.png").release_value_but_fixme_should_propagate_errors() });
-        m_volume_level_bitmaps.append({ 1, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-low.png").release_value_but_fixme_should_propagate_errors() });
-        m_volume_level_bitmaps.append({ 0, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png").release_value_but_fixme_should_propagate_errors() });
-        m_volume_level_bitmaps.append({ 0, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png").release_value_but_fixme_should_propagate_errors() });
 
         m_slider_window = add<GUI::Window>(window());
         m_slider_window->set_frameless(true);
@@ -109,6 +124,7 @@ public:
         };
     }
 
+public:
     virtual ~AudioWidget() override { }
 
     void set_audio_widget_size(bool show_percent)
@@ -192,11 +208,6 @@ private:
         m_slider_window->set_rect(applet_rect.x() - 20, applet_rect.y() - 106, 50, 100);
     }
 
-    struct VolumeBitmapPair {
-        int volume_threshold { 0 };
-        RefPtr<Gfx::Bitmap> bitmap;
-    };
-
     NonnullRefPtr<Audio::ClientConnection> m_audio_client;
     Vector<VolumeBitmapPair, 5> m_volume_level_bitmaps;
     bool m_show_percent { false };
@@ -225,7 +236,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Audio");
     window->set_window_type(GUI::WindowType::Applet);
 
-    window->set_main_widget<AudioWidget>();
+    auto audio_widget = TRY(window->try_set_main_widget<AudioWidget>());
     window->show();
 
     // This positioning code depends on the window actually existing.

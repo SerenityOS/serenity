@@ -564,9 +564,9 @@ ErrorOr<void> VirtualFileSystem::chown(Custody& custody, UserID a_uid, GroupID a
     return inode.chown(new_uid, new_gid);
 }
 
-ErrorOr<void> VirtualFileSystem::chown(StringView path, UserID a_uid, GroupID a_gid, Custody& base)
+ErrorOr<void> VirtualFileSystem::chown(StringView path, UserID a_uid, GroupID a_gid, Custody& base, int options)
 {
-    auto custody = TRY(resolve_path(path, base));
+    auto custody = TRY(resolve_path(path, base, nullptr, options));
     return chown(custody, a_uid, a_gid);
 }
 

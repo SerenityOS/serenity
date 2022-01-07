@@ -608,12 +608,19 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         // a. Let n be an implementation- and locale-dependent (ILD) String value indicating the NaN value.
         formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::NaN).value_or("NaN"sv);
     }
-    // 3. Else if x is a non-finite Number, then
-    else if (!Value(number).is_finite_number()) {
-        // a. Let n be an ILD String value indicating infinity.
+    // 3. Else if x is +∞, then
+    else if (Value(number).is_positive_infinity()) {
+        // a. Let n be an ILD String value indicating positive infinity.
         formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::Infinity).value_or("infinity"sv);
     }
-    // 4. Else,
+    // 4. Else if x is -∞, then
+    else if (Value(number).is_negative_infinity()) {
+        // a. Let n be an ILD String value indicating negative infinity.
+        // NOTE: The CLDR does not contain unique strings for negative infinity. The negative sign will
+        //       be inserted by the pattern returned from GetNumberFormatPattern.
+        formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::Infinity).value_or("infinity"sv);
+    }
+    // 5. Else,
     else {
         // a. If numberFormat.[[Style]] is "percent", let x be 100 × x.
         if (number_format.style() == NumberFormat::Style::Percent)
@@ -637,18 +644,18 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
 
     Unicode::NumberFormat found_pattern {};
 
-    // 5. Let pattern be GetNumberFormatPattern(numberFormat, x).
+    // 6. Let pattern be GetNumberFormatPattern(numberFormat, x).
     auto pattern = get_number_format_pattern(number_format, number, found_pattern);
     if (!pattern.has_value())
         return {};
 
-    // 6. Let result be a new empty List.
+    // 7. Let result be a new empty List.
     Vector<PatternPartition> result;
 
-    // 7. Let patternParts be PartitionPattern(pattern).
+    // 8. Let patternParts be PartitionPattern(pattern).
     auto pattern_parts = pattern->visit([](auto const& p) { return partition_pattern(p); });
 
-    // 8. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
+    // 9. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
     for (auto& pattern_part : pattern_parts) {
         // a. Let p be patternPart.[[Type]].
         auto part = pattern_part.type;
@@ -729,7 +736,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         }
     }
 
-    // 9. Return result.
+    // 10. Return result.
     return result;
 }
 
@@ -1122,11 +1129,14 @@ RawFormatResult to_raw_precision(double number, int min_precision, int max_preci
 {
     RawFormatResult result {};
 
-    // 1. Let p be maxPrecision.
+    // 1. Set x to ℝ(x).
+    // FIXME: Support BigInt number formatting.
+
+    // 2. Let p be maxPrecision.
     int precision = max_precision;
     int exponent = 0;
 
-    // 2. If x = 0, then
+    // 3. If x = 0, then
     if (number == 0.0) {
         // a. Let m be the String consisting of p occurrences of the character "0".
         result.formatted_string = String::repeated('0', precision);
@@ -1137,31 +1147,28 @@ RawFormatResult to_raw_precision(double number, int min_precision, int max_preci
         // c. Let xFinal be 0.
         result.rounded_number = 0;
     }
-
-    // 3. Else,
+    // 4. Else,
     else {
         // FIXME: The result of these steps isn't entirely accurate for large values of 'p' (which
         //        defaults to 21, resulting in numbers on the order of 10^21). Either AK::format or
         //        our Number::toString AO (double_to_string in Value.cpp) will need to be improved
         //        to produce more accurate results.
 
-        // a. Let e be the base 10 logarithm of x rounded down to the nearest integer.
+        // a. Let e and n be integers such that 10^(p–1) ≤ n < 10^p and for which n × 10^(e–p+1) – x is as close to zero as possible.
+        //    If there are two such sets of e and n, pick the e and n for which n × 10^(e–p+1) is larger.
         exponent = log10floor(number);
 
         double power = pow(10, exponent - precision + 1);
-
-        // b. Let n be an integer such that 10^(p–1) ≤ n < 10^p and for which the exact mathematical value of n × 10^(e–p+1) – x
-        //    is as close to zero as possible. If there is more than one such n, pick the one for which n × 10^(e–p+1) is larger.
         double n = round(number / power);
 
-        // c. Let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
+        // b. Let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
         result.formatted_string = Value(n).to_string_without_side_effects();
 
-        // d. Let xFinal be n × 10^(e–p+1).
+        // c. Let xFinal be n × 10^(e–p+1).
         result.rounded_number = n * power;
     }
 
-    // 4. If e ≥ p–1, then
+    // 5. If e ≥ p–1, then
     if (exponent >= (precision - 1)) {
         // a. Let m be the string-concatenation of m and e–p+1 occurrences of the character "0".
         result.formatted_string = String::formatted(
@@ -1172,7 +1179,7 @@ RawFormatResult to_raw_precision(double number, int min_precision, int max_preci
         // b. Let int be e+1.
         result.digits = exponent + 1;
     }
-    // 5. Else if e ≥ 0, then
+    // 6. Else if e ≥ 0, then
     else if (exponent >= 0) {
         // a. Let m be the string-concatenation of the first e+1 characters of m, the character ".", and the remaining p–(e+1) characters of m.
         result.formatted_string = String::formatted(
@@ -1183,7 +1190,7 @@ RawFormatResult to_raw_precision(double number, int min_precision, int max_preci
         // b. Let int be e+1.
         result.digits = exponent + 1;
     }
-    // 6. Else,
+    // 7. Else,
     else {
         // a. Assert: e < 0.
         // b. Let m be the string-concatenation of the String value "0.", –(e+1) occurrences of the character "0", and m.
@@ -1196,15 +1203,16 @@ RawFormatResult to_raw_precision(double number, int min_precision, int max_preci
         result.digits = 1;
     }
 
-    // 7. If m contains the character ".", and maxPrecision > minPrecision, then
+    // 8. If m contains the character ".", and maxPrecision > minPrecision, then
     if (result.formatted_string.contains('.') && (max_precision > min_precision)) {
         // a. Let cut be maxPrecision – minPrecision.
         int cut = max_precision - min_precision;
 
+        // Steps 8b-8c are implemented by cut_trailing_zeroes.
         result.formatted_string = cut_trailing_zeroes(result.formatted_string, cut);
     }
 
-    // 8. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int }.
+    // 9. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int }.
     return result;
 }
 
@@ -1214,21 +1222,24 @@ RawFormatResult to_raw_fixed(double number, int min_fraction, int max_fraction)
 {
     RawFormatResult result {};
 
-    // 1. Let f be maxFraction.
+    // 1. Set x to ℝ(x).
+    // FIXME: Support BigInt number formatting.
+
+    // 2. Let f be maxFraction.
     int fraction = max_fraction;
 
     double power = pow(10, fraction);
 
-    // 2. Let n be an integer for which the exact mathematical value of n / 10^f – x is as close to zero as possible. If there are two such n, pick the larger n.
+    // 3. Let n be an integer for which the exact mathematical value of n / 10^f – x is as close to zero as possible. If there are two such n, pick the larger n.
     double n = round(number * power);
 
-    // 3. Let xFinal be n / 10^f.
+    // 4. Let xFinal be n / 10^f.
     result.rounded_number = n / power;
 
-    // 4. If n = 0, let m be the String "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
+    // 5. If n = 0, let m be the String "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
     result.formatted_string = n == 0.0 ? String("0"sv) : Value(n).to_string_without_side_effects();
 
-    // 5. If f ≠ 0, then
+    // 6. If f ≠ 0, then
     if (fraction != 0) {
         // a. Let k be the number of characters in m.
         auto decimals = result.formatted_string.length();
@@ -1255,17 +1266,18 @@ RawFormatResult to_raw_fixed(double number, int min_fraction, int max_fraction)
         // e. Let int be the number of characters in a.
         result.digits = a.length();
     }
-    // 6. Else, let int be the number of characters in m.
+    // 7. Else, let int be the number of characters in m.
     else {
         result.digits = result.formatted_string.length();
     }
 
-    // 7. Let cut be maxFraction – minFraction.
+    // 8. Let cut be maxFraction – minFraction.
     int cut = max_fraction - min_fraction;
 
+    // Steps 9-10 are implemented by cut_trailing_zeroes.
     result.formatted_string = cut_trailing_zeroes(result.formatted_string, cut);
 
-    // 10. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int }.
+    // 11. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int }.
     return result;
 }
 
@@ -1577,7 +1589,7 @@ int compute_exponent(NumberFormat& number_format, double number)
     int magnitude = log10floor(number);
 
     // 4. Let exponent be ComputeExponentForMagnitude(numberFormat, magnitude).
-    int exponent = compute_exponent_for_magniude(number_format, magnitude);
+    int exponent = compute_exponent_for_magnitude(number_format, magnitude);
 
     // 5. Let x be x × 10^(-exponent).
     number *= pow(10, -exponent);
@@ -1601,11 +1613,11 @@ int compute_exponent(NumberFormat& number_format, double number)
     }
 
     // 10. Return ComputeExponentForMagnitude(numberFormat, magnitude + 1).
-    return compute_exponent_for_magniude(number_format, magnitude + 1);
+    return compute_exponent_for_magnitude(number_format, magnitude + 1);
 }
 
 // 15.1.17 ComputeExponentForMagnitude ( numberFormat, magnitude ), https://tc39.es/ecma402/#sec-computeexponentformagnitude
-int compute_exponent_for_magniude(NumberFormat& number_format, int magnitude)
+int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude)
 {
     // 1. Let notation be numberFormat.[[Notation]].
     switch (number_format.notation()) {

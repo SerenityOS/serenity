@@ -8,6 +8,10 @@ set(CMAKE_EXE_EXPORTS_C_FLAG "-Wl,--export-dynamic")
 set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-shared -Wl,--hash-style=gnu,-z,relro,-z,now,-z,noexecstack,-z,separate-code")
 
+# Shared libraries with no builtin soname may not be linked safely by
+# specifying the file path.
+set(CMAKE_PLATFORM_USES_PATH_WHEN_NO_SONAME 1)
+
 # Initialize C link type selection flags.  These flags are used when
 # building a shared library, shared module, or executable that links
 # to other libraries to select whether to use the static or shared

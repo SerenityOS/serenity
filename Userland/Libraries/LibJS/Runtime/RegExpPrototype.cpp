@@ -563,7 +563,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 
         // 3. If matchStr is the empty String, then
         if (match_str.is_empty()) {
-            // Stepsp 3a-3c are implemented by increment_last_index.
+            // Steps 3a-3c are implemented by increment_last_index.
             TRY(increment_last_index(global_object, *regexp_object, string.view(), full_unicode));
         }
 
@@ -682,7 +682,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
         // 2. If matchStr is the empty String, then
         if (match_str.is_empty()) {
-            // Stepsp 2a-2c are implemented by increment_last_index.
+            // Steps 2a-2c are implemented by increment_last_index.
             TRY(increment_last_index(global_object, *regexp_object, string.view(), full_unicode));
         }
     }

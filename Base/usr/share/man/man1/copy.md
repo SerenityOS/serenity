@@ -23,6 +23,6 @@ $ copy [options...] [text...]
 # Copy some image to clipboard
 $ cat image.png | copy -t image/png
 
-# Place text 'foo' in clupboard
+# Place text 'foo' in clipboard
 $ copy foo
 ```

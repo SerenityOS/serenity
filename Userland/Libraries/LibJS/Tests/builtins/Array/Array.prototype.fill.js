@@ -18,3 +18,13 @@ test("basic functionality", () => {
     expect([1, 2, 3].fill(4, 3, 5)).toEqual([1, 2, 3]);
     expect(Array(3).fill(4)).toEqual([4, 4, 4]);
 });
+
+test("is unscopable", () => {
+    expect(Array.prototype[Symbol.unscopables].fill).toBeTrue();
+    const array = [];
+    with (array) {
+        expect(() => {
+            fill;
+        }).toThrowWithMessage(ReferenceError, "'fill' is not defined");
+    }
+});

@@ -769,7 +769,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/UnicodeLocale.h>
 
-namespace Unicode::Detail {
+namespace Unicode {
 
 struct Patterns {
     ListPatternType type;
@@ -847,9 +847,9 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     generator.append(R"~~~(
 
 struct CanonicalLanguageID {
-    Unicode::LanguageID to_unicode_language_id() const
+    LanguageID to_unicode_language_id() const
     {
-        Unicode::LanguageID language_id {};
+        LanguageID language_id {};
         language_id.variants.ensure_capacity(variants_size);
 
         language_id.language = s_string_list[language];
@@ -936,7 +936,7 @@ static constexpr Array<LanguageMapping, @size@> s_@name@ { {
     append_complex_mapping("likely_subtags"sv, locale_data.likely_subtags);
 
     generator.append(R"~~~(
-static LanguageMapping const* resolve_likely_subtag(Unicode::LanguageID const& language_id)
+static LanguageMapping const* resolve_likely_subtag(LanguageID const& language_id)
 {
     // https://unicode.org/reports/tr35/#Likely_Subtags
     enum class State {
@@ -951,7 +951,7 @@ static LanguageMapping const* resolve_likely_subtag(Unicode::LanguageID const& l
     auto state = State::LanguageScriptRegion;
 
     while (state != State::Done) {
-        Unicode::LanguageID search_key;
+        LanguageID search_key;
 
         switch (state) {
         case State::LanguageScriptRegion:
@@ -1032,7 +1032,6 @@ static LanguageMapping const* resolve_likely_subtag(Unicode::LanguageID const& l
         generator.set("unique_list", unique_list);
 
         generator.append(R"~~~(
-Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringView @enum_snake@) asm("unicode_get_locale_@enum_snake@_mapping");
 Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringView @enum_snake@)
 {
     auto locale_value = locale_from_string(locale);
@@ -1092,7 +1091,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     append_alias_search("territory"sv, locale_data.territory_aliases);
 
     append_from_string("ScriptTag"sv, "script_tag"sv, locale_data.scripts);
-    append_mapping_search("script_tag"sv, "script_tag"sv, "s_scripts"sv, "s_script_lists"sv);
+    append_mapping_search("script"sv, "script_tag"sv, "s_scripts"sv, "s_script_lists"sv);
     append_alias_search("script_tag"sv, locale_data.script_aliases);
 
     append_from_string("Currency"sv, "currency"sv, locale_data.currencies);
@@ -1111,8 +1110,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     append_from_string("ListPatternStyle"sv, "list_pattern_style"sv, locale_data.list_pattern_styles);
 
     generator.append(R"~~~(
-Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, StringView list_pattern_type, StringView list_pattern_style) asm("unicode_get_locale_list_pattern_mapping");
-Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, StringView list_pattern_type, StringView list_pattern_style)
+Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView list_pattern_type, StringView list_pattern_style)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
@@ -1147,8 +1145,7 @@ Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, String
     return {};
 }
 
-void resolve_complex_language_aliases(Unicode::LanguageID& language_id) asm("unicode_resolve_complex_language_aliases");
-void resolve_complex_language_aliases(Unicode::LanguageID& language_id)
+void resolve_complex_language_aliases(LanguageID& language_id)
 {
     for (auto const& map : s_complex_alias) {
         auto const& key_language = s_string_list[map.key.language];
@@ -1180,8 +1177,7 @@ void resolve_complex_language_aliases(Unicode::LanguageID& language_id)
     }
 }
 
-Optional<Unicode::LanguageID> add_likely_subtags(Unicode::LanguageID const& language_id) asm("unicode_add_likely_subtags");
-Optional<Unicode::LanguageID> add_likely_subtags(Unicode::LanguageID const& language_id)
+Optional<LanguageID> add_likely_subtags(LanguageID const& language_id)
 {
     // https://www.unicode.org/reports/tr35/#Likely_Subtags
     auto const* likely_subtag = resolve_likely_subtag(language_id);
@@ -1207,8 +1203,7 @@ Optional<Unicode::LanguageID> add_likely_subtags(Unicode::LanguageID const& lang
     return maximized;
 }
 
-Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& language_id) asm("unicode_resolve_most_likely_territory");
-Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& language_id)
+Optional<String> resolve_most_likely_territory(LanguageID const& language_id)
 {
     if (auto const* likely_subtag = resolve_likely_subtag(language_id); likely_subtag != nullptr)
         return s_string_list[likely_subtag->alias.region];

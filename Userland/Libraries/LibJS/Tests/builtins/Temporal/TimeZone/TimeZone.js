@@ -8,7 +8,7 @@ describe("errors", () => {
     test("Invalid time zone name", () => {
         expect(() => {
             new Temporal.TimeZone("foo");
-        }).toThrowWithMessage(RangeError, "Invalid time zone name");
+        }).toThrowWithMessage(RangeError, "Invalid time zone name 'foo'");
     });
 });
 

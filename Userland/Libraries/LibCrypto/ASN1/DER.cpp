@@ -383,7 +383,7 @@ void pretty_print(Decoder& decoder, OutputStream& stream, int indent)
             }
             case Kind::Sequence:
             case Kind::Set:
-                dbgln("Seq/Sequence PrettyPrint error: Unexpected Primtive");
+                dbgln("Seq/Sequence PrettyPrint error: Unexpected Primitive");
                 return;
             }
         }

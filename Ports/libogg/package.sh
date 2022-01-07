@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libogg
-version=1.3.4
+version=1.3.5
 useconfigure=true
-files="https://github.com/xiph/ogg/releases/download/v${version}/libogg-${version}.tar.gz libogg-${version}.tar.gz fe5670640bd49e828d64d2879c31cb4dde9758681bb664f9bdbf159a01b0c76e"
+files="https://github.com/xiph/ogg/releases/download/v${version}/libogg-${version}.tar.gz libogg-${version}.tar.gz 0eb4b4b9420a0f51db142ba3f9c64b333f826532dc0f48c6410ae51f4799b664"
 auth_type=sha256
 
 install() {

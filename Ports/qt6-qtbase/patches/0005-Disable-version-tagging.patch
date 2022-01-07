@@ -1,0 +1,41 @@
+From 830de469bab98268a328fc982c6d4f938e1547fb Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Thu, 16 Dec 2021 12:47:31 +0100
+Subject: [PATCH] Disable version tagging
+
+This is necessary because as of now, Serenity doesn't support DT_VERSYM
+and other related ELF objects
+---
+ cmake/QtBuild.cmake                    | 2 ++
+ src/corelib/global/qversiontagging.cpp | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/cmake/QtBuild.cmake b/cmake/QtBuild.cmake
+index 702ddf6f..ff60a061 100644
+--- a/cmake/QtBuild.cmake
++++ b/cmake/QtBuild.cmake
+@@ -323,6 +323,8 @@ elseif(WASM)
+     set(QT_DEFAULT_MKSPEC wasm-emscripten)
+ elseif(SERENITYOS)
+     set(QT_DEFAULT_MKSPEC serenity-g++)
++    set(QT_DEFAULT_PLATFORM_DEFINITIONS QT_NO_VERSION_TAGGING=1)
++    set(HAVE_LD_VERSION_SCRIPT 0)
+ elseif(QNX)
+     # Certain POSIX defines are not set if we don't compile with -std=gnuXX
+     set(QT_ENABLE_CXX_EXTENSIONS ON)
+diff --git a/src/corelib/global/qversiontagging.cpp b/src/corelib/global/qversiontagging.cpp
+index b5e524bf..a7547a3b 100644
+--- a/src/corelib/global/qversiontagging.cpp
++++ b/src/corelib/global/qversiontagging.cpp
+@@ -42,7 +42,7 @@
+ #define SYM QT_MANGLE_NAMESPACE(qt_version_tag)
+ //#define SSYM QT_STRINGIFY(SYM)
+ 
+-#if defined(Q_CC_GNU) && defined(Q_OF_ELF) && !defined(Q_OS_ANDROID)
++#if defined(Q_CC_GNU) && defined(Q_OF_ELF) && !defined(Q_OS_ANDROID) && !defined(QT_NO_VERSION_TAGGING)
+ #  define make_versioned_symbol2(sym, m, n, separator)     \
+     Q_CORE_EXPORT extern const char sym ## _ ## m ## _ ## n = 0; \
+     asm(".symver " QT_STRINGIFY(sym) "_" QT_STRINGIFY(m) "_" QT_STRINGIFY(n) ", " \
+-- 
+2.33.1
+

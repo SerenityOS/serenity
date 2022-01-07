@@ -19,7 +19,7 @@ class CharacterMap {
 
 public:
     CharacterMap(const String& map_name, const CharacterMapData& map_data);
-    static Optional<CharacterMap> load_from_file(const String& filename);
+    static ErrorOr<CharacterMap> load_from_file(const String& filename);
 
 #ifndef KERNEL
     int set_system_map();

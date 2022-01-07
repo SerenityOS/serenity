@@ -11,6 +11,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -71,7 +72,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
     return true;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     const char* path;
     int map_size_limit = 32 * MiB;
@@ -83,55 +84,38 @@ int main(int argc, char** argv)
     args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'd', "path");
     args_parser.add_option(quiet, "Be less verbose", "quiet", 'q');
     args_parser.add_positional_argument(path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     String zip_file_path { path };
 
-    struct stat st;
-    int rc = stat(zip_file_path.characters(), &st);
-    if (rc < 0) {
-        perror("stat");
-        return 1;
-    }
+    struct stat st = TRY(Core::System::stat(zip_file_path));
 
     // FIXME: Map file chunk-by-chunk once we have mmap() with offset.
     //        This will require mapping some parts then unmapping them repeatedly,
     //        but it would be significantly faster and less syscall heavy than seek()/read() at every read.
     if (st.st_size >= map_size_limit) {
         warnln("unzip warning: Refusing to map file since it is larger than {}, pass '--map-size-limit {}' to get around this",
-            human_readable_size(map_size_limit).characters(),
+            human_readable_size(map_size_limit),
             round_up_to_power_of_two(st.st_size, 16));
         return 1;
     }
 
-    auto file_or_error = Core::MappedFile::map(zip_file_path);
-    if (file_or_error.is_error()) {
-        warnln("Failed to open {}: {}", zip_file_path, file_or_error.error());
-        return 1;
-    }
-    auto& mapped_file = *file_or_error.value();
+    auto mapped_file = TRY(Core::MappedFile::map(zip_file_path));
 
     if (!quiet)
         warnln("Archive: {}", zip_file_path);
 
-    auto zip_file = Archive::Zip::try_create(mapped_file.bytes());
+    auto zip_file = Archive::Zip::try_create(mapped_file->bytes());
     if (!zip_file.has_value()) {
         warnln("Invalid zip file {}", zip_file_path);
         return 1;
     }
 
     if (!output_directory_path.is_null()) {
-        rc = mkdir(output_directory_path.characters(), 0755);
-        if (rc < 0 && errno != EEXIST) {
-            perror("mkdir");
-            return 1;
-        }
-
-        rc = chdir(output_directory_path.characters());
-        if (rc < 0) {
-            perror("chdir");
-            return 1;
-        }
+        auto mkdir_error = Core::System::mkdir(output_directory_path, 0755);
+        if (mkdir_error.is_error() && mkdir_error.error().code() != EEXIST)
+            return mkdir_error.release_error();
+        TRY(Core::System::chdir(output_directory_path));
     }
 
     auto success = zip_file->for_each_member([&](auto zip_member) {

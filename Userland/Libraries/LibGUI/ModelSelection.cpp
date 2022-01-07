@@ -10,18 +10,10 @@
 
 namespace GUI {
 
-void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
+void ModelSelection::remove_all_matching(Function<bool(ModelIndex const&)> filter)
 {
-    Vector<ModelIndex> to_remove;
-    for (auto& index : m_indices) {
-        if (filter(index))
-            to_remove.append(index);
-    }
-    if (!to_remove.is_empty()) {
-        for (auto& index : to_remove)
-            m_indices.remove(index);
+    if (m_indices.remove_all_matching([&](ModelIndex const& index) { return filter(index); }))
         notify_selection_changed();
-    }
 }
 
 void ModelSelection::set(const ModelIndex& index)
@@ -37,10 +29,8 @@ void ModelSelection::set(const ModelIndex& index)
 void ModelSelection::add(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indices.contains(index))
-        return;
-    m_indices.set(index);
-    notify_selection_changed();
+    if (m_indices.set(index) == AK::HashSetResult::InsertedNewEntry)
+        notify_selection_changed();
 }
 
 void ModelSelection::add_all(const Vector<ModelIndex>& indices)

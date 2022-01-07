@@ -143,7 +143,7 @@ private:
     void do_clear_selection();
     bool do_add_selection(ItemData&);
     void add_selection(ItemData&);
-    void remove_selection(ItemData&);
+    void remove_item_selection(ItemData&);
     void toggle_selection(ItemData&);
 
     int m_horizontal_padding { 5 };

@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     bool seen_event_type_arg = false;
 
     args_parser.add_option(pid_argument, "Target PID", nullptr, 'p', "PID");
-    args_parser.add_option(all_processes, "Profile all processes (super-user only)", nullptr, 'a');
+    args_parser.add_option(all_processes, "Profile all processes (super-user only), result at /proc/profile", nullptr, 'a');
     args_parser.add_option(enable, "Enable", nullptr, 'e');
     args_parser.add_option(disable, "Disable", nullptr, 'd');
     args_parser.add_option(free, "Free the profiling buffer for the associated process(es).", nullptr, 'f');
@@ -102,7 +102,6 @@ int main(int argc, char** argv)
                 perror("profiling_disable");
                 return 1;
             }
-            outln("Profiling disabled.");
         }
 
         if (free && profiling_free_buffer(pid) < 0) {

@@ -19,12 +19,13 @@ These instructions assume the OS installed is Ubuntu 20.04 (Focal), so they migh
 ### Install base dependencies
 ```shell
 add-apt-repository ppa:canonical-server/server-backports
+add-apt-repository ppa:ubuntu-toolchain-r/test
 apt update
-apt install git build-essential make cmake clang-format-11 gcc-10 g++-10 libstdc++-10-dev libgmp-dev ccache libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 wabt
+apt install git build-essential make cmake clang-format-11 gcc-11 g++-11 libstdc++-11-dev libgmp-dev ccache libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 wabt
 ```
-### Force usage of GCC 10
+### Force usage of GCC 11
 ```shell
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11
 ```
 ### Create a new user account named 'runner'
 ```shell
@@ -62,7 +63,7 @@ RUST_WHITELISTED_EVENT_NAME=push
 ```shell
 MAX_RUNNER_THREADS=XXX
 ```
-If you are setting up multiple runners on the same machine, this setting can be used to divvy up the cores, if youre only setting up one runner, this can just be set to the server's core count
+If you are setting up multiple runners on the same machine, this setting can be used to divvy up the cores, if you're only setting up one runner, this can just be set to the server's core count
 ### Install the runner as a service
 ```shell
 sudo ./svc.sh install

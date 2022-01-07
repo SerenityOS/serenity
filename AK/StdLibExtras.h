@@ -45,6 +45,8 @@ constexpr T&& move(T& arg)
 }
 
 }
+#else
+#include <utility>
 #endif
 // clang-format on
 
@@ -87,6 +89,12 @@ constexpr T clamp(const T& value, const IdentityType<T>& min, const IdentityType
     if (value < min)
         return min;
     return value;
+}
+
+template<typename T, typename U>
+constexpr T mix(T const& v1, T const& v2, U const& interpolation)
+{
+    return v1 + (v2 - v1) * interpolation;
 }
 
 template<typename T, typename U>
@@ -165,6 +173,7 @@ using AK::exchange;
 using AK::is_constant_evaluated;
 using AK::max;
 using AK::min;
+using AK::mix;
 using AK::RawPtr;
 using AK::swap;
 using AK::to_underlying;

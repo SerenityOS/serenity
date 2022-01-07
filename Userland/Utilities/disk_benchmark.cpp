@@ -147,7 +147,7 @@ Optional<Result> benchmark(const String& filename, int file_size, int block_size
     auto timer = Core::ElapsedTimer::start_new();
 
     ssize_t total_written = 0;
-    for (ssize_t j = 0; j < file_size; j += block_size) {
+    while (total_written < file_size) {
         auto nwritten = write(fd, buffer.data(), block_size);
         if (nwritten < 0) {
             perror("write");

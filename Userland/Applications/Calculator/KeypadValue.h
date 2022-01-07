@@ -12,6 +12,7 @@
 
 class KeypadValue {
     friend class Keypad;
+    friend class Calculator;
 
 public:
     KeypadValue(i64, u8);
@@ -24,7 +25,6 @@ public:
     KeypadValue operator*(KeypadValue const&);
     KeypadValue operator-(void) const;
     bool operator<(KeypadValue const&);
-    bool operator>(KeypadValue const&);
     bool operator==(KeypadValue const&);
 
     KeypadValue sqrt() const;

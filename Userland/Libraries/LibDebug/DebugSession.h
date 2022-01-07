@@ -144,7 +144,7 @@ private:
     HashMap<void*, BreakPoint> m_breakpoints;
     HashMap<void*, WatchPoint> m_watchpoints;
 
-    // Maps from library name to LoadedLibrary obect
+    // Maps from library name to LoadedLibrary object
     HashMap<String, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
 };
 
@@ -245,7 +245,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
         if (current_breakpoint.has_value()) {
             // We want to make the breakpoint transparent to the user of the debugger.
             // To achieve this, we perform two rollbacks:
-            // 1. Set regs.eip to point at the actual address of the instruction we breaked on.
+            // 1. Set regs.eip to point at the actual address of the instruction we broke on.
             //    regs.eip currently points to one byte after the address of the original instruction,
             //    because the cpu has just executed the INT3 we patched into the instruction.
             // 2. We restore the original first byte of the instruction,
@@ -285,9 +285,9 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             // To re-enable the breakpoint, we first perform a single step and execute the
             // instruction of the breakpoint, and then redo the INT3 patch in its first byte.
 
-            // If the user manually inserted a breakpoint at were we breaked at originally,
-            // we need to disable that breakpoint because we want to singlestep over it to execute the
-            // instruction we breaked on (we re-enable it again later anyways).
+            // If the user manually inserted a breakpoint at the current instruction,
+            // we need to disable that breakpoint because we want to singlestep over that
+            // instruction (we re-enable it again later anyways).
             if (m_breakpoints.contains(current_breakpoint.value().address) && m_breakpoints.get(current_breakpoint.value().address).value().state == BreakPointState::Enabled) {
                 disable_breakpoint(current_breakpoint.value().address);
             }

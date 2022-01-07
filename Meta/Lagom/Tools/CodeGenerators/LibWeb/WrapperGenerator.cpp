@@ -937,6 +937,8 @@ static bool is_wrappable_type(IDL::Type const& type)
         return true;
     if (type.name == "NamedNodeMap")
         return true;
+    if (type.name == "TextMetrics")
+        return true;
     return false;
 }
 
@@ -1637,6 +1639,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/MessagePortWrapper.h>
 #include <LibWeb/Bindings/NamedNodeMapWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
+#include <LibWeb/Bindings/TextMetricsWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Element.h>
@@ -1759,7 +1762,7 @@ JS::ThrowCompletionOr<bool> @class_name@::is_named_property_exposed_on_object(JS
         return false;
 
     // 2. If O has an own property named P, then return false.
-    // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overrided internal_get_own_property.
+    // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overridden internal_get_own_property.
     auto own_property_named_p = MUST(Object::internal_get_own_property(property_name));
 
     if (own_property_named_p.has_value())
@@ -2195,7 +2198,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
             // 2. If O implements an interface with the [LegacyOverrideBuiltIns] extended attribute or O does not have an own property named P, then:
             if (!interface.extended_attributes.contains("LegacyOverrideBuiltIns")) {
                 scoped_generator.append(R"~~~(
-        // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overrided internal_get_own_property.
+        // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overridden internal_get_own_property.
         auto own_property_named_p = TRY(Object::internal_get_own_property(property_name));
 
         if (!own_property_named_p.has_value()))~~~");
@@ -2808,6 +2811,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/RangeWrapper.h>
 #include <LibWeb/Bindings/StyleSheetListWrapper.h>
 #include <LibWeb/Bindings/SubtleCryptoWrapper.h>
+#include <LibWeb/Bindings/TextMetricsWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/Bindings/URLSearchParamsWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>

@@ -99,7 +99,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool had_error = false;
     for (auto& file : files) {
-        had_error |= stat(file, should_follow_links).is_error();
+        auto r = stat(file, should_follow_links);
+        if (r.is_error()) {
+            had_error = true;
+            warnln("stat: cannot stat '{}': {}", file, strerror(r.error().code()));
+        }
     }
 
     return had_error;

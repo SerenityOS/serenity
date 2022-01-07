@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
- * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2021-2022, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2021, David Isaksson <davidisaksson93@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -12,6 +12,7 @@
 #include "Layer.h"
 #include "Tools/MoveTool.h"
 #include "Tools/Tool.h"
+#include <AK/LexicalPath.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Painter.h>
@@ -23,12 +24,11 @@ namespace PixelPaint {
 
 ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     : m_image(move(image))
-    , m_undo_stack(make<GUI::UndoStack>())
+    , m_title("Untitled")
     , m_selection(*this)
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
-    m_undo_stack = make<GUI::UndoStack>();
-    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image));
     m_image->add_client(*this);
 
     m_pixel_grid_threshold = (float)Config::read_i32("PixelPaint", "PixelGrid", "Threshold", 15);
@@ -45,12 +45,12 @@ ImageEditor::~ImageEditor()
 
 void ImageEditor::did_complete_action()
 {
-    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image));
 }
 
 bool ImageEditor::undo()
 {
-    if (!m_undo_stack->can_undo())
+    if (!m_undo_stack.can_undo())
         return false;
 
     /* Without this you need to undo twice to actually start undoing stuff.
@@ -63,21 +63,34 @@ bool ImageEditor::undo()
      * This works because UndoStack::undo first decrements the stack pointer and then restores the snapshot,
      * while UndoStack::redo first restores the snapshot and then increments the stack pointer.
      */
-    m_undo_stack->undo();
-    m_undo_stack->undo();
-    m_undo_stack->redo();
+    m_undo_stack.undo();
+    m_undo_stack.undo();
+    m_undo_stack.redo();
     layers_did_change();
     return true;
 }
 
 bool ImageEditor::redo()
 {
-    if (!m_undo_stack->can_redo())
+    if (!m_undo_stack.can_redo())
         return false;
 
-    m_undo_stack->redo();
+    m_undo_stack.redo();
     layers_did_change();
     return true;
+}
+
+void ImageEditor::set_title(String title)
+{
+    m_title = move(title);
+    if (on_title_change)
+        on_title_change(m_title);
+}
+
+void ImageEditor::set_path(String path)
+{
+    m_path = move(path);
+    set_title(LexicalPath::basename(m_path));
 }
 
 void ImageEditor::paint_event(GUI::PaintEvent& event)
@@ -678,12 +691,6 @@ void ImageEditor::image_did_change_rect(Gfx::IntRect const& new_image_rect)
 {
     m_editor_image_rect = enclosing_int_rect(image_rect_to_editor_rect(new_image_rect));
     update(m_editor_image_rect);
-}
-
-void ImageEditor::image_did_change_title(String const& path)
-{
-    if (on_image_title_change)
-        on_image_title_change(path);
 }
 
 void ImageEditor::image_select_layer(Layer* layer)

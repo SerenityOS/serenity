@@ -102,6 +102,7 @@ private:
     bool m_draw_animation { false };
     uint8_t m_draw_animation_delay { 0 };
     uint8_t m_draw_animation_pile { 0 };
+    Gfx::IntRect m_original_stock_rect;
 
     uint32_t m_score { 500 };
 };

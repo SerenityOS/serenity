@@ -113,49 +113,56 @@ static FloatType internal_to_integer(FloatType x, RoundingMode rounding_mode)
 {
     if (!isfinite(x))
         return x;
+
     using Extractor = FloatExtractor<decltype(x)>;
     Extractor extractor;
     extractor.d = x;
+
     auto unbiased_exponent = extractor.exponent - Extractor::exponent_bias;
-    bool round = false;
-    bool guard = false;
+
+    bool has_half_fraction = false;
+    bool has_nonhalf_fraction = false;
     if (unbiased_exponent < 0) {
         // it was easier to special case [0..1) as it saves us from
         // handling subnormals, underflows, etc
         if (unbiased_exponent == -1) {
-            round = true;
+            has_half_fraction = true;
         }
-        guard = extractor.mantissa != 0;
+
+        has_nonhalf_fraction = unbiased_exponent < -1 || extractor.mantissa != 0;
         extractor.mantissa = 0;
         extractor.exponent = 0;
     } else {
         if (unbiased_exponent >= Extractor::mantissa_bits)
             return x;
+
         auto dead_bitcount = Extractor::mantissa_bits - unbiased_exponent;
         auto dead_mask = (1ull << dead_bitcount) - 1;
         auto dead_bits = extractor.mantissa & dead_mask;
         extractor.mantissa &= ~dead_mask;
 
-        auto guard_mask = dead_mask >> 1;
-        guard = (dead_bits & guard_mask) != 0;
-        round = (dead_bits & ~guard_mask) != 0;
+        auto nonhalf_fraction_mask = dead_mask >> 1;
+        has_nonhalf_fraction = (dead_bits & nonhalf_fraction_mask) != 0;
+        has_half_fraction = (dead_bits & ~nonhalf_fraction_mask) != 0;
     }
+
     bool should_round = false;
     switch (rounding_mode) {
     case RoundingMode::ToEven:
-        should_round = round;
+        should_round = has_half_fraction;
         break;
     case RoundingMode::Up:
         if (!extractor.sign)
-            should_round = guard || round;
+            should_round = has_nonhalf_fraction || has_half_fraction;
         break;
     case RoundingMode::Down:
         if (extractor.sign)
-            should_round = guard || round;
+            should_round = has_nonhalf_fraction || has_half_fraction;
         break;
     case RoundingMode::ToZero:
         break;
     }
+
     if (should_round) {
         // We could do this ourselves, but this saves us from manually
         // handling overflow.

@@ -546,7 +546,7 @@ static void build_sse_f3(u8 op, const char* mnemonic, InstructionFormat format, 
     build_slash_rm(0xD9, 5, 0xED, "FLDLN2", OP_FPU, &Interpreter::FLDLN2);
     build_slash_rm(0xD9, 5, 0xEE, "FLDZ", OP_FPU, &Interpreter::FLDZ);
     build_slash(0xD9, 6, "FNSTENV", OP_FPU_RM32, &Interpreter::FNSTENV);
-    // FIXME: Extraodinary prefix 0x9B + 0xD9/6: FSTENV
+    // FIXME: Extraordinary prefix 0x9B + 0xD9/6: FSTENV
     build_slash_rm(0xD9, 6, 0xF0, "F2XM1", OP_FPU, &Interpreter::F2XM1);
     build_slash_rm(0xD9, 6, 0xF1, "FYL2X", OP_FPU, &Interpreter::FYL2X);
     build_slash_rm(0xD9, 6, 0xF2, "FPTAN", OP_FPU, &Interpreter::FPTAN);
@@ -556,7 +556,7 @@ static void build_sse_f3(u8 op, const char* mnemonic, InstructionFormat format, 
     build_slash_rm(0xD9, 6, 0xF6, "FDECSTP", OP_FPU, &Interpreter::FDECSTP);
     build_slash_rm(0xD9, 6, 0xF7, "FINCSTP", OP_FPU, &Interpreter::FINCSTP);
     build_slash(0xD9, 7, "FNSTCW", OP_FPU_RM16, &Interpreter::FNSTCW);
-    // FIXME: Extraodinary prefix 0x9B + 0xD9/7: FSTCW
+    // FIXME: Extraordinary prefix 0x9B + 0xD9/7: FSTCW
     build_slash_rm(0xD9, 7, 0xF8, "FPREM", OP_FPU, &Interpreter::FPREM);
     build_slash_rm(0xD9, 7, 0xF9, "FYL2XP1", OP_FPU, &Interpreter::FYL2XP1);
     build_slash_rm(0xD9, 7, 0xFA, "FSQRT", OP_FPU, &Interpreter::FSQRT);
@@ -592,9 +592,9 @@ static void build_sse_f3(u8 op, const char* mnemonic, InstructionFormat format, 
     build_slash_rm(0xDB, 4, 0xE0, "FNENI", OP_FPU_reg, &Interpreter::FNENI);
     build_slash_rm(0xDB, 4, 0xE1, "FNDISI", OP_FPU_reg, &Interpreter::FNDISI);
     build_slash_rm(0xDB, 4, 0xE2, "FNCLEX", OP_FPU_reg, &Interpreter::FNCLEX);
-    // FIXME: Extraodinary prefix 0x9B + 0xDB/4: FCLEX
+    // FIXME: Extraordinary prefix 0x9B + 0xDB/4: FCLEX
     build_slash_rm(0xDB, 4, 0xE3, "FNINIT", OP_FPU_reg, &Interpreter::FNINIT);
-    // FIXME: Extraodinary prefix 0x9B + 0xDB/4: FINIT
+    // FIXME: Extraordinary prefix 0x9B + 0xDB/4: FINIT
     build_slash_rm(0xDB, 4, 0xE4, "FNSETPM", OP_FPU_reg, &Interpreter::FNSETPM);
     build_slash(0xDB, 5, "FLD", OP_FPU_M80, &Interpreter::FLD_RM80);
     build_slash_reg(0xDB, 5, "FUCOMI", OP_FPU_reg, &Interpreter::FUCOMI);
@@ -622,9 +622,9 @@ static void build_sse_f3(u8 op, const char* mnemonic, InstructionFormat format, 
     build_slash(0xDD, 5, "FUCOMP", OP_FPU_reg, &Interpreter::FUCOMP);
     // FIXME: DD/5 E9 (...but isn't this what DD/5 does naturally, with E9 just being normal R/M?)
     build_slash(0xDD, 6, "FNSAVE", OP_FPU_mem, &Interpreter::FNSAVE);
-    // FIXME: Extraodinary prefix 0x9B + 0xDD/6: FSAVE
+    // FIXME: Extraordinary prefix 0x9B + 0xDD/6: FSAVE
     build_slash(0xDD, 7, "FNSTSW", OP_FPU_RM16, &Interpreter::FNSTSW);
-    // FIXME: Extraodinary prefix 0x9B + 0xDD/7: FSTSW
+    // FIXME: Extraordinary prefix 0x9B + 0xDD/7: FSTSW
 
     build_slash(0xDE, 0, "FIADD", OP_FPU_RM16, &Interpreter::FIADD_RM16);
     build_slash_reg(0xDE, 0, "FADDP", OP_FPU_reg, &Interpreter::FADDP);
@@ -659,7 +659,7 @@ static void build_sse_f3(u8 op, const char* mnemonic, InstructionFormat format, 
     build_slash_reg(0xDF, 3, "FSTP9", OP_FPU_reg, &Interpreter::FSTP_RM32);
     build_slash(0xDF, 4, "FBLD", OP_FPU_M80, &Interpreter::FBLD_M80);
     build_slash_reg(0xDF, 4, "FNSTSW", OP_FPU_AX16, &Interpreter::FNSTSW_AX);
-    // FIXME: Extraodinary prefix 0x9B + 0xDF/e: FSTSW_AX
+    // FIXME: Extraordinary prefix 0x9B + 0xDF/e: FSTSW_AX
     build_slash(0xDF, 5, "FILD", OP_FPU_RM64, &Interpreter::FILD_RM64);
     build_slash_reg(0xDF, 5, "FUCOMIP", OP_FPU_reg, &Interpreter::FUCOMIP);
     build_slash(0xDF, 6, "FBSTP", OP_FPU_M80, &Interpreter::FBSTP_M80);
@@ -828,7 +828,7 @@ static void build_sse_f3(u8 op, const char* mnemonic, InstructionFormat format, 
     build_0f_slash(0x18, 2, "PREFETCHT1", OP_RM8, &Interpreter::PREFETCHT1);
     build_0f_slash(0x18, 3, "PREFETCHT2", OP_RM8, &Interpreter::PREFETCHT2);
 
-    // FIXME: Techinically NoPrefix (sse_np_slash?)
+    // FIXME: Technically NoPrefix (sse_np_slash?)
     build_0f_slash(0xAE, 2, "LDMXCSR", OP_RM32, &Interpreter::LDMXCSR);
     build_0f_slash(0xAE, 3, "STMXCSR", OP_RM32, &Interpreter::STMXCSR);
     // FIXME: SFENCE: NP 0F AE F8

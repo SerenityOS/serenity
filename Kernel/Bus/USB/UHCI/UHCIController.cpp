@@ -47,7 +47,7 @@ static constexpr u16 UHCI_FRAMELIST_FRAME_INVALID = 0x0001;
 
 // Port stuff
 static constexpr u8 UHCI_ROOT_PORT_COUNT = 2;
-static constexpr u16 UHCI_PORTSC_CURRRENT_CONNECT_STATUS = 0x0001;
+static constexpr u16 UHCI_PORTSC_CURRENT_CONNECT_STATUS = 0x0001;
 static constexpr u16 UHCI_PORTSC_CONNECT_STATUS_CHANGED = 0x0002;
 static constexpr u16 UHCI_PORTSC_PORT_ENABLED = 0x0004;
 static constexpr u16 UHCI_PORTSC_PORT_ENABLE_CHANGED = 0x0008;
@@ -56,7 +56,7 @@ static constexpr u16 UHCI_PORTSC_RESUME_DETECT = 0x40;
 static constexpr u16 UHCI_PORTSC_LOW_SPEED_DEVICE = 0x0100;
 static constexpr u16 UHCI_PORTSC_PORT_RESET = 0x0200;
 static constexpr u16 UHCI_PORTSC_SUSPEND = 0x1000;
-static constexpr u16 UCHI_PORTSC_NON_WRITE_CLEAR_BIT_MASK = 0x1FF5; // This is used to mask out the Write Clear bits making sure we don't accidentally clear them.
+static constexpr u16 UHCI_PORTSC_NON_WRITE_CLEAR_BIT_MASK = 0x1FF5; // This is used to mask out the Write Clear bits making sure we don't accidentally clear them.
 
 // *BSD and a few other drivers seem to use this number
 static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
@@ -511,7 +511,7 @@ void UHCIController::get_port_status(Badge<UHCIRootHub>, u8 port, HubStatus& hub
 
     u16 status = port == 0 ? read_portsc1() : read_portsc2();
 
-    if (status & UHCI_PORTSC_CURRRENT_CONNECT_STATUS)
+    if (status & UHCI_PORTSC_CURRENT_CONNECT_STATUS)
         hub_port_status.status |= PORT_STATUS_CURRENT_CONNECT_STATUS;
 
     if (status & UHCI_PORTSC_CONNECT_STATUS_CHANGED)
@@ -555,7 +555,7 @@ void UHCIController::reset_port(u8 port)
     VERIFY(port < NUMBER_OF_ROOT_PORTS);
 
     u16 port_data = port == 0 ? read_portsc1() : read_portsc2();
-    port_data &= UCHI_PORTSC_NON_WRITE_CLEAR_BIT_MASK;
+    port_data &= UHCI_PORTSC_NON_WRITE_CLEAR_BIT_MASK;
     port_data |= UHCI_PORTSC_PORT_RESET;
     if (port == 0)
         write_portsc1(port_data);
@@ -605,7 +605,7 @@ ErrorOr<void> UHCIController::set_port_feature(Badge<UHCIRootHub>, u8 port, HubF
         break;
     case HubFeatureSelector::PORT_SUSPEND: {
         u16 port_data = port == 0 ? read_portsc1() : read_portsc2();
-        port_data &= UCHI_PORTSC_NON_WRITE_CLEAR_BIT_MASK;
+        port_data &= UHCI_PORTSC_NON_WRITE_CLEAR_BIT_MASK;
         port_data |= UHCI_PORTSC_SUSPEND;
 
         if (port == 0)
@@ -632,7 +632,7 @@ ErrorOr<void> UHCIController::clear_port_feature(Badge<UHCIRootHub>, u8 port, Hu
     dbgln_if(UHCI_DEBUG, "UHCI: clear_port_feature: port={} feature_selector={}", port, (u8)feature_selector);
 
     u16 port_data = port == 0 ? read_portsc1() : read_portsc2();
-    port_data &= UCHI_PORTSC_NON_WRITE_CLEAR_BIT_MASK;
+    port_data &= UHCI_PORTSC_NON_WRITE_CLEAR_BIT_MASK;
 
     switch (feature_selector) {
     case HubFeatureSelector::PORT_ENABLE:

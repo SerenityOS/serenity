@@ -11,7 +11,6 @@
 #include <AK/Utf8View.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Locale.h>
-#include <LibUnicode/UnicodeSymbols.h>
 
 #if ENABLE_UNICODE_DATA
 #    include <LibUnicode/UnicodeData.h>
@@ -22,19 +21,11 @@
 
 namespace Unicode {
 
+Optional<String> __attribute__((weak)) code_point_display_name(u32) { return {}; }
+u32 __attribute__((weak)) canonical_combining_class(u32) { return {}; }
+Span<SpecialCasing const* const> __attribute__((weak)) special_case_mapping(u32) { return {}; }
+
 #if ENABLE_UNICODE_DATA
-
-static u32 canonical_combining_class(u32 code_point)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.canonical_combining_class(code_point);
-}
-
-static Span<Unicode::SpecialCasing const* const> special_case_mapping(u32 code_point)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.special_case_mapping(code_point);
-}
 
 static bool is_after_uppercase_i(Utf8View const& string, size_t index)
 {
@@ -217,22 +208,14 @@ static SpecialCasing const* find_matching_special_case(u32 code_point, Utf8View 
 
 #endif
 
-u32 to_unicode_lowercase(u32 code_point)
+u32 __attribute__((weak)) to_unicode_lowercase(u32 code_point)
 {
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.simple_lowercase_mapping(code_point);
+    return to_ascii_lowercase(code_point);
 }
 
-u32 to_unicode_uppercase(u32 code_point)
+u32 __attribute__((weak)) to_unicode_uppercase(u32 code_point)
 {
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.simple_uppercase_mapping(code_point);
-}
-
-Optional<String> code_point_display_name(u32 code_point)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.code_point_display_name(code_point);
+    return to_ascii_uppercase(code_point);
 }
 
 String to_unicode_lowercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
@@ -293,29 +276,10 @@ String to_unicode_uppercase_full(StringView string, [[maybe_unused]] Optional<St
 #endif
 }
 
-Optional<GeneralCategory> general_category_from_string(StringView general_category)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.general_category_from_string(general_category);
-}
-
-bool code_point_has_general_category(u32 code_point, GeneralCategory general_category)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.code_point_has_general_category(code_point, general_category);
-}
-
-Optional<Property> property_from_string(StringView property)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.property_from_string(property);
-}
-
-bool code_point_has_property(u32 code_point, Property property)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.code_point_has_property(code_point, property);
-}
+Optional<GeneralCategory> __attribute__((weak)) general_category_from_string(StringView) { return {}; }
+bool __attribute__((weak)) code_point_has_general_category(u32, GeneralCategory) { return {}; }
+Optional<Property> __attribute__((weak)) property_from_string(StringView) { return {}; }
+bool __attribute__((weak)) code_point_has_property(u32, Property) { return {}; }
 
 bool is_ecma262_property([[maybe_unused]] Property property)
 {
@@ -384,22 +348,8 @@ bool is_ecma262_property([[maybe_unused]] Property property)
 #endif
 }
 
-Optional<Script> script_from_string(StringView script)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.script_from_string(script);
-}
-
-bool code_point_has_script(u32 code_point, Script script)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.code_point_has_script(code_point, script);
-}
-
-bool code_point_has_script_extension(u32 code_point, Script script)
-{
-    static auto const& symbols = Detail::Symbols::ensure_loaded();
-    return symbols.code_point_has_script_extension(code_point, script);
-}
+Optional<Script> __attribute__((weak)) script_from_string(StringView) { return {}; }
+bool __attribute__((weak)) code_point_has_script(u32, Script) { return {}; }
+bool __attribute__((weak)) code_point_has_script_extension(u32, Script) { return {}; }
 
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,17 +14,6 @@
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
-
-// Temporary helper akin to TRY(), but returning a default-constructed type (e.g. empty JS::Value)
-// instead of the throw completion record. Use this as the bridge between functions that have
-// already been updated to use completions and functions that haven't.
-#define TRY_OR_DISCARD(expression)             \
-    ({                                         \
-        auto _temporary_result = (expression); \
-        if (_temporary_result.is_error())      \
-            return {};                         \
-        _temporary_result.release_value();     \
-    })
 
 // 6.2.3 The Completion Record Specification Type, https://tc39.es/ecma262/#sec-completion-record-specification-type
 class [[nodiscard]] Completion {
@@ -60,27 +49,26 @@ public:
     }
 
     [[nodiscard]] Type type() const { return m_type; }
-
-    [[nodiscard]] bool has_value() const { return m_value.has_value(); }
-    [[nodiscard]] Value value() const { return *m_value; }
-
-    [[nodiscard]] bool has_target() const { return m_target.has_value(); }
-    [[nodiscard]] FlyString const& target() const { return *m_target; }
+    [[nodiscard]] Optional<Value>& value() { return m_value; }
+    [[nodiscard]] Optional<Value> const& value() const { return m_value; }
+    [[nodiscard]] Optional<FlyString>& target() { return m_target; }
+    [[nodiscard]] Optional<FlyString> const& target() const { return m_target; }
 
     // "abrupt completion refers to any completion with a [[Type]] value other than normal"
     [[nodiscard]] bool is_abrupt() const { return m_type != Type::Normal; }
 
     // These are for compatibility with the TRY() macro in AK.
     [[nodiscard]] bool is_error() const { return m_type == Type::Throw; }
-    [[nodiscard]] Value release_value() { return m_value.release_value(); }
+    [[nodiscard]] Optional<Value> release_value() { return move(m_value); }
     Completion release_error()
     {
         VERIFY(is_error());
+        VERIFY(m_value.has_value());
         return { m_type, release_value(), move(m_target) };
     }
 
     // 6.2.3.4 UpdateEmpty ( completionRecord, value ), https://tc39.es/ecma262/#sec-updateempty
-    Completion update_empty(Value value) const
+    Completion update_empty(Optional<Value> value) const
     {
         // 1. Assert: If completionRecord.[[Type]] is either return or throw, then completionRecord.[[Value]] is not empty.
         if (m_type == Type::Return || m_type == Type::Throw)
@@ -91,7 +79,7 @@ public:
             return *this;
 
         // 3. Return Completion { [[Type]]: completionRecord.[[Type]], [[Value]]: value, [[Target]]: completionRecord.[[Target]] }.
-        return { m_type, value, m_target };
+        return { m_type, move(value), m_target };
     }
 
 private:
@@ -159,7 +147,7 @@ ThrowCompletionOr<Value> await(GlobalObject&, Value);
 // 6.2.3.2 NormalCompletion ( value ), https://tc39.es/ecma262/#sec-normalcompletion
 inline Completion normal_completion(Optional<Value> value)
 {
-    return { Completion::Type::Normal, value, {} };
+    return { Completion::Type::Normal, move(value), {} };
 }
 
 // 6.2.3.3 ThrowCompletion ( value ), https://tc39.es/ecma262/#sec-throwcompletion

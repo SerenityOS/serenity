@@ -56,32 +56,32 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Image Viewer");
 
-    auto& root_widget = window->set_main_widget<GUI::Widget>();
-    root_widget.set_fill_with_background_color(true);
-    root_widget.set_layout<GUI::VerticalBoxLayout>();
-    root_widget.layout()->set_spacing(2);
+    auto root_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    root_widget->set_fill_with_background_color(true);
+    root_widget->set_layout<GUI::VerticalBoxLayout>();
+    root_widget->layout()->set_spacing(2);
 
-    auto& toolbar_container = root_widget.add<GUI::ToolbarContainer>();
-    auto& main_toolbar = toolbar_container.add<GUI::Toolbar>();
+    auto toolbar_container = TRY(root_widget->try_add<GUI::ToolbarContainer>());
+    auto main_toolbar = TRY(toolbar_container->try_add<GUI::Toolbar>());
 
-    auto& widget = root_widget.add<ViewWidget>();
+    auto widget = TRY(root_widget->try_add<ViewWidget>());
     if (path) {
-        widget.set_path(path);
+        widget->set_path(path);
     }
-    widget.on_scale_change = [&](float scale) {
-        if (!widget.bitmap()) {
+    widget->on_scale_change = [&](float scale) {
+        if (!widget->bitmap()) {
             window->set_title("Image Viewer");
             return;
         }
 
-        window->set_title(String::formatted("{} {} {}% - Image Viewer", widget.path(), widget.bitmap()->size().to_string(), (int)(scale * 100)));
+        window->set_title(String::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_string(), (int)(scale * 100)));
 
-        if (scale == 100 && !widget.scaled_for_first_image()) {
-            widget.set_scaled_for_first_image(true);
-            widget.resize_window();
+        if (scale == 100 && !widget->scaled_for_first_image()) {
+            widget->set_scaled_for_first_image(true);
+            widget->resize_window();
         }
     };
-    widget.on_drop = [&](auto& event) {
+    widget->on_drop = [&](auto& event) {
         if (!event.mime_data().has_urls())
             return;
 
@@ -93,17 +93,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->move_to_front();
 
         auto path = urls.first().path();
-        widget.set_path(path);
-        widget.load_from_file(path);
+        widget->set_path(path);
+        widget->load_from_file(path);
 
         for (size_t i = 1; i < urls.size(); ++i) {
             Desktop::Launcher::open(URL::create_with_file_protocol(urls[i].path().characters()), "/bin/ImageViewer");
         }
     };
-    widget.on_doubleclick = [&] {
+    widget->on_doubleclick = [&] {
         window->set_fullscreen(!window->is_fullscreen());
-        toolbar_container.set_visible(!window->is_fullscreen());
-        widget.set_frame_thickness(window->is_fullscreen() ? 0 : 2);
+        toolbar_container->set_visible(!window->is_fullscreen());
+        widget->set_frame_thickness(window->is_fullscreen() ? 0 : 2);
     };
 
     // Actions
@@ -111,14 +111,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         [&](auto&) {
             auto path = GUI::FilePicker::get_open_filepath(window, "Open Image");
             if (path.has_value()) {
-                widget.set_path(path.value());
-                widget.load_from_file(path.value());
+                widget->set_path(path.value());
+                widget->load_from_file(path.value());
             }
         });
 
     auto delete_action = GUI::CommonActions::make_delete_action(
         [&](auto&) {
-            auto path = widget.path();
+            auto path = widget->path();
             if (path.is_empty())
                 return;
 
@@ -131,17 +131,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (msgbox_result == GUI::MessageBox::ExecCancel)
                 return;
 
-            if (unlink(widget.path().characters()) < 0) {
-                int saved_errno = errno;
+            auto unlinked_or_error = Core::System::unlink(widget->path());
+            if (unlinked_or_error.is_error()) {
                 GUI::MessageBox::show(window,
-                    String::formatted("unlink({}) failed: {}", path, strerror(saved_errno)),
+                    String::formatted("unlink({}) failed: {}", path, unlinked_or_error.error()),
                     "Delete failed",
                     GUI::MessageBox::Type::Error);
 
                 return;
             }
 
-            widget.clear();
+            widget->clear();
         });
 
     auto quit_action = GUI::CommonActions::make_quit_action(
@@ -149,100 +149,104 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             app->quit();
         });
 
-    auto rotate_left_action = GUI::Action::create("Rotate &Left", { Mod_None, Key_L },
-        [&](auto&) {
-            widget.rotate(Gfx::RotationDirection::CounterClockwise);
-        });
+    auto rotate_counterclockwise_action = GUI::CommonActions::make_rotate_counterclockwise_action([&](auto&) {
+        widget->rotate(Gfx::RotationDirection::CounterClockwise);
+    });
 
-    auto rotate_right_action = GUI::Action::create("Rotate &Right", { Mod_None, Key_R },
-        [&](auto&) {
-            widget.rotate(Gfx::RotationDirection::Clockwise);
-        });
+    auto rotate_clockwise_action = GUI::CommonActions::make_rotate_clockwise_action([&](auto&) {
+        widget->rotate(Gfx::RotationDirection::Clockwise);
+    });
 
     auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V },
         [&](auto&) {
-            widget.flip(Gfx::Orientation::Vertical);
+            widget->flip(Gfx::Orientation::Vertical);
         });
 
     auto horizontal_flip_action = GUI::Action::create("Flip &Horizontally", { Mod_None, Key_H },
         [&](auto&) {
-            widget.flip(Gfx::Orientation::Horizontal);
+            widget->flip(Gfx::Orientation::Horizontal);
         });
 
     auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper",
         [&](auto&) {
-            GUI::Desktop::the().set_wallpaper(widget.path());
+            auto could_set_wallpaper = GUI::Desktop::the().set_wallpaper(widget->path());
+            if (!could_set_wallpaper) {
+                GUI::MessageBox::show(window,
+                    String::formatted("set_wallpaper({}) failed", widget->path()),
+                    "Could not set wallpaper",
+                    GUI::MessageBox::Type::Error);
+            }
         });
 
-    auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, Key_Home }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-first.png").release_value_but_fixme_should_propagate_errors(),
+    auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, Key_Home }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-first.png")),
         [&](auto&) {
-            widget.navigate(ViewWidget::Directions::First);
+            widget->navigate(ViewWidget::Directions::First);
         });
 
-    auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors(),
+    auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png")),
         [&](auto&) {
-            widget.navigate(ViewWidget::Directions::Back);
+            widget->navigate(ViewWidget::Directions::Back);
         });
 
-    auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(),
+    auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png")),
         [&](auto&) {
-            widget.navigate(ViewWidget::Directions::Forward);
+            widget->navigate(ViewWidget::Directions::Forward);
         });
 
-    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-last.png").release_value_but_fixme_should_propagate_errors(),
+    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-last.png")),
         [&](auto&) {
-            widget.navigate(ViewWidget::Directions::Last);
+            widget->navigate(ViewWidget::Directions::Last);
         });
 
     auto full_screen_action = GUI::CommonActions::make_fullscreen_action(
         [&](auto&) {
-            widget.on_doubleclick();
+            widget->on_doubleclick();
         });
 
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action(
         [&](auto&) {
-            widget.set_scale(widget.scale() * 1.44f);
+            widget->set_scale(widget->scale() * 1.44f);
         },
         window);
 
     auto reset_zoom_action = GUI::CommonActions::make_reset_zoom_action(
         [&](auto&) {
-            widget.set_scale(1.f);
+            widget->set_scale(1.f);
         },
         window);
 
     auto zoom_out_action = GUI::CommonActions::make_zoom_out_action(
         [&](auto&) {
-            widget.set_scale(widget.scale() / 1.44f);
+            widget->set_scale(widget->scale() / 1.44f);
         },
         window);
 
     auto hide_show_toolbar_action = GUI::Action::create("Hide/Show &Toolbar", { Mod_Ctrl, Key_T },
         [&](auto&) {
-            toolbar_container.set_visible(!toolbar_container.is_visible());
+            toolbar_container->set_visible(!toolbar_container->is_visible());
         });
 
     auto copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
-        if (widget.bitmap())
-            GUI::Clipboard::the().set_bitmap(*widget.bitmap());
+        if (widget->bitmap())
+            GUI::Clipboard::the().set_bitmap(*widget->bitmap());
     });
 
     auto nearest_neighbor_action = GUI::Action::create_checkable("&Nearest Neighbor", [&](auto&) {
-        widget.set_scaling_mode(Gfx::Painter::ScalingMode::NearestNeighbor);
+        widget->set_scaling_mode(Gfx::Painter::ScalingMode::NearestNeighbor);
     });
     nearest_neighbor_action->set_checked(true);
 
     auto bilinear_action = GUI::Action::create_checkable("&Bilinear", [&](auto&) {
-        widget.set_scaling_mode(Gfx::Painter::ScalingMode::BilinearBlend);
+        widget->set_scaling_mode(Gfx::Painter::ScalingMode::BilinearBlend);
     });
 
-    widget.on_image_change = [&](const Gfx::Bitmap* bitmap) {
+    widget->on_image_change = [&](const Gfx::Bitmap* bitmap) {
         bool should_enable_image_actions = (bitmap != nullptr);
-        bool should_enable_forward_actions = (widget.is_next_available() && should_enable_image_actions);
-        bool should_enable_backward_actions = (widget.is_previous_available() && should_enable_image_actions);
+        bool should_enable_forward_actions = (widget->is_next_available() && should_enable_image_actions);
+        bool should_enable_backward_actions = (widget->is_previous_available() && should_enable_image_actions);
         delete_action->set_enabled(should_enable_image_actions);
-        rotate_left_action->set_enabled(should_enable_image_actions);
-        rotate_right_action->set_enabled(should_enable_image_actions);
+        rotate_counterclockwise_action->set_enabled(should_enable_image_actions);
+        rotate_clockwise_action->set_enabled(should_enable_image_actions);
         vertical_flip_action->set_enabled(should_enable_image_actions);
         horizontal_flip_action->set_enabled(should_enable_image_actions);
         desktop_wallpaper_action->set_enabled(should_enable_image_actions);
@@ -260,69 +264,69 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    main_toolbar.add_action(open_action);
-    main_toolbar.add_action(delete_action);
-    main_toolbar.add_separator();
-    main_toolbar.add_action(go_first_action);
-    main_toolbar.add_action(go_back_action);
-    main_toolbar.add_action(go_forward_action);
-    main_toolbar.add_action(go_last_action);
-    main_toolbar.add_separator();
-    main_toolbar.add_action(zoom_in_action);
-    main_toolbar.add_action(reset_zoom_action);
-    main_toolbar.add_action(zoom_out_action);
+    (void)TRY(main_toolbar->try_add_action(open_action));
+    (void)TRY(main_toolbar->try_add_action(delete_action));
+    (void)TRY(main_toolbar->try_add_separator());
+    (void)TRY(main_toolbar->try_add_action(go_first_action));
+    (void)TRY(main_toolbar->try_add_action(go_back_action));
+    (void)TRY(main_toolbar->try_add_action(go_forward_action));
+    (void)TRY(main_toolbar->try_add_action(go_last_action));
+    (void)TRY(main_toolbar->try_add_separator());
+    (void)TRY(main_toolbar->try_add_action(zoom_in_action));
+    (void)TRY(main_toolbar->try_add_action(reset_zoom_action));
+    (void)TRY(main_toolbar->try_add_action(zoom_out_action));
 
-    auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(open_action);
-    file_menu.add_action(delete_action);
-    file_menu.add_separator();
-    file_menu.add_action(quit_action);
+    auto file_menu = TRY(window->try_add_menu("&File"));
+    TRY(file_menu->try_add_action(open_action));
+    TRY(file_menu->try_add_action(delete_action));
+    TRY(file_menu->try_add_separator());
+    TRY(file_menu->try_add_action(quit_action));
 
-    auto& image_menu = window->add_menu("&Image");
-    image_menu.add_action(rotate_left_action);
-    image_menu.add_action(rotate_right_action);
-    image_menu.add_action(vertical_flip_action);
-    image_menu.add_action(horizontal_flip_action);
-    image_menu.add_separator();
-    image_menu.add_action(desktop_wallpaper_action);
+    auto image_menu = TRY(window->try_add_menu("&Image"));
+    TRY(image_menu->try_add_action(rotate_counterclockwise_action));
+    TRY(image_menu->try_add_action(rotate_clockwise_action));
+    TRY(image_menu->try_add_action(vertical_flip_action));
+    TRY(image_menu->try_add_action(horizontal_flip_action));
+    TRY(image_menu->try_add_separator());
+    TRY(image_menu->try_add_action(desktop_wallpaper_action));
 
-    auto& navigate_menu = window->add_menu("&Navigate");
-    navigate_menu.add_action(go_first_action);
-    navigate_menu.add_action(go_back_action);
-    navigate_menu.add_action(go_forward_action);
-    navigate_menu.add_action(go_last_action);
+    auto navigate_menu = TRY(window->try_add_menu("&Navigate"));
+    TRY(navigate_menu->try_add_action(go_first_action));
+    TRY(navigate_menu->try_add_action(go_back_action));
+    TRY(navigate_menu->try_add_action(go_forward_action));
+    TRY(navigate_menu->try_add_action(go_last_action));
 
-    auto& view_menu = window->add_menu("&View");
-    view_menu.add_action(full_screen_action);
-    view_menu.add_separator();
-    view_menu.add_action(zoom_in_action);
-    view_menu.add_action(reset_zoom_action);
-    view_menu.add_action(zoom_out_action);
-    view_menu.add_separator();
+    auto view_menu = TRY(window->try_add_menu("&View"));
+    TRY(view_menu->try_add_action(full_screen_action));
+    TRY(view_menu->try_add_separator());
+    TRY(view_menu->try_add_action(zoom_in_action));
+    TRY(view_menu->try_add_action(reset_zoom_action));
+    TRY(view_menu->try_add_action(zoom_out_action));
+    TRY(view_menu->try_add_separator());
 
-    auto& scaling_mode_menu = view_menu.add_submenu("&Scaling Mode");
+    auto scaling_mode_menu = TRY(view_menu->try_add_submenu("&Scaling Mode"));
 
     auto scaling_mode_group = make<GUI::ActionGroup>();
     scaling_mode_group->set_exclusive(true);
     scaling_mode_group->add_action(*nearest_neighbor_action);
     scaling_mode_group->add_action(*bilinear_action);
 
-    scaling_mode_menu.add_action(nearest_neighbor_action);
-    scaling_mode_menu.add_action(bilinear_action);
+    TRY(scaling_mode_menu->try_add_action(nearest_neighbor_action));
+    TRY(scaling_mode_menu->try_add_action(bilinear_action));
 
-    view_menu.add_separator();
-    view_menu.add_action(hide_show_toolbar_action);
+    TRY(view_menu->try_add_separator());
+    TRY(view_menu->try_add_action(hide_show_toolbar_action));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/ImageViewer.md"), "/bin/Help");
-    }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Image Viewer", app_icon, window));
+    })));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Image Viewer", app_icon, window)));
 
     if (path != nullptr) {
-        widget.load_from_file(path);
+        widget->load_from_file(path);
     } else {
-        widget.clear();
+        widget->clear();
     }
 
     window->show();

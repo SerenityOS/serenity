@@ -20,7 +20,7 @@
  *  [ ] switch to use tsc values for perf check
  *  [ ] handle mouse events differently for smoother painting (queue)
  *  [ ] handle fire bitmap edges better
-*/
+ */
 
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/System.h>
@@ -107,7 +107,7 @@ Fire::Fire()
         bitmap->scanline_u8(bitmap->height() - 1)[i] = FIRE_MAX;
 
     /* Set off initital paint event */
-    //update();
+    // update();
 }
 
 Fire::~Fire()

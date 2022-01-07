@@ -44,7 +44,7 @@ struct ParserTraits {
     E(NonConformingColumnCount, "Header count does not match given column count") \
     E(QuoteFailure, "Quoting failure")                                            \
     E(InternalError, "Internal error")                                            \
-    E(DataPastLogicalEnd, "Exrta data past the logical end of the rows")
+    E(DataPastLogicalEnd, "Extra data past the logical end of the rows")
 
 enum class ReadError {
 #define E(name, _) name,

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2021, Conor Byrne <conor@cbyrne.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,35 +28,37 @@ public:
         RefPtr<GitRepo> repo;
     };
 
-    static CreateResult try_to_create(const LexicalPath& repository_root);
-    static RefPtr<GitRepo> initialize_repository(const LexicalPath& repository_root);
+    static CreateResult try_to_create(String const& repository_root);
+    static RefPtr<GitRepo> initialize_repository(String const& repository_root);
 
-    Vector<LexicalPath> unstaged_files() const;
-    Vector<LexicalPath> staged_files() const;
-    bool stage(const LexicalPath& file);
-    bool unstage(const LexicalPath& file);
-    bool commit(const String& message);
-    Optional<String> original_file_content(const LexicalPath& file) const;
-    Optional<String> unstaged_diff(const LexicalPath& file) const;
-    bool is_tracked(const LexicalPath& file) const;
+    bool stage(String const& file);
+    bool unstage(String const& file);
+    bool commit(String const& message);
+    bool is_tracked(String const& file) const;
+
+    Vector<String> unstaged_files() const;
+    Vector<String> staged_files() const;
+    Optional<String> original_file_content(String const& file) const;
+    Optional<String> unstaged_diff(String const& file) const;
 
 private:
-    static String command_wrapper(const Vector<String>& command_parts, const LexicalPath& chdir);
     static bool git_is_installed();
-    static bool git_repo_exists(const LexicalPath& repo_root);
-    static Vector<LexicalPath> parse_files_list(const String&);
+    static bool git_repo_exists(String const& repo_root);
 
-    explicit GitRepo(const LexicalPath& repository_root)
+    static String command_wrapper(Vector<String> const& command_parts, String const& chdir);
+    static Vector<String> parse_files_list(String const&);
+
+    explicit GitRepo(String const& repository_root)
         : m_repository_root(repository_root)
     {
     }
 
-    Vector<LexicalPath> modified_files() const;
-    Vector<LexicalPath> untracked_files() const;
+    Vector<String> modified_files() const;
+    Vector<String> untracked_files() const;
 
-    String command(const Vector<String>& command_parts) const;
+    String command(Vector<String> const& command_parts) const;
 
-    LexicalPath m_repository_root;
+    String m_repository_root;
 };
 
 }

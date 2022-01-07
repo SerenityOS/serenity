@@ -65,7 +65,7 @@ ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_ta
         // a. If ! IsValidTimeZoneName(identifier) is false, then
         if (!is_valid_time_zone_name(identifier)) {
             // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName);
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, identifier);
         }
 
         // b. Let canonical be ! CanonicalizeTimeZoneName(identifier).

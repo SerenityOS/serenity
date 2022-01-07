@@ -259,6 +259,29 @@ TEST_CASE(vector_remove)
     EXPECT_EQ(ints[0], 4);
 }
 
+TEST_CASE(remove_all_matching)
+{
+    Vector<int> ints;
+
+    ints.append(1);
+    ints.append(2);
+    ints.append(3);
+    ints.append(4);
+
+    EXPECT_EQ(ints.size(), 4u);
+
+    EXPECT_EQ(ints.remove_all_matching([&](int value) { return value > 2; }), true);
+    EXPECT_EQ(ints.remove_all_matching([&](int) { return false; }), false);
+
+    EXPECT_EQ(ints.size(), 2u);
+
+    EXPECT_EQ(ints.remove_all_matching([&](int) { return true; }), true);
+
+    EXPECT(ints.is_empty());
+
+    EXPECT_EQ(ints.remove_all_matching([&](int) { return true; }), false);
+}
+
 TEST_CASE(nonnullownptrvector)
 {
     struct Object {

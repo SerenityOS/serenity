@@ -97,6 +97,9 @@ String DirIterator::next_full_path()
 
 String find_executable_in_path(String filename)
 {
+    if (filename.is_empty())
+        return {};
+
     if (filename.starts_with('/')) {
         if (access(filename.characters(), X_OK) == 0)
             return filename;

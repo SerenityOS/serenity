@@ -76,7 +76,7 @@ public:
         return *m_indices.begin();
     }
 
-    void remove_matching(Function<bool(const ModelIndex&)>);
+    void remove_all_matching(Function<bool(ModelIndex const&)> filter);
 
     template<typename Function>
     void change_from_model(Badge<SortingProxyModel>, Function f)

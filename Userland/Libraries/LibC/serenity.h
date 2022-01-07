@@ -34,7 +34,7 @@ static ALWAYS_INLINE int futex_wait(uint32_t* userspace_address, uint32_t value,
     } else {
         op = FUTEX_WAIT;
     }
-    return futex(userspace_address, op, value, abstime, nullptr, FUTEX_BITSET_MATCH_ANY);
+    return futex(userspace_address, op, value, abstime, NULL, FUTEX_BITSET_MATCH_ANY);
 }
 
 static ALWAYS_INLINE int futex_wake(uint32_t* userspace_address, uint32_t count)

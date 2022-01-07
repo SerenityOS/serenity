@@ -72,7 +72,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
         arguments.remove(0);
     }
 
-    return this_function.bind(bound_this_arg, move(arguments));
+    return TRY(this_function.bind(bound_this_arg, move(arguments)));
 }
 
 // 20.2.3.3 Function.prototype.call ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.call

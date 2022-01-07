@@ -22,6 +22,8 @@ public:
     static ErrorOr<NonnullRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~TCPSocket() override;
 
+    virtual bool unref() const override;
+
     enum class Direction {
         Unspecified,
         Outgoing,

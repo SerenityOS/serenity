@@ -220,6 +220,6 @@ ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_obje
 Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, double number, Unicode::NumberFormat& found_pattern);
 Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int exponent);
 int compute_exponent(NumberFormat& number_format, double number);
-int compute_exponent_for_magniude(NumberFormat& number_format, int magnitude);
+int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude);
 
 }

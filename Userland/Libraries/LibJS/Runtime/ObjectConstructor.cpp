@@ -226,7 +226,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 
     auto* object = Object::create(global_object, global_object.object_prototype());
 
-    TRY(get_iterator_values(global_object, iterable, [&](Value iterator_value) -> Optional<Completion> {
+    (void)TRY(get_iterator_values(global_object, iterable, [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
             return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
 
@@ -277,7 +277,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 
     // 4. For each element key of ownKeys, do
     for (auto& key : own_keys) {
-        auto property_name = PropertyKey::from_value(global_object, key);
+        auto property_name = MUST(PropertyKey::from_value(global_object, key));
 
         // a. Let desc be ? obj.[[GetOwnProperty]](key).
         auto desc = TRY(object->internal_get_own_property(property_name));
@@ -411,7 +411,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
 
         // iii. For each element nextKey of keys, do
         for (auto& next_key : keys) {
-            auto property_name = PropertyKey::from_value(global_object, next_key);
+            auto property_name = MUST(PropertyKey::from_value(global_object, next_key));
 
             // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
             auto desc = TRY(from->internal_get_own_property(property_name));

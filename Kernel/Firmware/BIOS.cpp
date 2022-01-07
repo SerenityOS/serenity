@@ -86,7 +86,7 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_32_bit_entry_initialization_va
     auto smbios_entry = Memory::map_typed<SMBIOS::EntryPoint32bit>(m_dmi_entry_point, SMBIOS_SEARCH_AREA_SIZE);
     m_smbios_structure_table = PhysicalAddress(smbios_entry.ptr()->legacy_structure.smbios_table_ptr);
     m_dmi_entry_point_length = smbios_entry.ptr()->length;
-    m_smbios_structure_table_length = smbios_entry.ptr()->legacy_structure.smboios_table_length;
+    m_smbios_structure_table_length = smbios_entry.ptr()->legacy_structure.smbios_table_length;
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<BIOSSysFSDirectory> BIOSSysFSDirectory::must_create(FirmwareSysFSDirectory& firmware_directory)
@@ -163,11 +163,10 @@ Memory::MappedROM map_bios()
 Memory::MappedROM map_ebda()
 {
     auto ebda_segment_ptr = Memory::map_typed<u16>(PhysicalAddress(0x40e));
-    auto ebda_length_ptr_b0 = Memory::map_typed<u8>(PhysicalAddress(0x413));
-    auto ebda_length_ptr_b1 = Memory::map_typed<u8>(PhysicalAddress(0x414));
-
-    PhysicalAddress ebda_paddr(*ebda_segment_ptr << 4);
-    size_t ebda_size = (*ebda_length_ptr_b1 << 8) | *ebda_length_ptr_b0;
+    PhysicalAddress ebda_paddr(PhysicalAddress(*ebda_segment_ptr).get() << 4);
+    // The EBDA size is stored in the first byte of the EBDA in 1K units
+    size_t ebda_size = *Memory::map_typed<u8>(ebda_paddr);
+    ebda_size *= 1024;
 
     Memory::MappedROM mapping;
     mapping.region = MM.allocate_kernel_region(ebda_paddr.page_base(), Memory::page_round_up(ebda_size).release_value_but_fixme_should_propagate_errors(), {}, Memory::Region::Access::Read).release_value();

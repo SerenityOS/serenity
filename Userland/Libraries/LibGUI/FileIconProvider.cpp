@@ -267,8 +267,10 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
         return s_filetype_image_icon;
 
     for (auto& filetype : s_filetype_icons.keys()) {
-        auto patterns = s_filetype_patterns.get(filetype).value();
-        for (auto& pattern : patterns) {
+        auto pattern_it = s_filetype_patterns.find(filetype);
+        if (pattern_it == s_filetype_patterns.end())
+            continue;
+        for (auto& pattern : pattern_it->value) {
             if (path.matches(pattern, CaseSensitivity::CaseInsensitive))
                 return s_filetype_icons.get(filetype).value();
         }

@@ -9,7 +9,7 @@
 
 namespace HackStudio {
 
-GitRepo::CreateResult GitRepo::try_to_create(const LexicalPath& repository_root)
+GitRepo::CreateResult GitRepo::try_to_create(String const& repository_root)
 {
     if (!git_is_installed()) {
         return { CreateResult::Type::GitProgramNotFound, nullptr };
@@ -21,7 +21,7 @@ GitRepo::CreateResult GitRepo::try_to_create(const LexicalPath& repository_root)
     return { CreateResult::Type::Success, adopt_ref(*new GitRepo(repository_root)) };
 }
 
-RefPtr<GitRepo> GitRepo::initialize_repository(const LexicalPath& repository_root)
+RefPtr<GitRepo> GitRepo::initialize_repository(String const& repository_root)
 {
     auto res = command_wrapper({ "init" }, repository_root);
     if (res.is_null())
@@ -31,7 +31,7 @@ RefPtr<GitRepo> GitRepo::initialize_repository(const LexicalPath& repository_roo
     return adopt_ref(*new GitRepo(repository_root));
 }
 
-Vector<LexicalPath> GitRepo::unstaged_files() const
+Vector<String> GitRepo::unstaged_files() const
 {
     auto modified = modified_files();
     auto untracked = untracked_files();
@@ -39,7 +39,7 @@ Vector<LexicalPath> GitRepo::unstaged_files() const
     return modified;
 }
 //
-Vector<LexicalPath> GitRepo::staged_files() const
+Vector<String> GitRepo::staged_files() const
 {
     auto raw_result = command({ "diff", "--cached", "--name-only" });
     if (raw_result.is_null())
@@ -47,7 +47,7 @@ Vector<LexicalPath> GitRepo::staged_files() const
     return parse_files_list(raw_result);
 }
 
-Vector<LexicalPath> GitRepo::modified_files() const
+Vector<String> GitRepo::modified_files() const
 {
     auto raw_result = command({ "ls-files", "--modified", "--exclude-standard" });
     if (raw_result.is_null())
@@ -55,7 +55,7 @@ Vector<LexicalPath> GitRepo::modified_files() const
     return parse_files_list(raw_result);
 }
 
-Vector<LexicalPath> GitRepo::untracked_files() const
+Vector<String> GitRepo::untracked_files() const
 {
     auto raw_result = command({ "ls-files", "--others", "--exclude-standard" });
     if (raw_result.is_null())
@@ -63,66 +63,67 @@ Vector<LexicalPath> GitRepo::untracked_files() const
     return parse_files_list(raw_result);
 }
 
-Vector<LexicalPath> GitRepo::parse_files_list(const String& raw_result)
+Vector<String> GitRepo::parse_files_list(String const& raw_result)
 {
     auto lines = raw_result.split('\n');
-    Vector<LexicalPath> files;
-    for (const auto& line : lines) {
+    Vector<String> files;
+    for (auto const& line : lines) {
         files.empend(line);
     }
     return files;
 }
 
-String GitRepo::command(const Vector<String>& command_parts) const
+String GitRepo::command(Vector<String> const& command_parts) const
 {
     return command_wrapper(command_parts, m_repository_root);
 }
 
-String GitRepo::command_wrapper(const Vector<String>& command_parts, const LexicalPath& chdir)
+String GitRepo::command_wrapper(Vector<String> const& command_parts, String const& chdir)
 {
-    return Core::command("git", command_parts, chdir);
+    return Core::command("git", command_parts, LexicalPath(chdir));
 }
 
 bool GitRepo::git_is_installed()
 {
-    return !command_wrapper({ "--help" }, LexicalPath("/")).is_null();
+    return !command_wrapper({ "--help" }, "/").is_null();
 }
 
-bool GitRepo::git_repo_exists(const LexicalPath& repo_root)
+bool GitRepo::git_repo_exists(String const& repo_root)
 {
     return !command_wrapper({ "status" }, repo_root).is_null();
 }
 
-bool GitRepo::stage(const LexicalPath& file)
+bool GitRepo::stage(String const& file)
 {
-    return !command({ "add", file.string() }).is_null();
+    return !command({ "add", file }).is_null();
 }
 
-bool GitRepo::unstage(const LexicalPath& file)
+bool GitRepo::unstage(String const& file)
 {
-    return !command({ "reset", "HEAD", "--", file.string() }).is_null();
+    return !command({ "reset", "HEAD", "--", file }).is_null();
 }
 
-bool GitRepo::commit(const String& message)
+bool GitRepo::commit(String const& message)
 {
     return !command({ "commit", "-m", message }).is_null();
 }
 
-Optional<String> GitRepo::original_file_content(const LexicalPath& file) const
+Optional<String> GitRepo::original_file_content(String const& file) const
 {
     return command({ "show", String::formatted("HEAD:{}", file) });
 }
 
-Optional<String> GitRepo::unstaged_diff(const LexicalPath& file) const
+Optional<String> GitRepo::unstaged_diff(String const& file) const
 {
-    return command({ "diff", file.string().characters() });
+    return command({ "diff", file.characters() });
 }
 
-bool GitRepo::is_tracked(const LexicalPath& file) const
+bool GitRepo::is_tracked(String const& file) const
 {
-    auto res = command({ "ls-files", file.string() });
+    auto res = command({ "ls-files", file });
     if (res.is_null())
         return false;
+
     return !res.is_empty();
 }
 

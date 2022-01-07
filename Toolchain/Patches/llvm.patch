@@ -592,6 +592,19 @@ index ba9f96384..4aecfeee2 100644
      return;
  
    case llvm::Triple::Win32:
+diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
+index 39b9120f0..1a49ac3e5 100644
+--- a/compiler-rt/cmake/config-ix.cmake
++++ b/compiler-rt/cmake/config-ix.cmake
+@@ -684,7 +684,7 @@ endif()
+ 
+ # TODO: Add builtins support.
+ 
+-if (CRT_SUPPORTED_ARCH AND OS_NAME MATCHES "Linux" AND NOT LLVM_USE_SANITIZER)
++if (CRT_SUPPORTED_ARCH AND OS_NAME MATCHES "Linux|SerenityOS" AND NOT LLVM_USE_SANITIZER)
+   set(COMPILER_RT_HAS_CRT TRUE)
+ else()
+   set(COMPILER_RT_HAS_CRT FALSE)
 diff --git a/libcxx/cmake/Modules/HandleOutOfTreeLLVM.cmake b/libcxx/cmake/Modules/HandleOutOfTreeLLVM.cmake
 index ad2820b32..deaa2c380 100644
 --- a/libcxx/cmake/Modules/HandleOutOfTreeLLVM.cmake
@@ -736,26 +749,18 @@ index d5ab8fb3b..5039c1987 100644
      // Newlib has a 257-entry table in ctype_.c, where (char)0 starts at [1].
      return _ctype_ + 1;
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index 0c3419390..75f8b552b 100644
+index 0c3419390..7673b9183 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
-@@ -228,11 +228,11 @@ endif()
+@@ -228,7 +228,7 @@ endif()
  
  # Pass -Wl,-z,defs. This makes sure all symbols are defined. Otherwise a DSO
  # build might work on ELF but fail on MachO/COFF.
 -if(NOT (CMAKE_SYSTEM_NAME MATCHES "Darwin|FreeBSD|OpenBSD|DragonFly|AIX|SunOS|OS390" OR
--        WIN32 OR CYGWIN) AND
--   NOT LLVM_USE_SANITIZER)
--  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,defs")
--endif()
-+#if(NOT (CMAKE_SYSTEM_NAME MATCHES "Darwin|FreeBSD|OpenBSD|DragonFly|AIX|SunOS|OS390" OR
-+#        WIN32 OR CYGWIN) AND
-+#   NOT LLVM_USE_SANITIZER)
-+#  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,defs")
-+#endif()
- 
- # Pass -Wl,-z,nodelete. This makes sure our shared libraries are not unloaded
- # by dlclose(). We need that since the CLI API relies on cross-references
++if(NOT (CMAKE_SYSTEM_NAME MATCHES "Darwin|FreeBSD|OpenBSD|DragonFly|AIX|SunOS|OS390|SerenityOS" OR
+         WIN32 OR CYGWIN) AND
+    NOT LLVM_USE_SANITIZER)
+   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,defs")
 diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
 index 76f351405..b81556c55 100644
 --- a/llvm/include/llvm/ADT/Triple.h

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -160,10 +160,7 @@ ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(GlobalObject
         }
     }
 
-    auto value = expression.execute(interpreter(), global_object);
-    if (auto* thrown_exception = exception())
-        return JS::throw_completion(thrown_exception->value());
-    return value;
+    return TRY(expression.execute(interpreter(), global_object)).release_value();
 }
 
 // 13.15.5.2 Runtime Semantics: DestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-destructuringassignmentevaluation
@@ -244,9 +241,6 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 VERIFY_NOT_REACHED();
             }
 
-            if (auto* thrown_exception = exception())
-                return JS::throw_completion(thrown_exception->value());
-
             auto* rest_object = Object::create(global_object, global_object.object_prototype());
             VERIFY(rest_object);
 
@@ -257,25 +251,15 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 return assignment_target.initialize_referenced_binding(global_object, rest_object);
         }
 
-        PropertyKey name;
-
-        property.name.visit(
-            [&](Empty) { VERIFY_NOT_REACHED(); },
-            [&](NonnullRefPtr<Identifier> const& identifier) {
-                name = identifier->string();
+        auto name = TRY(property.name.visit(
+            [&](Empty) -> ThrowCompletionOr<PropertyKey> { VERIFY_NOT_REACHED(); },
+            [&](NonnullRefPtr<Identifier> const& identifier) -> ThrowCompletionOr<PropertyKey> {
+                return identifier->string();
             },
-            [&](NonnullRefPtr<Expression> const& expression) {
-                auto result = expression->execute(interpreter(), global_object);
-                if (exception())
-                    return;
-                auto name_or_error = result.to_property_key(global_object);
-                if (name_or_error.is_error())
-                    return;
-                name = name_or_error.release_value();
-            });
-
-        if (auto* thrown_exception = exception())
-            return JS::throw_completion(thrown_exception->value());
+            [&](NonnullRefPtr<Expression> const& expression) -> ThrowCompletionOr<PropertyKey> {
+                auto result = TRY(expression->execute(interpreter(), global_object)).release_value();
+                return result.to_property_key(global_object);
+            }));
 
         seen_names.set(name);
 
@@ -306,18 +290,12 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 return TRY(member_expression->to_reference(interpreter(), global_object));
             }));
 
-        if (auto* thrown_exception = exception())
-            return JS::throw_completion(thrown_exception->value());
-
         auto value_to_assign = TRY(object->get(name));
         if (property.initializer && value_to_assign.is_undefined()) {
             if (auto* identifier_ptr = property.alias.get_pointer<NonnullRefPtr<Identifier>>())
                 value_to_assign = TRY(named_evaluation_if_anonymous_function(global_object, *property.initializer, (*identifier_ptr)->string()));
             else
-                value_to_assign = property.initializer->execute(interpreter(), global_object);
-
-            if (auto* thrown_exception = exception())
-                return JS::throw_completion(thrown_exception->value());
+                value_to_assign = TRY(property.initializer->execute(interpreter(), global_object)).release_value();
         }
 
         if (auto* binding_ptr = property.alias.get_pointer<NonnullRefPtr<BindingPattern>>()) {
@@ -361,7 +339,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                 auto next_object_or_error = iterator_next(*iterator);
                 if (next_object_or_error.is_throw_completion()) {
                     iterator_done = true;
-                    return JS::throw_completion(next_object_or_error.release_error().value());
+                    return JS::throw_completion(*next_object_or_error.release_error().value());
                 }
                 auto* next_object = next_object_or_error.release_value();
 
@@ -380,7 +358,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             auto next_object_or_error = iterator_next(*iterator);
             if (next_object_or_error.is_throw_completion()) {
                 iterator_done = true;
-                return JS::throw_completion(next_object_or_error.release_error().value());
+                return JS::throw_completion(*next_object_or_error.release_error().value());
             }
             auto* next_object = next_object_or_error.release_value();
 
@@ -392,7 +370,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                 auto value_or_error = next_object->get(names.value);
                 if (value_or_error.is_throw_completion()) {
                     iterator_done = true;
-                    return JS::throw_completion(value_or_error.release_error().value());
+                    return JS::throw_completion(*value_or_error.release_error().value());
                 }
                 value = value_or_error.release_value();
             }
@@ -405,10 +383,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             if (auto* identifier_ptr = entry.alias.get_pointer<NonnullRefPtr<Identifier>>())
                 value = TRY(named_evaluation_if_anonymous_function(global_object, *entry.initializer, (*identifier_ptr)->string()));
             else
-                value = entry.initializer->execute(interpreter(), global_object);
-
-            if (auto* thrown_exception = exception())
-                return JS::throw_completion(thrown_exception->value());
+                value = TRY(entry.initializer->execute(interpreter(), global_object)).release_value();
         }
 
         if (auto* binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern>>()) {
@@ -493,7 +468,6 @@ ThrowCompletionOr<void> VM::initialize_instance_elements(Object& object, ECMAScr
 void VM::throw_exception(Exception& exception)
 {
     set_exception(exception);
-    unwind(ScopeType::Try);
 }
 
 // 9.4.4 ResolveThisBinding ( ), https://tc39.es/ecma262/#sec-resolvethisbinding
@@ -572,7 +546,6 @@ void VM::run_queued_promise_jobs()
         // exceptions when running Promise jobs. See the commit where these two lines were initially
         // added for a much more detailed explanation.
         clear_exception();
-        stop_unwind();
 
         if (pushed_execution_context)
             pop_execution_context();

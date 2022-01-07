@@ -1,10 +1,19 @@
 # This file specifies the options used for building the various LLVM runtime libraries
 
+# Note: We force the cmake module path for all dependent projects to include our custom directory
+# That has the Platform/SerenityOS.cmake definition
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${SERENITY_MODULE_PATH}" CACHE STRING "Modules for CMake")
+
 set(CMAKE_BUILD_TYPE Release CACHE STRING "")
 
 set(LLVM_ENABLE_RUNTIMES "libcxx;libcxxabi;libunwind" CACHE STRING "")
 
+set(CMAKE_SYSTEM_NAME SerenityOS CACHE STRING "")
 set(target_triple ${SERENITY_TOOLCHAIN_ARCH}-pc-serenity)
+
+IF(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH ON CACHE BOOL "")
+ENDIF()
 
 set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR ON CACHE BOOL "")
 set(LLVM_ENABLE_BINDINGS OFF CACHE BOOL "")

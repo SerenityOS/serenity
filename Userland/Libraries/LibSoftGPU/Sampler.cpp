@@ -4,15 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/Sampler.h>
 #include <math.h>
 
 namespace SoftGPU {
-
-// See: https://www.khronos.org/opengl/wiki/Common_Mistakes#Texture_edge_color_problem
-// FIXME: make this dynamically configurable through ConfigServer
-static constexpr bool CLAMP_DEPRECATED_BEHAVIOR = false;
 
 static constexpr float fracf(float value)
 {
@@ -89,8 +86,11 @@ FloatVector4 Sampler::sample_2d(FloatVector2 const& uv) const
         return image.texel(layer, level, i, j, 0);
     }
 
-    int i0 = m_config.texture_wrap_u == TextureWrapMode::Repeat ? static_cast<unsigned>(floorf(u - 0.5f)) % width : floorf(u - 0.5f);
-    int j0 = m_config.texture_wrap_v == TextureWrapMode::Repeat ? static_cast<unsigned>(floorf(v - 0.5f)) % height : floorf(v - 0.5f);
+    u -= 0.5f;
+    v -= 0.5f;
+
+    int i0 = m_config.texture_wrap_u == TextureWrapMode::Repeat ? static_cast<unsigned>(floorf(u)) % width : floorf(u);
+    int j0 = m_config.texture_wrap_v == TextureWrapMode::Repeat ? static_cast<unsigned>(floorf(v)) % height : floorf(v);
 
     int i1 = m_config.texture_wrap_u == TextureWrapMode::Repeat ? (i0 + 1) % width : i0 + 1;
     int j1 = m_config.texture_wrap_v == TextureWrapMode::Repeat ? (j0 + 1) % height : j0 + 1;
@@ -111,16 +111,12 @@ FloatVector4 Sampler::sample_2d(FloatVector2 const& uv) const
         t3 = (i1 < 0 || i1 >= w || j1 < 0 || j1 >= h) ? m_config.border_color : image.texel(layer, level, i1, j1, 0);
     }
 
-    float alpha = fracf(u - 0.5f);
-    float beta = fracf(v - 0.5f);
+    float const alpha = fracf(u);
+    float const beta = fracf(v);
 
-    float one_minus_alpha = 1 - alpha;
-    float one_minus_beta = 1 - beta;
-
-    auto lerp_0 = t0 * one_minus_alpha + t1 * alpha;
-    auto lerp_1 = t2 * one_minus_alpha + t3 * alpha;
-
-    return lerp_0 * one_minus_beta + lerp_1 * beta;
+    auto const lerp_0 = mix(t0, t1, alpha);
+    auto const lerp_1 = mix(t2, t3, alpha);
+    return mix(lerp_0, lerp_1, beta);
 }
 
 }

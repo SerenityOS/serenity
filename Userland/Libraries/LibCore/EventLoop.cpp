@@ -59,6 +59,8 @@ static Vector<EventLoop&>* s_event_loop_stack;
 static NeverDestroyed<IDAllocator> s_id_allocator;
 static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 static HashTable<Notifier*>* s_notifiers;
+static Threading::Mutex s_notifiers_mutex;
+
 int EventLoop::s_wake_pipe_fds[2];
 static RefPtr<InspectorServerConnection> s_inspector_server_connection;
 
@@ -379,7 +381,7 @@ void EventLoop::spin_until(Function<bool()> goal_condition)
         pump();
 }
 
-void EventLoop::pump(WaitMode mode)
+size_t EventLoop::pump(WaitMode mode)
 {
     wait_for_event(mode);
 
@@ -389,6 +391,7 @@ void EventLoop::pump(WaitMode mode)
         events = move(m_queued_events);
     }
 
+    size_t processed_events = 0;
     for (size_t i = 0; i < events.size(); ++i) {
         auto& queued_event = events.at(i);
         auto receiver = queued_event.receiver.strong_ref();
@@ -400,7 +403,6 @@ void EventLoop::pump(WaitMode mode)
             switch (event.type()) {
             case Event::Quit:
                 VERIFY_NOT_REACHED();
-                return;
             default:
                 dbgln_if(EVENTLOOP_DEBUG, "Event type {} with no receiver :(", event.type());
                 break;
@@ -412,6 +414,7 @@ void EventLoop::pump(WaitMode mode)
             NonnullRefPtr<Object> protector(*receiver);
             receiver->dispatch_event(event);
         }
+        ++processed_events;
 
         if (m_exit_requested) {
             Threading::MutexLocker locker(m_private->lock);
@@ -422,15 +425,17 @@ void EventLoop::pump(WaitMode mode)
                 new_event_queue.unchecked_append(move(events[i]));
             new_event_queue.extend(move(m_queued_events));
             m_queued_events = move(new_event_queue);
-            return;
+            break;
         }
     }
+
+    return processed_events;
 }
 
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
     Threading::MutexLocker lock(m_private->lock);
-    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::post_event: ({}) << receivier={}, event={}", m_queued_events.size(), receiver, event);
+    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::post_event: ({}) << receiver={}, event={}", m_queued_events.size(), receiver, event);
     m_queued_events.empend(receiver, move(event));
 }
 
@@ -517,7 +522,7 @@ void EventLoop::handle_signal(int signo)
     VERIFY(signo != 0);
     // We MUST check if the current pid still matches, because there
     // is a window between fork() and exec() where a signal delivered
-    // to our fork could be inadvertedly routed to the parent process!
+    // to our fork could be inadvertently routed to the parent process!
     if (getpid() == s_pid) {
         int nwritten = write(s_wake_pipe_fds[1], &signo, sizeof(signo));
         if (nwritten < 0) {
@@ -602,13 +607,17 @@ retry:
     int max_fd_added = -1;
     add_fd_to_set(s_wake_pipe_fds[0], rfds);
     max_fd = max(max_fd, max_fd_added);
-    for (auto& notifier : *s_notifiers) {
-        if (notifier->event_mask() & Notifier::Read)
-            add_fd_to_set(notifier->fd(), rfds);
-        if (notifier->event_mask() & Notifier::Write)
-            add_fd_to_set(notifier->fd(), wfds);
-        if (notifier->event_mask() & Notifier::Exceptional)
-            VERIFY_NOT_REACHED();
+
+    {
+        Threading::MutexLocker locker(s_notifiers_mutex);
+        for (auto& notifier : *s_notifiers) {
+            if (notifier->event_mask() & Notifier::Read)
+                add_fd_to_set(notifier->fd(), rfds);
+            if (notifier->event_mask() & Notifier::Write)
+                add_fd_to_set(notifier->fd(), wfds);
+            if (notifier->event_mask() & Notifier::Exceptional)
+                VERIFY_NOT_REACHED();
+        }
     }
 
     bool queued_events_is_empty;
@@ -695,6 +704,7 @@ try_select_again:
     if (!marked_fd_count)
         return;
 
+    Threading::MutexLocker locker(s_notifiers_mutex);
     for (auto& notifier : *s_notifiers) {
         if (FD_ISSET(notifier->fd(), &rfds)) {
             if (notifier->event_mask() & Notifier::Event::Read)
@@ -760,11 +770,13 @@ bool EventLoop::unregister_timer(int timer_id)
 
 void EventLoop::register_notifier(Badge<Notifier>, Notifier& notifier)
 {
+    Threading::MutexLocker locker(s_notifiers_mutex);
     s_notifiers->set(&notifier);
 }
 
 void EventLoop::unregister_notifier(Badge<Notifier>, Notifier& notifier)
 {
+    Threading::MutexLocker locker(s_notifiers_mutex);
     s_notifiers->remove(&notifier);
 }
 

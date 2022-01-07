@@ -43,11 +43,11 @@ Vertex Clipper::clip_intersection_point(const Vertex& p1, const Vertex& p2, Clip
     float a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
 
     Vertex out;
-    out.position = p1.position * (1 - a) + p2.position * a;
-    out.eye_coordinates = p1.eye_coordinates * (1 - a) + p2.eye_coordinates * a;
-    out.clip_coordinates = p1.clip_coordinates * (1 - a) + p2.clip_coordinates * a;
-    out.color = p1.color * (1 - a) + p2.color * a;
-    out.tex_coord = p1.tex_coord * (1 - a) + p2.tex_coord * a;
+    out.position = mix(p1.position, p2.position, a);
+    out.eye_coordinates = mix(p1.eye_coordinates, p2.eye_coordinates, a);
+    out.clip_coordinates = mix(p1.clip_coordinates, p2.clip_coordinates, a);
+    out.color = mix(p1.color, p2.color, a);
+    out.tex_coord = mix(p1.tex_coord, p2.tex_coord, a);
     return out;
 }
 

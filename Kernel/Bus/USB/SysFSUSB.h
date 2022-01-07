@@ -19,7 +19,7 @@ class SysFSUSBDeviceInformation : public SysFSComponent {
 public:
     virtual ~SysFSUSBDeviceInformation() override;
 
-    static NonnullRefPtr<SysFSUSBDeviceInformation> create(USB::Device&);
+    static ErrorOr<NonnullRefPtr<SysFSUSBDeviceInformation>> create(USB::Device&);
     virtual StringView name() const override { return m_device_name->view(); }
 
     RefPtr<USB::Device> device() const { return m_device; }

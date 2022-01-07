@@ -139,7 +139,7 @@ private:
         bool punct_before;
         bool punct_after;
         // is_run indicates that this token is a 'delimiter run'. A delimiter
-        // run occurs when several of the same sytactical character ('`', '_',
+        // run occurs when several of the same syntactical character ('`', '_',
         // or '*') occur in a row.
         bool is_run;
 

@@ -8,6 +8,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -37,12 +38,9 @@ private:
     Vector<Vector<StringView>> m_all_parts;
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 {
-    if (pledge("stdio rpath proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath proc exec", nullptr));
 
     const char* placeholder = nullptr;
     bool split_with_nulls = false;
@@ -64,7 +62,7 @@ int main(int argc, char** argv)
     args_parser.add_option(max_lines_for_one_command, "Use at most max-lines lines to create a command", "line-limit", 'L', "max-lines");
     args_parser.add_option(max_bytes_for_one_command, "Use at most max-chars characters to create a command", "char-limit", 's', "max-chars");
     args_parser.add_positional_argument(arguments, "Command and any initial arguments for it", "command", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(main_arguments);
 
     size_t max_bytes = min(ARG_MAX, max_bytes_for_one_command);
     size_t max_lines = max(max_lines_for_one_command, 0);
@@ -105,11 +103,7 @@ int main(int argc, char** argv)
     int devnull_fd = 0;
 
     if (is_stdin) {
-        devnull_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
-        if (devnull_fd < 0) {
-            perror("open");
-            return 1;
-        }
+        devnull_fd = TRY(Core::System::open("/dev/null", O_RDONLY | O_CLOEXEC));
     }
 
     size_t total_command_length = 0;

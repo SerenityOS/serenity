@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -55,6 +56,14 @@ void Palette::set_color(ColorRole role, Color color)
         m_impl = m_impl->clone();
     auto& theme = const_cast<SystemTheme&>(impl().theme());
     theme.color[(int)role] = color.value();
+}
+
+void Palette::set_alignment(AlignmentRole role, Gfx::TextAlignment value)
+{
+    if (m_impl->ref_count() != 1)
+        m_impl = m_impl->clone();
+    auto& theme = const_cast<SystemTheme&>(impl().theme());
+    theme.alignment[(int)role] = value;
 }
 
 void Palette::set_flag(FlagRole role, bool value)

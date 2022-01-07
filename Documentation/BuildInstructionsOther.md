@@ -36,7 +36,7 @@ with import <nixpkgs> {};
 stdenv.mkDerivation {
   name = "cpp-env";
   nativeBuildInputs = [
-    gcc10
+    gcc11
     curl
     cmake
     mpfr

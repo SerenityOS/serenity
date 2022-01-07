@@ -23,7 +23,10 @@ public:
 
     Optional<PhysicalAddress> find_chunk_starting_with(StringView prefix, size_t chunk_size) const
     {
-        for (auto* candidate = base(); candidate < end(); candidate += chunk_size) {
+        auto prefix_length = prefix.length();
+        if (size < prefix_length)
+            return {};
+        for (auto* candidate = base(); candidate <= end() - prefix_length; candidate += chunk_size) {
             if (!__builtin_memcmp(prefix.characters_without_null_termination(), candidate, prefix.length()))
                 return paddr_of(candidate);
         }

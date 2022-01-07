@@ -162,7 +162,7 @@ ErrorOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserOrK
         if (m_content && static_cast<off_t>(m_content->capacity()) >= new_size) {
             m_content->set_size(new_size);
         } else {
-            // Grow the content buffer 2x the new sizeto accommodate repeating write() calls.
+            // Grow the content buffer 2x the new size to accommodate repeating write() calls.
             // Note that we're not actually committing physical memory to the buffer
             // until it's needed. We only grow VM here.
 
@@ -271,13 +271,19 @@ ErrorOr<void> TmpFSInode::add_child(Inode& child, StringView name, mode_t)
     if (name.length() > NAME_MAX)
         return ENAMETOOLONG;
 
+    MutexLocker locker(m_inode_lock);
+    for (auto const& existing_child : m_children) {
+        if (existing_child.name->view() == name)
+            return EEXIST;
+    }
+
     auto name_kstring = TRY(KString::try_create(name));
     // Balanced by `delete` in remove_child()
+
     auto* child_entry = new (nothrow) Child { move(name_kstring), static_cast<TmpFSInode&>(child) };
     if (!child_entry)
         return ENOMEM;
 
-    MutexLocker locker(m_inode_lock);
     m_children.append(*child_entry);
     did_add_child(child.identifier(), name);
     return {};

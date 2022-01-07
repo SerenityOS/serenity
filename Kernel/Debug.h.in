@@ -210,6 +210,10 @@
 #cmakedefine01 NETWORK_TASK_DEBUG
 #endif
 
+#ifndef NVME_DEBUG
+#cmakedefine01 NVME_DEBUG
+#endif
+
 #ifndef OFFD_DEBUG
 #cmakedefine01 OFFD_DEBUG
 #endif

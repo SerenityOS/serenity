@@ -111,8 +111,8 @@ private:
     // Either returns the metadata block or sets error message.
     // Additionally, increments m_data_start_location past the read meta block.
     ErrorOr<FlacRawMetadataBlock, LoaderError> next_meta_block(InputBitStream& bit_input);
-    // Fetches and sets the next FLAC frame
-    MaybeLoaderError next_frame();
+    // Fetches and writes the next FLAC frame
+    MaybeLoaderError next_frame(Span<Sample>);
     // Helper of next_frame that fetches a sub frame's header
     ErrorOr<FlacSubframeHeader, LoaderError> next_subframe_header(InputBitStream& bit_input, u8 channel_index);
     // Helper of next_frame that decompresses a subframe
@@ -151,7 +151,8 @@ private:
     u64 m_data_start_location { 0 };
     OwnPtr<FlacInputStream<FLAC_BUFFER_SIZE>> m_stream;
     Optional<FlacFrameHeader> m_current_frame;
-    Vector<Sample> m_current_frame_data;
+    // Whatever the last get_more_samples() call couldn't return gets stored here.
+    Vector<Sample, FLAC_BUFFER_SIZE> m_unread_data;
     u64 m_current_sample_or_frame { 0 };
 };
 

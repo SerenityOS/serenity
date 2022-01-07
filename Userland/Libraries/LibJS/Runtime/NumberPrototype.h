@@ -18,8 +18,10 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~NumberPrototype() override;
 
+    JS_DECLARE_NATIVE_FUNCTION(to_exponential);
     JS_DECLARE_NATIVE_FUNCTION(to_fixed);
     JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_precision);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
 };

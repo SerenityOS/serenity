@@ -160,9 +160,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     auto buffer_or_error = vm.argument(0).to_object(global_object);
     JS::Value rejection_value;
     if (buffer_or_error.is_error()) {
-        rejection_value = buffer_or_error.throw_completion().value();
+        rejection_value = *buffer_or_error.throw_completion().value();
         vm.clear_exception();
-        vm.stop_unwind();
     }
     auto promise = JS::Promise::create(global_object);
     if (!rejection_value.is_empty()) {
@@ -172,7 +171,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     auto* buffer = buffer_or_error.release_value();
     auto result = parse_module(global_object, buffer);
     if (result.is_error())
-        promise->reject(result.release_error().value());
+        promise->reject(*result.release_error().value());
     else
         promise->fulfill(vm.heap().allocate<WebAssemblyModuleObject>(global_object, global_object, result.release_value()));
     return promise;
@@ -325,9 +324,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     auto promise = JS::Promise::create(global_object);
     bool should_return_module = false;
     if (buffer_or_error.is_error()) {
-        auto rejection_value = buffer_or_error.throw_completion().value();
+        auto rejection_value = *buffer_or_error.throw_completion().value();
         vm.clear_exception();
-        vm.stop_unwind();
         promise->reject(rejection_value);
         return promise;
     }
@@ -337,7 +335,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     if (is<JS::ArrayBuffer>(buffer) || is<JS::TypedArrayBase>(buffer)) {
         auto result = parse_module(global_object, buffer);
         if (result.is_error()) {
-            promise->reject(result.release_error().value());
+            promise->reject(*result.release_error().value());
             return promise;
         }
         module = &WebAssemblyObject::s_compiled_modules.at(result.release_value()).module;
@@ -353,7 +351,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
 
     auto result = instantiate_module(*module, vm, global_object);
     if (result.is_error()) {
-        promise->reject(result.release_error().value());
+        promise->reject(*result.release_error().value());
     } else {
         auto instance_object = vm.heap().allocate<WebAssemblyInstanceObject>(global_object, global_object, result.release_value());
         if (should_return_module) {

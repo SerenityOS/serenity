@@ -59,12 +59,8 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     execution_context.realm = &realm();
     execution_context.is_strict_mode = program.is_strict_mode();
     MUST(vm.push_execution_context(execution_context, global_object));
-    auto value = program.execute(*this, global_object);
-    vm.set_last_value(Badge<Interpreter> {}, value.value_or(js_undefined()));
-
-    // FIXME: We unconditionally stop the unwind here this should be done using completions leaving
-    //        the VM in a cleaner state after executing. For example it does still store the exception.
-    vm.stop_unwind();
+    auto completion = program.execute(*this, global_object);
+    vm.set_last_value(Badge<Interpreter> {}, completion.value().value_or(js_undefined()));
 
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
     // in which case this is a no-op.

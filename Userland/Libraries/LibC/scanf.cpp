@@ -488,6 +488,7 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
                 conversion_specifier = ConversionSpecifier::Unsigned;
                 break;
             case 'x':
+            case 'X':
                 format_lexer.consume();
                 conversion_specifier = ConversionSpecifier::Hex;
                 break;

@@ -1,15 +1,5 @@
 # Patches for LLVM on SerenityOS
 
-## `build-crt.patch`
-
-This patch lets us use LLVM's `crtbegin.o`/`crtend.o` implementation.
-
-### Status
-- [ ] Local?
-- [x] Should be merged to upstream?
-- [ ] Resolves issue(s) with our side of things
-- [ ] Hack
-
 ## `insert-ifdef-serenity.patch`
 
 This patch adds several defines in order to omit things not supported by SerenityOS.

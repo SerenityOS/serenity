@@ -296,7 +296,7 @@ ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
     if (level == IntegrityLevel::Sealed) {
         // a. For each element k of keys, do
         for (auto& key : keys) {
-            auto property_name = PropertyKey::from_value(global_object, key);
+            auto property_name = MUST(PropertyKey::from_value(global_object, key));
 
             // i. Perform ? DefinePropertyOrThrow(O, k, PropertyDescriptor { [[Configurable]]: false }).
             TRY(define_property_or_throw(property_name, { .configurable = false }));
@@ -308,7 +308,7 @@ ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
 
         // b. For each element k of keys, do
         for (auto& key : keys) {
-            auto property_name = PropertyKey::from_value(global_object, key);
+            auto property_name = MUST(PropertyKey::from_value(global_object, key));
 
             // i. Let currentDesc be ? O.[[GetOwnProperty]](k).
             auto current_descriptor = TRY(internal_get_own_property(property_name));
@@ -360,7 +360,7 @@ ThrowCompletionOr<bool> Object::test_integrity_level(IntegrityLevel level) const
 
     // 7. For each element k of keys, do
     for (auto& key : keys) {
-        auto property_name = PropertyKey::from_value(global_object(), key);
+        auto property_name = MUST(PropertyKey::from_value(global_object(), key));
 
         // a. Let currentDesc be ? O.[[GetOwnProperty]](k).
         auto current_descriptor = TRY(internal_get_own_property(property_name));
@@ -405,7 +405,7 @@ ThrowCompletionOr<MarkedValueList> Object::enumerable_own_property_names(Propert
         // a. If Type(key) is String, then
         if (!key.is_string())
             continue;
-        auto property_name = PropertyKey::from_value(global_object, key);
+        auto property_name = MUST(PropertyKey::from_value(global_object, key));
 
         // i. Let desc be ? O.[[GetOwnProperty]](key).
         auto descriptor = TRY(internal_get_own_property(property_name));
@@ -453,7 +453,7 @@ ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<
     auto* from_object = MUST(source.to_object(global_object));
 
     for (auto& next_key_value : TRY(from_object->internal_own_property_keys())) {
-        auto next_key = PropertyKey::from_value(global_object, next_key_value);
+        auto next_key = MUST(PropertyKey::from_value(global_object, next_key_value));
         if (seen_names.contains(next_key))
             continue;
 
@@ -1151,7 +1151,7 @@ ThrowCompletionOr<Object*> Object::define_properties(Value properties)
 
     // 5. For each element nextKey of keys, do
     for (auto& next_key : keys) {
-        auto property_name = PropertyKey::from_value(global_object, next_key);
+        auto property_name = MUST(PropertyKey::from_value(global_object, next_key));
 
         // a. Let propDesc be ? props.[[GetOwnProperty]](nextKey).
         auto property_descriptor = TRY(props->internal_get_own_property(property_name));

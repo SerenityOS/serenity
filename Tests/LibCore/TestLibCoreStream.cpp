@@ -380,7 +380,7 @@ TEST_CASE(local_socket_write)
 
 // Buffered stream tests
 
-TEST_CASE(buffered_file_read)
+TEST_CASE(buffered_long_file_read)
 {
     auto maybe_file = Core::Stream::File::open("/usr/Tests/LibCore/long_lines.txt", Core::Stream::OpenMode::Read);
     EXPECT(!maybe_file.is_error());
@@ -400,6 +400,34 @@ TEST_CASE(buffered_file_read)
     auto maybe_after_seek_nread = file.read_line(buffer);
     EXPECT(!maybe_after_seek_nread.is_error());
     EXPECT_EQ(maybe_after_seek_nread.value(), 3985ul); // 4095 - 110
+}
+
+TEST_CASE(buffered_small_file_read)
+{
+    auto maybe_file = Core::Stream::File::open("/usr/Tests/LibCore/small.txt", Core::Stream::OpenMode::Read);
+    EXPECT(!maybe_file.is_error());
+    auto maybe_buffered_file = Core::Stream::BufferedFile::create(maybe_file.release_value());
+    EXPECT(!maybe_buffered_file.is_error());
+    auto file = maybe_buffered_file.release_value();
+
+    static constexpr StringView expected_lines[] {
+        "Well"sv,
+        "hello"sv,
+        "friends!"sv,
+        ":^)"sv
+    };
+
+    // Testing that we don't read out of bounds when the entire file fits into the buffer
+    auto buffer = ByteBuffer::create_uninitialized(4096).release_value();
+    for (auto const& line : expected_lines) {
+        VERIFY(file.can_read_line().release_value());
+        auto maybe_nread = file.read_line(buffer);
+        EXPECT(!maybe_nread.is_error());
+        EXPECT_EQ(maybe_nread.value(), line.length());
+        EXPECT_EQ(StringView(buffer.span().trim(maybe_nread.value())), line);
+    }
+    EXPECT(!file.can_read_line().is_error());
+    EXPECT(!file.can_read_line().value());
 }
 
 constexpr auto buffered_sent_data = "Well hello friends!\n:^)\nThis shouldn't be present. :^("sv;

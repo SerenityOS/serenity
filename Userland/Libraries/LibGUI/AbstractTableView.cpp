@@ -277,11 +277,15 @@ void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_ho
     switch (selection_behavior()) {
     case SelectionBehavior::SelectItems:
         rect = content_rect(index);
+        if (row_header().is_visible())
+            rect.set_left(rect.left() - row_header().width());
         break;
     case SelectionBehavior::SelectRows:
         rect = row_rect(index.row());
         break;
     }
+    if (column_header().is_visible())
+        rect.set_top(rect.top() - column_header().height());
     AbstractScrollableWidget::scroll_into_view(rect, scroll_horizontally, scroll_vertically);
 }
 

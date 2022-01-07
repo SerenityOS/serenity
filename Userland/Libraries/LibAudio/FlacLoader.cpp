@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/FixedArray.h>
 #include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/Math.h>
@@ -13,6 +14,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
+#include <AK/TypedTransfer.h>
 #include <AK/UFixedBigInt.h>
 #include <LibAudio/Buffer.h>
 #include <LibAudio/FlacLoader.h>
@@ -190,41 +192,41 @@ MaybeLoaderError FlacLoaderPlugin::seek(const int position)
 
 LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
 {
-    Vector<Sample> samples;
     ssize_t remaining_samples = static_cast<ssize_t>(m_total_samples - m_loaded_samples);
     if (remaining_samples <= 0)
         return Buffer::create_empty();
 
     size_t samples_to_read = min(max_bytes_to_read_from_input, remaining_samples);
-    samples.ensure_capacity(samples_to_read);
-    while (samples_to_read > 0) {
-        if (!m_current_frame.has_value())
-            TRY(next_frame());
+    auto samples = FixedArray<Sample>(samples_to_read);
+    size_t sample_index = 0;
 
-        // Do a full vector extend if possible
-        if (m_current_frame_data.size() <= samples_to_read) {
-            samples_to_read -= m_current_frame_data.size();
-            samples.extend(move(m_current_frame_data));
-            m_current_frame_data.clear();
-            m_current_frame.clear();
-        } else {
-            samples.unchecked_append(m_current_frame_data.data(), samples_to_read);
-            m_current_frame_data.remove(0, samples_to_read);
-            if (m_current_frame_data.size() == 0) {
-                m_current_frame.clear();
-            }
-            samples_to_read = 0;
-        }
+    if (m_unread_data.size() > 0) {
+        size_t to_transfer = min(m_unread_data.size(), samples_to_read);
+        dbgln_if(AFLACLOADER_DEBUG, "Reading {} samples from unread sample buffer (size {})", to_transfer, m_unread_data.size());
+        AK::TypedTransfer<Sample>::move(samples.data(), m_unread_data.data(), to_transfer);
+        if (to_transfer < m_unread_data.size())
+            m_unread_data.remove(0, to_transfer);
+        else
+            m_unread_data.clear_with_capacity();
+
+        sample_index += to_transfer;
     }
 
-    m_loaded_samples += samples.size();
+    while (sample_index < samples_to_read) {
+        TRY(next_frame(samples.span().slice(sample_index)));
+        sample_index += m_current_frame->sample_count;
+        if (m_stream->handle_any_error())
+            return LoaderError { LoaderError::Category::IO, m_loaded_samples, "Unknown I/O error" };
+    }
+
+    m_loaded_samples += sample_index;
     auto maybe_buffer = Buffer::create_with_samples(move(samples));
     if (maybe_buffer.is_error())
         return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Couldn't allocate sample buffer" };
     return maybe_buffer.release_value();
 }
 
-MaybeLoaderError FlacLoaderPlugin::next_frame()
+MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
 {
 #define FLAC_VERIFY(check, category, msg)                                                                                               \
     do {                                                                                                                                \
@@ -293,13 +295,14 @@ MaybeLoaderError FlacLoaderPlugin::next_frame()
     for (u8 i = 0; i < subframe_count; ++i) {
         FlacSubframeHeader new_subframe = TRY(next_subframe_header(bit_stream, i));
         Vector<i32> subframe_samples = TRY(parse_subframe(new_subframe, bit_stream));
-        current_subframes.append(move(subframe_samples));
+        current_subframes.unchecked_append(move(subframe_samples));
     }
 
     bit_stream.align_to_byte_boundary();
 
     // TODO: check checksum, see above
     [[maybe_unused]] u16 footer_checksum = static_cast<u16>(bit_stream.read_bits_big_endian(16));
+    dbgln_if(AFLACLOADER_DEBUG, "Subframe footer checksum: {}", footer_checksum);
 
     Vector<i32> left;
     Vector<i32> right;
@@ -352,17 +355,25 @@ MaybeLoaderError FlacLoaderPlugin::next_frame()
         break;
     }
 
-    VERIFY(left.size() == right.size());
+    VERIFY(left.size() == right.size() && left.size() == m_current_frame->sample_count);
 
     double sample_rescale = static_cast<double>(1 << (pcm_bits_per_sample(m_current_frame->bit_depth) - 1));
     dbgln_if(AFLACLOADER_DEBUG, "Sample rescaled from {} bits: factor {:.1f}", pcm_bits_per_sample(m_current_frame->bit_depth), sample_rescale);
 
-    m_current_frame_data.clear_with_capacity();
-    m_current_frame_data.ensure_capacity(left.size());
     // zip together channels
-    for (size_t i = 0; i < left.size(); ++i) {
+    auto samples_to_directly_copy = min(target_vector.size(), m_current_frame->sample_count);
+    for (size_t i = 0; i < samples_to_directly_copy; ++i) {
         Sample frame = { left[i] / sample_rescale, right[i] / sample_rescale };
-        m_current_frame_data.unchecked_append(frame);
+        target_vector[i] = frame;
+    }
+    // move superfluous data into the class buffer instead
+    auto result = m_unread_data.try_grow_capacity(m_current_frame->sample_count - samples_to_directly_copy);
+    if (result.is_error())
+        return LoaderError { LoaderError::Category::Internal, static_cast<size_t>(samples_to_directly_copy + m_current_sample_or_frame), "Couldn't allocate sample buffer for superfluous data" };
+
+    for (size_t i = samples_to_directly_copy; i < m_current_frame->sample_count; ++i) {
+        Sample frame = { left[i] / sample_rescale, right[i] / sample_rescale };
+        m_unread_data.unchecked_append(frame);
     }
 
     return {};
@@ -619,7 +630,7 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
         for (size_t t = 0; t < subframe.order; ++t) {
             // It's really important that we compute in 64-bit land here.
             // Even though FLAC operates at a maximum bit depth of 32 bits, modern encoders use super-large coefficients for maximum compression.
-            // These will easily overflow 32 bits and cause strange white noise that apruptly stops intermittently (at the end of a frame).
+            // These will easily overflow 32 bits and cause strange white noise that abruptly stops intermittently (at the end of a frame).
             // The simple fix of course is to do intermediate computations in 64 bits.
             sample += static_cast<i64>(coefficients[t]) * static_cast<i64>(decoded[i - t - 1]);
         }

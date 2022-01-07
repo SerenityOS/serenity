@@ -1,5 +1,9 @@
 # This file specifies the options used for building the Clang compiler, LLD linker and the compiler builtins library
 
+# Note: We force the cmake module path for all dependent projects to include our custom directory
+# That has the Platform/SerenityOS.cmake definition
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${SERENITY_MODULE_PATH}" CACHE STRING "Modules for CMake")
+
 set(CMAKE_BUILD_TYPE Release CACHE STRING "")
 
 set(LLVM_TARGETS_TO_BUILD "X86;AArch64" CACHE STRING "")
@@ -35,10 +39,14 @@ foreach(target i686-pc-serenity;x86_64-pc-serenity;aarch64-pc-serenity)
     set(RUNTIMES_${target}_COMPILER_RT_BUILD_PROFILE OFF CACHE BOOL "")
     set(RUNTIMES_${target}_COMPILER_RT_BUILD_XRAY OFF CACHE BOOL "")
     set(RUNTIMES_${target}_COMPILER_RT_BUILD_ORC OFF CACHE BOOL "")
+    set(RUNTIMES_${target}_CMAKE_SYSTEM_NAME SerenityOS CACHE STRING "")
+    set(RUNTIMES_${target}_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} CACHE STRING "")
 
     set(BUILTINS_${target}_CMAKE_BUILD_TYPE Release CACHE STRING "")
     set(BUILTINS_${target}_CMAKE_SYSROOT ${SERENITY_${target}_SYSROOT} CACHE PATH "")
     set(BUILTINS_${target}_COMPILER_RT_EXCLUDE_ATOMIC_BUILTIN OFF CACHE BOOL "")
+    set(BUILTINS_${target}_CMAKE_SYSTEM_NAME SerenityOS CACHE STRING "")
+    set(BUILTINS_${target}_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} CACHE STRING "")
 endforeach()
 
 set(LLVM_TOOLCHAIN_TOOLS

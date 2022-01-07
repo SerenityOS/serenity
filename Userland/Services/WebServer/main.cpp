@@ -84,7 +84,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        VERIFY(!maybe_buffered_socket.value().set_blocking(true).is_error());
+        // FIXME: Propagate errors
+        MUST(maybe_buffered_socket.value().set_blocking(true));
         auto client = WebServer::Client::construct(maybe_buffered_socket.release_value(), server);
         client->start();
     };

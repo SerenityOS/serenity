@@ -625,9 +625,10 @@ static void generate_unicode_data_implementation(Core::File& file, UnicodeData c
 #include <AK/Span.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/UnicodeData.h>
 
-namespace Unicode::Detail {
+namespace Unicode {
 )~~~");
 
     auto append_list_and_size = [&](auto const& list, StringView format) {
@@ -851,7 +852,6 @@ static constexpr Array<CodePointName, @code_point_display_names_size@> s_code_po
 )~~~");
 
     generator.append(R"~~~(
-Optional<String> code_point_display_name(u32 code_point) asm("unicode_code_point_display_name");
 Optional<String> code_point_display_name(u32 code_point)
 {
     if (auto const* entry = binary_search(s_code_point_display_names, code_point, nullptr, CodePointNameComparator {})) {
@@ -870,7 +870,6 @@ Optional<String> code_point_display_name(u32 code_point)
         generator.set("mappings", mappings);
         generator.set("fallback", fallback);
         generator.append(R"~~~(
-u32 @method@(u32 code_point) asm("unicode_@method@");
 u32 @method@(u32 code_point)
 {
     auto const* mapping = binary_search(@mappings@, code_point, nullptr, CodePointComparator<CodePointMapping> {});
@@ -880,11 +879,10 @@ u32 @method@(u32 code_point)
     };
 
     append_code_point_mapping_search("canonical_combining_class"sv, "s_combining_class_mappings"sv, "0"sv);
-    append_code_point_mapping_search("simple_uppercase_mapping"sv, "s_uppercase_mappings"sv, "code_point"sv);
-    append_code_point_mapping_search("simple_lowercase_mapping"sv, "s_lowercase_mappings"sv, "code_point"sv);
+    append_code_point_mapping_search("to_unicode_uppercase"sv, "s_uppercase_mappings"sv, "code_point"sv);
+    append_code_point_mapping_search("to_unicode_lowercase"sv, "s_lowercase_mappings"sv, "code_point"sv);
 
     generator.append(R"~~~(
-Span<SpecialCasing const* const> special_case_mapping(u32 code_point) asm("unicode_special_case_mapping");
 Span<SpecialCasing const* const> special_case_mapping(u32 code_point)
 {
     auto const* mapping = binary_search(s_special_case_mappings, code_point, nullptr, CodePointComparator<SpecialCaseMapping> {});
@@ -900,7 +898,6 @@ Span<SpecialCasing const* const> special_case_mapping(u32 code_point)
         generator.set("enum_snake", enum_snake);
         generator.set("collection_name", collection_name);
         generator.append(R"~~~(
-bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@) asm("unicode_code_point_has_@enum_snake@");
 bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 {
     auto index = static_cast<@enum_title@UnderlyingType>(@enum_snake@);

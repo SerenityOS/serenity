@@ -908,8 +908,8 @@ TEST_CASE(optimizer_atomic_groups)
         Tuple { "(abcfoo|abcbar|abcbaz).*x"sv, "abcbarx"sv, true },
         Tuple { "(a|a)"sv, "a"sv, true },
         Tuple { "(a|)"sv, ""sv, true },                   // Ensure that empty alternatives are not outright removed
-        Tuple { "a{2,3}|a{5,8}"sv, "abc"sv, false },      // Optimiser should not mess up the instruction stream by ignoring inter-insn dependencies, see #11247.
-        Tuple { "^(a{2,3}|a{5,8})$"sv, "aaaa"sv, false }, // Optimiser should not mess up the instruction stream by ignoring inter-insn dependencies, see #11247.
+        Tuple { "a{2,3}|a{5,8}"sv, "abc"sv, false },      // Optimizer should not mess up the instruction stream by ignoring inter-insn dependencies, see #11247.
+        Tuple { "^(a{2,3}|a{5,8})$"sv, "aaaa"sv, false }, // Optimizer should not mess up the instruction stream by ignoring inter-insn dependencies, see #11247.
         // ForkReplace shouldn't be applied where it would change the semantics
         Tuple { "(1+)\\1"sv, "11"sv, true },
         Tuple { "(1+)1"sv, "11"sv, true },

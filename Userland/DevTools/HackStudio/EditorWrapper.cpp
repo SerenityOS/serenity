@@ -38,7 +38,7 @@ EditorWrapper::EditorWrapper()
         set_current_editor_wrapper(this);
     };
 
-    m_editor->on_open = [](String path) {
+    m_editor->on_open = [](String const& path) {
         open_file(path);
     };
 
@@ -93,10 +93,10 @@ void EditorWrapper::save()
 void EditorWrapper::update_diff()
 {
     if (m_git_repo)
-        m_hunks = Diff::parse_hunks(m_git_repo->unstaged_diff(LexicalPath(filename())).value());
+        m_hunks = Diff::parse_hunks(m_git_repo->unstaged_diff(filename()).value());
 }
 
-void EditorWrapper::set_project_root(LexicalPath const& project_root)
+void EditorWrapper::set_project_root(String const& project_root)
 {
     m_project_root = project_root;
     auto result = GitRepo::try_to_create(*m_project_root);

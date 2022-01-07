@@ -125,7 +125,7 @@ enum KeyCode : u8 {
         Key_Shift
     = Key_LeftShift,
 };
-const int key_code_count = Key_Super;
+const int key_code_count = Key_Menu;
 
 enum KeyModifier {
     Mod_None = 0x00,
@@ -168,7 +168,7 @@ inline const char* key_code_to_string(KeyCode key)
     }
 }
 
-inline KeyCode visible_code_point_to_key_code(u32 code_point)
+inline KeyCode code_point_to_key_code(u32 code_point)
 {
     switch (code_point) {
 #define MATCH_ALPHA(letter) \
@@ -250,6 +250,7 @@ inline KeyCode visible_code_point_to_key_code(u32 code_point)
         MATCH_KEY(Backtick, '`')
         MATCH_KEY(Space, ' ')
         MATCH_KEY(Tab, '\t')
+        MATCH_KEY(Backspace, '\b')
 #undef MATCH_KEY
 
     default:

@@ -6,6 +6,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <grp.h>
@@ -19,19 +20,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath chown", nullptr));
 
-    if (arguments.strings.size() < 3) {
-        warnln("usage: chown <uid[:gid]> <path>");
-        return 1;
-    }
+    String spec;
+    String path;
+    bool dont_follow_symlinks = false;
+
+    Core::ArgsParser args_parser;
+    args_parser.set_general_help("Change the ownership of a file or directory.");
+    args_parser.add_option(dont_follow_symlinks, "Don't follow symlinks", "no-dereference", 'h');
+    args_parser.add_positional_argument(spec, "User and group IDs", "USER[:GROUP]");
+    args_parser.add_positional_argument(path, "Path to file", "PATH");
+    args_parser.parse(arguments);
 
     uid_t new_uid = -1;
     gid_t new_gid = -1;
 
-    auto parts = arguments.strings[1].split_view(':', true);
-    if (parts.is_empty()) {
-        warnln("Empty uid/gid spec");
-        return 1;
-    }
+    auto parts = spec.split_view(':', true);
     if (parts[0].is_empty() || (parts.size() == 2 && parts[1].is_empty()) || parts.size() > 2) {
         warnln("Invalid uid/gid spec");
         return 1;
@@ -63,7 +66,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    TRY(Core::System::chown(arguments.strings[2], new_uid, new_gid));
+    if (dont_follow_symlinks) {
+        TRY(Core::System::lchown(path, new_uid, new_gid));
+    } else {
+        TRY(Core::System::chown(path, new_uid, new_gid));
+    }
 
     return 0;
 }

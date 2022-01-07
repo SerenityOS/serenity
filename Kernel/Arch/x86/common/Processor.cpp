@@ -461,10 +461,9 @@ void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
     m_gdt[i].high = high;
 
     // clear selectors we may have skipped
-    while (i < prev_gdt_length) {
-        m_gdt[i].low = 0;
-        m_gdt[i].high = 0;
-        i++;
+    for (auto j = prev_gdt_length; j < i; ++j) {
+        m_gdt[j].low = 0;
+        m_gdt[j].high = 0;
     }
 }
 
@@ -1222,7 +1221,7 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     tss_descriptor.operation_size64 = 0;
     tss_descriptor.operation_size32 = 1;
     tss_descriptor.descriptor_type = 0;
-    tss_descriptor.type = 9;
+    tss_descriptor.type = Descriptor::SystemType::AvailableTSS;
     write_gdt_entry(GDT_SELECTOR_TSS, tss_descriptor); // tss
 
 #if ARCH(X86_64)

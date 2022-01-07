@@ -257,7 +257,7 @@ int main(int argc, char** argv)
             bool no_source_info = !source_position.has_value();
             if (no_source_info || source_position.value() != previous_source_position) {
                 if (no_source_info)
-                    outln("No source information for current instruction! stoppoing.");
+                    outln("No source information for current instruction! stopping.");
                 in_step_line = false;
             } else {
                 return Debug::DebugSession::DebugDecision::SingleStep;

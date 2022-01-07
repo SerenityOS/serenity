@@ -359,11 +359,13 @@ describe("normal behavior", () => {
     });
 
     test("all valid timeZoneName options", () => {
-        ["short", "long"].forEach(timeZoneName => {
-            expect(() => {
-                new Intl.DateTimeFormat("en", { timeZoneName: timeZoneName });
-            }).not.toThrow();
-        });
+        ["short", "long", "shortOffset", "longOffset", "shortGeneric", "longGeneric"].forEach(
+            timeZoneName => {
+                expect(() => {
+                    new Intl.DateTimeFormat("en", { timeZoneName: timeZoneName });
+                }).not.toThrow();
+            }
+        );
     });
 
     test("all valid formatMatcher options", () => {

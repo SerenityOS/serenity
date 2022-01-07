@@ -7,12 +7,28 @@ serenity_component(
 
 compile_gml(PixelPaintWindow.gml PixelPaintWindowGML.h pixel_paint_window_gml)
 compile_gml(EditGuideDialog.gml EditGuideDialogGML.h edit_guide_dialog_gml)
+compile_gml(FilterGallery.gml FilterGalleryGML.h filter_gallery_gml)
 
 set(SOURCES
     CreateNewImageDialog.cpp
     CreateNewLayerDialog.cpp
     EditGuideDialog.cpp
     EditGuideDialogGML.h
+    FilterGallery.cpp
+    FilterGalleryGML.h
+    FilterModel.cpp
+    Filters/Bloom.cpp
+    Filters/BoxBlur3.cpp
+    Filters/BoxBlur5.cpp
+    Filters/Filter.cpp
+    Filters/FastBoxBlur.cpp
+    Filters/GaussBlur3.cpp
+    Filters/GaussBlur5.cpp
+    Filters/Grayscale.cpp
+    Filters/Invert.cpp
+    Filters/LaplaceCardinal.cpp
+    Filters/LaplaceDiagonal.cpp
+    Filters/Sharpen.cpp
     Image.cpp
     ImageEditor.cpp
     Layer.cpp

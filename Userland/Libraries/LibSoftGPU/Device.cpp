@@ -6,17 +6,23 @@
  */
 
 #include <AK/Function.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector3.h>
+#include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Device.h>
 
 namespace SoftGPU {
 
+static long long g_num_rasterized_triangles;
+static long long g_num_pixels;
+static long long g_num_pixels_shaded;
+static long long g_num_pixels_blended;
+static long long g_num_sampler_calls;
+
 using IntVector2 = Gfx::Vector2<int>;
 using IntVector3 = Gfx::Vector3<int>;
-
-static constexpr int RASTERIZER_BLOCK_SIZE = 8;
 
 constexpr static int edge_function(const IntVector2& a, const IntVector2& b, const IntVector2& c)
 {
@@ -27,12 +33,6 @@ template<typename T>
 constexpr static T interpolate(const T& v0, const T& v1, const T& v2, const FloatVector3& barycentric_coords)
 {
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
-}
-
-template<typename T>
-constexpr static T mix(const T& x, const T& y, float interp)
-{
-    return x * (1 - interp) + y * interp;
 }
 
 ALWAYS_INLINE constexpr static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
@@ -114,6 +114,8 @@ static constexpr void setup_blend_factors(BlendFactor mode, FloatVector4& consta
 template<typename PS>
 static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, const Triangle& triangle, PS pixel_shader)
 {
+    INCREASE_STATISTICS_COUNTER(g_num_rasterized_triangles, 1);
+
     // Since the algorithm is based on blocks of uniform size, we need
     // to ensure that our render_target size is actually a multiple of the block size
     VERIFY((render_target.width() % RASTERIZER_BLOCK_SIZE) == 0);
@@ -128,10 +130,12 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     Vertex const vertex1 = triangle.vertices[1];
     Vertex const vertex2 = triangle.vertices[2];
 
+    constexpr int subpixel_factor = 1 << SUBPIXEL_BITS;
+
     // Calculate area of the triangle for later tests
-    IntVector2 const v0 { static_cast<int>(vertex0.window_coordinates.x()), static_cast<int>(vertex0.window_coordinates.y()) };
-    IntVector2 const v1 { static_cast<int>(vertex1.window_coordinates.x()), static_cast<int>(vertex1.window_coordinates.y()) };
-    IntVector2 const v2 { static_cast<int>(vertex2.window_coordinates.x()), static_cast<int>(vertex2.window_coordinates.y()) };
+    IntVector2 const v0 { static_cast<int>(vertex0.window_coordinates.x() * subpixel_factor), static_cast<int>(vertex0.window_coordinates.y() * subpixel_factor) };
+    IntVector2 const v1 { static_cast<int>(vertex1.window_coordinates.x() * subpixel_factor), static_cast<int>(vertex1.window_coordinates.y() * subpixel_factor) };
+    IntVector2 const v2 { static_cast<int>(vertex2.window_coordinates.x() * subpixel_factor), static_cast<int>(vertex2.window_coordinates.y() * subpixel_factor) };
 
     int area = edge_function(v0, v1, v2);
     if (area == 0)
@@ -202,12 +206,12 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     auto render_bounds = render_target.rect();
     if (options.scissor_enabled)
         render_bounds.intersect(scissor_box_to_window_coordinates(options.scissor_box, render_target.rect()));
-    int const block_padding = RASTERIZER_BLOCK_SIZE - 1;
+
     // clang-format off
-    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()))                  / RASTERIZER_BLOCK_SIZE;
-    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x())) + block_padding) / RASTERIZER_BLOCK_SIZE;
-    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y()))                  / RASTERIZER_BLOCK_SIZE;
-    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y())) + block_padding) / RASTERIZER_BLOCK_SIZE;
+    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()) / subpixel_factor)  / RASTERIZER_BLOCK_SIZE;
+    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x()) / subpixel_factor)) / RASTERIZER_BLOCK_SIZE + 1;
+    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y()) / subpixel_factor)  / RASTERIZER_BLOCK_SIZE;
+    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y()) / subpixel_factor)) / RASTERIZER_BLOCK_SIZE + 1;
     // clang-format on
 
     u8 pixel_mask[RASTERIZER_BLOCK_SIZE];
@@ -229,10 +233,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
             // Edge values of the 4 block corners
             // clang-format off
-            auto b0 = calculate_edge_values({ bx * RASTERIZER_BLOCK_SIZE,                         by * RASTERIZER_BLOCK_SIZE });
-            auto b1 = calculate_edge_values({ bx * RASTERIZER_BLOCK_SIZE + RASTERIZER_BLOCK_SIZE, by * RASTERIZER_BLOCK_SIZE });
-            auto b2 = calculate_edge_values({ bx * RASTERIZER_BLOCK_SIZE,                         by * RASTERIZER_BLOCK_SIZE + RASTERIZER_BLOCK_SIZE });
-            auto b3 = calculate_edge_values({ bx * RASTERIZER_BLOCK_SIZE + RASTERIZER_BLOCK_SIZE, by * RASTERIZER_BLOCK_SIZE + RASTERIZER_BLOCK_SIZE });
+            auto b0 = calculate_edge_values(IntVector2{ bx,     by     } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
+            auto b1 = calculate_edge_values(IntVector2{ bx + 1, by     } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
+            auto b2 = calculate_edge_values(IntVector2{ bx,     by + 1 } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
+            auto b3 = calculate_edge_values(IntVector2{ bx + 1, by + 1 } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
             // clang-format on
 
             // If the whole block is outside any of the triangle edges we can discard it completely
@@ -258,6 +262,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
             // Generate the coverage mask
             if (!options.scissor_enabled && test_point(b0) && test_point(b1) && test_point(b2) && test_point(b3)) {
+                INCREASE_STATISTICS_COUNTER(g_num_pixels, RASTERIZER_BLOCK_SIZE * RASTERIZER_BLOCK_SIZE);
                 // The block is fully contained within the triangle. Fill the mask with all 1s
                 for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++)
                     pixel_mask[y] = -1;
@@ -269,8 +274,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     pixel_mask[y] = 0;
 
                     for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx) {
-                        if (test_point(coords) && (!options.scissor_enabled || render_bounds.contains(x0 + x, y0 + y)))
+                        if (test_point(coords) && (!options.scissor_enabled || render_bounds.contains(x0 + x, y0 + y))) {
+                            INCREASE_STATISTICS_COUNTER(g_num_pixels, 1);
                             pixel_mask[y] |= 1 << x;
+                        }
                     }
                 }
             }
@@ -402,6 +409,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     float fog_fragment_depth = interpolate(vertex0_eye_absz, vertex1_eye_absz, vertex2_eye_absz, barycentric);
 
                     *pixel = pixel_shader(uv, vertex_color, fog_fragment_depth);
+                    INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, 1);
                 }
             }
 
@@ -491,6 +499,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             + FloatVector4(float_dst.w(), float_dst.w(), float_dst.w(), float_dst.w()) * dst_factor_dst_alpha;
 
                         *dst = (*dst & ~options.color_mask) | (to_rgba32(*src * src_factor + float_dst * dst_factor) & options.color_mask);
+                        INCREASE_STATISTICS_COUNTER(g_num_pixels_blended, 1);
                     }
                 }
             } else {
@@ -529,7 +538,7 @@ DeviceInfo Device::info() const
     return {
         .vendor_name = "SerenityOS",
         .device_name = "SoftGPU",
-        .num_texture_units = num_samplers
+        .num_texture_units = NUM_SAMPLERS
     };
 }
 
@@ -606,12 +615,12 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
     //
-    // 1.   Transform all of the vertices in the current vertex list into eye space by mulitplying the model-view matrix
+    // 1.   Transform all of the vertices in the current vertex list into eye space by multiplying the model-view matrix
     // 2.   Transform all of the vertices from eye space into clip space by multiplying by the projection matrix
     // 3.   If culling is enabled, we cull the desired faces (https://learnopengl.com/Advanced-OpenGL/Face-culling)
     // 4.   Each element of the vertex is then divided by w to bring the positions into NDC (Normalized Device Coordinates)
-    // 5.   The vertices are sorted (for the rasteriser, how are we doing this? 3Dfx did this top to bottom in terms of vertex y coordinates)
-    // 6.   The vertices are then sent off to the rasteriser and drawn to the screen
+    // 5.   The vertices are sorted (for the rasterizer, how are we doing this? 3Dfx did this top to bottom in terms of vertex y coordinates)
+    // 6.   The vertices are then sent off to the rasterizer and drawn to the screen
 
     float scr_width = m_render_target->width();
     float scr_height = m_render_target->height();
@@ -796,6 +805,7 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
             auto const& sampler = m_samplers[i];
 
             FloatVector4 texel = sampler.sample_2d({ uv.x(), uv.y() });
+            INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
 
             // FIXME: Implement more blend modes
             switch (sampler.config().fixed_function_texture_env_mode) {
@@ -807,10 +817,9 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
                 break;
             case TextureEnvMode::Decal: {
                 float src_alpha = fragment.w();
-                float one_minus_src_alpha = 1 - src_alpha;
-                fragment.set_x(texel.x() * src_alpha + fragment.x() * one_minus_src_alpha);
-                fragment.set_y(texel.y() * src_alpha + fragment.y() * one_minus_src_alpha);
-                fragment.set_z(texel.z() * src_alpha + fragment.z() * one_minus_src_alpha);
+                fragment.set_x(mix(fragment.x(), texel.x(), src_alpha));
+                fragment.set_y(mix(fragment.y(), texel.y(), src_alpha));
+                fragment.set_z(mix(fragment.z(), texel.z(), src_alpha));
                 break;
             }
             default:
@@ -891,6 +900,9 @@ void Device::blit(Gfx::Bitmap const& source, int x, int y)
 {
     wait_for_all_threads();
 
+    INCREASE_STATISTICS_COUNTER(g_num_pixels, source.width() * source.height());
+    INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, source.width() * source.height());
+
     Gfx::Painter painter { *m_render_target };
     painter.blit({ x, y }, source, source.rect(), 1.0f, true);
 }
@@ -901,6 +913,65 @@ void Device::blit_to(Gfx::Bitmap& target)
 
     Gfx::Painter painter { target };
     painter.blit({ 0, 0 }, *m_render_target, m_render_target->rect(), 1.0f, false);
+
+    if constexpr (ENABLE_STATISTICS_OVERLAY)
+        draw_statistics_overlay(target);
+}
+
+void Device::draw_statistics_overlay(Gfx::Bitmap& target)
+{
+    static Core::ElapsedTimer timer;
+    static String debug_string;
+    static int frame_counter;
+
+    frame_counter++;
+    int milliseconds = 0;
+    if (timer.is_valid())
+        milliseconds = timer.elapsed();
+    else
+        timer.start();
+
+    Gfx::Painter painter { target };
+
+    if (milliseconds > 500) {
+
+        if (g_num_pixels == 0)
+            g_num_pixels = 1;
+
+        int num_rendertarget_pixels = m_render_target->width() * m_render_target->height();
+
+        StringBuilder builder;
+        builder.append(String::formatted("Timings      : {:.1}ms {:.1}FPS\n",
+            static_cast<double>(milliseconds) / frame_counter,
+            (milliseconds > 0) ? 1000.0 * frame_counter / milliseconds : 9999.0));
+        builder.append(String::formatted("Triangles    : {}\n", g_num_rasterized_triangles));
+        builder.append(String::formatted("Pixels       : {}, Shaded: {}%, Blended: {}%, Overdraw: {}%\n",
+            g_num_pixels,
+            g_num_pixels_shaded * 100 / g_num_pixels,
+            g_num_pixels_blended * 100 / g_num_pixels_shaded,
+            g_num_pixels_shaded * 100 / num_rendertarget_pixels - 100));
+        builder.append(String::formatted("Sampler calls: {}\n", g_num_sampler_calls));
+
+        debug_string = builder.to_string();
+
+        frame_counter = 0;
+        timer.start();
+    }
+
+    g_num_rasterized_triangles = 0;
+    g_num_pixels = 0;
+    g_num_pixels_shaded = 0;
+    g_num_pixels_blended = 0;
+    g_num_sampler_calls = 0;
+
+    auto& font = Gfx::FontDatabase::default_fixed_width_font();
+
+    for (int y = -1; y < 2; y++)
+        for (int x = -1; x < 2; x++)
+            if (x != 0 && y != 0)
+                painter.draw_text(target.rect().translated(x + 2, y + 2), debug_string, font, Gfx::TextAlignment::TopLeft, Gfx::Color::Black);
+
+    painter.draw_text(target.rect().translated(2, 2), debug_string, font, Gfx::TextAlignment::TopLeft, Gfx::Color::White);
 }
 
 void Device::wait_for_all_threads() const

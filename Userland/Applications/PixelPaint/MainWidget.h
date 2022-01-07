@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2021-2022, Mustafa Quraish <mustafa@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,6 +36,8 @@ public:
 
     void open_image_fd(int fd, String const& path);
     void create_default_image();
+
+    bool request_close_editor();
     bool request_close();
 
 private:
@@ -43,6 +45,7 @@ private:
 
     ImageEditor* current_image_editor();
     ImageEditor& create_new_editor(NonnullRefPtr<Image>);
+    void create_image_from_clipboard();
 
     virtual void drop_event(GUI::DropEvent&) override;
 
@@ -58,7 +61,9 @@ private:
     RefPtr<GUI::ComboBox> m_zoom_combobox;
 
     RefPtr<GUI::Action> m_new_image_action;
+    RefPtr<GUI::Action> m_new_image_from_clipboard_action;
     RefPtr<GUI::Action> m_open_image_action;
+    RefPtr<GUI::Action> m_save_image_action;
     RefPtr<GUI::Action> m_save_image_as_action;
 
     RefPtr<GUI::Action> m_copy_action;

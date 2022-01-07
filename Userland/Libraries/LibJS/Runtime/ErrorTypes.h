@@ -50,6 +50,7 @@
     M(InvalidIndex, "Index must be a positive integer")                                                                                 \
     M(InvalidLeftHandAssignment, "Invalid left-hand side in assignment")                                                                \
     M(InvalidLength, "Invalid {} length")                                                                                               \
+    M(InvalidPrecision, "Precision must be an integer no less than 1, and no greater than 100")                                         \
     M(InvalidTimeValue, "Invalid time value")                                                                                           \
     M(InvalidRadix, "Radix must be an integer no less than 2, and no greater than 36")                                                  \
     M(IsNotA, "{} is not a {}")                                                                                                         \
@@ -239,7 +240,7 @@
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeString, "Invalid time string '{}'")                                                                            \
     M(TemporalInvalidTimeStringUTCDesignator, "Invalid time string '{}': must not contain a UTC designator")                            \
-    M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
+    M(TemporalInvalidTimeZoneName, "Invalid time zone name '{}'")                                                                       \
     M(TemporalInvalidTimeZoneString, "Invalid time zone string '{}'")                                                                   \
     M(TemporalInvalidUnitRange, "Invalid unit range, {} is larger than {}")                                                             \
     M(TemporalInvalidYearMonthString, "Invalid year month string '{}'")                                                                 \

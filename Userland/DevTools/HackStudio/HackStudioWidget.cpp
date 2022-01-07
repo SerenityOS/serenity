@@ -208,7 +208,7 @@ void HackStudioWidget::open_project(const String& root_path)
         m_project_tree_view->update();
     }
     if (m_git_widget && m_git_widget->initialized()) {
-        m_git_widget->change_repo(LexicalPath(root_path));
+        m_git_widget->change_repo(root_path);
         m_git_widget->refresh();
     }
     if (Debugger::is_initialized()) {
@@ -217,7 +217,7 @@ void HackStudioWidget::open_project(const String& root_path)
         debugger.set_source_root(m_project->root_path());
     }
     for (auto& editor_wrapper : m_all_editor_wrappers)
-        editor_wrapper.set_project_root(LexicalPath(m_project->root_path()));
+        editor_wrapper.set_project_root(m_project->root_path());
 
     m_locations_history.clear();
     m_locations_history_end_index = 0;
@@ -597,7 +597,7 @@ void HackStudioWidget::add_new_editor(GUI::Widget& parent)
     m_all_editor_wrappers.append(wrapper);
     wrapper->editor().set_focus(true);
     wrapper->editor().set_font(*m_editor_font);
-    wrapper->set_project_root(LexicalPath(m_project->root_path()));
+    wrapper->set_project_root(m_project->root_path());
     wrapper->editor().on_cursor_change = [this] { on_cursor_change(); };
     wrapper->on_change = [this] { update_gml_preview(); };
     set_edit_mode(EditMode::Text);
@@ -1103,7 +1103,7 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
     };
 
     m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
-    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git", LexicalPath(m_project->root_path()));
+    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git", m_project->root_path());
     m_git_widget->set_view_diff_callback([this](const auto& original_content, const auto& diff) {
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);

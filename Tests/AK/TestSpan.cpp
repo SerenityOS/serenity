@@ -17,7 +17,7 @@ TEST_CASE(constexpr_default_constructor_is_empty)
     static_assert(span.is_empty(), "Default constructed span should be empty.");
 }
 
-TEST_CASE(implicit_converson_to_const)
+TEST_CASE(implicit_conversion_to_const)
 {
     constexpr Bytes bytes0;
     [[maybe_unused]] constexpr ReadonlyBytes bytes2 = bytes0;

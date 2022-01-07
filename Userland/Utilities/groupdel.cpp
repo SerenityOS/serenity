@@ -54,7 +54,7 @@ int main(int argc, char** argv)
             break;
     }
 
-    // If pw is not NULL it means we ended prematuraly, aka. the group was found as primary group of an user
+    // If pw is not NULL it means we ended prematurely, aka. the group was found as primary group of an user
     if (pw) {
         warnln("cannot remove the primary group of user '{}'", pw->pw_name);
         endpwent();

@@ -1,3 +1,7 @@
+test("length is 7", () => {
+    expect(Date.UTC).toHaveLength(7);
+});
+
 test("basic functionality", () => {
     expect(Date.UTC(2020)).toBe(1577836800000);
     expect(Date.UTC(2000, 10)).toBe(973036800000);
@@ -48,4 +52,21 @@ test("out of range", () => {
 
     expect(Date.UTC(2020, 1, 15, 12, 30, 30, -2345)).toBe(1581769827655);
     expect(Date.UTC(2020, 1, 15, 12, 30, 30, 2345)).toBe(1581769832345);
+});
+
+test("special values", () => {
+    [Infinity, -Infinity, NaN].forEach(value => {
+        expect(Date.UTC(value)).toBeNaN();
+        expect(Date.UTC(0, value)).toBeNaN();
+        expect(Date.UTC(0, 0, value)).toBeNaN();
+        expect(Date.UTC(0, 0, 1, value)).toBeNaN();
+        expect(Date.UTC(0, 0, 1, 0, value)).toBeNaN();
+        expect(Date.UTC(0, 0, 1, 0, 0, value)).toBeNaN();
+        expect(Date.UTC(0, 0, 1, 0, 0, 0, value)).toBeNaN();
+    });
+});
+
+test("time clip", () => {
+    expect(Date.UTC(275760, 8, 13, 0, 0, 0, 0)).toBe(8.64e15);
+    expect(Date.UTC(275760, 8, 13, 0, 0, 0, 1)).toBeNaN();
 });

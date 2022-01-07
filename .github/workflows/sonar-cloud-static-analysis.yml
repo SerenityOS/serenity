@@ -55,18 +55,15 @@ jobs:
 
       - name: "Install Ubuntu dependencies"
         # These packages are already part of the ubuntu-20.04 image:
-        # cmake clang-format-11 gcc-10 g++-10 libstdc++-10-dev libgmp-dev npm shellcheck
+        # cmake clang-format-11 libgmp-dev npm shellcheck
         # Packages below aren't.
-        #
-        # We add the canonical-server/server-backports PPA to get updated QEMU releases without having to manage
-        #    yet another cache in github actions
         run: |
-          sudo add-apt-repository ppa:canonical-server/server-backports
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
-          sudo apt-get install libmpfr-dev libmpc-dev ninja-build unzip
+          sudo apt-get install -y gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build unzip
 
       - name: Check versions
-        run: set +e; g++ --version; g++-10 --version; ninja --version;
+        run: set +e; g++ --version; g++-11 --version; ninja --version;
 
       - name: Prepare useful stamps
         id: stamps
@@ -108,8 +105,8 @@ jobs:
           cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
             -DSERENITY_ARCH=${{ env.SONAR_ANALYSIS_ARCH }} \
             -DSERENITY_TOOLCHAIN=GNU \
-            -DCMAKE_C_COMPILER=gcc-10 \
-            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DCMAKE_C_COMPILER=gcc-11 \
+            -DCMAKE_CXX_COMPILER=g++-11 \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
 

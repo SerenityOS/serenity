@@ -189,6 +189,19 @@ else
     SERENITY_QEMU_DISPLAY_DEVICE="VGA,vgamem_mb=64 "
 fi
 
+# Check if SERENITY_NVME_ENABLE is unset
+if [ -z ${SERENITY_NVME_ENABLE+x} ]; then
+    SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk"
+else
+    if [ "$SERENITY_NVME_ENABLE" -eq 1 ]; then
+        SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk,if=none,id=disk"
+        SERENITY_BOOT_DRIVE="$SERENITY_BOOT_DRIVE -device i82801b11-bridge,id=bridge4 -device sdhci-pci,bus=bridge4"
+        SERENITY_BOOT_DRIVE="$SERENITY_BOOT_DRIVE -device nvme,serial=deadbeef,drive=disk,bus=bridge4"
+    else
+        SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk"
+    fi
+fi
+
 if [ -z "$SERENITY_DISABLE_GDB_SOCKET" ]; then
   SERENITY_EXTRA_QEMU_ARGS="$SERENITY_EXTRA_QEMU_ARGS -s"
 fi
@@ -206,7 +219,6 @@ if [ -z "$SERENITY_MACHINE" ]; then
         -smp $SERENITY_CPUS
         -display $SERENITY_QEMU_DISPLAY_BACKEND
         -device $SERENITY_QEMU_DISPLAY_DEVICE
-        -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
         -device virtio-serial,max_ports=2
         -device virtconsole,chardev=stdout
         -device isa-debugcon,chardev=stdout
@@ -219,6 +231,7 @@ if [ -z "$SERENITY_MACHINE" ]; then
         -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
         -device ich9-ahci,bus=bridge3
         -chardev stdio,id=stdout,mux=on
+        $SERENITY_BOOT_DRIVE
         "
     fi
 fi
@@ -279,9 +292,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device pci-bridge,chassis_nr=1,id=bridge1,bus=pcie.4,addr=0x3.0x0
 -device sdhci-pci,bus=bridge1,addr=0x1.0x0
 -display $SERENITY_QEMU_DISPLAY_BACKEND
--drive file=${SERENITY_DISK_IMAGE},format=raw,id=disk,if=none
 -device ahci,id=ahci
--device ide-hd,bus=ahci.0,drive=disk,unit=0
 -device virtio-serial
 -chardev stdio,id=stdout,mux=on
 -device virtconsole,chardev=stdout
@@ -289,6 +300,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device virtio-rng-pci
 $SERENITY_AUDIO_BACKEND
 $SERENITY_AUDIO_HW
+$SERENITY_BOOT_DRIVE
 "
 
 export SDL_VIDEO_X11_DGAMOUSE=0
