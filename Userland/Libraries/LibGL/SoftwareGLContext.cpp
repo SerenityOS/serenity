@@ -697,6 +697,17 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         m_active_texture_unit->set_texture_cube_map_enabled(true);
         m_sampler_config_is_dirty = true;
         break;
+    case GL_LIGHT0:
+    case GL_LIGHT1:
+    case GL_LIGHT2:
+    case GL_LIGHT3:
+    case GL_LIGHT4:
+    case GL_LIGHT5:
+    case GL_LIGHT6:
+    case GL_LIGHT7:
+        m_light_states.at(capability - GL_LIGHT0).is_enabled = true;
+        m_light_state_is_dirty = true;
+        break;
     case GL_TEXTURE_GEN_Q:
     case GL_TEXTURE_GEN_R:
     case GL_TEXTURE_GEN_S:
@@ -751,6 +762,17 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         break;
     case GL_LIGHTING:
         m_lighting_enabled = false;
+        break;
+    case GL_LIGHT0:
+    case GL_LIGHT1:
+    case GL_LIGHT2:
+    case GL_LIGHT3:
+    case GL_LIGHT4:
+    case GL_LIGHT5:
+    case GL_LIGHT6:
+    case GL_LIGHT7:
+        m_light_states.at(capability - GL_LIGHT0).is_enabled = false;
+        m_light_state_is_dirty = true;
         break;
     case GL_NORMALIZE:
         m_normalize = false;
