@@ -36,10 +36,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     VERIFY(spaces_in_indent >= 0);
     args_parser.parse(arguments);
 
+    RefPtr<Core::File> file;
     if (path == nullptr)
-        path = "/dev/stdin"sv;
-
-    auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
+        file = Core::File::standard_input();
+    else
+        file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
 
     TRY(Core::System::pledge("stdio"));
 
