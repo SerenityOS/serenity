@@ -49,7 +49,7 @@ jobs:
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
-          sudo apt-get install ninja-build unzip gcc-11 g++-11
+          sudo apt-get install -y ninja-build unzip gcc-11 g++-11
 
       - name: Setup Python
         uses: actions/setup-python@v2
