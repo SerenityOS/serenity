@@ -1,0 +1,14 @@
+--- php-8.1.1/ext/standard/php_fopen_wrapper.c	2021-12-15 03:00:45.000000000 +0100
++++ php-8.1.1-patched/ext/standard/php_fopen_wrapper.c	2022-01-07 23:45:58.357132436 +0100
+@@ -317,11 +317,7 @@
+ 			return NULL;
+ 		}
+ 
+-#if HAVE_UNISTD_H
+-		dtablesize = getdtablesize();
+-#else
+ 		dtablesize = INT_MAX;
+-#endif
+ 
+ 		if (fildes_ori < 0 || fildes_ori >= dtablesize) {
+ 			php_stream_wrapper_log_error(wrapper, options,
