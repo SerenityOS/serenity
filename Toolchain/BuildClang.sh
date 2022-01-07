@@ -231,7 +231,7 @@ for arch in $USERLAND_ARCHS; do
         mkdir -p Root/usr/lib/
         for lib in "$DIR/Stubs/${arch}clang/"*".so"; do
             lib_name=$(basename "$lib")
-            [ ! -f "Root/usr/lib/${lib_name}.so" ] && cp "$lib" "Root/usr/lib/${lib_name}"
+            [ ! -f "Root/usr/lib/${lib_name}" ] && cp "$lib" "Root/usr/lib/${lib_name}"
         done
     popd
 done
