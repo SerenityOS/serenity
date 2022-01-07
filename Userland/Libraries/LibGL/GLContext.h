@@ -121,6 +121,8 @@ public:
     virtual void gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) = 0;
     virtual void gl_tex_gen(GLenum coord, GLenum pname, GLint param) = 0;
     virtual void gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* params) = 0;
+    virtual void gl_lightf(GLenum light, GLenum pname, GLfloat param) = 0;
+    virtual void gl_lightfv(GLenum light, GLenum pname, GLfloat const* params) = 0;
 
     virtual void present() = 0;
 };

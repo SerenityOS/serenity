@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2021, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022, Jesse Buhagiar <jooster669@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,14 +20,12 @@ void glColorMaterial(GLenum face, GLenum mode)
 
 void glLightf(GLenum light, GLenum pname, GLfloat param)
 {
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "glLightf({}, {}, {}): unimplemented", light, pname, param);
+    g_gl_context->gl_lightf(light, pname, param);
 }
 
-void glLightfv(GLenum light, GLenum pname, GLfloat* param)
+void glLightfv(GLenum light, GLenum pname, GLfloat const* param)
 {
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "glLightfv({}, {}, {}): unimplemented", light, pname, param);
+    g_gl_context->gl_lightfv(light, pname, param);
 }
 
 void glLightModelf(GLenum pname, GLfloat param)

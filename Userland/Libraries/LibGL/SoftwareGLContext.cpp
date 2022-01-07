@@ -63,6 +63,17 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
 {
     m_texture_units.resize(m_device_info.num_texture_units);
     m_active_texture_unit = &m_texture_units[0];
+
+    // Query the number lights from the device and set set up their state
+    // locally in the GL
+    m_light_states.resize(m_device_info.num_lights);
+
+    // Set-up light0's state, as it has a different default state
+    // to the other lights, as per the OpenGL 1.5 spec
+    auto& light0 = m_light_states.at(0);
+    light0.diffuse_intensity = { 1.0f, 1.0f, 1.0f, 1.0f };
+    light0.specular_intensity = { 1.0f, 1.0f, 1.0f, 1.0f };
+    m_light_state_is_dirty = true;
 }
 
 Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
@@ -2842,6 +2853,7 @@ void SoftwareGLContext::sync_device_config()
 {
     sync_device_sampler_config();
     sync_device_texcoord_config();
+    sync_light_state();
 }
 
 void SoftwareGLContext::sync_device_sampler_config()
@@ -2961,6 +2973,34 @@ void SoftwareGLContext::sync_device_sampler_config()
     }
 }
 
+void SoftwareGLContext::sync_light_state()
+{
+    if (!m_light_state_is_dirty)
+        return;
+
+    m_light_state_is_dirty = false;
+
+    for (auto light_id = 0u; light_id < SoftGPU::NUM_LIGHTS; light_id++) {
+        SoftGPU::Light light;
+        auto const& current_light_state = m_light_states.at(light_id);
+
+        light.is_enabled = current_light_state.is_enabled;
+        light.ambient_intensity = current_light_state.ambient_intensity;
+        light.diffuse_intensity = current_light_state.diffuse_intensity;
+        light.specular_intensity = current_light_state.specular_intensity;
+        light.position = current_light_state.position;
+        light.spotlight_direction = current_light_state.spotlight_direction;
+        light.spotlight_exponent = current_light_state.spotlight_exponent;
+        light.spotlight_cutoff_angle = current_light_state.spotlight_cutoff_angle;
+        light.spotlight_cutoff_angle_rads = current_light_state.spotlight_cutoff_angle_rads;
+        light.constant_attenuation = current_light_state.constant_attenuation;
+        light.linear_attenuation = current_light_state.linear_attenuation;
+        light.quadratic_attenuation = current_light_state.quadratic_attenuation;
+
+        m_rasterizer.set_light_state(light_id, light);
+    }
+}
+
 void SoftwareGLContext::sync_device_texcoord_config()
 {
     if (!m_texcoord_generation_dirty)
@@ -3022,4 +3062,89 @@ void SoftwareGLContext::sync_device_texcoord_config()
     m_rasterizer.set_options(options);
 }
 
+void SoftwareGLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_lightf, light, pname, param);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_rasterizer.info().num_lights), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION || pname != GL_SPOT_EXPONENT || pname != GL_SPOT_CUTOFF), GL_INVALID_ENUM);
+
+    auto& light_state = m_light_states.at(light - GL_LIGHT0);
+
+    switch (pname) {
+    case GL_CONSTANT_ATTENUATION:
+        light_state.constant_attenuation = param;
+        break;
+    case GL_LINEAR_ATTENUATION:
+        light_state.linear_attenuation = param;
+        break;
+    case GL_QUADRATIC_ATTENUATION:
+        light_state.quadratic_attenuation = param;
+        break;
+    case GL_SPOT_EXPONENT:
+        light_state.spotlight_exponent = param;
+        break;
+    case GL_SPOT_CUTOFF:
+        light_state.spotlight_cutoff_angle = param;
+        light_state.spotlight_cutoff_angle_rads = param * (AK::Pi<float> / 180.0f);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_light_state_is_dirty = true;
+}
+
+void SoftwareGLContext::gl_lightfv(GLenum light, GLenum pname, GLfloat const* params)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_lightfv, light, pname, params);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_rasterizer.info().num_lights), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_POSITION || pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION || pname == GL_SPOT_CUTOFF || pname == GL_SPOT_EXPONENT || pname == GL_SPOT_DIRECTION), GL_INVALID_ENUM);
+
+    auto& light_state = m_light_states.at(light - GL_LIGHT0);
+
+    switch (pname) {
+    case GL_AMBIENT:
+        light_state.ambient_intensity = { params[0], params[1], params[2], params[3] };
+        break;
+    case GL_DIFFUSE:
+        light_state.diffuse_intensity = { params[0], params[1], params[2], params[3] };
+        break;
+    case GL_SPECULAR:
+        light_state.specular_intensity = { params[0], params[1], params[2], params[3] };
+        break;
+    case GL_POSITION:
+        light_state.position = { params[0], params[1], params[2], params[3] };
+        light_state.position = m_model_view_matrix * light_state.position;
+        break;
+    case GL_CONSTANT_ATTENUATION:
+        light_state.constant_attenuation = *params;
+        break;
+    case GL_LINEAR_ATTENUATION:
+        light_state.linear_attenuation = *params;
+        break;
+    case GL_QUADRATIC_ATTENUATION:
+        light_state.quadratic_attenuation = *params;
+        break;
+    case GL_SPOT_EXPONENT:
+        light_state.spotlight_exponent = *params;
+        break;
+    case GL_SPOT_CUTOFF:
+        light_state.spotlight_cutoff_angle = *params;
+        light_state.spotlight_cutoff_angle_rads = *params * (AK::Pi<float> / 180.0f);
+        break;
+    case GL_SPOT_DIRECTION: {
+        FloatVector4 direction_vector = { params[0], params[1], params[2], 0.0f };
+        direction_vector = m_model_view_matrix * direction_vector;
+        light_state.spotlight_direction = { direction_vector.x(), direction_vector.y(), direction_vector.z() };
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_light_state_is_dirty = true;
+}
 }
