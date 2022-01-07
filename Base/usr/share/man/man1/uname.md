@@ -30,4 +30,4 @@ Serenity i686
 
 ## See also
 
-* [`uname`(2)](../man2/uname.md)
+* [`uname`(2)](help://man/2/uname)

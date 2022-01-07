@@ -25,5 +25,5 @@ $ chgrp <name> <path>
 
 ## See also
 
-* [`chmod`(1)](chmod.md)
-* [`chown`(1)](chown.md)
+* [`chmod`(1)](help://man/1/chmod)
+* [`chown`(1)](help://man/1/chown)

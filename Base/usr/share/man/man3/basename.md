@@ -50,4 +50,4 @@ int main()
 
 ## See also
 
-* [`dirname`(3)](dirname.md)
+* [`dirname`(3)](help://man/3/dirname)

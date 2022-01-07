@@ -33,7 +33,7 @@ View all stacks of pid number 10:
 $ bt 10
 ```
 
-Use [`watch`(1)](watch.md) to emit a backtrace of pid 124, every second:
+Use [`watch`(1)](help://man/1/watch) to emit a backtrace of pid 124, every second:
 
 ```sh
 $ watch -n 1 -- bt 124
@@ -41,8 +41,8 @@ $ watch -n 1 -- bt 124
 
 ## See also
 
-* [`Inspector`(1)](Inspector.md)
+* [`Inspector`(1)](help://man/1/Inspector)
 
-* [`Profiler`(1)](Profiler.md)
+* [`Profiler`(1)](help://man/1/Profiler)
 
-* [`watch`(1)](watch.md)
+* [`watch`(1)](help://man/1/watch)

@@ -66,4 +66,4 @@ pid_t read_pid_using_core_file()
 
 ## See also
 
-* [`readlink`(1)](../man1/readlink.md)
+* [`readlink`(1)](help://man/1/readlink)

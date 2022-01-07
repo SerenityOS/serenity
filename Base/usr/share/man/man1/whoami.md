@@ -23,4 +23,4 @@ root
 
 ## See also
 
-* [`id`(1)](id.md)
+* [`id`(1)](help://man/1/id)
