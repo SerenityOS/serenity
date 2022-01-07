@@ -23,6 +23,7 @@
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Device.h>
+#include <LibSoftGPU/Light/Light.h>
 #include <LibSoftGPU/Vertex.h>
 
 namespace GL {
@@ -136,6 +137,8 @@ public:
     virtual void gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) override;
     virtual void gl_tex_gen(GLenum coord, GLenum pname, GLint param) override;
     virtual void gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* params) override;
+    virtual void gl_lightf(GLenum light, GLenum pname, GLfloat param) override;
+    virtual void gl_lightfv(GLenum light, GLenum pname, GLfloat const* params) override;
 
     virtual void present() override;
 
@@ -143,6 +146,7 @@ private:
     void sync_device_config();
     void sync_device_sampler_config();
     void sync_device_texcoord_config();
+    void sync_light_state();
 
     template<typename T>
     T* store_in_listing(T value)
@@ -286,6 +290,7 @@ private:
     SoftGPU::Device m_rasterizer;
     SoftGPU::DeviceInfo const m_device_info;
     bool m_sampler_config_is_dirty { true };
+    bool m_light_state_is_dirty { true };
 
     struct Listing {
 
@@ -365,7 +370,9 @@ private:
             decltype(&SoftwareGLContext::gl_tex_gen_floatv),
             decltype(&SoftwareGLContext::gl_fogf),
             decltype(&SoftwareGLContext::gl_fogfv),
-            decltype(&SoftwareGLContext::gl_fogi)>;
+            decltype(&SoftwareGLContext::gl_fogi),
+            decltype(&SoftwareGLContext::gl_lightf),
+            decltype(&SoftwareGLContext::gl_lightfv)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -419,6 +426,8 @@ private:
     bool m_lighting_enabled { false };
     FloatVector4 m_light_model_ambient { 0.2f, 0.2f, 0.2f, 1.0f };
     GLfloat m_light_model_two_side { 0.0f };
+
+    Vector<SoftGPU::Light> m_light_states;
 };
 
 }

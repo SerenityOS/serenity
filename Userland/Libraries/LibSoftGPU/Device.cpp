@@ -1004,4 +1004,9 @@ void Device::set_sampler_config(unsigned sampler, SamplerConfig const& config)
     m_samplers[sampler].set_config(config);
 }
 
+void Device::set_light_state(unsigned int light_id, Light const& light)
+{
+    m_lights.at(light_id) = light;
+}
+
 }

@@ -571,7 +571,7 @@ GLAPI void glFogi(GLenum pname, GLint param);
 GLAPI void glPixelStorei(GLenum pname, GLint param);
 GLAPI void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 GLAPI void glLightf(GLenum light, GLenum pname, GLfloat param);
-GLAPI void glLightfv(GLenum light, GLenum pname, GLfloat* param);
+GLAPI void glLightfv(GLenum light, GLenum pname, GLfloat const* param);
 GLAPI void glLightModelf(GLenum pname, GLfloat param);
 GLAPI void glLightModelfv(GLenum pname, GLfloat const* params);
 GLAPI void glLightModeli(GLenum pname, GLint param);
