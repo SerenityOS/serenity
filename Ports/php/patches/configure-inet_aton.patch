@@ -1,0 +1,11 @@
+--- php-8.1.1/configure	2021-12-15 03:00:45.000000000 +0100
++++ php-8.1.1-patched/configure	2022-01-07 23:44:20.361165350 +0100
+@@ -14229,7 +14229,7 @@
+ then :
+   found=yes
+ else $as_nop
+-  found=no
++  found=yes
+ fi
+ 
+ fi
