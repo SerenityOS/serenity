@@ -199,6 +199,10 @@ void KeyboardMapperWidget::keydown_event(GUI::KeyEvent& event)
         tmp_button->update();
         break;
     }
+
+    if (m_automatic_modifier && event.modifiers() > 0) {
+        update_modifier_radio_buttons(event);
+    }
 }
 
 void KeyboardMapperWidget::keyup_event(GUI::KeyEvent& event)
@@ -210,6 +214,10 @@ void KeyboardMapperWidget::keyup_event(GUI::KeyEvent& event)
         tmp_button->set_pressed(false);
         tmp_button->update();
         break;
+    }
+
+    if (m_automatic_modifier) {
+        update_modifier_radio_buttons(event);
     }
 }
 
@@ -246,4 +254,28 @@ void KeyboardMapperWidget::update_window_title()
 void KeyboardMapperWidget::show_error_to_user(Error error)
 {
     GUI::MessageBox::show_error(window(), error.string_literal());
+}
+
+void KeyboardMapperWidget::set_automatic_modifier(bool checked)
+{
+    m_automatic_modifier = checked;
+}
+
+void KeyboardMapperWidget::update_modifier_radio_buttons(GUI::KeyEvent& event)
+{
+    GUI::RadioButton* radio_button;
+    if (event.shift() && event.altgr()) {
+        radio_button = m_map_group->find_child_of_type_named<GUI::RadioButton>("shift_altgr_map");
+    } else if (event.altgr()) {
+        radio_button = m_map_group->find_child_of_type_named<GUI::RadioButton>("altgr_map");
+    } else if (event.alt()) {
+        radio_button = m_map_group->find_child_of_type_named<GUI::RadioButton>("alt_map");
+    } else if (event.shift()) {
+        radio_button = m_map_group->find_child_of_type_named<GUI::RadioButton>("shift_map");
+    } else {
+        radio_button = m_map_group->find_child_of_type_named<GUI::RadioButton>("map");
+    }
+
+    if (radio_button)
+        radio_button->set_checked(true);
 }

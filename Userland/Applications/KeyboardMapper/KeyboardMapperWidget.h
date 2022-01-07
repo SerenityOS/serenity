@@ -22,6 +22,7 @@ public:
     ErrorOr<void> save();
     ErrorOr<void> save_to_file(StringView);
     void show_error_to_user(Error);
+    void set_automatic_modifier(bool checked);
 
 protected:
     virtual void keydown_event(GUI::KeyEvent&) override;
@@ -37,9 +38,11 @@ private:
     RefPtr<GUI::Widget> m_map_group;
     void add_map_radio_button(const StringView map_name, const StringView button_text);
     u32* map_from_name(const StringView map_name);
+    void update_modifier_radio_buttons(GUI::KeyEvent&);
 
     String m_filename;
     Keyboard::CharacterMapData m_character_map;
     String m_current_map_name;
     bool m_modified { false };
+    bool m_automatic_modifier { false };
 };
