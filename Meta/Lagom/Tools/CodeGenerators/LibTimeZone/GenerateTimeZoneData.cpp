@@ -168,15 +168,17 @@ static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& t
 
 static String format_identifier(StringView owner, String identifier)
 {
-    constexpr auto gmt_time_zone = "Etc/GMT"sv;
+    constexpr auto gmt_time_zones = Array { "Etc/GMT"sv, "GMT"sv };
 
-    if (identifier.starts_with(gmt_time_zone)) {
-        auto offset = identifier.substring_view(gmt_time_zone.length());
+    for (auto gmt_time_zone : gmt_time_zones) {
+        if (identifier.starts_with(gmt_time_zone)) {
+            auto offset = identifier.substring_view(gmt_time_zone.length());
 
-        if (offset.starts_with('+'))
-            identifier = String::formatted("{}_P{}", gmt_time_zone, offset.substring_view(1));
-        else if (offset.starts_with('-'))
-            identifier = String::formatted("{}_M{}", gmt_time_zone, offset.substring_view(1));
+            if (offset.starts_with('+'))
+                identifier = String::formatted("{}_P{}", gmt_time_zone, offset.substring_view(1));
+            else if (offset.starts_with('-'))
+                identifier = String::formatted("{}_M{}", gmt_time_zone, offset.substring_view(1));
+        }
     }
 
     identifier = identifier.replace("-"sv, "_"sv, true);
