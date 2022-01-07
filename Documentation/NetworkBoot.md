@@ -10,7 +10,7 @@ This guide assumes several things:
 
 - The TFTP server root is `/srv/tftp/`
 - Bootloaders are located inside `/srv/tftp/boot/`
-- SerenityOS artefacts are located inside `/srv/tftp/serenity/`:
+- SerenityOS artifacts are located inside `/srv/tftp/serenity/`:
     - The prekernel is located at `/srv/tftp/serenity/prekernel`
         - You can find it at `Build/i686/Kernel/Prekernel/Prekernel`
     - The kernel is located at `/srv/tftp/serenity/kernel`
@@ -134,7 +134,7 @@ LABEL SerenityOS
 ### Troubleshooting
 
 - Issues with DHCP or TFTP usually require sniffing packets on the network to figure out.
-- TFTP is a slow protocol, transferring the QEMU disk image (~ 200 MiB) will take some time. Consider setting up a FTP or HTTP server for faster downloading of SerenityOS artefacts if your bootloader supports it.
+- TFTP is a slow protocol, transferring the QEMU disk image (~ 200 MiB) will take some time. Consider setting up a FTP or HTTP server for faster downloading of SerenityOS artifacts if your bootloader supports it.
 - Remember that SerenityOS has not been extensively tested on physical hardware.
 - Some BIOS implementations of PXE are buggy or some machines may not have a PXE boot option at all in which case you could try using [iPXE](https://ipxe.org/).
 - Virtual machines can also be booted over the network. Cheat notes for QEMU on Linux, assuming `br0` is already set up:

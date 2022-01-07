@@ -162,7 +162,7 @@ ErrorOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserOrK
         if (m_content && static_cast<off_t>(m_content->capacity()) >= new_size) {
             m_content->set_size(new_size);
         } else {
-            // Grow the content buffer 2x the new sizeto accommodate repeating write() calls.
+            // Grow the content buffer 2x the new size to accommodate repeating write() calls.
             // Note that we're not actually committing physical memory to the buffer
             // until it's needed. We only grow VM here.
 

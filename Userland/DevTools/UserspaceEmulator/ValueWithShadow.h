@@ -13,8 +13,8 @@
 
 namespace UserspaceEmulator {
 
-constexpr u64 _inititalized_64 = 0x01010101'01010101LLU;
-constexpr u128 _initialized_128 = u128(_inititalized_64, _inititalized_64);
+constexpr u64 _initialized_64 = 0x01010101'01010101LLU;
+constexpr u128 _initialized_128 = u128(_initialized_64, _initialized_64);
 constexpr u256 _initialized_256 = u256(_initialized_128, _initialized_128);
 
 template<typename T>
@@ -43,7 +43,7 @@ public:
         if constexpr (sizeof(T) == 16)
             return (m_shadow & _initialized_128) != _initialized_128;
         if constexpr (sizeof(T) == 8)
-            return (m_shadow & _inititalized_64) != _inititalized_64;
+            return (m_shadow & _initialized_64) != _initialized_64;
         if constexpr (sizeof(T) == 4)
             return (m_shadow & 0x01010101) != 0x01010101;
         if constexpr (sizeof(T) == 2)
@@ -59,7 +59,7 @@ public:
         if constexpr (sizeof(T) == 16)
             m_shadow = _initialized_128;
         if constexpr (sizeof(T) == 8)
-            m_shadow = _inititalized_64;
+            m_shadow = _initialized_64;
         if constexpr (sizeof(T) == 4)
             m_shadow = 0x01010101;
         if constexpr (sizeof(T) == 2)
@@ -91,7 +91,7 @@ public:
         if constexpr (sizeof(T) == 16)
             return (m_shadow & _initialized_128) != _initialized_128;
         if constexpr (sizeof(T) == 8)
-            return (m_shadow & _inititalized_64) != _inititalized_64;
+            return (m_shadow & _initialized_64) != _initialized_64;
         if constexpr (sizeof(T) == 4)
             return (m_shadow & 0x01010101) != 0x01010101;
         if constexpr (sizeof(T) == 2)
@@ -121,7 +121,7 @@ ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_as_initialized(T value)
     if constexpr (sizeof(T) == 16)
         return { value, _initialized_128 };
     if constexpr (sizeof(T) == 8)
-        return { value, _inititalized_64 };
+        return { value, _initialized_64 };
     if constexpr (sizeof(T) == 4)
         return { value, 0x01010101 };
     if constexpr (sizeof(T) == 2)

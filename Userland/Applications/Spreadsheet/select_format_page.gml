@@ -7,7 +7,7 @@
 
     @GUI::Label {
         text: "Please double-check the guessed file type\nor select the correct one below"
-        text_aliignment: "TopLeft"
+        text_alignment: "TopLeft"
         fixed_height: 32
     }
 

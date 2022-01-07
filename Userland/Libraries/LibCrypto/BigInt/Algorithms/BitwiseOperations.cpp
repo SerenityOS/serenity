@@ -237,7 +237,7 @@ ALWAYS_INLINE UnsignedBigInteger::Word UnsignedBigIntegerAlgorithms::shift_left_
     size_t result_word_index)
 {
     // "<= length()" (rather than length() - 1) is intentional,
-    // The result inedx of length() is used when calculating the carry word
+    // The result index of length() is used when calculating the carry word
     VERIFY(result_word_index <= number.length());
     VERIFY(num_bits <= UnsignedBigInteger::BITS_IN_WORD);
     u32 result = 0;

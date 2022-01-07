@@ -18,7 +18,7 @@ namespace Spreadsheet {
 Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView source)
 {
     JS::Lexer lexer { source };
-    // Track <identifier> <OpenParen>'s, and how many complete expressions are inside the parenthesised expression.
+    // Track <identifier> <OpenParen>'s, and how many complete expressions are inside the parenthesized expression.
     Vector<size_t> state;
     StringView last_name;
     Vector<StringView> names;

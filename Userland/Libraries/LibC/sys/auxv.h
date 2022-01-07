@@ -27,7 +27,7 @@ __BEGIN_DECLS
 #define AT_EGID 14          /* a_val holds effective group id of process */
 #define AT_PLATFORM 15      /* a_val points to a string containing platform name */
 #define AT_HWCAP 16         /* a_val contains bitmask of CPU features. Equivalent to CPUID 1.EDX*/
-#define AT_CLKTCK 17        /* a_val contains frequence at which times() increments. (Re: Spec. What is times()?) */
+#define AT_CLKTCK 17        /* a_val contains frequency at which times() increments. (Re: Spec. What is times()?) */
 #define AT_SECURE 23        /* a_val holds 1 if program in secure mode (e.g. suid). Otherwise 0 */
 #define AT_BASE_PLATFORM 24 /* a_ptr points to a string identifying base platform name, which might be different from platform (e.g x86_64 when in i386 compat)  */
 #define AT_RANDOM 25        /* a_ptr points to 16 securely generated random bytes */

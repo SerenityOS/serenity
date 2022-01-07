@@ -15,7 +15,7 @@ VALIDATE_IS_X86()
 
 namespace Kernel {
 
-class GenericInterruptHandeler;
+class GenericInterruptHandler;
 
 extern "C" void interrupt_common_asm_entry();
 

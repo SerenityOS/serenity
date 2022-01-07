@@ -26,7 +26,7 @@ LibAudio is the baseline audio library that provides common audio abstractions, 
 
 #### LibDSP
 
-LibDSP is the digital signal processing library. It provides structures for audio editing programs, such as tracks and clips, while both dealing with MIDI data and sample data. More important is the Processor system, which allows synthesizers, samplers, sequencers, effects, etc. to be written with a common interface and be combined into chains for unlimited DSP (and musical) potential. The ProcessorParameters provide an interface for changing processor parameters programatically or through a UI.
+LibDSP is the digital signal processing library. It provides structures for audio editing programs, such as tracks and clips, while both dealing with MIDI data and sample data. More important is the Processor system, which allows synthesizers, samplers, sequencers, effects, etc. to be written with a common interface and be combined into chains for unlimited DSP (and musical) potential. The ProcessorParameters provide an interface for changing processor parameters programmatically or through a UI.
 
 LibDSP was started to support development efforts in Piano, but it is intended as a general-purpose audio processing library, building on the groundwork from LibAudio. Therefore, users of LibDSP must be familiar with LibAudio classes and concepts, as they are used extensively in LibDSP.
 
@@ -46,7 +46,7 @@ Audio volume is more complicated than just multiplying a (digital or analog) aud
 
 For the SerenityOS audio system, the following applies: Userland applications and libraries that do their own volume changes need to be aware of the nature of volume. LibAudio provides utility functions for correctly handling volume, so these are to be used whenever applicable. For AudioServer, main and per-client volume is already handled correctly; to the outside, volume is linear between 0 and 1.
 
-For example: A program may set its client volume to 0.5 and the audio will be percieved as half as loud by a human. However, if the program wishes to change the volume beforehand, it needs to use logarithmic scaling, for example with LibAudio's built-in functionality.
+For example: A program may set its client volume to 0.5 and the audio will be perceived as half as loud by a human. However, if the program wishes to change the volume beforehand, it needs to use logarithmic scaling, for example with LibAudio's built-in functionality.
 
 ### Sample rate
 
