@@ -47,13 +47,17 @@ if(CCACHE_PROGRAM)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE FILEPATH "Path to a compiler launcher program, e.g. ccache")
 endif()
 
-# FIXME: With cmake 3.18, we can change unzip/untar steps to use
-#        file(ARCHIVE_EXTRACT) instead
-find_program(UNZIP unzip REQUIRED)
-find_program(TAR tar REQUIRED)
+if (NOT HACKSTUDIO_BUILD)
 
-# Host tools, required to generate files for the build
-find_package(Lagom CONFIG REQUIRED)
+    # FIXME: With cmake 3.18, we can change unzip/untar steps to use
+    #        file(  ARCHIVE_EXTRACT) instead
+    find_program(UNZIP unzip REQUIRED)
+    find_program(TAR tar REQUIRED)
+
+    # Host tools, required to generate files for the build
+    find_package(Lagom CONFIG REQUIRED)
+
+endif()
 
 # Meta target to run all code-gen steps in the build.
 add_custom_target(all_generated)
@@ -109,11 +113,15 @@ add_custom_target(install-ports
     USES_TERMINAL
 )
 
-add_custom_target(configure-components
-    COMMAND "$<TARGET_FILE:Lagom::ConfigureComponents>"
-    USES_TERMINAL
-)
-add_dependencies(configure-components Lagom::ConfigureComponents)
+if (NOT HACKSTUDIO_BUILD)
+
+    add_custom_target(configure-components
+        COMMAND "$<TARGET_FILE:Lagom::ConfigureComponents>"
+        USES_TERMINAL
+    )
+    add_dependencies(configure-components Lagom::ConfigureComponents)
+
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -250,6 +258,11 @@ serenity_component(
     Tests
     RECOMMENDED
 )
+
+if (HACKSTUDIO_BUILD)
+    include(${HACKSTUDIO_BUILD_CMAKE_FILE})
+    return()
+endif()
 
 add_subdirectory(AK)
 add_subdirectory(Kernel)
