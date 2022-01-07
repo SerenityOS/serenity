@@ -40,8 +40,8 @@ jobs:
           -DENABLE_UNDEFINED_SANITIZER=ON \
           -DENABLE_PCI_IDS_DOWNLOAD=OFF \
           -DENABLE_USB_IDS_DOWNLOAD=OFF \
-          -DCMAKE_C_COMPILER=gcc-10 \
-          -DCMAKE_CXX_COMPILER=g++-10
+          -DCMAKE_C_COMPILER=gcc-11 \
+          -DCMAKE_CXX_COMPILER=g++-11
       displayName: 'Create Build Environment'
       workingDirectory: $(Build.SourcesDirectory)
       env:

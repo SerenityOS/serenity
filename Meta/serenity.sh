@@ -144,7 +144,7 @@ create_build_dir() {
 pick_gcc() {
     local BEST_VERSION=0
     local BEST_GCC_CANDIDATE=""
-    for GCC_CANDIDATE in egcc gcc gcc-10 gcc-11 gcc-12 /usr/local/bin/gcc-11 /opt/homebrew/bin/gcc-11; do
+    for GCC_CANDIDATE in egcc gcc gcc-11 gcc-12 /usr/local/bin/gcc-11 /opt/homebrew/bin/gcc-11; do
         if ! command -v $GCC_CANDIDATE >/dev/null 2>&1; then
             continue
         fi
@@ -164,8 +164,8 @@ pick_gcc() {
     done
     CMAKE_ARGS+=("-DCMAKE_C_COMPILER=$BEST_GCC_CANDIDATE")
     CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=${BEST_GCC_CANDIDATE/gcc/g++}")
-    if [ "$BEST_VERSION" -lt 10 ]; then
-        die "Please make sure that GCC version 10.2 or higher is installed."
+    if [ "$BEST_VERSION" -lt 11 ]; then
+        die "Please make sure that GCC version 11 or higher is installed."
     fi
 }
 

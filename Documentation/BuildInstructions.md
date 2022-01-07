@@ -10,18 +10,18 @@ Make sure you have all the dependencies installed:
 sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-gui qemu-system-x86 qemu-utils ccache rsync unzip texinfo
 ```
 
-#### GCC 10
+#### GCC 11
 
-On Ubuntu gcc-10 is available in the repositories of 20.04 (Focal) and later - add the `ubuntu-toolchain-r/test` PPA if you're running an older version:
+On Ubuntu gcc-11 is available in the repositories of 21.04 (Hirsuite) and later - add the `ubuntu-toolchain-r/test` PPA if you're running an older version:
 
 ```console
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 ```
 
-Now on Ubuntu or Debian you can install gcc-10 with apt like this:
+Now on Ubuntu or Debian you can install gcc-11 with apt like this:
 
 ```console
-sudo apt install gcc-10 g++-10
+sudo apt install gcc-11 g++-11
 ```
 
 #### QEMU 5 or later
