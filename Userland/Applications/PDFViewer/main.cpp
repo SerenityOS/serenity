@@ -30,9 +30,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto& pdf_viewer_widget = window->set_main_widget<PDFViewerWidget>();
+    auto pdf_viewer_widget = TRY(window->try_set_main_widget<PDFViewerWidget>());
 
-    pdf_viewer_widget.initialize_menubar(*window);
+    pdf_viewer_widget->initialize_menubar(*window);
 
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
             return 1;
         }
-        pdf_viewer_widget.open_file(*response.fd, *response.chosen_file);
+        pdf_viewer_widget->open_file(*response.fd, *response.chosen_file);
     }
 
     return app->exec();
