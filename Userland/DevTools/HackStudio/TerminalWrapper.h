@@ -16,8 +16,11 @@ class TerminalWrapper final : public GUI::Widget {
     C_OBJECT(TerminalWrapper)
 public:
     virtual ~TerminalWrapper() override;
-
-    void run_command(const String&);
+    enum class WaitForExit {
+        No,
+        Yes
+    };
+    void run_command(const String&, Optional<String> working_directory = {}, WaitForExit = WaitForExit::No);
     void kill_running_command();
     void clear_including_history();
 
@@ -30,6 +33,7 @@ public:
     };
     ErrorOr<int> setup_master_pseudoterminal(WaitForChildOnExit = WaitForChildOnExit::Yes);
     static ErrorOr<void> setup_slave_pseudoterminal(int master_fd);
+    int child_exit_status() const;
 
     Function<void()> on_command_exit;
 
@@ -39,6 +43,8 @@ private:
     RefPtr<VT::TerminalWidget> m_terminal_widget;
     pid_t m_pid { -1 };
     bool m_user_spawned { true };
+    bool m_child_exited { false };
+    Optional<int> m_child_exit_status;
 };
 
 }
