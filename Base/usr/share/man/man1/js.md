@@ -55,4 +55,4 @@ undefined
 
 ## See also
 
-* [`test-js`(1)](test-js.md)
+* [`test-js`(1)](help://man/1/test-js)

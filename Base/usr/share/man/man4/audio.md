@@ -11,7 +11,7 @@ The `/dev/audio` character device file exposes the audio output device of the sy
 | Format | 16-bit signed | 16-bit signed |
 | Data | Left sample | Right sample |
 
-The sample rate of the samples is determined by the audio device's current sample rate, which may be accessed by an [ioctl](../man2/ioctl.md).
+The sample rate of the samples is determined by the audio device's current sample rate, which may be accessed by an [ioctl](help://man/2/ioctl).
 
 Note that for convenience, the audio device may not block the call to `write` and return before all the samples were actually transferred to the hardware and/or played by the hardware. For this reason, users need to be aware that the audio device driver's internal buffer may become full and calls to `write` may return `ENOSPC`.
 

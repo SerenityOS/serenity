@@ -17,9 +17,9 @@ Returns the effective user or group id.
 
 ## See also
 
-* [`setuid_overview`(7)](../man7/setuid_overview.md)
-* [`getuid`(2) / `getgid`(2)](getuid.md)
-* [`getresuid`(2) / `getresgid`(2)](getresuid.md)
-* [`seteuid`(2) / `setegid`(2)](seteuid.md)
-* [`setuid`(2) / `setgid`(2)](setuid.md)
-* [`setresuid`(2) / `setresgid`(2)](setresuid.md)
+* [`setuid_overview`(7)](help://man/7/setuid_overview)
+* [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
+* [`getresuid`(2) / `getresgid`(2)](help://man/2/getresuid)
+* [`seteuid`(2) / `setegid`(2)](help://man/2/seteuid)
+* [`setuid`(2) / `setgid`(2)](help://man/2/setuid)
+* [`setresuid`(2) / `setresgid`(2)](help://man/2/setresuid)

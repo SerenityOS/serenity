@@ -243,6 +243,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             history.push(path);
             open_page(path);
+        } else if (url.protocol() == "help") {
+            if (url.host() == "man") {
+                if (url.paths().size() != 2) {
+                    dbgln("Bad help page URL '{}'", url);
+                    return;
+                }
+                auto const section = url.paths()[0];
+                auto const page = url.paths()[1];
+                open_url(URL::create_with_file_scheme(String::formatted("/usr/share/man/man{}/{}.md", section, page), url.fragment()));
+            } else {
+                dbgln("Bad help operation '{}' in URL '{}'", url.host(), url);
+            }
         } else {
             open_external(url);
         }

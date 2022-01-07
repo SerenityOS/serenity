@@ -24,4 +24,4 @@ $ readlink /proc/self/cwd
 
 ## See also
 
-* [`readlink`(2)](../man2/readlink.md)
+* [`readlink`(2)](help://man/2/readlink)

@@ -25,4 +25,4 @@ In pledged programs, the `stdio` promise is required for this system call.
 
 ## See also
 
-* [`set_process_name`(2)](../man2/set_process_name.md)
+* [`set_process_name`(2)](help://man/2/set_process_name)

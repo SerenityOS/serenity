@@ -1,6 +1,6 @@
 ## Name
 
-Overview of the SerenityOS audio subsystem, including a brief description of [`/dev/audio`](../man4/audio.md), the AudioServer and their interfaces. 
+Overview of the SerenityOS audio subsystem, including a brief description of [`/dev/audio`](help://man/4/audio), the AudioServer and their interfaces. 
 
 ## Description
 
@@ -12,7 +12,7 @@ SerenityOS structures audio into three groups of responsibilities: Audio drivers
 
 AudioServer is responsible for handling userland audio clients and talking to the hardware. For this reason, no userland application should ever need to write to `/dev/audio` directly, except for special cases in which AudioServer is not present.
 
-As with all system servers, AudioServer provides an IPC interface on `/tmp/portal/audio`. For specifics on how to talk to AudioServer, the IPC interface specifications are the best source of information. Audio clients send audio buffers with the standard audio format (see [audio](../man4/audio.md)) to the server. They can then query the state of these buffers, pause buffer playback or clear the playing buffers. For controlling mixer functionality, clients have the ability to obtain and change their own volume, or the main volume and mute state.
+As with all system servers, AudioServer provides an IPC interface on `/tmp/portal/audio`. For specifics on how to talk to AudioServer, the IPC interface specifications are the best source of information. Audio clients send audio buffers with the standard audio format (see [audio](help://man/4/audio)) to the server. They can then query the state of these buffers, pause buffer playback or clear the playing buffers. For controlling mixer functionality, clients have the ability to obtain and change their own volume, or the main volume and mute state.
 
 In reverse, AudioServer has "event" calls that the client receives. These are: A client buffer finished playing (useful for queuing the next buffer), various mixer states changed (main volume, main mute, client volume).
 
@@ -37,7 +37,7 @@ This is a non-exhaustive list of applications that use audio. Most of these foll
 * **Piano** is a sequencer/tracker and synthesizer.
 * **aplay** is a command line audio file playback utility.
 * **SoundPlayer** is a UI audio file player with extra features such as playlist support and audio visualizations.
-* [**asctl**](../man1/asctl.md) is a command line audio server control utility.
+* [**asctl**](help://man/1/asctl) is a command line audio server control utility.
 * **Applets/Audio** (AudioApplet) is a taskbar applet for setting audio parameters through a UI.
 
 ### Volume
@@ -56,11 +56,11 @@ Although the sample rate can change at any time, it is considered a rarely-chang
 
 ## Files
 
-* [/dev/audio](../man4/audio.md)
+* [/dev/audio](help://man/4/audio)
 * AudioApplet and AudioServer have settings which are managed by ConfigServer.
 * `/tmp/portal/audio`: AudioServer's IPC socket
 
 ## See also
 
-* [asctl](../man1/asctl.md)
-* [aplay](../man1/aplay.md)
+* [asctl](help://man/1/asctl)
+* [aplay](help://man/1/aplay)

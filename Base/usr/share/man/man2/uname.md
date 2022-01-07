@@ -35,4 +35,4 @@ If successful, returns 0. Otherwise, returns -1 and sets `errno` to describe the
 
 ## See also
 
-* [`uname`(1)](../man1/uname.md)
+* [`uname`(1)](help://man/1/uname)

@@ -19,8 +19,8 @@ $ Inspector [pid]
 Inspector facilitates process inspection via RPC.
 
 The inspected process must have previously allowed the
-[`accept`(2)](../man2/accept.md) system call with
-[`pledge`(2)](../man2/pledge.md) to allow inspection
+[`accept`(2)](help://man/2/accept) system call with
+[`pledge`(2)](help://man/2/pledge) to allow inspection
 via UNIX socket.
 
 ## Examples

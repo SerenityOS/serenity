@@ -36,7 +36,7 @@ int posix_spawnattr_setsigmask(posix_spawnattr_t*, const sigset_t*);
 
 ## Description
 
-Configures a `posix_spawnattr_t` object for use with [`posix_spawn`(2)](posix_spawn.md). This object can be used to let `posix_spawn()` set up process attributes for the spawned child process. The file actions are executed after creating the new process but before loading its binary.
+Configures a `posix_spawnattr_t` object for use with [`posix_spawn`(2)](help://man/3/posix_spawn). This object can be used to let `posix_spawn()` set up process attributes for the spawned child process. The file actions are executed after creating the new process but before loading its binary.
 
 A `posix_spawnattr_t` object is allocated on the stack but starts in an undefined state.
 
@@ -48,7 +48,7 @@ It is valid to alternatingly call `posix_spawnattr_init()` and `posix_spawnattr_
 
 `posix_spawnattr_setflags()` configures which attributes of the new child process `posix_spawn()` will set. It receives a bitmask that can contain:
 
-* `POSIX_SPAWN_RESETIDS`: If set, `posix_spawn()` will reset the effective uid and gid of the child process to the real uid and gid of the parent process. See also [`setuid_overview`(7)](../man7/setuid_overview.md).
+* `POSIX_SPAWN_RESETIDS`: If set, `posix_spawn()` will reset the effective uid and gid of the child process to the real uid and gid of the parent process. See also [`setuid_overview`(7)](help://man/7/setuid_overview).
 
 * `POSIX_SPAWN_SETPGROUP`: If set, `posix_spawn()` will set the process group ID of the child process to the process group ID configured with `posix_spawnattr_setpgroup()`, as if `setpgid(0, pgroup)` was called in the child process. The behavior if both this and `POSIX_SPAWN_SETSID` is set is undefined.
 
@@ -75,4 +75,4 @@ If the effect of an attr fails, the child will exit with exit code 127 before ev
 
 ## See also
 
-* [`posix_spawn`(2)](posix_spawn.md)
+* [`posix_spawn`(2)](help://man/3/posix_spawn)
