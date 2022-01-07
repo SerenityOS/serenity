@@ -553,10 +553,10 @@ void Editor::edit_in_external_editor()
     };
 
     Vector<const char*> args { editor_command, file_path, nullptr };
-    auto pid = vfork();
+    auto pid = fork();
 
     if (pid == -1) {
-        perror("vfork");
+        perror("fork");
         return;
     }
 
