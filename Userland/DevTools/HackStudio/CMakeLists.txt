@@ -43,6 +43,7 @@ set(SOURCES
     LanguageClient.cpp
     Locator.cpp
     Project.cpp
+    ProjectBuilder.cpp
     ProjectDeclarations.cpp
     ProjectFile.cpp
     ProjectTemplate.cpp
