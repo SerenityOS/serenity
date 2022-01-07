@@ -109,7 +109,8 @@ public:
     Gfx::FloatPoint image_position_to_editor_position(Gfx::IntPoint const&) const;
     Gfx::FloatPoint editor_position_to_image_position(Gfx::IntPoint const&) const;
 
-    Result<void, String> save_project_to_fd_and_close(int fd) const;
+    void save_project_as();
+    void save_project();
 
     NonnullRefPtrVector<Guide> const& guides() const { return m_guides; }
     bool guide_visibility() { return m_show_guides; }
@@ -148,6 +149,8 @@ private:
 
     GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
+
+    Result<void, String> save_project_to_fd_and_close(int fd) const;
 
     void clamped_scale_by(float, bool do_relayout);
     void relayout();
