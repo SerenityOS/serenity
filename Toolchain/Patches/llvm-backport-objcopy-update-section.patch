@@ -1,0 +1,440 @@
+From 140a4569a033b133fc2dc1787ae83d505e03b982 Mon Sep 17 00:00:00 2001
+From: Leonard Chan <leonardchan@google.com>
+Date: Wed, 20 Oct 2021 13:03:49 -0700
+Subject: [PATCH] Add --update-section
+
+This is another attempt at D59351 which attempted to add --update-section, but
+with some heuristics for adjusting segment/section offsets/sizes in the event
+the data copied into the section is larger than the original size of the section.
+We are opting to not support this case. GNU's objcopy was able to do this because
+the linker and objcopy are tightly coupled enough that segment reformatting was
+simpler. This is not the case with llvm-objcopy and lld where they like to be separated.
+
+This will attempt to copy data into the section without changing any other
+properties of the parent segment (if the section is part of one).
+
+Differential Revision: https://reviews.llvm.org/D112116
+---
+ .../llvm-objcopy/ELF/update-section.test      | 176 ++++++++++++++++++
+ llvm/tools/llvm-objcopy/CommonConfig.h        |   1 +
+ llvm/tools/llvm-objcopy/ConfigManager.cpp     |  11 ++
+ llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp    |  48 +++--
+ llvm/tools/llvm-objcopy/ELF/Object.cpp        |  42 +++++
+ llvm/tools/llvm-objcopy/ELF/Object.h          |  14 ++
+ llvm/tools/llvm-objcopy/ObjcopyOpts.td        |   4 +
+ 7 files changed, 281 insertions(+), 15 deletions(-)
+ create mode 100644 llvm/test/tools/llvm-objcopy/ELF/update-section.test
+
+diff --git a/llvm/test/tools/llvm-objcopy/ELF/update-section.test b/llvm/test/tools/llvm-objcopy/ELF/update-section.test
+new file mode 100644
+index 000000000..644225557
+--- /dev/null
++++ b/llvm/test/tools/llvm-objcopy/ELF/update-section.test
+@@ -0,0 +1,176 @@
++# RUN: yaml2obj %s -o %t
++
++# RUN: echo -n 11112222 > %t.same
++# RUN: echo -n 00000000 > %t.zeros
++# RUN: echo -n 11 > %t.short
++# RUN: echo -n 11113333 > %t.updated
++# RUN: echo -n 111122223 > %t.larger
++
++## Update the segment section with a regular chunk of data the same size as the section.
++# RUN: llvm-objcopy --update-section=.in_segment=%t.same %t %t.same.o
++# RUN: llvm-readobj --section-headers --section-data --program-headers %t.same.o | \
++# RUN:   FileCheck %s --check-prefix=NORMAL
++
++## Show that if we overwrite a given section (.in_segment) with new data, then rewrite it
++## back (from the second `--update-section`), then it should be the exact same as the
++## original file.
++# RUN: llvm-objcopy %t %t.copy.o
++# RUN: llvm-objcopy --update-section=.in_segment=%t.same --update-section=.in_segment=%t.zeros %t %t.original.o
++# RUN: cmp %t.copy.o %t.original.o
++
++## Update segment section with a smaller chunk of data. This will also update the
++## section size to the length of the new data written. This does not affect the offset
++## of any subsequent sections in the same segment as this.
++# RUN: llvm-objcopy --update-section=.in_segment=%t.short %t %t.short.o
++# RUN: llvm-readobj --section-headers --section-data --program-headers %t.short.o | \
++# RUN:   FileCheck %s --check-prefix=SHORT
++
++## Ensure the data that was in a shortened section within a segment is still retained.
++## For cases where there are gaps in segments not covered by sections, the existing
++## contents are preserved.
++# RUN: od -t x1 -j 0x78 -N 16 %t.short.o | FileCheck %s --check-prefix=PRESERVED
++
++## Add a new section via --add-section, then update it.
++# RUN: llvm-objcopy --add-section=.added=%t.zeros --update-section=.added=%t.updated \
++# RUN:   %t %t.updated.o
++# RUN: llvm-readobj --section-headers --section-data --program-headers %t.updated.o | \
++# RUN:   FileCheck %s --check-prefix=ADD-UPDATE
++
++## Adding should always be first regardless of flag order.
++# RUN: llvm-objcopy --update-section=.added=%t.updated --add-section=.added=%t.updated \
++# RUN:   %t %t.updated.o
++# RUN: llvm-readobj --section-headers --section-data --program-headers %t.updated.o | \
++# RUN:   FileCheck %s --check-prefix=ADD-UPDATE
++
++## We can't update sections which don't exist.
++# RUN: not llvm-objcopy --update-section=.nosection=%t.same %t %t-err1 2>&1 | \
++# RUN:   FileCheck %s --check-prefix=ERR-NO-SECTION
++
++## We can't update certain types of sections.
++# RUN: not llvm-objcopy --update-section=.nobits_type=%t.same %t %t-err2 2>&1 | \
++# RUN:   FileCheck %s --check-prefix=ERR-NOBITS-TYPE
++# RUN: not llvm-objcopy --update-section=.null_type=%t.same %t %t-err2 2>&1 | \
++# RUN:   FileCheck %s --check-prefix=ERR-NULL-TYPE
++
++## Fail on trying to insert data larger than the existing section.
++# RUN: not llvm-objcopy --update-section=.in_segment=%t.larger %t %t-err3 2>&1 | \
++# RUN:   FileCheck %s --check-prefix=ERR-LARGER
++
++## But we can insert larger data if the section is NOT part of a segment.
++# RUN: llvm-objcopy --update-section=.not_in_segment=%t.larger %t %t.larger.o
++# RUN: llvm-readobj --section-headers --section-data --program-headers %t.larger.o | \
++# RUN:   FileCheck %s --check-prefix=LONG
++
++## We should still fail on inserting larger data, even if it is superceded by a
++## valid --update-section flag.
++# RUN: not llvm-objcopy --update-section=.in_segment=%t.larger --update-section=.in_segment=%t.same %t %t-err3 2>&1 | \
++# RUN:   FileCheck %s --check-prefix=ERR-LARGER
++
++## Test option parsing failures.
++# RUN: not llvm-objcopy --update-section %t %t.out 2>&1 | FileCheck %s --check-prefix=MISSING-EQ
++# RUN: not llvm-objcopy --update-section=.in_segment= %t %t.out 2>&1 | FileCheck %s --check-prefix=MISSING-FILE
++
++!ELF
++FileHeader:
++  Class:           ELFCLASS64
++  Data:            ELFDATA2LSB
++  Type:            ET_EXEC
++  Machine:         EM_X86_64
++Sections:
++  - Name:            .in_segment
++    Type:            SHT_PROGBITS
++    Content:         "3030303030303030"
++  - Name:            .unmodified_in_segment
++    Type:            SHT_PROGBITS
++    Content:         "3130303030303030"
++  - Name:            .nobits_type
++    Type:            SHT_NOBITS
++  - Name:            .not_in_segment
++    Type:            SHT_PROGBITS
++  - Name:            .null_type
++    Type:            SHT_NULL
++ProgramHeaders:
++  - Type: PT_LOAD
++    VAddr: 0x1000
++    FirstSec: .in_segment
++## The unmodified section is for ensuring that it remains untouched (ie. its
++## offset is the same) even when the section before it is shrunk.
++    LastSec: .unmodified_in_segment
++
++# NORMAL:      Name: .in_segment
++# NORMAL:      Offset:
++# NORMAL-SAME:   {{ }}0x78{{$}}
++# NORMAL:      Size:
++# NORMAL-SAME:   {{ }}8{{$}}
++# NORMAL:      SectionData (
++# NORMAL-NEXT:   |11112222|
++# NORMAL-NEXT: )
++# NORMAL:      Name: .unmodified_in_segment
++# NORMAL:      Offset:
++# NORMAL-SAME:   {{ }}0x80{{$}}
++# NORMAL:      Size:
++# NORMAL-SAME:   {{ }}8{{$}}
++# NORMAL:      SectionData (
++# NORMAL-NEXT:   |10000000|
++# NORMAL-NEXT: )
++# NORMAL:      ProgramHeaders [
++# NORMAL-NEXT:   ProgramHeader {
++# NORMAL-NEXT:     Type: PT_LOAD (0x1)
++# NORMAL:          FileSize:
++# NORMAL-SAME:       {{ }}16{{$}}
++# NORMAL:          MemSize:
++# NORMAL-SAME:       {{ }}16{{$}}
++# NORMAL:        }
++# NORMAL-NEXT: ]
++
++# SHORT:      Name: .in_segment
++# SHORT:      Offset:
++# SHORT-SAME:   {{ }}0x78{{$}}
++# SHORT:      Size:
++# SHORT-SAME:   {{ }}2{{$}}
++# SHORT:      SectionData (
++# SHORT-NEXT:   |11|
++# SHORT-NEXT: )
++# SHORT:      Name: .unmodified_in_segment
++# SHORT:      Offset:
++# SHORT-SAME:   {{ }}0x80{{$}}
++# SHORT:      Size:
++# SHORT-SAME:   {{ }}8{{$}}
++# SHORT:      SectionData (
++# SHORT-NEXT:   |10000000|
++# SHORT-NEXT: )
++# SHORT:      ProgramHeaders [
++# SHORT-NEXT:   ProgramHeader {
++# SHORT-NEXT:     Type: PT_LOAD (0x1)
++# SHORT:          FileSize:
++# SHORT-SAME:       {{ }}16{{$}}
++# SHORT:          MemSize:
++# SHORT-SAME:       {{ }}16{{$}}
++# SHORT:        }
++# SHORT-NEXT: ]
++
++## The first 8 bytes are the modified section. The last 8 bytes are the
++## unmodified section.
++# PRESERVED: 31 31 30 30 30 30 30 30 31 30 30 30 30 30 30 30
++
++# LONG:      Name: .not_in_segment
++# LONG:      Size:
++# LONG-SAME:   {{ }}9{{$}}
++# LONG:      SectionData (
++# LONG-NEXT:   |111122223|
++# LONT-NEXT: )
++
++# ADD-UPDATE:      Name: .added
++# ADD-UPDATE:      Size:
++# ADD-UPDATE-SAME:   {{ }}8{{$}}
++# ADD-UPDATE:      SectionData (
++# ADD-UPDATE-NEXT:   |11113333|
++# ADD-UPDATE:      )
++
++# ERR-NO-SECTION: error: {{.*}}section '.nosection' not found
++# ERR-NOBITS-TYPE: error: {{.*}}section '.nobits_type' can't be updated because it does not have contents
++# ERR-NULL-TYPE: error: {{.*}}section '.null_type' can't be updated because it does not have contents
++# ERR-LARGER: error: {{.*}}cannot fit data of size 9 into section '.in_segment' with size 8 that is part of a segment
++
++# MISSING-EQ: error: bad format for --update-section: missing '='
++# MISSING-FILE: error: bad format for --update-section: missing file name
+diff --git a/llvm/tools/llvm-objcopy/CommonConfig.h b/llvm/tools/llvm-objcopy/CommonConfig.h
+index 131ce5c59..b7a7a5ec7 100644
+--- a/llvm/tools/llvm-objcopy/CommonConfig.h
++++ b/llvm/tools/llvm-objcopy/CommonConfig.h
+@@ -210,6 +210,7 @@ struct CommonConfig {
+   // Repeated options
+   std::vector<StringRef> AddSection;
+   std::vector<StringRef> DumpSection;
++  std::vector<StringRef> UpdateSection;
+   std::vector<StringRef> RPathToAdd;
+   std::vector<StringRef> RPathToPrepend;
+   DenseMap<StringRef, StringRef> RPathsToUpdate;
+diff --git a/llvm/tools/llvm-objcopy/ConfigManager.cpp b/llvm/tools/llvm-objcopy/ConfigManager.cpp
+index 9f7d06b99..2840f90cb 100644
+--- a/llvm/tools/llvm-objcopy/ConfigManager.cpp
++++ b/llvm/tools/llvm-objcopy/ConfigManager.cpp
+@@ -887,6 +887,17 @@ objcopy::parseObjcopyOptions(ArrayRef<const char *> RawArgsArr,
+           "bad format for --add-section: missing file name");
+     Config.AddSection.push_back(ArgValue);
+   }
++  for (auto Arg : InputArgs.filtered(OBJCOPY_update_section)) {
++    StringRef ArgValue(Arg->getValue());
++    if (!ArgValue.contains('='))
++      return createStringError(errc::invalid_argument,
++                               "bad format for --update-section: missing '='");
++    if (ArgValue.split("=").second.empty())
++      return createStringError(
++          errc::invalid_argument,
++          "bad format for --update-section: missing file name");
++    Config.UpdateSection.push_back(ArgValue);
++  }
+   for (auto *Arg : InputArgs.filtered(OBJCOPY_dump_section)) {
+     StringRef Value(Arg->getValue());
+     if (Value.split('=').second.empty())
+diff --git a/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp b/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp
+index 986eeca62..b9c6abdc1 100644
+--- a/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp
++++ b/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp
+@@ -554,6 +554,22 @@ static void addSymbol(Object &Obj, const NewSymbolInfo &SymInfo,
+       Sec ? (uint16_t)SYMBOL_SIMPLE_INDEX : (uint16_t)SHN_ABS, 0);
+ }
+ 
++static Error
++handleUserSection(StringRef Flag,
++                  function_ref<Error(StringRef, ArrayRef<uint8_t>)> F) {
++  std::pair<StringRef, StringRef> SecPair = Flag.split("=");
++  StringRef SecName = SecPair.first;
++  StringRef File = SecPair.second;
++  ErrorOr<std::unique_ptr<MemoryBuffer>> BufOrErr = MemoryBuffer::getFile(File);
++  if (!BufOrErr)
++    return createFileError(File, errorCodeToError(BufOrErr.getError()));
++  std::unique_ptr<MemoryBuffer> Buf = std::move(*BufOrErr);
++  ArrayRef<uint8_t> Data(
++      reinterpret_cast<const uint8_t *>(Buf->getBufferStart()),
++      Buf->getBufferSize());
++  return F(SecName, Data);
++}
++
+ // This function handles the high level operations of GNU objcopy including
+ // handling command line options. It's important to outline certain properties
+ // we expect to hold of the command line operations. Any operation that "keeps"
+@@ -664,21 +680,23 @@ static Error handleArgs(const CommonConfig &Config, const ELFConfig &ELFConfig,
+         Sec.Type = SHT_NOBITS;
+ 
+   for (const auto &Flag : Config.AddSection) {
+-    std::pair<StringRef, StringRef> SecPair = Flag.split("=");
+-    StringRef SecName = SecPair.first;
+-    StringRef File = SecPair.second;
+-    ErrorOr<std::unique_ptr<MemoryBuffer>> BufOrErr =
+-        MemoryBuffer::getFile(File);
+-    if (!BufOrErr)
+-      return createFileError(File, errorCodeToError(BufOrErr.getError()));
+-    std::unique_ptr<MemoryBuffer> Buf = std::move(*BufOrErr);
+-    ArrayRef<uint8_t> Data(
+-        reinterpret_cast<const uint8_t *>(Buf->getBufferStart()),
+-        Buf->getBufferSize());
+-    OwnedDataSection &NewSection =
+-        Obj.addSection<OwnedDataSection>(SecName, Data);
+-    if (SecName.startswith(".note") && SecName != ".note.GNU-stack")
+-      NewSection.Type = SHT_NOTE;
++    auto AddSection = [&](StringRef Name, ArrayRef<uint8_t> Data) {
++      OwnedDataSection &NewSection =
++          Obj.addSection<OwnedDataSection>(Name, Data);
++      if (Name.startswith(".note") && Name != ".note.GNU-stack")
++        NewSection.Type = SHT_NOTE;
++      return Error::success();
++    };
++    if (Error E = handleUserSection(Flag, AddSection))
++      return E;
++  }
++
++  for (StringRef Flag : Config.UpdateSection) {
++    auto UpdateSection = [&](StringRef Name, ArrayRef<uint8_t> Data) {
++      return Obj.updateSection(Name, Data);
++    };
++    if (Error E = handleUserSection(Flag, UpdateSection))
++      return E;
+   }
+ 
+   if (!Config.AddGnuDebugLink.empty())
+diff --git a/llvm/tools/llvm-objcopy/ELF/Object.cpp b/llvm/tools/llvm-objcopy/ELF/Object.cpp
+index ba91d08e5..c8a27f7a6 100644
+--- a/llvm/tools/llvm-objcopy/ELF/Object.cpp
++++ b/llvm/tools/llvm-objcopy/ELF/Object.cpp
+@@ -2093,6 +2093,17 @@ template <class ELFT> void ELFWriter<ELFT>::writeSegmentData() {
+                 Size);
+   }
+ 
++  for (auto it : Obj.getUpdatedSections()) {
++    SectionBase *Sec = it.first;
++    ArrayRef<uint8_t> Data = it.second;
++
++    auto *Parent = Sec->ParentSegment;
++    assert(Parent && "This section should've been part of a segment.");
++    uint64_t Offset =
++        Sec->OriginalOffset - Parent->OriginalOffset + Parent->Offset;
++    llvm::copy(Data, Buf->getBufferStart() + Offset);
++  }
++
+   // Iterate over removed sections and overwrite their old data with zeroes.
+   for (auto &Sec : Obj.removedSections()) {
+     Segment *Parent = Sec.ParentSegment;
+@@ -2110,6 +2121,37 @@ ELFWriter<ELFT>::ELFWriter(Object &Obj, raw_ostream &Buf, bool WSH,
+     : Writer(Obj, Buf), WriteSectionHeaders(WSH && Obj.HadShdrs),
+       OnlyKeepDebug(OnlyKeepDebug) {}
+ 
++Error Object::updateSection(StringRef Name, ArrayRef<uint8_t> Data) {
++  auto It = llvm::find_if(Sections,
++                          [&](const SecPtr &Sec) { return Sec->Name == Name; });
++  if (It == Sections.end())
++    return createStringError(errc::invalid_argument, "section '%s' not found",
++                             Name.str().c_str());
++
++  auto *OldSec = It->get();
++  if (!OldSec->hasContents())
++    return createStringError(
++        errc::invalid_argument,
++        "section '%s' can't be updated because it does not have contents",
++        Name.str().c_str());
++
++  if (Data.size() > OldSec->Size && OldSec->ParentSegment)
++    return createStringError(errc::invalid_argument,
++                             "cannot fit data of size %zu into section '%s' "
++                             "with size %zu that is part of a segment",
++                             Data.size(), Name.str().c_str(), OldSec->Size);
++
++  if (!OldSec->ParentSegment) {
++    *It = std::make_unique<OwnedDataSection>(*OldSec, Data);
++  } else {
++    // The segment writer will be in charge of updating these contents.
++    OldSec->Size = Data.size();
++    UpdatedSections[OldSec] = Data;
++  }
++
++  return Error::success();
++}
++
+ Error Object::removeSections(
+     bool AllowBrokenLinks, std::function<bool(const SectionBase &)> ToRemove) {
+ 
+diff --git a/llvm/tools/llvm-objcopy/ELF/Object.h b/llvm/tools/llvm-objcopy/ELF/Object.h
+index 6fd26afa3..060a92159 100644
+--- a/llvm/tools/llvm-objcopy/ELF/Object.h
++++ b/llvm/tools/llvm-objcopy/ELF/Object.h
+@@ -429,6 +429,7 @@ public:
+   virtual void markSymbols();
+   virtual void
+   replaceSectionReferences(const DenseMap<SectionBase *, SectionBase *> &);
++  virtual bool hasContents() const { return false; }
+   // Notify the section that it is subject to removal.
+   virtual void onRemove();
+ };
+@@ -493,6 +494,9 @@ public:
+       function_ref<bool(const SectionBase *)> ToRemove) override;
+   Error initialize(SectionTableRef SecTable) override;
+   void finalize() override;
++  bool hasContents() const override {
++    return Type != ELF::SHT_NOBITS && Type != ELF::SHT_NULL;
++  }
+ };
+ 
+ class OwnedDataSection : public SectionBase {
+@@ -518,9 +522,15 @@ public:
+     OriginalOffset = SecOff;
+   }
+ 
++  OwnedDataSection(SectionBase &S, ArrayRef<uint8_t> Data)
++      : SectionBase(S), Data(std::begin(Data), std::end(Data)) {
++    Size = Data.size();
++  }
++
+   void appendHexData(StringRef HexData);
+   Error accept(SectionVisitor &Sec) const override;
+   Error accept(MutableSectionVisitor &Visitor) override;
++  bool hasContents() const override { return true; }
+ };
+ 
+ class CompressedSection : public SectionBase {
+@@ -1016,6 +1026,7 @@ private:
+   std::vector<SecPtr> Sections;
+   std::vector<SegPtr> Segments;
+   std::vector<SecPtr> RemovedSections;
++  DenseMap<SectionBase *, std::vector<uint8_t>> UpdatedSections;
+ 
+   static bool sectionIsAlloc(const SectionBase &Sec) {
+     return Sec.Flags & ELF::SHF_ALLOC;
+@@ -1066,6 +1077,9 @@ public:
+     return make_filter_range(make_pointee_range(Sections), sectionIsAlloc);
+   }
+ 
++  const auto &getUpdatedSections() const { return UpdatedSections; }
++  Error updateSection(StringRef Name, ArrayRef<uint8_t> Data);
++
+   SectionBase *findSection(StringRef Name) {
+     auto SecIt =
+         find_if(Sections, [&](const SecPtr &Sec) { return Sec->Name == Name; });
+diff --git a/llvm/tools/llvm-objcopy/ObjcopyOpts.td b/llvm/tools/llvm-objcopy/ObjcopyOpts.td
+index 63abbe4c2..ccd7ff292 100644
+--- a/llvm/tools/llvm-objcopy/ObjcopyOpts.td
++++ b/llvm/tools/llvm-objcopy/ObjcopyOpts.td
+@@ -214,3 +214,7 @@ defm add_symbol
+          "compatibility: debug, constructor, warning, indirect, synthetic, "
+          "unique-object, before.">,
+       MetaVarName<"name=[section:]value[,flags]">;
++
++defm update_section
++    : Eq<"update-section", "Add section <name> with contents from a file <file>.">,
++      MetaVarName<"name=file">;
+-- 
+2.34.1
+
