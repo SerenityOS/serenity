@@ -17,6 +17,7 @@ namespace SoftGPU {
 static constexpr bool ENABLE_STATISTICS_OVERLAY = false;
 static constexpr int NUM_SAMPLERS = 32;
 static constexpr int SUBPIXEL_BITS = 5;
+static constexpr int NUM_LIGHTS = 8;
 
 // See: https://www.khronos.org/opengl/wiki/Common_Mistakes#Texture_edge_color_problem
 // FIXME: make this dynamically configurable through ConfigServer
