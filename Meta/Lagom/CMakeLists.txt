@@ -402,7 +402,7 @@ if (BUILD_LAGOM)
         SOURCES ${LIBSOFTGPU_SOURCES}
         LIBS m LagomGfx
     )
-    
+
     # SQL
     file(GLOB_RECURSE LIBSQL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/*.cpp")
     list(REMOVE_ITEM LIBSQL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibSQL/AST/SyntaxHighlighter.cpp")
@@ -437,7 +437,6 @@ if (BUILD_LAGOM)
         SOURCES ${LIBUNICODE_SOURCES} ${UNICODE_DATA_SOURCES}
     )
     target_compile_definitions(LagomUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
-    target_link_libraries(LagomUnicode -ldl)
 
     # WASM
     file(GLOB LIBWASM_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWasm/*/*.cpp")
