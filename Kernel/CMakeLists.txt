@@ -19,6 +19,8 @@ set(KERNEL_HEAP_SOURCES
 
 set(KERNEL_SOURCES
     AddressSanitizer.cpp
+    Bus/PCI/Controller/HostBridge.cpp
+    Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Access.cpp
     Bus/PCI/API.cpp
     Bus/PCI/Device.cpp
