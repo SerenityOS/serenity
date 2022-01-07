@@ -91,7 +91,6 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style)
 
 Optional<Calendar> __attribute__((weak)) calendar_from_string(StringView) { return {}; }
 Optional<HourCycleRegion> __attribute__((weak)) hour_cycle_region_from_string(StringView) { return {}; }
-Optional<TimeZone> __attribute__((weak)) time_zone_from_string(StringView) { return {}; }
 Vector<HourCycle> __attribute__((weak)) get_regional_hour_cycles(StringView) { return {}; }
 
 // https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
