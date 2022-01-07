@@ -107,7 +107,11 @@ template<typename... Args>
 static consteval size_t __testjs_count(Args...) { return sizeof...(Args); }
 
 template<auto... Values>
-static consteval size_t __testjs_last() { return (AK::Detail::IntegralConstant<size_t, Values> {}, ...).value; }
+static consteval size_t __testjs_last()
+{
+    Array values { Values... };
+    return values[values.size() - 1U];
+}
 
 static constexpr auto TOP_LEVEL_TEST_NAME = "__$$TOP_LEVEL$$__";
 extern RefPtr<JS::VM> g_vm;
