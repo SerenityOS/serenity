@@ -4,7 +4,7 @@ if (DEFINED UNICODE_DATA_SOURCES)
     set(SOURCES ${UNICODE_DATA_SOURCES})
     serenity_lib(LibUnicodeData unicodedata)
     target_compile_options(LibUnicodeData PRIVATE -g0 -Os)
-    target_link_libraries(LibUnicodeData LibCore)
+    target_link_libraries(LibUnicodeData LibCore LibTimeZone)
 endif()
 
 set(SOURCES

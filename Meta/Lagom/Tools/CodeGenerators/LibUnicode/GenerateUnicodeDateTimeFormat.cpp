@@ -23,6 +23,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibTimeZone/TimeZone.h>
 #include <LibUnicode/DateTimeFormat.h>
 
 using StringIndexType = u16;
@@ -519,7 +520,7 @@ struct UnicodeLocaleData {
     HashMap<String, HourCycleListIndexType> hour_cycles;
     Vector<String> hour_cycle_regions;
 
-    HashMap<String, Vector<String>> meta_zones;
+    HashMap<String, Vector<TimeZone::TimeZone>> meta_zones;
     Vector<String> time_zones { "UTC"sv };
 
     Vector<String> calendars;
@@ -618,12 +619,15 @@ static ErrorOr<void> parse_meta_zones(String core_path, UnicodeLocaleData& local
         auto const& meta_zone = mapping.as_object().get("_other"sv);
         auto const& golden_zone = mapping.as_object().get("_type"sv);
 
-        auto& golden_zones = locale_data.meta_zones.ensure(meta_zone.as_string());
-        golden_zones.append(golden_zone.as_string());
+        if (auto time_zone = TimeZone::time_zone_from_string(golden_zone.as_string()); time_zone.has_value()) {
+            auto& golden_zones = locale_data.meta_zones.ensure(meta_zone.as_string());
+            golden_zones.append(*time_zone);
+        }
     });
 
     // UTC does not appear in metaZones.json. Define it for convenience so other parsers don't need to check for its existence.
-    locale_data.meta_zones.set("UTC"sv, { "UTC"sv });
+    if (auto time_zone = TimeZone::time_zone_from_string("UTC"sv); time_zone.has_value())
+        locale_data.meta_zones.set("UTC"sv, { *time_zone });
 
     return {};
 };
@@ -1403,7 +1407,10 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
     time_zone_formats.gmt_zero_format = locale_data.unique_strings.ensure(gmt_zero_format_string.as_string());
 
     auto parse_time_zone = [&](StringView meta_zone, JsonObject const& meta_zone_object) {
-        auto const& golden_zones = locale_data.meta_zones.find(meta_zone)->value;
+        auto golden_zones = locale_data.meta_zones.find(meta_zone);
+        if (golden_zones == locale_data.meta_zones.end())
+            return;
+
         TimeZoneNames time_zone_names {};
 
         if (auto long_name = parse_name("long"sv, meta_zone_object); long_name.has_value())
@@ -1411,23 +1418,16 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
         if (auto short_name = parse_name("short"sv, meta_zone_object); short_name.has_value())
             time_zone_names.short_name = short_name.value();
 
-        for (auto const& golden_zone : golden_zones) {
-            auto time_zone_index = locale_data.time_zones.find_first_index(golden_zone).value();
-            time_zones[time_zone_index] = locale_data.unique_time_zones.ensure(move(time_zone_names));
+        auto time_zone_index = locale_data.unique_time_zones.ensure(move(time_zone_names));
+
+        for (auto golden_zone : golden_zones->value) {
+            auto time_zone = to_underlying(golden_zone);
+            if (time_zone >= time_zones.size())
+                time_zones.resize(time_zone + 1);
+
+            time_zones[time_zone] = time_zone_index;
         }
     };
-
-    meta_zone_object.as_object().for_each_member([&](auto const& meta_zone, JsonValue const&) {
-        auto const& golden_zones = locale_data.meta_zones.find(meta_zone)->value;
-
-        for (auto const& golden_zone : golden_zones) {
-            if (!locale_data.time_zones.contains_slow(golden_zone))
-                locale_data.time_zones.append(golden_zone);
-        }
-    });
-
-    time_zones.resize(locale_data.time_zones.size());
-    quick_sort(locale_data.time_zones);
 
     meta_zone_object.as_object().for_each_member([&](auto const& meta_zone, JsonValue const& value) {
         parse_time_zone(meta_zone, value.as_object());
@@ -1566,7 +1566,6 @@ namespace Unicode {
 
     generate_enum(generator, format_identifier, "Calendar"sv, {}, locale_data.calendars, locale_data.calendar_aliases);
     generate_enum(generator, format_identifier, "HourCycleRegion"sv, {}, locale_data.hour_cycle_regions);
-    generate_enum(generator, format_identifier, "TimeZone"sv, {}, locale_data.time_zones);
 
     generator.append(R"~~~(
 }
@@ -1599,6 +1598,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 #include <AK/BinarySearch.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <LibTimeZone/TimeZone.h>
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/UnicodeDateTimeFormat.h>
@@ -1835,7 +1835,6 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
 
     append_from_string("Calendar"sv, "calendar"sv, locale_data.calendars, locale_data.calendar_aliases);
     append_from_string("HourCycleRegion"sv, "hour_cycle_region"sv, locale_data.hour_cycle_regions);
-    append_from_string("TimeZone"sv, "time_zone"sv, locale_data.time_zones);
 
     generator.append(R"~~~(
 Vector<HourCycle> get_regional_hour_cycles(StringView region)
@@ -2087,7 +2086,7 @@ static TimeZoneNames const* find_time_zone_names(StringView locale, StringView t
     if (!locale_value.has_value())
         return nullptr;
 
-    auto time_zone_value = time_zone_from_string(time_zone);
+    auto time_zone_value = ::TimeZone::time_zone_from_string(time_zone);
     if (!time_zone_value.has_value())
         return nullptr;
 
@@ -2096,6 +2095,8 @@ static TimeZoneNames const* find_time_zone_names(StringView locale, StringView t
 
     auto time_zone_list_index = s_locale_time_zones.at(locale_index);
     auto const& time_zone_list = s_time_zone_lists.at(time_zone_list_index);
+    if (time_zone_list.size() <= time_zone_index)
+        return nullptr;
 
     time_zone_index = time_zone_list.at(time_zone_index);
     return &s_time_zones[time_zone_index];
