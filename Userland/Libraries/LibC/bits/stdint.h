@@ -65,14 +65,14 @@ typedef __INT_LEAST64_TYPE__ int_least64_t;
 #    define INT64_C(x) __int_c(x, __INT64_C_SUFFIX__)
 #    define UINT64_C(x) __int_c(x, __UINT64_C_SUFFIX__)
 
-#    define INTMAX_C(c) __int_c(c, __INTMAX_C_SUFFIX__)
-#    define UINTMAX_C(c) __int_c(x, __UINTMAX_C_SUFFIX__)
+#    define INTMAX_C(x) __int_c(x, __INTMAX_C_SUFFIX__)
+#    define UINTMAX_C(x) __int_c(x, __UINTMAX_C_SUFFIX__)
 #else
 #    define INT64_C(x) __INT64_C(x)
 #    define UINT64_C(x) __UINT64_C(x)
 
-#    define INTMAX_C(c) __INTMAX_C(x)
-#    define UINTMAX_C(c) __UINTMAX_C(x)
+#    define INTMAX_C(x) __INTMAX_C(x)
+#    define UINTMAX_C(x) __UINTMAX_C(x)
 #endif
 
 typedef __UINTPTR_TYPE__ uintptr_t;
