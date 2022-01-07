@@ -171,12 +171,14 @@ int pthread_detach(pthread_t thread)
     __RETURN_PTHREAD_ERROR(rc);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_sigmask.html
 int pthread_sigmask(int how, const sigset_t* set, sigset_t* old_set)
 {
     if (sigprocmask(how, set, old_set))
         return errno;
     return 0;
 }
+
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_init.html
 int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
 {
