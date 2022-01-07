@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_resizable(false);
     window->resize(250, 215);
 
-    auto& widget = window->set_main_widget<CalculatorWidget>();
+    auto widget = TRY(window->try_set_main_widget<CalculatorWidget>());
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
@@ -45,23 +45,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& edit_menu = window->add_menu("&Edit");
     edit_menu.add_action(GUI::CommonActions::make_copy_action([&](auto&) {
-        GUI::Clipboard::the().set_plain_text(widget.get_entry());
+        GUI::Clipboard::the().set_plain_text(widget->get_entry());
     }));
     edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
         auto clipboard = GUI::Clipboard::the().fetch_data_and_type();
         if (clipboard.mime_type == "text/plain") {
             if (!clipboard.data.is_empty()) {
-                widget.set_entry(KeypadValue(StringView(clipboard.data)));
+                widget->set_entry(KeypadValue(StringView(clipboard.data)));
             }
         }
     }));
 
     auto& constants_menu = window->add_menu("&Constants");
     constants_menu.add_action(GUI::Action::create("&Pi", [&](auto&) {
-        widget.set_entry(KeypadValue { 31415926535, 10 });
+        widget->set_entry(KeypadValue { 31415926535, 10 });
     }));
     constants_menu.add_action(GUI::Action::create("&Euler's Constant", [&](auto&) {
-        widget.set_entry(KeypadValue { 27182818284, 10 });
+        widget->set_entry(KeypadValue { 27182818284, 10 });
     }));
 
     auto& help_menu = window->add_menu("&Help");
