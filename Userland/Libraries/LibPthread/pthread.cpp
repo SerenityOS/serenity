@@ -515,7 +515,6 @@ int pthread_setspecific(pthread_key_t key, const void* value)
     return __pthread_setspecific(key, value);
 }
 
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setname_np.html
 int pthread_setname_np(pthread_t thread, const char* name)
 {
     if (!name)
@@ -524,7 +523,6 @@ int pthread_setname_np(pthread_t thread, const char* name)
     __RETURN_PTHREAD_ERROR(rc);
 }
 
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_getname_np.html
 int pthread_getname_np(pthread_t thread, char* buffer, size_t buffer_size)
 {
     int rc = syscall(SC_get_thread_name, thread, buffer, buffer_size);
