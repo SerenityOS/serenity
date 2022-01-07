@@ -332,6 +332,7 @@ public:
     KeyCode key() const { return m_key; }
     bool ctrl() const { return m_modifiers & Mod_Ctrl; }
     bool alt() const { return m_modifiers & Mod_Alt; }
+    bool altgr() const { return m_modifiers & Mod_AltGr; }
     bool shift() const { return m_modifiers & Mod_Shift; }
     bool super() const { return m_modifiers & Mod_Super; }
     u8 modifiers() const { return m_modifiers; }
