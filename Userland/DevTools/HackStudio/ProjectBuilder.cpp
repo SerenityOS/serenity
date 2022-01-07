@@ -158,9 +158,13 @@ void ProjectBuilder::generate_cmake_library_definitions(StringBuilder& builder)
 {
     Vector<String> arguments = { "sh", "-c", "find Userland/Libraries -name CMakeLists.txt | xargs grep serenity_lib" };
     auto res = Core::command("/bin/sh", arguments, {});
+    if (res.is_error()) {
+        warnln("{}", res.error());
+        return;
+    }
 
     static const Regex<ECMA262> parse_library_definition(R"~~~(.+:serenity_lib[c]?\((\w+) (\w+)\).*)~~~");
-    for (auto& line : res->stdout.split('\n')) {
+    for (auto& line : res.value().stdout.split('\n')) {
 
         RegexResult result;
         if (!parse_library_definition.search(line, result))
@@ -180,9 +184,13 @@ void ProjectBuilder::generate_cmake_library_dependencies(StringBuilder& builder)
 {
     Vector<String> arguments = { "sh", "-c", "find Userland/Libraries -name CMakeLists.txt | xargs grep target_link_libraries" };
     auto res = Core::command("/bin/sh", arguments, {});
+    if (res.is_error()) {
+        warnln("{}", res.error());
+        return;
+    }
 
     static const Regex<ECMA262> parse_library_definition(R"~~~(.+:target_link_libraries\((\w+) ([\w\s]+)\).*)~~~");
-    for (auto& line : res->stdout.split('\n')) {
+    for (auto& line : res.value().stdout.split('\n')) {
 
         RegexResult result;
         if (!parse_library_definition.search(line, result))
@@ -201,7 +209,7 @@ void ProjectBuilder::generate_cmake_library_dependencies(StringBuilder& builder)
 ErrorOr<void> ProjectBuilder::verify_cmake_is_installed()
 {
     auto res = Core::command("cmake --version", {});
-    if (res.has_value() && res->exit_code == 0)
+    if (!res.is_error() && res.value().exit_code == 0)
         return {};
     return Error::from_string_literal("CMake port is not installed"sv);
 }
