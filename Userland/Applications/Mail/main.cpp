@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-mail");
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& mail_widget = window->set_main_widget<MailWidget>();
+    auto mail_widget = TRY(window->try_set_main_widget<MailWidget>());
 
     window->set_title("Mail");
     window->resize(640, 400);
@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& file_menu = window->add_menu("&File");
 
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
-        mail_widget.on_window_close();
+        mail_widget->on_window_close();
         app->quit();
     }));
 
@@ -56,13 +56,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu.add_action(GUI::CommonActions::make_about_action("Mail", app_icon, window));
 
     window->on_close_request = [&] {
-        mail_widget.on_window_close();
+        mail_widget->on_window_close();
         return GUI::Window::CloseRequestDecision::Close;
     };
 
     window->show();
 
-    bool should_continue = mail_widget.connect_and_login();
+    bool should_continue = mail_widget->connect_and_login();
     if (!should_continue)
         return 1;
 
