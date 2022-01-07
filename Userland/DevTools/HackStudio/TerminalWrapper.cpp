@@ -7,6 +7,7 @@
 #include "TerminalWrapper.h"
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/MessageBox.h>
 #include <LibVT/TerminalWidget.h>
@@ -22,7 +23,7 @@
 
 namespace HackStudio {
 
-void TerminalWrapper::run_command(const String& command)
+void TerminalWrapper::run_command(const String& command, Optional<String> working_directory, WaitForExit wait_for_exit)
 {
     if (m_pid != -1) {
         GUI::MessageBox::show(window(),
@@ -39,6 +40,8 @@ void TerminalWrapper::run_command(const String& command)
     }
 
     int ptm_fd = ptm_res.value();
+    m_child_exited = false;
+    m_child_exit_status.clear();
 
     m_pid = fork();
     if (m_pid < 0) {
@@ -46,8 +49,21 @@ void TerminalWrapper::run_command(const String& command)
         return;
     }
 
-    if (m_pid > 0)
+    if (m_pid > 0) {
+        if (wait_for_exit == WaitForExit::Yes) {
+            GUI::Application::the()->event_loop().spin_until([this]() {
+                return m_child_exited;
+            });
+        }
         return;
+    }
+
+    if (working_directory.has_value()) {
+        if (chdir(working_directory->characters())) {
+            perror("chdir");
+            exit(1);
+        }
+    }
 
     if (setup_slave_pseudoterminal(ptm_fd).is_error()) {
         perror("setup_pseudoterminal");
@@ -93,6 +109,7 @@ ErrorOr<int> TerminalWrapper::setup_master_pseudoterminal(WaitForChildOnExit wai
                 perror("waitpid");
                 VERIFY_NOT_REACHED();
             }
+
             if (WIFEXITED(wstatus)) {
                 m_terminal_widget->inject_string(String::formatted("\033[{};1m(Command exited with code {})\033[0m\r\n", wstatus == 0 ? 32 : 31, WEXITSTATUS(wstatus)));
             } else if (WIFSTOPPED(wstatus)) {
@@ -100,6 +117,9 @@ ErrorOr<int> TerminalWrapper::setup_master_pseudoterminal(WaitForChildOnExit wai
             } else if (WIFSIGNALED(wstatus)) {
                 m_terminal_widget->inject_string(String::formatted("\033[34;1m(Command signaled with {}!)\033[0m\r\n", strsignal(WTERMSIG(wstatus))));
             }
+
+            m_child_exit_status = WEXITSTATUS(wstatus);
+            m_child_exited = true;
         }
         m_pid = -1;
 
@@ -185,6 +205,12 @@ TerminalWrapper::TerminalWrapper(bool user_spawned)
 
 TerminalWrapper::~TerminalWrapper()
 {
+}
+
+int TerminalWrapper::child_exit_status() const
+{
+    VERIFY(m_child_exit_status.has_value());
+    return m_child_exit_status.value();
 }
 
 }
