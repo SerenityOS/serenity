@@ -6,7 +6,7 @@ The Shell Command Language
 
 The shell operates according to the following general steps:
 
-* Some string is read from a source, be it a file, the standard input, or a command string (see [`Shell`(1)](../man1/Shell.md))
+* Some string is read from a source, be it a file, the standard input, or a command string (see [`Shell`(1)](help://man/1/Shell))
 * The shell parses the input to an abstract syntax tree
 * The shell performs various expansions and/or resolutions on the nodes
 * The shell performs various type checks and syntactic checks

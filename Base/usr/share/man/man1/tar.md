@@ -39,4 +39,4 @@ $ tar -x -f archive.tar
 
 ## See also
 
-* [`unzip`(1)](unzip.md)
+* [`unzip`(1)](help://man/1/unzip)

@@ -24,7 +24,7 @@ In some instances, it is useful for a SUID binary to either temporarily or perma
 
 To make this possible, each process has *three* user (and group) IDs: The (real) user ID, the *effective* user ID, and the *saved* user ID. When a process executes a normal binary, all three IDs are set to the parent process's user ID. However, when a process executes a SUID binary, the process runs with the parent process's ID as its real ID, but it takes its effective ID and saved ID from the binary. (Analogously for the group ID for SGID binaries.)
 
-The function [`setresuid`(2)](../man2/getresuid.md) can change the real, effective, and saved user ID of a process -- but for non-root processes it is only valid to set each new ID to the current value of real, effective, or saved user ID. Since SUID binaries start with the binary's owner as effective and saved user ID and with the current user's ID as real user ID, this allows switching the effective user ID between the SUID owner's ID and the current user's ID.
+The function [`setresuid`(2)](help://man/2/getresuid) can change the real, effective, and saved user ID of a process -- but for non-root processes it is only valid to set each new ID to the current value of real, effective, or saved user ID. Since SUID binaries start with the binary's owner as effective and saved user ID and with the current user's ID as real user ID, this allows switching the effective user ID between the SUID owner's ID and the current user's ID.
 
 Hence, to temporarily drop SUID privileges, set the effective ID to a less privileged user ID, and store the current effective user ID in the saved user ID so that it can be restored in a later call:
 
@@ -63,9 +63,9 @@ For historical reasons, there are many functions for setting and getting these I
 ## See also
 
 * "Setuid Demystified", Proceedings of the 11th USENIX Security Symposium, August 2002, Pages 171–190
-* [`getresuid`(2) / `getresgid`(2)](../man2/getresuid.md)
-* [`geteuid`(2) / `getegid`(2)](../man2/geteuid.md)
-* [`getuid`(2) / `getgid`(2)](../man2/getuid.md)
-* [`seteuid`(2) / `setegid`(2)](../man2/seteuid.md)
-* [`setuid`(2) / `setgid`(2)](../man2/setuid.md)
-* [`setresuid`(2) / `setresgid`(2)](../man2/setresuid.md)
+* [`getresuid`(2) / `getresgid`(2)](help://man/2/getresuid)
+* [`geteuid`(2) / `getegid`(2)](help://man/2/geteuid)
+* [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
+* [`seteuid`(2) / `setegid`(2)](help://man/2/seteuid)
+* [`setuid`(2) / `setgid`(2)](help://man/2/setuid)
+* [`setresuid`(2) / `setresgid`(2)](help://man/2/setresuid)

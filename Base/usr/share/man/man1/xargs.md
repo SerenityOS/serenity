@@ -48,4 +48,4 @@ $ xargs -a stuff --null -s 1024
 
 ## See also
 
-* [`find`(1)](find.md)
+* [`find`(1)](help://man/1/find)

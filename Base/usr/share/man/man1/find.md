@@ -72,4 +72,4 @@ $ find -name \*config\*
 
 ## See also
 
-* [`xargs`(1)](xargs.md)
+* [`xargs`(1)](help://man/1/xargs)

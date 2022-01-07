@@ -36,4 +36,4 @@ $ id -G
 
 ## See also
 
-* [`whoami`(1)](whoami.md)
+* [`whoami`(1)](help://man/1/whoami)

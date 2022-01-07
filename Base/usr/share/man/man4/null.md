@@ -14,6 +14,6 @@ Reading from `/dev/null` returns end of file and exits with status 0.
 
 ## See also
 
-* [`full`(4)](../man4/full.md)
-* [`zero`(4)](../man4/zero.md)
+* [`full`(4)](help://man/4/full)
+* [`zero`(4)](help://man/4/zero)
 
