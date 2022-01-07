@@ -476,7 +476,8 @@ DeviceInfo Device::info() const
     return {
         .vendor_name = "SerenityOS",
         .device_name = "SoftGPU",
-        .num_texture_units = NUM_SAMPLERS
+        .num_texture_units = NUM_SAMPLERS,
+        .num_lights = NUM_LIGHTS
     };
 }
 
