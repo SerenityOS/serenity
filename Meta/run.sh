@@ -292,9 +292,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device pci-bridge,chassis_nr=1,id=bridge1,bus=pcie.4,addr=0x3.0x0
 -device sdhci-pci,bus=bridge1,addr=0x1.0x0
 -display $SERENITY_QEMU_DISPLAY_BACKEND
--drive file=${SERENITY_DISK_IMAGE},format=raw,id=disk,if=none
 -device ahci,id=ahci
--device ide-hd,bus=ahci.0,drive=disk,unit=0
 -device virtio-serial
 -chardev stdio,id=stdout,mux=on
 -device virtconsole,chardev=stdout
