@@ -34,11 +34,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = GUI::Window::construct();
     window->set_title("Keyboard Mapper");
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_main_widget<KeyboardMapperWidget>();
+    auto keyboard_mapper_widget = TRY(window->try_set_main_widget<KeyboardMapperWidget>());
     window->resize(775, 315);
     window->set_resizable(false);
 
-    auto keyboard_mapper_widget = (KeyboardMapperWidget*)window->main_widget();
     if (path.is_empty())
         TRY(keyboard_mapper_widget->load_map_from_system());
     else
