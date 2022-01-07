@@ -615,12 +615,12 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
     //
-    // 1.   Transform all of the vertices in the current vertex list into eye space by mulitplying the model-view matrix
+    // 1.   Transform all of the vertices in the current vertex list into eye space by multiplying the model-view matrix
     // 2.   Transform all of the vertices from eye space into clip space by multiplying by the projection matrix
     // 3.   If culling is enabled, we cull the desired faces (https://learnopengl.com/Advanced-OpenGL/Face-culling)
     // 4.   Each element of the vertex is then divided by w to bring the positions into NDC (Normalized Device Coordinates)
-    // 5.   The vertices are sorted (for the rasteriser, how are we doing this? 3Dfx did this top to bottom in terms of vertex y coordinates)
-    // 6.   The vertices are then sent off to the rasteriser and drawn to the screen
+    // 5.   The vertices are sorted (for the rasterizer, how are we doing this? 3Dfx did this top to bottom in terms of vertex y coordinates)
+    // 6.   The vertices are then sent off to the rasterizer and drawn to the screen
 
     float scr_width = m_render_target->width();
     float scr_height = m_render_target->height();

@@ -14,7 +14,7 @@ Lagom can be used to fuzz parts of SerenityOS's code base. Fuzzers can be run lo
 
 ### Fuzzing locally
 
-Lagom can be used to fuzz parts of SerenityOS's code base. This requires buildling with `clang`, so it's convenient to use a different build directory for that. Fuzzers work best with Address Sanitizer enabled. Run CMake like this:
+Lagom can be used to fuzz parts of SerenityOS's code base. This requires building with `clang`, so it's convenient to use a different build directory for that. Fuzzers work best with Address Sanitizer enabled. Run CMake like this:
 
     # From the root of the SerenityOS checkout:
     cmake -GNinja -S Meta/Lagom -B Build/lagom-fuzzers \

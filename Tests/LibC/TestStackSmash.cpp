@@ -7,7 +7,7 @@
 #include <AK/Format.h>
 #include <LibTest/TestCase.h>
 
-// Note: Needs to be 'noline' so stack canary isn't optimized out.
+// Note: Needs to be 'noinline' so stack canary isn't optimized out.
 static void __attribute__((noinline)) smasher(char* string)
 {
 #pragma GCC diagnostic push
@@ -18,7 +18,7 @@ static void __attribute__((noinline)) smasher(char* string)
 #pragma GCC diagnostic pop
 }
 
-// Note: Needs to be 'noline' so stack canary isn't optimized out.
+// Note: Needs to be 'noinline' so stack canary isn't optimized out.
 static void __attribute__((noinline)) stack_to_smash()
 {
     char string[8] = {};

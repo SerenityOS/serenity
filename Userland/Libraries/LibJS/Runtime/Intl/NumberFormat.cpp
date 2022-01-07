@@ -1589,7 +1589,7 @@ int compute_exponent(NumberFormat& number_format, double number)
     int magnitude = log10floor(number);
 
     // 4. Let exponent be ComputeExponentForMagnitude(numberFormat, magnitude).
-    int exponent = compute_exponent_for_magniude(number_format, magnitude);
+    int exponent = compute_exponent_for_magnitude(number_format, magnitude);
 
     // 5. Let x be x × 10^(-exponent).
     number *= pow(10, -exponent);
@@ -1613,11 +1613,11 @@ int compute_exponent(NumberFormat& number_format, double number)
     }
 
     // 10. Return ComputeExponentForMagnitude(numberFormat, magnitude + 1).
-    return compute_exponent_for_magniude(number_format, magnitude + 1);
+    return compute_exponent_for_magnitude(number_format, magnitude + 1);
 }
 
 // 15.1.17 ComputeExponentForMagnitude ( numberFormat, magnitude ), https://tc39.es/ecma402/#sec-computeexponentformagnitude
-int compute_exponent_for_magniude(NumberFormat& number_format, int magnitude)
+int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude)
 {
     // 1. Let notation be numberFormat.[[Notation]].
     switch (number_format.notation()) {

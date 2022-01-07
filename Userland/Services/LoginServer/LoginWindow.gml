@@ -5,7 +5,7 @@
 
     @GUI::ImageWidget {
         name: "banner"
-        auto_resie: true
+        auto_resize: true
     }
 
     @GUI::Widget {

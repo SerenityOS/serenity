@@ -438,7 +438,7 @@ public:
     NonnullOwnPtrVector<KString> const& arguments() const { return m_arguments; };
     NonnullOwnPtrVector<KString> const& environment() const { return m_environment; };
 
-    ErrorOr<void> exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, int recusion_depth = 0);
+    ErrorOr<void> exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, int recursion_depth = 0);
 
     ErrorOr<LoadResult> load(NonnullRefPtr<OpenFileDescription> main_program_description, RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
 

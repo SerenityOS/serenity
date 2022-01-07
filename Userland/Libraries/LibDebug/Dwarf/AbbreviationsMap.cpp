@@ -37,9 +37,9 @@ void AbbreviationsMap::populate_map()
         u8 has_children = 0;
         abbreviation_stream >> has_children;
 
-        AbbreviationEntry abbrevation_entry {};
-        abbrevation_entry.tag = static_cast<EntryTag>(tag);
-        abbrevation_entry.has_children = (has_children == 1);
+        AbbreviationEntry abbreviation_entry {};
+        abbreviation_entry.tag = static_cast<EntryTag>(tag);
+        abbreviation_entry.has_children = (has_children == 1);
 
         AttributeSpecification current_attribute_specification {};
         do {
@@ -58,11 +58,11 @@ void AbbreviationsMap::populate_map()
             }
 
             if (current_attribute_specification.attribute != Attribute::None) {
-                abbrevation_entry.attribute_specifications.append(current_attribute_specification);
+                abbreviation_entry.attribute_specifications.append(current_attribute_specification);
             }
         } while (current_attribute_specification.attribute != Attribute::None || current_attribute_specification.form != AttributeDataForm::None);
 
-        m_entries.set((u32)abbreviation_code, move(abbrevation_entry));
+        m_entries.set((u32)abbreviation_code, move(abbreviation_entry));
     }
 }
 

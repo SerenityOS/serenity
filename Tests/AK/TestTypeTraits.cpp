@@ -40,7 +40,7 @@
     static_assert(!trait<__VA_ARGS__>)
 
 enum class Enummer : u8 {
-    Dummmy,
+    Dummy
 };
 
 TEST_CASE(FundamentalTypeClassification)

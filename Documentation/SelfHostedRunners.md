@@ -63,7 +63,7 @@ RUST_WHITELISTED_EVENT_NAME=push
 ```shell
 MAX_RUNNER_THREADS=XXX
 ```
-If you are setting up multiple runners on the same machine, this setting can be used to divvy up the cores, if youre only setting up one runner, this can just be set to the server's core count
+If you are setting up multiple runners on the same machine, this setting can be used to divvy up the cores, if you're only setting up one runner, this can just be set to the server's core count
 ### Install the runner as a service
 ```shell
 sudo ./svc.sh install

@@ -152,7 +152,7 @@ public:
         size_t real_n = line_subline_add(m_line, m_subline, n);
 
         // If we are moving less than a screen down, just draw the extra lines
-        // for efficency and more(1) compatibility.
+        // for efficiency and more(1) compatibility.
         if (n < m_height - 1) {
             size_t line = m_line;
             size_t subline = m_subline;

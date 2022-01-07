@@ -60,7 +60,7 @@ u64 SignedBigInteger::to_u64() const
     u64 unsigned_value = m_unsigned_data.to_u64();
     if (!m_sign)
         return unsigned_value;
-    return ~(unsigned_value - 1); // equivalent to `-unsigned_value`, but doesnt trigger UBSAN
+    return ~(unsigned_value - 1); // equivalent to `-unsigned_value`, but doesn't trigger UBSAN
 }
 
 double SignedBigInteger::to_double() const

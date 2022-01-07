@@ -7,7 +7,7 @@
 #include <AK/Types.h>
 #include <fenv.h>
 
-// This is the size of the floating point envinronment image in protected mode
+// This is the size of the floating point environment image in protected mode
 static_assert(sizeof(__x87_floating_point_environment) == 28);
 
 static u16 read_status_register()

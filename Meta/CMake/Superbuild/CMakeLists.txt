@@ -33,7 +33,7 @@ get_filename_component(
     ABSOLUTE CACHE
 )
 set(SERENITY_ARCH "i686" CACHE STRING "Target architecture for SerenityOS.")
-set(SERENITY_TOOLCHAIN "GNU" CACHE STRING "Compliler toolchain to use for Serenity (GNU or Clang)")
+set(SERENITY_TOOLCHAIN "GNU" CACHE STRING "Compiler toolchain to use for Serenity (GNU or Clang)")
 
 # FIXME: It is preferred to keep all the sub-build artifacts below the binary directory for the superbuild
 #        However, this has an impact on developer's IDE settings and more significantly, the Ports tree.

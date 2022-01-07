@@ -64,7 +64,7 @@ describe("only allowed in async functions", () => {
         expect("(function* () { for await (const v of []) return v; })").not.toEval();
     });
 
-    test("async genrator functions", () => {
+    test("async generator functions", () => {
         expect("async function* foo() { for await (const v of []) yield v; }").toEval();
         expect("(async function* () { for await (const v of []) yield v; })").toEval();
     });

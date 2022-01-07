@@ -33,6 +33,6 @@ This program must be run as root.
 
 ```sh
 # groupadd -g 110 contributors
-# groupadd mainteners
+# groupadd maintainers
 ```
 

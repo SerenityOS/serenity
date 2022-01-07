@@ -134,7 +134,7 @@ void Fire::timer_event(Core::TimerEvent&)
     if (phase > 1)
         phase = 0;
 
-    /* Paint our palletized buffer to screen */
+    /* Paint our palettized buffer to screen */
     for (int px = 0 + phase; px < FIRE_WIDTH; px += 2) {
         for (int py = 1; py < FIRE_HEIGHT; py++) {
             int rnd = rand() % 3;

@@ -273,7 +273,7 @@ describe("dayPeriod", () => {
 
 describe("hour", () => {
     // prettier-ignore
-    // FIXME: The 2-digit results are supposed to include {ampm}. These results are acheived from the "HH"
+    // FIXME: The 2-digit results are supposed to include {ampm}. These results are achieved from the "HH"
     //        pattern, which should only be applied to 24-hour cycles.
     const data = [
         { hour: "2-digit", en0: "05", en1: "07", ar0: "٠٥", ar1: "٠٧" },

@@ -105,7 +105,7 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::DeviceIdentifie
     , m_mmio_registers(PCI::get_BAR2(pci_device_identifier.address()) & 0xfffffff0)
     , m_registers(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(m_mmio_registers))
 {
-    // We assume safe resolutio is 1024x768x32
+    // We assume safe resolution is 1024x768x32
     m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
     // FIXME: This is a very wrong way to do this...
     GraphicsManagement::the().m_console = m_framebuffer_console;
