@@ -30,9 +30,13 @@ fi
 
 # To support virtualization acceleration on mac
 # we need to use 64-bit qemu
-if [ "$(uname)" = "Darwin" ] && [ "$(uname -m)" = "x86_64" ]; then
+if [ "$(uname)" = "Darwin" ]; then
 
-    [ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-x86_64"
+    if [ "$SERENITY_ARCH" != "aarch64" ]; then
+        [ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-x86_64"
+    else
+        [ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-aarch64"
+    fi
 
     if $SERENITY_QEMU_BIN --accel help | grep -q hvf; then
         SERENITY_VIRT_TECH_ARG="--accel hvf"
@@ -212,7 +216,7 @@ fi
 
 if [ -z "$SERENITY_MACHINE" ]; then
     if [ "$SERENITY_ARCH" = "aarch64" ]; then
-        SERENITY_MACHINE="-M raspi3 -serial stdio"
+        SERENITY_MACHINE="-M raspi3b -serial stdio"
     else
         SERENITY_MACHINE="
         -m $SERENITY_RAM_SIZE
