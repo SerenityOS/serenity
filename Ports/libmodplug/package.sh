@@ -9,6 +9,8 @@ workdir="libmodplug-$version"
 
 install() {
     run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
-    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libmodplug.so -Wl,-soname,libmodplug.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libmodplug.a -Wl,--no-whole-archive
-    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libmodplug.la
+    MODPLUG_LIBDIR="${SERENITY_INSTALL_ROOT}/usr/local/lib"
+    ${CC} -shared -o ${MODPLUG_LIBDIR}/libmodplug.so.1 -Wl,-soname,libmodplug.so -Wl,--whole-archive ${MODPLUG_LIBDIR}/libmodplug.a -Wl,--no-whole-archive
+    ln -rsf ${MODPLUG_LIBDIR}/libmodplug.so.1 ${MODPLUG_LIBDIR}/libmodplug.so
+    rm -f ${MODPLUG_LIBDIR}/libmodplug.la
 }
