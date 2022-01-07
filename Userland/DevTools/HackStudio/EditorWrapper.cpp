@@ -30,7 +30,8 @@ EditorWrapper::EditorWrapper()
     m_filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_filename_label->set_fixed_height(14);
 
-    m_editor = add<Editor>();
+    // FIXME: Propagate errors instead of giving up
+    m_editor = MUST(try_add<Editor>());
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
 
