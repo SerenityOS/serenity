@@ -39,15 +39,17 @@ jobs:
       # sudo apt-get update -qq
       - name: "Install Ubuntu dependencies"
         # These packages are already part of the ubuntu-20.04 image:
-        # cmake clang-format-11 gcc-10 g++-10 libstdc++-10-dev libgmp-dev npm shellcheck
+        # cmake clang-format-11 libgmp-dev npm shellcheck
         # Packages below aren't.
         #
         # We add the canonical-server/server-backports PPA to get updated QEMU releases without having to manage
         #    yet another cache in github actions
+        # We add the ubuntu-toolchain-r/test PPA to get gcc-11 on 20.04
         run: |
           sudo add-apt-repository ppa:canonical-server/server-backports
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
-          sudo apt-get install libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 ccache unzip
+          sudo apt-get install ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build qemu-utils qemu-system-i386 unzip
       - name: Install JS dependencies
         run: sudo npm install -g prettier@2.4.1
       - name: Install Python dependencies
@@ -56,7 +58,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 requests
       - name: Check versions
-        run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version
+        run: set +e; g++ --version; g++-11 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version
 
       # === PREPARE FOR BUILDING ===
 
@@ -140,8 +142,8 @@ jobs:
             -DSERENITY_ARCH=${{ matrix.arch }} \
             -DSERENITY_TOOLCHAIN=GNU \
             -DBUILD_LAGOM=ON \
-            -DCMAKE_C_COMPILER=gcc-10 \
-            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DCMAKE_C_COMPILER=gcc-11 \
+            -DCMAKE_CXX_COMPILER=g++-11 \
             -DENABLE_ALL_DEBUG_FACILITIES=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
@@ -155,8 +157,8 @@ jobs:
             -DENABLE_COMPILETIME_HEADER_CHECK=ON \
             -DSERENITY_ARCH=${{ matrix.arch }} \
             -DSERENITY_TOOLCHAIN=GNU \
-            -DCMAKE_C_COMPILER=gcc-10 \
-            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DCMAKE_C_COMPILER=gcc-11 \
+            -DCMAKE_CXX_COMPILER=g++-11 \
             -DENABLE_UNDEFINED_SANITIZER=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
