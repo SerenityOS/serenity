@@ -91,13 +91,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 break;
             }
         }
-        if (!section) {
-            warnln("No man page for {}", name);
-            exit(1);
-        }
     }
-
     auto filename = make_path(section);
+    if (section == nullptr) {
+        warnln("No man page for {}", name);
+        exit(1);
+    } else if (access(filename.characters(), R_OK) != 0) {
+        warnln("No man page for {} in section {}", name, section);
+        exit(1);
+    }
 
     String pager_command;
     if (pager)
