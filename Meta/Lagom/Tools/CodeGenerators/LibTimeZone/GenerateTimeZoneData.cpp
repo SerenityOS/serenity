@@ -36,6 +36,7 @@ struct TimeZone {
 struct TimeZoneData {
     HashMap<String, Vector<TimeZone>> time_zones;
     Vector<String> time_zones_names;
+    Vector<Alias> time_zones_aliases;
 };
 
 static Time parse_time(StringView segment)
@@ -126,6 +127,18 @@ static void parse_zone_continuation(StringView zone_line, Vector<TimeZone>& time
     time_zones.append(move(time_zone));
 }
 
+static void parse_link(StringView link_line, TimeZoneData& time_zone_data)
+{
+    auto segments = link_line.split_view_if([](char ch) { return (ch == '\t') || (ch == ' '); });
+
+    // Link TARGET LINK-NAME
+    VERIFY(segments[0] == "Link"sv);
+    auto target = segments[1];
+    auto alias = segments[2];
+
+    time_zone_data.time_zones_aliases.append({ target, alias });
+}
+
 static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& time_zone_data)
 {
     // For reference, the man page for `zic` has the best documentation of the TZDB file format.
@@ -144,6 +157,9 @@ static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& t
             parse_zone_continuation(line, *last_parsed_zone);
         } else {
             last_parsed_zone = nullptr;
+
+            if (line.starts_with("Link"sv))
+                parse_link(line, time_zone_data);
         }
     }
 
@@ -186,7 +202,7 @@ static void generate_time_zone_data_header(Core::File& file, TimeZoneData& time_
 namespace TimeZone {
 )~~~");
 
-    generate_enum(generator, format_identifier, "TimeZone"sv, {}, time_zone_data.time_zones_names);
+    generate_enum(generator, format_identifier, "TimeZone"sv, {}, time_zone_data.time_zones_names, time_zone_data.time_zones_aliases);
 
     generator.append(R"~~~(
 }
@@ -211,17 +227,19 @@ static void generate_time_zone_data_implementation(Core::File& file, TimeZoneDat
 namespace TimeZone {
 )~~~");
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values) {
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, auto const& aliases) {
         HashValueMap<String> hashes;
         hashes.ensure_capacity(values.size());
 
         for (auto const& value : values)
             hashes.set(value.hash(), format_identifier(enum_title, value));
+        for (auto const& alias : aliases)
+            hashes.set(alias.alias.hash(), format_identifier(enum_title, alias.alias));
 
         generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
     };
 
-    append_from_string("TimeZone"sv, "time_zone"sv, time_zone_data.time_zones_names);
+    append_from_string("TimeZone"sv, "time_zone"sv, time_zone_data.time_zones_names, time_zone_data.time_zones_aliases);
 
     generator.append(R"~~~(
 }
