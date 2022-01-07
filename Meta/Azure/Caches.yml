@@ -18,13 +18,13 @@ steps:
     - ${{ if eq(parameters.toolchain, 'clang') }}:
       - task: Cache@2
         inputs:
-          key: '"toolchain" | "x86_64" | Toolchain/BuildClang.sh | Toolchain/Patches/*[!gcc].patch | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
+          key: '"toolchain" | "x86_64" | Toolchain/BuildClang.sh | Toolchain/Patches/llvm*.patch | Toolchain/CMake/*.cmake | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
           path: $(Build.SourcesDirectory)/Toolchain/Cache
         displayName: 'Toolchain Prebuilt Cache'
     - ${{ if eq(parameters.toolchain, 'gcc') }}:
       - task: Cache@2
         inputs:
-          key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildIt.sh | Toolchain/Patches/*[!llvm].patch | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
+          key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildIt.sh | Toolchain/Patches/[!llvm]*.patch | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
           path: $(Build.SourcesDirectory)/Toolchain/Cache
         displayName: 'Toolchain Prebuilt Cache'
 
