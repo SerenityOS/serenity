@@ -41,7 +41,7 @@ public:
     template<typename U = T>
     void enqueue(U&& value)
     {
-        auto& slot = elements()[(m_head + m_size) % Capacity];
+        T& slot = elements()[(m_head + m_size) % Capacity];
         if (m_size == Capacity)
             slot.~T();
 
@@ -55,7 +55,7 @@ public:
     T dequeue()
     {
         VERIFY(!is_empty());
-        auto& slot = elements()[m_head];
+        T& slot = elements()[m_head];
         T value = move(slot);
         slot.~T();
         m_head = (m_head + 1) % Capacity;
