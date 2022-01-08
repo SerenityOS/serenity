@@ -20,9 +20,9 @@ struct group {
     char** gr_mem;
 };
 
-struct group* getgrent();
-void setgrent();
-void endgrent();
+struct group* getgrent(void);
+void setgrent(void);
+void endgrent(void);
 struct group* getgrnam(const char* name);
 struct group* getgrgid(gid_t);
 int putgrent(const struct group*, FILE*);

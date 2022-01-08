@@ -37,11 +37,11 @@ time_t timegm(struct tm*);
 time_t time(time_t*);
 char* ctime(const time_t*);
 char* ctime_r(const time_t* tm, char* buf);
-void tzset();
+void tzset(void);
 char* asctime(const struct tm*);
 char* asctime_r(const struct tm*, char* buf);
 
-clock_t clock();
+clock_t clock(void);
 
 int clock_gettime(clockid_t, struct timespec*);
 int clock_settime(clockid_t, struct timespec*);

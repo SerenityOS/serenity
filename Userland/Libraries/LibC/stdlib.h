@@ -16,7 +16,7 @@ __BEGIN_DECLS
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
-__attribute__((noreturn)) void _abort();
+__attribute__((noreturn)) void _abort(void);
 
 __attribute__((malloc)) __attribute__((alloc_size(1))) void* malloc(size_t);
 __attribute__((malloc)) __attribute__((alloc_size(1, 2))) void* calloc(size_t nmemb, size_t);
@@ -33,7 +33,7 @@ int putenv(char*);
 int unsetenv(const char*);
 int clearenv(void);
 int setenv(const char* name, const char* value, int overwrite);
-const char* getprogname();
+const char* getprogname(void);
 void setprogname(const char*);
 int atoi(const char*);
 long atol(const char*);
@@ -47,9 +47,9 @@ unsigned long long strtoull(const char*, char** endptr, int base);
 unsigned long strtoul(const char*, char** endptr, int base);
 void qsort(void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*));
 void qsort_r(void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*, void*), void* arg);
-int atexit(void (*function)());
+int atexit(void (*function)(void));
 __attribute__((noreturn)) void exit(int status);
-__attribute__((noreturn)) void abort();
+__attribute__((noreturn)) void abort(void);
 char* ptsname(int fd);
 int ptsname_r(int fd, char* buffer, size_t);
 int abs(int);
@@ -70,10 +70,10 @@ char* realpath(const char* pathname, char* buffer);
 __attribute__((noreturn)) void _Exit(int status);
 
 #define RAND_MAX 32767
-int rand();
+int rand(void);
 void srand(unsigned seed);
 
-long int random();
+long int random(void);
 void srandom(unsigned seed);
 
 uint32_t arc4random(void);
