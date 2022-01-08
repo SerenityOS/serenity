@@ -24,11 +24,8 @@ MoveTool::~MoveTool()
 
 void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
-    if (event.image_event().button() == GUI::MouseButton::Secondary && !m_is_panning) {
-        m_is_panning = true;
-        m_event_origin = event.raw_event().position();
-        m_saved_pan_origin = m_editor->pan_origin();
-        m_editor->set_override_cursor(Gfx::StandardCursor::Drag);
+    if (event.image_event().button() == GUI::MouseButton::Secondary) {
+        m_editor->start_panning(event.raw_event().position());
         return;
     }
 
@@ -48,12 +45,8 @@ void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
 
 void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
-    if (m_is_panning) {
-        auto& raw_event = event.raw_event();
-        auto delta = raw_event.position() - m_event_origin;
-        m_editor->set_pan_origin(m_saved_pan_origin.translated(
-            -delta.x(),
-            -delta.y()));
+    if (m_editor->is_panning()) {
+        m_editor->pan_to(event.raw_event().position());
         return;
     }
 
@@ -70,8 +63,8 @@ void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
 
 void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
 {
-    if (event.image_event().button() == GUI::MouseButton::Secondary && m_is_panning) {
-        m_is_panning = false;
+    if (event.image_event().button() == GUI::MouseButton::Secondary) {
+        m_editor->stop_panning();
         m_editor->set_override_cursor(cursor());
         return;
     }

@@ -12,6 +12,7 @@
 #include "Image.h"
 #include "Selection.h"
 #include <AK/Variant.h>
+#include <LibGUI/AbstractZoomPanWidget.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGfx/Point.h>
@@ -22,7 +23,7 @@ class Layer;
 class Tool;
 
 class ImageEditor final
-    : public GUI::Frame
+    : public GUI::AbstractZoomPanWidget
     , public ImageClient {
     C_OBJECT(ImageEditor);
 
@@ -68,16 +69,7 @@ public:
         Image
     };
 
-    float scale() const { return m_scale; }
-    void scale_centered_on_position(Gfx::IntPoint const&, float);
     void fit_image_to_view(FitType type = FitType::Image);
-    void reset_scale_and_position();
-    void scale_by(float);
-    void set_absolute_scale(float, bool do_relayout = true);
-    Function<void(float)> on_scale_changed;
-
-    void set_pan_origin(Gfx::FloatPoint const&);
-    Gfx::FloatPoint pan_origin() const { return m_pan_origin; }
 
     Color primary_color() const { return m_primary_color; }
     void set_primary_color(Color);
@@ -101,13 +93,6 @@ public:
     Function<void(Gfx::IntPoint const&)> on_image_mouse_position_change;
 
     Function<void(void)> on_leave;
-
-    Gfx::FloatRect layer_rect_to_editor_rect(Layer const&, Gfx::IntRect const&) const;
-    Gfx::FloatRect image_rect_to_editor_rect(Gfx::IntRect const&) const;
-    Gfx::FloatRect editor_rect_to_image_rect(Gfx::IntRect const&) const;
-    Gfx::FloatPoint layer_position_to_editor_position(Layer const&, Gfx::IntPoint const&) const;
-    Gfx::FloatPoint image_position_to_editor_position(Gfx::IntPoint const&) const;
-    Gfx::FloatPoint editor_position_to_image_position(Gfx::IntPoint const&) const;
 
     bool request_close();
 
@@ -137,11 +122,9 @@ private:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
-    virtual void mousewheel_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
-    virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
 
@@ -153,9 +136,6 @@ private:
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
 
     Result<void, String> save_project_to_fd_and_close(int fd) const;
-
-    void clamped_scale_by(float, bool do_relayout);
-    void relayout();
 
     int calculate_ruler_step_size() const;
     Gfx::IntRect mouse_indicator_rect_x() const;
@@ -180,11 +160,6 @@ private:
     Color m_primary_color { Color::Black };
     Color m_secondary_color { Color::White };
 
-    Gfx::IntRect m_editor_image_rect;
-    float m_scale { 1 };
-    Gfx::FloatPoint m_pan_origin;
-    Gfx::FloatPoint m_saved_pan_origin;
-    Gfx::IntPoint m_click_position;
     Gfx::IntPoint m_mouse_position;
 
     int m_ruler_thickness { 20 };

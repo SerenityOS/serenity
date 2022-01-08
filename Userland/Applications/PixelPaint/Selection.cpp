@@ -55,7 +55,7 @@ void Selection::draw_marching_ants(Gfx::Painter& painter, Mask const& mask) cons
 
     // Only check the visible selection area when drawing for performance
     auto rect = m_editor.rect();
-    rect = Gfx::enclosing_int_rect(m_editor.editor_rect_to_image_rect(rect));
+    rect = Gfx::enclosing_int_rect(m_editor.frame_to_content_rect(rect));
     rect.inflate(step * 2, step * 2); // prevent borders from having visible ants if the selection extends beyond it
 
     // Scan the image horizontally to find vertical borders
@@ -67,7 +67,7 @@ void Selection::draw_marching_ants(Gfx::Painter& painter, Mask const& mask) cons
 
             if (this_selected != previous_selected) {
                 Gfx::IntRect image_pixel { x, y, 1, 1 };
-                auto pixel = m_editor.image_rect_to_editor_rect(image_pixel).to_type<int>();
+                auto pixel = m_editor.content_to_frame_rect(image_pixel).to_type<int>();
                 auto end = max(pixel.top(), pixel.bottom()); // for when the zoom is < 100%
 
                 for (int pixel_y = pixel.top(); pixel_y <= end; pixel_y++) {
@@ -88,7 +88,7 @@ void Selection::draw_marching_ants(Gfx::Painter& painter, Mask const& mask) cons
 
             if (this_selected != previous_selected) {
                 Gfx::IntRect image_pixel { x, y, 1, 1 };
-                auto pixel = m_editor.image_rect_to_editor_rect(image_pixel).to_type<int>();
+                auto pixel = m_editor.content_to_frame_rect(image_pixel).to_type<int>();
                 auto end = max(pixel.left(), pixel.right()); // for when the zoom is < 100%
 
                 for (int pixel_x = pixel.left(); pixel_x <= end; pixel_x++) {
