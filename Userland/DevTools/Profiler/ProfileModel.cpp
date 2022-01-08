@@ -104,7 +104,7 @@ GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
     if (role == GUI::ModelRole::Icon) {
         if (index.column() == Column::StackFrame) {
             if (node->is_root()) {
-                return GUI::FileIconProvider::icon_for_executable(node->process().executable);
+                return GUI::FileIconProvider::the().icon_for_executable(node->process().executable);
             }
             auto maybe_kernel_base = Symbolication::kernel_base();
             if (maybe_kernel_base.has_value() && node->address() >= maybe_kernel_base.value())

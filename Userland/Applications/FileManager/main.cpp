@@ -1017,7 +1017,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     (void)TRY(main_toolbar.try_add_action(directory_view->view_as_columns_action()));
 
     directory_view->on_path_change = [&](String const& new_path, bool can_read_in_path, bool can_write_in_path) {
-        auto icon = GUI::FileIconProvider::icon_for_path(new_path);
+        auto icon = GUI::FileIconProvider::the().icon_for_path(new_path);
         auto* bitmap = icon.bitmap_for_size(16);
         window->set_icon(bitmap);
         location_textbox.set_icon(bitmap);
@@ -1043,7 +1043,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
             } else {
                 breadcrumbbar.clear_segments();
 
-                breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
+                breadcrumbbar.append_segment("/", GUI::FileIconProvider::the().icon_for_path("/").bitmap_for_size(16), "/", "/");
                 StringBuilder builder;
 
                 for (auto& part : lexical_path.parts()) {
@@ -1051,7 +1051,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
                     builder.append('/');
                     builder.append(part);
 
-                    breadcrumbbar.append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
+                    breadcrumbbar.append_segment(part, GUI::FileIconProvider::the().icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
                 }
 
                 breadcrumbbar.set_selected_segment(breadcrumbbar.segment_count() - 1);

@@ -33,7 +33,7 @@ void RunningProcessesModel::update()
             Process process;
             process.pid = it.pid;
             process.uid = it.uid;
-            process.icon = FileIconProvider::icon_for_executable(it.executable).bitmap_for_size(16);
+            process.icon = FileIconProvider::the().icon_for_executable(it.executable).bitmap_for_size(16);
             process.name = it.name;
             m_processes.append(move(process));
         }

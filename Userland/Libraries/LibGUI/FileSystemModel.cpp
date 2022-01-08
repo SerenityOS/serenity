@@ -588,29 +588,29 @@ Variant FileSystemModel::data(ModelIndex const& index, ModelRole role) const
 Icon FileSystemModel::icon_for(Node const& node) const
 {
     if (node.full_path() == "/")
-        return FileIconProvider::icon_for_path("/");
+        return FileIconProvider::the().icon_for_path("/");
 
     if (Gfx::Bitmap::is_path_a_supported_image_format(node.name)) {
         if (!node.thumbnail) {
             if (!const_cast<FileSystemModel*>(this)->fetch_thumbnail_for(node))
-                return FileIconProvider::filetype_image_icon();
+                return FileIconProvider::the().filetype_image_icon();
         }
-        return GUI::Icon(FileIconProvider::filetype_image_icon().bitmap_for_size(16), *node.thumbnail);
+        return GUI::Icon(FileIconProvider::the().filetype_image_icon().bitmap_for_size(16), *node.thumbnail);
     }
 
     if (node.is_directory()) {
         if (node.full_path() == Core::StandardPaths::home_directory()) {
             if (node.is_selected())
-                return FileIconProvider::home_directory_open_icon();
-            return FileIconProvider::home_directory_icon();
+                return FileIconProvider::the().home_directory_open_icon();
+            return FileIconProvider::the().home_directory_icon();
         }
         if (node.full_path() == Core::StandardPaths::desktop_directory())
-            return FileIconProvider::desktop_directory_icon();
+            return FileIconProvider::the().desktop_directory_icon();
         if (node.is_selected() && node.is_accessible_directory)
-            return FileIconProvider::directory_open_icon();
+            return FileIconProvider::the().directory_open_icon();
     }
 
-    return FileIconProvider::icon_for_path(node.full_path(), node.mode);
+    return FileIconProvider::the().icon_for_path(node.full_path(), node.mode);
 }
 
 static HashMap<String, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;

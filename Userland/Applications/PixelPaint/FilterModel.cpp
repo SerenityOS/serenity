@@ -109,7 +109,7 @@ GUI::Variant FilterModel::data(const GUI::ModelIndex& index, GUI::ModelRole role
         return filter->text;
     case GUI::ModelRole::Icon:
         if (filter->type == FilterInfo::Type::Category)
-            return GUI::FileIconProvider::directory_icon();
+            return GUI::FileIconProvider::the().directory_icon();
         return m_filter_icon;
     default:
         return {};

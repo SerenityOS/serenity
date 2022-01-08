@@ -46,7 +46,7 @@ void spawn_terminal(String const& directory)
 
 NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(LauncherHandler const&)> launch_handler)
 {
-    auto icon = GUI::FileIconProvider::icon_for_executable(details().executable).bitmap_for_size(16);
+    auto icon = GUI::FileIconProvider::the().icon_for_executable(details().executable).bitmap_for_size(16);
     return GUI::Action::create(details().name, move(icon), [this, launch_handler = move(launch_handler)](auto&) {
         launch_handler(*this);
     });

@@ -77,7 +77,7 @@ void AppProvider::query(String const& query, Function<void(NonnullRefPtrVector<R
         if (!match_result.matched)
             return;
 
-        auto icon = GUI::FileIconProvider::icon_for_executable(app_file->executable());
+        auto icon = GUI::FileIconProvider::the().icon_for_executable(app_file->executable());
         results.append(adopt_ref(*new AppResult(icon.bitmap_for_size(16), app_file->name(), {}, app_file, match_result.score)));
     });
 
@@ -117,7 +117,7 @@ void CalculatorProvider::query(String const& query, Function<void(NonnullRefPtrV
 
 Gfx::Bitmap const* FileResult::bitmap() const
 {
-    return GUI::FileIconProvider::icon_for_path(title()).bitmap_for_size(16);
+    return GUI::FileIconProvider::the().icon_for_path(title()).bitmap_for_size(16);
 }
 
 FileProvider::FileProvider()

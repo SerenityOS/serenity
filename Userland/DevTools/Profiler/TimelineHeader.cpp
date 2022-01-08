@@ -23,7 +23,7 @@ TimelineHeader::TimelineHeader(Profile& profile, Process const& process)
     set_fixed_size(200, 40);
     update_selection();
 
-    m_icon = GUI::FileIconProvider::icon_for_executable(m_process.executable).bitmap_for_size(32);
+    m_icon = GUI::FileIconProvider::the().icon_for_executable(m_process.executable).bitmap_for_size(32);
     m_text = String::formatted("{} ({})", LexicalPath::basename(m_process.executable), m_process.pid);
 }
 

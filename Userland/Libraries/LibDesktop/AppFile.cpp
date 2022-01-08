@@ -95,9 +95,9 @@ GUI::Icon AppFile::icon() const
     auto override_icon = icon_path();
     // FIXME: support pointing to actual .ico files
     if (!override_icon.is_empty())
-        return GUI::FileIconProvider::icon_for_path(override_icon);
+        return GUI::FileIconProvider::the().icon_for_path(override_icon);
 
-    return GUI::FileIconProvider::icon_for_path(executable());
+    return GUI::FileIconProvider::the().icon_for_path(executable());
 }
 
 bool AppFile::run_in_terminal() const

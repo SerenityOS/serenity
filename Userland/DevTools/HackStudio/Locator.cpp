@@ -55,7 +55,7 @@ public:
             if (index.column() == Column::Filename)
                 return "";
             if (index.column() == Column::Icon)
-                return GUI::FileIconProvider::icon_for_path(suggestion.as_filename.value());
+                return GUI::FileIconProvider::the().icon_for_path(suggestion.as_filename.value());
         }
         if (suggestion.is_symbol_declaration()) {
             if (index.column() == Column::Name) {

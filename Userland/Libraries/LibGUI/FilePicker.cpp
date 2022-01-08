@@ -244,11 +244,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         set_path(path);
     };
     for (auto& location : CommonLocationsProvider::common_locations()) {
-        auto index = common_locations_tray.add_item(location.name, FileIconProvider::icon_for_path(location.path).bitmap_for_size(16), location.path);
+        auto index = common_locations_tray.add_item(location.name, FileIconProvider::the().icon_for_path(location.path).bitmap_for_size(16), location.path);
         m_common_location_buttons.append({ location.path, index });
     }
 
-    m_location_textbox->set_icon(FileIconProvider::icon_for_path(path).bitmap_for_size(16));
+    m_location_textbox->set_icon(FileIconProvider::the().icon_for_path(path).bitmap_for_size(16));
     m_model->on_complete();
 }
 
@@ -297,7 +297,7 @@ void FilePicker::set_path(const String& path)
     }
 
     auto new_path = LexicalPath(path).string();
-    m_location_textbox->set_icon(FileIconProvider::icon_for_path(new_path).bitmap_for_size(16));
+    m_location_textbox->set_icon(FileIconProvider::the().icon_for_path(new_path).bitmap_for_size(16));
     m_model->set_root_path(new_path);
 }
 
