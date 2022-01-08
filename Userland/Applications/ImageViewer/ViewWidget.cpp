@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Mohsan Ali <mohsan0073@gmail.com>
+ * Copyright (c) 2022, Mustafa Quraish <mustafa@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,6 +39,7 @@ void ViewWidget::clear()
     m_bitmap = nullptr;
     if (on_image_change)
         on_image_change(m_bitmap);
+    set_original_rect({});
     m_path = {};
 
     reset_view();
@@ -47,7 +49,8 @@ void ViewWidget::clear()
 void ViewWidget::flip(Gfx::Orientation orientation)
 {
     m_bitmap = m_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
-    set_scale(m_scale);
+    set_original_rect(m_bitmap->rect());
+    set_scale(scale());
 
     resize_window();
 }
@@ -55,7 +58,8 @@ void ViewWidget::flip(Gfx::Orientation orientation)
 void ViewWidget::rotate(Gfx::RotationDirection rotation_direction)
 {
     m_bitmap = m_bitmap->rotated(rotation_direction).release_value_but_fixme_should_propagate_errors();
-    set_scale(m_scale);
+    set_original_rect(m_bitmap->rect());
+    set_scale(scale());
 
     resize_window();
 }
@@ -117,50 +121,6 @@ void ViewWidget::navigate(Directions direction)
     this->load_from_file(m_files_in_same_dir.at(index));
 }
 
-void ViewWidget::set_scale(float scale)
-{
-    if (m_bitmap.is_null())
-        return;
-
-    if (scale < 0.1f)
-        scale = 0.1f;
-    if (scale > 10.f)
-        scale = 10.f;
-
-    m_scale = scale;
-
-    Gfx::IntSize new_size;
-    new_size.set_width(m_bitmap->width() * m_scale);
-    new_size.set_height(m_bitmap->height() * m_scale);
-    m_bitmap_rect.set_size(new_size);
-
-    if (on_scale_change)
-        on_scale_change(m_scale);
-
-    relayout();
-}
-
-void ViewWidget::relayout()
-{
-    if (m_bitmap.is_null())
-        return;
-
-    Gfx::IntSize new_size = m_bitmap_rect.size();
-
-    Gfx::IntPoint new_location;
-    new_location.set_x((width() / 2) - (new_size.width() / 2) - m_pan_origin.x());
-    new_location.set_y((height() / 2) - (new_size.height() / 2) - m_pan_origin.y());
-    m_bitmap_rect.set_location(new_location);
-
-    update();
-}
-
-void ViewWidget::resize_event(GUI::ResizeEvent& event)
-{
-    relayout();
-    GUI::Widget::resize_event(event);
-}
-
 void ViewWidget::doubleclick_event(GUI::MouseEvent&)
 {
     on_doubleclick();
@@ -177,59 +137,21 @@ void ViewWidget::paint_event(GUI::PaintEvent& event)
     Gfx::StylePainter::paint_transparency_grid(painter, frame_inner_rect(), palette());
 
     if (!m_bitmap.is_null())
-        painter.draw_scaled_bitmap(m_bitmap_rect, *m_bitmap, m_bitmap->rect(), 1.0f, m_scaling_mode);
+        painter.draw_scaled_bitmap(content_rect(), *m_bitmap, m_bitmap->rect(), 1.0f, m_scaling_mode);
 }
 
 void ViewWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Primary)
-        return;
-    m_click_position = event.position();
-    m_saved_pan_origin = m_pan_origin;
+    if (event.button() == GUI::MouseButton::Primary)
+        start_panning(event.position());
+    GUI::AbstractZoomPanWidget::mousedown_event(event);
 }
 
-void ViewWidget::mouseup_event([[maybe_unused]] GUI::MouseEvent& event) { }
-
-void ViewWidget::mousemove_event(GUI::MouseEvent& event)
+void ViewWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    if (!(event.buttons() & GUI::MouseButton::Primary))
-        return;
-
-    auto delta = event.position() - m_click_position;
-    m_pan_origin = m_saved_pan_origin.translated(
-        -delta.x(),
-        -delta.y());
-
-    relayout();
-}
-
-void ViewWidget::mousewheel_event(GUI::MouseEvent& event)
-{
-    float new_scale = m_scale / AK::exp2(event.wheel_delta() / 8.f);
-    if (new_scale < 0.1f)
-        new_scale = 0.1f;
-    if (new_scale > 10.f)
-        new_scale = 10.f;
-
-    if (new_scale == m_scale) {
-        return;
-    }
-
-    // focus_point is the window position the cursor is pointing to.
-    // The pixel (in image space) the cursor points to is located at
-    // (m_pan_origin + focus_point) / scale_factor.
-    // We want the image after scaling to be panned in such a way that the cursor
-    // will still point to the same image pixel. Basically, we need to solve
-    // (m_pan_origin + focus_point) / old_scale_factor = (new_m_pan_origin + focus_point) / new_scale_factor.
-    Gfx::FloatPoint focus_point {
-        event.x() - width() / 2.0f,
-        event.y() - height() / 2.0f
-    };
-
-    // A little algebra shows that new m_pan_origin equals to:
-    m_pan_origin = (m_pan_origin + focus_point) * (new_scale / m_scale) - focus_point;
-
-    set_scale(new_scale);
+    if (event.button() == GUI::MouseButton::Primary)
+        stop_panning();
+    GUI::AbstractZoomPanWidget::mouseup_event(event);
 }
 
 void ViewWidget::load_from_file(const String& path)
@@ -257,6 +179,7 @@ void ViewWidget::load_from_file(const String& path)
 
     m_decoded_image = decoded_image_or_error.release_value();
     m_bitmap = m_decoded_image->frames[0].bitmap;
+    set_original_rect(m_bitmap->rect());
     if (on_image_change)
         on_image_change(m_bitmap);
 
@@ -270,7 +193,6 @@ void ViewWidget::load_from_file(const String& path)
     }
 
     m_path = Core::File::real_path_for(path);
-    m_scale = -1;
     reset_view();
 }
 
@@ -286,7 +208,7 @@ void ViewWidget::resize_window()
     if (window()->is_fullscreen() || window()->is_maximized())
         return;
 
-    auto absolute_bitmap_rect = m_bitmap_rect;
+    auto absolute_bitmap_rect = content_rect();
     absolute_bitmap_rect.translate_by(window()->rect().top_left());
     if (window()->rect().contains(absolute_bitmap_rect))
         return;
@@ -294,7 +216,7 @@ void ViewWidget::resize_window()
     if (!m_bitmap)
         return;
 
-    auto new_size = m_bitmap_rect.size();
+    auto new_size = content_rect().size();
 
     if (new_size.width() < 300)
         new_size.set_width(300);
@@ -305,17 +227,12 @@ void ViewWidget::resize_window()
     window()->resize(new_size);
 }
 
-void ViewWidget::reset_view()
-{
-    m_pan_origin = { 0, 0 };
-    set_scale(1.f);
-}
-
 void ViewWidget::set_bitmap(const Gfx::Bitmap* bitmap)
 {
     if (m_bitmap == bitmap)
         return;
     m_bitmap = bitmap;
+    set_original_rect(m_bitmap->rect());
     update();
 }
 
