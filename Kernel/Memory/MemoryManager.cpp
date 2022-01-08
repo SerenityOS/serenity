@@ -748,7 +748,8 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
     dma_buffer_page = allocate_supervisor_physical_page();
     if (dma_buffer_page.is_null())
         return ENOMEM;
-    auto region_or_error = allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access);
+    // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
+    auto region_or_error = allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access, Region::Cacheable::No);
     return region_or_error;
 }
 
@@ -758,7 +759,8 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
     dma_buffer_pages = allocate_contiguous_supervisor_physical_pages(size);
     if (dma_buffer_pages.is_empty())
         return ENOMEM;
-    auto region_or_error = allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access);
+    // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
+    auto region_or_error = allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access, Region::Cacheable::No);
     return region_or_error;
 }
 
