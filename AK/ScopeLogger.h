@@ -21,7 +21,7 @@ public:
     {
         StringBuilder sb;
 
-        for (auto indent = m_depth++; indent > 0; indent--)
+        for (size_t indent = m_depth++; indent > 0; indent--)
             sb.append(' ');
         if (m_extra.is_empty())
             dbgln("\033[1;{}m{}entering {}\033[0m", m_depth % 8 + 30, sb.to_string(), m_location);
@@ -38,8 +38,8 @@ public:
     {
         StringBuilder sb;
 
-        auto depth = m_depth;
-        for (auto indent = --m_depth; indent > 0; indent--)
+        size_t depth = m_depth;
+        for (size_t indent = --m_depth; indent > 0; indent--)
             sb.append(' ');
         if (m_extra.is_empty())
             dbgln("\033[1;{}m{}leaving {}\033[0m", depth % 8 + 30, sb.to_string(), m_location);
