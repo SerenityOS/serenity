@@ -43,14 +43,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         // We map the whole file instead of streaming to reduce size overhead (gzip header) and increase the deflate block size (better compression)
         // TODO: automatically fallback to buffered streaming for very large files
-        auto file = TRY(Core::MappedFile::map(input_filename));
+        RefPtr<Core::MappedFile> file;
+        ReadonlyBytes input_bytes;
+        if (TRY(Core::System::stat(input_filename)).st_size > 0) {
+            file = TRY(Core::MappedFile::map(input_filename));
+            input_bytes = file->bytes();
+        }
 
         AK::Optional<ByteBuffer> output_bytes;
-        if (decompress) {
-            output_bytes = Compress::GzipDecompressor::decompress_all(file->bytes());
-        } else {
-            output_bytes = Compress::GzipCompressor::compress_all(file->bytes());
-        }
+        if (decompress)
+            output_bytes = Compress::GzipDecompressor::decompress_all(input_bytes);
+        else
+            output_bytes = Compress::GzipCompressor::compress_all(input_bytes);
 
         if (!output_bytes.has_value()) {
             warnln("Failed gzip {} input file", decompress ? "decompressing"sv : "compressing"sv);
