@@ -1,15 +1,15 @@
---- curl-7.78.0/configure	2021-07-19 13:47:17.000000000 +0100
-+++ curl-7.78.0.serenity/configure	2021-07-29 23:44:57.345323249 +0100
-@@ -18920,48 +18920,6 @@
- rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+--- curl-7.81.0/configure.orig	2022-01-08 01:39:27.339369369 +0000
++++ curl-7.81.0/configure	2022-01-08 01:40:30.218717020 +0000
+@@ -19836,50 +19836,8 @@
+ rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
  
  
--    { $as_echo "$as_me:${as_lineno-$LINENO}: checking if compiler halts on function prototype mismatch" >&5
--$as_echo_n "checking if compiler halts on function prototype mismatch... " >&6; }
+-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if compiler halts on function prototype mismatch" >&5
+-printf %s "checking if compiler halts on function prototype mismatch... " >&6; }
 -  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 -/* end confdefs.h.  */
--
--
+ 
+ 
 -#     include <stdlib.h>
 -      int rand(int n);
 -      int rand(int n)
@@ -33,25 +33,27 @@
 -}
 -
 -_ACEOF
--if ac_fn_c_try_compile "$LINENO"; then :
+-if ac_fn_c_try_compile "$LINENO"
+-then :
 -
--    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
--$as_echo "no" >&6; }
+-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-printf "%s\n" "no" >&6; }
 -    as_fn_error $? "compiler does not halt on function prototype mismatch." "$LINENO" 5
 -
--else
+-else $as_nop
 -
--    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
--$as_echo "yes" >&6; }
+-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-printf "%s\n" "yes" >&6; }
 -
 -fi
--rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+-
  
- 
-       { $as_echo "$as_me:${as_lineno-$LINENO}: checking if compiler supports hiding library internal symbols" >&5
---- curl-7.78.0/configure.ac	2021-07-19 08:19:57.000000000 +0100
-+++ curl-7.78.0.serenity/configure.ac	2021-07-29 23:45:23.365054651 +0100
-@@ -402,7 +402,6 @@
+       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if compiler supports hiding library internal symbols" >&5
+ printf %s "checking if compiler supports hiding library internal symbols... " >&6; }
+--- curl-7.81.0/configure.ac.orig	2022-01-08 01:42:45.505315507 +0000
++++ curl-7.81.0/configure.ac	2022-01-08 01:42:47.917290542 +0000
+@@ -420,7 +420,6 @@
  
  CURL_CHECK_COMPILER_HALT_ON_ERROR
  CURL_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE
