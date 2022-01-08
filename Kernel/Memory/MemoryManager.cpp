@@ -753,6 +753,13 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
     return region_or_error;
 }
 
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access)
+{
+    RefPtr<Memory::PhysicalPage> dma_buffer_page;
+
+    return allocate_dma_buffer_page(name, access, dma_buffer_page);
+}
+
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages)
 {
     VERIFY(!(size % PAGE_SIZE));
@@ -762,6 +769,14 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
     auto region_or_error = allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access, Region::Cacheable::No);
     return region_or_error;
+}
+
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access)
+{
+    VERIFY(!(size % PAGE_SIZE));
+    NonnullRefPtrVector<Memory::PhysicalPage> dma_buffer_pages;
+
+    return allocate_dma_buffer_pages(size, name, access, dma_buffer_pages);
 }
 
 ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
