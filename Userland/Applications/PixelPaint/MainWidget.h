@@ -20,6 +20,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Widget.h>
@@ -46,6 +47,8 @@ private:
     ImageEditor& create_new_editor(NonnullRefPtr<Image>);
     void create_image_from_clipboard();
 
+    void set_actions_enabled(bool enabled);
+
     virtual void drop_event(GUI::DropEvent&) override;
 
     ProjectLoader m_loader;
@@ -59,11 +62,20 @@ private:
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::ComboBox> m_zoom_combobox;
 
+    RefPtr<GUI::Menu> m_export_submenu;
+    RefPtr<GUI::Menu> m_edit_menu;
+    RefPtr<GUI::Menu> m_view_menu;
+    RefPtr<GUI::Menu> m_tool_menu;
+    RefPtr<GUI::Menu> m_image_menu;
+    RefPtr<GUI::Menu> m_layer_menu;
+    RefPtr<GUI::Menu> m_filter_menu;
+
     RefPtr<GUI::Action> m_new_image_action;
     RefPtr<GUI::Action> m_new_image_from_clipboard_action;
     RefPtr<GUI::Action> m_open_image_action;
     RefPtr<GUI::Action> m_save_image_action;
     RefPtr<GUI::Action> m_save_image_as_action;
+    RefPtr<GUI::Action> m_close_image_action;
 
     RefPtr<GUI::Action> m_copy_action;
     RefPtr<GUI::Action> m_copy_merged_action;
