@@ -47,8 +47,6 @@ ThrowCompletionOr<Value> Interpreter::run(GlobalObject& global_object, const Pro
 
     VM::InterpreterExecutionScope scope(*this);
 
-    vm.set_last_value(Badge<Interpreter> {}, {});
-
     ExecutionContext execution_context(heap());
     execution_context.current_node = &program;
     execution_context.this_value = &global_object;
@@ -60,7 +58,6 @@ ThrowCompletionOr<Value> Interpreter::run(GlobalObject& global_object, const Pro
     execution_context.is_strict_mode = program.is_strict_mode();
     MUST(vm.push_execution_context(execution_context, global_object));
     auto completion = program.execute(*this, global_object);
-    vm.set_last_value(Badge<Interpreter> {}, completion.value().value_or(js_undefined()));
 
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
     // in which case this is a no-op.

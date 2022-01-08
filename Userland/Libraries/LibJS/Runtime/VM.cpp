@@ -97,9 +97,6 @@ void VM::gather_roots(HashTable<Cell*>& roots)
 
     roots.set(m_exception);
 
-    if (m_last_value.is_cell())
-        roots.set(&m_last_value.as_cell());
-
     auto gather_roots_from_execution_context_stack = [&roots](Vector<ExecutionContext*> const& stack) {
         for (auto& execution_context : stack) {
             if (execution_context->this_value.is_cell())

@@ -45,8 +45,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
 
     TemporaryChange restore_executable { m_current_executable, &executable };
 
-    vm().set_last_value(Badge<Interpreter> {}, {});
-
     ExecutionContext execution_context(vm().heap());
     if (vm().execution_context_stack().is_empty()) {
         execution_context.this_value = &global_object();
@@ -136,8 +134,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
             dbgln("[{:3}] {}", i, value_string);
         }
     }
-
-    vm().set_last_value(Badge<Interpreter> {}, accumulator());
 
     OwnPtr<RegisterWindow> frame;
     if (!m_manually_entered_frames.last()) {
