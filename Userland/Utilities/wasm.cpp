@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 #include <LibLine/Editor.h>
+#include <LibMain/Main.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/Printer/Printer.h>
@@ -265,7 +267,7 @@ static void print_link_error(Wasm::LinkError const& error)
         warnln("Missing import '{}'", missing);
 }
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     char const* filename = nullptr;
     bool print = false;
@@ -313,7 +315,7 @@ int main(int argc, char* argv[])
             return false;
         },
     });
-    parser.parse(argc, argv);
+    parser.parse(arguments);
 
     if (shell_mode) {
         debug = true;
