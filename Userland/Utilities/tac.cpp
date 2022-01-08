@@ -1,27 +1,26 @@
 /*
- * Copyright (c) 2021, Federico Guerinoni <guerinoni.federico@gmail.com>
+ * Copyright (c) 2021-2022, Federico Guerinoni <guerinoni.federico@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Concatenate files or pipes to stdout, last line first.");
     args_parser.add_positional_argument(paths, "File path(s)", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     Vector<FILE*> streams;
     auto num_paths = paths.size();
@@ -54,10 +53,7 @@ int main(int argc, char** argv)
         }
     };
 
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio"));
 
     for (auto* stream : streams) {
         Vector<String> lines;
