@@ -11,6 +11,7 @@ depends=("zlib")
 configopts=("--prefix=/usr/local" "-DOPENSSL_SYS_SERENITY=1" "-DOPENSSL_USE_IPV6=0" "zlib" "threads" "no-tests" "no-asm" "serenity-generic")
 
 configure() {
+    export LDFLAGS="-L${SERENITY_INSTALL_ROOT}/usr/local/lib"
     run ./"$configscript" "${configopts[@]}"
 }
 
