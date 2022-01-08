@@ -140,25 +140,25 @@ struct Tuple : Detail::Tuple<Ts...> {
     }
 
     template<typename T>
-    auto& get()
+    T& get()
     {
         return Detail::Tuple<Ts...>::template get<T>();
     }
 
     template<unsigned index>
-    auto& get()
+    typename Types::template Type<index>& get()
     {
         return Detail::Tuple<Ts...>::template get_with_index<typename Types::template Type<index>, index>();
     }
 
     template<typename T>
-    auto& get() const
+    T& get() const
     {
         return Detail::Tuple<Ts...>::template get<T>();
     }
 
     template<unsigned index>
-    auto& get() const
+    typename Types::template Type<index> const& get() const
     {
         return Detail::Tuple<Ts...>::template get_with_index<typename Types::template Type<index>, index>();
     }
