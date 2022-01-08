@@ -148,10 +148,6 @@ public:
 
     ThrowCompletionOr<Value> resolve_this_binding(GlobalObject&);
 
-    Value last_value() const { return m_last_value; }
-    void set_last_value(Badge<Bytecode::Interpreter>, Value value) { m_last_value = value; }
-    void set_last_value(Badge<Interpreter>, Value value) { m_last_value = value; }
-
     const StackInfo& stack_info() const { return m_stack_info; };
 
     bool underscore_is_last_value() const { return m_underscore_is_last_value; }
@@ -260,8 +256,6 @@ private:
     Vector<ExecutionContext*> m_execution_context_stack;
 
     Vector<Vector<ExecutionContext*>> m_saved_execution_context_stacks;
-
-    Value m_last_value;
 
     StackInfo m_stack_info;
 
