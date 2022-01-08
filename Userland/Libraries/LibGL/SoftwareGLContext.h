@@ -179,6 +179,8 @@ private:
     // FIXME: implement multi-texturing: the texture matrix stack should live inside a texture unit
     Vector<FloatMatrix4x4> m_texture_matrix_stack;
 
+    Gfx::IntRect m_viewport;
+
     FloatVector4 m_clear_color { 0.0f, 0.0f, 0.0f, 0.0f };
     double m_clear_depth { 1.0 };
     GLint m_clear_stencil { 0 };

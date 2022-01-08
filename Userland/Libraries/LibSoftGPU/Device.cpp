@@ -468,6 +468,7 @@ Device::Device(const Gfx::IntSize& size)
     , m_depth_buffer { adopt_own(*new DepthBuffer(size)) }
 {
     m_options.scissor_box = m_render_target->rect();
+    m_options.viewport = m_render_target->rect();
 }
 
 DeviceInfo Device::info() const
@@ -561,9 +562,6 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
     m_enabled_texture_units = enabled_texture_units;
 
-    float scr_width = m_render_target->width();
-    float scr_height = m_render_target->height();
-
     m_triangle_list.clear_with_capacity();
     m_processed_triangles.clear_with_capacity();
 
@@ -621,6 +619,11 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     }
 
     // Now let's transform each triangle and send that to the GPU
+    auto const viewport = window_coordinates_to_target_coordinates(m_options.viewport, m_render_target->rect());
+    auto const viewport_half_width = viewport.width() / 2.0f;
+    auto const viewport_half_height = viewport.height() / 2.0f;
+    auto const viewport_center_x = viewport.x() + viewport_half_width;
+    auto const viewport_center_y = viewport.y() + viewport_half_height;
     auto const depth_half_range = (m_options.depth_max - m_options.depth_min) / 2;
     auto const depth_halfway = (m_options.depth_min + m_options.depth_max) / 2;
     for (auto& triangle : m_triangle_list) {
@@ -663,12 +666,11 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                 one_over_w,
             };
 
-            // To window coordinates
-            // FIXME: implement viewport functionality
+            // To window coordinates - note that we flip the Y coordinate into target space
             vec.window_coordinates = {
-                scr_width / 2 + ndc_coordinates.x() * scr_width / 2,
-                scr_height / 2 - ndc_coordinates.y() * scr_height / 2,
-                depth_half_range * ndc_coordinates.z() + depth_halfway,
+                viewport_center_x + ndc_coordinates.x() * viewport_half_width,
+                viewport_center_y - ndc_coordinates.y() * viewport_half_height,
+                depth_halfway + ndc_coordinates.z() * depth_half_range,
                 ndc_coordinates.w(),
             };
         }
