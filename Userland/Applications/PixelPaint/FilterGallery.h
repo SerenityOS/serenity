@@ -21,6 +21,7 @@ private:
     GUI::Widget* m_config_widget { nullptr };
     RefPtr<GUI::Widget> m_selected_filter_config_widget { nullptr };
     Filter* m_selected_filter { nullptr };
+    RefPtr<Gfx::Bitmap> m_preview_bitmap { nullptr };
 };
 
 }

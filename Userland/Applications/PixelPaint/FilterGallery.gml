@@ -45,5 +45,11 @@
             text: "Cancel"
             max_width: 75
         }
+
+        @GUI::CheckBox {
+            name: "preview"
+            text : "Preview"
+            max_width : 75
+        }
     }
 }
