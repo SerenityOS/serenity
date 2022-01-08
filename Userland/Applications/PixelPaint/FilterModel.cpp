@@ -17,6 +17,7 @@
 #include "Filters/Invert.h"
 #include "Filters/LaplaceCardinal.h"
 #include "Filters/LaplaceDiagonal.h"
+#include "Filters/Sepia.h"
 #include "Filters/Sharpen.h"
 #include "Layer.h"
 #include <LibGUI/FileIconProvider.h>
@@ -48,6 +49,7 @@ FilterModel::FilterModel(ImageEditor* editor)
     auto color_category = FilterInfo::create_category("Color");
     auto grayscale_filter = FilterInfo::create_filter<Filters::Grayscale>(editor, color_category);
     auto invert_filter = FilterInfo::create_filter<Filters::Invert>(editor, color_category);
+    auto sepia_filter = FilterInfo::create_filter<Filters::Sepia>(editor, color_category);
 
     m_filters.append(color_category);
 
