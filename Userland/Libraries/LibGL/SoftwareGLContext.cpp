@@ -2685,17 +2685,25 @@ void SoftwareGLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLflo
                              || pname == GL_LIGHT_MODEL_TWO_SIDE),
         GL_INVALID_ENUM);
 
+    auto lighting_params = m_rasterizer.light_model();
+    bool update_lighting_model = false;
+
     switch (pname) {
     case GL_LIGHT_MODEL_AMBIENT:
-        m_light_model_ambient = { x, y, z, w };
+        lighting_params.scene_ambient_color = { x, y, z, w };
+        update_lighting_model = true;
         break;
     case GL_LIGHT_MODEL_TWO_SIDE:
         VERIFY(y == 0.0f && z == 0.0f && w == 0.0f);
-        m_light_model_two_side = x;
+        lighting_params.two_sided_lighting = x;
+        update_lighting_model = true;
         break;
     default:
         VERIFY_NOT_REACHED();
     }
+
+    if (update_lighting_model)
+        m_rasterizer.set_light_model_params(lighting_params);
 }
 
 void SoftwareGLContext::gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap)
