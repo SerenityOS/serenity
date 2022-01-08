@@ -32,12 +32,13 @@ void WebContentConsoleClient::handle_input(String const& js_source)
     auto program = parser.parse_program();
 
     StringBuilder output_html;
+    auto result = JS::ThrowCompletionOr<JS::Value> { JS::js_undefined() };
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
         auto hint = error.source_location_hint(js_source);
         if (!hint.is_empty())
             output_html.append(String::formatted("<pre>{}</pre>", escape_html_entities(hint)));
-        m_interpreter->vm().throw_exception<JS::SyntaxError>(*m_console_global_object.cell(), error.to_string());
+        result = m_interpreter->vm().throw_completion<JS::SyntaxError>(*m_console_global_object.cell(), error.to_string());
     } else {
         // FIXME: This is not the correct way to do this, we probably want to have
         //        multiple execution contexts we switch between.
@@ -46,16 +47,15 @@ void WebContentConsoleClient::handle_input(String const& js_source)
         auto& this_value_before = m_interpreter->realm().global_environment().global_this_value();
         m_interpreter->realm().set_global_object(*m_console_global_object.cell(), &global_object_before);
 
-        m_interpreter->run(*m_console_global_object.cell(), *program);
+        result = m_interpreter->run(*m_console_global_object.cell(), *program);
 
         m_interpreter->realm().set_global_object(global_object_before, &this_value_before);
     }
 
-    if (m_interpreter->exception()) {
-        auto* exception = m_interpreter->exception();
+    if (result.is_error()) {
         m_interpreter->vm().clear_exception();
         output_html.append("Uncaught exception: ");
-        auto error = exception->value();
+        auto error = *result.throw_completion().value();
         if (error.is_object())
             output_html.append(JS::MarkupGenerator::html_from_error(error.as_object()));
         else
@@ -64,7 +64,7 @@ void WebContentConsoleClient::handle_input(String const& js_source)
         return;
     }
 
-    print_html(JS::MarkupGenerator::html_from_value(m_interpreter->vm().last_value()));
+    print_html(JS::MarkupGenerator::html_from_value(result.value()));
 }
 
 void WebContentConsoleClient::print_html(String const& line)

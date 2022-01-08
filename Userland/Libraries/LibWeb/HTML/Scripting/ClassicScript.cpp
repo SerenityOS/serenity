@@ -70,12 +70,15 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
 
     auto timer = Core::ElapsedTimer::start_new();
     auto interpreter = JS::Interpreter::create_with_existing_realm(m_script_record->realm());
-    interpreter->run(interpreter->global_object(), m_script_record->parse_node());
-    auto& vm = interpreter->vm();
-    if (vm.exception())
-        vm.clear_exception();
+
+    auto result = interpreter->run(interpreter->global_object(), m_script_record->parse_node());
     dbgln("ClassicScript: Finished running script {}, Duration: {}ms", filename(), timer.elapsed());
-    return vm.last_value();
+    if (result.is_error()) {
+        // FIXME: Propagate error according to the spec.
+        interpreter->vm().clear_exception();
+        return {};
+    }
+    return result.value();
 }
 
 ClassicScript::ClassicScript(AK::URL base_url, String filename)

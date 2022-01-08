@@ -687,10 +687,13 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
     }
     auto& interpreter = document().interpreter();
     auto& vm = interpreter.vm();
-    interpreter.run(interpreter.global_object(), *program);
-    if (vm.exception())
+    auto result = interpreter.run(interpreter.global_object(), *program);
+    if (result.is_error()) {
+        // FIXME: I'm sure the spec could tell us something about error propagation here!
         vm.clear_exception();
-    return vm.last_value();
+        return {};
+    }
+    return result.value();
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelement

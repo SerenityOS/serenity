@@ -38,7 +38,7 @@ Interpreter::~Interpreter()
 {
 }
 
-void Interpreter::run(GlobalObject& global_object, const Program& program)
+ThrowCompletionOr<Value> Interpreter::run(GlobalObject& global_object, const Program& program)
 {
     // FIXME: Why does this receive a GlobalObject? Interpreter has one already, and this might not be in sync with the Realm's GlobalObject.
 
@@ -71,6 +71,12 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     vm.pop_execution_context();
 
     vm.finish_execution_generation();
+
+    if (completion.is_abrupt()) {
+        VERIFY(completion.type() == Completion::Type::Throw);
+        return completion.release_error();
+    }
+    return completion.value().value_or(js_undefined());
 }
 
 GlobalObject& Interpreter::global_object()

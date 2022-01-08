@@ -55,7 +55,7 @@ Sheet::Sheet(Workbook& workbook)
             warnln("Spreadsheet: Failed to parse runtime code");
             parser.print_errors();
         } else {
-            interpreter().run(global_object(), parser.parse_program());
+            (void)interpreter().run(global_object(), parser.parse_program());
             if (auto* exception = interpreter().exception()) {
                 warnln("Spreadsheet: Failed to run runtime code:");
                 for (auto& traceback_frame : exception->traceback()) {
@@ -164,16 +164,12 @@ Sheet::ValueAndException Sheet::evaluate(StringView source, Cell* on_behalf_of)
     if (parser.has_errors() || interpreter().exception())
         return { JS::js_undefined(), interpreter().exception() };
 
-    interpreter().run(global_object(), program);
-    if (interpreter().exception()) {
+    auto result = interpreter().run(global_object(), program);
+    if (result.is_error()) {
         auto exc = interpreter().exception();
         return { JS::js_undefined(), exc };
     }
-
-    auto value = interpreter().vm().last_value();
-    if (value.is_empty())
-        return { JS::js_undefined(), {} };
-    return { value, {} };
+    return { result.value(), {} };
 }
 
 Cell* Sheet::at(StringView name)
