@@ -73,7 +73,7 @@ String InspectableProcess::wait_for_response()
 void InspectableProcess::send_request(JsonObject const& request)
 {
     auto serialized = request.to_string();
-    auto length = serialized.length();
+    u32 length = serialized.length();
     m_socket->write((u8 const*)&length, sizeof(length));
     m_socket->write(serialized);
 }
