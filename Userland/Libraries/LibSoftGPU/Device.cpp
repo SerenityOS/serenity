@@ -900,9 +900,6 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
 
     if (milliseconds > 500) {
 
-        if (g_num_pixels == 0)
-            g_num_pixels = 1;
-
         int num_rendertarget_pixels = m_render_target->width() * m_render_target->height();
 
         StringBuilder builder;
@@ -913,9 +910,9 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
         builder.append(String::formatted("SIMD usage   : {}%\n", g_num_quads > 0 ? g_num_pixels_shaded * 25 / g_num_quads : 0));
         builder.append(String::formatted("Pixels       : {}, Shaded: {}%, Blended: {}%, Overdraw: {}%\n",
             g_num_pixels,
-            g_num_pixels_shaded * 100 / g_num_pixels,
-            g_num_pixels_blended * 100 / g_num_pixels_shaded,
-            g_num_pixels_shaded * 100 / num_rendertarget_pixels - 100));
+            g_num_pixels > 0 ? g_num_pixels_shaded * 100 / g_num_pixels : 0,
+            g_num_pixels_shaded > 0 ? g_num_pixels_blended * 100 / g_num_pixels_shaded : 0,
+            num_rendertarget_pixels > 0 ? g_num_pixels_shaded * 100 / num_rendertarget_pixels - 100 : 0));
         builder.append(String::formatted("Sampler calls: {}\n", g_num_sampler_calls));
 
         debug_string = builder.to_string();
