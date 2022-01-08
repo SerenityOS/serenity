@@ -2,6 +2,8 @@
 port=bash
 version=5.1.16
 useconfigure=true
+use_fresh_config_sub=true
+config_sub_path=support/config.sub
 configopts=("--disable-nls" "--without-bash-malloc")
 files="https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz bash-${version}.tar.gz 5bac17218d3911834520dad13cd1f85ab944e1c09ae1aba55906be1f8192f558"
 auth_type="sha256"

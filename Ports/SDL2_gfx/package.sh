@@ -6,6 +6,7 @@ files="https://downloads.sourceforge.net/project/sdl2gfx/SDL2_gfx-${version}.tar
 auth_type=sha256
 depends=("SDL2")
 useconfigure=true
+use_fresh_config_sub=true
 configopts=("--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local")
 
 install() {

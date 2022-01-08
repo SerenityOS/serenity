@@ -6,6 +6,7 @@ https://ftpmirror.gnu.org/gnu/grep/grep-${version}.tar.gz.sig grep-${version}.ta
 https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
 
 useconfigure=true
+use_fresh_config_sub=true
 configopts=("--disable-perl-regexp")
 auth_type="sig"
 auth_opts=("--keyring" "./gnu-keyring.gpg" "grep-${version}.tar.gz.sig")

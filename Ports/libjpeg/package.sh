@@ -2,6 +2,7 @@
 port=libjpeg
 version=9d
 useconfigure=true
+use_fresh_config_sub=true
 files="https://ijg.org/files/jpegsrc.v${version}.tar.gz jpeg-${version}.tar.gz 2303a6acfb6cc533e0e86e8a9d29f7e6079e118b9de3f96e07a71a11c082fa6a"
 auth_type=sha256
 workdir="jpeg-$version"

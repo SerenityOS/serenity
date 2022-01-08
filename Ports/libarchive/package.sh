@@ -2,6 +2,7 @@
 port=libarchive
 version=3.5.2
 useconfigure=true
+use_fresh_config_sub=true
 configopts=("--without-xml2")
 files="https://libarchive.org/downloads/libarchive-${version}.tar.gz libarchive-${version}.tar.gz
 https://libarchive.org/downloads/libarchive-${version}.tar.gz.asc libarchive-${version}.tar.gz.asc"

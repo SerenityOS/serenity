@@ -2,6 +2,7 @@
 port=libtool
 version=2.4
 useconfigure="true"
+use_fresh_config_sub="true"
 depends=("bash" "sed")
 files="https://ftpmirror.gnu.org/gnu/libtool/libtool-${version}.tar.xz libtool-${version}.tar.xz
 https://ftpmirror.gnu.org/gnu/libtool/libtool-${version}.tar.xz.sig libtool-${version}.tar.xz.sig
