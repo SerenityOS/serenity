@@ -16,6 +16,7 @@ namespace PixelPaint {
 
 FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     : GUI::Dialog(parent_window)
+    , m_editor(editor)
 {
     set_title("Filter Gallery");
     set_icon(parent_window->icon());
@@ -38,7 +39,7 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     VERIFY(m_config_widget);
     VERIFY(preview_checkbox);
 
-    auto filter_model = FilterModel::create(editor);
+    auto filter_model = FilterModel::create(m_editor);
     m_filter_tree->set_model(filter_model);
     m_filter_tree->expand_tree();
 
@@ -64,19 +65,24 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
             return;
         }
 
-        m_selected_filter->apply();
+        if (!m_preview_bitmap)
+            m_selected_filter->apply();
         done(ExecResult::ExecOK);
     };
 
     cancel_button->on_click = [this](auto) {
+        if (auto* layer = m_editor->active_layer()) {
+            if (m_preview_bitmap)
+                restore_layer_bitmap(layer);
+        }
         done(ExecResult::ExecCancel);
     };
 
-    preview_checkbox->on_checked = [this, editor](bool checked) {
-        if (!editor)
+    preview_checkbox->on_checked = [this](bool checked) {
+        if (!m_editor)
             return;
 
-        if (auto* layer = editor->active_layer()) {
+        if (auto* layer = m_editor->active_layer()) {
             if (checked) {
                 auto preview_bitmap_or_error = layer->bitmap().clone();
 
@@ -88,29 +94,36 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
                 if (!m_selected_filter)
                     return;
 
+                m_editor->inhibit_undo_stack = true;
                 m_selected_filter->apply();
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
+                m_editor->inhibit_undo_stack = false;
+                m_editor->update();
             } else {
                 if (!m_preview_bitmap)
                     return;
-
-                VERIFY(m_preview_bitmap->size() == layer->bitmap().size());
-
-                int height = m_preview_bitmap->height();
-                int width = m_preview_bitmap->width();
-
-                for (int y = 0; y < height; ++y) {
-                    for (int x = 0; x < width; ++x) {
-                        auto original_color = m_preview_bitmap->get_pixel(x, y);
-                        layer->bitmap().set_pixel(x, y, original_color);
-                    }
-                }
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
+                restore_layer_bitmap(layer);
+                m_editor->update();
             }
         }
     };
 }
 
+void FilterGallery::restore_layer_bitmap(Layer* active_layer)
+{
+    if (m_preview_bitmap) {
+        VERIFY(m_preview_bitmap->size() == active_layer->bitmap().size());
+
+        int height = m_preview_bitmap->height();
+        int width = m_preview_bitmap->width();
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                auto original_color = m_preview_bitmap->get_pixel(x, y);
+                active_layer->bitmap().set_pixel(x, y, original_color);
+            }
+        }
+
+        m_preview_bitmap = nullptr;
+    }
+}
 }

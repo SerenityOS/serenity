@@ -45,6 +45,8 @@ ImageEditor::~ImageEditor()
 
 void ImageEditor::did_complete_action()
 {
+    if (inhibit_undo_stack)
+        return;
     m_undo_stack.push(make<ImageUndoCommand>(*m_image));
 }
 

@@ -125,6 +125,7 @@ public:
 
     bool show_active_layer_boundary() const { return m_show_active_layer_boundary; }
     void set_show_active_layer_boundary(bool);
+    bool inhibit_undo_stack { false };
 
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
