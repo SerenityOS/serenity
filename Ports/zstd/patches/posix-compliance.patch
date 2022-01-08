@@ -1,6 +1,6 @@
---- zstd-1.4.4/programs/platform.h.orig	Sat Mar 14 15:22:06 2020
-+++ zstd-1.4.4/programs/platform.h	Sat Mar 14 15:22:41 2020
-@@ -97,7 +97,11 @@
+--- zstd-1.5.1/programs/platform.h.orig	2022-01-08 01:30:53.468728340 +0000
++++ zstd-1.5.1/programs/platform.h	2022-01-08 01:31:01.480646197 +0000
+@@ -98,7 +98,11 @@
  #    endif
  #    include <unistd.h>  /* declares _POSIX_VERSION */
  #    if defined(_POSIX_VERSION)  /* POSIX compliant */
