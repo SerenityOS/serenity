@@ -8,6 +8,7 @@ if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     export CXX="clang++ --target=${SERENITY_ARCH}-pc-serenity --sysroot=${SERENITY_BUILD_DIR}/Root"
     export AR="llvm-ar"
     export RANLIB="llvm-ranlib"
+    export READELF="llvm-readelf"
     export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/clang/bin:${HOST_PATH}"
 else
     export SERENITY_BUILD_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}"
@@ -15,6 +16,7 @@ else
     export CXX="${SERENITY_ARCH}-pc-serenity-g++"
     export AR="${SERENITY_ARCH}-pc-serenity-ar"
     export RANLIB="${SERENITY_ARCH}-pc-serenity-ranlib"
+    export READELF="${SERENITY_ARCH}-pc-serenity-readelf"
     export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin:${HOST_PATH}"
 fi
 
