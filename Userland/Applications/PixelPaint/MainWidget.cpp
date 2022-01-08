@@ -90,7 +90,7 @@ MainWidget::MainWidget()
             image_editor.set_active_tool(active_tool);
         m_show_guides_action->set_checked(image_editor.guide_visibility());
         m_show_rulers_action->set_checked(image_editor.ruler_visibility());
-        image_editor.on_scale_changed(image_editor.scale());
+        image_editor.on_scale_change(image_editor.scale());
     };
 }
 
@@ -344,9 +344,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_reset_zoom_action = GUI::CommonActions::make_reset_zoom_action(
         [&](auto&) {
-            auto* editor = current_image_editor();
-            VERIFY(editor);
-            editor->reset_scale_and_position();
+            if (auto* editor = current_image_editor())
+                editor->reset_view();
         });
 
     m_add_guide_action = GUI::Action::create(
@@ -664,15 +663,15 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         auto zoom_level_optional = value.view().trim("%"sv, TrimMode::Right).to_int();
         if (!zoom_level_optional.has_value()) {
             // Indicate that a parse-error occurred by resetting the text to the current state.
-            editor->on_scale_changed(editor->scale());
+            editor->on_scale_change(editor->scale());
             return;
         }
 
-        editor->set_absolute_scale(zoom_level_optional.value() * 1.0f / 100);
+        editor->set_scale(zoom_level_optional.value() * 1.0f / 100);
         // If the selected zoom level got clamped, or a "fit to …" level was selected,
         // there is a chance that the new scale is identical to the old scale.
         // In these cases, we need to manually reset the text:
-        editor->on_scale_changed(editor->scale());
+        editor->on_scale_change(editor->scale());
     };
     m_zoom_combobox->on_return_pressed = [this]() {
         m_zoom_combobox->on_change(m_zoom_combobox->text(), GUI::ModelIndex());
@@ -805,7 +804,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         m_show_rulers_action->set_checked(show_rulers);
     };
 
-    image_editor.on_scale_changed = [this](float scale) {
+    image_editor.on_scale_change = [this](float scale) {
         m_zoom_combobox->set_text(String::formatted("{}%", roundf(scale * 100)));
     };
 

@@ -171,7 +171,7 @@ void GuideTool::on_context_menu(Layer*, GUI::ContextMenuEvent& event)
             editor()));
     }
 
-    auto image_position = editor()->editor_position_to_image_position(event.position());
+    auto image_position = editor()->frame_to_content_position(event.position());
     m_context_menu_guide = closest_guide({ (int)image_position.x(), (int)image_position.y() });
     if (m_context_menu_guide)
         m_context_menu->popup(event.screen_position());
