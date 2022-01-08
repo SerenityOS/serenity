@@ -11,7 +11,7 @@
 
 __BEGIN_DECLS
 
-int sched_yield();
+int sched_yield(void);
 
 struct sched_param {
     int sched_priority;

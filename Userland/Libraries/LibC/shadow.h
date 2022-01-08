@@ -27,9 +27,9 @@ struct spwd {
 };
 
 #ifndef AK_OS_MACOS
-struct spwd* getspent();
-void setspent();
-void endspent();
+struct spwd* getspent(void);
+void setspent(void);
+void endspent(void);
 struct spwd* getspnam(const char* name);
 int putspent(struct spwd* p, FILE* stream);
 

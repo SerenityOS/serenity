@@ -43,7 +43,7 @@ typedef struct
     union {
         long a_val;
         void* a_ptr;
-        void (*a_fnc)(); /* In spec, not used */
+        void (*a_fnc)(void); /* In spec, not used */
     } a_un;
 } auxv_t;
 
