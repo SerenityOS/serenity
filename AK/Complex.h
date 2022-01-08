@@ -272,7 +272,7 @@ static constinit Complex<T> complex_imag_unit = Complex<T>((T)0, (T)1);
 template<AK::Concepts::Arithmetic T, AK::Concepts::Arithmetic U>
 static constexpr bool approx_eq(const Complex<T>& a, const Complex<U>& b, const double margin = 0.000001)
 {
-    const auto x = const_cast<Complex<T>&>(a) - const_cast<Complex<U>&>(b);
+    Complex<T> const x = const_cast<Complex<T>&>(a) - const_cast<Complex<U>&>(b);
     return x.magnitude() <= margin;
 }
 
