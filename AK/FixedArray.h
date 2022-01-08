@@ -114,17 +114,17 @@ public:
         ::swap(m_elements, other.m_elements);
     }
 
-    using ConstIterator = SimpleIterator<FixedArray const, T const>;
     using Iterator = SimpleIterator<FixedArray, T>;
+    using ConstIterator = SimpleIterator<FixedArray const, T const>;
 
-    ConstIterator begin() const { return ConstIterator::begin(*this); }
     Iterator begin() { return Iterator::begin(*this); }
+    ConstIterator begin() const { return ConstIterator::begin(*this); }
 
-    ConstIterator end() const { return ConstIterator::end(*this); }
     Iterator end() { return Iterator::end(*this); }
+    ConstIterator end() const { return ConstIterator::end(*this); }
 
-    Span<T const> span() const { return { data(), size() }; }
     Span<T> span() { return { data(), size() }; }
+    Span<T const> span() const { return { data(), size() }; }
 
 private:
     FixedArray(size_t size, T* elements)
