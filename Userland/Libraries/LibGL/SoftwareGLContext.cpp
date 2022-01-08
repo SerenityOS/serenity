@@ -668,6 +668,8 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         break;
     case GL_LIGHTING:
         m_lighting_enabled = true;
+        rasterizer_options.lighting_enabled = true;
+        update_rasterizer_options = true;
         break;
     case GL_NORMALIZE:
         m_normalize = true;
@@ -762,6 +764,8 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         break;
     case GL_LIGHTING:
         m_lighting_enabled = false;
+        rasterizer_options.lighting_enabled = false;
+        update_rasterizer_options = true;
         break;
     case GL_LIGHT0:
     case GL_LIGHT1:

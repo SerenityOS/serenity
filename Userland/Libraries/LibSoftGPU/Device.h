@@ -69,6 +69,7 @@ struct RasterizerOptions {
     u8 texcoord_generation_enabled_coordinates { TexCoordGenerationCoordinate::None };
     Array<TexCoordGenerationConfig, 4> texcoord_generation_config {};
     Gfx::IntRect viewport;
+    bool lighting_enabled { false };
 };
 
 struct LightModelParameters {
