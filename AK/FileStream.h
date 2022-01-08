@@ -53,7 +53,7 @@ public:
     {
         if (has_any_error())
             return false;
-        auto size = read(bytes);
+        size_t size = read(bytes);
         if (size < bytes.size()) {
             set_recoverable_error();
             return false;
@@ -72,7 +72,7 @@ public:
         char buf[4];
         size_t i = 0;
         while (i < count) {
-            auto size = min(count - i, 4ul);
+            size_t size = min(count - i, 4ul);
             if (read({ buf, size }) < size) {
                 // Can't reset here.
                 return false;
@@ -132,14 +132,14 @@ public:
 
     size_t write(ReadonlyBytes bytes) override
     {
-        auto nwritten = fwrite(bytes.data(), sizeof(u8), bytes.size(), m_file);
+        size_t nwritten = fwrite(bytes.data(), sizeof(u8), bytes.size(), m_file);
         m_bytes_written += nwritten;
         return nwritten;
     }
 
     bool write_or_error(ReadonlyBytes bytes) override
     {
-        auto nwritten = write(bytes);
+        size_t nwritten = write(bytes);
         if (nwritten < bytes.size()) {
             set_recoverable_error();
             return false;
