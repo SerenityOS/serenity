@@ -19,6 +19,7 @@
 #include <LibGfx/Filters/GrayscaleFilter.h>
 #include <LibGfx/Filters/InvertFilter.h>
 #include <LibGfx/Filters/LaplacianFilter.h>
+#include <LibGfx/Filters/SepiaFilter.h>
 #include <LibGfx/Filters/SharpenFilter.h>
 #include <LibGfx/Filters/SpatialGaussianBlurFilter.h>
 

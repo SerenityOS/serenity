@@ -28,6 +28,7 @@ set(SOURCES
     Filters/Invert.cpp
     Filters/LaplaceCardinal.cpp
     Filters/LaplaceDiagonal.cpp
+    Filters/Sepia.cpp
     Filters/Sharpen.cpp
     Image.cpp
     ImageEditor.cpp
