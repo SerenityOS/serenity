@@ -71,9 +71,9 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
     case GL_ALPHA_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_ALPHA_TEST:
-        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_alpha_test_enabled } };
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_alpha_test_enabled } };
     case GL_BLEND:
-        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_blend_enabled } };
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_blend_enabled } };
     case GL_BLEND_DST_ALPHA:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_blend_destination_factor) } };
     case GL_BLEND_SRC_ALPHA:
@@ -81,19 +81,23 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
     case GL_BLUE_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_CULL_FACE:
-        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_cull_faces } };
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_cull_faces } };
     case GL_DEPTH_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_DEPTH_TEST:
-        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_depth_test_enabled } };
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_depth_test_enabled } };
     case GL_DITHER:
-        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_dither_enabled } };
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_dither_enabled } };
     case GL_DOUBLEBUFFER:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = true } };
+    case GL_FOG: {
+        auto fog_enabled = m_rasterizer.options().fog_enabled;
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = fog_enabled } };
+    }
     case GL_GREEN_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_LIGHTING:
-        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_lighting_enabled } };
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_lighting_enabled } };
     case GL_MAX_MODELVIEW_STACK_DEPTH:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = MODELVIEW_MATRIX_STACK_LIMIT } };
     case GL_MAX_PROJECTION_STACK_DEPTH:
@@ -104,6 +108,8 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = TEXTURE_MATRIX_STACK_LIMIT } };
     case GL_MAX_TEXTURE_UNITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_texture_units.size()) } };
+    case GL_NORMALIZE:
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_normalize } };
     case GL_PACK_ALIGNMENT:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = m_pack_alignment } };
     case GL_PACK_IMAGE_HEIGHT:
@@ -134,10 +140,14 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
                 } }
         };
     } break;
+    case GL_SCISSOR_TEST: {
+        auto scissor_enabled = m_rasterizer.options().scissor_enabled;
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = scissor_enabled } };
+    }
     case GL_STENCIL_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_STENCIL_TEST:
-        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_stencil_test_enabled } };
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_stencil_test_enabled } };
     case GL_TEXTURE_1D:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_active_texture_unit->texture_1d_enabled() } };
     case GL_TEXTURE_2D:
@@ -146,6 +156,13 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_active_texture_unit->texture_3d_enabled() } };
     case GL_TEXTURE_CUBE_MAP:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_active_texture_unit->texture_cube_map_enabled() } };
+    case GL_TEXTURE_GEN_Q:
+    case GL_TEXTURE_GEN_R:
+    case GL_TEXTURE_GEN_S:
+    case GL_TEXTURE_GEN_T: {
+        auto generation_enabled = texture_coordinate_generation(name).enabled;
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = generation_enabled } };
+    }
     case GL_UNPACK_ALIGNMENT:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = m_unpack_alignment } };
     case GL_UNPACK_IMAGE_HEIGHT:
@@ -769,37 +786,13 @@ GLboolean SoftwareGLContext::gl_is_enabled(GLenum capability)
 {
     RETURN_VALUE_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION, 0);
 
-    auto rasterizer_options = m_rasterizer.options();
+    auto optional_parameter = get_context_parameter(capability);
+    RETURN_VALUE_WITH_ERROR_IF(!optional_parameter.has_value(), GL_INVALID_ENUM, 0);
 
-    switch (capability) {
-    case GL_CULL_FACE:
-        return m_cull_faces;
-    case GL_DEPTH_TEST:
-        return m_depth_test_enabled;
-    case GL_BLEND:
-        return m_blend_enabled;
-    case GL_ALPHA_TEST:
-        return m_alpha_test_enabled;
-    case GL_DITHER:
-        return m_dither_enabled;
-    case GL_FOG:
-        return rasterizer_options.fog_enabled;
-    case GL_LIGHTING:
-        return m_lighting_enabled;
-    case GL_NORMALIZE:
-        return m_normalize;
-    case GL_SCISSOR_TEST:
-        return rasterizer_options.scissor_enabled;
-    case GL_STENCIL_TEST:
-        return m_stencil_test_enabled;
-    case GL_TEXTURE_GEN_Q:
-    case GL_TEXTURE_GEN_R:
-    case GL_TEXTURE_GEN_S:
-    case GL_TEXTURE_GEN_T:
-        return texture_coordinate_generation(capability).enabled;
-    }
+    auto parameter = optional_parameter.release_value();
+    RETURN_VALUE_WITH_ERROR_IF(!parameter.is_capability, GL_INVALID_ENUM, 0);
 
-    RETURN_VALUE_WITH_ERROR_IF(true, GL_INVALID_ENUM, 0);
+    return parameter.value.boolean_value;
 }
 
 void SoftwareGLContext::gl_gen_textures(GLsizei n, GLuint* textures)

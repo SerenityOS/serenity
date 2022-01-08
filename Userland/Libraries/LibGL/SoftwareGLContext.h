@@ -28,6 +28,7 @@ namespace GL {
 
 struct ContextParameter {
     GLenum type;
+    bool is_capability { false };
     u8 count { 1 };
     union {
         bool boolean_value;
