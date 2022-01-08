@@ -51,12 +51,12 @@ void glLightModeli(GLenum pname, GLint param)
 
 void glMaterialf(GLenum face, GLenum pname, GLfloat param)
 {
-    g_gl_context->gl_materialv(face, pname, &param);
+    g_gl_context->gl_materialf(face, pname, param);
 }
 
 void glMaterialfv(GLenum face, GLenum pname, GLfloat const* params)
 {
-    g_gl_context->gl_materialv(face, pname, params);
+    g_gl_context->gl_materialfv(face, pname, params);
 }
 
 void glShadeModel(GLenum mode)

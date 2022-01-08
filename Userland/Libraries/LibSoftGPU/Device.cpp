@@ -1009,4 +1009,9 @@ void Device::set_light_state(unsigned int light_id, Light const& light)
     m_lights.at(light_id) = light;
 }
 
+void Device::set_material_state(unsigned int material_id, Material const& material)
+{
+    m_materials.at(material_id) = material;
+}
+
 }

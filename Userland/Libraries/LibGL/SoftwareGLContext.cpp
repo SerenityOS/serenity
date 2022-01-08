@@ -2649,47 +2649,6 @@ void SoftwareGLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w
     m_current_raster_position.clip_coordinate_value = w;
 }
 
-void SoftwareGLContext::gl_materialv(GLenum face, GLenum pname, GLfloat const* params)
-{
-    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_materialv, face, pname, params);
-
-    RETURN_WITH_ERROR_IF(!(face == GL_FRONT || face == GL_BACK || face == GL_FRONT_AND_BACK), GL_INVALID_ENUM);
-
-    RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT
-                             || pname == GL_DIFFUSE
-                             || pname == GL_SPECULAR
-                             || pname == GL_EMISSION
-                             || pname == GL_SHININESS
-                             || pname == GL_AMBIENT_AND_DIFFUSE
-                             || pname == GL_COLOR_INDEXES),
-        GL_INVALID_ENUM);
-
-    GLfloat x, y, z, w;
-
-    switch (pname) {
-    case GL_SHININESS:
-        x = params[0];
-        y = 0.0f;
-        z = 0.0f;
-        w = 0.0f;
-        break;
-    case GL_COLOR_INDEXES:
-        x = params[0];
-        y = params[1];
-        z = params[2];
-        w = 0.0f;
-        break;
-    default:
-        x = params[0];
-        y = params[1];
-        z = params[2];
-        w = params[3];
-    }
-
-    // FIXME: implement this method
-    dbgln_if(GL_DEBUG, "gl_materialv({}, {}, {}, {}, {}, {}): unimplemented", face, pname, x, y, z, w);
-}
-
 void SoftwareGLContext::gl_line_width(GLfloat width)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_line_width, width);
@@ -3018,6 +2977,23 @@ void SoftwareGLContext::sync_light_state()
 
         m_rasterizer.set_light_state(light_id, light);
     }
+
+    for (auto material_id = 0u; material_id < 2u; material_id++) {
+        SoftGPU::Material material;
+        auto const& current_material_state = m_material_states.at(material_id);
+
+        material.ambient = current_material_state.ambient;
+        material.diffuse = current_material_state.diffuse;
+        material.specular = current_material_state.specular;
+        material.emissive = current_material_state.emissive;
+        material.shininess = current_material_state.shininess;
+        material.specular_exponent = current_material_state.specular_exponent;
+        material.ambient_color_index = current_material_state.ambient_color_index;
+        material.diffuse_color_index = current_material_state.diffuse_color_index;
+        material.specular_color_index = current_material_state.specular_color_index;
+
+        m_rasterizer.set_material_state(material_id, material);
+    }
 }
 
 void SoftwareGLContext::sync_device_texcoord_config()
@@ -3166,4 +3142,77 @@ void SoftwareGLContext::gl_lightfv(GLenum light, GLenum pname, GLfloat const* pa
 
     m_light_state_is_dirty = true;
 }
+
+void SoftwareGLContext::gl_materialf(GLenum face, GLenum pname, GLfloat param)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_materialf, face, pname, param);
+    RETURN_WITH_ERROR_IF(!(face == GL_FRONT || face == GL_BACK || face == GL_FRONT_AND_BACK), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(pname != GL_SHININESS, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(param > 128.0f, GL_INVALID_VALUE);
+
+    switch (face) {
+    case GL_FRONT:
+        m_material_states.at(to_underlying(MaterialFace::Front)).shininess = param;
+        break;
+    case GL_BACK:
+        m_material_states.at(to_underlying(MaterialFace::Back)).shininess = param;
+        break;
+    case GL_FRONT_AND_BACK:
+        m_material_states.at(to_underlying(MaterialFace::Front)).shininess = param;
+        m_material_states.at(to_underlying(MaterialFace::Back)).shininess = param;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_light_state_is_dirty = true;
+}
+
+void SoftwareGLContext::gl_materialfv(GLenum face, GLenum pname, GLfloat const* params)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_materialfv, face, pname, params);
+    RETURN_WITH_ERROR_IF(!(face == GL_FRONT || face == GL_BACK || face == GL_FRONT_AND_BACK), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_EMISSION || pname == GL_SHININESS || pname == GL_AMBIENT_AND_DIFFUSE), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF((pname == GL_SHININESS && *params > 128.0f), GL_INVALID_VALUE);
+
+    auto update_material = [](SoftGPU::Material& material, GLenum pname, GLfloat const* params) {
+        switch (pname) {
+        case GL_AMBIENT:
+            material.ambient = { params[0], params[1], params[2], params[3] };
+            break;
+        case GL_DIFFUSE:
+            material.diffuse = { params[0], params[1], params[2], params[3] };
+            break;
+        case GL_SPECULAR:
+            material.specular = { params[0], params[1], params[2], params[3] };
+            break;
+        case GL_EMISSION:
+            material.emissive = { params[0], params[1], params[2], params[3] };
+            break;
+        case GL_SHININESS:
+            material.shininess = *params;
+            break;
+        case GL_AMBIENT_AND_DIFFUSE:
+            material.ambient = { params[0], params[1], params[2], params[3] };
+            material.diffuse = { params[0], params[1], params[2], params[3] };
+            break;
+        }
+    };
+
+    switch (face) {
+    case GL_FRONT:
+        update_material(m_material_states.at(to_underlying(MaterialFace::Front)), pname, params);
+        break;
+    case GL_BACK:
+        update_material(m_material_states.at(to_underlying(MaterialFace::Back)), pname, params);
+        break;
+    case GL_FRONT_AND_BACK:
+        update_material(m_material_states.at(to_underlying(MaterialFace::Front)), pname, params);
+        update_material(m_material_states.at(to_underlying(MaterialFace::Back)), pname, params);
+        break;
+    }
+
+    m_light_state_is_dirty = true;
+}
+
 }

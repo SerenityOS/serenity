@@ -41,6 +41,11 @@ struct ContextParameter {
     } value;
 };
 
+enum class MaterialFace : u8 {
+    Front = 0,
+    Back = 1,
+};
+
 class SoftwareGLContext : public GLContext {
 public:
     SoftwareGLContext(Gfx::Bitmap&);
@@ -126,7 +131,6 @@ public:
     virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) override;
     virtual void gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer) override;
     virtual void gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w) override;
-    virtual void gl_materialv(GLenum face, GLenum pname, GLfloat const* params) override;
     virtual void gl_line_width(GLfloat width) override;
     virtual void gl_push_attrib(GLbitfield mask) override;
     virtual void gl_pop_attrib() override;
@@ -139,7 +143,8 @@ public:
     virtual void gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* params) override;
     virtual void gl_lightf(GLenum light, GLenum pname, GLfloat param) override;
     virtual void gl_lightfv(GLenum light, GLenum pname, GLfloat const* params) override;
-
+    virtual void gl_materialf(GLenum face, GLenum pname, GLfloat param) override;
+    virtual void gl_materialfv(GLenum face, GLenum pname, GLfloat const* params) override;
     virtual void present() override;
 
 private:
@@ -358,7 +363,6 @@ private:
             decltype(&SoftwareGLContext::gl_stencil_op_separate),
             decltype(&SoftwareGLContext::gl_normal),
             decltype(&SoftwareGLContext::gl_raster_pos),
-            decltype(&SoftwareGLContext::gl_materialv),
             decltype(&SoftwareGLContext::gl_line_width),
             decltype(&SoftwareGLContext::gl_push_attrib),
             decltype(&SoftwareGLContext::gl_pop_attrib),
@@ -372,7 +376,9 @@ private:
             decltype(&SoftwareGLContext::gl_fogfv),
             decltype(&SoftwareGLContext::gl_fogi),
             decltype(&SoftwareGLContext::gl_lightf),
-            decltype(&SoftwareGLContext::gl_lightfv)>;
+            decltype(&SoftwareGLContext::gl_lightfv),
+            decltype(&SoftwareGLContext::gl_materialf),
+            decltype(&SoftwareGLContext::gl_materialfv)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -428,6 +434,7 @@ private:
     GLfloat m_light_model_two_side { 0.0f };
 
     Vector<SoftGPU::Light> m_light_states;
+    Array<SoftGPU::Material, 2u> m_material_states;
 };
 
 }
