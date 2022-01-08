@@ -37,8 +37,8 @@ struct TimeZone {
 
 struct TimeZoneData {
     HashMap<String, Vector<TimeZone>> time_zones;
-    Vector<String> time_zones_names;
-    Vector<Alias> time_zones_aliases;
+    Vector<String> time_zone_names;
+    Vector<Alias> time_zone_aliases;
 };
 
 static Time parse_time(StringView segment)
@@ -109,8 +109,8 @@ static Vector<TimeZone>& parse_zone(StringView zone_line, TimeZoneData& time_zon
     auto& time_zones = time_zone_data.time_zones.ensure(name);
     time_zones.append(move(time_zone));
 
-    if (!time_zone_data.time_zones_names.contains_slow(name))
-        time_zone_data.time_zones_names.append(name);
+    if (!time_zone_data.time_zone_names.contains_slow(name))
+        time_zone_data.time_zone_names.append(name);
 
     return time_zones;
 }
@@ -138,7 +138,7 @@ static void parse_link(StringView link_line, TimeZoneData& time_zone_data)
     auto target = segments[1];
     auto alias = segments[2];
 
-    time_zone_data.time_zones_aliases.append({ target, alias });
+    time_zone_data.time_zone_aliases.append({ target, alias });
 }
 
 static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& time_zone_data)
@@ -206,7 +206,7 @@ static void generate_time_zone_data_header(Core::File& file, TimeZoneData& time_
 namespace TimeZone {
 )~~~");
 
-    generate_enum(generator, format_identifier, "TimeZone"sv, {}, time_zone_data.time_zones_names, time_zone_data.time_zones_aliases);
+    generate_enum(generator, format_identifier, "TimeZone"sv, {}, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
 
     generator.append(R"~~~(
 }
@@ -243,7 +243,7 @@ namespace TimeZone {
         generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
     };
 
-    append_from_string("TimeZone"sv, "time_zone"sv, time_zone_data.time_zones_names, time_zone_data.time_zones_aliases);
+    append_from_string("TimeZone"sv, "time_zone"sv, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
 
     generator.append(R"~~~(
 }
