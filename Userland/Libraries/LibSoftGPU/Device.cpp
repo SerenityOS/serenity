@@ -183,11 +183,6 @@ void Device::rasterize_triangle(const Triangle& triangle)
 {
     INCREASE_STATISTICS_COUNTER(g_num_rasterized_triangles, 1);
 
-    // Since the algorithm is based on blocks of uniform size, we need
-    // to ensure that our m_render_target size is actually a multiple of the block size
-    VERIFY((m_render_target->width() % 2) == 0);
-    VERIFY((m_render_target->height() % 2) == 0);
-
     // Return if alpha testing is a no-op
     if (m_options.enable_alpha_test && m_options.alpha_test_func == AlphaTestFunction::Never)
         return;
@@ -244,13 +239,6 @@ void Device::rasterize_triangle(const Triangle& triangle)
             && edges.z() >= zero.z();
     };
 
-    auto test_scissor4 = [window_scissor_rect](const Vector2<i32x4>& screen_coordinates) -> i32x4 {
-        return screen_coordinates.x() >= window_scissor_rect.x()
-            && screen_coordinates.x() < window_scissor_rect.x() + window_scissor_rect.width()
-            && screen_coordinates.y() >= window_scissor_rect.y()
-            && screen_coordinates.y() < window_scissor_rect.y() + window_scissor_rect.height();
-    };
-
     // Calculate block-based bounds
     // clang-format off
     int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()) / subpixel_factor) & ~1;
@@ -265,6 +253,11 @@ void Device::rasterize_triangle(const Triangle& triangle)
     float const vertex2_eye_absz = fabs(vertex2.eye_coordinates.z());
 
     // FIXME: implement stencil testing
+
+    int const render_bounds_left = render_bounds.x();
+    int const render_bounds_right = render_bounds.x() + render_bounds.width();
+    int const render_bounds_top = render_bounds.y();
+    int const render_bounds_bottom = render_bounds.y() + render_bounds.height();
 
     // Iterate over all blocks within the bounds of the triangle
     for (int by = by0; by < by1; by += 2) {
@@ -281,9 +274,12 @@ void Device::rasterize_triangle(const Triangle& triangle)
 
             // Generate triangle coverage mask
             quad.mask = test_point4(edge_values);
-            if (m_options.scissor_enabled) {
-                quad.mask &= test_scissor4(quad.screen_coordinates);
-            }
+
+            // Test quad against intersection of render target size and scissor rect
+            quad.mask &= quad.screen_coordinates.x() >= render_bounds_left
+                && quad.screen_coordinates.x() < render_bounds_right
+                && quad.screen_coordinates.y() >= render_bounds_top
+                && quad.screen_coordinates.y() < render_bounds_bottom;
 
             if (none(quad.mask))
                 continue;
@@ -298,11 +294,13 @@ void Device::rasterize_triangle(const Triangle& triangle)
                 to_f32x4(edge_values.z()),
             } * one_over_area;
 
+            int coverage_bits = maskbits(quad.mask);
+
             float* depth_ptrs[4] = {
-                &m_depth_buffer->scanline(by)[bx],
-                &m_depth_buffer->scanline(by)[bx + 1],
-                &m_depth_buffer->scanline(by + 1)[bx],
-                &m_depth_buffer->scanline(by + 1)[bx + 1],
+                coverage_bits & 1 ? &m_depth_buffer->scanline(by)[bx] : nullptr,
+                coverage_bits & 2 ? &m_depth_buffer->scanline(by)[bx + 1] : nullptr,
+                coverage_bits & 4 ? &m_depth_buffer->scanline(by + 1)[bx] : nullptr,
+                coverage_bits & 8 ? &m_depth_buffer->scanline(by + 1)[bx + 1] : nullptr,
             };
 
             // AND the depth mask onto the coverage mask
@@ -416,10 +414,10 @@ void Device::rasterize_triangle(const Triangle& triangle)
                 continue;
 
             Gfx::RGBA32* color_ptrs[4] = {
-                &m_render_target->scanline(by)[bx],
-                &m_render_target->scanline(by)[bx + 1],
-                &m_render_target->scanline(by + 1)[bx],
-                &m_render_target->scanline(by + 1)[bx + 1],
+                coverage_bits & 1 ? &m_render_target->scanline(by)[bx] : nullptr,
+                coverage_bits & 2 ? &m_render_target->scanline(by)[bx + 1] : nullptr,
+                coverage_bits & 4 ? &m_render_target->scanline(by + 1)[bx] : nullptr,
+                coverage_bits & 8 ? &m_render_target->scanline(by + 1)[bx + 1] : nullptr,
             };
 
             u32x4 dst_u32;
@@ -456,16 +454,9 @@ void Device::rasterize_triangle(const Triangle& triangle)
     }
 }
 
-static Gfx::IntSize closest_multiple(const Gfx::IntSize& min_size, size_t step)
-{
-    int width = ((min_size.width() + step - 1) / step) * step;
-    int height = ((min_size.height() + step - 1) / step) * step;
-    return { width, height };
-}
-
-Device::Device(const Gfx::IntSize& min_size)
-    : m_render_target { Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, 2)).release_value_but_fixme_should_propagate_errors() }
-    , m_depth_buffer { adopt_own(*new DepthBuffer(closest_multiple(min_size, 2))) }
+Device::Device(const Gfx::IntSize& size)
+    : m_render_target { Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size).release_value_but_fixme_should_propagate_errors() }
+    , m_depth_buffer { adopt_own(*new DepthBuffer(size)) }
 {
     m_options.scissor_box = m_render_target->rect();
 }
@@ -829,12 +820,12 @@ ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)
     return any(quad.mask);
 }
 
-void Device::resize(const Gfx::IntSize& min_size)
+void Device::resize(const Gfx::IntSize& size)
 {
     wait_for_all_threads();
 
-    m_render_target = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, 2)).release_value_but_fixme_should_propagate_errors();
-    m_depth_buffer = adopt_own(*new DepthBuffer(m_render_target->size()));
+    m_render_target = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size).release_value_but_fixme_should_propagate_errors();
+    m_depth_buffer = adopt_own(*new DepthBuffer(size));
 }
 
 void Device::clear_color(const FloatVector4& color)

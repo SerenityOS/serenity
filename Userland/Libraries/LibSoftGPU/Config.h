@@ -15,7 +15,6 @@
 namespace SoftGPU {
 
 static constexpr bool ENABLE_STATISTICS_OVERLAY = false;
-static constexpr int RASTERIZER_BLOCK_SIZE = 8;
 static constexpr int NUM_SAMPLERS = 32;
 static constexpr int SUBPIXEL_BITS = 5;
 
