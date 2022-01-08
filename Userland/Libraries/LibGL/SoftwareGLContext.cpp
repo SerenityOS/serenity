@@ -56,7 +56,8 @@ static constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
     }
 
 SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
-    : m_frontbuffer(frontbuffer)
+    : m_viewport(frontbuffer.rect())
+    , m_frontbuffer(frontbuffer)
     , m_rasterizer(frontbuffer.size())
     , m_device_info(m_rasterizer.info())
 {
@@ -159,6 +160,18 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = 0 } };
     case GL_UNPACK_SWAP_BYTES:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = false } };
+    case GL_VIEWPORT:
+        return ContextParameter {
+            .type = GL_INT,
+            .count = 4,
+            .value = {
+                .integer_list = {
+                    m_viewport.x(),
+                    m_viewport.y(),
+                    m_viewport.width(),
+                    m_viewport.height(),
+                } }
+        };
     default:
         dbgln_if(GL_DEBUG, "get_context_parameter({:#x}): unknown context parameter", name);
         return {};
@@ -577,11 +590,13 @@ void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei hei
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_viewport, x, y, width, height);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0, GL_INVALID_VALUE);
 
-    (void)(x);
-    (void)(y);
-    (void)(width);
-    (void)(height);
+    m_viewport = { x, y, width, height };
+
+    auto rasterizer_options = m_rasterizer.options();
+    rasterizer_options.viewport = m_viewport;
+    m_rasterizer.set_options(rasterizer_options);
 }
 
 void SoftwareGLContext::gl_enable(GLenum capability)
