@@ -29,8 +29,12 @@ public:
 
         auto callback = [&](auto& list) {
             auto new_ref_count = deref_base();
-            if (new_ref_count == 0)
+            if (new_ref_count == 0) {
                 list.remove(const_cast<T&>(*that));
+                if constexpr (requires { that->revoke_weak_ptrs(); }) {
+                    that->revoke_weak_ptrs();
+                }
+            }
             return new_ref_count;
         };
 
