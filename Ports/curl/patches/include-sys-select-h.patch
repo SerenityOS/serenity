@@ -1,11 +1,11 @@
---- curl-7.78.0/include/curl/curl.h	2021-07-19 08:19:57.000000000 +0100
-+++ curl-7.78.0.serenity/include/curl/curl.h	2021-07-29 23:52:44.532510736 +0100
-@@ -74,7 +74,7 @@
+--- curl-7.81.0/include/curl/curl.h.orig	2022-01-08 01:48:40.381648337 +0000
++++ curl-7.81.0/include/curl/curl.h	2022-01-08 01:48:54.585501759 +0000
+@@ -71,7 +71,7 @@
  #if defined(_AIX) || defined(__NOVELL_LIBC__) || defined(__NetBSD__) || \
      defined(__minix) || defined(__SYMBIAN32__) || defined(__INTEGRITY) || \
      defined(ANDROID) || defined(__ANDROID__) || defined(__OpenBSD__) || \
 -    defined(__CYGWIN__) || defined(AMIGA) || defined(__NuttX__) || \
 +    defined(__CYGWIN__) || defined(AMIGA) || defined(__NuttX__) || defined(__serenity__) || \
     (defined(__FreeBSD_version) && (__FreeBSD_version < 800000)) || \
+    (defined(__MidnightBSD_version) && (__MidnightBSD_version < 100000)) || \
      defined(__VXWORKS__)
- #include <sys/select.h>

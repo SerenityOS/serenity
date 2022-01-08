@@ -1,5 +1,5 @@
---- curl-7.78.0/config.sub	2021-07-07 17:17:59.000000000 +0100
-+++ curl-7.78.0.serenity/config.sub	2021-07-29 23:43:17.210357809 +0100
+--- curl-7.81.0/config.sub.orig	2022-01-08 01:37:56.256315591 +0000
++++ curl-7.81.0/config.sub	2022-01-08 01:38:02.352252211 +0000
 @@ -1368,7 +1368,7 @@
  	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
  	      | -sym* | -kopensolaris* | -plan9* \
