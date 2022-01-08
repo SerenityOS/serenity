@@ -362,8 +362,12 @@ void* kmalloc(size_t size)
     Thread* current_thread = Thread::current();
     if (!current_thread)
         current_thread = Processor::idle_thread();
-    if (current_thread)
+    if (current_thread) {
+        // FIXME: By the time we check this, we have already allocated above.
+        //        This means that in the case of an infinite recursion, we can't catch it this way.
+        VERIFY(current_thread->is_allocation_enabled());
         PerformanceManager::add_kmalloc_perf_event(*current_thread, size, (FlatPtr)ptr);
+    }
 
     return ptr;
 }
@@ -384,8 +388,10 @@ void kfree_sized(void* ptr, size_t size)
         Thread* current_thread = Thread::current();
         if (!current_thread)
             current_thread = Processor::idle_thread();
-        if (current_thread)
+        if (current_thread) {
+            VERIFY(current_thread->is_allocation_enabled());
             PerformanceManager::add_kfree_perf_event(*current_thread, 0, (FlatPtr)ptr);
+        }
     }
 
     g_kmalloc_global->deallocate(ptr, size);
