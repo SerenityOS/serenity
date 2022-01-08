@@ -10,12 +10,14 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <LibELF/Image.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/ELFSymbolProvider.h>
 #include <string.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     const char* path = nullptr;
 
@@ -24,7 +26,7 @@ int main(int argc, char** argv)
         "Disassemble an executable, and show human-readable "
         "assembly code for each function.");
     args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error()) {
@@ -42,7 +44,7 @@ int main(int argc, char** argv)
         size_t address() const { return value; }
         size_t address_end() const { return value + size; }
 
-        bool contains(size_t virtual_address) { return address() <= virtual_address && virtual_address < address_end(); }
+        bool contains(size_t virtual_address) const { return address() <= virtual_address && virtual_address < address_end(); }
     };
     Vector<Symbol> symbols;
 
@@ -131,4 +133,6 @@ int main(int argc, char** argv)
 
         outln("{:p}  {}", virtual_offset, insn.value().to_string(virtual_offset, symbol_provider));
     }
+
+    return 0;
 }
