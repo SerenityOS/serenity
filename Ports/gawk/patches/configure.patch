@@ -1,15 +1,3 @@
-diff -ur a/config.sub b/config.sub
---- a/config.sub	2020-04-13 08:44:50.000000000 +0200
-+++ b/config.sub	2021-06-02 14:46:39.331046420 +0200
-@@ -1338,7 +1338,7 @@
- 	# The portable systems comes first.
- 	# Each alternative MUST end in a * to match a version number.
- 	# sysv* is not here because it comes later, after sysvr4.
--	gnu* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
-+	gnu* | bsd* | mach* | minix* | genix* | ultrix* | serenity* | irix* \
- 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]*\
- 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
- 	     | sym* | kopensolaris* | plan9* \
 diff -ur a/extension/build-aux/config.sub b/extension/build-aux/config.sub
 --- a/extension/build-aux/config.sub	2020-04-13 08:44:50.000000000 +0200
 +++ b/extension/build-aux/config.sub	2021-06-02 14:46:39.331046420 +0200

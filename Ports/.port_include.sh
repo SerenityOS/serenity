@@ -62,6 +62,8 @@ installopts=()
 configscript=configure
 configopts=()
 useconfigure=false
+config_sub_path=config.sub
+use_fresh_config_sub=false
 depends=()
 patchlevel=1
 auth_type=
@@ -79,7 +81,7 @@ shift
 : "${workdir:=$port-$version}"
 
 run_nocd() {
-    echo "+ $@ (nocd)"
+    echo "+ $@ (nocd)" >&2
     ("$@")
 }
 
@@ -90,6 +92,17 @@ run() {
 
 run_replace_in_file() {
     run perl -p -i -e "$1" $2
+}
+
+get_new_config_sub() {
+    config_sub="${1:-config.sub}"
+    if ! run grep -q serenity "$config_sub"; then
+        run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub" "${1:-config.sub}" false
+    fi
+}
+
+ensure_new_config_sub() {
+    get_new_config_sub "$config_sub_path"
 }
 
 ensure_build() {
@@ -193,6 +206,31 @@ func_defined pre_fetch || pre_fetch() {
 func_defined post_fetch || post_fetch() {
     :
 }
+
+do_download_file() {
+    local url="$1"
+    local filename="$2"
+    local accept_existing="${3:-true}"
+
+    echo "Downloading URL: ${url}"
+
+    # FIXME: Serenity's curl port does not support https, even with openssl installed.
+    if which curl >/dev/null 2>&1 && ! curl https://example.com -so /dev/null; then
+        url=$(echo "$url" | sed "s/^https:\/\//http:\/\//")
+    fi
+
+    # download files
+    if $accept_existing && [ -f "$filename" ]; then
+        echo "$filename already exists"
+    else
+        if which curl; then
+            run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
+        else
+            run_nocd pro "$url" > "$filename"
+        fi
+    fi
+}
+
 fetch() {
     pre_fetch
 
@@ -211,23 +249,7 @@ fetch() {
         for f in $files; do
             IFS=$OLDIFS
             read url filename auth_sum<<< $(echo "$f")
-            echo "Downloading URL: ${url}"
-
-            # FIXME: Serenity's curl port does not support https, even with openssl installed.
-            if which curl >/dev/null 2>&1 && ! curl https://example.com -so /dev/null; then
-                url=$(echo "$url" | sed "s/^https:\/\//http:\/\//")
-            fi
-
-            # download files
-            if [ -f "$filename" ]; then
-                echo "$filename already exists"
-            else
-                if which curl; then
-                    run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
-                else
-                    run_nocd pro "$url" > "$filename"
-                fi
-            fi
+            do_download_file "$url" "$filename"
         done
 
         verification_failed=0
@@ -343,7 +365,9 @@ func_defined patch_internal || patch_internal() {
     fi
 }
 func_defined pre_configure || pre_configure() {
-    :
+    if "$use_fresh_config_sub"; then
+        ensure_new_config_sub
+    fi
 }
 func_defined configure || configure() {
     chmod +x "${workdir}"/"$configscript"
