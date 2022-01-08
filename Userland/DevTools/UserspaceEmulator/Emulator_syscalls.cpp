@@ -866,6 +866,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
 {
     Syscall::SC_mmap_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
+    params.alignment = params.alignment ? params.alignment : PAGE_SIZE;
 
     u32 requested_size = round_up_to_power_of_two(params.size, PAGE_SIZE);
     FlatPtr final_address;
