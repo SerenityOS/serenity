@@ -164,6 +164,14 @@ Action* Menu::action_at(size_t index)
     return m_items[index].action();
 }
 
+void Menu::set_children_actions_enabled(bool enabled)
+{
+    for (auto& item : m_items) {
+        if (item.action())
+            item.action()->set_enabled(enabled);
+    }
+}
+
 void Menu::visibility_did_change(Badge<WindowServerConnection>, bool visible)
 {
     if (m_visible == visible)
