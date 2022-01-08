@@ -23,6 +23,7 @@
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/ImageFormat.h>
 #include <LibSoftGPU/Light/Light.h>
+#include <LibSoftGPU/Light/Material.h>
 #include <LibSoftGPU/Sampler.h>
 #include <LibSoftGPU/Triangle.h>
 #include <LibSoftGPU/Vertex.h>
@@ -94,6 +95,7 @@ public:
 
     void set_sampler_config(unsigned, SamplerConfig const&);
     void set_light_state(unsigned, Light const&);
+    void set_material_state(unsigned, Material const&);
 
 private:
     void draw_statistics_overlay(Gfx::Bitmap&);
@@ -115,6 +117,7 @@ private:
     Vector<size_t> m_enabled_texture_units;
     AlphaBlendFactors m_alpha_blend_factors;
     Array<Light, NUM_LIGHTS> m_lights;
+    Array<Material, 2u> m_materials;
 };
 
 }
