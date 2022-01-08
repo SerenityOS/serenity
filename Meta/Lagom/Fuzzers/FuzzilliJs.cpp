@@ -213,8 +213,8 @@ int main(int, char**)
         if (parser.has_errors()) {
             result = 1;
         } else {
-            interpreter->run(interpreter->global_object(), *program);
-            if (interpreter->exception()) {
+            auto completion = interpreter->run(interpreter->global_object(), *program);
+            if (completion.is_error()) {
                 result = 1;
                 vm->clear_exception();
             }

@@ -331,9 +331,9 @@ void ClientConnection::run_javascript(String const& js_source)
 
     auto parser = JS::Parser(JS::Lexer(js_source));
     auto program = parser.parse_program();
-    interpreter.run(interpreter.global_object(), *program);
+    auto result = interpreter.run(interpreter.global_object(), *program);
 
-    if (interpreter.vm().exception()) {
+    if (result.is_error()) {
         dbgln("Exception :(");
         interpreter.vm().clear_exception();
     }
