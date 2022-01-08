@@ -69,7 +69,7 @@ class RefCounted : public RefCountedBase {
 public:
     bool unref() const
     {
-        auto const* that = static_cast<T const*>(this);
+        auto* that = const_cast<T*>(static_cast<T const*>(this));
         auto new_ref_count = deref_base();
         if (new_ref_count == 0) {
             if constexpr (requires { that->will_be_destroyed(); })
