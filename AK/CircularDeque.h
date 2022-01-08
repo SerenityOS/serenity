@@ -17,8 +17,8 @@ public:
     template<typename U = T>
     void enqueue_begin(U&& value)
     {
-        const auto new_head = (this->m_head - 1 + Capacity) % Capacity;
-        auto& slot = this->elements()[new_head];
+        size_t const new_head = (this->m_head - 1 + Capacity) % Capacity;
+        T& slot = this->elements()[new_head];
         if (this->m_size == Capacity)
             slot.~T();
         else
@@ -31,7 +31,7 @@ public:
     T dequeue_end()
     {
         VERIFY(!this->is_empty());
-        auto& slot = this->elements()[(this->m_head + this->m_size - 1) % Capacity];
+        T& slot = this->elements()[(this->m_head + this->m_size - 1) % Capacity];
         T value = move(slot);
         slot.~T();
         this->m_size--;
