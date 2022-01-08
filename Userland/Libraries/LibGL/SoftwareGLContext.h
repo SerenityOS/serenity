@@ -430,8 +430,6 @@ private:
 
     // Lighting configuration
     bool m_lighting_enabled { false };
-    FloatVector4 m_light_model_ambient { 0.2f, 0.2f, 0.2f, 1.0f };
-    GLfloat m_light_model_two_side { 0.0f };
 
     Vector<SoftGPU::Light> m_light_states;
     Array<SoftGPU::Material, 2u> m_material_states;

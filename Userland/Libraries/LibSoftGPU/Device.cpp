@@ -970,6 +970,15 @@ void Device::set_options(const RasterizerOptions& options)
     // FIXME: Recreate or reinitialize render threads here when multithreading is being implemented
 }
 
+void Device::set_light_model_params(const LightModelParameters& lighting_model)
+{
+    wait_for_all_threads();
+
+    m_lighting_model = lighting_model;
+
+    // FIXME: Recreate or reinitialize render threads here when multithreading is being implemented
+}
+
 Gfx::RGBA32 Device::get_backbuffer_pixel(int x, int y)
 {
     // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks

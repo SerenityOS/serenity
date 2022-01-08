@@ -71,6 +71,13 @@ struct RasterizerOptions {
     Gfx::IntRect viewport;
 };
 
+struct LightModelParameters {
+    FloatVector4 scene_ambient_color { 0.2f, 0.2f, 0.2f, 1.0f };
+    bool viewer_at_infinity { false };
+    unsigned int single_color { 0x81F9 }; // This is the value of `GL_SINGLE_COLOR`. Considering we definitely don't leak gl.h stuff into here, we fix it to the gl.h macro value.
+    bool two_sided_lighting { false };
+};
+
 struct PixelQuad;
 
 class Device final {
@@ -87,7 +94,9 @@ public:
     void blit_to(Gfx::Bitmap&);
     void wait_for_all_threads() const;
     void set_options(const RasterizerOptions&);
+    void set_light_model_params(const LightModelParameters&);
     RasterizerOptions options() const { return m_options; }
+    LightModelParameters light_model() const { return m_lighting_model; }
     Gfx::RGBA32 get_backbuffer_pixel(int x, int y);
     float get_depthbuffer_value(int x, int y);
 
@@ -109,6 +118,7 @@ private:
     RefPtr<Gfx::Bitmap> m_render_target;
     OwnPtr<DepthBuffer> m_depth_buffer;
     RasterizerOptions m_options;
+    LightModelParameters m_lighting_model;
     Clipper m_clipper;
     Vector<Triangle> m_triangle_list;
     Vector<Triangle> m_processed_triangles;
