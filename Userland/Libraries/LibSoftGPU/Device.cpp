@@ -81,9 +81,14 @@ static Vector4<f32x4> to_vec4(u32x4 rgba)
     };
 }
 
-static Gfx::IntRect scissor_box_to_window_coordinates(Gfx::IntRect const& scissor_box, Gfx::IntRect const& window_rect)
+static Gfx::IntRect window_coordinates_to_target_coordinates(Gfx::IntRect const& window_rect, Gfx::IntRect const& target_rect)
 {
-    return scissor_box.translated(0, window_rect.height() - 2 * scissor_box.y() - scissor_box.height());
+    return {
+        window_rect.x(),
+        target_rect.height() - window_rect.height() - window_rect.y(),
+        window_rect.width(),
+        window_rect.height(),
+    };
 }
 
 void Device::setup_blend_factors()
@@ -206,9 +211,8 @@ void Device::rasterize_triangle(const Triangle& triangle)
     auto const one_over_area = 1.0f / area;
 
     auto render_bounds = m_render_target->rect();
-    auto window_scissor_rect = scissor_box_to_window_coordinates(m_options.scissor_box, m_render_target->rect());
     if (m_options.scissor_enabled)
-        render_bounds.intersect(window_scissor_rect);
+        render_bounds.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box, m_render_target->rect()));
 
     // Obey top-left rule:
     // This sets up "zero" for later pixel coverage tests.
@@ -845,7 +849,7 @@ void Device::clear_color(const FloatVector4& color)
 
     if (m_options.scissor_enabled) {
         auto fill_rect = m_render_target->rect();
-        fill_rect.intersect(scissor_box_to_window_coordinates(m_options.scissor_box, fill_rect));
+        fill_rect.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box, fill_rect));
         Gfx::Painter painter { *m_render_target };
         painter.fill_rect(fill_rect, fill_color);
         return;
@@ -859,7 +863,7 @@ void Device::clear_depth(float depth)
     wait_for_all_threads();
 
     if (m_options.scissor_enabled) {
-        m_depth_buffer->clear(scissor_box_to_window_coordinates(m_options.scissor_box, m_render_target->rect()), depth);
+        m_depth_buffer->clear(window_coordinates_to_target_coordinates(m_options.scissor_box, m_render_target->rect()), depth);
         return;
     }
 
