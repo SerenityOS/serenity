@@ -1,5 +1,5 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=zstd
-version=1.5.0
-files="https://github.com/facebook/zstd/releases/download/v${version}/zstd-${version}.tar.gz zstd-${version}.tar.gz 5194fbfa781fcf45b98c5e849651aa7b3b0a008c6b72d4a0db760f3002291e94"
+version=1.5.1
+files="https://github.com/facebook/zstd/releases/download/v${version}/zstd-${version}.tar.gz zstd-${version}.tar.gz e28b2f2ed5710ea0d3a1ecac3f6a947a016b972b9dd30242369010e5f53d7002"
 auth_type=sha256
