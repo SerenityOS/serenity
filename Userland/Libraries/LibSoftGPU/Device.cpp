@@ -1224,7 +1224,7 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
 
     Gfx::Painter painter { target };
 
-    if (milliseconds > 500) {
+    if (milliseconds > MILLISECONDS_PER_STATISTICS_PERIOD) {
 
         int num_rendertarget_pixels = m_render_target->width() * m_render_target->height();
 
