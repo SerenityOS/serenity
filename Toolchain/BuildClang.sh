@@ -130,6 +130,18 @@ then
     exit 1
 fi
 
+link_lld=
+buildstep dependencies echo "Checking whether the LLD linker is available..."
+if ${CXX:-c++} -o /dev/null -fuse-ld=lld -xc - >/dev/null 2>/dev/null << 'PROGRAM'
+int main() {}
+PROGRAM
+then
+    link_lld=1
+    buildstep dependencies echo "Using LLD for linking LLVM."
+else
+    buildstep dependencies echo "LLD not found. Using the default linker."
+fi
+
 # === CHECK CACHE AND REUSE ===
 
 pushd "$DIR"
@@ -254,6 +266,7 @@ pushd "$DIR/Build/clang"
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DSERENITY_MODULE_PATH="$DIR/CMake" \
             -C "$DIR/CMake/LLVMConfig.cmake" \
+            ${link_lld:+"-DLLVM_ENABLE_LLD=ON"} \
             ${dev:+"-DLLVM_CCACHE_BUILD=ON"} \
             ${ci:+"-DLLVM_CCACHE_BUILD=ON"} \
             ${ci:+"-DLLVM_CCACHE_DIR=$LLVM_CCACHE_DIR"} \
