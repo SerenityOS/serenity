@@ -1,0 +1,23 @@
+--- sqlite-autoconf-3350500/configure	2021-04-19 20:56:40.000000000 +0200
++++ sqlite-autoconf-port/configure	2022-01-08 10:07:29.108097826 +0100
+@@ -11069,6 +11069,8 @@
+       hardcode_shlibpath_var=no
+       ;;
+
++    serenity*)
++      ;;
+     *)
+       ld_shlibs=no
+       ;;
+--- sqlite-autoconf-3350500/configure	2022-01-08 10:08:22.185276101 +0100
++++ sqlite-autoconf-port/configure	2022-01-08 10:09:52.836148833 +0100
+@@ -12151,6 +12151,8 @@
+   shlibpath_var=LD_LIBRARY_PATH
+   ;;
+
++serenity*)
++  ;;
+ *)
+   dynamic_linker=no
+   ;;
+
