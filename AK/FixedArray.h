@@ -79,8 +79,8 @@ public:
         for (size_t i = 0; i < m_size; ++i)
             m_elements[i].~T();
         kfree_sized(m_elements, sizeof(T) * m_size);
-        m_elements = nullptr;
         m_size = 0;
+        m_elements = nullptr;
     }
 
     size_t size() const { return m_size; }
@@ -110,8 +110,8 @@ public:
 
     void swap(FixedArray<T>& other)
     {
-        ::swap(m_elements, other.m_elements);
         ::swap(m_size, other.m_size);
+        ::swap(m_elements, other.m_elements);
     }
 
     using ConstIterator = SimpleIterator<FixedArray const, T const>;
