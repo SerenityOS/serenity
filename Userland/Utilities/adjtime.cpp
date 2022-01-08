@@ -1,27 +1,26 @@
 /*
- * Copyright (c) 2020, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <math.h>
 #include <sys/time.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
 #ifdef __serenity__
-    if (pledge("stdio settime", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio settime"));
 #endif
 
     Core::ArgsParser args_parser;
     double delta = __builtin_nan("");
     args_parser.add_option(delta, "Adjust system time by this many seconds", "set", 's', "delta_seconds");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!__builtin_isnan(delta)) {
         long delta_us = static_cast<long>(round(delta * 1'000'000));
@@ -39,10 +38,7 @@ int main(int argc, char** argv)
     }
 
 #ifdef __serenity__
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio"));
 #endif
 
     timeval remaining_delta_timeval;
