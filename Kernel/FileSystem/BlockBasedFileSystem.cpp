@@ -34,20 +34,17 @@ public:
 
     ~DiskCache() = default;
 
-    bool is_dirty() const { return m_dirty; }
-    void set_dirty(bool b) { m_dirty = b; }
+    bool is_dirty() const { return !m_dirty_list.is_empty(); }
 
     void mark_all_clean()
     {
         while (auto* entry = m_dirty_list.first())
             m_clean_list.prepend(*entry);
-        m_dirty = false;
     }
 
     void mark_dirty(CacheEntry& entry)
     {
         m_dirty_list.prepend(entry);
-        m_dirty = true;
     }
 
     void mark_clean(CacheEntry& entry)
@@ -101,7 +98,6 @@ private:
     mutable IntrusiveList<&CacheEntry::list_node> m_dirty_list;
     NonnullOwnPtr<KBuffer> m_cached_block_data;
     NonnullOwnPtr<KBuffer> m_entries;
-    bool m_dirty { false };
 };
 
 BlockBasedFileSystem::BlockBasedFileSystem(OpenFileDescription& file_description)
