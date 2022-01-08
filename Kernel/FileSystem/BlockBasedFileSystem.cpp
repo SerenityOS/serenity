@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -52,7 +52,7 @@ public:
         m_clean_list.prepend(entry);
     }
 
-    CacheEntry& get(BlockBasedFileSystem::BlockIndex block_index) const
+    CacheEntry& ensure(BlockBasedFileSystem::BlockIndex block_index) const
     {
         if (auto it = m_hash.find(block_index); it != m_hash.end()) {
             auto& entry = const_cast<CacheEntry&>(*it->value);
@@ -65,7 +65,7 @@ public:
             // NOTE: We want to make sure we only call FileBackedFileSystem flush here,
             //       not some FileBackedFileSystem subclass flush!
             m_fs.flush_writes_impl();
-            return get(block_index);
+            return ensure(block_index);
         }
 
         VERIFY(m_clean_list.last());
@@ -148,7 +148,7 @@ ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKe
             return {};
         }
 
-        auto& entry = cache->get(index);
+        auto& entry = cache->ensure(index);
         if (count < block_size()) {
             // Fill the cache first.
             TRY(read_block(index, nullptr, block_size()));
@@ -226,7 +226,7 @@ ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuf
             return {};
         }
 
-        auto& entry = cache->get(index);
+        auto& entry = cache->ensure(index);
         if (!entry.has_data) {
             auto base_offset = index.value() * block_size();
             auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
