@@ -8,9 +8,11 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Vector<StringView> filenames;
     bool keep_input_files { false };
@@ -22,7 +24,7 @@ int main(int argc, char** argv)
     args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');
     args_parser.add_option(decompress, "Decompress", "decompress", 'd');
     args_parser.add_positional_argument(filenames, "Files", "FILES");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (write_to_stdout)
         keep_input_files = true;
@@ -41,12 +43,7 @@ int main(int argc, char** argv)
 
         // We map the whole file instead of streaming to reduce size overhead (gzip header) and increase the deflate block size (better compression)
         // TODO: automatically fallback to buffered streaming for very large files
-        auto file_or_error = Core::MappedFile::map(input_filename);
-        if (file_or_error.is_error()) {
-            warnln("Failed opening input file for reading: {}", file_or_error.error());
-            return 1;
-        }
-        auto file = file_or_error.value();
+        auto file = TRY(Core::MappedFile::map(input_filename));
 
         AK::Optional<ByteBuffer> output_bytes;
         if (decompress) {
@@ -78,11 +75,7 @@ int main(int argc, char** argv)
         }
 
         if (!keep_input_files) {
-            const auto retval = unlink(String(input_filename).characters());
-            if (retval != 0) {
-                warnln("Failed removing input file");
-                return 1;
-            }
+            TRY(Core::System::unlink(input_filename));
         }
     }
     return 0;
