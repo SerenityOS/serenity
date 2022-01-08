@@ -259,6 +259,11 @@ void Device::rasterize_triangle(const Triangle& triangle)
     int const render_bounds_top = render_bounds.y();
     int const render_bounds_bottom = render_bounds.y() + render_bounds.height();
 
+    auto const half_pixel_offset = Vector2<i32x4> {
+        expand4(subpixel_factor / 2),
+        expand4(subpixel_factor / 2),
+    };
+
     // Iterate over all blocks within the bounds of the triangle
     for (int by = by0; by < by1; by += 2) {
         for (int bx = bx0; bx < bx1; bx += 2) {
@@ -270,7 +275,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
                 i32x4 { by, by, by + 1, by + 1 },
             };
 
-            auto edge_values = calculate_edge_values4(quad.screen_coordinates * subpixel_factor);
+            auto edge_values = calculate_edge_values4(quad.screen_coordinates * subpixel_factor + half_pixel_offset);
 
             // Generate triangle coverage mask
             quad.mask = test_point4(edge_values);
