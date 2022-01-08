@@ -100,8 +100,8 @@ jobs:
       - name: Get previous results
         working-directory: libjs-test262
         run: |
-          cp -f ../libjs-website/test262/data/per-file-master.json . || :
-          cp -f ../libjs-website/test262/data/per-file-bytecode-master.json . || :
+          cp -f ../libjs-website/test262/data/per-file-master.json .
+          cp -f ../libjs-website/test262/data/per-file-bytecode-master.json .
 
       - name: Run test262 and test262-parser-tests
         working-directory: libjs-test262
@@ -127,9 +127,9 @@ jobs:
       - name: Compare non-bytecode
         continue-on-error: true
         working-directory: libjs-test262
-        run: ./per_file_result_diff.py -o master.json -n ../libjs-website/test262/data/per-file-master.json
+        run: ./per_file_result_diff.py -o per-file-master.json -n ../libjs-website/test262/data/per-file-master.json
 
       - name: Compare bytecode
         continue-on-error: true
         working-directory: libjs-test262
-        run: ./per_file_result_diff.py -o bytecode-master.json -n ../libjs-website/test262/data/per-file-bytecode-master.json
+        run: ./per_file_result_diff.py -o per-file-bytecode-master.json -n ../libjs-website/test262/data/per-file-bytecode-master.json
