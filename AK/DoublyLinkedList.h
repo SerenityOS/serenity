@@ -60,8 +60,8 @@ public:
 
     void clear()
     {
-        for (auto* node = m_head; node;) {
-            auto* next = node->next;
+        for (Node* node = m_head; node;) {
+            Node* next = node->next;
             delete node;
             node = next;
         }
@@ -95,7 +95,7 @@ public:
     {
         static_assert(
             requires { T(value); }, "Conversion operator is missing.");
-        auto* node = new Node(forward<U>(value));
+        Node* node = new Node(forward<U>(value));
         if (!m_head) {
             VERIFY(!m_tail);
             m_head = node;
@@ -113,7 +113,7 @@ public:
     void prepend(U&& value)
     {
         static_assert(IsSame<T, U>);
-        auto* node = new Node(forward<U>(value));
+        Node* node = new Node(forward<U>(value));
         if (!m_head) {
             VERIFY(!m_tail);
             m_head = node;
@@ -155,7 +155,7 @@ public:
     void remove(Iterator it)
     {
         VERIFY(it.m_node);
-        auto* node = it.m_node;
+        Node* node = it.m_node;
         if (node->prev) {
             VERIFY(node != m_head);
             node->prev->next = node->next;
