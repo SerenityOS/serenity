@@ -114,9 +114,10 @@ ErrorOr<void> DevPtsFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSy
     TRY(callback({ "..", identifier(), 0 }));
 
     return SlavePTY::all_instances().with([&](auto& list) -> ErrorOr<void> {
+        StringBuilder builder;
         for (SlavePTY& slave_pty : list) {
-            StringBuilder builder;
-            builder.appendff("{}", slave_pty.index());
+            builder.clear();
+            TRY(builder.try_appendff("{}", slave_pty.index()));
             TRY(callback({ builder.string_view(), { fsid(), pty_index_to_inode_index(slave_pty.index()) }, 0 }));
         }
         return {};
