@@ -19,6 +19,12 @@
 static constexpr unsigned short size_classes[] = { 16, 32, 64, 128, 256, 496, 1008, 2032, 4080, 8176, 16368, 32752, 0 };
 static constexpr size_t num_size_classes = (sizeof(size_classes) / sizeof(unsigned short)) - 1;
 
+#ifndef NO_TLS
+extern "C" {
+extern __thread bool s_allocation_enabled;
+}
+#endif
+
 consteval bool check_size_classes_alignment()
 {
     for (size_t i = 0; i < num_size_classes; i++) {
