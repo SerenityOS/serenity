@@ -737,7 +737,10 @@ void FontEditorWidget::drop_event(GUI::DropEvent& event)
 
 void FontEditorWidget::did_resize_glyph_editor()
 {
-    constexpr int glyph_toolbars_width = 100;
+    constexpr int button_width = 22;
+    constexpr int buttons_per_bar = 4;
+    constexpr int spacing = (buttons_per_bar - 1) * 2 + 10;
+    constexpr int glyph_toolbars_width = button_width * buttons_per_bar + spacing;
     m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
     m_left_column_container->set_fixed_width(max(m_glyph_editor_widget->preferred_width(), glyph_toolbars_width));
 }
