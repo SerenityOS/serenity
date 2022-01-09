@@ -8,6 +8,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -27,6 +28,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domains("Chess");
 
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man6/Chess.md") }));
+    TRY(Desktop::Launcher::seal_allowlist());
+
     TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec"));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-chess"));
@@ -37,6 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/ChessEngine", "x"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
     TRY(Core::System::unveil(Core::StandardPaths::home_directory().characters(), "wcbr"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -183,6 +188,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man6/Chess.md"), "/bin/Help");
+    })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Chess", app_icon, window)));
 
     window->show();
