@@ -488,7 +488,7 @@ void FontEditorWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>&& 
     m_path = path;
     m_edited_font = edited_font;
 
-    m_glyph_map_widget->initialize(*m_edited_font);
+    m_glyph_map_widget->set_font(*m_edited_font);
     m_glyph_editor_widget->initialize(*m_edited_font);
     did_resize_glyph_editor();
 

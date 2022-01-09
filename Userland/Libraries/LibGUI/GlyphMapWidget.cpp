@@ -12,6 +12,8 @@
 #include <LibGfx/Emoji.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, GlyphMapWidget);
+
 namespace GUI {
 
 GlyphMapWidget::Selection GlyphMapWidget::Selection::normalized() const
@@ -49,26 +51,15 @@ GlyphMapWidget::GlyphMapWidget()
 {
     set_focus_policy(FocusPolicy::StrongFocus);
     horizontal_scrollbar().set_visible(false);
+    did_change_font();
 }
 
 GlyphMapWidget::~GlyphMapWidget()
 {
 }
 
-void GlyphMapWidget::initialize(Gfx::BitmapFont& mutable_font)
-{
-    if (m_font == mutable_font)
-        return;
-    m_font = mutable_font;
-    vertical_scrollbar().set_step(font().glyph_height() + m_vertical_spacing);
-    set_active_glyph('A');
-}
-
 void GlyphMapWidget::resize_event(ResizeEvent& event)
 {
-    if (!m_font)
-        return;
-
     int event_width = event.size().width() - vertical_scrollbar().width() - (frame_thickness() * 2) - m_horizontal_spacing;
     int event_height = event.size().height() - (frame_thickness() * 2);
     m_visible_glyphs = (event_width * event_height) / (font().max_glyph_width() * font().glyph_height());
@@ -139,16 +130,16 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
             font().glyph_height());
         if (m_selection.contains(glyph)) {
             painter.fill_rect(outer_rect, is_focused() ? palette().selection() : palette().inactive_selection());
-            if (m_font->contains_raw_glyph(glyph))
+            if (font().contains_glyph(glyph))
                 painter.draw_glyph(inner_rect.location(), glyph, is_focused() ? palette().selection_text() : palette().inactive_selection_text());
             else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph))
-                painter.draw_emoji(inner_rect.location(), *emoji, *m_font);
-        } else if (m_font->contains_raw_glyph(glyph)) {
+                painter.draw_emoji(inner_rect.location(), *emoji, font());
+        } else if (font().contains_glyph(glyph)) {
             painter.fill_rect(outer_rect, palette().base());
             painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
         } else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph)) {
             painter.fill_rect(outer_rect, Gfx::Color { 255, 150, 150 });
-            painter.draw_emoji(inner_rect.location(), *emoji, *m_font);
+            painter.draw_emoji(inner_rect.location(), *emoji, font());
         }
     }
     painter.draw_focus_rect(get_outer_rect(m_active_glyph), Gfx::Color::Black);
@@ -250,6 +241,12 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         set_active_glyph(new_selection);
         return;
     }
+}
+
+void GlyphMapWidget::did_change_font()
+{
+    vertical_scrollbar().set_step(font().glyph_height() + m_vertical_spacing);
+    set_active_glyph('A');
 }
 
 void GlyphMapWidget::scroll_to_glyph(int glyph)
