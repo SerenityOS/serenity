@@ -8,7 +8,6 @@
 #include "FilterModel.h"
 #include <Applications/PixelPaint/FilterGalleryGML.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/CheckBox.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 
@@ -31,13 +30,13 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     auto apply_button = main_widget.find_descendant_of_type_named<GUI::Button>("apply_button");
     auto cancel_button = main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     m_config_widget = main_widget.find_descendant_of_type_named<GUI::Widget>("config_widget");
-    auto preview_checkbox = main_widget.find_descendant_of_type_named<GUI::CheckBox>("preview");
+    m_preview_checkbox = main_widget.find_descendant_of_type_named<GUI::CheckBox>("preview");
 
     VERIFY(m_filter_tree);
     VERIFY(apply_button);
     VERIFY(cancel_button);
     VERIFY(m_config_widget);
-    VERIFY(preview_checkbox);
+    VERIFY(m_preview_checkbox);
 
     auto filter_model = FilterModel::create(m_editor);
     m_filter_tree->set_model(filter_model);
@@ -57,6 +56,16 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
         m_selected_filter_config_widget = m_selected_filter->get_settings_widget();
         m_config_widget->remove_all_children();
         m_config_widget->add_child(*m_selected_filter_config_widget);
+
+        if (m_preview_checkbox->is_checked()) {
+            if (auto* layer = m_editor->active_layer()) {
+                if (m_preview_bitmap)
+                    restore_layer_bitmap(layer);
+                m_preview_bitmap = clone_of_active_layer_bitmap(layer);
+                apply_filter_inhibiting_undo_stack();
+                m_editor->update();
+            }
+        }
     };
 
     apply_button->on_click = [this](auto) {
@@ -78,25 +87,17 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
         done(ExecResult::ExecCancel);
     };
 
-    preview_checkbox->on_checked = [this](bool checked) {
+    m_preview_checkbox->on_checked = [this](bool checked) {
         if (!m_editor)
             return;
 
         if (auto* layer = m_editor->active_layer()) {
             if (checked) {
-                auto preview_bitmap_or_error = layer->bitmap().clone();
-
-                if (preview_bitmap_or_error.is_error())
-                    return;
-
-                m_preview_bitmap = preview_bitmap_or_error.release_value();
-
                 if (!m_selected_filter)
                     return;
 
-                m_editor->inhibit_undo_stack = true;
-                m_selected_filter->apply();
-                m_editor->inhibit_undo_stack = false;
+                m_preview_bitmap = clone_of_active_layer_bitmap(layer);
+                apply_filter_inhibiting_undo_stack();
                 m_editor->update();
             } else {
                 if (!m_preview_bitmap)
@@ -125,5 +126,20 @@ void FilterGallery::restore_layer_bitmap(Layer* active_layer)
 
         m_preview_bitmap = nullptr;
     }
+}
+
+void FilterGallery::apply_filter_inhibiting_undo_stack()
+{
+    m_editor->inhibit_undo_stack = true;
+    m_selected_filter->apply();
+    m_editor->inhibit_undo_stack = false;
+}
+
+RefPtr<Gfx::Bitmap> FilterGallery::clone_of_active_layer_bitmap(Layer* active_layer)
+{
+    auto bitmap_or_error = active_layer->bitmap().clone();
+    if (bitmap_or_error.is_error())
+        return nullptr;
+    return bitmap_or_error.release_value();
 }
 }
