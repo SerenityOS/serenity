@@ -474,24 +474,24 @@ ErrorOr<NonnullOwnPtr<KString>> IPv4Socket::pseudo_path(const OpenFileDescriptio
         return KString::try_create("socket"sv);
 
     StringBuilder builder;
-    builder.append("socket:");
+    TRY(builder.try_append("socket:"));
 
-    builder.appendff("{}:{}", m_local_address.to_string(), m_local_port);
+    TRY(builder.try_appendff("{}:{}", m_local_address.to_string(), m_local_port));
     if (m_role == Role::Accepted || m_role == Role::Connected)
-        builder.appendff(" / {}:{}", m_peer_address.to_string(), m_peer_port);
+        TRY(builder.try_appendff(" / {}:{}", m_peer_address.to_string(), m_peer_port));
 
     switch (m_role) {
     case Role::Listener:
-        builder.append(" (listening)");
+        TRY(builder.try_append(" (listening)"));
         break;
     case Role::Accepted:
-        builder.append(" (accepted)");
+        TRY(builder.try_append(" (accepted)"));
         break;
     case Role::Connected:
-        builder.append(" (connected)");
+        TRY(builder.try_append(" (connected)"));
         break;
     case Role::Connecting:
-        builder.append(" (connecting)");
+        TRY(builder.try_append(" (connecting)"));
         break;
     default:
         VERIFY_NOT_REACHED();
