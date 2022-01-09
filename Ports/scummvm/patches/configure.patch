@@ -1,5 +1,5 @@
---- scummvm-2.5.0/configure	2021-10-01 13:52:42.000000000 +0200
-+++ scummvm-2.5.0-patched/configure	2021-10-17 16:31:01.554772573 +0200
+--- scummvm-2.5.1/configure	2021-10-01 13:52:42.000000000 +0200
++++ scummvm-2.5.1-patched/configure	2021-10-17 16:31:01.554772573 +0200
 @@ -3979,7 +3980,7 @@
  	amigaos* | cygwin* | dreamcast | ds | gamecube | mingw* | morphos | n64 | ps3 | psp2 | psp | riscos | wii)
  		_posix=no
