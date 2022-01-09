@@ -26,7 +26,7 @@
 namespace Spreadsheet {
 
 SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool should_add_sheet_if_empty)
-    : m_workbook(make<Workbook>(move(sheets)))
+    : m_workbook(make<Workbook>(move(sheets), window()))
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>().set_margins(2);
