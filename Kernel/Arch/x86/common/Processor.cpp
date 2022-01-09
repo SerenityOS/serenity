@@ -249,69 +249,69 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
 #endif
 }
 
-String Processor::features_string() const
+NonnullOwnPtr<KString> Processor::features_string() const
 {
     StringBuilder builder;
     auto feature_to_str =
-        [](CPUFeature f) -> const char* {
+        [](CPUFeature f) -> StringView {
         switch (f) {
         case CPUFeature::NX:
-            return "nx";
+            return "nx"sv;
         case CPUFeature::PAE:
-            return "pae";
+            return "pae"sv;
         case CPUFeature::PGE:
-            return "pge";
+            return "pge"sv;
         case CPUFeature::RDRAND:
-            return "rdrand";
+            return "rdrand"sv;
         case CPUFeature::RDSEED:
-            return "rdseed";
+            return "rdseed"sv;
         case CPUFeature::SMAP:
-            return "smap";
+            return "smap"sv;
         case CPUFeature::SMEP:
-            return "smep";
+            return "smep"sv;
         case CPUFeature::SSE:
-            return "sse";
+            return "sse"sv;
         case CPUFeature::TSC:
-            return "tsc";
+            return "tsc"sv;
         case CPUFeature::RDTSCP:
-            return "rdtscp";
+            return "rdtscp"sv;
         case CPUFeature::CONSTANT_TSC:
-            return "constant_tsc";
+            return "constant_tsc"sv;
         case CPUFeature::NONSTOP_TSC:
-            return "nonstop_tsc";
+            return "nonstop_tsc"sv;
         case CPUFeature::UMIP:
-            return "umip";
+            return "umip"sv;
         case CPUFeature::SEP:
-            return "sep";
+            return "sep"sv;
         case CPUFeature::SYSCALL:
-            return "syscall";
+            return "syscall"sv;
         case CPUFeature::MMX:
-            return "mmx";
+            return "mmx"sv;
         case CPUFeature::FXSR:
-            return "fxsr";
+            return "fxsr"sv;
         case CPUFeature::SSE2:
-            return "sse2";
+            return "sse2"sv;
         case CPUFeature::SSE3:
-            return "sse3";
+            return "sse3"sv;
         case CPUFeature::SSSE3:
-            return "ssse3";
+            return "ssse3"sv;
         case CPUFeature::SSE4_1:
-            return "sse4.1";
+            return "sse4.1"sv;
         case CPUFeature::SSE4_2:
-            return "sse4.2";
+            return "sse4.2"sv;
         case CPUFeature::XSAVE:
-            return "xsave";
+            return "xsave"sv;
         case CPUFeature::AVX:
-            return "avx";
+            return "avx"sv;
         case CPUFeature::LM:
-            return "lm";
+            return "lm"sv;
         case CPUFeature::HYPERVISOR:
-            return "hypervisor";
+            return "hypervisor"sv;
             // no default statement here intentionally so that we get
             // a warning if a new feature is forgotten to be added here
         }
         // Shouldn't ever happen
-        return "???";
+        return "???"sv;
     };
     bool first = true;
     for (u32 flag = 1; flag != 0; flag <<= 1) {
@@ -319,12 +319,12 @@ String Processor::features_string() const
             if (first)
                 first = false;
             else
-                builder.append(' ');
+                MUST(builder.try_append(' '));
             auto str = feature_to_str(static_cast<CPUFeature>(flag));
-            builder.append(str, strlen(str));
+            MUST(builder.try_append(str));
         }
     }
-    return builder.build();
+    return KString::must_create(builder.string_view());
 }
 
 UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
