@@ -15,7 +15,7 @@ namespace Spreadsheet {
 
 class Workbook {
 public:
-    Workbook(NonnullRefPtrVector<Sheet>&& sheets);
+    Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window* parent_window);
 
     Result<bool, String> save(StringView filename);
     Result<bool, String> load(StringView filename);
@@ -48,6 +48,7 @@ private:
     JS::VM::InterpreterExecutionScope m_interpreter_scope;
     WorkbookObject* m_workbook_object { nullptr };
     JS::ExecutionContext m_main_execution_context;
+    GUI::Window* m_parent_window { nullptr };
 
     String m_current_filename;
     bool m_dirty { false };

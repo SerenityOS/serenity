@@ -19,6 +19,7 @@
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
+#include <LibGUI/Window.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGUI/Wizards/WizardPage.h>
 
@@ -174,9 +175,9 @@ void CSVImportDialogPage::update_preview()
     m_data_preview_table_view->update();
 }
 
-Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(StringView mime, Core::File& file, Workbook& workbook)
+Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(GUI::Window* parent, StringView mime, Core::File& file, Workbook& workbook)
 {
-    auto wizard = GUI::WizardDialog::construct(GUI::Application::the()->active_window());
+    auto wizard = GUI::WizardDialog::construct(parent);
     wizard->set_title("File Import Wizard");
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet").bitmap_for_size(16));
 
