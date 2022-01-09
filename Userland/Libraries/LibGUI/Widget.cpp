@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -553,17 +554,17 @@ void Widget::drag_enter_event(DragEvent& event)
 {
     StringBuilder builder;
     builder.join(',', event.mime_types());
-    dbgln("{} {:p} DRAG ENTER @ {}, {}", class_name(), this, event.position(), builder.string_view());
+    dbgln_if(DRAG_DEBUG, "{} {:p} DRAG ENTER @ {}, {}", class_name(), this, event.position(), builder.string_view());
 }
 
 void Widget::drag_leave_event(Event&)
 {
-    dbgln("{} {:p} DRAG LEAVE", class_name(), this);
+    dbgln_if(DRAG_DEBUG, "{} {:p} DRAG LEAVE", class_name(), this);
 }
 
 void Widget::drop_event(DropEvent& event)
 {
-    dbgln("{} {:p} DROP @ {}, '{}'", class_name(), this, event.position(), event.text());
+    dbgln_if(DRAG_DEBUG, "{} {:p} DROP @ {}, '{}'", class_name(), this, event.position(), event.text());
     event.ignore();
 }
 
