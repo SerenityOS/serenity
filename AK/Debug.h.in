@@ -102,6 +102,10 @@
 #cmakedefine01 DOUBLECLICK_DEBUG
 #endif
 
+#ifndef DRAG_DEBUG
+#cmakedefine01 DRAG_DEBUG
+#endif
+
 #ifndef DWARF_DEBUG
 #cmakedefine01 DWARF_DEBUG
 #endif
