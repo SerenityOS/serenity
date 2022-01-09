@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_app(Breakout ICON app-breakout)
-target_link_libraries(Breakout LibGUI LibMain)
+target_link_libraries(Breakout LibGUI LibMain LibDesktop)
