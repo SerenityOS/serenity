@@ -19,8 +19,6 @@ class GlyphMapWidget final : public AbstractScrollableWidget {
 public:
     virtual ~GlyphMapWidget() override;
 
-    void initialize(Gfx::BitmapFont&);
-
     class Selection {
     public:
         Selection() = default;
@@ -61,9 +59,6 @@ public:
     int rows() const { return m_rows; }
     int columns() const { return m_columns; }
 
-    Gfx::BitmapFont& font() { return *m_font; }
-    Gfx::BitmapFont const& font() const { return *m_font; }
-
     Function<void(int)> on_active_glyph_changed;
 
 private:
@@ -72,6 +67,7 @@ private:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
+    virtual void did_change_font() override;
 
     Gfx::IntRect get_outer_rect(int glyph) const;
 
@@ -80,7 +76,6 @@ private:
     void paste_glyph(int glyph);
     void delete_glyph(int glyph);
 
-    RefPtr<Gfx::BitmapFont> m_font;
     int m_glyph_count { 0x110000 };
     int m_columns { 0 };
     int m_rows { 0 };
