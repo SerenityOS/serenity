@@ -7,8 +7,10 @@
 #include "BoardView.h"
 #include "Game.h"
 #include "GameSizeDialog.h"
+#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -37,9 +39,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domains("2048");
 
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man6/2048.md") }));
+    TRY(Desktop::Launcher::seal_allowlist());
+
     TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
 
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     size_t board_size = Config::read_i32("2048", "", "board_size", 4);
@@ -196,6 +202,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man6/2048.md"), "/bin/Help");
+    })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("2048", app_icon, window)));
 
     window->show();
