@@ -1,17 +1,18 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "GlyphMapWidget.h"
-#include <AK/MemoryStream.h>
-#include <LibGUI/Clipboard.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Emoji.h>
 #include <LibGfx/Palette.h>
+
+namespace GUI {
 
 GlyphMapWidget::Selection GlyphMapWidget::Selection::normalized() const
 {
@@ -46,7 +47,7 @@ void GlyphMapWidget::Selection::extend_to(int glyph)
 
 GlyphMapWidget::GlyphMapWidget()
 {
-    set_focus_policy(GUI::FocusPolicy::StrongFocus);
+    set_focus_policy(FocusPolicy::StrongFocus);
     horizontal_scrollbar().set_visible(false);
 }
 
@@ -63,7 +64,7 @@ void GlyphMapWidget::initialize(Gfx::BitmapFont& mutable_font)
     set_active_glyph('A');
 }
 
-void GlyphMapWidget::resize_event(GUI::ResizeEvent& event)
+void GlyphMapWidget::resize_event(ResizeEvent& event)
 {
     if (!m_font)
         return;
@@ -115,11 +116,11 @@ void GlyphMapWidget::update_glyph(int glyph)
     update(get_outer_rect(glyph));
 }
 
-void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
+void GlyphMapWidget::paint_event(PaintEvent& event)
 {
-    GUI::Frame::paint_event(event);
+    Frame::paint_event(event);
 
-    GUI::Painter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
 
@@ -153,9 +154,9 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
     painter.draw_focus_rect(get_outer_rect(m_active_glyph), Gfx::Color::Black);
 }
 
-void GlyphMapWidget::mousedown_event(GUI::MouseEvent& event)
+void GlyphMapWidget::mousedown_event(MouseEvent& event)
 {
-    GUI::Frame::mousedown_event(event);
+    Frame::mousedown_event(event);
 
     Gfx::IntPoint map_offset { frame_thickness() - horizontal_scrollbar().value(), frame_thickness() - vertical_scrollbar().value() };
     auto map_position = event.position() - map_offset;
@@ -173,9 +174,9 @@ void GlyphMapWidget::mousedown_event(GUI::MouseEvent& event)
     }
 }
 
-void GlyphMapWidget::keydown_event(GUI::KeyEvent& event)
+void GlyphMapWidget::keydown_event(KeyEvent& event)
 {
-    GUI::Frame::keydown_event(event);
+    Frame::keydown_event(event);
 
     if (!event.ctrl() && !event.shift()) {
         m_selection.set_size(1);
@@ -262,4 +263,6 @@ void GlyphMapWidget::scroll_to_glyph(int glyph)
         font().glyph_height() + m_horizontal_spacing
     };
     scroll_into_view(scroll_rect, true, true);
+}
+
 }

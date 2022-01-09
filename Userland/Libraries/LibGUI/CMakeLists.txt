@@ -41,6 +41,7 @@ set(SOURCES
     FontPicker.cpp
     FontPickerDialogGML.h
     Frame.cpp
+    GlyphMapWidget.cpp
     GMLAutocompleteProvider.cpp
     GMLFormatter.cpp
     GMLLexer.cpp
