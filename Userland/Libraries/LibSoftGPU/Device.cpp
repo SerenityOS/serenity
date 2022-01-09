@@ -6,6 +6,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/Math.h>
 #include <AK/SIMDExtras.h>
 #include <AK/SIMDMath.h>
 #include <LibCore/ElapsedTimer.h>
@@ -664,6 +665,72 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
         if (m_clipped_vertices.size() < 3)
             continue;
+
+        if (m_options.lighting_enabled) {
+            auto const& front_material = m_materials.at(0);
+            // Walk through each vertex
+            for (auto& vertex : m_clipped_vertices) {
+                FloatVector4 result_color = front_material.emissive + (front_material.ambient * m_lighting_model.scene_ambient_color);
+
+                for (auto const& light : m_lights) {
+                    if (!light.is_enabled)
+                        continue;
+
+                    FloatVector4 vertex_to_light;
+
+                    // Light attenuation value.
+                    float light_attenuation_factor = 1.0f;
+                    if (light.position.w() != 0.0f) {
+                        vertex_to_light = light.position - vertex.eye_coordinates;
+                        auto const vertex_to_light_length = vertex_to_light.length();
+                        auto const vertex_to_light_length_squared = vertex_to_light_length * vertex_to_light_length;
+
+                        light_attenuation_factor = 1.0f / (light.constant_attenuation + (light.linear_attenuation * vertex_to_light_length) + (light.quadratic_attenuation * vertex_to_light_length_squared));
+                        vertex_to_light = vertex_to_light / vertex_to_light_length;
+                    } else {
+                        vertex_to_light = light.position.normalized();
+                    }
+
+                    // Spotlight factor
+                    float spotlight_factor = 1.0f;
+                    if (light.spotlight_cutoff_angle != 180.0f) {
+                        const auto spotlight_direction_normalized = light.spotlight_direction.normalized();
+                        const auto light_to_vertex_dot_normalized_spotlight_direction = spotlight_direction_normalized.dot(FloatVector3(vertex_to_light.x(), vertex_to_light.y(), vertex_to_light.z()));
+                        const auto cos_spotlight_cutoff = AK::cos<float>(light.spotlight_cutoff_angle);
+
+                        if (light_to_vertex_dot_normalized_spotlight_direction >= cos_spotlight_cutoff)
+                            spotlight_factor = AK::pow<float>(light_to_vertex_dot_normalized_spotlight_direction, light.spotlight_exponent);
+                        else
+                            spotlight_factor = 0.0f;
+                    }
+
+                    // FIXME: Specular. The math for it doesn't quite make sense...
+                    (void)m_lighting_model.viewer_at_infinity;
+
+                    // FIXME: The spec allows for splitting the colors calculated here into multiple different colors (primary/secondary color). Investigate what this means.
+                    (void)m_lighting_model.single_color;
+
+                    // FIXME: Two sided lighting should be implemented eventually (I believe this is where the normals are -ve and then lighting is calculated with the BACK material)
+                    (void)m_lighting_model.two_sided_lighting;
+
+                    // Ambient
+                    auto const ambient_component = front_material.ambient * light.ambient_intensity;
+
+                    // Diffuse
+                    auto const normal_dot_vertex_to_light = vertex.normal.dot(FloatVector3(vertex_to_light.x(), vertex_to_light.y(), vertex_to_light.z()));
+                    auto const diffuse_component = ((front_material.diffuse * light.diffuse_intensity) * normal_dot_vertex_to_light).clamped(0.0f, 1.0f);
+
+                    FloatVector4 color = ambient_component;
+                    color += diffuse_component;
+                    color = color * light_attenuation_factor * spotlight_factor;
+                    result_color += color;
+                }
+
+                vertex.color = result_color;
+                vertex.color.set_w(front_material.diffuse.w()); // OpenGL 1.5 spec, page 59: "The A produced by lighting is the alpha value associated with diffuse color material"
+                vertex.color.clamp(0.0f, 1.0f);
+            }
+        }
 
         for (auto& vec : m_clipped_vertices) {
             // To normalized device coordinates (NDC)
