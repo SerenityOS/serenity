@@ -299,7 +299,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_should_change_selected_cells = false;
             m_cell_value_editor->on_focusin = [this] { m_should_change_selected_cells = true; };
             m_cell_value_editor->on_focusout = [this] { m_should_change_selected_cells = false; };
-            m_cell_value_editor->on_change = [cells = move(cells), this] {
+            m_cell_value_editor->on_change = [cells = move(cells), this]() mutable {
                 if (m_should_change_selected_cells) {
                     auto* sheet_ptr = m_selected_view->sheet_if_available();
                     if (!sheet_ptr)
