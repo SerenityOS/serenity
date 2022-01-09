@@ -75,6 +75,7 @@ private:
     void copy_glyph(int glyph);
     void paste_glyph(int glyph);
     void delete_glyph(int glyph);
+    void recalculate_content_size();
 
     int m_glyph_count { 0x110000 };
     int m_columns { 0 };
