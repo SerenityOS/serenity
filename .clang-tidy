@@ -37,6 +37,7 @@ Checks: >
   -readability-magic-numbers,
   -readability-named-parameter,
   -readability-uppercase-literal-suffix,
+  -readability-use-anyofallof,
 WarningsAsErrors: ''
 HeaderFilterRegex: 'AK|Userland|Kernel|Tests'
 FormatStyle: none
