@@ -8,10 +8,12 @@
 
 #include <AK/SIMD.h>
 
-// Returning a vector on i686 target generates warning "psabi".
-// This prevents the CI, treating this as an error, from running to completion.
+// Functions returning vectors or accepting vector arguments have different calling conventions
+// depending on whether the target architecture supports SSE or not. GCC generates warning "psabi"
+// when compiling for non-SSE architectures. We disable this warning because these functions
+// are static and should never be visible from outside the translation unit that includes this header.
 #pragma GCC diagnostic push
-#pragma GCC diagnostic warning "-Wpsabi"
+#pragma GCC diagnostic ignored "-Wpsabi"
 
 namespace AK::SIMD {
 
@@ -141,6 +143,6 @@ ALWAYS_INLINE static void store4_masked(VectorType v, UnderlyingType* a, Underly
         *d = v[3];
 }
 
-#pragma GCC diagnostic pop
-
 }
+
+#pragma GCC diagnostic pop
