@@ -143,17 +143,20 @@ PaletteWidget::PaletteWidget()
     display_color_list(result.value());
 }
 
-void PaletteWidget::set_image_editor(ImageEditor& editor)
+void PaletteWidget::set_image_editor(ImageEditor* editor)
 {
-    m_editor = &editor;
-    set_primary_color(editor.primary_color());
-    set_secondary_color(editor.secondary_color());
+    m_editor = editor;
+    if (!m_editor)
+        return;
 
-    editor.on_primary_color_change = [this](Color color) {
+    set_primary_color(editor->primary_color());
+    set_secondary_color(editor->secondary_color());
+
+    editor->on_primary_color_change = [this](Color color) {
         set_primary_color(color);
     };
 
-    editor.on_secondary_color_change = [this](Color color) {
+    editor->on_secondary_color_change = [this](Color color) {
         set_secondary_color(color);
     };
 }
@@ -164,13 +167,15 @@ PaletteWidget::~PaletteWidget()
 
 void PaletteWidget::set_primary_color(Color color)
 {
-    m_editor->set_primary_color(color);
+    if (m_editor)
+        m_editor->set_primary_color(color);
     m_primary_color_widget->set_background_color(color);
 }
 
 void PaletteWidget::set_secondary_color(Color color)
 {
-    m_editor->set_secondary_color(color);
+    if (m_editor)
+        m_editor->set_secondary_color(color);
     m_secondary_color_widget->set_background_color(color);
 }
 
