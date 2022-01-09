@@ -75,7 +75,7 @@ void LayerPropertiesWidget::set_layer(Layer* layer)
         return;
 
     if (layer) {
-        m_layer = layer->make_weak_ptr();
+        m_layer = layer;
         m_name_textbox->set_text(layer->name());
         m_opacity_slider->set_value(layer->opacity_percent());
         m_visibility_checkbox->set_checked(layer->is_visible());
