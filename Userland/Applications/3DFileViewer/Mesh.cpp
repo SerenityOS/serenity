@@ -33,13 +33,6 @@ Mesh::Mesh(Vector<Vertex> vertices, Vector<TexCoord> tex_coords, Vector<Vertex> 
 
 void Mesh::draw(float uv_scale)
 {
-    // Light direction
-    const FloatVector3 light_direction(1.f, 1.f, 1.f);
-
-    // Mesh color
-    const FloatVector4 mesh_ambient_color(0.2f, 0.2f, 0.2f, 1.f);
-    const FloatVector4 mesh_diffuse_color(0.6f, 0.6f, 0.6f, 1.f);
-
     for (u32 i = 0; i < m_triangle_list.size(); i++) {
         const auto& triangle = m_triangle_list[i];
 
@@ -83,16 +76,13 @@ void Mesh::draw(float uv_scale)
             normal = vec_ab.cross(vec_ac).normalized();
         }
 
-        // Compute lighting with a Lambertian color model
-        const auto light_intensity = max(light_direction.dot(normal), 0.f);
-        const FloatVector4 color = mesh_ambient_color
-            + mesh_diffuse_color * light_intensity;
-
         glBegin(GL_TRIANGLES);
-        glColor4f(color.x(), color.y(), color.z(), color.w());
 
         if (is_textured())
             glTexCoord2f(m_tex_coords.at(triangle.tex_coord_index0).u * uv_scale, (1.0f - m_tex_coords.at(triangle.tex_coord_index0).v) * uv_scale);
+
+        // Upload the face normal
+        glNormal3f(normal.x(), normal.y(), normal.z());
 
         // Vertex 1
         glVertex3f(
