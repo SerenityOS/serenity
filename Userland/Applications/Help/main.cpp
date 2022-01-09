@@ -160,6 +160,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto url = URL::create_with_file_protocol(path);
         page_view->load_html(html, url);
+        page_view->scroll_to_top();
 
         app->deferred_invoke([&, path] {
             auto tree_view_index = manual_model->index_from_path(path);
