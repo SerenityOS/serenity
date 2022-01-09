@@ -22,7 +22,6 @@ void GlyphEditorWidget::initialize(Gfx::BitmapFont& mutable_font)
     if (m_font == mutable_font)
         return;
     m_font = mutable_font;
-    set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
 }
 
 void GlyphEditorWidget::set_glyph(int glyph)
