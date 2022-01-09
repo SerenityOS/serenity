@@ -42,27 +42,10 @@ Vector<StringView> StringView::split_view(const char separator, bool keep_empty)
 
 Vector<StringView> StringView::split_view(StringView separator, bool keep_empty) const
 {
-    VERIFY(!separator.is_empty());
-
-    if (is_empty())
-        return {};
-
-    StringView view { *this };
-
     Vector<StringView> parts;
-
-    auto maybe_separator_index = find(separator);
-    while (maybe_separator_index.has_value()) {
-        auto separator_index = maybe_separator_index.value();
-        auto part_with_separator = view.substring_view(0, separator_index + separator.length());
-        if (keep_empty || separator_index > 0)
-            parts.append(part_with_separator.substring_view(0, separator_index));
-        view = view.substring_view_starting_after_substring(part_with_separator);
-        maybe_separator_index = view.find(separator);
-    }
-    if (keep_empty || !view.is_empty())
+    for_each_split_view(separator, keep_empty, [&](StringView view) {
         parts.append(view);
-
+    });
     return parts;
 }
 

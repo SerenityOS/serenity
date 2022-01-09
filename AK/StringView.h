@@ -120,6 +120,36 @@ public:
 
     [[nodiscard]] Vector<StringView> split_view_if(Function<bool(char)> const& predicate, bool keep_empty = false) const;
 
+    template<VoidFunction<StringView> Callback>
+    void for_each_split_view(char separator, bool keep_empty, Callback callback) const
+    {
+        StringView seperator_view { &separator, 1 };
+        for_each_split_view(seperator_view, keep_empty, callback);
+    }
+
+    template<VoidFunction<StringView> Callback>
+    void for_each_split_view(StringView separator, bool keep_empty, Callback callback) const
+    {
+        VERIFY(!separator.is_empty());
+
+        if (is_empty())
+            return;
+
+        StringView view { *this };
+
+        auto maybe_separator_index = find(separator);
+        while (maybe_separator_index.has_value()) {
+            auto separator_index = maybe_separator_index.value();
+            auto part_with_separator = view.substring_view(0, separator_index + separator.length());
+            if (keep_empty || separator_index > 0)
+                callback(part_with_separator.substring_view(0, separator_index));
+            view = view.substring_view_starting_after_substring(part_with_separator);
+            maybe_separator_index = view.find(separator);
+        }
+        if (keep_empty || !view.is_empty())
+            callback(view);
+    }
+
     // Create a Vector of StringViews split by line endings. As of CommonMark
     // 0.29, the spec defines a line ending as "a newline (U+000A), a carriage
     // return (U+000D) not followed by a newline, or a carriage return and a
