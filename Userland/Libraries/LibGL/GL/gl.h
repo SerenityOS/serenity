@@ -461,6 +461,7 @@ GLAPI void glColor4fv(const GLfloat* v);
 GLAPI void glColor4ub(GLubyte r, GLubyte g, GLubyte b, GLubyte a);
 GLAPI void glColor4ubv(const GLubyte* v);
 GLAPI void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+GLAPI void glColorMaterial(GLenum face, GLenum mode);
 GLAPI void glDeleteTextures(GLsizei n, const GLuint* textures);
 GLAPI void glEnd();
 GLAPI void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble nearVal, GLdouble farVal);
