@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_app(Pong ICON app-pong)
-target_link_libraries(Pong LibGUI LibMain)
+target_link_libraries(Pong LibGUI LibMain LibDesktop)
