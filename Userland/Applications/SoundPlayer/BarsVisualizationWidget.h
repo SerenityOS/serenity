@@ -23,8 +23,13 @@ private:
     void render(GUI::PaintEvent&, Vector<double> const&) override;
     void context_menu_event(GUI::ContextMenuEvent& event) override;
 
+    static constexpr size_t FFTSize = 256;
+    static constexpr size_t BinGroupCount = 64;
+    static constexpr size_t BinsPerGroup = (FFTSize / 2) / BinGroupCount;
+
     Vector<Complex<double>> m_fft_samples;
-    Vector<int> m_gfx_falling_bars;
+    Array<double, FFTSize> m_fft_window;
+    Array<int, BinGroupCount> m_gfx_falling_bars;
     bool m_is_using_last;
     bool m_adjust_frequencies;
     RefPtr<GUI::Menu> m_context_menu;
