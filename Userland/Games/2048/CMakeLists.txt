@@ -12,4 +12,4 @@ set(SOURCES
 )
 
 serenity_app(2048 ICON app-2048)
-target_link_libraries(2048 LibConfig LibGUI LibMain)
+target_link_libraries(2048 LibConfig LibGUI LibMain LibDesktop)
