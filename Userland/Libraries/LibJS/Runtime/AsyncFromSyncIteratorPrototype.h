@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 
 #include <LibJS/Runtime/AsyncFromSyncIterator.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/PrototypeObject.h>
 
 namespace JS {
@@ -27,6 +29,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(throw_);
 };
 
-ThrowCompletionOr<Object*> create_async_from_sync_iterator(GlobalObject&, Object& sync_iterator);
+ThrowCompletionOr<Iterator> create_async_from_sync_iterator(GlobalObject&, Iterator sync_iterator);
 
 }

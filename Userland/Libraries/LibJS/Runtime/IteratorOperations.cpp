@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,53 +16,81 @@
 namespace JS {
 
 // 7.4.1 GetIterator ( obj [ , hint [ , method ] ] ), https://tc39.es/ecma262/#sec-getiterator
-ThrowCompletionOr<Object*> get_iterator(GlobalObject& global_object, Value value, IteratorHint hint, Optional<Value> method)
+ThrowCompletionOr<Iterator> get_iterator(GlobalObject& global_object, Value value, IteratorHint hint, Optional<Value> method)
 {
     auto& vm = global_object.vm();
+
+    // 1. If hint is not present, set hint to sync.
+
+    // 2. If method is not present, then
     if (!method.has_value()) {
+        // a. If hint is async, then
         if (hint == IteratorHint::Async) {
+            // i. Set method to ? GetMethod(obj, @@asyncIterator).
             auto* async_method = TRY(value.get_method(global_object, *vm.well_known_symbol_async_iterator()));
+
+            // ii. If method is undefined, then
             if (async_method == nullptr) {
+                // 1. Let syncMethod be ? GetMethod(obj, @@iterator).
                 auto* sync_method = TRY(value.get_method(global_object, *vm.well_known_symbol_iterator()));
-                auto* sync_iterator_record = TRY(get_iterator(global_object, value, IteratorHint::Sync, sync_method));
-                return TRY(create_async_from_sync_iterator(global_object, *sync_iterator_record));
+
+                // 2. Let syncIteratorRecord be ? GetIterator(obj, sync, syncMethod).
+                auto sync_iterator_record = TRY(get_iterator(global_object, value, IteratorHint::Sync, sync_method));
+
+                // 3. Return ! CreateAsyncFromSyncIterator(syncIteratorRecord).
+                return MUST(create_async_from_sync_iterator(global_object, sync_iterator_record));
             }
+
             method = Value(async_method);
-        } else {
+        }
+        // b. Otherwise, set method to ? GetMethod(obj, @@iterator).
+        else {
             method = TRY(value.get_method(global_object, *vm.well_known_symbol_iterator()));
         }
     }
 
+    // NOTE: Additional type check to produce a better error message than Call().
     if (!method->is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
 
-    auto iterator = TRY(vm.call(method->as_function(), value));
+    // 3. Let iterator be ? Call(method, obj).
+    auto iterator = TRY(call(global_object, *method, value));
+
+    // 4. If Type(iterator) is not Object, throw a TypeError exception.
     if (!iterator.is_object())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
 
-    return &iterator.as_object();
+    // 5. Let nextMethod be ? GetV(iterator, "next").
+    auto next_method = TRY(iterator.get(global_object, vm.names.next));
+
+    // 6. Let iteratorRecord be the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
+    auto iterator_record = Iterator { .iterator = &iterator.as_object(), .next_method = next_method, .done = false };
+
+    // 7. Return iteratorRecord.
+    return iterator_record;
 }
 
 // 7.4.2 IteratorNext ( iteratorRecord [ , value ] ), https://tc39.es/ecma262/#sec-iteratornext
-ThrowCompletionOr<Object*> iterator_next(Object& iterator, Optional<Value> value)
+ThrowCompletionOr<Object*> iterator_next(GlobalObject& global_object, Iterator const& iterator_record, Optional<Value> value)
 {
-    // FIXME: Implement using iterator records, not ordinary objects
-    auto& vm = iterator.vm();
-    auto& global_object = iterator.global_object();
-
-    auto next_method = TRY(iterator.get(vm.names.next));
-    if (!next_method.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IterableNextNotAFunction);
+    auto& vm = global_object.vm();
 
     Value result;
-    if (!value.has_value())
-        result = TRY(vm.call(next_method.as_function(), &iterator));
-    else
-        result = TRY(vm.call(next_method.as_function(), &iterator, *value));
 
+    // 1. If value is not present, then
+    if (!value.has_value()) {
+        // a. Let result be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
+        result = TRY(call(global_object, iterator_record.next_method, iterator_record.iterator));
+    } else {
+        // a. Let result be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]], « value »).
+        result = TRY(call(global_object, iterator_record.next_method, iterator_record.iterator, *value));
+    }
+
+    // 3. If Type(result) is not Object, throw a TypeError exception.
     if (!result.is_object())
         return vm.throw_completion<TypeError>(global_object, ErrorType::IterableNextBadReturn);
 
+    // 4. Return result.
     return &result.as_object();
 }
 
@@ -84,53 +113,60 @@ ThrowCompletionOr<Value> iterator_value(GlobalObject& global_object, Object& ite
 }
 
 // 7.4.5 IteratorStep ( iteratorRecord ), https://tc39.es/ecma262/#sec-iteratorstep
-ThrowCompletionOr<Object*> iterator_step(GlobalObject& global_object, Object& iterator)
+ThrowCompletionOr<Object*> iterator_step(GlobalObject& global_object, Iterator const& iterator_record)
 {
-    auto* result = TRY(iterator_next(iterator));
+    // 1. Let result be ? IteratorNext(iteratorRecord).
+    auto* result = TRY(iterator_next(global_object, iterator_record));
+
+    // 2. Let done be ? IteratorComplete(result).
     auto done = TRY(iterator_complete(global_object, *result));
 
+    // 3. If done is true, return false.
     if (done)
         return nullptr;
 
+    // 4. Return result.
     return result;
 }
 
 // 7.4.6 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
 // 7.4.8 AsyncIteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-asynciteratorclose
 // NOTE: These only differ in that async awaits the inner value after the call.
-static Completion iterator_close_(Object& iterator, Completion completion, IteratorHint iterator_hint)
+static Completion iterator_close_impl(GlobalObject& global_object, Iterator const& iterator_record, Completion completion, IteratorHint iterator_hint)
 {
-    auto& vm = iterator.vm();
-    auto& global_object = iterator.global_object();
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
+
+    // 2. Let iterator be iteratorRecord.[[Iterator]].
+    auto* iterator = iterator_record.iterator;
 
     // The callers of iterator_close() are often in an exceptional state.
     // Temporarily clear that exception for invocation(s) to Call.
     TemporaryClearException clear_exception(vm);
 
     // 3. Let innerResult be GetMethod(iterator, "return").
-    auto inner_result_or_error = Value(&iterator).get_method(global_object, vm.names.return_);
-    Value inner_result;
+    auto inner_result = ThrowCompletionOr<Value> { js_undefined() };
+    auto get_method_result = Value(iterator).get_method(global_object, vm.names.return_);
+    if (get_method_result.is_error())
+        inner_result = get_method_result.release_error();
 
     // 4. If innerResult.[[Type]] is normal, then
-    if (!inner_result_or_error.is_error()) {
+    if (!inner_result.is_error()) {
         // a. Let return be innerResult.[[Value]].
-        auto* return_method = inner_result_or_error.release_value();
+        auto* return_method = get_method_result.value();
 
         // b. If return is undefined, return Completion(completion).
         if (!return_method)
             return completion;
 
         // c. Set innerResult to Call(return, iterator).
-        auto result_or_error = vm.call(*return_method, &iterator);
-        if (result_or_error.is_error()) {
-            inner_result_or_error = result_or_error.release_error();
-        } else {
-            inner_result = result_or_error.release_value();
-            // Note: If this is AsyncIteratorClose perform one extra step.
-            if (iterator_hint == IteratorHint::Async) {
-                // d. If innerResult.[[Type]] is normal, set innerResult to Await(innerResult.[[Value]]).
-                inner_result = TRY(await(global_object, inner_result));
-            }
+        inner_result = call(global_object, return_method, iterator);
+
+        // Note: If this is AsyncIteratorClose perform one extra step.
+        if (iterator_hint == IteratorHint::Async && !inner_result.is_error()) {
+            // d. If innerResult.[[Type]] is normal, set innerResult to Await(innerResult.[[Value]]).
+            inner_result = await(global_object, inner_result.value());
         }
     }
 
@@ -139,11 +175,11 @@ static Completion iterator_close_(Object& iterator, Completion completion, Itera
         return completion;
 
     // 6. If innerResult.[[Type]] is throw, return Completion(innerResult).
-    if (inner_result_or_error.is_error())
-        return inner_result_or_error.release_error();
+    if (inner_result.is_throw_completion())
+        return inner_result;
 
     // 7. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
-    if (!inner_result.is_object())
+    if (!inner_result.value().is_object())
         return vm.throw_completion<TypeError>(global_object, ErrorType::IterableReturnBadReturn);
 
     // 8. Return Completion(completion).
@@ -151,24 +187,32 @@ static Completion iterator_close_(Object& iterator, Completion completion, Itera
 }
 
 // 7.4.6 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
-Completion iterator_close(Object& iterator, Completion completion)
+Completion iterator_close(GlobalObject& global_object, Iterator const& iterator_record, Completion completion)
 {
-    return iterator_close_(iterator, move(completion), IteratorHint::Sync);
+    return iterator_close_impl(global_object, iterator_record, move(completion), IteratorHint::Sync);
 }
 
 // 7.4.8 AsyncIteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-asynciteratorclose
-Completion async_iterator_close(Object& iterator, Completion completion)
+Completion async_iterator_close(GlobalObject& global_object, Iterator const& iterator_record, Completion completion)
 {
-    return iterator_close_(iterator, move(completion), IteratorHint::Async);
+    return iterator_close_impl(global_object, iterator_record, move(completion), IteratorHint::Async);
 }
 
 // 7.4.9 CreateIterResultObject ( value, done ), https://tc39.es/ecma262/#sec-createiterresultobject
 Object* create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
 {
     auto& vm = global_object.vm();
+
+    // 1. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* object = Object::create(global_object, global_object.object_prototype());
+
+    // 2. Perform ! CreateDataPropertyOrThrow(obj, "value", value).
     MUST(object->create_data_property_or_throw(vm.names.value, value));
+
+    // 3. Perform ! CreateDataPropertyOrThrow(obj, "done", done).
     MUST(object->create_data_property_or_throw(vm.names.done, Value(done)));
+
+    // 4. Return obj.
     return object;
 }
 
@@ -188,19 +232,20 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject& global_object,
     return { move(values) };
 }
 
+// Non-standard
 Completion get_iterator_values(GlobalObject& global_object, Value iterable, IteratorValueCallback callback, Optional<Value> method)
 {
-    auto* iterator = TRY(get_iterator(global_object, iterable, IteratorHint::Sync, move(method)));
+    auto iterator_record = TRY(get_iterator(global_object, iterable, IteratorHint::Sync, move(method)));
 
     while (true) {
-        auto* next_object = TRY(iterator_step(global_object, *iterator));
+        auto* next_object = TRY(iterator_step(global_object, iterator_record));
         if (!next_object)
             return {};
 
         auto next_value = TRY(iterator_value(global_object, *next_object));
 
         if (auto completion = callback(next_value); completion.has_value())
-            return iterator_close(*iterator, completion.release_value());
+            return iterator_close(global_object, iterator_record, completion.release_value());
     }
 }
 

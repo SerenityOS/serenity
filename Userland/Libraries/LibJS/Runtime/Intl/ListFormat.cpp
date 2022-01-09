@@ -276,7 +276,7 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global
     }
 
     // 2. Let iteratorRecord be ? GetIterator(iterable).
-    auto* iterator_record = TRY(get_iterator(global_object, iterable));
+    auto iterator_record = TRY(get_iterator(global_object, iterable));
 
     // 3. Let list be a new empty List.
     Vector<String> list;
@@ -287,7 +287,7 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global
     // 5. Repeat, while next is not false,
     do {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        next = TRY(iterator_step(global_object, *iterator_record));
+        next = TRY(iterator_step(global_object, iterator_record));
 
         // b. If next is not false, then
         if (next != nullptr) {
@@ -300,7 +300,7 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global
                 auto error = vm.throw_completion<TypeError>(global_object, ErrorType::NotAString, next_value);
 
                 // 2. Return ? IteratorClose(iteratorRecord, error).
-                return iterator_close(*iterator_record, move(error));
+                return iterator_close(global_object, iterator_record, move(error));
             }
 
             // iii. Append nextValue to the end of the List list.

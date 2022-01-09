@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -612,7 +612,7 @@ ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject& globa
     auto possible_instants = TRY(time_zone.invoke(global_object, vm.names.getPossibleInstantsFor, &date_time));
 
     // 3. Let iteratorRecord be ? GetIterator(possibleInstants, sync).
-    auto* iterator = TRY(get_iterator(global_object, possible_instants, IteratorHint::Sync));
+    auto iterator = TRY(get_iterator(global_object, possible_instants, IteratorHint::Sync));
 
     // 4. Let list be a new empty List.
     auto list = MarkedValueList { vm.heap() };
@@ -623,7 +623,7 @@ ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject& globa
     // 6. Repeat, while next is not false,
     do {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        next = TRY(iterator_step(global_object, *iterator));
+        next = TRY(iterator_step(global_object, iterator));
 
         // b. If next is not false, then
         if (next) {
@@ -636,7 +636,7 @@ ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject& globa
                 auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.Instant");
 
                 // 2. Return ? IteratorClose(iteratorRecord, completion).
-                return iterator_close(*iterator, move(completion));
+                return iterator_close(global_object, iterator, move(completion));
             }
 
             // iii. Append nextValue to the end of the List list.
