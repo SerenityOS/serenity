@@ -200,7 +200,8 @@ ErrorOr<size_t> AC97::write(OpenFileDescription&, u64, UserOrKernelBuffer const&
         m_output_buffer = TRY(MM.allocate_dma_buffer_pages(m_output_buffer_page_count * PAGE_SIZE, "AC97 Output buffer"sv, Memory::Region::Access::Write));
     }
     if (!m_buffer_descriptor_list) {
-        constexpr size_t buffer_descriptor_list_size = buffer_descriptor_list_max_entries * sizeof(BufferDescriptorListEntry);
+        size_t buffer_descriptor_list_size = buffer_descriptor_list_max_entries * sizeof(BufferDescriptorListEntry);
+        buffer_descriptor_list_size = TRY(Memory::page_round_up(buffer_descriptor_list_size));
         m_buffer_descriptor_list = TRY(MM.allocate_dma_buffer_pages(buffer_descriptor_list_size, "AC97 Buffer Descriptor List"sv, Memory::Region::Access::Write));
     }
 
