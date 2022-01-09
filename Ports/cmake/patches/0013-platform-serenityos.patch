@@ -2,7 +2,7 @@ diff -urp /dev/null a/Modules/Platform/SerenityOS.cmake
 --- /dev/null	2021-02-11 00:46:13.390326124 +0330
 +++ a/Modules/Platform/SerenityOS.cmake	2021-02-12 16:31:38.421786222 +0330
 @@ -0,0 +1,25 @@
-+set(CMAKE_DL_LIBS "")
++set(CMAKE_DL_LIBS "-ldl")
 +set(CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG "-Wl,-rpath,")
 +set(CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG_SEP ":")
 +set(CMAKE_SHARED_LIBRARY_RPATH_ORIGIN_TOKEN "\$ORIGIN")
