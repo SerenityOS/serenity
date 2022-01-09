@@ -57,7 +57,3 @@ void AlbumCoverVisualizationWidget::start_new_file(StringView filename)
     else
         m_album_cover = album_cover_or_error.value();
 }
-
-void AlbumCoverVisualizationWidget::set_buffer(RefPtr<Audio::Buffer>)
-{
-}
