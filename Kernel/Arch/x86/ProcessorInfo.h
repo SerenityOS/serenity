@@ -8,6 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <Kernel/KString.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_X86()
@@ -20,7 +21,7 @@ class ProcessorInfo {
     Processor& m_processor;
     String m_cpuid;
     String m_brandstr;
-    String m_features;
+    NonnullOwnPtr<KString> m_features;
     u32 m_display_model;
     u32 m_display_family;
     u32 m_stepping;
@@ -32,7 +33,7 @@ public:
 
     const String& cpuid() const { return m_cpuid; }
     const String& brandstr() const { return m_brandstr; }
-    const String& features() const { return m_features; }
+    StringView features() const { return m_features->view(); }
     u32 display_model() const { return m_display_model; }
     u32 display_family() const { return m_display_family; }
     u32 stepping() const { return m_stepping; }

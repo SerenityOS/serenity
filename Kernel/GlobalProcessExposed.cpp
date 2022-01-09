@@ -563,7 +563,7 @@ private:
                 obj.add("family", info.display_family());
 
                 auto features_array = obj.add_array("features");
-                for (auto& feature : info.features().split(' '))
+                for (auto& feature : info.features().split_view(' '))
                     features_array.add(feature);
                 features_array.finish();
 
