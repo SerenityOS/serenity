@@ -547,8 +547,12 @@ parse_arguments() {
             shift
             parse_arguments $@
             ;;
+        interactive)
+            export PS1="(serenity):\w$ "
+            bash --norc
+            ;;
         *)
-            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, clean, clean_dist, clean_all, uninstall, showproperty."
+            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, interactive, clean, clean_dist, clean_all, uninstall, showproperty."
             exit 1
             ;;
     esac
