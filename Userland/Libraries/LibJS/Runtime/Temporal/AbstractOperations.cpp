@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -54,7 +54,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject& global
     // 4. Repeat, while next is not false,
     while (next) {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        auto* iterator_result = TRY(iterator_step(global_object, *iterator_record));
+        auto* iterator_result = TRY(iterator_step(global_object, iterator_record));
         next = iterator_result;
 
         // b. If next is not false, then
@@ -66,7 +66,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject& global
                 // 1. Let completion be ThrowCompletion(a newly created TypeError object).
                 auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::IterableToListOfTypeInvalidValue, next_value.to_string_without_side_effects());
                 // 2. Return ? IteratorClose(iteratorRecord, completion).
-                return iterator_close(*iterator_record, move(completion));
+                return iterator_close(global_object, iterator_record, move(completion));
             }
             // iii. Append nextValue to the end of the List values.
             values.append(next_value);

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Value.h>
@@ -132,19 +133,41 @@ void NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
     interpreter.accumulator() = Array::create_from(interpreter.global_object(), elements);
 }
 
+// FIXME: Since the accumulator is a Value, we store an object there and have to convert back and forth between that an Iterator records. Not great.
+// Make sure to put this into the accumulator before the iterator object disappears from the stack to prevent the members from being GC'd.
+static Object* iterator_to_object(GlobalObject& global_object, Iterator iterator)
+{
+    auto& vm = global_object.vm();
+    auto* object = Object::create(global_object, nullptr);
+    object->define_direct_property(vm.names.iterator, iterator.iterator, 0);
+    object->define_direct_property(vm.names.next, iterator.next_method, 0);
+    object->define_direct_property(vm.names.done, Value(iterator.done), 0);
+    return object;
+}
+
+static Iterator object_to_iterator(GlobalObject& global_object, Object& object)
+{
+    auto& vm = global_object.vm();
+    return Iterator {
+        .iterator = &MUST(object.get(vm.names.iterator)).as_object(),
+        .next_method = MUST(object.get(vm.names.next)),
+        .done = MUST(object.get(vm.names.done)).as_bool()
+    };
+}
+
 void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& global_object = interpreter.global_object();
-    auto iterator_or_error = interpreter.accumulator().to_object(global_object);
-    if (iterator_or_error.is_error())
+    auto iterator_object_or_error = interpreter.accumulator().to_object(global_object);
+    if (iterator_object_or_error.is_error())
         return;
-    auto* iterator = iterator_or_error.release_value();
+    auto iterator = object_to_iterator(global_object, *iterator_object_or_error.release_value());
 
     auto* array = MUST(Array::create(global_object, 0));
     size_t index = 0;
 
     while (true) {
-        auto iterator_result_or_error = iterator_next(*iterator);
+        auto iterator_result_or_error = iterator_next(global_object, iterator);
         if (iterator_result_or_error.is_error())
             return;
         auto* iterator_result = iterator_result_or_error.release_value();
@@ -543,17 +566,17 @@ void GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
     auto iterator_or_error = get_iterator(interpreter.global_object(), interpreter.accumulator());
     if (iterator_or_error.is_error())
         return;
-    interpreter.accumulator() = iterator_or_error.release_value();
+    interpreter.accumulator() = iterator_to_object(interpreter.global_object(), iterator_or_error.release_value());
 }
 
 void IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto object_or_error = interpreter.accumulator().to_object(interpreter.global_object());
-    if (object_or_error.is_error())
+    auto iterator_object_or_error = interpreter.accumulator().to_object(interpreter.global_object());
+    if (iterator_object_or_error.is_error())
         return;
-    auto* object = object_or_error.release_value();
+    auto iterator = object_to_iterator(interpreter.global_object(), *iterator_object_or_error.release_value());
 
-    auto iterator_result_or_error = iterator_next(*object);
+    auto iterator_result_or_error = iterator_next(interpreter.global_object(), iterator);
     if (iterator_result_or_error.is_error())
         return;
     auto* iterator_result = iterator_result_or_error.release_value();
