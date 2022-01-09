@@ -71,6 +71,7 @@ MainWidget::MainWidget()
                 if (m_tab_widget->children().size() == 0) {
                     m_layer_list_widget->set_image(nullptr);
                     m_layer_properties_widget->set_layer(nullptr);
+                    m_palette_widget->set_image_editor(nullptr);
                 }
             });
         }
@@ -78,7 +79,7 @@ MainWidget::MainWidget()
 
     m_tab_widget->on_change = [&](auto& widget) {
         auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
-        m_palette_widget->set_image_editor(image_editor);
+        m_palette_widget->set_image_editor(&image_editor);
         m_layer_list_widget->set_image(&image_editor.image());
         m_layer_properties_widget->set_layer(image_editor.active_layer());
         if (auto* active_tool = m_toolbox->active_tool())
