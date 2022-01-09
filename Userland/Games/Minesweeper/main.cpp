@@ -6,8 +6,10 @@
 
 #include "CustomGameDialog.h"
 #include "Field.h"
+#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -30,9 +32,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domains("Minesweeper");
 
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man6/Minesweeper.md") }));
+    TRY(Desktop::Launcher::seal_allowlist());
+
     TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
 
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-minesweeper"));
@@ -149,6 +155,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     difficulty_actions.add_action(action);
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man6/Minesweeper.md"), "/bin/Help");
+    })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Minesweeper", app_icon, window)));
 
     window->show();
