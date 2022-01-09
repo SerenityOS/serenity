@@ -36,24 +36,8 @@ StringView::StringView(const ByteBuffer& buffer)
 
 Vector<StringView> StringView::split_view(const char separator, bool keep_empty) const
 {
-    if (is_empty())
-        return {};
-
-    Vector<StringView> v;
-    size_t substart = 0;
-    for (size_t i = 0; i < length(); ++i) {
-        char ch = characters_without_null_termination()[i];
-        if (ch == separator) {
-            size_t sublen = i - substart;
-            if (sublen != 0 || keep_empty)
-                v.append(substring_view(substart, sublen));
-            substart = i + 1;
-        }
-    }
-    size_t taillen = length() - substart;
-    if (taillen != 0 || keep_empty)
-        v.append(substring_view(substart, taillen));
-    return v;
+    StringView seperator_view { &separator, 1 };
+    return split_view(seperator_view, keep_empty);
 }
 
 Vector<StringView> StringView::split_view(StringView separator, bool keep_empty) const
