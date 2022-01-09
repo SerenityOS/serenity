@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +12,9 @@
 #include <LibGUI/TextRange.h>
 #include <LibGfx/BitmapFont.h>
 
-class GlyphMapWidget final : public GUI::AbstractScrollableWidget {
+namespace GUI {
+
+class GlyphMapWidget final : public AbstractScrollableWidget {
     C_OBJECT(GlyphMapWidget)
 public:
     virtual ~GlyphMapWidget() override;
@@ -65,10 +68,10 @@ public:
 
 private:
     GlyphMapWidget();
-    virtual void paint_event(GUI::PaintEvent&) override;
-    virtual void mousedown_event(GUI::MouseEvent&) override;
-    virtual void keydown_event(GUI::KeyEvent&) override;
-    virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void keydown_event(KeyEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
 
     Gfx::IntRect get_outer_rect(int glyph) const;
 
@@ -87,3 +90,5 @@ private:
     int m_active_glyph { 0 };
     int m_visible_glyphs { 0 };
 };
+
+}

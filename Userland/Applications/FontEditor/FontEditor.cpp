@@ -6,7 +6,6 @@
 
 #include "FontEditor.h"
 #include "GlyphEditorWidget.h"
-#include "GlyphMapWidget.h"
 #include "NewFontDialog.h"
 #include <AK/StringBuilder.h>
 #include <AK/UnicodeUtils.h>
@@ -135,7 +134,7 @@ FontEditorWidget::FontEditorWidget()
     m_font_metadata_groupbox = *find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
 
     m_glyph_editor_widget = m_glyph_editor_container->add<GlyphEditorWidget>();
-    m_glyph_map_widget = glyph_map_container.add<GlyphMapWidget>();
+    m_glyph_map_widget = glyph_map_container.add<GUI::GlyphMapWidget>();
 
     m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         if (!request_close())
