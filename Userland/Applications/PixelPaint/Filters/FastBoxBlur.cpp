@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Mustafa Quraish <mustafa@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,21 +13,20 @@
 
 namespace PixelPaint::Filters {
 
-void FastBoxBlur::apply() const
+void FastBoxBlur::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const
 {
-    if (!m_editor)
-        return;
-    if (auto* layer = m_editor->active_layer()) {
-        Gfx::FastBoxBlurFilter filter(layer->bitmap());
-
-        if (m_approximate_gauss)
-            filter.apply_three_passes(m_radius);
-        else
-            filter.apply_single_pass(m_radius);
-
-        layer->did_modify_bitmap(layer->rect());
-        m_editor->did_complete_action();
+    // This filter only works in-place, so if we have different target and source, we first copy over
+    // the source bitmap to the target one.
+    if (&target_bitmap != &source_bitmap) {
+        VERIFY(source_bitmap.size_in_bytes() == target_bitmap.size_in_bytes());
+        memcpy(target_bitmap.scanline(0), source_bitmap.scanline(0), source_bitmap.size_in_bytes());
     }
+
+    Gfx::FastBoxBlurFilter filter(target_bitmap);
+    if (m_approximate_gauss)
+        filter.apply_three_passes(m_radius);
+    else
+        filter.apply_single_pass(m_radius);
 }
 
 RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
