@@ -180,27 +180,16 @@ FontEditorWidget::FontEditorWidget()
     });
     m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
         cut_selected_glyphs();
-        if (m_edited_font->is_fixed_width())
-            m_glyph_editor_present_checkbox->set_checked(false, GUI::AllowCallback::No);
-        else
-            m_glyph_editor_width_spinbox->set_value(0, GUI::AllowCallback::No);
-        update_statusbar();
     });
     m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
         copy_selected_glyphs();
     });
     m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
         paste_glyphs();
-        update_statusbar();
     });
     m_paste_action->set_enabled(GUI::Clipboard::the().fetch_mime_type() == "glyph/x-fonteditor");
     m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) {
         delete_selected_glyphs();
-        if (m_edited_font->is_fixed_width())
-            m_glyph_editor_present_checkbox->set_checked(false, GUI::AllowCallback::No);
-        else
-            m_glyph_editor_width_spinbox->set_value(0, GUI::AllowCallback::No);
-        update_statusbar();
     });
     m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
         undo();
@@ -856,7 +845,13 @@ void FontEditorWidget::paste_glyphs()
             m_glyph_editor_widget->on_glyph_altered(glyph);
     }
 
+    if (m_edited_font->is_fixed_width())
+        m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_raw_glyph(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
+    else
+        m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
+
     m_glyph_editor_widget->update();
+    update_statusbar();
 }
 
 void FontEditorWidget::delete_selected_glyphs()
@@ -882,4 +877,12 @@ void FontEditorWidget::delete_selected_glyphs()
 
     for (int i = selection.start(); i < selection.start() + selection.size(); i++)
         delete_glyph(i);
+
+    if (m_edited_font->is_fixed_width())
+        m_glyph_editor_present_checkbox->set_checked(false, GUI::AllowCallback::No);
+    else
+        m_glyph_editor_width_spinbox->set_value(0, GUI::AllowCallback::No);
+
+    m_glyph_editor_widget->update();
+    update_statusbar();
 }
