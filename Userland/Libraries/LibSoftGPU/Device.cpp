@@ -636,6 +636,11 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         triangle.vertices[1].eye_coordinates = model_view_transform * triangle.vertices[1].position;
         triangle.vertices[2].eye_coordinates = model_view_transform * triangle.vertices[2].position;
 
+        // Transform the vertex normals into eye-space
+        triangle.vertices[0].normal = transform_direction(model_view_transform, triangle.vertices[0].normal);
+        triangle.vertices[1].normal = transform_direction(model_view_transform, triangle.vertices[1].normal);
+        triangle.vertices[2].normal = transform_direction(model_view_transform, triangle.vertices[2].normal);
+
         // Transform eye coordinates into clip coordinates using the projection transform
         triangle.vertices[0].clip_coordinates = projection_transform * triangle.vertices[0].eye_coordinates;
         triangle.vertices[1].clip_coordinates = projection_transform * triangle.vertices[1].eye_coordinates;
