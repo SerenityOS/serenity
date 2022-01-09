@@ -228,6 +228,8 @@ public:
         None,
         InternalControlFlowBreak,
         InternalControlFlowContinue,
+        InternalControlFlowInterrupted,
+        InternalControlFlowKilled,
         EvaluatedSyntaxError,
         NonExhaustiveMatchRules,
         InvalidGlobError,
@@ -260,6 +262,8 @@ public:
         switch (error) {
         case ShellError::InternalControlFlowBreak:
         case ShellError::InternalControlFlowContinue:
+        case ShellError::InternalControlFlowInterrupted:
+        case ShellError::InternalControlFlowKilled:
             return true;
         default:
             return false;
