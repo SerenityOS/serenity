@@ -9,7 +9,6 @@ configopts=(
     "--enable-c++11"
     "--enable-release-mode"
     "--enable-optimizations"
-    "--opengl-mode=none"
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
 )
 launcher_name=ScummVM
@@ -20,11 +19,13 @@ icon_file=icons/scummvm.ico
 function pre_configure() {
     export CPPFLAGS="-fvisibility=hidden"
     export FREETYPE2_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/freetype2"
+    export OPENGL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
     export SDL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
 }
 
 function post_configure() {
     unset CPPFLAGS
     unset FREETYPE2_CFLAGS
+    unset OPENGL_CFLAGS
     unset SDL_CFLAGS
 }
