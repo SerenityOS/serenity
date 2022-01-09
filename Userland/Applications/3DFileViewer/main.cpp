@@ -69,6 +69,12 @@ private:
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
 
+        // Enable lighting
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHT1);
+        glEnable(GL_LIGHT2);
+
         // Set projection matrix
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
@@ -159,6 +165,7 @@ void GLContextWidget::mousewheel_event(GUI::MouseEvent& event)
 void GLContextWidget::timer_event(Core::TimerEvent&)
 {
     auto timer = Core::ElapsedTimer::start_new();
+    static unsigned int light_counter = 0;
 
     glCallList(m_init_list);
 
@@ -174,6 +181,23 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     glRotatef(m_angle_x, 1, 0, 0);
     glRotatef(m_angle_y, 0, 1, 0);
     glRotatef(m_angle_z, 0, 0, 1);
+
+    glPushMatrix();
+    glLoadIdentity();
+    // Disco time ;)
+    GLfloat const light0_position[4] = { -4.0f, 0.0f, 0.0f, 0.0f };
+    GLfloat const light0_diffuse[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
+    GLfloat const light1_position[4] = { 4.0f, 0.0f, 0.0f, 0.0f };
+    GLfloat const light1_diffuse[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
+    GLfloat const light2_position[4] = { 0.0f, 5.0f, 0.0f, 0.0f };
+    GLfloat const light2_diffuse[4] = { 0.0f, 0.0f, 1.0f, 0.0f };
+    glLightfv(GL_LIGHT0, GL_POSITION, &light0_position[0]);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, &light0_diffuse[0]);
+    glLightfv(GL_LIGHT1, GL_POSITION, &light1_position[0]);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, &light1_diffuse[0]);
+    glLightfv(GL_LIGHT2, GL_POSITION, &light2_position[0]);
+    glLightfv(GL_LIGHT2, GL_DIFFUSE, &light2_diffuse[0]);
+    glPopMatrix();
 
     if (m_texture_enabled) {
         glEnable(GL_TEXTURE_2D);
@@ -195,6 +219,18 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
         auto frame_rate = render_time > 0 ? 1000 / render_time : 0;
         m_stats->set_text(String::formatted("{:.0f} fps, {:.1f} ms", frame_rate, render_time));
         m_accumulated_time = 0;
+
+        glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHT1);
+        glEnable(GL_LIGHT2);
+        light_counter++;
+
+        if ((light_counter % 3) == 0)
+            glDisable(GL_LIGHT0);
+        else if ((light_counter % 3) == 1)
+            glDisable(GL_LIGHT1);
+        else
+            glDisable(GL_LIGHT2);
     }
 
     update();
