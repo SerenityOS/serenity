@@ -9,20 +9,12 @@
 #include "VisualizationWidget.h"
 #include <LibGUI/Frame.h>
 
-namespace Audio {
-class Buffer;
-}
-
 class SampleWidget final : public VisualizationWidget {
     C_OBJECT(SampleWidget)
 public:
-    virtual ~SampleWidget() override;
-
-    void set_buffer(RefPtr<Audio::Buffer>) override;
+    virtual ~SampleWidget() override = default;
 
 private:
     SampleWidget();
-    virtual void paint_event(GUI::PaintEvent&) override;
-
-    RefPtr<Audio::Buffer> m_buffer;
+    virtual void render(GUI::PaintEvent&, Vector<double> const& samples) override;
 };

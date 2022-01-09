@@ -14,12 +14,12 @@ class NoVisualizationWidget final : public VisualizationWidget {
     C_OBJECT(NoVisualizationWidget)
 
 public:
-    ~NoVisualizationWidget() override;
-    void set_buffer(RefPtr<Audio::Buffer>) override;
+    ~NoVisualizationWidget() override = default;
 
 private:
+    void render(GUI::PaintEvent&, Vector<double> const&) override { }
     void paint_event(GUI::PaintEvent&) override;
-    NoVisualizationWidget();
+    NoVisualizationWidget() = default;
 
     RefPtr<Gfx::Bitmap> m_serenity_bg;
 };

@@ -12,9 +12,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 
-u32 round_previous_power_of_2(u32 x);
-
-void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
+void BarsVisualizationWidget::render(GUI::PaintEvent& event, Vector<double> const& samples)
 {
     GUI::Frame::paint_event(event);
     GUI::Painter painter(*this);
@@ -22,13 +20,13 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(frame_inner_rect(), Color::Black);
 
-    if (m_sample_buffer.is_empty())
-        return;
+    for (size_t i = 0; i < samples.size(); i++)
+        m_fft_samples[i] = samples[i];
 
-    LibDSP::fft(m_sample_buffer, false);
-    double max = AK::sqrt(m_sample_count * 2.);
+    LibDSP::fft(m_fft_samples, false);
+    double max = AK::sqrt(samples.size() * 2.);
 
-    double freq_bin = m_samplerate / (double)m_sample_count;
+    double freq_bin = m_samplerate / (double)samples.size();
 
     constexpr int group_count = 60;
     Vector<double, group_count> groups;
@@ -41,9 +39,9 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     for (double& d : groups)
         d = 0.;
 
-    int bins_per_group = ceil_div((m_sample_count - 1) / 2, group_count);
-    for (int i = 1; i < m_sample_count / 2; i++) {
-        groups[i / bins_per_group] += AK::fabs(m_sample_buffer.data()[i].real());
+    int bins_per_group = ceil_div((samples.size() - 1) / 2, group_count);
+    for (size_t i = 1; i < samples.size() / 2; i++) {
+        groups[i / bins_per_group] += AK::abs(m_fft_samples[i].real());
     }
     for (int i = 0; i < group_count; i++)
         groups[i] /= max * freq_bin / (m_adjust_frequencies ? (clamp(AK::pow(AK::E<double>, (double)i / group_count * 3.) - 1.75, 1., 15.)) : 1.);
@@ -65,65 +63,20 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     m_is_using_last = false;
 }
 
-BarsVisualizationWidget::~BarsVisualizationWidget()
-{
-}
-
 BarsVisualizationWidget::BarsVisualizationWidget()
-    : m_last_id(-1)
-    , m_is_using_last(false)
+    : m_is_using_last(false)
     , m_adjust_frequencies(false)
 {
     m_context_menu = GUI::Menu::construct();
     m_context_menu->add_action(GUI::Action::create_checkable("Adjust frequency energy (for aesthetics)", [&](GUI::Action& action) {
         m_adjust_frequencies = action.is_checked();
     }));
-}
 
-// black magic from Hacker's delight
-u32 round_previous_power_of_2(u32 x)
-{
-    x = x | (x >> 1);
-    x = x | (x >> 2);
-    x = x | (x >> 4);
-    x = x | (x >> 8);
-    x = x | (x >> 16);
-    return x - (x >> 1);
-}
-
-void BarsVisualizationWidget::set_buffer(RefPtr<Audio::Buffer> buffer, int samples_to_use)
-{
-    if (m_is_using_last)
-        return;
-    m_is_using_last = true;
-    // FIXME: We should dynamically adapt to the sample count and e.g. perform the fft over multiple buffers.
-    // For now, the visualizer doesn't work with extremely low global sample rates.
-    if (buffer->sample_count() < 256)
-        return;
-    m_sample_count = round_previous_power_of_2(samples_to_use);
-    m_sample_buffer.resize(m_sample_count);
-    for (int i = 0; i < m_sample_count; i++) {
-        m_sample_buffer.data()[i] = (AK::fabs(buffer->samples()[i].left) + AK::fabs(buffer->samples()[i].right)) / 2.;
-    }
-
-    update();
-}
-
-void BarsVisualizationWidget::set_buffer(RefPtr<Audio::Buffer> buffer)
-{
-    if (buffer.is_null())
-        return;
-    if (m_last_id == buffer->id())
-        return;
-    set_buffer(buffer, buffer->sample_count());
+    set_render_sample_count(128);
+    m_fft_samples.resize(128);
 }
 
 void BarsVisualizationWidget::context_menu_event(GUI::ContextMenuEvent& event)
 {
     m_context_menu->popup(event.screen_position());
-}
-
-void BarsVisualizationWidget::set_samplerate(int samplerate)
-{
-    m_samplerate = samplerate;
 }
