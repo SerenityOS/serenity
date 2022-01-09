@@ -48,7 +48,8 @@
     __ENUMERATE_SHELL_BUILTIN(bg)      \
     __ENUMERATE_SHELL_BUILTIN(wait)    \
     __ENUMERATE_SHELL_BUILTIN(dump)    \
-    __ENUMERATE_SHELL_BUILTIN(kill)
+    __ENUMERATE_SHELL_BUILTIN(kill)    \
+    __ENUMERATE_SHELL_BUILTIN(noop)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
@@ -329,6 +330,8 @@ private:
         ENUMERATE_SHELL_BUILTINS()
 
 #undef __ENUMERATE_SHELL_BUILTIN
+
+            ":", // POSIX-y name for "noop".
     };
 
     bool m_should_ignore_jobs_on_next_exit { false };
