@@ -15,10 +15,10 @@
 namespace JS {
 
 // 7.4.1 GetIterator ( obj [ , hint [ , method ] ] ), https://tc39.es/ecma262/#sec-getiterator
-ThrowCompletionOr<Object*> get_iterator(GlobalObject& global_object, Value value, IteratorHint hint, Value method)
+ThrowCompletionOr<Object*> get_iterator(GlobalObject& global_object, Value value, IteratorHint hint, Optional<Value> method)
 {
     auto& vm = global_object.vm();
-    if (method.is_empty()) {
+    if (!method.has_value()) {
         if (hint == IteratorHint::Async) {
             auto* async_method = TRY(value.get_method(global_object, *vm.well_known_symbol_async_iterator()));
             if (async_method == nullptr) {
@@ -32,10 +32,10 @@ ThrowCompletionOr<Object*> get_iterator(GlobalObject& global_object, Value value
         }
     }
 
-    if (!method.is_function())
+    if (!method->is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
 
-    auto iterator = TRY(vm.call(method.as_function(), value));
+    auto iterator = TRY(vm.call(method->as_function(), value));
     if (!iterator.is_object())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
 
@@ -43,7 +43,7 @@ ThrowCompletionOr<Object*> get_iterator(GlobalObject& global_object, Value value
 }
 
 // 7.4.2 IteratorNext ( iteratorRecord [ , value ] ), https://tc39.es/ecma262/#sec-iteratornext
-ThrowCompletionOr<Object*> iterator_next(Object& iterator, Value value)
+ThrowCompletionOr<Object*> iterator_next(Object& iterator, Optional<Value> value)
 {
     // FIXME: Implement using iterator records, not ordinary objects
     auto& vm = iterator.vm();
@@ -54,10 +54,10 @@ ThrowCompletionOr<Object*> iterator_next(Object& iterator, Value value)
         return vm.throw_completion<TypeError>(global_object, ErrorType::IterableNextNotAFunction);
 
     Value result;
-    if (value.is_empty())
+    if (!value.has_value())
         result = TRY(vm.call(next_method.as_function(), &iterator));
     else
-        result = TRY(vm.call(next_method.as_function(), &iterator, value));
+        result = TRY(vm.call(next_method.as_function(), &iterator, *value));
 
     if (!result.is_object())
         return vm.throw_completion<TypeError>(global_object, ErrorType::IterableNextBadReturn);
@@ -173,7 +173,7 @@ Object* create_iterator_result_object(GlobalObject& global_object, Value value, 
 }
 
 // 7.4.11 IterableToList ( items [ , method ] ), https://tc39.es/ecma262/#sec-iterabletolist
-ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject& global_object, Value iterable, Value method)
+ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject& global_object, Value iterable, Optional<Value> method)
 {
     auto& vm = global_object.vm();
     MarkedValueList values(vm.heap());
@@ -183,14 +183,14 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject& global_object,
             values.append(value);
             return {};
         },
-        method));
+        move(method)));
 
     return { move(values) };
 }
 
-Completion get_iterator_values(GlobalObject& global_object, Value iterable, IteratorValueCallback callback, Value method)
+Completion get_iterator_values(GlobalObject& global_object, Value iterable, IteratorValueCallback callback, Optional<Value> method)
 {
-    auto* iterator = TRY(get_iterator(global_object, iterable, IteratorHint::Sync, method));
+    auto* iterator = TRY(get_iterator(global_object, iterable, IteratorHint::Sync, move(method)));
 
     while (true) {
         auto* next_object = TRY(iterator_step(global_object, *iterator));
