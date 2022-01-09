@@ -9,18 +9,11 @@
 
 namespace PixelPaint::Filters {
 
-void BoxBlur5::apply() const
+void BoxBlur5::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const
 {
-    if (!m_editor)
-        return;
-    if (auto* layer = m_editor->active_layer()) {
-        Gfx::BoxBlurFilter<5> filter;
-        if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<5>>::get()) {
-            filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-            layer->did_modify_bitmap(layer->rect());
-            m_editor->did_complete_action();
-        }
-    }
+    Gfx::BoxBlurFilter<5> filter;
+    if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<5>>::get())
+        filter.apply(target_bitmap, target_bitmap.rect(), source_bitmap, source_bitmap.rect(), *parameters);
 }
 
 }

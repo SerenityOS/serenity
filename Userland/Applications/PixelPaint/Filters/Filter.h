@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Mustafa Quraish <mustafa@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,9 @@ namespace PixelPaint {
 
 class Filter {
 public:
-    virtual void apply() const = 0;
+    virtual void apply() const;
+    virtual void apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const = 0;
+
     virtual RefPtr<GUI::Widget> get_settings_widget();
 
     virtual StringView filter_name() = 0;

@@ -12,7 +12,8 @@ namespace PixelPaint::Filters {
 
 class Bloom final : public Filter {
 public:
-    virtual void apply() const override;
+    virtual void apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const override;
+
     virtual RefPtr<GUI::Widget> get_settings_widget() override;
 
     virtual StringView filter_name() override { return "Bloom Filter"sv; }
