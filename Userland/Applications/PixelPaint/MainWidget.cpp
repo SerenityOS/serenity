@@ -46,16 +46,18 @@ MainWidget::MainWidget()
 
     m_layer_list_widget = *find_descendant_of_type_named<PixelPaint::LayerListWidget>("layer_list_widget");
     m_layer_list_widget->on_layer_select = [&](auto* layer) {
-        if (auto* editor = current_image_editor())
-            editor->set_active_layer(layer);
+        auto* editor = current_image_editor();
+        VERIFY(editor);
+        editor->set_active_layer(layer);
     };
 
     m_layer_properties_widget = *find_descendant_of_type_named<PixelPaint::LayerPropertiesWidget>("layer_properties_widget");
     m_tool_properties_widget = *find_descendant_of_type_named<PixelPaint::ToolPropertiesWidget>("tool_properties_widget");
 
     m_toolbox->on_tool_selection = [&](auto* tool) {
-        if (auto* editor = current_image_editor())
-            editor->set_active_tool(tool);
+        auto* editor = current_image_editor();
+        VERIFY(editor);
+        editor->set_active_tool(tool);
         m_tool_properties_widget->set_active_tool(tool);
     };
 
@@ -136,13 +138,15 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_save_image_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        if (auto* editor = current_image_editor())
-            editor->save_project_as();
+        auto* editor = current_image_editor();
+        VERIFY(editor);
+        editor->save_project_as();
     });
 
     m_save_image_action = GUI::CommonActions::make_save_action([&](auto&) {
-        if (auto* editor = current_image_editor())
-            editor->save_project();
+        auto* editor = current_image_editor();
+        VERIFY(editor);
+        editor->save_project();
     });
 
     file_menu.add_action(*m_new_image_action);
@@ -157,8 +161,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         GUI::Action::create(
             "As &BMP", [&](auto&) {
                 auto* editor = current_image_editor();
-                if (!editor)
-                    return;
+                VERIFY(editor);
                 auto save_result = FileSystemAccessClient::Client::the().save_file(window.window_id(), "untitled", "bmp");
                 if (save_result.error != 0)
                     return;
@@ -172,6 +175,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         GUI::Action::create(
             "As &PNG", [&](auto&) {
                 auto* editor = current_image_editor();
+                VERIFY(editor);
                 auto save_result = FileSystemAccessClient::Client::the().save_file(window.window_id(), "untitled", "png");
                 if (save_result.error != 0)
                     return;
@@ -185,8 +189,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_close_image_action = GUI::Action::create("&Close Image", { Mod_Ctrl, Key_W }, [&](auto&) {
         auto* active_widget = m_tab_widget->active_widget();
-        if (!active_widget)
-            return;
+        VERIFY(active_widget);
         m_tab_widget->on_tab_close_click(*active_widget);
     });
 
@@ -201,8 +204,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
         auto* editor = current_image_editor();
-        if (!editor)
-            return;
+        VERIFY(editor);
+
         if (!editor->active_layer()) {
             dbgln("Cannot copy with no active layer selected");
             return;
@@ -219,8 +222,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         "Copy &Merged", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
+
             auto bitmap = editor->image().try_copy_bitmap(editor->selection());
             if (!bitmap) {
                 dbgln("try_copy_bitmap() from Image failed");
@@ -256,8 +259,9 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_redo_action = GUI::CommonActions::make_redo_action([&](auto&) {
-        if (auto* editor = current_image_editor())
-            editor->redo();
+        auto* editor = current_image_editor();
+        VERIFY(editor);
+        editor->redo();
     });
 
     m_edit_menu->add_action(*m_copy_action);
@@ -269,32 +273,33 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_edit_menu->add_action(GUI::CommonActions::make_select_all_action([&](auto&) {
         auto* editor = current_image_editor();
+        VERIFY(editor);
         if (!editor->active_layer())
             return;
         editor->selection().merge(editor->active_layer()->relative_rect(), PixelPaint::Selection::MergeMode::Set);
     }));
     m_edit_menu->add_action(GUI::Action::create(
         "Clear &Selection", { Mod_Ctrl | Mod_Shift, Key_A }, [&](auto&) {
-            if (auto* editor = current_image_editor())
-                editor->selection().clear();
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->selection().clear();
         }));
 
     m_edit_menu->add_separator();
     m_edit_menu->add_action(GUI::Action::create(
         "S&wap Colors", { Mod_None, Key_X }, [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             auto old_primary_color = editor->primary_color();
             editor->set_primary_color(editor->secondary_color());
             editor->set_secondary_color(old_primary_color);
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "&Default Colors", { Mod_None, Key_D }, [&](auto&) {
-            if (auto* editor = current_image_editor()) {
-                editor->set_primary_color(Color::Black);
-                editor->set_secondary_color(Color::White);
-            }
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->set_primary_color(Color::Black);
+            editor->set_secondary_color(Color::White);
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "&Load Color Palette", [&](auto&) {
@@ -325,20 +330,23 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_zoom_in_action = GUI::CommonActions::make_zoom_in_action(
         [&](auto&) {
-            if (auto* editor = current_image_editor())
-                editor->scale_by(0.1f);
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->scale_by(0.1f);
         });
 
     m_zoom_out_action = GUI::CommonActions::make_zoom_out_action(
         [&](auto&) {
-            if (auto* editor = current_image_editor())
-                editor->scale_by(-0.1f);
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->scale_by(-0.1f);
         });
 
     m_reset_zoom_action = GUI::CommonActions::make_reset_zoom_action(
         [&](auto&) {
-            if (auto* editor = current_image_editor())
-                editor->reset_scale_and_position();
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->reset_scale_and_position();
         });
 
     m_add_guide_action = GUI::Action::create(
@@ -346,21 +354,21 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto dialog = PixelPaint::EditGuideDialog::construct(&window);
             if (dialog->exec() != GUI::Dialog::ExecOK)
                 return;
-            if (auto* editor = current_image_editor()) {
-                auto offset = dialog->offset_as_pixel(*editor);
-                if (!offset.has_value())
-                    return;
-                editor->add_guide(PixelPaint::Guide::construct(dialog->orientation(), offset.value()));
-            }
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto offset = dialog->offset_as_pixel(*editor);
+            if (!offset.has_value())
+                return;
+            editor->add_guide(PixelPaint::Guide::construct(dialog->orientation(), offset.value()));
         });
 
     // Save this so other methods can use it
     m_show_guides_action = GUI::Action::create_checkable(
         "Show &Guides", [&](auto& action) {
             Config::write_bool("PixelPaint", "Guides", "Show", action.is_checked());
-            if (auto* editor = current_image_editor()) {
-                editor->set_guide_visibility(action.is_checked());
-            }
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->set_guide_visibility(action.is_checked());
         });
     m_show_guides_action->set_checked(Config::read_bool("PixelPaint", "Guides", "Show", true));
 
@@ -369,8 +377,9 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_action(*m_reset_zoom_action);
     m_view_menu->add_action(GUI::Action::create(
         "&Fit Image To View", [&](auto&) {
-            if (auto* editor = current_image_editor())
-                editor->fit_image_to_view();
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->fit_image_to_view();
         }));
     m_view_menu->add_separator();
     m_view_menu->add_action(*m_add_guide_action);
@@ -378,16 +387,18 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_view_menu->add_action(GUI::Action::create(
         "&Clear Guides", [&](auto&) {
-            if (auto* editor = current_image_editor())
-                editor->clear_guides();
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->clear_guides();
         }));
     m_view_menu->add_separator();
 
     auto show_pixel_grid_action = GUI::Action::create_checkable(
         "Show &Pixel Grid", [&](auto& action) {
             Config::write_bool("PixelPaint", "PixelGrid", "Show", action.is_checked());
-            if (auto* editor = current_image_editor())
-                editor->set_pixel_grid_visibility(action.is_checked());
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->set_pixel_grid_visibility(action.is_checked());
         });
     show_pixel_grid_action->set_checked(Config::read_bool("PixelPaint", "PixelGrid", "Show", true));
     m_view_menu->add_action(*show_pixel_grid_action);
@@ -395,9 +406,9 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_show_rulers_action = GUI::Action::create_checkable(
         "Show R&ulers", { Mod_Ctrl, Key_R }, [&](auto& action) {
             Config::write_bool("PixelPaint", "Rulers", "Show", action.is_checked());
-            if (auto* editor = current_image_editor()) {
-                editor->set_ruler_visibility(action.is_checked());
-            }
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->set_ruler_visibility(action.is_checked());
         });
     m_show_rulers_action->set_checked(Config::read_bool("PixelPaint", "Rulers", "Show", true));
     m_view_menu->add_action(*m_show_rulers_action);
@@ -405,8 +416,9 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_show_active_layer_boundary_action = GUI::Action::create_checkable(
         "Show Active Layer &Boundary", [&](auto& action) {
             Config::write_bool("PixelPaint", "ImageEditor", "ShowActiveLayerBoundary", action.is_checked());
-            if (auto* editor = current_image_editor())
-                editor->set_show_active_layer_boundary(action.is_checked());
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->set_show_active_layer_boundary(action.is_checked());
         });
     m_show_active_layer_boundary_action->set_checked(Config::read_bool("PixelPaint", "ImageEditor", "ShowActiveLayerBoundary", true));
     m_view_menu->add_action(*m_show_active_layer_boundary_action);
@@ -422,15 +434,13 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_image_menu->add_action(GUI::Action::create(
         "Flip &Vertically", [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             editor->image().flip(Gfx::Orientation::Vertical);
         }));
     m_image_menu->add_action(GUI::Action::create(
         "Flip &Horizontally", [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             editor->image().flip(Gfx::Orientation::Horizontal);
         }));
     m_image_menu->add_separator();
@@ -438,24 +448,23 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_image_menu->add_action(GUI::CommonActions::make_rotate_counterclockwise_action(
         [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             editor->image().rotate(Gfx::RotationDirection::CounterClockwise);
         }));
 
     m_image_menu->add_action(GUI::CommonActions::make_rotate_clockwise_action(
         [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             editor->image().rotate(Gfx::RotationDirection::Clockwise);
         }));
     m_image_menu->add_separator();
     m_image_menu->add_action(GUI::Action::create(
         "&Crop To Selection", [&](auto&) {
             auto* editor = current_image_editor();
+            VERIFY(editor);
             // FIXME: disable this action if there is no selection
-            if (!editor || editor->selection().is_empty())
+            if (editor->selection().is_empty())
                 return;
             auto crop_rect = editor->selection().bounding_rect();
             editor->image().crop(crop_rect);
@@ -466,8 +475,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(GUI::Action::create(
         "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-layer.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(editor->image().size(), &window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
                 auto layer_or_error = PixelPaint::Layer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
@@ -502,8 +510,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(GUI::CommonActions::make_move_to_front_action(
         [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
@@ -513,8 +520,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(GUI::CommonActions::make_move_to_back_action(
         [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
@@ -525,8 +531,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(GUI::Action::create(
         "Move Active Layer &Up", { Mod_Ctrl, Key_PageUp }, [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
@@ -535,8 +540,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(GUI::Action::create(
         "Move Active Layer &Down", { Mod_Ctrl, Key_PageDown }, [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
@@ -546,8 +550,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(GUI::Action::create(
         "&Remove Active Layer", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
@@ -573,8 +576,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(GUI::Action::create(
         "Fl&atten Image", { Mod_Ctrl, Key_F }, [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             editor->image().flatten_all_layers();
             editor->did_complete_action();
         }));
@@ -582,8 +584,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(GUI::Action::create(
         "&Merge Visible", { Mod_Ctrl, Key_M }, [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             editor->image().merge_visible_layers();
             editor->did_complete_action();
         }));
@@ -591,8 +592,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(GUI::Action::create(
         "M&erge Active Layer Down", { Mod_Ctrl, Key_E }, [&](auto&) {
             auto* editor = current_image_editor();
-            if (!editor)
-                return;
+            VERIFY(editor);
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
@@ -604,8 +604,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_filter_menu->add_action(GUI::Action::create("Filter &Gallery", [&](auto&) {
         auto* editor = current_image_editor();
-        if (!editor)
-            return;
+        VERIFY(editor);
         auto dialog = PixelPaint::FilterGallery::construct(&window, editor);
         if (dialog->exec() != GUI::Dialog::ExecOK)
             return;
@@ -614,8 +613,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_filter_menu->add_separator();
     m_filter_menu->add_action(GUI::Action::create("Generic 5x5 &Convolution", [&](auto&) {
         auto* editor = current_image_editor();
-        if (!editor)
-            return;
+        VERIFY(editor);
         if (auto* layer = editor->active_layer()) {
             Gfx::GenericConvolutionFilter<5> filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::GenericConvolutionFilter<5>>::get(&window)) {
@@ -647,8 +645,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_zoom_combobox->set_model(*GUI::ItemListModel<String>::create(s_suggested_zoom_levels));
     m_zoom_combobox->on_change = [this](String const& value, GUI::ModelIndex const& index) {
         auto* editor = current_image_editor();
-        if (editor == nullptr)
-            return;
+        VERIFY(editor);
 
         if (index.is_valid()) {
             switch (index.row()) {
