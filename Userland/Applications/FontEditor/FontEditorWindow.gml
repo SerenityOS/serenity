@@ -77,13 +77,15 @@
             @GUI::GroupBox {
                 name: "font_metadata_groupbox"
                 title: "Metadata"
-                fixed_height: 220
+                shrink_to_fit: true
 
                 layout: @GUI::VerticalBoxLayout {
                     margins: [6, 6, 6, 6]
                 }
 
                 @GUI::Widget {
+                    fixed_height: 22
+
                     layout: @GUI::HorizontalBoxLayout {
                     }
 
@@ -100,6 +102,8 @@
                 }
 
                 @GUI::Widget {
+                    fixed_height: 22
+
                     layout: @GUI::HorizontalBoxLayout {
                     }
 
@@ -116,6 +120,8 @@
                 }
 
                 @GUI::Widget {
+                    fixed_height: 22
+
                     layout: @GUI::HorizontalBoxLayout {
                     }
 
@@ -133,6 +139,8 @@
                 }
 
                 @GUI::Widget {
+                    fixed_height: 22
+
                     layout: @GUI::HorizontalBoxLayout {
                     }
 
@@ -150,6 +158,8 @@
                 }
 
                 @GUI::Widget {
+                    fixed_height: 22
+
                     layout: @GUI::HorizontalBoxLayout {
                     }
 
@@ -168,6 +178,8 @@
                 }
 
                 @GUI::Widget {
+                    fixed_height: 22
+
                     layout: @GUI::HorizontalBoxLayout {
                     }
 
@@ -185,6 +197,8 @@
                 }
 
                 @GUI::Widget {
+                    fixed_height: 22
+
                     layout: @GUI::HorizontalBoxLayout {
                     }
 
