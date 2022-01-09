@@ -69,6 +69,8 @@ private:
     GlyphMapWidget();
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
@@ -87,6 +89,7 @@ private:
     Selection m_selection;
     int m_active_glyph { 0 };
     int m_visible_glyphs { 0 };
+    bool m_in_drag_select { false };
 };
 
 }
