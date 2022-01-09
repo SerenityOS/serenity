@@ -25,6 +25,11 @@ extern char** environ;
 
 namespace Shell {
 
+int Shell::builtin_noop(int, const char**)
+{
+    return 0;
+}
+
 int Shell::builtin_dump(int argc, const char** argv)
 {
     if (argc != 2)
@@ -1142,6 +1147,9 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
     Core::EventLoop loop;
     setup_signals();
 
+    if (name == ":"sv)
+        name = "noop"sv;
+
 #define __ENUMERATE_SHELL_BUILTIN(builtin)                               \
     if (name == #builtin) {                                              \
         retval = builtin_##builtin(argv.size() - 1, argv.data());        \
@@ -1160,6 +1168,9 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
 
 bool Shell::has_builtin(StringView name) const
 {
+    if (name == ":"sv)
+        return true;
+
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
     if (name == #builtin) {                \
         return true;                       \
