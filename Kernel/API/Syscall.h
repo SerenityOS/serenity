@@ -570,6 +570,23 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
 #        endif
     return result;
 }
+#    elif ARCH(AARCH64)
+
+// FIXME: Implement these.
+inline uintptr_t invoke(Function) { return 0; }
+
+template<typename T1>
+inline uintptr_t invoke(Function, T1) { return 0; }
+
+template<typename T1, typename T2>
+inline uintptr_t invoke(Function, T1, T2) { return 0; }
+
+template<typename T1, typename T2, typename T3>
+inline uintptr_t invoke(Function, T1, T2, T3) { return 0; }
+
+template<typename T1, typename T2, typename T3, typename T4>
+inline uintptr_t invoke(Function, T1, T2, T3, T4) { return 0; }
+
 #    endif
 #endif
 

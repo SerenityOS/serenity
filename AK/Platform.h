@@ -67,7 +67,11 @@
 #ifdef NAKED
 #    undef NAKED
 #endif
-#define NAKED __attribute__((naked))
+#ifdef __aarch64__
+#    define NAKED
+#else
+#    define NAKED __attribute__((naked))
+#endif
 
 #ifdef DISALLOW
 #    undef DISALLOW

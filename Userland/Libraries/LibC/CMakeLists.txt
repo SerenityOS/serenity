@@ -6,7 +6,6 @@ set(LIBC_SOURCES
     dirent.cpp
     dlfcn.cpp
     fcntl.cpp
-    fenv.cpp
     fnmatch.cpp
     ifaddrs.cpp
     getopt.cpp
@@ -69,6 +68,10 @@ set(LIBC_SOURCES
     wctype.cpp
     wstdio.cpp
 )
+
+if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
+    list(APPEND LIBC_SOURCES fenv.cpp)
+endif ()
 
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../../AK/*.cpp")
 file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")

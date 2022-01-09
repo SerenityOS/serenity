@@ -24,9 +24,13 @@ void _start(int, char**, char**) __attribute__((used));
 
 NAKED void _start(int, char**, char**)
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+#else
     asm(
         "push $0\n"
         "jmp _entry@plt\n");
+#endif
 }
 
 int _entry(int argc, char** argv, char** env)

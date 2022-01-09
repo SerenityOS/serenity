@@ -1,3 +1,4 @@
+if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
 add_subdirectory(AK)
 add_subdirectory(Kernel)
 add_subdirectory(LibC)
@@ -25,3 +26,7 @@ if (${SERENITY_ARCH} STREQUAL "i686")
 endif()
 add_subdirectory(LibCrypto)
 add_subdirectory(LibTLS)
+else ()
+# FIXME: Add the rest of the subdirectories
+add_subdirectory(LibM)
+endif ()

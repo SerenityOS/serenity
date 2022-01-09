@@ -39,7 +39,7 @@
 #    include <AK/Types.h>
 #endif
 
-#ifdef __x86_64__
+#if defined(__x86_64__) || defined(__aarch64__)
 #    define ElfW(type) Elf64_##type
 #else
 #    define ElfW(type) Elf32_##type

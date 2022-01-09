@@ -579,7 +579,11 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "Jumping to entry point: {:p}", entry_point_function);
     if (s_do_breakpoint_trap_before_entry) {
+#if ARCH(AARCH64)
+        asm("brk #0x1");
+#else
         asm("int3");
+#endif
     }
 
     _invoke_entry(argc, argv, envp, entry_point_function);

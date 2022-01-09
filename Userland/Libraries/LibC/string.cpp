@@ -125,15 +125,27 @@ int memcmp(const void* v1, const void* v2, size_t n)
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
     void* original_dest = dest_ptr;
+#if ARCH(AARCH64)
+    auto* destination = static_cast<uint8_t*>(dest_ptr);
+    auto* source = static_cast<const uint8_t*>(src_ptr);
+    for (size_t i = 0; i < n; i++)
+        destination[i] = source[i];
+#else
     asm volatile(
         "rep movsb"
         : "+D"(dest_ptr), "+S"(src_ptr), "+c"(n)::"memory");
+#endif
     return original_dest;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memset.html
 void* memset(void* dest_ptr, int c, size_t n)
 {
+#if ARCH(AARCH64)
+    auto* destination = static_cast<uint8_t*>(dest_ptr);
+    for (size_t i = 0; i < n; i++)
+        destination[i] = c;
+#else
     size_t dest = (size_t)dest_ptr;
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && n >= 12) {
@@ -161,6 +173,7 @@ void* memset(void* dest_ptr, int c, size_t n)
         : "=D"(dest), "=c"(n)
         : "0"(dest), "1"(n), "a"(c)
         : "memory");
+#endif
     return dest_ptr;
 }
 

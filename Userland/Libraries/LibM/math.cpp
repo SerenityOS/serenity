@@ -59,7 +59,7 @@ enum class RoundingMode {
 template<typename T>
 union FloatExtractor;
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(I386) || ARCH(X86_64) || ARCH(AARCH64)
 // This assumes long double is 80 bits, which is true with GCC on Intel platforms
 template<>
 union FloatExtractor<long double> {
@@ -410,6 +410,10 @@ MAKE_AK_BACKED2(remainder);
 
 long double truncl(long double x) NOEXCEPT
 {
+#if ARCH(AARCH64)
+	(void)x;
+	return 0;
+#else
     if (fabsl(x) < LONG_LONG_MAX) {
         // This is 1.6 times faster than the implementation using the "internal_to_integer"
         // helper (on x86_64)
@@ -424,10 +428,15 @@ long double truncl(long double x) NOEXCEPT
     }
 
     return internal_to_integer(x, RoundingMode::ToZero);
+#endif
 }
 
 double trunc(double x) NOEXCEPT
 {
+#if ARCH(AARCH64)
+	(void)x;
+	return 0;
+#else
     if (fabs(x) < LONG_LONG_MAX) {
         u64 temp;
         asm(
@@ -439,10 +448,16 @@ double trunc(double x) NOEXCEPT
     }
 
     return internal_to_integer(x, RoundingMode::ToZero);
+#endif
 }
 
 float truncf(float x) NOEXCEPT
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+	(void)x;
+	return 0;
+#else
     if (fabsf(x) < LONG_LONG_MAX) {
         u64 temp;
         asm(
@@ -454,38 +469,62 @@ float truncf(float x) NOEXCEPT
     }
 
     return internal_to_integer(x, RoundingMode::ToZero);
+#endif
 }
 
 long double rintl(long double value)
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+	(void)value;
+	return 0;
+#else
     double res;
     asm(
         "frndint\n"
         : "=t"(res)
         : "0"(value));
     return res;
+#endif
 }
 double rint(double value)
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+	(void)value;
+	return 0;
+#else
     double res;
     asm(
         "frndint\n"
         : "=t"(res)
         : "0"(value));
     return res;
+#endif
 }
 float rintf(float value)
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+	(void)value;
+	return 0;
+#else
     double res;
     asm(
         "frndint\n"
         : "=t"(res)
         : "0"(value));
     return res;
+#endif
 }
 
 long lrintl(long double value)
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+	(void)value;
+	return 0;
+#else
     long res;
     asm(
         "fistpl %0\n"
@@ -493,9 +532,15 @@ long lrintl(long double value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 long lrint(double value)
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+	(void)value;
+	return 0;
+#else
     long res;
     asm(
         "fistpl %0\n"
@@ -503,9 +548,15 @@ long lrint(double value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 long lrintf(float value)
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+	(void)value;
+	return 0;
+#else
     long res;
     asm(
         "fistpl %0\n"
@@ -513,10 +564,16 @@ long lrintf(float value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 
 long long llrintl(long double value)
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+	(void)value;
+	return 0;
+#else
     long long res;
     asm(
         "fistpq %0\n"
@@ -524,9 +581,15 @@ long long llrintl(long double value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 long long llrint(double value)
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+	(void)value;
+	return 0;
+#else
     long long res;
     asm(
         "fistpq %0\n"
@@ -534,9 +597,15 @@ long long llrint(double value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 long long llrintf(float value)
 {
+#if ARCH(AARCH64)
+	// FIXME: Implement.
+	(void)value;
+	return 0;
+#else
     long long res;
     asm(
         "fistpq %0\n"
@@ -544,6 +613,7 @@ long long llrintf(float value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 
 // On systems where FLT_RADIX == 2, ldexp is equivalent to scalbn

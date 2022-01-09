@@ -211,7 +211,11 @@ int atexit(void (*handler)())
 
 void _abort()
 {
+#if ARCH(AARCH64)
+    asm volatile("udf #0xdead");
+#else
     asm volatile("ud2");
+#endif
     __builtin_unreachable();
 }
 

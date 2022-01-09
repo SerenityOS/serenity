@@ -75,6 +75,8 @@ NEVER_INLINE NAKED void syscall_asm_entry()
         "    movq %rsp, %rdi \n"
         "    call syscall_handler\n"
         "    jmp common_trap_exit \n");
+#elif ARCH(AARCH64)
+	// FIXME: Implement.
 #endif
     // clang-format on
 }

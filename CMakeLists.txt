@@ -253,10 +253,8 @@ serenity_component(
 
 add_subdirectory(AK)
 add_subdirectory(Kernel)
-if(NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    add_subdirectory(Userland)
-    add_subdirectory(Tests)
-endif()
+add_subdirectory(Userland)
+add_subdirectory(Tests)
 if (ENABLE_COMPILETIME_HEADER_CHECK)
     add_subdirectory(Meta/HeaderCheck)
 endif()
