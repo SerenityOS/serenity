@@ -1,0 +1,23 @@
+--- scummvm-2.5.1/backends/timer/sdl/sdl-timer.cpp	2021-12-24 22:19:28.000000000 +0000
++++ scummvm-2.5.1-patched/backends/timer/sdl/sdl-timer.cpp	2022-01-09 22:17:13.919057360 +0000
+@@ -29,11 +29,7 @@
+ 
+ #include "common/textconsole.h"
+ 
+-OSystem::MutexRef timerMutex;
+-
+ static Uint32 timer_handler(Uint32 interval, void *param) {
+-	Common::StackLock lock(timerMutex);
+-
+ 	((DefaultTimerManager *)param)->handler();
+ 	return interval;
+ }
+@@ -49,8 +45,6 @@
+ }
+ 
+ SdlTimerManager::~SdlTimerManager() {
+-	Common::StackLock lock(timerMutex);
+-
+ 	// Removes the timer callback
+ 	SDL_RemoveTimer(_timerID);
+ 
