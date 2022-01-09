@@ -1765,7 +1765,12 @@ void Shell::notify_child_event()
             }
             if (child_pid == job.pid()) {
                 if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
-                    job.set_signalled(WTERMSIG(wstatus));
+                    auto signal = WTERMSIG(wstatus);
+                    job.set_signalled(signal);
+                    if (signal == SIGINT)
+                        raise_error(ShellError::InternalControlFlowInterrupted, "Interrupted"sv, job.command().position);
+                    else if (signal == SIGKILL)
+                        raise_error(ShellError::InternalControlFlowKilled, "Interrupted"sv, job.command().position);
                 } else if (WIFEXITED(wstatus)) {
                     job.set_has_exit(WEXITSTATUS(wstatus));
                 } else if (WIFSTOPPED(wstatus)) {
@@ -1998,6 +2003,8 @@ void Shell::possibly_print_error() const
         break;
     case ShellError::InternalControlFlowBreak:
     case ShellError::InternalControlFlowContinue:
+    case ShellError::InternalControlFlowInterrupted:
+    case ShellError::InternalControlFlowKilled:
         return;
     case ShellError::None:
         return;
