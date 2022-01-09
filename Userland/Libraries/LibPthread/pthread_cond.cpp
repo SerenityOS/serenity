@@ -39,8 +39,17 @@ int pthread_condattr_getclock(pthread_condattr_t* attr, clockid_t* clock)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_condattr_setclock.html
 int pthread_condattr_setclock(pthread_condattr_t* attr, clockid_t clock)
 {
-    attr->clockid = clock;
-    return 0;
+    switch (clock) {
+    case CLOCK_REALTIME:
+    case CLOCK_REALTIME_COARSE:
+    case CLOCK_MONOTONIC:
+    case CLOCK_MONOTONIC_COARSE:
+    case CLOCK_MONOTONIC_RAW:
+        attr->clockid = clock;
+        return 0;
+    default:
+        return EINVAL;
+    }
 }
 
 // Condition variables.
