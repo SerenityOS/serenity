@@ -719,7 +719,7 @@ void TextEditor::paint_event(PaintEvent& event)
         painter.draw_scaled_bitmap(icon_rect, *m_icon, m_icon->rect());
     }
 
-    if (is_focused() && m_cursor_state && !is_displayonly())
+    if (is_enabled() && is_focused() && m_cursor_state && !is_displayonly())
         painter.fill_rect(cursor_content_rect(), palette().text_cursor());
 }
 
