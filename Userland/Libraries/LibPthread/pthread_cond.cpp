@@ -29,6 +29,13 @@ int pthread_condattr_destroy(pthread_condattr_t*)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_condattr_getclock.html
+int pthread_condattr_getclock(pthread_condattr_t* attr, clockid_t* clock)
+{
+    *clock = attr->clockid;
+    return 0;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_condattr_setclock.html
 int pthread_condattr_setclock(pthread_condattr_t* attr, clockid_t clock)
 {
