@@ -26,6 +26,15 @@
 namespace Core::System {
 
 #ifdef __serenity__
+
+ErrorOr<void> beep()
+{
+    auto rc = ::sysbeep();
+    if (rc < 0)
+        return Error::from_syscall("beep", rc);
+    return {};
+}
+
 ErrorOr<void> pledge(StringView promises, StringView execpromises)
 {
     Syscall::SC_pledge_params params {
