@@ -20,17 +20,17 @@ enum class IteratorHint {
     Async,
 };
 
-ThrowCompletionOr<Object*> get_iterator(GlobalObject&, Value value, IteratorHint hint = IteratorHint::Sync, Value method = {});
-ThrowCompletionOr<Object*> iterator_next(Object& iterator, Value value = {});
+ThrowCompletionOr<Object*> get_iterator(GlobalObject&, Value value, IteratorHint hint = IteratorHint::Sync, Optional<Value> method = {});
+ThrowCompletionOr<Object*> iterator_next(Object& iterator, Optional<Value> value = {});
 ThrowCompletionOr<Object*> iterator_step(GlobalObject&, Object& iterator);
 ThrowCompletionOr<bool> iterator_complete(GlobalObject&, Object& iterator_result);
 ThrowCompletionOr<Value> iterator_value(GlobalObject&, Object& iterator_result);
 Completion iterator_close(Object& iterator, Completion completion);
 Completion async_iterator_close(Object& iterator, Completion completion);
 Object* create_iterator_result_object(GlobalObject&, Value value, bool done);
-ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject&, Value iterable, Value method = {});
+ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject&, Value iterable, Optional<Value> method = {});
 
 using IteratorValueCallback = Function<Optional<Completion>(Value)>;
-Completion get_iterator_values(GlobalObject& global_object, Value iterable, IteratorValueCallback callback, Value method = {});
+Completion get_iterator_values(GlobalObject& global_object, Value iterable, IteratorValueCallback callback, Optional<Value> method = {});
 
 }
