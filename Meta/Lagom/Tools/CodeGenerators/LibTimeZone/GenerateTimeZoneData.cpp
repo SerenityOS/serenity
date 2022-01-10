@@ -5,6 +5,7 @@
  */
 
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
+#include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
@@ -15,44 +16,60 @@
 
 namespace {
 
-struct Time {
-    i8 hour { 0 };
-    u8 minute { 0 };
-    u8 second { 0 };
-};
-
 struct DateTime {
     u16 year { 0 };
     Optional<u8> month;
+    Optional<u8> day;
+
     Optional<u8> last_weekday;
     Optional<u8> after_weekday;
-    Optional<u8> day;
-    Optional<Time> time;
+
+    Optional<u8> hour;
+    Optional<u8> minute;
+    Optional<u8> second;
 };
 
-struct TimeZone {
-    Time offset;
+struct TimeZoneOffset {
+    i64 offset { 0 };
     Optional<DateTime> until;
 };
 
 struct TimeZoneData {
-    HashMap<String, Vector<TimeZone>> time_zones;
+    HashMap<String, Vector<TimeZoneOffset>> time_zones;
     Vector<String> time_zone_names;
     Vector<Alias> time_zone_aliases;
 };
 
-static Time parse_time(StringView segment)
-{
-    // FIXME: Some times end with a letter, e.g. "2:00u" and "2:00s". Figure out what this means and handle it.
-    auto segments = segment.split_view(':');
-
-    Time time {};
-    time.hour = segments[0].to_int().value();
-    time.minute = segments.size() > 1 ? segments[1].substring_view(0, 2).to_uint().value() : 0;
-    time.second = segments.size() > 2 ? segments[2].substring_view(0, 2).to_uint().value() : 0;
-
-    return time;
 }
+
+template<>
+struct AK::Formatter<DateTime> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, DateTime const& date_time)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {}, {}, {}, {}, {}, {}, {} }}",
+            date_time.year,
+            date_time.month.value_or(1),
+            date_time.day.value_or(1),
+            date_time.last_weekday.value_or(0),
+            date_time.after_weekday.value_or(0),
+            date_time.hour.value_or(0),
+            date_time.minute.value_or(0),
+            date_time.second.value_or(0));
+    }
+};
+
+template<>
+struct AK::Formatter<TimeZoneOffset> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, TimeZoneOffset const& time_zone_offset)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {}, {} }}",
+            time_zone_offset.offset,
+            time_zone_offset.until.value_or({}),
+            time_zone_offset.until.has_value());
+    }
+};
 
 static Optional<DateTime> parse_date_time(Span<StringView const> segments)
 {
@@ -69,7 +86,7 @@ static Optional<DateTime> parse_date_time(Span<StringView const> segments)
     date_time.year = segments[0].to_uint().value();
 
     if (segments.size() > 1)
-        date_time.month = find_index(months.begin(), months.end(), segments[1]);
+        date_time.month = find_index(months.begin(), months.end(), segments[1]) + 1;
 
     if (segments.size() > 2) {
         if (segments[2].starts_with("last"sv)) {
@@ -86,13 +103,31 @@ static Optional<DateTime> parse_date_time(Span<StringView const> segments)
         }
     }
 
-    if (segments.size() > 3)
-        date_time.time = parse_time(segments[3]);
+    if (segments.size() > 3) {
+        // FIXME: Some times end with a letter, e.g. "2:00u" and "2:00s". Figure out what this means and handle it.
+        auto time_segments = segments[3].split_view(':');
+
+        date_time.hour = time_segments[0].to_int().value();
+        date_time.minute = time_segments.size() > 1 ? time_segments[1].substring_view(0, 2).to_uint().value() : 0;
+        date_time.second = time_segments.size() > 2 ? time_segments[2].substring_view(0, 2).to_uint().value() : 0;
+    }
 
     return date_time;
 }
 
-static Vector<TimeZone>& parse_zone(StringView zone_line, TimeZoneData& time_zone_data)
+static i64 parse_time_offset(StringView segment)
+{
+    auto segments = segment.split_view(':');
+
+    i64 hours = segments[0].to_int().value();
+    i64 minutes = segments.size() > 1 ? segments[1].to_uint().value() : 0;
+    i64 seconds = segments.size() > 2 ? segments[2].to_uint().value() : 0;
+
+    i64 sign = ((hours < 0) || (segments[0] == "-0"sv)) ? -1 : 1;
+    return (hours * 3600) + sign * ((minutes * 60) + seconds);
+}
+
+static Vector<TimeZoneOffset>& parse_zone(StringView zone_line, TimeZoneData& time_zone_data)
 {
     auto segments = zone_line.split_view_if([](char ch) { return (ch == '\t') || (ch == ' '); });
 
@@ -100,8 +135,8 @@ static Vector<TimeZone>& parse_zone(StringView zone_line, TimeZoneData& time_zon
     VERIFY(segments[0] == "Zone"sv);
     auto name = segments[1];
 
-    TimeZone time_zone {};
-    time_zone.offset = parse_time(segments[2]);
+    TimeZoneOffset time_zone {};
+    time_zone.offset = parse_time_offset(segments[2]);
 
     if (segments.size() > 5)
         time_zone.until = parse_date_time(segments.span().slice(5));
@@ -115,13 +150,13 @@ static Vector<TimeZone>& parse_zone(StringView zone_line, TimeZoneData& time_zon
     return time_zones;
 }
 
-static void parse_zone_continuation(StringView zone_line, Vector<TimeZone>& time_zones)
+static void parse_zone_continuation(StringView zone_line, Vector<TimeZoneOffset>& time_zones)
 {
     auto segments = zone_line.split_view_if([](char ch) { return (ch == '\t') || (ch == ' '); });
 
     // STDOFF RULES FORMAT [UNTIL]
-    TimeZone time_zone {};
-    time_zone.offset = parse_time(segments[0]);
+    TimeZoneOffset time_zone {};
+    time_zone.offset = parse_time_offset(segments[0]);
 
     if (segments.size() > 3)
         time_zone.until = parse_date_time(segments.span().slice(3));
@@ -145,7 +180,7 @@ static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& t
 {
     // For reference, the man page for `zic` has the best documentation of the TZDB file format.
     auto file = TRY(Core::File::open(time_zone_path, Core::OpenMode::ReadOnly));
-    Vector<TimeZone>* last_parsed_zone = nullptr;
+    Vector<TimeZoneOffset>* last_parsed_zone = nullptr;
 
     while (file->can_read_line()) {
         auto line = file->read_line();
@@ -224,12 +259,71 @@ static void generate_time_zone_data_implementation(Core::File& file, TimeZoneDat
 #include <AK/Array.h>
 #include <AK/BinarySearch.h>
 #include <AK/Optional.h>
+#include <AK/Span.h>
 #include <AK/StringView.h>
+#include <AK/Time.h>
 #include <LibTimeZone/TimeZone.h>
 #include <LibTimeZone/TimeZoneData.h>
 
 namespace TimeZone {
+
+static constexpr auto seconds_per_day = 86'400;
+static constexpr auto seconds_per_hour = 3'600;
+static constexpr auto seconds_per_minute = 60;
+
+struct DateTime {
+    AK::Time time_since_epoch() const
+    {
+        // FIXME: This implementation does not take last_weekday or after_weekday into account.
+        i64 seconds_since_epoch = AK::days_since_epoch(year, month, day);
+        seconds_since_epoch *= seconds_per_day;
+
+        seconds_since_epoch += hour * seconds_per_hour;
+        seconds_since_epoch += minute * seconds_per_minute;
+        seconds_since_epoch += second;
+
+        return AK::Time::from_seconds(seconds_since_epoch);
+    }
+
+    u16 year { 0 };
+    u8 month { 1 };
+    u8 day { 1 };
+
+    u8 last_weekday { 0 };
+    u8 after_weekday { 0 };
+
+    u8 hour { 0 };
+    u8 minute { 0 };
+    u8 second { 0 };
+};
+
+struct TimeZoneOffset {
+    i64 offset { 0 };
+
+    DateTime until {};
+    bool has_until { false };
+};
 )~~~");
+
+    auto append_time_zone_offsets = [&](auto const& name, auto const& time_zone_offsets) {
+        generator.set("name", name);
+        generator.set("size", String::number(time_zone_offsets.size()));
+
+        generator.append(R"~~~(
+static constexpr Array<TimeZoneOffset, @size@> @name@ { {
+)~~~");
+
+        for (auto const& time_zone_offset : time_zone_offsets)
+            generator.append(String::formatted("    {},\n", time_zone_offset));
+
+        generator.append("} };\n");
+    };
+
+    generate_mapping(generator, time_zone_data.time_zone_names, "TimeZoneOffset"sv, "s_time_zone_offsets"sv, "s_time_zone_offsets_{}", format_identifier,
+        [&](auto const& name, auto const& value) {
+            auto const& time_zone_offsets = time_zone_data.time_zones.find(value)->value;
+            append_time_zone_offsets(name, time_zone_offsets);
+        });
 
     auto append_string_conversions = [&](StringView enum_title, StringView enum_snake, auto const& values, auto const& aliases) {
         HashValueMap<String> hashes;
@@ -254,12 +348,27 @@ namespace TimeZone {
     append_string_conversions("TimeZone"sv, "time_zone"sv, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
 
     generator.append(R"~~~(
+Optional<i64> get_time_zone_offset(TimeZone time_zone, AK::Time time)
+{
+    // FIXME: This implementation completely ignores DST.
+    auto const& time_zone_offsets = s_time_zone_offsets[to_underlying(time_zone)];
+
+    size_t index = 0;
+    for (; index < time_zone_offsets.size(); ++index) {
+        auto const& time_zone_offset = time_zone_offsets[index];
+
+        if (!time_zone_offset.has_until || (time_zone_offset.until.time_since_epoch() > time))
+            break;
+    }
+
+    VERIFY(index < time_zone_offsets.size());
+    return time_zone_offsets[index].offset;
+}
+
 }
 )~~~");
 
     VERIFY(file.write(generator.as_string_view()));
-}
-
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
