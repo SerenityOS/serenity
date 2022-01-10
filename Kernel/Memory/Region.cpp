@@ -177,15 +177,14 @@ void Region::set_should_cow(size_t page_index, bool cow)
 bool Region::map_individual_page_impl(size_t page_index)
 {
     VERIFY(m_page_directory->get_lock().is_locked_by_current_processor());
+    VERIFY(s_mm_lock.is_locked_by_current_processor());
+
     auto page_vaddr = vaddr_from_page_index(page_index);
 
     bool user_allowed = page_vaddr.get() >= USER_RANGE_BASE && is_user_address(page_vaddr);
     if (is_mmap() && !user_allowed) {
         PANIC("About to map mmap'ed page at a kernel address");
     }
-
-    // NOTE: We have to take the MM lock for PTE's to stay valid while we use them.
-    SpinlockLocker mm_locker(s_mm_lock);
 
     auto* pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     if (!pte)
@@ -215,6 +214,7 @@ bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
     if (!translate_vmobject_page(page_index))
         return true; // not an error, region doesn't map this page
     SpinlockLocker page_lock(m_page_directory->get_lock());
+    SpinlockLocker lock(s_mm_lock);
     VERIFY(physical_page(page_index));
     bool success = map_individual_page_impl(page_index);
     if (with_flush)
