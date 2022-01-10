@@ -104,7 +104,7 @@ public:
     };
 
 private:
-    SerialDevice(IOAddress base_addr, unsigned minor);
+    SerialDevice(IOAddress base_addr, MinorNumber minor);
 
     friend class PCISerialDevice;
 
