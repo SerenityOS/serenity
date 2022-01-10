@@ -2,6 +2,8 @@
 
 Profiler - Serenity process profiler
 
+[Open](file:///bin/Profiler)
+
 ## Synopsis
 
 ```**sh
