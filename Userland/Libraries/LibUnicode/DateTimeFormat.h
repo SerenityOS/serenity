@@ -111,6 +111,7 @@ struct CalendarPattern {
     String skeleton {};
     String pattern {};
     Optional<String> pattern12 {};
+    Optional<HourCycle> hour_cycle {};
 
     // https://unicode.org/reports/tr35/tr35-dates.html#Calendar_Fields
     Optional<CalendarPatternStyle> era {};
