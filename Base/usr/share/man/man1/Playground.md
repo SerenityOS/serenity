@@ -2,6 +2,8 @@
 
 Playground - GUI Markup Language (GML) editor
 
+[Open](file:///bin/Playground)
+
 ## Synopsis
 
 ```**sh

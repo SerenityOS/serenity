@@ -2,6 +2,8 @@
 
 Inspector - Serenity process inspector
 
+[Open](file:///bin/Inspector)
+
 ## Synopsis
 
 ```**sh

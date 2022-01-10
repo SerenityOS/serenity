@@ -2,6 +2,8 @@
 
 TextEditor - SerenityOS text editor
 
+[Open](file:///bin/TextEditor)
+
 ## Synopsis
 
 ```**sh
