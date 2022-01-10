@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/Optional.h>
 #include <AK/Random.h>
-#include <AK/Vector.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
@@ -122,13 +122,13 @@ public:
     };
 
     struct Cloud {
-        Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps;
+        FixedArray<NonnullRefPtr<Gfx::Bitmap>> cloud_bitmaps;
         float x {};
         float y {};
         int bitmap_id {};
 
     private:
-        Cloud(Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps_value)
+        Cloud(FixedArray<NonnullRefPtr<Gfx::Bitmap>> cloud_bitmaps_value)
             : cloud_bitmaps(move(cloud_bitmaps_value))
         {
             reset();
@@ -138,11 +138,12 @@ public:
     public:
         static ErrorOr<Cloud> construct()
         {
-            Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps {
-                TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_0.png")),
-                TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_1.png")),
-                TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_2.png")),
-            };
+            auto cloud_bitmaps = TRY(FixedArray<NonnullRefPtr<Gfx::Bitmap>>::try_create(
+                {
+                    TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_0.png")),
+                    TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_1.png")),
+                    TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_2.png")),
+                }));
             return Cloud(move(cloud_bitmaps));
         }
 
