@@ -500,7 +500,7 @@ ErrorOr<size_t> ISO9660Inode::write_bytes(off_t, size_t, const UserOrKernelBuffe
     return EROFS;
 }
 
-ErrorOr<NonnullRefPtr<Inode>> ISO9660Inode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> ISO9660Inode::create_child(StringView, mode_t, DeviceID, UserID, GroupID)
 {
     return EROFS;
 }

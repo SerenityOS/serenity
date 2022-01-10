@@ -80,7 +80,7 @@ ErrorOr<void> ProcFSInode::add_child(Inode&, StringView, mode_t)
     return EROFS;
 }
 
-ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(StringView, mode_t, DeviceID, UserID, GroupID)
 {
     return EROFS;
 }

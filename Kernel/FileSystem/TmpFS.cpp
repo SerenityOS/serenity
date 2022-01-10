@@ -214,12 +214,12 @@ ErrorOr<void> TmpFSInode::chown(UserID uid, GroupID gid)
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
+ErrorOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, DeviceID device_id, UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
 
     // TODO: Support creating devices on TmpFS.
-    if (dev != 0)
+    if (device_id != 0)
         return ENOTSUP;
 
     time_t now = kgettimeofday().to_truncated_seconds();

@@ -1120,11 +1120,11 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
+ErrorOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(StringView name, mode_t mode, DeviceID device_id, UserID uid, GroupID gid)
 {
     if (::is_directory(mode))
         return fs().create_directory(*this, name, mode, uid, gid);
-    return fs().create_inode(*this, name, mode, dev, uid, gid);
+    return fs().create_inode(*this, name, mode, device_id, uid, gid);
 }
 
 ErrorOr<void> Ext2FSInode::add_child(Inode& child, StringView name, mode_t mode)
@@ -1463,7 +1463,7 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::create_directory(Ext2FSInode& parent_inode
     return inode;
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
+ErrorOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, StringView name, mode_t mode, DeviceID device_id, UserID uid, GroupID gid)
 {
     if (name.length() > EXT2_NAME_LEN)
         return ENAMETOOLONG;
@@ -1487,9 +1487,9 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, St
     e2inode.i_links_count = is_directory(mode);
 
     if (is_character_device(mode))
-        e2inode.i_block[0] = dev;
+        e2inode.i_block[0] = device_id.value();
     else if (is_block_device(mode))
-        e2inode.i_block[1] = dev;
+        e2inode.i_block[1] = device_id.value();
 
     auto inode_id = TRY(allocate_inode());
 

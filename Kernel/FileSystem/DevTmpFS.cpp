@@ -79,7 +79,7 @@ ErrorOr<size_t> DevTmpFSInode::write_bytes(off_t, size_t, const UserOrKernelBuff
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<NonnullRefPtr<Inode>> DevTmpFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> DevTmpFSInode::create_child(StringView, mode_t, DeviceID, UserID, GroupID)
 {
     VERIFY_NOT_REACHED();
 }
@@ -242,7 +242,7 @@ ErrorOr<void> DevTmpFSDirectoryInode::remove_child(StringView name)
     return Error::from_errno(ENOENT);
 }
 
-ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView name, mode_t mode, dev_t device_id, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView name, mode_t mode, DeviceID device_id, UserID, GroupID)
 {
     MutexLocker locker(m_inode_lock);
     for (auto& node : m_nodes) {

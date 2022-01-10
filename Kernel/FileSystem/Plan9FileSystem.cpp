@@ -904,7 +904,7 @@ ErrorOr<NonnullRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
     return TRY(Plan9FSInode::try_create(fs(), newfid));
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, DeviceID, UserID, GroupID)
 {
     // TODO
     return ENOTIMPL;

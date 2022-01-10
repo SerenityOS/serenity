@@ -55,7 +55,7 @@ public:
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const = 0;
     virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) = 0;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) = 0;
-    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
+    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, DeviceID, UserID, GroupID) = 0;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) = 0;
     virtual ErrorOr<void> remove_child(StringView name) = 0;
     virtual ErrorOr<void> chmod(mode_t) = 0;

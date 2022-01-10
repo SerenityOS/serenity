@@ -157,7 +157,7 @@ ErrorOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKernel
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
 
-ErrorOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, DeviceID, UserID, GroupID)
 {
     return EROFS;
 }
