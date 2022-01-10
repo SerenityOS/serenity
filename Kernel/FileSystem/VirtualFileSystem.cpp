@@ -292,7 +292,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView p
     return description;
 }
 
-ErrorOr<void> VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
+ErrorOr<void> VirtualFileSystem::mknod(StringView path, mode_t mode, DeviceID dev, Custody& base)
 {
     if (!is_regular_file(mode) && !is_block_device(mode) && !is_character_device(mode) && !is_fifo(mode) && !is_socket(mode))
         return EINVAL;
