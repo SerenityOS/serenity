@@ -40,12 +40,12 @@ UNMAP_AFTER_INIT void initialize()
     case PCIAccessLevel::MemoryAddressing: {
         auto mcfg = ACPI::Parser::the()->find_table("MCFG");
         VERIFY(mcfg.has_value());
-        auto success = Access::initialize_for_memory_access(mcfg.value());
+        auto success = Access::initialize_for_multiple_pci_domains(mcfg.value());
         VERIFY(success);
         break;
     }
     case PCIAccessLevel::IOAddressing: {
-        auto success = Access::initialize_for_io_access();
+        auto success = Access::initialize_for_one_pci_domain();
         VERIFY(success);
         break;
     }

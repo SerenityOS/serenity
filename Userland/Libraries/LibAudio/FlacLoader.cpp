@@ -197,7 +197,7 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
         return Buffer::create_empty();
 
     size_t samples_to_read = min(max_bytes_to_read_from_input, remaining_samples);
-    auto samples = FixedArray<Sample>(samples_to_read);
+    auto samples = FixedArray<Sample>::must_create_but_fixme_should_propagate_errors(samples_to_read);
     size_t sample_index = 0;
 
     if (m_unread_data.size() > 0) {

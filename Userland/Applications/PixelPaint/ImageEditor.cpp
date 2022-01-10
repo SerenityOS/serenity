@@ -14,7 +14,9 @@
 #include "Tools/Tool.h"
 #include <AK/LexicalPath.h>
 #include <LibConfig/Client.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Command.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Palette.h>
@@ -696,6 +698,55 @@ void ImageEditor::image_did_change_rect(Gfx::IntRect const& new_image_rect)
 void ImageEditor::image_select_layer(Layer* layer)
 {
     set_active_layer(layer);
+}
+
+bool ImageEditor::request_close()
+{
+    if (!undo_stack().is_current_modified())
+        return true;
+
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), path(), undo_stack().last_unmodified_timestamp());
+
+    if (result == GUI::MessageBox::ExecYes) {
+        save_project();
+        return true;
+    }
+
+    if (result == GUI::MessageBox::ExecNo)
+        return true;
+
+    return false;
+}
+
+void ImageEditor::save_project()
+{
+    if (path().is_empty()) {
+        save_project_as();
+        return;
+    }
+    auto response = FileSystemAccessClient::Client::the().request_file(window()->window_id(), path(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+    if (response.error != 0)
+        return;
+    auto result = save_project_to_fd_and_close(*response.fd);
+    if (result.is_error()) {
+        GUI::MessageBox::show_error(window(), String::formatted("Could not save {}: {}", *response.chosen_file, result.error()));
+        return;
+    }
+    undo_stack().set_current_unmodified();
+}
+
+void ImageEditor::save_project_as()
+{
+    auto save_result = FileSystemAccessClient::Client::the().save_file(window()->window_id(), "untitled", "pp");
+    if (save_result.error != 0)
+        return;
+    auto result = save_project_to_fd_and_close(*save_result.fd);
+    if (result.is_error()) {
+        GUI::MessageBox::show_error(window(), String::formatted("Could not save {}: {}", *save_result.chosen_file, result.error()));
+        return;
+    }
+    set_path(*save_result.chosen_file);
+    undo_stack().set_current_unmodified();
 }
 
 Result<void, String> ImageEditor::save_project_to_fd_and_close(int fd) const

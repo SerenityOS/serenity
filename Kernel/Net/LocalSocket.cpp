@@ -358,21 +358,21 @@ StringView LocalSocket::socket_path() const
 ErrorOr<NonnullOwnPtr<KString>> LocalSocket::pseudo_path(const OpenFileDescription& description) const
 {
     StringBuilder builder;
-    builder.append("socket:");
-    builder.append(socket_path());
+    TRY(builder.try_append("socket:"));
+    TRY(builder.try_append(socket_path()));
 
     switch (role(description)) {
     case Role::Listener:
-        builder.append(" (listening)");
+        TRY(builder.try_append(" (listening)"));
         break;
     case Role::Accepted:
-        builder.appendff(" (accepted from pid {})", origin_pid());
+        TRY(builder.try_appendff(" (accepted from pid {})", origin_pid()));
         break;
     case Role::Connected:
-        builder.appendff(" (connected to pid {})", acceptor_pid());
+        TRY(builder.try_appendff(" (connected to pid {})", acceptor_pid()));
         break;
     case Role::Connecting:
-        builder.append(" (connecting)");
+        TRY(builder.try_append(" (connecting)"));
         break;
     default:
         break;

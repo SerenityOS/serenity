@@ -16,7 +16,7 @@ TEST_CASE(construct)
 
 TEST_CASE(ints)
 {
-    FixedArray<int> ints(3);
+    FixedArray<int> ints = FixedArray<int>::must_create_but_fixme_should_propagate_errors(3);
     ints[0] = 0;
     ints[1] = 1;
     ints[2] = 2;

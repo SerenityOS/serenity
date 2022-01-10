@@ -6,9 +6,7 @@
 
 #pragma once
 
-#ifndef AK_OS_MACOS
-#    include <bits/FILE.h>
-#endif
+#include <bits/FILE.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -26,10 +24,9 @@ struct spwd {
     unsigned long int sp_flag;
 };
 
-#ifndef AK_OS_MACOS
-struct spwd* getspent();
-void setspent();
-void endspent();
+struct spwd* getspent(void);
+void setspent(void);
+void endspent(void);
 struct spwd* getspnam(const char* name);
 int putspent(struct spwd* p, FILE* stream);
 
@@ -38,6 +35,5 @@ int getspnam_r(const char* name, struct spwd* spbuf, char* buf, size_t buflen, s
 
 int fgetspent_r(FILE* fp, struct spwd* spbuf, char* buf, size_t buflen, struct spwd** spbufp);
 int sgetspent_r(const char* s, struct spwd* spbuf, char* buf, size_t buflen, struct spwd** spbufp);
-#endif
 
 __END_DECLS

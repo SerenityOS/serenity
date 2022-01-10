@@ -1,6 +1,6 @@
---- scummvm-2.5.0/configure	2021-10-01 13:52:42.000000000 +0200
-+++ scummvm-2.5.0-patched/configure	2021-10-17 16:31:01.554772573 +0200
-@@ -3979,7 +3980,7 @@
+--- scummvm-2.5.1/configure	2021-12-24 22:19:28.000000000 +0000
++++ scummvm-2.5.1-patched/configure	2022-01-09 21:55:40.753734211 +0000
+@@ -3998,7 +3998,7 @@
  	amigaos* | cygwin* | dreamcast | ds | gamecube | mingw* | morphos | n64 | ps3 | psp2 | psp | riscos | wii)
  		_posix=no
  		;;
@@ -9,3 +9,13 @@
  		_posix=yes
  		;;
  	os2-emx*)
+@@ -5538,6 +5538,9 @@
+ 		mingw*)
+ 			OPENGL_LIBS="-lopengl32"
+ 			;;
++		serenity*)
++			OPENGL_LIBS="-lgl"
++			;;
+ 		*)
+ 			OPENGL_LIBS="-lGL"
+ 			;;

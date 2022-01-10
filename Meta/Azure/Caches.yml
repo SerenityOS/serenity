@@ -7,7 +7,7 @@ parameters:
   serenity_ccache_path: ''
   toolchain_ccache_path: ''
   toolchain_ccache_size: $(CCACHE_MAXSIZE)
-  with_unicode_caches: true
+  with_remote_data_caches: true
 
 steps:
   - script: |
@@ -18,13 +18,13 @@ steps:
     - ${{ if eq(parameters.toolchain, 'clang') }}:
       - task: Cache@2
         inputs:
-          key: '"toolchain" | "x86_64" | Toolchain/BuildClang.sh | Toolchain/Patches/*[!gcc].patch | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
+          key: '"toolchain" | "x86_64" | Toolchain/BuildClang.sh | Toolchain/Patches/llvm*.patch | Toolchain/CMake/*.cmake | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
           path: $(Build.SourcesDirectory)/Toolchain/Cache
         displayName: 'Toolchain Prebuilt Cache'
     - ${{ if eq(parameters.toolchain, 'gcc') }}:
       - task: Cache@2
         inputs:
-          key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildIt.sh | Toolchain/Patches/*[!llvm].patch | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
+          key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildIt.sh | Toolchain/Patches/[!llvm]*.patch | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
           path: $(Build.SourcesDirectory)/Toolchain/Cache
         displayName: 'Toolchain Prebuilt Cache'
 
@@ -56,7 +56,13 @@ steps:
         CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -s
       displayName: 'Configure Serenity ccache'
 
-  - ${{ if eq(parameters.with_unicode_caches, true) }}:
+  - ${{ if eq(parameters.with_remote_data_caches, true) }}:
+    - task: Cache@2
+      inputs:
+        key: '"time_zone_data" | Meta/CMake/time_zone_data.cmake'
+        path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/TZDB
+      displayName: 'TimeZoneData Cache'
+
     - task: Cache@2
       inputs:
         key: '"unicode_data" | Meta/CMake/unicode_data.cmake'

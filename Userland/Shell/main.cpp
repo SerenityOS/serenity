@@ -9,17 +9,17 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <errno.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <signal.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 RefPtr<Line::Editor> editor;
 Shell::Shell* s_shell;
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
 
@@ -42,10 +42,7 @@ int main(int argc, char** argv)
     });
 
 #ifdef __serenity__
-    if (pledge("stdio rpath wpath cpath proc exec tty sigaction unix fattr", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath wpath cpath proc exec tty sigaction unix fattr", nullptr));
 #endif
 
     RefPtr<::Shell::Shell> shell;
@@ -104,38 +101,29 @@ int main(int argc, char** argv)
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
     parser.add_positional_argument(script_args, "Extra arguments to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 
-    parser.parse(argc, argv);
+    parser.parse(arguments);
 
     if (format) {
-        auto file = Core::File::open(format, Core::OpenMode::ReadOnly);
-        if (file.is_error()) {
-            warnln("Error: {}", file.error());
-            return 1;
-        }
+        auto file = TRY(Core::File::open(format, Core::OpenMode::ReadOnly));
 
         initialize();
 
         ssize_t cursor = -1;
-        puts(shell->format(file.value()->read_all(), cursor).characters());
+        puts(shell->format(file->read_all(), cursor).characters());
         return 0;
     }
 
     auto pid = getpid();
     if (auto sid = getsid(pid); sid == 0) {
-        if (setsid() < 0) {
-            perror("setsid");
-            // Let's just hope that it's ok.
-        }
+        if (auto res = Core::System::setsid(); res.is_error())
+            dbgln("{}", res.release_error());
     } else if (sid != pid) {
         if (getpgid(pid) != pid) {
-            if (setpgid(pid, sid) < 0) {
-                auto strerr = strerror(errno);
-                dbgln("couldn't setpgid: {}", strerr);
-            }
-            if (setsid() < 0) {
-                auto strerr = strerror(errno);
-                dbgln("couldn't setsid: {}", strerr);
-            }
+            if (auto res = Core::System::setpgid(pid, sid); res.is_error())
+                dbgln("{}", res.release_error());
+
+            if (auto res = Core::System::setsid(); res.is_error())
+                dbgln("{}", res.release_error());
         }
     }
 
@@ -150,7 +138,7 @@ int main(int argc, char** argv)
     initialize();
 
     shell->set_live_formatting(should_format_live);
-    shell->current_script = argv[0];
+    shell->current_script = arguments.strings[0];
 
     if (!skip_rc_files) {
         auto run_rc_file = [&](auto& name) {

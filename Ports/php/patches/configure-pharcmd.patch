@@ -1,6 +1,6 @@
---- php-8.0.6/configure	2021-06-04 20:36:10.053986191 +0200
-+++ php-8.0.6-patched/configure	2021-06-04 20:36:20.769935808 +0200
-@@ -91478,8 +91478,8 @@
+--- php-8.1.1/configure	2022-01-07 23:44:48.117187609 +0100
++++ php-8.1.1-patched/configure	2022-01-07 23:47:02.228957328 +0100
+@@ -96803,8 +96803,8 @@
  CXXFLAGS="$CXXFLAGS $standard_libtool_flag \$(PROF_FLAGS)"
  
  if test "$PHP_PHAR" != "no" && test "$PHP_CLI" != "no"; then

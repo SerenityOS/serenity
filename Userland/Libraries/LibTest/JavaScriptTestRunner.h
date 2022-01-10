@@ -342,10 +342,8 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
         MUST(bytecode_interpreter.run(executable));
     } else {
-        interpreter->run(interpreter->global_object(), m_test_script->parse_node());
+        MUST(interpreter->run(interpreter->global_object(), m_test_script->parse_node()));
     }
-
-    VERIFY(!g_vm->exception());
 
     auto file_script = parse_script(test_path, interpreter->realm());
     if (file_script.is_error())
@@ -358,7 +356,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
         (void)bytecode_interpreter.run(executable);
     } else {
-        interpreter->run(interpreter->global_object(), file_script.value()->parse_node());
+        (void)interpreter->run(interpreter->global_object(), file_script.value()->parse_node());
     }
 
     if (g_vm->exception())

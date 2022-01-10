@@ -9,18 +9,11 @@
 
 namespace PixelPaint::Filters {
 
-void LaplaceCardinal::apply() const
+void LaplaceCardinal::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const
 {
-    if (!m_editor)
-        return;
-    if (auto* layer = m_editor->active_layer()) {
-        Gfx::LaplacianFilter filter;
-        if (auto parameters = PixelPaint::FilterParameters<Gfx::LaplacianFilter>::get(false)) {
-            filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-            layer->did_modify_bitmap(layer->rect());
-            m_editor->did_complete_action();
-        }
-    }
+    Gfx::LaplacianFilter filter;
+    if (auto parameters = PixelPaint::FilterParameters<Gfx::LaplacianFilter>::get(false))
+        filter.apply(target_bitmap, target_bitmap.rect(), source_bitmap, source_bitmap.rect(), *parameters);
 }
 
 }

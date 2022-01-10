@@ -10,7 +10,7 @@ steps:
         sudo add-apt-repository ppa:canonical-server/server-backports
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
         sudo apt-get update
-        sudo apt-get install ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build qemu-utils qemu-system-i386 unzip
+        sudo apt-get install ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build qemu-utils qemu-system-i386 unzip lld
       displayName: 'Install Dependencies'
 
   - ${{ if eq(parameters.os, 'Linux') }}:

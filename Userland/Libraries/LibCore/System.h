@@ -30,6 +30,7 @@
 namespace Core::System {
 
 #ifdef __serenity__
+ErrorOr<void> beep();
 ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
 ErrorOr<void> unveil(StringView path, StringView permissions);
 ErrorOr<void> sendfd(int sockfd, int fd);
@@ -90,6 +91,7 @@ ErrorOr<void> seteuid(uid_t);
 ErrorOr<void> setgid(gid_t);
 ErrorOr<void> setegid(gid_t);
 ErrorOr<void> setpgid(pid_t pid, pid_t pgid);
+ErrorOr<pid_t> setsid();
 ErrorOr<bool> isatty(int fd);
 ErrorOr<void> symlink(StringView target, StringView link_path);
 ErrorOr<void> mkdir(StringView path, mode_t);

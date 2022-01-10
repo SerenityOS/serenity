@@ -1135,8 +1135,7 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Global
 
     // NOTE: Perform step 7 from ForIn/OfHeadEvaluation. And since this is always async we only have to do step 7.d.
     // d. Return ? GetIterator(exprValue, iteratorHint).
-    auto* iterator = TRY(get_iterator(global_object, rhs_result, IteratorHint::Async));
-    VERIFY(iterator);
+    auto iterator = TRY(get_iterator(global_object, rhs_result, IteratorHint::Async));
 
     auto& vm = interpreter.vm();
 
@@ -1155,15 +1154,12 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Global
 
     // 6. Repeat,
     while (true) {
-        // NOTE: Since we don't have iterator records yet we have to extract the function first.
-        auto next_method = TRY(iterator->get(vm.names.next));
-        if (!next_method.is_function())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::IterableNextNotAFunction);
-
         // a. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
-        auto next_result = TRY(call(global_object, next_method, iterator));
+        auto next_result = TRY(call(global_object, iterator.next_method, iterator.iterator));
+
         // b. If iteratorKind is async, set nextResult to ? Await(nextResult).
         next_result = TRY(await(global_object, next_result));
+
         // c. If Type(nextResult) is not Object, throw a TypeError exception.
         if (!next_result.is_object())
             return vm.throw_completion<TypeError>(global_object, ErrorType::IterableNextBadReturn);
@@ -1193,7 +1189,7 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Global
             auto status = result.update_empty(last_value);
 
             // 3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
-            return async_iterator_close(*iterator, move(status));
+            return async_iterator_close(global_object, iterator, move(status));
         }
 
         // o. If result.[[Value]] is not empty, set V to result.[[Value]].

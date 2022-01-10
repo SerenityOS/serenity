@@ -128,18 +128,18 @@ struct HardwareID {
 class Domain {
 public:
     Domain() = delete;
-    Domain(PhysicalAddress base_address, u8 start_bus, u8 end_bus)
-        : m_base_addr(base_address)
+    Domain(u32 domain_number, u8 start_bus, u8 end_bus)
+        : m_domain_number(domain_number)
         , m_start_bus(start_bus)
         , m_end_bus(end_bus)
     {
     }
     u8 start_bus() const { return m_start_bus; }
     u8 end_bus() const { return m_end_bus; }
-    PhysicalAddress paddr() const { return m_base_addr; }
+    u32 domain_number() const { return m_domain_number; }
 
 private:
-    PhysicalAddress m_base_addr;
+    u32 m_domain_number;
     u8 m_start_bus;
     u8 m_end_bus;
 };
@@ -188,11 +188,6 @@ public:
     u8 bus() const { return m_bus; }
     u8 device() const { return m_device; }
     u8 function() const { return m_function; }
-
-    u32 io_address_for_field(u8 field) const
-    {
-        return 0x80000000u | (m_bus << 16u) | (m_device << 11u) | (m_function << 8u) | (field & 0xfc);
-    }
 
 private:
     u32 m_domain { 0 };

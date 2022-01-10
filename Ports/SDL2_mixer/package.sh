@@ -7,12 +7,17 @@ auth_type=sha256
 depends=("libmodplug" "libvorbis" "SDL2")
 
 configure() {
+    export LIBS="-L${SERENITY_INSTALL_ROOT}/usr/local/lib"
     run ./configure \
         --host="${SERENITY_ARCH}-pc-serenity" \
         --with-sdl-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
         --enable-music-opus=false \
         --enable-music-opus-shared=false \
         EXTRA_LDFLAGS="-lgui -lgfx -lipc -lcore -lcompression"
+}
+
+post_configure() {
+    unset LIBS
 }
 
 build() {

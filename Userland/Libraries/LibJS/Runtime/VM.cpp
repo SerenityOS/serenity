@@ -97,9 +97,6 @@ void VM::gather_roots(HashTable<Cell*>& roots)
 
     roots.set(m_exception);
 
-    if (m_last_value.is_cell())
-        roots.set(&m_last_value.as_cell());
-
     auto gather_roots_from_execution_context_stack = [&roots](Vector<ExecutionContext*> const& stack) {
         for (auto& execution_context : stack) {
             if (execution_context->this_value.is_cell())
@@ -200,18 +197,17 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
     // BindingPattern : ArrayBindingPattern
     else {
         // 1. Let iteratorRecord be ? GetIterator(value).
-        auto* iterator = TRY(get_iterator(global_object, value));
-        auto iterator_done = false;
+        auto iterator_record = TRY(get_iterator(global_object, value));
 
         // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
-        auto result = iterator_binding_initialization(*target, iterator, iterator_done, environment, global_object);
+        auto result = iterator_binding_initialization(*target, iterator_record, environment, global_object);
 
         // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
-        if (!iterator_done) {
+        if (!iterator_record.done) {
             // iterator_close() always returns a Completion, which ThrowCompletionOr will interpret as a throw
             // completion. So only return the result of iterator_close() if it is indeed a throw completion.
             auto completion = result.is_throw_completion() ? result.release_error() : normal_completion({});
-            if (completion = iterator_close(*iterator, move(completion)); completion.is_error())
+            if (completion = iterator_close(global_object, iterator_record, move(completion)); completion.is_error())
                 return completion.release_error();
         }
 
@@ -314,7 +310,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
 // 13.15.5.5 Runtime Semantics: IteratorDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-iteratordestructuringassignmentevaluation
 // 8.5.3 Runtime Semantics: IteratorBindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization
-ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, Object* iterator, bool& iterator_done, Environment* environment, GlobalObject& global_object)
+ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment, GlobalObject& global_object)
 {
     // FIXME: this method is nearly identical to destructuring assignment!
     for (size_t i = 0; i < binding.entries.size(); i++) {
@@ -331,51 +327,97 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                 return TRY(member_expression->to_reference(interpreter(), global_object));
             }));
 
+        // BindingRestElement : ... BindingIdentifier
+        // BindingRestElement : ... BindingPattern
         if (entry.is_rest) {
             VERIFY(i == binding.entries.size() - 1);
 
+            // 2. Let A be ! ArrayCreate(0).
             auto* array = MUST(Array::create(global_object, 0));
-            while (!iterator_done) {
-                auto next_object_or_error = iterator_next(*iterator);
-                if (next_object_or_error.is_throw_completion()) {
-                    iterator_done = true;
-                    return JS::throw_completion(*next_object_or_error.release_error().value());
-                }
-                auto* next_object = next_object_or_error.release_value();
 
-                auto done_property = TRY(next_object->get(names.done));
-                if (done_property.to_boolean()) {
-                    iterator_done = true;
+            // 3. Let n be 0.
+            // 4. Repeat,
+            while (true) {
+                ThrowCompletionOr<Object*> next { nullptr };
+
+                // a. If iteratorRecord.[[Done]] is false, then
+                if (!iterator_record.done) {
+                    // i. Let next be IteratorStep(iteratorRecord).
+                    next = iterator_step(global_object, iterator_record);
+
+                    // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+                    // iii. ReturnIfAbrupt(next).
+                    if (next.is_error()) {
+                        iterator_record.done = true;
+                        return next.release_error();
+                    }
+
+                    // iv. If next is false, set iteratorRecord.[[Done]] to true.
+                    if (!next.value())
+                        iterator_record.done = true;
+                }
+
+                // b. If iteratorRecord.[[Done]] is true, then
+                if (iterator_record.done) {
+                    // NOTE: Step i. and ii. are handled below.
                     break;
                 }
 
-                auto next_value = TRY(next_object->get(names.value));
-                array->indexed_properties().append(next_value);
+                // c. Let nextValue be IteratorValue(next).
+                auto next_value = iterator_value(global_object, *next.value());
+
+                // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
+                // e. ReturnIfAbrupt(nextValue).
+                if (next_value.is_error()) {
+                    iterator_record.done = true;
+                    return next_value.release_error();
+                }
+
+                // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
+                array->indexed_properties().append(next_value.value());
+
+                // g. Set n to n + 1.
             }
             value = array;
-
-        } else if (!iterator_done) {
-            auto next_object_or_error = iterator_next(*iterator);
-            if (next_object_or_error.is_throw_completion()) {
-                iterator_done = true;
-                return JS::throw_completion(*next_object_or_error.release_error().value());
-            }
-            auto* next_object = next_object_or_error.release_value();
-
-            auto done_property = TRY(next_object->get(names.done));
-            if (done_property.to_boolean()) {
-                iterator_done = true;
-                value = js_undefined();
-            } else {
-                auto value_or_error = next_object->get(names.value);
-                if (value_or_error.is_throw_completion()) {
-                    iterator_done = true;
-                    return JS::throw_completion(*value_or_error.release_error().value());
-                }
-                value = value_or_error.release_value();
-            }
-        } else {
+        }
+        // SingleNameBinding : BindingIdentifier Initializer[opt]
+        // BindingElement : BindingPattern Initializer[opt]
+        else {
+            // 1. Let v be undefined.
             value = js_undefined();
+
+            // 2. If iteratorRecord.[[Done]] is false, then
+            if (!iterator_record.done) {
+                // a. Let next be IteratorStep(iteratorRecord).
+                auto next = iterator_step(global_object, iterator_record);
+
+                // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+                // c. ReturnIfAbrupt(next).
+                if (next.is_error()) {
+                    iterator_record.done = true;
+                    return next.release_error();
+                }
+
+                // d. If next is false, set iteratorRecord.[[Done]] to true.
+                if (!next.value()) {
+                    iterator_record.done = true;
+                }
+                // e. Else,
+                else {
+                    // i. Set v to IteratorValue(next).
+                    auto value_or_error = iterator_value(global_object, *next.value());
+
+                    // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
+                    // iii. ReturnIfAbrupt(v).
+                    if (value_or_error.is_throw_completion()) {
+                        iterator_record.done = true;
+                        return value_or_error.release_error();
+                    }
+                    value = value_or_error.release_value();
+                }
+            }
+
+            // NOTE: Step 3. and 4. are handled below.
         }
 
         if (value.is_undefined() && entry.initializer) {

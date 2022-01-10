@@ -21,6 +21,15 @@ Image::Image(ImageFormat format, unsigned width, unsigned height, unsigned depth
     VERIFY(levels > 0);
     VERIFY(layers > 0);
 
+    if ((width & (width - 1)) == 0)
+        m_width_is_power_of_two = true;
+
+    if ((height & (height - 1)) == 0)
+        m_height_is_power_of_two = true;
+
+    if ((depth & (depth - 1)) == 0)
+        m_depth_is_power_of_two = true;
+
     m_mipmap_sizes.append({ width, height, depth });
     m_mipmap_offsets.append(0);
 

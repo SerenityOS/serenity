@@ -21,7 +21,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     if (!parser.has_errors()) {
         auto vm = JS::VM::create();
         auto interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
-        interpreter->run(interpreter->global_object(), *program);
+        (void)interpreter->run(interpreter->global_object(), *program);
     }
     return 0;
 }

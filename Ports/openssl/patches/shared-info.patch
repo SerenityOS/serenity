@@ -1,5 +1,5 @@
---- openssl-1.1.1k/Configurations/shared-info.pl	2021-03-25 21:28:38.000000000 +0800
-+++ openssl-1.1.1k/Configurations/shared-info.pl	2021-09-26 00:05:04.340004623 +0800
+--- openssl-1.1.1m/Configurations/shared-info.pl	2021-03-25 21:28:38.000000000 +0800
++++ openssl-1.1.1m/Configurations/shared-info.pl	2021-09-26 00:05:04.340004623 +0800
 @@ -34,6 +34,13 @@
              shared_defflag    => '-Wl,--version-script=',
          };

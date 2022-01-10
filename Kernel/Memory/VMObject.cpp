@@ -18,13 +18,13 @@ SpinlockProtected<VMObject::AllInstancesList>& VMObject::all_instances()
 }
 
 VMObject::VMObject(VMObject const& other)
-    : m_physical_pages(other.m_physical_pages)
+    : m_physical_pages(other.m_physical_pages.must_clone_but_fixme_should_propagate_errors())
 {
     all_instances().with([&](auto& list) { list.append(*this); });
 }
 
 VMObject::VMObject(size_t size)
-    : m_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE)))
+    : m_physical_pages(FixedArray<RefPtr<PhysicalPage>>::must_create_but_fixme_should_propagate_errors(ceil_div(size, static_cast<size_t>(PAGE_SIZE))))
 {
     all_instances().with([&](auto& list) { list.append(*this); });
 }

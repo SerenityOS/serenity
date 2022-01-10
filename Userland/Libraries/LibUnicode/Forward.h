@@ -35,7 +35,6 @@ enum class ScriptTag : u8;
 enum class StandardNumberFormatType : u8;
 enum class Style : u8;
 enum class Territory : u8;
-enum class TimeZone : u16;
 enum class Weekday : u8;
 enum class WordBreakProperty : u8;
 

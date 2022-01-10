@@ -1,7 +1,6 @@
 
 include(${CMAKE_CURRENT_LIST_DIR}/serenity_components.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/code_generators.cmake)
-include(${CMAKE_CURRENT_LIST_DIR}/unicode_data.cmake)
 
 function(serenity_install_headers target_name)
     file(GLOB_RECURSE headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h")
@@ -155,7 +154,41 @@ function(embed_resource target section file)
 endfunction()
 
 function(link_with_unicode_data target)
-    if (DEFINED UNICODE_DATA_SOURCES)
+    if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         target_link_libraries("${target}" LibUnicodeData)
     endif()
+endfunction()
+
+function(remove_path_if_version_changed version version_file cache_path)
+    set(version_differs YES)
+
+    if (EXISTS "${version_file}")
+        file(STRINGS "${version_file}" active_version)
+        if (version STREQUAL active_version)
+            set(version_differs NO)
+        endif()
+    endif()
+
+    if (version_differs)
+        message(STATUS "Removing outdated ${cache_path} for version ${version}")
+        file(REMOVE_RECURSE "${cache_path}")
+        file(WRITE "${version_file}" "${version}")
+    endif()
+endfunction()
+
+function(invoke_generator name generator version_file prefix header implementation)
+    cmake_parse_arguments(invoke_generator "" "" "arguments" ${ARGN})
+
+    add_custom_command(
+        OUTPUT "${header}" "${implementation}"
+        COMMAND $<TARGET_FILE:${generator}> -h "${header}.tmp" -c "${implementation}.tmp" ${invoke_generator_arguments}
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${header}.tmp" "${header}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${implementation}.tmp" "${implementation}"
+        COMMAND "${CMAKE_COMMAND}" -E remove "${header}.tmp" "${implementation}.tmp"
+        VERBATIM
+        DEPENDS ${generator} "${version_file}"
+    )
+
+    add_custom_target("generate_${prefix}${name}" DEPENDS "${header}" "${implementation}")
+    add_dependencies(all_generated "generate_${prefix}${name}")
 endfunction()

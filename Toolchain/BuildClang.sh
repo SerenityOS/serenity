@@ -14,7 +14,6 @@ ARCHS="$USERLAND_ARCHS aarch64"
 
 MD5SUM="md5sum"
 REALPATH="realpath"
-MAKE="make"
 NPROC="nproc"
 INSTALL="install"
 SED="sed"
@@ -24,18 +23,15 @@ SYSTEM_NAME="$(uname -s)"
 if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     MD5SUM="md5 -q"
     REALPATH="readlink -f"
-    MAKE="gmake"
     NPROC="sysctl -n hw.ncpuonline"
     export CC=egcc
     export CXX=eg++
     export LDFLAGS=-Wl,-z,notext
 elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     MD5SUM="md5 -q"
-    MAKE="gmake"
     NPROC="sysctl -n hw.ncpu"
 elif [ "$SYSTEM_NAME" = "Darwin" ]; then
     MD5SUM="md5 -q"
-    MAKE="make"
     NPROC="sysctl -n hw.ncpu"
     REALPATH="grealpath"  # GNU coreutils
     INSTALL="ginstall"    # GNU coreutils
@@ -80,13 +76,6 @@ LLVM_NAME="llvm-project-$LLVM_VERSION.src"
 LLVM_PKG="$LLVM_NAME.tar.xz"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/$LLVM_PKG"
 
-# We need GNU binutils because we use a feature that llvm-objdump doesn't support yet.
-BINUTILS_VERSION="2.37"
-BINUTILS_MD5SUM="1e55743d73c100b7a0d67ffb32398cdb"
-BINUTILS_NAME="binutils-$BINUTILS_VERSION"
-BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
-BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
-
 buildstep() {
     NAME=$1
     shift
@@ -106,9 +95,9 @@ buildstep_ninja() {
 
 # === DEPENDENCIES ===
 
-buildstep dependencies echo "Checking whether 'make' is available..."
-if ! command -v ${MAKE:-make} >/dev/null; then
-    buildstep dependencies echo "Please make sure to install GNU Make (for the '${MAKE:-make}' tool)."
+buildstep dependencies echo "Checking whether Ninja is available..."
+if ! command -v ninja >/dev/null; then
+    buildstep dependencies echo "Please make sure to install Ninja."
     exit 1
 fi
 
@@ -139,6 +128,18 @@ PROGRAM
 then
     buildstep dependencies echo "Please make sure to install a working C++ compiler."
     exit 1
+fi
+
+link_lld=
+buildstep dependencies echo "Checking whether the LLD linker is available..."
+if ${CXX:-c++} -o /dev/null -fuse-ld=lld -xc - >/dev/null 2>/dev/null << 'PROGRAM'
+int main() {}
+PROGRAM
+then
+    link_lld=1
+    buildstep dependencies echo "Using LLD for linking LLVM."
+else
+    buildstep dependencies echo "LLD not found. Using the default linker."
 fi
 
 # === CHECK CACHE AND REUSE ===
@@ -208,44 +209,13 @@ pushd "$DIR/Tarballs"
             git init > /dev/null
             git add . > /dev/null
             git commit -am "BASE" > /dev/null
+            git am "$DIR"/Patches/llvm-backport-objcopy-update-section.patch > /dev/null
             git apply "$DIR"/Patches/llvm.patch > /dev/null
         else
             patch -p1 < "$DIR/Patches/llvm.patch" > /dev/null
+            patch -p1 < "$DIR/Patches/llvm-backport-objcopy-update-section.patch" > /dev/null
         fi
-        $MD5SUM "$DIR/Patches/llvm.patch" > .patch.applied
-    popd
-
-    md5=""
-    if [ -e "$BINUTILS_PKG" ]; then
-        md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
-        echo "bu md5='$md5'"
-    fi
-
-    if [ "$md5" != "$BINUTILS_MD5SUM" ]; then
-        rm -f "$BINUTILS_PKG"
-        curl -LO "$BINUTILS_BASE_URL/$BINUTILS_PKG"
-    else
-        echo "Skipped downloading GNU binutils"
-    fi
-
-    if [ -d "$BINUTILS_NAME" ]; then
-        rm -rf "$BINUTILS_NAME"
-        rm -rf "$DIR/Build/clang/binutils"
-    fi
-    echo "Extracting GNU binutils"
-
-
-    tar -xzf "$BINUTILS_PKG"
-    pushd "$BINUTILS_NAME"
-        if [ "$dev" = "1" ]; then
-            git init > /dev/null
-            git add . > /dev/null
-            git commit -am "BASE" > /dev/null
-            git apply "$DIR"/Patches/binutils.patch > /dev/null
-        else
-            patch -p1 < "$DIR/Patches/binutils.patch" > /dev/null
-        fi
-         $MD5SUM "$DIR/Patches/binutils.patch" > .patch.applied
+        $MD5SUM "$DIR/Patches/llvm.patch" "$DIR/Patches/llvm-backport-objcopy-update-section.patch" > .patch.applied
     popd
 popd
 
@@ -273,7 +243,7 @@ for arch in $USERLAND_ARCHS; do
         mkdir -p Root/usr/lib/
         for lib in "$DIR/Stubs/${arch}clang/"*".so"; do
             lib_name=$(basename "$lib")
-            [ ! -f "Root/usr/lib/${lib_name}.so" ] && cp "$lib" "Root/usr/lib/${lib_name}"
+            [ ! -f "Root/usr/lib/${lib_name}" ] && cp "$lib" "Root/usr/lib/${lib_name}"
         done
     popd
 done
@@ -296,6 +266,7 @@ pushd "$DIR/Build/clang"
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DSERENITY_MODULE_PATH="$DIR/CMake" \
             -C "$DIR/CMake/LLVMConfig.cmake" \
+            ${link_lld:+"-DLLVM_ENABLE_LLD=ON"} \
             ${dev:+"-DLLVM_CCACHE_BUILD=ON"} \
             ${ci:+"-DLLVM_CCACHE_BUILD=ON"} \
             ${ci:+"-DLLVM_CCACHE_DIR=$LLVM_CCACHE_DIR"} \
@@ -303,21 +274,6 @@ pushd "$DIR/Build/clang"
 
         buildstep_ninja "llvm/build" ninja -j "$MAKEJOBS"
         buildstep "llvm/install" ninja install/strip
-    popd
-
-    mkdir -p binutils
-    pushd binutils
-        buildstep "binutils/configure" "$DIR/Tarballs/$BINUTILS_NAME/configure" --prefix="$PREFIX" \
-            --enable-targets="$(echo "$ARCHS" | "$SED" -E "s@(\S)(\s|$)@\1-pc-serenity,@g")" \
-            --program-prefix="gnu-" \
-            --disable-nls \
-            --disable-gas \
-            --disable-gold \
-            --disable-ld \
-            --disable-gprof \
-            --enable-shared
-        buildstep "binutils/build" "$MAKE" -j "$MAKEJOBS"
-        buildstep "binutils/install" "$MAKE" install
     popd
 
     for arch in $ARCHS; do

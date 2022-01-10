@@ -24,7 +24,7 @@ typedef struct __Dl_info {
 } Dl_info;
 
 int dlclose(void*);
-char* dlerror();
+char* dlerror(void);
 void* dlopen(const char*, int);
 void* dlsym(void*, const char*);
 int dladdr(void*, Dl_info*);

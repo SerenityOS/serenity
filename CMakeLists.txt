@@ -204,10 +204,10 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
 
     # Clang doesn't add compiler_rt to the search path when compiling with -nostdlib.
     link_directories(${TOOLCHAIN_ROOT}/lib/clang/${CMAKE_CXX_COMPILER_VERSION}/lib/${SERENITY_ARCH}-pc-serenity/)
-    add_link_options(LINKER:--allow-shlib-undefined)
 endif()
 
 add_link_options(LINKER:-z,text)
+add_link_options(LINKER:--no-allow-shlib-undefined)
 
 add_compile_definitions(SANITIZE_PTRS)
 set(CMAKE_CXX_FLAGS_STATIC "${CMAKE_CXX_FLAGS} -static")

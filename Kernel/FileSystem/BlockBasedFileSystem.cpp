@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,20 +34,18 @@ public:
 
     ~DiskCache() = default;
 
-    bool is_dirty() const { return m_dirty; }
-    void set_dirty(bool b) { m_dirty = b; }
+    bool is_dirty() const { return !m_dirty_list.is_empty(); }
+    bool entry_is_dirty(CacheEntry const& entry) const { return m_dirty_list.contains(entry); }
 
     void mark_all_clean()
     {
         while (auto* entry = m_dirty_list.first())
             m_clean_list.prepend(*entry);
-        m_dirty = false;
     }
 
     void mark_dirty(CacheEntry& entry)
     {
         m_dirty_list.prepend(entry);
-        m_dirty = true;
     }
 
     void mark_clean(CacheEntry& entry)
@@ -55,20 +53,27 @@ public:
         m_clean_list.prepend(entry);
     }
 
-    CacheEntry& get(BlockBasedFileSystem::BlockIndex block_index) const
+    CacheEntry* get(BlockBasedFileSystem::BlockIndex block_index) const
     {
-        if (auto it = m_hash.find(block_index); it != m_hash.end()) {
-            auto& entry = const_cast<CacheEntry&>(*it->value);
-            VERIFY(entry.block_index == block_index);
-            return entry;
-        }
+        auto it = m_hash.find(block_index);
+        if (it == m_hash.end())
+            return nullptr;
+        auto& entry = const_cast<CacheEntry&>(*it->value);
+        VERIFY(entry.block_index == block_index);
+        return &entry;
+    }
+
+    CacheEntry& ensure(BlockBasedFileSystem::BlockIndex block_index) const
+    {
+        if (auto* entry = get(block_index))
+            return *entry;
 
         if (m_clean_list.is_empty()) {
             // Not a single clean entry! Flush writes and try again.
             // NOTE: We want to make sure we only call FileBackedFileSystem flush here,
             //       not some FileBackedFileSystem subclass flush!
             m_fs.flush_writes_impl();
-            return get(block_index);
+            return ensure(block_index);
         }
 
         VERIFY(m_clean_list.last());
@@ -101,7 +106,6 @@ private:
     mutable IntrusiveList<&CacheEntry::list_node> m_dirty_list;
     NonnullOwnPtr<KBuffer> m_cached_block_data;
     NonnullOwnPtr<KBuffer> m_entries;
-    bool m_dirty { false };
 };
 
 BlockBasedFileSystem::BlockBasedFileSystem(OpenFileDescription& file_description)
@@ -152,7 +156,7 @@ ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKe
             return {};
         }
 
-        auto& entry = cache->get(index);
+        auto& entry = cache->ensure(index);
         if (count < block_size()) {
             // Fill the cache first.
             TRY(read_block(index, nullptr, block_size()));
@@ -230,7 +234,7 @@ ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuf
             return {};
         }
 
-        auto& entry = cache->get(index);
+        auto& entry = cache->ensure(index);
         if (!entry.has_data) {
             auto base_offset = index.value() * block_size();
             auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
@@ -265,19 +269,14 @@ void BlockBasedFileSystem::flush_specific_block_if_needed(BlockIndex index)
     m_cache.with_exclusive([&](auto& cache) {
         if (!cache->is_dirty())
             return;
-        Vector<CacheEntry*, 32> cleaned_entries;
-        cache->for_each_dirty_entry([&](CacheEntry& entry) {
-            if (entry.block_index != index) {
-                size_t base_offset = entry.block_index.value() * block_size();
-                auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
-                [[maybe_unused]] auto rc = file_description().write(base_offset, entry_data_buffer, block_size());
-                cleaned_entries.append(&entry);
-            }
-        });
-        // NOTE: We make a separate pass to mark entries clean since marking them clean
-        //       moves them out of the dirty list which would disturb the iteration above.
-        for (auto* entry : cleaned_entries)
-            cache->mark_clean(*entry);
+        auto* entry = cache->get(index);
+        if (!entry)
+            return;
+        if (!cache->entry_is_dirty(*entry))
+            return;
+        size_t base_offset = entry->block_index.value() * block_size();
+        auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry->data);
+        (void)file_description().write(base_offset, entry_data_buffer, block_size());
     });
 }
 

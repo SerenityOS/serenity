@@ -65,8 +65,16 @@ jobs:
 
       - name: Create build directory
         run: |
+          mkdir -p libjs-test262/Build/TZDB
           mkdir -p libjs-test262/Build/UCD
           mkdir -p libjs-test262/Build/CLDR
+
+      - name: TimeZoneData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/libjs-test262/Build/TZDB
+          key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
 
       - name: UnicodeData cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
@@ -89,6 +97,12 @@ jobs:
           cmake -GNinja -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11 -DSERENITY_SOURCE_DIR=${{ env.SERENITY_SOURCE_DIR }} ..
           ninja libjs-test262-runner test-js
 
+      - name: Get previous results
+        working-directory: libjs-test262
+        run: |
+          cp -f ../libjs-website/test262/data/per-file-master.json .
+          cp -f ../libjs-website/test262/data/per-file-bytecode-master.json .
+
       - name: Run test262 and test262-parser-tests
         working-directory: libjs-test262
         run: |
@@ -96,7 +110,9 @@ jobs:
             --serenity .. \
             --test262 ../test262 \
             --test262-parser-tests ../test262-parser-tests \
-            --results-json ../libjs-website/test262/data/results.json
+            --results-json ../libjs-website/test262/data/results.json \
+            --per-file-output ../libjs-website/test262/data/per-file-master.json \
+            --per-file-bytecode-output ../libjs-website/test262/data/per-file-bytecode-master.json
 
       - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@4.1.1
@@ -107,3 +123,13 @@ jobs:
           repository-name: linusg/libjs-website
           token: ${{ secrets.BUGGIEBOT }}
           folder: libjs-website
+
+      - name: Compare non-bytecode
+        continue-on-error: true
+        working-directory: libjs-test262
+        run: ./per_file_result_diff.py -o per-file-master.json -n ../libjs-website/test262/data/per-file-master.json
+
+      - name: Compare bytecode
+        continue-on-error: true
+        working-directory: libjs-test262
+        run: ./per_file_result_diff.py -o per-file-bytecode-master.json -n ../libjs-website/test262/data/per-file-bytecode-master.json

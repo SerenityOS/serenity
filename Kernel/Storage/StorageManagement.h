@@ -38,7 +38,7 @@ private:
 
     void enumerate_controllers(bool force_pio);
     void enumerate_storage_devices();
-    void enumerate_disk_partitions() const;
+    void enumerate_disk_partitions();
 
     void determine_boot_device();
     void determine_boot_device_with_partition_uuid();

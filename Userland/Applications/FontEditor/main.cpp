@@ -6,6 +6,7 @@
 
 #include "FontEditor.h"
 #include <AK/URL.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -27,6 +28,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
+    Config::pledge_domains("FontEditor");
+    Config::monitor_domain("FontEditor");
     TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath"));
 
     char const* path = nullptr;
@@ -40,20 +43,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(440, 470);
 
-    auto& font_editor = window->set_main_widget<FontEditorWidget>();
-    font_editor.initialize_menubar(*window);
+    auto font_editor = TRY(window->try_set_main_widget<FontEditorWidget>());
+    font_editor->initialize_menubar(*window);
 
     if (path) {
-        auto success = font_editor.open_file(path);
+        auto success = font_editor->open_file(path);
         if (!success)
             return 1;
     } else {
         auto mutable_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::FontDatabase::default_font().clone())->unmasked_character_set();
-        font_editor.initialize({}, move(mutable_font));
+        font_editor->initialize({}, move(mutable_font));
     }
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (font_editor.request_close())
+        if (font_editor->request_close())
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
     };

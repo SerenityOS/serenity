@@ -22,9 +22,9 @@ struct passwd {
     char* pw_shell;
 };
 
-struct passwd* getpwent();
-void setpwent();
-void endpwent();
+struct passwd* getpwent(void);
+void setpwent(void);
+void endpwent(void);
 struct passwd* getpwnam(const char* name);
 struct passwd* getpwuid(uid_t);
 int putpwent(const struct passwd* p, FILE* stream);

@@ -11,6 +11,7 @@ if [ -z "${HOST_CC:=}" ]; then
     export HOST_AR="${AR:=ar}"
     export HOST_RANLIB="${RANLIB:=ranlib}"
     export HOST_PATH="${PATH:=}"
+    export HOST_READELF="${READELF:=readelf}"
     export HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
     export HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
     export HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
@@ -47,6 +48,7 @@ host_env() {
     export AR="${HOST_AR}"
     export RANLIB="${HOST_RANLIB}"
     export PATH="${HOST_PATH}"
+    export READELF="${HOST_READELF}"
     export PKG_CONFIG_DIR="${HOST_PKG_CONFIG_DIR}"
     export PKG_CONFIG_SYSROOT_DIR="${HOST_PKG_CONFIG_SYSROOT_DIR}"
     export PKG_CONFIG_LIBDIR="${HOST_PKG_CONFIG_LIBDIR}"
@@ -545,8 +547,12 @@ parse_arguments() {
             shift
             parse_arguments $@
             ;;
+        interactive)
+            export PS1="(serenity):\w$ "
+            bash --norc
+            ;;
         *)
-            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, clean, clean_dist, clean_all, uninstall, showproperty."
+            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, interactive, clean, clean_dist, clean_all, uninstall, showproperty."
             exit 1
             ;;
     esac

@@ -20,7 +20,7 @@ launcher_command="/usr/local/bin/tuxracer"
 pre_configure() {
     export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
     export CXXFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
-    export LIBS="-lmodplug -lSDL2"
+    export LIBS="-lSDL2"
 }
 
 post_configure() {

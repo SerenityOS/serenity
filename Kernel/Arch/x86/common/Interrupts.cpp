@@ -234,8 +234,10 @@ void handle_crash(RegisterState const& regs, char const* description, int signal
     dmesgln("CRASH: CPU #{} {} in ring {}", Processor::current_id(), description, (regs.cs & 3));
     dump(regs);
 
-    if (crashed_in_kernel)
+    if (crashed_in_kernel) {
+        process.address_space().dump_regions();
         PANIC("Crash in ring 0");
+    }
 
     process.crash(signal, regs.ip(), out_of_memory);
 }

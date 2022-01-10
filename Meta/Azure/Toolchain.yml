@@ -21,7 +21,7 @@ jobs:
         toolchain: 'clang'
         toolchain_ccache_path: '$(LLVM_CCACHE_DIR)'
         toolchain_ccache_size: '$(LLVM_CCACHE_MAXSIZE)'
-        with_unicode_caches: false
+        with_remote_data_caches: false
 
     - script: ./Toolchain/BuildClang.sh --ci
       displayName: Build Toolchain

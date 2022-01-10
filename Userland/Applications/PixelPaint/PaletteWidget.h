@@ -35,7 +35,7 @@ public:
     static Result<void, String> save_palette_fd_and_close(Vector<Color>, int);
     static Vector<Color> fallback_colors();
 
-    void set_image_editor(ImageEditor&);
+    void set_image_editor(ImageEditor*);
 
 private:
     static Result<Vector<Color>, String> load_palette_file(Core::File&);

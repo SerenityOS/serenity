@@ -1190,7 +1190,7 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
             return IterationDecision::Continue;
         }
 
-        if (!shell->has_error(Shell::ShellError::None))
+        if (shell->has_any_error() && !shell->has_error(Shell::ShellError::InternalControlFlowInterrupted))
             return IterationDecision::Break;
 
         if (block_value->is_job()) {
@@ -1199,13 +1199,12 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
                 return IterationDecision::Continue;
             shell->block_on_job(job);
 
-            if (job->signaled()) {
-                if (job->termination_signal() == SIGINT)
+            if (shell->has_any_error()) {
+                if (shell->has_error(Shell::ShellError::InternalControlFlowInterrupted))
                     ++consecutive_interruptions;
-                else
+
+                if (shell->has_error(Shell::ShellError::InternalControlFlowKilled))
                     return IterationDecision::Break;
-            } else {
-                consecutive_interruptions = 0;
             }
         }
         return IterationDecision::Continue;
@@ -1216,11 +1215,16 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
         Optional<StringView> index_name = m_index_variable.has_value() ? Optional<StringView>(m_index_variable->name) : Optional<StringView>();
         size_t i = 0;
         m_iterated_expression->for_each_entry(shell, [&](auto value) {
-            if (consecutive_interruptions == 2)
+            if (consecutive_interruptions >= 2)
                 return IterationDecision::Break;
 
-            if (shell && shell->has_any_error())
-                return IterationDecision::Break;
+            if (shell) {
+                if (shell->has_error(Shell::ShellError::InternalControlFlowInterrupted))
+                    shell->take_error();
+
+                if (shell->has_any_error())
+                    return IterationDecision::Break;
+            }
 
             RefPtr<Value> block_value;
 
@@ -1240,11 +1244,16 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
         });
     } else {
         for (;;) {
-            if (shell && shell->has_any_error())
+            if (consecutive_interruptions >= 2)
                 break;
 
-            if (consecutive_interruptions == 2)
-                break;
+            if (shell) {
+                if (shell->has_error(Shell::ShellError::InternalControlFlowInterrupted))
+                    shell->take_error();
+
+                if (shell->has_any_error())
+                    break;
+            }
 
             RefPtr<Value> block_value = m_block->run(shell);
             if (run(block_value) == IterationDecision::Break)
@@ -3555,7 +3564,7 @@ Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
 
     switch (m_name) {
     case '?':
-        return { resolve_slices(shell, String::number(shell->last_return_code), m_slices) };
+        return { resolve_slices(shell, String::number(shell->last_return_code.value_or(0)), m_slices) };
     case '$':
         return { resolve_slices(shell, String::number(getpid()), m_slices) };
     case '*':

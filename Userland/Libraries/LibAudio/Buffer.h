@@ -89,7 +89,7 @@ public:
     static NonnullRefPtr<Buffer> create_empty()
     {
         // If we can't allocate an empty buffer, things are in a very bad state.
-        return MUST(adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(FixedArray<Sample> {})));
+        return MUST(adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(FixedArray<Sample>())));
     }
 
     Sample const* samples() const { return (const Sample*)data(); }

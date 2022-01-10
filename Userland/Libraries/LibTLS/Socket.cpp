@@ -173,8 +173,10 @@ void TLSv12::read_from_socket()
         }
     };
 
-    if (!check_connection_state(true))
+    if (!check_connection_state(true)) {
+        set_idle(true);
         return;
+    }
 
     consume(Core::Socket::read(4 * MiB));
 }

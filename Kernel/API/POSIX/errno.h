@@ -51,7 +51,6 @@
     E(EAFNOSUPPORT, "Address family not supported")                   \
     E(ENOTSOCK, "Not a socket")                                       \
     E(EADDRINUSE, "Address in use")                                   \
-    E(EWHYTHO, "Failed without setting an error code (bug!)")         \
     E(ENOTEMPTY, "Directory not empty")                               \
     E(EDOM, "Math argument out of domain")                            \
     E(ECONNREFUSED, "Connection refused")                             \

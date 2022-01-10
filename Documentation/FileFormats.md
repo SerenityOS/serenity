@@ -23,12 +23,11 @@ Various applications accept drag & drop to open files.
 
 ## glyph/x-fonteditor (Clipboard-only)
 
-Requires the metadata-fields, `char` (usually encoded as a string of length 1: the codepoint as a character),
-`width`, and `height` (encoded as a decimal number).
+Requires the metadata-fields `count` (count of glyphs copied) and `first_glyph` (lowest codepoint that is copied), encoded as decimal strings.
 
-The glyph bitmap data is encoded in width times height many bytes, either 0 (clear) or 1 (set).
+The data contains codepoint (encoded as host-endian u32), width and height (as u8's) and glyph bitmap data. It is encoded in width times height many bytes, either 0 (clear) or 1 (set).
 
-Implemented in `GlyphEditorWidget::copy_glyph` and `GlyphEditorWidget::paste_glyph`, in [`Userland/Applications/FontEditor/GlyphEditorWidget.cpp`](../Userland/Applications/FontEditor/GlyphEditorWidget.cpp).
+Implemented in `FontEditor::copy_selected_glyphs` and `FontEditor::paste_glyphs`, in [`Userland/Applications/FontEditor/FontEditor.cpp`](../Userland/Applications/FontEditor/FontEditor.cpp).
 
 ## image/x-serenityos (Clipboard-only)
 

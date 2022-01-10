@@ -17,12 +17,13 @@
 
 namespace Spreadsheet {
 
-Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets)
+Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window* parent_window)
     : m_sheets(move(sheets))
     , m_vm(JS::VM::create())
     , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(m_vm))
     , m_interpreter_scope(*m_interpreter)
     , m_main_execution_context(m_vm->heap())
+    , m_parent_window(parent_window)
 {
     m_workbook_object = m_vm->heap().allocate<WorkbookObject>(m_interpreter->global_object(), *this);
     m_interpreter->global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
@@ -62,7 +63,7 @@ Result<bool, String> Workbook::load(StringView filename)
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 
     // Make an import dialog, we might need to import it.
-    auto result = ImportDialog::make_and_run_for(mime, file_or_error.value(), *this);
+    auto result = ImportDialog::make_and_run_for(m_parent_window, mime, file_or_error.value(), *this);
     if (result.is_error())
         return result.error();
 

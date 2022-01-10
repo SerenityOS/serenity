@@ -31,9 +31,9 @@ int __pthread_key_delete(pthread_key_t);
 void* __pthread_getspecific(pthread_key_t);
 int __pthread_setspecific(pthread_key_t, const void*);
 
-int __pthread_self();
+int __pthread_self(void);
 
-void __pthread_key_destroy_for_current_thread();
+void __pthread_key_destroy_for_current_thread(void);
 
 #define __PTHREAD_MUTEX_NORMAL 0
 #define __PTHREAD_MUTEX_RECURSIVE 1

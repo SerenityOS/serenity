@@ -25,6 +25,11 @@ extern char** environ;
 
 namespace Shell {
 
+int Shell::builtin_noop(int, const char**)
+{
+    return 0;
+}
+
 int Shell::builtin_dump(int argc, const char** argv)
 {
     if (argc != 2)
@@ -1028,13 +1033,20 @@ int Shell::builtin_unset(int argc, const char** argv)
     if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
+    bool did_touch_path = false;
     for (auto& value : vars) {
+        if (!did_touch_path && value == "PATH"sv)
+            did_touch_path = true;
+
         if (lookup_local_variable(value)) {
             unset_local_variable(value);
         } else {
             unsetenv(value);
         }
     }
+
+    if (did_touch_path)
+        cache_path();
 
     return 0;
 }
@@ -1059,7 +1071,7 @@ int Shell::builtin_not(int argc, const char** argv)
     }
     // In case it was a function.
     if (!found_a_job)
-        exit_code = last_return_code;
+        exit_code = last_return_code.value_or(0);
     return exit_code == 0 ? 1 : 0;
 }
 
@@ -1135,6 +1147,9 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
     Core::EventLoop loop;
     setup_signals();
 
+    if (name == ":"sv)
+        name = "noop"sv;
+
 #define __ENUMERATE_SHELL_BUILTIN(builtin)                               \
     if (name == #builtin) {                                              \
         retval = builtin_##builtin(argv.size() - 1, argv.data());        \
@@ -1153,6 +1168,9 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
 
 bool Shell::has_builtin(StringView name) const
 {
+    if (name == ":"sv)
+        return true;
+
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
     if (name == #builtin) {                \
         return true;                       \

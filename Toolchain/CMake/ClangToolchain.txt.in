@@ -25,8 +25,7 @@ set(CMAKE_RANLIB ${TOOLCHAIN_PATH}/llvm-ranlib)
 set(CMAKE_STRIP ${TOOLCHAIN_PATH}/llvm-strip)
 set(CMAKE_AR ${TOOLCHAIN_PATH}/llvm-ar)
 set(SERENITY_CXXFILT ${TOOLCHAIN_PATH}/llvm-cxxfilt)
-# FIXME: Persuade LLVM maintainers to add `--update-section` to llvm-objcopy, as it's required for the kernel symbol map.
-set(CMAKE_OBJCOPY ${TOOLCHAIN_PATH}/gnu-objcopy)
+set(CMAKE_OBJCOPY ${TOOLCHAIN_PATH}/llvm-objcopy)
 
 set(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,--hash-style=gnu,-z,relro,-z,now,-z,noexecstack,-z,max-page-size=0x1000,-z,separate-code")
 

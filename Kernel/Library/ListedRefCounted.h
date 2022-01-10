@@ -25,10 +25,16 @@ class ListedRefCounted : public RefCountedBase {
 public:
     bool unref() const
     {
+        auto* that = const_cast<T*>(static_cast<T const*>(this));
+
         auto callback = [&](auto& list) {
             auto new_ref_count = deref_base();
-            if (new_ref_count == 0)
-                list.remove(const_cast<T&>(static_cast<T const&>(*this)));
+            if (new_ref_count == 0) {
+                list.remove(const_cast<T&>(*that));
+                if constexpr (requires { that->revoke_weak_ptrs(); }) {
+                    that->revoke_weak_ptrs();
+                }
+            }
             return new_ref_count;
         };
 
@@ -38,10 +44,12 @@ public:
         else if constexpr (Lock == LockType::Mutex)
             new_ref_count = T::all_instances().with_exclusive(callback);
         if (new_ref_count == 0) {
-            call_will_be_destroyed_if_present(static_cast<const T*>(this));
-            delete const_cast<T*>(static_cast<T const*>(this));
+            if constexpr (requires { that->will_be_destroyed(); })
+                that->will_be_destroyed();
+            delete that;
         } else if (new_ref_count == 1) {
-            call_one_ref_left_if_present(static_cast<T const*>(this));
+            if constexpr (requires { that->one_ref_left(); })
+                that->one_ref_left();
         }
         return new_ref_count == 0;
     }

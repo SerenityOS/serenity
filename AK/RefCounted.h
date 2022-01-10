@@ -18,32 +18,6 @@
 
 namespace AK {
 
-template<class T>
-constexpr auto call_will_be_destroyed_if_present(const T* object) -> decltype(const_cast<T*>(object)->will_be_destroyed(), TrueType {})
-{
-    const_cast<T*>(object)->will_be_destroyed();
-    return {};
-}
-
-// NOLINTNEXTLINE(cert-dcl50-cpp) variadic argument used to implement "is detected" pattern
-constexpr auto call_will_be_destroyed_if_present(...) -> FalseType
-{
-    return {};
-}
-
-template<class T>
-constexpr auto call_one_ref_left_if_present(const T* object) -> decltype(const_cast<T*>(object)->one_ref_left(), TrueType {})
-{
-    const_cast<T*>(object)->one_ref_left();
-    return {};
-}
-
-// NOLINTNEXTLINE(cert-dcl50-cpp) variadic argument used to implement "is detected" pattern
-constexpr auto call_one_ref_left_if_present(...) -> FalseType
-{
-    return {};
-}
-
 class RefCountedBase {
     AK_MAKE_NONCOPYABLE(RefCountedBase);
     AK_MAKE_NONMOVABLE(RefCountedBase);
@@ -87,13 +61,17 @@ class RefCounted : public RefCountedBase {
 public:
     bool unref() const
     {
+        auto* that = const_cast<T*>(static_cast<T const*>(this));
+
         auto new_ref_count = deref_base();
         if (new_ref_count == 0) {
-            call_will_be_destroyed_if_present(static_cast<const T*>(this));
+            if constexpr (requires { that->will_be_destroyed(); })
+                that->will_be_destroyed();
             delete static_cast<const T*>(this);
             return true;
         } else if (new_ref_count == 1) {
-            call_one_ref_left_if_present(static_cast<const T*>(this));
+            if constexpr (requires { that->one_ref_left(); })
+                that->one_ref_left();
         }
         return false;
     }

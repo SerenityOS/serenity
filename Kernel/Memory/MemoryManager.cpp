@@ -209,13 +209,13 @@ UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
     m_reserved_memory_ranges.append(ContiguousReservedMemoryRange { range.start, m_physical_memory_ranges.last().start.get() + m_physical_memory_ranges.last().length - range.start.get() });
 }
 
-bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_address, VirtualRange const& range) const
+bool MemoryManager::is_allowed_to_read_physical_memory_for_userspace(PhysicalAddress start_address, size_t read_length) const
 {
     // Note: Guard against overflow in case someone tries to mmap on the edge of
     // the RAM
-    if (start_address.offset_addition_would_overflow(range.size()))
+    if (start_address.offset_addition_would_overflow(read_length))
         return false;
-    auto end_address = start_address.offset(range.size());
+    auto end_address = start_address.offset(read_length);
     for (auto& current_range : m_reserved_memory_ranges) {
         if (current_range.start > start_address)
             continue;
@@ -748,8 +748,16 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
     dma_buffer_page = allocate_supervisor_physical_page();
     if (dma_buffer_page.is_null())
         return ENOMEM;
-    auto region_or_error = allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access);
+    // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
+    auto region_or_error = allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access, Region::Cacheable::No);
     return region_or_error;
+}
+
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access)
+{
+    RefPtr<Memory::PhysicalPage> dma_buffer_page;
+
+    return allocate_dma_buffer_page(name, access, dma_buffer_page);
 }
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages)
@@ -758,8 +766,17 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
     dma_buffer_pages = allocate_contiguous_supervisor_physical_pages(size);
     if (dma_buffer_pages.is_empty())
         return ENOMEM;
-    auto region_or_error = allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access);
+    // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
+    auto region_or_error = allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access, Region::Cacheable::No);
     return region_or_error;
+}
+
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access)
+{
+    VERIFY(!(size % PAGE_SIZE));
+    NonnullRefPtrVector<Memory::PhysicalPage> dma_buffer_pages;
+
+    return allocate_dma_buffer_pages(size, name, access, dma_buffer_pages);
 }
 
 ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)

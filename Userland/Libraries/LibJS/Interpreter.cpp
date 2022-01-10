@@ -38,7 +38,7 @@ Interpreter::~Interpreter()
 {
 }
 
-void Interpreter::run(GlobalObject& global_object, const Program& program)
+ThrowCompletionOr<Value> Interpreter::run(GlobalObject& global_object, const Program& program)
 {
     // FIXME: Why does this receive a GlobalObject? Interpreter has one already, and this might not be in sync with the Realm's GlobalObject.
 
@@ -46,8 +46,6 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     VERIFY(!vm.exception());
 
     VM::InterpreterExecutionScope scope(*this);
-
-    vm.set_last_value(Badge<Interpreter> {}, {});
 
     ExecutionContext execution_context(heap());
     execution_context.current_node = &program;
@@ -60,7 +58,6 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     execution_context.is_strict_mode = program.is_strict_mode();
     MUST(vm.push_execution_context(execution_context, global_object));
     auto completion = program.execute(*this, global_object);
-    vm.set_last_value(Badge<Interpreter> {}, completion.value().value_or(js_undefined()));
 
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
     // in which case this is a no-op.
@@ -71,6 +68,12 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     vm.pop_execution_context();
 
     vm.finish_execution_generation();
+
+    if (completion.is_abrupt()) {
+        VERIFY(completion.type() == Completion::Type::Throw);
+        return completion.release_error();
+    }
+    return completion.value().value_or(js_undefined());
 }
 
 GlobalObject& Interpreter::global_object()

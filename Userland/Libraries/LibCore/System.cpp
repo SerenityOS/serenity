@@ -26,6 +26,15 @@
 namespace Core::System {
 
 #ifdef __serenity__
+
+ErrorOr<void> beep()
+{
+    auto rc = ::sysbeep();
+    if (rc < 0)
+        return Error::from_syscall("beep", rc);
+    return {};
+}
+
 ErrorOr<void> pledge(StringView promises, StringView execpromises)
 {
     Syscall::SC_pledge_params params {
@@ -549,6 +558,14 @@ ErrorOr<void> setpgid(pid_t pid, pid_t pgid)
     if (::setpgid(pid, pgid) < 0)
         return Error::from_syscall("setpgid"sv, -errno);
     return {};
+}
+
+ErrorOr<pid_t> setsid()
+{
+    int rc = ::setsid();
+    if (rc < 0)
+        return Error::from_syscall("setsid"sv, -errno);
+    return rc;
 }
 
 ErrorOr<bool> isatty(int fd)

@@ -98,11 +98,11 @@ void CalculatorProvider::query(String const& query, Function<void(NonnullRefPtrV
     if (parser.has_errors())
         return;
 
-    interpreter->run(interpreter->global_object(), *program);
-    if (interpreter->exception())
+    auto completion = interpreter->run(interpreter->global_object(), *program);
+    if (completion.is_error())
         return;
 
-    auto result = interpreter->vm().last_value();
+    auto result = completion.release_value();
     String calculation;
     if (!result.is_number()) {
         calculation = "0";

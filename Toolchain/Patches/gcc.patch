@@ -348,7 +348,7 @@ index 5095b6830..d19942eee 100644
      && defined(TARGET_DL_ITERATE_PHDR) \
      && defined(__linux__)
 diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index 326a279c5..6b76901dc 100755
+index 326a279c5..4379c25c8 100755
 --- a/libstdc++-v3/configure
 +++ b/libstdc++-v3/configure
 @@ -4219,15 +4219,7 @@ printf ("hello world\n");
@@ -368,15 +368,13 @@ index 326a279c5..6b76901dc 100755
  if test x$gcc_no_link = xyes; then
    # Setting cross_compile will disable run tests; it will
    # also disable AC_CHECK_FILE but that's generally
-@@ -29264,6 +29256,5 @@ if
+@@ -29264,12 +29256,5990 @@ else
  
      $as_echo "#define HAVE_ICONV 1" >>confdefs.h
  
 -    $as_echo "#define HAVE_MEMALIGN 1" >>confdefs.h
- 
+-
    else
- 
-@@ -29270,6 +29261,5986 @@ else
  
  # Base decisions on target environment.
  case "${host}" in

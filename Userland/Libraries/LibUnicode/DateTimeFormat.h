@@ -174,7 +174,6 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style);
 
 Optional<Calendar> calendar_from_string(StringView calendar);
 Optional<HourCycleRegion> hour_cycle_region_from_string(StringView hour_cycle_region);
-Optional<TimeZone> time_zone_from_string(StringView time_zone);
 
 Vector<HourCycle> get_regional_hour_cycles(StringView region);
 Vector<Unicode::HourCycle> get_locale_hour_cycles(StringView locale);

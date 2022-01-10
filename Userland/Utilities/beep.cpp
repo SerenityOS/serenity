@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <unistd.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main()
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    sysbeep();
+    TRY(Core::System::beep());
     return 0;
 }

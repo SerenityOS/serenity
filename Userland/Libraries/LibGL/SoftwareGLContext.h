@@ -28,6 +28,7 @@ namespace GL {
 
 struct ContextParameter {
     GLenum type;
+    bool is_capability { false };
     u8 count { 1 };
     union {
         bool boolean_value;
@@ -178,6 +179,8 @@ private:
     Vector<FloatMatrix4x4> m_model_view_matrix_stack;
     // FIXME: implement multi-texturing: the texture matrix stack should live inside a texture unit
     Vector<FloatMatrix4x4> m_texture_matrix_stack;
+
+    Gfx::IntRect m_viewport;
 
     FloatVector4 m_clear_color { 0.0f, 0.0f, 0.0f, 0.0f };
     double m_clear_depth { 1.0 };

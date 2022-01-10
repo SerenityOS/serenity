@@ -35,6 +35,7 @@ bool TCPSocket::unref() const
         if (deref_base())
             return false;
         table.remove(tuple());
+        const_cast<TCPSocket&>(*this).revoke_weak_ptrs();
         return true;
     });
     if (did_hit_zero) {

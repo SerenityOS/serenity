@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2021, Jamie Mansfield <jmansfield@cadixdev.org>
+ * Copyright (c) 2022, Jonas Höpner <me@jonashoepner.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Game.h"
 #include <AK/Random.h>
+#include <LibGUI/Event.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 
@@ -267,13 +269,33 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                         m_focused_stack->set_focused(false);
                     to_check.set_focused(true);
                     m_focused_stack = &to_check;
-                    m_mouse_down = true;
+                    // When the user wants to automatically move cards, do not go into the drag mode.
+                    if (event.button() != GUI::MouseButton::Secondary)
+                        m_mouse_down = true;
                     start_timer_if_necessary();
                 }
             }
             break;
         }
     }
+}
+
+void Game::move_focused_cards(CardStack& stack)
+{
+    for (auto& to_intersect : m_focused_cards) {
+        mark_intersecting_stacks_dirty(to_intersect);
+        stack.push(to_intersect);
+        (void)m_focused_stack->pop();
+    }
+
+    update_score(-1);
+
+    update(m_focused_stack->bounding_box());
+    update(stack.bounding_box());
+
+    detect_full_stacks();
+
+    ensure_top_card_is_visible(*m_focused_stack);
 }
 
 void Game::mouseup_event(GUI::MouseEvent& event)
@@ -284,30 +306,33 @@ void Game::mouseup_event(GUI::MouseEvent& event)
         return;
 
     bool rebound = true;
-    for (auto& stack : m_stacks) {
-        if (stack.is_focused())
-            continue;
+    if (event.button() == GUI::MouseButton::Secondary) {
+        // This enables the game to move the focused cards to the first possible stack excluding empty stacks.
+        // NOTE: This ignores empty stacks, as the game has no undo button, and a card, which has been moved to an empty stack without any other possibilities is not reversable.
+        for (auto& stack : m_stacks) {
+            if (stack.is_focused())
+                continue;
 
-        for (auto& focused_card : m_focused_cards) {
-            if (stack.bounding_box().intersects(focused_card.rect())) {
-                if (stack.is_allowed_to_push(m_focused_cards.at(0), m_focused_cards.size(), Cards::CardStack::Any)) {
-                    for (auto& to_intersect : m_focused_cards) {
-                        mark_intersecting_stacks_dirty(to_intersect);
-                        stack.push(to_intersect);
-                        (void)m_focused_stack->pop();
+            if (stack.is_allowed_to_push(m_focused_cards.at(0), m_focused_cards.size(), Cards::CardStack::Any) && !stack.is_empty()) {
+                move_focused_cards(stack);
+
+                rebound = false;
+                break;
+            }
+        }
+    } else {
+        for (auto& stack : m_stacks) {
+            if (stack.is_focused())
+                continue;
+
+            for (auto& focused_card : m_focused_cards) {
+                if (stack.bounding_box().intersects(focused_card.rect())) {
+                    if (stack.is_allowed_to_push(m_focused_cards.at(0), m_focused_cards.size(), Cards::CardStack::Any)) {
+                        move_focused_cards(stack);
+
+                        rebound = false;
+                        break;
                     }
-
-                    update_score(-1);
-
-                    update(m_focused_stack->bounding_box());
-                    update(stack.bounding_box());
-
-                    detect_full_stacks();
-
-                    ensure_top_card_is_visible(*m_focused_stack);
-
-                    rebound = false;
-                    break;
                 }
             }
         }

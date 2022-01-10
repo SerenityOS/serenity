@@ -16,27 +16,24 @@
 
 namespace PixelPaint::Filters {
 
-void Bloom::apply() const
+void Bloom::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const
 {
-    if (!m_editor)
+    auto intermediate_bitmap_or_error = source_bitmap.clone();
+    if (intermediate_bitmap_or_error.is_error())
         return;
-    if (auto* layer = m_editor->active_layer()) {
-        auto intermediate_bitmap_or_error = layer->bitmap().clone();
-        if (intermediate_bitmap_or_error.is_error())
-            return;
 
-        auto intermediate_bitmap = intermediate_bitmap_or_error.release_value();
+    auto intermediate_bitmap = intermediate_bitmap_or_error.release_value();
 
-        Gfx::LumaFilter luma_filter(intermediate_bitmap);
-        luma_filter.apply(m_luma_lower, 255);
+    Gfx::LumaFilter luma_filter(intermediate_bitmap);
+    luma_filter.apply(m_luma_lower, 255);
 
-        Gfx::FastBoxBlurFilter blur_filter(intermediate_bitmap);
-        blur_filter.apply_three_passes(m_blur_radius);
+    Gfx::FastBoxBlurFilter blur_filter(intermediate_bitmap);
+    blur_filter.apply_three_passes(m_blur_radius);
 
-        Gfx::BitmapMixer mixer(layer->bitmap());
-        mixer.mix_with(intermediate_bitmap, Gfx::BitmapMixer::MixingMethod::Lightest);
-    }
+    Gfx::BitmapMixer mixer(target_bitmap);
+    mixer.mix_with(intermediate_bitmap, Gfx::BitmapMixer::MixingMethod::Lightest);
 }
+
 RefPtr<GUI::Widget> Bloom::get_settings_widget()
 {
     if (!m_settings_widget) {

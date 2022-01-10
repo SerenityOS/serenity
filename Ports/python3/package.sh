@@ -17,9 +17,8 @@ icon_file="../launcher.ico" # This is an older icon that's downloaded separately
 
 depends=("bzip2" "libffi" "libuuid" "ncurses" "openssl" "readline" "sqlite" "termcap" "zlib")
 
-configopts=("--enable-optimizations" "--disable-ipv6" "--without-ensurepip" "ac_cv_file__dev_ptmx=no" "ac_cv_file__dev_ptc=no")
+configopts=("--disable-ipv6" "--without-ensurepip" "ac_cv_file__dev_ptmx=no" "ac_cv_file__dev_ptc=no")
 
-export CC="${CC} --sysroot=${SERENITY_INSTALL_ROOT}"
 export BLDSHARED="${CC} -shared"
 
 pre_configure() {

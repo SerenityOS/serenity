@@ -1,4 +1,14 @@
-+++ emu2-master/src/main.c	2021-04-14 07:16:54.192314882 -0700
+diff -ur a/src/main.c b/src/main.c
+--- a/src/main.c	2022-01-07 14:27:34.882469924 +0100
++++ b/src/main.c	2022-01-07 17:25:14.828001662 +0100
+@@ -12,6 +12,7 @@
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <math.h>
++#include <signal.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
 @@ -304,12 +304,6 @@
      signal(SIGQUIT, exit_handler);
      signal(SIGPIPE, exit_handler);

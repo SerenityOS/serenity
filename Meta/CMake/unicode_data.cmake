@@ -1,3 +1,5 @@
+include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
+
 set(UCD_VERSION 14.0.0)
 set(CLDR_VERSION 40.0.0)
 
@@ -67,23 +69,6 @@ set(CLDR_NUMBERS_PATH "${CLDR_PATH}/${CLDR_NUMBERS_SOURCE}")
 set(CLDR_UNITS_SOURCE cldr-units-modern)
 set(CLDR_UNITS_PATH "${CLDR_PATH}/${CLDR_UNITS_SOURCE}")
 
-function(remove_unicode_data_if_version_changed version version_file cache_path)
-    set(version_differs YES)
-
-    if (EXISTS "${version_file}")
-        file(STRINGS "${version_file}" active_version)
-        if (version STREQUAL active_version)
-            set(version_differs NO)
-        endif()
-    endif()
-
-    if (version_differs)
-        message(STATUS "Removing outdated ${cache_path} for version ${version}")
-        file(REMOVE_RECURSE "${cache_path}")
-        file(WRITE "${version_file}" "${version}")
-    endif()
-endfunction()
-
 function(download_ucd_file url path)
     if (NOT EXISTS "${path}")
         get_filename_component(file "${path}" NAME)
@@ -102,26 +87,9 @@ function(extract_cldr_file source path)
     endif()
 endfunction()
 
-function(invoke_generator name generator header implementation)
-    cmake_parse_arguments(invoke_generator "" "" "arguments" ${ARGN})
-
-    add_custom_command(
-        OUTPUT "${header}" "${implementation}"
-        COMMAND $<TARGET_FILE:${generator}> -h "${header}.tmp" -c "${implementation}.tmp" ${invoke_generator_arguments}
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${header}.tmp" "${header}"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${implementation}.tmp" "${implementation}"
-        COMMAND "${CMAKE_COMMAND}" -E remove "${header}.tmp" "${implementation}.tmp"
-        VERBATIM
-        DEPENDS ${generator} "${UCD_VERSION_FILE}" "${CLDR_VERSION_FILE}"
-    )
-
-    add_custom_target(generate_${UNICODE_META_TARGET_PREFIX}${name} DEPENDS "${header}" "${implementation}")
-    add_dependencies(all_generated generate_${UNICODE_META_TARGET_PREFIX}${name})
-endfunction()
-
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
-    remove_unicode_data_if_version_changed("${UCD_VERSION}" "${UCD_VERSION_FILE}" "${UCD_PATH}")
-    remove_unicode_data_if_version_changed("${CLDR_VERSION}" "${CLDR_VERSION_FILE}" "${CLDR_PATH}")
+    remove_path_if_version_changed("${UCD_VERSION}" "${UCD_VERSION_FILE}" "${UCD_PATH}")
+    remove_path_if_version_changed("${CLDR_VERSION}" "${CLDR_VERSION_FILE}" "${CLDR_PATH}")
 
     download_ucd_file("${UNICODE_DATA_URL}" "${UNICODE_DATA_PATH}")
     download_ucd_file("${SPECIAL_CASING_URL}" "${SPECIAL_CASING_PATH}")
@@ -182,6 +150,8 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     invoke_generator(
         "UnicodeData"
         Lagom::GenerateUnicodeData
+        "${UCD_VERSION_FILE}"
+        "${UNICODE_META_TARGET_PREFIX}"
         "${UNICODE_DATA_HEADER}"
         "${UNICODE_DATA_IMPLEMENTATION}"
         arguments -u "${UNICODE_DATA_PATH}" -s "${SPECIAL_CASING_PATH}" -g "${DERIVED_GENERAL_CATEGORY_PATH}" -p "${PROP_LIST_PATH}" -d "${DERIVED_CORE_PROP_PATH}" -b "${DERIVED_BINARY_PROP_PATH}" -a "${PROP_ALIAS_PATH}" -v "${PROP_VALUE_ALIAS_PATH}" -r "${SCRIPTS_PATH}" -x "${SCRIPT_EXTENSIONS_PATH}" -e "${EMOJI_DATA_PATH}" -m "${NAME_ALIAS_PATH}" -n "${NORM_PROPS_PATH}"
@@ -189,6 +159,8 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     invoke_generator(
         "UnicodeDateTimeFormat"
         Lagom::GenerateUnicodeDateTimeFormat
+        "${CLDR_VERSION_FILE}"
+        "${UNICODE_META_TARGET_PREFIX}"
         "${UNICODE_DATE_TIME_FORMAT_HEADER}"
         "${UNICODE_DATE_TIME_FORMAT_IMPLEMENTATION}"
         arguments -r "${CLDR_CORE_PATH}" -d "${CLDR_DATES_PATH}"
@@ -196,6 +168,8 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     invoke_generator(
         "UnicodeLocale"
         Lagom::GenerateUnicodeLocale
+        "${CLDR_VERSION_FILE}"
+        "${UNICODE_META_TARGET_PREFIX}"
         "${UNICODE_LOCALE_HEADER}"
         "${UNICODE_LOCALE_IMPLEMENTATION}"
         arguments -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}" -m "${CLDR_MISC_PATH}" -n "${CLDR_NUMBERS_PATH}" -d "${CLDR_DATES_PATH}"
@@ -203,6 +177,8 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     invoke_generator(
         "UnicodeNumberFormat"
         Lagom::GenerateUnicodeNumberFormat
+        "${CLDR_VERSION_FILE}"
+        "${UNICODE_META_TARGET_PREFIX}"
         "${UNICODE_NUMBER_FORMAT_HEADER}"
         "${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}"
         arguments -n "${CLDR_NUMBERS_PATH}" -u "${CLDR_UNITS_PATH}"

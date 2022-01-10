@@ -469,7 +469,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
 
     (void)function.body->run(*this);
 
-    retval = last_return_code;
+    retval = last_return_code.value_or(0);
     return true;
 }
 
@@ -536,8 +536,8 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
 
     take_error();
 
-    // If we end up executing nothing, let's return a failing exit code.
-    last_return_code = 128;
+    if (!last_return_code.has_value())
+        last_return_code = 0;
 
     ScopedValueRollback source_position_rollback { m_source_position };
     if (source_position_override.has_value())
@@ -581,7 +581,7 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
         return 1;
     }
 
-    return last_return_code;
+    return last_return_code.value_or(0);
 }
 
 ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
@@ -595,7 +595,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     if (command.argv.is_empty() && !command.should_immediately_execute_next) {
         m_global_redirections.extend(command.redirections);
         for (auto& next_in_chain : command.next_chain)
-            run_tail(command, next_in_chain, last_return_code);
+            run_tail(command, next_in_chain, last_return_code.value_or(0));
         return nullptr;
     }
 
@@ -668,9 +668,10 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     for (auto& redirection : command.redirections)
         TRY(resolve_redirection(redirection));
 
-    if (command.should_wait && run_builtin(command, rewirings, last_return_code)) {
+    if (int local_return_code = 0; command.should_wait && run_builtin(command, rewirings, local_return_code)) {
+        last_return_code = local_return_code;
         for (auto& next_in_chain : command.next_chain)
-            run_tail(command, next_in_chain, last_return_code);
+            run_tail(command, next_in_chain, *last_return_code);
         return nullptr;
     }
 
@@ -681,9 +682,10 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
         for (auto& rewiring : rewirings)
             TRY(Core::System::dup2(rewiring.old_fd, rewiring.new_fd));
 
-        if (invoke_function(command, last_return_code)) {
+        if (int local_return_code = 0; invoke_function(command, local_return_code)) {
+            last_return_code = local_return_code;
             for (auto& next_in_chain : command.next_chain)
-                run_tail(command, next_in_chain, last_return_code);
+                run_tail(command, next_in_chain, *last_return_code);
             return nullptr;
         }
     }
@@ -695,7 +697,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
         && command.next_chain.first().node->should_override_execution_in_current_process()) {
 
         for (auto& next_in_chain : command.next_chain)
-            run_tail(command, next_in_chain, last_return_code);
+            run_tail(command, next_in_chain, last_return_code.value_or(0));
         return nullptr;
     }
 
@@ -752,14 +754,14 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
             for (auto& next_in_chain : command.next_chain)
                 run_tail(command, next_in_chain, 0);
 
-            _exit(last_return_code);
+            _exit(last_return_code.value_or(0));
         }
 
-        if (run_builtin(command, {}, last_return_code))
-            _exit(last_return_code);
+        if (int local_return_code = 0; run_builtin(command, {}, local_return_code))
+            _exit(local_return_code);
 
-        if (invoke_function(command, last_return_code))
-            _exit(last_return_code);
+        if (int local_return_code = 0; invoke_function(command, local_return_code))
+            _exit(local_return_code);
 
         // We no longer need the jobs here.
         jobs.clear();
@@ -1765,7 +1767,12 @@ void Shell::notify_child_event()
             }
             if (child_pid == job.pid()) {
                 if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
-                    job.set_signalled(WTERMSIG(wstatus));
+                    auto signal = WTERMSIG(wstatus);
+                    job.set_signalled(signal);
+                    if (signal == SIGINT)
+                        raise_error(ShellError::InternalControlFlowInterrupted, "Interrupted"sv, job.command().position);
+                    else if (signal == SIGKILL)
+                        raise_error(ShellError::InternalControlFlowKilled, "Interrupted"sv, job.command().position);
                 } else if (WIFEXITED(wstatus)) {
                     job.set_has_exit(WEXITSTATUS(wstatus));
                 } else if (WIFSTOPPED(wstatus)) {
@@ -1998,6 +2005,8 @@ void Shell::possibly_print_error() const
         break;
     case ShellError::InternalControlFlowBreak:
     case ShellError::InternalControlFlowContinue:
+    case ShellError::InternalControlFlowInterrupted:
+    case ShellError::InternalControlFlowKilled:
         return;
     case ShellError::None:
         return;

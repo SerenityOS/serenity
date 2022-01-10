@@ -20,13 +20,6 @@ static constexpr u16 pcm_fixed_sample_rate = 48000;
 static constexpr u16 pcm_sample_rate_minimum = 8000;
 static constexpr u16 pcm_sample_rate_maximum = 48000;
 
-static ErrorOr<OwnPtr<Memory::Region>> allocate_physical_buffer(size_t size, StringView name)
-{
-    auto rounded_size = TRY(Memory::page_round_up(size));
-    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(rounded_size));
-    return TRY(MM.allocate_kernel_region_with_vmobject(move(vmobject), vmobject->size(), name, Memory::Region::Access::Write));
-}
-
 UNMAP_AFTER_INIT void AC97::detect()
 {
     PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
@@ -204,11 +197,12 @@ void AC97::set_pcm_output_volume(u8 left_channel, u8 right_channel, Muted mute)
 ErrorOr<size_t> AC97::write(OpenFileDescription&, u64, UserOrKernelBuffer const& data, size_t length)
 {
     if (!m_output_buffer) {
-        m_output_buffer = TRY(allocate_physical_buffer(m_output_buffer_page_count * PAGE_SIZE, "AC97 Output buffer"sv));
+        m_output_buffer = TRY(MM.allocate_dma_buffer_pages(m_output_buffer_page_count * PAGE_SIZE, "AC97 Output buffer"sv, Memory::Region::Access::Write));
     }
     if (!m_buffer_descriptor_list) {
-        constexpr size_t buffer_descriptor_list_size = buffer_descriptor_list_max_entries * sizeof(BufferDescriptorListEntry);
-        m_buffer_descriptor_list = TRY(allocate_physical_buffer(buffer_descriptor_list_size, "AC97 Buffer Descriptor List"sv));
+        size_t buffer_descriptor_list_size = buffer_descriptor_list_max_entries * sizeof(BufferDescriptorListEntry);
+        buffer_descriptor_list_size = TRY(Memory::page_round_up(buffer_descriptor_list_size));
+        m_buffer_descriptor_list = TRY(MM.allocate_dma_buffer_pages(buffer_descriptor_list_size, "AC97 Buffer Descriptor List"sv, Memory::Region::Access::Write));
     }
 
     auto remaining = length;

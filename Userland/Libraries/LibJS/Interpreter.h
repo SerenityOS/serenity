@@ -15,6 +15,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
@@ -52,7 +53,7 @@ public:
 
     ~Interpreter();
 
-    void run(GlobalObject&, const Program&);
+    ThrowCompletionOr<Value> run(GlobalObject&, const Program&);
 
     GlobalObject& global_object();
     const GlobalObject& global_object() const;

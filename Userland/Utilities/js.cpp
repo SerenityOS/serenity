@@ -915,6 +915,8 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
     if (s_dump_ast)
         program->dump(0);
 
+    auto result = JS::ThrowCompletionOr<JS::Value> { JS::js_undefined() };
+
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
         if (!s_disable_source_location_hints) {
@@ -922,7 +924,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             if (!hint.is_empty())
                 js_outln("{}", hint);
         }
-        vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
+        result = vm->throw_completion<JS::SyntaxError>(interpreter.global_object(), error.to_string());
     } else {
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
             auto executable = JS::Bytecode::Generator::generate(*program);
@@ -938,15 +940,12 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
 
             if (s_run_bytecode) {
                 JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object(), interpreter.realm());
-                auto result = bytecode_interpreter.run(executable);
-                // Since all the error handling code uses vm.exception() we just rethrow any exception we got here.
-                if (result.is_error())
-                    vm->throw_exception(interpreter.global_object(), *result.throw_completion().value());
+                result = bytecode_interpreter.run(executable);
             } else {
                 return true;
             }
         } else {
-            interpreter.run(interpreter.global_object(), *program);
+            result = interpreter.run(interpreter.global_object(), *program);
         }
     }
 
@@ -982,15 +981,15 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
         }
     };
 
-    if (vm->exception()) {
+    if (result.is_error()) {
         handle_exception();
         return false;
-    }
-    if (s_print_last_result)
-        print(vm->last_value());
-    if (vm->exception()) {
-        handle_exception();
-        return false;
+    } else if (s_print_last_result) {
+        print(result.value());
+        if (vm->exception()) {
+            handle_exception();
+            return false;
+        }
     }
     return true;
 }
@@ -1010,7 +1009,7 @@ static JS::ThrowCompletionOr<JS::Value> load_file_impl(JS::VM& vm, JS::GlobalObj
         return vm.throw_completion<JS::SyntaxError>(global_object, error.to_string());
     }
     // FIXME: Use eval()-like semantics and execute in current scope?
-    vm.interpreter().run(global_object, *program);
+    TRY(vm.interpreter().run(global_object, *program));
     return JS::js_undefined();
 }
 

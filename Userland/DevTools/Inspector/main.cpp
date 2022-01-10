@@ -95,11 +95,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Inspector", app_icon, window));
 
-    auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.set_fill_with_background_color(true);
-    widget.set_layout<GUI::VerticalBoxLayout>();
+    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    widget->set_fill_with_background_color(true);
+    widget->set_layout<GUI::VerticalBoxLayout>();
 
-    auto& splitter = widget.add<GUI::HorizontalSplitter>();
+    auto& splitter = widget->add<GUI::HorizontalSplitter>();
 
     remote_process.on_update = [&] {
         if (!remote_process.process_name().is_null())

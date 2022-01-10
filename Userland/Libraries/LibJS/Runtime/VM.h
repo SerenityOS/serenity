@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -21,6 +21,7 @@
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/ExecutionContext.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/Value.h>
@@ -148,10 +149,6 @@ public:
 
     ThrowCompletionOr<Value> resolve_this_binding(GlobalObject&);
 
-    Value last_value() const { return m_last_value; }
-    void set_last_value(Badge<Bytecode::Interpreter>, Value value) { m_last_value = value; }
-    void set_last_value(Badge<Interpreter>, Value value) { m_last_value = value; }
-
     const StackInfo& stack_info() const { return m_stack_info; };
 
     bool underscore_is_last_value() const { return m_underscore_is_last_value; }
@@ -248,7 +245,7 @@ private:
     [[nodiscard]] ThrowCompletionOr<Value> call_internal(FunctionObject&, Value this_value, Optional<MarkedValueList> arguments);
 
     ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object);
-    ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Object* iterator, bool& iterator_done, Environment* environment, GlobalObject& global_object);
+    ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment, GlobalObject& global_object);
 
     Exception* m_exception { nullptr };
 
@@ -260,8 +257,6 @@ private:
     Vector<ExecutionContext*> m_execution_context_stack;
 
     Vector<Vector<ExecutionContext*>> m_saved_execution_context_stacks;
-
-    Value m_last_value;
 
     StackInfo m_stack_info;
 

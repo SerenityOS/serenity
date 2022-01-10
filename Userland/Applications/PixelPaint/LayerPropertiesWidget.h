@@ -27,7 +27,7 @@ private:
     RefPtr<GUI::OpacitySlider> m_opacity_slider;
     RefPtr<GUI::TextBox> m_name_textbox;
 
-    WeakPtr<Layer> m_layer;
+    RefPtr<Layer> m_layer;
 };
 
 }

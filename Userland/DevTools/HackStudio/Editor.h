@@ -21,8 +21,10 @@ namespace HackStudio {
 class EditorWrapper;
 
 class Editor final : public GUI::TextEditor {
-    C_OBJECT(Editor)
+    C_OBJECT_ABSTRACT(Editor)
 public:
+    static ErrorOr<NonnullRefPtr<Editor>> try_create();
+
     virtual ~Editor() override;
 
     Function<void()> on_focus;
@@ -115,8 +117,8 @@ private:
     RefPtr<GUI::Action> m_move_execution_to_line_action;
 
     OwnPtr<LanguageClient> m_language_client;
-    void initialize_documentation_tooltip();
-    void initialize_parameters_hint_tooltip();
+    ErrorOr<void> initialize_documentation_tooltip();
+    ErrorOr<void> initialize_parameters_hint_tooltip();
 };
 
 }
