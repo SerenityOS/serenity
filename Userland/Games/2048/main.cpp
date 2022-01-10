@@ -165,7 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png")), [&](auto&) {
         start_a_new_game();
     })));
 
@@ -186,7 +186,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
 
     TRY(game_menu->try_add_separator());
-    TRY(game_menu->try_add_action(GUI::Action::create("&Settings...", [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&Settings...", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png")), [&](auto&) {
         change_settings();
     })));
 
