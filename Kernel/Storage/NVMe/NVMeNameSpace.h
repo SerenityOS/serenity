@@ -23,7 +23,7 @@ class NVMeNameSpace : public StorageDevice {
 
 public:
     static ErrorOr<NonnullRefPtr<NVMeNameSpace>> try_create(NonnullRefPtrVector<NVMeQueue> queues, u8 controller_id, u16 nsid, size_t storage_size, size_t lba_size);
-    explicit NVMeNameSpace(NonnullRefPtrVector<NVMeQueue> queues, size_t storage_size, size_t lba_size, size_t major_number, size_t minor_number, u16 nsid, NonnullOwnPtr<KString> early_device_name);
+    explicit NVMeNameSpace(NonnullRefPtrVector<NVMeQueue> queues, size_t storage_size, size_t lba_size, MajorNumber, MinorNumber, u16 nsid, NonnullOwnPtr<KString> early_device_name);
 
     CommandSet command_set() const override { return CommandSet::NVMe; };
     void start_request(AsyncBlockDeviceRequest& request) override;

@@ -19,8 +19,8 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeNameSpace>> NVMeNameSpace::try_create
     return TRY(DeviceManagement::try_create_device<NVMeNameSpace>(move(queues), storage_size, lba_size, major_number.value(), minor_number.value(), nsid, move(device_name_kstring)));
 }
 
-UNMAP_AFTER_INIT NVMeNameSpace::NVMeNameSpace(NonnullRefPtrVector<NVMeQueue> queues, size_t max_addresable_block, size_t lba_size, size_t major_number, size_t minor_number, u16 nsid, NonnullOwnPtr<KString> dev_name)
-    : StorageDevice(major_number, minor_number, lba_size, max_addresable_block, move(dev_name))
+UNMAP_AFTER_INIT NVMeNameSpace::NVMeNameSpace(NonnullRefPtrVector<NVMeQueue> queues, size_t max_addresable_block, size_t lba_size, MajorNumber major, MinorNumber minor, u16 nsid, NonnullOwnPtr<KString> dev_name)
+    : StorageDevice(major, minor, lba_size, max_addresable_block, move(dev_name))
     , m_nsid(nsid)
     , m_queues(move(queues))
 {
