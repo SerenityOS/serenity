@@ -34,6 +34,8 @@ public:
                 if constexpr (requires { that->revoke_weak_ptrs(); }) {
                     that->revoke_weak_ptrs();
                 }
+                if constexpr (requires { that->remove_from_secondary_lists(); })
+                    that->remove_from_secondary_lists();
             }
             return new_ref_count;
         };
