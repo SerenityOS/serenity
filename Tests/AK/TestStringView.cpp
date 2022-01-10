@@ -189,3 +189,15 @@ TEST_CASE(constexpr_stuff)
     }
 #undef do_test
 }
+
+TEST_CASE(case_insensitive_hash)
+{
+    auto string1 = "abcdef"sv;
+    auto string2 = "ABCDEF"sv;
+    auto string3 = "aBcDeF"sv;
+    auto string4 = "foo"sv;
+
+    EXPECT_EQ(CaseInsensitiveStringViewTraits::hash(string1), CaseInsensitiveStringViewTraits::hash(string2));
+    EXPECT_EQ(CaseInsensitiveStringViewTraits::hash(string1), CaseInsensitiveStringViewTraits::hash(string3));
+    EXPECT_NE(CaseInsensitiveStringViewTraits::hash(string1), CaseInsensitiveStringViewTraits::hash(string4));
+}

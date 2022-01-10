@@ -221,6 +221,15 @@ struct Traits<StringView> : public GenericTraits<StringView> {
     static unsigned hash(StringView s) { return s.hash(); }
 };
 
+struct CaseInsensitiveStringViewTraits : public Traits<StringView> {
+    static unsigned hash(StringView s)
+    {
+        if (s.is_empty())
+            return 0;
+        return case_insensitive_string_hash(s.characters_without_null_termination(), s.length());
+    }
+};
+
 }
 
 [[nodiscard]] ALWAYS_INLINE constexpr AK::StringView operator"" sv(const char* cstring, size_t length)
@@ -228,4 +237,5 @@ struct Traits<StringView> : public GenericTraits<StringView> {
     return AK::StringView(cstring, length);
 }
 
+using AK::CaseInsensitiveStringViewTraits;
 using AK::StringView;
