@@ -177,9 +177,9 @@ static String format_identifier(StringView owner, String identifier)
             auto offset = identifier.substring_view(gmt_time_zone.length());
 
             if (offset.starts_with('+'))
-                identifier = String::formatted("{}_P{}", gmt_time_zone, offset.substring_view(1));
+                identifier = String::formatted("{}_Ahead_{}", gmt_time_zone, offset.substring_view(1));
             else if (offset.starts_with('-'))
-                identifier = String::formatted("{}_M{}", gmt_time_zone, offset.substring_view(1));
+                identifier = String::formatted("{}_Behind_{}", gmt_time_zone, offset.substring_view(1));
         }
     }
 
