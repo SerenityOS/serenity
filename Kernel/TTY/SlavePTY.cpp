@@ -37,7 +37,7 @@ bool SlavePTY::unref() const
 }
 
 SlavePTY::SlavePTY(MasterPTY& master, unsigned index, NonnullOwnPtr<KString> tty_name)
-    : TTY(201, index)
+    : TTY(encoded_device(201, index))
     , m_master(master)
     , m_index(index)
     , m_tty_name(move(tty_name))

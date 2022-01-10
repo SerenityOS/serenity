@@ -23,7 +23,7 @@ bool DeviceControlDevice::can_read(const OpenFileDescription&, u64) const
 }
 
 UNMAP_AFTER_INIT DeviceControlDevice::DeviceControlDevice()
-    : CharacterDevice(2, 10)
+    : CharacterDevice(encoded_device(2, 10))
 {
 }
 

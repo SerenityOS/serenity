@@ -10,7 +10,7 @@
 namespace Kernel {
 
 MouseDevice::MouseDevice()
-    : HIDDevice(10, HIDManagement::the().generate_minor_device_number_for_mouse())
+    : HIDDevice(encoded_device(10, HIDManagement::the().generate_minor_device_number_for_mouse()))
 {
 }
 

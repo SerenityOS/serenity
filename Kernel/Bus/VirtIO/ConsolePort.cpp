@@ -20,7 +20,7 @@ ErrorOr<NonnullRefPtr<ConsolePort>> ConsolePort::try_create(unsigned port, Conso
 }
 
 ConsolePort::ConsolePort(unsigned port, VirtIO::Console& console, NonnullOwnPtr<Memory::RingBuffer> receive_buffer, NonnullOwnPtr<Memory::RingBuffer> transmit_buffer)
-    : CharacterDevice(229, next_device_id++)
+    : CharacterDevice(encoded_device(229, next_device_id++))
     , m_receive_buffer(move(receive_buffer))
     , m_transmit_buffer(move(transmit_buffer))
     , m_console(console)

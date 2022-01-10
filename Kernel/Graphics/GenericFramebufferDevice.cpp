@@ -150,7 +150,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
 }
 
 GenericFramebufferDevice::GenericFramebufferDevice(const GenericGraphicsAdapter& adapter)
-    : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
+    : BlockDevice(encoded_device(29, GraphicsManagement::the().allocate_minor_device_number()))
     , m_graphics_adapter(adapter)
 {
 }

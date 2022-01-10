@@ -20,8 +20,8 @@
 
 namespace Kernel {
 
-TTY::TTY(MajorNumber major, MinorNumber minor)
-    : CharacterDevice(major, minor)
+TTY::TTY(DeviceID id)
+    : CharacterDevice(id)
 {
     set_default_termios();
 }

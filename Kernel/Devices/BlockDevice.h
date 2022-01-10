@@ -66,8 +66,8 @@ public:
     virtual void start_request(AsyncBlockDeviceRequest&) = 0;
 
 protected:
-    BlockDevice(MajorNumber major, MinorNumber minor, size_t block_size = PAGE_SIZE)
-        : Device(major, minor)
+    BlockDevice(DeviceID id, size_t block_size = PAGE_SIZE)
+        : Device(id)
         , m_block_size(block_size)
     {
         // 512 is the minimum sector size in most block devices

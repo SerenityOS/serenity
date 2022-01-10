@@ -18,14 +18,14 @@ class RamdiskDevice final : public StorageDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<RamdiskDevice> create(const RamdiskController&, NonnullOwnPtr<Memory::Region>&& region, MajorNumber major, MinorNumber minor);
+    static NonnullRefPtr<RamdiskDevice> create(const RamdiskController&, NonnullOwnPtr<Memory::Region>&& region, DeviceID);
     virtual ~RamdiskDevice() override;
 
     // ^DiskDevice
     virtual StringView class_name() const override;
 
 private:
-    RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&&, MajorNumber major, MinorNumber minor, NonnullOwnPtr<KString> device_name);
+    RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&&, DeviceID, NonnullOwnPtr<KString> device_name);
 
     // ^BlockDevice
     virtual void start_request(AsyncBlockDeviceRequest&) override;

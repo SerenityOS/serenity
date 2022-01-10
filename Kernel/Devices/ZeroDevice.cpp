@@ -20,7 +20,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ZeroDevice> ZeroDevice::must_create()
 }
 
 UNMAP_AFTER_INIT ZeroDevice::ZeroDevice()
-    : CharacterDevice(1, 5)
+    : CharacterDevice(encoded_device(1, 5))
 {
 }
 

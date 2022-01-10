@@ -31,7 +31,7 @@ ErrorOr<NonnullRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
 }
 
 MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer, NonnullOwnPtr<KString> pts_name)
-    : CharacterDevice(200, index)
+    : CharacterDevice(encoded_device(200, index))
     , m_index(index)
     , m_buffer(move(buffer))
     , m_pts_name(move(pts_name))

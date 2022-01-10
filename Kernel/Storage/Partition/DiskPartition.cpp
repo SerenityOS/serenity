@@ -20,7 +20,7 @@ NonnullRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, MinorNum
 }
 
 DiskPartition::DiskPartition(BlockDevice& device, MinorNumber minor_number, DiskPartitionMetadata metadata)
-    : BlockDevice(100, minor_number, device.block_size())
+    : BlockDevice(encoded_device(100, minor_number), device.block_size())
     , m_device(device)
     , m_metadata(metadata)
 {

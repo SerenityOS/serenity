@@ -48,7 +48,7 @@ RamdiskController::RamdiskController()
             if (region_or_error.is_error()) {
                 dmesgln("RamdiskController: Failed to allocate kernel region of size {}", length);
             } else {
-                m_devices.append(RamdiskDevice::create(*this, region_or_error.release_value(), 6, count));
+                m_devices.append(RamdiskDevice::create(*this, region_or_error.release_value(), encoded_device(6, count)));
             }
             count++;
         }

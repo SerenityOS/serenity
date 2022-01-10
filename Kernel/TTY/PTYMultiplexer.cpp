@@ -22,7 +22,7 @@ PTYMultiplexer& PTYMultiplexer::the()
 }
 
 UNMAP_AFTER_INIT PTYMultiplexer::PTYMultiplexer()
-    : CharacterDevice(5, 2)
+    : CharacterDevice(encoded_device(5, 2))
 {
     m_freelist.with([&](auto& freelist) {
         freelist.ensure_capacity(max_pty_pairs);

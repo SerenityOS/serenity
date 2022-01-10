@@ -16,11 +16,11 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeNameSpace>> NVMeNameSpace::try_create
     auto minor_number = StorageManagement::generate_storage_minor_number();
     auto major_number = StorageManagement::storage_type_major_number();
     auto device_name_kstring = TRY(KString::formatted("nvme{:d}n{:d}", controller_id, nsid));
-    return TRY(DeviceManagement::try_create_device<NVMeNameSpace>(move(queues), storage_size, lba_size, major_number.value(), minor_number.value(), nsid, move(device_name_kstring)));
+    return TRY(DeviceManagement::try_create_device<NVMeNameSpace>(move(queues), storage_size, lba_size, encoded_device(major_number, minor_number), nsid, move(device_name_kstring)));
 }
 
-UNMAP_AFTER_INIT NVMeNameSpace::NVMeNameSpace(NonnullRefPtrVector<NVMeQueue> queues, size_t max_addresable_block, size_t lba_size, MajorNumber major, MinorNumber minor, u16 nsid, NonnullOwnPtr<KString> dev_name)
-    : StorageDevice(major, minor, lba_size, max_addresable_block, move(dev_name))
+UNMAP_AFTER_INIT NVMeNameSpace::NVMeNameSpace(NonnullRefPtrVector<NVMeQueue> queues, size_t max_addresable_block, size_t lba_size, DeviceID device_id, u16 nsid, NonnullOwnPtr<KString> dev_name)
+    : StorageDevice(device_id, lba_size, max_addresable_block, move(dev_name))
     , m_nsid(nsid)
     , m_queues(move(queues))
 {

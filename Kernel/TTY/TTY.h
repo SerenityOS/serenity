@@ -53,7 +53,7 @@ protected:
     virtual ErrorOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 
-    TTY(MajorNumber major, MinorNumber minor);
+    TTY(DeviceID id);
     void emit(u8, bool do_evaluate_block_conditions = false);
     void echo_with_processing(u8);
 

@@ -114,9 +114,8 @@ RefPtr<SysFSComponent> SysFSCharacterDevicesDirectory::lookup(StringView name)
     });
 }
 
-Device::Device(MajorNumber major, MinorNumber minor)
-    : m_major(major)
-    , m_minor(minor)
+Device::Device(DeviceID id)
+    : m_id(id)
 {
 }
 

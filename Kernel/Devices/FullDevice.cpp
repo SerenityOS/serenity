@@ -21,7 +21,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<FullDevice> FullDevice::must_create()
 }
 
 UNMAP_AFTER_INIT FullDevice::FullDevice()
-    : CharacterDevice(1, 7)
+    : CharacterDevice(encoded_device(1, 7))
 {
 }
 

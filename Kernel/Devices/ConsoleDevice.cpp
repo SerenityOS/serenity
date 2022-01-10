@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ConsoleDevice> ConsoleDevice::must_create()
 }
 
 UNMAP_AFTER_INIT ConsoleDevice::ConsoleDevice()
-    : CharacterDevice(5, 1)
+    : CharacterDevice(encoded_device(5, 1))
 {
 }
 

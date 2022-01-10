@@ -20,7 +20,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<NullDevice> NullDevice::must_initialize()
 }
 
 UNMAP_AFTER_INIT NullDevice::NullDevice()
-    : CharacterDevice(1, 3)
+    : CharacterDevice(encoded_device(1, 3))
 {
 }
 

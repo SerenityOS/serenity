@@ -37,12 +37,12 @@ protected:
 public:
     virtual ~Device() override;
 
-    MajorNumber major() const { return m_major; }
-    MinorNumber minor() const { return m_minor; }
+    MajorNumber major() const { return major_from_encoded_device(m_id); }
+    MinorNumber minor() const { return minor_from_encoded_device(m_id); }
 
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
-    DeviceID id() const { return encoded_device(m_major, m_minor); }
+    DeviceID id() const { return m_id; }
     UserID uid() const { return m_uid; }
     GroupID gid() const { return m_gid; }
 
@@ -64,13 +64,12 @@ public:
     }
 
 protected:
-    Device(MajorNumber major, MinorNumber minor);
+    Device(DeviceID id);
     void set_uid(UserID uid) { m_uid = uid; }
     void set_gid(GroupID gid) { m_gid = gid; }
 
 private:
-    MajorNumber m_major { 0 };
-    MinorNumber m_minor { 0 };
+    DeviceID m_id { 0 };
     UserID m_uid { 0 };
     GroupID m_gid { 0 };
 

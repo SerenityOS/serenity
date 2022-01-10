@@ -13,23 +13,23 @@
 
 namespace Kernel {
 
-NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(const RamdiskController& controller, NonnullOwnPtr<Memory::Region>&& region, MajorNumber major, MinorNumber minor)
+NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(const RamdiskController& controller, NonnullOwnPtr<Memory::Region>&& region, DeviceID id)
 {
     // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
-    size_t drive_index = minor.value() / 16;
+    size_t drive_index = minor_from_encoded_device(id).value() / 16;
     auto device_name = MUST(KString::formatted("ramdisk{}", drive_index));
 
-    auto device_or_error = DeviceManagement::try_create_device<RamdiskDevice>(controller, move(region), major, minor, move(device_name));
+    auto device_or_error = DeviceManagement::try_create_device<RamdiskDevice>(controller, move(region), id, move(device_name));
     // FIXME: Find a way to propagate errors
     VERIFY(!device_or_error.is_error());
     return device_or_error.release_value();
 }
 
-RamdiskDevice::RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&& region, MajorNumber major, MinorNumber minor, NonnullOwnPtr<KString> device_name)
-    : StorageDevice(major, minor, 512, region->size() / 512, move(device_name))
+RamdiskDevice::RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&& region, DeviceID id, NonnullOwnPtr<KString> device_name)
+    : StorageDevice(id, 512, region->size() / 512, move(device_name))
     , m_region(move(region))
 {
-    dmesgln("Ramdisk: Device #{} @ {}, Capacity={}", minor, m_region->vaddr(), max_addressable_block() * 512);
+    dmesgln("Ramdisk: Device #{} @ {}, Capacity={}", minor_from_encoded_device(id), m_region->vaddr(), max_addressable_block() * 512);
 }
 
 RamdiskDevice::~RamdiskDevice()

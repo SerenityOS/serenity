@@ -177,7 +177,7 @@ void VirtualConsole::refresh_after_resolution_change()
 }
 
 UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index, NonnullOwnPtr<KString> tty_name)
-    : TTY(4, index)
+    : TTY(encoded_device(4, index))
     , m_index(index)
     , m_tty_name(move(tty_name))
     , m_console_impl(*this)

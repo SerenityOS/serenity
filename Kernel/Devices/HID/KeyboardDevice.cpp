@@ -270,7 +270,7 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
 // FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices
 // like USB keyboards, we need to remove this
 UNMAP_AFTER_INIT KeyboardDevice::KeyboardDevice()
-    : HIDDevice(85, HIDManagement::the().generate_minor_device_number_for_keyboard())
+    : HIDDevice(encoded_device(85, HIDManagement::the().generate_minor_device_number_for_keyboard()))
 {
 }
 

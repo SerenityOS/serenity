@@ -23,8 +23,8 @@ public:
     virtual void enable_interrupts() = 0;
 
 protected:
-    HIDDevice(MajorNumber major, MinorNumber minor)
-        : CharacterDevice(major, minor)
+    HIDDevice(DeviceID id)
+        : CharacterDevice(id)
     {
     }
 

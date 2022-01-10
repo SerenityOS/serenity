@@ -46,7 +46,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SerialDevice> SerialDevice::must_create(size_t co
 }
 
 UNMAP_AFTER_INIT SerialDevice::SerialDevice(IOAddress base_addr, MinorNumber minor)
-    : CharacterDevice(4, minor)
+    : CharacterDevice(encoded_device(4, minor))
     , m_base_addr(base_addr)
 {
     initialize();

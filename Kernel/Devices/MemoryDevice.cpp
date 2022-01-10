@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<MemoryDevice> MemoryDevice::must_create()
 }
 
 UNMAP_AFTER_INIT MemoryDevice::MemoryDevice()
-    : CharacterDevice(1, 1)
+    : CharacterDevice(encoded_device(1, 1))
 {
 }
 

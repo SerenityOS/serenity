@@ -15,8 +15,8 @@ public:
     virtual ~CharacterDevice() override;
 
 protected:
-    CharacterDevice(MajorNumber major, MinorNumber minor)
-        : Device(major, minor)
+    CharacterDevice(DeviceID id)
+        : Device(id)
     {
     }
 

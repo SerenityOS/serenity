@@ -20,7 +20,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<RandomDevice> RandomDevice::must_create()
 }
 
 UNMAP_AFTER_INIT RandomDevice::RandomDevice()
-    : CharacterDevice(1, 8)
+    : CharacterDevice(encoded_device(1, 8))
 {
 }
 
