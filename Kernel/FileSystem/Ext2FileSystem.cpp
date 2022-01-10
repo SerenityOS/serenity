@@ -1553,11 +1553,6 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
     return fs().get_inode({ fsid(), inode_index });
 }
 
-void Ext2FSInode::one_ref_left()
-{
-    // FIXME: I would like to not live forever, but uncached Ext2FS is fucking painful right now.
-}
-
 ErrorOr<void> Ext2FSInode::set_atime(time_t t)
 {
     MutexLocker locker(m_inode_lock);
