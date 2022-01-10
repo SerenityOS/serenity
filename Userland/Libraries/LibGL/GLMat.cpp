@@ -112,6 +112,11 @@ void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdou
     g_gl_context->gl_ortho(left, right, bottom, top, nearVal, farVal);
 }
 
+void glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z)
+{
+    g_gl_context->gl_rotate(angle, x, y, z);
+}
+
 void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
     g_gl_context->gl_rotate(angle, x, y, z);
