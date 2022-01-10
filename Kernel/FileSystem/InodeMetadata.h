@@ -17,7 +17,7 @@ namespace Kernel {
 
 class Process;
 
-constexpr u64 encoded_device(MajorNumber major, MinorNumber minor)
+constexpr DeviceID encoded_device(MajorNumber major, MinorNumber minor)
 {
     return (minor.value() & 0xff) | (major.value() << 8) | ((minor.value() & ~0xff) << 12);
 }
