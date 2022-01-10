@@ -45,6 +45,11 @@ void glLightModelfv(GLenum pname, GLfloat const* params)
     }
 }
 
+void glLightModeli(GLenum pname, GLint param)
+{
+    g_gl_context->gl_light_model(pname, param, 0.0f, 0.0f, 0.0f);
+}
+
 void glMaterialf(GLenum face, GLenum pname, GLfloat param)
 {
     g_gl_context->gl_materialv(face, pname, &param);
