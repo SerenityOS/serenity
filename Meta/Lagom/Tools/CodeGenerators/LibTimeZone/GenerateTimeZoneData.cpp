@@ -13,6 +13,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 
+namespace {
+
 struct Time {
     i8 hour { 0 };
     u8 minute { 0 };
@@ -248,6 +250,8 @@ namespace TimeZone {
 )~~~");
 
     VERIFY(file.write(generator.as_string_view()));
+}
+
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
