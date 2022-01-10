@@ -399,12 +399,18 @@ enum class @name@ : @underlying@ {)~~~");
 )~~~");
 }
 
-template<typename LocalesType, typename ListFormatter>
-void generate_mapping(SourceGenerator& generator, LocalesType const& locales, StringView type, StringView name, StringView format, ListFormatter&& format_list)
+template<typename LocalesType, typename IdentifierFormatter, typename ListFormatter>
+void generate_mapping(SourceGenerator& generator, LocalesType const& locales, StringView type, StringView name, StringView format, IdentifierFormatter&& format_identifier, ListFormatter&& format_list)
 {
-    auto format_mapping_name = [](StringView format, StringView name) {
-        auto mapping_name = name.to_lowercase_string().replace("-"sv, "_"sv, true).replace("/"sv, "_"sv, true);
-        return String::formatted(format, mapping_name);
+    auto format_mapping_name = [&](StringView format, StringView name) {
+        String mapping_name;
+
+        if constexpr (IsNullPointer<IdentifierFormatter>)
+            mapping_name = name.replace("-"sv, "_"sv, true);
+        else
+            mapping_name = format_identifier(type, name);
+
+        return String::formatted(format, mapping_name.to_lowercase());
     };
 
     Vector<String> mapping_names;
