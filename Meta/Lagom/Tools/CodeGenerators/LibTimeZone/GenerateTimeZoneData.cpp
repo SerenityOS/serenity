@@ -235,12 +235,19 @@ namespace TimeZone {
         HashValueMap<String> hashes;
         hashes.ensure_capacity(values.size());
 
-        for (auto const& value : values)
-            hashes.set(value.hash(), format_identifier(enum_title, value));
-        for (auto const& alias : aliases)
-            hashes.set(alias.alias.hash(), format_identifier(enum_title, alias.alias));
+        auto hash = [](auto const& value) {
+            return CaseInsensitiveStringViewTraits::hash(value);
+        };
 
-        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
+        for (auto const& value : values)
+            hashes.set(hash(value), format_identifier(enum_title, value));
+        for (auto const& alias : aliases)
+            hashes.set(hash(alias.alias), format_identifier(enum_title, alias.alias));
+
+        ValueFromStringOptions options {};
+        options.sensitivity = CaseSensitivity::CaseInsensitive;
+
+        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes), options);
     };
 
     append_from_string("TimeZone"sv, "time_zone"sv, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
