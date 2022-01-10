@@ -158,10 +158,10 @@ set(KERNEL_SOURCES
     Memory/PhysicalRegion.cpp
     Memory/PhysicalZone.cpp
     Memory/PrivateInodeVMObject.cpp
-        Memory/ScopedAddressSpaceSwitcher.cpp
     Memory/Region.cpp
     Memory/RingBuffer.cpp
     Memory/ScatterGatherList.cpp
+    Memory/ScopedAddressSpaceSwitcher.cpp
     Memory/SharedInodeVMObject.cpp
     Memory/VMObject.cpp
     Memory/VirtualRange.cpp
