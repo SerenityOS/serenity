@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/StringView.h>
+#include <AK/Time.h>
 #include <LibTimeZone/TimeZone.h>
 
 #if ENABLE_TIME_ZONE_DATA
@@ -82,6 +83,47 @@ TEST_CASE(canonicalize_time_zone)
     EXPECT_EQ(TimeZone::canonicalize_time_zone("Etc/GMT"sv), "UTC"sv);
 
     EXPECT(!TimeZone::canonicalize_time_zone("I don't exist"sv).has_value());
+}
+
+TEST_CASE(get_time_zone_offset)
+{
+    auto offset = [](i64 sign, i64 hours, i64 minutes, i64 seconds) {
+        return sign * ((hours * 3600) + (minutes * 60) + seconds);
+    };
+
+    auto test_offset = [](auto time_zone, i64 time, i64 expected_offset) {
+        auto actual_offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_seconds(time));
+        VERIFY(actual_offset.has_value());
+        EXPECT_EQ(*actual_offset, expected_offset);
+    };
+
+    test_offset("America/Chicago"sv, -2717668237, offset(-1, 5, 50, 36)); // Sunday, November 18, 1883 12:09:23 PM
+    test_offset("America/Chicago"sv, -2717668236, offset(-1, 6, 00, 00)); // Sunday, November 18, 1883 12:09:24 PM
+    test_offset("America/Chicago"sv, -1067810460, offset(-1, 6, 00, 00)); // Sunday, March 1, 1936 1:59:00 AM
+    test_offset("America/Chicago"sv, -1067810400, offset(-1, 5, 00, 00)); // Sunday, March 1, 1936 2:00:00 AM
+    test_offset("America/Chicago"sv, -1045432860, offset(-1, 5, 00, 00)); // Sunday, November 15, 1936 1:59:00 AM
+    test_offset("America/Chicago"sv, -1045432800, offset(-1, 6, 00, 00)); // Sunday, November 15, 1936 2:00:00 AM
+
+    test_offset("Europe/London"sv, -3852662401, offset(-1, 0, 01, 15)); // Tuesday, November 30, 1847 11:59:59 PM
+    test_offset("Europe/London"sv, -3852662400, offset(+1, 0, 00, 00)); // Wednesday, December 1, 1847 12:00:00 AM
+    test_offset("Europe/London"sv, -37238401, offset(+1, 0, 00, 00));   // Saturday, October 26, 1968 11:59:59 PM
+    test_offset("Europe/London"sv, -37238400, offset(+1, 1, 00, 00));   // Sunday, October 27, 1968 12:00:00 AM
+    test_offset("Europe/London"sv, 57722399, offset(+1, 1, 00, 00));    // Sunday, October 31, 1971 1:59:59 AM
+    test_offset("Europe/London"sv, 57722400, offset(+1, 0, 00, 00));    // Sunday, October 31, 1971 2:00:00 AM
+
+    test_offset("UTC"sv, -1641846268, offset(+1, 0, 00, 00));
+    test_offset("UTC"sv, 0, offset(+1, 0, 00, 00));
+    test_offset("UTC"sv, 1641846268, offset(+1, 0, 00, 00));
+
+    test_offset("Etc/GMT+4"sv, -1641846268, offset(-1, 4, 00, 00));
+    test_offset("Etc/GMT+5"sv, 0, offset(-1, 5, 00, 00));
+    test_offset("Etc/GMT+6"sv, 1641846268, offset(-1, 6, 00, 00));
+
+    test_offset("Etc/GMT-12"sv, -1641846268, offset(+1, 12, 00, 00));
+    test_offset("Etc/GMT-13"sv, 0, offset(+1, 13, 00, 00));
+    test_offset("Etc/GMT-14"sv, 1641846268, offset(+1, 14, 00, 00));
+
+    EXPECT(!TimeZone::get_time_zone_offset("I don't exist"sv, {}).has_value());
 }
 
 #endif
