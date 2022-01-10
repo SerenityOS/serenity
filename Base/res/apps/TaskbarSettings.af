@@ -1,0 +1,5 @@
+[App]
+Name=Taskbar Settings
+Executable=/bin/TaskbarSettings
+Category=Settings
+Description=Customize the taskbar settings
