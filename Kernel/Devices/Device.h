@@ -42,6 +42,7 @@ public:
 
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
+    DeviceID id() const { return encoded_device(m_major, m_minor); }
     UserID uid() const { return m_uid; }
     GroupID gid() const { return m_gid; }
 

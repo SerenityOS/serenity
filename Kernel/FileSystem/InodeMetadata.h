@@ -21,8 +21,8 @@ constexpr u64 encoded_device(MajorNumber major, MinorNumber minor)
 {
     return (minor.value() & 0xff) | (major.value() << 8) | ((minor.value() & ~0xff) << 12);
 }
-static inline MajorNumber major_from_encoded_device(dev_t dev) { return (dev & 0xfff00u) >> 8u; }
-static inline MinorNumber minor_from_encoded_device(dev_t dev) { return (dev & 0xffu) | ((dev >> 12u) & 0xfff00u); }
+static inline MajorNumber major_from_encoded_device(DeviceID dev) { return (dev.value() & 0xfff00u) >> 8u; }
+static inline MinorNumber minor_from_encoded_device(DeviceID dev) { return (dev.value() & 0xffu) | ((dev.value() >> 12u) & 0xfff00u); }
 
 inline bool is_directory(mode_t mode) { return (mode & S_IFMT) == S_IFDIR; }
 inline bool is_character_device(mode_t mode) { return (mode & S_IFMT) == S_IFCHR; }

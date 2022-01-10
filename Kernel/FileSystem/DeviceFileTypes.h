@@ -10,6 +10,7 @@
 
 namespace Kernel {
 
+TYPEDEF_DISTINCT_ORDERED_ID(uint32_t, DeviceID);
 TYPEDEF_DISTINCT_ORDERED_ID(unsigned, MajorNumber);
 TYPEDEF_DISTINCT_ORDERED_ID(unsigned, MinorNumber);
 
