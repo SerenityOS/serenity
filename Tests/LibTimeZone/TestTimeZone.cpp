@@ -46,4 +46,11 @@ TEST_CASE(time_zone_from_string_link)
     test_link("Universal"sv, "UTC"sv);
 }
 
+TEST_CASE(case_insensitive_time_zone_from_string)
+{
+    EXPECT_EQ(TimeZone::time_zone_from_string("UTC"sv), TimeZone::TimeZone::UTC);
+    EXPECT_EQ(TimeZone::time_zone_from_string("utc"sv), TimeZone::TimeZone::UTC);
+    EXPECT_EQ(TimeZone::time_zone_from_string("uTc"sv), TimeZone::TimeZone::UTC);
+}
+
 #endif
