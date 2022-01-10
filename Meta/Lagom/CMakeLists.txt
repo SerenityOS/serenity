@@ -576,6 +576,15 @@ if (BUILD_LAGOM)
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS)
         endforeach()
 
+        # TimeZone
+        file(GLOB LIBTIMEZONE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibTimeZone/*.cpp")
+        foreach(source ${LIBTIMEZONE_TEST_SOURCES})
+            lagom_test(${source} LIBS LagomTimeZone)
+
+            get_filename_component(target "${source}" NAME_WLE)
+            target_compile_definitions("${target}_lagom" PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
+        endforeach()
+
         # Unicode
         file(GLOB LIBUNICODE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibUnicode/*.cpp")
         foreach(source ${LIBUNICODE_TEST_SOURCES})
