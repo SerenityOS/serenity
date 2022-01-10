@@ -33,9 +33,6 @@ public:
     bool is_symlink() const { return Kernel::is_symlink(m_raw_inode.i_mode); }
     bool is_directory() const { return Kernel::is_directory(m_raw_inode.i_mode); }
 
-    // ^Inode (RefCounted magic)
-    virtual void one_ref_left() override;
-
 private:
     // ^Inode
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
