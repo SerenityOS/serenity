@@ -52,6 +52,7 @@ GlyphMapWidget::GlyphMapWidget()
     set_focus_policy(FocusPolicy::StrongFocus);
     horizontal_scrollbar().set_visible(false);
     did_change_font();
+    set_active_glyph('A');
 }
 
 GlyphMapWidget::~GlyphMapWidget()
@@ -236,7 +237,6 @@ void GlyphMapWidget::did_change_font()
 {
     recalculate_content_size();
     vertical_scrollbar().set_step(font().glyph_height() + m_vertical_spacing);
-    set_active_glyph('A');
 }
 
 void GlyphMapWidget::scroll_to_glyph(int glyph)
