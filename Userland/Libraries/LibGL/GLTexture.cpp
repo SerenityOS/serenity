@@ -69,6 +69,11 @@ void glTexEnvf(GLenum target, GLenum pname, GLfloat param)
     g_gl_context->gl_tex_env(target, pname, param);
 }
 
+void glTexEnvi(GLenum target, GLenum pname, GLint param)
+{
+    g_gl_context->gl_tex_env(target, pname, param);
+}
+
 void glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
 {
     g_gl_context->gl_copy_tex_image_2d(target, level, internalformat, x, y, width, height, border);
