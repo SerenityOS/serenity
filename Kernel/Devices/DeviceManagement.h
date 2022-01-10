@@ -44,7 +44,7 @@ public:
     void before_device_removal(Badge<Device>, Device&);
 
     void for_each(Function<void(Device&)>);
-    Device* get_device(MajorNumber major, MinorNumber minor);
+    Device* get_device(DeviceID);
 
     NullDevice const& null_device() const;
     NullDevice& null_device();
@@ -73,7 +73,7 @@ private:
     RefPtr<ConsoleDevice> m_console_device;
     RefPtr<DeviceControlDevice> m_device_control_device;
     // FIXME: Once we have a singleton for managing many sound cards, remove this from here
-    SpinlockProtected<HashMap<u64, Device*>> m_devices;
+    SpinlockProtected<HashMap<DeviceID, Device*>> m_devices;
 
     mutable Spinlock m_event_queue_lock;
     CircularQueue<DeviceEvent, 100> m_event_queue;
