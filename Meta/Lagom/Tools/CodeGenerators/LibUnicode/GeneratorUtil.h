@@ -364,6 +364,36 @@ Optional<@return_type@> @method_name@(StringView key)
 }
 
 template<typename IdentifierFormatter>
+void generate_value_to_string(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, IdentifierFormatter&& format_identifier, Span<String const> values)
+{
+    generator.set("method_name", String::formatted(method_name_format, value_name));
+    generator.set("value_type", value_type);
+    generator.set("value_name", value_name);
+
+    generator.append(R"~~~(
+StringView @method_name@(@value_type@ @value_name@)
+{
+    using enum @value_type@;
+
+    switch (@value_name@) {)~~~");
+
+    for (auto const& value : values) {
+        generator.set("enum_value", format_identifier(value_type, value));
+        generator.set("string_value", value);
+        generator.append(R"~~~(
+    case @enum_value@:
+        return "@string_value@"sv;)~~~");
+    }
+
+    generator.append(R"~~~(
+    }
+
+    VERIFY_NOT_REACHED();
+}
+)~~~");
+}
+
+template<typename IdentifierFormatter>
 void generate_enum(SourceGenerator& generator, IdentifierFormatter&& format_identifier, StringView name, StringView default_, Vector<String>& values, Vector<Alias> aliases = {})
 {
     quick_sort(values, [](auto const& value1, auto const& value2) { return value1.to_lowercase() < value2.to_lowercase(); });

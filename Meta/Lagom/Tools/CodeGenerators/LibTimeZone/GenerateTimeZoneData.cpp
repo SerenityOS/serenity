@@ -231,7 +231,7 @@ static void generate_time_zone_data_implementation(Core::File& file, TimeZoneDat
 namespace TimeZone {
 )~~~");
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, auto const& aliases) {
+    auto append_string_conversions = [&](StringView enum_title, StringView enum_snake, auto const& values, auto const& aliases) {
         HashValueMap<String> hashes;
         hashes.ensure_capacity(values.size());
 
@@ -248,9 +248,10 @@ namespace TimeZone {
         options.sensitivity = CaseSensitivity::CaseInsensitive;
 
         generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes), options);
+        generate_value_to_string(generator, "{}_to_string"sv, enum_title, enum_snake, format_identifier, values);
     };
 
-    append_from_string("TimeZone"sv, "time_zone"sv, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
+    append_string_conversions("TimeZone"sv, "time_zone"sv, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
 
     generator.append(R"~~~(
 }

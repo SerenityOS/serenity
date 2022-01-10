@@ -9,5 +9,6 @@
 namespace TimeZone {
 
 Optional<TimeZone> __attribute__((weak)) time_zone_from_string(StringView) { return {}; }
+StringView __attribute__((weak)) time_zone_to_string(TimeZone) { return {}; }
 
 }
