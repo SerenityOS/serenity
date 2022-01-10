@@ -123,7 +123,7 @@ UNMAP_AFTER_INIT void MemoryManager::unmap_prekernel()
     auto end = end_of_prekernel_image.page_base().get();
 
     for (auto i = start; i <= end; i += PAGE_SIZE)
-        release_pte(kernel_page_directory(), VirtualAddress(i), i == end ? IsLastPTERelease::Yes : IsLastPTERelease::No, UnsafeIgnoreMissingPageTable::Yes);
+        release_pte(kernel_page_directory(), VirtualAddress(i), i == end ? IsLastPTERelease::Yes : IsLastPTERelease::No);
     flush_tlb(&kernel_page_directory(), VirtualAddress(start), (end - start) / PAGE_SIZE);
 }
 
@@ -505,9 +505,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     // so finish setting up the kernel page directory
     m_kernel_page_directory->allocate_kernel_directory();
 
-    // Now create legit PhysicalPage objects for the page tables we created, so that
-    // we can put them into kernel_page_directory().m_page_tables
-    auto& kernel_page_tables = kernel_page_directory().m_page_tables;
+    // Now create legit PhysicalPage objects for the page tables we created.
     virtual_page_array_current_page = virtual_page_array_base;
     for (size_t pt_index = 0; pt_index < needed_page_table_count; pt_index++) {
         VERIFY(virtual_page_array_current_page <= range.end().get());
@@ -515,8 +513,9 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         auto physical_page_index = PhysicalAddress::physical_page_index(pt_paddr.get());
         auto& physical_page_entry = m_physical_page_entries[physical_page_index];
         auto physical_page = adopt_ref(*new (&physical_page_entry.allocated.physical_page) PhysicalPage(MayReturnToFreeList::No));
-        auto result = kernel_page_tables.set(virtual_page_array_current_page & ~0x1fffff, move(physical_page));
-        VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+
+        // NOTE: This leaked ref is matched by the unref in MemoryManager::release_pte()
+        (void)physical_page.leak_ref();
 
         virtual_page_array_current_page += (PAGE_SIZE / sizeof(PageTableEntry)) * PAGE_SIZE;
     }
@@ -568,39 +567,38 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
 
     auto* pd = quickmap_pd(page_directory, page_directory_table_index);
-    PageDirectoryEntry& pde = pd[page_directory_index];
-    if (!pde.is_present()) {
-        bool did_purge = false;
-        auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
-        if (!page_table) {
-            dbgln("MM: Unable to allocate page table to map {}", vaddr);
-            return nullptr;
-        }
-        if (did_purge) {
-            // If any memory had to be purged, ensure_pte may have been called as part
-            // of the purging process. So we need to re-map the pd in this case to ensure
-            // we're writing to the correct underlying physical page
-            pd = quickmap_pd(page_directory, page_directory_table_index);
-            VERIFY(&pde == &pd[page_directory_index]); // Sanity check
+    auto& pde = pd[page_directory_index];
+    if (pde.is_present())
+        return &quickmap_pt(PhysicalAddress(pde.page_table_base()))[page_table_index];
 
-            VERIFY(!pde.is_present()); // Should have not changed
-        }
-        pde.set_page_table_base(page_table->paddr().get());
-        pde.set_user_allowed(true);
-        pde.set_present(true);
-        pde.set_writable(true);
-        pde.set_global(&page_directory == m_kernel_page_directory.ptr());
-        // Use page_directory_table_index and page_directory_index as key
-        // This allows us to release the page table entry when no longer needed
-        auto result = page_directory.m_page_tables.set(vaddr.get() & ~(FlatPtr)0x1fffff, page_table.release_nonnull());
-        // If you're hitting this VERIFY on x86_64 chances are a 64-bit pointer was truncated somewhere
-        VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+    bool did_purge = false;
+    auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
+    if (!page_table) {
+        dbgln("MM: Unable to allocate page table to map {}", vaddr);
+        return nullptr;
     }
+    if (did_purge) {
+        // If any memory had to be purged, ensure_pte may have been called as part
+        // of the purging process. So we need to re-map the pd in this case to ensure
+        // we're writing to the correct underlying physical page
+        pd = quickmap_pd(page_directory, page_directory_table_index);
+        VERIFY(&pde == &pd[page_directory_index]); // Sanity check
 
-    return &quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
+        VERIFY(!pde.is_present()); // Should have not changed
+    }
+    pde.set_page_table_base(page_table->paddr().get());
+    pde.set_user_allowed(true);
+    pde.set_present(true);
+    pde.set_writable(true);
+    pde.set_global(&page_directory == m_kernel_page_directory.ptr());
+
+    // NOTE: This leaked ref is matched by the unref in MemoryManager::release_pte()
+    (void)page_table.leak_ref();
+
+    return &quickmap_pt(PhysicalAddress(pde.page_table_base()))[page_table_index];
 }
 
-void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress vaddr, IsLastPTERelease is_last_pte_release, UnsafeIgnoreMissingPageTable unsafe_ignore_missing_page_table)
+void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress vaddr, IsLastPTERelease is_last_pte_release)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(s_mm_lock.is_locked_by_current_processor());
@@ -627,10 +625,8 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
                 }
             }
             if (all_clear) {
+                get_physical_page_entry(PhysicalAddress { pde.page_table_base() }).allocated.physical_page.unref();
                 pde.clear();
-
-                auto result = page_directory.m_page_tables.remove(vaddr.get() & ~0x1fffff);
-                VERIFY(unsafe_ignore_missing_page_table == UnsafeIgnoreMissingPageTable::Yes || result);
             }
         }
     }
