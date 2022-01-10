@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     pid_t child_pid = TRY(Core::System::posix_spawnp(arguments.strings[2], nullptr, nullptr, &arguments.argv[2], environ));
-    int status = TRY(Core::System::waitpid(child_pid, &status, 0));
+    auto [_, status] = TRY(Core::System::waitpid(child_pid));
 
     return WEXITSTATUS(status);
 }
