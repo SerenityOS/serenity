@@ -48,10 +48,9 @@ DevTmpFSInode::DevTmpFSInode(DevTmpFS& fs)
 {
 }
 
-DevTmpFSInode::DevTmpFSInode(DevTmpFS& fs, MajorNumber major_number, MinorNumber minor_number)
+DevTmpFSInode::DevTmpFSInode(DevTmpFS& fs, DeviceID device_id)
     : Inode(fs, fs.allocate_inode_index())
-    , m_major_number(major_number)
-    , m_minor_number(minor_number)
+    , m_device_id(device_id)
 {
 }
 
@@ -115,12 +114,12 @@ InodeMetadata DevTmpFSInode::metadata() const
     case Type::BlockDevice:
         metadata.inode = { fsid(), index() };
         metadata.mode = S_IFBLK | m_mode;
-        metadata.device_id = encoded_device(m_major_number, m_minor_number);
+        metadata.device_id = m_device_id;
         break;
     case Type::CharacterDevice:
         metadata.inode = { fsid(), index() };
         metadata.mode = S_IFCHR | m_mode;
-        metadata.device_id = encoded_device(m_major_number, m_minor_number);
+        metadata.device_id = m_device_id;
         break;
     case Type::Link:
         metadata.inode = { fsid(), index() };
@@ -243,7 +242,7 @@ ErrorOr<void> DevTmpFSDirectoryInode::remove_child(StringView name)
     return Error::from_errno(ENOENT);
 }
 
-ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView name, mode_t mode, dev_t device_mode, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView name, mode_t mode, dev_t device_id, UserID, GroupID)
 {
     MutexLocker locker(m_inode_lock);
     for (auto& node : m_nodes) {
@@ -262,9 +261,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView na
     }
     if (metadata.is_device()) {
         auto name_kstring = TRY(KString::try_create(name));
-        auto major = major_from_encoded_device(device_mode);
-        auto minor = minor_from_encoded_device(device_mode);
-        auto new_device_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSDeviceInode(fs(), major, minor, is_block_device(mode), move(name_kstring))));
+        auto new_device_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSDeviceInode(fs(), device_id, is_block_device(mode), move(name_kstring))));
         TRY(new_device_inode->chmod(mode));
         m_nodes.append(*new_device_inode);
         return new_device_inode;
@@ -297,8 +294,8 @@ ErrorOr<void> DevTmpFSRootDirectoryInode::chown(UserID, GroupID)
     return EPERM;
 }
 
-DevTmpFSDeviceInode::DevTmpFSDeviceInode(DevTmpFS& fs, MajorNumber major_number, MinorNumber minor_number, bool block_device, NonnullOwnPtr<KString> name)
-    : DevTmpFSInode(fs, major_number, minor_number)
+DevTmpFSDeviceInode::DevTmpFSDeviceInode(DevTmpFS& fs, DeviceID device_id, bool block_device, NonnullOwnPtr<KString> name)
+    : DevTmpFSInode(fs, device_id)
     , m_name(move(name))
     , m_block_device(block_device)
 {
@@ -317,7 +314,7 @@ ErrorOr<size_t> DevTmpFSDeviceInode::read_bytes(off_t offset, size_t count, User
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
-    RefPtr<Device> device = DeviceManagement::the().get_device(encoded_device(m_major_number, m_minor_number));
+    RefPtr<Device> device = DeviceManagement::the().get_device(m_device_id);
     if (!device)
         return Error::from_errno(ENODEV);
     if (!device->can_read(*description, offset))
@@ -332,7 +329,7 @@ ErrorOr<size_t> DevTmpFSDeviceInode::write_bytes(off_t offset, size_t count, con
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
-    RefPtr<Device> device = DeviceManagement::the().get_device(encoded_device(m_major_number, m_minor_number));
+    RefPtr<Device> device = DeviceManagement::the().get_device(m_device_id);
     if (!device)
         return Error::from_errno(ENODEV);
     if (!device->can_write(*description, offset))
