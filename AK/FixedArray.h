@@ -38,6 +38,23 @@ public:
         return MUST(try_create(size));
     }
 
+    // NOTE:
+    // Even though it may look like there will be a template instantiation of this function for every size,
+    // the compiler will inline this anyway and therefore not generate any duplicate code.
+
+    template<size_t N>
+    static ErrorOr<FixedArray<T>> try_create(T(&&array)[N])
+    {
+        if (N == 0)
+            return FixedArray<T>();
+        T* elements = static_cast<T*>(kmalloc_array(N, sizeof(T)));
+        if (!elements)
+            return Error::from_errno(ENOMEM);
+        for (size_t i = 0; i < N; ++i)
+            new (&elements[i]) T(move(array[i]));
+        return FixedArray<T>(N, elements);
+    }
+
     ErrorOr<FixedArray<T>> try_clone() const
     {
         if (m_size == 0)
