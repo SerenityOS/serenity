@@ -448,6 +448,23 @@ size_t strxfrm(char* dest, const char* src, size_t n)
     return i;
 }
 
+// Not in POSIX, originated in BSD but also supported on Linux.
+// https://man.openbsd.org/strsep.3
+char* strsep(char** str, char const* delim)
+{
+    if (*str == nullptr)
+        return nullptr;
+    auto* begin = *str;
+    auto* end = begin + strcspn(begin, delim);
+    if (*end) {
+        *end = '\0';
+        *str = ++end;
+    } else {
+        *str = nullptr;
+    }
+    return begin;
+}
+
 void explicit_bzero(void* ptr, size_t size)
 {
     secure_zero(ptr, size);
