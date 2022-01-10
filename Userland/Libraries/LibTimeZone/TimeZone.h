@@ -14,5 +14,6 @@ namespace TimeZone {
 
 Optional<TimeZone> time_zone_from_string(StringView time_zone);
 StringView time_zone_to_string(TimeZone time_zone);
+Optional<StringView> canonicalize_time_zone(StringView time_zone);
 
 }

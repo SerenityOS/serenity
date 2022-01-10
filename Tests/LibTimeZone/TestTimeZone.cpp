@@ -69,4 +69,19 @@ TEST_CASE(time_zone_to_string_link)
     EXPECT_EQ(TimeZone::time_zone_to_string(TimeZone::TimeZone::Etc_Universal), "Etc/UTC"sv);
 }
 
+TEST_CASE(canonicalize_time_zone)
+{
+    EXPECT_EQ(TimeZone::canonicalize_time_zone("America/New_York"sv), "America/New_York"sv);
+    EXPECT_EQ(TimeZone::canonicalize_time_zone("AmErIcA/NeW_YoRk"sv), "America/New_York"sv);
+
+    EXPECT_EQ(TimeZone::canonicalize_time_zone("UTC"sv), "UTC"sv);
+    EXPECT_EQ(TimeZone::canonicalize_time_zone("GMT"sv), "UTC"sv);
+    EXPECT_EQ(TimeZone::canonicalize_time_zone("GMT+0"sv), "UTC"sv);
+    EXPECT_EQ(TimeZone::canonicalize_time_zone("GMT-0"sv), "UTC"sv);
+    EXPECT_EQ(TimeZone::canonicalize_time_zone("Etc/UTC"sv), "UTC"sv);
+    EXPECT_EQ(TimeZone::canonicalize_time_zone("Etc/GMT"sv), "UTC"sv);
+
+    EXPECT(!TimeZone::canonicalize_time_zone("I don't exist"sv).has_value());
+}
+
 #endif
