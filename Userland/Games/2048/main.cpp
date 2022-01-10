@@ -141,19 +141,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             break;
         case Game::MoveOutcome::Won: {
             update();
-            auto message_box = GUI::MessageBox::construct(window, "Congratulations! You won the game, Do you still want to continue?",
-                "Want to continue?",
+            auto want_to_continue = GUI::MessageBox::show(window,
+                String::formatted("You won the game in {} turns with a score of {}. Would you like to continue?", game.turns(), game.score()),
+                "Congratulations!",
                 GUI::MessageBox::Type::Question,
                 GUI::MessageBox::InputType::YesNo);
-            if (message_box->exec() == GUI::MessageBox::ExecYes)
+            if (want_to_continue == GUI::MessageBox::ExecYes)
                 game.set_want_to_continue();
-            else {
-                GUI::MessageBox::show(window,
-                    String::formatted("You reached {} in {} turns with a score of {}", game.largest_tile(), game.turns(), game.score()),
-                    "You won!",
-                    GUI::MessageBox::Type::Information);
+            else
                 start_a_new_game();
-            }
             break;
         }
         case Game::MoveOutcome::GameOver:
