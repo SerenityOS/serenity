@@ -53,4 +53,20 @@ TEST_CASE(case_insensitive_time_zone_from_string)
     EXPECT_EQ(TimeZone::time_zone_from_string("uTc"sv), TimeZone::TimeZone::UTC);
 }
 
+TEST_CASE(time_zone_to_string)
+{
+    EXPECT_EQ(TimeZone::time_zone_to_string(TimeZone::TimeZone::America_New_York), "America/New_York"sv);
+    EXPECT_EQ(TimeZone::time_zone_to_string(TimeZone::TimeZone::Europe_Paris), "Europe/Paris"sv);
+    EXPECT_EQ(TimeZone::time_zone_to_string(TimeZone::TimeZone::Etc_GMT_Ahead_2), "Etc/GMT+2"sv);
+    EXPECT_EQ(TimeZone::time_zone_to_string(TimeZone::TimeZone::Etc_GMT_Behind_5), "Etc/GMT-5"sv);
+}
+
+TEST_CASE(time_zone_to_string_link)
+{
+    EXPECT_EQ(TimeZone::time_zone_to_string(TimeZone::TimeZone::Etc_UTC), "Etc/UTC"sv);
+    EXPECT_EQ(TimeZone::time_zone_to_string(TimeZone::TimeZone::UTC), "Etc/UTC"sv);
+    EXPECT_EQ(TimeZone::time_zone_to_string(TimeZone::TimeZone::Universal), "Etc/UTC"sv);
+    EXPECT_EQ(TimeZone::time_zone_to_string(TimeZone::TimeZone::Etc_Universal), "Etc/UTC"sv);
+}
+
 #endif
