@@ -569,6 +569,7 @@ void ISO9660Inode::create_metadata()
     time_t recorded_at = parse_numerical_date_time(m_record.recording_date_and_time);
 
     m_metadata = {
+        .device_id = 0,
         .inode = identifier(),
         .size = data_length,
         .mode = static_cast<mode_t>((is_directory ? S_IFDIR : S_IFREG) | (is_directory ? 0555 : 0444)),
@@ -581,8 +582,6 @@ void ISO9660Inode::create_metadata()
         .dtime = 0,
         .block_count = 0,
         .block_size = 0,
-        .major_device = 0,
-        .minor_device = 0,
     };
 }
 

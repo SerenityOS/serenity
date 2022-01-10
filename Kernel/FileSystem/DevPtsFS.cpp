@@ -63,13 +63,12 @@ ErrorOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) cons
     VERIFY(device);
 
     auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device))));
+    inode->m_metadata.device_id = device->id();
     inode->m_metadata.inode = inode_id;
     inode->m_metadata.size = 0;
     inode->m_metadata.uid = device->uid();
     inode->m_metadata.gid = device->gid();
     inode->m_metadata.mode = 0020600;
-    inode->m_metadata.major_device = device->major();
-    inode->m_metadata.minor_device = device->minor();
     inode->m_metadata.mtime = mepoch;
     return inode;
 }

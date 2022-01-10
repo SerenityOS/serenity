@@ -743,8 +743,7 @@ InodeMetadata Ext2FSInode::metadata() const
         unsigned dev = m_raw_inode.i_block[0];
         if (!dev)
             dev = m_raw_inode.i_block[1];
-        metadata.major_device = major_from_encoded_device(dev).value();
-        metadata.minor_device = minor_from_encoded_device(dev).value();
+        metadata.device_id = dev;
     }
     return metadata;
 }

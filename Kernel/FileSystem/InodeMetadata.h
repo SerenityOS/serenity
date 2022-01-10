@@ -92,7 +92,7 @@ struct InodeMetadata {
         if (!is_valid())
             return EIO;
         struct stat buffer = {};
-        buffer.st_rdev = encoded_device(major_device, minor_device);
+        buffer.st_rdev = device_id.value();
         buffer.st_ino = inode.index().value();
         buffer.st_mode = mode;
         buffer.st_nlink = link_count;
@@ -111,6 +111,7 @@ struct InodeMetadata {
         return buffer;
     }
 
+    DeviceID device_id { 0 };
     InodeIdentifier inode;
     off_t size { 0 };
     mode_t mode { 0 };
@@ -123,8 +124,6 @@ struct InodeMetadata {
     time_t dtime { 0 };
     blkcnt_t block_count { 0 };
     blksize_t block_size { 0 };
-    MajorNumber major_device { 0 };
-    MinorNumber minor_device { 0 };
 };
 
 }

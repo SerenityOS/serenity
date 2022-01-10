@@ -115,14 +115,12 @@ InodeMetadata DevTmpFSInode::metadata() const
     case Type::BlockDevice:
         metadata.inode = { fsid(), index() };
         metadata.mode = S_IFBLK | m_mode;
-        metadata.major_device = m_major_number;
-        metadata.minor_device = m_minor_number;
+        metadata.device_id = encoded_device(m_major_number, m_minor_number);
         break;
     case Type::CharacterDevice:
         metadata.inode = { fsid(), index() };
         metadata.mode = S_IFCHR | m_mode;
-        metadata.major_device = m_major_number;
-        metadata.minor_device = m_minor_number;
+        metadata.device_id = encoded_device(m_major_number, m_minor_number);
         break;
     case Type::Link:
         metadata.inode = { fsid(), index() };

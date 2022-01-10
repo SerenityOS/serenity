@@ -268,7 +268,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView p
     if (metadata.is_device()) {
         if (custody.mount_flags() & MS_NODEV)
             return EACCES;
-        auto device = DeviceManagement::the().get_device(encoded_device(metadata.major_device, metadata.minor_device));
+        auto device = DeviceManagement::the().get_device(metadata.device_id);
         if (device == nullptr) {
             return ENODEV;
         }
