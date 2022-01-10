@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Types.h>
 #include <initializer_list>
 
@@ -85,9 +86,8 @@ public:
     {
         Matrix division;
         for (size_t i = 0; i < N; ++i) {
-            for (size_t j = 0; j < N; ++j) {
+            for (size_t j = 0; j < N; ++j)
                 division.m_elements[i][j] = m_elements[i][j] / divisor;
-            }
         }
         return division;
     }
@@ -159,10 +159,11 @@ public:
         return result;
     }
 
-    [[nodiscard]] constexpr Matrix inverse() const
+    [[nodiscard]] constexpr ErrorOr<Matrix> inverse() const
     {
         auto det = determinant();
-        VERIFY(det != 0);
+        if (det == 0)
+            return Error::from_string_literal("inverse of matrix does not exist"sv);
         return adjugate() / det;
     }
 
@@ -170,9 +171,8 @@ public:
     {
         Matrix result;
         for (size_t i = 0; i < N; ++i) {
-            for (size_t j = 0; j < N; ++j) {
+            for (size_t j = 0; j < N; ++j)
                 result.m_elements[i][j] = m_elements[j][i];
-            }
         }
         return result;
     }
