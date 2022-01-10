@@ -6,6 +6,7 @@
 
 #include "GL/gl.h"
 #include "GLContext.h"
+#include <AK/Debug.h>
 
 extern GL::GLContext* g_gl_context;
 
@@ -22,6 +23,12 @@ void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, con
 void glLineWidth(GLfloat width)
 {
     g_gl_context->gl_line_width(width);
+}
+
+void glPointSize(GLfloat size)
+{
+    // FIXME: implement
+    dbgln_if(GL_DEBUG, "glPointSize({}): unimplemented", size);
 }
 
 void glRasterPos2i(GLint x, GLint y)
