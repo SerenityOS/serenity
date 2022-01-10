@@ -15,6 +15,12 @@ start:
   and x13, x13, 0xff
   cbnz x13, _ZN9Prekernel4haltEv
 
+  // Enable the use of va_list in EL1
+  // by disabling the trap of accessing FP and SIMD registers.
+  mrs x0, CPACR_EL1
+  orr x0, x0, #(0b11 << 20)
+  msr CPACR_EL1, x0
+
   // Let stack start before .text for now.
   // 512 kiB (0x80000) of stack are probably not sufficient, especially once we give the other cores some stack too,
   // but for now it's ok.
