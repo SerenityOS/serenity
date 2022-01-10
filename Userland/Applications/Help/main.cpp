@@ -22,6 +22,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/ModelIndex.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
@@ -30,6 +31,7 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
@@ -134,6 +136,41 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     RefPtr<GUI::Action> go_back_action;
     RefPtr<GUI::Action> go_forward_action;
 
+    auto open_url = [&](auto const& url) {
+        if (url.protocol() == "file") {
+            auto path = url.path();
+            auto source_result = manual_model->page_view(path);
+            if (source_result.is_error()) {
+                GUI::MessageBox::show(window, String::formatted("{}", source_result.error()), "Failed to open man page", GUI::MessageBox::Type::Error);
+                return;
+            }
+
+            auto source = source_result.value();
+            String html;
+            {
+                auto md_document = Markdown::Document::parse(source);
+                VERIFY(md_document);
+                html = md_document->render_to_html();
+            }
+
+            page_view->load_html(html, url);
+            page_view->scroll_to_top();
+
+            app->deferred_invoke([&, path = url.path()] {
+                auto tree_view_index = manual_model->index_from_path(path);
+                if (tree_view_index.has_value()) {
+                    tree_view->expand_tree(tree_view_index.value().parent());
+                    tree_view->selection().set(tree_view_index.value());
+
+                    String page_and_section = manual_model->page_and_section(tree_view_index.value());
+                    window->set_title(String::formatted("{} - Help", page_and_section));
+                } else {
+                    window->set_title("Help");
+                }
+            });
+        }
+    };
+
     auto open_page = [&](String const& path) {
         go_back_action->set_enabled(history.can_go_back());
         go_forward_action->set_enabled(history.can_go_forward());
@@ -144,36 +181,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        auto source_result = manual_model->page_view(path);
-        if (source_result.is_error()) {
-            GUI::MessageBox::show(window, String::formatted("{}", source_result.error()), "Failed to open man page", GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        auto source = source_result.value();
-        String html;
-        {
-            auto md_document = Markdown::Document::parse(source);
-            VERIFY(md_document);
-            html = md_document->render_to_html();
-        }
-
-        auto url = URL::create_with_file_protocol(path);
-        page_view->load_html(html, url);
-        page_view->scroll_to_top();
-
-        app->deferred_invoke([&, path] {
-            auto tree_view_index = manual_model->index_from_path(path);
-            if (tree_view_index.has_value()) {
-                tree_view->expand_tree(tree_view_index.value().parent());
-                tree_view->selection().set(tree_view_index.value());
-
-                String page_and_section = manual_model->page_and_section(tree_view_index.value());
-                window->set_title(String::formatted("{} - Help", page_and_section));
-            } else {
-                window->set_title("Help");
-            }
-        });
+        open_url(URL::create_with_url_or_path(path));
     };
 
     tree_view->on_selection_change = [&] {
@@ -221,23 +229,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     page_view->on_link_click = [&](auto& url, auto&, unsigned) {
-        if (url.protocol() != "file") {
+        if (url.protocol() == "file") {
+            auto path = url.path();
+            if (!path.starts_with("/usr/share/man/")) {
+                open_external(url);
+                return;
+            }
+            auto tree_view_index = manual_model->index_from_path(path);
+            if (tree_view_index.has_value()) {
+                dbgln("Found path _{}_ in manual_model at index {}", path, tree_view_index.value());
+                tree_view->selection().set(tree_view_index.value());
+                return;
+            }
+            history.push(path);
+            open_page(path);
+        } else {
             open_external(url);
-            return;
         }
-        auto path = Core::File::real_path_for(url.path());
-        if (!path.starts_with("/usr/share/man/")) {
-            open_external(url);
-            return;
-        }
-        auto tree_view_index = manual_model->index_from_path(path);
-        if (tree_view_index.has_value()) {
-            dbgln("Found path _{}_ in manual_model at index {}", path, tree_view_index.value());
-            tree_view->selection().set(tree_view_index.value());
-            return;
-        }
-        history.push(path);
-        open_page(path);
     };
 
     go_back_action = GUI::CommonActions::make_go_back_action([&](auto&) {
