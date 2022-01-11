@@ -59,7 +59,7 @@ ErrorOr<NonnullOwnPtr<KString>> Custody::try_serialize_absolute_path() const
     Vector<Custody const*, 32> custody_chain;
     size_t path_length = 0;
     for (auto const* custody = this; custody; custody = custody->parent()) {
-        custody_chain.append(custody);
+        TRY(custody_chain.try_append(custody));
         path_length += custody->m_name->length() + 1;
     }
     VERIFY(path_length > 0);
