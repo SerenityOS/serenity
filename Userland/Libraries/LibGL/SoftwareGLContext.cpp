@@ -317,8 +317,7 @@ void SoftwareGLContext::gl_end()
         mv_elements[0][0], mv_elements[1][0], mv_elements[2][0],
         mv_elements[0][1], mv_elements[1][1], mv_elements[2][1],
         mv_elements[0][2], mv_elements[1][2], mv_elements[2][2]);
-    auto normal_transform_or_error = model_view_transposed.inverse();
-    auto const& normal_transform = normal_transform_or_error.is_error() ? model_view_transposed : normal_transform_or_error.release_value();
+    auto const& normal_transform = model_view_transposed.inverse();
 
     m_rasterizer.draw_primitives(primitive_type, m_model_view_matrix, normal_transform, m_projection_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
 
@@ -2810,9 +2809,7 @@ void SoftwareGLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat co
         texture_coordinate_generation(capability).object_plane_coefficients = { params[0], params[1], params[2], params[3] };
         break;
     case GL_EYE_PLANE: {
-        auto inverse_matrix_or_error = m_model_view_matrix.inverse();
-        auto const& inverse_model_view_matrix = inverse_matrix_or_error.is_error() ? m_model_view_matrix : inverse_matrix_or_error.release_value();
-
+        auto const& inverse_model_view = m_model_view_matrix.inverse();
         auto input_coefficients = FloatVector4 { params[0], params[1], params[2], params[3] };
 
         // Note: we are allowed to store transformed coefficients here, according to the documentation on
@@ -2821,7 +2818,7 @@ void SoftwareGLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat co
         // "The returned values are those maintained in eye coordinates. They are not equal to the values
         //  specified using glTexGen, unless the modelview matrix was identity when glTexGen was called."
 
-        texture_coordinate_generation(capability).eye_plane_coefficients = inverse_model_view_matrix * input_coefficients;
+        texture_coordinate_generation(capability).eye_plane_coefficients = inverse_model_view * input_coefficients;
         break;
     }
     default:
