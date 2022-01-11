@@ -267,22 +267,11 @@ static void generate_time_zone_data_implementation(Core::File& file, TimeZoneDat
 
 namespace TimeZone {
 
-static constexpr auto seconds_per_day = 86'400;
-static constexpr auto seconds_per_hour = 3'600;
-static constexpr auto seconds_per_minute = 60;
-
 struct DateTime {
     AK::Time time_since_epoch() const
     {
         // FIXME: This implementation does not take last_weekday or after_weekday into account.
-        i64 seconds_since_epoch = AK::days_since_epoch(year, month, day);
-        seconds_since_epoch *= seconds_per_day;
-
-        seconds_since_epoch += hour * seconds_per_hour;
-        seconds_since_epoch += minute * seconds_per_minute;
-        seconds_since_epoch += second;
-
-        return AK::Time::from_seconds(seconds_since_epoch);
+        return AK::Time::from_timestamp(year, month, day, hour, minute, second, 0);
     }
 
     u16 year { 0 };
