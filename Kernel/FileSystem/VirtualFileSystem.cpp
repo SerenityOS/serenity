@@ -434,9 +434,9 @@ ErrorOr<void> VirtualFileSystem::chmod(Custody& custody, mode_t mode)
     return inode.chmod(mode);
 }
 
-ErrorOr<void> VirtualFileSystem::chmod(StringView path, mode_t mode, Custody& base)
+ErrorOr<void> VirtualFileSystem::chmod(StringView path, mode_t mode, Custody& base, int options)
 {
-    auto custody = TRY(resolve_path(path, base));
+    auto custody = TRY(resolve_path(path, base, nullptr, options));
     return chmod(custody, mode);
 }
 

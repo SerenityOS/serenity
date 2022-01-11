@@ -359,7 +359,7 @@ public:
     ErrorOr<FlatPtr> sys$rmdir(Userspace<const char*> pathname, size_t path_length);
     ErrorOr<FlatPtr> sys$mount(Userspace<const Syscall::SC_mount_params*>);
     ErrorOr<FlatPtr> sys$umount(Userspace<const char*> mountpoint, size_t mountpoint_length);
-    ErrorOr<FlatPtr> sys$chmod(Userspace<const char*> pathname, size_t path_length, mode_t);
+    ErrorOr<FlatPtr> sys$chmod(Userspace<Syscall::SC_chmod_params const*>);
     ErrorOr<FlatPtr> sys$fchmod(int fd, mode_t);
     ErrorOr<FlatPtr> sys$chown(Userspace<const Syscall::SC_chown_params*>);
     ErrorOr<FlatPtr> sys$fchown(int fd, UserID, GroupID);
