@@ -20,7 +20,7 @@ class Button : public AbstractButton {
 public:
     virtual ~Button() override;
 
-    void set_icon(RefPtr<Gfx::Bitmap>&&);
+    void set_icon(RefPtr<Gfx::Bitmap>);
     void set_icon_from_path(String const&);
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
     Gfx::Bitmap* icon() { return m_icon.ptr(); }
