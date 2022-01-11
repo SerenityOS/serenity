@@ -56,6 +56,9 @@ public:
     void scroll_to_glyph(int);
     void update_glyph(int);
 
+    void select_previous_existing_glyph();
+    void select_next_existing_glyph();
+
     int rows() const { return m_rows; }
     int columns() const { return m_columns; }
 

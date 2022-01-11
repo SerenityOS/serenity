@@ -270,6 +270,44 @@ void GlyphMapWidget::scroll_to_glyph(int glyph)
     scroll_into_view(scroll_rect, true, true);
 }
 
+void GlyphMapWidget::select_previous_existing_glyph()
+{
+    bool search_wrapped = false;
+    for (int i = active_glyph() - 1;; --i) {
+        if (i < 0 && !search_wrapped) {
+            i = 0x10FFFF;
+            search_wrapped = true;
+        } else if (i < 0 && search_wrapped) {
+            break;
+        }
+        if (font().contains_glyph(i)) {
+            set_focus(true);
+            set_active_glyph(i);
+            scroll_to_glyph(i);
+            break;
+        }
+    }
+}
+
+void GlyphMapWidget::select_next_existing_glyph()
+{
+    bool search_wrapped = false;
+    for (int i = active_glyph() + 1;; ++i) {
+        if (i > 0x10FFFF && !search_wrapped) {
+            i = 0;
+            search_wrapped = true;
+        } else if (i > 0x10FFFF && search_wrapped) {
+            break;
+        }
+        if (font().contains_glyph(i)) {
+            set_focus(true);
+            set_active_glyph(i);
+            scroll_to_glyph(i);
+            break;
+        }
+    }
+}
+
 void GlyphMapWidget::recalculate_content_size()
 {
     auto inner_rect = frame_inner_rect();

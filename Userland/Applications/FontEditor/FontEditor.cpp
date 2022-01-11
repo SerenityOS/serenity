@@ -233,39 +233,11 @@ FontEditorWidget::FontEditorWidget()
     });
     m_go_to_glyph_action->set_status_tip("Go to the specified code point");
     m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        bool search_wrapped = false;
-        for (int i = m_glyph_map_widget->active_glyph() - 1;; --i) {
-            if (i < 0 && !search_wrapped) {
-                i = 0x10FFFF;
-                search_wrapped = true;
-            } else if (i < 0 && search_wrapped) {
-                break;
-            }
-            if (m_edited_font->contains_raw_glyph(i)) {
-                m_glyph_map_widget->set_focus(true);
-                m_glyph_map_widget->set_active_glyph(i);
-                m_glyph_map_widget->scroll_to_glyph(i);
-                break;
-            }
-        }
+        m_glyph_map_widget->select_previous_existing_glyph();
     });
     m_previous_glyph_action->set_status_tip("Seek the previous visible glyph");
     m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        bool search_wrapped = false;
-        for (int i = m_glyph_map_widget->active_glyph() + 1;; ++i) {
-            if (i > 0x10FFFF && !search_wrapped) {
-                i = 0;
-                search_wrapped = true;
-            } else if (i > 0x10FFFF && search_wrapped) {
-                break;
-            }
-            if (m_edited_font->contains_raw_glyph(i)) {
-                m_glyph_map_widget->set_focus(true);
-                m_glyph_map_widget->set_active_glyph(i);
-                m_glyph_map_widget->scroll_to_glyph(i);
-                break;
-            }
-        }
+        m_glyph_map_widget->select_next_existing_glyph();
     });
     m_next_glyph_action->set_status_tip("Seek the next visible glyph");
 
