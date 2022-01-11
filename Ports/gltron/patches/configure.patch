@@ -1,0 +1,29 @@
+--- gltron-0.70/configure	2003-12-14 09:00:19.000000000 +0000
++++ gltron-0.70-patched/configure	2022-01-10 00:11:14.467260522 +0000
+@@ -2805,7 +2805,7 @@
+   RANLIB="$ac_cv_prog_RANLIB"
+ fi
+ 
+-CFLAGS="-DSEPARATOR=\"'/'\""
++CFLAGS="$CFLAGS -DSEPARATOR=\"'/'\""
+ 
+ # Check whether --enable-warn or --disable-warn was given.
+ if test "${enable_warn+set}" = set; then
+@@ -3130,7 +3130,7 @@
+   echo $ECHO_N "(cached) $ECHO_C" >&6
+ else
+   ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lGL  $LIBS"
++LIBS="-lgl  $LIBS"
+ cat >conftest.$ac_ext <<_ACEOF
+ #line 3135 "configure"
+ #include "confdefs.h"
+@@ -3171,7 +3171,7 @@
+ #define HAVE_LIBGL 1
+ EOF
+ 
+-  LIBS="-lGL $LIBS"
++  LIBS="-lgl $LIBS"
+ 
+ else
+   { { echo "$as_me:3177: error: OpenGL is not installed" >&5

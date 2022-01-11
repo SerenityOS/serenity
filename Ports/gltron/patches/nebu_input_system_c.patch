@@ -1,0 +1,25 @@
+--- gltron-0.70/nebu/input/input_system.c	2003-07-16 20:23:38.000000000 +0000
++++ gltron-0.70-patched/nebu/input/input_system.c	2022-01-10 00:40:05.362550537 +0000
+@@ -6,18 +6,19 @@
+ #include "SDL.h"
+ #include <stdlib.h>
+ 
++extern SDL_Window* window;
+ static float joystick_threshold = 0;
+ 
+ void SystemGrabInput() {
+-  SDL_WM_GrabInput(SDL_GRAB_ON);
++  SDL_SetWindowGrab(window, SDL_TRUE);
+ }
+ 
+ void SystemUngrabInput() {
+-  SDL_WM_GrabInput(SDL_GRAB_OFF);
++  SDL_SetWindowGrab(window, SDL_FALSE);
+ }
+ 
+ void SystemWarpPointer(int x, int y) {
+-  SDL_WarpMouse(x, y);
++  SDL_WarpMouseInWindow(window, x, y);
+ }
+ 
+ void SystemHidePointer() {

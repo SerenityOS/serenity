@@ -1,0 +1,31 @@
+--- gltron-0.70/scripts/config.lua	2003-12-12 09:01:14.000000000 +0000
++++ gltron-0.70-patched/scripts/config.lua	2022-01-11 01:05:39.007703324 +0000
+@@ -90,18 +90,18 @@
+ 
+ settings.keys = { 
+    { -- player 1
+-      left = 97, -- lower case 'a'
+-      right = 115, -- lower case 's'
+-      glance_left = 113, -- lower case 'q'
+-      glance_right = 119, -- lower case 'w'
+-			boost = 101, -- lower case 'd'
++      left = 65, -- lower case 'a'
++      right = 83, -- lower case 's'
++      glance_left = 81, -- lower case 'q'
++      glance_right = 87, -- lower case 'w'
++			boost = 68, -- lower case 'd'
+    },
+    { -- player 2
+-      left = 106, -- lower case 'j'
+-      right = 107, -- lower case 'k'
+-      glance_left = 117, -- lower case 'u'
+-      glance_right = 105, -- lower case 'i'
+-			boost = 108, -- lower case 'l'
++      left = 74, -- lower case 'j'
++      right = 75, -- lower case 'k'
++      glance_left = 85, -- lower case 'u'
++      glance_right = 73, -- lower case 'i'
++			boost = 76, -- lower case 'l'
+    },
+    { -- player 3
+       left = 276, -- cursor left

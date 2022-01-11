@@ -1,0 +1,15 @@
+--- gltron-0.70/nebu/include/scripting/nebu_scripting.h	2003-12-12 09:01:13.000000000 +0000
++++ gltron-0.70-patched/nebu/include/scripting/nebu_scripting.h	2022-01-10 00:21:06.346024766 +0000
+@@ -18,9 +18,9 @@
+ extern int scripting_CopyStringResult(char *s, int len);
+ 
+ 
+-extern void scripting_RunFile(const char *name);
+-extern void scripting_Run(const char *command);
+-extern void scripting_RunFormat(const char *format, ...);
++extern void scripting_RunFile(char *name);
++extern void scripting_Run(char *command);
++extern void scripting_RunFormat(char *format, ...);
+ extern void scripting_RunGC();
+ extern void scripting_Register(const char *name, int(*func) (lua_State *L));
+ 

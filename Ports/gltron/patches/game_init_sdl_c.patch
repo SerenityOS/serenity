@@ -1,0 +1,10 @@
+--- gltron-0.70/src/game/init_sdl.c	2003-07-13 13:47:58.000000000 +0000
++++ gltron-0.70-patched/src/game/init_sdl.c	2022-01-10 00:57:00.255732917 +0000
+@@ -22,7 +22,6 @@
+ 
+ void inputInit(void) {
+ 	/* keyboard */
+-  SDL_EnableKeyRepeat(0, 0); /* turn keyrepeat off */
+   
+ 	/* joystick */
+ 	if(SDL_Init(SDL_INIT_JOYSTICK) >= 0) {
