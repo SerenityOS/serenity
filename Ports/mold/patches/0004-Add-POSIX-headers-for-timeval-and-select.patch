@@ -1,0 +1,28 @@
+From a55b1a4d2ca37c0c4ef2516d71a6555de118cc68 Mon Sep 17 00:00:00 2001
+From: Andrew Kaster <akaster@serenityos.org>
+Date: Tue, 11 Jan 2022 01:02:59 -0700
+Subject: [PATCH 4/7] Add POSIX headers for timeval and select
+
+mold was relying on other libc implementations leaking these definitions
+from other headers.
+---
+ elf/subprocess.cc | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/elf/subprocess.cc b/elf/subprocess.cc
+index 9e2fa9f6..410e568b 100644
+--- a/elf/subprocess.cc
++++ b/elf/subprocess.cc
+@@ -10,7 +10,9 @@
+ #include <signal.h>
+ #include <sys/socket.h>
+ #include <sys/stat.h>
++#include <sys/time.h>
+ #include <sys/types.h>
++#include <sys/select.h>
+ #include <sys/un.h>
+ #include <sys/wait.h>
+ #include <unistd.h>
+-- 
+2.25.1
+
