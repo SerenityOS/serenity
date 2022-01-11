@@ -160,6 +160,11 @@ void glTexCoord2fv(GLfloat const* v)
     g_gl_context->gl_tex_coord(v[0], v[1], 0.0f, 0.0f);
 }
 
+void glTexCoord2i(GLint s, GLint t)
+{
+    g_gl_context->gl_tex_coord(s, t, 0.0f, 1.0f);
+}
+
 void glTexCoord4fv(const GLfloat* v)
 {
     g_gl_context->gl_tex_coord(v[0], v[1], v[2], v[3]);
