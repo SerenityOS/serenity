@@ -32,11 +32,10 @@ ErrorOr<FlatPtr> Process::sys$sethostname(Userspace<const char*> buffer, size_t 
     if (length > 64)
         return ENAMETOOLONG;
     auto new_name = TRY(try_copy_kstring_from_user(buffer, length));
-    return hostname().with_exclusive([&](auto& name) -> ErrorOr<FlatPtr> {
-        // FIXME: Use KString instead of String here.
+    hostname().with_exclusive([&](auto& name) {
         name = new_name->view();
-        return 0;
     });
+    return 0;
 }
 
 }
