@@ -134,7 +134,7 @@ void Button::set_action(Action& action)
         set_checked(action.is_checked());
 }
 
-void Button::set_icon(RefPtr<Gfx::Bitmap>&& icon)
+void Button::set_icon(RefPtr<Gfx::Bitmap> icon)
 {
     if (m_icon == icon)
         return;
