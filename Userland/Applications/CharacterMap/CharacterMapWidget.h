@@ -27,6 +27,8 @@ private:
     RefPtr<GUI::Toolbar> m_toolbar;
     RefPtr<GUI::Label> m_font_name_label;
     RefPtr<GUI::GlyphMapWidget> m_glyph_map;
+    RefPtr<GUI::TextBox> m_output_box;
+    RefPtr<GUI::Button> m_copy_output_button;
     RefPtr<GUI::Statusbar> m_statusbar;
 
     RefPtr<GUI::Action> m_choose_font_action;
