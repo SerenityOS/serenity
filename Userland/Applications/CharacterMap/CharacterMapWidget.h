@@ -33,4 +33,7 @@ private:
 
     RefPtr<GUI::Action> m_choose_font_action;
     RefPtr<GUI::Action> m_copy_selection_action;
+    RefPtr<GUI::Action> m_previous_glyph_action;
+    RefPtr<GUI::Action> m_next_glyph_action;
+    RefPtr<GUI::Action> m_go_to_glyph_action;
 };
