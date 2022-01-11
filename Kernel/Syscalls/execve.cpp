@@ -289,7 +289,8 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         }
 
         auto range = TRY(new_space->try_allocate_range({}, program_header.size_in_memory()));
-        master_tls_region = TRY(new_space->allocate_region(range, String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
+        auto region_name = TRY(KString::formatted("{} (master-tls)", elf_name));
+        master_tls_region = TRY(new_space->allocate_region(range, region_name->view(), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
         master_tls_size = program_header.size_in_memory();
         master_tls_alignment = program_header.alignment();
 
@@ -311,14 +312,14 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
             prot |= PROT_READ;
         if (program_header.is_writable())
             prot |= PROT_WRITE;
-        auto region_name = String::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "");
+        auto region_name = TRY(KString::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : ""));
 
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
         size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
         auto range_end = VirtualAddress { rounded_range_end };
 
         auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get()));
-        auto region = TRY(new_space->allocate_region(range, region_name, prot, AllocationStrategy::Reserve));
+        auto region = TRY(new_space->allocate_region(range, region_name->view(), prot, AllocationStrategy::Reserve));
 
         // It's not always the case with PIE executables (and very well shouldn't be) that the
         // virtual address in the program header matches the one we end up giving the process.
