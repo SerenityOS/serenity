@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <LibAudio/ClientConnection.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
@@ -34,12 +35,12 @@ private:
 public:
     static ErrorOr<NonnullRefPtr<AudioWidget>> try_create()
     {
-        Vector<VolumeBitmapPair, 5> volume_level_bitmaps = {
-            { 66, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-high.png")) },
-            { 33, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-medium.png")) },
-            { 1, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-low.png")) },
-            { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png")) },
-            { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png")) }
+        Array<VolumeBitmapPair, 5> volume_level_bitmaps {
+            VolumeBitmapPair { 66, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-high.png")) },
+            VolumeBitmapPair { 33, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-medium.png")) },
+            VolumeBitmapPair { 1, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-low.png")) },
+            VolumeBitmapPair { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png")) },
+            VolumeBitmapPair { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png")) }
         };
         auto audio_client = TRY(Audio::ClientConnection::try_create());
         NonnullRefPtr<AudioWidget> audio_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(audio_client), move(volume_level_bitmaps))));
@@ -48,7 +49,7 @@ public:
     }
 
 private:
-    AudioWidget(NonnullRefPtr<Audio::ClientConnection> audio_client, Vector<VolumeBitmapPair, 5> volume_level_bitmaps)
+    AudioWidget(NonnullRefPtr<Audio::ClientConnection> audio_client, Array<VolumeBitmapPair, 5> volume_level_bitmaps)
         : m_audio_client(move(audio_client))
         , m_volume_level_bitmaps(move(volume_level_bitmaps))
         , m_show_percent(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false))
@@ -217,7 +218,7 @@ private:
     }
 
     NonnullRefPtr<Audio::ClientConnection> m_audio_client;
-    Vector<VolumeBitmapPair, 5> m_volume_level_bitmaps;
+    Array<VolumeBitmapPair, 5> m_volume_level_bitmaps;
     bool m_show_percent { false };
     bool m_audio_muted { false };
     int m_audio_volume { 100 };
