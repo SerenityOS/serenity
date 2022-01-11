@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <Kernel/KBuffer.h>
 #include <stdarg.h>

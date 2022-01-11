@@ -13,7 +13,6 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <AK/Variant.h>
@@ -1247,7 +1246,7 @@ public:
     bool is_allocation_enabled() const { return m_allocation_enabled; }
     void set_allocation_enabled(bool value) { m_allocation_enabled = value; }
 
-    String backtrace();
+    ErrorOr<NonnullOwnPtr<KString>> backtrace();
 
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullRefPtr<Timer>, NonnullOwnPtr<KString>);

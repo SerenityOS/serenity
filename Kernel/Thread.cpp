@@ -1157,7 +1157,7 @@ struct RecognizedSymbol {
     const KernelSymbol* symbol { nullptr };
 };
 
-static bool symbolicate(RecognizedSymbol const& symbol, Process& process, StringBuilder& builder)
+static ErrorOr<bool> symbolicate(RecognizedSymbol const& symbol, Process& process, StringBuilder& builder)
 {
     if (symbol.address == 0)
         return false;
@@ -1165,30 +1165,29 @@ static bool symbolicate(RecognizedSymbol const& symbol, Process& process, String
     bool mask_kernel_addresses = !process.is_superuser();
     if (!symbol.symbol) {
         if (!Memory::is_user_address(VirtualAddress(symbol.address))) {
-            builder.append("0xdeadc0de\n");
+            TRY(builder.try_append("0xdeadc0de\n"));
         } else {
             if (auto* region = process.address_space().find_region_containing({ VirtualAddress(symbol.address), sizeof(FlatPtr) })) {
                 size_t offset = symbol.address - region->vaddr().get();
                 if (auto region_name = region->name(); !region_name.is_null() && !region_name.is_empty())
-                    builder.appendff("{:p}  {} + {:#x}\n", (void*)symbol.address, region_name, offset);
+                    TRY(builder.try_appendff("{:p}  {} + {:#x}\n", (void*)symbol.address, region_name, offset));
                 else
-                    builder.appendff("{:p}  {:p} + {:#x}\n", (void*)symbol.address, region->vaddr().as_ptr(), offset);
+                    TRY(builder.try_appendff("{:p}  {:p} + {:#x}\n", (void*)symbol.address, region->vaddr().as_ptr(), offset));
             } else {
-                builder.appendff("{:p}\n", symbol.address);
+                TRY(builder.try_appendff("{:p}\n", symbol.address));
             }
         }
         return true;
     }
     unsigned offset = symbol.address - symbol.symbol->address;
-    if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096) {
-        builder.appendff("{:p}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address));
-    } else {
-        builder.appendff("{:p}  {} + {:#x}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address), symbol.symbol->name, offset);
-    }
+    if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096)
+        TRY(builder.try_appendff("{:p}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address)));
+    else
+        TRY(builder.try_appendff("{:p}  {} + {:#x}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address), symbol.symbol->name, offset));
     return true;
 }
 
-String Thread::backtrace()
+ErrorOr<NonnullOwnPtr<KString>> Thread::backtrace()
 {
     Vector<RecognizedSymbol, 128> recognized_symbols;
 
@@ -1198,18 +1197,18 @@ String Thread::backtrace()
     ScopedAddressSpaceSwitcher switcher(process);
     for (auto& frame : stack_trace) {
         if (Memory::is_user_range(VirtualAddress(frame), sizeof(FlatPtr) * 2)) {
-            recognized_symbols.append({ frame });
+            TRY(recognized_symbols.try_append({ frame }));
         } else {
-            recognized_symbols.append({ frame, symbolicate_kernel_address(frame) });
+            TRY(recognized_symbols.try_append({ frame, symbolicate_kernel_address(frame) }));
         }
     }
 
     StringBuilder builder;
     for (auto& symbol : recognized_symbols) {
-        if (!symbolicate(symbol, process, builder))
+        if (!TRY(symbolicate(symbol, process, builder)))
             break;
     }
-    return builder.to_string();
+    return KString::try_create(builder.string_view());
 }
 
 size_t Thread::thread_specific_region_alignment() const
