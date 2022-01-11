@@ -126,4 +126,24 @@ TEST_CASE(get_time_zone_offset)
     EXPECT(!TimeZone::get_time_zone_offset("I don't exist"sv, {}).has_value());
 }
 
+#else
+
+TEST_CASE(time_zone_from_string)
+{
+    EXPECT_EQ(TimeZone::time_zone_from_string("UTC"sv), TimeZone::TimeZone::UTC);
+
+    EXPECT(!TimeZone::time_zone_from_string("Europe/Paris"sv).has_value());
+    EXPECT(!TimeZone::time_zone_from_string("Etc/UTC"sv).has_value());
+    EXPECT(!TimeZone::time_zone_from_string("I don't exist"sv).has_value());
+}
+
+TEST_CASE(get_time_zone_offset)
+{
+    EXPECT_EQ(TimeZone::get_time_zone_offset("UTC", AK::Time::from_seconds(123456)), 0);
+
+    EXPECT(!TimeZone::get_time_zone_offset("Europe/Paris"sv, {}).has_value());
+    EXPECT(!TimeZone::get_time_zone_offset("Etc/UTC"sv, {}).has_value());
+    EXPECT(!TimeZone::get_time_zone_offset("I don't exist"sv, {}).has_value());
+}
+
 #endif
