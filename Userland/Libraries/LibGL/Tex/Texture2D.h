@@ -35,7 +35,7 @@ public:
     MipMap const& mipmap(unsigned lod) const
     {
         if (lod >= m_mipmaps.size())
-            return m_mipmaps.back();
+            return m_mipmaps.last();
 
         return m_mipmaps.at(lod);
     }

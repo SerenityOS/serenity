@@ -32,11 +32,11 @@ struct Array {
         return __data[index];
     }
 
-    [[nodiscard]] constexpr T const& front() const { return at(0); }
-    [[nodiscard]] constexpr T& front() { return at(0); }
+    [[nodiscard]] constexpr T const& first() const { return at(0); }
+    [[nodiscard]] constexpr T& first() { return at(0); }
 
-    [[nodiscard]] constexpr T const& back() const requires(Size > 0) { return at(Size - 1); }
-    [[nodiscard]] constexpr T& back() requires(Size > 0) { return at(Size - 1); }
+    [[nodiscard]] constexpr T const& last() const requires(Size > 0) { return at(Size - 1); }
+    [[nodiscard]] constexpr T& last() requires(Size > 0) { return at(Size - 1); }
 
     [[nodiscard]] constexpr bool is_empty() const { return size() == 0; }
 
