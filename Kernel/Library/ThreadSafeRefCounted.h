@@ -77,10 +77,6 @@ public:
             delete that;
             return true;
         }
-        if (new_ref_count == 1) {
-            if constexpr (requires { that->one_ref_left(); })
-                that->one_ref_left();
-        }
         return false;
     }
 };
