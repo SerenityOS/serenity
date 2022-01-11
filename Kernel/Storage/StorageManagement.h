@@ -28,8 +28,7 @@ public:
 
     NonnullRefPtr<FileSystem> root_filesystem() const;
 
-    static MajorNumber storage_type_major_number();
-    static MinorNumber generate_storage_minor_number();
+    static DeviceID generate_storage_device_id();
 
     void remove_device(StorageDevice&);
 

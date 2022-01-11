@@ -239,15 +239,11 @@ RefPtr<BlockDevice> StorageManagement::boot_block_device() const
     return m_boot_block_device.strong_ref();
 }
 
-MajorNumber StorageManagement::storage_type_major_number()
-{
-    return 3;
-}
-MinorNumber StorageManagement::generate_storage_minor_number()
+DeviceID StorageManagement::generate_storage_device_id()
 {
     auto minor_number = s_device_minor_number.load();
     s_device_minor_number++;
-    return minor_number;
+    return encoded_device(3, minor_number);
 }
 
 NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const

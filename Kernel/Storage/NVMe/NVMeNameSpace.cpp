@@ -13,10 +13,9 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeNameSpace>> NVMeNameSpace::try_create(NonnullRefPtrVector<NVMeQueue> queues, u8 controller_id, u16 nsid, size_t storage_size, size_t lba_size)
 {
-    auto minor_number = StorageManagement::generate_storage_minor_number();
-    auto major_number = StorageManagement::storage_type_major_number();
+    auto device_id = StorageManagement::generate_storage_device_id();
     auto device_name_kstring = TRY(KString::formatted("nvme{:d}n{:d}", controller_id, nsid));
-    return TRY(DeviceManagement::try_create_device<NVMeNameSpace>(move(queues), storage_size, lba_size, encoded_device(major_number, minor_number), nsid, move(device_name_kstring)));
+    return TRY(DeviceManagement::try_create_device<NVMeNameSpace>(queues, storage_size, lba_size, device_id, nsid, move(device_name_kstring)));
 }
 
 UNMAP_AFTER_INIT NVMeNameSpace::NVMeNameSpace(NonnullRefPtrVector<NVMeQueue> queues, size_t max_addresable_block, size_t lba_size, DeviceID device_id, u16 nsid, NonnullOwnPtr<KString> dev_name)
