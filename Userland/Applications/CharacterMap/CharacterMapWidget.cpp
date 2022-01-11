@@ -5,6 +5,7 @@
  */
 
 #include "CharacterMapWidget.h"
+#include <AK/StringUtils.h>
 #include <Applications/CharacterMap/CharacterMapWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
@@ -12,6 +13,7 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/TextBox.h>
@@ -48,10 +50,39 @@ CharacterMapWidget::CharacterMapWidget()
         }
         GUI::Clipboard::the().set_plain_text(builder.to_string());
     });
+    m_copy_selection_action->set_status_tip("Copy the highlighted characters to the clipboard");
+
+    m_previous_glyph_action = GUI::Action::create("Previous character", { Mod_Alt, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        m_glyph_map->select_previous_existing_glyph();
+    });
+    m_previous_glyph_action->set_status_tip("Seek the previous visible glyph");
+
+    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        m_glyph_map->select_next_existing_glyph();
+    });
+    m_next_glyph_action->set_status_tip("Seek the next visible glyph");
+
+    m_go_to_glyph_action = GUI::Action::create("Go to glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        String input;
+        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecOK && !input.is_empty()) {
+            auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
+            if (!maybe_code_point.has_value())
+                return;
+            auto code_point = clamp(maybe_code_point.value(), 0x0000, 0x10FFFF);
+            m_glyph_map->set_focus(true);
+            m_glyph_map->set_active_glyph(code_point);
+            m_glyph_map->scroll_to_glyph(code_point);
+        }
+    });
+    m_go_to_glyph_action->set_status_tip("Go to the specified code point");
 
     m_toolbar->add_action(*m_choose_font_action);
     m_toolbar->add_separator();
     m_toolbar->add_action(*m_copy_selection_action);
+    m_toolbar->add_separator();
+    m_toolbar->add_action(*m_previous_glyph_action);
+    m_toolbar->add_action(*m_next_glyph_action);
+    m_toolbar->add_action(*m_go_to_glyph_action);
 
     m_glyph_map->on_active_glyph_changed = [&](int) {
         update_statusbar();
