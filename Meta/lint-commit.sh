@@ -30,6 +30,10 @@ while read -r line; do
   ((line_number += 1))
   line_length=${#line}
 
+  if [[ $line_number -eq 2 ]] && [[ $line_length -ne 0 ]]; then
+    error "Empty line between commit title and body is missing"
+  fi
+
   category_pattern="^\S.*?\S: .+"
   if [[ $line_number -eq 1 ]] && (echo "$line" | grep -E -v -q "$category_pattern"); then
     error "Missing category in commit title (if this is a fix up of a previous commit, it should be squashed)"
