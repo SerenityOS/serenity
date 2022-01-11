@@ -36,9 +36,22 @@ describe("normal behavior", () => {
     });
 
     test("canonicalizes time zone name", () => {
-        expect(new Temporal.TimeZone("Utc").id).toBe("UTC");
-        expect(new Temporal.TimeZone("utc").id).toBe("UTC");
-        expect(new Temporal.TimeZone("uTC").id).toBe("UTC");
+        const values = [
+            ["UTC", "UTC"],
+            ["Utc", "UTC"],
+            ["utc", "UTC"],
+            ["uTc", "UTC"],
+            ["GMT", "UTC"],
+            ["Etc/UTC", "UTC"],
+            ["Etc/GMT", "UTC"],
+            ["Etc/GMT+12", "Etc/GMT+12"],
+            ["Etc/GMT-12", "Etc/GMT-12"],
+            ["Europe/London", "Europe/London"],
+            ["Europe/Isle_of_Man", "Europe/London"],
+        ];
+        for (const [arg, expected] of values) {
+            expect(new Temporal.TimeZone(arg).id).toBe(expected);
+        }
     });
 
     test("numeric UTC offset", () => {
