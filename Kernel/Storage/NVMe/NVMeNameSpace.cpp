@@ -7,7 +7,6 @@
 #include "NVMeNameSpace.h"
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Storage/NVMe/NVMeNameSpace.h>
 #include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {
@@ -17,15 +16,14 @@ ErrorOr<NonnullRefPtr<NVMeNameSpace>> NVMeNameSpace::try_create(NonnullRefPtrVec
     auto minor_number = StorageManagement::generate_storage_minor_number();
     auto major_number = StorageManagement::storage_type_major_number();
     auto device_name_kstring = TRY(KString::formatted("nvme{:d}n{:d}", controller_id, nsid));
-    auto device = TRY(DeviceManagement::try_create_device<NVMeNameSpace>(queues, storage_size, lba_size, major_number.value(), minor_number.value(), nsid, move(device_name_kstring)));
-
+    auto device = TRY(DeviceManagement::try_create_device<NVMeNameSpace>(move(queues), storage_size, lba_size, major_number.value(), minor_number.value(), nsid, move(device_name_kstring)));
     return device;
 }
 
 NVMeNameSpace::NVMeNameSpace(NonnullRefPtrVector<NVMeQueue> queues, size_t max_addresable_block, size_t lba_size, size_t major_number, size_t minor_number, u16 nsid, NonnullOwnPtr<KString> dev_name)
     : StorageDevice(major_number, minor_number, lba_size, max_addresable_block, move(dev_name))
     , m_nsid(nsid)
-    , m_queues(queues)
+    , m_queues(move(queues))
 {
 }
 
