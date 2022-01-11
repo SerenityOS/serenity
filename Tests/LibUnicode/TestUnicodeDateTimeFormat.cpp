@@ -35,31 +35,32 @@ TEST_CASE(time_zone_name)
         TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "America/Los_Angeles"sv, "PDT"sv },
 
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "America/Los_Angeles"sv, "توقيت المحيط الهادي الصيفي"sv },
-        // The "ar" locale does not have a short name for PDT. LibUnicode will need to fall back to GMT offset when we have that data.
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "America/Los_Angeles"sv, "غرينتش-٨"sv },
 
         TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "America/Vancouver"sv, "Pacific Daylight Time"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "America/Vancouver"sv, "PDT"sv },
 
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "America/Vancouver"sv, "توقيت المحيط الهادي الصيفي"sv },
-        // The "ar" locale does not have a short name for PDT. LibUnicode will need to fall back to GMT offset when we have that data.
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "America/Vancouver"sv, "غرينتش-٨"sv },
 
         TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "Europe/London"sv, "Greenwich Mean Time"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "Europe/London"sv, "GMT"sv },
 
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "Europe/London"sv, "توقيت غرينتش"sv },
-        // The "ar" locale does not have a short name for GMT. LibUnicode will need to fall back to GMT offset when we have that data.
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "Europe/London"sv, "غرينتش"sv },
 
         TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "Africa/Accra"sv, "Greenwich Mean Time"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "Africa/Accra"sv, "GMT"sv },
 
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "Africa/Accra"sv, "توقيت غرينتش"sv },
-        // The "ar" locale does not have a short name for GMT. LibUnicode will need to fall back to GMT offset when we have that data.
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "Africa/Accra"sv, "غرينتش"sv },
     };
 
+    constexpr auto jan_1_2022 = AK::Time::from_seconds(1640995200); // Saturday, January 1, 2022 12:00:00 AM
+
     for (auto const& test : test_data) {
-        auto time_zone = Unicode::get_time_zone_name(test.locale, test.time_zone, test.style);
-        VERIFY(time_zone.has_value());
-        EXPECT_EQ(*time_zone, test.expected_result);
+        auto time_zone = Unicode::format_time_zone(test.locale, test.time_zone, test.style, jan_1_2022);
+        EXPECT_EQ(time_zone, test.expected_result);
     }
 }
 

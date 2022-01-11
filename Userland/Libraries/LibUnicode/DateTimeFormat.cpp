@@ -262,11 +262,28 @@ String format_time_zone(StringView locale, StringView time_zone, CalendarPattern
     case CalendarPatternStyle::Long:
     case CalendarPatternStyle::ShortGeneric:
     case CalendarPatternStyle::LongGeneric:
-        return get_time_zone_name(locale, time_zone, style).value_or(time_zone);
+        if (auto name = get_time_zone_name(locale, time_zone, style); name.has_value())
+            return *name;
+        break;
 
     case CalendarPatternStyle::ShortOffset:
     case CalendarPatternStyle::LongOffset:
         return format_time_zone_offset(locale, time_zone, style, time).value_or(time_zone);
+
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    // If more styles are added, consult the following table to ensure always falling back to GMT offset is still correct:
+    // https://unicode.org/reports/tr35/tr35-dates.html#dfst-zone
+    switch (style) {
+    case CalendarPatternStyle::Short:
+    case CalendarPatternStyle::ShortGeneric:
+        return format_time_zone(locale, time_zone, CalendarPatternStyle::ShortOffset, time);
+
+    case CalendarPatternStyle::Long:
+    case CalendarPatternStyle::LongGeneric:
+        return format_time_zone(locale, time_zone, CalendarPatternStyle::LongOffset, time);
 
     default:
         VERIFY_NOT_REACHED();
