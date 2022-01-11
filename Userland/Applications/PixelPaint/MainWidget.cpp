@@ -106,7 +106,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     auto& file_menu = window.add_menu("&File");
 
     m_new_image_action = GUI::Action::create(
-        "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-pixelpaint.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto dialog = PixelPaint::CreateNewImageDialog::construct(&window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
                 auto image = PixelPaint::Image::try_create_with_size(dialog->image_size()).release_value_but_fixme_should_propagate_errors();
@@ -184,6 +184,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, String::formatted("Export to PNG failed: {}", result.error()));
             }));
+
+    m_export_submenu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/file-export.png").release_value_but_fixme_should_propagate_errors());
 
     file_menu.add_separator();
 
@@ -279,7 +281,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         editor->selection().merge(editor->active_layer()->relative_rect(), PixelPaint::Selection::MergeMode::Set);
     }));
     m_edit_menu->add_action(GUI::Action::create(
-        "Clear &Selection", { Mod_Ctrl | Mod_Shift, Key_A }, [&](auto&) {
+        "Clear &Selection", { Mod_Ctrl | Mod_Shift, Key_A }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/clear-selection.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->selection().clear();
@@ -287,7 +289,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_edit_menu->add_separator();
     m_edit_menu->add_action(GUI::Action::create(
-        "S&wap Colors", { Mod_None, Key_X }, [&](auto&) {
+        "S&wap Colors", { Mod_None, Key_X }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/swap-colors.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto old_primary_color = editor->primary_color();
@@ -295,7 +297,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->set_secondary_color(old_primary_color);
         }));
     m_edit_menu->add_action(GUI::Action::create(
-        "&Default Colors", { Mod_None, Key_D }, [&](auto&) {
+        "&Default Colors", { Mod_None, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/default-colors.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->set_primary_color(Color::Black);
@@ -432,13 +434,13 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_image_menu = window.add_menu("&Image");
     m_image_menu->add_action(GUI::Action::create(
-        "Flip &Vertically", [&](auto&) {
+        "Flip &Vertically", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().flip(Gfx::Orientation::Vertical);
         }));
     m_image_menu->add_action(GUI::Action::create(
-        "Flip &Horizontally", [&](auto&) {
+        "Flip &Horizontally", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().flip(Gfx::Orientation::Horizontal);
@@ -491,11 +493,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
-        "Select &Previous Layer", { 0, Key_PageUp }, [&](auto&) {
+        "Select &Previous Layer", { 0, Key_PageUp }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/previous-layer.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             m_layer_list_widget->cycle_through_selection(1);
         }));
     m_layer_menu->add_action(GUI::Action::create(
-        "Select &Next Layer", { 0, Key_PageDown }, [&](auto&) {
+        "Select &Next Layer", { 0, Key_PageDown }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/next-layer.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             m_layer_list_widget->cycle_through_selection(-1);
         }));
     m_layer_menu->add_action(GUI::Action::create(
@@ -529,7 +531,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
-        "Move Active Layer &Up", { Mod_Ctrl, Key_PageUp }, [&](auto&) {
+        "Move Active Layer &Up", { Mod_Ctrl, Key_PageUp }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/active-layer-up.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto active_layer = editor->active_layer();
@@ -538,7 +540,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->image().move_layer_up(*active_layer);
         }));
     m_layer_menu->add_action(GUI::Action::create(
-        "Move Active Layer &Down", { Mod_Ctrl, Key_PageDown }, [&](auto&) {
+        "Move Active Layer &Down", { Mod_Ctrl, Key_PageDown }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/active-layer-down.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto active_layer = editor->active_layer();
@@ -602,7 +604,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_filter_menu = window.add_menu("&Filter");
 
-    m_filter_menu->add_action(GUI::Action::create("Filter &Gallery", [&](auto&) {
+    m_filter_menu->add_action(GUI::Action::create("Filter &Gallery", Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/filter.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         auto* editor = current_image_editor();
         VERIFY(editor);
         auto dialog = PixelPaint::FilterGallery::construct(&window, editor);
