@@ -18,7 +18,6 @@ namespace Kernel {
 class Processor;
 
 class ProcessorInfo {
-    Processor& m_processor;
     String m_cpuid;
     String m_brand;
     NonnullOwnPtr<KString> m_features;
@@ -29,7 +28,7 @@ class ProcessorInfo {
     u32 m_apic_id;
 
 public:
-    ProcessorInfo(Processor& processor);
+    ProcessorInfo(Processor const& processor);
 
     const String& cpuid() const { return m_cpuid; }
     const String& brand() const { return m_brand; }

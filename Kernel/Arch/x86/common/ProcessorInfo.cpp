@@ -12,9 +12,8 @@
 
 namespace Kernel {
 
-ProcessorInfo::ProcessorInfo(Processor& processor)
-    : m_processor(processor)
-    , m_features(m_processor.features_string())
+ProcessorInfo::ProcessorInfo(Processor const& processor)
+    : m_features(processor.features_string())
 {
     u32 max_leaf;
     {
