@@ -35,7 +35,8 @@ NonnullRefPtrVector<Card> Player::pick_cards_to_pass(PassingDirection)
     return cards;
 }
 
-Vector<CardWithIndex> Player::hand_sorted_by_fn(bool (*fn)(CardWithIndex&, CardWithIndex&)) const
+template<typename Comparator>
+Vector<CardWithIndex> Player::hand_sorted_by_fn(Comparator comparator) const
 {
     Vector<CardWithIndex> sorted_hand;
     for (size_t i = 0; i < hand.size(); i++) {
@@ -43,7 +44,7 @@ Vector<CardWithIndex> Player::hand_sorted_by_fn(bool (*fn)(CardWithIndex&, CardW
         if (card)
             sorted_hand.empend(*card, i);
     }
-    quick_sort(sorted_hand, fn);
+    quick_sort(sorted_hand, comparator);
     return sorted_hand;
 }
 

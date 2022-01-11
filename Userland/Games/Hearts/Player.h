@@ -42,7 +42,8 @@ public:
     Optional<size_t> pick_specific_card(Card::Type type, CardValue value);
     size_t pick_last_card();
     bool has_card_of_type(Card::Type type);
-    Vector<CardWithIndex> hand_sorted_by_fn(bool (*)(CardWithIndex&, CardWithIndex&)) const;
+    template<typename Comparator>
+    Vector<CardWithIndex> hand_sorted_by_fn(Comparator comparator) const;
 
     void sort_hand() { quick_sort(hand, hearts_card_less); }
     void remove_cards(NonnullRefPtrVector<Card> const& cards);
