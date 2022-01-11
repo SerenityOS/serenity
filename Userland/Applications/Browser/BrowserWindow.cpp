@@ -197,21 +197,21 @@ void BrowserWindow::build_menus()
     });
 
     m_view_source_action = GUI::Action::create(
-        "View &Source", { Mod_Ctrl, Key_U }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/code.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        "View &Source", { Mod_Ctrl, Key_U }, g_icon_bag.code, [this](auto&) {
             active_tab().m_web_content_view->get_source();
         },
         this);
     m_view_source_action->set_status_tip("View source code of the current page");
 
     m_inspect_dom_tree_action = GUI::Action::create(
-        "Inspect &DOM Tree", { Mod_None, Key_F12 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/tree.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        "Inspect &DOM Tree", { Mod_None, Key_F12 }, g_icon_bag.tree, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::Document);
         },
         this);
     m_inspect_dom_tree_action->set_status_tip("Open inspector window for this page");
 
     m_inspect_dom_node_action = GUI::Action::create(
-        "&Inspect Element", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspect.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        "&Inspect Element", g_icon_bag.inspect, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::HoveredElement);
         },
         this);
@@ -222,7 +222,7 @@ void BrowserWindow::build_menus()
     inspect_menu.add_action(*m_inspect_dom_tree_action);
 
     auto js_console_action = GUI::Action::create(
-        "Open &JS Console", { Mod_Ctrl, Key_I }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-javascript.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        "Open &JS Console", { Mod_Ctrl, Key_I }, g_icon_bag.filetype_javascript, [this](auto&) {
             active_tab().show_console_window();
         },
         this);
@@ -249,7 +249,7 @@ void BrowserWindow::build_menus()
 
     m_search_engine_actions.set_exclusive(true);
     auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
-    search_engine_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors());
+    search_engine_menu.set_icon(g_icon_bag.find);
     bool search_engine_set = false;
 
     m_disable_search_engine_action = GUI::Action::create_checkable(
@@ -318,7 +318,7 @@ void BrowserWindow::build_menus()
     }
 
     auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme");
-    color_scheme_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png").release_value_but_fixme_should_propagate_errors());
+    color_scheme_menu.set_icon(g_icon_bag.color_chooser);
     {
         auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser", "Preferences", "ColorScheme", "auto"));
         m_color_scheme_actions.set_exclusive(true);
@@ -343,7 +343,7 @@ void BrowserWindow::build_menus()
 
     auto& debug_menu = add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
-        "Dump &DOM Tree", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/tree.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        "Dump &DOM Tree", g_icon_bag.tree, [this](auto&) {
             active_tab().m_web_content_view->debug_request("dump-dom-tree");
         },
         this));
@@ -360,7 +360,7 @@ void BrowserWindow::build_menus()
     debug_menu.add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, [this](auto&) {
         active_tab().m_history.dump();
     }));
-    debug_menu.add_action(GUI::Action::create("Dump C&ookies", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/cookie.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Dump C&ookies", g_icon_bag.cookie, [this](auto&) {
         auto& tab = active_tab();
         if (tab.on_dump_cookies)
             tab.on_dump_cookies();

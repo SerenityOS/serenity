@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Browser.h"
-#include "BrowserWindow.h"
-#include "CookieJar.h"
-#include "Tab.h"
-#include "WindowActions.h"
 #include <AK/StringBuilder.h>
+#include <Applications/Browser/Browser.h>
+#include <Applications/Browser/BrowserWindow.h>
+#include <Applications/Browser/CookieJar.h>
+#include <Applications/Browser/Tab.h>
+#include <Applications/Browser/WindowActions.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -29,6 +29,7 @@ namespace Browser {
 String g_search_engine;
 String g_home_url;
 Vector<String> g_content_filters;
+IconBag g_icon_bag;
 
 }
 
@@ -69,6 +70,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::g_home_url = Config::read_string("Browser", "Preferences", "Home", "file:///res/html/misc/welcome.html");
     Browser::g_search_engine = Config::read_string("Browser", "Preferences", "SearchEngine", {});
+
+    Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
 
     auto ad_filter_list_or_error = Core::File::open(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::OpenMode::ReadOnly);
     if (!ad_filter_list_or_error.is_error()) {

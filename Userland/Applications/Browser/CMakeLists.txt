@@ -18,6 +18,7 @@ set(SOURCES
     DownloadWidget.cpp
     EditBookmarkGML.h
     History.cpp
+    IconBag.cpp
     InspectorWidget.cpp
     Tab.cpp
     TabGML.h
