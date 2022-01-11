@@ -69,7 +69,7 @@ ProcessorInfo::ProcessorInfo(Processor& processor)
         copy_brand_string_part_to_buffer(0);
         copy_brand_string_part_to_buffer(1);
         copy_brand_string_part_to_buffer(2);
-        m_brandstr = buffer;
+        m_brand = buffer;
     }
 }
 
