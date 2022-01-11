@@ -135,16 +135,25 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
     painter.draw_focus_rect(get_outer_rect(m_active_glyph), Gfx::Color::Black);
 }
 
+Optional<int> GlyphMapWidget::glyph_at_position(Gfx::IntPoint position) const
+{
+    Gfx::IntPoint map_offset { frame_thickness() - horizontal_scrollbar().value(), frame_thickness() - vertical_scrollbar().value() };
+    auto map_position = position - map_offset;
+    auto col = (map_position.x() - 1) / ((font().max_glyph_width() + m_horizontal_spacing));
+    auto row = (map_position.y() - 1) / ((font().glyph_height() + m_vertical_spacing));
+    auto glyph = row * columns() + col;
+    if (row >= 0 && row < rows() && col >= 0 && col < columns() && glyph < m_glyph_count)
+        return glyph;
+
+    return {};
+}
+
 void GlyphMapWidget::mousedown_event(MouseEvent& event)
 {
     Frame::mousedown_event(event);
 
-    Gfx::IntPoint map_offset { frame_thickness() - horizontal_scrollbar().value(), frame_thickness() - vertical_scrollbar().value() };
-    auto map_position = event.position() - map_offset;
-    auto col = (map_position.x() - 1) / ((font().max_glyph_width() + m_horizontal_spacing));
-    auto row = (map_position.y() - 1) / ((font().glyph_height() + m_vertical_spacing));
-    auto glyph = row * columns() + col;
-    if (row >= 0 && row < rows() && col >= 0 && col < columns() && glyph < m_glyph_count) {
+    if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value()) {
+        auto glyph = maybe_glyph.value();
         if (event.shift())
             m_selection.extend_to(glyph);
         else {
@@ -152,6 +161,15 @@ void GlyphMapWidget::mousedown_event(MouseEvent& event)
             m_selection.set_start(glyph);
         }
         set_active_glyph(glyph, ShouldResetSelection::No);
+    }
+}
+
+void GlyphMapWidget::doubleclick_event(MouseEvent& event)
+{
+    Widget::doubleclick_event(event);
+    if (on_glyph_double_clicked) {
+        if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value())
+            on_glyph_double_clicked(maybe_glyph.value());
     }
 }
 
