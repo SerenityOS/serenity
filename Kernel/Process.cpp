@@ -788,11 +788,12 @@ void Process::tracer_trap(Thread& thread, const RegisterState& regs)
 
 bool Process::create_perf_events_buffer_if_needed()
 {
-    if (!m_perf_event_buffer) {
-        m_perf_event_buffer = PerformanceEventBuffer::try_create_with_size(4 * MiB);
-        m_perf_event_buffer->add_process(*this, ProcessEventType::Create);
-    }
-    return !!m_perf_event_buffer;
+    if (m_perf_event_buffer)
+        return true;
+    m_perf_event_buffer = PerformanceEventBuffer::try_create_with_size(4 * MiB);
+    if (!m_perf_event_buffer)
+        return false;
+    return !m_perf_event_buffer->add_process(*this, ProcessEventType::Create).is_error();
 }
 
 void Process::delete_perf_events_buffer()
