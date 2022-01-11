@@ -1,5 +1,5 @@
 --- gltron-0.70/nebu/video/video_system.c	2003-07-21 08:18:57.000000000 +0000
-+++ gltron-0.70-patched/nebu/video/video_system.c	2022-01-10 00:39:53.078575380 +0000
++++ gltron-0.70-patched/nebu/video/video_system.c	2022-01-11 23:08:04.316789459 +0000
 @@ -1,16 +1,17 @@
  #include "Nebu_video.h"
  
