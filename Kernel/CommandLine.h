@@ -58,7 +58,7 @@ public:
         BootloaderOnly
     };
 
-    [[nodiscard]] const String& string() const { return m_string; }
+    [[nodiscard]] StringView string() const { return m_string->view(); }
     Optional<StringView> lookup(StringView key) const;
     [[nodiscard]] bool contains(StringView key) const;
 
@@ -89,12 +89,12 @@ public:
     [[nodiscard]] size_t switch_to_tty() const;
 
 private:
-    CommandLine(const String&);
+    CommandLine(StringView);
 
     void add_arguments(const Vector<StringView>& args);
-    void build_commandline(const String& cmdline_from_bootloader);
+    static NonnullOwnPtr<KString> build_commandline(StringView cmdline_from_bootloader);
 
-    String m_string;
+    NonnullOwnPtr<KString> m_string;
     HashMap<StringView, StringView> m_params;
 };
 

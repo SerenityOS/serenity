@@ -48,7 +48,7 @@ UNMAP_AFTER_INIT void CommandLine::initialize()
     }
 }
 
-UNMAP_AFTER_INIT void CommandLine::build_commandline(const String& cmdline_from_bootloader)
+UNMAP_AFTER_INIT NonnullOwnPtr<KString> CommandLine::build_commandline(StringView cmdline_from_bootloader)
 {
     StringBuilder builder;
     builder.append(cmdline_from_bootloader);
@@ -56,7 +56,7 @@ UNMAP_AFTER_INIT void CommandLine::build_commandline(const String& cmdline_from_
         builder.append(" ");
         builder.append(s_embedded_cmd_line);
     }
-    m_string = builder.to_string();
+    return KString::must_create(builder.string_view());
 }
 
 UNMAP_AFTER_INIT void CommandLine::add_arguments(const Vector<StringView>& args)
@@ -77,11 +77,11 @@ UNMAP_AFTER_INIT void CommandLine::add_arguments(const Vector<StringView>& args)
     }
 }
 
-UNMAP_AFTER_INIT CommandLine::CommandLine(const String& cmdline_from_bootloader)
+UNMAP_AFTER_INIT CommandLine::CommandLine(StringView cmdline_from_bootloader)
+    : m_string(build_commandline(cmdline_from_bootloader))
 {
     s_the = this;
-    build_commandline(cmdline_from_bootloader);
-    const auto& args = m_string.split_view(' ');
+    const auto& args = m_string->view().split_view(' ');
     m_params.ensure_capacity(args.size());
     add_arguments(args);
 }
