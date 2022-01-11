@@ -358,7 +358,12 @@ private:
             fs_object.add("free_block_count", fs.free_block_count());
             fs_object.add("total_inode_count", fs.total_inode_count());
             fs_object.add("free_inode_count", fs.free_inode_count());
-            fs_object.add("mount_point", mount.absolute_path());
+            auto mount_point_or_error = mount.absolute_path();
+            if (mount_point_or_error.is_error()) {
+                result = mount_point_or_error.release_error();
+                return IterationDecision::Break;
+            }
+            fs_object.add("mount_point", mount_point_or_error.value()->view());
             fs_object.add("block_size", static_cast<u64>(fs.block_size()));
             fs_object.add("readonly", fs.is_readonly());
             fs_object.add("mount_flags", mount.flags());

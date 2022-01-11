@@ -27,11 +27,11 @@ Mount::Mount(Inode& source, Custody& host_custody, int flags)
 {
 }
 
-String Mount::absolute_path() const
+ErrorOr<NonnullOwnPtr<KString>> Mount::absolute_path() const
 {
     if (!m_host_custody)
-        return "/";
-    return m_host_custody->absolute_path();
+        return KString::try_create("/"sv);
+    return m_host_custody->try_serialize_absolute_path();
 }
 
 Inode* Mount::host()
