@@ -568,7 +568,9 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     // Let's construct some triangles
     if (primitive_type == PrimitiveType::Triangles) {
         Triangle triangle;
-        for (size_t i = 0; i < vertices.size(); i += 3) {
+        if (vertices.size() < 3)
+            return;
+        for (size_t i = 0; i < vertices.size() - 2; i += 3) {
             triangle.vertices[0] = vertices.at(i);
             triangle.vertices[1] = vertices.at(i + 1);
             triangle.vertices[2] = vertices.at(i + 2);
@@ -578,8 +580,9 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     } else if (primitive_type == PrimitiveType::Quads) {
         // We need to construct two triangles to form the quad
         Triangle triangle;
-        VERIFY(vertices.size() % 4 == 0);
-        for (size_t i = 0; i < vertices.size(); i += 4) {
+        if (vertices.size() < 4)
+            return;
+        for (size_t i = 0; i < vertices.size() - 3; i += 4) {
             // Triangle 1
             triangle.vertices[0] = vertices.at(i);
             triangle.vertices[1] = vertices.at(i + 1);
