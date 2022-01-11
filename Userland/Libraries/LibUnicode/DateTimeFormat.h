@@ -9,6 +9,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/Time.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibUnicode/Forward.h>
@@ -167,6 +168,17 @@ enum class CalendarSymbol : u8 {
     Weekday,
 };
 
+struct TimeZoneFormat {
+    StringView symbol_ahead_sign {};
+    StringView symbol_ahead_separator {};
+
+    StringView symbol_behind_sign {};
+    StringView symbol_behind_separator {};
+
+    StringView gmt_format {};
+    StringView gmt_zero_format {};
+};
+
 HourCycle hour_cycle_from_string(StringView hour_cycle);
 StringView hour_cycle_to_string(HourCycle hour_cycle);
 
@@ -197,6 +209,8 @@ Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView c
 Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value);
 Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour);
 
+String format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time);
 Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style);
+Optional<TimeZoneFormat> get_time_zone_format(StringView locale);
 
 }

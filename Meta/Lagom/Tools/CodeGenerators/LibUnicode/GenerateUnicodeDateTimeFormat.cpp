@@ -414,14 +414,32 @@ struct AK::Traits<TimeZoneNames> : public GenericTraits<TimeZoneNames> {
 struct TimeZoneFormat {
     unsigned hash() const
     {
-        return int_hash(gmt_zero_format);
+        auto hash = int_hash(symbol_ahead_sign);
+        hash = pair_int_hash(hash, symbol_ahead_separator);
+        hash = pair_int_hash(hash, symbol_behind_sign);
+        hash = pair_int_hash(hash, symbol_behind_separator);
+        hash = pair_int_hash(hash, gmt_format);
+        hash = pair_int_hash(hash, gmt_zero_format);
+        return hash;
     }
 
     bool operator==(TimeZoneFormat const& other) const
     {
-        return gmt_zero_format == other.gmt_zero_format;
+        return (symbol_ahead_sign == other.symbol_ahead_sign)
+            && (symbol_ahead_separator == other.symbol_ahead_separator)
+            && (symbol_behind_sign == other.symbol_behind_sign)
+            && (symbol_behind_separator == other.symbol_behind_separator)
+            && (gmt_format == other.gmt_format)
+            && (gmt_zero_format == other.gmt_zero_format);
     }
 
+    StringIndexType symbol_ahead_sign { 0 };
+    StringIndexType symbol_ahead_separator { 0 };
+
+    StringIndexType symbol_behind_sign { 0 };
+    StringIndexType symbol_behind_separator { 0 };
+
+    StringIndexType gmt_format { 0 };
     StringIndexType gmt_zero_format { 0 };
 };
 
@@ -429,7 +447,13 @@ template<>
 struct AK::Formatter<TimeZoneFormat> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZoneFormat const& time_zone_format)
     {
-        return Formatter<FormatString>::format(builder, "{{ {} }}", time_zone_format.gmt_zero_format);
+        return Formatter<FormatString>::format(builder, "{{ {}, {}, {}, {}, {}, {} }}",
+            time_zone_format.symbol_ahead_sign,
+            time_zone_format.symbol_ahead_separator,
+            time_zone_format.symbol_behind_sign,
+            time_zone_format.symbol_behind_separator,
+            time_zone_format.gmt_format,
+            time_zone_format.gmt_zero_format);
     }
 };
 
@@ -1380,6 +1404,8 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
     auto const& dates_object = locale_object.as_object().get("dates"sv);
     auto const& time_zone_names_object = dates_object.as_object().get("timeZoneNames"sv);
     auto const& meta_zone_object = time_zone_names_object.as_object().get("metazone"sv);
+    auto const& hour_format_string = time_zone_names_object.as_object().get("hourFormat"sv);
+    auto const& gmt_format_string = time_zone_names_object.as_object().get("gmtFormat"sv);
     auto const& gmt_zero_format_string = time_zone_names_object.as_object().get("gmtZeroFormat"sv);
 
     if (meta_zone_object.is_null())
@@ -1401,9 +1427,34 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
         return {};
     };
 
+    auto parse_hour_format = [&](auto const& format, auto& time_zone_formats) {
+        auto hour_formats = format.split_view(';');
+
+        auto hour_format_ahead_start = hour_formats[0].find('H').value();
+        auto separator_ahead_start = hour_formats[0].find_last('H').value() + 1;
+        auto separator_ahead_end = hour_formats[0].find('m').value();
+
+        auto hour_format_behind_start = hour_formats[1].find('H').value();
+        auto separator_behind_start = hour_formats[1].find_last('H').value() + 1;
+        auto separator_behind_end = hour_formats[1].find('m').value();
+
+        auto symbol_ahead_sign = hour_formats[0].substring_view(0, hour_format_ahead_start);
+        auto symbol_ahead_separator = hour_formats[0].substring_view(separator_ahead_start, separator_ahead_end - separator_ahead_start);
+
+        auto symbol_behind_sign = hour_formats[1].substring_view(0, hour_format_behind_start);
+        auto symbol_behind_separator = hour_formats[1].substring_view(separator_behind_start, separator_behind_end - separator_behind_start);
+
+        time_zone_formats.symbol_ahead_sign = locale_data.unique_strings.ensure(symbol_ahead_sign);
+        time_zone_formats.symbol_ahead_separator = locale_data.unique_strings.ensure(symbol_ahead_separator);
+        time_zone_formats.symbol_behind_sign = locale_data.unique_strings.ensure(symbol_behind_sign);
+        time_zone_formats.symbol_behind_separator = locale_data.unique_strings.ensure(symbol_behind_separator);
+    };
+
     TimeZoneNamesList time_zones;
 
     TimeZoneFormat time_zone_formats {};
+    parse_hour_format(hour_format_string.as_string(), time_zone_formats);
+    time_zone_formats.gmt_format = locale_data.unique_strings.ensure(gmt_format_string.as_string());
     time_zone_formats.gmt_zero_format = locale_data.unique_strings.ensure(gmt_zero_format_string.as_string());
 
     auto parse_time_zone = [&](StringView meta_zone, JsonObject const& meta_zone_object) {
@@ -1748,7 +1799,27 @@ struct TimeZoneNames {
     @string_index_type@ short_name { 0 };
 };
 
-struct TimeZoneFormat {
+struct TimeZoneFormatImpl {
+    TimeZoneFormat to_time_zone_format() const {
+        TimeZoneFormat time_zone_format {};
+
+        time_zone_format.symbol_ahead_sign = s_string_list[symbol_ahead_sign];
+        time_zone_format.symbol_ahead_separator = s_string_list[symbol_ahead_separator];
+        time_zone_format.symbol_behind_sign = s_string_list[symbol_behind_sign];
+        time_zone_format.symbol_behind_separator = s_string_list[symbol_behind_separator];
+        time_zone_format.gmt_format = s_string_list[gmt_format];
+        time_zone_format.gmt_zero_format = s_string_list[gmt_zero_format];
+
+        return time_zone_format;
+    }
+
+    @string_index_type@ symbol_ahead_sign { 0 };
+    @string_index_type@ symbol_ahead_separator { 0 };
+
+    @string_index_type@ symbol_behind_sign { 0 };
+    @string_index_type@ symbol_behind_separator { 0 };
+
+    @string_index_type@ gmt_format { 0 };
     @string_index_type@ gmt_zero_format { 0 };
 };
 
@@ -1766,7 +1837,7 @@ struct DayPeriodData {
     locale_data.unique_calendars.generate(generator, "CalendarData"sv, "s_calendars"sv, 10);
     locale_data.unique_time_zones.generate(generator, "TimeZoneNames"sv, "s_time_zones"sv, 30);
     locale_data.unique_time_zone_lists.generate(generator, s_time_zone_index_type, "s_time_zone_lists"sv);
-    locale_data.unique_time_zone_formats.generate(generator, "TimeZoneFormat"sv, "s_time_zone_formats"sv, 30);
+    locale_data.unique_time_zone_formats.generate(generator, "TimeZoneFormatImpl"sv, "s_time_zone_formats"sv, 30);
     locale_data.unique_day_periods.generate(generator, "DayPeriodData"sv, "s_day_periods"sv, 30);
     locale_data.unique_day_period_lists.generate(generator, s_day_period_index_type, "s_day_period_lists"sv);
     locale_data.unique_hour_cycle_lists.generate(generator, "u8"sv, "s_hour_cycle_lists"sv);
@@ -2068,16 +2139,17 @@ Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, 
     return get_calendar_day_period_symbol(locale, calendar, style, DayPeriod::PM);
 }
 
-static TimeZoneFormat const* find_time_zone_formats(StringView locale)
+Optional<TimeZoneFormat> get_time_zone_format(StringView locale)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
-        return nullptr;
+        return {};
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
-
     auto time_zone_format_index = s_locale_time_zone_formats.at(locale_index);
-    return &s_time_zone_formats.at(time_zone_format_index);
+
+    auto const& time_zone_format = s_time_zone_formats.at(time_zone_format_index);
+    return time_zone_format.to_time_zone_format();
 }
 
 static TimeZoneNames const* find_time_zone_names(StringView locale, StringView time_zone)
@@ -2111,14 +2183,12 @@ Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone,
                 return s_string_list[time_zone_index];
         }
     } else {
-        // FIXME: This becomes more complicated when time zones other than UTC are supported. We will need to know the GMT offset
-        //        of each time zone (which must be parsed from the time zone database, not the CLDR). For now, assuming UTC means
-        //        we can assume a GMT offset of 0, for which the CLDR has a specific format string for the offset styles. Further,
-        //        we will need to parse the "generic" time zone names from timeZoneNames.json.
+        // FIXME: We will need to parse the "generic" time zone names from timeZoneNames.json
+        //        to support time zones other than UTC.
         VERIFY(time_zone == "UTC"sv);
 
-        if (auto const* formats = find_time_zone_formats(locale); formats != nullptr)
-            return s_string_list[formats->gmt_zero_format];
+        if (auto formats = get_time_zone_format(locale); formats.has_value())
+            return formats->gmt_zero_format;
     }
 
     return {};
