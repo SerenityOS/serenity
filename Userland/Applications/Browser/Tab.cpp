@@ -74,7 +74,7 @@ void Tab::view_source(const URL& url, const String& source)
     editor.set_ruler_visible(true);
     window->resize(640, 480);
     window->set_title(url.to_string());
-    window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-text.png").release_value_but_fixme_should_propagate_errors());
+    window->set_icon(g_icon_bag.filetype_text);
     window->show();
 }
 
@@ -98,9 +98,7 @@ Tab::Tab(BrowserWindow& window)
         m_go_back_context_menu = GUI::Menu::construct();
         for (auto& url : m_history.get_back_title_history()) {
             i++;
-            m_go_back_context_menu->add_action(GUI::Action::create(url.to_string(),
-                Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png").release_value_but_fixme_should_propagate_errors(),
-                [this, i](auto&) { go_back(i); }));
+            m_go_back_context_menu->add_action(GUI::Action::create(url.to_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_back(i); }));
         }
         m_go_back_context_menu->popup(context_menu_event.screen_position());
     };
@@ -113,9 +111,7 @@ Tab::Tab(BrowserWindow& window)
         m_go_forward_context_menu = GUI::Menu::construct();
         for (auto& url : m_history.get_forward_title_history()) {
             i++;
-            m_go_forward_context_menu->add_action(GUI::Action::create(url.to_string(),
-                Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png").release_value_but_fixme_should_propagate_errors(),
-                [this, i](auto&) { go_forward(i); }));
+            m_go_forward_context_menu->add_action(GUI::Action::create(url.to_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_forward(i); }));
         }
         m_go_forward_context_menu->popup(context_menu_event.screen_position());
     };
@@ -150,7 +146,7 @@ Tab::Tab(BrowserWindow& window)
     m_bookmark_button = toolbar.add<GUI::Button>();
     m_bookmark_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_bookmark_button->set_focus_policy(GUI::FocusPolicy::TabFocus);
-    m_bookmark_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/bookmark-contour.png").release_value_but_fixme_should_propagate_errors());
+    m_bookmark_button->set_icon(g_icon_bag.bookmark_contour);
     m_bookmark_button->set_fixed_size(22, 22);
 
     m_bookmark_button->on_click = [this](auto) {
@@ -332,7 +328,7 @@ Tab::Tab(BrowserWindow& window)
     m_tab_context_menu->add_action(GUI::CommonActions::make_close_tab_action([this](auto&) {
         on_tab_close_request(*this);
     }));
-    m_tab_context_menu->add_action(GUI::Action::create("&Duplicate Tab", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/duplicate-tab.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_tab_context_menu->add_action(GUI::Action::create("&Duplicate Tab", g_icon_bag.duplicate_tab, [this](auto&) {
         on_tab_open_request(url());
     }));
     m_tab_context_menu->add_action(GUI::Action::create("Close &Other Tabs", [this](auto&) {
@@ -413,10 +409,10 @@ void Tab::bookmark_current_url()
 void Tab::update_bookmark_button(const String& url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
-        m_bookmark_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/bookmark-filled.png").release_value_but_fixme_should_propagate_errors());
+        m_bookmark_button->set_icon(g_icon_bag.bookmark_filled);
         m_bookmark_button->set_tooltip("Remove Bookmark");
     } else {
-        m_bookmark_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/bookmark-contour.png").release_value_but_fixme_should_propagate_errors());
+        m_bookmark_button->set_icon(g_icon_bag.bookmark_contour);
         m_bookmark_button->set_tooltip("Add Bookmark");
     }
 }
@@ -485,7 +481,7 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
         auto window = GUI::Window::construct(&this->window());
         window->resize(300, 500);
         window->set_title("Inspector");
-        window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png").release_value_but_fixme_should_propagate_errors());
+        window->set_icon(g_icon_bag.inspector_object);
         window->on_close = [&]() {
             m_web_content_view->clear_inspected_dom_node();
         };
@@ -514,7 +510,7 @@ void Tab::show_console_window()
         auto console_window = GUI::Window::construct(&window());
         console_window->resize(500, 300);
         console_window->set_title("JS Console");
-        console_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-javascript.png").release_value_but_fixme_should_propagate_errors());
+        console_window->set_icon(g_icon_bag.filetype_javascript);
         m_console_widget = console_window->set_main_widget<ConsoleWidget>();
         m_console_widget->on_js_input = [this](String const& js_source) {
             m_web_content_view->js_console_input(js_source);

@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "BookmarksBarWidget.h"
+#include <Applications/Browser/BookmarksBarWidget.h>
+#include <Applications/Browser/Browser.h>
 #include <Applications/Browser/EditBookmarkGML.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -198,7 +199,7 @@ void BookmarksBarWidget::model_did_update(unsigned)
 
         button.set_button_style(Gfx::ButtonStyle::Coolbar);
         button.set_text(title);
-        button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png").release_value_but_fixme_should_propagate_errors());
+        button.set_icon(g_icon_bag.filetype_html);
         button.set_fixed_size(font().width(title) + 32, 20);
         button.set_relative_rect(rect);
         button.set_focus_policy(GUI::FocusPolicy::TabFocus);
@@ -249,11 +250,7 @@ void BookmarksBarWidget::update_content_size()
         for (size_t i = m_last_visible_index; i < m_bookmarks.size(); ++i) {
             auto& bookmark = m_bookmarks.at(i);
             bookmark.set_visible(false);
-            m_additional_menu->add_action(GUI::Action::create(bookmark.text(),
-                Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png").release_value_but_fixme_should_propagate_errors(),
-                [&](auto&) {
-                    bookmark.on_click(0);
-                }));
+            m_additional_menu->add_action(GUI::Action::create(bookmark.text(), g_icon_bag.filetype_html, [&](auto&) { bookmark.on_click(0); }));
         }
     }
 }
