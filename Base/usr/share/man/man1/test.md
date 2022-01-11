@@ -93,4 +93,4 @@ $ /bin/test \( 10 -gt 20 \) -o \( ! 10 -ne 10 \) && echo "magic numbers!"
 
 ## See Also
 
-* [`find`(1)](find.md)
+* [`find`(1)](help://man/1/find)

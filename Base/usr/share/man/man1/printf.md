@@ -50,4 +50,4 @@ $ printf '%d%d%d' 1 2 3 4 x
 
 ## See also
 
-* [`echo`(1)](../man1/echo.md)
+* [`echo`(1)](help://man/1/echo)

@@ -2,6 +2,8 @@
 
 Terminal - Serenity terminal emulator
 
+[Open](file:///bin/Terminal)
+
 ## Synopsis
 
 ```**sh

@@ -362,7 +362,6 @@ public:
     virtual ErrorOr<void> set_atime(time_t) override;
     virtual ErrorOr<void> set_ctime(time_t) override;
     virtual ErrorOr<void> set_mtime(time_t) override;
-    virtual void one_ref_left() override;
 
 private:
     // HACK: The base ISO 9660 standard says the maximum filename length is 37

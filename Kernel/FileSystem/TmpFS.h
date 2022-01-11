@@ -33,7 +33,7 @@ private:
 
     RefPtr<TmpFSInode> m_root_inode;
 
-    HashMap<InodeIndex, NonnullRefPtr<TmpFSInode>> m_inodes;
+    HashMap<InodeIndex, TmpFSInode*> m_inodes;
     ErrorOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier identifier) const;
     void register_inode(TmpFSInode&);
     void unregister_inode(InodeIdentifier);
@@ -67,7 +67,7 @@ public:
     virtual ErrorOr<void> set_atime(time_t) override;
     virtual ErrorOr<void> set_ctime(time_t) override;
     virtual ErrorOr<void> set_mtime(time_t) override;
-    virtual void one_ref_left() override;
+    virtual void remove_from_secondary_lists() override;
 
 private:
     TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent);

@@ -278,11 +278,7 @@ private:
         Yes,
         No
     };
-    enum class UnsafeIgnoreMissingPageTable {
-        Yes,
-        No
-    };
-    void release_pte(PageDirectory&, VirtualAddress, IsLastPTERelease, UnsafeIgnoreMissingPageTable = UnsafeIgnoreMissingPageTable::No);
+    void release_pte(PageDirectory&, VirtualAddress, IsLastPTERelease);
 
     RefPtr<PageDirectory> m_kernel_page_directory;
 

@@ -2,6 +2,8 @@
 
 FontEditor - Serenity font editor
 
+[Open](file:///bin/FontEditor)
+
 ## Synopsis
 
 ```**sh

@@ -23,4 +23,4 @@ $ umount <mountpoint>
 
 ## See also
 
-* [`mount`(8)](../man8/mount.md)
+* [`mount`(8)](help://man/8/mount)

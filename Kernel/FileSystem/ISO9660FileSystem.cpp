@@ -552,10 +552,6 @@ ErrorOr<void> ISO9660Inode::set_mtime(time_t)
     return EROFS;
 }
 
-void ISO9660Inode::one_ref_left()
-{
-}
-
 ISO9660Inode::ISO9660Inode(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView name)
     : Inode(fs, get_inode_index(record, name))
     , m_record(record)

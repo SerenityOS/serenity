@@ -2,6 +2,8 @@
 
 Mail - Serenity e-mail client
 
+[Open](file:///bin/Mail)
+
 ## Synopsis
 
 ```**sh

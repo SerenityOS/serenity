@@ -21,15 +21,15 @@ If `executable_path` passed to `posix_spawn` is a relative path, it is resolved 
 
 If `executable_path` passed to `posix_spawnp` is a relative path, it is resolved by searching through directories specified in the `PATH` environment variable.
 
-The `posix_spawn_file_actions_t` and `posix_spawnattr_t` arguments may be `nullptr`. If they aren't, see [`posix_spawn_file_actions`(2)](posix_spawn_file_actions_init.md) and [`posix_spawnattr`(2)](posix_spawnattr_init.md) for what they do.
+The `posix_spawn_file_actions_t` and `posix_spawnattr_t` arguments may be `nullptr`. If they aren't, see [`posix_spawn_file_actions`(2)](help://man/3/posix_spawn_file_actions_init) and [`posix_spawnattr`(2)](help://man/3/posix_spawnattr_init) for what they do.
 
 The last entry in `argv` and `envp` has to be `nullptr`.
 
 The new process is started as if the following steps are executed in this order:
 
 1. A new process is started as if `fork()` was called.
-2. If the `posix_spawnattr_t` parameter is non-nullptr, it [takes effect](posix_spawnattr_init.md).
-3. If the `posix_spawn_file_actions_t` parameter is non-nullptr, it [takes effect](posix_spawn_file_actions_init.md).
+2. If the `posix_spawnattr_t` parameter is non-nullptr, it [takes effect](help://man/3/posix_spawnattr_init).
+3. If the `posix_spawn_file_actions_t` parameter is non-nullptr, it [takes effect](help://man/3/posix_spawn_file_actions_init).
 4. `executable_path` is loaded and starts running, as if `execve` or `execvpe` was called.
 
 ## Return value
@@ -62,5 +62,5 @@ int main()
 
 ## See also
 
-* [`posix_spawnattr`(2)](posix_spawnattr_init.md)
-* [`posix_spawn_file_actions`(2)](posix_spawn_file_actions_init.md)
+* [`posix_spawnattr`(2)](help://man/3/posix_spawnattr_init)
+* [`posix_spawn_file_actions`(2)](help://man/3/posix_spawn_file_actions_init)

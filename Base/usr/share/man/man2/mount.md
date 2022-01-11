@@ -95,4 +95,4 @@ All of the usual path resolution errors may also occur.
 
 ## See also
 
-* [`mount`(8)](../man8/mount.md)
+* [`mount`(8)](help://man/8/mount)

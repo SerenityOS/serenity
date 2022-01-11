@@ -47,6 +47,7 @@ static bool is_missing_file_acceptable(String const& filename)
         "/man6/index.html",
         "/man7/index.html",
         "/man8/index.html",
+        "index.html",
     };
     for (auto const& suffix : acceptable_missing_files) {
         if (filename.ends_with(suffix))

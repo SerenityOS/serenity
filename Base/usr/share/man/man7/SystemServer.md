@@ -23,11 +23,11 @@ between socket creation and the client trying to connect to those sockets.
 When a service is spawned, SystemServer passes it an open file descriptor to the
 configured socket as fd 3, and sets `SOCKET_TAKEOVER=1` in the environment to
 inform the service that socket takeover is happening. SystemServer calls
-[`listen`(2)](../man2/listen.md) on the file descriptor, so the service doesn't
+[`listen`(2)](help://man/2/listen) on the file descriptor, so the service doesn't
 need to do it again. The file descriptor does not have the `FD_CLOEXEC` flag set
 on it.
 
-The service is advised to set this flag using [`fcntl`(2)](../man2/fcntl.md) and
+The service is advised to set this flag using [`fcntl`(2)](help://man/2/fcntl) and
 unset `SOCKET_TAKEOVER` from the environment in order not to confuse its
 children.
 
@@ -48,4 +48,4 @@ the accepted socket to the service process.
 
 ## See also
 
-* [`SystemServer`(5)](../man5/SystemServer.md)
+* [`SystemServer`(5)](help://man/5/SystemServer)
