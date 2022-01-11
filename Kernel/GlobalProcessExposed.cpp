@@ -572,7 +572,7 @@ private:
                 obj.add("model", info.display_model());
                 obj.add("stepping", info.stepping());
                 obj.add("type", info.type());
-                obj.add("brandstr", info.brandstr());
+                obj.add("brand", info.brand());
             });
         array.finish();
         return {};
