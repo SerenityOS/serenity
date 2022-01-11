@@ -23,37 +23,53 @@ TEST_CASE(time_zone_name)
     constexpr auto test_data = Array {
         TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "UTC"sv, "Coordinated Universal Time"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "UTC"sv, "UTC"sv },
-        TestData { "en"sv, Unicode::CalendarPatternStyle::ShortGeneric, "UTC"sv, "GMT"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::LongGeneric, "UTC"sv, "GMT"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::ShortGeneric, "UTC"sv, "GMT"sv },
 
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "UTC"sv, "التوقيت العالمي المنسق"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "UTC"sv, "UTC"sv },
-        TestData { "ar"sv, Unicode::CalendarPatternStyle::ShortGeneric, "UTC"sv, "غرينتش"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::LongGeneric, "UTC"sv, "غرينتش"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::ShortGeneric, "UTC"sv, "غرينتش"sv },
 
         TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "America/Los_Angeles"sv, "Pacific Daylight Time"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "America/Los_Angeles"sv, "PDT"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::LongGeneric, "America/Los_Angeles"sv, "Pacific Time"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::ShortGeneric, "America/Los_Angeles"sv, "PT"sv },
 
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "America/Los_Angeles"sv, "توقيت المحيط الهادي الصيفي"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "America/Los_Angeles"sv, "غرينتش-٨"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::LongGeneric, "America/Los_Angeles"sv, "توقيت المحيط الهادي"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::ShortGeneric, "America/Los_Angeles"sv, "غرينتش-٨"sv },
 
         TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "America/Vancouver"sv, "Pacific Daylight Time"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "America/Vancouver"sv, "PDT"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::LongGeneric, "America/Vancouver"sv, "Pacific Time"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::ShortGeneric, "America/Vancouver"sv, "PT"sv },
 
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "America/Vancouver"sv, "توقيت المحيط الهادي الصيفي"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "America/Vancouver"sv, "غرينتش-٨"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::LongGeneric, "America/Vancouver"sv, "توقيت المحيط الهادي"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::ShortGeneric, "America/Vancouver"sv, "غرينتش-٨"sv },
 
         TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "Europe/London"sv, "Greenwich Mean Time"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "Europe/London"sv, "GMT"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::LongGeneric, "Europe/London"sv, "GMT"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::ShortGeneric, "Europe/London"sv, "GMT"sv },
 
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "Europe/London"sv, "توقيت غرينتش"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "Europe/London"sv, "غرينتش"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::LongGeneric, "Europe/London"sv, "غرينتش"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::ShortGeneric, "Europe/London"sv, "غرينتش"sv },
 
         TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "Africa/Accra"sv, "Greenwich Mean Time"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "Africa/Accra"sv, "GMT"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::LongGeneric, "Africa/Accra"sv, "GMT"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::ShortGeneric, "Africa/Accra"sv, "GMT"sv },
 
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "Africa/Accra"sv, "توقيت غرينتش"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "Africa/Accra"sv, "غرينتش"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::LongGeneric, "Africa/Accra"sv, "غرينتش"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::ShortGeneric, "Africa/Accra"sv, "غرينتش"sv },
     };
 
     constexpr auto jan_1_2022 = AK::Time::from_seconds(1640995200); // Saturday, January 1, 2022 12:00:00 AM

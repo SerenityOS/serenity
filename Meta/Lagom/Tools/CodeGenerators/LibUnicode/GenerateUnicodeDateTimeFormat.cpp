@@ -383,16 +383,26 @@ struct AK::Traits<Calendar> : public GenericTraits<Calendar> {
 struct TimeZoneNames {
     unsigned hash() const
     {
-        return pair_int_hash(long_name, short_name);
+        auto hash = pair_int_hash(short_standard_name, long_standard_name);
+        hash = pair_int_hash(hash, short_generic_name);
+        hash = pair_int_hash(hash, long_generic_name);
+
+        return hash;
     }
 
     bool operator==(TimeZoneNames const& other) const
     {
-        return (long_name == other.long_name) && (short_name == other.short_name);
+        return (short_standard_name == other.short_standard_name)
+            && (long_standard_name == other.long_standard_name)
+            && (short_generic_name == other.short_generic_name)
+            && (long_generic_name == other.long_generic_name);
     }
 
-    StringIndexType long_name { 0 };
-    StringIndexType short_name { 0 };
+    StringIndexType short_standard_name { 0 };
+    StringIndexType long_standard_name { 0 };
+
+    StringIndexType short_generic_name { 0 };
+    StringIndexType long_generic_name { 0 };
 };
 
 template<>
@@ -400,9 +410,11 @@ struct AK::Formatter<TimeZoneNames> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZoneNames const& time_zone)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {} }}",
-            time_zone.long_name,
-            time_zone.short_name);
+            "{{ {}, {}, {}, {} }}",
+            time_zone.short_standard_name,
+            time_zone.long_standard_name,
+            time_zone.short_generic_name,
+            time_zone.long_generic_name);
     }
 };
 
@@ -1411,18 +1423,16 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
     if (meta_zone_object.is_null())
         return {};
 
-    auto parse_name = [&](StringView type, JsonObject const& meta_zone_object) -> Optional<StringIndexType> {
+    auto parse_name = [&](StringView type, JsonObject const& meta_zone_object, Span<StringView const> keys) -> Optional<StringIndexType> {
         auto const& names = meta_zone_object.get(type);
         if (!names.is_object())
             return {};
 
-        auto const& daylight = names.as_object().get("daylight"sv);
-        if (daylight.is_string())
-            return locale_data.unique_strings.ensure(daylight.as_string());
-
-        auto const& standard = names.as_object().get("standard"sv);
-        if (standard.is_string())
-            return locale_data.unique_strings.ensure(standard.as_string());
+        for (auto key : keys) {
+            auto const& name = names.as_object().get(key);
+            if (name.is_string())
+                return locale_data.unique_strings.ensure(name.as_string());
+        }
 
         return {};
     };
@@ -1458,16 +1468,23 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
     time_zone_formats.gmt_zero_format = locale_data.unique_strings.ensure(gmt_zero_format_string.as_string());
 
     auto parse_time_zone = [&](StringView meta_zone, JsonObject const& meta_zone_object) {
+        constexpr auto standard_keys = Array { "daylight"sv, "standard"sv };
+        constexpr auto generic_keys = Array { "generic"sv };
+
         auto golden_zones = locale_data.meta_zones.find(meta_zone);
         if (golden_zones == locale_data.meta_zones.end())
             return;
 
         TimeZoneNames time_zone_names {};
 
-        if (auto long_name = parse_name("long"sv, meta_zone_object); long_name.has_value())
-            time_zone_names.long_name = long_name.value();
-        if (auto short_name = parse_name("short"sv, meta_zone_object); short_name.has_value())
-            time_zone_names.short_name = short_name.value();
+        if (auto name = parse_name("long"sv, meta_zone_object, standard_keys); name.has_value())
+            time_zone_names.long_standard_name = name.value();
+        if (auto name = parse_name("short"sv, meta_zone_object, standard_keys); name.has_value())
+            time_zone_names.short_standard_name = name.value();
+        if (auto name = parse_name("long"sv, meta_zone_object, generic_keys); name.has_value())
+            time_zone_names.long_generic_name = name.value();
+        if (auto name = parse_name("short"sv, meta_zone_object, generic_keys); name.has_value())
+            time_zone_names.short_generic_name = name.value();
 
         auto time_zone_index = locale_data.unique_time_zones.ensure(move(time_zone_names));
 
@@ -1795,8 +1812,11 @@ struct CalendarData {
 };
 
 struct TimeZoneNames {
-    @string_index_type@ long_name { 0 };
-    @string_index_type@ short_name { 0 };
+    @string_index_type@ short_standard_name { 0 };
+    @string_index_type@ long_standard_name { 0 };
+
+    @string_index_type@ short_generic_name { 0 };
+    @string_index_type@ long_generic_name { 0 };
 };
 
 struct TimeZoneFormatImpl {
@@ -2176,19 +2196,28 @@ static TimeZoneNames const* find_time_zone_names(StringView locale, StringView t
 
 Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style)
 {
-    if ((style == CalendarPatternStyle::Long) || (style == CalendarPatternStyle::Short)) {
-        if (auto const* data = find_time_zone_names(locale, time_zone); data != nullptr) {
-            auto time_zone_index = style == CalendarPatternStyle::Long ? data->long_name : data->short_name;
-            if (time_zone_index != 0)
-                return s_string_list[time_zone_index];
-        }
-    } else {
-        // FIXME: We will need to parse the "generic" time zone names from timeZoneNames.json
-        //        to support time zones other than UTC.
-        VERIFY(time_zone == "UTC"sv);
+    if (auto const* data = find_time_zone_names(locale, time_zone); data != nullptr) {
+        size_t name_index = 0;
 
-        if (auto formats = get_time_zone_format(locale); formats.has_value())
-            return formats->gmt_zero_format;
+        switch (style) {
+        case CalendarPatternStyle::Short:
+            name_index = data->short_standard_name;
+            break;
+        case CalendarPatternStyle::Long:
+            name_index = data->long_standard_name;
+            break;
+        case CalendarPatternStyle::ShortGeneric:
+            name_index = data->short_generic_name;
+            break;
+        case CalendarPatternStyle::LongGeneric:
+            name_index = data->long_generic_name;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        if (name_index != 0)
+            return s_string_list[name_index];
     }
 
     return {};
