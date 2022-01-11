@@ -2,6 +2,8 @@
 
 Profiler - Serenity process profiler
 
+[Open](file:///bin/Profiler)
+
 ## Synopsis
 
 ```**sh
@@ -47,5 +49,5 @@ $ Profiler perfcore.123
 
 ## See also
 
-* [`perfcore`(5)](../man5/perfcore.md)
+* [`perfcore`(5)](help://man/5/perfcore)
 

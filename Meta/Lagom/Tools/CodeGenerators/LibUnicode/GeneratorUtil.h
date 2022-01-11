@@ -293,15 +293,21 @@ struct HashValueComparator
 template<typename ValueType>
 using HashValueMap = HashMap<unsigned, ValueType>;
 
+struct ValueFromStringOptions {
+    Optional<StringView> return_type {};
+    StringView return_format { "{}"sv };
+    CaseSensitivity sensitivity { CaseSensitivity::CaseSensitive };
+};
+
 template<typename ValueType>
-void generate_value_from_string(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, HashValueMap<ValueType> hashes, Optional<StringView> return_type = {}, StringView return_format = "{}"sv)
+void generate_value_from_string(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, HashValueMap<ValueType> hashes, ValueFromStringOptions options = {})
 {
     ensure_from_string_types_are_generated(generator);
 
     generator.set("method_name", String::formatted(method_name_format, value_name));
     generator.set("value_type", value_type);
     generator.set("value_name", value_name);
-    generator.set("return_type", return_type.has_value() ? *return_type : value_type);
+    generator.set("return_type", options.return_type.has_value() ? *options.return_type : value_type);
     generator.set("size", String::number(hashes.size()));
 
     generator.append(R"~~~(
@@ -334,13 +340,55 @@ Optional<@return_type@> @method_name@(StringView key)
         }
     }
 
-    generator.set("return_statement", String::formatted(return_format, "value->value"sv));
+    generator.set("return_statement", String::formatted(options.return_format, "value->value"sv));
     generator.append(R"~~~(
     } };
+)~~~");
 
-    if (auto const* value = binary_search(hash_pairs, key.hash(), nullptr, HashValueComparator<@value_type@> {}))
+    if (options.sensitivity == CaseSensitivity::CaseSensitive) {
+        generator.append(R"~~~(
+    auto hash = key.hash();
+)~~~");
+    } else {
+        generator.append(R"~~~(
+    auto hash = CaseInsensitiveStringViewTraits::hash(key);
+)~~~");
+    }
+
+    generator.append(R"~~~(
+    if (auto const* value = binary_search(hash_pairs, hash, nullptr, HashValueComparator<@value_type@> {}))
         return @return_statement@;
     return {};
+}
+)~~~");
+}
+
+template<typename IdentifierFormatter>
+void generate_value_to_string(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, IdentifierFormatter&& format_identifier, Span<String const> values)
+{
+    generator.set("method_name", String::formatted(method_name_format, value_name));
+    generator.set("value_type", value_type);
+    generator.set("value_name", value_name);
+
+    generator.append(R"~~~(
+StringView @method_name@(@value_type@ @value_name@)
+{
+    using enum @value_type@;
+
+    switch (@value_name@) {)~~~");
+
+    for (auto const& value : values) {
+        generator.set("enum_value", format_identifier(value_type, value));
+        generator.set("string_value", value);
+        generator.append(R"~~~(
+    case @enum_value@:
+        return "@string_value@"sv;)~~~");
+    }
+
+    generator.append(R"~~~(
+    }
+
+    VERIFY_NOT_REACHED();
 }
 )~~~");
 }
@@ -381,12 +429,18 @@ enum class @name@ : @underlying@ {)~~~");
 )~~~");
 }
 
-template<typename LocalesType, typename ListFormatter>
-void generate_mapping(SourceGenerator& generator, LocalesType const& locales, StringView type, StringView name, StringView format, ListFormatter&& format_list)
+template<typename LocalesType, typename IdentifierFormatter, typename ListFormatter>
+void generate_mapping(SourceGenerator& generator, LocalesType const& locales, StringView type, StringView name, StringView format, IdentifierFormatter&& format_identifier, ListFormatter&& format_list)
 {
-    auto format_mapping_name = [](StringView format, StringView name) {
-        auto mapping_name = name.to_lowercase_string().replace("-"sv, "_"sv, true).replace("/"sv, "_"sv, true);
-        return String::formatted(format, mapping_name);
+    auto format_mapping_name = [&](StringView format, StringView name) {
+        String mapping_name;
+
+        if constexpr (IsNullPointer<IdentifierFormatter>)
+            mapping_name = name.replace("-"sv, "_"sv, true);
+        else
+            mapping_name = format_identifier(type, name);
+
+        return String::formatted(format, mapping_name.to_lowercase());
     };
 
     Vector<String> mapping_names;

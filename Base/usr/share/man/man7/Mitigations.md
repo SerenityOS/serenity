@@ -312,5 +312,5 @@ Build: Pass "-z separate-code" to linker
 
 ## See also
 
-* [`unveil`(2)](../man2/unveil.md)
-* [`pledge`(2)](../man2/pledge.md)
+* [`unveil`(2)](help://man/2/unveil)
+* [`pledge`(2)](help://man/2/pledge)

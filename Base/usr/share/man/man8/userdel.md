@@ -40,4 +40,4 @@ This program must be run as root.
 
 ## See Also
 
-* [`useradd`(8)](useradd.md)
+* [`useradd`(8)](help://man/8/useradd)

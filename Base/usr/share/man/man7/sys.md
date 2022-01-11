@@ -49,4 +49,4 @@ reset the the offset to 0.
 
 ## See also
 
-* [`mount`(2))](../man2/mount.md).
+* [`mount`(2))](help://man/2/mount).

@@ -69,9 +69,6 @@ public:
                 that->will_be_destroyed();
             delete static_cast<const T*>(this);
             return true;
-        } else if (new_ref_count == 1) {
-            if constexpr (requires { that->one_ref_left(); })
-                that->one_ref_left();
         }
         return false;
     }

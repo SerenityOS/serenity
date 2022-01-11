@@ -26,7 +26,7 @@ The value of this variable is used to determine which entries are kept in the Sh
 - `ignoreboth`: The behavior of `ignorespace` and `ignoredups` is combined
 - If the variable is unset (this is the default) or has any other value than the above, no entries will be excluded from history.
 
-Note: This variable is respected by every program using `Line::Editor`, e.g. [`js`(1)](../man1/js.md).
+Note: This variable is respected by every program using `Line::Editor`, e.g. [`js`(1)](help://man/1/js).
 
 `HISTFILE`  (environment)
 

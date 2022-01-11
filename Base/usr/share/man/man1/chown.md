@@ -27,5 +27,5 @@ $ chown anon:anon file
 
 ## See also
 
-* [`chgrp`(1)](chgrp.md)
-* [`chmod`(1)](chmod.md)
+* [`chgrp`(1)](help://man/1/chgrp)
+* [`chmod`(1)](help://man/1/chmod)

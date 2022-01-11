@@ -43,4 +43,4 @@ describe("Examples from Gary Bernhardt's 'Wat' talk", () => {
 
 ## See also
 
-* [`js`(1)](js.md)
+* [`js`(1)](help://man/1/js)

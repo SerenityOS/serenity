@@ -1077,7 +1077,11 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
         for (auto const& alias : aliases)
             hashes.set(alias.key.hash(), alias.value);
 
-        generate_value_from_string(generator, "resolve_{}_alias"sv, s_string_index_type, enum_snake, move(hashes), "StringView"sv, "s_string_list[{}]"sv);
+        ValueFromStringOptions options {};
+        options.return_type = "StringView"sv;
+        options.return_format = "s_string_list[{}]"sv;
+
+        generate_value_from_string(generator, "resolve_{}_alias"sv, s_string_index_type, enum_snake, move(hashes), options);
     };
 
     append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys(), locale_data.locale_aliases);

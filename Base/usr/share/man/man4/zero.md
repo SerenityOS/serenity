@@ -21,6 +21,6 @@ $ head -c 8 /dev/zero | hexdump
 
 ## See also
 
-* [`null`(4)](../man4/null.md)
-* [`full`(4)](../man4/full.md)
+* [`null`(4)](help://man/4/null)
+* [`full`(4)](help://man/4/full)
 

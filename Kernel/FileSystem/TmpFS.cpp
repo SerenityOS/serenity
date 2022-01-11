@@ -37,19 +37,21 @@ Inode& TmpFS::root_inode()
 
 void TmpFS::register_inode(TmpFSInode& inode)
 {
-    MutexLocker locker(m_lock);
     VERIFY(inode.identifier().fsid() == fsid());
 
-    auto index = inode.identifier().index();
-    m_inodes.set(index, inode);
+    Inode::all_instances().with([&](auto&) {
+        auto index = inode.identifier().index();
+        m_inodes.set(index, &inode);
+    });
 }
 
 void TmpFS::unregister_inode(InodeIdentifier identifier)
 {
-    MutexLocker locker(m_lock);
     VERIFY(identifier.fsid() == fsid());
 
-    m_inodes.remove(identifier.index());
+    Inode::all_instances().with([&](auto&) {
+        m_inodes.remove(identifier.index());
+    });
 }
 
 unsigned TmpFS::next_inode_index()
@@ -61,13 +63,13 @@ unsigned TmpFS::next_inode_index()
 
 ErrorOr<NonnullRefPtr<Inode>> TmpFS::get_inode(InodeIdentifier identifier) const
 {
-    MutexLocker locker(m_lock, Mutex::Mode::Shared);
-    VERIFY(identifier.fsid() == fsid());
-
-    auto it = m_inodes.find(identifier.index());
-    if (it == m_inodes.end())
-        return ENOENT;
-    return it->value;
+    return Inode::all_instances().with([&](auto&) -> ErrorOr<NonnullRefPtr<Inode>> {
+        VERIFY(identifier.fsid() == fsid());
+        auto it = m_inodes.find(identifier.index());
+        if (it == m_inodes.end())
+            return ENOENT;
+        return *it->value;
+    });
 }
 
 TmpFSInode::TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent)
@@ -363,9 +365,8 @@ ErrorOr<void> TmpFSInode::set_mtime(time_t t)
     return {};
 }
 
-void TmpFSInode::one_ref_left()
+void TmpFSInode::remove_from_secondary_lists()
 {
-    // Destroy ourselves.
     fs().unregister_inode(identifier());
 }
 

@@ -30,6 +30,6 @@ $ head -c 8 /dev/full | hexdump
 
 ## See also
 
-* [`null`(4)](../man4/null.md)
-* [`zero`(4)](../man4/zero.md)
+* [`null`(4)](help://man/4/null)
+* [`zero`(4)](help://man/4/zero)
 

@@ -97,6 +97,11 @@ pandoc -f gfm -t html5 -s \
     --metadata title="SerenityOS man pages" \
     -o output/index.html \
     Meta/Websites/man.serenityos.org/index.md
+pandoc -f gfm -t html5 -s \
+    -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
+    --metadata title="Can't run applications" \
+    -o output/cant-run-application.html \
+    Meta/Websites/man.serenityos.org/cant-run-application.md
 
 # Copy pre-made files
 cp Meta/Websites/man.serenityos.org/banner.png output/

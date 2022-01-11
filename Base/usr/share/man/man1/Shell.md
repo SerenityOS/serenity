@@ -14,7 +14,7 @@ $ Shell [--skip-shellrc] --format command_file
 ## Description
 
 The `Shell` utility is a command language interpreter, which reads commands from either a command string, a specified file, or the standard input.
-The command language shall be described in [`Shell`(5)](../man5/Shell.md), _The Shell Command Language_.
+The command language shall be described in [`Shell`(5)](help://man/5/Shell), _The Shell Command Language_.
 
 Any extra arguments passed into `arguments` are placed in the local variable `$ARGV` and can also be accessed through the special variable `$*`.
 
@@ -44,4 +44,4 @@ Shell foo a b c
 
 ## See also
 
-* [`Shell-vars`(7)](../man7/Shell-vars.md) For details on local and environment variables used by the shell
+* [`Shell-vars`(7)](help://man/7/Shell-vars) For details on local and environment variables used by the shell

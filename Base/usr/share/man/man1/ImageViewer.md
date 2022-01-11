@@ -2,6 +2,8 @@
 
 Image Viewer - SerenityOS image viewer
 
+[Open](file:///bin/ImageViewer)
+
 ## Synopsis
 
 ```**sh

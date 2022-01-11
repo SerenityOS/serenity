@@ -24,4 +24,4 @@ $ pmap $$
 
 ## See also
 
-* [`ps`(1)](../man1/ps.md)
+* [`ps`(1)](help://man/1/ps)
