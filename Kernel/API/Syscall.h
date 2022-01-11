@@ -478,6 +478,13 @@ struct SC_statvfs_params {
     struct statvfs* buf;
 };
 
+struct SC_chmod_params {
+    int dirfd;
+    StringArgument path;
+    u16 mode;
+    int follow_symlinks;
+};
+
 void initialize();
 int sync();
 
