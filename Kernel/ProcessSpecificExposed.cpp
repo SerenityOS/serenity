@@ -51,7 +51,8 @@ ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<Err
         for (auto const& thread : list) {
             int tid = thread.tid().value();
             InodeIdentifier identifier = { fsid, SegmentedProcFSIndex::build_segmented_index_for_thread_stack(pid(), thread.tid()) };
-            TRY(callback({ String::number(tid), identifier, 0 }));
+            auto name = TRY(KString::number(tid));
+            TRY(callback({ name->view(), identifier, 0 }));
         }
         return {};
     });
