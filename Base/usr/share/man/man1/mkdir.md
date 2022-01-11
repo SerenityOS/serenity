@@ -28,4 +28,4 @@ $ mkdir -m a=rx /tmp/foo/bar
 
 ## See also
 
-* [`mkdir`(2)](../man2/mkdir.md)
+* [`mkdir`(2)](help://man/2/mkdir)

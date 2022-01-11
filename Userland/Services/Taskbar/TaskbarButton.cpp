@@ -121,7 +121,9 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
 
     if (window.progress().has_value()) {
         auto adjusted_rect = rect().shrunken(4, 4);
-        if (is_being_pressed() || is_checked()) {
+        if (!is_being_pressed() && !is_checked()) {
+            adjusted_rect.translate_by(-1, -1);
+            adjusted_rect.set_width(adjusted_rect.width() + 1);
             adjusted_rect.set_height(adjusted_rect.height() + 1);
         }
         paint_custom_progressbar(painter, adjusted_rect, text_rect, palette(), 0, 100, window.progress().value(), text(), font, text_alignment());

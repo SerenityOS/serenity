@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Glenford Williams <gw_dev@outlook.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -178,12 +179,20 @@ void TableView::keydown_event(KeyEvent& event)
     if (is_editable() && edit_triggers() & EditTrigger::AnyKeyPressed && (event.code_point() != 0 || is_clear)) {
         begin_editing(cursor_index());
         if (m_editing_delegate) {
-            if (is_delete)
-                m_editing_delegate->set_value(String {});
-            else if (is_backspace)
+            if (is_delete) {
+                if (selection().size() > 1) {
+                    selection().for_each_index([&](GUI::ModelIndex& index) {
+                        begin_editing(index);
+                        m_editing_delegate->set_value(String {});
+                    });
+                } else {
+                    m_editing_delegate->set_value(String {});
+                }
+            } else if (is_backspace) {
                 m_editing_delegate->set_value(String::empty());
-            else
+            } else {
                 m_editing_delegate->set_value(event.text(), ModelEditingDelegate::SelectionBehavior::DoNotSelect);
+            }
         }
     }
 }

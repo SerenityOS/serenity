@@ -21,7 +21,7 @@ int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t*, int fd, const 
 
 ## Description
 
-Configure a `posix_spawn_file_actions_t` object for use with [`posix_spawn`(2)](posix_spawn.md). This object can be used to let `posix_spawn()` set up file-related state for the spawned child process. The file actions are executed after creating the the new process but before loading its binary in the order they were added to the `posix_spawn_file_actions_t` object.
+Configure a `posix_spawn_file_actions_t` object for use with [`posix_spawn`(2)](help://man/3/posix_spawn). This object can be used to let `posix_spawn()` set up file-related state for the spawned child process. The file actions are executed after creating the the new process but before loading its binary in the order they were added to the `posix_spawn_file_actions_t` object.
 
 A `posix_spawn_file_actions_t` object is allocated on the stack but starts in an undefined state.
 
@@ -47,4 +47,4 @@ If the effect of a file action fails, the child will exit with exit code 127 bef
 
 ## See also
 
-* [`posix_spawn`(2)](posix_spawn.md)
+* [`posix_spawn`(2)](help://man/3/posix_spawn)

@@ -11,7 +11,7 @@ $ more
 ## Description
 
 `more` reads data from standard input and prints it to standard output, screen by screen.
-`more` is a symlink for [`less`(1)](less.md), which has a more emulation mode.
+`more` is a symlink for [`less`(1)](help://man/1/less), which has a more emulation mode.
 
 ## Examples
 
@@ -23,4 +23,4 @@ $ more
 
 ## See Also
 
-* [`less`(1)](less.md) For the more advanced terminal pager that implements more.
+* [`less`(1)](help://man/1/less) For the more advanced terminal pager that implements more.

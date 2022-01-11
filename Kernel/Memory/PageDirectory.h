@@ -64,7 +64,6 @@ private:
 #else
     RefPtr<PhysicalPage> m_directory_pages[4];
 #endif
-    HashMap<FlatPtr, NonnullRefPtr<PhysicalPage>> m_page_tables;
     RecursiveSpinlock m_lock;
 };
 

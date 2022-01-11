@@ -35,4 +35,4 @@ If a file descriptor is successfully sent, `sendfd()` returns 0. Otherwise, -1 i
 
 ## See also
 
-* [`recvfd`(2)](recvfd.md)
+* [`recvfd`(2)](help://man/2/recvfd)

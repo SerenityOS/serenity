@@ -1244,6 +1244,9 @@ public:
     bool is_promise_violation_pending() const { return m_is_promise_violation_pending; }
     void set_promise_violation_pending(bool value) { m_is_promise_violation_pending = value; }
 
+    bool is_allocation_enabled() const { return m_allocation_enabled; }
+    void set_allocation_enabled(bool value) { m_allocation_enabled = value; }
+
     String backtrace();
 
 private:
@@ -1348,6 +1351,7 @@ private:
     u32 m_lock_requested_count { 0 };
     IntrusiveListNode<Thread> m_blocked_threads_list_node;
     LockRank m_lock_rank_mask { LockRank::None };
+    bool m_allocation_enabled { true };
 
 #if LOCK_DEBUG
     struct HoldingLockInfo {

@@ -21,4 +21,4 @@ it returns -1 and sets `errno` to describe the error.
 
 ## See also
 
-* [`mkdir`(1)](../man1/mkdir.md)
+* [`mkdir`(1)](help://man/1/mkdir)

@@ -2,6 +2,8 @@
 
 Playground - GUI Markup Language (GML) editor
 
+[Open](file:///bin/Playground)
+
 ## Synopsis
 
 ```**sh
@@ -29,4 +31,4 @@ $ Playground /home/anon/example.gml
 
 ## See also
 
-* [`gml-format`(1)](../man1/gml-format.md) For automated GML formatting
+* [`gml-format`(1)](help://man/1/gml-format) For automated GML formatting

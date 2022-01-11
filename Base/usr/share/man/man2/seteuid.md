@@ -31,9 +31,9 @@ Otherwise, returns -1 and sets `errno` to describe the error.
 
 ## See also
 
-* [`setuid_overview`(7)](../man7/setuid_overview.md)
-* [`geteuid`(2) / `getegid`(2)](geteuid.md)
-* [`getuid`(2) / `getgid`(2)](getuid.md)
-* [`getresuid`(2) / `getresgid`(2)](getresuid.md)
-* [`setuid`(2) / `setgid`(2)](setuid.md)
-* [`setresuid`(2) / `setresgid`(2)](setresuid.md)
+* [`setuid_overview`(7)](help://man/7/setuid_overview)
+* [`geteuid`(2) / `getegid`(2)](help://man/2/geteuid)
+* [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
+* [`getresuid`(2) / `getresgid`(2)](help://man/2/getresuid)
+* [`setuid`(2) / `setgid`(2)](help://man/2/setuid)
+* [`setresuid`(2) / `setresgid`(2)](help://man/2/setresuid)

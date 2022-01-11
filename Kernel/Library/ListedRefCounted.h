@@ -34,6 +34,8 @@ public:
                 if constexpr (requires { that->revoke_weak_ptrs(); }) {
                     that->revoke_weak_ptrs();
                 }
+                if constexpr (requires { that->remove_from_secondary_lists(); })
+                    that->remove_from_secondary_lists();
             }
             return new_ref_count;
         };
@@ -47,9 +49,6 @@ public:
             if constexpr (requires { that->will_be_destroyed(); })
                 that->will_be_destroyed();
             delete that;
-        } else if (new_ref_count == 1) {
-            if constexpr (requires { that->one_ref_left(); })
-                that->one_ref_left();
         }
         return new_ref_count == 0;
     }

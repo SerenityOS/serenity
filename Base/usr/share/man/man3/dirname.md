@@ -51,4 +51,4 @@ int main()
 
 ## See also
 
-* [`basename`(3)](basename.md)
+* [`basename`(3)](help://man/3/basename)

@@ -18,7 +18,7 @@ File descriptors are sent out-of-band and do not affect the regular data streams
 
 The *options* argument accepts a bitmask of the following flags:
 
-* `O_CLOEXEC`: The opened fd shall be closed on [`exec`(2)](../man2/exec.md).
+* `O_CLOEXEC`: The opened fd shall be closed on [`exec`(2)](help://man/2/exec).
 
 ## Return value
 
@@ -38,4 +38,4 @@ If a file descriptor is successfully received, it is returned as a non-negative 
 
 ## See also
 
-* [`sendfd`(2)](sendfd.md)
+* [`sendfd`(2)](help://man/2/sendfd)

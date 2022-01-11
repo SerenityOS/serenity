@@ -49,7 +49,7 @@ List of options:
   be configured in a periodic mode. **`nonperiodic`** - The High Precision Event Timer should eb configure din non-periodic mode.
 
 * **`init`** - This parameter expects the fully qualified path to the init program the Kernel should launch after boot.
-    This defaults to [`SystemServer`(7)](../man7/SystemServer.md).
+    This defaults to [`SystemServer`(7)](help://man/7/SystemServer).
 
 * **`init_args`** - This parameter expects a set of arguments to pass to the **`init`** program.
   The value should be a set of strings separated by `,` characters.
@@ -80,4 +80,4 @@ List of options:
 
 ## See also
 
-* [`SystemServer`(7)](../man7/SystemServer.md).
+* [`SystemServer`(7)](help://man/7/SystemServer).

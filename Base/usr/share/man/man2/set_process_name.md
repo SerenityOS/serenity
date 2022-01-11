@@ -25,4 +25,4 @@ In pledged programs, the `proc` promise is required for this system call.
 
 ## See also
 
-* [`get_process_name`(2)](../man2/get_process_name.md)
+* [`get_process_name`(2)](help://man/2/get_process_name)

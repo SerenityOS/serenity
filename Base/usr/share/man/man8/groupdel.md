@@ -41,5 +41,5 @@ You should manually check all users to ensure that no user remain in this group.
 
 ## See Also
 
-* [`useradd`(8)](groupadd.md)
+* [`useradd`(8)](help://man/8/groupadd)
 

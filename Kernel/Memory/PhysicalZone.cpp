@@ -186,7 +186,7 @@ void PhysicalZone::dump() const
 {
     dbgln("(( {} used, {} available, page_count: {} ))", m_used_chunks, available(), m_page_count);
     for (size_t i = 0; i <= max_order; ++i) {
-        auto& bucket = m_buckets[i];
+        auto const& bucket = m_buckets[i];
         dbgln("[{:2} / {:4}] ", i, (size_t)(2u << i));
         auto entry = bucket.freelist;
         while (entry != -1) {

@@ -24,5 +24,5 @@ None.
 
 ## See also
 
-* [`getpid`(2)](getpid.md)
-* [`gettid`(2)](gettid.md)
+* [`getpid`(2)](help://man/2/getpid)
+* [`gettid`(2)](help://man/2/gettid)
