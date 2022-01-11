@@ -135,7 +135,7 @@ using NumericSymbolList = Vector<StringIndexType>;
 struct NumberSystem {
     unsigned hash() const
     {
-        auto hash = pair_int_hash(system, symbols);
+        auto hash = int_hash(symbols);
         hash = pair_int_hash(hash, primary_grouping_size);
         hash = pair_int_hash(hash, secondary_grouping_size);
         hash = pair_int_hash(hash, decimal_format);
@@ -152,8 +152,7 @@ struct NumberSystem {
 
     bool operator==(NumberSystem const& other) const
     {
-        return (system == other.system)
-            && (symbols == other.symbols)
+        return (symbols == other.symbols)
             && (primary_grouping_size == other.primary_grouping_size)
             && (secondary_grouping_size == other.secondary_grouping_size)
             && (decimal_format == other.decimal_format)
@@ -167,7 +166,6 @@ struct NumberSystem {
             && (scientific_format == other.scientific_format);
     }
 
-    StringIndexType system { 0 };
     NumericSymbolListIndexType symbols { 0 };
 
     u8 primary_grouping_size { 0 };
@@ -191,8 +189,7 @@ struct AK::Formatter<NumberSystem> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, NumberSystem const& system)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
-            system.system,
+            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
             system.symbols,
             system.primary_grouping_size,
             system.secondary_grouping_size,
@@ -256,7 +253,7 @@ struct AK::Traits<Unit> : public GenericTraits<Unit> {
 };
 
 struct Locale {
-    HashMap<String, NumberSystemIndexType> number_systems;
+    Vector<NumberSystemIndexType> number_systems;
     HashMap<String, UnitIndexType> units {};
 };
 
@@ -459,13 +456,18 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
     auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
 
-    HashMap<String, NumberSystem> number_systems;
+    Vector<Optional<NumberSystem>> number_systems;
+    number_systems.resize(locale_data.number_systems.size());
 
     auto ensure_number_system = [&](auto const& system) -> NumberSystem& {
-        return number_systems.ensure(system, [&]() {
-            auto system_index = locale_data.unique_strings.ensure(system);
-            return NumberSystem { .system = system_index };
-        });
+        auto system_index = locale_data.number_systems.find_first_index(system).value();
+        VERIFY(system_index < number_systems.size());
+
+        auto& number_system = number_systems.at(system_index);
+        if (!number_system.has_value())
+            number_system = NumberSystem {};
+
+        return number_system.value();
     };
 
     auto parse_number_format = [&](auto const& format_object) {
@@ -593,9 +595,14 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
         }
     });
 
+    locale.number_systems.ensure_capacity(number_systems.size());
+
     for (auto& number_system : number_systems) {
-        auto system_index = locale_data.unique_systems.ensure(move(number_system.value));
-        locale.number_systems.set(number_system.key, system_index);
+        NumberSystemIndexType system_index = 0;
+        if (number_system.has_value())
+            system_index = locale_data.unique_systems.ensure(number_system.release_value());
+
+        locale.number_systems.append(system_index);
     }
 
     return {};
@@ -833,7 +840,6 @@ struct NumberFormatImpl {
 };
 
 struct NumberSystemData {
-    @string_index_type@ system { 0 };
     @numeric_symbol_list_index_type@ symbols { 0 };
 
     u8 primary_grouping_size { 0 };
@@ -920,17 +926,20 @@ static NumberSystemData const* find_number_system(StringView locale, StringView 
     if (!locale_value.has_value())
         return nullptr;
 
+    auto number_system_value = number_system_from_string(system);
+    if (!number_system_value.has_value())
+        return nullptr;
+
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+    auto number_system_index = to_underlying(*number_system_value);
+
     auto const& number_systems = s_locale_number_systems.at(locale_index);
+    number_system_index = number_systems.at(number_system_index);
 
-    for (auto system_index : number_systems) {
-        auto const& number_system = s_number_systems.at(system_index);
+    if (number_system_index == 0)
+        return nullptr;
 
-        if (system == s_string_list[number_system.system])
-            return &number_system;
-    };
-
-    return nullptr;
+    return &s_number_systems.at(number_system_index);
 }
 
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol)
