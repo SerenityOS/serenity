@@ -28,6 +28,7 @@ enum class ListPatternStyle : u8;
 enum class ListPatternType : u8;
 enum class Locale : u16;
 enum class Month : u8;
+enum class NumberSystem : u8;
 enum class NumericSymbol : u8;
 enum class Property : u8;
 enum class Script : u8;
