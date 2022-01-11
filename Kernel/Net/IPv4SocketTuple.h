@@ -13,6 +13,8 @@
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/Socket.h>
 
+namespace Kernel {
+
 class IPv4SocketTuple {
 public:
     IPv4SocketTuple(IPv4Address local_address, u16 local_port, IPv4Address peer_address, u16 peer_port)
@@ -48,11 +50,13 @@ private:
     u16 m_peer_port { 0 };
 };
 
+}
+
 namespace AK {
 
 template<>
-struct Traits<IPv4SocketTuple> : public GenericTraits<IPv4SocketTuple> {
-    static unsigned hash(const IPv4SocketTuple& tuple)
+struct Traits<Kernel::IPv4SocketTuple> : public GenericTraits<Kernel::IPv4SocketTuple> {
+    static unsigned hash(const Kernel::IPv4SocketTuple& tuple)
     {
         auto h1 = pair_int_hash(tuple.local_address().to_u32(), tuple.local_port());
         auto h2 = pair_int_hash(tuple.peer_address().to_u32(), tuple.peer_port());
