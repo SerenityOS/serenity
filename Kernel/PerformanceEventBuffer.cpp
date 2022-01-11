@@ -317,15 +317,15 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
 {
     SpinlockLocker locker(process.address_space().get_lock());
 
-    String executable;
+    OwnPtr<KString> executable;
     if (process.executable())
-        executable = process.executable()->absolute_path();
+        executable = MUST(process.executable()->try_serialize_absolute_path());
     else
-        executable = String::formatted("<{}>", process.name());
+        executable = MUST(KString::formatted("<{}>", process.name()));
 
     [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), 0, 0, 0,
         event_type == ProcessEventType::Create ? PERF_EVENT_PROCESS_CREATE : PERF_EVENT_PROCESS_EXEC,
-        0, process.pid().value(), 0, executable);
+        0, process.pid().value(), 0, executable->view());
 
     process.for_each_thread([&](auto& thread) {
         [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), thread.tid().value(),
