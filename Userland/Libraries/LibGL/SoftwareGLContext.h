@@ -143,7 +143,6 @@ private:
     void sync_device_sampler_config();
     void sync_device_texcoord_config();
 
-private:
     template<typename T>
     T* store_in_listing(T value)
     {
