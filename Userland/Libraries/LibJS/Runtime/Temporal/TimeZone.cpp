@@ -230,7 +230,9 @@ static bool parse_time_zone_numeric_utc_offset_syntax(String const& offset_strin
     if (!lexer.consume_specific('.') && !lexer.consume_specific(','))
         return false;
     fraction = lexer.consume_fractional_seconds();
-    return fraction.has_value();
+    if (!fraction.has_value())
+        return false;
+    return !lexer.tell_remaining();
 }
 
 bool is_valid_time_zone_numeric_utc_offset_syntax(String const& offset_string)

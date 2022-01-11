@@ -10,6 +10,16 @@ describe("errors", () => {
             new Temporal.TimeZone("foo");
         }).toThrowWithMessage(RangeError, "Invalid time zone name 'foo'");
     });
+
+    test("Invalid numeric UTC offset", () => {
+        // FIXME: Error message should probably say '...name or UTC offset ...' :^)
+        expect(() => {
+            new Temporal.TimeZone("0123456");
+        }).toThrowWithMessage(RangeError, "Invalid time zone name '0123456'");
+        expect(() => {
+            new Temporal.TimeZone("23:59:59.9999999999");
+        }).toThrowWithMessage(RangeError, "Invalid time zone name '23:59:59.9999999999'");
+    });
 });
 
 describe("normal behavior", () => {
