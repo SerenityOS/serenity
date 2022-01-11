@@ -540,6 +540,7 @@ GLAPI void glTexCoord2d(GLdouble s, GLdouble t);
 GLAPI void glTexCoord2dv(GLdouble const* v);
 GLAPI void glTexCoord2f(GLfloat s, GLfloat t);
 GLAPI void glTexCoord2fv(GLfloat const* v);
+GLAPI void glTexCoord2i(GLint s, GLint t);
 GLAPI void glTexCoord4fv(const GLfloat* v);
 GLAPI void glTexParameteri(GLenum target, GLenum pname, GLint param);
 GLAPI void glTexParameterf(GLenum target, GLenum pname, GLfloat param);
