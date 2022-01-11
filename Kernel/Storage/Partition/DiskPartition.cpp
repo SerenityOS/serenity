@@ -11,16 +11,16 @@
 
 namespace Kernel {
 
-NonnullRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, MinorNumber minor_number, DiskPartitionMetadata metadata)
+NonnullRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, DeviceID device_id, DiskPartitionMetadata metadata)
 {
-    auto partition_or_error = DeviceManagement::try_create_device<DiskPartition>(device, minor_number, metadata);
+    auto partition_or_error = DeviceManagement::try_create_device<DiskPartition>(device, device_id, metadata);
     // FIXME: Find a way to propagate errors
     VERIFY(!partition_or_error.is_error());
     return partition_or_error.release_value();
 }
 
-DiskPartition::DiskPartition(BlockDevice& device, MinorNumber minor_number, DiskPartitionMetadata metadata)
-    : BlockDevice(encoded_device(100, minor_number), device.block_size())
+DiskPartition::DiskPartition(BlockDevice& device, DeviceID device_id, DiskPartitionMetadata metadata)
+    : BlockDevice(device_id, device.block_size())
     , m_device(device)
     , m_metadata(metadata)
 {

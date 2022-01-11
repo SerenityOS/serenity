@@ -17,7 +17,7 @@ class DiskPartition final : public BlockDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<DiskPartition> create(BlockDevice&, MinorNumber, DiskPartitionMetadata);
+    static NonnullRefPtr<DiskPartition> create(BlockDevice&, DeviceID, DiskPartitionMetadata);
     virtual ~DiskPartition();
 
     virtual void start_request(AsyncBlockDeviceRequest&) override;
@@ -31,7 +31,7 @@ public:
     const DiskPartitionMetadata& metadata() const;
 
 private:
-    DiskPartition(BlockDevice&, MinorNumber, DiskPartitionMetadata);
+    DiskPartition(BlockDevice&, DeviceID, DiskPartitionMetadata);
     virtual StringView class_name() const override;
 
     WeakPtr<BlockDevice> m_device;

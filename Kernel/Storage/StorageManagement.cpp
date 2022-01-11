@@ -28,6 +28,7 @@ namespace Kernel {
 
 static Singleton<StorageManagement> s_the;
 static Atomic<u32> s_device_minor_number;
+static Atomic<u32> s_disk_partition_minor_number;
 
 static constexpr StringView partition_uuid_prefix = "PARTUUID:"sv;
 
@@ -148,6 +149,13 @@ UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_par
     return {};
 }
 
+DeviceID StorageManagement::generate_disk_partition_device_id()
+{
+    auto minor_number = s_disk_partition_minor_number.load();
+    s_disk_partition_minor_number++;
+    return encoded_device(100, minor_number);
+}
+
 UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
 {
     VERIFY(!m_storage_devices.is_empty());
@@ -160,8 +168,8 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
             auto partition_metadata = partition_table->partition(partition_index);
             if (!partition_metadata.has_value())
                 continue;
-            // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
-            auto disk_partition = DiskPartition::create(device, (partition_index + (16 * device_index)), partition_metadata.value());
+            auto device_id = generate_disk_partition_device_id();
+            auto disk_partition = DiskPartition::create(device, device_id, partition_metadata.value());
             device.add_partition(disk_partition);
         }
         device_index++;
@@ -268,6 +276,7 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
 UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool force_pio, bool poll)
 {
     VERIFY(s_device_minor_number == 0);
+    VERIFY(s_disk_partition_minor_number == 0);
     m_boot_argument = root_device;
     enumerate_controllers(force_pio, poll);
     enumerate_storage_devices();

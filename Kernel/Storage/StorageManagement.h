@@ -28,6 +28,7 @@ public:
 
     NonnullRefPtr<FileSystem> root_filesystem() const;
 
+    static DeviceID generate_disk_partition_device_id();
     static DeviceID generate_storage_device_id();
 
     void remove_device(StorageDevice&);
