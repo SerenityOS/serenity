@@ -110,7 +110,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             window->set_title(String::formatted("Spreadsheet Help - Example {} for {}", name, entry));
             window->on_close = [window = window.ptr()] { window->remove_from_parent(); };
 
-            auto& widget = window->set_main_widget<SpreadsheetWidget>(NonnullRefPtrVector<Sheet> {}, false);
+            auto& widget = window->set_main_widget<SpreadsheetWidget>(window, NonnullRefPtrVector<Sheet> {}, false);
             auto sheet = Sheet::from_json(value.as_object(), widget.workbook());
             if (!sheet) {
                 GUI::MessageBox::show_error(this, String::formatted("Corrupted example '{}' in '{}'", name, url.path()));
