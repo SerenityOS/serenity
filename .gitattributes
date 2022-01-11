@@ -10,3 +10,6 @@
 *.pgm binary
 *.png binary
 *.ppm binary
+
+# Prevent port patches from being normalized
+/Ports/**/patches/* -text
