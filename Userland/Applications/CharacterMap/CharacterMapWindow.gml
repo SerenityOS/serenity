@@ -38,6 +38,25 @@
         name: "glyph_map"
     }
 
+    @GUI::Widget {
+        shrink_to_fit: true
+
+        layout: @GUI::HorizontalBoxLayout {
+            spacing: 4
+            margins: [0, 2, 0, 2]
+        }
+
+        @GUI::TextBox {
+            name: "output_box"
+        }
+
+        @GUI::Button {
+            name: "copy_output_button"
+            icon: "/res/icons/16x16/edit-copy.png"
+            fixed_width: 22
+        }
+    }
+
     @GUI::Statusbar {
         name: "statusbar"
     }
