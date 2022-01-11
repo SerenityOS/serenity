@@ -60,16 +60,19 @@ public:
     int columns() const { return m_columns; }
 
     Function<void(int)> on_active_glyph_changed;
+    Function<void(int)> on_glyph_double_clicked;
 
 private:
     GlyphMapWidget();
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
+    virtual void doubleclick_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void did_change_font() override;
 
     Gfx::IntRect get_outer_rect(int glyph) const;
+    Optional<int> glyph_at_position(Gfx::IntPoint) const;
 
     void recalculate_content_size();
 
