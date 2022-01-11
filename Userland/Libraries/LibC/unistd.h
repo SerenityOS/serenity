@@ -39,6 +39,7 @@ int gettid(void);
 int getpagesize(void);
 pid_t fork(void);
 pid_t vfork(void);
+int daemon(int nochdir, int noclose);
 int execv(const char* path, char* const argv[]);
 int execve(const char* filename, char* const argv[], char* const envp[]);
 int execvpe(const char* filename, char* const argv[], char* const envp[]);
