@@ -142,22 +142,22 @@ void glVertex4sv(const GLshort* v)
 
 void glTexCoord2d(GLdouble s, GLdouble t)
 {
-    g_gl_context->gl_tex_coord(s, t, 0.0f, 0.0f);
+    g_gl_context->gl_tex_coord(s, t, 0.0f, 1.0f);
 }
 
 void glTexCoord2dv(GLdouble const* v)
 {
-    g_gl_context->gl_tex_coord(v[0], v[1], 0.0f, 0.0f);
+    g_gl_context->gl_tex_coord(v[0], v[1], 0.0f, 1.0f);
 }
 
 void glTexCoord2f(GLfloat s, GLfloat t)
 {
-    g_gl_context->gl_tex_coord(s, t, 0.0f, 0.0f);
+    g_gl_context->gl_tex_coord(s, t, 0.0f, 1.0f);
 }
 
 void glTexCoord2fv(GLfloat const* v)
 {
-    g_gl_context->gl_tex_coord(v[0], v[1], 0.0f, 0.0f);
+    g_gl_context->gl_tex_coord(v[0], v[1], 0.0f, 1.0f);
 }
 
 void glTexCoord2i(GLint s, GLint t)
