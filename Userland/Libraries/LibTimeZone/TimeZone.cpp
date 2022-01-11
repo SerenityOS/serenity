@@ -8,8 +8,35 @@
 
 namespace TimeZone {
 
-Optional<TimeZone> __attribute__((weak)) time_zone_from_string(StringView) { return {}; }
-StringView __attribute__((weak)) time_zone_to_string(TimeZone) { return {}; }
+// NOTE: Without ENABLE_TIME_ZONE_DATA LibTimeZone operates in a UTC-only mode and only recognizes
+//       the 'UTC' time zone, which is slightly more useful than a bunch of dummy functions that
+//       can't do anything. When we build with time zone data, these weakly linked functions are
+//       replaced with their proper counterparts.
+
+#if !ENABLE_TIME_ZONE_DATA
+enum class TimeZone : u16 {
+    UTC,
+};
+#endif
+
+Optional<TimeZone> __attribute__((weak)) time_zone_from_string([[maybe_unused]] StringView time_zone)
+{
+#if !ENABLE_TIME_ZONE_DATA
+    if (time_zone.equals_ignoring_case("UTC"sv))
+        return TimeZone::UTC;
+#endif
+    return {};
+}
+
+StringView __attribute__((weak)) time_zone_to_string([[maybe_unused]] TimeZone time_zone)
+{
+#if !ENABLE_TIME_ZONE_DATA
+    VERIFY(time_zone == TimeZone::UTC);
+    return "UTC"sv;
+#else
+    return {};
+#endif
+}
 
 Optional<StringView> canonicalize_time_zone(StringView time_zone)
 {
@@ -24,7 +51,15 @@ Optional<StringView> canonicalize_time_zone(StringView time_zone)
     return canonical_time_zone;
 }
 
-Optional<i64> __attribute__((weak)) get_time_zone_offset(TimeZone, AK::Time) { return {}; }
+Optional<i64> __attribute__((weak)) get_time_zone_offset([[maybe_unused]] TimeZone time_zone, AK::Time)
+{
+#if !ENABLE_TIME_ZONE_DATA
+    VERIFY(time_zone == TimeZone::UTC);
+    return 0;
+#else
+    return {};
+#endif
+}
 
 Optional<i64> get_time_zone_offset(StringView time_zone, AK::Time time)
 {
