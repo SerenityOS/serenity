@@ -23,6 +23,16 @@ Optional<NumberFormat> __attribute__((weak)) get_standard_number_system_format(S
 Vector<NumberFormat> __attribute__((weak)) get_compact_number_system_formats(StringView, StringView, CompactNumberFormatType) { return {}; }
 Vector<NumberFormat> __attribute__((weak)) get_unit_formats(StringView, StringView, Style) { return {}; }
 
+Optional<StringView> get_default_number_system(StringView locale)
+{
+    if (auto systems = get_locale_key_mapping(locale, "nu"sv); systems.has_value()) {
+        auto index = systems->find(',');
+        return index.has_value() ? systems->substring_view(0, *index) : *systems;
+    }
+
+    return {};
+}
+
 String replace_digits_for_number_system(StringView system, StringView number)
 {
     // https://tc39.es/ecma402/#table-numbering-system-digits
