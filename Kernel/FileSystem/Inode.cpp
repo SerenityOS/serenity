@@ -202,7 +202,7 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
     }
 }
 
-void Inode::did_add_child(InodeIdentifier, String const& name)
+void Inode::did_add_child(InodeIdentifier, StringView name)
 {
     MutexLocker locker(m_inode_lock);
 
@@ -211,7 +211,7 @@ void Inode::did_add_child(InodeIdentifier, String const& name)
     }
 }
 
-void Inode::did_remove_child(InodeIdentifier, String const& name)
+void Inode::did_remove_child(InodeIdentifier, StringView name)
 {
     MutexLocker locker(m_inode_lock);
 

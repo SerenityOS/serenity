@@ -12,6 +12,7 @@
 #include <AK/CircularQueue.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/String.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/Forward.h>
@@ -54,7 +55,7 @@ public:
     virtual StringView class_name() const override { return "InodeWatcher"sv; };
     virtual bool is_inode_watcher() const override { return true; }
 
-    void notify_inode_event(Badge<Inode>, InodeIdentifier, InodeWatcherEvent::Type, String const& name = {});
+    void notify_inode_event(Badge<Inode>, InodeIdentifier, InodeWatcherEvent::Type, StringView name = {});
 
     ErrorOr<int> register_inode(Inode&, unsigned event_mask);
     ErrorOr<void> unregister_by_wd(int);
