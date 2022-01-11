@@ -8,16 +8,20 @@
 #include "ExportDialog.h"
 #include "ImportDialog.h"
 #include "JSIntegration.h"
+#include "LibGUI/MessageBox.h"
 #include "Readers/CSV.h"
 #include <AK/ByteBuffer.h>
+#include <AK/StringView.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/TextBox.h>
+#include <LibGUI/Window.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace Spreadsheet {
 
-Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window* parent_window)
+Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_window)
     : m_sheets(move(sheets))
     , m_vm(JS::VM::create())
     , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(m_vm))
@@ -47,23 +51,18 @@ bool Workbook::set_filename(const String& filename)
     return true;
 }
 
-Result<bool, String> Workbook::load(StringView filename)
+Result<bool, String> Workbook::open_file(int fd, StringView filename)
 {
-    auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
-        StringBuilder sb;
-        sb.append("Failed to open ");
-        sb.append(filename);
-        sb.append(" for reading. Error: ");
-        sb.appendff("{}", file_or_error.error());
+    auto file = Core::File::construct();
 
-        return sb.to_string();
+    if (!file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
+        return String::formatted("Opening \"{}\" failed: {}", file, strerror(errno));
     }
 
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 
     // Make an import dialog, we might need to import it.
-    auto result = ImportDialog::make_and_run_for(m_parent_window, mime, file_or_error.value(), *this);
+    auto result = ImportDialog::make_and_run_for(m_parent_window, mime, file, *this);
     if (result.is_error())
         return result.error();
 
@@ -72,6 +71,22 @@ Result<bool, String> Workbook::load(StringView filename)
     set_filename(filename);
 
     return true;
+}
+
+Result<bool, String> Workbook::load(StringView filename)
+{
+    auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(m_parent_window.window_id(), filename);
+    if (response.error != 0) {
+        StringBuilder sb;
+        sb.append("Failed to open ");
+        sb.append(filename);
+        sb.append(" for reading. Error: ");
+        sb.appendff("{}", response.error);
+
+        return sb.to_string();
+    }
+
+    return open_file(*response.fd, filename);
 }
 
 Result<bool, String> Workbook::save(StringView filename)
