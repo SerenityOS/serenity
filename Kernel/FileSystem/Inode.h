@@ -106,8 +106,8 @@ protected:
     void set_metadata_dirty(bool);
     ErrorOr<void> prepare_to_write_data();
 
-    void did_add_child(InodeIdentifier child_id, String const& name);
-    void did_remove_child(InodeIdentifier child_id, String const& name);
+    void did_add_child(InodeIdentifier child_id, StringView);
+    void did_remove_child(InodeIdentifier child_id, StringView);
     void did_modify_contents();
     void did_delete_self();
 
