@@ -9,6 +9,7 @@
 #include <AK/HashMap.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/KBuffer.h>
+#include <Kernel/KString.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/Socket.h>
@@ -33,9 +34,9 @@ public:
         return other.local_address() == m_local_address && other.local_port() == m_local_port && other.peer_address() == m_peer_address && other.peer_port() == m_peer_port;
     };
 
-    String to_string() const
+    ErrorOr<NonnullOwnPtr<KString>> to_string() const
     {
-        return String::formatted(
+        return KString::formatted(
             "{}:{} -> {}:{}",
             m_local_address,
             m_local_port,
