@@ -10,14 +10,14 @@
 namespace Kernel::Memory {
 
 InodeVMObject::InodeVMObject(Inode& inode, size_t size)
-    : VMObject(size)
+    : VMObject(VMObject::must_create_physical_pages_but_fixme_should_propagate_errors(size))
     , m_inode(inode)
     , m_dirty_pages(page_count(), false)
 {
 }
 
 InodeVMObject::InodeVMObject(InodeVMObject const& other)
-    : VMObject(other)
+    : VMObject(other.must_clone_physical_pages_but_fixme_should_propagate_errors())
     , m_inode(other.m_inode)
     , m_dirty_pages(page_count(), false)
 {
