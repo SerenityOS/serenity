@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Error.h>
 #include <AK/Types.h>
 #include <initializer_list>
 
@@ -159,12 +158,9 @@ public:
         return result;
     }
 
-    [[nodiscard]] constexpr ErrorOr<Matrix> inverse() const
+    [[nodiscard]] constexpr Matrix inverse() const
     {
-        auto det = determinant();
-        if (det == 0)
-            return Error::from_string_literal("inverse of matrix does not exist"sv);
-        return adjugate() / det;
+        return adjugate() / determinant();
     }
 
     [[nodiscard]] constexpr Matrix transpose() const
