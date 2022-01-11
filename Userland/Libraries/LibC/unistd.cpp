@@ -102,6 +102,39 @@ pid_t vfork()
     return fork();
 }
 
+// Non-POSIX, but present in BSDs and Linux
+// https://man.openbsd.org/daemon.3
+int daemon(int nochdir, int noclose)
+{
+    pid_t pid = fork();
+    if (pid < 0)
+        return -1;
+
+    // exit parent, continue execution in child
+    if (pid > 0)
+        _exit(0);
+
+    pid = setsid();
+    if (pid < 0)
+        return -1;
+
+    if (nochdir == 0)
+        (void)chdir("/");
+
+    if (noclose == 0) {
+        // redirect stdout and stderr to /dev/null
+        int fd = open("/dev/null", O_WRONLY);
+        if (fd < 0)
+            return -1;
+        (void)close(STDOUT_FILENO);
+        (void)close(STDERR_FILENO);
+        (void)dup2(fd, STDOUT_FILENO);
+        (void)dup2(fd, STDERR_FILENO);
+        (void)close(fd);
+    }
+    return 0;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/execv.html
 int execv(const char* path, char* const argv[])
 {
