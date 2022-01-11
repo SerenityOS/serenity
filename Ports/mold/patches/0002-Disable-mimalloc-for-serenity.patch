@@ -1,0 +1,27 @@
+From 3912ec0acdd0e01bf32b4fe38004194e4f42fa93 Mon Sep 17 00:00:00 2001
+From: Andrew Kaster <akaster@serenityos.org>
+Date: Tue, 11 Jan 2022 01:43:35 -0700
+Subject: [PATCH 2/7] Disable mimalloc for serenity
+
+mimalloc needs some help to compile on serenity. That's one yak too
+far for right now.
+---
+ Makefile | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index 5b4f8576..e946c6fd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -59,6 +59,8 @@ endif
+ USE_MIMALLOC = 1
+ ifeq ($(OS), Darwin)
+   USE_MIMALLOC = 0
++else ifeq ($(OS), SerenityOS)
++  USE_MIMALLOC = 0
+ else ifneq (, $(findstring android, $(shell uname -r)))
+   USE_MIMALLOC = 0
+ else ifeq ($(ASAN), 1)
+-- 
+2.25.1
+
