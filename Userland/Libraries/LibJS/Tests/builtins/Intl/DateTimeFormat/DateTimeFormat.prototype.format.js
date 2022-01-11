@@ -383,21 +383,34 @@ describe("fractionalSecondDigits", () => {
 describe("timeZoneName", () => {
     // prettier-ignore
     const data = [
-        { timeZoneName: "short", en0: "12/7/2021, 5:40 PM UTC", en1: "1/23/1989, 7:08 AM UTC", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م UTC", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص UTC" },
-        { timeZoneName: "long", en0: "12/7/2021, 5:40 PM Coordinated Universal Time", en1: "1/23/1989, 7:08 AM Coordinated Universal Time", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م التوقيت العالمي المنسق", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص التوقيت العالمي المنسق" },
-        { timeZoneName: "shortOffset", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
-        { timeZoneName: "longOffset", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
-        { timeZoneName: "shortGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
-        { timeZoneName: "longGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZone: "UTC", timeZoneName: "short", en0: "12/7/2021, 5:40 PM UTC", en1: "1/23/1989, 7:08 AM UTC", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م UTC", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص UTC" },
+        { timeZone: "UTC", timeZoneName: "long", en0: "12/7/2021, 5:40 PM Coordinated Universal Time", en1: "1/23/1989, 7:08 AM Coordinated Universal Time", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م التوقيت العالمي المنسق", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص التوقيت العالمي المنسق" },
+        { timeZone: "UTC", timeZoneName: "shortOffset", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZone: "UTC", timeZoneName: "longOffset", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZone: "UTC", timeZoneName: "shortGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZone: "UTC", timeZoneName: "longGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+
+        // FIXME: The time stamps on the below cases are incorrect as they do not adjust the time based on the GMT offset.
+        //        Update these once the LocalTZA AO is implemented and ToLocalTime uses it.
+        { timeZone: "America/New_York", timeZoneName: "shortOffset", en0: "12/7/2021, 5:40 PM GMT-5", en1: "1/23/1989, 7:08 AM GMT-5", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش-٥", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش-٥" },
+        { timeZone: "America/New_York", timeZoneName: "longOffset", en0: "12/7/2021, 5:40 PM GMT-05:00", en1: "1/23/1989, 7:08 AM GMT-05:00", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش-٠٥:٠٠", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش-٠٥:٠٠" },
+        { timeZone: "America/New_York", timeZoneName: "shortGeneric", en0: "12/7/2021, 5:40 PM ET", en1: "1/23/1989, 7:08 AM ET", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش-٥", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش-٥" },
+        { timeZone: "America/New_York", timeZoneName: "longGeneric", en0: "12/7/2021, 5:40 PM Eastern Time", en1: "1/23/1989, 7:08 AM Eastern Time", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م التوقيت الشرقي لأمريكا الشمالية", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص التوقيت الشرقي لأمريكا الشمالية" },
     ];
 
     test("all", () => {
         data.forEach(d => {
-            const en = new Intl.DateTimeFormat("en", { timeZoneName: d.timeZoneName });
+            const en = new Intl.DateTimeFormat("en", {
+                timeZone: d.timeZone,
+                timeZoneName: d.timeZoneName,
+            });
             expect(en.format(d0)).toBe(d.en0);
             expect(en.format(d1)).toBe(d.en1);
 
-            const ar = new Intl.DateTimeFormat("ar", { timeZoneName: d.timeZoneName });
+            const ar = new Intl.DateTimeFormat("ar", {
+                timeZone: d.timeZone,
+                timeZoneName: d.timeZoneName,
+            });
             expect(ar.format(d0)).toBe(d.ar0);
             expect(ar.format(d1)).toBe(d.ar1);
         });
