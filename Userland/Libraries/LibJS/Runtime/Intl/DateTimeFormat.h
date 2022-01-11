@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/Time.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibJS/Runtime/Completion.h>
@@ -161,6 +162,11 @@ enum class OptionDefaults {
 
 // Table 5: Record returned by ToLocalTime, https://tc39.es/ecma402/#table-datetimeformat-tolocaltime-record
 struct LocalTime {
+    AK::Time time_since_epoch() const
+    {
+        return AK::Time::from_timestamp(year, month + 1, day + 1, hour, minute, second, millisecond);
+    }
+
     int weekday { 0 };     // [[Weekday]]
     Unicode::Era era {};   // [[Era]]
     i32 year { 0 };        // [[Year]]
