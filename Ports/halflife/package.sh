@@ -45,9 +45,6 @@ install() {
 }
 
 post_install() {
-    # Delete the OpenGL renderer (ref_gl.so) so we don't crash on launch...
-    rm ${SERENITY_INSTALL_ROOT}/home/anon/Games/halflife/libref_gl.so
-    
     # Strip the output libraries of their "lib" prefix
     pushd ${SERENITY_INSTALL_ROOT}/home/anon/Games/halflife/valve/cl_dlls/
     rename 's/^...//' lib*
