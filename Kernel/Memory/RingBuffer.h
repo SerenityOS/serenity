@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
@@ -14,7 +13,7 @@ namespace Kernel::Memory {
 
 class RingBuffer {
 public:
-    RingBuffer(String region_name, size_t capacity);
+    RingBuffer(StringView region_name, size_t capacity);
 
     bool has_space() const { return m_num_used_bytes < m_capacity_in_bytes; }
     bool copy_data_in(const UserOrKernelBuffer& buffer, size_t offset, size_t length, PhysicalAddress& start_of_copied_data, size_t& bytes_copied);
