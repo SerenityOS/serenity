@@ -116,6 +116,10 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
     MUST(options->create_data_property_or_throw(vm.names.type, js_string(vm, display_names->type_string())));
     MUST(options->create_data_property_or_throw(vm.names.fallback, js_string(vm, display_names->fallback_string())));
 
+    // NOTE: Step 4c indicates languageDisplay must not be undefined, but it is only set when the type option is language.
+    if (display_names->has_language_display())
+        MUST(options->create_data_property_or_throw(vm.names.languageDisplay, js_string(vm, display_names->language_display_string())));
+
     // 5. Return options.
     return options;
 }

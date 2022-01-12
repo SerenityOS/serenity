@@ -26,6 +26,58 @@ describe("correct behavior", () => {
             style: "short",
             type: "language",
             fallback: "code",
+            languageDisplay: "dialect",
+        });
+
+        const ar = new Intl.DisplayNames("ar", { type: "calendar" });
+        expect(ar.resolvedOptions()).toEqual({
+            locale: "ar",
+            style: "long",
+            type: "calendar",
+            fallback: "code",
+        });
+
+        const fr = new Intl.DisplayNames("fr", { type: "dateTimeField" });
+        expect(fr.resolvedOptions()).toEqual({
+            locale: "fr",
+            style: "long",
+            type: "dateTimeField",
+            fallback: "code",
+        });
+    });
+
+    test("all valid language displays", () => {
+        const en = new Intl.DisplayNames("en", { type: "language" });
+        expect(en.resolvedOptions()).toEqual({
+            locale: "en",
+            style: "long",
+            type: "language",
+            fallback: "code",
+            languageDisplay: "dialect",
+        });
+
+        const es419 = new Intl.DisplayNames("es-419", {
+            type: "language",
+            languageDisplay: "dialect",
+        });
+        expect(es419.resolvedOptions()).toEqual({
+            locale: "es-419",
+            style: "long",
+            type: "language",
+            fallback: "code",
+            languageDisplay: "dialect",
+        });
+
+        const zhHant = new Intl.DisplayNames(["zh-Hant"], {
+            type: "language",
+            languageDisplay: "standard",
+        });
+        expect(zhHant.resolvedOptions()).toEqual({
+            locale: "zh-Hant",
+            style: "long",
+            type: "language",
+            fallback: "code",
+            languageDisplay: "standard",
         });
     });
 
