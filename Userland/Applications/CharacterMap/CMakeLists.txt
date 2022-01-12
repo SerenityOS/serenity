@@ -16,5 +16,5 @@ set(SOURCES
 )
 
 serenity_app(CharacterMap ICON app-keyboard-settings)
-target_link_libraries(CharacterMap LibGUI LibMain)
+target_link_libraries(CharacterMap LibDesktop LibGUI LibMain)
 link_with_unicode_data(CharacterMap)
