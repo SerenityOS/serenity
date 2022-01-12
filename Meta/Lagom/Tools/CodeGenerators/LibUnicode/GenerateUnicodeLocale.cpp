@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,6 +35,9 @@ constexpr auto s_script_list_index_type = "u8"sv;
 
 using CurrencyListIndexType = u16;
 constexpr auto s_currency_list_index_type = "u16"sv;
+
+using CalendarListIndexType = u8;
+constexpr auto s_calendar_list_index_type = "u8"sv;
 
 using KeywordListIndexType = u8;
 constexpr auto s_keyword_list_index_type = "u8"sv;
@@ -109,6 +112,7 @@ using LanguageList = Vector<StringIndexType>;
 using TerritoryList = Vector<StringIndexType>;
 using ScriptList = Vector<StringIndexType>;
 using CurrencyList = Vector<StringIndexType>;
+using CalendarList = Vector<StringIndexType>;
 using KeywordList = Vector<StringIndexType>;
 using ListPatternList = Vector<ListPatternIndexType>;
 
@@ -123,6 +127,7 @@ struct Locale {
     CurrencyListIndexType short_currencies { 0 };
     CurrencyListIndexType narrow_currencies { 0 };
     CurrencyListIndexType numeric_currencies { 0 };
+    CalendarListIndexType calendars { 0 };
     KeywordListIndexType keywords { 0 };
     ListPatternListIndexType list_patterns { 0 };
 };
@@ -138,6 +143,7 @@ struct UnicodeLocaleData {
     UniqueStorage<TerritoryList, TerritoryListIndexType> unique_territory_lists;
     UniqueStorage<ScriptList, ScriptListIndexType> unique_script_lists;
     UniqueStorage<CurrencyList, CurrencyListIndexType> unique_currency_lists;
+    UniqueStorage<CalendarList, CalendarListIndexType> unique_calendar_lists;
     UniqueStorage<KeywordList, KeywordListIndexType> unique_keyword_lists;
     UniqueStorage<ListPatterns, ListPatternIndexType> unique_list_patterns;
     UniqueStorage<ListPatternList, ListPatternListIndexType> unique_list_pattern_lists;
@@ -150,6 +156,12 @@ struct UnicodeLocaleData {
     Vector<String> scripts;
     Vector<String> variants;
     Vector<String> currencies;
+    Vector<String> calendars;
+    Vector<Alias> calendar_aliases {
+        // FIXME: Aliases should come from BCP47. See: https://unicode-org.atlassian.net/browse/CLDR-15158
+        { "ethiopic-amete-alem"sv, "ethioaa"sv },
+        { "gregorian"sv, "gregory"sv },
+    };
     Vector<String> keywords { "ca"sv, "nu"sv }; // FIXME: These should be parsed from BCP47. https://unicode-org.atlassian.net/browse/CLDR-15158
     Vector<String> list_pattern_types;
     Vector<String> list_pattern_styles;
@@ -458,6 +470,37 @@ static ErrorOr<void> parse_locale_currencies(String numbers_path, UnicodeLocaleD
     return {};
 }
 
+static ErrorOr<void> parse_locale_calendars(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
+{
+    LexicalPath locale_display_names_path(move(locale_path));
+    locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
+
+    auto locale_display_names_file = TRY(Core::File::open(locale_display_names_path.string(), Core::OpenMode::ReadOnly));
+    auto locale_display_names = TRY(JsonValue::from_string(locale_display_names_file->read_all()));
+
+    auto const& main_object = locale_display_names.as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(locale_display_names_path.parent().basename());
+    auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
+    auto const& types_object = locale_display_names_object.as_object().get("types"sv);
+    auto const& calendar_object = types_object.as_object().get("calendar"sv);
+
+    calendar_object.as_object().for_each_member([&](auto const& key, auto const&) {
+        if (!locale_data.calendars.contains_slow(key))
+            locale_data.calendars.append(key);
+    });
+
+    CalendarList calendars;
+    calendars.resize(locale_data.calendars.size());
+
+    calendar_object.as_object().for_each_member([&](auto const& key, auto const& calendar) {
+        auto index = locale_data.calendars.find_first_index(key).value();
+        calendars[index] = locale_data.unique_strings.ensure(calendar.as_string());
+    });
+
+    locale.calendars = locale_data.unique_calendar_lists.ensure(move(calendars));
+    return {};
+}
+
 static ErrorOr<void> parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData& locale_data, KeywordList& keywords)
 {
     static constexpr StringView key = "nu"sv;
@@ -679,6 +722,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
         TRY(parse_locale_languages(locale_path, locale_data, locale));
         TRY(parse_locale_territories(locale_path, locale_data, locale));
         TRY(parse_locale_scripts(locale_path, locale_data, locale));
+        TRY(parse_locale_calendars(locale_path, locale_data, locale));
     }
 
     while (misc_iterator.has_next()) {
@@ -738,6 +782,7 @@ namespace Unicode {
     generate_enum(generator, format_identifier, "Territory"sv, {}, locale_data.territories);
     generate_enum(generator, format_identifier, "ScriptTag"sv, {}, locale_data.scripts);
     generate_enum(generator, format_identifier, "Currency"sv, {}, locale_data.currencies);
+    generate_enum(generator, format_identifier, "CalendarName"sv, {}, locale_data.calendars, locale_data.calendar_aliases);
     generate_enum(generator, format_identifier, "Key"sv, {}, locale_data.keywords);
     generate_enum(generator, format_identifier, "Variant"sv, {}, locale_data.variants);
     generate_enum(generator, format_identifier, "ListPatternType"sv, {}, locale_data.list_pattern_types);
@@ -786,6 +831,7 @@ struct Patterns {
     locale_data.unique_territory_lists.generate(generator, s_string_index_type, "s_territory_lists"sv);
     locale_data.unique_script_lists.generate(generator, s_string_index_type, "s_script_lists"sv);
     locale_data.unique_currency_lists.generate(generator, s_string_index_type, "s_currency_lists"sv);
+    locale_data.unique_calendar_lists.generate(generator, s_string_index_type, "s_calendar_lists"sv);
     locale_data.unique_keyword_lists.generate(generator, s_string_index_type, "s_keyword_lists"sv);
     locale_data.unique_list_patterns.generate(generator, "Patterns"sv, "s_list_patterns"sv, 10);
     locale_data.unique_list_pattern_lists.generate(generator, s_list_pattern_index_type, "s_list_pattern_lists"sv);
@@ -841,6 +887,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_short_currencies"sv, [&](auto const& locale) { return locale.short_currencies; });
     append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_narrow_currencies"sv, [&](auto const& locale) { return locale.narrow_currencies; });
     append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_numeric_currencies"sv, [&](auto const& locale) { return locale.numeric_currencies; });
+    append_mapping(locales, locale_data.locales, s_calendar_list_index_type, "s_calendars"sv, [&](auto const& locale) { return locale.calendars; });
     append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_keywords"sv, [&](auto const& locale) { return locale.keywords; });
     append_mapping(locales, locale_data.locales, s_list_pattern_list_index_type, "s_locale_list_patterns"sv, [&](auto const& locale) { return locale.list_patterns; });
 
@@ -1103,6 +1150,9 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     append_mapping_search("short_currency"sv, "currency"sv, "s_short_currencies"sv, "s_currency_lists"sv);
     append_mapping_search("narrow_currency"sv, "currency"sv, "s_narrow_currencies"sv, "s_currency_lists"sv);
     append_mapping_search("numeric_currency"sv, "currency"sv, "s_numeric_currencies"sv, "s_currency_lists"sv);
+
+    append_from_string("CalendarName"sv, "calendar_name"sv, locale_data.calendars, locale_data.calendar_aliases);
+    append_mapping_search("calendar"sv, "calendar_name"sv, "s_calendars"sv, "s_calendar_lists"sv);
 
     append_from_string("Key"sv, "key"sv, locale_data.keywords);
     append_mapping_search("key"sv, "key"sv, "s_keywords"sv, "s_keyword_lists"sv);

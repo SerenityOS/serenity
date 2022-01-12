@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -746,6 +746,7 @@ Optional<Language> __attribute__((weak)) language_from_string(StringView) { retu
 Optional<Territory> __attribute__((weak)) territory_from_string(StringView) { return {}; }
 Optional<ScriptTag> __attribute__((weak)) script_tag_from_string(StringView) { return {}; }
 Optional<Currency> __attribute__((weak)) currency_from_string(StringView) { return {}; }
+Optional<CalendarName> __attribute__((weak)) calendar_name_from_string(StringView) { return {}; }
 Optional<Key> __attribute__((weak)) key_from_string(StringView) { return {}; }
 Optional<ListPatternType> __attribute__((weak)) list_pattern_type_from_string(StringView) { return {}; }
 Optional<ListPatternStyle> __attribute__((weak)) list_pattern_style_from_string(StringView) { return {}; }
@@ -756,6 +757,7 @@ Optional<StringView> __attribute__((weak)) get_locale_long_currency_mapping(Stri
 Optional<StringView> __attribute__((weak)) get_locale_short_currency_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_narrow_currency_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_numeric_currency_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_calendar_mapping(StringView, StringView) { return {}; }
 
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency, Style style)
 {

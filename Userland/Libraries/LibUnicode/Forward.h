@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +13,7 @@ namespace Unicode {
 enum class Calendar : u8;
 enum class CalendarFormatType : u8;
 enum class CalendarPatternStyle : u8;
+enum class CalendarName : u8;
 enum class CalendarSymbol : u8;
 enum class CompactNumberFormatType : u8;
 enum class Condition : u8;
