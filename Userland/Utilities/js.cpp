@@ -601,6 +601,10 @@ static void print_intl_display_names(JS::Object const& object, HashTable<JS::Obj
     print_value(js_string(object.vm(), display_names.style_string()), seen_objects);
     js_out("\n  fallback: ");
     print_value(js_string(object.vm(), display_names.fallback_string()), seen_objects);
+    if (display_names.has_language_display()) {
+        js_out("\n  languageDisplay: ");
+        print_value(js_string(object.vm(), display_names.language_display_string()), seen_objects);
+    }
 }
 
 static void print_intl_locale(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
