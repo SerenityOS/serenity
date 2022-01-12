@@ -1,0 +1,22 @@
+--- gltron-0.70/lua/src/lib/Makefile.in	2003-12-14 09:00:20.000000000 +0000
++++ gltron-0.70-patched/lua/src/lib/Makefile.in	2022-01-10 00:05:42.499282291 +0000
+@@ -82,7 +82,7 @@
+ 
+ DEFS = 
+ CPPFLAGS = 
+-CFLAGS = -ansi -pedantic -Wall -I$(srcdir)/.. -I$(top_srcdir)/lua/include
++CFLAGS = -pedantic -Wall -I$(srcdir)/.. -I$(top_srcdir)/lua/include
+ LDFLAGS = 
+ LIBS = -lm
+ 
+--- gltron-0.70/lua/src/Makefile.in	2003-12-14 09:00:20.000000000 +0000
++++ gltron-0.70-patched/lua/src/Makefile.in	2022-01-10 00:05:33.643271402 +0000
+@@ -84,7 +84,7 @@
+ 
+ DEFS = 
+ AM_CPPFLAGS = 
+-AM_CFLAGS = -ansi -pedantic -Wall -I$(srcdir) -I$(top_srcdir)/lua/include
++AM_CFLAGS = -pedantic -Wall -I$(srcdir) -I$(top_srcdir)/lua/include
+ LDFLAGS = 
+ LIBS = -lm
+ 

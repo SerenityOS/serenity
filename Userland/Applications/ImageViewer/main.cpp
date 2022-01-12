@@ -157,17 +157,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->rotate(Gfx::RotationDirection::Clockwise);
     });
 
-    auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V },
+    auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png")),
         [&](auto&) {
             widget->flip(Gfx::Orientation::Vertical);
         });
 
-    auto horizontal_flip_action = GUI::Action::create("Flip &Horizontally", { Mod_None, Key_H },
+    auto horizontal_flip_action = GUI::Action::create("Flip &Horizontally", { Mod_None, Key_H }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png")),
         [&](auto&) {
             widget->flip(Gfx::Orientation::Horizontal);
         });
 
-    auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper",
+    auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png")),
         [&](auto&) {
             auto could_set_wallpaper = GUI::Desktop::the().set_wallpaper(widget->path());
             if (!could_set_wallpaper) {

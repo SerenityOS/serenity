@@ -1,0 +1,63 @@
+--- gltron-0.70/nebu/video/video_system.c	2003-07-21 08:18:57.000000000 +0000
++++ gltron-0.70-patched/nebu/video/video_system.c	2022-01-11 23:08:04.316789459 +0000
+@@ -1,16 +1,17 @@
+ #include "Nebu_video.h"
+ 
+-#include "SDL.h"
++#include "SDL.h"
+ #include "SDL_opengl.h"
+ 
+-static SDL_Surface *screen;
++SDL_Window* window;
++static SDL_GLContext glcontext;
+ static int width, height;
+ static int flags;
+ static int fullscreen;
+ extern int video_initialized;
+ 
+ void SystemSwapBuffers() {
+-  SDL_GL_SwapBuffers();
++  SDL_GL_SwapWindow(window);
+ }
+ 
+ void SystemInitWindow(int x, int y, int w, int h) {
+@@ -50,21 +51,22 @@
+ }
+ 
+ void SystemSetGamma(float red, float green, float blue) {
+-  SDL_SetGamma(red, green, blue);
++  SDL_SetWindowBrightness(window, (red + green + blue) / 3);
+ }
+ 
+ int SystemCreateWindow(char *name) {
+-  int f = SDL_OPENGL;
++  int f = SDL_WINDOW_OPENGL;
+   if(fullscreen & SYSTEM_FULLSCREEN)
+-    f |= SDL_FULLSCREEN;
+-  if( (screen = SDL_SetVideoMode( width, height, 0, f )) == NULL ) {
++    f |= SDL_WINDOW_FULLSCREEN;
++  if( (window = SDL_CreateWindow("GLTron", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, f )) == NULL ) {
+     fprintf(stderr, "[system] Couldn't set GL mode: %s\n", SDL_GetError());
+     exit(1); /* OK: critical, no visual */
+   }
+-  SDL_WM_SetCaption("GLtron", "");
+-  glClearColor(0,0,0,0);
+-  glClear(GL_COLOR_BUFFER_BIT);
+-  SDL_GL_SwapBuffers();
++  glcontext = SDL_GL_CreateContext(window);
++  SDL_SetWindowTitle(window, "GLtron");
++  glClearColor(0,0,0,0);
++  glClear(GL_COLOR_BUFFER_BIT);
++  SDL_GL_SwapWindow(window);
+   return 1;
+ }
+ 
+@@ -76,7 +78,7 @@
+ 	/* there used to be some problems (memory leaks, unprober driver unloading)
+ 	 * caused by this, but I can't remember what they where
+ 	 */
+-		 
++	SDL_GL_DeleteContext(glcontext);
+   SDL_QuitSubSystem(SDL_INIT_VIDEO);
+   video_initialized = 0;
+ }

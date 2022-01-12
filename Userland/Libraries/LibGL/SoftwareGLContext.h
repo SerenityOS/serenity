@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2021-2022, Jesse Buhagiar <jooster669@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +23,7 @@
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Device.h>
+#include <LibSoftGPU/Light/Light.h>
 #include <LibSoftGPU/Vertex.h>
 
 namespace GL {
@@ -37,6 +39,11 @@ struct ContextParameter {
         GLdouble double_value;
         GLdouble double_list[4];
     } value;
+};
+
+enum class MaterialFace : u8 {
+    Front = 0,
+    Back = 1,
 };
 
 class SoftwareGLContext : public GLContext {
@@ -124,7 +131,6 @@ public:
     virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) override;
     virtual void gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer) override;
     virtual void gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w) override;
-    virtual void gl_materialv(GLenum face, GLenum pname, GLfloat const* params) override;
     virtual void gl_line_width(GLfloat width) override;
     virtual void gl_push_attrib(GLbitfield mask) override;
     virtual void gl_pop_attrib() override;
@@ -135,15 +141,18 @@ public:
     virtual void gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) override;
     virtual void gl_tex_gen(GLenum coord, GLenum pname, GLint param) override;
     virtual void gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* params) override;
-
+    virtual void gl_lightf(GLenum light, GLenum pname, GLfloat param) override;
+    virtual void gl_lightfv(GLenum light, GLenum pname, GLfloat const* params) override;
+    virtual void gl_materialf(GLenum face, GLenum pname, GLfloat param) override;
+    virtual void gl_materialfv(GLenum face, GLenum pname, GLfloat const* params) override;
     virtual void present() override;
 
 private:
     void sync_device_config();
     void sync_device_sampler_config();
     void sync_device_texcoord_config();
+    void sync_light_state();
 
-private:
     template<typename T>
     T* store_in_listing(T value)
     {
@@ -286,6 +295,7 @@ private:
     SoftGPU::Device m_rasterizer;
     SoftGPU::DeviceInfo const m_device_info;
     bool m_sampler_config_is_dirty { true };
+    bool m_light_state_is_dirty { true };
 
     struct Listing {
 
@@ -353,7 +363,6 @@ private:
             decltype(&SoftwareGLContext::gl_stencil_op_separate),
             decltype(&SoftwareGLContext::gl_normal),
             decltype(&SoftwareGLContext::gl_raster_pos),
-            decltype(&SoftwareGLContext::gl_materialv),
             decltype(&SoftwareGLContext::gl_line_width),
             decltype(&SoftwareGLContext::gl_push_attrib),
             decltype(&SoftwareGLContext::gl_pop_attrib),
@@ -365,7 +374,11 @@ private:
             decltype(&SoftwareGLContext::gl_tex_gen_floatv),
             decltype(&SoftwareGLContext::gl_fogf),
             decltype(&SoftwareGLContext::gl_fogfv),
-            decltype(&SoftwareGLContext::gl_fogi)>;
+            decltype(&SoftwareGLContext::gl_fogi),
+            decltype(&SoftwareGLContext::gl_lightf),
+            decltype(&SoftwareGLContext::gl_lightfv),
+            decltype(&SoftwareGLContext::gl_materialf),
+            decltype(&SoftwareGLContext::gl_materialfv)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -417,8 +430,9 @@ private:
 
     // Lighting configuration
     bool m_lighting_enabled { false };
-    FloatVector4 m_light_model_ambient { 0.2f, 0.2f, 0.2f, 1.0f };
-    GLfloat m_light_model_two_side { 0.0f };
+
+    Vector<SoftGPU::Light> m_light_states;
+    Array<SoftGPU::Material, 2u> m_material_states;
 };
 
 }

@@ -14,6 +14,7 @@ struct DeviceInfo final {
     String vendor_name;
     String device_name;
     unsigned num_texture_units;
+    unsigned num_lights;
 };
 
 }

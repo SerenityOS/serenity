@@ -4,15 +4,22 @@ describe("correct behavior", () => {
     });
 
     test("basic functionality", () => {
-        const timeZone = new Temporal.TimeZone("UTC");
-        const instant = new Temporal.Instant(0n);
-        expect(timeZone.getOffsetStringFor(instant)).toBe("+00:00");
-    });
-
-    test("custom offset", () => {
-        const timeZone = new Temporal.TimeZone("+01:30");
-        const instant = new Temporal.Instant(0n);
-        expect(timeZone.getOffsetStringFor(instant)).toBe("+01:30");
+        const values = [
+            ["UTC", "+00:00"],
+            ["GMT", "+00:00"],
+            ["Etc/GMT+12", "-12:00"],
+            ["Etc/GMT-12", "+12:00"],
+            ["Europe/London", "+00:00"],
+            ["Europe/Berlin", "+01:00"],
+            ["America/New_York", "-05:00"],
+            ["America/Los_Angeles", "-08:00"],
+            ["+00:00", "+00:00"],
+            ["+01:30", "+01:30"],
+        ];
+        for (const [arg, expected] of values) {
+            const instant = new Temporal.Instant(1600000000000000000n);
+            expect(new Temporal.TimeZone(arg).getOffsetStringFor(instant)).toBe(expected);
+        }
     });
 });
 

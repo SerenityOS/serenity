@@ -10,6 +10,16 @@ describe("errors", () => {
             new Temporal.TimeZone("foo");
         }).toThrowWithMessage(RangeError, "Invalid time zone name 'foo'");
     });
+
+    test("Invalid numeric UTC offset", () => {
+        // FIXME: Error message should probably say '...name or UTC offset ...' :^)
+        expect(() => {
+            new Temporal.TimeZone("0123456");
+        }).toThrowWithMessage(RangeError, "Invalid time zone name '0123456'");
+        expect(() => {
+            new Temporal.TimeZone("23:59:59.9999999999");
+        }).toThrowWithMessage(RangeError, "Invalid time zone name '23:59:59.9999999999'");
+    });
 });
 
 describe("normal behavior", () => {
@@ -26,10 +36,56 @@ describe("normal behavior", () => {
     });
 
     test("canonicalizes time zone name", () => {
-        expect(new Temporal.TimeZone("Utc").id).toBe("UTC");
-        expect(new Temporal.TimeZone("utc").id).toBe("UTC");
-        expect(new Temporal.TimeZone("uTC").id).toBe("UTC");
+        const values = [
+            ["UTC", "UTC"],
+            ["Utc", "UTC"],
+            ["utc", "UTC"],
+            ["uTc", "UTC"],
+            ["GMT", "UTC"],
+            ["Etc/UTC", "UTC"],
+            ["Etc/GMT", "UTC"],
+            ["Etc/GMT+12", "Etc/GMT+12"],
+            ["Etc/GMT-12", "Etc/GMT-12"],
+            ["Europe/London", "Europe/London"],
+            ["Europe/Isle_of_Man", "Europe/London"],
+        ];
+        for (const [arg, expected] of values) {
+            expect(new Temporal.TimeZone(arg).id).toBe(expected);
+        }
     });
 
-    // TODO: Add tests for time numeric zone offset once that's implemented
+    test("numeric UTC offset", () => {
+        const signs = [
+            ["+", "+"],
+            ["-", "-"],
+            ["\u2212", "-"],
+        ];
+        const values = [
+            ["01", "01:00"],
+            ["0123", "01:23"],
+            ["012345", "01:23:45"],
+            ["012345.6", "01:23:45.6"],
+            ["012345.123", "01:23:45.123"],
+            ["012345.123456789", "01:23:45.123456789"],
+            ["012345,6", "01:23:45.6"],
+            ["012345,123", "01:23:45.123"],
+            ["012345,123456789", "01:23:45.123456789"],
+            ["01:23", "01:23"],
+            ["01:23:45", "01:23:45"],
+            ["01:23:45.6", "01:23:45.6"],
+            ["01:23:45.123", "01:23:45.123"],
+            ["01:23:45.123456789", "01:23:45.123456789"],
+            ["01:23:45,6", "01:23:45.6"],
+            ["01:23:45,123", "01:23:45.123"],
+            ["01:23:45,123456789", "01:23:45.123456789"],
+            ["23:59:59.999999999", "23:59:59.999999999"],
+        ];
+        for (const [sign, expectedSign] of signs) {
+            for (const [offset, expectedOffset] of values) {
+                expect(new Temporal.TimeZone(`${sign}${offset}`).id).toBe(
+                    `${expectedSign}${expectedOffset}`
+                );
+            }
+        }
+    });
 });

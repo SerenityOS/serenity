@@ -6,8 +6,11 @@
 
 #include <AK/Array.h>
 #include <AK/StringBuilder.h>
+#include <LibTimeZone/TimeZone.h>
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
+#include <LibUnicode/NumberFormat.h>
+#include <stdlib.h>
 
 namespace Unicode {
 
@@ -191,6 +194,100 @@ Optional<StringView> __attribute__((weak)) get_calendar_month_symbol(StringView,
 Optional<StringView> __attribute__((weak)) get_calendar_weekday_symbol(StringView, StringView, CalendarPatternStyle, Weekday) { return {}; }
 Optional<StringView> __attribute__((weak)) get_calendar_day_period_symbol(StringView, StringView, CalendarPatternStyle, DayPeriod) { return {}; }
 Optional<StringView> __attribute__((weak)) get_calendar_day_period_symbol_for_hour(StringView, StringView, CalendarPatternStyle, u8) { return {}; }
+
 Optional<StringView> __attribute__((weak)) get_time_zone_name(StringView, StringView, CalendarPatternStyle) { return {}; }
+Optional<TimeZoneFormat> __attribute__((weak)) get_time_zone_format(StringView) { return {}; }
+
+static Optional<String> format_time_zone_offset(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time)
+{
+    auto formats = get_time_zone_format(locale);
+    if (!formats.has_value())
+        return {};
+
+    auto number_system = get_default_number_system(locale);
+    if (!number_system.has_value())
+        return {};
+
+    auto offset_seconds = TimeZone::get_time_zone_offset(time_zone, time);
+    if (!offset_seconds.has_value())
+        return {};
+    if (*offset_seconds == 0)
+        return formats->gmt_zero_format;
+
+    auto sign = *offset_seconds > 0 ? formats->symbol_ahead_sign : formats->symbol_behind_sign;
+    auto separator = *offset_seconds > 0 ? formats->symbol_ahead_separator : formats->symbol_behind_separator;
+    *offset_seconds = llabs(*offset_seconds);
+
+    auto offset_hours = *offset_seconds / 3'600;
+    *offset_seconds %= 3'600;
+
+    auto offset_minutes = *offset_seconds / 60;
+    *offset_seconds %= 60;
+
+    StringBuilder builder;
+    builder.append(sign);
+
+    switch (style) {
+    // The long format always uses 2-digit hours field and minutes field, with optional 2-digit seconds field.
+    case CalendarPatternStyle::LongOffset:
+        builder.appendff("{:02}{}{:02}", offset_hours, separator, offset_minutes);
+        if (*offset_seconds > 0)
+            builder.appendff("{}{:02}", separator, *offset_seconds);
+        break;
+
+    // The short format is intended for the shortest representation and uses hour fields without leading zero, with optional 2-digit minutes and seconds fields.
+    case CalendarPatternStyle::ShortOffset:
+        builder.appendff("{}", offset_hours);
+        if (offset_minutes > 0) {
+            builder.appendff("{}{:02}", separator, offset_minutes);
+            if (*offset_seconds > 0)
+                builder.appendff("{}{:02}", separator, *offset_seconds);
+        }
+        break;
+
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    // The digits used for hours, minutes and seconds fields in this format are the locale's default decimal digits.
+    auto offset = replace_digits_for_number_system(*number_system, builder.build());
+    return formats->gmt_format.replace("{0}"sv, offset);
+}
+
+// https://unicode.org/reports/tr35/tr35-dates.html#Time_Zone_Format_Terminology
+String format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time)
+{
+    switch (style) {
+    case CalendarPatternStyle::Short:
+    case CalendarPatternStyle::Long:
+    case CalendarPatternStyle::ShortGeneric:
+    case CalendarPatternStyle::LongGeneric:
+        if (auto name = get_time_zone_name(locale, time_zone, style); name.has_value())
+            return *name;
+        break;
+
+    case CalendarPatternStyle::ShortOffset:
+    case CalendarPatternStyle::LongOffset:
+        return format_time_zone_offset(locale, time_zone, style, time).value_or(time_zone);
+
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    // If more styles are added, consult the following table to ensure always falling back to GMT offset is still correct:
+    // https://unicode.org/reports/tr35/tr35-dates.html#dfst-zone
+    switch (style) {
+    case CalendarPatternStyle::Short:
+    case CalendarPatternStyle::ShortGeneric:
+        return format_time_zone(locale, time_zone, CalendarPatternStyle::ShortOffset, time);
+
+    case CalendarPatternStyle::Long:
+    case CalendarPatternStyle::LongGeneric:
+        return format_time_zone(locale, time_zone, CalendarPatternStyle::LongOffset, time);
+
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
 
 }

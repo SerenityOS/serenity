@@ -563,8 +563,10 @@ private:
                 obj.add("family", info.display_family());
 
                 auto features_array = obj.add_array("features");
-                for (auto& feature : info.features().split(' '))
+                auto keep_empty = false;
+                info.features().for_each_split_view(' ', keep_empty, [&](StringView feature) {
                     features_array.add(feature);
+                });
                 features_array.finish();
 
                 obj.add("model", info.display_model());

@@ -41,7 +41,9 @@ public:
             { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png")) },
             { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png")) }
         };
-        return adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(volume_level_bitmaps)));
+        NonnullRefPtr<AudioWidget> audio_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(volume_level_bitmaps))));
+        TRY(audio_widget->try_initialize_graphical_elements());
+        return audio_widget;
     }
 
 private:
@@ -68,7 +70,10 @@ private:
             if (!m_audio_muted)
                 update();
         };
+    }
 
+    ErrorOr<void> try_initialize_graphical_elements()
+    {
         m_slider_window = add<GUI::Window>(window());
         m_slider_window->set_frameless(true);
         m_slider_window->set_resizable(false);
@@ -78,7 +83,7 @@ private:
                 close();
         };
 
-        m_root_container = m_slider_window->set_main_widget<GUI::Label>();
+        m_root_container = TRY(m_slider_window->try_set_main_widget<GUI::Label>());
         m_root_container->set_fill_with_background_color(true);
         m_root_container->set_layout<GUI::VerticalBoxLayout>();
         m_root_container->layout()->set_margins({ 4, 0 });
@@ -122,7 +127,9 @@ private:
             m_audio_client->set_main_mix_muted(is_muted);
             GUI::Application::the()->hide_tooltip();
         };
-    }
+
+        return {};
+    };
 
 public:
     virtual ~AudioWidget() override { }

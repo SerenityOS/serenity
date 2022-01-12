@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2021, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022, Jesse Buhagiar <jooster669@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,14 +20,12 @@ void glColorMaterial(GLenum face, GLenum mode)
 
 void glLightf(GLenum light, GLenum pname, GLfloat param)
 {
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "glLightf({}, {}, {}): unimplemented", light, pname, param);
+    g_gl_context->gl_lightf(light, pname, param);
 }
 
-void glLightfv(GLenum light, GLenum pname, GLfloat* param)
+void glLightfv(GLenum light, GLenum pname, GLfloat const* param)
 {
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "glLightfv({}, {}, {}): unimplemented", light, pname, param);
+    g_gl_context->gl_lightfv(light, pname, param);
 }
 
 void glLightModelf(GLenum pname, GLfloat param)
@@ -45,14 +44,19 @@ void glLightModelfv(GLenum pname, GLfloat const* params)
     }
 }
 
+void glLightModeli(GLenum pname, GLint param)
+{
+    g_gl_context->gl_light_model(pname, param, 0.0f, 0.0f, 0.0f);
+}
+
 void glMaterialf(GLenum face, GLenum pname, GLfloat param)
 {
-    g_gl_context->gl_materialv(face, pname, &param);
+    g_gl_context->gl_materialf(face, pname, param);
 }
 
 void glMaterialfv(GLenum face, GLenum pname, GLfloat const* params)
 {
-    g_gl_context->gl_materialv(face, pname, params);
+    g_gl_context->gl_materialfv(face, pname, params);
 }
 
 void glShadeModel(GLenum mode)

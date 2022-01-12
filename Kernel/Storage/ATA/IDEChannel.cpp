@@ -62,12 +62,12 @@ UNMAP_AFTER_INIT void IDEChannel::initialize()
     IO::delay(30000);
     m_io_group.control_base().out<u8>(device_control);
     // Wait up to 30 seconds before failing
-    if (!wait_until_not_busy(false, 30000)) {
+    if (!select_device_and_wait_until_not_busy(DeviceType::Master, 30000)) {
         dbgln("IDEChannel: reset failed, busy flag on master stuck");
         return;
     }
     // Wait up to 30 seconds before failing
-    if (!wait_until_not_busy(true, 30000)) {
+    if (!select_device_and_wait_until_not_busy(DeviceType::Slave, 30000)) {
         dbgln("IDEChannel: reset failed, busy flag on slave stuck");
         return;
     }
@@ -261,10 +261,11 @@ static void io_delay()
         IO::in8(0x3f6);
 }
 
-bool IDEChannel::wait_until_not_busy(bool slave, size_t milliseconds_timeout)
+bool IDEChannel::select_device_and_wait_until_not_busy(DeviceType device_type, size_t milliseconds_timeout)
 {
     IO::delay(20);
-    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (slave << 4)); // First, we need to select the drive itself
+    u8 slave = device_type == DeviceType::Slave;
+    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (slave << 4));
     IO::delay(20);
     size_t time_elapsed = 0;
     while (m_io_group.control_base().in<u8>() & ATA_SR_BSY && time_elapsed <= milliseconds_timeout) {
@@ -303,10 +304,11 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
     // There are only two possible disks connected to a channel
     for (auto i = 0; i < 2; i++) {
-        // We need to select the drive and then we wait 20 microseconds... and it doesn't hurt anything so let's just do it.
-        IO::delay(20);
-        m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (i << 4)); // First, we need to select the drive itself
-        IO::delay(20);
+
+        if (!select_device_and_wait_until_not_busy(i == 0 ? DeviceType::Master : DeviceType::Slave, 32000)) {
+            dbgln("IDEChannel: Timeout waiting for busy flag to clear during {} {} detection", channel_type_string(), channel_string(i));
+            continue;
+        }
 
         auto status = m_io_group.control_base().in<u8>();
         if (status == 0x0) {

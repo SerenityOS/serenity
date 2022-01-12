@@ -110,7 +110,6 @@ public:
     virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) = 0;
     virtual void gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer) = 0;
     virtual void gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w) = 0;
-    virtual void gl_materialv(GLenum face, GLenum pname, GLfloat const* params) = 0;
     virtual void gl_line_width(GLfloat width) = 0;
     virtual void gl_push_attrib(GLbitfield mask) = 0;
     virtual void gl_pop_attrib() = 0;
@@ -121,6 +120,10 @@ public:
     virtual void gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) = 0;
     virtual void gl_tex_gen(GLenum coord, GLenum pname, GLint param) = 0;
     virtual void gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* params) = 0;
+    virtual void gl_lightf(GLenum light, GLenum pname, GLfloat param) = 0;
+    virtual void gl_lightfv(GLenum light, GLenum pname, GLfloat const* params) = 0;
+    virtual void gl_materialf(GLenum face, GLenum pname, GLfloat param) = 0;
+    virtual void gl_materialfv(GLenum face, GLenum pname, GLfloat const* params) = 0;
 
     virtual void present() = 0;
 };

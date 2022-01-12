@@ -44,6 +44,11 @@ public:
         Secondary
     };
 
+    enum class DeviceType : u8 {
+        Master,
+        Slave,
+    };
+
     struct IOAddressGroup {
         IOAddressGroup(IOAddress io_base, IOAddress control_base, IOAddress bus_master_base)
             : m_io_base(io_base)
@@ -127,7 +132,7 @@ protected:
     StringView channel_type_string() const;
 
     void try_disambiguate_error();
-    bool wait_until_not_busy(bool slave, size_t milliseconds_timeout);
+    bool select_device_and_wait_until_not_busy(DeviceType, size_t milliseconds_timeout);
     bool wait_until_not_busy(size_t milliseconds_timeout);
 
     void start_request(AsyncBlockDeviceRequest&, bool, u16);

@@ -135,7 +135,7 @@ using NumericSymbolList = Vector<StringIndexType>;
 struct NumberSystem {
     unsigned hash() const
     {
-        auto hash = pair_int_hash(system, symbols);
+        auto hash = int_hash(symbols);
         hash = pair_int_hash(hash, primary_grouping_size);
         hash = pair_int_hash(hash, secondary_grouping_size);
         hash = pair_int_hash(hash, decimal_format);
@@ -152,8 +152,7 @@ struct NumberSystem {
 
     bool operator==(NumberSystem const& other) const
     {
-        return (system == other.system)
-            && (symbols == other.symbols)
+        return (symbols == other.symbols)
             && (primary_grouping_size == other.primary_grouping_size)
             && (secondary_grouping_size == other.secondary_grouping_size)
             && (decimal_format == other.decimal_format)
@@ -167,7 +166,6 @@ struct NumberSystem {
             && (scientific_format == other.scientific_format);
     }
 
-    StringIndexType system { 0 };
     NumericSymbolListIndexType symbols { 0 };
 
     u8 primary_grouping_size { 0 };
@@ -191,8 +189,7 @@ struct AK::Formatter<NumberSystem> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, NumberSystem const& system)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
-            system.system,
+            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
             system.symbols,
             system.primary_grouping_size,
             system.secondary_grouping_size,
@@ -256,7 +253,7 @@ struct AK::Traits<Unit> : public GenericTraits<Unit> {
 };
 
 struct Locale {
-    HashMap<String, NumberSystemIndexType> number_systems;
+    Vector<NumberSystemIndexType> number_systems;
     HashMap<String, UnitIndexType> units {};
 };
 
@@ -268,9 +265,46 @@ struct UnicodeLocaleData {
     UniqueStorage<NumberSystem, NumberSystemIndexType> unique_systems;
     UniqueStorage<Unit, UnitIndexType> unique_units;
 
+    HashMap<String, Array<u32, 10>> number_system_digits;
+    Vector<String> number_systems;
+
     HashMap<String, Locale> locales;
     size_t max_identifier_count { 0 };
 };
+
+static ErrorOr<void> parse_number_system_digits(String core_supplemental_path, UnicodeLocaleData& locale_data)
+{
+    LexicalPath number_systems_path(move(core_supplemental_path));
+    number_systems_path = number_systems_path.append("numberingSystems.json"sv);
+
+    auto number_systems_file = TRY(Core::File::open(number_systems_path.string(), Core::OpenMode::ReadOnly));
+    auto number_systems = TRY(JsonValue::from_string(number_systems_file->read_all()));
+
+    auto const& supplemental_object = number_systems.as_object().get("supplemental"sv);
+    auto const& number_systems_object = supplemental_object.as_object().get("numberingSystems"sv);
+
+    number_systems_object.as_object().for_each_member([&](auto const& number_system, auto const& digits_object) {
+        auto type = digits_object.as_object().get("_type"sv).as_string();
+        if (type != "numeric"sv)
+            return;
+
+        auto digits = digits_object.as_object().get("_digits"sv).as_string();
+
+        Utf8View utf8_digits { digits };
+        VERIFY(utf8_digits.length() == 10);
+
+        auto& number_system_digits = locale_data.number_system_digits.ensure(number_system);
+        size_t index = 0;
+
+        for (u32 digit : utf8_digits)
+            number_system_digits[index++] = digit;
+
+        if (!locale_data.number_systems.contains_slow(number_system))
+            locale_data.number_systems.append(number_system);
+    });
+
+    return {};
+}
 
 static String parse_identifiers(String pattern, StringView replacement, UnicodeLocaleData& locale_data, NumberFormat& format)
 {
@@ -422,13 +456,18 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
     auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
 
-    HashMap<String, NumberSystem> number_systems;
+    Vector<Optional<NumberSystem>> number_systems;
+    number_systems.resize(locale_data.number_systems.size());
 
     auto ensure_number_system = [&](auto const& system) -> NumberSystem& {
-        return number_systems.ensure(system, [&]() {
-            auto system_index = locale_data.unique_strings.ensure(system);
-            return NumberSystem { .system = system_index };
-        });
+        auto system_index = locale_data.number_systems.find_first_index(system).value();
+        VERIFY(system_index < number_systems.size());
+
+        auto& number_system = number_systems.at(system_index);
+        if (!number_system.has_value())
+            number_system = NumberSystem {};
+
+        return number_system.value();
     };
 
     auto parse_number_format = [&](auto const& format_object) {
@@ -556,9 +595,14 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
         }
     });
 
+    locale.number_systems.ensure_capacity(number_systems.size());
+
     for (auto& number_system : number_systems) {
-        auto system_index = locale_data.unique_systems.ensure(move(number_system.value));
-        locale.number_systems.set(number_system.key, system_index);
+        NumberSystemIndexType system_index = 0;
+        if (number_system.has_value())
+            system_index = locale_data.unique_systems.ensure(number_system.release_value());
+
+        locale.number_systems.append(system_index);
     }
 
     return {};
@@ -671,10 +715,16 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String numbers_path, String units_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_all_locales(String core_path, String numbers_path, String units_path, UnicodeLocaleData& locale_data)
 {
     auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
     auto units_iterator = TRY(path_to_dir_iterator(move(units_path)));
+
+    LexicalPath core_supplemental_path(move(core_path));
+    core_supplemental_path = core_supplemental_path.append("supplemental"sv);
+    VERIFY(Core::File::is_directory(core_supplemental_path.string()));
+
+    TRY(parse_number_system_digits(core_supplemental_path.string(), locale_data));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
         auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, LexicalPath::basename(path)));
@@ -708,14 +758,28 @@ static ErrorOr<void> parse_all_locales(String numbers_path, String units_path, U
     return {};
 }
 
-static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData&)
+static String format_identifier(StringView, String identifier)
+{
+    return identifier.to_titlecase();
+}
+
+static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& locale_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    // FIXME: Update unicode_data.cmake to not require a header.
     generator.append(R"~~~(
+#include <AK/Types.h>
+
 #pragma once
+
+namespace Unicode {
+)~~~");
+
+    generate_enum(generator, format_identifier, "NumberSystem"sv, {}, locale_data.number_systems);
+
+    generator.append(R"~~~(
+}
 )~~~");
 
     VERIFY(file.write(generator.as_string_view()));
@@ -775,8 +839,7 @@ struct NumberFormatImpl {
     Array<@string_index_type@, @identifier_count@> identifiers {};
 };
 
-struct NumberSystem {
-    @string_index_type@ system { 0 };
+struct NumberSystemData {
     @numeric_symbol_list_index_type@ symbols { 0 };
 
     u8 primary_grouping_size { 0 };
@@ -806,7 +869,7 @@ struct Unit {
     locale_data.unique_formats.generate(generator, "NumberFormatImpl"sv, "s_number_formats"sv, 10);
     locale_data.unique_format_lists.generate(generator, s_number_format_index_type, "s_number_format_lists"sv);
     locale_data.unique_symbols.generate(generator, s_string_index_type, "s_numeric_symbol_lists"sv);
-    locale_data.unique_systems.generate(generator, "NumberSystem"sv, "s_number_systems"sv, 10);
+    locale_data.unique_systems.generate(generator, "NumberSystemData"sv, "s_number_systems"sv, 10);
     locale_data.unique_units.generate(generator, "Unit"sv, "s_units"sv, 10);
 
     auto append_map = [&](String name, auto type, auto const& map) {
@@ -820,34 +883,63 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         bool first = true;
         for (auto const& item : map) {
             generator.append(first ? " " : ", ");
-            generator.append(String::number(item.value));
+            if constexpr (requires { item.value; })
+                generator.append(String::number(item.value));
+            else
+                generator.append(String::number(item));
             first = false;
         }
 
         generator.append(" } };");
     };
 
+    generate_mapping(generator, locale_data.number_system_digits, "u32"sv, "s_number_systems_digits"sv, "s_number_systems_digits_{}", nullptr, [&](auto const& name, auto const& value) { append_map(name, "u32"sv, value); });
     generate_mapping(generator, locale_data.locales, s_number_system_index_type, "s_locale_number_systems"sv, "s_number_systems_{}", nullptr, [&](auto const& name, auto const& value) { append_map(name, s_number_system_index_type, value.number_systems); });
     generate_mapping(generator, locale_data.locales, s_unit_index_type, "s_locale_units"sv, "s_units_{}", nullptr, [&](auto const& name, auto const& value) { append_map(name, s_unit_index_type, value.units); });
 
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values) {
+        HashValueMap<String> hashes;
+        hashes.ensure_capacity(values.size());
+
+        for (auto const& value : values)
+            hashes.set(value.hash(), format_identifier(enum_title, value));
+
+        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
+    };
+
+    append_from_string("NumberSystem"sv, "number_system"sv, locale_data.number_systems);
+
     generator.append(R"~~~(
-static NumberSystem const* find_number_system(StringView locale, StringView system)
+Optional<Span<u32 const>> get_digits_for_number_system(StringView system)
+{
+    auto number_system_value = number_system_from_string(system);
+    if (!number_system_value.has_value())
+        return {};
+
+    auto number_system_index = to_underlying(*number_system_value);
+    return s_number_systems_digits[number_system_index];
+}
+
+static NumberSystemData const* find_number_system(StringView locale, StringView system)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
         return nullptr;
 
+    auto number_system_value = number_system_from_string(system);
+    if (!number_system_value.has_value())
+        return nullptr;
+
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+    auto number_system_index = to_underlying(*number_system_value);
+
     auto const& number_systems = s_locale_number_systems.at(locale_index);
+    number_system_index = number_systems.at(number_system_index);
 
-    for (auto system_index : number_systems) {
-        auto const& number_system = s_number_systems.at(system_index);
+    if (number_system_index == 0)
+        return nullptr;
 
-        if (system == s_string_list[number_system.system])
-            return &number_system;
-    };
-
-    return nullptr;
+    return &s_number_systems.at(number_system_index);
 }
 
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol)
@@ -991,14 +1083,16 @@ Vector<NumberFormat> get_unit_formats(StringView locale, StringView unit, Style 
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    StringView generated_header_path = nullptr;
-    StringView generated_implementation_path = nullptr;
-    StringView numbers_path = nullptr;
-    StringView units_path = nullptr;
+    StringView generated_header_path;
+    StringView generated_implementation_path;
+    StringView core_path;
+    StringView numbers_path;
+    StringView units_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode locale header file to generate", "generated-header-path", 'h', "generated-header-path");
     args_parser.add_option(generated_implementation_path, "Path to the Unicode locale implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
+    args_parser.add_option(core_path, "Path to cldr-core directory", "core-path", 'r', "core-path");
     args_parser.add_option(numbers_path, "Path to cldr-numbers directory", "numbers-path", 'n', "numbers-path");
     args_parser.add_option(units_path, "Path to cldr-units directory", "units-path", 'u', "units-path");
     args_parser.parse(arguments);
@@ -1016,7 +1110,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto generated_implementation_file = TRY(open_file(generated_implementation_path));
 
     UnicodeLocaleData locale_data;
-    TRY(parse_all_locales(numbers_path, units_path, locale_data));
+    TRY(parse_all_locales(core_path, numbers_path, units_path, locale_data));
 
     generate_unicode_locale_header(generated_header_file, locale_data);
     generate_unicode_locale_implementation(generated_implementation_file, locale_data);

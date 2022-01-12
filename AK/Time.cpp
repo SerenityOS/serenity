@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Array.h>
 #include <AK/Checked.h>
 #include <AK/Time.h>
 
@@ -18,19 +17,6 @@
 #endif
 
 namespace AK {
-
-int day_of_year(int year, unsigned month, int day)
-{
-    VERIFY(month >= 1 && month <= 12);
-
-    constexpr Array seek_table = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
-    int day_of_year = seek_table[month - 1] + day - 1;
-
-    if (is_leap_year(year) && month >= 3)
-        day_of_year++;
-
-    return day_of_year;
-}
 
 int days_in_month(int year, unsigned month)
 {

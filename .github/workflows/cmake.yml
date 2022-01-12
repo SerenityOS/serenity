@@ -51,7 +51,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build qemu-utils qemu-system-i386 unzip
       - name: Install JS dependencies
-        run: sudo npm install -g prettier@2.4.1
+        run: sudo npm install -g prettier@2.5.1
       - name: Install Python dependencies
         # The setup-python action set default python to python3.x. Note that we are not using system python here.
         run: |

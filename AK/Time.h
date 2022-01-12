@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Assertions.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
@@ -25,6 +26,11 @@ concept TimeSpecType = requires(T t)
     t.tv_nsec;
 };
 
+constexpr bool is_leap_year(int year)
+{
+    return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+}
+
 // Month and day start at 1. Month must be >= 1 and <= 12.
 // The return value is 0-indexed, that is 0 is Sunday, 1 is Monday, etc.
 // Day may be negative or larger than the number of days
@@ -36,22 +42,28 @@ unsigned day_of_week(int year, unsigned month, int day);
 // Day may be negative or larger than the number of days
 // in the given month. If day is negative enough, the result
 // can be negative.
-int day_of_year(int year, unsigned month, int day);
+constexpr int day_of_year(int year, unsigned month, int day)
+{
+    VERIFY(month >= 1 && month <= 12);
+
+    constexpr Array seek_table = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    int day_of_year = seek_table[month - 1] + day - 1;
+
+    if (is_leap_year(year) && month >= 3)
+        day_of_year++;
+
+    return day_of_year;
+}
 
 // Month starts at 1. Month must be >= 1 and <= 12.
 int days_in_month(int year, unsigned month);
 
-inline bool is_leap_year(int year)
-{
-    return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
-}
-
-inline int days_in_year(int year)
+constexpr int days_in_year(int year)
 {
     return 365 + (is_leap_year(year) ? 1 : 0);
 }
 
-inline int years_to_days_since_epoch(int year)
+constexpr int years_to_days_since_epoch(int year)
 {
     int days = 0;
     for (int current_year = 1970; current_year < year; ++current_year)
@@ -61,7 +73,7 @@ inline int years_to_days_since_epoch(int year)
     return days;
 }
 
-inline int days_since_epoch(int year, int month, int day)
+constexpr int days_since_epoch(int year, int month, int day)
 {
     return years_to_days_since_epoch(year) + day_of_year(year, month, day);
 }
@@ -124,6 +136,24 @@ private:
     }
 
 public:
+    [[nodiscard]] constexpr static Time from_timestamp(u16 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u8 millisecond)
+    {
+        constexpr auto milliseconds_per_day = 86'400'000;
+        constexpr auto milliseconds_per_hour = 3'600'000;
+        constexpr auto milliseconds_per_minute = 60'000;
+        constexpr auto milliseconds_per_second = 1'000;
+
+        i64 milliseconds_since_epoch = days_since_epoch(year, month, day);
+        milliseconds_since_epoch *= milliseconds_per_day;
+
+        milliseconds_since_epoch += hour * milliseconds_per_hour;
+        milliseconds_since_epoch += minute * milliseconds_per_minute;
+        milliseconds_since_epoch += second * milliseconds_per_second;
+        milliseconds_since_epoch += millisecond;
+
+        return from_milliseconds(milliseconds_since_epoch);
+    }
+
     [[nodiscard]] constexpr static Time from_seconds(i64 seconds) { return Time(seconds, 0); }
     [[nodiscard]] constexpr static Time from_nanoseconds(i64 nanoseconds)
     {

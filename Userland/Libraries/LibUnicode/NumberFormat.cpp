@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Utf8View.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Locale.h>
@@ -15,11 +16,50 @@
 
 namespace Unicode {
 
+Optional<NumberSystem> __attribute__((weak)) number_system_from_string(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_number_system_symbol(StringView, StringView, NumericSymbol) { return {}; }
 Optional<NumberGroupings> __attribute__((weak)) get_number_system_groupings(StringView, StringView) { return {}; }
 Optional<NumberFormat> __attribute__((weak)) get_standard_number_system_format(StringView, StringView, StandardNumberFormatType) { return {}; }
 Vector<NumberFormat> __attribute__((weak)) get_compact_number_system_formats(StringView, StringView, CompactNumberFormatType) { return {}; }
 Vector<NumberFormat> __attribute__((weak)) get_unit_formats(StringView, StringView, Style) { return {}; }
+
+Optional<StringView> get_default_number_system(StringView locale)
+{
+    if (auto systems = get_locale_key_mapping(locale, "nu"sv); systems.has_value()) {
+        auto index = systems->find(',');
+        return index.has_value() ? systems->substring_view(0, *index) : *systems;
+    }
+
+    return {};
+}
+
+Optional<Span<u32 const>> __attribute__((weak)) get_digits_for_number_system(StringView)
+{
+    // Fall back to "latn" digits when Unicode data generation is disabled.
+    constexpr Array<u32, 10> digits { { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39 } };
+    return digits.span();
+}
+
+String replace_digits_for_number_system(StringView system, StringView number)
+{
+    auto digits = get_digits_for_number_system(system);
+    if (!digits.has_value())
+        digits = get_digits_for_number_system("latn"sv);
+    VERIFY(digits.has_value());
+
+    StringBuilder builder;
+
+    for (auto ch : number) {
+        if (is_ascii_digit(ch)) {
+            u32 digit = digits->at(parse_ascii_digit(ch));
+            builder.append_code_point(digit);
+        } else {
+            builder.append(ch);
+        }
+    }
+
+    return builder.build();
+}
 
 Optional<NumberFormat> select_pattern_with_plurality(Vector<NumberFormat> const& formats, double number)
 {

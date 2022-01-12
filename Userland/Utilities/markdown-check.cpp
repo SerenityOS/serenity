@@ -16,6 +16,7 @@
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
 #include <AK/OwnPtr.h>
+#include <AK/RecursionDecision.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
@@ -25,18 +26,6 @@
 static bool is_missing_file_acceptable(String const& filename)
 {
     const StringView acceptable_missing_files[] = {
-        // FIXME: Please write these manpages!
-        "/usr/share/man/man2/accept.md",
-        "/usr/share/man/man2/exec.md",
-        "/usr/share/man/man2/fcntl.md",
-        "/usr/share/man/man2/fork.md",
-        "/usr/share/man/man2/ioctl.md",
-        "/usr/share/man/man2/listen.md",
-        "/usr/share/man/man2/mmap.md",
-        "/usr/share/man/man2/mprotect.md",
-        "/usr/share/man/man2/open.md",
-        "/usr/share/man/man2/ptrace.md",
-        "/usr/share/man/man5/perfcore.md",
         // These ones are okay:
         "/home/anon/js-tests/test-common.js",
         "/man1/index.html",
@@ -165,6 +154,11 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
     }
     if (href.starts_with("https://") || href.starts_with("http://")) {
         outln("Not checking external link {}", href);
+        return RecursionDecision::Recurse;
+    }
+    if (href.starts_with("help://")) {
+        // TODO: Check that the man page actually exists. (That check would also fail because we are currently referring to some nonexistent man pages.)
+        outln("Not checking man page link {}", href);
         return RecursionDecision::Recurse;
     }
     if (href.starts_with("file://")) {

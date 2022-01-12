@@ -30,7 +30,7 @@ FrameLoader::FrameLoader(HTML::BrowsingContext& browsing_context)
     : m_browsing_context(browsing_context)
 {
     if (!s_default_favicon_bitmap) {
-        s_default_favicon_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png").release_value_but_fixme_should_propagate_errors();
+        s_default_favicon_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-browser.png").release_value_but_fixme_should_propagate_errors();
         VERIFY(s_default_favicon_bitmap);
     }
 }

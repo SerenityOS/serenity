@@ -19,6 +19,7 @@
 #include <Kernel/Arch/x86/PageDirectory.h>
 #include <Kernel/Arch/x86/TSS.h>
 #include <Kernel/Forward.h>
+#include <Kernel/KString.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_X86()
@@ -123,7 +124,7 @@ class Processor {
     void cpu_detect();
     void cpu_setup();
 
-    String features_string() const;
+    NonnullOwnPtr<KString> features_string() const;
 
 public:
     Processor() = default;

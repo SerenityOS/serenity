@@ -85,9 +85,8 @@ public:
     {
         Matrix division;
         for (size_t i = 0; i < N; ++i) {
-            for (size_t j = 0; j < N; ++j) {
+            for (size_t j = 0; j < N; ++j)
                 division.m_elements[i][j] = m_elements[i][j] / divisor;
-            }
         }
         return division;
     }
@@ -161,18 +160,15 @@ public:
 
     [[nodiscard]] constexpr Matrix inverse() const
     {
-        auto det = determinant();
-        VERIFY(det != 0);
-        return adjugate() / det;
+        return adjugate() / determinant();
     }
 
     [[nodiscard]] constexpr Matrix transpose() const
     {
         Matrix result;
         for (size_t i = 0; i < N; ++i) {
-            for (size_t j = 0; j < N; ++j) {
+            for (size_t j = 0; j < N; ++j)
                 result.m_elements[i][j] = m_elements[j][i];
-            }
         }
         return result;
     }

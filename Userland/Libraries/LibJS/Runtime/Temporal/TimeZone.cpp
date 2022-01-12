@@ -5,6 +5,7 @@
  */
 
 #include <AK/DateTimeLexer.h>
+#include <AK/Time.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
@@ -16,6 +17,7 @@
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
+#include <LibTimeZone/TimeZone.h>
 
 namespace JS::Temporal {
 
@@ -27,35 +29,30 @@ TimeZone::TimeZone(String identifier, Object& prototype)
 }
 
 // 11.1.1 IsValidTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sec-isvalidtimezonename
-// NOTE: This is the minimum implementation of IsValidTimeZoneName, supporting only the "UTC" time zone.
+// 15.1.1 IsValidTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sup-isvalidtimezonename
 bool is_valid_time_zone_name(String const& time_zone)
 {
-    // 1. Assert: Type(timeZone) is String.
-
-    // 2. Let tzText be ! StringToCodePoints(timeZone).
-    // 3. Let tzUpperText be the result of toUppercase(tzText), according to the Unicode Default Case Conversion algorithm.
-    // 4. Let tzUpper be ! CodePointsToString(tzUpperText).
-    auto tz_upper = time_zone.to_uppercase();
-
-    // 5. If tzUpper and "UTC" are the same sequence of code points, return true.
-    if (tz_upper == "UTC")
-        return true;
-
-    // 6. Return false.
-    return false;
+    // 1. If one of the Zone or Link names of the IANA Time Zone Database is an ASCII-case-insensitive match of timeZone as described in 6.1, return true.
+    // 2. If timeZone is an ASCII-case-insensitive match of "UTC", return true.
+    // 3. Return false.
+    // NOTE: When LibTimeZone is built without ENABLE_TIME_ZONE_DATA, this only recognizes 'UTC',
+    // which matches the minimum requirements of the Temporal spec.
+    return ::TimeZone::time_zone_from_string(time_zone).has_value();
 }
 
 // 11.1.2 CanonicalizeTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sec-canonicalizetimezonename
-// NOTE: This is the minimum implementation of CanonicalizeTimeZoneName, supporting only the "UTC" time zone.
+// 15.1.2 CanonicalizeTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sup-canonicalizetimezonename
 String canonicalize_time_zone_name(String const& time_zone)
 {
-    // 1. Assert: Type(timeZone) is String.
+    // 1. Let ianaTimeZone be the String value of the Zone or Link name of the IANA Time Zone Database that is an ASCII-case-insensitive match of timeZone as described in 6.1.
+    // 2. If ianaTimeZone is a Link name, let ianaTimeZone be the String value of the corresponding Zone name as specified in the file backward of the IANA Time Zone Database.
+    auto iana_time_zone = ::TimeZone::canonicalize_time_zone(time_zone);
 
-    // 2. Assert: ! IsValidTimeZoneName(timeZone) is true.
-    VERIFY(is_valid_time_zone_name(time_zone));
+    // 3. If ianaTimeZone is "Etc/UTC" or "Etc/GMT", return "UTC".
+    // NOTE: This is already done in canonicalize_time_zone().
 
-    // 3. Return "UTC".
-    return "UTC";
+    // 4. Return ianaTimeZone.
+    return *iana_time_zone;
 }
 
 // 11.1.3 DefaultTimeZone ( ), https://tc39.es/proposal-temporal/#sec-defaulttimezone
@@ -160,12 +157,12 @@ ISODateTime get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
 }
 
 // 11.6.4 GetIANATimeZoneEpochValue ( timeZoneIdentifier, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneepochvalue
-MarkedValueList get_iana_time_zone_epoch_value(GlobalObject& global_object, StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
+MarkedValueList get_iana_time_zone_epoch_value(GlobalObject& global_object, [[maybe_unused]] StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
     // The abstract operation GetIANATimeZoneEpochValue is an implementation-defined algorithm that returns a List of integers. Each integer in the List represents a number of nanoseconds since the Unix epoch in UTC that may correspond to the given calendar date and wall-clock time in the IANA time zone identified by timeZoneIdentifier.
     // When the input represents a local time repeating multiple times at a negative time zone transition (e.g. when the daylight saving time ends or the time zone offset is decreased due to a time zone rule change), the returned List will have more than one element. When the input represents a skipped local time at a positive time zone transition (e.g. when the daylight saving time starts or the time zone offset is increased due to a time zone rule change), the returned List will be empty. Otherwise, the returned List will have one element.
 
-    VERIFY(time_zone_identifier == "UTC"sv);
+    // FIXME: Implement this properly for non-UTC timezones.
     // FIXME: MarkedValueList<T> for T != Value would still be nice.
     auto& vm = global_object.vm();
     auto list = MarkedValueList { vm.heap() };
@@ -174,12 +171,34 @@ MarkedValueList get_iana_time_zone_epoch_value(GlobalObject& global_object, Stri
 }
 
 // 11.6.5 GetIANATimeZoneOffsetNanoseconds ( epochNanoseconds, timeZoneIdentifier ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneoffsetnanoseconds
-i64 get_iana_time_zone_offset_nanoseconds([[maybe_unused]] BigInt const& epoch_nanoseconds, [[maybe_unused]] String const& time_zone_identifier)
+i64 get_iana_time_zone_offset_nanoseconds(BigInt const& epoch_nanoseconds, String const& time_zone_identifier)
 {
     // The abstract operation GetIANATimeZoneOffsetNanoseconds is an implementation-defined algorithm that returns an integer representing the offset of the IANA time zone identified by timeZoneIdentifier from UTC, at the instant corresponding to epochNanoseconds.
     // Given the same values of epochNanoseconds and timeZoneIdentifier, the result must be the same for the lifetime of the surrounding agent.
-    // TODO: Implement this
-    return 0;
+
+    // Only called with validated TimeZone [[Identifier]] as argument.
+    auto time_zone = ::TimeZone::time_zone_from_string(time_zone_identifier);
+    VERIFY(time_zone.has_value());
+
+    // Since Time::from_seconds() and Time::from_nanoseconds() both take an i64, converting to
+    // seconds first gives us a greater range. The TZDB doesn't have sub-second offsets.
+    auto seconds = epoch_nanoseconds.big_integer().divided_by("1000000000"_bigint).quotient;
+
+    // The provided epoch (nano)seconds value is potentially out of range for AK::Time and subsequently
+    // get_time_zone_offset(). We can safely assume that the TZDB has no useful information that far
+    // into the past and future anyway, so clamp it to the i64 range.
+    Time time;
+    if (seconds < Crypto::SignedBigInteger::create_from(NumericLimits<i64>::min()))
+        time = Time::min();
+    else if (seconds > Crypto::SignedBigInteger::create_from(NumericLimits<i64>::max()))
+        time = Time::max();
+    else
+        time = Time::from_seconds(*seconds.to_base(10).to_int<i64>());
+
+    auto offset_seconds = ::TimeZone::get_time_zone_offset(*time_zone, time);
+    VERIFY(offset_seconds.has_value());
+
+    return *offset_seconds * 1'000'000'000;
 }
 
 // 11.6.6 GetIANATimeZoneNextTransition ( epochNanoseconds, timeZoneIdentifier ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezonenexttransition
@@ -230,7 +249,9 @@ static bool parse_time_zone_numeric_utc_offset_syntax(String const& offset_strin
     if (!lexer.consume_specific('.') && !lexer.consume_specific(','))
         return false;
     fraction = lexer.consume_fractional_seconds();
-    return fraction.has_value();
+    if (!fraction.has_value())
+        return false;
+    return !lexer.tell_remaining();
 }
 
 bool is_valid_time_zone_numeric_utc_offset_syntax(String const& offset_string)

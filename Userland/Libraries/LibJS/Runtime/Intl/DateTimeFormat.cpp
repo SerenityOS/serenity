@@ -938,7 +938,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
             //      The String value may also depend on the value of the [[InDST]] field of tm if f is "short", "long", "shortOffset", or "longOffset".
             //      If the implementation does not have a localized representation of f, then use the String value of v itself.
             // FIXME: This should take [[InDST]] into account.
-            auto formatted_value = Unicode::get_time_zone_name(data_locale, value, style).value_or(value);
+            auto formatted_value = Unicode::format_time_zone(data_locale, value, style, local_time.time_since_epoch());
 
             // iv. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
             result.append({ "timeZoneName"sv, move(formatted_value) });

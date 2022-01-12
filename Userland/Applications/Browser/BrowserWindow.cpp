@@ -197,21 +197,21 @@ void BrowserWindow::build_menus()
     });
 
     m_view_source_action = GUI::Action::create(
-        "View &Source", { Mod_Ctrl, Key_U }, [this](auto&) {
+        "View &Source", { Mod_Ctrl, Key_U }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/code.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
             active_tab().m_web_content_view->get_source();
         },
         this);
     m_view_source_action->set_status_tip("View source code of the current page");
 
     m_inspect_dom_tree_action = GUI::Action::create(
-        "Inspect &DOM Tree", { Mod_None, Key_F12 }, [this](auto&) {
+        "Inspect &DOM Tree", { Mod_None, Key_F12 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/tree.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::Document);
         },
         this);
     m_inspect_dom_tree_action->set_status_tip("Open inspector window for this page");
 
     m_inspect_dom_node_action = GUI::Action::create(
-        "&Inspect Element", [this](auto&) {
+        "&Inspect Element", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspect.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::HoveredElement);
         },
         this);
@@ -222,7 +222,7 @@ void BrowserWindow::build_menus()
     inspect_menu.add_action(*m_inspect_dom_tree_action);
 
     auto js_console_action = GUI::Action::create(
-        "Open &JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
+        "Open &JS Console", { Mod_Ctrl, Key_I }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-javascript.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
             active_tab().show_console_window();
         },
         this);
@@ -343,7 +343,7 @@ void BrowserWindow::build_menus()
 
     auto& debug_menu = add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
-        "Dump &DOM Tree", [this](auto&) {
+        "Dump &DOM Tree", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/tree.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
             active_tab().m_web_content_view->debug_request("dump-dom-tree");
         },
         this));
@@ -360,7 +360,7 @@ void BrowserWindow::build_menus()
     debug_menu.add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, [this](auto&) {
         active_tab().m_history.dump();
     }));
-    debug_menu.add_action(GUI::Action::create("Dump C&ookies", [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Dump C&ookies", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/cookie.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         auto& tab = active_tab();
         if (tab.on_dump_cookies)
             tab.on_dump_cookies();

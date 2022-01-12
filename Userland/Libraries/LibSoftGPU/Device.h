@@ -22,6 +22,8 @@
 #include <LibSoftGPU/Enums.h>
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/ImageFormat.h>
+#include <LibSoftGPU/Light/Light.h>
+#include <LibSoftGPU/Light/Material.h>
 #include <LibSoftGPU/Sampler.h>
 #include <LibSoftGPU/Triangle.h>
 #include <LibSoftGPU/Vertex.h>
@@ -67,6 +69,14 @@ struct RasterizerOptions {
     u8 texcoord_generation_enabled_coordinates { TexCoordGenerationCoordinate::None };
     Array<TexCoordGenerationConfig, 4> texcoord_generation_config {};
     Gfx::IntRect viewport;
+    bool lighting_enabled { false };
+};
+
+struct LightModelParameters {
+    FloatVector4 scene_ambient_color { 0.2f, 0.2f, 0.2f, 1.0f };
+    bool viewer_at_infinity { false };
+    unsigned int single_color { 0x81F9 }; // This is the value of `GL_SINGLE_COLOR`. Considering we definitely don't leak gl.h stuff into here, we fix it to the gl.h macro value.
+    bool two_sided_lighting { false };
 };
 
 struct PixelQuad;
@@ -85,13 +95,17 @@ public:
     void blit_to(Gfx::Bitmap&);
     void wait_for_all_threads() const;
     void set_options(const RasterizerOptions&);
+    void set_light_model_params(const LightModelParameters&);
     RasterizerOptions options() const { return m_options; }
+    LightModelParameters light_model() const { return m_lighting_model; }
     Gfx::RGBA32 get_backbuffer_pixel(int x, int y);
     float get_depthbuffer_value(int x, int y);
 
     NonnullRefPtr<Image> create_image(ImageFormat, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers);
 
     void set_sampler_config(unsigned, SamplerConfig const&);
+    void set_light_state(unsigned, Light const&);
+    void set_material_state(unsigned, Material const&);
 
 private:
     void draw_statistics_overlay(Gfx::Bitmap&);
@@ -105,6 +119,7 @@ private:
     RefPtr<Gfx::Bitmap> m_render_target;
     OwnPtr<DepthBuffer> m_depth_buffer;
     RasterizerOptions m_options;
+    LightModelParameters m_lighting_model;
     Clipper m_clipper;
     Vector<Triangle> m_triangle_list;
     Vector<Triangle> m_processed_triangles;
@@ -112,6 +127,8 @@ private:
     Array<Sampler, NUM_SAMPLERS> m_samplers;
     Vector<size_t> m_enabled_texture_units;
     AlphaBlendFactors m_alpha_blend_factors;
+    Array<Light, NUM_LIGHTS> m_lights;
+    Array<Material, 2u> m_materials;
 };
 
 }
