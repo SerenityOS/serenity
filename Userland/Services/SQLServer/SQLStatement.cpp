@@ -104,7 +104,7 @@ void SQLStatement::next()
         return;
     }
     if (m_index < m_result->results().size()) {
-        auto& tuple = m_result->results()[m_index++];
+        auto& tuple = m_result->results()[m_index++].row;
         client_connection->async_next_result(statement_id(), tuple.to_string_vector());
         deferred_invoke([this]() {
             next();

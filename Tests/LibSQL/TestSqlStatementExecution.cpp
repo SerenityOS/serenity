@@ -216,7 +216,7 @@ TEST_CASE(select_with_column_names)
     EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->has_results());
     EXPECT_EQ(result->results().size(), 5u);
-    EXPECT_EQ(result->results()[0].size(), 1u);
+    EXPECT_EQ(result->results()[0].row.size(), 1u);
 }
 
 TEST_CASE(select_with_nonexisting_column_name)
@@ -258,7 +258,7 @@ TEST_CASE(select_with_where)
     EXPECT(result->has_results());
     EXPECT_EQ(result->results().size(), 2u);
     for (auto& row : result->results()) {
-        EXPECT(row[1].to_int().value() > 44);
+        EXPECT(row.row[1].to_int().value() > 44);
     }
 }
 
@@ -291,11 +291,11 @@ TEST_CASE(select_cross_join)
     EXPECT(result->has_results());
     EXPECT_EQ(result->results().size(), 25u);
     for (auto& row : result->results()) {
-        EXPECT(row.size() == 4);
-        EXPECT(row[1].to_int().value() >= 42);
-        EXPECT(row[1].to_int().value() <= 46);
-        EXPECT(row[3].to_int().value() >= 40);
-        EXPECT(row[3].to_int().value() <= 48);
+        EXPECT(row.row.size() == 4);
+        EXPECT(row.row[1].to_int().value() >= 42);
+        EXPECT(row.row[1].to_int().value() <= 46);
+        EXPECT(row.row[3].to_int().value() >= 40);
+        EXPECT(row.row[3].to_int().value() <= 48);
     }
 }
 
@@ -331,10 +331,10 @@ TEST_CASE(select_inner_join)
     EXPECT(result->has_results());
     EXPECT_EQ(result->results().size(), 1u);
     auto& row = result->results()[0];
-    EXPECT_EQ(row.size(), 3u);
-    EXPECT_EQ(row[0].to_int().value(), 42);
-    EXPECT_EQ(row[1].to_string(), "Test_1");
-    EXPECT_EQ(row[2].to_string(), "Test_12");
+    EXPECT_EQ(row.row.size(), 3u);
+    EXPECT_EQ(row.row[0].to_int().value(), 42);
+    EXPECT_EQ(row.row[1].to_string(), "Test_1");
+    EXPECT_EQ(row.row[2].to_string(), "Test_12");
 }
 
 TEST_CASE(select_with_like)
@@ -408,6 +408,106 @@ TEST_CASE(select_with_like)
     result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE TextColumn LIKE '%' ESCAPE 'whf';");
     EXPECT(result->error().code == SQL::SQLErrorCode::SyntaxError);
     EXPECT(!result->has_results());
+}
+
+TEST_CASE(select_with_order)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    auto result = execute(database,
+        "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
+        "( 'Test_5', 44 ), "
+        "( 'Test_2', 42 ), "
+        "( 'Test_1', 47 ), "
+        "( 'Test_3', 40 ), "
+        "( 'Test_4', 41 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 5);
+
+    result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    auto rows = result->results();
+    EXPECT_EQ(rows.size(), 5u);
+    EXPECT_EQ(rows[0].row[1].to_int().value(), 40);
+    EXPECT_EQ(rows[1].row[1].to_int().value(), 41);
+    EXPECT_EQ(rows[2].row[1].to_int().value(), 42);
+    EXPECT_EQ(rows[3].row[1].to_int().value(), 44);
+    EXPECT_EQ(rows[4].row[1].to_int().value(), 47);
+
+    result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY TextColumn;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    rows = result->results();
+    EXPECT_EQ(rows.size(), 5u);
+    EXPECT_EQ(rows[0].row[0].to_string(), "Test_1");
+    EXPECT_EQ(rows[1].row[0].to_string(), "Test_2");
+    EXPECT_EQ(rows[2].row[0].to_string(), "Test_3");
+    EXPECT_EQ(rows[3].row[0].to_string(), "Test_4");
+    EXPECT_EQ(rows[4].row[0].to_string(), "Test_5");
+}
+
+TEST_CASE(select_with_order_two_columns)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    auto result = execute(database,
+        "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
+        "( 'Test_5', 44 ), "
+        "( 'Test_2', 42 ), "
+        "( 'Test_1', 47 ), "
+        "( 'Test_2', 40 ), "
+        "( 'Test_4', 41 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 5);
+
+    result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY TextColumn, IntColumn;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    auto rows = result->results();
+    EXPECT_EQ(rows.size(), 5u);
+    EXPECT_EQ(rows[0].row[0].to_string(), "Test_1");
+    EXPECT_EQ(rows[0].row[1].to_int().value(), 47);
+    EXPECT_EQ(rows[1].row[0].to_string(), "Test_2");
+    EXPECT_EQ(rows[1].row[1].to_int().value(), 40);
+    EXPECT_EQ(rows[2].row[0].to_string(), "Test_2");
+    EXPECT_EQ(rows[2].row[1].to_int().value(), 42);
+    EXPECT_EQ(rows[3].row[0].to_string(), "Test_4");
+    EXPECT_EQ(rows[3].row[1].to_int().value(), 41);
+    EXPECT_EQ(rows[4].row[0].to_string(), "Test_5");
+    EXPECT_EQ(rows[4].row[1].to_int().value(), 44);
+}
+
+TEST_CASE(select_with_order_by_column_not_in_result)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    auto result = execute(database,
+        "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
+        "( 'Test_5', 44 ), "
+        "( 'Test_2', 42 ), "
+        "( 'Test_1', 47 ), "
+        "( 'Test_3', 40 ), "
+        "( 'Test_4', 41 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 5);
+
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    auto rows = result->results();
+    EXPECT_EQ(rows.size(), 5u);
+    EXPECT_EQ(rows[0].row[0].to_string(), "Test_3");
+    EXPECT_EQ(rows[1].row[0].to_string(), "Test_4");
+    EXPECT_EQ(rows[2].row[0].to_string(), "Test_2");
+    EXPECT_EQ(rows[3].row[0].to_string(), "Test_5");
+    EXPECT_EQ(rows[4].row[0].to_string(), "Test_1");
 }
 
 }

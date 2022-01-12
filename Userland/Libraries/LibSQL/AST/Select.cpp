@@ -7,6 +7,7 @@
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Meta.h>
+#include <LibSQL/ResultSet.h>
 #include <LibSQL/Row.h>
 
 namespace SQL::AST {
@@ -77,6 +78,14 @@ RefPtr<SQLResult> Select::execute(ExecutionContext& context) const
         }
     }
 
+    bool has_ordering { false };
+    AK::NonnullRefPtr<TupleDescriptor> sort_descriptor = AK::adopt_ref(*new TupleDescriptor);
+    for (auto& term : m_ordering_term_list) {
+        sort_descriptor->append(TupleElementDescriptor { .order = term.order() });
+        has_ordering = true;
+    }
+    Tuple sort_key(sort_descriptor);
+
     for (auto& row : rows) {
         context.current_row = &row;
         if (where_clause()) {
@@ -93,7 +102,17 @@ RefPtr<SQLResult> Select::execute(ExecutionContext& context) const
                 return context.result;
             tuple.append(value);
         }
-        context.result->append(tuple);
+
+        if (has_ordering) {
+            sort_key.clear();
+            for (auto& term : m_ordering_term_list) {
+                auto value = term.expression()->evaluate(context);
+                if (context.result->has_error())
+                    return context.result;
+                sort_key.append(value);
+            }
+        }
+        context.result->insert(tuple, sort_key);
     }
     return context.result;
 }
