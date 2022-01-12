@@ -32,7 +32,7 @@ PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
 
 # We depend on GNU coreutils du for the --apparent-size extension.
 # GNU coreutils is a build dependency.
-if type gdu > /dev/null 2>&1; then
+if command -v gdu > /dev/null 2>&1 && gdu --version | grep -q "GNU coreutils"; then
     GNUDU="gdu"
 else
     GNUDU="du"
