@@ -58,7 +58,7 @@ private:
 #endif
     }
 
-    bool m_allocation_enabled_previously;
+    bool m_allocation_enabled_previously { true };
 };
 
 }
