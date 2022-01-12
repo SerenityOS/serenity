@@ -657,9 +657,10 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
         [this, path, weak_this](auto thumbnail_or_error) {
             if (thumbnail_or_error.is_error()) {
                 s_thumbnail_cache.set(path, nullptr);
-                return;
+                dbgln("Failed to load thumbnail for {}: {}", path, thumbnail_or_error.error());
+            } else {
+                s_thumbnail_cache.set(path, thumbnail_or_error.release_value());
             }
-            s_thumbnail_cache.set(path, thumbnail_or_error.release_value());
 
             // The model was destroyed, no need to update
             // progress or call any event handlers.
