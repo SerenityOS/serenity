@@ -973,8 +973,7 @@ ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSRootDirectory::lookup(Strin
         return maybe_candidate.release_value();
     }
 
-    String process_directory_name = name;
-    auto pid = process_directory_name.to_uint<unsigned>();
+    auto pid = name.to_uint<unsigned>();
     if (!pid.has_value())
         return ESRCH;
     auto actual_pid = pid.value();
