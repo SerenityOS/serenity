@@ -18,7 +18,7 @@
 namespace Kernel {
 Atomic<u8> NVMeController::controller_id {};
 
-ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(const Kernel::PCI::DeviceIdentifier& device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(const Kernel::PCI::DeviceIdentifier& device_identifier)
 {
     auto controller = TRY(adopt_nonnull_ref_or_enomem(new NVMeController(device_identifier)));
     TRY(controller->initialize());
@@ -26,13 +26,13 @@ ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(const Kern
     return controller;
 }
 
-NVMeController::NVMeController(const PCI::DeviceIdentifier& device_identifier)
+UNMAP_AFTER_INIT NVMeController::NVMeController(const PCI::DeviceIdentifier& device_identifier)
     : PCI::Device(device_identifier.address())
     , m_pci_device_id(device_identifier)
 {
 }
 
-ErrorOr<void> NVMeController::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize()
 {
     // Nr of queues = one queue per core
     auto nr_of_queues = Processor::count();
@@ -138,7 +138,7 @@ bool NVMeController::start_controller()
     return true;
 }
 
-u32 NVMeController::get_admin_q_dept()
+UNMAP_AFTER_INIT u32 NVMeController::get_admin_q_dept()
 {
     u32 aqa = m_controller_regs->aqa;
     // Queue depth is 0 based
@@ -147,7 +147,7 @@ u32 NVMeController::get_admin_q_dept()
     return q_depth;
 }
 
-ErrorOr<void> NVMeController::identify_and_init_namespaces()
+UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
 {
 
     RefPtr<Memory::PhysicalPage> prp_dma_buffer;
@@ -213,7 +213,7 @@ ErrorOr<void> NVMeController::identify_and_init_namespaces()
     return {};
 }
 
-Tuple<u64, u8> NVMeController::get_ns_features(IdentifyNamespace& identify_data_struct)
+UNMAP_AFTER_INIT Tuple<u64, u8> NVMeController::get_ns_features(IdentifyNamespace& identify_data_struct)
 {
     auto flbas = identify_data_struct.flbas & FLBA_SIZE_MASK;
     auto namespace_size = identify_data_struct.nsze;
@@ -253,7 +253,7 @@ void NVMeController::complete_current_request([[maybe_unused]] AsyncDeviceReques
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> NVMeController::create_admin_queue(u8 irq)
+UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(u8 irq)
 {
     auto qdepth = get_admin_q_dept();
     OwnPtr<Memory::Region> cq_dma_region;
@@ -296,7 +296,7 @@ ErrorOr<void> NVMeController::create_admin_queue(u8 irq)
     return {};
 }
 
-ErrorOr<void> NVMeController::create_io_queue(u8 irq, u8 qid)
+UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 irq, u8 qid)
 {
     NVMeSubmission sub {};
     OwnPtr<Memory::Region> cq_dma_region;
