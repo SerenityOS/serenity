@@ -297,20 +297,22 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
     }
 
     // 7. Set hours to ! ToIntegerOrInfinity(hours).
-    auto hours = MUST(Value(js_string(vm, hours_part)).to_integer_or_infinity(global_object));
-    // 8. Set minutes to ! ToIntegerOrInfinity(minutes).
-    auto minutes = MUST(Value(js_string(vm, minutes_part.value_or(""sv))).to_integer_or_infinity(global_object));
-    // 9. Set seconds to ! ToIntegerOrInfinity(seconds).
-    auto seconds = MUST(Value(js_string(vm, seconds_part.value_or(""sv))).to_integer_or_infinity(global_object));
+    auto hours = *hours_part.to_uint<u8>();
 
-    double nanoseconds;
+    // 8. Set minutes to ! ToIntegerOrInfinity(minutes).
+    auto minutes = *minutes_part.value_or("0"sv).to_uint<u8>();
+
+    // 9. Set seconds to ! ToIntegerOrInfinity(seconds).
+    auto seconds = *seconds_part.value_or("0"sv).to_uint<u8>();
+
+    i32 nanoseconds;
     // 10. If fraction is not undefined, then
     if (fraction_part.has_value()) {
         // a. Set fraction to the string-concatenation of the previous value of fraction and the string "000000000".
         auto fraction = String::formatted("{}000000000", *fraction_part);
         // b. Let nanoseconds be the String value equal to the substring of fraction consisting of the code units with indices 0 (inclusive) through 9 (exclusive).
         // c. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
-        nanoseconds = MUST(Value(js_string(vm, fraction.substring_view(0, 9))).to_integer_or_infinity(global_object));
+        nanoseconds = *fraction.substring(0, 9).to_int<i32>();
     }
     // 11. Else,
     else {
@@ -318,7 +320,8 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
         nanoseconds = 0;
     }
     // 12. Return sign × (((hours × 60 + minutes) × 60 + seconds) × 10^9 + nanoseconds).
-    return sign * (((hours * 60 + minutes) * 60 + seconds) * 1000000000 + nanoseconds);
+    // NOTE: Decimal point in 10^9 is important, otherwise it's all integers and the result overflows!
+    return sign * (((hours * 60 + minutes) * 60 + seconds) * 1000000000.0 + nanoseconds);
 }
 
 // 11.6.9 FormatTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formattimezoneoffsetstring
