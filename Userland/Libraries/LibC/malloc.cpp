@@ -500,7 +500,7 @@ void* calloc(size_t count, size_t size)
     return ptr;
 }
 
-size_t malloc_size(void* ptr)
+size_t malloc_size(void const* ptr)
 {
     MemoryAuditingSuppressor suppressor;
     if (!ptr)
