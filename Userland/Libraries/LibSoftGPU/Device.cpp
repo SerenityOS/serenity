@@ -82,7 +82,7 @@ static Vector4<f32x4> to_vec4(u32x4 rgba)
     };
 }
 
-static Gfx::IntRect window_coordinates_to_target_coordinates(Gfx::IntRect const& window_rect, Gfx::IntRect const& target_rect)
+static Gfx::IntRect window_coordinates_to_target_coordinates(Gfx::IntRect const window_rect, Gfx::IntRect const target_rect)
 {
     return {
         window_rect.x(),
@@ -977,15 +977,19 @@ void Device::clear_depth(float depth)
     m_depth_buffer->clear(depth);
 }
 
-void Device::blit(Gfx::Bitmap const& source, int x, int y)
+void Device::blit_to_color_buffer_at_raster_position(Gfx::Bitmap const& source)
 {
+    if (!m_raster_position.valid)
+        return;
+
     wait_for_all_threads();
 
     INCREASE_STATISTICS_COUNTER(g_num_pixels, source.width() * source.height());
     INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, source.width() * source.height());
 
     Gfx::Painter painter { *m_render_target };
-    painter.blit({ x, y }, source, source.rect(), 1.0f, true);
+    auto const blit_rect = raster_rect_in_target_coordinates(source.size());
+    painter.blit({ blit_rect.x(), blit_rect.y() }, source, source.rect(), 1.0f, true);
 }
 
 void Device::blit_to(Gfx::Bitmap& target)
@@ -1122,6 +1126,53 @@ void Device::set_light_state(unsigned int light_id, Light const& light)
 void Device::set_material_state(unsigned int material_id, Material const& material)
 {
     m_materials.at(material_id) = material;
+}
+
+void Device::set_raster_position(RasterPosition const& raster_position)
+{
+    m_raster_position = raster_position;
+}
+
+void Device::set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform)
+{
+    auto const eye_coordinates = model_view_transform * position;
+    auto const clip_coordinates = projection_transform * eye_coordinates;
+
+    // FIXME: implement clipping
+    m_raster_position.valid = true;
+
+    auto ndc_coordinates = clip_coordinates / clip_coordinates.w();
+    ndc_coordinates.set_w(clip_coordinates.w());
+
+    auto const viewport = m_options.viewport;
+    auto const viewport_half_width = viewport.width() / 2.0f;
+    auto const viewport_half_height = viewport.height() / 2.0f;
+    auto const viewport_center_x = viewport.x() + viewport_half_width;
+    auto const viewport_center_y = viewport.y() + viewport_half_height;
+    auto const depth_half_range = (m_options.depth_max - m_options.depth_min) / 2;
+    auto const depth_halfway = (m_options.depth_min + m_options.depth_max) / 2;
+
+    // FIXME: implement other raster position properties such as color and texcoords
+
+    m_raster_position.window_coordinates = {
+        viewport_center_x + ndc_coordinates.x() * viewport_half_width,
+        viewport_center_y + ndc_coordinates.y() * viewport_half_height,
+        depth_halfway + ndc_coordinates.z() * depth_half_range,
+        ndc_coordinates.w(),
+    };
+
+    m_raster_position.eye_coordinate_distance = eye_coordinates.length();
+}
+
+Gfx::IntRect Device::raster_rect_in_target_coordinates(Gfx::IntSize size)
+{
+    auto const raster_rect = Gfx::IntRect {
+        static_cast<int>(m_raster_position.window_coordinates.x()),
+        static_cast<int>(m_raster_position.window_coordinates.y()),
+        size.width(),
+        size.height(),
+    };
+    return window_coordinates_to_target_coordinates(raster_rect, m_render_target->rect());
 }
 
 }
