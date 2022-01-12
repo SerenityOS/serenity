@@ -992,6 +992,26 @@ void Device::blit_to_color_buffer_at_raster_position(Gfx::Bitmap const& source)
     painter.blit({ blit_rect.x(), blit_rect.y() }, source, source.rect(), 1.0f, true);
 }
 
+void Device::blit_to_depth_buffer_at_raster_position(Vector<float> const& depth_values, size_t width, size_t height)
+{
+    if (!m_raster_position.valid)
+        return;
+
+    auto const raster_rect = raster_rect_in_target_coordinates({ width, height });
+    auto const y1 = raster_rect.y();
+    auto const y2 = y1 + height;
+    auto const x1 = raster_rect.x();
+    int const x2 = x1 + width;
+
+    auto index = 0;
+    for (int y = y2 - 1; y >= y1; --y) {
+        auto depth_line = m_depth_buffer->scanline(y);
+        for (int x = x1; x < x2; ++x) {
+            depth_line[x] = depth_values.at(index++);
+        }
+    }
+}
+
 void Device::blit_to(Gfx::Bitmap& target)
 {
     wait_for_all_threads();
