@@ -6,13 +6,13 @@
  */
 
 #include "Calculator.h"
-#include "KeypadValue.h"
 #include <AK/Assertions.h>
 #include <AK/Math.h>
+#include <LibCrypto/BigFraction/BigFraction.h>
 
-KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argument)
+Crypto::BigFraction Calculator::begin_operation(Operation operation, Crypto::BigFraction argument)
 {
-    KeypadValue res = 0;
+    Crypto::BigFraction res {};
 
     switch (operation) {
     case Operation::None:
@@ -27,7 +27,7 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
         return argument;
 
     case Operation::Sqrt:
-        if (argument < 0) {
+        if (argument < Crypto::BigFraction {}) {
             m_has_error = true;
             return argument;
         }
@@ -35,7 +35,7 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
         clear_operation();
         break;
     case Operation::Inverse:
-        if (argument == 0) {
+        if (argument == Crypto::BigFraction {}) {
             m_has_error = true;
             return argument;
         }
@@ -43,14 +43,14 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
         clear_operation();
         break;
     case Operation::Percent:
-        res = argument * KeypadValue { 1, 2 }; // also known as `KeypadValue{0.01}`
+        res = argument * Crypto::BigFraction { 1, 100 };
         break;
     case Operation::ToggleSign:
         res = -argument;
         break;
 
     case Operation::MemClear:
-        m_mem = 0;
+        m_mem.set_to_0();
         res = argument;
         break;
     case Operation::MemRecall:
@@ -66,15 +66,12 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
         break;
     }
 
-    if (should_be_rounded(res))
-        round(res);
-
     return res;
 }
 
-KeypadValue Calculator::finish_operation(KeypadValue argument)
+Crypto::BigFraction Calculator::finish_operation(Crypto::BigFraction argument)
 {
-    KeypadValue res = 0;
+    Crypto::BigFraction res {};
 
     switch (m_operation_in_progress) {
     case Operation::None:
@@ -90,7 +87,7 @@ KeypadValue Calculator::finish_operation(KeypadValue argument)
         res = m_saved_argument * argument;
         break;
     case Operation::Divide:
-        if (argument == 0) {
+        if (argument == Crypto::BigFraction {}) {
             m_has_error = true;
             return argument;
         }
@@ -108,9 +105,6 @@ KeypadValue Calculator::finish_operation(KeypadValue argument)
         VERIFY_NOT_REACHED();
     }
 
-    if (should_be_rounded(res))
-        round(res);
-
     clear_operation();
     return res;
 }
@@ -118,32 +112,6 @@ KeypadValue Calculator::finish_operation(KeypadValue argument)
 void Calculator::clear_operation()
 {
     m_operation_in_progress = Operation::None;
-    m_saved_argument = 0;
+    m_saved_argument.set_to_0();
     clear_error();
-}
-
-bool Calculator::should_be_rounded(KeypadValue value)
-{
-    // We check if pow(10, value.m_decimal_places) overflow.
-    // If it does, the value can't be displayed (and provoke a division by zero), see Keypad::set_value()
-    // For u64, the threshold is 19
-    return value.m_decimal_places > rounding_threshold;
-}
-
-void Calculator::round(KeypadValue& value)
-{
-    while (value.m_decimal_places > rounding_threshold) {
-        bool const need_increment = value.m_value % 10 > 4;
-
-        value.m_value /= 10;
-        if (need_increment)
-            value.m_value++;
-
-        value.m_decimal_places--;
-
-        if (value.m_value == 0) {
-            value = 0;
-            return;
-        }
-    }
 }

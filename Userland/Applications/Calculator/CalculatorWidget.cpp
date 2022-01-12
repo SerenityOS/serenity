@@ -8,9 +8,9 @@
  */
 
 #include "CalculatorWidget.h"
-#include "KeypadValue.h"
 #include <Applications/Calculator/CalculatorGML.h>
 #include <LibCore/Event.h>
+#include <LibCrypto/BigFraction/BigFraction.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
@@ -50,14 +50,14 @@ CalculatorWidget::CalculatorWidget()
 
     m_clear_button = *find_descendant_of_type_named<GUI::Button>("clear_button");
     m_clear_button->on_click = [this](auto) {
-        m_keypad.set_value(0.0);
+        m_keypad.set_to_0();
         m_calculator.clear_operation();
         update_display();
     };
 
     m_clear_error_button = *find_descendant_of_type_named<GUI::Button>("clear_error_button");
     m_clear_error_button->on_click = [this](auto) {
-        m_keypad.set_value(0.0);
+        m_keypad.set_to_0();
         update_display();
     };
 
@@ -99,18 +99,18 @@ CalculatorWidget::CalculatorWidget()
 
     m_equals_button = *find_descendant_of_type_named<GUI::Button>("equal_button");
     m_equals_button->on_click = [this](auto) {
-        KeypadValue argument = m_keypad.value();
-        KeypadValue res = m_calculator.finish_operation(argument);
-        m_keypad.set_value(res);
+        Crypto::BigFraction argument = m_keypad.value();
+        Crypto::BigFraction res = m_calculator.finish_operation(move(argument));
+        m_keypad.set_value(move(res));
         update_display();
     };
 }
 
 void CalculatorWidget::perform_operation(Calculator::Operation operation)
 {
-    KeypadValue argument = m_keypad.value();
-    KeypadValue res = m_calculator.begin_operation(operation, argument);
-    m_keypad.set_value(res);
+    Crypto::BigFraction argument = m_keypad.value();
+    Crypto::BigFraction res = m_calculator.begin_operation(operation, move(argument));
+    m_keypad.set_value(move(res));
     update_display();
 }
 
@@ -134,9 +134,9 @@ String CalculatorWidget::get_entry()
     return m_entry->text();
 }
 
-void CalculatorWidget::set_entry(KeypadValue value)
+void CalculatorWidget::set_entry(Crypto::BigFraction value)
 {
-    m_keypad.set_value(value);
+    m_keypad.set_value(move(value));
     update_display();
 }
 
@@ -167,7 +167,7 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
         m_keypad.type_decimal_point();
         mimic_pressed_button(m_decimal_point_button);
     } else if (event.key() == KeyCode::Key_Escape || event.key() == KeyCode::Key_Delete) {
-        m_keypad.set_value(0.0);
+        m_keypad.set_to_0();
         m_calculator.clear_operation();
         mimic_pressed_button(m_clear_button);
     } else if (event.key() == KeyCode::Key_Backspace) {
