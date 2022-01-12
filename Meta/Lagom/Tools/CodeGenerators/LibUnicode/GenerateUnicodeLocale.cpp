@@ -39,6 +39,9 @@ constexpr auto s_currency_list_index_type = "u16"sv;
 using CalendarListIndexType = u8;
 constexpr auto s_calendar_list_index_type = "u8"sv;
 
+using DateFieldListIndexType = u8;
+constexpr auto s_date_field_list_index_type = "u8"sv;
+
 using KeywordListIndexType = u8;
 constexpr auto s_keyword_list_index_type = "u8"sv;
 
@@ -113,6 +116,7 @@ using TerritoryList = Vector<StringIndexType>;
 using ScriptList = Vector<StringIndexType>;
 using CurrencyList = Vector<StringIndexType>;
 using CalendarList = Vector<StringIndexType>;
+using DateFieldList = Vector<StringIndexType>;
 using KeywordList = Vector<StringIndexType>;
 using ListPatternList = Vector<ListPatternIndexType>;
 
@@ -128,6 +132,9 @@ struct Locale {
     CurrencyListIndexType narrow_currencies { 0 };
     CurrencyListIndexType numeric_currencies { 0 };
     CalendarListIndexType calendars { 0 };
+    DateFieldListIndexType long_date_fields { 0 };
+    DateFieldListIndexType short_date_fields { 0 };
+    DateFieldListIndexType narrow_date_fields { 0 };
     KeywordListIndexType keywords { 0 };
     ListPatternListIndexType list_patterns { 0 };
 };
@@ -144,6 +151,7 @@ struct UnicodeLocaleData {
     UniqueStorage<ScriptList, ScriptListIndexType> unique_script_lists;
     UniqueStorage<CurrencyList, CurrencyListIndexType> unique_currency_lists;
     UniqueStorage<CalendarList, CalendarListIndexType> unique_calendar_lists;
+    UniqueStorage<DateFieldList, DateFieldListIndexType> unique_date_field_lists;
     UniqueStorage<KeywordList, KeywordListIndexType> unique_keyword_lists;
     UniqueStorage<ListPatterns, ListPatternIndexType> unique_list_patterns;
     UniqueStorage<ListPatternList, ListPatternListIndexType> unique_list_pattern_lists;
@@ -161,6 +169,14 @@ struct UnicodeLocaleData {
         // FIXME: Aliases should come from BCP47. See: https://unicode-org.atlassian.net/browse/CLDR-15158
         { "ethiopic-amete-alem"sv, "ethioaa"sv },
         { "gregorian"sv, "gregory"sv },
+    };
+    Vector<String> date_fields;
+    Vector<Alias> date_field_aliases {
+        // ECMA-402 and the CLDR refer to some date fields with different names. Defining these aliases
+        // means we can remain agnostic about the naming differences elsewhere.
+        { "dayperiod"sv, "dayPeriod"sv },
+        { "week"sv, "weekOfYear"sv },
+        { "zone"sv, "timeZoneName"sv },
     };
     Vector<String> keywords { "ca"sv, "nu"sv }; // FIXME: These should be parsed from BCP47. https://unicode-org.atlassian.net/browse/CLDR-15158
     Vector<String> list_pattern_types;
@@ -501,6 +517,64 @@ static ErrorOr<void> parse_locale_calendars(String locale_path, UnicodeLocaleDat
     return {};
 }
 
+static ErrorOr<void> parse_locale_date_fields(String dates_path, UnicodeLocaleData& locale_data, Locale& locale)
+{
+    LexicalPath date_fields_path(move(dates_path));
+    date_fields_path = date_fields_path.append("dateFields.json"sv);
+
+    auto date_fields_file = TRY(Core::File::open(date_fields_path.string(), Core::OpenMode::ReadOnly));
+    auto locale_date_fields = TRY(JsonValue::from_string(date_fields_file->read_all()));
+
+    auto const& main_object = locale_date_fields.as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(date_fields_path.parent().basename());
+    auto const& dates_object = locale_object.as_object().get("dates"sv);
+    auto const& fields_object = dates_object.as_object().get("fields"sv);
+
+    auto is_sanctioned_field = [](StringView field) {
+        // This is a copy of the units sanctioned for use within ECMA-402, with names adjusted for the names used by the CLDR.
+        // https://tc39.es/ecma402/#table-validcodeforDateField
+        return field.is_one_of("era"sv, "year"sv, "quarter"sv, "month"sv, "week"sv, "weekday"sv, "day"sv, "dayperiod"sv, "hour"sv, "minute"sv, "second"sv, "zone"sv);
+    };
+
+    fields_object.as_object().for_each_member([&](auto const& key, JsonValue const&) {
+        if (!is_sanctioned_field(key))
+            return;
+
+        if (!locale_data.date_fields.contains_slow(key))
+            locale_data.date_fields.append(key);
+    });
+
+    quick_sort(locale_data.date_fields);
+
+    DateFieldList long_date_fields {};
+    long_date_fields.resize(locale_data.date_fields.size());
+
+    DateFieldList short_date_fields {};
+    short_date_fields.resize(locale_data.date_fields.size());
+
+    DateFieldList narrow_date_fields {};
+    narrow_date_fields.resize(locale_data.date_fields.size());
+
+    fields_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        if (!is_sanctioned_field(key))
+            return;
+
+        auto const& long_name = value.as_object().get("displayName"sv);
+        auto const& short_name = fields_object.as_object().get(String::formatted("{}-short", key)).as_object().get("displayName"sv);
+        auto const& narrow_name = fields_object.as_object().get(String::formatted("{}-narrow", key)).as_object().get("displayName"sv);
+
+        auto index = locale_data.date_fields.find_first_index(key).value();
+        long_date_fields[index] = locale_data.unique_strings.ensure(long_name.as_string());
+        short_date_fields[index] = locale_data.unique_strings.ensure(short_name.as_string());
+        narrow_date_fields[index] = locale_data.unique_strings.ensure(narrow_name.as_string());
+    });
+
+    locale.long_date_fields = locale_data.unique_date_field_lists.ensure(move(long_date_fields));
+    locale.short_date_fields = locale_data.unique_date_field_lists.ensure(move(short_date_fields));
+    locale.narrow_date_fields = locale_data.unique_date_field_lists.ensure(move(narrow_date_fields));
+    return {};
+}
+
 static ErrorOr<void> parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData& locale_data, KeywordList& keywords)
 {
     static constexpr StringView key = "nu"sv;
@@ -748,6 +822,9 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
         auto dates_path = TRY(next_path_from_dir_iterator(dates_iterator));
         auto language = TRY(remove_variants_from_path(dates_path));
 
+        auto& locale = locale_data.locales.ensure(language);
+        TRY(parse_locale_date_fields(dates_path, locale_data, locale));
+
         auto& keywords = ensure_keyword_list(language);
         TRY(parse_calendar_keywords(dates_path, locale_data, keywords));
     }
@@ -783,6 +860,7 @@ namespace Unicode {
     generate_enum(generator, format_identifier, "ScriptTag"sv, {}, locale_data.scripts);
     generate_enum(generator, format_identifier, "Currency"sv, {}, locale_data.currencies);
     generate_enum(generator, format_identifier, "CalendarName"sv, {}, locale_data.calendars, locale_data.calendar_aliases);
+    generate_enum(generator, format_identifier, "DateField"sv, {}, locale_data.date_fields, locale_data.date_field_aliases);
     generate_enum(generator, format_identifier, "Key"sv, {}, locale_data.keywords);
     generate_enum(generator, format_identifier, "Variant"sv, {}, locale_data.variants);
     generate_enum(generator, format_identifier, "ListPatternType"sv, {}, locale_data.list_pattern_types);
@@ -832,6 +910,7 @@ struct Patterns {
     locale_data.unique_script_lists.generate(generator, s_string_index_type, "s_script_lists"sv);
     locale_data.unique_currency_lists.generate(generator, s_string_index_type, "s_currency_lists"sv);
     locale_data.unique_calendar_lists.generate(generator, s_string_index_type, "s_calendar_lists"sv);
+    locale_data.unique_date_field_lists.generate(generator, s_string_index_type, "s_date_field_lists"sv);
     locale_data.unique_keyword_lists.generate(generator, s_string_index_type, "s_keyword_lists"sv);
     locale_data.unique_list_patterns.generate(generator, "Patterns"sv, "s_list_patterns"sv, 10);
     locale_data.unique_list_pattern_lists.generate(generator, s_list_pattern_index_type, "s_list_pattern_lists"sv);
@@ -888,6 +967,9 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_narrow_currencies"sv, [&](auto const& locale) { return locale.narrow_currencies; });
     append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_numeric_currencies"sv, [&](auto const& locale) { return locale.numeric_currencies; });
     append_mapping(locales, locale_data.locales, s_calendar_list_index_type, "s_calendars"sv, [&](auto const& locale) { return locale.calendars; });
+    append_mapping(locales, locale_data.locales, s_date_field_list_index_type, "s_long_date_fields"sv, [&](auto const& locale) { return locale.long_date_fields; });
+    append_mapping(locales, locale_data.locales, s_date_field_list_index_type, "s_short_date_fields"sv, [&](auto const& locale) { return locale.short_date_fields; });
+    append_mapping(locales, locale_data.locales, s_date_field_list_index_type, "s_narrow_date_fields"sv, [&](auto const& locale) { return locale.narrow_date_fields; });
     append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_keywords"sv, [&](auto const& locale) { return locale.keywords; });
     append_mapping(locales, locale_data.locales, s_list_pattern_list_index_type, "s_locale_list_patterns"sv, [&](auto const& locale) { return locale.list_patterns; });
 
@@ -1153,6 +1235,11 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 
     append_from_string("CalendarName"sv, "calendar_name"sv, locale_data.calendars, locale_data.calendar_aliases);
     append_mapping_search("calendar"sv, "calendar_name"sv, "s_calendars"sv, "s_calendar_lists"sv);
+
+    append_from_string("DateField"sv, "date_field"sv, locale_data.date_fields, locale_data.date_field_aliases);
+    append_mapping_search("long_date_field"sv, "date_field"sv, "s_long_date_fields"sv, "s_date_field_lists"sv);
+    append_mapping_search("short_date_field"sv, "date_field"sv, "s_short_date_fields"sv, "s_date_field_lists"sv);
+    append_mapping_search("narrow_date_field"sv, "date_field"sv, "s_narrow_date_fields"sv, "s_date_field_lists"sv);
 
     append_from_string("Key"sv, "key"sv, locale_data.keywords);
     append_mapping_search("key"sv, "key"sv, "s_keywords"sv, "s_keyword_lists"sv);

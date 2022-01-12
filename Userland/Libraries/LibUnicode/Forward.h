@@ -18,6 +18,7 @@ enum class CalendarSymbol : u8;
 enum class CompactNumberFormatType : u8;
 enum class Condition : u8;
 enum class Currency : u16;
+enum class DateField : u8;
 enum class DayPeriod : u8;
 enum class Era : u8;
 enum class GeneralCategory : u8;
