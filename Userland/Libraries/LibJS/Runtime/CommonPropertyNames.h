@@ -294,6 +294,7 @@ namespace JS {
     P(keyFor)                                \
     P(keys)                                  \
     P(language)                              \
+    P(languageDisplay)                       \
     P(largestUnit)                           \
     P(lastIndex)                             \
     P(lastIndexOf)                           \

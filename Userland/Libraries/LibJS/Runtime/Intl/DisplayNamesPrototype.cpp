@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -76,6 +76,10 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
         default:
             VERIFY_NOT_REACHED();
         }
+        break;
+    case DisplayNames::Type::Calendar:
+        break;
+    case DisplayNames::Type::DateTimeField:
         break;
     default:
         VERIFY_NOT_REACHED();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -52,7 +52,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     auto locale_value = vm.argument(0);
     auto options_value = vm.argument(1);
 
-    // 2. Let displayNames be ? OrdinaryCreateFromConstructor(NewTarget, "%DisplayNames.prototype%", « [[InitializedDisplayNames]], [[Locale]], [[Style]], [[Type]], [[Fallback]], [[Fields]] »).
+    // 2. Let displayNames be ? OrdinaryCreateFromConstructor(NewTarget, "%DisplayNames.prototype%", « [[InitializedDisplayNames]], [[Locale]], [[Style]], [[Type]], [[Fallback]], [[LanguageDisplay]], [[Fields]] »).
     auto* display_names = TRY(ordinary_create_from_constructor<DisplayNames>(global_object, new_target, &GlobalObject::intl_display_names_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
@@ -85,8 +85,8 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     // 12. Set displayNames.[[Style]] to style.
     display_names->set_style(style.as_string().string());
 
-    // 13. Let type be ? GetOption(options, "type", "string", « "language", "region", "script", "currency" », undefined).
-    auto type = TRY(get_option(global_object, *options, vm.names.type, Value::Type::String, { "language"sv, "region"sv, "script"sv, "currency"sv }, Empty {}));
+    // 13. Let type be ? GetOption(options, "type", "string", « "language", "region", "script", "currency", "calendar", "dateTimeField" », undefined).
+    auto type = TRY(get_option(global_object, *options, vm.names.type, Value::Type::String, { "language"sv, "region"sv, "script"sv, "currency"sv, "calendar"sv, "dateTimeField"sv }, Empty {}));
 
     // 14. If type is undefined, throw a TypeError exception.
     if (type.is_undefined())
@@ -104,10 +104,33 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     // 18. Set displayNames.[[Locale]] to r.[[locale]].
     display_names->set_locale(move(result.locale));
 
-    // Note: The remaining steps are skipped in favor of deferring to LibUnicode. We could copy
-    //       the data from LibUnicode to the DisplayNames object, but for now we do not do that.
+    // Note: Several of the steps below are skipped in favor of deferring to LibUnicode.
 
-    // 28. Return displayNames.
+    // 19. Let dataLocale be r.[[dataLocale]].
+    // 20. Let dataLocaleData be localeData.[[<dataLocale>]].
+    // 21. Let types be dataLocaleData.[[types]].
+    // 22. Assert: types is a Record (see 12.4.3).
+
+    // 23. Let languageDisplay be ? GetOption(options, "languageDisplay", "string", « "dialect", "standard" », "dialect").
+    auto language_display = TRY(get_option(global_object, *options, vm.names.languageDisplay, Value::Type::String, { "dialect"sv, "standard"sv }, "dialect"sv));
+
+    // 24. Let typeFields be types.[[<type>]].
+    // 25. Assert: typeFields is a Record (see 12.4.3).
+
+    // 26. If type is "language", then
+    if (display_names->type() == DisplayNames::Type::Language) {
+        // a. Set displayNames.[[LanguageDisplay]] to languageDisplay.
+        display_names->set_language_display(language_display.as_string().string());
+
+        // b. Let typeFields be typeFields.[[<languageDisplay>]].
+        // c. Assert: typeFields is a Record (see 12.4.3).
+    }
+
+    // 27. Let styleFields be typeFields.[[<style>]].
+    // 28. Assert: styleFields is a Record (see 12.4.3).
+    // 29. Set displayNames.[[Fields]] to styleFields.
+
+    // 30. Return displayNames.
     return display_names;
 }
 

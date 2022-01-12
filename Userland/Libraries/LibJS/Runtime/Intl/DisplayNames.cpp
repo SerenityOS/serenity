@@ -53,6 +53,10 @@ void DisplayNames::set_type(StringView type)
         m_type = Type::Script;
     else if (type == "currency"sv)
         m_type = Type::Currency;
+    else if (type == "calendar"sv)
+        m_type = Type::Calendar;
+    else if (type == "dateTimeField"sv)
+        m_type = Type::DateTimeField;
     else
         VERIFY_NOT_REACHED();
 }
@@ -68,6 +72,10 @@ StringView DisplayNames::type_string() const
         return "script"sv;
     case Type::Currency:
         return "currency"sv;
+    case Type::Calendar:
+        return "calendar"sv;
+    case Type::DateTimeField:
+        return "dateTimeField"sv;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -90,6 +98,30 @@ StringView DisplayNames::fallback_string() const
         return "none"sv;
     case Fallback::Code:
         return "code"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+void DisplayNames::set_language_display(StringView language_display)
+{
+    if (language_display == "dialect"sv)
+        m_language_display = LanguageDisplay::Dialect;
+    else if (language_display == "standard"sv)
+        m_language_display = LanguageDisplay::Standard;
+    else
+        VERIFY_NOT_REACHED();
+}
+
+StringView DisplayNames::language_display_string() const
+{
+    VERIFY(m_language_display.has_value());
+
+    switch (*m_language_display) {
+    case LanguageDisplay::Dialect:
+        return "dialect"sv;
+    case LanguageDisplay::Standard:
+        return "standard"sv;
     default:
         VERIFY_NOT_REACHED();
     }
