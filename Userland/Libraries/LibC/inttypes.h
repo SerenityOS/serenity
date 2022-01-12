@@ -50,10 +50,12 @@ __BEGIN_DECLS
 #ifndef __x86_64__
 #    define PRIx64 "llx"
 #    define PRIX64 "llX"
+#    define PRIxMAX "llx"
 #    define PRIxPTR "x"
 #else
 #    define PRIx64 "lx"
 #    define PRIX64 "lX"
+#    define PRIxMAX "lx"
 #    define PRIxPTR "lx"
 #endif
 
