@@ -7,7 +7,6 @@ auth_type=sha256
 depends=("freetype" "libiconv" "libjpeg" "libpng" "libtheora" "SDL2")
 configopts=(
     "--enable-c++11"
-    "--enable-release-mode"
     "--enable-optimizations"
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
 )
