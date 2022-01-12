@@ -111,12 +111,8 @@ class SQLResult : public Core::Object {
     C_OBJECT(SQLResult)
 
 public:
-    void insert(Tuple const& row, Tuple const& sort_key)
-    {
-        m_has_results = true;
-        m_result_set.insert_row(row, sort_key);
-    }
-
+    void insert(Tuple const& row, Tuple const& sort_key);
+    void limit(size_t offset, size_t limit);
     SQLCommand command() const { return m_command; }
     int updated() const { return m_update_count; }
     int inserted() const { return m_insert_count; }
