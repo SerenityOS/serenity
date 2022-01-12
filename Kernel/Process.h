@@ -39,7 +39,7 @@
 
 namespace Kernel {
 
-MutexProtected<String>& hostname();
+MutexProtected<OwnPtr<KString>>& hostname();
 Time kgettimeofday();
 
 #define ENUMERATE_PLEDGE_PROMISES         \

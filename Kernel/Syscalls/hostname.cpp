@@ -15,9 +15,9 @@ ErrorOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
     return hostname().with_shared([&](const auto& name) -> ErrorOr<FlatPtr> {
-        if (size < (name.length() + 1))
+        if (size < (name->length() + 1))
             return ENAMETOOLONG;
-        TRY(copy_to_user(buffer, name.characters(), name.length() + 1));
+        TRY(copy_to_user(buffer, name->characters(), name->length() + 1));
         return 0;
     });
 }
@@ -33,7 +33,7 @@ ErrorOr<FlatPtr> Process::sys$sethostname(Userspace<const char*> buffer, size_t 
         return ENAMETOOLONG;
     auto new_name = TRY(try_copy_kstring_from_user(buffer, length));
     hostname().with_exclusive([&](auto& name) {
-        name = new_name->view();
+        name = move(new_name);
     });
     return 0;
 }
