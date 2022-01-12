@@ -480,8 +480,8 @@ private:
                     break;
                 }
             } else {
-                process_object.add("pledge", String());
-                process_object.add("veil", String());
+                process_object.add("pledge", ""sv);
+                process_object.add("veil", ""sv);
             }
 
             process_object.add("pid", process.pid().value());
