@@ -5,10 +5,13 @@ serenity_component(
 )
 
 compile_gml(CharacterMapWindow.gml CharacterMapWindowGML.h character_map_window_gml)
+compile_gml(CharacterSearchWindow.gml CharacterSearchWindowGML.h character_search_window_gml)
 
 set(SOURCES
-    CharacterMapWindowGML.h
     CharacterMapWidget.cpp
+    CharacterMapWindowGML.h
+    CharacterSearchWidget.cpp
+    CharacterSearchWindowGML.h
     main.cpp
 )
 

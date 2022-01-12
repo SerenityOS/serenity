@@ -5,6 +5,7 @@
  */
 
 #include "CharacterMapWidget.h"
+#include "CharacterSearchWidget.h"
 #include <AK/StringUtils.h>
 #include <Applications/CharacterMap/CharacterMapWindowGML.h>
 #include <LibConfig/Client.h>
@@ -76,6 +77,23 @@ CharacterMapWidget::CharacterMapWidget()
     });
     m_go_to_glyph_action->set_status_tip("Go to the specified code point");
 
+    m_find_glyphs_action = GUI::Action::create("&Find glyphs...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        if (m_find_window.is_null()) {
+            m_find_window = GUI::Window::construct(window());
+            auto& search_widget = m_find_window->set_main_widget<CharacterSearchWidget>();
+            search_widget.on_character_selected = [&](auto code_point) {
+                m_glyph_map->set_active_glyph(code_point);
+                m_glyph_map->scroll_to_glyph(code_point);
+            };
+            m_find_window->set_icon(GUI::Icon::try_create_default_icon("find").value().bitmap_for_size(16));
+            m_find_window->set_title("Find a character");
+            m_find_window->resize(300, 400);
+        }
+        m_find_window->show();
+        m_find_window->move_to_front();
+        m_find_window->find_descendant_of_type_named<GUI::TextBox>("search_input")->set_focus(true);
+    });
+
     m_toolbar->add_action(*m_choose_font_action);
     m_toolbar->add_separator();
     m_toolbar->add_action(*m_copy_selection_action);
@@ -83,6 +101,7 @@ CharacterMapWidget::CharacterMapWidget()
     m_toolbar->add_action(*m_previous_glyph_action);
     m_toolbar->add_action(*m_next_glyph_action);
     m_toolbar->add_action(*m_go_to_glyph_action);
+    m_toolbar->add_action(*m_find_glyphs_action);
 
     m_glyph_map->on_active_glyph_changed = [&](int) {
         update_statusbar();
