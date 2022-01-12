@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,15 +19,14 @@ DisplayNames::DisplayNames(Object& prototype)
 
 void DisplayNames::set_style(StringView style)
 {
-    if (style == "narrow"sv) {
+    if (style == "narrow"sv)
         m_style = Style::Narrow;
-    } else if (style == "short"sv) {
+    else if (style == "short"sv)
         m_style = Style::Short;
-    } else if (style == "long"sv) {
+    else if (style == "long"sv)
         m_style = Style::Long;
-    } else {
+    else
         VERIFY_NOT_REACHED();
-    }
 }
 
 StringView DisplayNames::style_string() const
@@ -46,17 +45,16 @@ StringView DisplayNames::style_string() const
 
 void DisplayNames::set_type(StringView type)
 {
-    if (type == "language"sv) {
+    if (type == "language"sv)
         m_type = Type::Language;
-    } else if (type == "region"sv) {
+    else if (type == "region"sv)
         m_type = Type::Region;
-    } else if (type == "script"sv) {
+    else if (type == "script"sv)
         m_type = Type::Script;
-    } else if (type == "currency"sv) {
+    else if (type == "currency"sv)
         m_type = Type::Currency;
-    } else {
+    else
         VERIFY_NOT_REACHED();
-    }
 }
 
 StringView DisplayNames::type_string() const
@@ -77,13 +75,12 @@ StringView DisplayNames::type_string() const
 
 void DisplayNames::set_fallback(StringView fallback)
 {
-    if (fallback == "none"sv) {
+    if (fallback == "none"sv)
         m_fallback = Fallback::None;
-    } else if (fallback == "code"sv) {
+    else if (fallback == "code"sv)
         m_fallback = Fallback::Code;
-    } else {
+    else
         VERIFY_NOT_REACHED();
-    }
 }
 
 StringView DisplayNames::fallback_string() const
