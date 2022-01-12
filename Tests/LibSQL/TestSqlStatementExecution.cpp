@@ -510,4 +510,109 @@ TEST_CASE(select_with_order_by_column_not_in_result)
     EXPECT_EQ(rows[4].row[0].to_string(), "Test_1");
 }
 
+TEST_CASE(select_with_limit)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    for (auto count = 0; count < 100; count++) {
+        auto result = execute(database,
+            String::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+        EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+        EXPECT(result->inserted() == 1);
+    }
+    auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 10;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    auto rows = result->results();
+    EXPECT_EQ(rows.size(), 10u);
+}
+
+TEST_CASE(select_with_limit_and_offset)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    for (auto count = 0; count < 100; count++) {
+        auto result = execute(database,
+            String::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+        EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+        EXPECT(result->inserted() == 1);
+    }
+    auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 10 OFFSET 10;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    auto rows = result->results();
+    EXPECT_EQ(rows.size(), 10u);
+}
+
+TEST_CASE(select_with_order_limit_and_offset)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    for (auto count = 0; count < 100; count++) {
+        auto result = execute(database,
+            String::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+        EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+        EXPECT(result->inserted() == 1);
+    }
+    auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY IntColumn LIMIT 10 OFFSET 10;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    auto rows = result->results();
+    EXPECT_EQ(rows.size(), 10u);
+    EXPECT_EQ(rows[0].row[1].to_int().value(), 10);
+    EXPECT_EQ(rows[1].row[1].to_int().value(), 11);
+    EXPECT_EQ(rows[2].row[1].to_int().value(), 12);
+    EXPECT_EQ(rows[3].row[1].to_int().value(), 13);
+    EXPECT_EQ(rows[4].row[1].to_int().value(), 14);
+    EXPECT_EQ(rows[5].row[1].to_int().value(), 15);
+    EXPECT_EQ(rows[6].row[1].to_int().value(), 16);
+    EXPECT_EQ(rows[7].row[1].to_int().value(), 17);
+    EXPECT_EQ(rows[8].row[1].to_int().value(), 18);
+    EXPECT_EQ(rows[9].row[1].to_int().value(), 19);
+}
+
+TEST_CASE(select_with_limit_out_of_bounds)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    for (auto count = 0; count < 100; count++) {
+        auto result = execute(database,
+            String::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+        EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+        EXPECT(result->inserted() == 1);
+    }
+    auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 500;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    auto rows = result->results();
+    EXPECT_EQ(rows.size(), 100u);
+}
+
+TEST_CASE(select_with_offset_out_of_bounds)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    for (auto count = 0; count < 100; count++) {
+        auto result = execute(database,
+            String::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+        EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+        EXPECT(result->inserted() == 1);
+    }
+    auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 10 OFFSET 200;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    auto rows = result->results();
+    EXPECT_EQ(rows.size(), 0u);
+}
+
 }

@@ -21,6 +21,7 @@ set(SOURCES
     Row.cpp
     Serializer.cpp
     SQLClient.cpp
+    SQLResult.cpp
     TreeNode.cpp
     Tuple.cpp
     Value.cpp
