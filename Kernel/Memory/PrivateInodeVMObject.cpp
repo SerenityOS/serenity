@@ -11,21 +11,23 @@ namespace Kernel::Memory {
 
 ErrorOr<NonnullRefPtr<PrivateInodeVMObject>> PrivateInodeVMObject::try_create_with_inode(Inode& inode)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) PrivateInodeVMObject(inode, inode.size()));
+    auto new_physical_pages = TRY(VMObject::try_create_physical_pages(inode.size()));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) PrivateInodeVMObject(inode, move(new_physical_pages)));
 }
 
 ErrorOr<NonnullRefPtr<VMObject>> PrivateInodeVMObject::try_clone()
 {
-    return adopt_nonnull_ref_or_enomem<VMObject>(new (nothrow) PrivateInodeVMObject(*this));
+    auto new_physical_pages = TRY(this->try_clone_physical_pages());
+    return adopt_nonnull_ref_or_enomem<VMObject>(new (nothrow) PrivateInodeVMObject(*this, move(new_physical_pages)));
 }
 
-PrivateInodeVMObject::PrivateInodeVMObject(Inode& inode, size_t size)
-    : InodeVMObject(inode, VMObject::must_create_physical_pages_but_fixme_should_propagate_errors(size))
+PrivateInodeVMObject::PrivateInodeVMObject(Inode& inode, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
+    : InodeVMObject(inode, move(new_physical_pages))
 {
 }
 
-PrivateInodeVMObject::PrivateInodeVMObject(PrivateInodeVMObject const& other)
-    : InodeVMObject(other, other.must_clone_physical_pages_but_fixme_should_propagate_errors())
+PrivateInodeVMObject::PrivateInodeVMObject(PrivateInodeVMObject const& other, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
+    : InodeVMObject(other, move(new_physical_pages))
 {
 }
 
