@@ -120,7 +120,7 @@ public:
     virtual void present() = 0;
 };
 
-OwnPtr<GLContext> create_context(Gfx::Bitmap&);
+NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap&);
 void make_context_current(GLContext*);
 void present_context(GLContext*);
 
