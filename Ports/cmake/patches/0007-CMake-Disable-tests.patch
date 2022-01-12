@@ -1,0 +1,32 @@
+From fefbff0df0bdf95bf61e13feac2552af13f877ff Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Wed, 12 Jan 2022 22:18:57 +0330
+Subject: [PATCH 7/7] CMake: Disable tests
+
+We don't care about building tests for now, and it makes the compilation much faster.
+
+- [ ] Local?
+- [ ] Should be merged to upstream?
+- [ ] Resolves issue(s) with our side of things
+- [ ] Hack
+---
+ CMakeLists.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index fdfe456a..00c122ba 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -718,7 +718,8 @@ endif()
+ include(Source/CMakeVersion.cmake)
+ 
+ # Include the standard Dart testing module
+-enable_testing()
++# enable_testing()
++set(BUILD_TESTING 0)
+ include (${CMAKE_ROOT}/Modules/Dart.cmake)
+ 
+ # Set up test-time configuration.
+-- 
+2.34.1
+

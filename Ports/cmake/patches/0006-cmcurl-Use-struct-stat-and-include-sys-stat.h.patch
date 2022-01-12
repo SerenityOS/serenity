@@ -1,0 +1,30 @@
+From 33e8e0bcf0b8d66267083c656c1f4d55b817dc68 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Wed, 12 Jan 2022 22:18:23 +0330
+Subject: [PATCH 6/7] cmcurl: Use struct stat and include sys/stat.h
+
+For unknown reasons, curl_setup_once.h does not include sys/stat.h. this patch includes sys/stat.h.
+
+- [ ] Local?
+- [ ] Should be merged to upstream?
+- [X] Resolves issue(s) with our side of things
+- [X] Hack
+---
+ Utilities/cmcurl/lib/curl_setup.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Utilities/cmcurl/lib/curl_setup.h b/Utilities/cmcurl/lib/curl_setup.h
+index 554dcc1e..dfb7859e 100644
+--- a/Utilities/cmcurl/lib/curl_setup.h
++++ b/Utilities/cmcurl/lib/curl_setup.h
+@@ -403,6 +403,7 @@
+ #endif
+ 
+ #ifndef struct_stat
++#  include <sys/stat.h>
+ #  define struct_stat struct stat
+ #endif
+ 
+-- 
+2.34.1
+
