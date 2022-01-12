@@ -519,53 +519,42 @@ ErrorOr<void> Process::dump_core()
     return coredump->write();
 }
 
-bool Process::dump_perfcore()
+ErrorOr<void> Process::dump_perfcore()
 {
     VERIFY(is_dumpable());
     VERIFY(m_perf_event_buffer);
     dbgln("Generating perfcore for pid: {}", pid().value());
 
     // Try to generate a filename which isn't already used.
-    auto base_filename = String::formatted("{}_{}", name(), pid().value());
-    auto perfcore_filename = String::formatted("{}.profile", base_filename);
+    auto base_filename = TRY(KString::formatted("{}_{}", name(), pid().value()));
+    auto perfcore_filename = TRY(KString::formatted("{}.profile", base_filename));
     RefPtr<OpenFileDescription> description;
     for (size_t attempt = 1; attempt <= 10; ++attempt) {
-        auto description_or_error = VirtualFileSystem::the().open(perfcore_filename, O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
+        auto description_or_error = VirtualFileSystem::the().open(perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
         if (!description_or_error.is_error()) {
             description = description_or_error.release_value();
             break;
         }
-        perfcore_filename = String::formatted("{}.{}.profile", base_filename, attempt);
+        perfcore_filename = TRY(KString::formatted("{}.{}.profile", base_filename, attempt));
     }
     if (!description) {
         dbgln("Failed to generate perfcore for pid {}: Could not generate filename for the perfcore file.", pid().value());
-        return false;
+        return EEXIST;
     }
 
-    auto builder_or_error = KBufferBuilder::try_create();
-    if (builder_or_error.is_error()) {
-        dbgln("Failed to generate perfcore for pid {}: Could not allocate KBufferBuilder.", pid());
-        return false;
-    }
-    auto builder = builder_or_error.release_value();
-    if (m_perf_event_buffer->to_json(builder).is_error()) {
-        dbgln("Failed to generate perfcore for pid {}: Could not serialize performance events to JSON.", pid().value());
-        return false;
-    }
+    auto builder = TRY(KBufferBuilder::try_create());
+    TRY(m_perf_event_buffer->to_json(builder));
 
     auto json = builder.build();
     if (!json) {
         dbgln("Failed to generate perfcore for pid {}: Could not allocate buffer.", pid().value());
-        return false;
+        return ENOMEM;
     }
     auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json->data());
-    if (description->write(json_buffer, json->size()).is_error()) {
-        dbgln("Failed to generate perfcore for pid {}: Could not write to perfcore file.", pid().value());
-        return false;
-    }
+    TRY(description->write(json_buffer, json->size()));
 
     dbgln("Wrote perfcore for pid {} to {}", pid().value(), perfcore_filename);
-    return true;
+    return {};
 }
 
 void Process::finalize()
@@ -585,7 +574,9 @@ void Process::finalize()
             }
         }
         if (m_perf_event_buffer) {
-            dump_perfcore();
+            auto result = dump_perfcore();
+            if (result.is_error())
+                critical_dmesgln("Failed to write perfcore: {}", result.error());
             TimeManagement::the().disable_profile_timer();
         }
     }
