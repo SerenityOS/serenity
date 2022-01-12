@@ -20,12 +20,12 @@ ErrorOr<NonnullRefPtr<VMObject>> PrivateInodeVMObject::try_clone()
 }
 
 PrivateInodeVMObject::PrivateInodeVMObject(Inode& inode, size_t size)
-    : InodeVMObject(inode, size)
+    : InodeVMObject(inode, VMObject::must_create_physical_pages_but_fixme_should_propagate_errors(size))
 {
 }
 
 PrivateInodeVMObject::PrivateInodeVMObject(PrivateInodeVMObject const& other)
-    : InodeVMObject(other)
+    : InodeVMObject(other, other.must_clone_physical_pages_but_fixme_should_propagate_errors())
 {
 }
 
