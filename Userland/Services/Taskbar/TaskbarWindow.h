@@ -12,7 +12,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/ShareableBitmap.h>
-#include <WindowServer/ScreenLayout.h>
+#include <Services/WindowServer/ScreenLayout.h>
 
 class TaskbarWindow final : public GUI::Window {
     C_OBJECT(TaskbarWindow);
