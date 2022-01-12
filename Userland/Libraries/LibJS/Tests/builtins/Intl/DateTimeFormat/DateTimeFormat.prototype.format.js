@@ -389,13 +389,10 @@ describe("timeZoneName", () => {
         { timeZone: "UTC", timeZoneName: "longOffset", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
         { timeZone: "UTC", timeZoneName: "shortGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
         { timeZone: "UTC", timeZoneName: "longGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
-
-        // FIXME: The time stamps on the below cases are incorrect as they do not adjust the time based on the GMT offset.
-        //        Update these once the LocalTZA AO is implemented and ToLocalTime uses it.
-        { timeZone: "America/New_York", timeZoneName: "shortOffset", en0: "12/7/2021, 5:40 PM GMT-5", en1: "1/23/1989, 7:08 AM GMT-5", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش-٥", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش-٥" },
-        { timeZone: "America/New_York", timeZoneName: "longOffset", en0: "12/7/2021, 5:40 PM GMT-05:00", en1: "1/23/1989, 7:08 AM GMT-05:00", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش-٠٥:٠٠", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش-٠٥:٠٠" },
-        { timeZone: "America/New_York", timeZoneName: "shortGeneric", en0: "12/7/2021, 5:40 PM ET", en1: "1/23/1989, 7:08 AM ET", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش-٥", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش-٥" },
-        { timeZone: "America/New_York", timeZoneName: "longGeneric", en0: "12/7/2021, 5:40 PM Eastern Time", en1: "1/23/1989, 7:08 AM Eastern Time", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م التوقيت الشرقي لأمريكا الشمالية", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص التوقيت الشرقي لأمريكا الشمالية" },
+        { timeZone: "America/New_York", timeZoneName: "shortOffset", en0: "12/7/2021, 12:40 PM GMT-5", en1: "1/23/1989, 2:08 AM GMT-5", ar0: "٧‏/١٢‏/٢٠٢١, ١٢:٤٠ م غرينتش-٥", ar1: "٢٣‏/١‏/١٩٨٩, ٢:٠٨ ص غرينتش-٥" },
+        { timeZone: "America/New_York", timeZoneName: "longOffset", en0: "12/7/2021, 12:40 PM GMT-05:00", en1: "1/23/1989, 2:08 AM GMT-05:00", ar0: "٧‏/١٢‏/٢٠٢١, ١٢:٤٠ م غرينتش-٠٥:٠٠", ar1: "٢٣‏/١‏/١٩٨٩, ٢:٠٨ ص غرينتش-٠٥:٠٠" },
+        { timeZone: "America/New_York", timeZoneName: "shortGeneric", en0: "12/7/2021, 12:40 PM ET", en1: "1/23/1989, 2:08 AM ET", ar0: "٧‏/١٢‏/٢٠٢١, ١٢:٤٠ م غرينتش-٥", ar1: "٢٣‏/١‏/١٩٨٩, ٢:٠٨ ص غرينتش-٥" },
+        { timeZone: "America/New_York", timeZoneName: "longGeneric", en0: "12/7/2021, 12:40 PM Eastern Time", en1: "1/23/1989, 2:08 AM Eastern Time", ar0: "٧‏/١٢‏/٢٠٢١, ١٢:٤٠ م التوقيت الشرقي لأمريكا الشمالية", ar1: "٢٣‏/١‏/١٩٨٩, ٢:٠٨ ص التوقيت الشرقي لأمريكا الشمالية" },
     ];
 
     test("all", () => {

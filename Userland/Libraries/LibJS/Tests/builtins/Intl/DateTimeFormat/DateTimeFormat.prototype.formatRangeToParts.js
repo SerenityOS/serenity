@@ -347,7 +347,7 @@ describe("timeStyle", () => {
     // FIXME: These results should include the date, even though it isn't requested, because the start/end dates
     //        are more than just hours apart. See the FIXME in PartitionDateTimeRangePattern.
     test("full", () => {
-        const en = new Intl.DateTimeFormat("en", { timeStyle: "full" });
+        const en = new Intl.DateTimeFormat("en", { timeStyle: "full", timeZone: "UTC" });
         expect(en.formatRangeToParts(d0, d1)).toEqual([
             { type: "hour", value: "7", source: "startRange" },
             { type: "literal", value: ":", source: "startRange" },
@@ -370,7 +370,7 @@ describe("timeStyle", () => {
             { type: "timeZoneName", value: "Coordinated Universal Time", source: "endRange" },
         ]);
 
-        const ja = new Intl.DateTimeFormat("ja", { timeStyle: "full" });
+        const ja = new Intl.DateTimeFormat("ja", { timeStyle: "full", timeZone: "UTC" });
         expect(ja.formatRangeToParts(d0, d1)).toEqual([
             { type: "hour", value: "7", source: "startRange" },
             { type: "literal", value: "時", source: "startRange" },
@@ -391,7 +391,7 @@ describe("timeStyle", () => {
     });
 
     test("long", () => {
-        const en = new Intl.DateTimeFormat("en", { timeStyle: "long" });
+        const en = new Intl.DateTimeFormat("en", { timeStyle: "long", timeZone: "UTC" });
         expect(en.formatRangeToParts(d0, d1)).toEqual([
             { type: "hour", value: "7", source: "startRange" },
             { type: "literal", value: ":", source: "startRange" },
@@ -414,7 +414,7 @@ describe("timeStyle", () => {
             { type: "timeZoneName", value: "UTC", source: "endRange" },
         ]);
 
-        const ja = new Intl.DateTimeFormat("ja", { timeStyle: "long" });
+        const ja = new Intl.DateTimeFormat("ja", { timeStyle: "long", timeZone: "UTC" });
         expect(ja.formatRangeToParts(d0, d1)).toEqual([
             { type: "hour", value: "7", source: "startRange" },
             { type: "literal", value: ":", source: "startRange" },
@@ -435,7 +435,7 @@ describe("timeStyle", () => {
     });
 
     test("medium", () => {
-        const en = new Intl.DateTimeFormat("en", { timeStyle: "medium" });
+        const en = new Intl.DateTimeFormat("en", { timeStyle: "medium", timeZone: "UTC" });
         expect(en.formatRangeToParts(d0, d1)).toEqual([
             { type: "hour", value: "7", source: "startRange" },
             { type: "literal", value: ":", source: "startRange" },
@@ -454,7 +454,7 @@ describe("timeStyle", () => {
             { type: "dayPeriod", value: "PM", source: "endRange" },
         ]);
 
-        const ja = new Intl.DateTimeFormat("ja", { timeStyle: "medium" });
+        const ja = new Intl.DateTimeFormat("ja", { timeStyle: "medium", timeZone: "UTC" });
         expect(ja.formatRangeToParts(d0, d1)).toEqual([
             { type: "hour", value: "7", source: "startRange" },
             { type: "literal", value: ":", source: "startRange" },
@@ -471,7 +471,7 @@ describe("timeStyle", () => {
     });
 
     test("short", () => {
-        const en = new Intl.DateTimeFormat("en", { timeStyle: "short" });
+        const en = new Intl.DateTimeFormat("en", { timeStyle: "short", timeZone: "UTC" });
         expect(en.formatRangeToParts(d0, d1)).toEqual([
             { type: "hour", value: "7", source: "startRange" },
             { type: "literal", value: ":", source: "startRange" },
@@ -486,7 +486,7 @@ describe("timeStyle", () => {
             { type: "dayPeriod", value: "PM", source: "endRange" },
         ]);
 
-        const ja = new Intl.DateTimeFormat("ja", { timeStyle: "short" });
+        const ja = new Intl.DateTimeFormat("ja", { timeStyle: "short", timeZone: "UTC" });
         expect(ja.formatRangeToParts(d0, d1)).toEqual([
             { type: "hour", value: "7", source: "startRange" },
             { type: "literal", value: ":", source: "startRange" },

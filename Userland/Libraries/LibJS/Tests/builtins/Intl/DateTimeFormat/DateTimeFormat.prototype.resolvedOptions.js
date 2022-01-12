@@ -86,8 +86,8 @@ describe("correct behavior", () => {
     });
 
     test("style", () => {
-        const en = new Intl.DateTimeFormat("en");
-        expect(en.resolvedOptions().timeZone).toBe("UTC");
+        const en = new Intl.DateTimeFormat("en", { timeZone: "EST" });
+        expect(en.resolvedOptions().timeZone).toBe("EST");
 
         const el = new Intl.DateTimeFormat("el", { timeZone: "UTC" });
         expect(el.resolvedOptions().timeZone).toBe("UTC");
