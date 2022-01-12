@@ -2243,26 +2243,42 @@ void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum for
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: we only support RGBA + GL_UNSIGNED_BYTE, implement all the others!
-    if (format != GL_RGBA) {
-        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for format {:#x} not implemented", format);
-        return;
-    } else if (type != GL_UNSIGNED_BYTE) {
-        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for type {:#x} not implemented", type);
+    // FIXME: we only support RGBA + UNSIGNED_BYTE and DEPTH_COMPONENT + UNSIGNED_SHORT, implement all combinations!
+    if (!((format == GL_RGBA && type == GL_UNSIGNED_BYTE) || (format == GL_DEPTH_COMPONENT && type == GL_UNSIGNED_SHORT))) {
+        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for format {:#x} and/or type {:#x} not implemented", format, type);
         return;
     }
 
-    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height });
-    RETURN_WITH_ERROR_IF(bitmap_or_error.is_error(), GL_OUT_OF_MEMORY);
-    auto bitmap = bitmap_or_error.release_value();
+    // FIXME: implement support for pixel parameters such as GL_UNPACK_ALIGNMENT
 
-    // FIXME: implement support for GL_UNPACK_ALIGNMENT and other pixel parameters
-    auto pixel_data = static_cast<u32 const*>(data);
-    for (int y = 0; y < height; ++y)
-        for (int x = 0; x < width; ++x)
-            bitmap->set_pixel(x, y, Color::from_rgba(*(pixel_data++)));
+    if (format == GL_RGBA) {
+        auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height });
+        RETURN_WITH_ERROR_IF(bitmap_or_error.is_error(), GL_OUT_OF_MEMORY);
+        auto bitmap = bitmap_or_error.release_value();
 
-    m_rasterizer.blit_to_color_buffer_at_raster_position(bitmap);
+        auto pixel_data = static_cast<u32 const*>(data);
+        for (int y = 0; y < height; ++y)
+            for (int x = 0; x < width; ++x)
+                bitmap->set_pixel(x, y, Color::from_rgba(*(pixel_data++)));
+
+        m_rasterizer.blit_to_color_buffer_at_raster_position(bitmap);
+    } else if (format == GL_DEPTH_COMPONENT) {
+        Vector<float> depth_values;
+        depth_values.ensure_capacity(width * height);
+
+        auto depth_data = static_cast<u16 const*>(data);
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                auto u16_value = *(depth_data++);
+                auto float_value = static_cast<float>(u16_value) / NumericLimits<u16>::max();
+                depth_values.append(float_value);
+            }
+        }
+
+        m_rasterizer.blit_to_depth_buffer_at_raster_position(depth_values, width, height);
+    } else {
+        VERIFY_NOT_REACHED();
+    }
 }
 
 void SoftwareGLContext::gl_depth_range(GLdouble min, GLdouble max)

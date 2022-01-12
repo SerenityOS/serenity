@@ -105,6 +105,7 @@ public:
     void clear_depth(float);
     void blit_to(Gfx::Bitmap&);
     void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&);
+    void blit_to_depth_buffer_at_raster_position(Vector<float> const&, size_t, size_t);
     void wait_for_all_threads() const;
     void set_options(const RasterizerOptions&);
     void set_light_model_params(const LightModelParameters&);
