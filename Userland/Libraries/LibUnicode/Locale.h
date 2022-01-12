@@ -159,7 +159,6 @@ Optional<StringView> get_locale_long_currency_mapping(StringView locale, StringV
 Optional<StringView> get_locale_short_currency_mapping(StringView locale, StringView currency);
 Optional<StringView> get_locale_narrow_currency_mapping(StringView locale, StringView currency);
 Optional<StringView> get_locale_numeric_currency_mapping(StringView locale, StringView currency);
-Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency, Style style);
 Optional<StringView> get_locale_calendar_mapping(StringView locale, StringView calendar);
 Optional<StringView> get_locale_long_date_field_mapping(StringView locale, StringView date_field);
 Optional<StringView> get_locale_short_date_field_mapping(StringView locale, StringView date_field);
