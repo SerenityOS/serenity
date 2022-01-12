@@ -1,6 +1,24 @@
-diff -urp /dev/null a/Modules/Platform/SerenityOS.cmake
---- /dev/null	2021-02-11 00:46:13.390326124 +0330
-+++ a/Modules/Platform/SerenityOS.cmake	2021-02-12 16:31:38.421786222 +0330
+From e32762d8f7393337786d11d77a71843c80a23b0e Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Wed, 12 Jan 2022 22:17:47 +0330
+Subject: [PATCH 4/7] Platform/SerenityOS
+
+This patch adds the SerenityOS platform config file to CMake.
+
+- [ ] Local?
+- [X] Should be merged to upstream? If we want to have cmake support serenity out of the box.
+- [ ] Resolves issue(s) with our side of things
+- [ ] Hack
+---
+ Modules/Platform/SerenityOS.cmake | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+ create mode 100644 Modules/Platform/SerenityOS.cmake
+
+diff --git a/Modules/Platform/SerenityOS.cmake b/Modules/Platform/SerenityOS.cmake
+new file mode 100644
+index 00000000..952ff61a
+--- /dev/null
++++ b/Modules/Platform/SerenityOS.cmake
 @@ -0,0 +1,25 @@
 +set(CMAKE_DL_LIBS "-ldl")
 +set(CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG "-Wl,-rpath,")
@@ -27,3 +45,6 @@ diff -urp /dev/null a/Modules/Platform/SerenityOS.cmake
 +unset(CMAKE_LIBRARY_ARCHITECTURE_REGEX)
 +
 +include(Platform/UnixPaths)
+-- 
+2.34.1
+
