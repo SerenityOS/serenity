@@ -77,5 +77,6 @@ private:
 };
 
 ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_object, DisplayNames::Type type, StringView code);
+bool is_valid_date_time_field_code(StringView field);
 
 }

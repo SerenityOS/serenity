@@ -171,16 +171,45 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
         return js_string(vm, code.to_titlecase_string());
     }
 
-    // 4. Assert: type is "currency".
+    // 4. If type is "calendar", then
+    if (type == DisplayNames::Type::Calendar) {
+        // a. If code does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
+        if (!Unicode::is_type_identifier(code))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "calendar"sv);
+
+        // b. Let code be the result of mapping code to lower case as described in 6.1.
+        // c. Return code.
+        return js_string(vm, code.to_lowercase_string());
+    }
+
+    // 5. If type is "dateTimeField", then
+    if (type == DisplayNames::Type::DateTimeField) {
+        // a. If the result of IsValidDateTimeFieldCode(code) is false, throw a RangeError exception.
+        if (!is_valid_date_time_field_code(code))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "dateTimeField"sv);
+
+        // b. Return code.
+        return js_string(vm, code);
+    }
+
+    // 6. Assert: type is "currency".
     VERIFY(type == DisplayNames::Type::Currency);
 
-    // 5. If ! IsWellFormedCurrencyCode(code) is false, throw a RangeError exception.
+    // 7. If ! IsWellFormedCurrencyCode(code) is false, throw a RangeError exception.
     if (!is_well_formed_currency_code(code))
         return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "currency"sv);
 
-    // 6. Let code be the result of mapping code to upper case as described in 6.1.
-    // 7. Return code.
+    // 8. Let code be the result of mapping code to upper case as described in 6.1.
+    // 9. Return code.
     return js_string(vm, code.to_uppercase_string());
+}
+
+// 12.2 IsValidDateTimeFieldCode ( field ), https://tc39.es/ecma402/#sec-isvaliddatetimefieldcode
+bool is_valid_date_time_field_code(StringView field)
+{
+    // 1. If field is listed in the Code column of Table 8, return true.
+    // 2. Return false.
+    return field.is_one_of("era"sv, "year"sv, "quarter"sv, "month"sv, "weekOfYear"sv, "weekday"sv, "day"sv, "dayPeriod"sv, "hour"sv, "minute"sv, "second"sv, "timeZoneName"sv);
 }
 
 }
