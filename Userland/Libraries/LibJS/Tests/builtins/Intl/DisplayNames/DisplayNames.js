@@ -35,6 +35,12 @@ describe("errors", () => {
         }).toThrowWithMessage(RangeError, "hello! is not a valid value for option fallback");
     });
 
+    test("language display option is invalid ", () => {
+        expect(() => {
+            new Intl.DisplayNames("en", { type: "language", languageDisplay: "hello!" });
+        }).toThrowWithMessage(RangeError, "hello! is not a valid value for option languageDisplay");
+    });
+
     test("missing type options ", () => {
         expect(() => {
             new Intl.DisplayNames("en", {});
@@ -48,9 +54,17 @@ describe("normal behavior", () => {
     });
 
     test("all valid types", () => {
-        ["language", "region", "script", "currency"].forEach(type => {
+        ["language", "region", "script", "currency", "calendar", "dateTimeField"].forEach(type => {
             expect(() => {
                 new Intl.DisplayNames("en", { type: type });
+            }).not.toThrow();
+        });
+    });
+
+    test("all valid language displays", () => {
+        ["dialect", "standard"].forEach(languageDisplay => {
+            expect(() => {
+                new Intl.DisplayNames("en", { type: "language", languageDisplay: languageDisplay });
             }).not.toThrow();
         });
     });
