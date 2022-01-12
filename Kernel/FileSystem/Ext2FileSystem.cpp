@@ -24,7 +24,7 @@ static constexpr size_t max_block_size = 4096;
 static constexpr size_t max_inline_symlink_length = 60;
 
 struct Ext2FSDirectoryEntry {
-    String name;
+    NonnullOwnPtr<KString> name;
     InodeIndex inode_index { 0 };
     u8 file_type { 0 };
     u16 record_length { 0 };
@@ -1094,10 +1094,10 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
     size_t space_in_block = block_size;
     for (size_t i = 0; i < entries.size(); ++i) {
         auto& entry = entries[i];
-        entry.record_length = EXT2_DIR_REC_LEN(entry.name.length());
+        entry.record_length = EXT2_DIR_REC_LEN(entry.name->length());
         space_in_block -= entry.record_length;
         if (i + 1 < entries.size()) {
-            if (EXT2_DIR_REC_LEN(entries[i + 1].name.length()) > space_in_block) {
+            if (EXT2_DIR_REC_LEN(entries[i + 1].name->length()) > space_in_block) {
                 entry.record_length += space_in_block;
                 space_in_block = block_size;
             }
@@ -1116,14 +1116,14 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
     OutputMemoryStream stream { directory_data };
 
     for (auto& entry : entries) {
-        dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): Writing inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry.inode_index, u16(entry.name.length()), u16(entry.record_length), u8(entry.file_type), entry.name);
+        dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): Writing inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry.inode_index, u16(entry.name->length()), u16(entry.record_length), u8(entry.file_type), entry.name);
 
         stream << u32(entry.inode_index.value());
         stream << u16(entry.record_length);
-        stream << u8(entry.name.length());
+        stream << u8(entry.name->length());
         stream << u8(entry.file_type);
-        stream << entry.name.bytes();
-        int padding = entry.record_length - entry.name.length() - 8;
+        stream << entry.name->bytes();
+        int padding = entry.record_length - entry.name->length() - 8;
         for (int j = 0; j < padding; ++j)
             stream << u8(0);
     }
@@ -1161,13 +1161,15 @@ ErrorOr<void> Ext2FSInode::add_child(Inode& child, StringView name, mode_t mode)
     TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
         if (name == entry.name)
             return EEXIST;
-        TRY(entries.try_append({ entry.name, entry.inode.index(), entry.file_type }));
+        auto entry_name = TRY(KString::try_create(entry.name));
+        TRY(entries.try_append({ move(entry_name), entry.inode.index(), entry.file_type }));
         return {};
     }));
 
     TRY(child.increment_link_count());
 
-    TRY(entries.try_empend(name, child.index(), to_ext2_file_type(mode)));
+    auto entry_name = TRY(KString::try_create(name));
+    TRY(entries.try_empend(move(entry_name), child.index(), to_ext2_file_type(mode)));
 
     TRY(write_directory(entries));
     TRY(populate_lookup_cache());
@@ -1194,8 +1196,10 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
 
     Vector<Ext2FSDirectoryEntry> entries;
     TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
-        if (name != entry.name)
-            TRY(entries.try_append({ entry.name, entry.inode.index(), entry.file_type }));
+        if (name != entry.name) {
+            auto entry_name = TRY(KString::try_create(entry.name));
+            TRY(entries.try_append({ move(entry_name), entry.inode.index(), entry.file_type }));
+        }
         return {};
     }));
 
@@ -1463,8 +1467,10 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::create_directory(Ext2FSInode& parent_inode
     dbgln_if(EXT2_DEBUG, "Ext2FS: create_directory: created new directory named '{} with inode {}", name, inode->index());
 
     Vector<Ext2FSDirectoryEntry> entries;
-    TRY(entries.try_empend(".", inode->index(), static_cast<u8>(EXT2_FT_DIR)));
-    TRY(entries.try_empend("..", parent_inode.index(), static_cast<u8>(EXT2_FT_DIR)));
+    auto current_directory_name = TRY(KString::try_create("."sv));
+    TRY(entries.try_empend(move(current_directory_name), inode->index(), static_cast<u8>(EXT2_FT_DIR)));
+    auto parent_directory_name = TRY(KString::try_create(".."sv));
+    TRY(entries.try_empend(move(parent_directory_name), parent_inode.index(), static_cast<u8>(EXT2_FT_DIR)));
 
     TRY(static_cast<Ext2FSInode&>(*inode).write_directory(entries));
     TRY(parent_inode.increment_link_count());
