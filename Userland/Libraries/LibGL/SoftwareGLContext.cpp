@@ -2262,10 +2262,7 @@ void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum for
         for (int x = 0; x < width; ++x)
             bitmap->set_pixel(x, y, Color::from_rgba(*(pixel_data++)));
 
-    m_rasterizer.blit(
-        bitmap,
-        static_cast<int>(m_current_raster_position.window_coordinates.x()),
-        static_cast<int>(m_current_raster_position.window_coordinates.y()));
+    m_rasterizer.blit_to_color_buffer_at_raster_position(bitmap);
 }
 
 void SoftwareGLContext::gl_depth_range(GLdouble min, GLdouble max)
@@ -2686,8 +2683,7 @@ void SoftwareGLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_raster_pos, x, y, z, w);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_current_raster_position.window_coordinates = { x, y, z };
-    m_current_raster_position.clip_coordinate_value = w;
+    m_rasterizer.set_raster_position({ x, y, z, w }, m_model_view_matrix, m_projection_matrix);
 }
 
 void SoftwareGLContext::gl_line_width(GLfloat width)
@@ -2751,8 +2747,14 @@ void SoftwareGLContext::gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, 
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_bitmap, width, height, xorig, yorig, xmove, ymove, bitmap);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: implement gl_bitmap({}, {}, {}, {}, {}, {}, {})", width, height, xorig, yorig, xmove, ymove, bitmap);
+    if (bitmap != nullptr) {
+        // FIXME: implement
+        dbgln_if(GL_DEBUG, "gl_bitmap({}, {}, {}, {}, {}, {}, {}): unimplemented", width, height, xorig, yorig, xmove, ymove, bitmap);
+    }
+
+    auto raster_position = m_rasterizer.raster_position();
+    raster_position.window_coordinates += { xmove, ymove, 0.f, 0.f };
+    m_rasterizer.set_raster_position(raster_position);
 }
 
 void SoftwareGLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)

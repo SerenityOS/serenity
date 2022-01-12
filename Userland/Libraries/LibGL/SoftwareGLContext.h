@@ -418,17 +418,6 @@ private:
     GLsizei m_unpack_row_length { 0 };
     u8 m_unpack_alignment { 4 };
 
-    struct RasterPosition {
-        FloatVector3 window_coordinates { 0.0f, 0.0f, 0.0f };
-        float clip_coordinate_value { 1.0f };
-        float eye_coordinate_distance { 0.0f };
-        bool valid { true };
-        FloatVector4 color_rgba { 1.0f, 1.0f, 1.0f, 1.0f };
-        float color_index { 1.0f };
-        FloatVector4 texture_coordinates { 0.0f, 0.0f, 0.0f, 1.0f };
-    };
-    RasterPosition m_current_raster_position;
-
     float m_line_width { 1.0f };
 
     // Lighting configuration
