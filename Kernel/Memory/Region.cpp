@@ -234,7 +234,7 @@ bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
     return success;
 }
 
-void Region::unmap(ShouldDeallocateVirtualRange deallocate_range)
+void Region::unmap(ShouldDeallocateVirtualRange deallocate_range, ShouldFlushTLB should_flush_tlb)
 {
     if (!m_page_directory)
         return;
@@ -245,7 +245,8 @@ void Region::unmap(ShouldDeallocateVirtualRange deallocate_range)
         auto vaddr = vaddr_from_page_index(i);
         MM.release_pte(*m_page_directory, vaddr, i == count - 1 ? MemoryManager::IsLastPTERelease::Yes : MemoryManager::IsLastPTERelease::No);
     }
-    MemoryManager::flush_tlb(m_page_directory, vaddr(), page_count());
+    if (should_flush_tlb == ShouldFlushTLB::Yes)
+        MemoryManager::flush_tlb(m_page_directory, vaddr(), page_count());
     if (deallocate_range == ShouldDeallocateVirtualRange::Yes) {
         m_page_directory->range_allocator().deallocate(range());
     }

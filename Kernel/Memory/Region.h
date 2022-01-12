@@ -178,7 +178,7 @@ public:
         No,
         Yes,
     };
-    void unmap(ShouldDeallocateVirtualRange = ShouldDeallocateVirtualRange::Yes);
+    void unmap(ShouldDeallocateVirtualRange, ShouldFlushTLB = ShouldFlushTLB::Yes);
 
     void remap();
 
