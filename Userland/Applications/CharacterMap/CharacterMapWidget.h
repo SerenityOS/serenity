@@ -30,10 +30,12 @@ private:
     RefPtr<GUI::TextBox> m_output_box;
     RefPtr<GUI::Button> m_copy_output_button;
     RefPtr<GUI::Statusbar> m_statusbar;
+    RefPtr<GUI::Window> m_find_window;
 
     RefPtr<GUI::Action> m_choose_font_action;
     RefPtr<GUI::Action> m_copy_selection_action;
     RefPtr<GUI::Action> m_previous_glyph_action;
     RefPtr<GUI::Action> m_next_glyph_action;
     RefPtr<GUI::Action> m_go_to_glyph_action;
+    RefPtr<GUI::Action> m_find_glyphs_action;
 };

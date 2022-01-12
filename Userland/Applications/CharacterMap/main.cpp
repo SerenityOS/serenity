@@ -5,6 +5,7 @@
  */
 
 #include "CharacterMapWidget.h"
+#include "SearchCharacters.h"
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -13,34 +14,19 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibMain/Main.h>
-#include <LibUnicode/CharacterTypes.h>
 
 static void search_and_print_results(String const& query)
 {
     outln("Searching for '{}'", query);
-    String uppercase_query = query.to_uppercase();
-    StringView uppercase_query_view = uppercase_query.view();
-    // FIXME: At time of writing there are 144,697 code points in Unicode. I've added some breathing room,
-    //        but ideally this would be defined in LibUnicode somewhere.
-    constexpr u32 unicode_character_count = 150000;
-    // FIXME: There's probably a better way to do this than just looping, but it still only takes ~150ms to run for me!
     u32 result_count = 0;
-    for (u32 i = 1; i < unicode_character_count; ++i) {
-        if (auto maybe_display_name = Unicode::code_point_display_name(i); maybe_display_name.has_value()) {
-            auto& display_name = maybe_display_name.value();
-            // FIXME: This should be a case-sensitive search, since we already converted the query to uppercase
-            //        and the unicode names are all in uppercase. But, that makes it run slower!
-            //        Sensitive: ~175ms, Insensitive: ~140ms
-            if (display_name.contains(uppercase_query_view, AK::CaseSensitivity::CaseInsensitive)) {
-                StringBuilder builder;
-                builder.append_code_point(i);
-                builder.append(" - ");
-                builder.append(display_name);
-                outln(builder.string_view());
-                result_count++;
-            }
-        }
-    }
+    for_each_character_containing(query, [&](auto code_point, auto& display_name) {
+        StringBuilder builder;
+        builder.append_code_point(code_point);
+        builder.append(" - ");
+        builder.append(display_name);
+        outln(builder.string_view());
+        result_count++;
+    });
 
     if (result_count == 0)
         outln("No results found.");
