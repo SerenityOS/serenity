@@ -389,10 +389,34 @@ describe("timeZoneName", () => {
         { timeZone: "UTC", timeZoneName: "longOffset", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
         { timeZone: "UTC", timeZoneName: "shortGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
         { timeZone: "UTC", timeZoneName: "longGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+
+        { timeZone: "America/New_York", timeZoneName: "short", en0: "12/7/2021, 12:40 PM EST", en1: "1/23/1989, 2:08 AM EST", ar0: "٧‏/١٢‏/٢٠٢١, ١٢:٤٠ م غرينتش-٥", ar1: "٢٣‏/١‏/١٩٨٩, ٢:٠٨ ص غرينتش-٥" },
+        { timeZone: "America/New_York", timeZoneName: "long", en0: "12/7/2021, 12:40 PM Eastern Standard Time", en1: "1/23/1989, 2:08 AM Eastern Standard Time", ar0: "٧‏/١٢‏/٢٠٢١, ١٢:٤٠ م التوقيت الرسمي الشرقي لأمريكا الشمالية", ar1: "٢٣‏/١‏/١٩٨٩, ٢:٠٨ ص التوقيت الرسمي الشرقي لأمريكا الشمالية" },
         { timeZone: "America/New_York", timeZoneName: "shortOffset", en0: "12/7/2021, 12:40 PM GMT-5", en1: "1/23/1989, 2:08 AM GMT-5", ar0: "٧‏/١٢‏/٢٠٢١, ١٢:٤٠ م غرينتش-٥", ar1: "٢٣‏/١‏/١٩٨٩, ٢:٠٨ ص غرينتش-٥" },
         { timeZone: "America/New_York", timeZoneName: "longOffset", en0: "12/7/2021, 12:40 PM GMT-05:00", en1: "1/23/1989, 2:08 AM GMT-05:00", ar0: "٧‏/١٢‏/٢٠٢١, ١٢:٤٠ م غرينتش-٠٥:٠٠", ar1: "٢٣‏/١‏/١٩٨٩, ٢:٠٨ ص غرينتش-٠٥:٠٠" },
         { timeZone: "America/New_York", timeZoneName: "shortGeneric", en0: "12/7/2021, 12:40 PM ET", en1: "1/23/1989, 2:08 AM ET", ar0: "٧‏/١٢‏/٢٠٢١, ١٢:٤٠ م غرينتش-٥", ar1: "٢٣‏/١‏/١٩٨٩, ٢:٠٨ ص غرينتش-٥" },
         { timeZone: "America/New_York", timeZoneName: "longGeneric", en0: "12/7/2021, 12:40 PM Eastern Time", en1: "1/23/1989, 2:08 AM Eastern Time", ar0: "٧‏/١٢‏/٢٠٢١, ١٢:٤٠ م التوقيت الشرقي لأمريكا الشمالية", ar1: "٢٣‏/١‏/١٩٨٩, ٢:٠٨ ص التوقيت الشرقي لأمريكا الشمالية" },
+
+        { timeZone: "Europe/London", timeZoneName: "short", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZone: "Europe/London", timeZoneName: "long", en0: "12/7/2021, 5:40 PM Greenwich Mean Time", en1: "1/23/1989, 7:08 AM Greenwich Mean Time", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م توقيت غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص توقيت غرينتش" },
+        { timeZone: "Europe/London", timeZoneName: "shortOffset", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZone: "Europe/London", timeZoneName: "longOffset", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZone: "Europe/London", timeZoneName: "shortGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+        { timeZone: "Europe/London", timeZoneName: "longGeneric", en0: "12/7/2021, 5:40 PM GMT", en1: "1/23/1989, 7:08 AM GMT", ar0: "٧‏/١٢‏/٢٠٢١, ٥:٤٠ م غرينتش", ar1: "٢٣‏/١‏/١٩٨٩, ٧:٠٨ ص غرينتش" },
+
+        { timeZone: "America/Los_Angeles", timeZoneName: "short", en0: "12/7/2021, 9:40 AM PST", en1: "1/22/1989, 11:08 PM PST", ar0: "٧‏/١٢‏/٢٠٢١, ٩:٤٠ ص غرينتش-٨", ar1: "٢٢‏/١‏/١٩٨٩, ١١:٠٨ م غرينتش-٨" },
+        { timeZone: "America/Los_Angeles", timeZoneName: "long", en0: "12/7/2021, 9:40 AM Pacific Standard Time", en1: "1/22/1989, 11:08 PM Pacific Standard Time", ar0: "٧‏/١٢‏/٢٠٢١, ٩:٤٠ ص توقيت المحيط الهادي الرسمي", ar1: "٢٢‏/١‏/١٩٨٩, ١١:٠٨ م توقيت المحيط الهادي الرسمي" },
+        { timeZone: "America/Los_Angeles", timeZoneName: "shortOffset", en0: "12/7/2021, 9:40 AM GMT-8", en1: "1/22/1989, 11:08 PM GMT-8", ar0: "٧‏/١٢‏/٢٠٢١, ٩:٤٠ ص غرينتش-٨", ar1: "٢٢‏/١‏/١٩٨٩, ١١:٠٨ م غرينتش-٨" },
+        { timeZone: "America/Los_Angeles", timeZoneName: "longOffset", en0: "12/7/2021, 9:40 AM GMT-08:00", en1: "1/22/1989, 11:08 PM GMT-08:00", ar0: "٧‏/١٢‏/٢٠٢١, ٩:٤٠ ص غرينتش-٠٨:٠٠", ar1: "٢٢‏/١‏/١٩٨٩, ١١:٠٨ م غرينتش-٠٨:٠٠" },
+        { timeZone: "America/Los_Angeles", timeZoneName: "shortGeneric", en0: "12/7/2021, 9:40 AM PT", en1: "1/22/1989, 11:08 PM PT", ar0: "٧‏/١٢‏/٢٠٢١, ٩:٤٠ ص غرينتش-٨", ar1: "٢٢‏/١‏/١٩٨٩, ١١:٠٨ م غرينتش-٨" },
+        { timeZone: "America/Los_Angeles", timeZoneName: "longGeneric", en0: "12/7/2021, 9:40 AM Pacific Time", en1: "1/22/1989, 11:08 PM Pacific Time", ar0: "٧‏/١٢‏/٢٠٢١, ٩:٤٠ ص توقيت المحيط الهادي", ar1: "٢٢‏/١‏/١٩٨٩, ١١:٠٨ م توقيت المحيط الهادي" },
+
+        { timeZone: "Asia/Kathmandu", timeZoneName: "short", en0: "12/7/2021, 11:25 PM GMT+5:45", en1: "1/23/1989, 12:53 PM GMT+5:45", ar0: "٧‏/١٢‏/٢٠٢١, ١١:٢٥ م غرينتش+٥:٤٥", ar1: "٢٣‏/١‏/١٩٨٩, ١٢:٥٣ م غرينتش+٥:٤٥" },
+        { timeZone: "Asia/Kathmandu", timeZoneName: "long", en0: "12/7/2021, 11:25 PM Nepal Time", en1: "1/23/1989, 12:53 PM Nepal Time", ar0: "٧‏/١٢‏/٢٠٢١, ١١:٢٥ م توقيت نيبال", ar1: "٢٣‏/١‏/١٩٨٩, ١٢:٥٣ م توقيت نيبال" },
+        { timeZone: "Asia/Kathmandu", timeZoneName: "shortOffset", en0: "12/7/2021, 11:25 PM GMT+5:45", en1: "1/23/1989, 12:53 PM GMT+5:45", ar0: "٧‏/١٢‏/٢٠٢١, ١١:٢٥ م غرينتش+٥:٤٥", ar1: "٢٣‏/١‏/١٩٨٩, ١٢:٥٣ م غرينتش+٥:٤٥" },
+        { timeZone: "Asia/Kathmandu", timeZoneName: "longOffset", en0: "12/7/2021, 11:25 PM GMT+05:45", en1: "1/23/1989, 12:53 PM GMT+05:45", ar0: "٧‏/١٢‏/٢٠٢١, ١١:٢٥ م غرينتش+٠٥:٤٥", ar1: "٢٣‏/١‏/١٩٨٩, ١٢:٥٣ م غرينتش+٠٥:٤٥" },
+        { timeZone: "Asia/Kathmandu", timeZoneName: "shortGeneric", en0: "12/7/2021, 11:25 PM GMT+5:45", en1: "1/23/1989, 12:53 PM GMT+5:45", ar0: "٧‏/١٢‏/٢٠٢١, ١١:٢٥ م غرينتش+٥:٤٥", ar1: "٢٣‏/١‏/١٩٨٩, ١٢:٥٣ م غرينتش+٥:٤٥" },
+        { timeZone: "Asia/Kathmandu", timeZoneName: "longGeneric", en0: "12/7/2021, 11:25 PM GMT+05:45", en1: "1/23/1989, 12:53 PM GMT+05:45", ar0: "٧‏/١٢‏/٢٠٢١, ١١:٢٥ م غرينتش+٠٥:٤٥", ar1: "٢٣‏/١‏/١٩٨٩, ١٢:٥٣ م غرينتش+٠٥:٤٥" },
     ];
 
     test("all", () => {
