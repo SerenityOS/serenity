@@ -114,6 +114,12 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
             push_string_on_new_stack(value.optional_string);
             value.auxv.a_un.a_ptr = (void*)new_sp;
         }
+        if (value.auxv.a_type == ELF::AuxiliaryValue::Random) {
+            u8 random_bytes[16] {};
+            get_fast_random_bytes({ random_bytes, sizeof(random_bytes) });
+            push_string_on_new_stack({ random_bytes, sizeof(random_bytes) });
+            value.auxv.a_un.a_ptr = (void*)new_sp;
+        }
     }
 
     for (ssize_t i = auxiliary_values.size() - 1; i >= 0; --i) {
@@ -655,10 +661,7 @@ static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, 
     // FIXME: Also take into account things like extended filesystem permissions? That's what linux does...
     auxv.append({ ELF::AuxiliaryValue::Secure, ((uid != euid) || (gid != egid)) ? 1 : 0 });
 
-    char random_bytes[16] {};
-    get_fast_random_bytes({ (u8*)random_bytes, sizeof(random_bytes) });
-
-    auxv.append({ ELF::AuxiliaryValue::Random, String(random_bytes, sizeof(random_bytes)) });
+    auxv.append({ ELF::AuxiliaryValue::Random, nullptr });
 
     auxv.append({ ELF::AuxiliaryValue::ExecFilename, executable_path });
 
