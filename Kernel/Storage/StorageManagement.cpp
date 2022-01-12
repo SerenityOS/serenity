@@ -145,11 +145,14 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
             // number in the device name indicates the node, e.g. /dev/nvme0n1 we need to append a "p" character
             // so that we can properly distinguish the partition index from the device itself
             char storage_name_last_char = *(storage_device.early_storage_name().end() - 1);
-            String early_storage_name;
-            if (storage_name_last_char >= '0' && storage_name_last_char <= '9')
-                early_storage_name = String::formatted("{}p", storage_device.early_storage_name());
-            else
+            OwnPtr<KString> normalized_name;
+            StringView early_storage_name;
+            if (storage_name_last_char >= '0' && storage_name_last_char <= '9') {
+                normalized_name = MUST(KString::formatted("{}p", storage_device.early_storage_name()));
+                early_storage_name = normalized_name->view();
+            } else {
                 early_storage_name = storage_device.early_storage_name();
+            }
 
             auto start_storage_name = storage_name.substring_view(0, min(early_storage_name.length(), storage_name.length()));
 
