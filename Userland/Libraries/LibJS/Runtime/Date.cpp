@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibTimeZone/TimeZone.h>
 #include <time.h>
 
 namespace JS {
@@ -313,6 +314,29 @@ u8 week_day(double t)
 {
     // 𝔽(ℝ(Day(t) + 4𝔽) modulo 7)
     return static_cast<u8>(modulo(day(t) + 4, 7));
+}
+
+// 21.4.1.7 LocalTZA ( t, isUTC ), https://tc39.es/ecma262/#sec-local-time-zone-adjustment
+double local_tza(double time, bool is_utc, Optional<StringView> time_zone_override)
+{
+    // The time_zone_override parameter is non-standard, but allows callers to override the system
+    // time zone with a specific value without setting environment variables.
+    auto time_zone = time_zone_override.value_or(TimeZone::current_time_zone());
+
+    // When isUTC is true, LocalTZA( tUTC, true ) should return the offset of the local time zone from
+    // UTC measured in milliseconds at time represented by time value tUTC. When the result is added to
+    // tUTC, it should yield the corresponding Number tlocal.
+    if (is_utc) {
+        auto offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_milliseconds(time));
+        return offset.value_or(0) * 1000;
+    }
+
+    // When isUTC is false, LocalTZA( tlocal, false ) should return the offset of the local time zone from
+    // UTC measured in milliseconds at local time represented by Number tlocal. When the result is subtracted
+    // from tlocal, it should yield the corresponding time value tUTC.
+
+    // FIXME: Implement isUTC=false when any caller needs it.
+    TODO();
 }
 
 // 21.4.1.11 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
