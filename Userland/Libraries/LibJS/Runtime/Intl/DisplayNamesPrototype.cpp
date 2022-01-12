@@ -54,6 +54,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 
     switch (display_names->type()) {
     case DisplayNames::Type::Language:
+        // FIXME: Handle the [[LanguageDisplay]] internal slot once we know where that data comes from.
         result = Unicode::get_locale_language_mapping(display_names->locale(), code.as_string().string());
         break;
     case DisplayNames::Type::Region:
