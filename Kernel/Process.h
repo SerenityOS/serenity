@@ -528,7 +528,7 @@ private:
     void kill_threads_except_self();
     void kill_all_threads();
     ErrorOr<void> dump_core();
-    bool dump_perfcore();
+    ErrorOr<void> dump_perfcore();
     bool create_perf_events_buffer_if_needed();
     void delete_perf_events_buffer();
 
