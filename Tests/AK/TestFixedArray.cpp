@@ -23,7 +23,4 @@ TEST_CASE(ints)
     EXPECT_EQ(ints[0], 0);
     EXPECT_EQ(ints[1], 1);
     EXPECT_EQ(ints[2], 2);
-
-    ints.clear();
-    EXPECT_EQ(ints.size(), 0u);
 }
