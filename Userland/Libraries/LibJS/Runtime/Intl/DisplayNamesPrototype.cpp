@@ -79,8 +79,22 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
         }
         break;
     case DisplayNames::Type::Calendar:
+        result = Unicode::get_locale_calendar_mapping(display_names->locale(), code.as_string().string());
         break;
     case DisplayNames::Type::DateTimeField:
+        switch (display_names->style()) {
+        case DisplayNames::Style::Long:
+            result = Unicode::get_locale_long_date_field_mapping(display_names->locale(), code.as_string().string());
+            break;
+        case DisplayNames::Style::Short:
+            result = Unicode::get_locale_short_date_field_mapping(display_names->locale(), code.as_string().string());
+            break;
+        case DisplayNames::Style::Narrow:
+            result = Unicode::get_locale_narrow_date_field_mapping(display_names->locale(), code.as_string().string());
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
         break;
     default:
         VERIFY_NOT_REACHED();
