@@ -431,6 +431,7 @@ static void free_impl(void* ptr)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html
 void* malloc(size_t size)
 {
     MemoryAuditingSuppressor suppressor;
@@ -471,6 +472,7 @@ void* _aligned_malloc(size_t size, size_t alignment)
     return aligned_ptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html
 void free(void* ptr)
 {
     MemoryAuditingSuppressor suppressor;
@@ -486,6 +488,7 @@ void _aligned_free(void* ptr)
         free(((void**)ptr)[-1]);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/calloc.html
 void* calloc(size_t count, size_t size)
 {
     MemoryAuditingSuppressor suppressor;
