@@ -22,19 +22,9 @@ ErrorOr<FixedArray<RefPtr<PhysicalPage>>> VMObject::try_clone_physical_pages() c
     return m_physical_pages.try_clone();
 }
 
-FixedArray<RefPtr<PhysicalPage>> VMObject::must_clone_physical_pages_but_fixme_should_propagate_errors() const
-{
-    return MUST(try_clone_physical_pages());
-}
-
 ErrorOr<FixedArray<RefPtr<PhysicalPage>>> VMObject::try_create_physical_pages(size_t size)
 {
     return FixedArray<RefPtr<PhysicalPage>>::try_create(ceil_div(size, static_cast<size_t>(PAGE_SIZE)));
-}
-
-FixedArray<RefPtr<PhysicalPage>> VMObject::must_create_physical_pages_but_fixme_should_propagate_errors(size_t size)
-{
-    return MUST(try_create_physical_pages(size));
 }
 
 VMObject::VMObject(FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
