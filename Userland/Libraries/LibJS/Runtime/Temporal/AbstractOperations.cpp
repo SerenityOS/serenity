@@ -1663,7 +1663,9 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
             auto fraction = String::formatted("{}000000000", *fraction_part);
             // ii. Let nanoseconds be the String value equal to the substring of fraction from 1 to 10.
             // iii. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
-            nanoseconds = *fraction.substring(1, 10).to_int<i32>();
+            // FIXME: 1-10 is wrong and should be 0-9; the decimal separator is no longer present in the parsed string.
+            //        See: https://github.com/tc39/proposal-temporal/pull/1999
+            nanoseconds = *fraction.substring(0, 9).to_int<i32>();
         }
         // h. Else,
         else {
