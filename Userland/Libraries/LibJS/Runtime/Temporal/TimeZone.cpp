@@ -56,11 +56,11 @@ String canonicalize_time_zone_name(String const& time_zone)
 }
 
 // 11.1.3 DefaultTimeZone ( ), https://tc39.es/proposal-temporal/#sec-defaulttimezone
-// NOTE: This is the minimum implementation of DefaultTimeZone, supporting only the "UTC" time zone.
+// 15.1.3 DefaultTimeZone ( ), https://tc39.es/proposal-temporal/#sup-defaulttimezone
 String default_time_zone()
 {
-    // 1. Return "UTC".
-    return "UTC";
+    // The DefaultTimeZone abstract operation returns a String value representing the valid (11.1.1) and canonicalized (11.1.2) time zone name for the host environment's current time zone.
+    return ::TimeZone::current_time_zone();
 }
 
 // 11.6.1 ParseTemporalTimeZone ( string ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezone

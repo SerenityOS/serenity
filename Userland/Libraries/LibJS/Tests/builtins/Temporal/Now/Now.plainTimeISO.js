@@ -15,7 +15,7 @@ describe("correct behavior", () => {
                 return 86400000000000;
             },
         };
-        const plainTime = Temporal.Now.plainTimeISO();
+        const plainTime = Temporal.Now.plainTimeISO("UTC");
         const plainTimeWithOffset = Temporal.Now.plainTimeISO(timeZone);
         // FIXME: Compare these in a sensible way
     });
