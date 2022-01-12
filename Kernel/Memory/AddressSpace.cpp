@@ -165,7 +165,7 @@ ErrorOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, String
         region_name = TRY(KString::try_create(name));
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(range.size(), strategy));
     auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), 0, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false));
-    TRY(region->map(page_directory()));
+    TRY(region->map(page_directory(), ShouldFlushTLB::No));
     return add_region(move(region));
 }
 
@@ -191,7 +191,7 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const&
         region_name = TRY(KString::try_create(name));
     auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), offset_in_vmobject, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
     auto* added_region = TRY(add_region(move(region)));
-    TRY(added_region->map(page_directory()));
+    TRY(added_region->map(page_directory(), ShouldFlushTLB::No));
     return added_region;
 }
 
