@@ -1670,8 +1670,11 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
             // i. Let nanoseconds be 0.
             nanoseconds = 0;
         }
+
         // i. Let offsetNanoseconds be sign × (((hours × 60 + minutes) × 60 + seconds) × 10^9 + nanoseconds).
-        auto offset_nanoseconds = sign * (((hours * 60 + minutes) * 60 + seconds) * 1000000000 + nanoseconds);
+        // NOTE: Decimal point in 10^9 is important, otherwise it's all integers and the result overflows!
+        auto offset_nanoseconds = sign * (((hours * 60 + minutes) * 60 + seconds) * 1000000000.0 + nanoseconds);
+
         // j. Let offsetString be ! FormatTimeZoneOffsetString(offsetNanoseconds).
         offset = format_time_zone_offset_string(offset_nanoseconds);
     }
