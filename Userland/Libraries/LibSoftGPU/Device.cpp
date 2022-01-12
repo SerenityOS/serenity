@@ -607,6 +607,8 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         }
     } else if (primitive_type == PrimitiveType::TriangleStrip) {
         Triangle triangle;
+        if (vertices.size() < 3)
+            return;
         for (size_t i = 0; i < vertices.size() - 2; i++) {
             if (i % 2 == 0) {
                 triangle.vertices[0] = vertices.at(i);
