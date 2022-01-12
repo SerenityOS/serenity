@@ -306,7 +306,7 @@ void Region::clear_to_zero()
     VERIFY(vmobject().is_anonymous());
     SpinlockLocker locker(vmobject().m_lock);
     for (auto i = 0u; i < page_count(); ++i) {
-        auto page = physical_page_slot(i);
+        auto& page = physical_page_slot(i);
         VERIFY(page);
         if (page->is_shared_zero_page())
             continue;
