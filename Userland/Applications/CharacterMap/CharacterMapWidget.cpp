@@ -138,7 +138,7 @@ void CharacterMapWidget::initialize_menubar(GUI::Window& window)
     help_menu.add_action(GUI::CommonActions::make_help_action([&](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/CharacterMap.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Character Map", GUI::Icon::default_icon("app-keyboard-settings"), &window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Character Map", GUI::Icon::default_icon("app-character-map"), &window));
 }
 
 void CharacterMapWidget::did_change_font()
