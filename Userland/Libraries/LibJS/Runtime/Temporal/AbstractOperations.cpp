@@ -632,7 +632,13 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         // j. Let timeZone be ? Get(value, "timeZone").
         time_zone = TRY(value_object.get(vm.names.timeZone));
 
-        // k. If offsetString is undefined, then
+        // k. If timeZone is not undefined, then
+        if (!time_zone.is_undefined()) {
+            // i. Set timeZone to ? ToTemporalTimeZone(timeZone).
+            time_zone = TRY(to_temporal_time_zone(global_object, time_zone));
+        }
+
+        // l. If offsetString is undefined, then
         if (offset_string.is_undefined()) {
             // i. Set offsetBehaviour to wall.
             offset_behavior = OffsetBehavior::Wall;
@@ -655,21 +661,44 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         // d. Let offsetString be result.[[TimeZoneOffset]].
         offset_string = parsed_result.time_zone.offset.has_value() ? js_string(vm, *parsed_result.time_zone.offset) : js_undefined();
 
-        // e. Let timeZone be result.[[TimeZoneIANAName]].
-        time_zone = parsed_result.time_zone.name.has_value() ? js_string(vm, *parsed_result.time_zone.name) : js_undefined();
+        // e. Let timeZoneName be result.[[TimeZoneIANAName]].
+        auto time_zone_name = parsed_result.time_zone.name;
 
-        // f. If result.[[TimeZoneZ]] is true, then
+        // f. If timeZoneName is not undefined, then
+        if (time_zone_name.has_value()) {
+            // i. If ParseText(! StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is not a List of errors, then
+            // FIXME: Logic error in the spec (check for no errors -> check for errors).
+            //        See: https://github.com/tc39/proposal-temporal/pull/2000
+            if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
+                // 1. If ! IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
+                if (!is_valid_time_zone_name(*time_zone_name))
+                    return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
+
+                // 2. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).
+                time_zone_name = canonicalize_time_zone_name(*time_zone_name);
+            }
+
+            // ii. Let timeZone be ! CreateTemporalTimeZone(timeZoneName).
+            time_zone = MUST(create_temporal_time_zone(global_object, *time_zone_name));
+        }
+        // g. Else,
+        else {
+            // i. Let timeZone be undefined.
+            time_zone = js_undefined();
+        }
+
+        // h. If result.[[TimeZoneZ]] is true, then
         if (parsed_result.time_zone.z) {
             // i. Set offsetBehaviour to exact.
             offset_behavior = OffsetBehavior::Exact;
         }
-        // g. Else if offsetString is undefined, then
+        // i. Else if offsetString is undefined, then
         else if (offset_string.is_undefined()) {
             // i. Set offsetBehaviour to wall.
             offset_behavior = OffsetBehavior::Wall;
         }
 
-        // h. Set matchBehaviour to match minutes.
+        // j. Set matchBehaviour to match minutes.
         match_behavior = MatchBehavior::MatchMinutes;
 
         // See NOTE above about why this is done.
@@ -678,12 +707,9 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
 
     // 8. If timeZone is not undefined, then
     if (!time_zone.is_undefined()) {
-        // a. Set timeZone to ? ToTemporalTimeZone(timeZone).
-        time_zone = TRY(to_temporal_time_zone(global_object, time_zone));
-
         double offset_ns;
 
-        // b. If offsetBehaviour is option, then
+        // a. If offsetBehaviour is option, then
         if (offset_behavior == OffsetBehavior::Option) {
             // i. Set offsetString to ? ToString(offsetString).
             // NOTE: offsetString is not used after this path, so we don't need to put this into the original offset_string which is of type JS::Value.
@@ -692,16 +718,16 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
             // ii. Let offsetNs be ? ParseTimeZoneOffsetString(offsetString).
             offset_ns = TRY(parse_time_zone_offset_string(global_object, actual_offset_string));
         }
-        // c. Else,
+        // b. Else,
         else {
             // i. Let offsetNs be 0.
             offset_ns = 0;
         }
 
-        // d. Let epochNanoseconds be ? InterpretISODateTimeOffset(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], offsetBehaviour, offsetNs, timeZone, "compatible", "reject", matchBehaviour).
+        // c. Let epochNanoseconds be ? InterpretISODateTimeOffset(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], offsetBehaviour, offsetNs, timeZone, "compatible", "reject", matchBehaviour).
         auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, offset_behavior, offset_ns, time_zone, "compatible"sv, "reject"sv, match_behavior));
 
-        // e. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
+        // d. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
         return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone.as_object(), *calendar));
     }
 
@@ -1681,19 +1707,8 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         offset = format_time_zone_offset_string(offset_nanoseconds);
     }
 
-    Optional<String> name;
-    // 7. If name is not undefined, then
-    if (name_part.has_value()) {
-        // a. If ! IsValidTimeZoneName(name) is false, throw a RangeError exception.
-        if (!is_valid_time_zone_name(*name_part))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, *name_part);
-
-        // b. Set name to ! CanonicalizeTimeZoneName(name).
-        name = canonicalize_time_zone_name(*name_part);
-    }
-
-    // 8. Return the Record { [[Z]]: false, [[OffsetString]]: offsetString, [[Name]]: name }.
-    return TemporalTimeZone { .z = false, .offset = offset, .name = name };
+    // 7. Return the Record { [[Z]]: false, [[OffsetString]]: offsetString, [[Name]]: name }.
+    return TemporalTimeZone { .z = false, .offset = offset, .name = name_part.has_value() ? String { *name_part } : Optional<String> {} };
 }
 
 // 13.44 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
