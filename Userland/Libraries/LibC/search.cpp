@@ -96,7 +96,7 @@ void* tfind(const void* key, void* const* rootp, int (*comparator)(const void*, 
 void* tdelete(const void*, void**, int (*)(const void*, const void*))
 {
     dbgln("FIXME: Implement tdelete()");
-    TODO();
+    return nullptr;
 }
 
 static void twalk_internal(const struct search_tree_node* node, void (*action)(const void*, VISIT, int), int depth)
