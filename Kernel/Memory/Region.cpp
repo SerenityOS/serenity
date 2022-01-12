@@ -234,12 +234,19 @@ bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
     return success;
 }
 
-void Region::unmap(ShouldDeallocateVirtualRange deallocate_range, ShouldFlushTLB should_flush_tlb)
+void Region::unmap(ShouldDeallocateVirtualRange should_deallocate_range, ShouldFlushTLB should_flush_tlb)
 {
     if (!m_page_directory)
         return;
-    SpinlockLocker page_lock(m_page_directory->get_lock());
-    SpinlockLocker lock(s_mm_lock);
+    SpinlockLocker pd_locker(m_page_directory->get_lock());
+    SpinlockLocker mm_locker(s_mm_lock);
+    unmap_with_locks_held(should_deallocate_range, should_flush_tlb, pd_locker, mm_locker);
+}
+
+void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange deallocate_range, ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
+{
+    if (!m_page_directory)
+        return;
     size_t count = page_count();
     for (size_t i = 0; i < count; ++i) {
         auto vaddr = vaddr_from_page_index(i);
