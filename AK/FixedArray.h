@@ -14,6 +14,8 @@
 
 namespace AK {
 
+// FixedArray is an Array with a size only known at run-time.
+// It guarantees to only allocate when being constructed, and to only deallocate when being destructed.
 template<typename T>
 class FixedArray {
 public:
@@ -69,16 +71,12 @@ public:
 
     ~FixedArray()
     {
-        clear();
-    }
-
-    void clear()
-    {
         if (!m_elements)
             return;
         for (size_t i = 0; i < m_size; ++i)
             m_elements[i].~T();
         kfree_sized(m_elements, sizeof(T) * m_size);
+        // NOTE: should prevent use-after-free early
         m_size = 0;
         m_elements = nullptr;
     }
