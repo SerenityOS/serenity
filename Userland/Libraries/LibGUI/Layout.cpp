@@ -46,12 +46,17 @@ void Layout::notify_adopted(Badge<Widget>, Widget& widget)
     if (m_owner == &widget)
         return;
     m_owner = widget;
+    m_owner->for_each_child_widget([&](Widget& child) {
+        add_widget(child);
+        return IterationDecision::Continue;
+    });
 }
 
 void Layout::notify_disowned(Badge<Widget>, Widget& widget)
 {
     VERIFY(m_owner == &widget);
     m_owner.clear();
+    m_entries.clear();
 }
 
 ErrorOr<void> Layout::try_add_entry(Entry&& entry)
