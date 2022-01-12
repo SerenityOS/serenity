@@ -26,12 +26,12 @@ ErrorOr<NonnullRefPtr<VMObject>> SharedInodeVMObject::try_clone()
 }
 
 SharedInodeVMObject::SharedInodeVMObject(Inode& inode, size_t size)
-    : InodeVMObject(inode, size)
+    : InodeVMObject(inode, VMObject::must_create_physical_pages_but_fixme_should_propagate_errors(size))
 {
 }
 
 SharedInodeVMObject::SharedInodeVMObject(SharedInodeVMObject const& other)
-    : InodeVMObject(other)
+    : InodeVMObject(other, other.must_clone_physical_pages_but_fixme_should_propagate_errors())
 {
 }
 
