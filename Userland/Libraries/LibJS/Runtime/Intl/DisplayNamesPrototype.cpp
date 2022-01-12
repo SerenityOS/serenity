@@ -65,13 +65,13 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
     case DisplayNames::Type::Currency:
         switch (display_names->style()) {
         case DisplayNames::Style::Long:
-            result = Unicode::get_locale_currency_mapping(display_names->locale(), code.as_string().string(), Unicode::Style::Long);
+            result = Unicode::get_locale_long_currency_mapping(display_names->locale(), code.as_string().string());
             break;
         case DisplayNames::Style::Short:
-            result = Unicode::get_locale_currency_mapping(display_names->locale(), code.as_string().string(), Unicode::Style::Short);
+            result = Unicode::get_locale_short_currency_mapping(display_names->locale(), code.as_string().string());
             break;
         case DisplayNames::Style::Narrow:
-            result = Unicode::get_locale_currency_mapping(display_names->locale(), code.as_string().string(), Unicode::Style::Narrow);
+            result = Unicode::get_locale_narrow_currency_mapping(display_names->locale(), code.as_string().string());
             break;
         default:
             VERIFY_NOT_REACHED();

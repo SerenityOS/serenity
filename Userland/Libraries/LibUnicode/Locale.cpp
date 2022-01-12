@@ -762,23 +762,6 @@ Optional<StringView> __attribute__((weak)) get_locale_calendar_mapping(StringVie
 Optional<StringView> __attribute__((weak)) get_locale_long_date_field_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_short_date_field_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_narrow_date_field_mapping(StringView, StringView) { return {}; }
-
-Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency, Style style)
-{
-    switch (style) {
-    case Style::Long:
-        return get_locale_long_currency_mapping(locale, currency);
-    case Style::Short:
-        return get_locale_short_currency_mapping(locale, currency);
-    case Style::Narrow:
-        return get_locale_narrow_currency_mapping(locale, currency);
-    case Style::Numeric:
-        return get_locale_numeric_currency_mapping(locale, currency);
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
 Optional<StringView> __attribute__((weak)) get_locale_key_mapping(StringView, StringView) { return {}; }
 
 Vector<StringView> get_locale_key_mapping_list(StringView locale, StringView keyword)

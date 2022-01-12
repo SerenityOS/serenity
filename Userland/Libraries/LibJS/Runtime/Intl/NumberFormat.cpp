@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -85,13 +85,13 @@ StringView NumberFormat::resolve_currency_display()
         m_resolved_currency_display = currency();
         break;
     case NumberFormat::CurrencyDisplay::Symbol:
-        m_resolved_currency_display = Unicode::get_locale_currency_mapping(data_locale(), currency(), Unicode::Style::Short);
+        m_resolved_currency_display = Unicode::get_locale_short_currency_mapping(data_locale(), currency());
         break;
     case NumberFormat::CurrencyDisplay::NarrowSymbol:
-        m_resolved_currency_display = Unicode::get_locale_currency_mapping(data_locale(), currency(), Unicode::Style::Narrow);
+        m_resolved_currency_display = Unicode::get_locale_narrow_currency_mapping(data_locale(), currency());
         break;
     case NumberFormat::CurrencyDisplay::Name:
-        m_resolved_currency_display = Unicode::get_locale_currency_mapping(data_locale(), currency(), Unicode::Style::Numeric);
+        m_resolved_currency_display = Unicode::get_locale_numeric_currency_mapping(data_locale(), currency());
         break;
     default:
         VERIFY_NOT_REACHED();
