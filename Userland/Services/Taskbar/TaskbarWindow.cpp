@@ -26,6 +26,8 @@
 #include <serenity.h>
 #include <stdio.h>
 
+namespace Taskbar {
+
 class TaskbarWidget final : public GUI::Widget {
     C_OBJECT(TaskbarWidget);
 
@@ -85,7 +87,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_applet_area_container->set_frame_shape(Gfx::FrameShape::Box);
     m_applet_area_container->set_frame_shadow(Gfx::FrameShadow::Sunken);
 
-    main_widget.add<Taskbar::ClockWidget>();
+    m_clock = main_widget.add<Taskbar::ClockWidget>();
 
     m_show_desktop_button = GUI::Button::construct();
     m_show_desktop_button->set_tooltip("Show Desktop");
@@ -369,4 +371,11 @@ void TaskbarWindow::set_start_button_font(Gfx::Font const& font)
 {
     m_start_button->set_font(font);
     m_start_button->set_fixed_size(font.width(m_start_button->text()) + 30, 21);
+}
+
+void TaskbarWindow::set_clock_format(String const& format)
+{
+    m_clock->set_time_format(format);
+}
+
 }

@@ -35,6 +35,27 @@
 static ErrorOr<Vector<String>> discover_apps_and_categories();
 static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu();
 
+class TaskbarChangeListener : public Config::Listener {
+public:
+    TaskbarChangeListener(Taskbar::TaskbarWindow& parent_widget)
+        : m_parent_widget(parent_widget)
+    {
+    }
+
+    virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override
+    {
+        VERIFY(domain == "Taskbar");
+        if (group == "Clock") {
+            if (key == "Format") {
+                m_parent_widget.set_clock_format(value);
+            }
+        }
+    }
+
+private:
+    Taskbar::TaskbarWindow& m_parent_widget;
+};
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix sigaction"));
@@ -57,7 +78,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto menu = TRY(build_system_menu());
     menu->realize_menu_if_needed();
 
-    auto window = TRY(TaskbarWindow::try_create(move(menu)));
+    auto window = TRY(Taskbar::TaskbarWindow::try_create(move(menu)));
+
+    Config::monitor_domain("Taskbar");
+    TaskbarChangeListener listener { window };
+
     window->show();
 
     window->make_window_manager(

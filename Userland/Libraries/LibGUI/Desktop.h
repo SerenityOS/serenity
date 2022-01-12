@@ -39,7 +39,7 @@ public:
     unsigned workspace_rows() const { return m_workspace_rows; }
     unsigned workspace_columns() const { return m_workspace_columns; }
 
-    int taskbar_height() const { return TaskbarWindow::taskbar_height(); }
+    int taskbar_height() const { return Taskbar::TaskbarWindow::taskbar_height(); }
 
     void did_receive_screen_rects(Badge<WindowServerConnection>, const Vector<Gfx::IntRect, 4>&, size_t, unsigned, unsigned);
 

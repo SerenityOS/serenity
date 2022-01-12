@@ -5,6 +5,7 @@
  */
 
 #include "ClockWidget.h"
+#include <LibConfig/Client.h>
 #include <LibCore/Process.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SeparatorWidget.h>
@@ -20,9 +21,13 @@ ClockWidget::ClockWidget()
     set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(1);
 
-    m_time_width = font().width("22:22:22");
+    m_time_format_to_format_string.set("HH:MM:SS", "%T");
+    m_time_format_to_format_string.set("HH:MM", "%R");
 
-    set_fixed_size(m_time_width + 20, 21);
+    m_time_format_to_width_string.set("HH:MM:SS", "22:22:22");
+    m_time_format_to_width_string.set("HH:MM", "22:22");
+
+    set_time_format(Config::read_string("Taskbar", "Clock", "Format", "HH:MM:SS"));
 
     m_timer = add<Core::Timer>(1000, [this] {
         static time_t last_update_time;
@@ -168,7 +173,7 @@ ClockWidget::~ClockWidget()
 void ClockWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
-    auto time_text = Core::DateTime::now().to_string("%T");
+
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
 
@@ -177,11 +182,11 @@ void ClockWidget::paint_event(GUI::PaintEvent& event)
     // This prevents the rest of the string from shifting around while seconds tick.
     const Gfx::Font& font = Gfx::FontDatabase::default_font();
     const int frame_width = frame_thickness();
-    const int ideal_width = m_time_width;
+    const int ideal_width = time_width();
     const int widget_width = max_width();
     const int translation_x = (widget_width - ideal_width) / 2 - frame_width;
 
-    painter.draw_text(frame_inner_rect().translated(translation_x, frame_width), time_text, font, Gfx::TextAlignment::CenterLeft, palette().window_text());
+    painter.draw_text(frame_inner_rect().translated(translation_x, frame_width), time_format(), font, Gfx::TextAlignment::CenterLeft, palette().window_text());
 }
 
 void ClockWidget::mousedown_event(GUI::MouseEvent& event)
@@ -224,6 +229,24 @@ void ClockWidget::jump_to_current_date()
     m_calendar->set_selected_date(Core::DateTime::now());
     m_calendar->update_tiles(Core::DateTime::now().year(), Core::DateTime::now().month());
     m_selected_calendar_button->set_text(m_calendar->formatted_date());
+}
+
+int ClockWidget::time_width()
+{
+    auto width_string = m_time_format_to_width_string.get(m_time_format);
+    return font().width(width_string.value());
+}
+
+void ClockWidget::set_time_format(String const& format)
+{
+    m_time_format = format;
+    set_fixed_size(time_width() + 20, 21);
+}
+
+String ClockWidget::time_format()
+{
+    auto format = m_time_format_to_format_string.get(m_time_format);
+    return Core::DateTime::now().to_string(format.value());
 }
 
 }

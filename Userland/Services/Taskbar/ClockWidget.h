@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Application.h>
@@ -23,6 +24,7 @@ class ClockWidget final : public GUI::Frame {
 
 public:
     virtual ~ClockWidget() override;
+    void set_time_format(String const&);
 
 private:
     ClockWidget();
@@ -42,6 +44,10 @@ private:
     void position_calendar_window();
     void jump_to_current_date();
 
+    int time_width();
+
+    String time_format();
+
     RefPtr<GUI::Window> m_calendar_window;
     RefPtr<GUI::Calendar> m_calendar;
     RefPtr<GUI::Button> m_next_date;
@@ -50,7 +56,10 @@ private:
     RefPtr<GUI::Button> m_jump_to_button;
     RefPtr<GUI::Button> m_calendar_launcher;
     RefPtr<Core::Timer> m_timer;
-    int m_time_width { 0 };
+
+    String m_time_format;
+    HashMap<String, String> m_time_format_to_format_string;
+    HashMap<String, String> m_time_format_to_width_string;
 };
 
 }

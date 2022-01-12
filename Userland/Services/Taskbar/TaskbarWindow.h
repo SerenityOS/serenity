@@ -14,6 +14,10 @@
 #include <LibGfx/ShareableBitmap.h>
 #include <Services/WindowServer/ScreenLayout.h>
 
+namespace Taskbar {
+
+class ClockWidget;
+
 class TaskbarWindow final : public GUI::Window {
     C_OBJECT(TaskbarWindow);
 
@@ -22,6 +26,8 @@ public:
 
     static int taskbar_height() { return 27; }
     static int taskbar_icon_size() { return 16; }
+
+    void set_clock_format(String const&);
 
 private:
     explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
@@ -56,6 +62,10 @@ private:
 
     RefPtr<Desktop::AppFile> m_assistant_app_file;
 
+    RefPtr<ClockWidget> m_clock;
+
     unsigned m_current_workspace_row { 0 };
     unsigned m_current_workspace_column { 0 };
 };
+
+}
