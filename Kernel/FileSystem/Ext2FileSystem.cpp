@@ -24,7 +24,7 @@ static constexpr size_t max_block_size = 4096;
 static constexpr size_t max_inline_symlink_length = 60;
 
 struct Ext2FSDirectoryEntry {
-    StringView name;
+    String name;
     InodeIndex inode_index { 0 };
     u8 file_type { 0 };
     u16 record_length { 0 };
@@ -1463,8 +1463,8 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::create_directory(Ext2FSInode& parent_inode
     dbgln_if(EXT2_DEBUG, "Ext2FS: create_directory: created new directory named '{} with inode {}", name, inode->index());
 
     Vector<Ext2FSDirectoryEntry> entries;
-    TRY(entries.try_empend("."sv, inode->index(), static_cast<u8>(EXT2_FT_DIR)));
-    TRY(entries.try_empend(".."sv, parent_inode.index(), static_cast<u8>(EXT2_FT_DIR)));
+    TRY(entries.try_empend(".", inode->index(), static_cast<u8>(EXT2_FT_DIR)));
+    TRY(entries.try_empend("..", parent_inode.index(), static_cast<u8>(EXT2_FT_DIR)));
 
     TRY(static_cast<Ext2FSInode&>(*inode).write_directory(entries));
     TRY(parent_inode.increment_link_count());
