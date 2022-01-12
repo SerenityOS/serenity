@@ -17,11 +17,10 @@
 
 #    define kmalloc malloc
 #    define kmalloc_good_size malloc_good_size
-#    define kfree free
 
 inline void kfree_sized(void* ptr, size_t)
 {
-    kfree(ptr);
+    free(ptr);
 }
 #endif
 
