@@ -24,7 +24,7 @@ ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 #endif
 
     hostname().with_shared([&](const auto& name) {
-        memcpy(buf.nodename, name.characters(), name.length() + 1);
+        memcpy(buf.nodename, name->characters(), name->length() + 1);
     });
 
     TRY(copy_to_user(user_buf, &buf));
