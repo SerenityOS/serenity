@@ -66,9 +66,6 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
         break;
     }
 
-    if (should_be_rounded(res))
-        res.round(rounding_threshold);
-
     return res;
 }
 
@@ -108,9 +105,6 @@ KeypadValue Calculator::finish_operation(KeypadValue argument)
         VERIFY_NOT_REACHED();
     }
 
-    if (should_be_rounded(res))
-        res.round(rounding_threshold);
-
     clear_operation();
     return res;
 }
@@ -120,12 +114,4 @@ void Calculator::clear_operation()
     m_operation_in_progress = Operation::None;
     m_saved_argument.set_to_0();
     clear_error();
-}
-
-bool Calculator::should_be_rounded(KeypadValue value)
-{
-    // We check if pow(10, value.m_decimal_places) overflow.
-    // If it does, the value can't be displayed (and provoke a division by zero), see Keypad::set_value()
-    // For u64, the threshold is 19
-    return value.m_decimal_places > rounding_threshold;
 }

@@ -13,7 +13,6 @@
 
 class KeypadValue {
     friend class Keypad;
-    friend class Calculator;
 
 public:
     KeypadValue() = default;

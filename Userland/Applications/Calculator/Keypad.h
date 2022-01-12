@@ -29,6 +29,8 @@ public:
     void set_value(KeypadValue);
     void set_to_0();
 
+    void set_rounding_length(unsigned);
+
     String to_string() const;
 
 private:
@@ -42,6 +44,8 @@ private:
     // m_int_value = 35
     // m_frac_value = 4200
     // m_frac_length = 6
+
+    BigInteger::UnsignedBigInteger m_displayed_frac_length { 0 };
 
     enum class State {
         External,

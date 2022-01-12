@@ -9,6 +9,7 @@
 #include "Keypad.h"
 #include "KeypadValue.h"
 #include <AK/StringBuilder.h>
+#include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 
 void Keypad::type_digit(int digit)
@@ -138,15 +139,52 @@ String Keypad::to_string() const
         builder.append("-");
     builder.appendff("{}", m_int_value.to_base(10));
 
+    auto const frac_value_str = [&]() {
+        if (m_state == State::External) {
+            auto keypad = value();
+            keypad.round(m_displayed_frac_length.to_u64());
+
+            auto const full_value = keypad.m_value.to_base(10);
+            auto const start = full_value.length() - keypad.m_decimal_places.to_u64();
+
+            return full_value.substring(start, full_value.length() - start);
+        }
+
+        return m_frac_value.to_base(10);
+    }();
+
+    auto const printed_length = frac_value_str.length();
+
+    bool const has_decimal_part = printed_length > 0 && frac_value_str != "0";
+
     // NOTE: This is so the decimal point appears on screen as soon as you type it.
-    if (m_frac_length > 0 || m_state == State::TypingDecimal)
+    if (has_decimal_part || m_state == State::TypingDecimal)
         builder.append('.');
 
-    auto const frac_value_str = m_frac_value.to_base(10);
-    if (m_frac_length > 0) {
-        builder.append_repeated('0', m_frac_length.to_u64() - frac_value_str.length());
-        builder.appendff("{}"sv, frac_value_str);
+    if (m_state == State::TypingDecimal) {
+        builder.append_repeated('0', m_frac_length.to_u64() - (printed_length - 1) - (frac_value_str == "0" ? 0 : 1));
+        if (frac_value_str != "0")
+            builder.append(frac_value_str);
+        return builder.to_string();
+    }
+
+    if (has_decimal_part) {
+        auto const remove_tailing_zeros = [](StringView value) -> StringView {
+            auto n = value.length();
+            while (value.characters_without_null_termination()[n - 1] == '0')
+                --n;
+            return { value.characters_without_null_termination(), n };
+        };
+
+        auto const printed_value = remove_tailing_zeros(frac_value_str);
+
+        builder.append(printed_value);
     }
 
     return builder.to_string();
+}
+
+void Keypad::set_rounding_length(unsigned rounding_threshold)
+{
+    m_displayed_frac_length = Crypto::UnsignedBigInteger::create_from(rounding_threshold);
 }

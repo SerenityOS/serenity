@@ -218,3 +218,9 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
 
     update_display();
 }
+
+void CalculatorWidget::set_rounding_length(unsigned rounding_threshold)
+{
+    m_keypad.set_rounding_length(rounding_threshold);
+    update_display();
+}
