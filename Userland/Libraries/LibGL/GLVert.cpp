@@ -140,6 +140,16 @@ void glVertex4sv(const GLshort* v)
     g_gl_context->gl_vertex(v[0], v[1], v[2], v[3]);
 }
 
+void glTexCoord1f(GLfloat s)
+{
+    g_gl_context->gl_tex_coord(s, 0.0f, 0.0f, 1.0f);
+}
+
+void glTexCoord1fv(GLfloat const* v)
+{
+    g_gl_context->gl_tex_coord(v[0], 0.0f, 0.0f, 1.0f);
+}
+
 void glTexCoord2d(GLdouble s, GLdouble t)
 {
     g_gl_context->gl_tex_coord(s, t, 0.0f, 1.0f);
@@ -163,6 +173,21 @@ void glTexCoord2fv(GLfloat const* v)
 void glTexCoord2i(GLint s, GLint t)
 {
     g_gl_context->gl_tex_coord(s, t, 0.0f, 1.0f);
+}
+
+void glTexCoord3f(GLfloat s, GLfloat t, GLfloat r)
+{
+    g_gl_context->gl_tex_coord(s, t, r, 1.0f);
+}
+
+void glTexCoord3fv(GLfloat const* v)
+{
+    g_gl_context->gl_tex_coord(v[0], v[1], v[2], 1.0f);
+}
+
+void glTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
+{
+    g_gl_context->gl_tex_coord(s, t, r, q);
 }
 
 void glTexCoord4fv(const GLfloat* v)
