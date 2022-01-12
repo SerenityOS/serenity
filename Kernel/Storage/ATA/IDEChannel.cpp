@@ -304,10 +304,11 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
     // There are only two possible disks connected to a channel
     for (auto i = 0; i < 2; i++) {
-        // We need to select the drive and then we wait 20 microseconds... and it doesn't hurt anything so let's just do it.
-        IO::delay(20);
-        m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (i << 4)); // First, we need to select the drive itself
-        IO::delay(20);
+
+        if (!select_device_and_wait_until_not_busy(i == 0 ? DeviceType::Master : DeviceType::Slave, 32000)) {
+            dbgln("IDEChannel: Timeout waiting for busy flag to clear during {} {} detection", channel_type_string(), channel_string(i));
+            continue;
+        }
 
         auto status = m_io_group.control_base().in<u8>();
         if (status == 0x0) {
