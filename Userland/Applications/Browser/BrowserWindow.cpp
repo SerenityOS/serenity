@@ -197,7 +197,7 @@ void BrowserWindow::build_menus()
     });
 
     m_view_source_action = GUI::Action::create(
-        "View &Source", { Mod_Ctrl, Key_U }, [this](auto&) {
+        "View &Source", { Mod_Ctrl, Key_U }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/code.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
             active_tab().m_web_content_view->get_source();
         },
         this);
@@ -211,7 +211,7 @@ void BrowserWindow::build_menus()
     m_inspect_dom_tree_action->set_status_tip("Open inspector window for this page");
 
     m_inspect_dom_node_action = GUI::Action::create(
-        "&Inspect Element", [this](auto&) {
+        "&Inspect Element", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspect.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::HoveredElement);
         },
         this);
@@ -222,7 +222,7 @@ void BrowserWindow::build_menus()
     inspect_menu.add_action(*m_inspect_dom_tree_action);
 
     auto js_console_action = GUI::Action::create(
-        "Open &JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
+        "Open &JS Console", { Mod_Ctrl, Key_I }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-javascript.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
             active_tab().show_console_window();
         },
         this);
