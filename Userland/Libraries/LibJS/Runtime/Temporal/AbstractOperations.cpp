@@ -1638,7 +1638,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         // b. Set hours to ! ToIntegerOrInfinity(hours).
         u8 hours = *hours_part->to_uint<u8>();
 
-        u8 sign;
+        i8 sign;
         // c. If sign is the code unit 0x002D (HYPHEN-MINUS) or the code unit 0x2212 (MINUS SIGN), then
         if (sign_part->is_one_of("-", "\u2212")) {
             // i. Set sign to −1.
