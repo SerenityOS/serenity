@@ -1,0 +1,30 @@
+From c758a59b2b26e3ab22c4fbcba6c83e0b385b86ce Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Wed, 12 Jan 2022 13:41:39 +0100
+Subject: [PATCH] Prevent call to `glGetIntegerv` without context
+
+This call to `SDL_GL_GetAttribute` happens when switching from the
+launcher to the game, when no GL context may exist. This caused Grim
+Fandango to crash almost immediately.
+
+Since this is for MSAA which we do not yet support, patch it out.
+---
+ backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp b/backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp
+index d5c034f..8a4e3ff 100644
+--- a/backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp
++++ b/backends/graphics3d/openglsdl/openglsdl-graphics3d.cpp
+@@ -185,7 +185,7 @@ void OpenGLSdlGraphics3dManager::setupScreen() {
+ 		// (or not bridged in Emscripten?). This forces a windows reset.
+ 		currentSamples = -1;
+ 		#else
+-		SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &currentSamples);
++		currentSamples = -1;
+ 		#endif
+ 
+ 		// When rendering to a framebuffer, MSAA is enabled on that framebuffer, not on the screen
+-- 
+2.32.0
+
