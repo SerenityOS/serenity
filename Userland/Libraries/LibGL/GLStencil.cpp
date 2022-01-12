@@ -33,3 +33,8 @@ void glStencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass
 {
     g_gl_context->gl_stencil_op_separate(face, sfail, dpfail, dppass);
 }
+
+void glStencilMask(GLuint mask)
+{
+    dbgln("(STUBBED) glStencilMask(0x{:08x})", mask);
+}
