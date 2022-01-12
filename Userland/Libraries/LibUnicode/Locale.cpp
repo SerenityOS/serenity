@@ -747,6 +747,7 @@ Optional<Territory> __attribute__((weak)) territory_from_string(StringView) { re
 Optional<ScriptTag> __attribute__((weak)) script_tag_from_string(StringView) { return {}; }
 Optional<Currency> __attribute__((weak)) currency_from_string(StringView) { return {}; }
 Optional<CalendarName> __attribute__((weak)) calendar_name_from_string(StringView) { return {}; }
+Optional<DateField> __attribute__((weak)) date_field_from_string(StringView) { return {}; }
 Optional<Key> __attribute__((weak)) key_from_string(StringView) { return {}; }
 Optional<ListPatternType> __attribute__((weak)) list_pattern_type_from_string(StringView) { return {}; }
 Optional<ListPatternStyle> __attribute__((weak)) list_pattern_style_from_string(StringView) { return {}; }
@@ -758,6 +759,9 @@ Optional<StringView> __attribute__((weak)) get_locale_short_currency_mapping(Str
 Optional<StringView> __attribute__((weak)) get_locale_narrow_currency_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_numeric_currency_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_calendar_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_long_date_field_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_short_date_field_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_narrow_date_field_mapping(StringView, StringView) { return {}; }
 
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency, Style style)
 {
