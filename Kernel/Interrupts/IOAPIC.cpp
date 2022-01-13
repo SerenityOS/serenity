@@ -25,7 +25,7 @@ enum DeliveryMode {
 
 UNMAP_AFTER_INIT IOAPIC::IOAPIC(PhysicalAddress address, u32 gsi_base)
     : m_address(address)
-    , m_regs(Memory::map_typed_writable<ioapic_mmio_regs>(m_address))
+    , m_regs(Memory::map_typed_writable<ioapic_mmio_regs>(m_address).release_value_but_fixme_should_propagate_errors())
     , m_gsi_base(gsi_base)
     , m_id((read_register(0x0) >> 24) & 0xFF)
     , m_version(read_register(0x1) & 0xFF)

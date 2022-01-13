@@ -103,7 +103,7 @@ void BochsGraphicsAdapter::set_framebuffer_to_little_endian_format()
 UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
     : PCI::Device(pci_device_identifier.address())
     , m_mmio_registers(PCI::get_BAR2(pci_device_identifier.address()) & 0xfffffff0)
-    , m_registers(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(m_mmio_registers))
+    , m_registers(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(m_mmio_registers).release_value_but_fixme_should_propagate_errors())
 {
     // We assume safe resolution is 1024x768x32
     m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));

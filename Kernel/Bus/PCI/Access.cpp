@@ -42,7 +42,12 @@ UNMAP_AFTER_INIT bool Access::find_and_register_pci_host_bridges_from_acpi_mcfg_
     u32 length = 0;
     u8 revision = 0;
     {
-        auto mapped_mcfg_table = Memory::map_typed<ACPI::Structures::SDTHeader>(mcfg_table);
+        auto mapped_mcfg_table_or_error = Memory::map_typed<ACPI::Structures::SDTHeader>(mcfg_table);
+        if (mapped_mcfg_table_or_error.is_error()) {
+            dbgln("Failed to map MCFG table");
+            return false;
+        }
+        auto mapped_mcfg_table = mapped_mcfg_table_or_error.release_value();
         length = mapped_mcfg_table->length;
         revision = mapped_mcfg_table->revision;
     }
