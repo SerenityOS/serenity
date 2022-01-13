@@ -2989,7 +2989,6 @@ void SoftwareGLContext::sync_light_state()
         light.spotlight_direction = current_light_state.spotlight_direction;
         light.spotlight_exponent = current_light_state.spotlight_exponent;
         light.spotlight_cutoff_angle = current_light_state.spotlight_cutoff_angle;
-        light.spotlight_cutoff_angle_rads = current_light_state.spotlight_cutoff_angle_rads;
         light.constant_attenuation = current_light_state.constant_attenuation;
         light.linear_attenuation = current_light_state.linear_attenuation;
         light.quadratic_attenuation = current_light_state.quadratic_attenuation;
@@ -3101,7 +3100,6 @@ void SoftwareGLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)
         break;
     case GL_SPOT_CUTOFF:
         light_state.spotlight_cutoff_angle = param;
-        light_state.spotlight_cutoff_angle_rads = param * (AK::Pi<float> / 180.0f);
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -3147,7 +3145,6 @@ void SoftwareGLContext::gl_lightfv(GLenum light, GLenum pname, GLfloat const* pa
         break;
     case GL_SPOT_CUTOFF:
         light_state.spotlight_cutoff_angle = *params;
-        light_state.spotlight_cutoff_angle_rads = *params * (AK::Pi<float> / 180.0f);
         break;
     case GL_SPOT_DIRECTION: {
         FloatVector4 direction_vector = { params[0], params[1], params[2], 0.0f };

@@ -698,7 +698,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                     if (light.spotlight_cutoff_angle != 180.0f) {
                         const auto spotlight_direction_normalized = light.spotlight_direction.normalized();
                         const auto light_to_vertex_dot_normalized_spotlight_direction = spotlight_direction_normalized.dot(FloatVector3(vertex_to_light.x(), vertex_to_light.y(), vertex_to_light.z()));
-                        const auto cos_spotlight_cutoff = AK::cos<float>(light.spotlight_cutoff_angle);
+                        const auto cos_spotlight_cutoff = AK::cos<float>(light.spotlight_cutoff_angle * AK::Pi<float> / 180.f);
 
                         if (light_to_vertex_dot_normalized_spotlight_direction >= cos_spotlight_cutoff)
                             spotlight_factor = AK::pow<float>(light_to_vertex_dot_normalized_spotlight_direction, light.spotlight_exponent);
