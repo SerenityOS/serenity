@@ -21,8 +21,8 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 
-using StringIndexType = u16;
-constexpr auto s_string_index_type = "u16"sv;
+using StringIndexType = u32;
+constexpr auto s_string_index_type = "u32"sv;
 
 using DisplayPatternIndexType = u8;
 constexpr auto s_display_pattern_index_type = "u8"sv;
@@ -319,8 +319,6 @@ static ErrorOr<void> parse_identity(String locale_path, UnicodeLocaleData& local
     auto const& variant_string = identity_object.as_object().get("variant"sv);
 
     locale.language = language_string.as_string();
-    if (!locale_data.languages.contains_slow(locale.language))
-        locale_data.languages.append(locale.language);
 
     if (territory_string.is_string()) {
         locale.territory = territory_string.as_string();
@@ -366,6 +364,27 @@ static ErrorOr<void> parse_locale_display_patterns(String locale_path, UnicodeLo
     return {};
 }
 
+static ErrorOr<void> preprocess_languages(String locale_path, UnicodeLocaleData& locale_data)
+{
+    LexicalPath languages_path(move(locale_path));
+    languages_path = languages_path.append("languages.json"sv);
+
+    auto languages_file = TRY(Core::File::open(languages_path.string(), Core::OpenMode::ReadOnly));
+    auto locale_languages = TRY(JsonValue::from_string(languages_file->read_all()));
+
+    auto const& main_object = locale_languages.as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
+    auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
+    auto const& languages_object = locale_display_names_object.as_object().get("languages"sv);
+
+    languages_object.as_object().for_each_member([&](auto const& key, auto const&) {
+        if (!key.contains("-alt-"sv) && !locale_data.languages.contains_slow(key))
+            locale_data.languages.append(key);
+    });
+
+    return {};
+}
+
 static ErrorOr<void> parse_locale_languages(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
     LexicalPath languages_path(move(locale_path));
@@ -383,8 +402,11 @@ static ErrorOr<void> parse_locale_languages(String locale_path, UnicodeLocaleDat
     languages.resize(locale_data.languages.size());
 
     languages_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        if (auto index = locale_data.languages.find_first_index(key); index.has_value())
-            languages[*index] = locale_data.unique_strings.ensure(value.as_string());
+        if (key.contains("-alt-"sv))
+            return;
+
+        auto index = locale_data.languages.find_first_index(key).value();
+        languages[index] = locale_data.unique_strings.ensure(value.as_string());
     });
 
     locale.languages = locale_data.unique_language_lists.ensure(move(languages));
@@ -802,6 +824,7 @@ static ErrorOr<void> define_aliases_without_scripts(UnicodeLocaleData& locale_da
 static ErrorOr<void> parse_all_locales(String core_path, String locale_names_path, String misc_path, String numbers_path, String dates_path, UnicodeLocaleData& locale_data)
 {
     auto identity_iterator = TRY(path_to_dir_iterator(locale_names_path));
+    auto preprocess_iterator = TRY(path_to_dir_iterator(locale_names_path));
     auto locale_names_iterator = TRY(path_to_dir_iterator(move(locale_names_path)));
     auto misc_iterator = TRY(path_to_dir_iterator(move(misc_path)));
     auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
@@ -833,6 +856,11 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
 
         auto& locale = locale_data.locales.ensure(language);
         TRY(parse_identity(locale_path, locale_data, locale));
+    }
+
+    while (preprocess_iterator.has_next()) {
+        auto locale_path = TRY(next_path_from_dir_iterator(preprocess_iterator));
+        TRY(preprocess_languages(locale_path, locale_data));
     }
 
     quick_sort(locale_data.languages);
