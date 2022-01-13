@@ -270,7 +270,12 @@ void SoftwareGLContext::gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_color, r, g, b, a);
 
-    m_current_vertex_color = { (float)r, (float)g, (float)b, (float)a };
+    m_current_vertex_color = {
+        static_cast<float>(r),
+        static_cast<float>(g),
+        static_cast<float>(b),
+        static_cast<float>(a),
+    };
 }
 
 void SoftwareGLContext::gl_end()
