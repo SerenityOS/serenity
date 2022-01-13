@@ -35,6 +35,7 @@ TEST_CASE(file_readline)
     file->close();
     outputfile->close();
     VERIFY(files_have_same_contents(path, output_path));
+    unlink(output_path);
 }
 
 TEST_CASE(file_get_read_position)
@@ -88,4 +89,5 @@ TEST_CASE(file_lines_range)
     file->close();
     outputfile->close();
     VERIFY(files_have_same_contents(path, output_path));
+    unlink(output_path);
 }
