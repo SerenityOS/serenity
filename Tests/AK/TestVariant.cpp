@@ -48,6 +48,20 @@ TEST_CASE(visit_const)
         [&](auto const&) {});
 
     EXPECT(correct);
+
+    correct = false;
+    auto the_value_but_not_const = the_value;
+    the_value_but_not_const.visit(
+        [&](String const&) { correct = true; },
+        [&](auto&) {});
+
+    EXPECT(correct);
+
+    correct = false;
+    the_value_but_not_const.visit(
+        [&]<typename T>(T&) { correct = !IsConst<T>; });
+
+    EXPECT(correct);
 }
 
 TEST_CASE(destructor)
