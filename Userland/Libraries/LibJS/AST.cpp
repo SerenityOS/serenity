@@ -2507,7 +2507,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter, GlobalObject&
         // AssignmentExpression : LeftHandSideExpression = AssignmentExpression
         return m_lhs.visit(
             // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
-            [&](NonnullRefPtr<Expression>& lhs) -> ThrowCompletionOr<Value> {
+            [&](NonnullRefPtr<Expression> const& lhs) -> ThrowCompletionOr<Value> {
                 // a. Let lref be the result of evaluating LeftHandSideExpression.
                 // b. ReturnIfAbrupt(lref).
                 auto reference = TRY(lhs->to_reference(interpreter, global_object));
@@ -2534,7 +2534,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter, GlobalObject&
                 return rhs_result;
             },
             // 2. Let assignmentPattern be the AssignmentPattern that is covered by LeftHandSideExpression.
-            [&](NonnullRefPtr<BindingPattern>& pattern) -> ThrowCompletionOr<Value> {
+            [&](NonnullRefPtr<BindingPattern> const& pattern) -> ThrowCompletionOr<Value> {
                 // 3. Let rref be the result of evaluating AssignmentExpression.
                 // 4. Let rval be ? GetValue(rref).
                 auto rhs_result = TRY(m_rhs->execute(interpreter, global_object)).release_value();

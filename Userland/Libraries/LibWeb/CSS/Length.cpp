@@ -123,10 +123,10 @@ static float resolve_calc_value(CalculatedStyleValue::CalcValue const& calc_valu
 {
     return calc_value.visit(
         [](float value) { return value; },
-        [&](Length length) {
+        [&](Length const& length) {
             return length.resolved_or_zero(layout_node, reference_for_percent).to_px(layout_node);
         },
-        [&](NonnullOwnPtr<CalculatedStyleValue::CalcSum>& calc_sum) {
+        [&](NonnullOwnPtr<CalculatedStyleValue::CalcSum> const& calc_sum) {
             return resolve_calc_sum(calc_sum, layout_node, reference_for_percent);
         },
         [](auto&) {
@@ -173,7 +173,7 @@ static float resolve_calc_number_value(CalculatedStyleValue::CalcNumberValue con
 {
     return number_value.visit(
         [](float number) { return number; },
-        [](NonnullOwnPtr<CalculatedStyleValue::CalcNumberSum>& calc_number_sum) {
+        [](NonnullOwnPtr<CalculatedStyleValue::CalcNumberSum> const& calc_number_sum) {
             return resolve_calc_number_sum(calc_number_sum);
         });
 }

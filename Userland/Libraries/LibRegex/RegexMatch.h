@@ -201,7 +201,7 @@ public:
                     views.empend(view);
                 return views;
             },
-            [](Utf8View& view) {
+            [](Utf8View const& view) {
                 Vector<RegexStringView> views;
                 auto it = view.begin();
                 auto previous_newline_position_it = it;

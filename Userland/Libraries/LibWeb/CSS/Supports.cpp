@@ -35,13 +35,13 @@ MatchResult Supports::Condition::evaluate() const
 MatchResult Supports::InParens::evaluate() const
 {
     return value.visit(
-        [&](NonnullOwnPtr<Condition>& condition) {
+        [&](NonnullOwnPtr<Condition> const& condition) {
             return condition->evaluate();
         },
-        [&](Feature& feature) {
+        [&](Feature const& feature) {
             return feature.evaluate();
         },
-        [&](GeneralEnclosed& general_enclosed) {
+        [&](GeneralEnclosed const& general_enclosed) {
             return general_enclosed.evaluate();
         });
 }
