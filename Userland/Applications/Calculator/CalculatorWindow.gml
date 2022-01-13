@@ -40,6 +40,7 @@
                     fixed_width: 65
                     fixed_height: 28
                     foreground_color: "brown"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -48,6 +49,7 @@
                     fixed_width: 56
                     fixed_height: 28
                     foreground_color: "brown"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -56,6 +58,7 @@
                     fixed_width: 60
                     fixed_height: 28
                     foreground_color: "brown"
+                    focus_policy: "NoFocus"
                 }
             }
 
@@ -68,6 +71,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "red"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Widget {
@@ -80,6 +84,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -88,6 +93,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -96,6 +102,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -103,6 +110,7 @@
                     text: "/"
                     fixed_width: 35
                     fixed_height: 28
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -111,6 +119,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
             }
 
@@ -123,6 +132,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "red"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Widget {
@@ -135,6 +145,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -143,6 +154,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -151,6 +163,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -158,6 +171,7 @@
                     text: "*"
                     fixed_width: 35
                     fixed_height: 28
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -166,6 +180,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
             }
 
@@ -178,6 +193,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "red"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Widget {
@@ -190,6 +206,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -198,6 +215,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -206,6 +224,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -213,6 +232,7 @@
                     text: "-"
                     fixed_width: 35
                     fixed_height: 28
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -221,6 +241,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
             }
 
@@ -233,6 +254,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "red"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Widget {
@@ -245,6 +267,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -253,6 +276,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -261,6 +285,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "blue"
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -268,6 +293,7 @@
                     text: "+"
                     fixed_width: 35
                     fixed_height: 28
+                    focus_policy: "NoFocus"
                 }
 
                 @GUI::Button {
@@ -276,6 +302,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_color: "red"
+                    focus_policy: "NoFocus"
                 }
             }
         }
