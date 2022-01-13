@@ -71,6 +71,7 @@ public:
     virtual void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q) = 0;
     virtual void gl_tex_env(GLenum target, GLenum pname, GLfloat param) = 0;
     virtual void gl_bind_texture(GLenum target, GLuint texture) = 0;
+    virtual GLboolean gl_is_texture(GLuint texture) = 0;
     virtual void gl_active_texture(GLenum texture) = 0;
     virtual void gl_depth_mask(GLboolean flag) = 0;
     virtual void gl_enable_client_state(GLenum cap) = 0;
