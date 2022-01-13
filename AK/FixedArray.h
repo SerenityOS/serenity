@@ -55,7 +55,7 @@ public:
         return MUST(try_clone());
     }
 
-    // NOTE: Nobody can ever use these functions, since it would be impossible to make them OOM-safe due to their signatures. We just explicitly delete them.
+    // Nobody can ever use these functions, since it would be impossible to make them OOM-safe due to their signatures. We just explicitly delete them.
     FixedArray(FixedArray<T> const&) = delete;
     FixedArray<T>& operator=(FixedArray<T> const&) = delete;
 
@@ -66,7 +66,7 @@ public:
         other.m_size = 0;
         other.m_elements = nullptr;
     }
-    // NOTE: Nobody uses this function, so we just explicitly delete it.
+    // This function would violate the contract, as it would need to deallocate this FixedArray. As it also has no use case, we delete it.
     FixedArray<T>& operator=(FixedArray<T>&&) = delete;
 
     ~FixedArray()
