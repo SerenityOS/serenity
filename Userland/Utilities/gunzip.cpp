@@ -7,6 +7,8 @@
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
 static bool decompress_file(Buffered<Core::InputFileStream>& input_stream, Buffered<Core::OutputFileStream>& output_stream)
@@ -23,7 +25,7 @@ static bool decompress_file(Buffered<Core::InputFileStream>& input_stream, Buffe
     return !gzip_stream.handle_any_error();
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments args)
 {
     Vector<StringView> filenames;
     bool keep_input_files { false };
@@ -33,7 +35,7 @@ int main(int argc, char** argv)
     args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
     args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');
     args_parser.add_positional_argument(filenames, "File to decompress", "FILE");
-    args_parser.parse(argc, argv);
+    args_parser.parse(args);
 
     if (write_to_stdout)
         keep_input_files = true;
@@ -45,37 +47,24 @@ int main(int argc, char** argv)
         const auto input_filename = filename;
         const auto output_filename = filename.substring_view(0, filename.length() - 3);
 
-        auto input_stream_result = Core::InputFileStream::open_buffered(input_filename);
-
-        if (input_stream_result.is_error()) {
-            warnln("Failed opening input file for reading: {}", input_stream_result.error());
-            return 1;
-        }
+        auto input_stream_result = TRY(Core::InputFileStream::open_buffered(input_filename));
 
         auto success = false;
         if (write_to_stdout) {
             auto stdout = Core::OutputFileStream::stdout_buffered();
-            success = decompress_file(input_stream_result.value(), stdout);
+            success = decompress_file(input_stream_result, stdout);
         } else {
-            auto output_stream_result = Core::OutputFileStream::open_buffered(output_filename);
-            if (output_stream_result.is_error()) {
-                warnln("Failed opening output file for writing: {}", output_stream_result.error());
-                return 1;
-            }
-            success = decompress_file(input_stream_result.value(), output_stream_result.value());
+            auto output_stream_result = TRY(Core::OutputFileStream::open_buffered(output_filename));
+
+            success = decompress_file(input_stream_result, output_stream_result);
         }
         if (!success) {
             warnln("Failed gzip decompressing input file");
             return 1;
         }
 
-        if (!keep_input_files) {
-            const auto retval = unlink(String { input_filename }.characters());
-            if (retval != 0) {
-                warnln("Failed removing input file");
-                return 1;
-            }
-        }
+        if (!keep_input_files)
+            TRY(Core::System::unlink(input_filename));
     }
     return 0;
 }
