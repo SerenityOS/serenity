@@ -169,7 +169,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
     }
 
     auto it = m_threads.find(m_tids[index.row()]);
-    auto& thread = *(*it).value;
+    auto& thread = *it->value;
 
     if (role == GUI::ModelRole::Sort) {
         switch (index.column()) {

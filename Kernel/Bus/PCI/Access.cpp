@@ -124,7 +124,7 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
     SpinlockLocker scan_locker(m_scan_lock);
     VERIFY(m_device_identifiers.is_empty());
     for (auto it = m_host_controllers.begin(); it != m_host_controllers.end(); ++it) {
-        (*it).value->enumerate_attached_devices([this](DeviceIdentifier device_identifier) -> void {
+        it->value->enumerate_attached_devices([this](DeviceIdentifier device_identifier) -> void {
             m_device_identifiers.append(device_identifier);
         });
     }

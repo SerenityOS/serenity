@@ -2153,7 +2153,7 @@ String parse_ampersand_string(StringView raw_text, Optional<size_t>* underline_o
             if (i != (raw_text.length() - 1) && raw_text[i + 1] == '&') {
                 builder.append(raw_text[i]);
                 ++i;
-            } else if (underline_offset && !(*underline_offset).has_value()) {
+            } else if (underline_offset && !underline_offset->has_value()) {
                 *underline_offset = i;
             }
             continue;

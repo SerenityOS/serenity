@@ -141,7 +141,7 @@ Action* Application::action_for_key_event(const KeyEvent& event)
     auto it = m_global_shortcut_actions.find(Shortcut(event.modifiers(), (KeyCode)event.key()));
     if (it == m_global_shortcut_actions.end())
         return nullptr;
-    return (*it).value;
+    return it->value;
 }
 
 void Application::show_tooltip(String tooltip, const Widget* tooltip_source_widget)

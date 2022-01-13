@@ -69,7 +69,7 @@ TEST_CASE(should_provide_dereference_operator)
 TEST_CASE(should_provide_indirection_operator)
 {
     AK::NeverDestroyed<Counter> n {};
-    EXPECT_EQ(0, (*n).num_destroys);
+    EXPECT_EQ(0, n->num_destroys);
 }
 
 TEST_CASE(should_provide_basic_getter)

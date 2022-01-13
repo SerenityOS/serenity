@@ -97,7 +97,7 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
         if (lines.is_end())
             break;
 
-        if ((*lines).is_empty()) {
+        if (lines->is_empty()) {
             has_trailing_blank_lines = true;
             ++lines;
 

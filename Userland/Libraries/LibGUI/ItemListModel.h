@@ -83,7 +83,7 @@ public:
         Vector<GUI::ModelIndex> found_indices;
         if constexpr (IsTwoDimensional) {
             for (auto it = m_data.begin(); it != m_data.end(); ++it) {
-                for (auto it2d = (*it).begin(); it2d != (*it).end(); ++it2d) {
+                for (auto it2d = it->begin(); it2d != it->end(); ++it2d) {
                     GUI::ModelIndex index = this->index(it.index(), it2d.index());
                     if (!string_matches(data(index, ModelRole::Display).to_string(), searching, flags))
                         continue;

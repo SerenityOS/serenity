@@ -62,7 +62,7 @@ void WMClientConnection::set_active_window(i32 client_id, i32 window_id)
         did_misbehave("SetActiveWindow: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     WindowManager::the().minimize_windows(window, false);
     WindowManager::the().move_to_front_and_make_active(window);
 }
@@ -79,7 +79,7 @@ void WMClientConnection::popup_window_menu(i32 client_id, i32 window_id, Gfx::In
         did_misbehave("PopupWindowMenu: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     if (auto* modal_window = window.blocking_modal_window()) {
         modal_window->popup_window_menu(screen_position, WindowMenuDefaultAction::BasedOnWindowState);
     } else {
@@ -99,7 +99,7 @@ void WMClientConnection::start_window_resize(i32 client_id, i32 window_id)
         did_misbehave("WM_StartWindowResize: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     // FIXME: We are cheating a bit here by using the current cursor location and hard-coding the left button.
     //        Maybe the client should be allowed to specify what initiated this request?
     WindowManager::the().start_window_resize(window, ScreenInput::the().cursor_location(), MouseButton::Primary);
@@ -117,7 +117,7 @@ void WMClientConnection::set_window_minimized(i32 client_id, i32 window_id, bool
         did_misbehave("WM_SetWindowMinimized: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     WindowManager::the().minimize_windows(window, minimized);
 }
 
@@ -179,7 +179,7 @@ void WMClientConnection::set_window_taskbar_rect(i32 client_id, i32 window_id, G
     if (it == client->m_windows.end())
         return;
 
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     window.set_taskbar_rect(rect);
 }
 

@@ -1188,7 +1188,7 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
     auto it = m_lookup_cache.find(name);
     if (it == m_lookup_cache.end())
         return ENOENT;
-    auto child_inode_index = (*it).value;
+    auto child_inode_index = it->value;
 
     InodeIdentifier child_id { fsid(), child_inode_index };
 

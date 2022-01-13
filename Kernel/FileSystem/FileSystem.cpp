@@ -38,7 +38,7 @@ FileSystem* FileSystem::from_fsid(FileSystemID id)
 {
     auto it = all_file_systems().find(id);
     if (it != all_file_systems().end())
-        return (*it).value;
+        return it->value;
     return nullptr;
 }
 

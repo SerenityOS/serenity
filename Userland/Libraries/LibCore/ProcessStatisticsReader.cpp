@@ -119,7 +119,7 @@ String ProcessStatisticsReader::username_from_uid(uid_t uid)
 
     auto it = s_usernames.find(uid);
     if (it != s_usernames.end())
-        return (*it).value;
+        return it->value;
     return String::number(uid);
 }
 }
