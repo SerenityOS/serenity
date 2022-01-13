@@ -51,8 +51,8 @@ public:
     void finalize(PNGChunk&);
     void add_byte_to_block(u8 data, PNGChunk&);
 
-    u32 adler_s1() const { return m_adler_s1; }
-    u32 adler_s2() const { return m_adler_s2; }
+    u16 adler_s1() const { return m_adler_s1; }
+    u16 adler_s2() const { return m_adler_s2; }
 
 private:
     void add_block_to_chunk(PNGChunk&, bool);
