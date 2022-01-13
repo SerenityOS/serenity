@@ -80,16 +80,16 @@ struct Variant<IndexType, InitialIndex> {
 
 template<typename IndexType, typename... Ts>
 struct VisitImpl {
-    template<typename Visitor, IndexType CurrentIndex = 0>
-    ALWAYS_INLINE static constexpr decltype(auto) visit(IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
+    template<typename Self, typename Visitor, IndexType CurrentIndex = 0>
+    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
     {
         using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
 
         if (id == CurrentIndex)
-            return visitor(*bit_cast<T*>(data));
+            return visitor(*bit_cast<CopyConst<Self, T>*>(data));
 
         if constexpr ((CurrentIndex + 1) < sizeof...(Ts))
-            return visit<Visitor, CurrentIndex + 1>(id, data, forward<Visitor>(visitor));
+            return visit<Self, Visitor, CurrentIndex + 1>(self, id, data, forward<Visitor>(visitor));
         else
             VERIFY_NOT_REACHED();
     }
@@ -367,14 +367,14 @@ public:
     ALWAYS_INLINE decltype(auto) visit(Fs&&... functions)
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        return VisitHelper::visit(m_index, m_data, move(visitor));
+        return VisitHelper::visit(*this, m_index, m_data, move(visitor));
     }
 
     template<typename... Fs>
     ALWAYS_INLINE decltype(auto) visit(Fs&&... functions) const
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        return VisitHelper::visit(m_index, m_data, move(visitor));
+        return VisitHelper::visit(*this, m_index, m_data, move(visitor));
     }
 
     template<typename... NewTs>
