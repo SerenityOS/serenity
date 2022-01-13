@@ -25,7 +25,7 @@ enum class GeneralCategory : u8;
 enum class HourCycle : u8;
 enum class HourCycleRegion : u8;
 enum class Key : u8;
-enum class Language : u8;
+enum class Language : u16;
 enum class ListPatternStyle : u8;
 enum class ListPatternType : u8;
 enum class Locale : u16;
