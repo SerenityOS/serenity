@@ -41,19 +41,60 @@ describe("correct behavior", () => {
         expect(Intl.DisplayNames.prototype.of).toHaveLength(1);
     });
 
-    test("option type language", () => {
-        const en = new Intl.DisplayNames("en", { type: "language" });
-        expect(en.of("en")).toBe("English");
+    test("option type language, display dialect", () => {
+        // prettier-ignore
+        const data = [
+            { locale: "en", en: "English", es419: "inglés", zhHant: "英文" },
+            { locale: "en-US", en: "American English", es419: "inglés estadounidense", zhHant: "英文（美國）" },
+            { locale: "en-GB", en: "British English", es419: "inglés británico", zhHant: "英文（英國）" },
+            { locale: "sr", en: "Serbian", es419: "serbio", zhHant: "塞爾維亞文" },
+            { locale: "sr-Cyrl", en: "Serbian (Cyrillic)", es419: "serbio (cirílico)", zhHant: "塞爾維亞文（斯拉夫文）" },
+            { locale: "sr-Cyrl-BA", en: "Serbian (Cyrillic, Bosnia & Herzegovina)", es419: "serbio (cirílico, Bosnia-Herzegovina)", zhHant: "塞爾維亞文（斯拉夫文，波士尼亞與赫塞哥維納）" },
+        ];
 
-        const es419 = new Intl.DisplayNames("es-419", { type: "language" });
-        expect(es419.of("en")).toBe("inglés");
+        const en = new Intl.DisplayNames("en", { type: "language", languageDisplay: "dialect" });
+        const es419 = new Intl.DisplayNames("es-419", {
+            type: "language",
+            languageDisplay: "dialect",
+        });
+        const zhHant = new Intl.DisplayNames("zh-Hant", {
+            type: "language",
+            languageDisplay: "dialect",
+        });
 
-        const zhHant = new Intl.DisplayNames(["zh-Hant"], { type: "language" });
-        expect(zhHant.of("en")).toBe("英文");
+        data.forEach(d => {
+            expect(en.of(d.locale)).toBe(d.en);
+            expect(es419.of(d.locale)).toBe(d.es419);
+            expect(zhHant.of(d.locale)).toBe(d.zhHant);
+        });
+    });
 
-        expect(en.of("zz")).toBe("zz");
-        expect(es419.of("zz")).toBe("zz");
-        expect(zhHant.of("zz")).toBe("zz");
+    test("option type language, display standard", () => {
+        // prettier-ignore
+        const data = [
+            { locale: "en", en: "English", es419: "inglés", zhHant: "英文" },
+            { locale: "en-US", en: "English (United States)", es419: "inglés (Estados Unidos)", zhHant: "英文（美國）" },
+            { locale: "en-GB", en: "English (United Kingdom)", es419: "inglés (Reino Unido)", zhHant: "英文（英國）" },
+            { locale: "sr", en: "Serbian", es419: "serbio", zhHant: "塞爾維亞文" },
+            { locale: "sr-Cyrl", en: "Serbian (Cyrillic)", es419: "serbio (cirílico)", zhHant: "塞爾維亞文（斯拉夫文）" },
+            { locale: "sr-Cyrl-BA", en: "Serbian (Cyrillic, Bosnia & Herzegovina)", es419: "serbio (cirílico, Bosnia-Herzegovina)", zhHant: "塞爾維亞文（斯拉夫文，波士尼亞與赫塞哥維納）" },
+        ];
+
+        const en = new Intl.DisplayNames("en", { type: "language", languageDisplay: "standard" });
+        const es419 = new Intl.DisplayNames("es-419", {
+            type: "language",
+            languageDisplay: "standard",
+        });
+        const zhHant = new Intl.DisplayNames("zh-Hant", {
+            type: "language",
+            languageDisplay: "standard",
+        });
+
+        data.forEach(d => {
+            expect(en.of(d.locale)).toBe(d.en);
+            expect(es419.of(d.locale)).toBe(d.es419);
+            expect(zhHant.of(d.locale)).toBe(d.zhHant);
+        });
     });
 
     test("option type region", () => {
