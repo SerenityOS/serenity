@@ -1801,6 +1801,20 @@ void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
     m_sampler_config_is_dirty = true;
 }
 
+GLboolean SoftwareGLContext::gl_is_texture(GLuint texture)
+{
+    RETURN_VALUE_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION, GL_FALSE);
+
+    if (texture == 0)
+        return GL_FALSE;
+
+    auto it = m_allocated_textures.find(texture);
+    if (it == m_allocated_textures.end())
+        return GL_FALSE;
+
+    return it->value.is_null() ? GL_FALSE : GL_TRUE;
+}
+
 void SoftwareGLContext::gl_active_texture(GLenum texture)
 {
     RETURN_WITH_ERROR_IF(texture < GL_TEXTURE0 || texture > GL_TEXTURE31, GL_INVALID_ENUM);
