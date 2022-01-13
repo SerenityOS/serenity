@@ -410,6 +410,9 @@ public:
     virtual ErrorOr<void> set_blocking(bool enabled) override { return m_helper.set_blocking(enabled); }
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.set_close_on_exec(enabled); }
 
+    ErrorOr<int> receive_fd(int flags);
+    ErrorOr<void> send_fd(int fd);
+
     virtual ~LocalSocket() { close(); }
 
 private:
