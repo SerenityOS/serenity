@@ -125,6 +125,7 @@ public:
     }
 
     Instruction const& operator*() const { return dereference(); }
+    Instruction const* operator->() const { return &dereference(); }
 
     ALWAYS_INLINE void operator++()
     {
