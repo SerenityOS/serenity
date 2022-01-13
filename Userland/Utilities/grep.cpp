@@ -5,14 +5,14 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
-#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -32,12 +32,9 @@ void fail(StringView format, Ts... args)
     abort();
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath", nullptr));
 
     Vector<const char*> files;
 
@@ -128,7 +125,7 @@ int main(int argc, char** argv)
     });
     args_parser.add_option(count_lines, "Output line count instead of line contents", "count", 'c');
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(args);
 
     // mock grep behavior: if -e is omitted, use first positional argument as pattern
     if (patterns.size() == 0 && files.size())
