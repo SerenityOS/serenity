@@ -240,9 +240,8 @@ ThrowCompletionOr<String> temporal_instant_to_string(GlobalObject& global_object
 
     // 4. If outputTimeZone is undefined, then
     if (output_time_zone.is_undefined()) {
-        // TODO: Can this really throw...?
-        // a. Set outputTimeZone to ? CreateTemporalTimeZone("UTC").
-        output_time_zone = TRY(create_temporal_time_zone(global_object, "UTC"sv));
+        // a. Set outputTimeZone to ! CreateTemporalTimeZone("UTC").
+        output_time_zone = MUST(create_temporal_time_zone(global_object, "UTC"sv));
     }
 
     // 5. Let isoCalendar be ! GetISO8601Calendar().
