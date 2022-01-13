@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Alex Major
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +14,7 @@
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibMain/Main.h>
 #include <net/if.h>
 #include <net/route.h>
 #include <netinet/in.h>
@@ -21,7 +23,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     const char* value_ipv4 = nullptr;
     const char* value_adapter = nullptr;
@@ -34,23 +36,12 @@ int main(int argc, char** argv)
     args_parser.add_option(value_adapter, "Select a specific network adapter to configure", "adapter", 'a', "adapter");
     args_parser.add_option(value_gateway, "Set the default gateway of the selected network", "gateway", 'g', "gateway");
     args_parser.add_option(value_mask, "Set the network mask of the selected network", "mask", 'm', "mask");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!value_ipv4 && !value_adapter && !value_gateway && !value_mask) {
+        auto file = TRY(Core::File::open("/proc/net/adapters", Core::OpenMode::ReadOnly));
+        auto json = TRY(JsonValue::from_string(file->read_all()));
 
-        auto file = Core::File::construct("/proc/net/adapters");
-        if (!file->open(Core::OpenMode::ReadOnly)) {
-            outln("Failed to open {}: {}", file->name(), file->error_string());
-            return 1;
-        }
-
-        auto file_contents = file->read_all();
-        auto json_or_error = JsonValue::from_string(file_contents);
-        if (json_or_error.is_error()) {
-            outln("Failed to decode JSON: {}", json_or_error.error());
-            return 1;
-        }
-        auto json = json_or_error.release_value();
         json.as_array().for_each([](auto& value) {
             auto& if_object = value.as_object();
 
