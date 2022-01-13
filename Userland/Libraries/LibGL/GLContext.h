@@ -115,6 +115,7 @@ public:
     virtual void gl_lightfv(GLenum light, GLenum pname, GLfloat const* params) = 0;
     virtual void gl_materialf(GLenum face, GLenum pname, GLfloat param) = 0;
     virtual void gl_materialfv(GLenum face, GLenum pname, GLfloat const* params) = 0;
+    virtual void gl_color_material(GLenum face, GLenum mode) = 0;
 
     virtual void present() = 0;
 };

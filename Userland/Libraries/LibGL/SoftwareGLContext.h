@@ -146,6 +146,7 @@ public:
     virtual void gl_lightfv(GLenum light, GLenum pname, GLfloat const* params) override;
     virtual void gl_materialf(GLenum face, GLenum pname, GLfloat param) override;
     virtual void gl_materialfv(GLenum face, GLenum pname, GLfloat const* params) override;
+    virtual void gl_color_material(GLenum face, GLenum mode) override;
     virtual void present() override;
 
 private:
@@ -379,7 +380,8 @@ private:
             decltype(&SoftwareGLContext::gl_lightf),
             decltype(&SoftwareGLContext::gl_lightfv),
             decltype(&SoftwareGLContext::gl_materialf),
-            decltype(&SoftwareGLContext::gl_materialfv)>;
+            decltype(&SoftwareGLContext::gl_materialfv),
+            decltype(&SoftwareGLContext::gl_color_material)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -431,9 +433,13 @@ private:
 
     // Lighting configuration
     bool m_lighting_enabled { false };
-
     Vector<SoftGPU::Light> m_light_states;
     Array<SoftGPU::Material, 2u> m_material_states;
+
+    // Color material
+    bool m_color_material_enabled { false };
+    GLenum m_color_material_face { GL_FRONT_AND_BACK };
+    GLenum m_color_material_mode { GL_AMBIENT_AND_DIFFUSE };
 };
 
 }

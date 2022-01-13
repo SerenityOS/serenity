@@ -33,6 +33,20 @@ enum class BlendFactor {
     SrcAlphaSaturate,
 };
 
+enum class ColorMaterialFace {
+    Front,
+    Back,
+    FrontAndBack,
+};
+
+enum class ColorMaterialMode {
+    Ambient,
+    AmbientAndDiffuse,
+    Diffuse,
+    Emissive,
+    Specular,
+};
+
 enum class DepthTestFunction {
     Never,
     Always,

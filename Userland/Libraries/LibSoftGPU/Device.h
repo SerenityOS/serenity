@@ -70,6 +70,9 @@ struct RasterizerOptions {
     Array<TexCoordGenerationConfig, 4> texcoord_generation_config {};
     Gfx::IntRect viewport;
     bool lighting_enabled { false };
+    bool color_material_enabled { false };
+    ColorMaterialFace color_material_face { ColorMaterialFace::FrontAndBack };
+    ColorMaterialMode color_material_mode { ColorMaterialMode::AmbientAndDiffuse };
 };
 
 struct LightModelParameters {

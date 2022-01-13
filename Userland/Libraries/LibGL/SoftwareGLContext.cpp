@@ -91,6 +91,12 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_blend_source_factor) } };
     case GL_BLUE_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+    case GL_COLOR_MATERIAL:
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_color_material_enabled } };
+    case GL_COLOR_MATERIAL_FACE:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_color_material_face) } };
+    case GL_COLOR_MATERIAL_MODE:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_color_material_mode) } };
     case GL_CULL_FACE:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_cull_faces } };
     case GL_DEPTH_BITS:
@@ -644,6 +650,9 @@ void SoftwareGLContext::gl_enable(GLenum capability)
     bool update_rasterizer_options = false;
 
     switch (capability) {
+    case GL_COLOR_MATERIAL:
+        m_color_material_enabled = true;
+        break;
     case GL_CULL_FACE:
         m_cull_faces = true;
         rasterizer_options.enable_culling = true;
@@ -741,6 +750,9 @@ void SoftwareGLContext::gl_disable(GLenum capability)
     bool update_rasterizer_options = false;
 
     switch (capability) {
+    case GL_COLOR_MATERIAL:
+        m_color_material_enabled = false;
+        break;
     case GL_CULL_FACE:
         m_cull_faces = false;
         rasterizer_options.enable_culling = false;
@@ -2995,6 +3007,43 @@ void SoftwareGLContext::sync_light_state()
 
     m_light_state_is_dirty = false;
 
+    auto options = m_rasterizer.options();
+    options.color_material_enabled = m_color_material_enabled;
+    switch (m_color_material_face) {
+    case GL_BACK:
+        options.color_material_face = SoftGPU::ColorMaterialFace::Back;
+        break;
+    case GL_FRONT:
+        options.color_material_face = SoftGPU::ColorMaterialFace::Front;
+        break;
+    case GL_FRONT_AND_BACK:
+        options.color_material_face = SoftGPU::ColorMaterialFace::FrontAndBack;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    switch (m_color_material_mode) {
+    case GL_AMBIENT:
+        options.color_material_mode = SoftGPU::ColorMaterialMode::Ambient;
+        break;
+    case GL_AMBIENT_AND_DIFFUSE:
+        options.color_material_mode = SoftGPU::ColorMaterialMode::Ambient;
+        options.color_material_mode = SoftGPU::ColorMaterialMode::Diffuse;
+        break;
+    case GL_DIFFUSE:
+        options.color_material_mode = SoftGPU::ColorMaterialMode::Diffuse;
+        break;
+    case GL_EMISSION:
+        options.color_material_mode = SoftGPU::ColorMaterialMode::Emissive;
+        break;
+    case GL_SPECULAR:
+        options.color_material_mode = SoftGPU::ColorMaterialMode::Specular;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    m_rasterizer.set_options(options);
+
     for (auto light_id = 0u; light_id < SoftGPU::NUM_LIGHTS; light_id++) {
         SoftGPU::Light light;
         auto const& current_light_state = m_light_states.at(light_id);
@@ -3245,6 +3294,28 @@ void SoftwareGLContext::gl_materialfv(GLenum face, GLenum pname, GLfloat const* 
         update_material(m_material_states.at(MaterialFace::Back), pname, params);
         break;
     }
+
+    m_light_state_is_dirty = true;
+}
+
+void SoftwareGLContext::gl_color_material(GLenum face, GLenum mode)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_color_material, face, mode);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    RETURN_WITH_ERROR_IF(face != GL_FRONT
+            && face != GL_BACK
+            && face != GL_FRONT_AND_BACK,
+        GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(mode != GL_EMISSION
+            && mode != GL_AMBIENT
+            && mode != GL_DIFFUSE
+            && mode != GL_SPECULAR
+            && mode != GL_AMBIENT_AND_DIFFUSE,
+        GL_INVALID_ENUM);
+
+    m_color_material_face = face;
+    m_color_material_mode = mode;
 
     m_light_state_is_dirty = true;
 }
