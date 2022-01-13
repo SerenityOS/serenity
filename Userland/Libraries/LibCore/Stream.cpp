@@ -6,6 +6,7 @@
  */
 
 #include "Stream.h"
+#include <LibCore/System.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <poll.h>
@@ -533,6 +534,26 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(String const& path)
 
     socket->setup_notifier();
     return socket;
+}
+
+ErrorOr<int> LocalSocket::receive_fd(int flags)
+{
+#ifdef __serenity__
+    return Core::System::recvfd(m_helper.fd(), flags);
+#else
+    (void)flags;
+    return Error::from_string_literal("File descriptor passing not supported on this platform");
+#endif
+}
+
+ErrorOr<void> LocalSocket::send_fd(int fd)
+{
+#ifdef __serenity__
+    return Core::System::sendfd(m_helper.fd(), fd);
+#else
+    (void)fd;
+    return Error::from_string_literal("File descriptor passing not supported on this platform");
+#endif
 }
 
 }
