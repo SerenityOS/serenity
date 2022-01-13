@@ -234,18 +234,26 @@ bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
     return success;
 }
 
-void Region::unmap(ShouldDeallocateVirtualRange deallocate_range)
+void Region::unmap(ShouldDeallocateVirtualRange should_deallocate_range, ShouldFlushTLB should_flush_tlb)
 {
     if (!m_page_directory)
         return;
-    SpinlockLocker page_lock(m_page_directory->get_lock());
-    SpinlockLocker lock(s_mm_lock);
+    SpinlockLocker pd_locker(m_page_directory->get_lock());
+    SpinlockLocker mm_locker(s_mm_lock);
+    unmap_with_locks_held(should_deallocate_range, should_flush_tlb, pd_locker, mm_locker);
+}
+
+void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange deallocate_range, ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
+{
+    if (!m_page_directory)
+        return;
     size_t count = page_count();
     for (size_t i = 0; i < count; ++i) {
         auto vaddr = vaddr_from_page_index(i);
         MM.release_pte(*m_page_directory, vaddr, i == count - 1 ? MemoryManager::IsLastPTERelease::Yes : MemoryManager::IsLastPTERelease::No);
     }
-    MemoryManager::flush_tlb(m_page_directory, vaddr(), page_count());
+    if (should_flush_tlb == ShouldFlushTLB::Yes)
+        MemoryManager::flush_tlb(m_page_directory, vaddr(), page_count());
     if (deallocate_range == ShouldDeallocateVirtualRange::Yes) {
         m_page_directory->range_allocator().deallocate(range());
     }
@@ -298,7 +306,7 @@ void Region::clear_to_zero()
     VERIFY(vmobject().is_anonymous());
     SpinlockLocker locker(vmobject().m_lock);
     for (auto i = 0u; i < page_count(); ++i) {
-        auto page = physical_page_slot(i);
+        auto& page = physical_page_slot(i);
         VERIFY(page);
         if (page->is_shared_zero_page())
             continue;

@@ -59,4 +59,11 @@ String Project::to_absolute_path(String const& path) const
     return LexicalPath { String::formatted("{}/{}", m_root_path, path) }.string();
 }
 
+bool Project::project_is_serenity() const
+{
+    // FIXME: Improve this heuristic
+    // Running "Meta/serenity.sh copy-src" installs the serenity repository at this path in the home directory
+    return m_root_path.ends_with("Source/serenity");
+}
+
 }

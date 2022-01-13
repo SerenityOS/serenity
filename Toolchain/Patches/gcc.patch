@@ -224,10 +224,10 @@ index 000000000..dc2f5361e
 +  } while(0);
 diff --git a/gcc/config/serenity.opt b/gcc/config/serenity.opt
 new file mode 100644
-index 000000000..6ce2af2d7
+index 000000000..2756a5575
 --- /dev/null
 +++ b/gcc/config/serenity.opt
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,35 @@
 +; SerenityOS options.
 +
 +; Copyright (C) 2021 Gunnar Beutner <gunnar@beutner.name>
@@ -257,6 +257,9 @@ index 000000000..6ce2af2d7
 +Driver
 +
 +pthread
++Driver
++
++rdynamic
 +Driver
 +
 +; This comment is to ensure we retain the blank line above.

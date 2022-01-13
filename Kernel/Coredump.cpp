@@ -219,7 +219,7 @@ ErrorOr<void> Coredump::create_notes_process_data(auto& builder) const
         JsonObjectSerializer process_obj { builder };
         process_obj.add("pid"sv, m_process->pid().value());
         process_obj.add("termination_signal"sv, m_process->termination_signal());
-        process_obj.add("executable_path"sv, m_process->executable() ? m_process->executable()->absolute_path() : String::empty());
+        process_obj.add("executable_path"sv, m_process->executable() ? TRY(m_process->executable()->try_serialize_absolute_path())->view() : ""sv);
 
         {
             auto arguments_array = process_obj.add_array("arguments"sv);

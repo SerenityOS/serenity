@@ -18,6 +18,7 @@
 #include "Git/GitWidget.h"
 #include "Locator.h"
 #include "Project.h"
+#include "ProjectBuilder.h"
 #include "ProjectFile.h"
 #include "TerminalWrapper.h"
 #include "ToDoEntriesWidget.h"
@@ -133,8 +134,8 @@ private:
     void create_project_tab(GUI::Widget& parent);
     void configure_project_tree_view();
 
-    void run(TerminalWrapper& wrapper);
-    void build(TerminalWrapper& wrapper);
+    void run();
+    void build();
 
     void hide_action_tabs();
     bool any_document_is_dirty() const;
@@ -228,5 +229,6 @@ private:
 
     Mode m_mode { Mode::Code };
     OwnPtr<Coredump::Inspector> m_coredump_inspector;
+    OwnPtr<ProjectBuilder> m_project_builder;
 };
 }

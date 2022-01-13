@@ -1492,15 +1492,14 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(GlobalObject& global_o
 }
 
 // 11.1.14 ToLocalTime ( t, calendar, timeZone ), https://tc39.es/ecma402/#sec-tolocaltime
-ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double time, StringView calendar, [[maybe_unused]] StringView time_zone)
+ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double time, StringView calendar, StringView time_zone)
 {
     // 1. Assert: Type(t) is Number.
 
     // 2. If calendar is "gregory", then
     if (calendar == "gregory"sv) {
         // a. Let timeZoneOffset be the value calculated according to LocalTZA(t, true) where the local time zone is replaced with timezone timeZone.
-        // FIXME: Implement LocalTZA when timezones other than UTC are supported.
-        double time_zone_offset = 0;
+        double time_zone_offset = local_tza(time, true, time_zone);
 
         // b. Let tz be the time value t + timeZoneOffset.
         double zoned_time = time + time_zone_offset;

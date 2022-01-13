@@ -5,6 +5,7 @@
  */
 
 #include <LibTimeZone/TimeZone.h>
+#include <time.h>
 
 namespace TimeZone {
 
@@ -18,6 +19,17 @@ enum class TimeZone : u16 {
     UTC,
 };
 #endif
+
+StringView current_time_zone()
+{
+    static bool initialized_time_zone = false;
+    if (!initialized_time_zone) {
+        initialized_time_zone = true;
+        tzset();
+    }
+
+    return tzname[0];
+}
 
 Optional<TimeZone> __attribute__((weak)) time_zone_from_string([[maybe_unused]] StringView time_zone)
 {

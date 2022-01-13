@@ -59,7 +59,7 @@ ErrorOr<NonnullOwnPtr<KString>> Custody::try_serialize_absolute_path() const
     Vector<Custody const*, 32> custody_chain;
     size_t path_length = 0;
     for (auto const* custody = this; custody; custody = custody->parent()) {
-        custody_chain.append(custody);
+        TRY(custody_chain.try_append(custody));
         path_length += custody->m_name->length() + 1;
     }
     VERIFY(path_length > 0);
@@ -77,21 +77,6 @@ ErrorOr<NonnullOwnPtr<KString>> Custody::try_serialize_absolute_path() const
     VERIFY(string->length() == string_index);
     buffer[string_index] = 0;
     return string;
-}
-
-String Custody::absolute_path() const
-{
-    if (!parent())
-        return "/";
-    Vector<Custody const*, 32> custody_chain;
-    for (auto const* custody = this; custody; custody = custody->parent())
-        custody_chain.append(custody);
-    StringBuilder builder;
-    for (int i = custody_chain.size() - 2; i >= 0; --i) {
-        builder.append('/');
-        builder.append(custody_chain[i]->name());
-    }
-    return builder.to_string();
 }
 
 bool Custody::is_readonly() const

@@ -1638,7 +1638,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         // b. Set hours to ! ToIntegerOrInfinity(hours).
         u8 hours = *hours_part->to_uint<u8>();
 
-        u8 sign;
+        i8 sign;
         // c. If sign is the code unit 0x002D (HYPHEN-MINUS) or the code unit 0x2212 (MINUS SIGN), then
         if (sign_part->is_one_of("-", "\u2212")) {
             // i. Set sign to −1.
@@ -1663,15 +1663,20 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
             auto fraction = String::formatted("{}000000000", *fraction_part);
             // ii. Let nanoseconds be the String value equal to the substring of fraction from 1 to 10.
             // iii. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
-            nanoseconds = *fraction.substring(1, 10).to_int<i32>();
+            // FIXME: 1-10 is wrong and should be 0-9; the decimal separator is no longer present in the parsed string.
+            //        See: https://github.com/tc39/proposal-temporal/pull/1999
+            nanoseconds = *fraction.substring(0, 9).to_int<i32>();
         }
         // h. Else,
         else {
             // i. Let nanoseconds be 0.
             nanoseconds = 0;
         }
+
         // i. Let offsetNanoseconds be sign × (((hours × 60 + minutes) × 60 + seconds) × 10^9 + nanoseconds).
-        auto offset_nanoseconds = sign * (((hours * 60 + minutes) * 60 + seconds) * 1000000000 + nanoseconds);
+        // NOTE: Decimal point in 10^9 is important, otherwise it's all integers and the result overflows!
+        auto offset_nanoseconds = sign * (((hours * 60 + minutes) * 60 + seconds) * 1000000000.0 + nanoseconds);
+
         // j. Let offsetString be ! FormatTimeZoneOffsetString(offsetNanoseconds).
         offset = format_time_zone_offset_string(offset_nanoseconds);
     }

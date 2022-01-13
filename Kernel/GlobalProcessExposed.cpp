@@ -358,7 +358,12 @@ private:
             fs_object.add("free_block_count", fs.free_block_count());
             fs_object.add("total_inode_count", fs.total_inode_count());
             fs_object.add("free_inode_count", fs.free_inode_count());
-            fs_object.add("mount_point", mount.absolute_path());
+            auto mount_point_or_error = mount.absolute_path();
+            if (mount_point_or_error.is_error()) {
+                result = mount_point_or_error.release_error();
+                return IterationDecision::Break;
+            }
+            fs_object.add("mount_point", mount_point_or_error.value()->view());
             fs_object.add("block_size", static_cast<u64>(fs.block_size()));
             fs_object.add("readonly", fs.is_readonly());
             fs_object.add("mount_flags", mount.flags());
@@ -448,7 +453,7 @@ private:
         JsonObjectSerializer<KBufferBuilder> json { builder };
 
         // Keep this in sync with CProcessStatistics.
-        auto build_process = [&](JsonArraySerializer<KBufferBuilder>& array, const Process& process) {
+        auto build_process = [&](JsonArraySerializer<KBufferBuilder>& array, const Process& process) -> ErrorOr<void> {
             auto process_object = array.add_object();
 
             if (process.is_user_process()) {
@@ -488,7 +493,7 @@ private:
             process_object.add("ppid", process.ppid().value());
             process_object.add("nfds", process.fds().open_count());
             process_object.add("name", process.name());
-            process_object.add("executable", process.executable() ? process.executable()->absolute_path() : "");
+            process_object.add("executable", process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv);
             process_object.add("tty", process.tty() ? process.tty()->tty_name().view() : "notty"sv);
             process_object.add("amount_virtual", process.address_space().amount_virtual());
             process_object.add("amount_resident", process.address_space().amount_resident());
@@ -525,17 +530,20 @@ private:
                 thread_object.add("ipv4_socket_read_bytes", thread.ipv4_socket_read_bytes());
                 thread_object.add("ipv4_socket_write_bytes", thread.ipv4_socket_write_bytes());
             });
+
+            return {};
         };
 
         SpinlockLocker lock(g_scheduler_lock);
         {
             {
                 auto array = json.add_array("processes");
-                build_process(array, *Scheduler::colonel());
-                Process::all_instances().with([&](auto& processes) {
+                TRY(build_process(array, *Scheduler::colonel()));
+                TRY(Process::all_instances().with([&](auto& processes) -> ErrorOr<void> {
                     for (auto& process : processes)
-                        build_process(array, process);
-                });
+                        TRY(build_process(array, process));
+                    return {};
+                }));
             }
 
             auto total_time_scheduled = Scheduler::get_total_time_scheduled();
@@ -572,7 +580,7 @@ private:
                 obj.add("model", info.display_model());
                 obj.add("stepping", info.stepping());
                 obj.add("type", info.type());
-                obj.add("brandstr", info.brandstr());
+                obj.add("brand", info.brand());
             });
         array.finish();
         return {};

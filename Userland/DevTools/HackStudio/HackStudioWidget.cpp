@@ -162,6 +162,8 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
             }
         };
     }
+
+    m_project_builder = make<ProjectBuilder>(*m_terminal_wrapper, *m_project);
 }
 
 void HackStudioWidget::update_actions()
@@ -923,20 +925,20 @@ String HackStudioWidget::get_project_executable_path() const
     return String::formatted("{}/{}", m_project->root_path(), LexicalPath::basename(m_project->root_path()));
 }
 
-void HackStudioWidget::build(TerminalWrapper& wrapper)
+void HackStudioWidget::build()
 {
-    if (active_file().ends_with(".js"))
-        wrapper.run_command(String::formatted("js -A {}", active_file()));
-    else
-        wrapper.run_command("make");
+    auto result = m_project_builder->build(active_file());
+    if (result.is_error()) {
+        GUI::MessageBox::show(window(), String::formatted("{}", result.error()), "Build failed", GUI::MessageBox::Type::Error);
+    }
 }
 
-void HackStudioWidget::run(TerminalWrapper& wrapper)
+void HackStudioWidget::run()
 {
-    if (active_file().ends_with(".js"))
-        wrapper.run_command(String::formatted("js {}", active_file()));
-    else
-        wrapper.run_command("make run");
+    auto result = m_project_builder->run(active_file());
+    if (result.is_error()) {
+        GUI::MessageBox::show(window(), String::formatted("{}", result.error()), "Run failed", GUI::MessageBox::Type::Error);
+    }
 }
 
 void HackStudioWidget::hide_action_tabs()
@@ -1065,7 +1067,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_build_action()
             return;
 
         reveal_action_tab(*m_terminal_wrapper);
-        build(*m_terminal_wrapper);
+        build();
         m_stop_action->set_enabled(true);
     });
 }
@@ -1074,7 +1076,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_run_action()
 {
     return GUI::Action::create("&Run", { Mod_Ctrl, Key_R }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/program-run.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         reveal_action_tab(*m_terminal_wrapper);
-        run(*m_terminal_wrapper);
+        run();
         m_stop_action->set_enabled(true);
     });
 }

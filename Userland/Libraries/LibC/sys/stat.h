@@ -15,6 +15,7 @@ __BEGIN_DECLS
 
 mode_t umask(mode_t);
 int chmod(const char* pathname, mode_t);
+int fchmodat(int fd, char const* path, mode_t mode, int flag);
 int fchmod(int fd, mode_t);
 int mkdir(const char* pathname, mode_t);
 int mkfifo(const char* pathname, mode_t);

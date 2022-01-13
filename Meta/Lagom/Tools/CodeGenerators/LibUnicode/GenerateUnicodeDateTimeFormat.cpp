@@ -1468,7 +1468,7 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
     time_zone_formats.gmt_zero_format = locale_data.unique_strings.ensure(gmt_zero_format_string.as_string());
 
     auto parse_time_zone = [&](StringView meta_zone, JsonObject const& meta_zone_object) {
-        constexpr auto standard_keys = Array { "daylight"sv, "standard"sv };
+        constexpr auto standard_keys = Array { "standard"sv, "daylight"sv };
         constexpr auto generic_keys = Array { "generic"sv };
 
         auto golden_zones = locale_data.meta_zones.find(meta_zone);

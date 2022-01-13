@@ -521,10 +521,8 @@ public:
 
     void clear()
     {
-        if (this->m_root) {
-            delete this->m_root;
-            this->m_root = nullptr;
-        }
+        delete this->m_root;
+        this->m_root = nullptr;
         this->m_minimum = nullptr;
         this->m_size = 0;
     }
@@ -542,10 +540,8 @@ private:
 
         ~Node()
         {
-            if (this->left_child)
-                delete this->left_child;
-            if (this->right_child)
-                delete this->right_child;
+            delete this->left_child;
+            delete this->right_child;
         }
     };
 };

@@ -136,7 +136,7 @@ private:
     int virt$beep();
     int virt$bind(int sockfd, FlatPtr address, socklen_t address_length);
     int virt$chdir(FlatPtr, size_t);
-    int virt$chmod(FlatPtr, size_t, mode_t);
+    int virt$chmod(FlatPtr);
     int virt$chown(FlatPtr);
     int virt$clock_gettime(int, FlatPtr);
     int virt$clock_nanosleep(FlatPtr);

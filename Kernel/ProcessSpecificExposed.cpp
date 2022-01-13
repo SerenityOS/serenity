@@ -51,7 +51,8 @@ ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<Err
         for (auto const& thread : list) {
             int tid = thread.tid().value();
             InodeIdentifier identifier = { fsid, SegmentedProcFSIndex::build_segmented_index_for_thread_stack(pid(), thread.tid()) };
-            TRY(callback({ String::number(tid), identifier, 0 }));
+            auto name = TRY(KString::number(tid));
+            TRY(callback({ name->view(), identifier, 0 }));
         }
         return {};
     });
@@ -264,7 +265,7 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
 
 ErrorOr<void> Process::procfs_get_current_work_directory_link(KBufferBuilder& builder) const
 {
-    return builder.append_bytes(const_cast<Process&>(*this).current_directory().absolute_path().bytes());
+    return builder.append(TRY(const_cast<Process&>(*this).current_directory().try_serialize_absolute_path())->view());
 }
 
 mode_t Process::binary_link_required_mode() const
@@ -279,7 +280,7 @@ ErrorOr<void> Process::procfs_get_binary_link(KBufferBuilder& builder) const
     auto const* custody = executable();
     if (!custody)
         return Error::from_errno(ENOEXEC);
-    return builder.append(custody->absolute_path().bytes());
+    return builder.append(TRY(custody->try_serialize_absolute_path())->view());
 }
 
 ErrorOr<void> Process::procfs_get_tty_link(KBufferBuilder& builder) const

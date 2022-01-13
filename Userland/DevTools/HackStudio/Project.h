@@ -30,6 +30,7 @@ public:
 
     void for_each_text_file(Function<void(const ProjectFile&)>) const;
     String to_absolute_path(String const&) const;
+    bool project_is_serenity() const;
 
 private:
     explicit Project(const String& root_path);

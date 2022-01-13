@@ -35,7 +35,7 @@ describe("correct behavior", () => {
             },
         };
 
-        const plainDateTime = Temporal.Now.plainDateTimeISO();
+        const plainDateTime = Temporal.Now.plainDateTimeISO("UTC");
         const plainDateTimeWithOffset = Temporal.Now.plainDateTimeISO(timeZone);
 
         if (plainDateTime.year !== plainDateTimeWithOffset.year) return;
@@ -55,7 +55,7 @@ describe("correct behavior", () => {
             },
         };
 
-        const plainDateTime = Temporal.Now.plainDateTimeISO();
+        const plainDateTime = Temporal.Now.plainDateTimeISO("UTC");
         const plainDateTimeWithOffset = Temporal.Now.plainDateTimeISO(timeZone);
 
         if (plainDateTime.year !== plainDateTimeWithOffset.year) return;

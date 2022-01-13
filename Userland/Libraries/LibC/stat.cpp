@@ -35,11 +35,29 @@ int mkdir(const char* pathname, mode_t mode)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/chmod.html
 int chmod(const char* pathname, mode_t mode)
 {
+    return fchmodat(AT_FDCWD, pathname, mode, 0);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fchmodat.html
+int fchmodat(int dirfd, char const* pathname, mode_t mode, int flags)
+{
     if (!pathname) {
         errno = EFAULT;
         return -1;
     }
-    int rc = syscall(SC_chmod, pathname, strlen(pathname), mode);
+
+    if (flags & ~AT_SYMLINK_NOFOLLOW) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    Syscall::SC_chmod_params params {
+        dirfd,
+        { pathname, strlen(pathname) },
+        mode,
+        !(flags & AT_SYMLINK_NOFOLLOW)
+    };
+    int rc = syscall(SC_chmod, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

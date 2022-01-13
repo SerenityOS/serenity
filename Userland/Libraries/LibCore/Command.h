@@ -14,7 +14,14 @@
 namespace Core {
 
 // If the executed command fails, the returned String will be in the null state.
-String command(const String& program, const Vector<String>& arguments, Optional<LexicalPath> chdir);
-String command(const String& command_string, Optional<LexicalPath> chdir);
+
+struct CommandResult {
+    int exit_code { 0 };
+    String stdout;
+    String stderr;
+};
+
+ErrorOr<CommandResult> command(String const& program, Vector<String> const& arguments, Optional<LexicalPath> chdir);
+ErrorOr<CommandResult> command(String const& command_string, Optional<LexicalPath> chdir);
 
 }

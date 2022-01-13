@@ -18,14 +18,14 @@ public:
     {
         if (g_profiling_all_threads) {
             VERIFY(g_global_perf_events);
-            g_global_perf_events->add_process(process, ProcessEventType::Create);
+            (void)g_global_perf_events->add_process(process, ProcessEventType::Create);
         }
     }
 
     inline static void add_process_exec_event(Process& process)
     {
         if (auto* event_buffer = process.current_perf_events_buffer()) {
-            event_buffer->add_process(process, ProcessEventType::Exec);
+            (void)event_buffer->add_process(process, ProcessEventType::Exec);
         }
     }
 

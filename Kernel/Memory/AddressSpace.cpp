@@ -320,7 +320,12 @@ void AddressSpace::dump_regions()
 
 void AddressSpace::remove_all_regions(Badge<Process>)
 {
-    SpinlockLocker lock(m_lock);
+    VERIFY(Thread::current() == g_finalizer);
+    SpinlockLocker locker(m_lock);
+    SpinlockLocker pd_locker(m_page_directory->get_lock());
+    SpinlockLocker mm_locker(s_mm_lock);
+    for (auto& region : m_regions)
+        (*region).unmap_with_locks_held(Region::ShouldDeallocateVirtualRange::No, ShouldFlushTLB::No, pd_locker, mm_locker);
     m_regions.clear();
 }
 

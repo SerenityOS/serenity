@@ -9,7 +9,6 @@
 #include <AK/Error.h>
 #include <AK/IntrusiveList.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
 #include <Kernel/Library/ListedRefCounted.h>
@@ -31,7 +30,6 @@ public:
     Inode const& inode() const { return *m_inode; }
     StringView name() const { return m_name->view(); }
     ErrorOr<NonnullOwnPtr<KString>> try_serialize_absolute_path() const;
-    String absolute_path() const;
 
     int mount_flags() const { return m_mount_flags; }
     bool is_readonly() const;

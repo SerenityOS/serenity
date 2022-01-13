@@ -31,22 +31,22 @@ TEST_CASE(time_zone_name)
         TestData { "ar"sv, Unicode::CalendarPatternStyle::LongGeneric, "UTC"sv, "غرينتش"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::ShortGeneric, "UTC"sv, "غرينتش"sv },
 
-        TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "America/Los_Angeles"sv, "Pacific Daylight Time"sv },
-        TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "America/Los_Angeles"sv, "PDT"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "America/Los_Angeles"sv, "Pacific Standard Time"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "America/Los_Angeles"sv, "PST"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::LongGeneric, "America/Los_Angeles"sv, "Pacific Time"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::ShortGeneric, "America/Los_Angeles"sv, "PT"sv },
 
-        TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "America/Los_Angeles"sv, "توقيت المحيط الهادي الصيفي"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "America/Los_Angeles"sv, "توقيت المحيط الهادي الرسمي"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "America/Los_Angeles"sv, "غرينتش-٨"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::LongGeneric, "America/Los_Angeles"sv, "توقيت المحيط الهادي"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::ShortGeneric, "America/Los_Angeles"sv, "غرينتش-٨"sv },
 
-        TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "America/Vancouver"sv, "Pacific Daylight Time"sv },
-        TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "America/Vancouver"sv, "PDT"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "America/Vancouver"sv, "Pacific Standard Time"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "America/Vancouver"sv, "PST"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::LongGeneric, "America/Vancouver"sv, "Pacific Time"sv },
         TestData { "en"sv, Unicode::CalendarPatternStyle::ShortGeneric, "America/Vancouver"sv, "PT"sv },
 
-        TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "America/Vancouver"sv, "توقيت المحيط الهادي الصيفي"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "America/Vancouver"sv, "توقيت المحيط الهادي الرسمي"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "America/Vancouver"sv, "غرينتش-٨"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::LongGeneric, "America/Vancouver"sv, "توقيت المحيط الهادي"sv },
         TestData { "ar"sv, Unicode::CalendarPatternStyle::ShortGeneric, "America/Vancouver"sv, "غرينتش-٨"sv },

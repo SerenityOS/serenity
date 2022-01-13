@@ -26,7 +26,7 @@ public:
     FileSystem const& guest_fs() const { return *m_guest_fs; }
     FileSystem& guest_fs() { return *m_guest_fs; }
 
-    String absolute_path() const;
+    ErrorOr<NonnullOwnPtr<KString>> absolute_path() const;
 
     int flags() const { return m_flags; }
     void set_flags(int flags) { m_flags = flags; }

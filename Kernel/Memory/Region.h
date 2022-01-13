@@ -178,7 +178,8 @@ public:
         No,
         Yes,
     };
-    void unmap(ShouldDeallocateVirtualRange = ShouldDeallocateVirtualRange::Yes);
+    void unmap(ShouldDeallocateVirtualRange, ShouldFlushTLB = ShouldFlushTLB::Yes);
+    void unmap_with_locks_held(ShouldDeallocateVirtualRange, ShouldFlushTLB, SpinlockLocker<RecursiveSpinlock>& pd_locker, SpinlockLocker<RecursiveSpinlock>& mm_locker);
 
     void remap();
 

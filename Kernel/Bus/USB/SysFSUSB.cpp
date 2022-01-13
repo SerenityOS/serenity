@@ -170,7 +170,7 @@ UNMAP_AFTER_INIT void SysFSUSBBusDirectory::initialize()
 
 ErrorOr<NonnullRefPtr<SysFSUSBDeviceInformation>> SysFSUSBDeviceInformation::create(USB::Device& device)
 {
-    auto device_name = TRY(KString::try_create(String::number(device.address())));
+    auto device_name = TRY(KString::number(device.address()));
     return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSUSBDeviceInformation(move(device_name), device));
 }
 

@@ -15,16 +15,6 @@
 
 namespace GL {
 
-#define VERIFY_CURRENT_CONTEXT() \
-    if (!g_gl_context) {         \
-        return;                  \
-    }
-
-#define VERIFY_CURRENT_CONTEXT_OR_VALUE(value) \
-    if (!g_gl_context) {                       \
-        return value;                          \
-    }
-
 class GLContext {
 public:
     virtual ~GLContext();

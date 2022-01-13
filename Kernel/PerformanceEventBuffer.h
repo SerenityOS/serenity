@@ -121,7 +121,7 @@ public:
 
     ErrorOr<void> to_json(KBufferBuilder&) const;
 
-    void add_process(const Process&, ProcessEventType event_type);
+    ErrorOr<void> add_process(const Process&, ProcessEventType event_type);
 
     ErrorOr<FlatPtr> register_string(NonnullOwnPtr<KString>);
 

@@ -9,9 +9,12 @@
 #include <AK/HashMap.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/KBuffer.h>
+#include <Kernel/KString.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/Socket.h>
+
+namespace Kernel {
 
 class IPv4SocketTuple {
 public:
@@ -31,9 +34,9 @@ public:
         return other.local_address() == m_local_address && other.local_port() == m_local_port && other.peer_address() == m_peer_address && other.peer_port() == m_peer_port;
     };
 
-    String to_string() const
+    ErrorOr<NonnullOwnPtr<KString>> to_string() const
     {
-        return String::formatted(
+        return KString::formatted(
             "{}:{} -> {}:{}",
             m_local_address,
             m_local_port,
@@ -48,11 +51,13 @@ private:
     u16 m_peer_port { 0 };
 };
 
+}
+
 namespace AK {
 
 template<>
-struct Traits<IPv4SocketTuple> : public GenericTraits<IPv4SocketTuple> {
-    static unsigned hash(const IPv4SocketTuple& tuple)
+struct Traits<Kernel::IPv4SocketTuple> : public GenericTraits<Kernel::IPv4SocketTuple> {
+    static unsigned hash(const Kernel::IPv4SocketTuple& tuple)
     {
         auto h1 = pair_int_hash(tuple.local_address().to_u32(), tuple.local_port());
         auto h2 = pair_int_hash(tuple.peer_address().to_u32(), tuple.peer_port());

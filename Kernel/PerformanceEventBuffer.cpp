@@ -313,29 +313,34 @@ OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size
     return adopt_own_if_nonnull(new (nothrow) PerformanceEventBuffer(buffer_or_error.release_value()));
 }
 
-void PerformanceEventBuffer::add_process(const Process& process, ProcessEventType event_type)
+ErrorOr<void> PerformanceEventBuffer::add_process(const Process& process, ProcessEventType event_type)
 {
     SpinlockLocker locker(process.address_space().get_lock());
 
-    String executable;
+    OwnPtr<KString> executable;
     if (process.executable())
-        executable = process.executable()->absolute_path();
+        executable = TRY(process.executable()->try_serialize_absolute_path());
     else
-        executable = String::formatted("<{}>", process.name());
+        executable = TRY(KString::formatted("<{}>", process.name()));
 
-    [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), 0, 0, 0,
+    TRY(append_with_ip_and_bp(process.pid(), 0, 0, 0,
         event_type == ProcessEventType::Create ? PERF_EVENT_PROCESS_CREATE : PERF_EVENT_PROCESS_EXEC,
-        0, process.pid().value(), 0, executable);
+        0, process.pid().value(), 0, executable->view()));
 
+    ErrorOr<void> result;
     process.for_each_thread([&](auto& thread) {
-        [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), thread.tid().value(),
+        result = append_with_ip_and_bp(process.pid(), thread.tid().value(),
             0, 0, PERF_EVENT_THREAD_CREATE, 0, 0, 0, nullptr);
+        return result.is_error() ? IterationDecision::Break : IterationDecision::Continue;
     });
+    TRY(result);
 
     for (auto const& region : process.address_space().regions()) {
-        [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), 0,
-            0, 0, PERF_EVENT_MMAP, 0, region->range().base().get(), region->range().size(), region->name());
+        TRY(append_with_ip_and_bp(process.pid(), 0,
+            0, 0, PERF_EVENT_MMAP, 0, region->range().base().get(), region->range().size(), region->name()));
     }
+
+    return {};
 }
 
 ErrorOr<FlatPtr> PerformanceEventBuffer::register_string(NonnullOwnPtr<KString> string)

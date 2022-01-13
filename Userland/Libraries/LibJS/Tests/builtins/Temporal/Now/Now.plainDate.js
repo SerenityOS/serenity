@@ -17,7 +17,7 @@ describe("correct behavior", () => {
                 return 86400000000000;
             },
         };
-        const plainDate = Temporal.Now.plainDate(calendar);
+        const plainDate = Temporal.Now.plainDate(calendar, "UTC");
         const plainDateWithOffset = Temporal.Now.plainDate(calendar, timeZone);
         if (plainDate.dayOfYear === plainDate.daysInYear) {
             expect(plainDateWithOffset.year).toBe(plainDate.year + 1);

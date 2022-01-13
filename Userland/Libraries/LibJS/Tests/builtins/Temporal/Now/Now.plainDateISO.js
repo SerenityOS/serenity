@@ -15,7 +15,7 @@ describe("correct behavior", () => {
                 return 86400000000000;
             },
         };
-        const plainDate = Temporal.Now.plainDateISO();
+        const plainDate = Temporal.Now.plainDateISO("UTC");
         const plainDateWithOffset = Temporal.Now.plainDateISO(timeZone);
         if (plainDate.dayOfYear === plainDate.daysInYear) {
             expect(plainDateWithOffset.year).toBe(plainDate.year + 1);

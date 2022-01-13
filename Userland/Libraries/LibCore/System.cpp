@@ -386,7 +386,13 @@ ErrorOr<void> chmod(StringView pathname, mode_t mode)
         return Error::from_syscall("chmod"sv, -EFAULT);
 
 #ifdef __serenity__
-    int rc = syscall(SC_chmod, pathname.characters_without_null_termination(), pathname.length(), mode);
+    Syscall::SC_chmod_params params {
+        AT_FDCWD,
+        { pathname.characters_without_null_termination(), pathname.length() },
+        mode,
+        true
+    };
+    int rc = syscall(SC_chmod, &params);
     HANDLE_SYSCALL_RETURN_VALUE("chmod"sv, rc, {});
 #else
     String path = pathname;

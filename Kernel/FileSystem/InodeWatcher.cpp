@@ -86,7 +86,7 @@ ErrorOr<NonnullOwnPtr<KString>> InodeWatcher::pseudo_path(const OpenFileDescript
     return KString::formatted("InodeWatcher:({})", m_wd_to_watches.size());
 }
 
-void InodeWatcher::notify_inode_event(Badge<Inode>, InodeIdentifier inode_id, InodeWatcherEvent::Type event_type, String const& name)
+void InodeWatcher::notify_inode_event(Badge<Inode>, InodeIdentifier inode_id, InodeWatcherEvent::Type event_type, StringView name)
 {
     MutexLocker locker(m_lock);
 
