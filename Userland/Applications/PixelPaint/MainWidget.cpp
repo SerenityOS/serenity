@@ -157,6 +157,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     file_menu.add_action(*m_save_image_as_action);
 
     m_export_submenu = file_menu.add_submenu("&Export");
+    m_export_submenu->set_icon(g_icon_bag.file_export);
 
     m_export_submenu->add_action(
         GUI::Action::create(
@@ -186,8 +187,6 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, String::formatted("Export to PNG failed: {}", result.error()));
             }));
-
-    m_export_submenu->set_icon(g_icon_bag.file_export);
 
     file_menu.add_separator();
 
