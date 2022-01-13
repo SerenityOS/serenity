@@ -3187,14 +3187,14 @@ void SoftwareGLContext::gl_materialf(GLenum face, GLenum pname, GLfloat param)
 
     switch (face) {
     case GL_FRONT:
-        m_material_states.at(to_underlying(MaterialFace::Front)).shininess = param;
+        m_material_states.at(MaterialFace::Front).shininess = param;
         break;
     case GL_BACK:
-        m_material_states.at(to_underlying(MaterialFace::Back)).shininess = param;
+        m_material_states.at(MaterialFace::Back).shininess = param;
         break;
     case GL_FRONT_AND_BACK:
-        m_material_states.at(to_underlying(MaterialFace::Front)).shininess = param;
-        m_material_states.at(to_underlying(MaterialFace::Back)).shininess = param;
+        m_material_states.at(MaterialFace::Front).shininess = param;
+        m_material_states.at(MaterialFace::Back).shininess = param;
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -3236,14 +3236,14 @@ void SoftwareGLContext::gl_materialfv(GLenum face, GLenum pname, GLfloat const* 
 
     switch (face) {
     case GL_FRONT:
-        update_material(m_material_states.at(to_underlying(MaterialFace::Front)), pname, params);
+        update_material(m_material_states.at(MaterialFace::Front), pname, params);
         break;
     case GL_BACK:
-        update_material(m_material_states.at(to_underlying(MaterialFace::Back)), pname, params);
+        update_material(m_material_states.at(MaterialFace::Back), pname, params);
         break;
     case GL_FRONT_AND_BACK:
-        update_material(m_material_states.at(to_underlying(MaterialFace::Front)), pname, params);
-        update_material(m_material_states.at(to_underlying(MaterialFace::Back)), pname, params);
+        update_material(m_material_states.at(MaterialFace::Front), pname, params);
+        update_material(m_material_states.at(MaterialFace::Back), pname, params);
         break;
     }
 
