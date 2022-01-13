@@ -167,7 +167,7 @@ bool Emulator::load_elf()
     }
 
     StringBuilder interpreter_path_builder;
-    auto result_or_error = ELF::validate_program_headers(*(Elf32_Ehdr const*)elf_image_data.data(), elf_image_data.size(), (u8 const*)elf_image_data.data(), elf_image_data.size(), &interpreter_path_builder);
+    auto result_or_error = ELF::validate_program_headers(*(Elf32_Ehdr const*)elf_image_data.data(), elf_image_data.size(), elf_image_data, &interpreter_path_builder);
     if (result_or_error.is_error() || !result_or_error.value()) {
         reportln("failed to validate ELF file");
         return false;

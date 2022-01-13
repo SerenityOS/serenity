@@ -68,7 +68,7 @@ static Optional<String> elf_details(String description, const String& path)
         return {};
 
     StringBuilder interpreter_path_builder;
-    auto result_or_error = ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_data.data(), elf_data.size(), (const u8*)elf_data.data(), elf_data.size(), &interpreter_path_builder);
+    auto result_or_error = ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_data.data(), elf_data.size(), elf_data, &interpreter_path_builder);
     if (result_or_error.is_error() || !result_or_error.value())
         return {};
     auto interpreter_path = interpreter_path_builder.string_view();

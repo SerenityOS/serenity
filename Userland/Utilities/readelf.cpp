@@ -299,7 +299,7 @@ int main(int argc, char** argv)
     }
 
     StringBuilder interpreter_path_builder;
-    auto result_or_error = ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_image_data.data(), elf_image_data.size(), (const u8*)elf_image_data.data(), elf_image_data.size(), &interpreter_path_builder);
+    auto result_or_error = ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_image_data.data(), elf_image_data.size(), elf_image_data, &interpreter_path_builder);
     if (result_or_error.is_error() || !result_or_error.value()) {
         warnln("Invalid ELF headers");
         return -1;
