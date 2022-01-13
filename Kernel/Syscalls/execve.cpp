@@ -838,41 +838,46 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*>
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::exec));
 
-    // NOTE: Be extremely careful with allocating any kernel memory in this function.
-    //       On success, the kernel stack will be lost.
-    auto params = TRY(copy_typed_from_user(user_params));
-
-    if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
-        return E2BIG;
-
-    auto path = TRY(get_syscall_path_argument(params.path));
-
-    auto copy_user_strings = [](const auto& list, auto& output) -> ErrorOr<void> {
-        if (!list.length)
-            return {};
-        Checked<size_t> size = sizeof(*list.strings);
-        size *= list.length;
-        if (size.has_overflow())
-            return EOVERFLOW;
-        Vector<Syscall::StringArgument, 32> strings;
-        TRY(strings.try_resize(list.length));
-        TRY(copy_from_user(strings.data(), list.strings, size.value()));
-        for (size_t i = 0; i < list.length; ++i) {
-            auto string = TRY(try_copy_kstring_from_user(strings[i]));
-            TRY(output.try_append(move(string)));
-        }
-        return {};
-    };
-
-    NonnullOwnPtrVector<KString> arguments;
-    TRY(copy_user_strings(params.arguments, arguments));
-
-    NonnullOwnPtrVector<KString> environment;
-    TRY(copy_user_strings(params.environment, environment));
-
     Thread* new_main_thread = nullptr;
     u32 prev_flags = 0;
-    TRY(exec(move(path), move(arguments), move(environment), new_main_thread, prev_flags));
+
+    // NOTE: Be extremely careful with allocating any kernel memory in this function.
+    //       On success, the kernel stack will be lost.
+    //       The explicit block scope below is specifically placed to minimize the number
+    //       of stack locals in this function.
+    {
+        auto params = TRY(copy_typed_from_user(user_params));
+
+        if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
+            return E2BIG;
+
+        auto path = TRY(get_syscall_path_argument(params.path));
+
+        auto copy_user_strings = [](const auto& list, auto& output) -> ErrorOr<void> {
+            if (!list.length)
+                return {};
+            Checked<size_t> size = sizeof(*list.strings);
+            size *= list.length;
+            if (size.has_overflow())
+                return EOVERFLOW;
+            Vector<Syscall::StringArgument, 32> strings;
+            TRY(strings.try_resize(list.length));
+            TRY(copy_from_user(strings.data(), list.strings, size.value()));
+            for (size_t i = 0; i < list.length; ++i) {
+                auto string = TRY(try_copy_kstring_from_user(strings[i]));
+                TRY(output.try_append(move(string)));
+            }
+            return {};
+        };
+
+        NonnullOwnPtrVector<KString> arguments;
+        TRY(copy_user_strings(params.arguments, arguments));
+
+        NonnullOwnPtrVector<KString> environment;
+        TRY(copy_user_strings(params.environment, environment));
+
+        TRY(exec(move(path), move(arguments), move(environment), new_main_thread, prev_flags));
+    }
 
     // NOTE: If we're here, the exec has succeeded and we've got a new executable image!
     //       We will not return normally from this function. Instead, the next time we
