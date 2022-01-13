@@ -216,9 +216,11 @@ void ClientConnection::flash_menubar_menu(i32 window_id, i32 menu_id)
             m_flashed_menu_timer->stop();
         }
 
-        m_flashed_menu_timer = Core::Timer::create_single_shot(75, [&window] {
-            window.menubar().flash_menu(nullptr);
-            window.frame().invalidate_menubar();
+        m_flashed_menu_timer = Core::Timer::create_single_shot(75, [weak_window = window.make_weak_ptr<Window>()]() mutable {
+            if (!weak_window)
+                return;
+            weak_window->menubar().flash_menu(nullptr);
+            weak_window->frame().invalidate_menubar();
         });
         m_flashed_menu_timer->start();
     } else if (m_flashed_menu_timer) {
