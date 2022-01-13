@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
 #include <LibJS/Runtime/Intl/DisplayNamesPrototype.h>
 #include <LibUnicode/Locale.h>
@@ -51,11 +52,18 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
     // 5. Let fields be displayNames.[[Fields]].
     // 6. If fields has a field [[<code>]], return fields.[[<code>]].
     Optional<StringView> result;
+    Optional<String> formatted_result;
 
     switch (display_names->type()) {
     case DisplayNames::Type::Language:
-        // FIXME: Handle the [[LanguageDisplay]] internal slot once we know where that data comes from.
-        result = Unicode::get_locale_language_mapping(display_names->locale(), code.as_string().string());
+        if (display_names->language_display() == DisplayNames::LanguageDisplay::Dialect) {
+            result = Unicode::get_locale_language_mapping(display_names->locale(), code.as_string().string());
+            if (result.has_value())
+                break;
+        }
+
+        if (auto locale = is_structurally_valid_language_tag(code.as_string().string()); locale.has_value())
+            formatted_result = Unicode::format_locale_for_display(display_names->locale(), locale.release_value());
         break;
     case DisplayNames::Type::Region:
         result = Unicode::get_locale_territory_mapping(display_names->locale(), code.as_string().string());
@@ -102,6 +110,8 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 
     if (result.has_value())
         return js_string(vm, result.release_value());
+    if (formatted_result.has_value())
+        return js_string(vm, formatted_result.release_value());
 
     // 7. If displayNames.[[Fallback]] is "code", return code.
     if (display_names->fallback() == DisplayNames::Fallback::Code)
