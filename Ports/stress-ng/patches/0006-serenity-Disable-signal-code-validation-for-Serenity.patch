@@ -1,7 +1,7 @@
-From 08258d635aa54ad755a05757b14b047ae9754e0f Mon Sep 17 00:00:00 2001
+From e8fd707250d04c8d782175bec85fc82c2fe9ac67 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 23:30:03 -0800
-Subject: [PATCH 07/14] serenity: Disable signal code validation for Serenity
+Subject: [PATCH 06/12] serenity: Disable signal code validation for Serenity
 
 We don't currently have a definition for SEGV_ACCERR, so
 this validation is meaningless for SerenityOS.
@@ -28,5 +28,5 @@ index 18b1ca6..e6bdf17 100644
  			inc_counter(args);
  		} else {
 -- 
-2.32.0
+2.34.1
 

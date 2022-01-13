@@ -1,7 +1,7 @@
-From 2db39e274a4dcdc5d4a892371ce5aba45e91c187 Mon Sep 17 00:00:00 2001
+From e19e4ca90d68afd1a246a173d3a573342305df5c Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 23:48:49 -0800
-Subject: [PATCH 13/14] serenity: Disable lrand48 zlib stress, it is not
+Subject: [PATCH 10/12] serenity: Disable lrand48 zlib stress, it is not
  implemented for Serenity
 
 ---
@@ -49,5 +49,5 @@ index dbe5758..95c65f5 100644
  	{ "nybble",	stress_rand_data_nybble },
  	{ "objcode",	stress_rand_data_objcode },
 -- 
-2.32.0
+2.34.1
 

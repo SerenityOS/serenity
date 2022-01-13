@@ -1,7 +1,7 @@
-From 2742eeb0aca33560354de125fb7af3cbe986b414 Mon Sep 17 00:00:00 2001
+From c6fd5831cbd21c3c6d3689bea6c790a221b6c96d Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 23:46:44 -0800
-Subject: [PATCH 10/14] serenity: Disable rand48 cpu stressor, it's not
+Subject: [PATCH 07/12] serenity: Disable rand48 cpu stressor, it's not
  implemented for Serenity
 
 ---
@@ -40,5 +40,5 @@ index 81dd882..b3a586d 100644
  	{ "sdbm",		stress_cpu_sdbm },
  	{ "sieve",		stress_cpu_sieve },
 -- 
-2.32.0
+2.34.1
 

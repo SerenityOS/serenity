@@ -1,7 +1,7 @@
-From d28829e86cc1c8dff2c46fbeb3d4d1217fa4fd5c Mon Sep 17 00:00:00 2001
+From fc1915941417ecea79023636925448d2a0f06853 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 20:58:41 -0800
-Subject: [PATCH 03/14] serenity: Fix duplicate definition of ALWAYS_INLINE on
+Subject: [PATCH 03/12] serenity: Fix duplicate definition of ALWAYS_INLINE on
  serenity
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH 03/14] serenity: Fix duplicate definition of ALWAYS_INLINE on
  1 file changed, 5 insertions(+)
 
 diff --git a/stress-ng.h b/stress-ng.h
-index 73f549b..44f8bfa 100644
+index 41fb906..837790b 100644
 --- a/stress-ng.h
 +++ b/stress-ng.h
-@@ -1230,6 +1230,11 @@ typedef struct {
+@@ -1234,6 +1234,11 @@ typedef struct {
  #define WEAK
  #endif
  
@@ -25,5 +25,5 @@ index 73f549b..44f8bfa 100644
  #if (defined(__GNUC__) && NEED_GNUC(3, 4, 0) 					\
       && ((!defined(__s390__) && !defined(__s390x__)) || NEED_GNUC(6, 0, 1))) ||	\
 -- 
-2.32.0
+2.34.1
 
