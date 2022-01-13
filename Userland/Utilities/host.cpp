@@ -5,25 +5,22 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    if (pledge("stdio unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio unix", nullptr));
 
     const char* name_or_ip = nullptr;
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Convert between domain name and IPv4 address.");
     args_parser.add_positional_argument(name_or_ip, "Domain name or IPv4 address", "name");
-    args_parser.parse(argc, argv);
+    args_parser.parse(args);
 
     // If input looks like an IPv4 address, we should do a reverse lookup.
     struct sockaddr_in addr;
