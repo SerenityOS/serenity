@@ -1,0 +1,30 @@
+From 749c81e5006dea41daf16e99c8a60926236d2373 Mon Sep 17 00:00:00 2001
+From: Kenneth Myhra <kennethmyhra@gmail.com>
+Date: Sat, 25 Dec 2021 19:15:35 +0100
+Subject: [PATCH 2/3] filemanager/ext.c: Include strings.h if SerenityOS
+
+- [ ] Local?
+- [X] Should be merged to upstream?
+- [ ] Resolves issue(s) with our side of things
+- [ ] Hack
+---
+ src/filemanager/ext.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/filemanager/ext.c b/src/filemanager/ext.c
+index 781a763..33baf8c 100644
+--- a/src/filemanager/ext.c
++++ b/src/filemanager/ext.c
+@@ -36,6 +36,9 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
++#ifdef __serenity__
++#include <strings.h>
++#endif
+ #include <unistd.h>
+ 
+ #include "lib/global.h"
+-- 
+2.25.1
+
