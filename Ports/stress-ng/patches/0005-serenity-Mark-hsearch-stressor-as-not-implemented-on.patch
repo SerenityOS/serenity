@@ -1,7 +1,7 @@
-From 308c59d16757b935bc6ad7c369b80681fa879f80 Mon Sep 17 00:00:00 2001
+From 6e46eec4b5490c810bf12e89aabc49c23ddd272e Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 21:01:59 -0800
-Subject: [PATCH 05/14] serenity: Mark hsearch stressor as not implemented on
+Subject: [PATCH 05/12] serenity: Mark hsearch stressor as not implemented on
  Serenity
 
 ---
@@ -32,5 +32,5 @@ index 61c71a6..345a2ca 100644
 +};
 +#endif
 -- 
-2.32.0
+2.34.1
 

@@ -1,7 +1,7 @@
-From 5ce9746b2885d2a3da7f5dbe6c15de858b093188 Mon Sep 17 00:00:00 2001
+From d5955e243cc81d6565eec57ccec282523348e735 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 20:53:47 -0800
-Subject: [PATCH 01/14] serenity: Disable linux scheduler integration on
+Subject: [PATCH 01/12] serenity: Disable linux scheduler integration on
  Serenity
 
 Follow the path of other platforms, and make this code nop
@@ -26,7 +26,7 @@ index a27d15a..65ebe8c 100644
  static const char prefix[] = "sched";
  
 diff --git a/stress-schedpolicy.c b/stress-schedpolicy.c
-index ceaf535..3fdb74d 100644
+index e57b1d8..749e0c1 100644
 --- a/stress-schedpolicy.c
 +++ b/stress-schedpolicy.c
 @@ -33,7 +33,8 @@ static const stress_help_t help[] = {
@@ -40,5 +40,5 @@ index ceaf535..3fdb74d 100644
  static const int policies[] = {
  #if defined(SCHED_IDLE)
 -- 
-2.32.0
+2.34.1
 

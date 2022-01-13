@@ -1,7 +1,7 @@
-From 176c9d8becd0ea0469a9d75df46a78ae913acd33 Mon Sep 17 00:00:00 2001
+From 72e43b83f27b9ea385a28c4f1e3f65ec3e442706 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 23:47:22 -0800
-Subject: [PATCH 11/14] serenity: Make lsearch stressor a nop on Serenity
+Subject: [PATCH 08/12] serenity: Make lsearch stressor a nop on Serenity
 
 ---
  stress-lsearch.c | 9 +++++++++
@@ -32,5 +32,5 @@ index 60174a2..74a9ef9 100644
 +};
 +#endif
 -- 
-2.32.0
+2.34.1
 
