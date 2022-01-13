@@ -158,6 +158,7 @@ Optional<ListPatternType> list_pattern_type_from_string(StringView list_pattern_
 Optional<ListPatternStyle> list_pattern_style_from_string(StringView list_pattern_style);
 
 Optional<DisplayPattern> get_locale_display_patterns(StringView locale);
+Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id);
 
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
