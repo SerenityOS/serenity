@@ -151,7 +151,9 @@ ErrorOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread>&
     setup_description(1);
     setup_description(2);
 
-    if (auto result = process->exec(move(path_string), move(arguments), move(environment)); result.is_error()) {
+    Thread* new_main_thread = nullptr;
+    u32 prev_flags = 0;
+    if (auto result = process->exec(move(path_string), move(arguments), move(environment), new_main_thread, prev_flags); result.is_error()) {
         dbgln("Failed to exec {}: {}", path, result.error());
         first_thread = nullptr;
         return result.release_error();

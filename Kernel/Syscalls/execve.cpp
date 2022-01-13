@@ -777,7 +777,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
     return nullptr;
 }
 
-ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, int recursion_depth)
+ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, Thread*& new_main_thread, u32& prev_flags, int recursion_depth)
 {
     if (recursion_depth > 2) {
         dbgln("exec({}): SHENANIGANS! recursed too far trying to find #! interpreter", path);
@@ -815,7 +815,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KSt
         auto shebang_path = TRY(shebang_words.first().try_clone());
         arguments.ptr_at(0) = move(path);
         TRY(arguments.try_prepend(move(shebang_words)));
-        return exec(move(shebang_path), move(arguments), move(environment), ++recursion_depth);
+        return exec(move(shebang_path), move(arguments), move(environment), new_main_thread, prev_flags, ++recursion_depth);
     }
 
     // #2) ELF32 for i386
@@ -829,43 +829,8 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KSt
         return ENOEXEC;
     }
 
-    // The bulk of exec() is done by do_exec(), which ensures that all locals
-    // are cleaned up by the time we yield-teleport below.
-    Thread* new_main_thread = nullptr;
-    u32 prev_flags = 0;
-
     auto interpreter_description = TRY(find_elf_interpreter_for_executable(path->view(), *main_program_header, nread, metadata.size));
-    TRY(do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header));
-
-    VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::in_critical());
-
-    auto* current_thread = Thread::current();
-    if (current_thread == new_main_thread) {
-        {
-            // Make sure that `path` gets deleted before we teleport into the new process.
-            // If we don't do this, it will leak (since we never return from this function.)
-            OwnPtr<KString> path_deleter = move(path);
-        }
-
-        // We need to enter the scheduler lock before changing the state
-        // and it will be released after the context switch into that
-        // thread. We should also still be in our critical section
-        VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
-        VERIFY(Processor::in_critical() == 1);
-        g_scheduler_lock.lock();
-        current_thread->set_state(Thread::State::Running);
-        Processor::assume_context(*current_thread, prev_flags);
-        VERIFY_NOT_REACHED();
-    }
-
-    // NOTE: This code path is taken in the non-syscall case, i.e when the kernel spawns
-    //       a userspace process directly (such as /bin/SystemServer on startup)
-
-    if (prev_flags & 0x200)
-        sti();
-    Processor::leave_critical();
-    return {};
+    return do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header);
 }
 
 ErrorOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
@@ -873,7 +838,7 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*>
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::exec));
 
-    // NOTE: Be extremely careful with allocating any kernel memory in exec().
+    // NOTE: Be extremely careful with allocating any kernel memory in this function.
     //       On success, the kernel stack will be lost.
     auto params = TRY(copy_typed_from_user(user_params));
 
@@ -905,9 +870,37 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*>
     NonnullOwnPtrVector<KString> environment;
     TRY(copy_user_strings(params.environment, environment));
 
-    TRY(exec(move(path), move(arguments), move(environment)));
-    // We should never continue after a successful exec!
-    VERIFY_NOT_REACHED();
+    Thread* new_main_thread = nullptr;
+    u32 prev_flags = 0;
+    TRY(exec(move(path), move(arguments), move(environment), new_main_thread, prev_flags));
+
+    // NOTE: If we're here, the exec has succeeded and we've got a new executable image!
+    //       We will not return normally from this function. Instead, the next time we
+    //       get scheduled, it'll be at the entry point of the new executable.
+
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(Processor::in_critical());
+
+    auto* current_thread = Thread::current();
+    if (current_thread == new_main_thread) {
+        // We need to enter the scheduler lock before changing the state
+        // and it will be released after the context switch into that
+        // thread. We should also still be in our critical section
+        VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
+        VERIFY(Processor::in_critical() == 1);
+        g_scheduler_lock.lock();
+        current_thread->set_state(Thread::State::Running);
+        Processor::assume_context(*current_thread, prev_flags);
+        VERIFY_NOT_REACHED();
+    }
+
+    // NOTE: This code path is taken in the non-syscall case, i.e when the kernel spawns
+    //       a userspace process directly (such as /bin/SystemServer on startup)
+
+    if (prev_flags & 0x200)
+        sti();
+    Processor::leave_critical();
+    return 0;
 }
 
 }
