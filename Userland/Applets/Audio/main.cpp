@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
+ * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
  * Copyright (c) 2021, David Isaksson <davidisaksson93@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
