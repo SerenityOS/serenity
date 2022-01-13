@@ -11,11 +11,12 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
 #include <LibELF/Image.h>
+#include <LibMain/Main.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/ELFSymbolProvider.h>
 #include <string.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments args)
 {
     const char* path = nullptr;
 
@@ -24,15 +25,9 @@ int main(int argc, char** argv)
         "Disassemble an executable, and show human-readable "
         "assembly code for each function.");
     args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
-    args_parser.parse(argc, argv);
+    args_parser.parse(args);
 
-    auto file_or_error = Core::MappedFile::map(path);
-    if (file_or_error.is_error()) {
-        warnln("Could not map file: {}", file_or_error.error());
-        return 1;
-    }
-
-    auto& file = *file_or_error.value();
+    auto file = TRY(Core::MappedFile::map(path));
 
     struct Symbol {
         size_t value;
@@ -46,8 +41,8 @@ int main(int argc, char** argv)
     };
     Vector<Symbol> symbols;
 
-    const u8* asm_data = (const u8*)file.data();
-    size_t asm_size = file.size();
+    const u8* asm_data = (const u8*)file->data();
+    size_t asm_size = file->size();
     size_t file_offset = 0;
     Vector<Symbol>::Iterator current_symbol = symbols.begin();
     OwnPtr<X86::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
@@ -131,4 +126,5 @@ int main(int argc, char** argv)
 
         outln("{:p}  {}", virtual_offset, insn.value().to_string(virtual_offset, symbol_provider));
     }
+    return 0;
 }
