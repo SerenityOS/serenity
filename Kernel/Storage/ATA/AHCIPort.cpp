@@ -292,7 +292,7 @@ bool AHCIPort::initialize()
     size_t physical_sector_size = 512;
     u64 max_addressable_sector = 0;
     if (identify_device()) {
-        auto identify_block = Memory::map_typed<ATAIdentifyBlock>(m_parent_handler->get_identify_metadata_physical_region(m_port_index));
+        auto identify_block = Memory::map_typed<ATAIdentifyBlock>(m_parent_handler->get_identify_metadata_physical_region(m_port_index)).release_value_but_fixme_should_propagate_errors();
         // Check if word 106 is valid before using it!
         if ((identify_block->physical_sector_size_to_logical_sector_size >> 14) == 1) {
             if (identify_block->physical_sector_size_to_logical_sector_size & (1 << 12)) {

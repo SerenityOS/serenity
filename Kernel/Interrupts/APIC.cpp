@@ -271,7 +271,12 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
     }
 
     if (kernel_command_line().is_smp_enabled()) {
-        auto madt = Memory::map_typed<ACPI::Structures::MADT>(madt_address.value());
+        auto madt_or_error = Memory::map_typed<ACPI::Structures::MADT>(madt_address.value());
+        if (madt_or_error.is_error()) {
+            dbgln("APIC: Failed to map MADT table");
+            return false;
+        }
+        auto madt = madt_or_error.release_value();
         size_t entry_index = 0;
         size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
         auto* madt_entry = madt->entries;

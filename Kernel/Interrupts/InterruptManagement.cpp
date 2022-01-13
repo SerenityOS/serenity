@@ -189,7 +189,7 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
 UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
 {
     VERIFY(!m_madt.is_null());
-    auto madt = Memory::map_typed<ACPI::Structures::MADT>(m_madt);
+    auto madt = Memory::map_typed<ACPI::Structures::MADT>(m_madt).release_value_but_fixme_should_propagate_errors();
 
     int irq_controller_count = 0;
     if (madt->flags & PCAT_COMPAT_FLAG) {

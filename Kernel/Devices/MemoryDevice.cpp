@@ -38,7 +38,7 @@ ErrorOr<size_t> MemoryDevice::read(OpenFileDescription&, u64 offset, UserOrKerne
         dbgln("MemoryDevice: Trying to read physical memory at {} for range of {} bytes failed due to violation of access", PhysicalAddress(offset), length);
         return EINVAL;
     }
-    auto mapping = Memory::map_typed<u8>(PhysicalAddress(offset), length);
+    auto mapping = TRY(Memory::map_typed<u8>(PhysicalAddress(offset), length));
 
     auto bytes = ReadonlyBytes { mapping.ptr(), length };
     TRY(buffer.write(bytes));
