@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <sys/cdefs.h>
+#include <LibMain/Main.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
     return 1;
 }
