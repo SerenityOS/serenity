@@ -146,7 +146,7 @@ ErrorOr<RefPtr<TableDef>> Database::get_table(String const& schema, String const
         return Error::from_string_literal("Schema does not exist"sv);
     }
     auto ret = TableDef::construct(schema_def, name);
-    ret->set_pointer((*table_iterator).pointer());
+    ret->set_pointer(table_iterator->pointer());
     m_table_cache.set(key.hash(), ret);
     auto hash = ret->hash();
     auto column_key = ColumnDef::make_key(ret);

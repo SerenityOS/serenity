@@ -42,7 +42,7 @@ ClientConnection* ClientConnection::from_client_id(int client_id)
     auto it = s_connections->find(client_id);
     if (it == s_connections->end())
         return nullptr;
-    return (*it).value.ptr();
+    return it->value.ptr();
 }
 
 ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socket, int client_id)
@@ -103,7 +103,7 @@ void ClientConnection::destroy_menu(i32 menu_id)
         did_misbehave("DestroyMenu: Bad menu ID");
         return;
     }
-    auto& menu = *(*it).value;
+    auto& menu = *it->value;
     menu.close();
     m_menus.remove(it);
     remove_child(menu);
@@ -121,8 +121,8 @@ void ClientConnection::add_menu(i32 window_id, i32 menu_id)
         did_misbehave("AddMenu: Bad menu ID");
         return;
     }
-    auto& window = *(*it).value;
-    auto& menu = *(*jt).value;
+    auto& window = *it->value;
+    auto& menu = *jt->value;
     window.add_menu(menu);
 }
 
@@ -135,7 +135,7 @@ void ClientConnection::add_menu_item(i32 menu_id, i32 identifier, i32 submenu_id
         dbgln("AddMenuItem: Bad menu ID: {}", menu_id);
         return;
     }
-    auto& menu = *(*it).value;
+    auto& menu = *it->value;
     auto menu_item = make<MenuItem>(menu, identifier, text, shortcut, enabled, checkable, checked);
     if (is_default)
         menu_item->set_default(true);
@@ -153,7 +153,7 @@ void ClientConnection::popup_menu(i32 menu_id, Gfx::IntPoint const& screen_posit
         did_misbehave("PopupMenu: Bad menu ID");
         return;
     }
-    auto& menu = *(*it).value;
+    auto& menu = *it->value;
     menu.popup(position);
 }
 
@@ -164,7 +164,7 @@ void ClientConnection::dismiss_menu(i32 menu_id)
         did_misbehave("DismissMenu: Bad menu ID");
         return;
     }
-    auto& menu = *(*it).value;
+    auto& menu = *it->value;
     menu.close();
 }
 
@@ -177,7 +177,7 @@ void ClientConnection::update_menu_item(i32 menu_id, i32 identifier, [[maybe_unu
         did_misbehave("UpdateMenuItem: Bad menu ID");
         return;
     }
-    auto& menu = *(*it).value;
+    auto& menu = *it->value;
     auto* menu_item = menu.item_with_identifier(identifier);
     if (!menu_item) {
         did_misbehave("UpdateMenuItem: Bad menu item identifier");
@@ -199,14 +199,14 @@ void ClientConnection::flash_menubar_menu(i32 window_id, i32 menu_id)
         did_misbehave("FlashMenubarMenu: Bad window ID");
         return;
     }
-    auto& window = *(*itw).value;
+    auto& window = *itw->value;
 
     auto itm = m_menus.find(menu_id);
     if (itm == m_menus.end()) {
         did_misbehave("FlashMenubarMenu: Bad menu ID");
         return;
     }
-    auto& menu = *(*itm).value;
+    auto& menu = *itm->value;
 
     if (window.menubar().flash_menu(&menu)) {
         window.frame().invalidate_menubar();
@@ -233,7 +233,7 @@ void ClientConnection::add_menu_separator(i32 menu_id)
         did_misbehave("AddMenuSeparator: Bad menu ID");
         return;
     }
-    auto& menu = *(*it).value;
+    auto& menu = *it->value;
     menu.add_item(make<MenuItem>(menu, MenuItem::Separator));
 }
 
@@ -244,7 +244,7 @@ void ClientConnection::move_window_to_front(i32 window_id)
         did_misbehave("MoveWindowToFront: Bad window ID");
         return;
     }
-    WindowManager::the().move_to_front_and_make_active(*(*it).value);
+    WindowManager::the().move_to_front_and_make_active(*it->value);
 }
 
 void ClientConnection::set_fullscreen(i32 window_id, bool fullscreen)
@@ -403,7 +403,7 @@ void ClientConnection::set_window_icon_bitmap(i32 window_id, Gfx::ShareableBitma
         did_misbehave("SetWindowIconBitmap: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
 
     if (icon.is_valid()) {
         window.set_icon(*icon.bitmap());
@@ -422,7 +422,7 @@ Messages::WindowServer::SetWindowRectResponse ClientConnection::set_window_rect(
         did_misbehave("SetWindowRect: Bad window ID");
         return nullptr;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     if (window.is_fullscreen()) {
         dbgln("ClientConnection: Ignoring SetWindowRect request for fullscreen window");
         return nullptr;
@@ -460,7 +460,7 @@ void ClientConnection::set_window_minimum_size(i32 window_id, Gfx::IntSize const
         did_misbehave("SetWindowMinimumSize: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     if (window.is_fullscreen()) {
         dbgln("ClientConnection: Ignoring SetWindowMinimumSize request for fullscreen window");
         return;
@@ -612,7 +612,7 @@ Messages::WindowServer::DestroyWindowResponse ClientConnection::destroy_window(i
         did_misbehave("DestroyWindow: Bad window ID");
         return nullptr;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     Vector<i32> destroyed_window_ids;
     destroy_window(window, destroyed_window_ids);
     return destroyed_window_ids;
@@ -634,7 +634,7 @@ void ClientConnection::invalidate_rect(i32 window_id, Vector<Gfx::IntRect> const
         did_misbehave("InvalidateRect: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     for (size_t i = 0; i < rects.size(); ++i)
         window.request_update(rects[i].intersected({ {}, window.size() }), ignore_occlusion);
 }
@@ -646,7 +646,7 @@ void ClientConnection::did_finish_painting(i32 window_id, Vector<Gfx::IntRect> c
         did_misbehave("DidFinishPainting: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     for (auto& rect : rects)
         window.invalidate(rect);
     if (window.has_alpha_channel() && window.alpha_hit_threshold() > 0.0f)
@@ -664,7 +664,7 @@ void ClientConnection::set_window_backing_store(i32 window_id, [[maybe_unused]] 
         did_misbehave("SetWindowBackingStore: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     if (window.last_backing_store() && window.last_backing_store_serial() == serial) {
         window.swap_backing_stores();
     } else {
@@ -702,7 +702,7 @@ void ClientConnection::set_window_cursor(i32 window_id, i32 cursor_type)
         did_misbehave("SetWindowCursor: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     if (cursor_type < 0 || cursor_type >= (i32)Gfx::StandardCursor::__Count) {
         did_misbehave("SetWindowCursor: Bad cursor type");
         return;
@@ -720,7 +720,7 @@ void ClientConnection::set_window_custom_cursor(i32 window_id, Gfx::ShareableBit
         return;
     }
 
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     if (!cursor.is_valid()) {
         did_misbehave("SetWindowCustomCursor: Bad cursor");
         return;
@@ -757,7 +757,7 @@ void ClientConnection::start_window_resize(i32 window_id)
         did_misbehave("WM_StartWindowResize: Bad window ID");
         return;
     }
-    auto& window = *(*it).value;
+    auto& window = *it->value;
     if (!window.is_resizable()) {
         dbgln("Client wants to start resizing a non-resizable window");
         return;

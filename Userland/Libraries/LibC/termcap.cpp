@@ -82,7 +82,7 @@ char* __attribute__((weak)) tgetstr(const char* id, char** area)
     auto it = caps->find(id);
     if (it != caps->end()) {
         char* ret = *area;
-        const char* val = (*it).value;
+        const char* val = it->value;
         strcpy(*area, val);
         *area += strlen(val) + 1;
         return ret;
@@ -107,7 +107,7 @@ int __attribute__((weak)) tgetnum(const char* id)
     warnln_if(TERMCAP_DEBUG, "tgetnum: '{}'", id);
     auto it = caps->find(id);
     if (it != caps->end())
-        return atoi((*it).value);
+        return atoi(it->value);
     return -1;
 }
 

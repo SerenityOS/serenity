@@ -280,7 +280,7 @@ String FileSystemModel::name_for_uid(uid_t uid) const
     auto it = m_user_names.find(uid);
     if (it == m_user_names.end())
         return String::number(uid);
-    return (*it).value;
+    return it->value;
 }
 
 String FileSystemModel::name_for_gid(gid_t gid) const
@@ -288,7 +288,7 @@ String FileSystemModel::name_for_gid(gid_t gid) const
     auto it = m_group_names.find(gid);
     if (it == m_group_names.end())
         return String::number(gid);
-    return (*it).value;
+    return it->value;
 }
 
 static String permission_string(mode_t mode)
@@ -635,9 +635,9 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
     auto path = node.full_path();
     auto it = s_thumbnail_cache.find(path);
     if (it != s_thumbnail_cache.end()) {
-        if (!(*it).value)
+        if (!it->value)
             return false;
-        node.thumbnail = (*it).value;
+        node.thumbnail = it->value;
         return true;
     }
 

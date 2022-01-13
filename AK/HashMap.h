@@ -138,7 +138,7 @@ public:
         auto it = find(key);
         if (it == end())
             return {};
-        return (*it).value;
+        return it->value;
     }
 
     Optional<typename Traits<V>::ConstPeekType> get(const K& key) const requires(IsPointer<typename Traits<V>::PeekType>)
@@ -146,7 +146,7 @@ public:
         auto it = find(key);
         if (it == end())
             return {};
-        return (*it).value;
+        return it->value;
     }
 
     Optional<typename Traits<V>::PeekType> get(const K& key) requires(!IsConst<typename Traits<V>::PeekType>)
@@ -154,7 +154,7 @@ public:
         auto it = find(key);
         if (it == end())
             return {};
-        return (*it).value;
+        return it->value;
     }
 
     template<Concepts::HashCompatible<K> Key>
@@ -163,7 +163,7 @@ public:
         auto it = find(key);
         if (it == end())
             return {};
-        return (*it).value;
+        return it->value;
     }
 
     template<Concepts::HashCompatible<K> Key>
@@ -172,7 +172,7 @@ public:
         auto it = find(key);
         if (it == end())
             return {};
-        return (*it).value;
+        return it->value;
     }
 
     template<Concepts::HashCompatible<K> Key>
@@ -181,7 +181,7 @@ public:
         auto it = find(key);
         if (it == end())
             return {};
-        return (*it).value;
+        return it->value;
     }
 
     [[nodiscard]] bool contains(const K& key) const

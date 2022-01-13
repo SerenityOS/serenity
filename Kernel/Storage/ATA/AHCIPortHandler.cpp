@@ -59,7 +59,7 @@ RefPtr<AHCIPort> AHCIPortHandler::port_at_index(u32 port_index) const
     auto it = m_handled_ports.find(port_index);
     if (it == m_handled_ports.end())
         return nullptr;
-    return (*it).value;
+    return it->value;
 }
 
 PhysicalAddress AHCIPortHandler::get_identify_metadata_physical_region(u32 port_index) const

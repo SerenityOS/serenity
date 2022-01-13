@@ -43,7 +43,7 @@ inline constexpr const void* bitap_bitwise(const void* haystack, size_t haystack
 }
 
 template<typename HaystackIterT>
-inline Optional<size_t> memmem(const HaystackIterT& haystack_begin, const HaystackIterT& haystack_end, Span<const u8> needle) requires(requires { (*haystack_begin).data(); (*haystack_begin).size(); })
+inline Optional<size_t> memmem(const HaystackIterT& haystack_begin, const HaystackIterT& haystack_end, Span<const u8> needle) requires(requires { haystack_begin->data(); haystack_begin->size(); })
 {
     auto prepare_kmp_partial_table = [&] {
         Vector<int, 64> table;

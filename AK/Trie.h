@@ -58,7 +58,7 @@ class Trie {
             if (current_state.it == current_state.end)
                 return pop_and_get_next();
 
-            m_current_node = &*(*current_state.it).value;
+            m_current_node = &*current_state.it->value;
 
             // FIXME: Figure out how to OOM harden this iterator.
             MUST(m_state.try_empend(false, m_current_node->m_children.begin(), m_current_node->m_children.end()));
@@ -102,7 +102,7 @@ public:
             auto next_it = node->m_children.find(*it);
             if (next_it == node->m_children.end())
                 return static_cast<BaseType&>(*node);
-            node = &*(*next_it).value;
+            node = &*next_it->value;
         }
         return static_cast<BaseType&>(*node);
     }
