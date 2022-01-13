@@ -751,6 +751,7 @@ Optional<DateField> __attribute__((weak)) date_field_from_string(StringView) { r
 Optional<Key> __attribute__((weak)) key_from_string(StringView) { return {}; }
 Optional<ListPatternType> __attribute__((weak)) list_pattern_type_from_string(StringView) { return {}; }
 Optional<ListPatternStyle> __attribute__((weak)) list_pattern_style_from_string(StringView) { return {}; }
+Optional<DisplayPattern> __attribute__((weak)) get_locale_display_patterns(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_language_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_territory_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_script_mapping(StringView, StringView) { return {}; }

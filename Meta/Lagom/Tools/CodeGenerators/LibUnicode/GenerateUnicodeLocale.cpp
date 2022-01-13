@@ -24,6 +24,9 @@
 using StringIndexType = u16;
 constexpr auto s_string_index_type = "u16"sv;
 
+using DisplayPatternIndexType = u8;
+constexpr auto s_display_pattern_index_type = "u8"sv;
+
 using LanguageListIndexType = u8;
 constexpr auto s_language_list_index_type = "u8"sv;
 
@@ -61,6 +64,38 @@ static String format_identifier(StringView owner, String identifier)
         return String::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
     return identifier;
 }
+
+struct DisplayPattern {
+    unsigned hash() const
+    {
+        return pair_int_hash(locale_pattern, locale_separator);
+    }
+
+    bool operator==(DisplayPattern const& other) const
+    {
+        return (locale_pattern == other.locale_pattern)
+            && (locale_separator == other.locale_separator);
+    }
+
+    StringIndexType locale_pattern { 0 };
+    StringIndexType locale_separator { 0 };
+};
+
+template<>
+struct AK::Formatter<DisplayPattern> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, DisplayPattern const& patterns)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {} }}",
+            patterns.locale_pattern,
+            patterns.locale_separator);
+    }
+};
+
+template<>
+struct AK::Traits<DisplayPattern> : public GenericTraits<DisplayPattern> {
+    static unsigned hash(DisplayPattern const& p) { return p.hash(); }
+};
 
 struct ListPatterns {
     unsigned hash() const
@@ -124,6 +159,7 @@ struct Locale {
     String language;
     Optional<String> territory;
     Optional<String> variant;
+    DisplayPatternIndexType display_patterns { 0 };
     LanguageListIndexType languages { 0 };
     TerritoryListIndexType territories { 0 };
     ScriptListIndexType scripts { 0 };
@@ -146,6 +182,7 @@ struct LanguageMapping {
 
 struct UnicodeLocaleData {
     UniqueStringStorage<StringIndexType> unique_strings;
+    UniqueStorage<DisplayPattern, DisplayPatternIndexType> unique_display_patterns;
     UniqueStorage<LanguageList, LanguageListIndexType> unique_language_lists;
     UniqueStorage<TerritoryList, TerritoryListIndexType> unique_territory_lists;
     UniqueStorage<ScriptList, ScriptListIndexType> unique_script_lists;
@@ -303,6 +340,29 @@ static ErrorOr<void> parse_identity(String locale_path, UnicodeLocaleData& local
             locale_data.variants.append(*locale.variant);
     }
 
+    return {};
+}
+
+static ErrorOr<void> parse_locale_display_patterns(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
+{
+    LexicalPath locale_display_names_path(move(locale_path));
+    locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
+
+    auto locale_display_names_file = TRY(Core::File::open(locale_display_names_path.string(), Core::OpenMode::ReadOnly));
+    auto locale_display_names = TRY(JsonValue::from_string(locale_display_names_file->read_all()));
+
+    auto const& main_object = locale_display_names.as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(locale_display_names_path.parent().basename());
+    auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
+    auto const& locale_display_patterns_object = locale_display_names_object.as_object().get("localeDisplayPattern"sv);
+    auto const& locale_pattern = locale_display_patterns_object.as_object().get("localePattern"sv);
+    auto const& locale_separator = locale_display_patterns_object.as_object().get("localeSeparator"sv);
+
+    DisplayPattern patterns {};
+    patterns.locale_pattern = locale_data.unique_strings.ensure(locale_pattern.as_string());
+    patterns.locale_separator = locale_data.unique_strings.ensure(locale_separator.as_string());
+
+    locale.display_patterns = locale_data.unique_display_patterns.ensure(move(patterns));
     return {};
 }
 
@@ -793,6 +853,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
         auto language = TRY(remove_variants_from_path(locale_path));
 
         auto& locale = locale_data.locales.ensure(language);
+        TRY(parse_locale_display_patterns(locale_path, locale_data, locale));
         TRY(parse_locale_languages(locale_path, locale_data, locale));
         TRY(parse_locale_territories(locale_path, locale_data, locale));
         TRY(parse_locale_scripts(locale_path, locale_data, locale));
@@ -893,6 +954,24 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 #include <LibUnicode/UnicodeLocale.h>
 
 namespace Unicode {
+)~~~");
+
+    locale_data.unique_strings.generate(generator);
+
+    generator.append(R"~~~(
+struct DisplayPatternImpl {
+    DisplayPattern to_display_pattern() const
+    {
+        DisplayPattern display_patterns {};
+        display_patterns.locale_pattern = s_string_list[locale_pattern];
+        display_patterns.locale_separator = s_string_list[locale_separator];
+
+        return display_patterns;
+    }
+
+    @string_index_type@ locale_pattern { 0 };
+    @string_index_type@ locale_separator { 0 };
+};
 
 struct Patterns {
     ListPatternType type;
@@ -904,7 +983,7 @@ struct Patterns {
 };
 )~~~");
 
-    locale_data.unique_strings.generate(generator);
+    locale_data.unique_display_patterns.generate(generator, "DisplayPatternImpl"sv, "s_display_patterns"sv, 30);
     locale_data.unique_language_lists.generate(generator, s_string_index_type, "s_language_lists"sv);
     locale_data.unique_territory_lists.generate(generator, s_string_index_type, "s_territory_lists"sv);
     locale_data.unique_script_lists.generate(generator, s_string_index_type, "s_script_lists"sv);
@@ -959,6 +1038,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     auto locales = locale_data.locales.keys();
     quick_sort(locales);
 
+    append_mapping(locales, locale_data.locales, s_display_pattern_index_type, "s_locale_display_patterns"sv, [&](auto const& locale) { return locale.display_patterns; });
     append_mapping(locales, locale_data.locales, s_language_list_index_type, "s_languages"sv, [&](auto const& locale) { return locale.languages; });
     append_mapping(locales, locale_data.locales, s_territory_list_index_type, "s_territories"sv, [&](auto const& locale) { return locale.territories; });
     append_mapping(locales, locale_data.locales, s_script_list_index_type, "s_scripts"sv, [&](auto const& locale) { return locale.scripts; });
@@ -1251,6 +1331,19 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     append_from_string("ListPatternStyle"sv, "list_pattern_style"sv, locale_data.list_pattern_styles);
 
     generator.append(R"~~~(
+Optional<DisplayPattern> get_locale_display_patterns(StringView locale)
+{
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return {};
+
+    auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+    auto display_patterns_index = s_locale_display_patterns.at(locale_index);
+
+    auto const& display_patterns = s_display_patterns.at(display_patterns_index);
+    return display_patterns.to_display_pattern();
+}
+
 Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView list_pattern_type, StringView list_pattern_style)
 {
     auto locale_value = locale_from_string(locale);
