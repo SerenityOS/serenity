@@ -126,7 +126,7 @@ bool Image::parse()
         return false;
     }
 
-    auto result_or_error = validate_program_headers(header(), m_size, m_buffer, m_size, nullptr, m_verbose_logging);
+    auto result_or_error = validate_program_headers(header(), m_size, { m_buffer, m_size }, nullptr, m_verbose_logging);
     if (result_or_error.is_error()) {
         if (m_verbose_logging)
             dbgln("ELF::Image::parse(): Failed validating ELF Program Headers");

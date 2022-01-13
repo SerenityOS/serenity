@@ -714,7 +714,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
 {
     // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
     StringBuilder interpreter_path_builder;
-    if (!TRY(ELF::validate_program_headers(main_executable_header, file_size, (u8 const*)&main_executable_header, main_executable_header_size, &interpreter_path_builder))) {
+    if (!TRY(ELF::validate_program_headers(main_executable_header, file_size, { &main_executable_header, main_executable_header_size }, &interpreter_path_builder))) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
         return ENOEXEC;
     }
@@ -747,7 +747,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
 
         // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
         StringBuilder interpreter_interpreter_path_builder;
-        if (!TRY(ELF::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, &interpreter_interpreter_path_builder))) {
+        if (!TRY(ELF::validate_program_headers(*elf_header, interp_metadata.size, { first_page, nread }, &interpreter_interpreter_path_builder))) {
             dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_path);
             return ENOEXEC;
         }
