@@ -644,35 +644,38 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         triangle.vertices[1].normal = transform_direction(model_view_transform, triangle.vertices[1].normal);
         triangle.vertices[2].normal = transform_direction(model_view_transform, triangle.vertices[2].normal);
 
-        // Transform eye coordinates into clip coordinates using the projection transform
-        triangle.vertices[0].clip_coordinates = projection_transform * triangle.vertices[0].eye_coordinates;
-        triangle.vertices[1].clip_coordinates = projection_transform * triangle.vertices[1].eye_coordinates;
-        triangle.vertices[2].clip_coordinates = projection_transform * triangle.vertices[2].eye_coordinates;
-
-        // At this point, we're in clip space
-        // Here's where we do the clipping. This is a really crude implementation of the
-        // https://learnopengl.com/Getting-started/Coordinate-Systems
-        // "Note that if only a part of a primitive e.g. a triangle is outside the clipping volume OpenGL
-        // will reconstruct the triangle as one or more triangles to fit inside the clipping range. "
-        //
-        // ALL VERTICES ARE DEFINED IN A CLOCKWISE ORDER
-
-        // Okay, let's do some face culling first
-
-        m_clipped_vertices.clear_with_capacity();
-        m_clipped_vertices.append(triangle.vertices[0]);
-        m_clipped_vertices.append(triangle.vertices[1]);
-        m_clipped_vertices.append(triangle.vertices[2]);
-        m_clipper.clip_triangle_against_frustum(m_clipped_vertices);
-
-        if (m_clipped_vertices.size() < 3)
-            continue;
-
+        // Calculate per-vertex lighting
         if (m_options.lighting_enabled) {
-            auto const& front_material = m_materials.at(0);
-            // Walk through each vertex
-            for (auto& vertex : m_clipped_vertices) {
-                FloatVector4 result_color = front_material.emissive + (front_material.ambient * m_lighting_model.scene_ambient_color);
+            auto const& material = m_materials.at(0);
+            for (auto& vertex : triangle.vertices) {
+                auto ambient = material.ambient;
+                auto diffuse = material.diffuse;
+                auto emissive = material.emissive;
+                auto specular = material.specular;
+
+                if (m_options.color_material_enabled
+                    && (m_options.color_material_face == ColorMaterialFace::Front || m_options.color_material_face == ColorMaterialFace::FrontAndBack)) {
+                    switch (m_options.color_material_mode) {
+                    case ColorMaterialMode::Ambient:
+                        ambient = vertex.color;
+                        break;
+                    case ColorMaterialMode::AmbientAndDiffuse:
+                        ambient = vertex.color;
+                        diffuse = vertex.color;
+                        break;
+                    case ColorMaterialMode::Diffuse:
+                        diffuse = vertex.color;
+                        break;
+                    case ColorMaterialMode::Emissive:
+                        emissive = vertex.color;
+                        break;
+                    case ColorMaterialMode::Specular:
+                        specular = vertex.color;
+                        break;
+                    }
+                }
+
+                FloatVector4 result_color = emissive + (ambient * m_lighting_model.scene_ambient_color);
 
                 for (auto const& light : m_lights) {
                     if (!light.is_enabled)
@@ -716,11 +719,11 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                     (void)m_lighting_model.two_sided_lighting;
 
                     // Ambient
-                    auto const ambient_component = front_material.ambient * light.ambient_intensity;
+                    auto const ambient_component = ambient * light.ambient_intensity;
 
                     // Diffuse
                     auto const normal_dot_vertex_to_light = vertex.normal.dot(FloatVector3(vertex_to_light.x(), vertex_to_light.y(), vertex_to_light.z()));
-                    auto const diffuse_component = ((front_material.diffuse * light.diffuse_intensity) * normal_dot_vertex_to_light).clamped(0.0f, 1.0f);
+                    auto const diffuse_component = ((diffuse * light.diffuse_intensity) * normal_dot_vertex_to_light).clamped(0.0f, 1.0f);
 
                     FloatVector4 color = ambient_component;
                     color += diffuse_component;
@@ -729,10 +732,34 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                 }
 
                 vertex.color = result_color;
-                vertex.color.set_w(front_material.diffuse.w()); // OpenGL 1.5 spec, page 59: "The A produced by lighting is the alpha value associated with diffuse color material"
+                vertex.color.set_w(diffuse.w()); // OpenGL 1.5 spec, page 59: "The A produced by lighting is the alpha value associated with diffuse color material"
                 vertex.color.clamp(0.0f, 1.0f);
             }
         }
+
+        // Transform eye coordinates into clip coordinates using the projection transform
+        triangle.vertices[0].clip_coordinates = projection_transform * triangle.vertices[0].eye_coordinates;
+        triangle.vertices[1].clip_coordinates = projection_transform * triangle.vertices[1].eye_coordinates;
+        triangle.vertices[2].clip_coordinates = projection_transform * triangle.vertices[2].eye_coordinates;
+
+        // At this point, we're in clip space
+        // Here's where we do the clipping. This is a really crude implementation of the
+        // https://learnopengl.com/Getting-started/Coordinate-Systems
+        // "Note that if only a part of a primitive e.g. a triangle is outside the clipping volume OpenGL
+        // will reconstruct the triangle as one or more triangles to fit inside the clipping range. "
+        //
+        // ALL VERTICES ARE DEFINED IN A CLOCKWISE ORDER
+
+        // Okay, let's do some face culling first
+
+        m_clipped_vertices.clear_with_capacity();
+        m_clipped_vertices.append(triangle.vertices[0]);
+        m_clipped_vertices.append(triangle.vertices[1]);
+        m_clipped_vertices.append(triangle.vertices[2]);
+        m_clipper.clip_triangle_against_frustum(m_clipped_vertices);
+
+        if (m_clipped_vertices.size() < 3)
+            continue;
 
         for (auto& vec : m_clipped_vertices) {
             // To normalized device coordinates (NDC)

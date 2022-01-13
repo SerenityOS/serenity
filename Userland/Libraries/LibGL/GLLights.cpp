@@ -14,8 +14,7 @@ extern GL::GLContext* g_gl_context;
 
 void glColorMaterial(GLenum face, GLenum mode)
 {
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "glColorMaterial({:#x}, {:#x}): unimplemented", face, mode);
+    g_gl_context->gl_color_material(face, mode);
 }
 
 void glLightf(GLenum light, GLenum pname, GLfloat param)
