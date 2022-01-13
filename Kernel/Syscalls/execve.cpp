@@ -713,11 +713,12 @@ static ErrorOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_execut
 ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
 {
     // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
-    String interpreter_path;
-    if (!ELF::validate_program_headers(main_executable_header, file_size, (u8 const*)&main_executable_header, main_executable_header_size, &interpreter_path)) {
+    StringBuilder interpreter_path_builder;
+    if (!TRY(ELF::validate_program_headers(main_executable_header, file_size, (u8 const*)&main_executable_header, main_executable_header_size, &interpreter_path_builder))) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
         return ENOEXEC;
     }
+    auto interpreter_path = interpreter_path_builder.string_view();
 
     if (!interpreter_path.is_empty()) {
         dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
@@ -745,11 +746,12 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
         }
 
         // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
-        String interpreter_interpreter_path;
-        if (!ELF::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, &interpreter_interpreter_path)) {
+        StringBuilder interpreter_interpreter_path_builder;
+        if (!TRY(ELF::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, &interpreter_interpreter_path_builder))) {
             dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_path);
             return ENOEXEC;
         }
+        auto interpreter_interpreter_path = interpreter_interpreter_path_builder.string_view();
 
         if (!interpreter_interpreter_path.is_empty()) {
             dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_path, interpreter_interpreter_path);

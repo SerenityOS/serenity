@@ -67,9 +67,11 @@ static Optional<String> elf_details(String description, const String& path)
     if (!elf_image.is_valid())
         return {};
 
-    String interpreter_path;
-    if (!ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_data.data(), elf_data.size(), (const u8*)elf_data.data(), elf_data.size(), &interpreter_path))
+    StringBuilder interpreter_path_builder;
+    auto result_or_error = ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_data.data(), elf_data.size(), (const u8*)elf_data.data(), elf_data.size(), &interpreter_path_builder);
+    if (result_or_error.is_error() || !result_or_error.value())
         return {};
+    auto interpreter_path = interpreter_path_builder.string_view();
 
     auto& header = *reinterpret_cast<const ElfW(Ehdr)*>(elf_data.data());
 

@@ -192,7 +192,7 @@ bool validate_elf_header(const ElfW(Ehdr) & elf_header, size_t file_size, bool v
     return true;
 }
 
-bool validate_program_headers(const ElfW(Ehdr) & elf_header, size_t file_size, const u8* buffer, size_t buffer_size, String* interpreter_path, bool verbose)
+ErrorOr<bool> validate_program_headers(const ElfW(Ehdr) & elf_header, size_t file_size, const u8* buffer, size_t buffer_size, StringBuilder* interpreter_path_builder, bool verbose)
 {
     Checked<size_t> total_size_of_program_headers = elf_header.e_phnum;
     total_size_of_program_headers *= elf_header.e_phentsize;
@@ -268,8 +268,8 @@ bool validate_program_headers(const ElfW(Ehdr) & elf_header, size_t file_size, c
                     dbgln("Found PT_INTERP header ({}), but p_filesz is invalid ({})", header_index, program_header.p_filesz);
                 return false;
             }
-            if (interpreter_path)
-                *interpreter_path = String((const char*)&buffer[program_header.p_offset], program_header.p_filesz - 1);
+            if (interpreter_path_builder)
+                TRY(interpreter_path_builder->try_append({ &buffer[program_header.p_offset], program_header.p_filesz - 1 }));
             break;
         case PT_LOAD:
         case PT_DYNAMIC:
