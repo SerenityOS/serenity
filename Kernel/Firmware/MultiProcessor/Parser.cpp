@@ -86,11 +86,17 @@ UNMAP_AFTER_INIT void MultiProcessorParser::parse_configuration_table()
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> MultiProcessorParser::find_floating_pointer()
 {
-    StringView signature("_MP_");
-    auto mp_floating_pointer = map_ebda().find_chunk_starting_with(signature, 16);
-    if (mp_floating_pointer.has_value())
-        return mp_floating_pointer;
-    return map_bios().find_chunk_starting_with(signature, 16);
+    static constexpr auto signature = "_MP_"sv;
+    auto ebda_or_error = map_ebda();
+    if (!ebda_or_error.is_error()) {
+        auto mp_floating_pointer = ebda_or_error.value().find_chunk_starting_with(signature, 16);
+        if (mp_floating_pointer.has_value())
+            return mp_floating_pointer;
+    }
+    auto bios_or_error = map_bios();
+    if (bios_or_error.is_error())
+        return {};
+    return bios_or_error.value().find_chunk_starting_with(signature, 16);
 }
 
 UNMAP_AFTER_INIT Vector<u8> MultiProcessorParser::get_pci_bus_ids() const

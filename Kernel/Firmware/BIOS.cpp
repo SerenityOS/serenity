@@ -143,24 +143,31 @@ UNMAP_AFTER_INIT BIOSSysFSDirectory::BIOSSysFSDirectory(FirmwareSysFSDirectory& 
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> BIOSSysFSDirectory::find_dmi_entry64bit_point()
 {
-    return map_bios().find_chunk_starting_with("_SM3_", 16);
+    auto bios_or_error = map_bios();
+    if (bios_or_error.is_error())
+        return {};
+    return bios_or_error.value().find_chunk_starting_with("_SM3_", 16);
 }
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> BIOSSysFSDirectory::find_dmi_entry32bit_point()
 {
-    return map_bios().find_chunk_starting_with("_SM_", 16);
+    auto bios_or_error = map_bios();
+    if (bios_or_error.is_error())
+        return {};
+    return bios_or_error.value().find_chunk_starting_with("_SM_", 16);
 }
 
-Memory::MappedROM map_bios()
+ErrorOr<Memory::MappedROM> map_bios()
 {
     Memory::MappedROM mapping;
     mapping.size = 128 * KiB;
     mapping.paddr = PhysicalAddress(0xe0000);
-    mapping.region = MM.allocate_kernel_region(mapping.paddr, Memory::page_round_up(mapping.size).release_value_but_fixme_should_propagate_errors(), {}, Memory::Region::Access::Read).release_value();
+    auto region_size = TRY(Memory::page_round_up(mapping.size));
+    mapping.region = TRY(MM.allocate_kernel_region(mapping.paddr, region_size, {}, Memory::Region::Access::Read));
     return mapping;
 }
 
-Memory::MappedROM map_ebda()
+ErrorOr<Memory::MappedROM> map_ebda()
 {
     auto ebda_segment_ptr = Memory::map_typed<u16>(PhysicalAddress(0x40e));
     PhysicalAddress ebda_paddr(PhysicalAddress(*ebda_segment_ptr).get() << 4);
@@ -169,7 +176,8 @@ Memory::MappedROM map_ebda()
     ebda_size *= 1024;
 
     Memory::MappedROM mapping;
-    mapping.region = MM.allocate_kernel_region(ebda_paddr.page_base(), Memory::page_round_up(ebda_size).release_value_but_fixme_should_propagate_errors(), {}, Memory::Region::Access::Read).release_value();
+    auto region_size = TRY(Memory::page_round_up(ebda_size));
+    mapping.region = TRY(MM.allocate_kernel_region(ebda_paddr.page_base(), region_size, {}, Memory::Region::Access::Read));
     mapping.offset = ebda_paddr.offset_in_page();
     mapping.size = ebda_size;
     mapping.paddr = ebda_paddr;
