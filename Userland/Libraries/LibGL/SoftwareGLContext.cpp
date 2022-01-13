@@ -723,6 +723,7 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         m_texcoord_generation_dirty = true;
         break;
     default:
+        dbgln_if(GL_DEBUG, "gl_enable({:#x}): unknown parameter", capability);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
@@ -819,6 +820,7 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         m_texcoord_generation_dirty = true;
         break;
     default:
+        dbgln_if(GL_DEBUG, "gl_disable({:#x}): unknown parameter", capability);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
