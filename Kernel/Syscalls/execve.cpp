@@ -840,6 +840,12 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KSt
 
     auto* current_thread = Thread::current();
     if (current_thread == new_main_thread) {
+        {
+            // Make sure that `path` gets deleted before we teleport into the new process.
+            // If we don't do this, it will leak (since we never return from this function.)
+            OwnPtr<KString> path_deleter = move(path);
+        }
+
         // We need to enter the scheduler lock before changing the state
         // and it will be released after the context switch into that
         // thread. We should also still be in our critical section
