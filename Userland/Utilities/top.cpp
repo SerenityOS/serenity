@@ -222,7 +222,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto jt = prev.map.find(pid_and_tid);
             if (jt == prev.map.end())
                 continue;
-            auto time_scheduled_before = (*jt).value.time_scheduled;
+            auto time_scheduled_before = jt->value.time_scheduled;
             auto time_scheduled_diff = it.value.time_scheduled - time_scheduled_before;
             it.value.time_scheduled_since_prev = time_scheduled_diff;
             it.value.cpu_percent = total_scheduled_diff > 0 ? ((time_scheduled_diff * 100) / total_scheduled_diff) : 0;

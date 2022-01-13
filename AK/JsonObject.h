@@ -64,7 +64,7 @@ public:
         auto it = m_members.find(key);
         if (it == m_members.end())
             return nullptr;
-        return &(*it).value;
+        return &it->value;
     }
 
     [[nodiscard]] [[nodiscard]] bool has(StringView key) const

@@ -3875,7 +3875,7 @@ bool Parser::try_parse_arrow_function_expression_failed_at_position(const Positi
     if (it == m_token_memoizations.end())
         return false;
 
-    return (*it).value.try_parse_arrow_function_expression_failed;
+    return it->value.try_parse_arrow_function_expression_failed;
 }
 
 void Parser::set_try_parse_arrow_function_expression_failed_at_position(const Position& position, bool failed)

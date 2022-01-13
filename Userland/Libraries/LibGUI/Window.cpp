@@ -61,7 +61,7 @@ Window* Window::from_window_id(int window_id)
 {
     auto it = reified_windows->find(window_id);
     if (it != reified_windows->end())
-        return (*it).value;
+        return it->value;
     return nullptr;
 }
 

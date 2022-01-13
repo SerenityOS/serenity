@@ -26,7 +26,7 @@ Service* Service::find_by_pid(pid_t pid)
     auto it = s_service_map.find(pid);
     if (it == s_service_map.end())
         return nullptr;
-    return (*it).value;
+    return it->value;
 }
 
 void Service::setup_socket(SocketDescriptor& socket)

@@ -35,7 +35,7 @@ RefPtr<UDPSocket> UDPSocket::from_port(u16 port)
         auto it = table.find(port);
         if (it == table.end())
             return {};
-        return (*it).value;
+        return it->value;
     });
 }
 

@@ -31,7 +31,7 @@ Menu* Menu::from_menu_id(int menu_id)
     auto it = all_menus().find(menu_id);
     if (it == all_menus().end())
         return nullptr;
-    return (*it).value;
+    return it->value;
 }
 
 Menu::Menu(String name)

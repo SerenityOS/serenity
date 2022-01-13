@@ -446,7 +446,7 @@ bool HashIndexIterator::operator==(Key const& other) const
         return false;
     if (other.is_null())
         return false;
-    return (**this).compare(other);
+    return (*this)->compare(other);
 }
 
 }
