@@ -85,6 +85,11 @@ enum class Style : u8 {
     Numeric,
 };
 
+struct DisplayPattern {
+    StringView locale_pattern;
+    StringView locale_separator;
+};
+
 struct ListPatterns {
     StringView start;
     StringView middle;
@@ -151,6 +156,8 @@ Optional<DateField> date_field_from_string(StringView calendar);
 Optional<Key> key_from_string(StringView key);
 Optional<ListPatternType> list_pattern_type_from_string(StringView list_pattern_type);
 Optional<ListPatternStyle> list_pattern_style_from_string(StringView list_pattern_style);
+
+Optional<DisplayPattern> get_locale_display_patterns(StringView locale);
 
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
