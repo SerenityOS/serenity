@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/StringView.h>
 #include <fcntl.h>
 #include <grp.h>
 #include <pwd.h>
@@ -72,6 +73,7 @@ ErrorOr<int> dup(int source_fd);
 ErrorOr<int> dup2(int source_fd, int destination_fd);
 ErrorOr<String> ptsname(int fd);
 ErrorOr<String> gethostname();
+ErrorOr<void> sethostname(StringView);
 ErrorOr<String> getcwd();
 ErrorOr<void> ioctl(int fd, unsigned request, ...);
 ErrorOr<struct termios> tcgetattr(int fd);
