@@ -27,6 +27,7 @@
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Date.h>
+#include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -311,7 +312,7 @@ static void print_function(JS::Object const& object, HashTable<JS::Object*>&)
 static void print_date(JS::Object const& object, HashTable<JS::Object*>&)
 {
     print_type("Date");
-    js_out(" \033[34;1m{}\033[0m", static_cast<JS::Date const&>(object).string());
+    js_out(" \033[34;1m{}\033[0m", JS::to_date_string(static_cast<JS::Date const&>(object).date_value()));
 }
 
 static void print_error(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
