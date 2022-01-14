@@ -379,6 +379,7 @@ private:
 class LocalSocket final : public Socket {
 public:
     static ErrorOr<NonnullOwnPtr<LocalSocket>> connect(String const& path);
+    static ErrorOr<NonnullOwnPtr<LocalSocket>> adopt_fd(int fd);
 
     LocalSocket(LocalSocket&& other)
         : Socket(static_cast<Socket&&>(other))

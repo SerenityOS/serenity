@@ -536,6 +536,18 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(String const& path)
     return socket;
 }
 
+ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::adopt_fd(int fd)
+{
+    if (fd < 0) {
+        return Error::from_errno(EBADF);
+    }
+
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LocalSocket()));
+    socket->m_helper.set_fd(fd);
+    socket->setup_notifier();
+    return socket;
+}
+
 ErrorOr<int> LocalSocket::receive_fd(int flags)
 {
 #ifdef __serenity__
