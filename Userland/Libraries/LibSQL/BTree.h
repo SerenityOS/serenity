@@ -171,10 +171,10 @@ public:
         return (*m_current)[m_index];
     }
 
-    Key const& operator->() const
+    Key const* operator->() const
     {
         VERIFY(!is_end());
-        return (*m_current)[m_index];
+        return &(*m_current)[m_index];
     }
 
     BTreeIterator& operator=(BTreeIterator const&);
