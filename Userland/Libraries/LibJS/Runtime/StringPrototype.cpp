@@ -518,7 +518,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
     if (Value(int_start).is_negative_infinity())
         int_start = 0;
     if (int_start < 0)
-        int_start = max(size + (i32)int_start, 0);
+        int_start = max(size + int_start, 0);
 
     auto length = vm.argument(1);
 
