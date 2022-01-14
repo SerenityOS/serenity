@@ -463,37 +463,6 @@ private:
     size_t m_layer_count;
 };
 
-class PositionStyleValue final : public StyleValue {
-public:
-    static NonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, Length const& offset_x, PositionEdge edge_y, Length const& offset_y)
-    {
-        return adopt_ref(*new PositionStyleValue(edge_x, offset_x, edge_y, offset_y));
-    }
-    virtual ~PositionStyleValue() override { }
-
-    PositionEdge edge_x() const { return m_edge_x; }
-    Length const& offset_x() const { return m_offset_x; }
-    PositionEdge edge_y() const { return m_edge_y; }
-    Length const& offset_y() const { return m_offset_y; }
-
-    virtual String to_string() const override;
-
-private:
-    PositionStyleValue(PositionEdge edge_x, Length const& offset_x, PositionEdge edge_y, Length const& offset_y)
-        : StyleValue(Type::Position)
-        , m_edge_x(edge_x)
-        , m_offset_x(offset_x)
-        , m_edge_y(edge_y)
-        , m_offset_y(offset_y)
-    {
-    }
-
-    PositionEdge m_edge_x;
-    Length m_offset_x;
-    PositionEdge m_edge_y;
-    Length m_offset_y;
-};
-
 class BackgroundRepeatStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<BackgroundRepeatStyleValue> create(Repeat repeat_x, Repeat repeat_y)
@@ -1202,6 +1171,37 @@ private:
 
     NonnullRefPtr<StyleValue> m_overflow_x;
     NonnullRefPtr<StyleValue> m_overflow_y;
+};
+
+class PositionStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, Length const& offset_x, PositionEdge edge_y, Length const& offset_y)
+    {
+        return adopt_ref(*new PositionStyleValue(edge_x, offset_x, edge_y, offset_y));
+    }
+    virtual ~PositionStyleValue() override { }
+
+    PositionEdge edge_x() const { return m_edge_x; }
+    Length const& offset_x() const { return m_offset_x; }
+    PositionEdge edge_y() const { return m_edge_y; }
+    Length const& offset_y() const { return m_offset_y; }
+
+    virtual String to_string() const override;
+
+private:
+    PositionStyleValue(PositionEdge edge_x, Length const& offset_x, PositionEdge edge_y, Length const& offset_y)
+        : StyleValue(Type::Position)
+        , m_edge_x(edge_x)
+        , m_offset_x(offset_x)
+        , m_edge_y(edge_y)
+        , m_offset_y(offset_y)
+    {
+    }
+
+    PositionEdge m_edge_x;
+    Length m_offset_x;
+    PositionEdge m_edge_y;
+    Length m_offset_y;
 };
 
 class StringStyleValue : public StyleValue {
