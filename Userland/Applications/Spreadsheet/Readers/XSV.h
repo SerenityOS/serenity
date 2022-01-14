@@ -136,8 +136,24 @@ public:
         {
         }
 
-        Row operator*() const { return Row { m_xsv, m_index }; }
+        Row const operator*() const { return Row { m_xsv, m_index }; }
         Row operator*() requires(!const_) { return Row { m_xsv, m_index }; }
+
+        class RowPointer {
+        public:
+            RowPointer(Row row)
+                : m_row(row)
+            {
+            }
+            Row* operator->() { return &m_row; }
+            Row const* operator->() const { return &m_row; }
+
+        private:
+            Row m_row;
+        };
+
+        RowPointer const operator->() const { return Row { m_xsv, m_index }; }
+        RowPointer operator->() requires(!const_) { return Row { m_xsv, m_index }; }
 
         RowIterator& operator++()
         {
