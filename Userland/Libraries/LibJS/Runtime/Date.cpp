@@ -337,6 +337,20 @@ double local_tza(double time, bool is_utc, Optional<StringView> time_zone_overri
     return is_utc ? offset : -offset;
 }
 
+// 21.4.1.8 LocalTime ( t ), https://tc39.es/ecma262/#sec-localtime
+double local_time(double time)
+{
+    // 1. Return t + LocalTZA(t, true).
+    return time + local_tza(time, true);
+}
+
+// 21.4.1.9 UTC ( t ), https://tc39.es/ecma262/#sec-utc-t
+double utc_time(double time)
+{
+    // 1. Return t - LocalTZA(t, false).
+    return time - local_tza(time, false);
+}
+
 // 21.4.1.11 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
 Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, Value ms)
 {
@@ -363,6 +377,13 @@ Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, V
 double day(double time_value)
 {
     return floor(time_value / MS_PER_DAY);
+}
+
+// TimeWithinDay(t), https://tc39.es/ecma262/#eqn-TimeWithinDay
+double time_within_day(double time)
+{
+    // 𝔽(ℝ(t) modulo ℝ(msPerDay))
+    return modulo(time, MS_PER_DAY);
 }
 
 // 21.4.1.12 MakeDay ( year, month, date ), https://tc39.es/ecma262/#sec-makeday
