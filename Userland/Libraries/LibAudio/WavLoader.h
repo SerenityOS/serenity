@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/MemoryStream.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/Span.h>
 #include <AK/Stream.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
@@ -34,7 +34,7 @@ class Buffer;
 class WavLoaderPlugin : public LoaderPlugin {
 public:
     explicit WavLoaderPlugin(StringView path);
-    explicit WavLoaderPlugin(const ByteBuffer& buffer);
+    explicit WavLoaderPlugin(const Bytes& buffer);
 
     virtual MaybeLoaderError initialize() override;
 

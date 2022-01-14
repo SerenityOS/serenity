@@ -30,7 +30,7 @@ Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(StringView p
     return LoaderError { "No loader plugin available" };
 }
 
-Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(ByteBuffer const& buffer)
+Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(Bytes& buffer)
 {
     NonnullOwnPtr<LoaderPlugin> plugin = adopt_own(*new WavLoaderPlugin(buffer));
     if (auto initstate = plugin->initialize(); !initstate.is_error())

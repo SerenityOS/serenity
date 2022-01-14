@@ -36,7 +36,7 @@ MaybeLoaderError WavLoaderPlugin::initialize()
     return {};
 }
 
-WavLoaderPlugin::WavLoaderPlugin(const ByteBuffer& buffer)
+WavLoaderPlugin::WavLoaderPlugin(const Bytes& buffer)
 {
     m_stream = make<InputMemoryStream>(buffer);
     if (!m_stream) {
