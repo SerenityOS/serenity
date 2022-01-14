@@ -6,6 +6,8 @@
 
 #include <AK/StdLibExtras.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -14,12 +16,9 @@
 
 int head(const String& filename, bool print_filename, ssize_t line_count, ssize_t byte_count);
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath", nullptr));
 
     int line_count = -1;
     int byte_count = -1;
@@ -34,7 +33,7 @@ int main(int argc, char** argv)
     args_parser.add_option(never_print_filenames, "Never print filenames", "quiet", 'q');
     args_parser.add_option(always_print_filenames, "Always print filenames", "verbose", 'v');
     args_parser.add_positional_argument(files, "File to process", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(args);
 
     if (line_count == -1 && byte_count == -1) {
         line_count = 10;
