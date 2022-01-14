@@ -341,20 +341,20 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     // FIXME: BorderXRadius properties are now BorderRadiusStyleValues, so make use of that.
     auto border_bottom_left_radius = specified_style.property(CSS::PropertyID::BorderBottomLeftRadius);
-    if (border_bottom_left_radius.has_value())
-        computed_values.set_border_bottom_left_radius(border_bottom_left_radius.value()->to_length());
+    if (border_bottom_left_radius.has_value() && border_bottom_left_radius.value()->is_border_radius())
+        computed_values.set_border_bottom_left_radius(border_bottom_left_radius.value()->as_border_radius().horizontal_radius());
 
     auto border_bottom_right_radius = specified_style.property(CSS::PropertyID::BorderBottomRightRadius);
-    if (border_bottom_right_radius.has_value())
-        computed_values.set_border_bottom_right_radius(border_bottom_right_radius.value()->to_length());
+    if (border_bottom_right_radius.has_value() && border_bottom_right_radius.value()->is_border_radius())
+        computed_values.set_border_bottom_right_radius(border_bottom_right_radius.value()->as_border_radius().horizontal_radius());
 
     auto border_top_left_radius = specified_style.property(CSS::PropertyID::BorderTopLeftRadius);
-    if (border_top_left_radius.has_value())
-        computed_values.set_border_top_left_radius(border_top_left_radius.value()->to_length());
+    if (border_top_left_radius.has_value() && border_top_left_radius.value()->is_border_radius())
+        computed_values.set_border_top_left_radius(border_top_left_radius.value()->as_border_radius().horizontal_radius());
 
     auto border_top_right_radius = specified_style.property(CSS::PropertyID::BorderTopRightRadius);
-    if (border_top_right_radius.has_value())
-        computed_values.set_border_top_right_radius(border_top_right_radius.value()->to_length());
+    if (border_top_right_radius.has_value() && border_top_right_radius.value()->is_border_radius())
+        computed_values.set_border_top_right_radius(border_top_right_radius.value()->as_border_radius().horizontal_radius());
 
     computed_values.set_display(specified_style.display());
 
