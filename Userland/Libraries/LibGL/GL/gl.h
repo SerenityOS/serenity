@@ -229,6 +229,7 @@ extern "C" {
 
 // Format enums
 #define GL_COLOR_INDEX 0x1900
+#define GL_COLOR_INDEX8_EXT 0x80E5
 #define GL_STENCIL_INDEX 0x1901
 #define GL_DEPTH_COMPONENT 0x1902
 #define GL_RED 0x1903
@@ -242,6 +243,17 @@ extern "C" {
 #define GL_BGR 0x190B
 #define GL_BGRA 0x190C
 #define GL_BITMAP 0x1A00
+
+#define GL_LUMINANCE8 0x8040
+#define GL_INTENSITY8 0x804B
+#define GL_R3_G3_B2 0x2A10
+#define GL_RGB4 0x804F
+#define GL_RGB5 0x8050
+#define GL_RGB8 0x8051
+#define GL_RGBA2 0x8055
+#define GL_RGBA4 0x8056
+#define GL_RGB5_A1 0x8057
+#define GL_RGBA8 0x8058
 
 // Lighting related defines
 #define GL_LIGHTING 0x0B50
@@ -279,6 +291,12 @@ extern "C" {
 #define GL_ONE_MINUS_CONSTANT_COLOR 0x8002
 #define GL_CONSTANT_ALPHA 0x8003
 #define GL_ONE_MINUS_CONSTANT_ALPHA 0x8004
+
+// Points
+#define GL_POINT_SMOOTH 0x0B10
+#define GL_POINT_SIZE_MIN_EXT 0x8126
+#define GL_POINT_SIZE_MAX_EXT 0x8127
+#define GL_DISTANCE_ATTENUATION_EXT 0x8129
 
 // Polygon modes
 #define GL_POINT 0x1B00
