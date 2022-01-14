@@ -323,20 +323,18 @@ double local_tza(double time, bool is_utc, Optional<StringView> time_zone_overri
     // time zone with a specific value without setting environment variables.
     auto time_zone = time_zone_override.value_or(TimeZone::current_time_zone());
 
+    auto maybe_offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_milliseconds(time));
+    auto offset = maybe_offset.value_or(0) * 1000;
+
     // When isUTC is true, LocalTZA( tUTC, true ) should return the offset of the local time zone from
     // UTC measured in milliseconds at time represented by time value tUTC. When the result is added to
     // tUTC, it should yield the corresponding Number tlocal.
-    if (is_utc) {
-        auto offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_milliseconds(time));
-        return offset.value_or(0) * 1000;
-    }
 
     // When isUTC is false, LocalTZA( tlocal, false ) should return the offset of the local time zone from
     // UTC measured in milliseconds at local time represented by Number tlocal. When the result is subtracted
     // from tlocal, it should yield the corresponding time value tUTC.
 
-    // FIXME: Implement isUTC=false when any caller needs it.
-    TODO();
+    return is_utc ? offset : -offset;
 }
 
 // 21.4.1.11 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
