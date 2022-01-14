@@ -22,8 +22,6 @@ stages:
       - template: Meta/Azure/Lagom.yml
         parameters:
           os: 'macOS'
-          allow_test_failures: true
-
 
   - stage: Toolchain
     dependsOn: []
