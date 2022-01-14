@@ -2110,94 +2110,114 @@ RefPtr<StyleValue> Parser::parse_dynamic_value(StyleComponentValueRule const& co
     return {};
 }
 
-Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_value)
+Optional<Parser::Dimension> Parser::parse_dimension(StyleComponentValueRule const& component_value)
 {
-    Length::Type type = Length::Type::Undefined;
-    Optional<float> numeric_value;
-
     if (component_value.is(Token::Type::Dimension)) {
-        numeric_value = component_value.token().dimension_value();
+        float numeric_value = component_value.token().dimension_value();
         auto unit_string = component_value.token().dimension_unit();
+        Optional<Length::Type> length_type = Length::Type::Undefined;
 
-        if (unit_string.equals_ignoring_case("px")) {
-            type = Length::Type::Px;
-        } else if (unit_string.equals_ignoring_case("pt")) {
-            type = Length::Type::Pt;
-        } else if (unit_string.equals_ignoring_case("pc")) {
-            type = Length::Type::Pc;
-        } else if (unit_string.equals_ignoring_case("mm")) {
-            type = Length::Type::Mm;
-        } else if (unit_string.equals_ignoring_case("rem")) {
-            type = Length::Type::Rem;
-        } else if (unit_string.equals_ignoring_case("em")) {
-            type = Length::Type::Em;
-        } else if (unit_string.equals_ignoring_case("ex")) {
-            type = Length::Type::Ex;
-        } else if (unit_string.equals_ignoring_case("ch")) {
-            type = Length::Type::Ch;
-        } else if (unit_string.equals_ignoring_case("vw")) {
-            type = Length::Type::Vw;
-        } else if (unit_string.equals_ignoring_case("vh")) {
-            type = Length::Type::Vh;
-        } else if (unit_string.equals_ignoring_case("vmax")) {
-            type = Length::Type::Vmax;
-        } else if (unit_string.equals_ignoring_case("vmin")) {
-            type = Length::Type::Vmin;
-        } else if (unit_string.equals_ignoring_case("cm")) {
-            type = Length::Type::Cm;
-        } else if (unit_string.equals_ignoring_case("in")) {
-            type = Length::Type::In;
-        } else if (unit_string.equals_ignoring_case("Q")) {
-            type = Length::Type::Q;
-        } else if (unit_string.equals_ignoring_case("%")) {
+        if (unit_string.equals_ignoring_case("px"sv)) {
+            length_type = Length::Type::Px;
+        } else if (unit_string.equals_ignoring_case("pt"sv)) {
+            length_type = Length::Type::Pt;
+        } else if (unit_string.equals_ignoring_case("pc"sv)) {
+            length_type = Length::Type::Pc;
+        } else if (unit_string.equals_ignoring_case("mm"sv)) {
+            length_type = Length::Type::Mm;
+        } else if (unit_string.equals_ignoring_case("rem"sv)) {
+            length_type = Length::Type::Rem;
+        } else if (unit_string.equals_ignoring_case("em"sv)) {
+            length_type = Length::Type::Em;
+        } else if (unit_string.equals_ignoring_case("ex"sv)) {
+            length_type = Length::Type::Ex;
+        } else if (unit_string.equals_ignoring_case("ch"sv)) {
+            length_type = Length::Type::Ch;
+        } else if (unit_string.equals_ignoring_case("vw"sv)) {
+            length_type = Length::Type::Vw;
+        } else if (unit_string.equals_ignoring_case("vh"sv)) {
+            length_type = Length::Type::Vh;
+        } else if (unit_string.equals_ignoring_case("vmax"sv)) {
+            length_type = Length::Type::Vmax;
+        } else if (unit_string.equals_ignoring_case("vmin"sv)) {
+            length_type = Length::Type::Vmin;
+        } else if (unit_string.equals_ignoring_case("cm"sv)) {
+            length_type = Length::Type::Cm;
+        } else if (unit_string.equals_ignoring_case("in"sv)) {
+            length_type = Length::Type::In;
+        } else if (unit_string.equals_ignoring_case("Q"sv)) {
+            length_type = Length::Type::Q;
+        } else if (unit_string.equals_ignoring_case("%"sv)) {
             // A number followed by `%` must always result in a Percentage token.
             VERIFY_NOT_REACHED();
-        } else {
-            return {};
         }
-    } else if (component_value.is(Token::Type::Percentage)) {
-        type = Length::Type::Percentage;
-        numeric_value = component_value.token().percentage();
-    } else if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto")) {
-        return Length::make_auto();
-    } else if (component_value.is(Token::Type::Number)) {
-        numeric_value = component_value.token().number_value();
-        if (numeric_value == 0) {
-            type = Length::Type::Px;
-        } else if (m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength)) {
+
+        if (length_type.has_value())
+            return Length { numeric_value, length_type.value() };
+    }
+
+    if (component_value.is(Token::Type::Percentage))
+        return Percentage { static_cast<float>(component_value.token().percentage()) };
+
+    if (component_value.is(Token::Type::Number)) {
+        float numeric_value = component_value.token().number_value();
+        if (numeric_value == 0)
+            return Length::make_px(0);
+        if (m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength)) {
             // https://quirks.spec.whatwg.org/#quirky-length-value
             // FIXME: Disallow quirk when inside a CSS sub-expression (like `calc()`)
             // "The <quirky-length> value must not be supported in arguments to CSS expressions other than the rect()
             // expression, and must not be supported in the supports() static method of the CSS interface."
-            type = Length::Type::Px;
+            return Length::make_px(numeric_value);
         }
     }
 
-    if (!numeric_value.has_value())
-        return {};
-
-    return Length(numeric_value.value(), type);
+    return {};
 }
 
-RefPtr<StyleValue> Parser::parse_length_value(StyleComponentValueRule const& component_value)
+Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_value)
+{
+    auto dimension = parse_dimension(component_value);
+    if (!dimension.has_value())
+        return {};
+
+    if (dimension->is_length())
+        return dimension->length();
+
+    // FIXME: This is a temporary hack until Length is split up fully.
+    if (dimension->is_percentage()) {
+        auto percentage = dimension->percentage();
+        return Length { (float)percentage.value(), Length::Type::Percentage };
+    }
+
+    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"))
+        return Length::make_auto();
+
+    return {};
+}
+
+RefPtr<StyleValue> Parser::parse_dimension_value(StyleComponentValueRule const& component_value)
 {
     // Numbers with no units can be lengths, in two situations:
     // 1) We're in quirks mode, and it's an integer.
     // 2) It's a 0.
     // We handle case 1 here. Case 2 is handled by NumericStyleValue pretending to be a LengthStyleValue if it is 0.
 
-    // FIXME: "auto" is also treated as a Length, and most of the time that is how it is used, but not always.
-    // Possibly it should always be an Identifier, and then quietly converted to a Length when needed, like 0 above.
-    // Right now, it instead is quietly converted to an Identifier when needed.
-    if (component_value.is(Token::Type::Dimension) || component_value.is(Token::Type::Percentage)
-        || (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv))
-        || (m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength) && component_value.is(Token::Type::Number) && component_value.token().number_value() != 0)) {
-        auto length = parse_length(component_value);
-        if (length.has_value())
-            return LengthStyleValue::create(length.value());
-    }
+    if (component_value.is(Token::Type::Number) && !(m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength)))
+        return {};
 
-    return {};
+    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"))
+        return LengthStyleValue::create(Length::make_auto());
+
+    auto dimension = parse_dimension(component_value);
+    if (!dimension.has_value())
+        return {};
+
+    if (dimension->is_length())
+        return LengthStyleValue::create(dimension->length());
+    if (dimension->is_percentage())
+        return PercentageStyleValue::create(dimension->percentage());
+    VERIFY_NOT_REACHED();
 }
 
 RefPtr<StyleValue> Parser::parse_numeric_value(StyleComponentValueRule const& component_value)
@@ -3793,8 +3813,8 @@ RefPtr<StyleValue> Parser::parse_css_value(StyleComponentValueRule const& compon
     if (auto color = parse_color_value(component_value))
         return color;
 
-    if (auto length = parse_length_value(component_value))
-        return length;
+    if (auto dimension = parse_dimension_value(component_value))
+        return dimension;
 
     if (auto numeric = parse_numeric_value(component_value))
         return numeric;
@@ -4388,6 +4408,40 @@ RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext 
     if (result.is_error())
         return {};
     return result.release_value();
+}
+
+bool Parser::Dimension::is_length() const
+{
+    return m_value.has<Length>();
+}
+
+Length Parser::Dimension::length() const
+{
+    return m_value.get<Length>();
+}
+
+bool Parser::Dimension::is_percentage() const
+{
+    return m_value.has<Percentage>();
+}
+
+Percentage Parser::Dimension::percentage() const
+{
+    return m_value.get<Percentage>();
+}
+
+bool Parser::Dimension::is_length_percentage() const
+{
+    return is_length() || is_percentage();
+}
+
+LengthPercentage Parser::Dimension::length_percentage() const
+{
+    if (is_length())
+        return length();
+    if (is_percentage())
+        return percentage();
+    VERIFY_NOT_REACHED();
 }
 
 }

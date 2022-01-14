@@ -25,6 +25,7 @@
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
+#include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>
@@ -284,6 +285,7 @@ public:
         ListStyle,
         Numeric,
         Overflow,
+        Percentage,
         Position,
         String,
         TextDecoration,
@@ -314,6 +316,7 @@ public:
     bool is_list_style() const { return type() == Type::ListStyle; }
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_overflow() const { return type() == Type::Overflow; }
+    bool is_percentage() const { return type() == Type::Percentage; }
     bool is_position() const { return type() == Type::Position; }
     bool is_string() const { return type() == Type::String; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
@@ -343,6 +346,7 @@ public:
     ListStyleStyleValue const& as_list_style() const;
     NumericStyleValue const& as_numeric() const;
     OverflowStyleValue const& as_overflow() const;
+    PercentageStyleValue const& as_percentage() const;
     PositionStyleValue const& as_position() const;
     StringStyleValue const& as_string() const;
     TextDecorationStyleValue const& as_text_decoration() const;
@@ -370,6 +374,7 @@ public:
     ListStyleStyleValue& as_list_style() { return const_cast<ListStyleStyleValue&>(const_cast<StyleValue const&>(*this).as_list_style()); }
     NumericStyleValue& as_numeric() { return const_cast<NumericStyleValue&>(const_cast<StyleValue const&>(*this).as_numeric()); }
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
+    PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
     StringStyleValue& as_string() { return const_cast<StringStyleValue&>(const_cast<StyleValue const&>(*this).as_string()); }
     TextDecorationStyleValue& as_text_decoration() { return const_cast<TextDecorationStyleValue&>(const_cast<StyleValue const&>(*this).as_text_decoration()); }
@@ -1171,6 +1176,36 @@ private:
 
     NonnullRefPtr<StyleValue> m_overflow_x;
     NonnullRefPtr<StyleValue> m_overflow_y;
+};
+
+class PercentageStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<PercentageStyleValue> create(Percentage&& percentage)
+    {
+        return adopt_ref(*new PercentageStyleValue(move(percentage)));
+    }
+    virtual ~PercentageStyleValue() override { }
+
+    Percentage const& percentage() const { return m_percentage; }
+    Percentage& percentage() { return m_percentage; }
+
+    // FIXME: This is a temporary hack until we fully separate Length and Percentage.
+    bool has_length() const override { return true; }
+    Length to_length() const override { return { m_percentage.value(), Length::Type::Percentage }; }
+
+    virtual String to_string() const override
+    {
+        return m_percentage.to_string();
+    }
+
+private:
+    PercentageStyleValue(Percentage&& percentage)
+        : StyleValue(Type::Percentage)
+        , m_percentage(percentage)
+    {
+    }
+
+    Percentage m_percentage;
 };
 
 class PositionStyleValue final : public StyleValue {

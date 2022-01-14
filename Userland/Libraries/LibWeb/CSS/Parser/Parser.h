@@ -176,6 +176,30 @@ private:
     [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
     [[nodiscard]] Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule const&);
 
+    class Dimension {
+    public:
+        Dimension(Length&& value)
+            : m_value(move(value))
+        {
+        }
+        Dimension(Percentage&& value)
+            : m_value(move(value))
+        {
+        }
+
+        bool is_length() const;
+        Length length() const;
+
+        bool is_percentage() const;
+        Percentage percentage() const;
+
+        bool is_length_percentage() const;
+        LengthPercentage length_percentage() const;
+
+    private:
+        Variant<Length, Percentage> m_value;
+    };
+    Optional<Dimension> parse_dimension(StyleComponentValueRule const&);
     Optional<Color> parse_color(StyleComponentValueRule const&);
     Optional<Length> parse_length(StyleComponentValueRule const&);
 
@@ -189,7 +213,7 @@ private:
     RefPtr<StyleValue> parse_css_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_builtin_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_dynamic_value(StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_length_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_dimension_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_numeric_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_identifier_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_color_value(StyleComponentValueRule const&);
