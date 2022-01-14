@@ -4,6 +4,9 @@ test("basic functionality", () => {
     expect("".substr(1)).toBe("");
     expect("".substr()).toBe("");
     expect("".substr(-1)).toBe("");
+    expect("a".substr(-1)).toBe("a");
+    expect("a".substr(-2)).toBe("a");
+    expect("a".substr(-3)).toBe("a");
     expect("hello friends".substr()).toBe("hello friends");
     expect("hello friends".substr(1)).toBe("ello friends");
     expect("hello friends".substr(0, 5)).toBe("hello");
