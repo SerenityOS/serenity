@@ -574,9 +574,6 @@ public:
     Length const& vertical_radius() const { return m_vertical_radius; }
     bool is_elliptical() const { return m_is_elliptical; }
 
-    // FIXME: Remove this once we support elliptical border-radius in Layout/Node.
-    virtual Length to_length() const override { return horizontal_radius(); }
-
     virtual String to_string() const override
     {
         return String::formatted("{} / {}", m_horizontal_radius.to_string(), m_vertical_radius.to_string());
