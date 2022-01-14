@@ -10,6 +10,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/CSS/Length.h>
+#include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
@@ -32,9 +33,20 @@ Length Length::make_auto()
 {
     return Length(0, Type::Auto);
 }
+
 Length Length::make_px(float value)
 {
     return Length(value, Type::Px);
+}
+
+Length Length::percentage_of(Percentage const& percentage) const
+{
+    if (is_undefined_or_auto()) {
+        dbgln("Attempting to get percentage of an undefined or auto length, this seems wrong? But for now we just return the original length.");
+        return *this;
+    }
+
+    return Length { percentage.as_fraction() * raw_value(), m_type };
 }
 
 Length Length::resolved(const Length& fallback_for_undefined, const Layout::Node& layout_node, float reference_for_percent) const
