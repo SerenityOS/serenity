@@ -123,6 +123,11 @@ public:
     Realm const* current_realm() const { return running_execution_context().realm; }
     Realm* current_realm() { return running_execution_context().realm; }
 
+    // https://tc39.es/ecma262/#active-function-object
+    // The value of the Function component of the running execution context is also called the active function object.
+    FunctionObject const* active_function_object() const { return running_execution_context().function; }
+    FunctionObject* active_function_object() { return running_execution_context().function; }
+
     bool in_strict_mode() const;
 
     size_t argument_count() const
