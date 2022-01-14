@@ -36,6 +36,7 @@ public:
     static float flex_grow() { return 0.0f; }
     static float flex_shrink() { return 1.0f; }
     static float opacity() { return 1.0f; }
+    static CSS::Length border_radius() { return Length::make_px(0); }
 };
 
 struct BackgroundLayerData {
@@ -119,10 +120,10 @@ public:
     const BorderData& border_right() const { return m_noninherited.border_right; }
     const BorderData& border_bottom() const { return m_noninherited.border_bottom; }
 
-    const CSS::Length& border_bottom_left_radius() const { return m_noninherited.border_bottom_left_radius; }
-    const CSS::Length& border_bottom_right_radius() const { return m_noninherited.border_bottom_right_radius; }
-    const CSS::Length& border_top_left_radius() const { return m_noninherited.border_top_left_radius; }
-    const CSS::Length& border_top_right_radius() const { return m_noninherited.border_top_right_radius; }
+    const CSS::LengthPercentage& border_bottom_left_radius() const { return m_noninherited.border_bottom_left_radius; }
+    const CSS::LengthPercentage& border_bottom_right_radius() const { return m_noninherited.border_bottom_right_radius; }
+    const CSS::LengthPercentage& border_top_left_radius() const { return m_noninherited.border_top_left_radius; }
+    const CSS::LengthPercentage& border_top_right_radius() const { return m_noninherited.border_top_right_radius; }
 
     CSS::Overflow overflow_x() const { return m_noninherited.overflow_x; }
     CSS::Overflow overflow_y() const { return m_noninherited.overflow_y; }
@@ -181,10 +182,10 @@ protected:
         BorderData border_top;
         BorderData border_right;
         BorderData border_bottom;
-        Length border_bottom_left_radius;
-        Length border_bottom_right_radius;
-        Length border_top_left_radius;
-        Length border_top_right_radius;
+        LengthPercentage border_bottom_left_radius { InitialValues::border_radius() };
+        LengthPercentage border_bottom_right_radius { InitialValues::border_radius() };
+        LengthPercentage border_top_left_radius { InitialValues::border_radius() };
+        LengthPercentage border_top_right_radius { InitialValues::border_radius() };
         Color background_color { InitialValues::background_color() };
         Vector<BackgroundLayerData> background_layers;
         CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
@@ -234,10 +235,10 @@ public:
     void set_overflow_y(CSS::Overflow value) { m_noninherited.overflow_y = value; }
     void set_list_style_type(CSS::ListStyleType value) { m_inherited.list_style_type = value; }
     void set_display(CSS::Display value) { m_noninherited.display = value; }
-    void set_border_bottom_left_radius(CSS::Length value) { m_noninherited.border_bottom_left_radius = value; }
-    void set_border_bottom_right_radius(CSS::Length value) { m_noninherited.border_bottom_right_radius = value; }
-    void set_border_top_left_radius(CSS::Length value) { m_noninherited.border_top_left_radius = value; }
-    void set_border_top_right_radius(CSS::Length value) { m_noninherited.border_top_right_radius = value; }
+    void set_border_bottom_left_radius(CSS::LengthPercentage value) { m_noninherited.border_bottom_left_radius = value; }
+    void set_border_bottom_right_radius(CSS::LengthPercentage value) { m_noninherited.border_bottom_right_radius = value; }
+    void set_border_top_left_radius(CSS::LengthPercentage value) { m_noninherited.border_top_left_radius = value; }
+    void set_border_top_right_radius(CSS::LengthPercentage value) { m_noninherited.border_top_right_radius = value; }
     BorderData& border_left() { return m_noninherited.border_left; }
     BorderData& border_top() { return m_noninherited.border_top; }
     BorderData& border_right() { return m_noninherited.border_right; }

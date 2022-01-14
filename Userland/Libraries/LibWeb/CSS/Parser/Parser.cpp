@@ -3009,18 +3009,18 @@ RefPtr<StyleValue> Parser::parse_border_value(Vector<StyleComponentValueRule> co
 RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() == 2) {
-        auto horizontal = parse_length(component_values[0]);
-        auto vertical = parse_length(component_values[1]);
-        if (horizontal.has_value() && vertical.has_value())
-            return BorderRadiusStyleValue::create(horizontal.value(), vertical.value());
+        auto horizontal = parse_dimension(component_values[0]);
+        auto vertical = parse_dimension(component_values[1]);
+        if (horizontal.has_value() && horizontal->is_length_percentage() && vertical.has_value() && vertical->is_length_percentage())
+            return BorderRadiusStyleValue::create(horizontal->length_percentage(), vertical->length_percentage());
 
         return nullptr;
     }
 
     if (component_values.size() == 1) {
-        auto radius = parse_length(component_values[0]);
-        if (radius.has_value())
-            return BorderRadiusStyleValue::create(radius.value(), radius.value());
+        auto radius = parse_dimension(component_values[0]);
+        if (radius.has_value() && radius->is_length_percentage())
+            return BorderRadiusStyleValue::create(radius->length_percentage(), radius->length_percentage());
         return nullptr;
     }
 
