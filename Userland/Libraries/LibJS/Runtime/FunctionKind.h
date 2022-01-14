@@ -9,8 +9,8 @@
 namespace JS {
 
 enum class FunctionKind {
+    Normal,
     Generator,
-    Regular,
     Async,
     AsyncGenerator
 };

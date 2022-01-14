@@ -155,7 +155,7 @@ public:
                 if (m_var_names.contains(function_name) || m_lexical_names.contains(function_name))
                     throw_identifier_declared(function_name, declaration);
 
-                if (function_declaration.kind() != FunctionKind::Regular || m_parser.m_state.strict_mode) {
+                if (function_declaration.kind() != FunctionKind::Normal || m_parser.m_state.strict_mode) {
                     if (m_function_names.contains(function_name))
                         throw_identifier_declared(function_name, declaration);
 
@@ -708,7 +708,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         load_state();
     };
 
-    auto function_kind = FunctionKind::Regular;
+    auto function_kind = FunctionKind::Normal;
 
     if (is_async) {
         consume(TokenType::Async);
@@ -1293,12 +1293,12 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
-                Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, FunctionKind::Regular,
+                Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, FunctionKind::Normal,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         } else {
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
-                Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Regular,
+                Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Normal,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         }
     }
@@ -1624,7 +1624,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         property_type = ObjectProperty::Type::KeyValue;
         RefPtr<Expression> property_name;
         RefPtr<Expression> property_value;
-        FunctionKind function_kind { FunctionKind::Regular };
+        FunctionKind function_kind { FunctionKind::Normal };
 
         if (match(TokenType::TripleDot)) {
             consume();
@@ -1653,8 +1653,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             consume();
             property_type = ObjectProperty::Type::KeyValue;
             property_name = parse_property_key();
-            VERIFY(function_kind == FunctionKind::Regular || function_kind == FunctionKind::Async);
-            function_kind = function_kind == FunctionKind::Regular ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
+            VERIFY(function_kind == FunctionKind::Normal || function_kind == FunctionKind::Async);
+            function_kind = function_kind == FunctionKind::Normal ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
         } else if (match_identifier()) {
             auto identifier = consume();
             if (identifier.original_value() == "get"sv && match_property_key()) {
@@ -2381,7 +2381,7 @@ NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclarati
     parse_statement_list(function_body);
 
     // If the function contains 'use strict' we need to check the parameters (again).
-    if (function_body->in_strict_mode() || function_kind != FunctionKind::Regular) {
+    if (function_body->in_strict_mode() || function_kind != FunctionKind::Normal) {
         Vector<StringView> parameter_names;
         for (auto& parameter : parameters) {
             parameter.binding.visit(
@@ -2461,17 +2461,17 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     else if ((parse_options & FunctionNodeParseOptions::IsAsyncFunction) != 0)
         function_kind = FunctionKind::Async;
     else
-        function_kind = FunctionKind::Regular;
+        function_kind = FunctionKind::Normal;
     String name;
     if (parse_options & FunctionNodeParseOptions::CheckForFunctionAndName) {
-        if (function_kind == FunctionKind::Regular && match(TokenType::Async) && !next_token().trivia_contains_line_terminator()) {
+        if (function_kind == FunctionKind::Normal && match(TokenType::Async) && !next_token().trivia_contains_line_terminator()) {
             function_kind = FunctionKind::Async;
             consume(TokenType::Async);
             parse_options = parse_options | FunctionNodeParseOptions::IsAsyncFunction;
         }
         consume(TokenType::Function);
         if (match(TokenType::Asterisk)) {
-            function_kind = function_kind == FunctionKind::Regular ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
+            function_kind = function_kind == FunctionKind::Normal ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
             consume(TokenType::Asterisk);
             parse_options = parse_options | FunctionNodeParseOptions::IsGeneratorFunction;
         }

@@ -75,7 +75,7 @@ public:
     bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
 
     // Equivalent to absence of [[Construct]]
-    virtual bool has_constructor() const override { return m_kind == FunctionKind::Regular && !m_is_arrow_function; }
+    virtual bool has_constructor() const override { return m_kind == FunctionKind::Normal && !m_is_arrow_function; }
 
     FunctionKind kind() const { return m_kind; }
 
@@ -113,7 +113,7 @@ private:
     FlyString m_name;
     Optional<Bytecode::Executable> m_bytecode_executable;
     i32 m_function_length { 0 };
-    FunctionKind m_kind { FunctionKind::Regular };
+    FunctionKind m_kind { FunctionKind::Normal };
     bool m_might_need_arguments_object { true };
     bool m_contains_direct_call_to_eval { true };
     bool m_is_arrow_function { false };
