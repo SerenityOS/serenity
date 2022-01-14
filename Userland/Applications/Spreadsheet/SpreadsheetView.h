@@ -107,6 +107,8 @@ private:
     virtual void hide_event(GUI::HideEvent&) override;
     virtual void show_event(GUI::ShowEvent&) override;
 
+    ErrorOr<void> select_row();
+
     void update_with_model();
 
     SpreadsheetView(Sheet&);
@@ -159,6 +161,7 @@ private:
     NonnullRefPtr<SheetModel> m_sheet_model;
     RefPtr<InfinitelyScrollableTableView> m_table_view;
     RefPtr<GUI::Menu> m_cell_range_context_menu;
+    Optional<GUI::ModelIndex> m_selected_row;
 };
 
 }

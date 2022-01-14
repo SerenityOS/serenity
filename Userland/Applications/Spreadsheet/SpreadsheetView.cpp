@@ -6,6 +6,7 @@
 
 #include "SpreadsheetView.h"
 #include "CellTypeDialog.h"
+#include "LibGUI/MessageBox.h"
 #include <AK/ScopeGuard.h>
 #include <AK/URL.h>
 #include <LibCore/MimeData.h>
@@ -108,9 +109,9 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
             Vector<GUI::ModelIndex> new_selection;
             for (auto i = min(m_starting_selection_index.row(), index.row()), imax = max(m_starting_selection_index.row(), index.row()); i <= imax; ++i) {
                 for (auto j = min(m_starting_selection_index.column(), index.column()), jmax = max(m_starting_selection_index.column(), index.column()); j <= jmax; ++j) {
-                    auto index = model->index(i, j);
+                    auto selection_index = model->index(i, j);
                     if (index.is_valid())
-                        new_selection.append(move(index));
+                        new_selection.append(move(selection_index));
                 }
             }
 
@@ -176,6 +177,13 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             m_table_view->set_column_painting_delegate(last_column_index, make<TableCellPainter>(*m_table_view));
         }
         update_with_model();
+
+        if (m_selected_row.has_value()) {
+            auto result = select_row();
+            if (result.is_error()) {
+                dbgln("{}", result.error().string_literal());
+            }
+        }
     };
 
     set_focus_proxy(m_table_view);
@@ -205,7 +213,16 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
 
     m_table_view->on_selection_change = [&] {
         m_sheet->selected_cells().clear();
-        for (auto& index : m_table_view->selection().indices()) {
+
+        auto indices = m_table_view->selection().indices();
+
+        if (!indices.is_empty() && m_selected_row.has_value()) {
+            if (m_selected_row->row() != indices.at(0).row() || indices.size() == 1) {
+                (void)m_selected_row.clear();
+            }
+        }
+
+        for (auto& index : indices) {
             Position position { (size_t)index.column(), (size_t)index.row() };
             m_sheet->selected_cells().set(position);
         }
@@ -226,6 +243,22 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
 
     m_table_view->on_activation = [this](auto&) {
         m_table_view->move_cursor(GUI::AbstractView::CursorMovement::Down, GUI::AbstractView::SelectionUpdate::Set);
+    };
+
+    m_table_view->row_header().set_context_menu_policy(GUI::ContextMenuPolicy::CustomContextMenu);
+    m_table_view->row_header().on_custom_menu_requested = [this](GUI::ContextMenuEvent& event) {
+        auto position = event.position()
+                            .moved_right(m_table_view->row_header().size().width())
+                            .moved_down((m_table_view->row_header().size().width() / 2) - m_table_view->vertical_scrollbar().value());
+
+        m_selected_row = m_table_view->index_at_event_position(position);
+        auto result = select_row();
+
+        if (result.is_error()) {
+            GUI::MessageBox::show_error(window(), result.error().string_literal());
+            return;
+        }
+        m_cell_range_context_menu->popup(event.screen_position());
     };
 
     m_table_view->on_context_menu_request = [&](const GUI::ModelIndex&, const GUI::ContextMenuEvent& event) {
@@ -319,6 +352,24 @@ void SpreadsheetView::show_event(GUI::ShowEvent&)
 void SpreadsheetView::move_cursor(GUI::AbstractView::CursorMovement direction)
 {
     m_table_view->move_cursor(direction, GUI::AbstractView::SelectionUpdate::Set);
+}
+
+ErrorOr<void> SpreadsheetView::select_row()
+{
+    if (!m_selected_row.has_value() || !m_selected_row->is_valid()) {
+        return Error::from_string_literal("Row selected is not valid");
+    }
+
+    Vector<GUI::ModelIndex> indices = {};
+
+    for (auto column_index = 0; column_index < m_table_view->model()->column_count(); column_index++) {
+        indices.append(m_selected_row->sibling(m_selected_row->row(), column_index));
+    }
+    m_table_view->set_cursor(indices.at(0), GUI::AbstractView::SelectionUpdate::Set);
+    m_table_view->selection().clear();
+    m_table_view->selection().add_all(indices);
+
+    return {};
 }
 
 void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::Palette& palette, const GUI::ModelIndex& index)
