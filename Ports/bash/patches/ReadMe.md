@@ -1,5 +1,8 @@
-# Patches for bash
+# Patches for bash on SerenityOS
 
-## `include-sys-select.patch`
+## `0001-accept.c-Include-sys-select.h.patch`
 
-Include `<sys/select.h>` before using it.
+accept.c: Include sys/select.h
+This is transitively pulled in by other headers in some systems,
+serenity is not one of them.
+
