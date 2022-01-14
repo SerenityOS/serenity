@@ -32,7 +32,7 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
 {
     Object* prototype = nullptr;
     switch (kind) {
-    case FunctionKind::Regular:
+    case FunctionKind::Normal:
         prototype = global_object.function_prototype();
         break;
     case FunctionKind::Generator:
@@ -99,7 +99,7 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
     if (!m_is_arrow_function) {
         Object* prototype = nullptr;
         switch (m_kind) {
-        case FunctionKind::Regular:
+        case FunctionKind::Normal:
             prototype = vm.heap().allocate<Object>(global_object, *global_object.new_ordinary_function_prototype_object_shape());
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
@@ -787,7 +787,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
         // NOTE: Running the bytecode should eventually return a completion.
         // Until it does, we assume "return" and include the undefined fallback from the call site.
-        if (m_kind == FunctionKind::Regular)
+        if (m_kind == FunctionKind::Normal)
             return { Completion::Type::Return, result.value_or(js_undefined()), {} };
 
         auto generator_object = TRY(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
@@ -813,7 +813,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         VM::InterpreterExecutionScope scope(*ast_interpreter);
 
         // FunctionBody : FunctionStatementList
-        if (m_kind == FunctionKind::Regular) {
+        if (m_kind == FunctionKind::Normal) {
             // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
             TRY(function_declaration_instantiation(ast_interpreter));
 

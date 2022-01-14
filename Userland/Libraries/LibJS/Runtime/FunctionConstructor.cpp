@@ -76,7 +76,7 @@ ThrowCompletionOr<Value> FunctionConstructor::call()
 ThrowCompletionOr<Object*> FunctionConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto function = TRY(create_dynamic_function_node(global_object(), new_target, FunctionKind::Regular));
+    auto function = TRY(create_dynamic_function_node(global_object(), new_target, FunctionKind::Normal));
 
     OwnPtr<Interpreter> local_interpreter;
     Interpreter* interpreter = vm.interpreter_if_exists();
