@@ -19,13 +19,13 @@ class OutOfProcessWebView;
 class WebContentClient final
     : public IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>
     , public WebContentClientEndpoint {
-    C_OBJECT(WebContentClient);
+    IPC_CLIENT_CONNECTION(WebContentClient, "/tmp/portal/webcontent");
 
 public:
     Function<void()> on_web_content_process_crash;
 
 private:
-    WebContentClient(OutOfProcessWebView&);
+    WebContentClient(NonnullOwnPtr<Core::Stream::LocalSocket>, OutOfProcessWebView&);
 
     virtual void die() override;
 

@@ -23,7 +23,7 @@ RefPtr<ClientConnection> ClientConnection::client_connection_for(int client_id)
     return nullptr;
 }
 
-ClientConnection::ClientConnection(AK::NonnullRefPtr<Core::LocalSocket> socket, int client_id)
+ClientConnection::ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, int client_id)
     : IPC::ClientConnection<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);

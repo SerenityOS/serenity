@@ -162,14 +162,9 @@ ErrorOr<void> Decoder::decode(Dictionary& dictionary)
 
 ErrorOr<void> Decoder::decode([[maybe_unused]] File& file)
 {
-#ifdef __serenity__
-    int fd = TRY(Core::System::recvfd(m_sockfd, O_CLOEXEC));
+    int fd = TRY(m_socket.receive_fd(O_CLOEXEC));
     file = File(fd, File::ConstructWithReceivedFileDescriptor);
     return {};
-#else
-    [[maybe_unused]] auto fd = m_sockfd;
-    return Error::from_string_literal("File descriptor passing not supported on this platform");
-#endif
 }
 
 ErrorOr<void> decode(Decoder& decoder, Core::AnonymousBuffer& buffer)

@@ -31,8 +31,8 @@ class ServerConnection
     friend class ServerConnectionWrapper;
 
 public:
-    ServerConnection(StringView socket, const String& project_path)
-        : IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, socket)
+    ServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, const String& project_path)
+        : IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket))
     {
         m_project_path = project_path;
         async_greet(m_project_path);
@@ -159,7 +159,7 @@ ServerConnectionWrapper& ServerConnectionWrapper::get_or_create(const String& pr
     if (wrapper)
         return *wrapper;
 
-    auto connection_wrapper_ptr = make<ServerConnectionWrapper>(LanguageServerType::language_name(), [project_path]() { return LanguageServerType::construct(project_path); });
+    auto connection_wrapper_ptr = make<ServerConnectionWrapper>(LanguageServerType::language_name(), [project_path]() { return LanguageServerType::try_create(project_path).release_value_but_fixme_should_propagate_errors(); });
     auto& connection_wrapper = *connection_wrapper_ptr;
     ServerConnectionInstances::set_instance_for_language(LanguageServerType::language_name(), move(connection_wrapper_ptr));
     return connection_wrapper;

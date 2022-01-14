@@ -13,7 +13,7 @@ namespace WindowServer {
 
 HashMap<int, NonnullRefPtr<WMClientConnection>> WMClientConnection::s_connections {};
 
-WMClientConnection::WMClientConnection(NonnullRefPtr<Core::LocalSocket> client_socket, int client_id)
+WMClientConnection::WMClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> client_socket, int client_id)
     : IPC::ClientConnection<WindowManagerClientEndpoint, WindowManagerServerEndpoint>(*this, move(client_socket), client_id)
 {
     s_connections.set(client_id, *this);

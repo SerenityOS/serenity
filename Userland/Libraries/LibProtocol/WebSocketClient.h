@@ -18,7 +18,7 @@ class WebSocket;
 class WebSocketClient final
     : public IPC::ServerConnection<WebSocketClientEndpoint, WebSocketServerEndpoint>
     , public WebSocketClientEndpoint {
-    C_OBJECT(WebSocketClient);
+    IPC_CLIENT_CONNECTION(WebSocketClient, "/tmp/portal/websocket")
 
 public:
     RefPtr<WebSocket> connect(const URL&, const String& origin = {}, const Vector<String>& protocols = {}, const Vector<String>& extensions = {}, const HashMap<String, String>& request_headers = {});
@@ -29,7 +29,7 @@ public:
     bool set_certificate(Badge<WebSocket>, WebSocket&, String, String);
 
 private:
-    WebSocketClient();
+    WebSocketClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
     virtual void connected(i32) override;
     virtual void received(i32, bool, ByteBuffer const&) override;
