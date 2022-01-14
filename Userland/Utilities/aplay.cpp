@@ -37,7 +37,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto loader = maybe_loader.release_value();
 
     outln("\033[34;1m Playing\033[0m: {}", path);
-    outln("\033[34;1m  Format\033[0m: {} Hz, {}-bit, {}",
+    outln("\033[34;1m  Format\033[0m: {} {} Hz, {}-bit, {}",
+        loader->format_name(),
         loader->sample_rate(),
         loader->bits_per_sample(),
         loader->num_channels() == 1 ? "Mono" : "Stereo");
