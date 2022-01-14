@@ -8,6 +8,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
+#include <AK/Time.h>
 #include <LibCore/DateTime.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
@@ -99,30 +100,21 @@ static Value parse_simplified_iso8601(const String& iso_8601)
 
     // We parsed a valid date simplified ISO 8601 string.
     VERIFY(year.has_value()); // A valid date string always has at least a year.
-    struct tm tm = {};
-    tm.tm_year = *year - 1900;
-    tm.tm_mon = !month.has_value() ? 0 : *month - 1;
-    tm.tm_mday = day.value_or(1);
-    tm.tm_hour = hours.value_or(0);
-    tm.tm_min = minutes.value_or(0);
-    tm.tm_sec = seconds.value_or(0);
+    auto time = AK::Time::from_timestamp(*year, month.value_or(1), day.value_or(1), hours.value_or(0), minutes.value_or(0), seconds.value_or(0), milliseconds.value_or(0));
+    auto time_ms = static_cast<double>(time.to_milliseconds());
 
     // https://tc39.es/ecma262/#sec-date.parse:
     // "When the UTC offset representation is absent, date-only forms are interpreted as a UTC time and date-time forms are interpreted as a local time."
-    time_t timestamp;
-    if (timezone.has_value() || !hours.has_value())
-        timestamp = timegm(&tm);
-    else
-        timestamp = mktime(&tm);
+    if (!timezone.has_value() && hours.has_value())
+        time_ms += local_tza(time_ms, false);
 
     if (timezone == '-')
-        timestamp += (*timezone_hours * 60 + *timezone_minutes) * 60;
+        time_ms += *timezone_hours * 3'600'000 + *timezone_minutes * 60'000;
     else if (timezone == '+')
-        timestamp -= (*timezone_hours * 60 + *timezone_minutes) * 60;
+        time_ms -= *timezone_hours * 3'600'000 + *timezone_minutes * 60'000;
 
-    // FIXME: reject timestamp if resulting value wouldn't fit in a double
-
-    return Value(1000.0 * timestamp + milliseconds.value_or(0));
+    // FIXME: reject time_ms if resulting value wouldn't fit in a double
+    return Value(time_ms);
 }
 
 static Value parse_date_string(String const& date_string)
