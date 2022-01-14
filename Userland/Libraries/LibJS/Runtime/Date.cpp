@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,11 +21,22 @@ Date* Date::create(GlobalObject& global_object, Core::DateTime datetime, i16 mil
     return global_object.heap().allocate<Date>(global_object, datetime, milliseconds, is_invalid, *global_object.date_prototype());
 }
 
+Date* Date::create(GlobalObject& global_object, double date_value)
+{
+    return global_object.heap().allocate<Date>(global_object, date_value, *global_object.date_prototype());
+}
+
 Date::Date(Core::DateTime datetime, i16 milliseconds, bool is_invalid, Object& prototype)
     : Object(prototype)
     , m_datetime(datetime)
     , m_milliseconds(milliseconds)
     , m_is_invalid(is_invalid)
+{
+}
+
+Date::Date(double date_value, Object& prototype)
+    : Object(prototype)
+    , m_date_value(date_value)
 {
 }
 
@@ -84,9 +96,7 @@ String Date::gmt_date_string() const
 
 String Date::iso_date_string() const
 {
-    auto tm = to_utc_tm();
-    int year = tm.tm_year + 1900;
-    int month = tm.tm_mon + 1;
+    int year = year_from_time(m_date_value);
 
     StringBuilder builder;
     if (year < 0)
@@ -96,17 +106,17 @@ String Date::iso_date_string() const
     else
         builder.appendff("{:04}", year);
     builder.append('-');
-    builder.appendff("{:02}", month);
+    builder.appendff("{:02}", month_from_time(m_date_value) + 1);
     builder.append('-');
-    builder.appendff("{:02}", tm.tm_mday);
+    builder.appendff("{:02}", date_from_time(m_date_value));
     builder.append('T');
-    builder.appendff("{:02}", tm.tm_hour);
+    builder.appendff("{:02}", hour_from_time(m_date_value));
     builder.append(':');
-    builder.appendff("{:02}", tm.tm_min);
+    builder.appendff("{:02}", min_from_time(m_date_value));
     builder.append(':');
-    builder.appendff("{:02}", tm.tm_sec);
+    builder.appendff("{:02}", sec_from_time(m_date_value));
     builder.append('.');
-    builder.appendff("{:03}", m_milliseconds);
+    builder.appendff("{:03}", ms_from_time(m_date_value));
     builder.append('Z');
 
     return builder.build();

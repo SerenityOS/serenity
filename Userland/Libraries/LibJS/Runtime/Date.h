@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,10 +20,15 @@ public:
     static constexpr double time_clip = 8.64e15;
 
     static Date* create(GlobalObject&, Core::DateTime, i16 milliseconds, bool is_invalid);
+    static Date* create(GlobalObject&, double date_value);
     static Date* now(GlobalObject&);
 
     Date(Core::DateTime datetime, i16 milliseconds, bool is_invalid, Object& prototype);
+    Date(double date_value, Object& prototype);
     virtual ~Date() override;
+
+    double date_value() const { return m_date_value; }
+    void set_date_value(double value) { m_date_value = value; }
 
     Core::DateTime& datetime() { return m_datetime; }
     const Core::DateTime& datetime() const { return m_datetime; }
@@ -74,20 +80,14 @@ public:
     String locale_string() const { return m_datetime.to_string(); }
     String locale_time_string() const { return m_datetime.to_string("%H:%M:%S"); }
 
-    // https://tc39.es/ecma262/#sec-properties-of-date-instances
-    // [[DateValue]]
-    double date_value() const
-    {
-        return m_is_invalid
-            ? AK::NaN<double>
-            : static_cast<double>(m_datetime.timestamp() * 1000 + m_milliseconds);
-    }
-
 private:
     tm to_utc_tm() const;
 
+    double m_date_value { 0 }; // [[DateValue]]
+
     Core::DateTime m_datetime;
     i16 m_milliseconds;
+
     bool m_is_invalid { false };
 };
 
