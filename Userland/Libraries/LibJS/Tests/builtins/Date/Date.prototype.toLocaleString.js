@@ -14,17 +14,16 @@ describe("errors", () => {
             new Date(1n).toLocaleString();
         }).toThrowWithMessage(TypeError, "Cannot convert BigInt to number");
     });
-
-    test("time value cannot be clipped", () => {
-        expect(() => {
-            new Date(-8.65e15).toLocaleString();
-        }).toThrowWithMessage(RangeError, "Time value must be between -8.64E15 and 8.64E15");
-    });
 });
 
 describe("correct behavior", () => {
     test("NaN", () => {
         const d = new Date(NaN);
+        expect(d.toLocaleString()).toBe("Invalid Date");
+    });
+
+    test("time clip", () => {
+        const d = new Date(-8.65e15);
         expect(d.toLocaleString()).toBe("Invalid Date");
     });
 
