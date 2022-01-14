@@ -1,6 +1,6 @@
 ## Name
 
-Flappy Bug
+### ![Icon](/res/icons/16x16/app-flappybug.png) Flappy Bug
 
 ## Synopsis
 
