@@ -41,10 +41,13 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         keep_input_files = true;
 
     for (auto filename : filenames) {
-        if (!filename.ends_with(".gz"))
-            filename = String::formatted("{}.gz", filename);
 
-        const auto input_filename = filename;
+        String input_filename;
+        if (filename.ends_with(".gz"))
+            input_filename = filename;
+        else
+            input_filename = String::formatted("{}.gz", filename);
+
         const auto output_filename = filename.substring_view(0, filename.length() - 3);
 
         auto input_stream_result = TRY(Core::InputFileStream::open_buffered(input_filename));
