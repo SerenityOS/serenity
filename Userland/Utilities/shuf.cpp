@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
+ * Copyright (c) 2022, Alex Major
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,17 +8,16 @@
 #include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
 {
-    if (pledge("stdio", nullptr) > 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio", nullptr));
 
     Vector<String> lines;
 

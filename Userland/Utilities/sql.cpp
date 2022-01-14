@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2022, Alex Major
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +12,7 @@
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibLine/Editor.h>
+#include <LibMain/Main.h>
 #include <LibSQL/AST/Lexer.h>
 #include <LibSQL/AST/Token.h>
 #include <LibSQL/SQLClient.h>
@@ -322,7 +324,7 @@ private:
     }
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     String database_name(getlogin());
     String file_to_source;
@@ -336,7 +338,7 @@ int main(int argc, char** argv)
     args_parser.add_option(file_to_read, "File to read", "read", 'r', "file");
     args_parser.add_option(file_to_source, "File to source", "source", 's', "file");
     args_parser.add_option(suppress_sqlrc, "Don't read ~/.sqlrc", "no-sqlrc", 'n');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     SQLRepl repl(database_name);
 

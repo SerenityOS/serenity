@@ -1,15 +1,17 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022, Alex Major
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
 {
     int power_state_switch_node = open("/sys/firmware/power_state", O_WRONLY);
     if (power_state_switch_node < 0) {
