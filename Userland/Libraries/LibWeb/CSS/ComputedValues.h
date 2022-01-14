@@ -135,7 +135,7 @@ public:
 
     Optional<Color> fill() const { return m_inherited.fill; }
     Optional<Color> stroke() const { return m_inherited.stroke; }
-    Optional<Length> const& stroke_width() const { return m_inherited.stroke_width; }
+    Optional<LengthPercentage> const& stroke_width() const { return m_inherited.stroke_width; }
 
     Vector<CSS::Transformation> transformations() const { return m_noninherited.transformations; }
 
@@ -158,7 +158,7 @@ protected:
 
         Optional<Color> fill;
         Optional<Color> stroke;
-        Optional<Length> stroke_width;
+        Optional<LengthPercentage> stroke_width;
     } m_inherited;
 
     struct {
@@ -256,7 +256,7 @@ public:
 
     void set_fill(Color value) { m_inherited.fill = value; }
     void set_stroke(Color value) { m_inherited.stroke = value; }
-    void set_stroke_width(Length value) { m_inherited.stroke_width = value; }
+    void set_stroke_width(LengthPercentage value) { m_inherited.stroke_width = value; }
 };
 
 }

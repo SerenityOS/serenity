@@ -59,8 +59,12 @@ Optional<float> SVGGraphicsElement::stroke_width() const
         return {};
     // FIXME: Converting to pixels isn't really correct - values should be in "user units"
     //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
-    if (auto width = layout_node()->computed_values().stroke_width(); width.has_value())
-        return width->to_px(*layout_node());
+    if (auto width = layout_node()->computed_values().stroke_width(); width.has_value()) {
+        // Resolved relative to the "Scaled viewport size": https://www.w3.org/TR/2017/WD-fill-stroke-3-20170413/#scaled-viewport-size
+        // FIXME: This isn't right, but it's something.
+        auto scaled_viewport_size = CSS::Length::make_px((client_width() + client_height()) * 0.5f);
+        return width->resolved(scaled_viewport_size).to_px(*layout_node());
+    }
     return {};
 }
 
