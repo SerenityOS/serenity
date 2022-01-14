@@ -5,29 +5,26 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <stdio.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio dpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio dpath"));
 
     mode_t mode = 0666;
-    Vector<const char*> paths;
+    Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     // FIXME: add -m for file modes
     args_parser.add_positional_argument(paths, "Paths of FIFOs to create", "paths");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     int exit_code = 0;
-
     for (auto path : paths) {
-        if (mkfifo(path, mode) < 0) {
+        auto error_or_void = Core::System::mkfifo(path, mode);
+        if (error_or_void.is_error()) {
             perror("mkfifo");
             exit_code = 1;
         }
