@@ -248,7 +248,8 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
 
     builder.append("<!DOCTYPE html>\n");
     builder.append("<html>\n");
-    builder.append("<head><title>Index of ");
+    builder.append("<head><meta charset=\"utf-8\">\n");
+    builder.append("<title>Index of ");
     builder.append(escape_html_entities(requested_path));
     builder.append("</title><style>\n");
     builder.append(".folder { width: 16px; height: 16px; background-image: url('data:image/png;base64,");
