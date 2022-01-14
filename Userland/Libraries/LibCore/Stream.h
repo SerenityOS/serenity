@@ -516,6 +516,11 @@ public:
         // Otherwise, let's try an extra read just in case there's something
         // in our receive buffer.
         auto stream_nread = TRY(stream().read(buffer.slice(buffer_nread)));
+
+        // Fill the internal buffer if it has run dry.
+        if (m_buffered_size == 0)
+            TRY(populate_read_buffer());
+
         return buffer_nread + stream_nread;
     }
 
