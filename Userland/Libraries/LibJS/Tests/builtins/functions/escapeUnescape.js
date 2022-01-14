@@ -4,6 +4,7 @@ test("escape", () => {
         ["äöü", "%E4%F6%FC"],
         ["ć", "%u0107"],
         ["@*_+-./", "@*_+-./"],
+        ["\ud834\udf06", "%uD834%uDF06"],
     ].forEach(test => {
         expect(escape(test[0])).toBe(test[1]);
     });
