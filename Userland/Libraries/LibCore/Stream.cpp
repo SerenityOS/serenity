@@ -341,15 +341,15 @@ ErrorOr<void> Socket::connect_inet(int fd, SocketAddress const& address)
     return {};
 }
 
-ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer)
+ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer, int flags)
 {
     if (!is_open()) {
         return Error::from_errno(ENOTCONN);
     }
 
-    ssize_t rc = ::recv(m_fd, buffer.data(), buffer.size(), 0);
+    ssize_t rc = ::recv(m_fd, buffer.data(), buffer.size(), flags);
     if (rc < 0) {
-        return Error::from_errno(errno);
+        return Error::from_syscall("recv", -errno);
     }
 
     m_last_read_was_eof = rc == 0;
@@ -554,6 +554,11 @@ ErrorOr<void> LocalSocket::send_fd(int fd)
     (void)fd;
     return Error::from_string_literal("File descriptor passing not supported on this platform");
 #endif
+}
+
+ErrorOr<size_t> LocalSocket::read_without_waiting(Bytes buffer)
+{
+    return m_helper.read(buffer, MSG_DONTWAIT);
 }
 
 }

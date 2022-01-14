@@ -229,7 +229,7 @@ public:
     int fd() const { return m_fd; }
     void set_fd(int fd) { m_fd = fd; }
 
-    ErrorOr<size_t> read(Bytes);
+    ErrorOr<size_t> read(Bytes, int flags = 0);
     ErrorOr<size_t> write(ReadonlyBytes);
 
     bool is_eof() const { return !is_open() || m_last_read_was_eof; }
@@ -412,6 +412,7 @@ public:
 
     ErrorOr<int> receive_fd(int flags);
     ErrorOr<void> send_fd(int fd);
+    ErrorOr<size_t> read_without_waiting(Bytes buffer);
 
     virtual ~LocalSocket() { close(); }
 
