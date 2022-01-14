@@ -405,6 +405,11 @@ void ImageEditor::resize_event(GUI::ResizeEvent& event)
 
 void ImageEditor::keydown_event(GUI::KeyEvent& event)
 {
+    if (event.key() == Key_Delete && !selection().is_empty() && active_layer()) {
+        active_layer()->erase_selection(selection());
+        return;
+    }
+
     if (m_active_tool)
         m_active_tool->on_keydown(event);
 }
