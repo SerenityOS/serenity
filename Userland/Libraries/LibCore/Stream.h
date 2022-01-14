@@ -81,60 +81,6 @@ public:
     virtual ErrorOr<off_t> size();
 };
 
-enum class GetAddrInfoError {
-    NoAddressInFamily = EAI_ADDRFAMILY,
-    TemporaryFailure = EAI_AGAIN,
-    PermanentFailure = EAI_FAIL,
-    BadFlags = EAI_BADFLAGS,
-    UnsupportedFamily = EAI_FAMILY,
-    OutOfMemory = EAI_MEMORY,
-    NoNetworkAddressesForHost = EAI_NODATA,
-    UnknownService = EAI_NONAME,
-    ServiceNotAvailable = EAI_SERVICE,
-    UnsupportedSocketType = EAI_SOCKTYPE,
-    System = EAI_SYSTEM,
-};
-
-class SocketError {
-public:
-    SocketError(GetAddrInfoError error)
-        : m_value(error)
-    {
-    }
-    SocketError(ErrorOr<void> const& error)
-        : m_value(error)
-    {
-    }
-
-    // TRY() compatibility
-    SocketError release_error() { return *this; }
-    void release_value() { }
-
-    bool is_error() const
-    {
-        return m_value.has<GetAddrInfoError>() || m_value.get<ErrorOr<void>>().is_error();
-    }
-    bool is_success() const { return !is_error(); }
-
-    bool is_kresult() { return m_value.has<ErrorOr<void>>(); }
-    bool is_getaddrinfo_error() { return m_value.has<GetAddrInfoError>(); }
-
-    ErrorOr<void> as_kresult() { return m_value.get<ErrorOr<void>>(); }
-    GetAddrInfoError as_getaddrinfo_error()
-    {
-        return m_value.get<GetAddrInfoError>();
-    }
-
-    StringView getaddrinfo_error_string()
-    {
-        VERIFY(is_getaddrinfo_error());
-        return { gai_strerror(static_cast<int>(as_getaddrinfo_error())) };
-    }
-
-private:
-    Variant<ErrorOr<void>, GetAddrInfoError> m_value;
-};
-
 /// The Socket class is the base class for all concrete BSD-style socket
 /// classes. Sockets are non-seekable streams which can be read byte-wise.
 class Socket : public Stream {
@@ -180,7 +126,7 @@ protected:
     static ErrorOr<int> create_fd(SocketDomain, SocketType);
     // FIXME: This will need to be updated when IPv6 socket arrives. Perhaps a
     //        base class for all address types is appropriate.
-    static Result<IPv4Address, SocketError> resolve_host(String const&, SocketType);
+    static ErrorOr<IPv4Address> resolve_host(String const&, SocketType);
 
     static ErrorOr<void> connect_local(int fd, String const& path);
     static ErrorOr<void> connect_inet(int fd, SocketAddress const&);
@@ -194,7 +140,7 @@ public:
     virtual bool is_connected() = 0;
     /// Reconnects the socket to the given host and port. Returns EALREADY if
     /// is_connected() is true.
-    virtual SocketError reconnect(String const& host, u16 port) = 0;
+    virtual ErrorOr<void> reconnect(String const& host, u16 port) = 0;
     /// Connects the socket to the given socket address (IP address + port).
     /// Returns EALREADY is_connected() is true.
     virtual ErrorOr<void> reconnect(SocketAddress const&) = 0;
@@ -220,8 +166,8 @@ class File final : public SeekableStream {
     AK_MAKE_NONCOPYABLE(File);
 
 public:
-    static ErrorOr<File> open(StringView const& filename, OpenMode, mode_t = 0644);
-    static ErrorOr<File> adopt_fd(int fd, OpenMode);
+    static ErrorOr<NonnullOwnPtr<File>> open(StringView const& filename, OpenMode, mode_t = 0644);
+    static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode);
 
     File(File&& other) { operator=(move(other)); }
 
@@ -307,9 +253,9 @@ private:
 
 class TCPSocket final : public Socket {
 public:
-    static Result<TCPSocket, SocketError> connect(String const& host, u16 port);
-    static ErrorOr<TCPSocket> connect(SocketAddress const& address);
-    static ErrorOr<TCPSocket> adopt_fd(int fd);
+    static ErrorOr<NonnullOwnPtr<TCPSocket>> connect(String const& host, u16 port);
+    static ErrorOr<NonnullOwnPtr<TCPSocket>> connect(SocketAddress const& address);
+    static ErrorOr<NonnullOwnPtr<TCPSocket>> adopt_fd(int fd);
 
     TCPSocket(TCPSocket&& other)
         : Socket(static_cast<Socket&&>(other))
@@ -364,8 +310,8 @@ private:
 
 class UDPSocket final : public Socket {
 public:
-    static Result<UDPSocket, SocketError> connect(String const& host, u16 port);
-    static ErrorOr<UDPSocket> connect(SocketAddress const& address);
+    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(String const& host, u16 port);
+    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(SocketAddress const& address);
 
     UDPSocket(UDPSocket&& other)
         : Socket(static_cast<Socket&&>(other))
@@ -394,7 +340,7 @@ public:
             // datagram to be discarded. That's not very nice, so let's bail
             // early, telling the caller that he should allocate a bigger
             // buffer.
-            return EMSGSIZE;
+            return Error::from_errno(EMSGSIZE);
         }
 
         return m_helper.read(buffer);
@@ -432,7 +378,7 @@ private:
 
 class LocalSocket final : public Socket {
 public:
-    static ErrorOr<LocalSocket> connect(String const& path);
+    static ErrorOr<NonnullOwnPtr<LocalSocket>> connect(String const& path);
 
     LocalSocket(LocalSocket&& other)
         : Socket(static_cast<Socket&&>(other))
@@ -498,7 +444,7 @@ class BufferedHelper {
 
 public:
     template<StreamLike U>
-    BufferedHelper(Badge<U>, T stream, ByteBuffer buffer)
+    BufferedHelper(Badge<U>, NonnullOwnPtr<T> stream, ByteBuffer buffer)
         : m_stream(move(stream))
         , m_buffer(move(buffer))
     {
@@ -520,29 +466,29 @@ public:
     }
 
     template<template<typename> typename BufferedType>
-    static ErrorOr<BufferedType<T>> create_buffered(T&& stream, size_t buffer_size)
+    static ErrorOr<NonnullOwnPtr<BufferedType<T>>> create_buffered(NonnullOwnPtr<T> stream, size_t buffer_size)
     {
         if (!buffer_size)
-            return EINVAL;
-        if (!stream.is_open())
-            return ENOTCONN;
+            return Error::from_errno(EINVAL);
+        if (!stream->is_open())
+            return Error::from_errno(ENOTCONN);
 
         auto maybe_buffer = ByteBuffer::create_uninitialized(buffer_size);
         if (!maybe_buffer.has_value())
-            return ENOMEM;
+            return Error::from_errno(ENOMEM);
 
-        return BufferedType<T> { move(stream), maybe_buffer.release_value() };
+        return adopt_nonnull_own_or_enomem(new BufferedType<T>(move(stream), maybe_buffer.release_value()));
     }
 
-    T& stream() { return m_stream; }
-    T const& stream() const { return m_stream; }
+    T& stream() { return *m_stream; }
+    T const& stream() const { return *m_stream; }
 
     ErrorOr<size_t> read(Bytes buffer)
     {
         if (!stream().is_open())
-            return ENOTCONN;
+            return Error::from_errno(ENOTCONN);
         if (!buffer.size())
-            return ENOBUFS;
+            return Error::from_errno(ENOBUFS);
 
         // Let's try to take all we can from the buffer first.
         size_t buffer_nread = 0;
@@ -569,7 +515,7 @@ public:
 
         // Otherwise, let's try an extra read just in case there's something
         // in our receive buffer.
-        auto stream_nread = TRY(m_stream.read(buffer.slice(buffer_nread)));
+        auto stream_nread = TRY(stream().read(buffer.slice(buffer_nread)));
         return buffer_nread + stream_nread;
     }
 
@@ -590,10 +536,10 @@ public:
     ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates)
     {
         if (!stream().is_open())
-            return ENOTCONN;
+            return Error::from_errno(ENOTCONN);
 
         if (buffer.is_empty())
-            return ENOBUFS;
+            return Error::from_errno(ENOBUFS);
 
         // We fill the buffer through can_read_line.
         if (!TRY(can_read_line()))
@@ -611,7 +557,7 @@ public:
                 // violating the invariant twice the next time the user attempts
                 // to read, which is No Good. So let's give a descriptive error
                 // to the caller about why it can't read.
-                return EMSGSIZE;
+                return Error::from_errno(EMSGSIZE);
             }
 
             m_buffer.span().slice(0, m_buffered_size).copy_to(buffer);
@@ -715,12 +661,12 @@ private:
             return ReadonlyBytes {};
 
         auto fillable_slice = m_buffer.span().slice(m_buffered_size);
-        auto nread = TRY(m_stream.read(fillable_slice));
+        auto nread = TRY(stream().read(fillable_slice));
         m_buffered_size += nread;
         return fillable_slice.slice(0, nread);
     }
 
-    T m_stream;
+    NonnullOwnPtr<T> m_stream;
     // FIXME: Replacing this with a circular buffer would be really nice and
     //        would avoid excessive copies; however, right now
     //        AK::CircularDuplexBuffer inlines its entire contents, and that
@@ -740,7 +686,7 @@ class BufferedSeekable final : public SeekableStream {
     friend BufferedHelper<T>;
 
 public:
-    static ErrorOr<BufferedSeekable<T>> create(T&& stream, size_t buffer_size = 16384)
+    static ErrorOr<NonnullOwnPtr<BufferedSeekable<T>>> create(NonnullOwnPtr<T> stream, size_t buffer_size = 16384)
     {
         return BufferedHelper<T>::template create_buffered<BufferedSeekable>(move(stream), buffer_size);
     }
@@ -773,7 +719,7 @@ public:
     virtual ~BufferedSeekable() override { }
 
 private:
-    BufferedSeekable(T stream, ByteBuffer buffer)
+    BufferedSeekable(NonnullOwnPtr<T> stream, ByteBuffer buffer)
         : m_helper(Badge<BufferedSeekable<T>> {}, move(stream), buffer)
     {
     }
@@ -786,7 +732,7 @@ class BufferedSocket final : public Socket {
     friend BufferedHelper<T>;
 
 public:
-    static ErrorOr<BufferedSocket<T>> create(T&& stream, size_t buffer_size = 16384)
+    static ErrorOr<NonnullOwnPtr<BufferedSocket<T>>> create(NonnullOwnPtr<T> stream, size_t buffer_size = 16384)
     {
         return BufferedHelper<T>::template create_buffered<BufferedSocket>(move(stream), buffer_size);
     }
@@ -830,7 +776,7 @@ public:
     virtual ~BufferedSocket() override { }
 
 private:
-    BufferedSocket(T stream, ByteBuffer buffer)
+    BufferedSocket(NonnullOwnPtr<T> stream, ByteBuffer buffer)
         : m_helper(Badge<BufferedSocket<T>> {}, move(stream), buffer)
     {
         setup_notifier();
@@ -858,14 +804,14 @@ using BufferedLocalSocket = BufferedSocket<LocalSocket>;
 template<SocketLike T>
 class BasicReusableSocket final : public ReusableSocket {
 public:
-    static Result<BasicReusableSocket<T>, SocketError> connect(String const& host, u16 port)
+    static ErrorOr<NonnullOwnPtr<BasicReusableSocket<T>>> connect(String const& host, u16 port)
     {
-        return BasicReusableSocket { TRY(T::connect(host, port)) };
+        return make<BasicReusableSocket<T>>(TRY(T::connect(host, port)));
     }
 
-    static ErrorOr<BasicReusableSocket<T>> connect(SocketAddress const& address)
+    static ErrorOr<NonnullOwnPtr<BasicReusableSocket<T>>> connect(SocketAddress const& address)
     {
-        return BasicReusableSocket { TRY(T::connect(address)) };
+        return make<BasicReusableSocket<T>>(TRY(T::connect(address)));
     }
 
     virtual bool is_connected() override
@@ -873,13 +819,13 @@ public:
         return m_socket.is_open();
     }
 
-    virtual SocketError reconnect(String const& host, u16 port) override
+    virtual ErrorOr<void> reconnect(String const& host, u16 port) override
     {
         if (is_connected())
-            return SocketError { Error::from_errno(EALREADY) };
+            return Error::from_errno(EALREADY);
 
         m_socket = TRY(T::connect(host, port));
-        return SocketError { {} };
+        return {};
     }
 
     virtual ErrorOr<void> reconnect(SocketAddress const& address) override
@@ -904,12 +850,12 @@ public:
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_socket.set_close_on_exec(enabled); }
 
 private:
-    BasicReusableSocket(T&& socket)
+    BasicReusableSocket(NonnullOwnPtr<T> socket)
         : m_socket(move(socket))
     {
     }
 
-    T m_socket;
+    NonnullOwnPtr<T> m_socket;
 };
 
 using ReusableTCPSocket = BasicReusableSocket<TCPSocket>;

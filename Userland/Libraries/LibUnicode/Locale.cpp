@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -746,9 +746,12 @@ Optional<Language> __attribute__((weak)) language_from_string(StringView) { retu
 Optional<Territory> __attribute__((weak)) territory_from_string(StringView) { return {}; }
 Optional<ScriptTag> __attribute__((weak)) script_tag_from_string(StringView) { return {}; }
 Optional<Currency> __attribute__((weak)) currency_from_string(StringView) { return {}; }
+Optional<CalendarName> __attribute__((weak)) calendar_name_from_string(StringView) { return {}; }
+Optional<DateField> __attribute__((weak)) date_field_from_string(StringView) { return {}; }
 Optional<Key> __attribute__((weak)) key_from_string(StringView) { return {}; }
 Optional<ListPatternType> __attribute__((weak)) list_pattern_type_from_string(StringView) { return {}; }
 Optional<ListPatternStyle> __attribute__((weak)) list_pattern_style_from_string(StringView) { return {}; }
+Optional<DisplayPattern> __attribute__((weak)) get_locale_display_patterns(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_language_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_territory_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_script_mapping(StringView, StringView) { return {}; }
@@ -756,24 +759,45 @@ Optional<StringView> __attribute__((weak)) get_locale_long_currency_mapping(Stri
 Optional<StringView> __attribute__((weak)) get_locale_short_currency_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_narrow_currency_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_numeric_currency_mapping(StringView, StringView) { return {}; }
-
-Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency, Style style)
-{
-    switch (style) {
-    case Style::Long:
-        return get_locale_long_currency_mapping(locale, currency);
-    case Style::Short:
-        return get_locale_short_currency_mapping(locale, currency);
-    case Style::Narrow:
-        return get_locale_narrow_currency_mapping(locale, currency);
-    case Style::Numeric:
-        return get_locale_numeric_currency_mapping(locale, currency);
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
+Optional<StringView> __attribute__((weak)) get_locale_calendar_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_long_date_field_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_short_date_field_mapping(StringView, StringView) { return {}; }
+Optional<StringView> __attribute__((weak)) get_locale_narrow_date_field_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_key_mapping(StringView, StringView) { return {}; }
+
+// https://www.unicode.org/reports/tr35/tr35-39/tr35-general.html#Display_Name_Elements
+Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id)
+{
+    auto language_id = move(locale_id.language_id);
+    VERIFY(language_id.language.has_value());
+
+    auto patterns = Unicode::get_locale_display_patterns(locale);
+    if (!patterns.has_value())
+        return {};
+
+    auto primary_tag = get_locale_language_mapping(locale, *language_id.language).value_or(*language_id.language);
+    Optional<StringView> script;
+    Optional<StringView> region;
+
+    if (language_id.script.has_value())
+        script = get_locale_script_mapping(locale, *language_id.script).value_or(*language_id.script);
+    if (language_id.region.has_value())
+        region = get_locale_territory_mapping(locale, *language_id.region).value_or(*language_id.region);
+
+    Optional<String> secondary_tag;
+
+    if (script.has_value() && region.has_value())
+        secondary_tag = patterns->locale_separator.replace("{0}"sv, *script).replace("{1}"sv, *region);
+    else if (script.has_value())
+        secondary_tag = *script;
+    else if (region.has_value())
+        secondary_tag = *region;
+
+    if (!secondary_tag.has_value())
+        return primary_tag;
+
+    return patterns->locale_pattern.replace("{0}"sv, primary_tag).replace("{1}"sv, *secondary_tag);
+}
 
 Vector<StringView> get_locale_key_mapping_list(StringView locale, StringView keyword)
 {

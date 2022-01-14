@@ -8,10 +8,12 @@
 
 #include "Game.h"
 #include "SettingsDialog.h"
+#include <AK/URL.h>
 #include <Games/Hearts/HeartsGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -31,9 +33,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domains("Hearts");
 
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man6/Hearts.md") }));
+    TRY(Desktop::Launcher::seal_allowlist());
+
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());
@@ -90,6 +98,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man6/Hearts.md"), "/bin/Help");
+    })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Hearts", app_icon, window)));
 
     window->set_resizable(false);

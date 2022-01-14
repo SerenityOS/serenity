@@ -123,8 +123,8 @@ void Console::handle_queue_update(u16 queue_index)
 
 void Console::setup_multiport()
 {
-    m_control_receive_buffer = make<Memory::RingBuffer>("VirtIOConsole control receive queue", CONTROL_BUFFER_SIZE);
-    m_control_transmit_buffer = make<Memory::RingBuffer>("VirtIOConsole control transmit queue", CONTROL_BUFFER_SIZE);
+    m_control_receive_buffer = make<Memory::RingBuffer>("VirtIOConsole control receive queue"sv, CONTROL_BUFFER_SIZE);
+    m_control_transmit_buffer = make<Memory::RingBuffer>("VirtIOConsole control transmit queue"sv, CONTROL_BUFFER_SIZE);
 
     auto& queue = get_queue(CONTROL_RECEIVEQ);
     SpinlockLocker queue_lock(queue.lock());

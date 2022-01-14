@@ -20,7 +20,7 @@ public:
     void start();
 
 private:
-    Client(Core::Stream::BufferedTCPSocket, Core::Object* parent);
+    Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket>, Core::Object* parent);
 
     ErrorOr<bool> handle_request(ReadonlyBytes);
     ErrorOr<void> send_response(InputStream&, HTTP::HttpRequest const&, String const& content_type);
@@ -31,7 +31,7 @@ private:
     ErrorOr<void> handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const&);
     bool verify_credentials(Vector<HTTP::HttpRequest::Header> const&);
 
-    Core::Stream::BufferedTCPSocket m_socket;
+    NonnullOwnPtr<Core::Stream::BufferedTCPSocket> m_socket;
 };
 
 }

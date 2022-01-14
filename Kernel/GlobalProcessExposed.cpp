@@ -480,8 +480,8 @@ private:
                     break;
                 }
             } else {
-                process_object.add("pledge", String());
-                process_object.add("veil", String());
+                process_object.add("pledge", ""sv);
+                process_object.add("veil", ""sv);
             }
 
             process_object.add("pid", process.pid().value());
@@ -973,8 +973,7 @@ ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSRootDirectory::lookup(Strin
         return maybe_candidate.release_value();
     }
 
-    String process_directory_name = name;
-    auto pid = process_directory_name.to_uint<unsigned>();
+    auto pid = name.to_uint<unsigned>();
     if (!pid.has_value())
         return ESRCH;
     auto actual_pid = pid.value();

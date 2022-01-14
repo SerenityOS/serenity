@@ -668,26 +668,35 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
     graphs_container->layout()->set_margins(4);
 
     auto& cpu_graph_group_box = graphs_container->add<GUI::GroupBox>("CPU usage");
-    cpu_graph_group_box.set_layout<GUI::HorizontalBoxLayout>();
-    cpu_graph_group_box.layout()->set_margins(6);
-    cpu_graph_group_box.set_fixed_height(120);
+    cpu_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
+
+    static constexpr size_t cpu_graphs_per_row = 4;
+    auto cpu_graph_rows = ceil_div(ProcessModel::the().cpus().size(), cpu_graphs_per_row);
+    cpu_graph_group_box.set_fixed_height(120u * cpu_graph_rows);
+
     Vector<GraphWidget&> cpu_graphs;
-    for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
-        auto& cpu_graph = cpu_graph_group_box.add<GraphWidget>();
-        cpu_graph.set_max(100);
-        cpu_graph.set_value_format(0, {
-                                          .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
-                                          .text_formatter = [](int value) {
-                                              return String::formatted("Total: {}%", value);
-                                          },
-                                      });
-        cpu_graph.set_value_format(1, {
-                                          .graph_color_role = ColorRole::SyntaxPreprocessorValue,
-                                          .text_formatter = [](int value) {
-                                              return String::formatted("Kernel: {}%", value);
-                                          },
-                                      });
-        cpu_graphs.append(cpu_graph);
+    for (auto row = 0u; row < cpu_graph_rows; ++row) {
+        auto& cpu_graph_row = cpu_graph_group_box.add<GUI::Widget>();
+        cpu_graph_row.set_layout<GUI::HorizontalBoxLayout>();
+        cpu_graph_row.layout()->set_margins(6);
+        cpu_graph_row.set_fixed_height(108);
+        for (auto i = 0u; i < cpu_graphs_per_row; ++i) {
+            auto& cpu_graph = cpu_graph_row.add<GraphWidget>();
+            cpu_graph.set_max(100);
+            cpu_graph.set_value_format(0, {
+                                              .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
+                                              .text_formatter = [](int value) {
+                                                  return String::formatted("Total: {}%", value);
+                                              },
+                                          });
+            cpu_graph.set_value_format(1, {
+                                              .graph_color_role = ColorRole::SyntaxPreprocessorValue,
+                                              .text_formatter = [](int value) {
+                                                  return String::formatted("Kernel: {}%", value);
+                                              },
+                                          });
+            cpu_graphs.append(cpu_graph);
+        }
     }
     ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) {
         float sum_cpu = 0;

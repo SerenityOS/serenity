@@ -45,7 +45,7 @@ ErrorOr<void> NVMeController::initialize()
 
     // Map only until doorbell register for the controller
     // Queues will individually map the doorbell register respectively
-    m_controller_regs = Memory::map_typed_writable<volatile ControllerRegister>(PhysicalAddress(m_bar));
+    m_controller_regs = TRY(Memory::map_typed_writable<volatile ControllerRegister>(PhysicalAddress(m_bar)));
 
     calculate_doorbell_stride();
     TRY(create_admin_queue(irq));
@@ -250,7 +250,7 @@ ErrorOr<void> NVMeController::create_admin_queue(u8 irq)
         auto buffer = TRY(MM.allocate_dma_buffer_pages(sq_size, "Admin SQ queue", Memory::Region::Access::ReadWrite, sq_dma_pages));
         sq_dma_region = move(buffer);
     }
-    auto doorbell_regs = Memory::map_typed_writable<volatile DoorbellRegister>(PhysicalAddress(m_bar + REG_SQ0TDBL_START));
+    auto doorbell_regs = TRY(Memory::map_typed_writable<volatile DoorbellRegister>(PhysicalAddress(m_bar + REG_SQ0TDBL_START)));
 
     m_admin_queue = TRY(NVMeQueue::try_create(0, irq, qdepth, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs)));
 
@@ -317,7 +317,7 @@ ErrorOr<void> NVMeController::create_io_queue(u8 irq, u8 qid)
     }
 
     auto queue_doorbell_offset = REG_SQ0TDBL_START + ((2 * qid) * (4 << m_dbl_stride));
-    auto doorbell_regs = Memory::map_typed_writable<volatile DoorbellRegister>(PhysicalAddress(m_bar + queue_doorbell_offset));
+    auto doorbell_regs = TRY(Memory::map_typed_writable<volatile DoorbellRegister>(PhysicalAddress(m_bar + queue_doorbell_offset)));
 
     m_queues.append(TRY(NVMeQueue::try_create(qid, irq, IO_QUEUE_SIZE, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs))));
     m_queues.last().enable_interrupts();

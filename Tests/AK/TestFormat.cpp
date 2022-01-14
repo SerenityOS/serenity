@@ -10,6 +10,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <math.h>
+#include <unistd.h>
 
 TEST_CASE(is_integral_works_properly)
 {
@@ -232,6 +233,8 @@ TEST_CASE(file_descriptor)
     EXPECT_EQ("Hello, World!\nfoobar\n"sv, StringView { buffer.span().trim(nread) });
 
     fclose(file);
+
+    unlink(filename);
 }
 
 TEST_CASE(floating_point_numbers)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -85,6 +85,11 @@ enum class Style : u8 {
     Numeric,
 };
 
+struct DisplayPattern {
+    StringView locale_pattern;
+    StringView locale_separator;
+};
+
 struct ListPatterns {
     StringView start;
     StringView middle;
@@ -146,9 +151,14 @@ Optional<Language> language_from_string(StringView language);
 Optional<Territory> territory_from_string(StringView territory);
 Optional<ScriptTag> script_tag_from_string(StringView script_tag);
 Optional<Currency> currency_from_string(StringView currency);
+Optional<CalendarName> calendar_name_from_string(StringView calendar);
+Optional<DateField> date_field_from_string(StringView calendar);
 Optional<Key> key_from_string(StringView key);
 Optional<ListPatternType> list_pattern_type_from_string(StringView list_pattern_type);
 Optional<ListPatternStyle> list_pattern_style_from_string(StringView list_pattern_style);
+
+Optional<DisplayPattern> get_locale_display_patterns(StringView locale);
+Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id);
 
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
@@ -157,7 +167,10 @@ Optional<StringView> get_locale_long_currency_mapping(StringView locale, StringV
 Optional<StringView> get_locale_short_currency_mapping(StringView locale, StringView currency);
 Optional<StringView> get_locale_narrow_currency_mapping(StringView locale, StringView currency);
 Optional<StringView> get_locale_numeric_currency_mapping(StringView locale, StringView currency);
-Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency, Style style);
+Optional<StringView> get_locale_calendar_mapping(StringView locale, StringView calendar);
+Optional<StringView> get_locale_long_date_field_mapping(StringView locale, StringView date_field);
+Optional<StringView> get_locale_short_date_field_mapping(StringView locale, StringView date_field);
+Optional<StringView> get_locale_narrow_date_field_mapping(StringView locale, StringView date_field);
 Optional<StringView> get_locale_key_mapping(StringView locale, StringView keyword);
 Vector<StringView> get_locale_key_mapping_list(StringView locale, StringView keyword);
 

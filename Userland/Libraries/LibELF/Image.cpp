@@ -126,7 +126,14 @@ bool Image::parse()
         return false;
     }
 
-    if (!validate_program_headers(header(), m_size, m_buffer, m_size, nullptr, m_verbose_logging)) {
+    auto result_or_error = validate_program_headers(header(), m_size, { m_buffer, m_size }, nullptr, m_verbose_logging);
+    if (result_or_error.is_error()) {
+        if (m_verbose_logging)
+            dbgln("ELF::Image::parse(): Failed validating ELF Program Headers");
+        m_valid = false;
+        return false;
+    }
+    if (!result_or_error.value()) {
         if (m_verbose_logging)
             dbgln("ELF::Image::parse(): ELF Program Headers not valid");
         m_valid = false;

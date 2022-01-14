@@ -198,33 +198,46 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         // NOTE: The ISODateTime struct inside parsed_result will be moved into `result` at the end of this path to avoid mismatching names.
         //       Thus, all remaining references to `result` in this path actually refers to `parsed_result`.
 
-        // d. Assert: result.[[TimeZoneName]] is not undefined.
-        VERIFY(parsed_result.time_zone.name.has_value());
+        // d. Let timeZoneName be result.[[TimeZoneName]].
+        auto time_zone_name = parsed_result.time_zone.name;
 
-        // e. Let offsetString be result.[[TimeZoneOffsetString]].
+        // e. Assert: timeZoneName is not undefined.
+        VERIFY(time_zone_name.has_value());
+
+        // f. If ParseText(! StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
+        if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
+            // i. If ! IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
+            if (!is_valid_time_zone_name(*time_zone_name))
+                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
+
+            // ii. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).
+            time_zone_name = canonicalize_time_zone_name(*time_zone_name);
+        }
+
+        // g. Let offsetString be result.[[TimeZoneOffsetString]].
         offset_string = move(parsed_result.time_zone.offset);
 
-        // f. If result.[[TimeZoneZ]] is true, then
+        // h. If result.[[TimeZoneZ]] is true, then
         if (parsed_result.time_zone.z) {
             // i. Set offsetBehaviour to exact.
             offset_behavior = OffsetBehavior::Exact;
         }
-        // g. Else if offsetString is undefined, then
+        // i. Else if offsetString is undefined, then
         else if (!offset_string.has_value()) {
             // i. Set offsetBehaviour to wall.
             offset_behavior = OffsetBehavior::Wall;
         }
 
-        // h. Let timeZone be ? CreateTemporalTimeZone(result.[[TimeZoneName]]).
-        time_zone = TRY(create_temporal_time_zone(global_object, *parsed_result.time_zone.name));
+        // j. Let timeZone be ! CreateTemporalTimeZone(timeZoneName).
+        time_zone = MUST(create_temporal_time_zone(global_object, *time_zone_name));
 
-        // i. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
+        // k. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
         auto temporal_calendar_like = parsed_result.date_time.calendar.has_value()
             ? js_string(vm, parsed_result.date_time.calendar.value())
             : js_undefined();
         calendar = TRY(to_temporal_calendar_with_iso_default(global_object, temporal_calendar_like));
 
-        // j. Set matchBehaviour to match minutes.
+        // l. Set matchBehaviour to match minutes.
         match_behavior = MatchBehavior::MatchMinutes;
 
         // See NOTE above about why this is done.

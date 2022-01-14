@@ -298,12 +298,13 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    String interpreter_path;
-
-    if (!ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_image_data.data(), elf_image_data.size(), (const u8*)elf_image_data.data(), elf_image_data.size(), &interpreter_path)) {
+    StringBuilder interpreter_path_builder;
+    auto result_or_error = ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_image_data.data(), elf_image_data.size(), elf_image_data, &interpreter_path_builder);
+    if (result_or_error.is_error() || !result_or_error.value()) {
         warnln("Invalid ELF headers");
         return -1;
     }
+    auto interpreter_path = interpreter_path_builder.string_view();
 
     auto& header = *reinterpret_cast<const ElfW(Ehdr)*>(elf_image_data.data());
 
@@ -311,7 +312,7 @@ int main(int argc, char** argv)
 
     if (elf_image.is_dynamic()) {
         if (interpreter_path.is_null()) {
-            interpreter_path = "/usr/lib/Loader.so";
+            interpreter_path = "/usr/lib/Loader.so"sv;
             warnln("Warning: Dynamic ELF object has no interpreter path. Using: {}", interpreter_path);
         }
 

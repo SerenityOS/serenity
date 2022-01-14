@@ -180,8 +180,8 @@ ErrorOr<void> KeyboardMapperWidget::save_to_file(StringView filename)
     // Write to file.
     String file_content = map_json.to_string();
     auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Write));
-    TRY(file.write(file_content.bytes()));
-    file.close();
+    TRY(file->write(file_content.bytes()));
+    file->close();
 
     m_modified = false;
     m_filename = filename;

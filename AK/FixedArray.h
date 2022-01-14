@@ -14,6 +14,8 @@
 
 namespace AK {
 
+// FixedArray is an Array with a size only known at run-time.
+// It guarantees to only allocate when being constructed, and to only deallocate when being destructed.
 template<typename T>
 class FixedArray {
 public:
@@ -53,7 +55,7 @@ public:
         return MUST(try_clone());
     }
 
-    // NOTE: Nobody can ever use these functions, since it would be impossible to make them OOM-safe due to their signatures. We just explicitly delete them.
+    // Nobody can ever use these functions, since it would be impossible to make them OOM-safe due to their signatures. We just explicitly delete them.
     FixedArray(FixedArray<T> const&) = delete;
     FixedArray<T>& operator=(FixedArray<T> const&) = delete;
 
@@ -64,21 +66,17 @@ public:
         other.m_size = 0;
         other.m_elements = nullptr;
     }
-    // NOTE: Nobody uses this function, so we just explicitly delete it.
+    // This function would violate the contract, as it would need to deallocate this FixedArray. As it also has no use case, we delete it.
     FixedArray<T>& operator=(FixedArray<T>&&) = delete;
 
     ~FixedArray()
-    {
-        clear();
-    }
-
-    void clear()
     {
         if (!m_elements)
             return;
         for (size_t i = 0; i < m_size; ++i)
             m_elements[i].~T();
         kfree_sized(m_elements, sizeof(T) * m_size);
+        // NOTE: should prevent use-after-free early
         m_size = 0;
         m_elements = nullptr;
     }

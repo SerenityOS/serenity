@@ -25,9 +25,6 @@ private:
     RefPtr<Layer> m_layer_being_moved;
     Gfx::IntPoint m_event_origin;
     Gfx::IntPoint m_layer_origin;
-
-    bool m_is_panning { false };
-    Gfx::FloatPoint m_saved_pan_origin;
 };
 
 }

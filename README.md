@@ -152,6 +152,8 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **Leon Albrecht** - [Hendiadyoin1](https://github.com/Hendiadyoin1)
 * **Tim Schumacher** - [timschumi](https://github.com/timschumi)
 * **Marcus Nilsson** - [metmo](https://github.com/metmo)
+* **Gegga Thor** - [Xexxa](https://github.com/Xexxa)
+* **kleines Filmröllchen** - [kleinesfilmroellchen](https://github.com/kleinesfilmroellchen)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 

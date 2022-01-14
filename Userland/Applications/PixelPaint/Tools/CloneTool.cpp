@@ -102,7 +102,7 @@ void CloneTool::on_second_paint(Layer const*, GUI::PaintEvent& event)
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
 
-    auto sample_pos = m_editor->image_position_to_editor_position(m_sample_location.value());
+    auto sample_pos = m_editor->content_to_frame_position(m_sample_location.value());
     // We don't want the marker to be a single pixel and hide the color.
     auto offset = AK::max(2, size() / 2);
     Gfx::IntRect rect = {

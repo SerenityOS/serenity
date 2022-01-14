@@ -39,7 +39,7 @@
 
 namespace Kernel {
 
-MutexProtected<String>& hostname();
+MutexProtected<OwnPtr<KString>>& hostname();
 Time kgettimeofday();
 
 #define ENUMERATE_PLEDGE_PROMISES         \
@@ -438,7 +438,7 @@ public:
     NonnullOwnPtrVector<KString> const& arguments() const { return m_arguments; };
     NonnullOwnPtrVector<KString> const& environment() const { return m_environment; };
 
-    ErrorOr<void> exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, int recursion_depth = 0);
+    ErrorOr<void> exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, Thread*& new_main_thread, u32& prev_flags, int recursion_depth = 0);
 
     ErrorOr<LoadResult> load(NonnullRefPtr<OpenFileDescription> main_program_description, RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
 
@@ -528,7 +528,7 @@ private:
     void kill_threads_except_self();
     void kill_all_threads();
     ErrorOr<void> dump_core();
-    bool dump_perfcore();
+    ErrorOr<void> dump_perfcore();
     bool create_perf_events_buffer_if_needed();
     void delete_perf_events_buffer();
 

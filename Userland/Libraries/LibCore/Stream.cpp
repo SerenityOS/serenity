@@ -90,14 +90,14 @@ ErrorOr<off_t> SeekableStream::size()
     return seek_result.value();
 }
 
-ErrorOr<File> File::open(StringView const& filename, OpenMode mode, mode_t permissions)
+ErrorOr<NonnullOwnPtr<File>> File::open(StringView const& filename, OpenMode mode, mode_t permissions)
 {
-    File file { mode };
-    TRY(file.open_path(filename, permissions));
+    auto file = TRY(adopt_nonnull_own_or_enomem(new (nothrow) File(mode)));
+    TRY(file->open_path(filename, permissions));
     return file;
 }
 
-ErrorOr<File> File::adopt_fd(int fd, OpenMode mode)
+ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode)
 {
     if (fd < 0) {
         return Error::from_errno(EBADF);
@@ -108,8 +108,8 @@ ErrorOr<File> File::adopt_fd(int fd, OpenMode mode)
         return Error::from_errno(EINVAL);
     }
 
-    File file { mode };
-    file.m_fd = fd;
+    auto file = TRY(adopt_nonnull_own_or_enomem(new (nothrow) File(mode)));
+    file->m_fd = fd;
     return file;
 }
 
@@ -164,7 +164,7 @@ ErrorOr<size_t> File::read(Bytes buffer)
         // NOTE: POSIX says that if the fd is not open for reading, the call
         //       will return EBADF. Since we already know whether we can or
         //       can't read the file, let's avoid a syscall.
-        return EBADF;
+        return Error::from_errno(EBADF);
     }
 
     ssize_t rc = ::read(m_fd, buffer.data(), buffer.size());
@@ -180,7 +180,7 @@ ErrorOr<size_t> File::write(ReadonlyBytes buffer)
 {
     if (!has_flag(m_mode, OpenMode::Write)) {
         // NOTE: Same deal as Read.
-        return EBADF;
+        return Error::from_errno(EBADF);
     }
 
     ssize_t rc = ::write(m_fd, buffer.data(), buffer.size());
@@ -273,7 +273,7 @@ ErrorOr<int> Socket::create_fd(SocketDomain domain, SocketType type)
     return rc;
 }
 
-Result<IPv4Address, SocketError> Socket::resolve_host(String const& host, SocketType type)
+ErrorOr<IPv4Address> Socket::resolve_host(String const& host, SocketType type)
 {
     int socket_type;
     switch (type) {
@@ -297,13 +297,13 @@ Result<IPv4Address, SocketError> Socket::resolve_host(String const& host, Socket
     int rc = getaddrinfo(host.characters(), nullptr, &hints, &results);
     if (rc != 0) {
         if (rc == EAI_SYSTEM) {
-            return SocketError { Error::from_errno(errno) };
-        } else {
-            return SocketError { static_cast<GetAddrInfoError>(rc) };
+            return Error::from_errno(errno);
         }
+
+        return Error::from_string_literal(gai_strerror(rc));
     }
 
-    auto socket_address = bit_cast<struct sockaddr_in*>(results->ai_addr);
+    auto* socket_address = bit_cast<struct sockaddr_in*>(results->ai_addr);
     NetworkOrdered<u32> network_ordered_address { socket_address->sin_addr.s_addr };
 
     freeaddrinfo(results);
@@ -343,7 +343,7 @@ ErrorOr<void> Socket::connect_inet(int fd, SocketAddress const& address)
 ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer)
 {
     if (!is_open()) {
-        return ENOTCONN;
+        return Error::from_errno(ENOTCONN);
     }
 
     ssize_t rc = ::recv(m_fd, buffer.data(), buffer.size(), 0);
@@ -364,7 +364,7 @@ ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer)
 ErrorOr<size_t> PosixSocketHelper::write(ReadonlyBytes buffer)
 {
     if (!is_open()) {
-        return ENOTCONN;
+        return Error::from_errno(ENOTCONN);
     }
 
     ssize_t rc = ::send(m_fd, buffer.data(), buffer.size(), 0);
@@ -445,23 +445,18 @@ void PosixSocketHelper::setup_notifier()
         m_notifier = Core::Notifier::construct(m_fd, Core::Notifier::Read);
 }
 
-Result<TCPSocket, SocketError> TCPSocket::connect(String const& host, u16 port)
+ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(String const& host, u16 port)
 {
     auto ip_address = TRY(resolve_host(host, SocketType::Stream));
-
-    auto maybe_socket = connect(SocketAddress { ip_address, port });
-    if (maybe_socket.is_error()) {
-        return SocketError { maybe_socket.release_error() };
-    }
-    return maybe_socket.release_value();
+    return connect(SocketAddress { ip_address, port });
 }
 
-ErrorOr<TCPSocket> TCPSocket::connect(SocketAddress const& address)
+ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(SocketAddress const& address)
 {
-    TCPSocket socket;
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TCPSocket()));
 
     auto fd = TRY(create_fd(SocketDomain::Inet, SocketType::Stream));
-    socket.m_helper.set_fd(fd);
+    socket->m_helper.set_fd(fd);
 
     auto result = connect_inet(fd, address);
     if (result.is_error()) {
@@ -469,26 +464,26 @@ ErrorOr<TCPSocket> TCPSocket::connect(SocketAddress const& address)
         return result.release_error();
     }
 
-    socket.setup_notifier();
+    socket->setup_notifier();
     return socket;
 }
 
-ErrorOr<TCPSocket> TCPSocket::adopt_fd(int fd)
+ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::adopt_fd(int fd)
 {
     if (fd < 0) {
         return Error::from_errno(EBADF);
     }
 
-    TCPSocket socket;
-    socket.m_helper.set_fd(fd);
-    socket.setup_notifier();
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TCPSocket()));
+    socket->m_helper.set_fd(fd);
+    socket->setup_notifier();
     return socket;
 }
 
 ErrorOr<size_t> PosixSocketHelper::pending_bytes() const
 {
     if (!is_open()) {
-        return ENOTCONN;
+        return Error::from_errno(ENOTCONN);
     }
 
     int value;
@@ -500,22 +495,18 @@ ErrorOr<size_t> PosixSocketHelper::pending_bytes() const
     return static_cast<size_t>(value);
 }
 
-Result<UDPSocket, SocketError> UDPSocket::connect(String const& host, u16 port)
+ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(String const& host, u16 port)
 {
     auto ip_address = TRY(resolve_host(host, SocketType::Datagram));
-    auto maybe_socket = connect(SocketAddress { ip_address, port });
-    if (maybe_socket.is_error()) {
-        return SocketError { maybe_socket.release_error() };
-    }
-    return maybe_socket.release_value();
+    return connect(SocketAddress { ip_address, port });
 }
 
-ErrorOr<UDPSocket> UDPSocket::connect(SocketAddress const& address)
+ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(SocketAddress const& address)
 {
-    UDPSocket socket;
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) UDPSocket()));
 
     auto fd = TRY(create_fd(SocketDomain::Inet, SocketType::Datagram));
-    socket.m_helper.set_fd(fd);
+    socket->m_helper.set_fd(fd);
 
     auto result = connect_inet(fd, address);
     if (result.is_error()) {
@@ -523,16 +514,16 @@ ErrorOr<UDPSocket> UDPSocket::connect(SocketAddress const& address)
         return result.release_error();
     }
 
-    socket.setup_notifier();
+    socket->setup_notifier();
     return socket;
 }
 
-ErrorOr<LocalSocket> LocalSocket::connect(String const& path)
+ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(String const& path)
 {
-    LocalSocket socket;
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LocalSocket()));
 
     auto fd = TRY(create_fd(SocketDomain::Local, SocketType::Stream));
-    socket.m_helper.set_fd(fd);
+    socket->m_helper.set_fd(fd);
 
     auto result = connect_local(fd, path);
     if (result.is_error()) {
@@ -540,7 +531,7 @@ ErrorOr<LocalSocket> LocalSocket::connect(String const& path)
         return result.release_error();
     }
 
-    socket.setup_notifier();
+    socket->setup_notifier();
     return socket;
 }
 

@@ -3,5 +3,6 @@
 - [Section 3: Library functions (basename, isatty, POSIX functions, etc.)](man3/index.html)
 - [Section 4: Special Files (audio, mem, etc.)](man4/index.html)
 - [Section 5: File formats (getopt convention, Shell, SystemServer)](man5/index.html)
+- [Section 6: Games (2048, Chess, FlappyBug, etc.)](man6/index.html)
 - [Section 7: Miscellanea (mitigations, sys filesystem, SystemServer, etc.)](man7/index.html)
 - [Section 8: Sysadmin tools (dmesg, pls, sysctl, useradd, etc.)](man8/index.html)

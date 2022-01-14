@@ -28,8 +28,6 @@ struct Light {
     float constant_attenuation { 1.0f };  // This is referred to `k0i` in the OpenGL spec
     float linear_attenuation { 0.0f };    // This is referred to `k1i` in the OpenGL spec
     float quadratic_attenuation { 0.0f }; // This is referred to `k2i` in the OpenGL spec
-
-    float spotlight_cutoff_angle_rads { AK::Pi<float> / 180.0f };
 };
 
 }

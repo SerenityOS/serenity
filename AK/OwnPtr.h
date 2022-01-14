@@ -210,7 +210,7 @@ inline ErrorOr<NonnullOwnPtr<T>> adopt_nonnull_own_or_enomem(T* object)
 {
     auto result = adopt_own_if_nonnull(object);
     if (!result)
-        return ENOMEM;
+        return Error::from_errno(ENOMEM);
     return result.release_nonnull();
 }
 

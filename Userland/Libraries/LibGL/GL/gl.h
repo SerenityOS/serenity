@@ -93,6 +93,8 @@ extern "C" {
 #define GL_SHADING_LANGUAGE_VERSION 0x8B8C
 
 // Get parameters
+#define GL_COLOR_MATERIAL_FACE 0x0B55
+#define GL_COLOR_MATERIAL_MODE 0x0B56
 #define GL_COLOR_MATERIAL 0x0B57
 #define GL_FOG_START 0x0B63
 #define GL_FOG_END 0x0B64
@@ -536,17 +538,23 @@ GLAPI void glTexImage1D(GLenum target, GLint level, GLint internalFormat, GLsize
 GLAPI void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid const* data);
 GLAPI void glTexImage3D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, GLvoid const* data);
 GLAPI void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data);
+GLAPI void glTexCoord1f(GLfloat s);
+GLAPI void glTexCoord1fv(GLfloat const* v);
 GLAPI void glTexCoord2d(GLdouble s, GLdouble t);
 GLAPI void glTexCoord2dv(GLdouble const* v);
 GLAPI void glTexCoord2f(GLfloat s, GLfloat t);
 GLAPI void glTexCoord2fv(GLfloat const* v);
 GLAPI void glTexCoord2i(GLint s, GLint t);
+GLAPI void glTexCoord3f(GLfloat s, GLfloat t, GLfloat r);
+GLAPI void glTexCoord3fv(GLfloat const* v);
+GLAPI void glTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q);
 GLAPI void glTexCoord4fv(const GLfloat* v);
 GLAPI void glTexParameteri(GLenum target, GLenum pname, GLint param);
 GLAPI void glTexParameterf(GLenum target, GLenum pname, GLfloat param);
 GLAPI void glTexEnvf(GLenum target, GLenum pname, GLfloat param);
 GLAPI void glTexEnvi(GLenum target, GLenum pname, GLint param);
 GLAPI void glBindTexture(GLenum target, GLuint texture);
+GLAPI GLboolean glIsTexture(GLuint texture);
 GLAPI void glActiveTexture(GLenum texture);
 GLAPI void glGetBooleanv(GLenum pname, GLboolean* data);
 GLAPI void glGetDoublev(GLenum pname, GLdouble* params);
@@ -579,6 +587,7 @@ GLAPI void glStencilFunc(GLenum func, GLint ref, GLuint mask);
 GLAPI void glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
 GLAPI void glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass);
 GLAPI void glStencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
+GLAPI void glStencilMask(GLuint mask);
 GLAPI void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz);
 GLAPI void glNormal3fv(GLfloat const* v);
 GLAPI void glNormalPointer(GLenum type, GLsizei stride, void const* pointer);

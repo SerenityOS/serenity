@@ -9,6 +9,7 @@ set(SOURCES
     AbstractSlider.cpp
     AbstractTableView.cpp
     AbstractView.cpp
+    AbstractZoomPanWidget.cpp
     Action.cpp
     ActionGroup.cpp
     Application.cpp

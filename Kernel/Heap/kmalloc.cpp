@@ -267,8 +267,6 @@ struct KmallocGlobalData {
             pte->set_present(true);
         }
 
-        MM.flush_tlb(&MM.kernel_page_directory(), new_subheap_base, new_subheap_size / PAGE_SIZE);
-
         add_subheap(new_subheap_base.as_ptr(), new_subheap_size);
         return true;
     }

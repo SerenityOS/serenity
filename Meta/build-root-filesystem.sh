@@ -22,10 +22,6 @@ die() {
     exit 1
 }
 
-if [ "$(id -u)" != 0 ]; then
-    die "this script needs to run as root"
-fi
-
 [ -z "$SERENITY_SOURCE_DIR" ] && die "SERENITY_SOURCE_DIR is not set"
 [ -d "$SERENITY_SOURCE_DIR/Base" ] || die "$SERENITY_SOURCE_DIR/Base doesn't exist"
 

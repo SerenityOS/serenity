@@ -1,0 +1,30 @@
+From 0a5b0b9c2bf5befae8e2e831e75a95f2f0bb26a3 Mon Sep 17 00:00:00 2001
+From: Kenneth Myhra <kennethmyhra@gmail.com>
+Date: Tue, 11 Jan 2022 19:56:13 +0100
+Subject: [PATCH 3/3] filemanager/ext.c: Use str_ncasecmp instead of
+ strncasecmp if SerenityOS
+
+- [ ] Local?
+- [X] Should be merged to upstream?
+- [ ] Resolves issue(s) with our side of things
+- [ ] Hack
+---
+ src/filemanager/ext.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/filemanager/ext.c b/src/filemanager/ext.c
+index 33baf8c..a48d6e1 100644
+--- a/src/filemanager/ext.c
++++ b/src/filemanager/ext.c
+@@ -950,7 +950,7 @@ regex_command_for (void *target, const vfs_path_t * filename_vpath, const char *
+                 if (case_insense)
+                 {
+                     p += 2;
+-                    cmp_func = strncasecmp;
++                    cmp_func = str_ncasecmp;
+                 }
+ 
+                 if (*p == '.' && file_len >= (size_t) (q - p))
+-- 
+2.25.1
+

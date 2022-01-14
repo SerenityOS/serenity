@@ -182,6 +182,20 @@ public:
         return try_ensure_capacity_slowpath(new_capacity);
     }
 
+    /// Return a span of bytes past the end of this ByteBuffer for writing.
+    /// Ensures that the required space is available.
+    ErrorOr<Bytes> get_bytes_for_writing(size_t length)
+    {
+        TRY(try_ensure_capacity(size() + length));
+        return Bytes { data() + size(), length };
+    }
+
+    /// Like get_bytes_for_writing, but crashes if allocation fails.
+    Bytes must_get_bytes_for_writing(size_t length)
+    {
+        return MUST(get_bytes_for_writing(length));
+    }
+
     void append(char byte)
     {
         MUST(try_append(byte));
