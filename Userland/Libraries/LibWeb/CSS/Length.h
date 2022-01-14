@@ -44,6 +44,7 @@ public:
 
     static Length make_auto();
     static Length make_px(float value);
+    Length percentage_of(Percentage const&) const;
 
     Length resolved(const Length& fallback_for_undefined, const Layout::Node& layout_node, float reference_for_percent) const;
     Length resolved_or_auto(const Layout::Node& layout_node, float reference_for_percent) const;
