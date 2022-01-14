@@ -55,6 +55,7 @@ class MediaQueryListEvent;
 class NumericStyleValue;
 class OverflowStyleValue;
 class Percentage;
+class PercentageStyleValue;
 class PositionStyleValue;
 class PropertyOwningCSSStyleDeclaration;
 class Screen;
