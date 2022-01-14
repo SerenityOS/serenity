@@ -64,4 +64,9 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(symbol_to_primitive);
 };
 
+String time_string(double time);
+String date_string(double time);
+String time_zone_string(double time);
+String to_date_string(double time);
+
 }
