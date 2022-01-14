@@ -170,3 +170,22 @@ void KeypadValue::set_to_0()
     m_value.set_to_0();
     m_decimal_places.set_to_0();
 }
+
+void KeypadValue::round(unsigned rounding_threshold)
+{
+    while (m_decimal_places > rounding_threshold) {
+        auto const result = m_value.divided_by(BigInteger::UnsignedBigInteger { 10 });
+        bool const need_increment = result.remainder.to_u64() > 4;
+
+        m_value = result.quotient;
+        if (need_increment)
+            m_value.set_to(m_value.plus(BigInteger::UnsignedBigInteger { 1 }));
+
+        m_decimal_places.set_to(m_decimal_places.minus(BigInteger::UnsignedBigInteger { 1 }));
+
+        if (m_value == BigInteger::UnsignedBigInteger { 0 }) {
+            set_to_0();
+            return;
+        }
+    }
+}

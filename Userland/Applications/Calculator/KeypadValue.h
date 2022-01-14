@@ -33,6 +33,8 @@ public:
     KeypadValue invert() const;
     KeypadValue operator/(KeypadValue const&) const;
 
+    void round(unsigned);
+
     void set_to_0();
 
 private:
