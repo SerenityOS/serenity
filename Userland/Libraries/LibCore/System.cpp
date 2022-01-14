@@ -919,4 +919,21 @@ ErrorOr<Vector<gid_t>> getgroups()
     return groups;
 }
 
+ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev)
+{
+    if (pathname.is_null())
+        return Error::from_syscall("mknod"sv, -EFAULT);
+
+#ifdef __serenity__
+    Syscall::SC_mknod_params params { { pathname.characters_without_null_termination(), pathname.length() }, mode, dev };
+    int rc = syscall(SC_mknod, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("mknod"sv, rc, {});
+#else
+    String path_string = pathname;
+    if (::mknod(path_string.characters(), mode, dev) < 0)
+        return Error::from_syscall("mknod"sv, -errno);
+    return {};
+#endif
+}
+
 }
