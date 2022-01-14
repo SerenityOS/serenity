@@ -109,7 +109,7 @@ DatePrototype::~DatePrototype()
 }
 
 // thisTimeValue ( value ), https://tc39.es/ecma262/#thistimevalue
-static ThrowCompletionOr<Value> this_time_value(GlobalObject& global_object, Value value)
+ThrowCompletionOr<Value> this_time_value(GlobalObject& global_object, Value value)
 {
     // 1. If Type(value) is Object and value has a [[DateValue]] internal slot, then
     if (value.is_object() && is<Date>(value.as_object())) {
