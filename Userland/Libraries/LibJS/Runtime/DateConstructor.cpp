@@ -106,7 +106,7 @@ static Value parse_simplified_iso8601(GlobalObject& global_object, const String&
     // https://tc39.es/ecma262/#sec-date.parse:
     // "When the UTC offset representation is absent, date-only forms are interpreted as a UTC time and date-time forms are interpreted as a local time."
     if (!timezone.has_value() && hours.has_value())
-        time_ms += local_tza(time_ms, false);
+        time_ms = utc_time(time_ms);
 
     if (timezone == '-')
         time_ms += *timezone_hours * 3'600'000 + *timezone_minutes * 60'000;
