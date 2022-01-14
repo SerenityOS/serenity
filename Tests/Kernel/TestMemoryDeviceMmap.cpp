@@ -23,7 +23,11 @@ static ALWAYS_INLINE bool mem_chunk(int fd, u64 base, u64 length)
 {
     u64 mmoffset = base % sysconf(_SC_PAGESIZE);
     void* mmp = mmap(NULL, mmoffset + length, PROT_READ, MAP_SHARED, fd, base - mmoffset);
-    return mmp != MAP_FAILED;
+    if (mmp == MAP_FAILED)
+        return false;
+    if (munmap(mmp, mmoffset + length) < 0)
+        perror("munmap");
+    return true;
 }
 
 enum class ReadResult {
