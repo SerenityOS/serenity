@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/TypeCasts.h>
@@ -13,6 +14,7 @@
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BigInt.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -21,8 +23,17 @@
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibTimeZone/TimeZone.h>
+#include <LibUnicode/DateTimeFormat.h>
+#include <LibUnicode/Locale.h>
 
 namespace JS {
+
+// Table 62: Names of days of the week, https://tc39.es/ecma262/#sec-todatestring-day-names
+static constexpr auto day_names = AK::Array { "Sun"sv, "Mon"sv, "Tue"sv, "Wed"sv, "Thu"sv, "Fri"sv, "Sat"sv };
+
+// Table 63: Names of months of the year, https://tc39.es/ecma262/#sec-todatestring-day-names
+static constexpr auto month_names = AK::Array { "Jan"sv, "Feb"sv, "Mar"sv, "Apr"sv, "May"sv, "Jun"sv, "Jul"sv, "Aug"sv, "Sep"sv, "Oct"sv, "Nov"sv, "Dec"sv };
 
 DatePrototype::DatePrototype(GlobalObject& global_object)
     : PrototypeObject(*global_object.object_prototype())
@@ -736,6 +747,101 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
 
     auto string = this_object->string();
     return js_string(vm, move(string));
+}
+
+// 21.4.4.41.1 TimeString ( tv ), https://tc39.es/ecma262/#sec-timestring
+String time_string(double time)
+{
+    // 1. Let hour be the String representation of HourFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    auto hour = hour_from_time(time);
+
+    // 2. Let minute be the String representation of MinFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    auto minute = min_from_time(time);
+
+    // 3. Let second be the String representation of SecFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    auto second = sec_from_time(time);
+
+    // 4. Return the string-concatenation of hour, ":", minute, ":", second, the code unit 0x0020 (SPACE), and "GMT".
+    return String::formatted("{:02}:{:02}:{:02} GMT", hour, minute, second);
+}
+
+// 21.4.4.41.2 DateString ( tv ), https://tc39.es/ecma262/#sec-datestring
+String date_string(double time)
+{
+    // 1. Let weekday be the Name of the entry in Table 62 with the Number WeekDay(tv).
+    auto weekday = day_names[week_day(time)];
+
+    // 2. Let month be the Name of the entry in Table 63 with the Number MonthFromTime(tv).
+    auto month = month_names[month_from_time(time)];
+
+    // 3. Let day be the String representation of DateFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    auto day = date_from_time(time);
+
+    // 4. Let yv be YearFromTime(tv).
+    auto year = year_from_time(time);
+
+    // 5. If yv ≥ +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
+    auto year_sign = year >= 0 ? ""sv : "-"sv;
+
+    // 6. Let year be the String representation of abs(ℝ(yv)), formatted as a decimal number.
+    year = abs(year);
+
+    // 7. Let paddedYear be ! StringPad(year, 4𝔽, "0", start).
+    // 8. Return the string-concatenation of weekday, the code unit 0x0020 (SPACE), month, the code unit 0x0020 (SPACE), day, the code unit 0x0020 (SPACE), yearSign, and paddedYear.
+    return String::formatted("{} {} {:02} {}{:04}", weekday, month, day, year_sign, year);
+}
+
+// 21.4.4.41.3 TimeZoneString ( tv ), https://tc39.es/ecma262/#sec-timezoneestring
+String time_zone_string(double time)
+{
+    // 1. Let offset be LocalTZA(tv, true).
+    auto offset = local_tza(time, true);
+
+    StringView offset_sign;
+
+    // 2. If offset ≥ +0𝔽, then
+    if (offset >= 0) {
+        // a. Let offsetSign be "+".
+        offset_sign = "+"sv;
+        // b. Let absOffset be offset.
+    }
+    // 3. Else,
+    else {
+        // a. Let offsetSign be "-".
+        offset_sign = "-"sv;
+        // b. Let absOffset be -offset.
+        offset *= -1;
+    }
+
+    // 4. Let offsetMin be the String representation of MinFromTime(absOffset), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    auto offset_min = min_from_time(offset);
+
+    // 5. Let offsetHour be the String representation of HourFromTime(absOffset), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    auto offset_hour = hour_from_time(offset);
+
+    // 6. Let tzName be an implementation-defined string that is either the empty String or the string-concatenation of the code unit 0x0020 (SPACE), the code unit 0x0028 (LEFT PARENTHESIS), an implementation-defined timezone name, and the code unit 0x0029 (RIGHT PARENTHESIS).
+    auto tz_name = TimeZone::current_time_zone();
+
+    // Most implementations seem to prefer the long-form display name of the time zone. Not super important, but we may as well match that behavior.
+    if (auto long_name = Unicode::get_time_zone_name(Unicode::default_locale(), tz_name, Unicode::CalendarPatternStyle::Long); long_name.has_value())
+        tz_name = long_name.release_value();
+
+    // 7. Return the string-concatenation of offsetSign, offsetHour, offsetMin, and tzName.
+    return String::formatted("{}{:02}{:02} ({})", offset_sign, offset_hour, offset_min, tz_name);
+}
+
+// 21.4.4.41.4 ToDateString ( tv ), https://tc39.es/ecma262/#sec-todatestring
+String to_date_string(double time)
+{
+    // 1. If tv is NaN, return "Invalid Date".
+    if (Value(time).is_nan())
+        return "Invalid Date"sv;
+
+    // 2. Let t be LocalTime(tv).
+    time = local_time(time);
+
+    // 3. Return the string-concatenation of DateString(t), the code unit 0x0020 (SPACE), TimeString(t), and TimeZoneString(tv).
+    return String::formatted("{} {}{}", date_string(time), time_string(time), time_zone_string(time));
 }
 
 // 14.1.1 Date.prototype.toTemporalInstant ( ), https://tc39.es/proposal-temporal/#sec-date.prototype.totemporalinstant
