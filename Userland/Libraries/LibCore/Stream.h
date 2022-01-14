@@ -413,6 +413,7 @@ public:
 
     ErrorOr<int> receive_fd(int flags);
     ErrorOr<void> send_fd(int fd);
+    ErrorOr<pid_t> peer_pid() const;
     ErrorOr<size_t> read_without_waiting(Bytes buffer);
 
     virtual ~LocalSocket() { close(); }
