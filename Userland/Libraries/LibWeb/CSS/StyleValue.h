@@ -564,14 +564,14 @@ private:
 
 class BorderRadiusStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<BorderRadiusStyleValue> create(Length const& horizontal_radius, Length const& vertical_radius)
+    static NonnullRefPtr<BorderRadiusStyleValue> create(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
     {
         return adopt_ref(*new BorderRadiusStyleValue(horizontal_radius, vertical_radius));
     }
     virtual ~BorderRadiusStyleValue() override { }
 
-    Length const& horizontal_radius() const { return m_horizontal_radius; }
-    Length const& vertical_radius() const { return m_vertical_radius; }
+    LengthPercentage const& horizontal_radius() const { return m_horizontal_radius; }
+    LengthPercentage const& vertical_radius() const { return m_vertical_radius; }
     bool is_elliptical() const { return m_is_elliptical; }
 
     virtual String to_string() const override
@@ -590,7 +590,7 @@ public:
     }
 
 private:
-    BorderRadiusStyleValue(Length const& horizontal_radius, Length const& vertical_radius)
+    BorderRadiusStyleValue(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
         : StyleValue(Type::BorderRadius)
         , m_horizontal_radius(horizontal_radius)
         , m_vertical_radius(vertical_radius)
@@ -600,13 +600,21 @@ private:
 
     virtual void visit_lengths(Function<void(CSS::Length&)> visitor) override
     {
-        visitor(m_horizontal_radius);
-        visitor(m_vertical_radius);
+        if (!m_horizontal_radius.is_percentage()) {
+            Length temp = m_horizontal_radius.length();
+            visitor(temp);
+            m_horizontal_radius = move(temp);
+        }
+        if (!m_vertical_radius.is_percentage()) {
+            Length temp = m_vertical_radius.length();
+            visitor(temp);
+            m_vertical_radius = move(temp);
+        }
     }
 
     bool m_is_elliptical;
-    Length m_horizontal_radius;
-    Length m_vertical_radius;
+    LengthPercentage m_horizontal_radius;
+    LengthPercentage m_vertical_radius;
 };
 
 class BoxShadowStyleValue final : public StyleValue {
