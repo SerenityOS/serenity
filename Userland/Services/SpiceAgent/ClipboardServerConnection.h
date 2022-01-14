@@ -15,7 +15,7 @@
 class ClipboardServerConnection final
     : public IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>
     , public ClipboardClientEndpoint {
-    C_OBJECT(ClipboardServerConnection);
+    IPC_CLIENT_CONNECTION(ClipboardServerConnection, "/tmp/portal/clipboard")
 
 public:
     Function<void()> on_data_changed;
@@ -23,8 +23,8 @@ public:
     void set_bitmap(Gfx::Bitmap const& bitmap);
 
 private:
-    ClipboardServerConnection()
-        : IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, "/tmp/portal/clipboard")
+    ClipboardServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+        : IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, move(socket))
     {
     }
     virtual void clipboard_data_changed(String const&) override

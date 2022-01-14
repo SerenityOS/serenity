@@ -31,14 +31,16 @@ class WebSocket;
 namespace Web::HTML {
 
 class WebSocketClientManager : public Core::Object {
-    C_OBJECT(WebSocketClientManager)
+    C_OBJECT_ABSTRACT(WebSocketClientManager)
 public:
     static WebSocketClientManager& the();
 
     RefPtr<Protocol::WebSocket> connect(const AK::URL&);
 
 private:
-    WebSocketClientManager();
+    static ErrorOr<NonnullRefPtr<WebSocketClientManager>> try_create();
+    WebSocketClientManager(NonnullRefPtr<Protocol::WebSocketClient>);
+
     RefPtr<Protocol::WebSocketClient> m_websocket_client;
 };
 

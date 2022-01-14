@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::EventLoop loop;
 
-    auto audio_client = Audio::ClientConnection::construct();
+    auto audio_client = TRY(Audio::ClientConnection::try_create());
     auto maybe_loader = Audio::Loader::create(path);
     if (maybe_loader.is_error()) {
         warnln("Failed to load audio file: {}", maybe_loader.error().description);

@@ -20,7 +20,7 @@ static RefPtr<Client> s_the = nullptr;
 Client& Client::the()
 {
     if (!s_the || !s_the->is_open())
-        s_the = Client::construct();
+        s_the = Client::try_create().release_value_but_fixme_should_propagate_errors();
     return *s_the;
 }
 

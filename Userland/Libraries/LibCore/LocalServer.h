@@ -8,6 +8,7 @@
 
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
+#include <LibCore/Stream.h>
 
 namespace Core {
 
@@ -20,9 +21,9 @@ public:
     bool is_listening() const { return m_listening; }
     bool listen(const String& address);
 
-    RefPtr<LocalSocket> accept();
+    ErrorOr<NonnullOwnPtr<Stream::LocalSocket>> accept();
 
-    Function<void(NonnullRefPtr<Core::LocalSocket>)> on_accept;
+    Function<void(NonnullOwnPtr<Stream::LocalSocket>)> on_accept;
 
 private:
     explicit LocalServer(Object* parent = nullptr);

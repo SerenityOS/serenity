@@ -71,7 +71,7 @@ public:
             m_editor->set_prompt(prompt_for_level(open_indents));
         };
 
-        m_sql_client = SQL::SQLClient::construct();
+        m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
 
         m_sql_client->on_connected = [this](int connection_id, String const& connected_to_database) {
             outln("Connected to \033[33;1m{}\033[0m", connected_to_database);

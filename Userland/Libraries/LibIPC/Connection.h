@@ -11,8 +11,8 @@
 #include <AK/Try.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
+#include <LibCore/Stream.h>
 #include <LibCore/Timer.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
@@ -39,9 +39,9 @@ public:
     virtual void die() { }
 
 protected:
-    explicit ConnectionBase(IPC::Stub&, NonnullRefPtr<Core::LocalSocket>, u32 local_endpoint_magic);
+    explicit ConnectionBase(IPC::Stub&, NonnullOwnPtr<Core::Stream::LocalSocket>, u32 local_endpoint_magic);
 
-    Core::LocalSocket& socket() { return *m_socket; }
+    Core::Stream::LocalSocket& socket() { return *m_socket; }
 
     virtual void may_have_become_unresponsive() { }
     virtual void did_become_responsive() { }
@@ -57,10 +57,9 @@ protected:
 
     IPC::Stub& m_local_stub;
 
-    NonnullRefPtr<Core::LocalSocket> m_socket;
+    NonnullOwnPtr<Core::Stream::LocalSocket> m_socket;
     RefPtr<Core::Timer> m_responsiveness_timer;
 
-    RefPtr<Core::Notifier> m_notifier;
     NonnullOwnPtrVector<Message> m_unprocessed_messages;
     ByteBuffer m_unprocessed_bytes;
 
@@ -70,10 +69,10 @@ protected:
 template<typename LocalEndpoint, typename PeerEndpoint>
 class Connection : public ConnectionBase {
 public:
-    Connection(IPC::Stub& local_stub, NonnullRefPtr<Core::LocalSocket> socket)
+    Connection(IPC::Stub& local_stub, NonnullOwnPtr<Core::Stream::LocalSocket> socket)
         : ConnectionBase(local_stub, move(socket), LocalEndpoint::static_magic())
     {
-        m_notifier->on_ready_to_read = [this] {
+        m_socket->on_ready_to_read = [this] {
             NonnullRefPtr protect = *this;
             // FIXME: Do something about errors.
             (void)drain_messages_from_peer();
@@ -122,9 +121,9 @@ protected:
                 break;
             index += sizeof(message_size);
             auto remaining_bytes = ReadonlyBytes { bytes.data() + index, message_size };
-            if (auto message = LocalEndpoint::decode_message(remaining_bytes, m_socket->fd())) {
+            if (auto message = LocalEndpoint::decode_message(remaining_bytes, *m_socket)) {
                 m_unprocessed_messages.append(message.release_nonnull());
-            } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, m_socket->fd())) {
+            } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, *m_socket)) {
                 m_unprocessed_messages.append(message.release_nonnull());
             } else {
                 dbgln("Failed to parse a message");

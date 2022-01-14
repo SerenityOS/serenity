@@ -29,7 +29,7 @@
 
 namespace WebContent {
 
-ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket)
+ClientConnection::ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
     : IPC::ClientConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket), 1)
     , m_page_host(PageHost::create(*this))
 {

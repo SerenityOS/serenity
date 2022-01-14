@@ -15,7 +15,7 @@ namespace SQL {
 class SQLClient
     : public IPC::ServerConnection<SQLClientEndpoint, SQLServerEndpoint>
     , public SQLClientEndpoint {
-    C_OBJECT(SQLClient);
+    IPC_CLIENT_CONNECTION(SQLClient, "/tmp/portal/sql")
     virtual ~SQLClient();
 
     Function<void(int, String const&)> on_connected;
@@ -27,8 +27,8 @@ class SQLClient
     Function<void(int, int)> on_results_exhausted;
 
 private:
-    SQLClient()
-        : IPC::ServerConnection<SQLClientEndpoint, SQLServerEndpoint>(*this, "/tmp/portal/sql")
+    SQLClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+        : IPC::ServerConnection<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket))
     {
     }
 
