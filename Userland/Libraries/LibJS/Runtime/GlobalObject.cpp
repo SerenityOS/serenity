@@ -9,6 +9,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Hex.h>
 #include <AK/Platform.h>
+#include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
@@ -548,7 +549,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
 {
     auto string = TRY(vm.argument(0).to_string(global_object));
     StringBuilder escaped;
-    for (auto code_point : Utf8View(string)) {
+    for (auto code_point : utf8_to_utf16(string)) {
         if (code_point < 256) {
             if ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./"sv.contains(code_point))
                 escaped.append(code_point);
@@ -556,7 +557,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
                 escaped.appendff("%{:02X}", code_point);
             continue;
         }
-        escaped.appendff("%u{:04X}", code_point); // FIXME: Handle utf-16 surrogate pairs
+        escaped.appendff("%u{:04X}", code_point);
     }
     return js_string(vm, escaped.build());
 }
