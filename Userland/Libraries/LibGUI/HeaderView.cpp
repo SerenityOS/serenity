@@ -375,7 +375,17 @@ Menu& HeaderView::ensure_context_menu()
 
 void HeaderView::context_menu_event(ContextMenuEvent& event)
 {
-    ensure_context_menu().popup(event.screen_position());
+    switch (context_menu_policy()) {
+    case ContextMenuPolicy::DefaultContextMenu:
+        ensure_context_menu().popup(event.screen_position());
+        return;
+    case ContextMenuPolicy::CustomContextMenu:
+        if (on_custom_menu_requested)
+            on_custom_menu_requested(event);
+        return;
+    default:
+        return;
+    }
 }
 
 void HeaderView::leave_event(Core::Event& event)

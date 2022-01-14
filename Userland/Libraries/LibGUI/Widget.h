@@ -52,6 +52,12 @@ enum class AllowCallback {
     Yes
 };
 
+enum class ContextMenuPolicy : u8 {
+    NoContextMenu,
+    DefaultContextMenu,
+    CustomContextMenu
+};
+
 class Widget : public Core::Object {
     C_OBJECT(Widget)
 public:
@@ -283,6 +289,11 @@ public:
     void set_accepts_emoji_input(bool b) { m_accepts_emoji_input = b; }
     bool accepts_emoji_input() const { return m_accepts_emoji_input; }
 
+    void set_context_menu_policy(GUI::ContextMenuPolicy policy) { m_context_menu_policy = policy; };
+    ContextMenuPolicy context_menu_policy() const { return m_context_menu_policy; }
+
+    Function<void(ContextMenuEvent& event)> on_custom_menu_requested;
+
     virtual Gfx::IntRect children_clip_rect() const;
 
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> override_cursor() const { return m_override_cursor; }
@@ -366,6 +377,8 @@ private:
     Gfx::ColorRole m_foreground_role;
     NonnullRefPtr<Gfx::Font> m_font;
     String m_tooltip;
+
+    ContextMenuPolicy m_context_menu_policy { ContextMenuPolicy::DefaultContextMenu };
 
     Gfx::IntSize m_min_size { -1, -1 };
     Gfx::IntSize m_max_size { -1, -1 };
