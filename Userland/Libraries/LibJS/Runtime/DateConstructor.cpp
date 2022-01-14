@@ -21,7 +21,7 @@
 namespace JS {
 
 // 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
-static Value parse_simplified_iso8601(const String& iso_8601)
+static Value parse_simplified_iso8601(GlobalObject& global_object, const String& iso_8601)
 {
     // 21.4.1.15 Date Time String Format, https://tc39.es/ecma262/#sec-date-time-string-format
     GenericLexer lexer(iso_8601);
@@ -113,13 +113,12 @@ static Value parse_simplified_iso8601(const String& iso_8601)
     else if (timezone == '+')
         time_ms -= *timezone_hours * 3'600'000 + *timezone_minutes * 60'000;
 
-    // FIXME: reject time_ms if resulting value wouldn't fit in a double
-    return Value(time_ms);
+    return time_clip(global_object, Value(time_ms));
 }
 
-static Value parse_date_string(String const& date_string)
+static Value parse_date_string(GlobalObject& global_object, String const& date_string)
 {
-    auto value = parse_simplified_iso8601(date_string);
+    auto value = parse_simplified_iso8601(global_object, date_string);
     if (value.is_finite_number())
         return value;
 
@@ -199,7 +198,7 @@ ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target
     if (vm.argument_count() == 1) {
         auto value = vm.argument(0);
         if (value.is_string())
-            value = parse_date_string(value.as_string().string());
+            value = parse_date_string(global_object, value.as_string().string());
         else
             value = TRY(value.to_number(global_object));
 
@@ -288,7 +287,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 
     auto date_string = TRY(vm.argument(0).to_string(global_object));
 
-    return parse_date_string(date_string);
+    return parse_date_string(global_object, date_string);
 }
 
 // 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc
