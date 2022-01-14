@@ -352,6 +352,14 @@ ErrorOr<String> gethostname()
     return String(&hostname[0]);
 }
 
+ErrorOr<void> sethostname(StringView hostname)
+{
+    int rc = ::sethostname(hostname.characters_without_null_termination(), hostname.length());
+    if (rc < 0)
+        return Error::from_syscall("sethostname"sv, -errno);
+    return {};
+}
+
 ErrorOr<String> getcwd()
 {
     auto* cwd = ::getcwd(nullptr, 0);
