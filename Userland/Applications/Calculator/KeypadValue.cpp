@@ -39,7 +39,7 @@ KeypadValue::KeypadValue(StringView sv)
     }
 };
 
-KeypadValue KeypadValue::operator+(KeypadValue const& rhs)
+KeypadValue KeypadValue::operator+(KeypadValue const& rhs) const
 {
     return operator_helper<KeypadValue>(*this, rhs, [](KeypadValue const&, KeypadValue const& more_decimal_places, i64 less_decimal_places_equalized, i64 more_decimal_places_equalized, bool) -> KeypadValue {
         return {
@@ -49,12 +49,12 @@ KeypadValue KeypadValue::operator+(KeypadValue const& rhs)
     });
 }
 
-KeypadValue KeypadValue::operator-(KeypadValue const& rhs)
+KeypadValue KeypadValue::operator-(KeypadValue const& rhs) const
 {
     return *this + (-rhs);
 }
 
-KeypadValue KeypadValue::operator*(KeypadValue const& rhs)
+KeypadValue KeypadValue::operator*(KeypadValue const& rhs) const
 {
     return operator_helper<KeypadValue>(*this, rhs, [](KeypadValue const& less_decimal_places, KeypadValue const& more_decimal_places, i64, i64, bool) -> KeypadValue {
         return {
@@ -79,12 +79,12 @@ KeypadValue KeypadValue::invert(void) const
     return KeypadValue { 1.0 / (double)(*this) };
 }
 
-KeypadValue KeypadValue::operator/(KeypadValue const& rhs)
+KeypadValue KeypadValue::operator/(KeypadValue const& rhs) const
 {
     return KeypadValue { (double)(*this) / (double)rhs };
 }
 
-bool KeypadValue::operator<(KeypadValue const& rhs)
+bool KeypadValue::operator<(KeypadValue const& rhs) const
 {
     return operator_helper<bool>(*this, rhs, [](KeypadValue const&, KeypadValue const&, i64 less_decimal_places_equalized, i64 more_decimal_places_equalized, bool lhs_is_less) {
         if (lhs_is_less)
@@ -94,7 +94,7 @@ bool KeypadValue::operator<(KeypadValue const& rhs)
     });
 }
 
-bool KeypadValue::operator==(KeypadValue const& rhs)
+bool KeypadValue::operator==(KeypadValue const& rhs) const
 {
     return operator_helper<bool>(*this, rhs, [](KeypadValue const&, KeypadValue const&, i64 less_decimal_places_equalized, i64 more_decimal_places_equalized, bool) {
         return less_decimal_places_equalized == more_decimal_places_equalized;
@@ -114,7 +114,7 @@ bool KeypadValue::operator==(KeypadValue const& rhs)
 // Unfortunately, not all operators are symmetric, so the last boolean tells the callback whether the left-hand side
 // was the KeypadValue with less decimal places (true), or the one with more decimal places (false).
 template<typename T, typename F>
-ALWAYS_INLINE T KeypadValue::operator_helper(KeypadValue const& lhs, KeypadValue const& rhs, F callback)
+ALWAYS_INLINE T KeypadValue::operator_helper(KeypadValue const& lhs, KeypadValue const& rhs, F callback) const
 {
     KeypadValue const& less_decimal_places = (lhs.m_decimal_places < rhs.m_decimal_places) ? lhs : rhs;
     KeypadValue const& more_decimal_places = (lhs.m_decimal_places < rhs.m_decimal_places) ? rhs : lhs;

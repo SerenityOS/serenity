@@ -20,23 +20,23 @@ public:
 
     explicit KeypadValue(StringView);
 
-    KeypadValue operator+(KeypadValue const&);
-    KeypadValue operator-(KeypadValue const&);
-    KeypadValue operator*(KeypadValue const&);
+    KeypadValue operator+(KeypadValue const&) const;
+    KeypadValue operator-(KeypadValue const&) const;
+    KeypadValue operator*(KeypadValue const&) const;
     KeypadValue operator-(void) const;
-    bool operator<(KeypadValue const&);
-    bool operator==(KeypadValue const&);
+    bool operator<(KeypadValue const&) const;
+    bool operator==(KeypadValue const&) const;
 
     KeypadValue sqrt() const;
     KeypadValue invert() const;
-    KeypadValue operator/(KeypadValue const&);
+    KeypadValue operator/(KeypadValue const&) const;
 
 private:
     explicit KeypadValue(double);
     explicit operator double() const;
 
     template<typename T, typename F>
-    T operator_helper(KeypadValue const& lhs, KeypadValue const& rhs, F callback);
+    T operator_helper(KeypadValue const& lhs, KeypadValue const& rhs, F callback) const;
 
     // This class represents a pair of a value together with the amount of decimal places that value is offset by.
     // For example, if we were to represent the value -123.55 in this format, m_value would be -12355 and
