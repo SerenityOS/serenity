@@ -80,11 +80,6 @@ struct BoxShadowData {
     Color color {};
 };
 
-struct BackgroundRepeatData {
-    CSS::Repeat repeat_x;
-    CSS::Repeat repeat_y;
-};
-
 class ComputedValues {
 public:
     CSS::Float float_() const { return m_noninherited.float_; }

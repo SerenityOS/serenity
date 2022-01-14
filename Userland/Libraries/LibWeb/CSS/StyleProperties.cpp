@@ -688,16 +688,6 @@ Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) c
     }
 }
 
-Optional<BackgroundRepeatData> StyleProperties::background_repeat() const
-{
-    auto value = property(CSS::PropertyID::BackgroundRepeat);
-    if (!value.has_value() || !value.value()->is_background_repeat())
-        return {};
-
-    auto& background_repeat = value.value()->as_background_repeat();
-    return BackgroundRepeatData { background_repeat.repeat_x(), background_repeat.repeat_y() };
-}
-
 Optional<CSS::BoxShadowData> StyleProperties::box_shadow() const
 {
     auto value_or_error = property(CSS::PropertyID::BoxShadow);
