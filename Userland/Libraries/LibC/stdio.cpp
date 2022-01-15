@@ -588,7 +588,7 @@ char* fgets(char* buffer, int size, FILE* stream)
 int fgetc(FILE* stream)
 {
     VERIFY(stream);
-    char ch;
+    u8 ch;
     size_t nread = fread(&ch, sizeof(char), 1, stream);
     if (nread == 1)
         return ch;
@@ -598,7 +598,7 @@ int fgetc(FILE* stream)
 int fgetc_unlocked(FILE* stream)
 {
     VERIFY(stream);
-    char ch;
+    u8 ch;
     size_t nread = fread_unlocked(&ch, sizeof(char), 1, stream);
     if (nread == 1)
         return ch;
