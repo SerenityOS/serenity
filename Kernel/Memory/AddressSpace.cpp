@@ -203,10 +203,6 @@ void AddressSpace::deallocate_region(Region& region)
 NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 {
     SpinlockLocker lock(m_lock);
-
-    if (m_region_lookup_cache.region.unsafe_ptr() == &region)
-        m_region_lookup_cache.region = nullptr;
-
     auto found_region = m_regions.unsafe_remove(region.vaddr().get());
     VERIFY(found_region.ptr() == &region);
     return found_region;
@@ -215,9 +211,6 @@ NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 Region* AddressSpace::find_region_from_range(VirtualRange const& range)
 {
     SpinlockLocker lock(m_lock);
-    if (m_region_lookup_cache.range.has_value() && m_region_lookup_cache.range.value() == range && m_region_lookup_cache.region)
-        return m_region_lookup_cache.region.unsafe_ptr();
-
     auto* found_region = m_regions.find(range.base().get());
     if (!found_region)
         return nullptr;
@@ -225,8 +218,6 @@ Region* AddressSpace::find_region_from_range(VirtualRange const& range)
     auto rounded_range_size = page_round_up(range.size());
     if (rounded_range_size.is_error() || region->size() != rounded_range_size.value())
         return nullptr;
-    m_region_lookup_cache.range = range;
-    m_region_lookup_cache.region = *region;
     return region;
 }
 
