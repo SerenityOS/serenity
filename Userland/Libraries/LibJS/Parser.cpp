@@ -2473,13 +2473,13 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
         if (function_kind == FunctionKind::Normal && match(TokenType::Async) && !next_token().trivia_contains_line_terminator()) {
             function_kind = FunctionKind::Async;
             consume(TokenType::Async);
-            parse_options = parse_options | FunctionNodeParseOptions::IsAsyncFunction;
+            parse_options |= FunctionNodeParseOptions::IsAsyncFunction;
         }
         consume(TokenType::Function);
         if (match(TokenType::Asterisk)) {
             function_kind = function_kind == FunctionKind::Normal ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
             consume(TokenType::Asterisk);
-            parse_options = parse_options | FunctionNodeParseOptions::IsGeneratorFunction;
+            parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
         }
 
         if (FunctionNodeType::must_have_name() || match_identifier())

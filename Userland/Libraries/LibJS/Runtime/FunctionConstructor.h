@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibJS/AST.h>
+#include <LibJS/Runtime/FunctionKind.h>
 #include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
@@ -15,7 +15,7 @@ class FunctionConstructor final : public NativeFunction {
     JS_OBJECT(FunctionConstructor, NativeFunction);
 
 public:
-    static ThrowCompletionOr<RefPtr<FunctionExpression>> create_dynamic_function_node(GlobalObject& global_object, FunctionObject& new_target, FunctionKind kind);
+    static ThrowCompletionOr<ECMAScriptFunctionObject*> create_dynamic_function(GlobalObject& global_object, FunctionObject& constructor, FunctionObject* new_target, FunctionKind kind, MarkedValueList const& args);
 
     explicit FunctionConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
