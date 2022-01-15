@@ -35,6 +35,28 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
     if (layer_event.button() != GUI::MouseButton::Primary && layer_event.button() != GUI::MouseButton::Secondary)
         return;
 
+    if (layer_event.alt()) {
+        Color color;
+        Gfx::IntPoint position = layer_event.position();
+        if (layer_event.ctrl()) {
+            if (!layer->rect().contains(position))
+                return;
+            color = layer->bitmap().get_pixel(position);
+        } else {
+            color = m_editor->image().color_at(position);
+        }
+
+        if (!color.alpha())
+            return;
+
+        if (layer_event.button() == GUI::MouseButton::Primary)
+            m_editor->set_primary_color(color);
+        else if (layer_event.button() == GUI::MouseButton::Secondary)
+            m_editor->set_secondary_color(color);
+
+        return;
+    }
+
     // Shift+Click draws a line from the last position to current one.
     if (layer_event.shift() && m_has_clicked) {
         draw_line(layer->bitmap(), color_for(layer_event), m_last_position, layer_event.position());
@@ -61,6 +83,9 @@ void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
 
     auto& layer_event = event.layer_event();
     if (!(layer_event.buttons() & GUI::MouseButton::Primary || layer_event.buttons() & GUI::MouseButton::Secondary))
+        return;
+
+    if (layer_event.alt())
         return;
 
     draw_line(layer->bitmap(), color_for(layer_event), m_last_position, layer_event.position());
