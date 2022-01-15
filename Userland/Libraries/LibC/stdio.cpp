@@ -90,7 +90,7 @@ void FILE::purge()
 
 ssize_t FILE::do_read(u8* data, size_t size)
 {
-    int nread = ::read(m_fd, data, size);
+    auto nread = ::read(m_fd, data, size);
 
     if (nread < 0) {
         m_error = errno;
@@ -102,7 +102,7 @@ ssize_t FILE::do_read(u8* data, size_t size)
 
 ssize_t FILE::do_write(const u8* data, size_t size)
 {
-    int nwritten = ::write(m_fd, data, size);
+    auto nwritten = ::write(m_fd, data, size);
 
     if (nwritten < 0)
         m_error = errno;
