@@ -7,7 +7,6 @@
 #include <AK/Format.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
-#include <LibCore/LocalSocket.h>
 #include <LibCore/Stream.h>
 #include <LibCore/TCPServer.h>
 #include <LibCore/TCPSocket.h>

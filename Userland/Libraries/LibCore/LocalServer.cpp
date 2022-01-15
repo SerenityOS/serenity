@@ -5,7 +5,6 @@
  */
 
 #include <LibCore/LocalServer.h>
-#include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>

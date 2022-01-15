@@ -16,7 +16,6 @@ set(SOURCES
     Group.cpp
     IODevice.cpp
     LocalServer.cpp
-    LocalSocket.cpp
     LockFile.cpp
     MappedFile.cpp
     MimeData.cpp
