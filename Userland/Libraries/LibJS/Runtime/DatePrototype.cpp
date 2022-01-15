@@ -72,10 +72,10 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.setMonth, set_month, 2, attr);
     define_native_function(vm.names.setSeconds, set_seconds, 2, attr);
     define_native_function(vm.names.setTime, set_time, 1, attr);
-    define_native_function(vm.names.setUTCDate, set_date, 1, attr);                 // FIXME: This is a hack, Serenity doesn't currently support timezones other than UTC.
-    define_native_function(vm.names.setUTCFullYear, set_full_year, 3, attr);        // FIXME: see above
-    define_native_function(vm.names.setUTCHours, set_hours, 4, attr);               // FIXME: see above
-    define_native_function(vm.names.setUTCMilliseconds, set_milliseconds, 1, attr); // FIXME: see above
+    define_native_function(vm.names.setUTCDate, set_date, 1, attr);          // FIXME: This is a hack, Serenity doesn't currently support timezones other than UTC.
+    define_native_function(vm.names.setUTCFullYear, set_full_year, 3, attr); // FIXME: see above
+    define_native_function(vm.names.setUTCHours, set_hours, 4, attr);        // FIXME: see above
+    define_native_function(vm.names.setUTCMilliseconds, set_utc_milliseconds, 1, attr);
     define_native_function(vm.names.setUTCMinutes, set_utc_minutes, 3, attr);
     define_native_function(vm.names.setUTCMonth, set_utc_month, 2, attr);
     define_native_function(vm.names.setUTCSeconds, set_utc_seconds, 2, attr);
@@ -617,6 +617,35 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
 
     // 5. Return v.
     return time;
+}
+
+// 21.4.4.31 Date.prototype.setUTCMilliseconds ( ms ), https://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_milliseconds)
+{
+    // 1. Let t be ? thisTimeValue(this value).
+    auto this_time = TRY(this_time_value(global_object, vm.this_value(global_object)));
+    auto time = local_time(this_time.as_double());
+
+    // 2. Let milli be ? ToNumber(ms).
+    auto millisecond = TRY(vm.argument(0).to_number(global_object));
+
+    // 3. Let time be MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), milli).
+    auto hour = Value(hour_from_time(time));
+    auto minute = Value(min_from_time(time));
+    auto second = Value(sec_from_time(time));
+
+    auto new_time = make_time(global_object, hour, minute, second, millisecond);
+
+    // 4. Let v be TimeClip(MakeDate(Day(t), time)).
+    auto date = make_date(Value(day(time)), new_time);
+    date = time_clip(global_object, date);
+
+    // 5. Set the [[DateValue]] internal slot of this Date object to v.
+    auto* this_object = MUST(typed_this_object(global_object));
+    this_object->set_date_value(date.as_double());
+
+    // 6. Return v.
+    return date;
 }
 
 // 21.4.4.32 Date.prototype.setUTCMinutes ( min [ , sec [ , ms ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setutcminutes
