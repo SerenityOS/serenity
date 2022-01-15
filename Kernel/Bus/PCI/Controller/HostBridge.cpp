@@ -53,7 +53,7 @@ UNMAP_AFTER_INIT Vector<Capability> HostBridge::get_capabilities_for_function(Bu
 UNMAP_AFTER_INIT void HostBridge::enumerate_functions(Function<void(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, FunctionNumber function, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating function, bus={}, device={}, function={}", bus, device, function);
-    Address address(0, bus.value(), device.value(), function.value());
+    Address address(domain_number(), bus.value(), device.value(), function.value());
     auto pci_class = (read8_field(bus, device, function, PCI::RegisterOffset::CLASS) << 8u) | read8_field(bus, device, function, PCI::RegisterOffset::SUBCLASS);
 
     HardwareID id = { read16_field(bus, device, function, PCI::RegisterOffset::VENDOR_ID), read16_field(bus, device, function, PCI::RegisterOffset::DEVICE_ID) };
