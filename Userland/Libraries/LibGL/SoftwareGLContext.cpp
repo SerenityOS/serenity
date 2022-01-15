@@ -1868,9 +1868,10 @@ GLboolean SoftwareGLContext::gl_is_texture(GLuint texture)
 
 void SoftwareGLContext::gl_active_texture(GLenum texture)
 {
-    RETURN_WITH_ERROR_IF(texture < GL_TEXTURE0 || texture > GL_TEXTURE31, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(texture < GL_TEXTURE0 || texture >= GL_TEXTURE0 + m_device_info.num_texture_units, GL_INVALID_ENUM);
 
-    m_active_texture_unit = &m_texture_units.at(texture - GL_TEXTURE0);
+    m_active_texture_unit_index = texture - GL_TEXTURE0;
+    m_active_texture_unit = &m_texture_units.at(m_active_texture_unit_index);
 }
 
 void SoftwareGLContext::gl_get_booleanv(GLenum pname, GLboolean* data)
