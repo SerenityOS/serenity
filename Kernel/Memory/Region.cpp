@@ -94,7 +94,8 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
     auto vmobject_clone = TRY(vmobject().try_clone());
 
     // Set up a COW region. The parent (this) region becomes COW as well!
-    remap();
+    if (is_writable())
+        remap();
 
     OwnPtr<KString> clone_region_name;
     if (m_name)
