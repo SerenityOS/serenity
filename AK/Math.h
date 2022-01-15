@@ -37,7 +37,7 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
 }
 
 #define CONSTEXPR_STATE(function, args...)        \
-    if (is_constant_evaluated()) {                \
+    if (is_constant_evaluated() || true) {        \
         if (IsSame<T, long double>)               \
             return __builtin_##function##l(args); \
         if (IsSame<T, double>)                    \
@@ -46,11 +46,14 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
             return __builtin_##function##f(args); \
     }
 
+#define NOSSE
+
 namespace Division {
 template<FloatingPoint T>
 constexpr T fmod(T x, T y)
 {
     CONSTEXPR_STATE(fmod, x, y);
+    #ifndef NOSSE
     u16 fpu_status;
     do {
         asm(
@@ -60,11 +63,15 @@ constexpr T fmod(T x, T y)
             : "u"(y));
     } while (fpu_status & 0x400);
     return x;
+    #endif
+    
+    return {};                                \
 }
 template<FloatingPoint T>
 constexpr T remainder(T x, T y)
 {
     CONSTEXPR_STATE(remainder, x, y);
+    #ifndef NOSSE
     u16 fpu_status;
     do {
         asm(
@@ -74,6 +81,9 @@ constexpr T remainder(T x, T y)
             : "u"(y));
     } while (fpu_status & 0x400);
     return x;
+    #endif
+
+    return {};
 }
 }
 
@@ -84,11 +94,15 @@ template<FloatingPoint T>
 constexpr T sqrt(T x)
 {
     CONSTEXPR_STATE(sqrt, x);
+    #ifndef NOSSE
     T res;
     asm("fsqrt"
         : "=t"(res)
         : "0"(x));
     return res;
+    #endif
+
+    return {};
 }
 
 template<FloatingPoint T>
@@ -136,10 +150,15 @@ constexpr T fabs(T x)
 {
     if (is_constant_evaluated())
         return x < 0 ? -x : x;
+
+    #ifndef NOSSE
     asm(
         "fabs"
         : "+t"(x));
     return x;
+    #endif 
+
+    return {};
 }
 
 namespace Trigonometry {
@@ -154,30 +173,39 @@ template<FloatingPoint T>
 constexpr T sin(T angle)
 {
     CONSTEXPR_STATE(sin, angle);
+    #ifndef NOSSE
     T ret;
     asm(
         "fsin"
         : "=t"(ret)
         : "0"(angle));
     return ret;
+    #endif
+
+    return {};
 }
 
 template<FloatingPoint T>
 constexpr T cos(T angle)
 {
     CONSTEXPR_STATE(cos, angle);
+    #ifndef NOSSE
     T ret;
     asm(
         "fcos"
         : "=t"(ret)
         : "0"(angle));
     return ret;
+    #endif
+
+    return {};
 }
 
 template<FloatingPoint T>
 constexpr T tan(T angle)
 {
     CONSTEXPR_STATE(tan, angle);
+    #ifndef NOSSE
     double ret, one;
     asm(
         "fptan"
@@ -185,13 +213,16 @@ constexpr T tan(T angle)
         : "0"(angle));
 
     return ret;
+    #endif
+
+    return {};
 }
 
 template<FloatingPoint T>
 constexpr T atan(T value)
 {
     CONSTEXPR_STATE(atan, value);
-
+    #ifndef NOSSE
     T ret;
     asm(
         "fld1\n"
@@ -199,6 +230,9 @@ constexpr T atan(T value)
         : "=t"(ret)
         : "0"(value));
     return ret;
+
+    #endif
+    return {};
 }
 
 template<FloatingPoint T>
@@ -243,13 +277,16 @@ template<FloatingPoint T>
 constexpr T atan2(T y, T x)
 {
     CONSTEXPR_STATE(atan2, y, x);
-
+    #ifndef NOSSE
     T ret;
     asm("fpatan"
         : "=t"(ret)
         : "0"(x), "u"(y)
         : "st(1)");
     return ret;
+    #endif
+
+    return {};
 }
 
 }
@@ -269,7 +306,7 @@ template<FloatingPoint T>
 constexpr T log(T x)
 {
     CONSTEXPR_STATE(log, x);
-
+    #ifndef NOSSE
     T ret;
     asm(
         "fldln2\n"
@@ -278,12 +315,16 @@ constexpr T log(T x)
         : "=t"(ret)
         : "0"(x));
     return ret;
+    #endif
+
+    return {};
 }
 
 template<FloatingPoint T>
 constexpr T log2(T x)
 {
     CONSTEXPR_STATE(log2, x);
+    #ifndef NOSSE
 
     T ret;
     asm(
@@ -293,6 +334,9 @@ constexpr T log2(T x)
         : "=t"(ret)
         : "0"(x));
     return ret;
+
+    #endif
+    return {};
 }
 
 template<Integral T>
@@ -305,7 +349,7 @@ template<FloatingPoint T>
 constexpr T log10(T x)
 {
     CONSTEXPR_STATE(log10, x);
-
+    #ifndef NOSSE
     T ret;
     asm(
         "fldlg2\n"
@@ -314,13 +358,16 @@ constexpr T log10(T x)
         : "=t"(ret)
         : "0"(x));
     return ret;
+    #endif
+
+    return {};
 }
 
 template<FloatingPoint T>
 constexpr T exp(T exponent)
 {
     CONSTEXPR_STATE(exp, exponent);
-
+    #ifndef NOSSE
     T res;
     asm("fldl2e\n"
         "fmulp\n"
@@ -334,13 +381,16 @@ constexpr T exp(T exponent)
         : "=t"(res)
         : "0"(exponent));
     return res;
+    #endif
+
+    return {};
 }
 
 template<FloatingPoint T>
 constexpr T exp2(T exponent)
 {
     CONSTEXPR_STATE(exp2, exponent);
-
+    #ifndef NOSSE
     T res;
     asm("fld1\n"
         "fld %%st(1)\n"
@@ -352,6 +402,9 @@ constexpr T exp2(T exponent)
         : "=t"(res)
         : "0"(exponent));
     return res;
+    #endif
+
+    return {};
 }
 template<Integral T>
 constexpr T exp2(T exponent)
