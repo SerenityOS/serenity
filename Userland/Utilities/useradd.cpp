@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Brandon Pruitt  <brapru@pm.me>
+ * Copyright (c) 2022, Umut İnan Erdoğan <umutinanerdogan62@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,8 @@
 #include <AK/Random.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <crypt.h>
 #include <ctype.h>
 #include <errno.h>
@@ -24,12 +27,9 @@ constexpr uid_t BASE_UID = 1000;
 constexpr gid_t USERS_GID = 100;
 constexpr const char* DEFAULT_SHELL = "/bin/sh";
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio wpath rpath cpath chown", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio wpath rpath cpath chown"));
 
     const char* home_path = nullptr;
     int uid = 0;
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     args_parser.add_option(gecos, "GECOS name of the new user", "gecos", 'n', "general-info");
     args_parser.add_positional_argument(username, "Login user identity (username)", "login");
 
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     // Let's run a quick sanity check on username
     if (strpbrk(username, "\\/!@#$%^&*()~+=`:\n")) {
@@ -64,7 +64,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (getpwnam(username)) {
+    auto passwd = TRY(Core::System::getpwnam(username));
+    if (passwd.has_value()) {
         warnln("user {} already exists!", username);
         return 1;
     }
@@ -76,13 +77,16 @@ int main(int argc, char** argv)
 
     // First, let's sort out the uid for the user
     if (uid > 0) {
-        if (getpwuid(static_cast<uid_t>(uid))) {
+        auto pwd = TRY(Core::System::getpwuid(static_cast<uid_t>(uid)));
+        if (pwd.has_value()) {
             warnln("uid {} already exists!", uid);
             return 4;
         }
-
     } else {
-        for (uid = BASE_UID; getpwuid(static_cast<uid_t>(uid)); uid++) {
+        for (uid = BASE_UID;; uid++) {
+            auto pwd = TRY(Core::System::getpwuid(static_cast<uid_t>(uid)));
+            if (!pwd.has_value())
+                break;
         }
     }
 
@@ -110,19 +114,22 @@ int main(int argc, char** argv)
         home = home_path;
 
     if (create_home_dir) {
-        if (mkdir(home.characters(), 0700) < 0) {
-            auto saved_errno = errno;
-            warnln("Failed to create directory {}: {}", home, strerror(saved_errno));
+        auto mkdir_error = Core::System::mkdir(home, 0700);
+        if (mkdir_error.is_error()) {
+            int code = mkdir_error.release_error().code();
+            warnln("Failed to create directory {}: {}", home, strerror(code));
             return 12;
         }
 
-        if (chown(home.characters(), static_cast<uid_t>(uid), static_cast<gid_t>(gid)) < 0) {
-            warnln("Failed to change owner of {} to {}:{}: {}", home, uid, gid, strerror(errno));
+        auto chown_error = Core::System::chown(home, static_cast<uid_t>(uid), static_cast<gid_t>(gid));
+        if (chown_error.is_error()) {
+            int code = chown_error.release_error().code();
+            warnln("Failed to change owner of {} to {}:{}: {}", home, uid, gid, strerror(code));
 
             if (rmdir(home.characters()) < 0) {
                 warnln("Failed to remove directory {}: {}", home, strerror(errno));
-                return 12;
             }
+
             return 12;
         }
     }
