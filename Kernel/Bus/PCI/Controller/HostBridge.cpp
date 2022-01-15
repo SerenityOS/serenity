@@ -109,19 +109,22 @@ UNMAP_AFTER_INIT void HostBridge::enumerate_attached_devices(Function<void(Devic
     m_enumerated_buses.set(m_domain.start_bus(), true);
     enumerate_bus(callback, m_domain.start_bus(), true);
 
-    // Handle Multiple PCI host bridges on slot 0, device 0.
+    // Handle Multiple PCI host bridges on bus 0, device 0, functions 1-7 (function 0
+    // is the main host bridge).
     // If we happen to miss some PCI buses because they are not reachable through
     // recursive PCI-to-PCI bridges starting from bus 0, we might find them here.
     if ((read8_field(0, 0, 0, PCI::RegisterOffset::HEADER_TYPE) & 0x80) != 0) {
-        for (int bus_as_function_number = 1; bus_as_function_number < 256; ++bus_as_function_number) {
+        for (int bus_as_function_number = 1; bus_as_function_number < 8; ++bus_as_function_number) {
             if (read16_field(0, 0, bus_as_function_number, PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
                 continue;
             if (read16_field(0, 0, bus_as_function_number, PCI::RegisterOffset::CLASS) != 0x6)
                 continue;
-            if (m_enumerated_buses.get(bus_as_function_number))
+            if (Checked<u8>::addition_would_overflow(m_domain.start_bus(), bus_as_function_number))
+                break;
+            if (m_enumerated_buses.get(m_domain.start_bus() + bus_as_function_number))
                 continue;
-            enumerate_bus(callback, bus_as_function_number, false);
-            m_enumerated_buses.set(bus_as_function_number, true);
+            enumerate_bus(callback, m_domain.start_bus() + bus_as_function_number, false);
+            m_enumerated_buses.set(m_domain.start_bus() + bus_as_function_number, true);
         }
     }
 }
