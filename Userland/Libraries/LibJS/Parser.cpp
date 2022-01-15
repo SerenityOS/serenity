@@ -777,7 +777,10 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
-            return parse_function_body(parameters, function_kind, contains_direct_call_to_eval);
+            consume(TokenType::CurlyOpen);
+            auto body = parse_function_body(parameters, function_kind, contains_direct_call_to_eval);
+            consume(TokenType::CurlyClose);
+            return body;
         }
         if (match_expression()) {
             // Parse a function body which returns a single expression
@@ -2366,7 +2369,6 @@ NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclarati
     auto rule_start = push_start();
     auto function_body = create_ast_node<FunctionBody>({ m_state.current_token.filename(), rule_start.position(), position() });
     ScopePusher function_scope = ScopePusher::function_scope(*this, function_body, parameters); // FIXME <-
-    consume(TokenType::CurlyOpen);
     auto has_use_strict = parse_directive(function_body);
     bool previous_strict_mode = m_state.strict_mode;
     if (has_use_strict) {
@@ -2379,6 +2381,11 @@ NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclarati
     }
 
     parse_statement_list(function_body);
+
+    // If we're parsing the function body standalone, e.g. via CreateDynamicFunction, we must have reached EOF here.
+    // Otherwise, we need a closing curly bracket (which is consumed elsewhere). If we get neither, it's an error.
+    if (!match(TokenType::Eof) && !match(TokenType::CurlyClose))
+        expected(Token::name(TokenType::CurlyClose));
 
     // If the function contains 'use strict' we need to check the parameters (again).
     if (function_body->in_strict_mode() || function_kind != FunctionKind::Normal) {
@@ -2421,7 +2428,6 @@ NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclarati
         }
     }
 
-    consume(TokenType::CurlyClose);
     m_state.strict_mode = previous_strict_mode;
     contains_direct_call_to_eval = function_scope.contains_direct_call_to_eval();
     return function_body;
@@ -2508,8 +2514,10 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
         m_state.labels_in_scope = move(old_labels_in_scope);
     });
 
+    consume(TokenType::CurlyOpen);
     bool contains_direct_call_to_eval = false;
     auto body = parse_function_body(parameters, function_kind, contains_direct_call_to_eval);
+    consume(TokenType::CurlyClose);
 
     auto has_strict_directive = body->in_strict_mode();
 
