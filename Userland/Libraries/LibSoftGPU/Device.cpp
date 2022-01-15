@@ -605,6 +605,7 @@ DeviceInfo Device::info() const
         .num_texture_units = NUM_SAMPLERS,
         .num_lights = NUM_LIGHTS,
         .stencil_bits = sizeof(u8) * 8,
+        .supports_npot_textures = true,
     };
 }
 
