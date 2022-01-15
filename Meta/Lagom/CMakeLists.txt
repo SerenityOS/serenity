@@ -304,12 +304,16 @@ if (BUILD_LAGOM)
     )
 
     # ELF
-    file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
-    # There's no way we can reliably make the dynamic loading classes cross platform
-    list(FILTER LIBELF_SOURCES EXCLUDE REGEX ".*Dynamic.*.cpp$")
-    lagom_lib(ELF elf
-        SOURCES ${LIBELF_SOURCES}
-    )
+    # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem 
+    #        for Lagom on Apple M1
+    if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+        file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
+        # There's no way we can reliably make the dynamic loading classes cross platform
+        list(FILTER LIBELF_SOURCES EXCLUDE REGEX ".*Dynamic.*.cpp$")
+        lagom_lib(ELF elf
+            SOURCES ${LIBELF_SOURCES}
+        )
+    endif()
 
     # Gemini
     file(GLOB LIBGEMINI_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGemini/*.cpp")
@@ -458,10 +462,14 @@ if (BUILD_LAGOM)
     )
 
     # x86
-    file(GLOB LIBX86_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibX86/*.cpp")
-    lagom_lib(X86 x86
-        SOURCES ${LIBX86_SOURCES}
-    )
+    # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem 
+    #        for Lagom on Apple M1
+    if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+        file(GLOB LIBX86_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibX86/*.cpp")
+        lagom_lib(X86 x86
+            SOURCES ${LIBX86_SOURCES}
+        )
+    endif()
 
     if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER AND NOT ENABLE_COMPILER_EXPLORER_BUILD)
         # Lagom Examples
@@ -476,9 +484,13 @@ if (BUILD_LAGOM)
         set_target_properties(adjtime_lagom PROPERTIES OUTPUT_NAME adjtime)
         target_link_libraries(adjtime_lagom LagomCore)
 
-        add_executable(disasm_lagom ../../Userland/Utilities/disasm.cpp)
-        set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
-        target_link_libraries(disasm_lagom LagomCore LagomELF LagomX86 LagomMain)
+        # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem 
+        #        for Lagom on Apple M1
+        if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+            add_executable(disasm_lagom ../../Userland/Utilities/disasm.cpp)
+            set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
+            target_link_libraries(disasm_lagom LagomCore LagomELF LagomX86 LagomMain)
+        endif()
 
         add_executable(gml-format_lagom ../../Userland/Utilities/gml-format.cpp)
         set_target_properties(gml-format_lagom PROPERTIES OUTPUT_NAME gml-format)
