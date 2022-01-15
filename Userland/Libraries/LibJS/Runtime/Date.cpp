@@ -59,21 +59,6 @@ String Date::iso_date_string() const
     return builder.build();
 }
 
-// https://tc39.es/ecma262/#eqn-HoursPerDay
-static constexpr double HOURS_PER_DAY = 24;
-// https://tc39.es/ecma262/#eqn-MinutesPerHour
-static constexpr double MINUTES_PER_HOUR = 60;
-// https://tc39.es/ecma262/#eqn-SecondsPerMinute
-static constexpr double SECONDS_PER_MINUTE = 60;
-// https://tc39.es/ecma262/#eqn-msPerSecond
-static constexpr double MS_PER_SECOND = 1000;
-// https://tc39.es/ecma262/#eqn-msPerMinute
-static constexpr double MS_PER_MINUTE = 60000;
-// https://tc39.es/ecma262/#eqn-msPerHour
-static constexpr double MS_PER_HOUR = 3600000;
-// https://tc39.es/ecma262/#eqn-msPerDay
-static constexpr double MS_PER_DAY = 86400000;
-
 // DayWithinYear(t), https://tc39.es/ecma262/#eqn-DayWithinYear
 u16 day_within_year(double t)
 {
@@ -155,7 +140,7 @@ double day_from_year(i32 y)
 double time_from_year(i32 y)
 {
     // msPerDay × DayFromYear(y)
-    return MS_PER_DAY * day_from_year(y);
+    return Date::ms_per_day * day_from_year(y);
 }
 
 // YearFromTime(t), https://tc39.es/ecma262/#eqn-YearFromTime
@@ -164,12 +149,12 @@ i32 year_from_time(double t)
     // the largest integral Number y (closest to +∞) such that TimeFromYear(y) ≤ t
 
     // Approximation using average number of milliseconds per year. We might have to adjust this guess afterwards.
-    auto year = static_cast<i32>(t / (365.2425 * MS_PER_DAY) + 1970);
+    auto year = static_cast<i32>(t / (365.2425 * Date::ms_per_day) + 1970);
 
     auto year_t = time_from_year(year);
     if (year_t > t)
         year--;
-    else if (year_t + days_in_year(year) * MS_PER_DAY <= t)
+    else if (year_t + days_in_year(year) * Date::ms_per_day <= t)
         year++;
 
     return year;
@@ -232,28 +217,28 @@ u8 month_from_time(double t)
 u8 hour_from_time(double t)
 {
     // 𝔽(floor(ℝ(t / msPerHour)) modulo HoursPerDay)
-    return static_cast<u8>(modulo(floor(t / MS_PER_HOUR), HOURS_PER_DAY));
+    return static_cast<u8>(modulo(floor(t / Date::ms_per_hour), Date::hours_per_day));
 }
 
 // MinFromTime(t), https://tc39.es/ecma262/#eqn-MinFromTime
 u8 min_from_time(double t)
 {
     // 𝔽(floor(ℝ(t / msPerMinute)) modulo MinutesPerHour)
-    return static_cast<u8>(modulo(floor(t / MS_PER_MINUTE), MINUTES_PER_HOUR));
+    return static_cast<u8>(modulo(floor(t / Date::ms_per_minute), Date::minutes_per_hour));
 }
 
 // SecFromTime(t), https://tc39.es/ecma262/#eqn-SecFromTime
 u8 sec_from_time(double t)
 {
     // 𝔽(floor(ℝ(t / msPerSecond)) modulo SecondsPerMinute)
-    return static_cast<u8>(modulo(floor(t / MS_PER_SECOND), SECONDS_PER_MINUTE));
+    return static_cast<u8>(modulo(floor(t / Date::ms_per_second), Date::seconds_per_minute));
 }
 
 // msFromTime(t), https://tc39.es/ecma262/#eqn-msFromTime
 u16 ms_from_time(double t)
 {
     // 𝔽(ℝ(t) modulo msPerSecond)
-    return static_cast<u16>(modulo(t, MS_PER_SECOND));
+    return static_cast<u16>(modulo(t, Date::ms_per_second));
 }
 
 // 21.4.1.6 Week Day, https://tc39.es/ecma262/#sec-week-day
@@ -314,7 +299,7 @@ Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, V
     auto milli = MUST(ms.to_integer_or_infinity(global_object));
     // 6. Let t be ((h * msPerHour + m * msPerMinute) + s * msPerSecond) + milli, performing the arithmetic according to IEEE 754-2019 rules (that is, as if using the ECMAScript operators * and +).
     // NOTE: C++ arithmetic abides by IEEE 754 rules
-    auto t = ((h * MS_PER_HOUR + m * MS_PER_MINUTE) + s * MS_PER_SECOND) + milli;
+    auto t = ((h * Date::ms_per_hour + m * Date::ms_per_minute) + s * Date::ms_per_second) + milli;
     // 7. Return t.
     return Value(t);
 }
@@ -322,14 +307,14 @@ Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, V
 // Day(t), https://tc39.es/ecma262/#eqn-Day
 double day(double time_value)
 {
-    return floor(time_value / MS_PER_DAY);
+    return floor(time_value / Date::ms_per_day);
 }
 
 // TimeWithinDay(t), https://tc39.es/ecma262/#eqn-TimeWithinDay
 double time_within_day(double time)
 {
     // 𝔽(ℝ(t) modulo ℝ(msPerDay))
-    return modulo(time, MS_PER_DAY);
+    return modulo(time, Date::ms_per_day);
 }
 
 // 21.4.1.12 MakeDay ( year, month, date ), https://tc39.es/ecma262/#sec-makeday
@@ -356,7 +341,7 @@ Value make_day(GlobalObject& global_object, Value year, Value month, Value date)
     // 8. Find a finite time value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn and DateFromTime(t) is 1𝔽; but if this is not possible (because some argument is out of range), return NaN.
     if (!AK::is_within_range<int>(ym) || !AK::is_within_range<int>(mn + 1))
         return js_nan();
-    auto t = days_since_epoch(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * MS_PER_DAY;
+    auto t = days_since_epoch(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * Date::ms_per_day;
 
     // 9. Return Day(t) + dt - 1𝔽.
     return Value(day(static_cast<double>(t)) + dt - 1);
@@ -370,7 +355,7 @@ Value make_date(Value day, Value time)
         return js_nan();
 
     // 2. Let tv be day × msPerDay + time.
-    auto tv = Value(day.as_double() * MS_PER_DAY + time.as_double());
+    auto tv = Value(day.as_double() * Date::ms_per_day + time.as_double());
 
     // 3. If tv is not finite, return NaN.
     if (!tv.is_finite_number())

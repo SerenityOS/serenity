@@ -26,6 +26,21 @@ public:
 
     String iso_date_string() const;
 
+    // https://tc39.es/ecma262/#eqn-HoursPerDay
+    static constexpr double hours_per_day = 24;
+    // https://tc39.es/ecma262/#eqn-MinutesPerHour
+    static constexpr double minutes_per_hour = 60;
+    // https://tc39.es/ecma262/#eqn-SecondsPerMinute
+    static constexpr double seconds_per_minute = 60;
+    // https://tc39.es/ecma262/#eqn-msPerSecond
+    static constexpr double ms_per_second = 1'000;
+    // https://tc39.es/ecma262/#eqn-msPerMinute
+    static constexpr double ms_per_minute = 60'000;
+    // https://tc39.es/ecma262/#eqn-msPerHour
+    static constexpr double ms_per_hour = 3'600'000;
+    // https://tc39.es/ecma262/#eqn-msPerDay
+    static constexpr double ms_per_day = 86'400'000;
+
 private:
     double m_date_value { 0 }; // [[DateValue]]
 };
