@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AsyncGeneratorFunctionConstructor.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
@@ -43,20 +42,16 @@ ThrowCompletionOr<Value> AsyncGeneratorFunctionConstructor::call()
 ThrowCompletionOr<Object*> AsyncGeneratorFunctionConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto function = TRY(FunctionConstructor::create_dynamic_function_node(global_object(), new_target, FunctionKind::AsyncGenerator));
+    auto& global_object = this->global_object();
 
-    OwnPtr<Interpreter> local_interpreter;
-    Interpreter* interpreter = vm.interpreter_if_exists();
+    // 1. Let C be the active function object.
+    auto* constructor = vm.active_function_object();
 
-    if (!interpreter) {
-        local_interpreter = Interpreter::create_with_existing_realm(*realm());
-        interpreter = local_interpreter.ptr();
-    }
+    // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
+    auto& args = vm.running_execution_context().arguments;
 
-    VM::InterpreterExecutionScope scope(*interpreter);
-    auto result = TRY(function->execute(*interpreter, global_object())).release_value();
-    VERIFY(result.is_object() && is<ECMAScriptFunctionObject>(result.as_object()));
-    return &result.as_object();
+    // 3. Return ? CreateDynamicFunction(C, NewTarget, asyncGenerator, args).
+    return TRY(FunctionConstructor::create_dynamic_function(global_object, *constructor, &new_target, FunctionKind::AsyncGenerator, args));
 }
 
 }
