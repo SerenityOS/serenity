@@ -264,6 +264,7 @@ private:
     HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
     Vector<TextureUnit> m_texture_units;
     TextureUnit* m_active_texture_unit;
+    size_t m_active_texture_unit_index { 0 };
 
     // Texture coordinate generation state
     struct TextureCoordinateGeneration {
