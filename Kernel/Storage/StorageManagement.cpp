@@ -9,6 +9,7 @@
 #include <AK/UUID.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/Controller/VolumeManagementDevice.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
@@ -53,6 +54,24 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
         PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
             if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::MassStorage)) {
                 return;
+            }
+
+            {
+                static constexpr PCI::HardwareID vmd_device = { 0x8086, 0x9a0b };
+                if (device_identifier.hardware_id() == vmd_device) {
+                    auto controller = PCI::VolumeManagementDevice::must_create(device_identifier);
+                    PCI::Access::the().add_host_controller_and_enumerate_attached_devices(move(controller), [this](PCI::DeviceIdentifier const& device_identifier) -> void {
+                        auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());
+                        if (subclass_code == SubclassID::NVMeController) {
+                            auto controller = NVMeController::try_initialize(device_identifier);
+                            if (controller.is_error()) {
+                                dmesgln("Unable to initialize NVMe controller: {}", controller.error());
+                            } else {
+                                m_controllers.append(controller.release_value());
+                            }
+                        }
+                    });
+                }
             }
 
             auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());

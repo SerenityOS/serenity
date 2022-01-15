@@ -38,6 +38,8 @@ public:
     Spinlock const& scan_lock() const { return m_scan_lock; }
     Mutex const& access_lock() const { return m_access_lock; }
 
+    void add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController>, Function<void(DeviceIdentifier const&)> callback);
+
 private:
     u8 read8_field(Address address, RegisterOffset field);
     u16 read16_field(Address address, RegisterOffset field);
