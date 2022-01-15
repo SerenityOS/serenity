@@ -246,7 +246,7 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(SignedBigInteger const& o
 
 bool SignedBigInteger::operator==(UnsignedBigInteger const& other) const
 {
-    if (m_sign)
+    if (m_sign && m_unsigned_data != 0)
         return false;
     return m_unsigned_data == other;
 }
