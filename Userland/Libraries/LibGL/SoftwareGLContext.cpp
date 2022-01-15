@@ -77,6 +77,9 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
     light0.specular_intensity = { 1.0f, 1.0f, 1.0f, 1.0f };
     m_light_state_is_dirty = true;
 
+    m_client_side_texture_coord_array_enabled.resize(m_device_info.num_texture_units);
+    m_client_tex_coord_pointer.resize(m_device_info.num_texture_units);
+
     build_extension_string();
 }
 
@@ -2008,7 +2011,7 @@ void SoftwareGLContext::gl_enable_client_state(GLenum cap)
         break;
 
     case GL_TEXTURE_COORD_ARRAY:
-        m_client_side_texture_coord_array_enabled = true;
+        m_client_side_texture_coord_array_enabled[m_client_active_texture] = true;
         break;
 
     default:
@@ -2030,7 +2033,7 @@ void SoftwareGLContext::gl_disable_client_state(GLenum cap)
         break;
 
     case GL_TEXTURE_COORD_ARRAY:
-        m_client_side_texture_coord_array_enabled = false;
+        m_client_side_texture_coord_array_enabled[m_client_active_texture] = false;
         break;
 
     default:
@@ -2040,7 +2043,9 @@ void SoftwareGLContext::gl_disable_client_state(GLenum cap)
 
 void SoftwareGLContext::gl_client_active_texture(GLenum target)
 {
-    (void)target;
+    RETURN_WITH_ERROR_IF(target < GL_TEXTURE0 || target >= GL_TEXTURE0 + m_device_info.num_texture_units, GL_INVALID_ENUM);
+
+    m_client_active_texture = target - GL_TEXTURE0;
 }
 
 void SoftwareGLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
@@ -2091,10 +2096,12 @@ void SoftwareGLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei st
 
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
-    m_client_tex_coord_pointer.size = size;
-    m_client_tex_coord_pointer.type = type;
-    m_client_tex_coord_pointer.stride = stride;
-    m_client_tex_coord_pointer.pointer = pointer;
+    auto& tex_coord_pointer = m_client_tex_coord_pointer[m_client_active_texture];
+
+    tex_coord_pointer.size = size;
+    tex_coord_pointer.type = type;
+    tex_coord_pointer.stride = stride;
+    tex_coord_pointer.pointer = pointer;
 }
 
 void SoftwareGLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
@@ -2146,21 +2153,23 @@ void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
     auto last = first + count;
     gl_begin(mode);
     for (int i = first; i < last; i++) {
-        if (m_client_side_texture_coord_array_enabled) {
-            float tex_coords[4] { 0, 0, 0, 0 };
-            read_from_vertex_attribute_pointer(m_client_tex_coord_pointer, i, tex_coords, false);
-            gl_tex_coord(tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+        for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
+            if (m_client_side_texture_coord_array_enabled[t]) {
+                float tex_coords[4] { 0, 0, 0, 0 };
+                read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords, false);
+                gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+            }
         }
 
         if (m_client_side_color_array_enabled) {
             float color[4] { 0, 0, 0, 1 };
             read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
-            glColor4fv(color);
+            gl_color(color[0], color[1], color[2], color[3]);
         }
 
         float vertex[4] { 0, 0, 0, 1 };
         read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex, false);
-        glVertex4fv(vertex);
+        gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
     }
     gl_end();
 }
@@ -2205,21 +2214,23 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
             break;
         }
 
-        if (m_client_side_texture_coord_array_enabled) {
-            float tex_coords[4] { 0, 0, 0, 0 };
-            read_from_vertex_attribute_pointer(m_client_tex_coord_pointer, i, tex_coords, false);
-            gl_tex_coord(tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+        for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
+            if (m_client_side_texture_coord_array_enabled[t]) {
+                float tex_coords[4] { 0, 0, 0, 0 };
+                read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords, false);
+                gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+            }
         }
 
         if (m_client_side_color_array_enabled) {
             float color[4] { 0, 0, 0, 1 };
             read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
-            glColor4fv(color);
+            gl_color(color[0], color[1], color[2], color[3]);
         }
 
         float vertex[4] { 0, 0, 0, 1 };
         read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex, false);
-        glVertex4fv(vertex);
+        gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
     }
     gl_end();
 }
