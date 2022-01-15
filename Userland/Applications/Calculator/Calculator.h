@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "KeypadValue.h"
+#include <LibCrypto/BigFraction/BigFraction.h>
 
 // This type implements the regular calculator
 // behavior, such as performing arithmetic
@@ -39,8 +39,8 @@ public:
         MemAdd
     };
 
-    KeypadValue begin_operation(Operation, KeypadValue);
-    KeypadValue finish_operation(KeypadValue);
+    Crypto::BigFraction begin_operation(Operation, Crypto::BigFraction);
+    Crypto::BigFraction finish_operation(Crypto::BigFraction);
 
     bool has_error() const { return m_has_error; }
 
@@ -49,7 +49,7 @@ public:
 
 private:
     Operation m_operation_in_progress { Operation::None };
-    KeypadValue m_saved_argument {};
-    KeypadValue m_mem {};
+    Crypto::BigFraction m_saved_argument {};
+    Crypto::BigFraction m_mem {};
     bool m_has_error { false };
 };
