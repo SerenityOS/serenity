@@ -245,13 +245,15 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
 // 21.4.4.11 Date.prototype.getTimezoneOffset ( ), https://tc39.es/ecma262/#sec-date.prototype.gettimezoneoffset
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_timezone_offset)
 {
-    auto* this_object = TRY(typed_this_object(global_object));
+    // 1. Let t be ? thisTimeValue(this value).
+    auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
-    if (!Value(this_object->date_value()).is_finite_number())
+    // 2. If t is NaN, return NaN.
+    if (time.is_nan())
         return js_nan();
 
-    // FIXME: Make this actually do something once we support timezones instead of just UTC
-    return Value(0);
+    // 3. Return (t - LocalTime(t)) / msPerMinute.
+    return Value((time.as_double() - local_time(time.as_double())) / Date::ms_per_minute);
 }
 
 // 21.4.4.12 Date.prototype.getUTCDate ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcdate
