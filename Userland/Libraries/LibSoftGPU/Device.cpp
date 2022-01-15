@@ -807,19 +807,37 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                     if (!light.is_enabled)
                         continue;
 
-                    FloatVector4 vertex_to_light;
+                    // We need to save the length here because the attenuation factor requires a non
+                    // normalized vector!
+                    auto sgi_arrow_operator = [](FloatVector4 const& p1, FloatVector4 const& p2, float& saved_length) {
+                        if ((p1.w() != 0.0f) && (p2.w() == 0.0f)) {
+                            saved_length = p2.length();
+                            return (p2 / saved_length).xyz();
+                        } else if ((p1.w() == 0.0f) && (p2.w() != 0.0f)) {
+                            saved_length = p2.length();
+                            return -(p1 / saved_length).xyz();
+                        } else {
+                            // FIXME: The OpenGL 1.5 spec says nothing about the case where P1 and P2 BOTH have a w value of 1, which would
+                            // then mean the light position has an implicit value of (0, 0, 0, 0). This doesn't make any logical sense, and it most likely
+                            // a typographical error. Most other GL implementations seem to just fix it to the distance from the vertex to the light, which
+                            // seems to work just fine.
+                            // If somebody with more insight about this could clarify this eventually, that'd be great.
+                            auto distance = (p2 - p1);
+                            saved_length = distance.length();
+                            return (distance / saved_length).xyz();
+                        }
+                    };
+
+                    float vector_length = 0.0f;
+                    FloatVector3 vertex_to_light = sgi_arrow_operator(vertex.eye_coordinates, light.position, vector_length);
 
                     // Light attenuation value.
                     float light_attenuation_factor = 1.0f;
                     if (light.position.w() != 0.0f) {
-                        vertex_to_light = light.position - vertex.eye_coordinates;
                         auto const vertex_to_light_length = vertex_to_light.length();
                         auto const vertex_to_light_length_squared = vertex_to_light_length * vertex_to_light_length;
 
                         light_attenuation_factor = 1.0f / (light.constant_attenuation + (light.linear_attenuation * vertex_to_light_length) + (light.quadratic_attenuation * vertex_to_light_length_squared));
-                        vertex_to_light = vertex_to_light / vertex_to_light_length;
-                    } else {
-                        vertex_to_light = light.position.normalized();
                     }
 
                     // Spotlight factor
