@@ -27,6 +27,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>
+#include <Kernel/kstdio.h>
 #include <LibC/signal_numbers.h>
 
 namespace Kernel {
@@ -501,8 +502,14 @@ void Thread::finalize()
         m_join_blocker_set.thread_finalizing();
     }
 
-    if (m_dump_backtrace_on_finalization)
-        dbgln("{}", backtrace());
+    if (m_dump_backtrace_on_finalization) {
+        auto trace_or_error = backtrace();
+        if (!trace_or_error.is_error()) {
+            auto trace = trace_or_error.release_value();
+            dbgln("Backtrace:");
+            kernelputstr(trace->characters(), trace->length());
+        }
+    }
 
     drop_thread_count(false);
 }
