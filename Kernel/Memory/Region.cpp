@@ -34,7 +34,9 @@ Region::Region(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size
     VERIFY((m_range.size() % PAGE_SIZE) == 0);
 
     m_vmobject->add_region(*this);
-    MM.register_region(*this);
+
+    if (is_kernel())
+        MM.register_kernel_region(*this);
 }
 
 Region::~Region()
@@ -46,7 +48,8 @@ Region::~Region()
 
     m_vmobject->remove_region(*this);
 
-    MM.unregister_region(*this);
+    if (is_kernel())
+        MM.unregister_kernel_region(*this);
 
     if (m_page_directory) {
         SpinlockLocker page_lock(m_page_directory->get_lock());
