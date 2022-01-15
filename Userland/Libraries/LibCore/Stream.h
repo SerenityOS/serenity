@@ -416,6 +416,12 @@ public:
     ErrorOr<pid_t> peer_pid() const;
     ErrorOr<size_t> read_without_waiting(Bytes buffer);
 
+    /// Release the fd associated with this LocalSocket. After the fd is
+    /// released, the socket will be considered "closed" and all operations done
+    /// on it will fail with ENOTCONN. Fails with ENOTCONN if the socket is
+    /// already closed.
+    ErrorOr<int> release_fd();
+
     virtual ~LocalSocket() { close(); }
 
 private:

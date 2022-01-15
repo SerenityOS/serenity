@@ -535,4 +535,15 @@ ErrorOr<size_t> LocalSocket::read_without_waiting(Bytes buffer)
     return m_helper.read(buffer, MSG_DONTWAIT);
 }
 
+ErrorOr<int> LocalSocket::release_fd()
+{
+    if (!is_open()) {
+        return Error::from_errno(ENOTCONN);
+    }
+
+    auto fd = m_helper.fd();
+    m_helper.set_fd(-1);
+    return fd;
+}
+
 }
