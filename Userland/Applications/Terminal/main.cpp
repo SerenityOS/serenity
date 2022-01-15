@@ -51,6 +51,15 @@ public:
     {
     }
 
+    virtual void config_bool_did_change(String const& domain, String const& group, String const& key, bool value) override
+    {
+        VERIFY(domain == "Terminal");
+
+        if (group == "Terminal" && key == "ShowScrollBar") {
+            m_parent_terminal.set_show_scrollbar(value);
+        }
+    }
+
     virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override
     {
         VERIFY(domain == "Terminal");
@@ -310,6 +319,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto new_scrollback_size = Config::read_i32("Terminal", "Terminal", "MaxHistorySize", terminal->max_history_size());
     terminal->set_max_history_size(new_scrollback_size);
+
+    auto show_scroll_bar = Config::read_bool("Terminal", "Terminal", "ShowScrollBar", true);
+    terminal->set_show_scrollbar(show_scroll_bar);
 
     auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
