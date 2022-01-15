@@ -78,7 +78,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.setUTCMilliseconds, set_milliseconds, 1, attr); // FIXME: see above
     define_native_function(vm.names.setUTCMinutes, set_minutes, 3, attr);           // FIXME: see above
     define_native_function(vm.names.setUTCMonth, set_month, 2, attr);               // FIXME: see above
-    define_native_function(vm.names.setUTCSeconds, set_seconds, 2, attr);           // FIXME: see above
+    define_native_function(vm.names.setUTCSeconds, set_utc_seconds, 2, attr);
     define_native_function(vm.names.toDateString, to_date_string, 0, attr);
     define_native_function(vm.names.toISOString, to_iso_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 1, attr);
@@ -617,6 +617,39 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
 
     // 5. Return v.
     return time;
+}
+
+// 21.4.4.34 Date.prototype.setUTCSeconds ( sec [ , ms ] ), https://tc39.es/ecma262/#sec-date.prototype.setutcseconds
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_seconds)
+{
+    // 1. Let t be ? thisTimeValue(this value).
+    auto this_time = TRY(this_time_value(global_object, vm.this_value(global_object)));
+    auto time = local_time(this_time.as_double());
+
+    // 2. Let s be ? ToNumber(sec).
+    auto second = TRY(vm.argument(0).to_number(global_object));
+
+    // 3. If ms is not present, let milli be msFromTime(t).
+    // 4. Else,
+    //     a. Let milli be ? ToNumber(ms).
+    auto millisecond = TRY(argument_or_value(global_object, 1, ms_from_time(time)));
+
+    // 5. Let date be MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli)).
+    auto hour = Value(hour_from_time(time));
+    auto minute = Value(min_from_time(time));
+
+    auto new_time = make_time(global_object, hour, minute, second, millisecond);
+    auto new_date = make_date(Value(day(time)), new_time);
+
+    // 6. Let v be TimeClip(date).
+    new_date = time_clip(global_object, new_date);
+
+    // 7. Set the [[DateValue]] internal slot of this Date object to v.
+    auto* this_object = MUST(typed_this_object(global_object));
+    this_object->set_date_value(new_date.as_double());
+
+    // 8. Return v.
+    return new_date;
 }
 
 // 21.4.4.35 Date.prototype.toDateString ( ), https://tc39.es/ecma262/#sec-date.prototype.todatestring
