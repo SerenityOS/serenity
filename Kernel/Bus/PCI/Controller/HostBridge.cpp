@@ -106,8 +106,8 @@ UNMAP_AFTER_INIT void HostBridge::enumerate_attached_devices(Function<void(Devic
     VERIFY(Access::the().scan_lock().is_locked());
     // First scan bus 0. Find any device on that bus, and if it's a PCI-to-PCI
     // bridge, recursively scan it too.
-    m_enumerated_buses.set(0, true);
-    enumerate_bus(callback, 0, true);
+    m_enumerated_buses.set(m_domain.start_bus(), true);
+    enumerate_bus(callback, m_domain.start_bus(), true);
 
     // Handle Multiple PCI host bridges on slot 0, device 0.
     // If we happen to miss some PCI buses because they are not reachable through
