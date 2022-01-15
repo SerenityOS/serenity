@@ -331,7 +331,8 @@ double local_tza(double time, [[maybe_unused]] bool is_utc, Optional<StringView>
     // UTC measured in milliseconds at local time represented by Number tlocal. When the result is subtracted
     // from tlocal, it should yield the corresponding time value tUTC.
 
-    auto maybe_offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_milliseconds(time));
+    auto time_since_epoch = Value(time).is_finite_number() ? AK::Time::from_milliseconds(time) : AK::Time::max();
+    auto maybe_offset = TimeZone::get_time_zone_offset(time_zone, time_since_epoch);
     return maybe_offset.value_or(0) * 1000;
 }
 
