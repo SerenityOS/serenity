@@ -1,38 +1,28 @@
 /*
  * Copyright (c) 2020, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2022, Alex Major
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-const char* const g_usage = R"(Usage:
-    seq [-h|--help]
-    seq LAST
-    seq FIRST LAST
-    seq FIRST INCREMENT LAST
-)";
-
-static void print_usage(FILE* stream)
-{
-    fputs(g_usage, stream);
-    return;
-}
-
-static double get_double(const char* name, const char* d_string, int* number_of_decimals)
+static Optional<double> get_double(const char* d_string, int* number_of_decimals)
 {
     char* end;
     double d = strtod(d_string, &end);
-    if (d == 0 && end == d_string) {
-        warnln("{}: invalid argument \"{}\"", name, d_string);
-        print_usage(stderr);
-        exit(1);
-    }
+    if (isnan(d) || d_string == end)
+        return {};
+
     if (const char* dot = strchr(d_string, '.'))
         *number_of_decimals = strlen(dot + 1);
     else
@@ -40,57 +30,69 @@ static double get_double(const char* name, const char* d_string, int* number_of_
     return d;
 }
 
-int main(int argc, const char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio", nullptr));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-            print_usage(stdout);
-            exit(0);
-        }
-    }
+    int number_of_decimals_arg_one = 0;
+    int number_of_decimals_arg_two = 0;
+    int number_of_decimals_arg_three = 0;
+    double start = 1;
+    double step = 1;
+    double end = 1;
 
-    double start = 1, step = 1, end = 1;
-    int number_of_start_decimals = 0, number_of_step_decimals = 0, number_of_end_decimals = 0;
-    switch (argc) {
-    case 2:
-        end = get_double(argv[0], argv[1], &number_of_end_decimals);
-        break;
-    case 3:
-        start = get_double(argv[0], argv[1], &number_of_start_decimals);
-        end = get_double(argv[0], argv[2], &number_of_end_decimals);
-        break;
-    case 4:
-        start = get_double(argv[0], argv[1], &number_of_start_decimals);
-        step = get_double(argv[0], argv[2], &number_of_step_decimals);
-        end = get_double(argv[0], argv[3], &number_of_end_decimals);
-        break;
-    default:
-        warnln("{}: unexpected number of arguments", argv[0]);
-        print_usage(stderr);
-        return 1;
-    }
+    auto args_parser = Core::ArgsParser();
+    args_parser.set_general_help("Print a sequence of numbers.");
+    args_parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "When one argument",
+        .name = "LAST",
+        .accept_value = [&](char const* input) {
+            auto opt = get_double(input, &number_of_decimals_arg_one);
+            if (opt.has_value()) {
+                end = opt.value_or(0.0);
+                return true;
+            }
+            return false;
+        },
+    });
+    args_parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "When two arguments",
+        .name = "FIRST LAST",
+        .accept_value = [&](char const* input) {
+            auto opt = get_double(input, &number_of_decimals_arg_two);
+            if (opt.has_value()) {
+                auto value = opt.value_or(0.0);
+                start = end;
+                end = value;
+                return true;
+            }
+            return false;
+        },
+    });
+    args_parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "When three arguments",
+        .name = "FIRST INCREMENT LAST",
+        .accept_value = [&](char const* input) {
+            auto opt = get_double(input, &number_of_decimals_arg_three);
+            if (opt.has_value()) {
+                auto value = opt.value_or(0.0);
+                step = end;
+                end = value;
+                return true;
+            }
+            return false;
+        },
+    });
+    args_parser.parse(arguments);
 
     if (step == 0) {
-        warnln("{}: increment must not be 0", argv[0]);
+        warnln("{}: INCREMENT must not be 0", arguments.argv[0]);
+        args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
-    if (__builtin_isnan(start) || __builtin_isnan(step) || __builtin_isnan(end)) {
-        warnln("{}: start, step, and end must not be NaN", argv[0]);
-        return 1;
-    }
-
-    int number_of_decimals = max(number_of_start_decimals, max(number_of_step_decimals, number_of_end_decimals));
-
+    int number_of_decimals = max(number_of_decimals_arg_one, max(number_of_decimals_arg_two, number_of_decimals_arg_three));
     int n = (end - start) / step;
     double d = start;
     for (int i = 0; i <= n; ++i) {
