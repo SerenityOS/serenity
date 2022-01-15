@@ -10,7 +10,7 @@
 #include <AK/Math.h>
 
 #ifdef __SSE__
-#include <xmmintrin.h>
+#    include <xmmintrin.h>
 #endif
 
 #include <AK/SIMD.h>
