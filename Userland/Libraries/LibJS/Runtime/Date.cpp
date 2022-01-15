@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NumericLimits.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <LibCore/DateTime.h>
@@ -147,6 +148,8 @@ double time_from_year(i32 y)
 i32 year_from_time(double t)
 {
     // the largest integral Number y (closest to +∞) such that TimeFromYear(y) ≤ t
+    if (!Value(t).is_finite_number())
+        return NumericLimits<i32>::max();
 
     // Approximation using average number of milliseconds per year. We might have to adjust this guess afterwards.
     auto year = static_cast<i32>(t / (365.2425 * Date::ms_per_day) + 1970);
