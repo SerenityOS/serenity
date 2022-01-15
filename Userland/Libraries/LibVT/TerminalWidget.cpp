@@ -548,6 +548,11 @@ void TerminalWidget::set_opacity(u8 new_opacity)
     update();
 }
 
+void TerminalWidget::set_show_scrollbar(bool show_scrollbar)
+{
+    m_scrollbar->set_visible(show_scrollbar);
+}
+
 bool TerminalWidget::has_selection() const
 {
     return m_selection.is_valid();
