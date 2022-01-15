@@ -702,6 +702,10 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                         }
                     };
 
+                    auto sgi_dot_operator = [](FloatVector3 const& d1, FloatVector3 const& d2) {
+                        return AK::max(d1.dot(d2), 0.0f);
+                    };
+
                     float vector_length = 0.0f;
                     FloatVector3 vertex_to_light = sgi_arrow_operator(vertex.eye_coordinates, light.position, vector_length);
 
@@ -717,12 +721,11 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                     // Spotlight factor
                     float spotlight_factor = 1.0f;
                     if (light.spotlight_cutoff_angle != 180.0f) {
-                        const auto spotlight_direction_normalized = light.spotlight_direction.normalized();
-                        const auto light_to_vertex_dot_normalized_spotlight_direction = spotlight_direction_normalized.dot(FloatVector3(vertex_to_light.x(), vertex_to_light.y(), vertex_to_light.z()));
-                        const auto cos_spotlight_cutoff = AK::cos<float>(light.spotlight_cutoff_angle * AK::Pi<float> / 180.f);
+                        auto const vertex_to_light_dot_spotlight_direction = sgi_dot_operator(vertex_to_light, light.spotlight_direction.normalized());
+                        auto const cos_spotlight_cutoff = AK::cos<float>(light.spotlight_cutoff_angle * AK::Pi<float> / 180.f);
 
-                        if (light_to_vertex_dot_normalized_spotlight_direction >= cos_spotlight_cutoff)
-                            spotlight_factor = AK::pow<float>(light_to_vertex_dot_normalized_spotlight_direction, light.spotlight_exponent);
+                        if (vertex_to_light_dot_spotlight_direction >= cos_spotlight_cutoff)
+                            spotlight_factor = AK::pow<float>(vertex_to_light_dot_spotlight_direction, light.spotlight_exponent);
                         else
                             spotlight_factor = 0.0f;
                     }
@@ -740,7 +743,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                     auto const ambient_component = ambient * light.ambient_intensity;
 
                     // Diffuse
-                    auto const normal_dot_vertex_to_light = vertex.normal.dot(FloatVector3(vertex_to_light.x(), vertex_to_light.y(), vertex_to_light.z()));
+                    auto const normal_dot_vertex_to_light = sgi_dot_operator(vertex.normal, vertex_to_light);
                     auto const diffuse_component = ((diffuse * light.diffuse_intensity) * normal_dot_vertex_to_light).clamped(0.0f, 1.0f);
 
                     FloatVector4 color = ambient_component;
