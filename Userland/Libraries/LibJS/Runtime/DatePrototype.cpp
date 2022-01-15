@@ -72,7 +72,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.setMonth, set_month, 2, attr);
     define_native_function(vm.names.setSeconds, set_seconds, 2, attr);
     define_native_function(vm.names.setTime, set_time, 1, attr);
-    define_native_function(vm.names.setUTCDate, set_date, 1, attr); // FIXME: This is a hack, Serenity doesn't currently support timezones other than UTC.
+    define_native_function(vm.names.setUTCDate, set_utc_date, 1, attr);
     define_native_function(vm.names.setUTCFullYear, set_utc_full_year, 3, attr);
     define_native_function(vm.names.setUTCHours, set_utc_hours, 4, attr);
     define_native_function(vm.names.setUTCMilliseconds, set_utc_milliseconds, 1, attr);
@@ -617,6 +617,34 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
 
     // 5. Return v.
     return time;
+}
+
+// 21.4.4.28 Date.prototype.setUTCDate ( date ), https://tc39.es/ecma262/#sec-date.prototype.setutcdate
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_date)
+{
+    // 1. Let t be LocalTime(? thisTimeValue(this value)).
+    auto this_time = TRY(this_time_value(global_object, vm.this_value(global_object)));
+    auto time = local_time(this_time.as_double());
+
+    // 2. Let dt be ? ToNumber(date).
+    auto date = TRY(vm.argument(0).to_number(global_object));
+
+    // 3. Let newDate be MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), dt), TimeWithinDay(t)).
+    auto year = Value(year_from_time(time));
+    auto month = Value(month_from_time(time));
+
+    auto day = make_day(global_object, year, month, date);
+    auto new_date = make_date(day, Value(time_within_day(time)));
+
+    // 4. Let v be TimeClip(newDate).
+    new_date = time_clip(global_object, new_date);
+
+    // 5. Set the [[DateValue]] internal slot of this Date object to v.
+    auto* this_object = MUST(typed_this_object(global_object));
+    this_object->set_date_value(new_date.as_double());
+
+    // 6. Return v.
+    return new_date;
 }
 
 // 21.4.4.29 Date.prototype.setUTCFullYear ( year [ , month [ , date ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setutcfullyear
