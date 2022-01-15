@@ -270,36 +270,15 @@ private:
     struct TextureCoordinateGeneration {
         bool enabled { false };
         GLenum generation_mode { GL_EYE_LINEAR };
-        FloatVector4 object_plane_coefficients;
-        FloatVector4 eye_plane_coefficients;
+        FloatVector4 object_plane_coefficients { 0.0f, 0.0f, 0.0f, 0.0f };
+        FloatVector4 eye_plane_coefficients { 0.0f, 0.0f, 0.0f, 0.0f };
     };
-    Array<TextureCoordinateGeneration, 4> m_texture_coordinate_generation {
-        // S
-        TextureCoordinateGeneration {
-            .object_plane_coefficients = { 1.0f, 0.0f, 0.0f, 0.0f },
-            .eye_plane_coefficients = { 1.0f, 0.0f, 0.0f, 0.0f },
-        },
-        // T
-        TextureCoordinateGeneration {
-            .object_plane_coefficients = { 0.0f, 1.0f, 0.0f, 0.0f },
-            .eye_plane_coefficients = { 0.0f, 1.0f, 0.0f, 0.0f },
-        },
-        // R
-        TextureCoordinateGeneration {
-            .object_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
-            .eye_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
-        },
-        // Q
-        TextureCoordinateGeneration {
-            .object_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
-            .eye_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
-        },
-    };
+    Vector<Array<TextureCoordinateGeneration, 4>> m_texture_coordinate_generation;
     bool m_texcoord_generation_dirty { true };
 
-    ALWAYS_INLINE TextureCoordinateGeneration& texture_coordinate_generation(GLenum capability)
+    ALWAYS_INLINE TextureCoordinateGeneration& texture_coordinate_generation(size_t texture_unit, GLenum capability)
     {
-        return m_texture_coordinate_generation[capability - GL_TEXTURE_GEN_S];
+        return m_texture_coordinate_generation[texture_unit][capability - GL_TEXTURE_GEN_S];
     }
 
     SoftGPU::Device m_rasterizer;

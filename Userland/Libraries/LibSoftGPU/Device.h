@@ -70,8 +70,8 @@ struct RasterizerOptions {
     WindingOrder front_face { WindingOrder::CounterClockwise };
     bool cull_back { true };
     bool cull_front { false };
-    u8 texcoord_generation_enabled_coordinates { TexCoordGenerationCoordinate::None };
-    Array<TexCoordGenerationConfig, 4> texcoord_generation_config {};
+    Array<u8, NUM_SAMPLERS> texcoord_generation_enabled_coordinates {};
+    Array<Array<TexCoordGenerationConfig, 4>, NUM_SAMPLERS> texcoord_generation_config {};
     Gfx::IntRect viewport;
     bool lighting_enabled { false };
     bool color_material_enabled { false };
