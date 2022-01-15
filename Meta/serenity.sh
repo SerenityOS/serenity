@@ -172,7 +172,7 @@ pick_gcc() {
 cmd_with_target() {
     is_valid_target || ( >&2 echo "Unknown target: $TARGET"; usage )
     if [ "$TOOLCHAIN_TYPE" == "GNU" ]; then
-	pick_gcc
+        pick_gcc
     fi
 
     if [ ! -d "$SERENITY_SOURCE_DIR" ]; then
