@@ -27,7 +27,7 @@ ErrorOr<size_t> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuil
         return Error::from_errno(ESRCH);
     bool show_kernel_addresses = Process::current().is_superuser();
     bool kernel_address_added = false;
-    for (auto address : Processor::capture_stack_trace(*thread, 1024)) {
+    for (auto address : TRY(Processor::capture_stack_trace(*thread, 1024))) {
         if (!show_kernel_addresses && !Memory::is_user_address(VirtualAddress { address })) {
             if (kernel_address_added)
                 continue;
