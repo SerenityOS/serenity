@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/QuickSort.h>
+#include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -75,6 +76,8 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
     light0.diffuse_intensity = { 1.0f, 1.0f, 1.0f, 1.0f };
     light0.specular_intensity = { 1.0f, 1.0f, 1.0f, 1.0f };
     m_light_state_is_dirty = true;
+
+    build_extension_string();
 }
 
 Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
@@ -431,7 +434,7 @@ GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
     case GL_VERSION:
         return reinterpret_cast<GLubyte*>(const_cast<char*>("1.5"));
     case GL_EXTENSIONS:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>(""));
+        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_extensions.characters()));
     case GL_SHADING_LANGUAGE_VERSION:
         return reinterpret_cast<GLubyte*>(const_cast<char*>("0.0"));
     default:
@@ -924,8 +927,10 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
     // Check if width and height are a power of 2
-    RETURN_WITH_ERROR_IF((width & (width - 1)) != 0, GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
+    if (!m_device_info.supports_npot_textures) {
+        RETURN_WITH_ERROR_IF((width & (width - 1)) != 0, GL_INVALID_VALUE);
+        RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
+    }
     RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
 
     if (level == 0) {
@@ -3247,6 +3252,19 @@ void SoftwareGLContext::sync_stencil_configuration()
     };
     set_device_stencil(SoftGPU::Face::Front, m_stencil_function[Face::Front], m_stencil_operation[Face::Front]);
     set_device_stencil(SoftGPU::Face::Back, m_stencil_function[Face::Back], m_stencil_operation[Face::Back]);
+}
+
+void SoftwareGLContext::build_extension_string()
+{
+    Vector<StringView> extensions;
+
+    // FIXME: npot texture support became a required core feature starting with OpenGL 2.0 (https://www.khronos.org/opengl/wiki/NPOT_Texture)
+    // Ideally we would verify if the selected device adheres to the requested OpenGL context version before context creation
+    // and refuse to create a context if it doesn't.
+    if (m_device_info.supports_npot_textures)
+        extensions.append("GL_ARB_texture_non_power_of_two");
+
+    m_extensions = String::join(" ", extensions);
 }
 
 void SoftwareGLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)

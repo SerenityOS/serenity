@@ -157,6 +157,8 @@ private:
     void sync_light_state();
     void sync_stencil_configuration();
 
+    void build_extension_string();
+
     template<typename T>
     T* store_in_listing(T value)
     {
@@ -432,6 +434,9 @@ private:
     bool m_color_material_enabled { false };
     GLenum m_color_material_face { GL_FRONT_AND_BACK };
     GLenum m_color_material_mode { GL_AMBIENT_AND_DIFFUSE };
+
+    // GL Extension string
+    String m_extensions;
 };
 
 }
