@@ -133,7 +133,7 @@ u16 days_in_year(i32 y)
 double day_from_year(i32 y)
 {
     // 𝔽(365 × (ℝ(y) - 1970) + floor((ℝ(y) - 1969) / 4) - floor((ℝ(y) - 1901) / 100) + floor((ℝ(y) - 1601) / 400))
-    return 365 * (y - 1970) + floor((y - 1969) / 4.0) - floor((y - 1901) / 100.0) + floor((y - 1601) / 400.0);
+    return 365.0 * (y - 1970) + floor((y - 1969) / 4.0) - floor((y - 1901) / 100.0) + floor((y - 1601) / 400.0);
 }
 
 // TimeFromYear(y), https://tc39.es/ecma262/#eqn-TimeFromYear
