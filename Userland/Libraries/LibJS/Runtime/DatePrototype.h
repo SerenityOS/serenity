@@ -46,6 +46,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(set_month);
     JS_DECLARE_NATIVE_FUNCTION(set_seconds);
     JS_DECLARE_NATIVE_FUNCTION(set_time);
+    JS_DECLARE_NATIVE_FUNCTION(set_utc_minutes);
     JS_DECLARE_NATIVE_FUNCTION(set_utc_month);
     JS_DECLARE_NATIVE_FUNCTION(set_utc_seconds);
     JS_DECLARE_NATIVE_FUNCTION(to_date_string);
