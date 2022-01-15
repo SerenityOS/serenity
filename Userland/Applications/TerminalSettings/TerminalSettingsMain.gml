@@ -53,6 +53,11 @@
             margins: [16, 8, 8]
         }
 
+       @GUI::CheckBox {
+            name: "terminal_show_scrollbar"
+            text: "Show scrollbar"
+        }
+
         @GUI::SpinBox {
             name: "history_size_spinbox"
             min: 0
