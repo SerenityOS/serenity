@@ -15,6 +15,7 @@
 #include <pwd.h>
 #include <signal.h>
 #include <spawn.h>
+#include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -130,4 +131,5 @@ ErrorOr<void> getsockname(int sockfd, struct sockaddr*, socklen_t*);
 ErrorOr<void> getpeername(int sockfd, struct sockaddr*, socklen_t*);
 ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2]);
 ErrorOr<Vector<gid_t>> getgroups();
+ErrorOr<FILE*> fdopen(int fd, char const* mode);
 }

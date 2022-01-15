@@ -887,4 +887,12 @@ ErrorOr<Vector<gid_t>> getgroups()
     return groups;
 }
 
+ErrorOr<FILE*> fdopen(int fd, char const* mode)
+{
+    auto* maybe_fp = ::fdopen(fd, mode);
+    if (maybe_fp == nullptr)
+        return Error::from_syscall("fdopen"sv, -errno);
+    return maybe_fp;
+}
+
 }
