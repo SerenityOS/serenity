@@ -239,7 +239,9 @@ extern "C" {
 #define GL_RGB 0x1907
 #define GL_RGBA 0x1908
 #define GL_LUMINANCE 0x1909
+#define GL_LUMINANCE8 0x8040
 #define GL_LUMINANCE_ALPHA 0x190A
+#define GL_LUMINANCE8_ALPHA8 0x8045
 #define GL_BGR 0x190B
 #define GL_BGRA 0x190C
 #define GL_BITMAP 0x1A00
