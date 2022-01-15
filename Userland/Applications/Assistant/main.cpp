@@ -122,11 +122,11 @@ public:
     explicit Database(AppState& state)
         : m_state(state)
     {
-        m_providers.append(make<AppProvider>());
-        m_providers.append(make<CalculatorProvider>());
-        m_providers.append(make<FileProvider>());
-        m_providers.append(make<TerminalProvider>());
-        m_providers.append(make<URLProvider>());
+        m_providers.append(make_ref_counted<AppProvider>());
+        m_providers.append(make_ref_counted<CalculatorProvider>());
+        m_providers.append(make_ref_counted<FileProvider>());
+        m_providers.append(make_ref_counted<TerminalProvider>());
+        m_providers.append(make_ref_counted<URLProvider>());
     }
 
     Function<void(NonnullRefPtrVector<Result>)> on_new_results;
@@ -176,7 +176,7 @@ private:
 
     AppState& m_state;
 
-    NonnullOwnPtrVector<Provider> m_providers;
+    NonnullRefPtrVector<Provider> m_providers;
 
     Threading::Mutex m_mutex;
     HashMap<String, NonnullRefPtrVector<Result>> m_result_cache;
