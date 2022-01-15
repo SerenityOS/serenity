@@ -730,9 +730,6 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                             spotlight_factor = 0.0f;
                     }
 
-                    // FIXME: Specular. The math for it doesn't quite make sense...
-                    (void)m_lighting_model.viewer_at_infinity;
-
                     // FIXME: The spec allows for splitting the colors calculated here into multiple different colors (primary/secondary color). Investigate what this means.
                     (void)m_lighting_model.single_color;
 
@@ -744,10 +741,27 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
                     // Diffuse
                     auto const normal_dot_vertex_to_light = sgi_dot_operator(vertex.normal, vertex_to_light);
-                    auto const diffuse_component = ((diffuse * light.diffuse_intensity) * normal_dot_vertex_to_light).clamped(0.0f, 1.0f);
+                    auto const diffuse_component = ((diffuse * light.diffuse_intensity) * normal_dot_vertex_to_light);
+
+                    // Specular
+                    FloatVector4 specular_component = { 0.0f, 0.0f, 0.0f, 0.0f };
+                    if (normal_dot_vertex_to_light > 0.0f) {
+                        FloatVector3 half_vector_normalized;
+                        if (!m_lighting_model.viewer_at_infinity) {
+                            half_vector_normalized = (vertex_to_light + FloatVector3(0.0f, 0.0f, 1.0f)).normalized();
+                        } else {
+                            auto const vertex_to_eye_point = sgi_arrow_operator(vertex.eye_coordinates.normalized(), FloatVector4(0.0f, 0.0f, 0.0f, 1.0f), vector_length);
+                            half_vector_normalized = vertex_to_light + vertex_to_eye_point;
+                        }
+
+                        auto const normal_dot_half_vector = sgi_dot_operator(vertex.normal.normalized(), half_vector_normalized);
+                        auto const specular_coefficient = AK::pow(normal_dot_half_vector, material.shininess);
+                        specular_component = (specular * light.specular_intensity) * specular_coefficient;
+                    }
 
                     FloatVector4 color = ambient_component;
                     color += diffuse_component;
+                    color += specular_component;
                     color = color * light_attenuation_factor * spotlight_factor;
                     result_color += color;
                 }
