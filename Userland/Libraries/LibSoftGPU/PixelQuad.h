@@ -10,6 +10,7 @@
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
+#include <LibSoftGPU/Config.h>
 
 namespace SoftGPU {
 
@@ -18,7 +19,7 @@ struct PixelQuad final {
     Vector3<AK::SIMD::f32x4> barycentrics;
     AK::SIMD::f32x4 depth;
     Vector4<AK::SIMD::f32x4> vertex_color;
-    Vector4<AK::SIMD::f32x4> uv;
+    Array<Vector4<AK::SIMD::f32x4>, NUM_SAMPLERS> texture_coordinates;
     Vector4<AK::SIMD::f32x4> out_color;
     AK::SIMD::f32x4 fog_depth;
     AK::SIMD::i32x4 mask;

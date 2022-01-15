@@ -522,7 +522,8 @@ void Device::rasterize_triangle(const Triangle& triangle)
                 quad.vertex_color = expand4(vertex0.color);
             }
 
-            quad.uv = interpolate(expand4(vertex0.tex_coord), expand4(vertex1.tex_coord), expand4(vertex2.tex_coord), quad.barycentrics);
+            for (size_t i = 0; i < NUM_SAMPLERS; ++i)
+                quad.texture_coordinates[i] = interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics);
 
             if (m_options.fog_enabled) {
                 // Calculate depth of fragment for fog
@@ -667,11 +668,11 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
     };
 
     auto const enabled_coords = options.texcoord_generation_enabled_coordinates;
-    vertex.tex_coord = {
-        ((enabled_coords & TexCoordGenerationCoordinate::S) > 0) ? generate_coordinate(0) : vertex.tex_coord.x(),
-        ((enabled_coords & TexCoordGenerationCoordinate::T) > 0) ? generate_coordinate(1) : vertex.tex_coord.y(),
-        ((enabled_coords & TexCoordGenerationCoordinate::R) > 0) ? generate_coordinate(2) : vertex.tex_coord.z(),
-        ((enabled_coords & TexCoordGenerationCoordinate::Q) > 0) ? generate_coordinate(3) : vertex.tex_coord.w(),
+    vertex.tex_coords[0] = {
+        ((enabled_coords & TexCoordGenerationCoordinate::S) > 0) ? generate_coordinate(0) : vertex.tex_coords[0].x(),
+        ((enabled_coords & TexCoordGenerationCoordinate::T) > 0) ? generate_coordinate(1) : vertex.tex_coords[0].y(),
+        ((enabled_coords & TexCoordGenerationCoordinate::R) > 0) ? generate_coordinate(2) : vertex.tex_coords[0].z(),
+        ((enabled_coords & TexCoordGenerationCoordinate::Q) > 0) ? generate_coordinate(3) : vertex.tex_coords[0].w(),
     };
 }
 
@@ -994,10 +995,11 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         }
 
         // Apply texture transformation
-        // FIXME: implement multi-texturing: texcoords should be stored per texture unit
-        triangle.vertices[0].tex_coord = texture_transform * triangle.vertices[0].tex_coord;
-        triangle.vertices[1].tex_coord = texture_transform * triangle.vertices[1].tex_coord;
-        triangle.vertices[2].tex_coord = texture_transform * triangle.vertices[2].tex_coord;
+        for (size_t i = 0; i < NUM_SAMPLERS; ++i) {
+            triangle.vertices[0].tex_coords[i] = texture_transform * triangle.vertices[0].tex_coords[i];
+            triangle.vertices[1].tex_coords[i] = texture_transform * triangle.vertices[1].tex_coords[i];
+            triangle.vertices[2].tex_coords[i] = texture_transform * triangle.vertices[2].tex_coords[i];
+        }
 
         rasterize_triangle(triangle);
     }
@@ -1011,7 +1013,7 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
         // FIXME: implement GL_TEXTURE_1D, GL_TEXTURE_3D and GL_TEXTURE_CUBE_MAP
         auto const& sampler = m_samplers[i];
 
-        auto texel = sampler.sample_2d({ quad.uv.x(), quad.uv.y() });
+        auto texel = sampler.sample_2d({ quad.texture_coordinates[i].x(), quad.texture_coordinates[i].y() });
         INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
 
         // FIXME: Implement more blend modes
