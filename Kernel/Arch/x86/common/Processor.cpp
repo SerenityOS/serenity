@@ -491,15 +491,15 @@ const DescriptorTablePointer& Processor::get_gdtr()
     return m_gdtr;
 }
 
-Vector<FlatPtr, 32> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
+ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
 {
     FlatPtr frame_ptr = 0, ip = 0;
     Vector<FlatPtr, 32> stack_trace;
 
-    auto walk_stack = [&](FlatPtr stack_ptr) {
+    auto walk_stack = [&](FlatPtr stack_ptr) -> ErrorOr<void> {
         static constexpr size_t max_stack_frames = 4096;
         bool is_walking_userspace_stack = false;
-        stack_trace.append(ip);
+        TRY(stack_trace.try_append(ip));
         size_t count = 1;
         while (stack_ptr && stack_trace.size() < max_stack_frames) {
             FlatPtr retaddr;
@@ -520,24 +520,25 @@ Vector<FlatPtr, 32> Processor::capture_stack_trace(Thread& thread, size_t max_fr
             if (Memory::is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
                 if (copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]).is_error() || !retaddr)
                     break;
-                stack_trace.append(retaddr);
+                TRY(stack_trace.try_append(retaddr));
                 if (copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr).is_error())
                     break;
             } else {
                 void* fault_at;
                 if (!safe_memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr), fault_at) || !retaddr)
                     break;
-                stack_trace.append(retaddr);
+                TRY(stack_trace.try_append(retaddr));
                 if (!safe_memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr), fault_at))
                     break;
             }
         }
+        return {};
     };
     auto capture_current_thread = [&]() {
         frame_ptr = (FlatPtr)__builtin_frame_address(0);
         ip = (FlatPtr)__builtin_return_address(0);
 
-        walk_stack(frame_ptr);
+        return walk_stack(frame_ptr);
     };
 
     // Since the thread may be running on another processor, there
@@ -551,7 +552,7 @@ Vector<FlatPtr, 32> Processor::capture_stack_trace(Thread& thread, size_t max_fr
         // need to be preempted. Since this is our own thread it won't
         // cause any problems as the stack won't change below this frame.
         lock.unlock();
-        capture_current_thread();
+        TRY(capture_current_thread());
     } else if (thread.is_active()) {
         VERIFY(thread.cpu() != Processor::current_id());
         // If this is the case, the thread is currently running
@@ -560,6 +561,7 @@ Vector<FlatPtr, 32> Processor::capture_stack_trace(Thread& thread, size_t max_fr
         // an IPI to that processor, have it walk the stack and wait
         // until it returns the data back to us
         auto& proc = Processor::current();
+        ErrorOr<void> result;
         smp_unicast(
             thread.cpu(),
             [&]() {
@@ -574,9 +576,10 @@ Vector<FlatPtr, 32> Processor::capture_stack_trace(Thread& thread, size_t max_fr
                 // TODO: What to do about page faults here? We might deadlock
                 //       because the other processor is still holding the
                 //       scheduler lock...
-                capture_current_thread();
+                result = capture_current_thread();
             },
             false);
+        TRY(result);
     } else {
         switch (thread.state()) {
         case Thread::Running:
@@ -608,7 +611,7 @@ Vector<FlatPtr, 32> Processor::capture_stack_trace(Thread& thread, size_t max_fr
             //       need to prevent the target thread from being run while
             //       we walk the stack
             lock.unlock();
-            walk_stack(frame_ptr);
+            TRY(walk_stack(frame_ptr));
             break;
         }
         default:

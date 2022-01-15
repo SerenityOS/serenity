@@ -1192,7 +1192,7 @@ ErrorOr<NonnullOwnPtr<KString>> Thread::backtrace()
     Vector<RecognizedSymbol, 128> recognized_symbols;
 
     auto& process = const_cast<Process&>(this->process());
-    auto stack_trace = Processor::capture_stack_trace(*this);
+    auto stack_trace = TRY(Processor::capture_stack_trace(*this));
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
     ScopedAddressSpaceSwitcher switcher(process);
     for (auto& frame : stack_trace) {
