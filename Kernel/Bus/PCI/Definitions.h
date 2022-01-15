@@ -184,7 +184,7 @@ public:
         return !(*this == other);
     }
 
-    u16 domain() const { return m_domain; }
+    u32 domain() const { return m_domain; }
     u8 bus() const { return m_bus; }
     u8 device() const { return m_device; }
     u8 function() const { return m_function; }
