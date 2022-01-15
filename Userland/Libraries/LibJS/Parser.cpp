@@ -2612,12 +2612,16 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
                 syntax_error("Generator function parameter initializer cannot contain a reference to an identifier named \"yield\"");
         }
         parameters.append({ move(parameter), default_value, is_rest });
-        if (match(TokenType::ParenClose) || is_rest)
+        if (!match(TokenType::Comma) || is_rest)
             break;
         consume(TokenType::Comma);
     }
     if (parse_options & FunctionNodeParseOptions::IsSetterFunction && parameters.is_empty())
         syntax_error("Setter function must have one argument");
+    // If we're parsing the parameters standalone, e.g. via CreateDynamicFunction, we must have reached EOF here.
+    // Otherwise, we need a closing parenthesis (which is consumed elsewhere). If we get neither, it's an error.
+    if (!match(TokenType::Eof) && !match(TokenType::ParenClose))
+        expected(Token::name(TokenType::ParenClose));
     return parameters;
 }
 
