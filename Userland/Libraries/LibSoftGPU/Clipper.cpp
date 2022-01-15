@@ -47,7 +47,8 @@ Vertex Clipper::clip_intersection_point(const Vertex& p1, const Vertex& p2, Clip
     out.eye_coordinates = mix(p1.eye_coordinates, p2.eye_coordinates, a);
     out.clip_coordinates = mix(p1.clip_coordinates, p2.clip_coordinates, a);
     out.color = mix(p1.color, p2.color, a);
-    out.tex_coord = mix(p1.tex_coord, p2.tex_coord, a);
+    for (size_t i = 0; i < NUM_SAMPLERS; ++i)
+        out.tex_coords[i] = mix(p1.tex_coords[i], p2.tex_coords[i], a);
     out.normal = mix(p1.normal, p2.normal, a);
     return out;
 }

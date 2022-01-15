@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
+#include <LibSoftGPU/Config.h>
 
 namespace SoftGPU {
 
@@ -18,7 +20,7 @@ struct Vertex {
     FloatVector4 clip_coordinates;
     FloatVector4 window_coordinates;
     FloatVector4 color;
-    FloatVector4 tex_coord;
+    Array<FloatVector4, NUM_SAMPLERS> tex_coords;
     FloatVector3 normal;
 };
 
