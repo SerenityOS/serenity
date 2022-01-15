@@ -204,7 +204,7 @@ private:
     u8 m_clear_stencil { 0 };
 
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    FloatVector4 m_current_vertex_tex_coord = { 0.0f, 0.0f, 0.0f, 1.0f };
+    Vector<FloatVector4> m_current_vertex_tex_coord;
     FloatVector3 m_current_vertex_normal = { 0.0f, 0.0f, 1.0f };
 
     Vector<SoftGPU::Vertex> m_vertex_list;
@@ -262,7 +262,7 @@ private:
     // Texture objects
     TextureNameAllocator m_name_allocator;
     HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
-    Vector<TextureUnit, 32> m_texture_units;
+    Vector<TextureUnit> m_texture_units;
     TextureUnit* m_active_texture_unit;
 
     // Texture coordinate generation state

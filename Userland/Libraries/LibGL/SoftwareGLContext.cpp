@@ -79,6 +79,9 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
 
     m_client_side_texture_coord_array_enabled.resize(m_device_info.num_texture_units);
     m_client_tex_coord_pointer.resize(m_device_info.num_texture_units);
+    m_current_vertex_tex_coord.resize(m_device_info.num_texture_units);
+    for (auto& tex_coord : m_current_vertex_tex_coord)
+        tex_coord = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     build_extension_string();
 }
@@ -619,7 +622,7 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
     vertex.position = { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(w) };
     vertex.color = m_current_vertex_color;
     for (size_t i = 0; i < m_device_info.num_texture_units; ++i)
-        vertex.tex_coords[i] = m_current_vertex_tex_coord;
+        vertex.tex_coords[i] = m_current_vertex_tex_coord[i];
     vertex.normal = m_current_vertex_normal;
 
     m_vertex_list.append(vertex);
@@ -629,14 +632,16 @@ void SoftwareGLContext::gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_coord, s, t, r, q);
 
-    m_current_vertex_tex_coord = { s, t, r, q };
+    m_current_vertex_tex_coord[0] = { s, t, r, q };
 }
 
 void SoftwareGLContext::gl_multi_tex_coord(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_multi_tex_coord, target, s, t, r, q);
 
-    m_current_vertex_tex_coord = { s, t, r, q };
+    RETURN_WITH_ERROR_IF(target < GL_TEXTURE0 || target >= GL_TEXTURE0 + m_device_info.num_texture_units, GL_INVALID_ENUM);
+
+    m_current_vertex_tex_coord[target - GL_TEXTURE0] = { s, t, r, q };
 }
 
 void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height)
