@@ -4,7 +4,6 @@ set(SOURCES
     Encoder.cpp
     Message.cpp
     Stub.cpp
-    SystemServerTakeover.cpp
 )
 
 serenity_lib(LibIPC ipc)
