@@ -15,7 +15,7 @@
 namespace SoftGPU {
 
 static constexpr bool ENABLE_STATISTICS_OVERLAY = false;
-static constexpr int NUM_SAMPLERS = 32;
+static constexpr int NUM_SAMPLERS = 2;
 static constexpr int SUBPIXEL_BITS = 5;
 static constexpr int NUM_LIGHTS = 8;
 
