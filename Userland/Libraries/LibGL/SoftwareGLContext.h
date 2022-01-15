@@ -254,7 +254,8 @@ private:
     // Client side arrays
     bool m_client_side_vertex_array_enabled = false;
     bool m_client_side_color_array_enabled = false;
-    bool m_client_side_texture_coord_array_enabled = false;
+    Vector<bool> m_client_side_texture_coord_array_enabled;
+    size_t m_client_active_texture = 0;
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
@@ -419,7 +420,7 @@ private:
 
     VertexAttribPointer m_client_vertex_pointer;
     VertexAttribPointer m_client_color_pointer;
-    VertexAttribPointer m_client_tex_coord_pointer;
+    Vector<VertexAttribPointer> m_client_tex_coord_pointer;
 
     u8 m_pack_alignment { 4 };
     GLsizei m_unpack_row_length { 0 };
