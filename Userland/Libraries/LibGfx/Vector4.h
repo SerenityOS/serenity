@@ -11,6 +11,9 @@
 
 namespace Gfx {
 template<typename T>
+class Vector3;
+
+template<typename T>
 class Vector4 final {
 public:
     constexpr Vector4() = default;
@@ -129,6 +132,11 @@ public:
     constexpr T length() const
     {
         return AK::sqrt(m_x * m_x + m_y * m_y + m_z * m_z + m_w * m_w);
+    }
+
+    constexpr Vector3<T> xyz() const
+    {
+        return Vector3<T>(m_x, m_y, m_z);
     }
 
     String to_string() const
