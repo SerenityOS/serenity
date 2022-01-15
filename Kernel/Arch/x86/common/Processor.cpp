@@ -491,7 +491,7 @@ const DescriptorTablePointer& Processor::get_gdtr()
     return m_gdtr;
 }
 
-Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
+Vector<FlatPtr, 32> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
 {
     FlatPtr frame_ptr = 0, ip = 0;
     Vector<FlatPtr, 32> stack_trace;

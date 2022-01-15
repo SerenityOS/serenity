@@ -398,7 +398,7 @@ public:
     NEVER_INLINE void switch_context(Thread*& from_thread, Thread*& to_thread);
     [[noreturn]] static void assume_context(Thread& thread, FlatPtr flags);
     FlatPtr init_context(Thread& thread, bool leave_crit);
-    static Vector<FlatPtr> capture_stack_trace(Thread& thread, size_t max_frames = 0);
+    static Vector<FlatPtr, 32> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
     static StringView platform_string();
 };
