@@ -3072,7 +3072,6 @@ void SoftwareGLContext::sync_light_state()
         material.specular = current_material_state.specular;
         material.emissive = current_material_state.emissive;
         material.shininess = current_material_state.shininess;
-        material.specular_exponent = current_material_state.specular_exponent;
         material.ambient_color_index = current_material_state.ambient_color_index;
         material.diffuse_color_index = current_material_state.diffuse_color_index;
         material.specular_color_index = current_material_state.specular_color_index;
