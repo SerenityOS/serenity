@@ -577,6 +577,7 @@ GLAPI void glTexEnvf(GLenum target, GLenum pname, GLfloat param);
 GLAPI void glTexEnvi(GLenum target, GLenum pname, GLint param);
 GLAPI void glBindTexture(GLenum target, GLuint texture);
 GLAPI GLboolean glIsTexture(GLuint texture);
+GLAPI void glActiveTextureARB(GLenum texture);
 GLAPI void glActiveTexture(GLenum texture);
 GLAPI void glGetBooleanv(GLenum pname, GLboolean* data);
 GLAPI void glGetDoublev(GLenum pname, GLdouble* params);
