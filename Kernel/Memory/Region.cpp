@@ -52,10 +52,16 @@ Region::~Region()
         MM.unregister_kernel_region(*this);
 
     if (m_page_directory) {
-        SpinlockLocker page_lock(m_page_directory->get_lock());
-        SpinlockLocker lock(s_mm_lock);
-        unmap(ShouldDeallocateVirtualRange::Yes);
-        VERIFY(!m_page_directory);
+        SpinlockLocker pd_locker(m_page_directory->get_lock());
+        if (!is_readable() && !is_writable() && !is_executable()) {
+            // If the region is "PROT_NONE", we didn't map it in the first place,
+            // so all we need to do here is deallocate the VM.
+            m_page_directory->range_allocator().deallocate(range());
+        } else {
+            SpinlockLocker mm_locker(s_mm_lock);
+            unmap_with_locks_held(ShouldDeallocateVirtualRange::Yes, ShouldFlushTLB::Yes, pd_locker, mm_locker);
+            VERIFY(!m_page_directory);
+        }
     }
 }
 

@@ -191,7 +191,14 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const&
         region_name = TRY(KString::try_create(name));
     auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), offset_in_vmobject, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
     auto* added_region = TRY(add_region(move(region)));
-    TRY(added_region->map(page_directory(), ShouldFlushTLB::No));
+    if (prot == PROT_NONE) {
+        // For PROT_NONE mappings, we don't have to set up any page table mappings.
+        // We do still need to attach the region to the page_directory though.
+        SpinlockLocker mm_locker(s_mm_lock);
+        added_region->set_page_directory(page_directory());
+    } else {
+        TRY(added_region->map(page_directory(), ShouldFlushTLB::No));
+    }
     return added_region;
 }
 
