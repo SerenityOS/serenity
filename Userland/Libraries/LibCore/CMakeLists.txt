@@ -32,6 +32,7 @@ set(SOURCES
     Stream.cpp
     StandardPaths.cpp
     System.cpp
+    SystemServerTakeover.cpp
     TCPServer.cpp
     TCPSocket.cpp
     TempFile.cpp
