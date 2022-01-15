@@ -95,7 +95,7 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
         clone_region_name = TRY(m_name->try_clone());
 
     auto clone_region = TRY(Region::try_create_user_accessible(
-        m_range, vmobject_clone, m_offset_in_vmobject, move(clone_region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
+        m_range, move(vmobject_clone), m_offset_in_vmobject, move(clone_region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
 
     if (m_stack) {
         VERIFY(is_readable());
