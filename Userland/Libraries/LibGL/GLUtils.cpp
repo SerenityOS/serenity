@@ -135,6 +135,16 @@ void glDisableClientState(GLenum cap)
     g_gl_context->gl_disable_client_state(cap);
 }
 
+void glClientActiveTextureARB(GLenum target)
+{
+    glClientActiveTexture(target);
+}
+
+void glClientActiveTexture(GLenum target)
+{
+    g_gl_context->gl_client_active_texture(target);
+}
+
 void glDepthRange(GLdouble min, GLdouble max)
 {
     g_gl_context->gl_depth_range(min, max);

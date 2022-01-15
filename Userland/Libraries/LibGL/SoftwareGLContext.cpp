@@ -621,10 +621,16 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
     m_vertex_list.append(vertex);
 }
 
-// FIXME: We need to add `r` and `q` to our GLVertex?!
 void SoftwareGLContext::gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_coord, s, t, r, q);
+
+    m_current_vertex_tex_coord = { s, t, r, q };
+}
+
+void SoftwareGLContext::gl_multi_tex_coord(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_multi_tex_coord, target, s, t, r, q);
 
     m_current_vertex_tex_coord = { s, t, r, q };
 }
@@ -2031,6 +2037,11 @@ void SoftwareGLContext::gl_disable_client_state(GLenum cap)
     }
 }
 
+void SoftwareGLContext::gl_client_active_texture(GLenum target)
+{
+    (void)target;
+}
+
 void SoftwareGLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
@@ -3263,6 +3274,9 @@ void SoftwareGLContext::build_extension_string()
     // and refuse to create a context if it doesn't.
     if (m_device_info.supports_npot_textures)
         extensions.append("GL_ARB_texture_non_power_of_two");
+
+    if (m_device_info.num_texture_units > 1)
+        extensions.append("GL_ARB_multitexture");
 
     m_extensions = String::join(" ", extensions);
 }
