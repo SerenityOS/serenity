@@ -101,7 +101,6 @@ bool NVMeController::reset_controller()
 
     m_controller_regs->cc = cc;
 
-    IO::delay(10);
     full_memory_barrier();
 
     // Wait until the RDY bit is cleared
@@ -128,7 +127,6 @@ bool NVMeController::start_controller()
 
     m_controller_regs->cc = cc;
 
-    IO::delay(10);
     full_memory_barrier();
 
     // Wait until the RDY bit is set
