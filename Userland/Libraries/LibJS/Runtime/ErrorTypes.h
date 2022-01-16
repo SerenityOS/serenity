@@ -65,6 +65,7 @@
     M(JsonCircular, "Cannot stringify circular object")                                                                                 \
     M(JsonMalformed, "Malformed JSON string")                                                                                           \
     M(MissingRequiredProperty, "Required property {} is missing or undefined")                                                          \
+    M(ModuleNoEnvironment, "Cannot find module environment for imported binding")                                                       \
     M(NegativeExponent, "Exponent must be positive")                                                                                    \
     M(NonExtensibleDefine, "Cannot define property {} on non-extensible object")                                                        \
     M(NotAConstructor, "{} is not a constructor")                                                                                       \
