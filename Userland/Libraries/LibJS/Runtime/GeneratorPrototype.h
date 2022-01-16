@@ -11,14 +11,14 @@
 
 namespace JS {
 
-// 27.5.1 %GeneratorFunction.prototype.prototype%, https://tc39.es/ecma262/#sec-properties-of-generator-prototype
-class GeneratorObjectPrototype final : public PrototypeObject<GeneratorObjectPrototype, GeneratorObject> {
-    JS_PROTOTYPE_OBJECT(GeneratorObjectPrototype, GeneratorObject, Generator);
+// 27.5.1 Properties of the Generator Prototype Object, https://tc39.es/ecma262/#sec-properties-of-generator-prototype
+class GeneratorPrototype final : public PrototypeObject<GeneratorPrototype, GeneratorObject> {
+    JS_PROTOTYPE_OBJECT(GeneratorPrototype, GeneratorObject, Generator);
 
 public:
-    explicit GeneratorObjectPrototype(GlobalObject&);
+    explicit GeneratorPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~GeneratorObjectPrototype() override;
+    virtual ~GeneratorPrototype() override;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(next);

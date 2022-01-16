@@ -20,7 +20,7 @@
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GeneratorObject.h>
-#include <LibJS/Runtime/GeneratorObjectPrototype.h>
+#include <LibJS/Runtime/GeneratorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
@@ -111,7 +111,7 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
             break;
         case FunctionKind::Generator:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-            prototype = global_object.generator_object_prototype();
+            prototype = global_object.generator_prototype();
             break;
         case FunctionKind::Async:
             break;

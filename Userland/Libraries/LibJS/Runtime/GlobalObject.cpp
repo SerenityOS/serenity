@@ -46,7 +46,7 @@
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GeneratorFunctionConstructor.h>
 #include <LibJS/Runtime/GeneratorFunctionPrototype.h>
-#include <LibJS/Runtime/GeneratorObjectPrototype.h>
+#include <LibJS/Runtime/GeneratorPrototype.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatConstructor.h>
@@ -168,8 +168,8 @@ void GlobalObject::initialize_global_object()
 
     // %GeneratorFunction.prototype.prototype% must be initialized separately as it has no
     // companion constructor
-    m_generator_object_prototype = heap().allocate<GeneratorObjectPrototype>(*this, *this);
-    m_generator_object_prototype->define_direct_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
+    m_generator_prototype = heap().allocate<GeneratorPrototype>(*this, *this);
+    m_generator_prototype->define_direct_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
 
     m_async_from_sync_iterator_prototype = heap().allocate<AsyncFromSyncIteratorPrototype>(*this, *this);
 
@@ -305,7 +305,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_new_object_shape);
     visitor.visit(m_new_ordinary_function_prototype_object_shape);
     visitor.visit(m_proxy_constructor);
-    visitor.visit(m_generator_object_prototype);
+    visitor.visit(m_generator_prototype);
     visitor.visit(m_array_prototype_values_function);
     visitor.visit(m_date_constructor_now_function);
     visitor.visit(m_eval_function);
