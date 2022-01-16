@@ -63,6 +63,9 @@ String Date::iso_date_string() const
 // DayWithinYear(t), https://tc39.es/ecma262/#eqn-DayWithinYear
 u16 day_within_year(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // Day(t) - DayFromYear(YearFromTime(t))
     return static_cast<u16>(day(t) - day_from_year(year_from_time(t)));
 }
