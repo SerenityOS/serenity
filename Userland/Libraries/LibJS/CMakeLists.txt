@@ -115,6 +115,7 @@ set(SOURCES
     Runtime/MapPrototype.cpp
     Runtime/MarkedValueList.cpp
     Runtime/MathObject.cpp
+    Runtime/ModuleEnvironment.cpp
     Runtime/NativeFunction.cpp
     Runtime/NumberConstructor.cpp
     Runtime/NumberObject.cpp
