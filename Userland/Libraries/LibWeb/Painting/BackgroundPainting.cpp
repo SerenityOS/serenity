@@ -82,18 +82,28 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         case CSS::BackgroundSize::LengthPercentage: {
             int width;
             int height;
-            if (layer.size_x.is_auto() && layer.size_y.is_auto()) {
+            bool x_is_auto = layer.size_x.is_length() && layer.size_x.length().is_auto();
+            bool y_is_auto = layer.size_y.is_length() && layer.size_y.length().is_auto();
+            if (x_is_auto && y_is_auto) {
                 width = image.width();
                 height = image.height();
-            } else if (layer.size_x.is_auto()) {
-                height = layer.size_y.resolved_or_zero(layout_node, background_positioning_area.height()).to_px(layout_node);
+            } else if (x_is_auto) {
+                height = layer.size_y.resolved(CSS::Length::make_px(background_positioning_area.height()))
+                             .resolved_or_zero(layout_node, background_positioning_area.height())
+                             .to_px(layout_node);
                 width = roundf(image.width() * ((float)height / (float)image.height()));
-            } else if (layer.size_y.is_auto()) {
-                width = layer.size_x.resolved_or_zero(layout_node, background_positioning_area.width()).to_px(layout_node);
+            } else if (y_is_auto) {
+                width = layer.size_x.resolved(CSS::Length::make_px(background_positioning_area.width()))
+                            .resolved_or_zero(layout_node, background_positioning_area.width())
+                            .to_px(layout_node);
                 height = roundf(image.height() * ((float)width / (float)image.width()));
             } else {
-                width = layer.size_x.resolved_or_zero(layout_node, background_positioning_area.width()).to_px(layout_node);
-                height = layer.size_y.resolved_or_zero(layout_node, background_positioning_area.height()).to_px(layout_node);
+                width = layer.size_x.resolved(CSS::Length::make_px(background_positioning_area.width()))
+                            .resolved_or_zero(layout_node, background_positioning_area.width())
+                            .to_px(layout_node);
+                height = layer.size_y.resolved(CSS::Length::make_px(background_positioning_area.height()))
+                             .resolved_or_zero(layout_node, background_positioning_area.height())
+                             .to_px(layout_node);
             }
 
             image_rect.set_size(width, height);
@@ -120,10 +130,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             // for the other dimension, then there is a third step: that other dimension is scaled
             // so that the original aspect ratio is restored.
             if (layer.repeat_x != layer.repeat_y) {
-                if (layer.size_x.is_auto()) {
+                if (layer.size_x.is_length() && layer.size_x.length().is_auto()) {
                     image_rect.set_width((float)image.width() * ((float)image_rect.height() / (float)image.height()));
                 }
-                if (layer.size_y.is_auto()) {
+                if (layer.size_y.is_length() && layer.size_y.length().is_auto()) {
                     image_rect.set_height((float)image.height() * ((float)image_rect.width() / (float)image.width()));
                 }
             }

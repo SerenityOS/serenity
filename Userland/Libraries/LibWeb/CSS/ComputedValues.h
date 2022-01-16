@@ -49,8 +49,8 @@ struct BackgroundLayerData {
     CSS::PositionEdge position_edge_y { CSS::PositionEdge::Top };
     CSS::Length position_offset_y { CSS::Length::make_px(0) };
     CSS::BackgroundSize size_type { CSS::BackgroundSize::LengthPercentage };
-    CSS::Length size_x { CSS::Length::make_auto() };
-    CSS::Length size_y { CSS::Length::make_auto() };
+    CSS::LengthPercentage size_x { CSS::Length::make_auto() };
+    CSS::LengthPercentage size_y { CSS::Length::make_auto() };
     CSS::Repeat repeat_x { CSS::Repeat::Repeat };
     CSS::Repeat repeat_y { CSS::Repeat::Repeat };
 };
