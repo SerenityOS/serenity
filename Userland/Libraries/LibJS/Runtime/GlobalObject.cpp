@@ -375,7 +375,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
     if (vm.argument(0).is_number())
         return vm.argument(0);
     auto input_string = TRY(vm.argument(0).to_string(global_object));
-    auto trimmed_string = input_string.trim_whitespace(TrimMode::Left);
+    auto trimmed_string = MUST(trim_string(global_object, js_string(vm, input_string), TrimMode::Left));
     for (size_t length = trimmed_string.length(); length > 0; --length) {
         auto number = MUST(Value(js_string(vm, trimmed_string.substring(0, length))).to_number(global_object));
         if (!number.is_nan())
