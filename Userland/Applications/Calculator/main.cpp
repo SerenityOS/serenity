@@ -91,13 +91,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     constexpr StringView format { "&Custom - {} ..." };
     auto round_custom = GUI::Action::create_checkable(String::formatted(format, 0), [&](auto& action) {
         unsigned custom_rounding_length = 0;
-        RoundingDialog::show(window, custom_rounding_length);
+        RoundingDialog::show(window, "Choose custom rounding"sv, custom_rounding_length);
 
         action.set_text(String::formatted(format, custom_rounding_length));
         widget->set_rounding_length(custom_rounding_length);
     });
 
     widget->set_rounding_custom(round_custom, format);
+
+    auto shrink_action = GUI::Action::create("&Shrink...", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-cut.png")), [&](auto&) {
+        unsigned shrink_length {};
+        RoundingDialog::show(window, "Choose shrinking length"sv, shrink_length);
+
+        round_custom->set_checked(true);
+        round_custom->set_text(String::formatted(format, shrink_length));
+        widget->set_rounding_length(shrink_length);
+        widget->shrink(shrink_length);
+    });
 
     preview_actions.add_action(*round_0);
     preview_actions.add_action(*round_2);
@@ -109,6 +119,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     round_menu.add_action(*round_2);
     round_menu.add_action(*round_4);
     round_menu.add_action(*round_custom);
+    round_menu.add_action(*shrink_action);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));

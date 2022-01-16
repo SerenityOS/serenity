@@ -147,3 +147,8 @@ unsigned Keypad::rounding_length() const
 {
     return m_displayed_frac_length.to_u64();
 }
+
+void Keypad::shrink(unsigned shrink_threshold)
+{
+    m_internal_value = m_internal_value.rounded(shrink_threshold);
+}

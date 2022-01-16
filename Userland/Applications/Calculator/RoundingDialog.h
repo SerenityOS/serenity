@@ -13,10 +13,10 @@ class RoundingDialog : public GUI::Dialog {
     C_OBJECT(RoundingDialog);
 
 public:
-    static ExecResult show(GUI::Window* parent_window, unsigned& rounding_value);
+    static ExecResult show(GUI::Window* parent_window, StringView, unsigned& rounding_value);
 
 private:
-    RoundingDialog();
+    RoundingDialog(StringView);
     virtual ~RoundingDialog() override = default;
 
     RefPtr<GUI::Label> m_error_label;
