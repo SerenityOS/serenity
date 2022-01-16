@@ -670,7 +670,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
     auto& cpu_graph_group_box = graphs_container->add<GUI::GroupBox>("CPU usage");
     cpu_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
 
-    static constexpr size_t cpu_graphs_per_row = 4;
+    size_t cpu_graphs_per_row = min(4, ProcessModel::the().cpus().size());
     auto cpu_graph_rows = ceil_div(ProcessModel::the().cpus().size(), cpu_graphs_per_row);
     cpu_graph_group_box.set_fixed_height(120u * cpu_graph_rows);
 

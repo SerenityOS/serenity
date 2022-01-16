@@ -13,7 +13,6 @@ set(SOURCES
     FontEditor.cpp
     FontEditorWindowGML.h
     GlyphEditorWidget.cpp
-    GlyphMapWidget.cpp
     main.cpp
     NewFontDialog.cpp
     NewFontDialogPage1GML.h

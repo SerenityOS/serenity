@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NumericLimits.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <LibCore/DateTime.h>
@@ -62,6 +63,9 @@ String Date::iso_date_string() const
 // DayWithinYear(t), https://tc39.es/ecma262/#eqn-DayWithinYear
 u16 day_within_year(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // Day(t) - DayFromYear(YearFromTime(t))
     return static_cast<u16>(day(t) - day_from_year(year_from_time(t)));
 }
@@ -133,7 +137,7 @@ u16 days_in_year(i32 y)
 double day_from_year(i32 y)
 {
     // 𝔽(365 × (ℝ(y) - 1970) + floor((ℝ(y) - 1969) / 4) - floor((ℝ(y) - 1901) / 100) + floor((ℝ(y) - 1601) / 400))
-    return 365 * (y - 1970) + floor((y - 1969) / 4.0) - floor((y - 1901) / 100.0) + floor((y - 1601) / 400.0);
+    return 365.0 * (y - 1970) + floor((y - 1969) / 4.0) - floor((y - 1901) / 100.0) + floor((y - 1601) / 400.0);
 }
 
 // TimeFromYear(y), https://tc39.es/ecma262/#eqn-TimeFromYear
@@ -147,6 +151,8 @@ double time_from_year(i32 y)
 i32 year_from_time(double t)
 {
     // the largest integral Number y (closest to +∞) such that TimeFromYear(y) ≤ t
+    if (!Value(t).is_finite_number())
+        return NumericLimits<i32>::max();
 
     // Approximation using average number of milliseconds per year. We might have to adjust this guess afterwards.
     auto year = static_cast<i32>(t / (365.2425 * Date::ms_per_day) + 1970);
@@ -216,6 +222,9 @@ u8 month_from_time(double t)
 // HourFromTime(t), https://tc39.es/ecma262/#eqn-HourFromTime
 u8 hour_from_time(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // 𝔽(floor(ℝ(t / msPerHour)) modulo HoursPerDay)
     return static_cast<u8>(modulo(floor(t / Date::ms_per_hour), Date::hours_per_day));
 }
@@ -223,6 +232,9 @@ u8 hour_from_time(double t)
 // MinFromTime(t), https://tc39.es/ecma262/#eqn-MinFromTime
 u8 min_from_time(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // 𝔽(floor(ℝ(t / msPerMinute)) modulo MinutesPerHour)
     return static_cast<u8>(modulo(floor(t / Date::ms_per_minute), Date::minutes_per_hour));
 }
@@ -230,6 +242,9 @@ u8 min_from_time(double t)
 // SecFromTime(t), https://tc39.es/ecma262/#eqn-SecFromTime
 u8 sec_from_time(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // 𝔽(floor(ℝ(t / msPerSecond)) modulo SecondsPerMinute)
     return static_cast<u8>(modulo(floor(t / Date::ms_per_second), Date::seconds_per_minute));
 }
@@ -237,6 +252,9 @@ u8 sec_from_time(double t)
 // msFromTime(t), https://tc39.es/ecma262/#eqn-msFromTime
 u16 ms_from_time(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // 𝔽(ℝ(t) modulo msPerSecond)
     return static_cast<u16>(modulo(t, Date::ms_per_second));
 }
@@ -244,6 +262,9 @@ u16 ms_from_time(double t)
 // 21.4.1.6 Week Day, https://tc39.es/ecma262/#sec-week-day
 u8 week_day(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // 𝔽(ℝ(Day(t) + 4𝔽) modulo 7)
     return static_cast<u8>(modulo(day(t) + 4, 7));
 }

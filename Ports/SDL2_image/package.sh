@@ -1,6 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=SDL2_image
 useconfigure=true
+use_fresh_config_sub=true
 version=2.0.5
 depends=("SDL2" "libpng" "libjpeg" "libtiff")
 files="https://www.libsdl.org/projects/SDL_image/release/SDL2_image-${version}.tar.gz SDL_image-${version}.tar.gz bdd5f6e026682f7d7e1be0b6051b209da2f402a2dd8bd1c4bd9c25ad263108d0"

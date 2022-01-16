@@ -12,7 +12,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibJS/Runtime/GeneratorObjectPrototype.h>
+#include <LibJS/Runtime/GeneratorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Realm.h>
 
@@ -242,7 +242,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 33. If kind is generator, then
     if (kind == FunctionKind::Generator) {
         // a. Let prototype be ! OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
-        prototype = Object::create(global_object, global_object.generator_object_prototype());
+        prototype = Object::create(global_object, global_object.generator_prototype());
 
         // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);

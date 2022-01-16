@@ -17,9 +17,11 @@ set(SOURCES
     Index.cpp
     Key.cpp
     Meta.cpp
+    ResultSet.cpp
     Row.cpp
     Serializer.cpp
     SQLClient.cpp
+    SQLResult.cpp
     TreeNode.cpp
     Tuple.cpp
     Value.cpp

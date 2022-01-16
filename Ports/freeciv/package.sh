@@ -2,6 +2,7 @@
 port=freeciv
 version=3.0.0-beta2
 useconfigure=true
+use_fresh_config_sub=true
 configopts=("--enable-client=sdl2" "--enable-fcmp=no")
 files="http://files.freeciv.org/beta/freeciv-${version}.tar.xz freeciv-${version}.tar.xz 9f44dc28068b239c18bda68192ddb27622030880f8ab9c17f777eac28391269e"
 auth_type=sha256

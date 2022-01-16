@@ -4,7 +4,8 @@ version=1.8.0
 files="https://distfiles.dereferenced.org/pkgconf/pkgconf-${version}.tar.xz pkgconf-${version}.tar.xz ef9c7e61822b7cb8356e6e9e1dca58d9556f3200d78acab35e4347e9d4c2bbaf"
 auth_type=sha256
 useconfigure=true
-# FIXME: This looks suspiciously host-y... 
+use_fresh_config_sub=true
+# FIXME: This looks suspiciously host-y...
 configopts=("--prefix=/usr/local" "--with-pkg-config-dir=/usr/local/lib/pkgconfig")
 
 post_install() {

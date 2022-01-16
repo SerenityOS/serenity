@@ -1,0 +1,36 @@
+From 6e46eec4b5490c810bf12e89aabc49c23ddd272e Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 21:01:59 -0800
+Subject: [PATCH 05/12] serenity: Mark hsearch stressor as not implemented on
+ Serenity
+
+---
+ stress-hsearch.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/stress-hsearch.c b/stress-hsearch.c
+index 61c71a6..345a2ca 100644
+--- a/stress-hsearch.c
++++ b/stress-hsearch.c
+@@ -31,6 +31,7 @@ static const stress_help_t help[] = {
+ 	{ NULL,	NULL,		  NULL }
+ };
+ 
++#ifndef __serenity__
+ /*
+  *  stress_set_hsearch_size()
+  *      set hsearch size from given option string
+@@ -158,3 +159,10 @@ stressor_info_t stress_hsearch_info = {
+ 	.opt_set_funcs = opt_set_funcs,
+ 	.help = help
+ };
++#else
++stressor_info_t stress_hsearch_info = {
++	.stressor = stress_not_implemented,
++	.class = CLASS_CPU_CACHE | CLASS_CPU | CLASS_MEMORY,
++	.help = help
++};
++#endif
+-- 
+2.34.1
+

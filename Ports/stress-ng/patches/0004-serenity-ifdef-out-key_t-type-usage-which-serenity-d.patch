@@ -1,0 +1,32 @@
+From 871d6d7e7bc3d7f85bdff69cb4b6122e78a82063 Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 20:59:35 -0800
+Subject: [PATCH 04/12] serenity: ifdef out key_t type usage, which serenity
+ does not have
+
+---
+ stress-ng.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/stress-ng.h b/stress-ng.h
+index 837790b..2388815 100644
+--- a/stress-ng.h
++++ b/stress-ng.h
+@@ -2501,11 +2501,14 @@ typedef struct {
+ 		uint32_t futex[STRESS_PROCS_MAX];	/* Shared futexes */
+ 		uint64_t timeout[STRESS_PROCS_MAX];	/* Shared futex timeouts */
+ 	} futex;
++
++#ifndef __serenity__
+ 	struct {
+ 		key_t key_id;				/* System V semaphore key id */
+ 		int sem_id;				/* System V semaphore id */
+ 		bool init;				/* System V semaphore initialized */
+ 	} sem_sysv;
++#endif
+ #if defined(STRESS_PERF_STATS)
+ 	struct {
+ 		bool no_perf;				/* true = Perf not available */
+-- 
+2.34.1
+

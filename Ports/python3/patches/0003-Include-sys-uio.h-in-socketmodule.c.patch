@@ -1,0 +1,27 @@
+From d8533ba9c81ffdd11f39aa2d9fb89fd3564d4d44 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Fri, 14 Jan 2022 23:36:28 +0330
+Subject: [PATCH 3/4] Include `sys/uio.h` in `socketmodule.c`
+
+This is to ensure that `struct iovec` is defined, which is required by
+the `socket` module.
+---
+ Modules/socketmodule.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Modules/socketmodule.c b/Modules/socketmodule.c
+index ab8618b..0109d97 100644
+--- a/Modules/socketmodule.c
++++ b/Modules/socketmodule.c
+@@ -168,7 +168,7 @@ shutdown(how) -- shut down traffic in one or both directions\n\
+ # undef HAVE_GETHOSTBYNAME_R_6_ARG
+ #endif
+ 
+-#if defined(__OpenBSD__)
++#if defined(__OpenBSD__) || defined(__serenity__)
+ # include <sys/uio.h>
+ #endif
+ 
+-- 
+2.34.1
+

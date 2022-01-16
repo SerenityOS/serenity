@@ -1,0 +1,117 @@
+From c77af92eb60ed81f0956d82361ac3a4ae88e9cf6 Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 20:57:05 -0800
+Subject: [PATCH 02/12] serenity: Disable itimer testing when compiling for
+ Serenity
+
+The itimer APIs are not implemented in serenity, so just disable
+these tests.
+---
+ stress-itimer.c     |  7 +++++++
+ stress-sysbadaddr.c | 14 ++++++++++++++
+ 2 files changed, 21 insertions(+)
+
+diff --git a/stress-itimer.c b/stress-itimer.c
+index 7fa8cea..f4aee66 100644
+--- a/stress-itimer.c
++++ b/stress-itimer.c
+@@ -24,6 +24,7 @@
+  */
+ #include "stress-ng.h"
+ 
++#ifndef __serenity__
+ static volatile uint64_t itimer_counter = 0;
+ static uint64_t max_ops;
+ static double rate_us;
+@@ -218,3 +219,9 @@ stressor_info_t stress_itimer_info = {
+ 	.opt_set_funcs = opt_set_funcs,
+ 	.help = help
+ };
++#else
++stressor_info_t stress_itimer_info = {
++	.stressor = stress_not_implemented,
++	.class = CLASS_INTERRUPT | CLASS_OS,
++};
++#endif
+diff --git a/stress-sysbadaddr.c b/stress-sysbadaddr.c
+index b7abae5..8d0481b 100644
+--- a/stress-sysbadaddr.c
++++ b/stress-sysbadaddr.c
+@@ -344,10 +344,12 @@ static int bad_gethostname(void *addr)
+ }
+ #endif
+ 
++#ifndef __serenity__
+ static int bad_getitimer(void *addr)
+ {
+ 	return getitimer(ITIMER_PROF, (struct itimerval *)addr);
+ }
++#endif
+ 
+ static int bad_getpeername(void *addr)
+ {
+@@ -639,11 +641,13 @@ static int bad_select(void *addr)
+ 	return ret;
+ }
+ 
++#ifndef __serenity__
+ static int bad_setitimer(void *addr)
+ {
+ 	return setitimer(ITIMER_PROF, (struct itimerval *)addr,
+ 		(struct itimerval *)inc_addr(addr, 1));
+ }
++#endif
+ 
+ static int bad_setrlimit(void *addr)
+ {
+@@ -825,7 +829,10 @@ static stress_bad_syscall_t bad_syscalls[] = {
+ #if defined(HAVE_GETHOSTNAME)
+ 	bad_gethostname,
+ #endif
++
++#ifndef __serenity__
+ 	bad_getitimer,
++#endif
+ 	bad_getpeername,
+ 	bad_getrandom,
+ 	bad_getrlimit,
+@@ -899,7 +906,10 @@ static stress_bad_syscall_t bad_syscalls[] = {
+ 	bad_sched_getaffinity,
+ #endif
+ 	bad_select,
++
++#ifndef __serenity__
+ 	bad_setitimer,
++#endif
+ 	bad_setrlimit,
+ 	bad_stat,
+ #if defined(HAVE_STATFS)
+@@ -955,7 +965,9 @@ static inline int stress_do_syscall(
+ 	if (pid < 0) {
+ 		_exit(EXIT_NO_RESOURCE);
+ 	} else if (pid == 0) {
++#ifndef __serenity__
+ 		struct itimerval it;
++#endif
+ 		size_t i;
+ 		int ret;
+ 
+@@ -978,6 +990,7 @@ static inline int stress_do_syscall(
+ 		stress_parent_died_alarm();
+ 		(void)sched_settings_apply(true);
+ 
++#ifndef __serenity__
+ 		/*
+ 		 * Force abort if we take too long
+ 		 */
+@@ -990,6 +1003,7 @@ static inline int stress_do_syscall(
+ 				args->name, errno, strerror(errno));
+ 			_exit(EXIT_NO_RESOURCE);
+ 		}
++#endif
+ 
+ 		ret = bad_syscall(addr);
+ 		if (ret < 0)
+-- 
+2.34.1
+

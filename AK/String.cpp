@@ -58,10 +58,10 @@ bool String::operator<(const String& other) const
 
 bool String::operator>(const String& other) const
 {
-    if (!m_impl)
-        return other.m_impl;
-
     if (!other.m_impl)
+        return m_impl;
+
+    if (!m_impl)
         return false;
 
     return strcmp(characters(), other.characters()) > 0;

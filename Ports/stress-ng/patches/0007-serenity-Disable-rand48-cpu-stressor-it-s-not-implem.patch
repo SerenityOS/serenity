@@ -1,0 +1,44 @@
+From c6fd5831cbd21c3c6d3689bea6c790a221b6c96d Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 23:46:44 -0800
+Subject: [PATCH 07/12] serenity: Disable rand48 cpu stressor, it's not
+ implemented for Serenity
+
+---
+ stress-cpu.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/stress-cpu.c b/stress-cpu.c
+index 81dd882..b3a586d 100644
+--- a/stress-cpu.c
++++ b/stress-cpu.c
+@@ -611,6 +611,7 @@ static void HOT OPTIMIZE3 stress_cpu_rand(const char *name)
+ 			"pseudo-random values\n", name);
+ }
+ 
++#if !defined(__serenity__)
+ /*
+  *  stress_cpu_rand48()
+  *	generate random values using rand48 family of functions
+@@ -631,6 +632,7 @@ static void HOT OPTIMIZE3 stress_cpu_rand48(const char *name)
+ 	stress_double_put(d);
+ 	stress_uint64_put((uint64_t)l);
+ }
++#endif
+ 
+ /*
+  *  stress_cpu_lfsr32()
+@@ -3190,7 +3192,10 @@ static const stress_cpu_method_info_t cpu_methods[] = {
+ 	{ "psi",		stress_cpu_psi },
+ 	{ "queens",		stress_cpu_queens },
+ 	{ "rand",		stress_cpu_rand },
++
++#if !defined(__serenity__)
+ 	{ "rand48",		stress_cpu_rand48 },
++#endif
+ 	{ "rgb",		stress_cpu_rgb },
+ 	{ "sdbm",		stress_cpu_sdbm },
+ 	{ "sieve",		stress_cpu_sieve },
+-- 
+2.34.1
+
