@@ -11,6 +11,7 @@
 #include <LibCore/File.h>
 #include <LibCore/Promise.h>
 #include <LibCore/StandardPaths.h>
+#include <LibGUI/Window.h>
 #include <LibIPC/ServerConnection.h>
 
 namespace FileSystemAccessClient {
@@ -20,6 +21,8 @@ struct Result {
     Optional<i32> fd;
     Optional<String> chosen_file;
 };
+
+using FileResult = ErrorOr<NonnullRefPtr<Core::File>>;
 
 class Client final
     : public IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>
@@ -31,6 +34,11 @@ public:
     Result request_file(i32 parent_window_id, String const& path, Core::OpenMode mode);
     Result open_file(i32 parent_window_id, String const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
     Result save_file(i32 parent_window_id, String const& name, String const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
+
+    FileResult try_request_file_read_only_approved(GUI::Window* parent_window, String const& path);
+    FileResult try_request_file(GUI::Window* parent_window, String const& path, Core::OpenMode mode);
+    FileResult try_open_file(GUI::Window* parent_window, String const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
+    FileResult try_save_file(GUI::Window* parent_window, String const& name, String const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
 
     static Client& the();
 
@@ -46,6 +54,8 @@ private:
     virtual void handle_prompt_end(i32 error, Optional<IPC::File> const& fd, Optional<String> const& chosen_file) override;
 
     RefPtr<Core::Promise<Result>> m_promise;
+    RefPtr<Core::Promise<FileResult>> m_file_promise;
+    GUI::Window* m_parent_window { nullptr };
 };
 
 }
