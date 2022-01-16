@@ -2635,9 +2635,9 @@ void SoftwareGLContext::gl_stencil_func_separate(GLenum face, GLenum func, GLint
 
     StencilFunctionOptions new_options = { func, ref, mask };
     if (face == GL_FRONT || face == GL_FRONT_AND_BACK)
-        m_stencil_frontfacing_func = new_options;
+        m_stencil_function[Face::Front] = new_options;
     if (face == GL_BACK || face == GL_FRONT_AND_BACK)
-        m_stencil_backfacing_func = new_options;
+        m_stencil_function[Face::Back] = new_options;
 }
 
 void SoftwareGLContext::gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass)
@@ -2677,9 +2677,9 @@ void SoftwareGLContext::gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum
 
     StencilOperationOptions new_options = { sfail, dpfail, dppass };
     if (face == GL_FRONT || face == GL_FRONT_AND_BACK)
-        m_stencil_frontfacing_op = new_options;
+        m_stencil_operation[Face::Front] = new_options;
     if (face == GL_BACK || face == GL_FRONT_AND_BACK)
-        m_stencil_backfacing_op = new_options;
+        m_stencil_operation[Face::Back] = new_options;
 }
 
 void SoftwareGLContext::gl_normal(GLfloat nx, GLfloat ny, GLfloat nz)

@@ -231,16 +231,14 @@ private:
         GLint reference_value { 0 };
         GLuint mask { NumericLimits<GLuint>::max() };
     };
-    StencilFunctionOptions m_stencil_backfacing_func;
-    StencilFunctionOptions m_stencil_frontfacing_func;
+    Array<StencilFunctionOptions, 2u> m_stencil_function;
 
     struct StencilOperationOptions {
         GLenum op_fail { GL_KEEP };
         GLenum op_depth_fail { GL_KEEP };
         GLenum op_pass { GL_KEEP };
     };
-    StencilOperationOptions m_stencil_backfacing_op;
-    StencilOperationOptions m_stencil_frontfacing_op;
+    Array<StencilOperationOptions, 2u> m_stencil_operation;
 
     GLenum m_current_read_buffer = GL_BACK;
     GLenum m_current_draw_buffer = GL_BACK;
