@@ -85,7 +85,9 @@ script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 "$script_path/build-root-filesystem.sh"
 
 echo "installing limine"
+mkdir -p esp/EFI/BOOT
 cp limine/build/bin/limine.sys esp
+cp limine/build/bin/BOOTX64.EFI esp/EFI/BOOT
 cp "$SERENITY_SOURCE_DIR"/Meta/limine.cfg esp
 limine/build/bin/limine-install "${dev}"
 echo "done"
