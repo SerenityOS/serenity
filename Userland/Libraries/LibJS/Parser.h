@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
- * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -214,7 +214,7 @@ private:
 
     RefPtr<BindingPattern> synthesize_binding_pattern(Expression const& expression);
 
-    Token next_token() const;
+    Token next_token(size_t steps = 1) const;
 
     void check_identifier_name_for_assignment_validity(StringView, bool force_strict = false);
 
@@ -225,7 +225,9 @@ private:
 
     bool parse_directive(ScopeNode& body);
     void parse_statement_list(ScopeNode& output_node, AllowLabelledFunction allow_labelled_functions = AllowLabelledFunction::No);
-    void parse_assert_clause(ModuleRequest& request);
+
+    FlyString consume_string_value();
+    ModuleRequest parse_module_request();
 
     struct RulePosition {
         AK_MAKE_NONCOPYABLE(RulePosition);
