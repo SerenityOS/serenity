@@ -5,19 +5,18 @@
  */
 
 #include "CalculatorWidget.h"
+#include "RoundingDialog.h"
 #include <LibCore/System.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -52,7 +51,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto clipboard = GUI::Clipboard::the().fetch_data_and_type();
         if (clipboard.mime_type == "text/plain") {
             if (!clipboard.data.is_empty()) {
-                widget->set_entry(Crypto::BigFraction(StringView(clipboard.data)));
+                auto const number = StringView(clipboard.data);
+                widget->set_entry(Crypto::BigFraction(number));
+                auto const fraction_length = number.length() - number.find('.').value_or(number.length() + 1) - 1;
+                widget->update_rounding(fraction_length);
             }
         }
     }));
@@ -71,17 +73,42 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
 
     auto& round_menu = window->add_menu("&Round");
-    round_menu.add_action(GUI::Action::create("To &zero digits", [&](auto&) {
+    GUI::ActionGroup preview_actions;
+
+    auto round_0 = GUI::Action::create_checkable("To &zero digits", [&](auto&) {
         widget->set_rounding_length(0);
-    }));
+    });
 
-    round_menu.add_action(GUI::Action::create("To &two digits", [&](auto&) {
+    auto round_2 = GUI::Action::create_checkable("To &two digits", [&](auto&) {
         widget->set_rounding_length(2);
-    }));
+    });
+    round_2->activate(round_2);
 
-    round_menu.add_action(GUI::Action::create("To &four digits", [&](auto&) {
+    auto round_4 = GUI::Action::create_checkable("To &four digits", [&](auto&) {
         widget->set_rounding_length(4);
-    }));
+    });
+
+    constexpr StringView format { "&Custom - {} ..." };
+    auto round_custom = GUI::Action::create_checkable(String::formatted(format, 0), [&](auto& action) {
+        unsigned custom_rounding_length = 0;
+        RoundingDialog::show(window, custom_rounding_length);
+
+        action.set_text(String::formatted(format, custom_rounding_length));
+        widget->set_rounding_length(custom_rounding_length);
+    });
+
+    widget->set_rounding_custom(round_custom, format);
+
+    preview_actions.add_action(*round_0);
+    preview_actions.add_action(*round_2);
+    preview_actions.add_action(*round_4);
+    preview_actions.add_action(*round_custom);
+    preview_actions.set_exclusive(true);
+
+    round_menu.add_action(*round_0);
+    round_menu.add_action(*round_2);
+    round_menu.add_action(*round_4);
+    round_menu.add_action(*round_custom);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
