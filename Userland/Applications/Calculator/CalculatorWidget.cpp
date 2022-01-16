@@ -217,6 +217,12 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
     update_display();
 }
 
+void CalculatorWidget::shrink(unsigned shrink_threshold)
+{
+    m_keypad.shrink(shrink_threshold);
+    update_display();
+}
+
 unsigned CalculatorWidget::rounding_length() const
 {
     return m_keypad.rounding_length();
