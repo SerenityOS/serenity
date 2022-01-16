@@ -169,7 +169,6 @@ void GlobalObject::initialize_global_object()
     // %GeneratorFunction.prototype.prototype% must be initialized separately as it has no
     // companion constructor
     m_generator_prototype = heap().allocate<GeneratorPrototype>(*this, *this);
-    m_generator_prototype->define_direct_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
 
     m_async_from_sync_iterator_prototype = heap().allocate<AsyncFromSyncIteratorPrototype>(*this, *this);
 
@@ -287,6 +286,9 @@ void GlobalObject::initialize_global_object()
     m_async_generator_function_constructor = heap().allocate<AsyncGeneratorFunctionConstructor>(*this, *this);
     // 27.4.3.1 AsyncGeneratorFunction.prototype.constructor, https://tc39.es/ecma262/#sec-asyncgeneratorfunction-prototype-constructor
     m_async_generator_function_prototype->define_direct_property(vm.names.constructor, m_async_generator_function_constructor, Attribute::Configurable);
+
+    // 27.5.1.1 Generator.prototype.constructor, https://tc39.es/ecma262/#sec-generator.prototype.constructor
+    m_generator_prototype->define_direct_property(vm.names.constructor, m_generator_function_prototype, Attribute::Configurable);
 
     m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
     m_date_constructor_now_function = &m_date_constructor->get_without_side_effects(vm.names.now).as_function();
