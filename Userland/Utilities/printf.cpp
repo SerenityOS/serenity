@@ -4,12 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/Demangle.h"
 #include <AK/Assertions.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <stdio.h>
+#include <typeinfo>
 #include <unistd.h>
 
 [[gnu::noreturn]] static void fail(const char* message)
@@ -117,55 +119,42 @@ struct ArgvNextArgument<const char*, V> {
     }
 };
 
-template<typename V>
-struct ArgvNextArgument<int, V> {
-    ALWAYS_INLINE int operator()(V arg) const
+template<Signed T, typename V>
+struct ArgvNextArgument<T, V> {
+    ALWAYS_INLINE T operator()(V arg) const
     {
         if (arg.argc == 0)
             return 0;
 
         auto result = *arg.argv++;
         --arg.argc;
-        return atoi(result);
+
+        dbgln("Read a {}: {}", AK::demangle(typeid(T).name()), result);
+
+        if constexpr (sizeof(T) <= sizeof(long))
+            return strtol(result, nullptr, 10);
+        else if constexpr (sizeof(T) <= sizeof(long long))
+            return strtoll(result, nullptr, 10);
+        else
+            static_assert(DependentFalse<T>, "Argument size too large");
     }
 };
 
-template<typename V>
-struct ArgvNextArgument<unsigned, V> {
-    ALWAYS_INLINE unsigned operator()(V arg) const
+template<Unsigned T, typename V>
+struct ArgvNextArgument<T, V> {
+    ALWAYS_INLINE T operator()(V arg) const
     {
         if (arg.argc == 0)
             return 0;
 
         auto result = *arg.argv++;
         --arg.argc;
-        return strtoul(result, nullptr, 10);
-    }
-};
-
-template<typename V>
-struct ArgvNextArgument<i64, V> {
-    ALWAYS_INLINE i64 operator()(V arg) const
-    {
-        if (arg.argc == 0)
-            return 0;
-
-        auto result = *arg.argv++;
-        --arg.argc;
-        return strtoll(result, nullptr, 10);
-    }
-};
-
-template<typename V>
-struct ArgvNextArgument<u64, V> {
-    ALWAYS_INLINE u64 operator()(V arg) const
-    {
-        if (arg.argc == 0)
-            return 0;
-
-        auto result = *arg.argv++;
-        --arg.argc;
-        return strtoull(result, nullptr, 10);
+        if constexpr (sizeof(T) <= sizeof(long))
+            return strtoul(result, nullptr, 10);
+        else if constexpr (sizeof(T) <= sizeof(long long))
+            return strtoull(result, nullptr, 10);
+        else
+            static_assert(DependentFalse<T>, "Argument size too large");
     }
 };
 
@@ -182,8 +171,8 @@ struct ArgvNextArgument<double, V> {
     }
 };
 
-template<typename V>
-struct ArgvNextArgument<int*, V> {
+template<Integral T, typename V>
+struct ArgvNextArgument<T*, V> {
     ALWAYS_INLINE int* operator()(V) const
     {
         VERIFY_NOT_REACHED();

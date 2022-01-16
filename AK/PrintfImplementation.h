@@ -76,51 +76,26 @@ ALWAYS_INLINE int print_hex(PutChFunc putch, CharType*& bufptr, T number, bool u
     return ret;
 }
 
-template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_number(PutChFunc putch, CharType*& bufptr, u32 number, bool left_pad, bool zero_pad, u32 field_width)
-{
-    u32 divisor = 1000000000;
-    char ch;
-    char padding = 1;
-    char buf[16];
-    char* p = buf;
-
-    for (;;) {
-        ch = '0' + (number / divisor);
-        number %= divisor;
-        if (ch != '0')
-            padding = 0;
-        if (!padding || divisor == 1)
-            *(p++) = ch;
-        if (divisor == 1)
-            break;
-        divisor /= 10;
-    }
-
-    size_t numlen = p - buf;
-    if (!field_width || field_width < numlen)
-        field_width = numlen;
-    if (!left_pad) {
-        for (unsigned i = 0; i < field_width - numlen; ++i) {
-            putch(bufptr, zero_pad ? '0' : ' ');
+static constexpr auto powers_of_10 = [] {
+    Array<u64, 8> table {};
+    u64 last_power_of_10 = 1;
+    for (size_t i = 0; i < 8; ++i) {
+        auto power = i + 1;
+        auto current_power_of_10 = last_power_of_10;
+        while (last_power_of_10 < (1ull << (power * 8 - 1))) {
+            current_power_of_10 = last_power_of_10;
+            last_power_of_10 *= 10ull;
         }
-    }
-    for (unsigned i = 0; i < numlen; ++i) {
-        putch(bufptr, buf[i]);
-    }
-    if (left_pad) {
-        for (unsigned i = 0; i < field_width - numlen; ++i) {
-            putch(bufptr, ' ');
-        }
-    }
 
-    return field_width;
-}
+        table[i] = current_power_of_10;
+    }
+    return table;
+}();
 
-template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_u64(PutChFunc putch, CharType*& bufptr, u64 number, bool left_pad, bool zero_pad, u32 field_width)
+template<typename PutChFunc, Unsigned Number, typename CharType>
+ALWAYS_INLINE int print_number(PutChFunc putch, CharType*& bufptr, Number number, bool left_pad, bool zero_pad, u32 field_width)
 {
-    u64 divisor = 10000000000000000000LLU;
+    Number divisor = powers_of_10[sizeof(Number) - 1];
     char ch;
     char padding = 1;
     char buf[16];
@@ -169,26 +144,16 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
         number = 0 - number;
     }
 
-    length = print_u64(putch, bufptr, (i64)number, left_pad, zero_pad, field_width);
+    auto number_as_integer = static_cast<u64>(number);
+    length = print_number(putch, bufptr, number_as_integer, left_pad, zero_pad, field_width);
     putch(bufptr, '.');
     length++;
-    double fraction = number - (i64)number;
+    double fraction = number - number_as_integer;
 
     for (u32 i = 0; i < fraction_length; ++i)
         fraction = fraction * 10;
 
-    return length + print_u64(putch, bufptr, (i64)fraction, false, true, fraction_length);
-}
-
-template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_i64(PutChFunc putch, CharType*& bufptr, i64 number, bool left_pad, bool zero_pad, u32 field_width)
-{
-    // FIXME: This won't work if there is padding. '  -17' becomes '-  17'.
-    if (number < 0) {
-        putch(bufptr, '-');
-        return print_u64(putch, bufptr, 0 - number, left_pad, zero_pad, field_width) + 1;
-    }
-    return print_u64(putch, bufptr, number, left_pad, zero_pad, field_width);
+    return length + print_number(putch, bufptr, (u64)fraction, false, true, fraction_length);
 }
 
 template<typename PutChFunc, typename CharType>
@@ -260,16 +225,16 @@ ALWAYS_INLINE int print_string(PutChFunc putch, CharType*& bufptr, const char* s
     return field_width;
 }
 
-template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_signed_number(PutChFunc putch, CharType*& bufptr, int number, bool left_pad, bool zero_pad, u32 field_width, bool always_sign)
+template<typename PutChFunc, Signed Number, typename CharType>
+ALWAYS_INLINE int print_signed_number(PutChFunc putch, CharType*& bufptr, Number number, bool left_pad, bool zero_pad, u32 field_width, bool always_sign)
 {
     if (number < 0) {
         putch(bufptr, '-');
-        return print_number(putch, bufptr, 0 - number, left_pad, zero_pad, field_width) + 1;
+        return print_number(putch, bufptr, static_cast<MakeUnsigned<Number>>(0 - number), left_pad, zero_pad, field_width) + 1;
     }
     if (always_sign)
         putch(bufptr, '+');
-    return print_number(putch, bufptr, number, left_pad, zero_pad, field_width) + always_sign;
+    return print_number(putch, bufptr, static_cast<MakeUnsigned<Number>>(0 - number), left_pad, zero_pad, field_width) + always_sign;
 }
 
 struct ModifierState {
@@ -279,8 +244,17 @@ struct ModifierState {
     unsigned field_width { 0 };
     bool has_fraction_length { false };
     unsigned fraction_length { 6 };
-    unsigned long_qualifiers { 0 };
-    bool size_qualifier { false };
+    enum SizeQualifier {
+        Default,
+        Char,
+        Short,
+        Int,
+        Long,
+        LongLong,
+        Size,
+        Ptr,
+        LongDouble,
+    } size_qualifier { Default };
     bool alternate_form { 0 };
     bool always_sign { false };
 };
@@ -294,6 +268,63 @@ struct PrintfImpl {
     {
     }
 
+#define FN(name) [this](auto&&... args) { return name(args...); }
+
+    template<auto DefaultQualifier, template<typename> typename TransformIfNeeded, auto... InvalidQualifiers, typename Func, typename... Args>
+    ALWAYS_INLINE auto apply_with_specified_type(ModifierState::SizeQualifier qualifier, ArgumentListRefT ap, Func&& fn, Args&&... args) const
+    {
+        if (qualifier == ModifierState::Default)
+            qualifier = DefaultQualifier;
+
+        constexpr auto is_valid = [](auto q) { return ((q != InvalidQualifiers) && ...); };
+
+        switch (qualifier) {
+        case ModifierState::Default:
+            VERIFY_NOT_REACHED();
+        case ModifierState::Char:
+            // Note: char is promoted to int through varargs.
+            if constexpr (is_valid(ModifierState::Char))
+                return fn(m_putch, m_bufptr, TransformIfNeeded<u8>(NextArgument<TransformIfNeeded<unsigned>>()(ap)), forward<Args>(args)...);
+            break;
+        case ModifierState::Short:
+            // Note: short is promoted to int through varargs.
+            if constexpr (is_valid(ModifierState::Short))
+                return fn(m_putch, m_bufptr, TransformIfNeeded<u16>(NextArgument<TransformIfNeeded<unsigned>>()(ap)), forward<Args>(args)...);
+            break;
+        case ModifierState::Int:
+            if constexpr (is_valid(ModifierState::Int))
+                return fn(m_putch, m_bufptr, NextArgument<TransformIfNeeded<u32>>()(ap), forward<Args>(args)...);
+            break;
+        case ModifierState::Long:
+            if constexpr (is_valid(ModifierState::Long))
+                return fn(m_putch, m_bufptr, NextArgument<TransformIfNeeded<u32>>()(ap), forward<Args>(args)...);
+            break;
+        case ModifierState::LongLong:
+            if constexpr (is_valid(ModifierState::LongLong))
+                return fn(m_putch, m_bufptr, NextArgument<TransformIfNeeded<u64>>()(ap), forward<Args>(args)...);
+            break;
+        case ModifierState::Size:
+            if constexpr (is_valid(ModifierState::Size))
+                return fn(m_putch, m_bufptr, NextArgument<TransformIfNeeded<size_t>>()(ap), forward<Args>(args)...);
+            break;
+        case ModifierState::Ptr:
+            if constexpr (is_valid(ModifierState::Ptr))
+                return fn(m_putch, m_bufptr, NextArgument<TransformIfNeeded<ptrdiff_t>>()(ap), forward<Args>(args)...);
+            break;
+        case ModifierState::LongDouble:
+            if constexpr (is_valid(ModifierState::LongDouble))
+                return fn(m_putch, m_bufptr, NextArgument<long double>()(ap), forward<Args>(args)...);
+            break;
+        }
+
+        dbgln("PrintfImplementation: A given qualifier did not apply to its format type");
+        using ReturnType = decltype(fn(m_putch, m_bufptr, declval<TransformIfNeeded<int>>(), forward<Args>(args)...));
+        if constexpr (IsVoid<ReturnType>)
+            return;
+        else
+            return ReturnType {};
+    }
+
     ALWAYS_INLINE int format_s(const ModifierState& state, ArgumentListRefT ap) const
     {
         const char* sp = NextArgument<const char*>()(ap);
@@ -303,10 +334,8 @@ struct PrintfImpl {
     }
     ALWAYS_INLINE int format_d(const ModifierState& state, ArgumentListRefT ap) const
     {
-        if (state.long_qualifiers >= 2)
-            return print_i64(m_putch, m_bufptr, NextArgument<i64>()(ap), state.left_pad, state.zero_pad, state.field_width);
-
-        return print_signed_number(m_putch, m_bufptr, NextArgument<int>()(ap), state.left_pad, state.zero_pad, state.field_width, state.always_sign);
+        return apply_with_specified_type<ModifierState::Int, MakeSigned, ModifierState::Ptr, ModifierState::LongDouble>(
+            state.size_qualifier, ap, FN(print_signed_number), state.left_pad, state.zero_pad, state.field_width, state.always_sign);
     }
     ALWAYS_INLINE int format_i(const ModifierState& state, ArgumentListRefT ap) const
     {
@@ -314,13 +343,12 @@ struct PrintfImpl {
     }
     ALWAYS_INLINE int format_u(const ModifierState& state, ArgumentListRefT ap) const
     {
-        if (state.long_qualifiers >= 2)
-            return print_u64(m_putch, m_bufptr, NextArgument<u64>()(ap), state.left_pad, state.zero_pad, state.field_width);
-        return print_number(m_putch, m_bufptr, NextArgument<u32>()(ap), state.left_pad, state.zero_pad, state.field_width);
+        return apply_with_specified_type<ModifierState::Int, MakeUnsigned, ModifierState::Ptr, ModifierState::LongDouble>(
+            state.size_qualifier, ap, FN(print_number), state.left_pad, state.zero_pad, state.field_width);
     }
     ALWAYS_INLINE int format_Q(const ModifierState& state, ArgumentListRefT ap) const
     {
-        return print_u64(m_putch, m_bufptr, NextArgument<u64>()(ap), state.left_pad, state.zero_pad, state.field_width);
+        return print_number(m_putch, m_bufptr, NextArgument<u64>()(ap), state.left_pad, state.zero_pad, state.field_width);
     }
     ALWAYS_INLINE int format_q(const ModifierState& state, ArgumentListRefT ap) const
     {
@@ -332,6 +360,9 @@ struct PrintfImpl {
     }
     ALWAYS_INLINE int format_f(const ModifierState& state, ArgumentListRefT ap) const
     {
+        // FIXME: This needs to be implemented!
+        if (state.size_qualifier == ModifierState::LongDouble)
+            dbgln("PrintfImplementation: Unimplemented long double size modifier - ignoring!");
         return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.left_pad, state.zero_pad, state.field_width, state.fraction_length);
     }
     ALWAYS_INLINE int format_o(const ModifierState& state, ArgumentListRefT ap) const
@@ -339,23 +370,30 @@ struct PrintfImpl {
         if (state.alternate_form)
             m_putch(m_bufptr, '0');
 
-        return (state.alternate_form ? 1 : 0) + print_octal_number(m_putch, m_bufptr, NextArgument<u32>()(ap), state.left_pad, state.zero_pad, state.field_width);
+        auto result = apply_with_specified_type<ModifierState::Int, MakeUnsigned, ModifierState::Ptr, ModifierState::LongDouble>(
+            state.size_qualifier, ap, FN(print_octal_number), state.left_pad, state.zero_pad, state.field_width);
+
+        return (state.alternate_form ? 1 : 0) + result;
     }
     ALWAYS_INLINE int format_x(const ModifierState& state, ArgumentListRefT ap) const
     {
-        if (state.long_qualifiers >= 2)
-            return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
-        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
+        return apply_with_specified_type<ModifierState::Int, MakeUnsigned, ModifierState::Ptr, ModifierState::LongDouble>(
+            state.size_qualifier, ap, FN(print_hex), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
     }
     ALWAYS_INLINE int format_X(const ModifierState& state, ArgumentListRefT ap) const
     {
-        if (state.long_qualifiers >= 2)
-            return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), true, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
-        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), true, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
+        return apply_with_specified_type<ModifierState::Int, MakeUnsigned, ModifierState::Ptr, ModifierState::LongDouble>(
+            state.size_qualifier, ap, FN(print_hex), true, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
     }
-    ALWAYS_INLINE int format_n(const ModifierState&, ArgumentListRefT ap) const
+    ALWAYS_INLINE int format_n(const ModifierState& state, ArgumentListRefT ap) const
     {
-        *NextArgument<int*>()(ap) = m_nwritten;
+        auto fn = [](auto&, auto&, auto* ptr, auto nwritten) {
+            *ptr = nwritten;
+        };
+
+        apply_with_specified_type<ModifierState::Int, RawPtr, ModifierState::LongDouble>(
+            state.size_qualifier, ap, fn, m_nwritten);
+
         return 0;
     }
     ALWAYS_INLINE int format_p(const ModifierState&, ArgumentListRefT ap) const
@@ -381,6 +419,8 @@ struct PrintfImpl {
         dbgln("printf_internal: Unimplemented format specifier {} (fmt: {})", format_op, fmt);
         return 0;
     }
+
+#undef FN
 
 protected:
     CharType*& m_bufptr;
@@ -465,18 +505,35 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, IdentityType<CharType>* buffe
                     goto one_more;
             }
             if (*p == 'l') {
-                ++state.long_qualifiers;
+                if (state.size_qualifier == ModifierState::Long)
+                    state.size_qualifier = ModifierState::LongLong;
+                else if (state.size_qualifier == ModifierState::Default)
+                    state.size_qualifier = ModifierState::Long;
+
                 if (*(p + 1))
                     goto one_more;
             }
             if (*p == 'L') {
-                // TODO: Implement this properly.
-                // For now just swallow, so the contents are actually rendered.
+                state.size_qualifier = ModifierState::LongDouble;
+                if (*(p + 1))
+                    goto one_more;
+            }
+            if (*p == 'h') {
+                state.size_qualifier = ModifierState::Short;
+                if (*(p + 1) == 'h') {
+                    ++p;
+                    state.size_qualifier = ModifierState::Char;
+                }
                 if (*(p + 1))
                     goto one_more;
             }
             if (*p == 'z') {
-                state.size_qualifier = true;
+                state.size_qualifier = ModifierState::Size;
+                if (*(p + 1))
+                    goto one_more;
+            }
+            if (*p == 't') {
+                state.size_qualifier = ModifierState::Ptr;
                 if (*(p + 1))
                     goto one_more;
             }
