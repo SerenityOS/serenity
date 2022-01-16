@@ -116,6 +116,7 @@ set(SOURCES
     Runtime/MarkedValueList.cpp
     Runtime/MathObject.cpp
     Runtime/ModuleEnvironment.cpp
+    Runtime/ModuleNamespaceObject.cpp
     Runtime/NativeFunction.cpp
     Runtime/NumberConstructor.cpp
     Runtime/NumberObject.cpp
