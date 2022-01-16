@@ -49,7 +49,7 @@ public:
 private:
     MenuManager();
 
-    void close_menus(const Vector<Menu&>&);
+    void close_menus(Vector<Menu&>&);
 
     virtual void event(Core::Event&) override;
     void handle_mouse_event(MouseEvent&);

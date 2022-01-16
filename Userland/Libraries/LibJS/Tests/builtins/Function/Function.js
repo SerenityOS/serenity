@@ -44,10 +44,20 @@ describe("errors", () => {
         })
             // This might be confusing at first but keep in mind it's actually parsing
             // function anonymous() { [ }
-            // This is in line with what other engines are reporting.
+            // Since the body, surrounded by a newline on each side, is first parsed standalone,
+            // we report unexpected token EOF instead of }.
+            // FIXME: The position is odd though, I'd expect `line: 2, column: 2` and `line: 3, column: 1`...
+            // > eval("\n[")   // Uncaught exception: [SyntaxError] Unexpected token Eof. Expected BracketClose (line: 2, column: 2)
+            // > eval("\n[\n") // Uncaught exception: [SyntaxError] Unexpected token Eof. Expected BracketClose (line: 2, column: 3)
             .toThrowWithMessage(
                 SyntaxError,
-                "Unexpected token CurlyClose. Expected BracketClose (line: 4, column: 1)"
+                "Unexpected token Eof. Expected BracketClose (line: 2, column: 3)"
             );
+    });
+
+    test("parameters and body must be valid standalone", () => {
+        expect(() => {
+            new Function("/*", "*/ ) {");
+        }).toThrowWithMessage(SyntaxError, "Unterminated multi-line comment (line: 1, column: 3)");
     });
 });

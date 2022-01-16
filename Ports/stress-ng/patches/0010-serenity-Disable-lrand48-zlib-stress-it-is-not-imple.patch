@@ -1,0 +1,53 @@
+From e19e4ca90d68afd1a246a173d3a573342305df5c Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 23:48:49 -0800
+Subject: [PATCH 10/12] serenity: Disable lrand48 zlib stress, it is not
+ implemented for Serenity
+
+---
+ stress-zlib.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/stress-zlib.c b/stress-zlib.c
+index dbe5758..95c65f5 100644
+--- a/stress-zlib.c
++++ b/stress-zlib.c
+@@ -696,6 +696,7 @@ static void stress_rand_data_lfsr32(
+ 	}
+ }
+ 
++#if !defined(__serenity__)
+ /*
+  *  stress_rand_data_lrand48()
+  *	fills buffer with random data from lrand48
+@@ -719,6 +720,7 @@ static void stress_rand_data_lrand48(
+ 	while (ptr < end)
+ 		*(ptr++) = lrand48();
+ }
++#endif
+ 
+ /*
+  *  stress_rand_data_latin()
+@@ -883,7 +885,9 @@ static const stress_zlib_rand_data_func rand_data_funcs[] = {
+ 	stress_rand_data_fixed,
+ 	stress_rand_data_gray,
+ 	stress_rand_data_latin,
++#if !defined(__serenity__)
+ 	stress_rand_data_lrand48,
++#endif
+ 	stress_rand_data_nybble,
+ 	stress_rand_data_objcode,
+ 	stress_rand_data_parity,
+@@ -926,7 +930,9 @@ static const stress_zlib_rand_data_info_t zlib_rand_data_methods[] = {
+ 	{ "latin",	stress_rand_data_latin },
+ 	{ "logmap",	stress_rand_data_logmap },
+ 	{ "lfsr32",	stress_rand_data_lfsr32 },
++#if !defined(__serenity__)
+ 	{ "lrand48",	stress_rand_data_lrand48 },
++#endif
+ 	{ "morse",	stress_rand_data_morse },
+ 	{ "nybble",	stress_rand_data_nybble },
+ 	{ "objcode",	stress_rand_data_objcode },
+-- 
+2.34.1
+

@@ -4,11 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Optional.h>
-#include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Lexer.h>
-#include <LibJS/Parser.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/Runtime/GeneratorFunctionConstructor.h>
@@ -45,22 +40,17 @@ ThrowCompletionOr<Value> GeneratorFunctionConstructor::call()
 // 27.3.1.1 GeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-generatorfunction
 ThrowCompletionOr<Object*> GeneratorFunctionConstructor::construct(FunctionObject& new_target)
 {
-    auto function = TRY(FunctionConstructor::create_dynamic_function_node(global_object(), new_target, FunctionKind::Generator));
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
 
-    auto* bytecode_interpreter = Bytecode::Interpreter::current();
-    VERIFY(bytecode_interpreter);
+    // 1. Let C be the active function object.
+    auto* constructor = vm.active_function_object();
 
-    auto executable = Bytecode::Generator::generate(function->body(), FunctionKind::Generator);
-    auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
-    passes.perform(executable);
-    if constexpr (JS_BYTECODE_DEBUG) {
-        dbgln("Optimisation passes took {}us", passes.elapsed());
-        dbgln("Compiled Bytecode::Block for function '{}':", function->name());
-        for (auto& block : executable.basic_blocks)
-            block.dump(executable);
-    }
+    // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
+    auto& args = vm.running_execution_context().arguments;
 
-    return ECMAScriptFunctionObject::create(global_object(), function->name(), function->body(), function->parameters(), function->function_length(), vm().lexical_environment(), nullptr, FunctionKind::Generator, function->is_strict_mode(), function->might_need_arguments_object());
+    // 3. Return ? CreateDynamicFunction(C, NewTarget, generator, args).
+    return TRY(FunctionConstructor::create_dynamic_function(global_object, *constructor, &new_target, FunctionKind::Generator, args));
 }
 
 }

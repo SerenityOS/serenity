@@ -11,6 +11,7 @@
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Date.h>
+#include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/VM.h>
@@ -141,7 +142,7 @@ void MarkupGenerator::function_to_html(const Object& function, StringBuilder& ht
 
 void MarkupGenerator::date_to_html(const Object& date, StringBuilder& html_output, HashTable<Object*>&)
 {
-    html_output.appendff("Date {}", static_cast<const JS::Date&>(date).string());
+    html_output.appendff("Date {}", JS::to_date_string(static_cast<JS::Date const&>(date).date_value()));
 }
 
 void MarkupGenerator::error_to_html(const Object& object, StringBuilder& html_output, HashTable<Object*>&)

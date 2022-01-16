@@ -18,6 +18,7 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Time/TimeManagement.h>
+#include <Kernel/kstdio.h>
 
 // Remove this once SMP is stable and can be enabled by default
 #define SCHEDULE_ON_ALL_PROCESSORS 0
@@ -595,8 +596,14 @@ void dump_thread_list(bool with_stack_traces)
                 thread.times_scheduled());
             break;
         }
-        if (with_stack_traces)
-            dbgln("{}", thread.backtrace());
+        if (with_stack_traces) {
+            auto trace_or_error = thread.backtrace();
+            if (!trace_or_error.is_error()) {
+                auto trace = trace_or_error.release_value();
+                dbgln("Backtrace:");
+                kernelputstr(trace->characters(), trace->length());
+            }
+        }
         return IterationDecision::Continue;
     });
 }

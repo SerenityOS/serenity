@@ -54,8 +54,9 @@ public:
     }
 
 protected:
-    explicit VMObject(size_t);
-    explicit VMObject(VMObject const&);
+    static ErrorOr<FixedArray<RefPtr<PhysicalPage>>> try_create_physical_pages(size_t);
+    ErrorOr<FixedArray<RefPtr<PhysicalPage>>> try_clone_physical_pages() const;
+    explicit VMObject(FixedArray<RefPtr<PhysicalPage>>&&);
 
     template<typename Callback>
     void for_each_region(Callback);

@@ -1,0 +1,44 @@
+From d5955e243cc81d6565eec57ccec282523348e735 Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 20:53:47 -0800
+Subject: [PATCH 01/12] serenity: Disable linux scheduler integration on
+ Serenity
+
+Follow the path of other platforms, and make this code nop
+when compiling for serenity.
+---
+ core-sched.c         | 3 ++-
+ stress-schedpolicy.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/core-sched.c b/core-sched.c
+index a27d15a..65ebe8c 100644
+--- a/core-sched.c
++++ b/core-sched.c
+@@ -68,7 +68,8 @@ const char *stress_get_sched_name(const int sched)
+ #if (defined(_POSIX_PRIORITY_SCHEDULING) || defined(__linux__)) && 	\
+     !defined(__OpenBSD__) && 						\
+     !defined(__minix__) &&						\
+-    !defined(__APPLE__)
++    !defined(__APPLE__) &&                      \
++    !defined(__serenity__)
+ 
+ static const char prefix[] = "sched";
+ 
+diff --git a/stress-schedpolicy.c b/stress-schedpolicy.c
+index e57b1d8..749e0c1 100644
+--- a/stress-schedpolicy.c
++++ b/stress-schedpolicy.c
+@@ -33,7 +33,8 @@ static const stress_help_t help[] = {
+ #if (defined(_POSIX_PRIORITY_SCHEDULING) || defined(__linux__)) &&	\
+      !defined(__OpenBSD__) &&						\
+      !defined(__minix__) &&						\
+-     !defined(__APPLE__)
++     !defined(__APPLE__) &&                     \
++     !defined(__serenity__)
+ 
+ static const int policies[] = {
+ #if defined(SCHED_IDLE)
+-- 
+2.34.1
+

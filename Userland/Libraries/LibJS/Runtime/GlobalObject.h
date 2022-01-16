@@ -35,7 +35,7 @@ public:
     ProxyConstructor* proxy_constructor() { return m_proxy_constructor; }
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
-    GeneratorObjectPrototype* generator_object_prototype() { return m_generator_object_prototype; }
+    GeneratorPrototype* generator_prototype() { return m_generator_prototype; }
     AsyncFromSyncIteratorPrototype* async_from_sync_iterator_prototype() { return m_async_from_sync_iterator_prototype; }
 
     FunctionObject* array_prototype_values_function() const { return m_array_prototype_values_function; }
@@ -102,7 +102,7 @@ private:
     ProxyConstructor* m_proxy_constructor { nullptr };
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
-    GeneratorObjectPrototype* m_generator_object_prototype { nullptr };
+    GeneratorPrototype* m_generator_prototype { nullptr };
     AsyncFromSyncIteratorPrototype* m_async_from_sync_iterator_prototype { nullptr };
 
     FunctionObject* m_array_prototype_values_function { nullptr };

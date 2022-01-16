@@ -2,6 +2,7 @@
 port=libexpat
 version=2.2.9
 useconfigure=true
+use_fresh_config_sub=true
 files="https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-${version}.tar.xz expat-${version}.tar.xz
 https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-${version}.tar.xz.asc expat-${version}.tar.xz.asc"
 workdir=expat-${version}

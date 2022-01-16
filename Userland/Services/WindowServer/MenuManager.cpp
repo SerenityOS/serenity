@@ -235,7 +235,7 @@ void MenuManager::close_everyone_not_in_lineage(Menu& menu)
     close_menus(menus_to_close);
 }
 
-void MenuManager::close_menus(const Vector<Menu&>& menus)
+void MenuManager::close_menus(Vector<Menu&>& menus)
 {
     for (auto& menu : menus) {
         if (&menu == m_current_menu)

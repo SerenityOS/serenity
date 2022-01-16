@@ -164,7 +164,7 @@ void FileProvider::build_filesystem_cache()
     m_work_queue.enqueue("/");
 
     (void)Threading::BackgroundAction<int>::construct(
-        [this](auto&) {
+        [this, strong_ref = NonnullRefPtr(*this)](auto&) {
             String slash = "/";
             auto timer = Core::ElapsedTimer::start_new();
             while (!m_work_queue.is_empty()) {

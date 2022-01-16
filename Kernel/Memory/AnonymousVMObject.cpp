@@ -43,7 +43,8 @@ ErrorOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
     // one and this one, as well as the clone have sufficient resources
     // to cow all pages as needed
     auto new_shared_committed_cow_pages = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SharedCommittedCowPages(move(committed_pages))));
-    auto clone = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(*this, *new_shared_committed_cow_pages)));
+    auto new_physical_pages = TRY(this->try_clone_physical_pages());
+    auto clone = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(*this, *new_shared_committed_cow_pages, move(new_physical_pages))));
 
     m_shared_committed_cow_pages = move(new_shared_committed_cow_pages);
 
@@ -73,7 +74,9 @@ ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_siz
         committed_pages = TRY(MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
     }
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages)));
+    auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(move(new_physical_pages), strategy, move(committed_pages)));
 }
 
 ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
@@ -82,7 +85,9 @@ ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physical
     if (contiguous_physical_pages.is_empty())
         return ENOMEM;
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(contiguous_physical_pages.span()));
+    auto new_physical_pages = TRY(FixedArray<RefPtr<PhysicalPage>>::try_create(contiguous_physical_pages.span()));
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(move(new_physical_pages)));
 }
 
 ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy strategy)
@@ -92,14 +97,17 @@ ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgeabl
         committed_pages = TRY(MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
     }
 
-    auto vmobject = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages))));
+    auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
+
+    auto vmobject = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(move(new_physical_pages), strategy, move(committed_pages))));
     vmobject->m_purgeable = true;
     return vmobject;
 }
 
 ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(physical_pages));
+    auto new_physical_pages = TRY(FixedArray<RefPtr<PhysicalPage>>::try_create(physical_pages));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(move(new_physical_pages)));
 }
 
 ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_for_physical_range(PhysicalAddress paddr, size_t size)
@@ -110,11 +118,13 @@ ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_for_phys
         return ENOMEM;
     }
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(paddr, size));
+    auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(paddr, move(new_physical_pages)));
 }
 
-AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy, Optional<CommittedPhysicalPageSet> committed_pages)
-    : VMObject(size)
+AnonymousVMObject::AnonymousVMObject(FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages, AllocationStrategy strategy, Optional<CommittedPhysicalPageSet> committed_pages)
+    : VMObject(move(new_physical_pages))
     , m_unused_committed_pages(move(committed_pages))
 {
     if (strategy == AllocationStrategy::AllocateNow) {
@@ -128,24 +138,21 @@ AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy, O
     }
 }
 
-AnonymousVMObject::AnonymousVMObject(PhysicalAddress paddr, size_t size)
-    : VMObject(size)
+AnonymousVMObject::AnonymousVMObject(PhysicalAddress paddr, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
+    : VMObject(move(new_physical_pages))
 {
     VERIFY(paddr.page_base() == paddr);
     for (size_t i = 0; i < page_count(); ++i)
         physical_pages()[i] = PhysicalPage::create(paddr.offset(i * PAGE_SIZE), MayReturnToFreeList::No);
 }
 
-AnonymousVMObject::AnonymousVMObject(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
-    : VMObject(physical_pages.size() * PAGE_SIZE)
+AnonymousVMObject::AnonymousVMObject(FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
+    : VMObject(move(new_physical_pages))
 {
-    for (size_t i = 0; i < physical_pages.size(); ++i) {
-        m_physical_pages[i] = physical_pages[i];
-    }
 }
 
-AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other, NonnullRefPtr<SharedCommittedCowPages> shared_committed_cow_pages)
-    : VMObject(other)
+AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other, NonnullRefPtr<SharedCommittedCowPages> shared_committed_cow_pages, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
+    : VMObject(move(new_physical_pages))
     , m_shared_committed_cow_pages(move(shared_committed_cow_pages))
     , m_purgeable(other.m_purgeable)
 {

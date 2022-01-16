@@ -1,0 +1,54 @@
+From b113080ce2b9538c16433df1a4074aa4ab538a22 Mon Sep 17 00:00:00 2001
+From: AnotherTest <ali.mpfard@gmail.com>
+Date: Fri, 12 Feb 2021 13:42:50 +0330
+Subject: [PATCH 2/7] kwsys: Don't use siginfo
+
+We don't support SIGINFO. This patch removes uses of SIGINFO.
+
+- [X] Local?
+- [ ] Should be merged to upstream?
+- [X] Resolves issue(s) with our side of things
+- [ ] Hack
+---
+ Source/kwsys/ProcessUNIX.c         | 2 +-
+ Source/kwsys/SystemInformation.cxx | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Source/kwsys/ProcessUNIX.c b/Source/kwsys/ProcessUNIX.c
+index a8a15ddb..5530814a 100644
+--- a/Source/kwsys/ProcessUNIX.c
++++ b/Source/kwsys/ProcessUNIX.c
+@@ -105,7 +105,7 @@ static inline void kwsysProcess_usleep(unsigned int msec)
+ #endif
+ 
+ /* Some platforms do not have siginfo on their signal handlers.  */
+-#if defined(SA_SIGINFO) && !defined(__BEOS__)
++#if defined(SA_SIGINFO) && !defined(__BEOS__) && !defined(__serenity__)
+ #  define KWSYSPE_USE_SIGINFO 1
+ #endif
+ 
+diff --git a/Source/kwsys/SystemInformation.cxx b/Source/kwsys/SystemInformation.cxx
+index f2bf85f6..ac2ac4a3 100644
+--- a/Source/kwsys/SystemInformation.cxx
++++ b/Source/kwsys/SystemInformation.cxx
+@@ -992,7 +992,7 @@ int GetFieldsFromCommand(const char* command, const char** fieldNames,
+ #endif
+ 
+ // ****************************************************************************
+-#if !defined(_WIN32) && !defined(__MINGW32__) && !defined(__CYGWIN__)
++#if !defined(_WIN32) && !defined(__MINGW32__) && !defined(__CYGWIN__) && !defined(__serenity__)
+ void StacktraceSignalHandler(int sigNo, siginfo_t* sigInfo,
+                              void* /*sigContext*/)
+ {
+@@ -4043,7 +4043,7 @@ when set print stack trace in response to common signals.
+ */
+ void SystemInformationImplementation::SetStackTraceOnError(int enable)
+ {
+-#if !defined(_WIN32) && !defined(__MINGW32__) && !defined(__CYGWIN__)
++#if !defined(_WIN32) && !defined(__MINGW32__) && !defined(__CYGWIN__) && !defined(__serenity__)
+   static int saOrigValid = 0;
+   static struct sigaction saABRTOrig;
+   static struct sigaction saSEGVOrig;
+-- 
+2.34.1
+

@@ -1,0 +1,27 @@
+From 556c1fcea9278f0147902334b16ec82f91ee3a2e Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 23:49:39 -0800
+Subject: [PATCH 11/12] serenity: Fix stress_get_prime64 variable type, uint ->
+ uint64_t
+
+Serenity doesn't have a definition for unit.
+---
+ core-helper.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/core-helper.c b/core-helper.c
+index 8215c56..bb2b018 100644
+--- a/core-helper.c
++++ b/core-helper.c
+@@ -1334,7 +1334,7 @@ bool stress_is_prime64(const uint64_t n)
+  */
+ uint64_t stress_get_prime64(const uint64_t n)
+ {
+-	static uint p = 1009;
++	static uint64_t p = 1009;
+ 
+ 	if (n != p)
+ 		return p;
+-- 
+2.34.1
+

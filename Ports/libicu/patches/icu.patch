@@ -89,18 +89,6 @@ diff -ur source/config/mh-serenity source.serenity/config/mh-serenity
 +
 +## End Linux-specific setup
 +
-diff -ur source/config.sub source.serenity/config.sub
---- source/config.sub	2021-04-08 02:10:27.000000000 +0200
-+++ source.serenity/config.sub	2021-04-11 07:59:52.531086431 +0200
-@@ -1416,7 +1416,7 @@
- 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
- 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
- 	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
--	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox*)
-+	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox* | -serenity*)
- 	# Remember, each alternative MUST END IN *, to match a version number.
- 		;;
- 	-qnx*)
 diff -ur source/configure source.serenity/configure
 --- source/configure	2021-04-08 02:10:27.000000000 +0200
 +++ source.serenity/configure	2021-04-11 09:24:04.971314734 +0200

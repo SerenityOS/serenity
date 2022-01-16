@@ -1,0 +1,50 @@
+From e32762d8f7393337786d11d77a71843c80a23b0e Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Wed, 12 Jan 2022 22:17:47 +0330
+Subject: [PATCH 4/7] Platform/SerenityOS
+
+This patch adds the SerenityOS platform config file to CMake.
+
+- [ ] Local?
+- [X] Should be merged to upstream? If we want to have cmake support serenity out of the box.
+- [ ] Resolves issue(s) with our side of things
+- [ ] Hack
+---
+ Modules/Platform/SerenityOS.cmake | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+ create mode 100644 Modules/Platform/SerenityOS.cmake
+
+diff --git a/Modules/Platform/SerenityOS.cmake b/Modules/Platform/SerenityOS.cmake
+new file mode 100644
+index 00000000..952ff61a
+--- /dev/null
++++ b/Modules/Platform/SerenityOS.cmake
+@@ -0,0 +1,25 @@
++set(CMAKE_DL_LIBS "-ldl")
++set(CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG "-Wl,-rpath,")
++set(CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG_SEP ":")
++set(CMAKE_SHARED_LIBRARY_RPATH_ORIGIN_TOKEN "\$ORIGIN")
++set(CMAKE_SHARED_LIBRARY_RPATH_LINK_C_FLAG "-Wl,-rpath-link,")
++set(CMAKE_SHARED_LIBRARY_SONAME_C_FLAG "-Wl,-soname,")
++set(CMAKE_EXE_EXPORTS_C_FLAG "-Wl,--export-dynamic")
++
++# Shared libraries with no builtin soname may not be linked safely by
++# specifying the file path.
++set(CMAKE_PLATFORM_USES_PATH_WHEN_NO_SONAME 1)
++
++# Initialize C link type selection flags.  These flags are used when
++# building a shared library, shared module, or executable that links
++# to other libraries to select whether to use the static or shared
++# versions of the libraries.
++foreach(type SHARED_LIBRARY SHARED_MODULE EXE)
++  set(CMAKE_${type}_LINK_STATIC_C_FLAGS "-Wl,-Bstatic")
++  set(CMAKE_${type}_LINK_DYNAMIC_C_FLAGS "-Wl,-Bdynamic")
++endforeach()
++
++# No multi-arch here (yet?)
++unset(CMAKE_LIBRARY_ARCHITECTURE_REGEX)
++
++include(Platform/UnixPaths)
+-- 
+2.34.1
+

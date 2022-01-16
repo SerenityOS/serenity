@@ -1,0 +1,26 @@
+From 90287ce0f011bb46c082a5e176114c831a6f32e1 Mon Sep 17 00:00:00 2001
+From: Luke <luke.wilde@live.co.uk>
+Date: Fri, 14 Jan 2022 16:43:10 +0330
+Subject: [PATCH] accept.c: Include sys/select.h
+
+This is transitively pulled in by other headers in some systems,
+serenity is not one of them.
+---
+ examples/loadables/accept.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/examples/loadables/accept.c b/examples/loadables/accept.c
+index 54cf38c..fd8e7ed 100644
+--- a/examples/loadables/accept.c
++++ b/examples/loadables/accept.c
+@@ -35,6 +35,7 @@
+ #include <sys/socket.h>
+ #include <arpa/inet.h>
+ #include <netinet/in.h>
++#include <sys/select.h>
+ 
+ #include "loadables.h"
+ 
+-- 
+2.34.1
+

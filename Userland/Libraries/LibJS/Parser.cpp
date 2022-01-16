@@ -155,7 +155,7 @@ public:
                 if (m_var_names.contains(function_name) || m_lexical_names.contains(function_name))
                     throw_identifier_declared(function_name, declaration);
 
-                if (function_declaration.kind() != FunctionKind::Regular || m_parser.m_state.strict_mode) {
+                if (function_declaration.kind() != FunctionKind::Normal || m_parser.m_state.strict_mode) {
                     if (m_function_names.contains(function_name))
                         throw_identifier_declared(function_name, declaration);
 
@@ -708,7 +708,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         load_state();
     };
 
-    auto function_kind = FunctionKind::Regular;
+    auto function_kind = FunctionKind::Normal;
 
     if (is_async) {
         consume(TokenType::Async);
@@ -777,7 +777,10 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
-            return parse_function_body(parameters, function_kind, contains_direct_call_to_eval);
+            consume(TokenType::CurlyOpen);
+            auto body = parse_function_body(parameters, function_kind, contains_direct_call_to_eval);
+            consume(TokenType::CurlyClose);
+            return body;
         }
         if (match_expression()) {
             // Parse a function body which returns a single expression
@@ -1293,12 +1296,12 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
-                Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, FunctionKind::Regular,
+                Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, FunctionKind::Normal,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         } else {
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
-                Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Regular,
+                Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Normal,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         }
     }
@@ -1624,7 +1627,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         property_type = ObjectProperty::Type::KeyValue;
         RefPtr<Expression> property_name;
         RefPtr<Expression> property_value;
-        FunctionKind function_kind { FunctionKind::Regular };
+        FunctionKind function_kind { FunctionKind::Normal };
 
         if (match(TokenType::TripleDot)) {
             consume();
@@ -1653,8 +1656,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             consume();
             property_type = ObjectProperty::Type::KeyValue;
             property_name = parse_property_key();
-            VERIFY(function_kind == FunctionKind::Regular || function_kind == FunctionKind::Async);
-            function_kind = function_kind == FunctionKind::Regular ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
+            VERIFY(function_kind == FunctionKind::Normal || function_kind == FunctionKind::Async);
+            function_kind = function_kind == FunctionKind::Normal ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
         } else if (match_identifier()) {
             auto identifier = consume();
             if (identifier.original_value() == "get"sv && match_property_key()) {
@@ -2366,7 +2369,6 @@ NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclarati
     auto rule_start = push_start();
     auto function_body = create_ast_node<FunctionBody>({ m_state.current_token.filename(), rule_start.position(), position() });
     ScopePusher function_scope = ScopePusher::function_scope(*this, function_body, parameters); // FIXME <-
-    consume(TokenType::CurlyOpen);
     auto has_use_strict = parse_directive(function_body);
     bool previous_strict_mode = m_state.strict_mode;
     if (has_use_strict) {
@@ -2380,8 +2382,13 @@ NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclarati
 
     parse_statement_list(function_body);
 
+    // If we're parsing the function body standalone, e.g. via CreateDynamicFunction, we must have reached EOF here.
+    // Otherwise, we need a closing curly bracket (which is consumed elsewhere). If we get neither, it's an error.
+    if (!match(TokenType::Eof) && !match(TokenType::CurlyClose))
+        expected(Token::name(TokenType::CurlyClose));
+
     // If the function contains 'use strict' we need to check the parameters (again).
-    if (function_body->in_strict_mode() || function_kind != FunctionKind::Regular) {
+    if (function_body->in_strict_mode() || function_kind != FunctionKind::Normal) {
         Vector<StringView> parameter_names;
         for (auto& parameter : parameters) {
             parameter.binding.visit(
@@ -2421,7 +2428,6 @@ NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclarati
         }
     }
 
-    consume(TokenType::CurlyClose);
     m_state.strict_mode = previous_strict_mode;
     contains_direct_call_to_eval = function_scope.contains_direct_call_to_eval();
     return function_body;
@@ -2461,19 +2467,19 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     else if ((parse_options & FunctionNodeParseOptions::IsAsyncFunction) != 0)
         function_kind = FunctionKind::Async;
     else
-        function_kind = FunctionKind::Regular;
+        function_kind = FunctionKind::Normal;
     String name;
     if (parse_options & FunctionNodeParseOptions::CheckForFunctionAndName) {
-        if (function_kind == FunctionKind::Regular && match(TokenType::Async) && !next_token().trivia_contains_line_terminator()) {
+        if (function_kind == FunctionKind::Normal && match(TokenType::Async) && !next_token().trivia_contains_line_terminator()) {
             function_kind = FunctionKind::Async;
             consume(TokenType::Async);
-            parse_options = parse_options | FunctionNodeParseOptions::IsAsyncFunction;
+            parse_options |= FunctionNodeParseOptions::IsAsyncFunction;
         }
         consume(TokenType::Function);
         if (match(TokenType::Asterisk)) {
-            function_kind = function_kind == FunctionKind::Regular ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
+            function_kind = function_kind == FunctionKind::Normal ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
             consume(TokenType::Asterisk);
-            parse_options = parse_options | FunctionNodeParseOptions::IsGeneratorFunction;
+            parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
         }
 
         if (FunctionNodeType::must_have_name() || match_identifier())
@@ -2508,8 +2514,10 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
         m_state.labels_in_scope = move(old_labels_in_scope);
     });
 
+    consume(TokenType::CurlyOpen);
     bool contains_direct_call_to_eval = false;
     auto body = parse_function_body(parameters, function_kind, contains_direct_call_to_eval);
+    consume(TokenType::CurlyClose);
 
     auto has_strict_directive = body->in_strict_mode();
 
@@ -2604,12 +2612,16 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
                 syntax_error("Generator function parameter initializer cannot contain a reference to an identifier named \"yield\"");
         }
         parameters.append({ move(parameter), default_value, is_rest });
-        if (match(TokenType::ParenClose) || is_rest)
+        if (!match(TokenType::Comma) || is_rest)
             break;
         consume(TokenType::Comma);
     }
     if (parse_options & FunctionNodeParseOptions::IsSetterFunction && parameters.is_empty())
         syntax_error("Setter function must have one argument");
+    // If we're parsing the parameters standalone, e.g. via CreateDynamicFunction, we must have reached EOF here.
+    // Otherwise, we need a closing parenthesis (which is consumed elsewhere). If we get neither, it's an error.
+    if (!match(TokenType::Eof) && !match(TokenType::ParenClose))
+        expected(Token::name(TokenType::ParenClose));
     return parameters;
 }
 

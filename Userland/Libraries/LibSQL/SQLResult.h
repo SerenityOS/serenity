@@ -10,6 +10,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Vector.h>
 #include <LibCore/Object.h>
+#include <LibSQL/ResultSet.h>
 #include <LibSQL/Tuple.h>
 #include <LibSQL/Type.h>
 
@@ -110,12 +111,8 @@ class SQLResult : public Core::Object {
     C_OBJECT(SQLResult)
 
 public:
-    void append(Tuple const& tuple)
-    {
-        m_has_results = true;
-        m_result_set.append(tuple);
-    }
-
+    void insert(Tuple const& row, Tuple const& sort_key);
+    void limit(size_t offset, size_t limit);
     SQLCommand command() const { return m_command; }
     int updated() const { return m_update_count; }
     int inserted() const { return m_insert_count; }
@@ -129,7 +126,7 @@ public:
     bool has_error() const { return m_error.code != SQLErrorCode::NoError; }
     SQLError const& error() const { return m_error; }
     bool has_results() const { return m_has_results; }
-    Vector<Tuple> const& results() const { return m_result_set; }
+    ResultSet const& results() const { return m_result_set; }
 
 private:
     SQLResult() = default;
@@ -161,7 +158,7 @@ private:
     int m_insert_count { 0 };
     int m_delete_count { 0 };
     bool m_has_results { false };
-    Vector<Tuple> m_result_set;
+    ResultSet m_result_set;
 };
 
 }

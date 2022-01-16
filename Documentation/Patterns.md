@@ -280,3 +280,14 @@ private:
 };
 #endif
 ```
+
+## `type[]` vs. `Array<type>` vs. `Vector<type>` vs. `FixedArray<type>`
+
+There are four "contiguous list" / array-like types, including C-style arrays themselves. They share a lot of their API, but their use cases are all slightly different, mostly relating to how they allocate their data.
+
+Note that `Span<type>` differs from all of these types in that it provides a *view* on data owned by somebody else. The four types mentioned above all own their data, but they can provide `Span`'s which view all or part of their data. For APIs that aren't specific to the kind of list and don't need to handle resizing in any way, `Span` is a good choice.
+
+* C-style arrays are generally discouraged (and this also holds for pointer+size-style arrays when passing them around). They are only used for the implementation of other collections or in specific circumstances.
+* `Array` is a thin wrapper around C-style arrays similar to `std::array`, where the template arguments include the size of the array. It allocates its data inline, just as arrays do, and never does any dynamic allocations.
+* `Vector` is similar to `std::vector` and represents a dynamic resizeable array. For most basic use cases of lists, this is the go-to collection. It has an optional inline capacity (the second template argument) which will allocate inline as the name suggests, but this is not always used. If the contents outgrow the inline capacity, Vector will automatically switch to the standard out-of-line storage. This is allocated on the heap, and the space is automatically resized and moved when more (or less) space is needed.
+* `FixedArray` is essentially a runtime-sized `Array`. It can't resize like `Vector`, but it's ideal for circumstances where the size is not known at compile time but doesn't need to change once the collection is initialized. `FixedArray` guarantees to not allocate or deallocate except for its constructor and destructor.
