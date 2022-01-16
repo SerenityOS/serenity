@@ -36,17 +36,17 @@ auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRe
 class LaunchServerConnection final
     : public IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>
     , public LaunchClientEndpoint {
-    C_OBJECT(LaunchServerConnection)
+    IPC_CLIENT_CONNECTION(LaunchServerConnection, "/tmp/portal/launch")
 private:
-    LaunchServerConnection()
-        : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, "/tmp/portal/launch")
+    LaunchServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+        : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, move(socket))
     {
     }
 };
 
 static LaunchServerConnection& connection()
 {
-    static auto connection = LaunchServerConnection::construct();
+    static auto connection = LaunchServerConnection::try_create().release_value_but_fixme_should_propagate_errors();
     return connection;
 }
 

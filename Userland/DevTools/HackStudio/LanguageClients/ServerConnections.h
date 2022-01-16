@@ -12,19 +12,19 @@
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
 #include <LibIPC/ServerConnection.h>
 
-#define LANGUAGE_CLIENT(language_name_, socket_name)                                           \
-    namespace language_name_ {                                                                 \
-    class ServerConnection final : public HackStudio::ServerConnection {                       \
-        C_OBJECT(ServerConnection)                                                             \
-    public:                                                                                    \
-        static const char* language_name() { return #language_name_; }                         \
-                                                                                               \
-    private:                                                                                   \
-        ServerConnection(const String& project_path)                                           \
-            : HackStudio::ServerConnection("/tmp/portal/language/" #socket_name, project_path) \
-        {                                                                                      \
-        }                                                                                      \
-    };                                                                                         \
+#define LANGUAGE_CLIENT(language_name_, socket_name)                                                  \
+    namespace language_name_ {                                                                        \
+    class ServerConnection final : public HackStudio::ServerConnection {                              \
+        IPC_CLIENT_CONNECTION(ServerConnection, "/tmp/portal/language" #socket_name)                  \
+    public:                                                                                           \
+        static const char* language_name() { return #language_name_; }                                \
+                                                                                                      \
+    private:                                                                                          \
+        ServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, const String& project_path) \
+            : HackStudio::ServerConnection(move(socket), project_path)                                \
+        {                                                                                             \
+        }                                                                                             \
+    };                                                                                                \
     }
 
 namespace LanguageClients {

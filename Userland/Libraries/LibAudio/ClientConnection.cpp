@@ -14,8 +14,8 @@ namespace Audio {
 // Real-time audio may be improved with a lower value.
 static timespec g_enqueue_wait_time { 0, 10'000'000 };
 
-ClientConnection::ClientConnection()
-    : IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>(*this, "/tmp/portal/audio")
+ClientConnection::ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    : IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>(*this, move(socket))
 {
 }
 

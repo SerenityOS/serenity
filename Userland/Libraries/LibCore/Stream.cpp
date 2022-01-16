@@ -6,6 +6,7 @@
  */
 
 #include "Stream.h"
+#include <LibCore/System.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <poll.h>
@@ -340,15 +341,15 @@ ErrorOr<void> Socket::connect_inet(int fd, SocketAddress const& address)
     return {};
 }
 
-ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer)
+ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer, int flags)
 {
     if (!is_open()) {
         return Error::from_errno(ENOTCONN);
     }
 
-    ssize_t rc = ::recv(m_fd, buffer.data(), buffer.size(), 0);
+    ssize_t rc = ::recv(m_fd, buffer.data(), buffer.size(), flags);
     if (rc < 0) {
-        return Error::from_errno(errno);
+        return Error::from_syscall("recv", -errno);
     }
 
     m_last_read_was_eof = rc == 0;
@@ -533,6 +534,79 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(String const& path)
 
     socket->setup_notifier();
     return socket;
+}
+
+ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::adopt_fd(int fd)
+{
+    if (fd < 0) {
+        return Error::from_errno(EBADF);
+    }
+
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LocalSocket()));
+    socket->m_helper.set_fd(fd);
+    socket->setup_notifier();
+    return socket;
+}
+
+ErrorOr<int> LocalSocket::receive_fd(int flags)
+{
+#ifdef __serenity__
+    return Core::System::recvfd(m_helper.fd(), flags);
+#else
+    (void)flags;
+    return Error::from_string_literal("File descriptor passing not supported on this platform");
+#endif
+}
+
+ErrorOr<void> LocalSocket::send_fd(int fd)
+{
+#ifdef __serenity__
+    return Core::System::sendfd(m_helper.fd(), fd);
+#else
+    (void)fd;
+    return Error::from_string_literal("File descriptor passing not supported on this platform");
+#endif
+}
+
+ErrorOr<pid_t> LocalSocket::peer_pid() const
+{
+#ifdef AK_OS_MACOS
+    pid_t pid;
+    socklen_t pid_size = sizeof(pid);
+#elif defined(__FreeBSD__)
+    struct xucred creds = {};
+    socklen_t creds_size = sizeof(creds);
+#elif defined(__OpenBSD__)
+    struct sockpeercred creds = {};
+    socklen_t creds_size = sizeof(creds);
+#else
+    struct ucred creds = {};
+    socklen_t creds_size = sizeof(creds);
+#endif
+
+#ifdef AK_OS_MACOS
+    if (getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size) < 0)
+#elif defined(__FreeBSD__)
+    if (getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERCRED, &creds, &creds_size) < 0)
+#else
+    if (getsockopt(m_helper.fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0)
+#endif
+    {
+        return Error::from_syscall("getsockopt", -errno);
+    }
+
+#ifdef AK_OS_MACOS
+    return pid;
+#elif defined(__FreeBSD__)
+    return creds.cr_pid;
+#else
+    return creds.pid;
+#endif
+}
+
+ErrorOr<size_t> LocalSocket::read_without_waiting(Bytes buffer)
+{
+    return m_helper.read(buffer, MSG_DONTWAIT);
 }
 
 }

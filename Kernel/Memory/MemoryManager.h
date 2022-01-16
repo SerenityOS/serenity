@@ -248,8 +248,8 @@ private:
     void initialize_physical_pages();
     void register_reserved_ranges();
 
-    void register_region(Region&);
-    void unregister_region(Region&);
+    void register_kernel_region(Region&);
+    void unregister_kernel_region(Region&);
 
     void protect_kernel_image();
     void parse_memory_map();

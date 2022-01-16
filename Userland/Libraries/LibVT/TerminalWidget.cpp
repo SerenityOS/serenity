@@ -265,9 +265,6 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
     painter.add_clip_rect(event.rect());
 
-    Gfx::IntRect terminal_buffer_rect(frame_inner_rect().top_left(), { frame_inner_rect().width() - m_scrollbar->width(), frame_inner_rect().height() });
-    painter.add_clip_rect(terminal_buffer_rect);
-
     if (visual_beep_active)
         painter.clear_rect(frame_inner_rect(), terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::Red)));
     else
@@ -546,6 +543,11 @@ void TerminalWidget::set_opacity(u8 new_opacity)
     window()->set_has_alpha_channel(new_opacity < 255);
     m_opacity = new_opacity;
     update();
+}
+
+void TerminalWidget::set_show_scrollbar(bool show_scrollbar)
+{
+    m_scrollbar->set_visible(show_scrollbar);
 }
 
 bool TerminalWidget::has_selection() const

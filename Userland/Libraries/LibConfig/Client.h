@@ -18,7 +18,7 @@ namespace Config {
 class Client final
     : public IPC::ServerConnection<ConfigClientEndpoint, ConfigServerEndpoint>
     , public ConfigClientEndpoint {
-    C_OBJECT(Client);
+    IPC_CLIENT_CONNECTION(Client, "/tmp/portal/config")
 
 public:
     void pledge_domains(Vector<String> const&);
@@ -39,8 +39,8 @@ public:
     static Client& the();
 
 private:
-    explicit Client()
-        : IPC::ServerConnection<ConfigClientEndpoint, ConfigServerEndpoint>(*this, "/tmp/portal/config")
+    explicit Client(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+        : IPC::ServerConnection<ConfigClientEndpoint, ConfigServerEndpoint>(*this, move(socket))
     {
     }
 

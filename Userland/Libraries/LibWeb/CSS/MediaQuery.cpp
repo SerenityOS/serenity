@@ -23,16 +23,16 @@ NonnullRefPtr<MediaQuery> MediaQuery::create_not_all()
 String MediaFeatureValue::to_string() const
 {
     return m_value.visit(
-        [](String& ident) { return serialize_an_identifier(ident); },
-        [](Length& length) { return length.to_string(); },
+        [](String const& ident) { return serialize_an_identifier(ident); },
+        [](Length const& length) { return length.to_string(); },
         [](double number) { return String::number(number); });
 }
 
 bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
 {
     return m_value.visit(
-        [&](String&) { return other.is_ident(); },
-        [&](Length&) { return other.is_length(); },
+        [&](String const&) { return other.is_ident(); },
+        [&](Length const&) { return other.is_length(); },
         [&](double) { return other.is_number(); });
 }
 

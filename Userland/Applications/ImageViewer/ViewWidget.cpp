@@ -169,7 +169,7 @@ void ViewWidget::load_from_file(const String& path)
     auto& mapped_file = *file_or_error.value();
 
     // Spawn a new ImageDecoder service process and connect to it.
-    auto client = ImageDecoderClient::Client::construct();
+    auto client = ImageDecoderClient::Client::try_create().release_value_but_fixme_should_propagate_errors();
 
     auto decoded_image_or_error = client->decode_image(mapped_file.bytes());
     if (!decoded_image_or_error.has_value()) {

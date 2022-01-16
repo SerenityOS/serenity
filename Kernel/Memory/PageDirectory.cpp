@@ -151,8 +151,7 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 PageDirectory::~PageDirectory()
 {
     SpinlockLocker lock(s_mm_lock);
-    if (m_space)
-        cr3_map().remove(cr3());
+    cr3_map().remove(cr3());
 }
 
 }

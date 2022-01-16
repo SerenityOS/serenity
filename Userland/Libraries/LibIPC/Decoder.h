@@ -11,6 +11,7 @@
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
+#include <LibCore/Stream.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
 
@@ -25,9 +26,9 @@ inline ErrorOr<void> decode(Decoder&, T&)
 
 class Decoder {
 public:
-    Decoder(InputMemoryStream& stream, int sockfd)
+    Decoder(InputMemoryStream& stream, Core::Stream::LocalSocket& socket)
         : m_stream(stream)
-        , m_sockfd(sockfd)
+        , m_socket(socket)
     {
     }
 
@@ -115,7 +116,7 @@ public:
 
 private:
     InputMemoryStream& m_stream;
-    int m_sockfd { -1 };
+    Core::Stream::LocalSocket& m_socket;
 };
 
 }

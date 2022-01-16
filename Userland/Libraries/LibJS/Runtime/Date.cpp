@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,16 +16,14 @@
 
 namespace JS {
 
-Date* Date::create(GlobalObject& global_object, Core::DateTime datetime, i16 milliseconds, bool is_invalid)
+Date* Date::create(GlobalObject& global_object, double date_value)
 {
-    return global_object.heap().allocate<Date>(global_object, datetime, milliseconds, is_invalid, *global_object.date_prototype());
+    return global_object.heap().allocate<Date>(global_object, date_value, *global_object.date_prototype());
 }
 
-Date::Date(Core::DateTime datetime, i16 milliseconds, bool is_invalid, Object& prototype)
+Date::Date(double date_value, Object& prototype)
     : Object(prototype)
-    , m_datetime(datetime)
-    , m_milliseconds(milliseconds)
-    , m_is_invalid(is_invalid)
+    , m_date_value(date_value)
 {
 }
 
@@ -32,61 +31,9 @@ Date::~Date()
 {
 }
 
-tm Date::to_utc_tm() const
-{
-    time_t timestamp = m_datetime.timestamp();
-    struct tm tm;
-    gmtime_r(&timestamp, &tm);
-    return tm;
-}
-
-int Date::utc_date() const
-{
-    return to_utc_tm().tm_mday;
-}
-
-int Date::utc_day() const
-{
-    return to_utc_tm().tm_wday;
-}
-
-int Date::utc_full_year() const
-{
-    return to_utc_tm().tm_year + 1900;
-}
-
-int Date::utc_hours() const
-{
-    return to_utc_tm().tm_hour;
-}
-
-int Date::utc_minutes() const
-{
-    return to_utc_tm().tm_min;
-}
-
-int Date::utc_month() const
-{
-    return to_utc_tm().tm_mon;
-}
-
-int Date::utc_seconds() const
-{
-    return to_utc_tm().tm_sec;
-}
-
-String Date::gmt_date_string() const
-{
-    // Mon, 18 Dec 1995 17:28:35 GMT
-    // FIXME: Note that we're totally cheating with the timezone part here..
-    return datetime().to_string("%a, %e %b %Y %T GMT");
-}
-
 String Date::iso_date_string() const
 {
-    auto tm = to_utc_tm();
-    int year = tm.tm_year + 1900;
-    int month = tm.tm_mon + 1;
+    int year = year_from_time(m_date_value);
 
     StringBuilder builder;
     if (year < 0)
@@ -96,36 +43,21 @@ String Date::iso_date_string() const
     else
         builder.appendff("{:04}", year);
     builder.append('-');
-    builder.appendff("{:02}", month);
+    builder.appendff("{:02}", month_from_time(m_date_value) + 1);
     builder.append('-');
-    builder.appendff("{:02}", tm.tm_mday);
+    builder.appendff("{:02}", date_from_time(m_date_value));
     builder.append('T');
-    builder.appendff("{:02}", tm.tm_hour);
+    builder.appendff("{:02}", hour_from_time(m_date_value));
     builder.append(':');
-    builder.appendff("{:02}", tm.tm_min);
+    builder.appendff("{:02}", min_from_time(m_date_value));
     builder.append(':');
-    builder.appendff("{:02}", tm.tm_sec);
+    builder.appendff("{:02}", sec_from_time(m_date_value));
     builder.append('.');
-    builder.appendff("{:03}", m_milliseconds);
+    builder.appendff("{:03}", ms_from_time(m_date_value));
     builder.append('Z');
 
     return builder.build();
 }
-
-// https://tc39.es/ecma262/#eqn-HoursPerDay
-static constexpr double HOURS_PER_DAY = 24;
-// https://tc39.es/ecma262/#eqn-MinutesPerHour
-static constexpr double MINUTES_PER_HOUR = 60;
-// https://tc39.es/ecma262/#eqn-SecondsPerMinute
-static constexpr double SECONDS_PER_MINUTE = 60;
-// https://tc39.es/ecma262/#eqn-msPerSecond
-static constexpr double MS_PER_SECOND = 1000;
-// https://tc39.es/ecma262/#eqn-msPerMinute
-static constexpr double MS_PER_MINUTE = 60000;
-// https://tc39.es/ecma262/#eqn-msPerHour
-static constexpr double MS_PER_HOUR = 3600000;
-// https://tc39.es/ecma262/#eqn-msPerDay
-static constexpr double MS_PER_DAY = 86400000;
 
 // DayWithinYear(t), https://tc39.es/ecma262/#eqn-DayWithinYear
 u16 day_within_year(double t)
@@ -208,7 +140,7 @@ double day_from_year(i32 y)
 double time_from_year(i32 y)
 {
     // msPerDay × DayFromYear(y)
-    return MS_PER_DAY * day_from_year(y);
+    return Date::ms_per_day * day_from_year(y);
 }
 
 // YearFromTime(t), https://tc39.es/ecma262/#eqn-YearFromTime
@@ -217,12 +149,12 @@ i32 year_from_time(double t)
     // the largest integral Number y (closest to +∞) such that TimeFromYear(y) ≤ t
 
     // Approximation using average number of milliseconds per year. We might have to adjust this guess afterwards.
-    auto year = static_cast<i32>(t / (365.2425 * MS_PER_DAY) + 1970);
+    auto year = static_cast<i32>(t / (365.2425 * Date::ms_per_day) + 1970);
 
     auto year_t = time_from_year(year);
     if (year_t > t)
         year--;
-    else if (year_t + days_in_year(year) * MS_PER_DAY <= t)
+    else if (year_t + days_in_year(year) * Date::ms_per_day <= t)
         year++;
 
     return year;
@@ -285,28 +217,28 @@ u8 month_from_time(double t)
 u8 hour_from_time(double t)
 {
     // 𝔽(floor(ℝ(t / msPerHour)) modulo HoursPerDay)
-    return static_cast<u8>(modulo(floor(t / MS_PER_HOUR), HOURS_PER_DAY));
+    return static_cast<u8>(modulo(floor(t / Date::ms_per_hour), Date::hours_per_day));
 }
 
 // MinFromTime(t), https://tc39.es/ecma262/#eqn-MinFromTime
 u8 min_from_time(double t)
 {
     // 𝔽(floor(ℝ(t / msPerMinute)) modulo MinutesPerHour)
-    return static_cast<u8>(modulo(floor(t / MS_PER_MINUTE), MINUTES_PER_HOUR));
+    return static_cast<u8>(modulo(floor(t / Date::ms_per_minute), Date::minutes_per_hour));
 }
 
 // SecFromTime(t), https://tc39.es/ecma262/#eqn-SecFromTime
 u8 sec_from_time(double t)
 {
     // 𝔽(floor(ℝ(t / msPerSecond)) modulo SecondsPerMinute)
-    return static_cast<u8>(modulo(floor(t / MS_PER_SECOND), SECONDS_PER_MINUTE));
+    return static_cast<u8>(modulo(floor(t / Date::ms_per_second), Date::seconds_per_minute));
 }
 
 // msFromTime(t), https://tc39.es/ecma262/#eqn-msFromTime
 u16 ms_from_time(double t)
 {
     // 𝔽(ℝ(t) modulo msPerSecond)
-    return static_cast<u16>(modulo(t, MS_PER_SECOND));
+    return static_cast<u16>(modulo(t, Date::ms_per_second));
 }
 
 // 21.4.1.6 Week Day, https://tc39.es/ecma262/#sec-week-day
@@ -317,7 +249,7 @@ u8 week_day(double t)
 }
 
 // 21.4.1.7 LocalTZA ( t, isUTC ), https://tc39.es/ecma262/#sec-local-time-zone-adjustment
-double local_tza(double time, bool is_utc, Optional<StringView> time_zone_override)
+double local_tza(double time, [[maybe_unused]] bool is_utc, Optional<StringView> time_zone_override)
 {
     // The time_zone_override parameter is non-standard, but allows callers to override the system
     // time zone with a specific value without setting environment variables.
@@ -326,17 +258,28 @@ double local_tza(double time, bool is_utc, Optional<StringView> time_zone_overri
     // When isUTC is true, LocalTZA( tUTC, true ) should return the offset of the local time zone from
     // UTC measured in milliseconds at time represented by time value tUTC. When the result is added to
     // tUTC, it should yield the corresponding Number tlocal.
-    if (is_utc) {
-        auto offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_milliseconds(time));
-        return offset.value_or(0) * 1000;
-    }
 
     // When isUTC is false, LocalTZA( tlocal, false ) should return the offset of the local time zone from
     // UTC measured in milliseconds at local time represented by Number tlocal. When the result is subtracted
     // from tlocal, it should yield the corresponding time value tUTC.
 
-    // FIXME: Implement isUTC=false when any caller needs it.
-    TODO();
+    auto time_since_epoch = Value(time).is_finite_number() ? AK::Time::from_milliseconds(time) : AK::Time::max();
+    auto maybe_offset = TimeZone::get_time_zone_offset(time_zone, time_since_epoch);
+    return maybe_offset.value_or(0) * 1000;
+}
+
+// 21.4.1.8 LocalTime ( t ), https://tc39.es/ecma262/#sec-localtime
+double local_time(double time)
+{
+    // 1. Return t + LocalTZA(t, true).
+    return time + local_tza(time, true);
+}
+
+// 21.4.1.9 UTC ( t ), https://tc39.es/ecma262/#sec-utc-t
+double utc_time(double time)
+{
+    // 1. Return t - LocalTZA(t, false).
+    return time - local_tza(time, false);
 }
 
 // 21.4.1.11 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
@@ -356,7 +299,7 @@ Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, V
     auto milli = MUST(ms.to_integer_or_infinity(global_object));
     // 6. Let t be ((h * msPerHour + m * msPerMinute) + s * msPerSecond) + milli, performing the arithmetic according to IEEE 754-2019 rules (that is, as if using the ECMAScript operators * and +).
     // NOTE: C++ arithmetic abides by IEEE 754 rules
-    auto t = ((h * MS_PER_HOUR + m * MS_PER_MINUTE) + s * MS_PER_SECOND) + milli;
+    auto t = ((h * Date::ms_per_hour + m * Date::ms_per_minute) + s * Date::ms_per_second) + milli;
     // 7. Return t.
     return Value(t);
 }
@@ -364,7 +307,14 @@ Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, V
 // Day(t), https://tc39.es/ecma262/#eqn-Day
 double day(double time_value)
 {
-    return floor(time_value / MS_PER_DAY);
+    return floor(time_value / Date::ms_per_day);
+}
+
+// TimeWithinDay(t), https://tc39.es/ecma262/#eqn-TimeWithinDay
+double time_within_day(double time)
+{
+    // 𝔽(ℝ(t) modulo ℝ(msPerDay))
+    return modulo(time, Date::ms_per_day);
 }
 
 // 21.4.1.12 MakeDay ( year, month, date ), https://tc39.es/ecma262/#sec-makeday
@@ -391,7 +341,10 @@ Value make_day(GlobalObject& global_object, Value year, Value month, Value date)
     // 8. Find a finite time value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn and DateFromTime(t) is 1𝔽; but if this is not possible (because some argument is out of range), return NaN.
     if (!AK::is_within_range<int>(ym) || !AK::is_within_range<int>(mn + 1))
         return js_nan();
-    auto t = days_since_epoch(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * MS_PER_DAY;
+
+    // FIXME: We are avoiding AK::years_to_days_since_epoch here because it is implemented by looping over
+    //        the range [1970, ym), which will spin for any time value with an extremely large year.
+    auto t = time_from_year(ym) + (day_of_year(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * Date::ms_per_day);
 
     // 9. Return Day(t) + dt - 1𝔽.
     return Value(day(static_cast<double>(t)) + dt - 1);
@@ -405,7 +358,7 @@ Value make_date(Value day, Value time)
         return js_nan();
 
     // 2. Let tv be day × msPerDay + time.
-    auto tv = Value(day.as_double() * MS_PER_DAY + time.as_double());
+    auto tv = Value(day.as_double() * Date::ms_per_day + time.as_double());
 
     // 3. If tv is not finite, return NaN.
     if (!tv.is_finite_number())

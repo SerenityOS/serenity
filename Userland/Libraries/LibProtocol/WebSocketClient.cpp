@@ -9,8 +9,8 @@
 
 namespace Protocol {
 
-WebSocketClient::WebSocketClient()
-    : IPC::ServerConnection<WebSocketClientEndpoint, WebSocketServerEndpoint>(*this, "/tmp/portal/websocket")
+WebSocketClient::WebSocketClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    : IPC::ServerConnection<WebSocketClientEndpoint, WebSocketServerEndpoint>(*this, move(socket))
 {
 }
 

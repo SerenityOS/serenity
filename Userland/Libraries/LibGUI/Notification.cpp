@@ -14,7 +14,7 @@ namespace GUI {
 class NotificationServerConnection final
     : public IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>
     , public NotificationClientEndpoint {
-    C_OBJECT(NotificationServerConnection)
+    IPC_CLIENT_CONNECTION(NotificationServerConnection, "/tmp/portal/notify")
 
     friend class Notification;
 
@@ -25,8 +25,8 @@ public:
     }
 
 private:
-    explicit NotificationServerConnection(Notification* notification)
-        : IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>(*this, "/tmp/portal/notify")
+    explicit NotificationServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, Notification* notification)
+        : IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>(*this, move(socket))
         , m_notification(notification)
     {
     }
@@ -45,7 +45,7 @@ void Notification::show()
 {
     VERIFY(!m_shown && !m_destroyed);
     auto icon = m_icon ? m_icon->to_shareable_bitmap() : Gfx::ShareableBitmap();
-    m_connection = NotificationServerConnection::construct(this);
+    m_connection = NotificationServerConnection::try_create(this).release_value_but_fixme_should_propagate_errors();
     m_connection->show_notification(m_text, m_title, icon);
     m_shown = true;
 }

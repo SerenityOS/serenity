@@ -368,9 +368,9 @@ public:
     static i32 static_message_id() { return (int)MessageID::@message.pascal_name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.pascal_name@"; }
 
-    static OwnPtr<@message.pascal_name@> decode(InputMemoryStream& stream, [[maybe_unused]] int sockfd)
+    static OwnPtr<@message.pascal_name@> decode(InputMemoryStream& stream, Core::Stream::LocalSocket& socket)
     {
-        IPC::Decoder decoder { stream, sockfd };
+        IPC::Decoder decoder { stream, socket };
 )~~~");
 
             for (auto& parameter : parameters) {
@@ -632,7 +632,7 @@ public:
 
     static u32 static_magic() { return @endpoint.magic@; }
 
-    static OwnPtr<IPC::Message> decode_message(ReadonlyBytes buffer, [[maybe_unused]] int sockfd)
+    static OwnPtr<IPC::Message> decode_message(ReadonlyBytes buffer, [[maybe_unused]] Core::Stream::LocalSocket& socket)
     {
         InputMemoryStream stream { buffer };
         u32 message_endpoint_magic = 0;
@@ -685,7 +685,7 @@ public:
 
                 message_generator.append(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.pascal_name@:
-            message = Messages::@endpoint.name@::@message.pascal_name@::decode(stream, sockfd);
+            message = Messages::@endpoint.name@::@message.pascal_name@::decode(stream, socket);
             break;
 )~~~");
             };

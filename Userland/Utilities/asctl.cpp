@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
+ * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
  * Copyright (c) 2021, David Isaksson <davidisaksson93@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -29,7 +29,7 @@ enum AudioVariable : u32 {
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
-    auto audio_client = Audio::ClientConnection::construct();
+    auto audio_client = TRY(Audio::ClientConnection::try_create());
 
     String command = String::empty();
     Vector<StringView> command_arguments;

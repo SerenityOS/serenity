@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
+ * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -100,6 +100,7 @@ public:
     virtual int total_samples() override { return static_cast<int>(m_total_samples); }
     virtual u32 sample_rate() override { return m_sample_rate; }
     virtual u16 num_channels() override { return m_num_channels; }
+    virtual String format_name() override { return "FLAC (.flac)"; }
     virtual PcmSampleFormat pcm_format() override { return m_sample_format; }
     virtual RefPtr<Core::File> file() override { return m_file; }
 

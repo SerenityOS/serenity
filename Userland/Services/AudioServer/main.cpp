@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
+ * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto server = TRY(Core::LocalServer::try_create());
     TRY(server->take_over_from_system_server());
 
-    server->on_accept = [&](NonnullRefPtr<Core::LocalSocket> client_socket) {
+    server->on_accept = [&](NonnullOwnPtr<Core::Stream::LocalSocket> client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
         (void)IPC::new_client_connection<AudioServer::ClientConnection>(move(client_socket), client_id, *mixer);

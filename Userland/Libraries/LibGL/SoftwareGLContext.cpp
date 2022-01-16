@@ -915,7 +915,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
         internal_format = GL_RGBA;
 
     // We only support symbolic constants for now
-    RETURN_WITH_ERROR_IF(!(internal_format == GL_RGB || internal_format == GL_RGBA), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(internal_format == GL_RGB || internal_format == GL_RGBA || internal_format == GL_LUMINANCE8 || internal_format == GL_LUMINANCE8_ALPHA8), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(!(type == GL_UNSIGNED_BYTE || type == GL_UNSIGNED_SHORT_5_6_5), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
@@ -939,6 +939,14 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
 
         case GL_RGBA:
             device_format = SoftGPU::ImageFormat::RGBA8888;
+            break;
+
+        case GL_LUMINANCE8:
+            device_format = SoftGPU::ImageFormat::L8;
+            break;
+
+        case GL_LUMINANCE8_ALPHA8:
+            device_format = SoftGPU::ImageFormat::L8A8;
             break;
 
         default:
@@ -2243,29 +2251,42 @@ void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum for
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: we only support RGBA + GL_UNSIGNED_BYTE, implement all the others!
-    if (format != GL_RGBA) {
-        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for format {:#x} not implemented", format);
-        return;
-    } else if (type != GL_UNSIGNED_BYTE) {
-        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for type {:#x} not implemented", type);
+    // FIXME: we only support RGBA + UNSIGNED_BYTE and DEPTH_COMPONENT + UNSIGNED_SHORT, implement all combinations!
+    if (!((format == GL_RGBA && type == GL_UNSIGNED_BYTE) || (format == GL_DEPTH_COMPONENT && type == GL_UNSIGNED_SHORT))) {
+        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for format {:#x} and/or type {:#x} not implemented", format, type);
         return;
     }
 
-    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height });
-    RETURN_WITH_ERROR_IF(bitmap_or_error.is_error(), GL_OUT_OF_MEMORY);
-    auto bitmap = bitmap_or_error.release_value();
+    // FIXME: implement support for pixel parameters such as GL_UNPACK_ALIGNMENT
 
-    // FIXME: implement support for GL_UNPACK_ALIGNMENT and other pixel parameters
-    auto pixel_data = static_cast<u32 const*>(data);
-    for (int y = 0; y < height; ++y)
-        for (int x = 0; x < width; ++x)
-            bitmap->set_pixel(x, y, Color::from_rgba(*(pixel_data++)));
+    if (format == GL_RGBA) {
+        auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height });
+        RETURN_WITH_ERROR_IF(bitmap_or_error.is_error(), GL_OUT_OF_MEMORY);
+        auto bitmap = bitmap_or_error.release_value();
 
-    m_rasterizer.blit(
-        bitmap,
-        static_cast<int>(m_current_raster_position.window_coordinates.x()),
-        static_cast<int>(m_current_raster_position.window_coordinates.y()));
+        auto pixel_data = static_cast<u32 const*>(data);
+        for (int y = 0; y < height; ++y)
+            for (int x = 0; x < width; ++x)
+                bitmap->set_pixel(x, y, Color::from_rgba(*(pixel_data++)));
+
+        m_rasterizer.blit_to_color_buffer_at_raster_position(bitmap);
+    } else if (format == GL_DEPTH_COMPONENT) {
+        Vector<float> depth_values;
+        depth_values.ensure_capacity(width * height);
+
+        auto depth_data = static_cast<u16 const*>(data);
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                auto u16_value = *(depth_data++);
+                auto float_value = static_cast<float>(u16_value) / NumericLimits<u16>::max();
+                depth_values.append(float_value);
+            }
+        }
+
+        m_rasterizer.blit_to_depth_buffer_at_raster_position(depth_values, width, height);
+    } else {
+        VERIFY_NOT_REACHED();
+    }
 }
 
 void SoftwareGLContext::gl_depth_range(GLdouble min, GLdouble max)
@@ -2686,8 +2707,7 @@ void SoftwareGLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_raster_pos, x, y, z, w);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_current_raster_position.window_coordinates = { x, y, z };
-    m_current_raster_position.clip_coordinate_value = w;
+    m_rasterizer.set_raster_position({ x, y, z, w }, m_model_view_matrix, m_projection_matrix);
 }
 
 void SoftwareGLContext::gl_line_width(GLfloat width)
@@ -2751,8 +2771,14 @@ void SoftwareGLContext::gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, 
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_bitmap, width, height, xorig, yorig, xmove, ymove, bitmap);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: implement gl_bitmap({}, {}, {}, {}, {}, {}, {})", width, height, xorig, yorig, xmove, ymove, bitmap);
+    if (bitmap != nullptr) {
+        // FIXME: implement
+        dbgln_if(GL_DEBUG, "gl_bitmap({}, {}, {}, {}, {}, {}, {}): unimplemented", width, height, xorig, yorig, xmove, ymove, bitmap);
+    }
+
+    auto raster_position = m_rasterizer.raster_position();
+    raster_position.window_coordinates += { xmove, ymove, 0.f, 0.f };
+    m_rasterizer.set_raster_position(raster_position);
 }
 
 void SoftwareGLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)

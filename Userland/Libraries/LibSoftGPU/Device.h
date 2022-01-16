@@ -84,6 +84,15 @@ struct LightModelParameters {
 
 struct PixelQuad;
 
+struct RasterPosition {
+    FloatVector4 window_coordinates { 0.0f, 0.0f, 0.0f, 1.0f };
+    float eye_coordinate_distance { 0.0f };
+    bool valid { true };
+    FloatVector4 color_rgba { 1.0f, 1.0f, 1.0f, 1.0f };
+    float color_index { 1.0f };
+    FloatVector4 texture_coordinates { 0.0f, 0.0f, 0.0f, 1.0f };
+};
+
 class Device final {
 public:
     Device(const Gfx::IntSize& min_size);
@@ -94,8 +103,9 @@ public:
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
     void clear_depth(float);
-    void blit(Gfx::Bitmap const&, int x, int y);
     void blit_to(Gfx::Bitmap&);
+    void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&);
+    void blit_to_depth_buffer_at_raster_position(Vector<float> const&, size_t, size_t);
     void wait_for_all_threads() const;
     void set_options(const RasterizerOptions&);
     void set_light_model_params(const LightModelParameters&);
@@ -110,8 +120,13 @@ public:
     void set_light_state(unsigned, Light const&);
     void set_material_state(unsigned, Material const&);
 
+    RasterPosition raster_position() const { return m_raster_position; }
+    void set_raster_position(RasterPosition const& raster_position);
+    void set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform);
+
 private:
     void draw_statistics_overlay(Gfx::Bitmap&);
+    Gfx::IntRect raster_rect_in_target_coordinates(Gfx::IntSize size);
 
     void rasterize_triangle(const Triangle& triangle);
     void setup_blend_factors();
@@ -132,6 +147,7 @@ private:
     AlphaBlendFactors m_alpha_blend_factors;
     Array<Light, NUM_LIGHTS> m_lights;
     Array<Material, 2u> m_materials;
+    RasterPosition m_raster_position;
 };
 
 }

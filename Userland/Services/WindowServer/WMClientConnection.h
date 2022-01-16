@@ -36,7 +36,7 @@ public:
     int window_id() const { return m_window_id; }
 
 private:
-    explicit WMClientConnection(NonnullRefPtr<Core::LocalSocket> client_socket, int client_id);
+    explicit WMClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> client_socket, int client_id);
 
     // ^ClientConnection
     virtual void die() override;

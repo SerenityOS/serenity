@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(inspectables_server->take_over_from_system_server("/tmp/portal/inspectables"));
 
     inspectables_server->on_accept = [&](auto client_socket) {
-        auto pid = client_socket->peer_pid();
+        auto pid = client_socket->peer_pid().release_value_but_fixme_should_propagate_errors();
         InspectorServer::g_processes.set(pid, make<InspectorServer::InspectableProcess>(pid, move(client_socket)));
     };
 

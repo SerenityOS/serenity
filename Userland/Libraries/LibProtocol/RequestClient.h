@@ -18,7 +18,7 @@ class Request;
 class RequestClient final
     : public IPC::ServerConnection<RequestClientEndpoint, RequestServerEndpoint>
     , public RequestClientEndpoint {
-    C_OBJECT(RequestClient);
+    IPC_CLIENT_CONNECTION(RequestClient, "/tmp/portal/request")
 
 public:
     template<typename RequestHashMapTraits = Traits<String>>
@@ -30,7 +30,7 @@ public:
     bool set_certificate(Badge<Request>, Request&, String, String);
 
 private:
-    RequestClient();
+    RequestClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
     virtual void request_progress(i32, Optional<u32> const&, u32) override;
     virtual void request_finished(i32, bool, u32) override;

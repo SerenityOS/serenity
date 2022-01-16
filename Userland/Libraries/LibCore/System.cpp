@@ -10,6 +10,7 @@
 #include <AK/Vector.h>
 #include <LibCore/System.h>
 #include <LibSystem/syscall.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -24,6 +25,14 @@
     return success_value;
 
 namespace Core::System {
+
+#ifndef HOST_NAME_MAX
+#    ifdef __APPLE__
+#        define HOST_NAME_MAX 255
+#    else
+#        define HOST_NAME_MAX 64
+#    endif
+#endif
 
 #ifdef __serenity__
 
@@ -336,11 +345,19 @@ ErrorOr<String> ptsname(int fd)
 
 ErrorOr<String> gethostname()
 {
-    char hostname[256];
+    char hostname[HOST_NAME_MAX];
     int rc = ::gethostname(hostname, sizeof(hostname));
     if (rc < 0)
         return Error::from_syscall("gethostname"sv, -errno);
     return String(&hostname[0]);
+}
+
+ErrorOr<void> sethostname(StringView hostname)
+{
+    int rc = ::sethostname(hostname.characters_without_null_termination(), hostname.length());
+    if (rc < 0)
+        return Error::from_syscall("sethostname"sv, -errno);
+    return {};
 }
 
 ErrorOr<String> getcwd()

@@ -35,25 +35,6 @@ Inode& TmpFS::root_inode()
     return *m_root_inode;
 }
 
-void TmpFS::register_inode(TmpFSInode& inode)
-{
-    VERIFY(inode.identifier().fsid() == fsid());
-
-    Inode::all_instances().with([&](auto&) {
-        auto index = inode.identifier().index();
-        m_inodes.set(index, &inode);
-    });
-}
-
-void TmpFS::unregister_inode(InodeIdentifier identifier)
-{
-    VERIFY(identifier.fsid() == fsid());
-
-    Inode::all_instances().with([&](auto&) {
-        m_inodes.remove(identifier.index());
-    });
-}
-
 unsigned TmpFS::next_inode_index()
 {
     MutexLocker locker(m_lock);
@@ -61,21 +42,10 @@ unsigned TmpFS::next_inode_index()
     return m_next_inode_index++;
 }
 
-ErrorOr<NonnullRefPtr<Inode>> TmpFS::get_inode(InodeIdentifier identifier) const
-{
-    return Inode::all_instances().with([&](auto&) -> ErrorOr<NonnullRefPtr<Inode>> {
-        VERIFY(identifier.fsid() == fsid());
-        auto it = m_inodes.find(identifier.index());
-        if (it == m_inodes.end())
-            return ENOENT;
-        return *it->value;
-    });
-}
-
-TmpFSInode::TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent)
+TmpFSInode::TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, WeakPtr<TmpFSInode> parent)
     : Inode(fs, fs.next_inode_index())
     , m_metadata(metadata)
-    , m_parent(parent)
+    , m_parent(move(parent))
 {
     m_metadata.inode = identifier();
 }
@@ -84,11 +54,9 @@ TmpFSInode::~TmpFSInode()
 {
 }
 
-ErrorOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, InodeIdentifier parent)
+ErrorOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, WeakPtr<TmpFSInode> parent)
 {
-    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, parent)));
-    fs.register_inode(inode);
-    return inode;
+    return adopt_nonnull_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, move(parent)));
 }
 
 ErrorOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
@@ -99,7 +67,7 @@ ErrorOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
     metadata.ctime = now;
     metadata.mtime = now;
     metadata.mode = S_IFDIR | S_ISVTX | 0777;
-    return try_create(fs, metadata, { fs.fsid(), 1 });
+    return try_create(fs, metadata, {});
 }
 
 InodeMetadata TmpFSInode::metadata() const
@@ -117,7 +85,8 @@ ErrorOr<void> TmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
         return ENOTDIR;
 
     TRY(callback({ ".", identifier(), 0 }));
-    TRY(callback({ "..", m_parent, 0 }));
+    if (auto parent = m_parent.strong_ref())
+        TRY(callback({ "..", parent->identifier(), 0 }));
 
     for (auto& child : m_children) {
         TRY(callback({ child.name->view(), child.inode->identifier(), 0 }));
@@ -194,8 +163,11 @@ ErrorOr<NonnullRefPtr<Inode>> TmpFSInode::lookup(StringView name)
 
     if (name == ".")
         return *this;
-    if (name == "..")
-        return fs().get_inode(m_parent);
+    if (name == "..") {
+        if (auto parent = m_parent.strong_ref())
+            return parent.release_nonnull();
+        return ENOENT;
+    }
 
     auto* child = find_child_by_name(name);
     if (!child)
@@ -260,7 +232,7 @@ ErrorOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t m
     metadata.ctime = now;
     metadata.mtime = now;
 
-    auto child = TRY(TmpFSInode::try_create(fs(), metadata, identifier()));
+    auto child = TRY(TmpFSInode::try_create(fs(), metadata, *this));
     TRY(add_child(*child, name, mode));
     return child;
 }
@@ -363,11 +335,6 @@ ErrorOr<void> TmpFSInode::set_mtime(time_t t)
     m_metadata.mtime = t;
     set_metadata_dirty(true);
     return {};
-}
-
-void TmpFSInode::remove_from_secondary_lists()
-{
-    fs().unregister_inode(identifier());
 }
 
 }

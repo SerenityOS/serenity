@@ -23,7 +23,7 @@ public:
     virtual void die() override;
 
 private:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+    explicit ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
 
     virtual void show_notification(String const&, String const&, Gfx::ShareableBitmap const&) override;
     virtual void close_notification() override;

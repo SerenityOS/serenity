@@ -7,6 +7,7 @@
 #include "SpreadsheetWidget.h"
 #include "CellSyntaxHighlighter.h"
 #include "HelpWindow.h"
+#include "LibFileSystemAccessClient/Client.h"
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -25,8 +26,8 @@
 
 namespace Spreadsheet {
 
-SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool should_add_sheet_if_empty)
-    : m_workbook(make<Workbook>(move(sheets), window()))
+SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVector<Sheet>&& sheets, bool should_add_sheet_if_empty)
+    : m_workbook(make<Workbook>(move(sheets), parent_window))
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>().set_margins(2);
@@ -123,7 +124,15 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
         if (!load_path.has_value())
             return;
 
-        load(load_path.value());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window()->window_id(), *load_path);
+
+        if (response.error != 0) {
+            if (response.error != -1)
+                GUI::MessageBox::show_error(window(), String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+            return;
+        }
+
+        load_file(*response.fd, *load_path);
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -299,7 +308,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_should_change_selected_cells = false;
             m_cell_value_editor->on_focusin = [this] { m_should_change_selected_cells = true; };
             m_cell_value_editor->on_focusout = [this] { m_should_change_selected_cells = false; };
-            m_cell_value_editor->on_change = [cells = move(cells), this] {
+            m_cell_value_editor->on_change = [cells = move(cells), this]() mutable {
                 if (m_should_change_selected_cells) {
                     auto* sheet_ptr = m_selected_view->sheet_if_available();
                     if (!sheet_ptr)
@@ -391,9 +400,9 @@ void SpreadsheetWidget::save(StringView filename)
         GUI::MessageBox::show_error(window(), result.error());
 }
 
-void SpreadsheetWidget::load(StringView filename)
+void SpreadsheetWidget::load_file(int fd, StringView filename)
 {
-    auto result = m_workbook->load(filename);
+    auto result = m_workbook->open_file(fd, filename);
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), result.error());
         return;

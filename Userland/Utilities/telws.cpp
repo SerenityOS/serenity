@@ -40,9 +40,15 @@ int main(int argc, char** argv)
     }
 
     Core::EventLoop loop;
+
+    auto maybe_websocket_client = Protocol::WebSocketClient::try_create();
+    if (maybe_websocket_client.is_error()) {
+        warnln("Failed to connect to the websocket server: {}\n", maybe_websocket_client.error());
+    }
+    auto websocket_client = maybe_websocket_client.release_value();
+
     RefPtr<Line::Editor> editor = Line::Editor::construct();
     bool should_quit = false;
-    auto websocket_client = Protocol::WebSocketClient::construct();
     auto socket = websocket_client->connect(url, origin);
     if (!socket) {
         warnln("Failed to start socket for '{}'\n", url);

@@ -90,18 +90,18 @@ Note: A `NonnullRefPtr` can be assigned to a `RefPtr` but not vice versa. To tra
 
 ### Construction using helper functions
 
-There is a `create<T>()` global helper function that constructs a new object and returns it wrapped in a `NonnullRefPtr`. All arguments passed to it are forwarded to `T`'s constructor. If memory cannot be allocated for the object, the program is terminated.
+There is a `make_ref_counted<T>()` global helper function that constructs a new object and returns it wrapped in a `NonnullRefPtr`. All arguments passed to it are forwarded to `T`'s constructor. If memory cannot be allocated for the object, the program is terminated.
 
 ```cpp
-NonnullRefPtr<Bar> our_object = create<Bar>();
+NonnullRefPtr<Bar> our_object = make_ref_counted<Bar>();
 NonnullRefPtr<Bar> another_owner = our_object;
 ```
 
 
-The `try_create<T>()` function constructs an object wrapped in `RefPtr<T>` which may be null if the allocation does not succeed. This allows the calling code to handle allocation failure as it wishes. All arguments passed to it are forwarded to `T`'s constructor.
+The `try_make_ref_counted<T>()` function constructs an object wrapped in `RefPtr<T>` which may be null if the allocation does not succeed. This allows the calling code to handle allocation failure as it wishes. All arguments passed to it are forwarded to `T`'s constructor.
 
 ```cpp
-RefPtr<Bar> our_object = try_create<Bar>();
+RefPtr<Bar> our_object = try_make_ref_counted<Bar>();
 if (!our_object) {
     // handle allocation failure...
 }

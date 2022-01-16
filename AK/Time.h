@@ -136,7 +136,7 @@ private:
     }
 
 public:
-    [[nodiscard]] constexpr static Time from_timestamp(u16 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u8 millisecond)
+    [[nodiscard]] constexpr static Time from_timestamp(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond)
     {
         constexpr auto milliseconds_per_day = 86'400'000;
         constexpr auto milliseconds_per_hour = 3'600'000;

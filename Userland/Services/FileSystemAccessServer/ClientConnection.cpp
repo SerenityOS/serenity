@@ -20,7 +20,7 @@ namespace FileSystemAccessServer {
 
 static HashMap<int, NonnullRefPtr<ClientConnection>> s_connections;
 
-ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket)
+ClientConnection::ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
     : IPC::ClientConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, move(socket), 1)
 {
     s_connections.set(1, *this);
@@ -72,7 +72,7 @@ void ClientConnection::request_file_handler(i32 window_server_client_id, i32 par
         else if (has_flag(requested_access, Core::OpenMode::WriteOnly))
             access_string = "write to";
 
-        auto pid = this->socket().peer_pid();
+        auto pid = this->socket().peer_pid().release_value_but_fixme_should_propagate_errors();
         auto exe_link = LexicalPath("/proc").append(String::number(pid)).append("exe").string();
         auto exe_path = Core::File::real_path_for(exe_link);
 

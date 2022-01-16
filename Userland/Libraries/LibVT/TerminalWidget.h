@@ -43,6 +43,8 @@ public:
     void set_opacity(u8);
     float opacity() { return m_opacity; };
 
+    void set_show_scrollbar(bool);
+
     enum class BellMode {
         Visible,
         AudibleBeep,

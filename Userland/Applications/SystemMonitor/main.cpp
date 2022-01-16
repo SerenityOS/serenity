@@ -698,7 +698,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
             cpu_graphs.append(cpu_graph);
         }
     }
-    ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) {
+    ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) mutable {
         float sum_cpu = 0;
         for (size_t i = 0; i < cpus.size(); ++i) {
             cpu_graphs[i].add_value({ static_cast<size_t>(cpus[i].total_cpu_percent), static_cast<size_t>(cpus[i].total_cpu_percent_kernel) });

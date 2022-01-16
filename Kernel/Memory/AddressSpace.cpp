@@ -191,7 +191,14 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const&
         region_name = TRY(KString::try_create(name));
     auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), offset_in_vmobject, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
     auto* added_region = TRY(add_region(move(region)));
-    TRY(added_region->map(page_directory(), ShouldFlushTLB::No));
+    if (prot == PROT_NONE) {
+        // For PROT_NONE mappings, we don't have to set up any page table mappings.
+        // We do still need to attach the region to the page_directory though.
+        SpinlockLocker mm_locker(s_mm_lock);
+        added_region->set_page_directory(page_directory());
+    } else {
+        TRY(added_region->map(page_directory(), ShouldFlushTLB::No));
+    }
     return added_region;
 }
 
@@ -203,10 +210,6 @@ void AddressSpace::deallocate_region(Region& region)
 NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 {
     SpinlockLocker lock(m_lock);
-
-    if (m_region_lookup_cache.region.unsafe_ptr() == &region)
-        m_region_lookup_cache.region = nullptr;
-
     auto found_region = m_regions.unsafe_remove(region.vaddr().get());
     VERIFY(found_region.ptr() == &region);
     return found_region;
@@ -215,9 +218,6 @@ NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 Region* AddressSpace::find_region_from_range(VirtualRange const& range)
 {
     SpinlockLocker lock(m_lock);
-    if (m_region_lookup_cache.range.has_value() && m_region_lookup_cache.range.value() == range && m_region_lookup_cache.region)
-        return m_region_lookup_cache.region.unsafe_ptr();
-
     auto* found_region = m_regions.find(range.base().get());
     if (!found_region)
         return nullptr;
@@ -225,8 +225,6 @@ Region* AddressSpace::find_region_from_range(VirtualRange const& range)
     auto rounded_range_size = page_round_up(range.size());
     if (rounded_range_size.is_error() || region->size() != rounded_range_size.value())
         return nullptr;
-    m_region_lookup_cache.range = range;
-    m_region_lookup_cache.region = *region;
     return region;
 }
 

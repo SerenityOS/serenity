@@ -23,7 +23,7 @@ public:
     bool is_monitoring_domain(String const& domain) const { return m_monitored_domains.contains(domain); }
 
 private:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+    explicit ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
 
     virtual void pledge_domains(Vector<String> const&) override;
     virtual void monitor_domain(String const&) override;

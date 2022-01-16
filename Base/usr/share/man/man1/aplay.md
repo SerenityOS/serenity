@@ -1,20 +1,21 @@
 ## Name
 
-aplay - play a sound
+aplay - play audio
 
 ## Synopsis
 
 ```**sh
-$ aplay [--loop] <path>
+$ aplay [--loop] [--sample-progress] <path>
 ```
 
 ## Description
 
-This program plays a sound specified in `path` through AudioServer.
+This program plays an audio file specified in `path` through AudioServer.
 
 ## Options
 
 * `-l`, `--loop`: Loop playback
+* `-s`, `--sample-progress`: Switch to (old-style) sample playback progress. By default, playback is printed as played, remaining and total length, all in minutes and seconds.
 
 ## Arguments
 
@@ -24,5 +25,5 @@ This program plays a sound specified in `path` through AudioServer.
 
 ```sh
 $ aplay ~/sound.wav
-$ aplay -l ~/music.wav
+$ aplay -l ~/music.flac
 ```

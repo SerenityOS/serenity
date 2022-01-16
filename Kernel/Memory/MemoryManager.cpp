@@ -1107,18 +1107,18 @@ bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vadd
     return validate_user_stack_no_lock(space, vaddr);
 }
 
-void MemoryManager::register_region(Region& region)
+void MemoryManager::register_kernel_region(Region& region)
 {
+    VERIFY(region.is_kernel());
     SpinlockLocker lock(s_mm_lock);
-    if (region.is_kernel())
-        m_kernel_regions.insert(region.vaddr().get(), &region);
+    m_kernel_regions.insert(region.vaddr().get(), &region);
 }
 
-void MemoryManager::unregister_region(Region& region)
+void MemoryManager::unregister_kernel_region(Region& region)
 {
+    VERIFY(region.is_kernel());
     SpinlockLocker lock(s_mm_lock);
-    if (region.is_kernel())
-        m_kernel_regions.remove(region.vaddr().get());
+    m_kernel_regions.remove(region.vaddr().get());
 }
 
 void MemoryManager::dump_kernel_regions()

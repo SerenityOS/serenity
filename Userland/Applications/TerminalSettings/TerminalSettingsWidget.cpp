@@ -74,6 +74,15 @@ TerminalSettingsMainWidget::TerminalSettingsMainWidget()
         m_max_history_size = value;
         Config::write_i32("Terminal", "Terminal", "MaxHistorySize", static_cast<i32>(m_max_history_size));
     };
+
+    m_show_scrollbar = Config::read_bool("Terminal", "Terminal", "ShowScrollBar", true);
+    m_orignal_show_scrollbar = m_show_scrollbar;
+    auto& show_scrollbar_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("terminal_show_scrollbar");
+    show_scrollbar_checkbox.on_checked = [&](bool show_scrollbar) {
+        m_show_scrollbar = show_scrollbar;
+        Config::write_bool("Terminal", "Terminal", "ShowScrollBar", show_scrollbar);
+    };
+    show_scrollbar_checkbox.set_checked(m_show_scrollbar);
 }
 
 TerminalSettingsViewWidget::TerminalSettingsViewWidget()
@@ -175,12 +184,14 @@ String TerminalSettingsMainWidget::stringify_bell(VT::TerminalWidget::BellMode b
 void TerminalSettingsMainWidget::apply_settings()
 {
     m_original_max_history_size = m_max_history_size;
+    m_orignal_show_scrollbar = m_show_scrollbar;
     m_original_bell_mode = m_bell_mode;
     write_back_settings();
 }
 void TerminalSettingsMainWidget::write_back_settings() const
 {
     Config::write_i32("Terminal", "Terminal", "MaxHistorySize", static_cast<i32>(m_original_max_history_size));
+    Config::write_bool("Terminal", "Terminal", "ShowScrollBar", m_orignal_show_scrollbar);
     Config::write_string("Terminal", "Window", "Bell", stringify_bell(m_original_bell_mode));
 }
 

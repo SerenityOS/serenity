@@ -7,7 +7,9 @@
 #include <AK/ByteBuffer.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/System.h>
 #include <LibCore/UDPSocket.h>
+#include <LibMain/Main.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
@@ -26,7 +28,7 @@
 //
 // nc -l someport > out.file
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool should_listen = false;
     bool verbose = false;
@@ -43,7 +45,7 @@ int main(int argc, char** argv)
     args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');
     args_parser.add_positional_argument(target, "Address to listen on, or the address or hostname to connect to", "target");
     args_parser.add_positional_argument(port, "Port to connect to or listen on", "port");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (udp_mode) {
         if (should_listen) {
@@ -52,34 +54,29 @@ int main(int argc, char** argv)
         }
 
         Core::EventLoop loop;
-        auto socket = Core::UDPSocket::construct();
+        auto socket = TRY(Core::UDPSocket::try_create());
 
         socket->on_connected = [&]() {
             if (verbose)
                 warnln("connected to {}:{}", target, port);
         };
+
         socket->connect(target, port);
 
+        Array<u8, 1024> buffer;
         for (;;) {
-            char buf[1024];
-            int nread = read(STDIN_FILENO, buf, sizeof(buf));
-            if (nread < 0) {
-                perror("read");
-                return 1;
-            }
+            Bytes buffer_span = buffer.span();
+            auto nread = TRY(Core::System::read(STDIN_FILENO, buffer_span));
+            buffer_span = buffer_span.trim(nread);
 
-            socket->send({ buf, static_cast<size_t>(nread) });
+            socket->send({ buffer_span.data(), static_cast<size_t>(nread) });
         }
     }
 
     int fd;
 
     if (should_listen) {
-        int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-        if (listen_fd < 0) {
-            perror("socket");
-            return 1;
-        }
+        int listen_fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM, 0));
 
         sockaddr_in sa {};
         sa.sin_family = AF_INET;
@@ -92,61 +89,34 @@ int main(int argc, char** argv)
             }
         }
 
-        if (bind(listen_fd, (struct sockaddr*)&sa, sizeof(sa)) == -1) {
-            perror("bind");
-            return 1;
-        }
-
-        if (listen(listen_fd, 1) == -1) {
-            perror("listen");
-            return 1;
-        }
+        TRY(Core::System::bind(listen_fd, (struct sockaddr*)&sa, sizeof(sa)));
+        TRY(Core::System::listen(listen_fd, 1));
 
         char addr_str[INET_ADDRSTRLEN];
-
         sockaddr_in sin;
         socklen_t len;
 
         len = sizeof(sin);
-        if (getsockname(listen_fd, (struct sockaddr*)&sin, &len) == -1) {
-            perror("getsockname");
-            return 1;
-        }
+        TRY(Core::System::getsockname(listen_fd, (struct sockaddr*)&sin, &len));
+
         if (verbose)
             warnln("waiting for a connection on {}:{}", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
 
         len = sizeof(sin);
-        fd = accept(listen_fd, (struct sockaddr*)&sin, &len);
-        if (fd == -1) {
-            perror("accept");
-            return 1;
-        }
+        TRY(Core::System::accept(listen_fd, (struct sockaddr*)&sin, &len));
 
         if (verbose)
             warnln("got connection from {}:{}", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
 
-        if (close(listen_fd) == -1) {
-            perror("close");
-            return 1;
-        };
+        TRY(Core::System::close(listen_fd));
     } else {
-        fd = socket(AF_INET, SOCK_STREAM, 0);
-        if (fd < 0) {
-            perror("socket");
-            return 1;
-        }
+        fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM, 0));
 
         struct timeval timeout {
             3, 0
         };
-        if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-            perror("setsockopt");
-            return 1;
-        }
-        if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 0) {
-            perror("setsockopt");
-            return 1;
-        }
+        TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+        TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)));
 
         auto* hostent = gethostbyname(target);
         if (!hostent) {
@@ -163,10 +133,8 @@ int main(int argc, char** argv)
             char addr_str[INET_ADDRSTRLEN];
             warnln("connecting to {}:{}", inet_ntop(dst_addr.sin_family, &dst_addr.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(dst_addr.sin_port));
         }
-        if (connect(fd, (struct sockaddr*)&dst_addr, sizeof(dst_addr)) < 0) {
-            perror("connect");
-            return 1;
-        }
+
+        TRY(Core::System::connect(fd, (struct sockaddr*)&dst_addr, sizeof(dst_addr)));
         if (verbose)
             warnln("connected!");
     }
@@ -204,12 +172,10 @@ int main(int argc, char** argv)
         }
 
         if (!stdin_closed && FD_ISSET(STDIN_FILENO, &readfds)) {
-            char buf[1024];
-            int nread = read(STDIN_FILENO, buf, sizeof(buf));
-            if (nread < 0) {
-                perror("read(STDIN_FILENO)");
-                return 1;
-            }
+            Array<u8, 1024> buffer;
+            Bytes buffer_span = buffer.span();
+            auto nread = TRY(Core::System::read(STDIN_FILENO, buffer_span));
+            buffer_span = buffer_span.trim(nread);
 
             // stdin closed
             if (nread == 0) {
@@ -217,22 +183,19 @@ int main(int argc, char** argv)
                 if (verbose)
                     warnln("stdin closed");
                 if (should_close) {
-                    close(fd);
+                    TRY(Core::System::close(fd));
                     fd_closed = true;
                 }
-            } else if (write(fd, buf, nread) < 0) {
-                perror("write(fd)");
-                return 1;
+            } else {
+                TRY(Core::System::write(fd, buffer_span));
             }
         }
 
         if (!fd_closed && FD_ISSET(fd, &readfds)) {
-            char buf[1024];
-            int nread = read(fd, buf, sizeof(buf));
-            if (nread < 0) {
-                perror("read(fd)");
-                return 1;
-            }
+            Array<u8, 1024> buffer;
+            Bytes buffer_span = buffer.span();
+            auto nread = TRY(Core::System::read(fd, buffer_span));
+            buffer_span = buffer_span.trim(nread);
 
             // remote end closed
             if (nread == 0) {
@@ -241,9 +204,8 @@ int main(int argc, char** argv)
                 fd_closed = true;
                 if (verbose)
                     warnln("remote closed");
-            } else if (write(STDOUT_FILENO, buf, nread) < 0) {
-                perror("write(STDOUT_FILENO)");
-                return 1;
+            } else {
+                TRY(Core::System::write(STDOUT_FILENO, buffer_span));
             }
         }
     }

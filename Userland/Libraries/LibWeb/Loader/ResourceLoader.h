@@ -27,7 +27,7 @@ namespace Web {
 constexpr auto default_user_agent = "Mozilla/4.0 (SerenityOS; " CPU_STRING ") LibWeb+LibJS (Not KHTML, nor Gecko) LibWeb";
 
 class ResourceLoader : public Core::Object {
-    C_OBJECT(ResourceLoader)
+    C_OBJECT_ABSTRACT(ResourceLoader)
 public:
     static ResourceLoader& the();
 
@@ -52,7 +52,9 @@ public:
     void clear_cache();
 
 private:
-    ResourceLoader();
+    ResourceLoader(NonnullRefPtr<Protocol::RequestClient> protocol_client);
+    static ErrorOr<NonnullRefPtr<ResourceLoader>> try_create();
+
     static bool is_port_blocked(int port);
 
     int m_pending_loads { 0 };

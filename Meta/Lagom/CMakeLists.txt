@@ -478,11 +478,11 @@ if (BUILD_LAGOM)
 
         add_executable(disasm_lagom ../../Userland/Utilities/disasm.cpp)
         set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
-        target_link_libraries(disasm_lagom LagomCore LagomELF LagomX86)
+        target_link_libraries(disasm_lagom LagomCore LagomELF LagomX86 LagomMain)
 
         add_executable(gml-format_lagom ../../Userland/Utilities/gml-format.cpp)
         set_target_properties(gml-format_lagom PROPERTIES OUTPUT_NAME gml-format)
-        target_link_libraries(gml-format_lagom LagomCore LagomGML)
+        target_link_libraries(gml-format_lagom LagomCore LagomGML LagomMain)
 
         add_executable(js_lagom ../../Userland/Utilities/js.cpp)
         set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)

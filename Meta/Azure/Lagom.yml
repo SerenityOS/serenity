@@ -2,7 +2,6 @@ parameters:
   os: 'Linux'
   fuzzer: 'NoFuzz'
   lagom_lints: false
-  allow_test_failures: false
 
 jobs:
   - job: 'Lagom_${{ parameters.os }}_${{ parameters.fuzzer }}'
@@ -92,7 +91,7 @@ jobs:
 
     - ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
       - script: |
-          ninja test || ${{ parameters.allow_test_failures }}
+          ninja test
         displayName: 'Test'
         workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
         env:

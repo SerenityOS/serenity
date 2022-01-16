@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibMain/Main.h>
+#include <math.h>
 #include <stdio.h>
 
 // The Kernel has issues with very large anonymous buffers.
@@ -20,15 +22,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     const char* path = nullptr;
     bool should_loop = false;
+    bool show_sample_progress = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path to audio file", "path");
     args_parser.add_option(should_loop, "Loop playback", "loop", 'l');
+    args_parser.add_option(show_sample_progress, "Show playback progress in samples", "sample-progress", 's');
     args_parser.parse(arguments);
 
     Core::EventLoop loop;
 
-    auto audio_client = Audio::ClientConnection::construct();
+    auto audio_client = TRY(Audio::ClientConnection::try_create());
     auto maybe_loader = Audio::Loader::create(path);
     if (maybe_loader.is_error()) {
         warnln("Failed to load audio file: {}", maybe_loader.error().description);
@@ -37,7 +41,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto loader = maybe_loader.release_value();
 
     outln("\033[34;1m Playing\033[0m: {}", path);
-    outln("\033[34;1m  Format\033[0m: {} Hz, {}-bit, {}",
+    outln("\033[34;1m  Format\033[0m: {} {} Hz, {}-bit, {}",
+        loader->format_name(),
         loader->sample_rate(),
         loader->bits_per_sample(),
         loader->num_channels() == 1 ? "Mono" : "Stereo");
@@ -58,7 +63,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (samples.value()->sample_count() > 0) {
                 // We can read and enqueue more samples
                 out("\033[u");
-                out("{}/{}", loader->loaded_samples(), loader->total_samples());
+                if (show_sample_progress) {
+                    out("{}/{}", loader->loaded_samples(), loader->total_samples());
+                } else {
+                    auto playing_seconds = static_cast<int>(floor(static_cast<double>(loader->loaded_samples()) / static_cast<double>(loader->sample_rate())));
+                    auto playing_minutes = playing_seconds / 60;
+                    auto playing_seconds_of_minute = playing_seconds % 60;
+
+                    auto total_seconds = static_cast<int>(floor(static_cast<double>(loader->total_samples()) / static_cast<double>(loader->sample_rate())));
+                    auto total_minutes = total_seconds / 60;
+                    auto total_seconds_of_minute = total_seconds % 60;
+
+                    auto remaining_seconds = total_seconds - playing_seconds;
+                    auto remaining_minutes = remaining_seconds / 60;
+                    auto remaining_seconds_of_minute = remaining_seconds % 60;
+
+                    out("\033[1m{:02d}:{:02d}\033[0m [{}{:02d}:{:02d}] -- {:02d}:{:02d}",
+                        playing_minutes, playing_seconds_of_minute,
+                        remaining_seconds == 0 ? " " : "-",
+                        remaining_minutes, remaining_seconds_of_minute,
+                        total_minutes, total_seconds_of_minute);
+                }
                 fflush(stdout);
                 resampler.reset();
                 auto resampled_samples = TRY(Audio::resample_buffer(resampler, *samples.value()));

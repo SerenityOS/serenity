@@ -33,11 +33,6 @@ private:
 
     RefPtr<TmpFSInode> m_root_inode;
 
-    HashMap<InodeIndex, TmpFSInode*> m_inodes;
-    ErrorOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier identifier) const;
-    void register_inode(TmpFSInode&);
-    void unregister_inode(InodeIdentifier);
-
     unsigned m_next_inode_index { 1 };
     unsigned next_inode_index();
 };
@@ -67,11 +62,10 @@ public:
     virtual ErrorOr<void> set_atime(time_t) override;
     virtual ErrorOr<void> set_ctime(time_t) override;
     virtual ErrorOr<void> set_mtime(time_t) override;
-    virtual void remove_from_secondary_lists() override;
 
 private:
-    TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent);
-    static ErrorOr<NonnullRefPtr<TmpFSInode>> try_create(TmpFS&, InodeMetadata const& metadata, InodeIdentifier parent);
+    TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, WeakPtr<TmpFSInode> parent);
+    static ErrorOr<NonnullRefPtr<TmpFSInode>> try_create(TmpFS&, InodeMetadata const& metadata, WeakPtr<TmpFSInode> parent);
     static ErrorOr<NonnullRefPtr<TmpFSInode>> try_create_root(TmpFS&);
 
     struct Child {
@@ -84,7 +78,7 @@ private:
     Child* find_child_by_name(StringView);
 
     InodeMetadata m_metadata;
-    InodeIdentifier m_parent;
+    WeakPtr<TmpFSInode> m_parent;
 
     OwnPtr<KBuffer> m_content;
 

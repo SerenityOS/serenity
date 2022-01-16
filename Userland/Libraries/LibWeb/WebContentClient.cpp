@@ -11,8 +11,8 @@
 
 namespace Web {
 
-WebContentClient::WebContentClient(OutOfProcessWebView& view)
-    : IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, "/tmp/portal/webcontent")
+WebContentClient::WebContentClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket, OutOfProcessWebView& view)
+    : IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket))
     , m_view(view)
 {
 }

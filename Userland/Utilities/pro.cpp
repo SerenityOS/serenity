@@ -188,7 +188,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     Core::EventLoop loop;
-    auto protocol_client = Protocol::RequestClient::construct();
+    auto protocol_client = TRY(Protocol::RequestClient::try_create());
 
     auto request = protocol_client->start_request(method, url, request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {});
     if (!request) {

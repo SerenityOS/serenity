@@ -80,16 +80,44 @@ struct Variant<IndexType, InitialIndex> {
 
 template<typename IndexType, typename... Ts>
 struct VisitImpl {
-    template<typename Visitor, IndexType CurrentIndex = 0>
-    ALWAYS_INLINE static constexpr decltype(auto) visit(IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
+    template<typename RT, typename T, size_t I, typename Fn>
+    static consteval u64 get_explicitly_named_overload_if_exists()
+    {
+        // If we're not allowed to make a member function pointer and call it directly (without explicitly resolving it),
+        // we have a templated function on our hands (or a function overload set).
+        // in such cases, we don't have an explicitly named overload, and we would have to select it.
+        if constexpr (requires { (declval<Fn>().*(&Fn::operator()))(declval<T>()); })
+            return 1ull << I;
+
+        return 0;
+    }
+
+    template<typename ReturnType, typename T, typename Visitor, auto... Is>
+    static consteval bool should_invoke_const_overload(IndexSequence<Is...>)
+    {
+        // Scan over all the different visitor functions, if none of them are suitable for calling with `T const&`, avoid calling that first.
+        return ((get_explicitly_named_overload_if_exists<ReturnType, T, Is, typename Visitor::Types::template Type<Is>>()) | ...) != 0;
+    }
+
+    template<typename Self, typename Visitor, IndexType CurrentIndex = 0>
+    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
     {
         using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
 
-        if (id == CurrentIndex)
-            return visitor(*bit_cast<T*>(data));
+        if (id == CurrentIndex) {
+            // Check if Visitor::operator() is an explicitly typed function (as opposed to a templated function)
+            // if so, try to call that with `T const&` first before copying the Variant's const-ness.
+            // This emulates normal C++ call semantics where templated functions are considered last, after all non-templated overloads
+            // are checked and found to be unusable.
+            using ReturnType = decltype(visitor(*bit_cast<T*>(data)));
+            if constexpr (should_invoke_const_overload<ReturnType, T, Visitor>(MakeIndexSequence<Visitor::Types::size>()))
+                return visitor(*bit_cast<AddConst<T>*>(data));
+
+            return visitor(*bit_cast<CopyConst<Self, T>*>(data));
+        }
 
         if constexpr ((CurrentIndex + 1) < sizeof...(Ts))
-            return visit<Visitor, CurrentIndex + 1>(id, data, forward<Visitor>(visitor));
+            return visit<Self, Visitor, CurrentIndex + 1>(self, id, data, forward<Visitor>(visitor));
         else
             VERIFY_NOT_REACHED();
     }
@@ -367,14 +395,14 @@ public:
     ALWAYS_INLINE decltype(auto) visit(Fs&&... functions)
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        return VisitHelper::visit(m_index, m_data, move(visitor));
+        return VisitHelper::visit(*this, m_index, m_data, move(visitor));
     }
 
     template<typename... Fs>
     ALWAYS_INLINE decltype(auto) visit(Fs&&... functions) const
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        return VisitHelper::visit(m_index, m_data, move(visitor));
+        return VisitHelper::visit(*this, m_index, m_data, move(visitor));
     }
 
     template<typename... NewTs>
@@ -424,6 +452,9 @@ private:
 
     template<typename... Fs>
     struct Visitor : Fs... {
+        using Types = TypeList<Fs...>;
+        static_assert(Types::size < 64, "Variant::visit() can take a maximum of 64 visit functions.");
+
         Visitor(Fs&&... args)
             : Fs(forward<Fs>(args))...
         {
