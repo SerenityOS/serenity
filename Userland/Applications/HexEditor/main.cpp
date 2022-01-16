@@ -48,15 +48,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     if (arguments.argc > 1) {
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), arguments.strings[1]);
-
-        if (response.error != 0) {
-            if (response.error != -1)
-                GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, arguments.strings[1]);
+        if (response.is_error())
             return 1;
-        }
-
-        hex_editor_widget->open_file(*response.fd, *response.chosen_file);
+        hex_editor_widget->open_file(response.value());
     }
 
     return app->exec();

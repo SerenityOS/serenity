@@ -22,7 +22,7 @@ class HexEditorWidget final : public GUI::Widget {
     C_OBJECT(HexEditorWidget)
 public:
     virtual ~HexEditorWidget() override;
-    void open_file(int fd, String const& path);
+    void open_file(NonnullRefPtr<Core::File>);
     void initialize_menubar(GUI::Window&);
     bool request_close();
 

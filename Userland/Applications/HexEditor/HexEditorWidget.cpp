@@ -88,13 +88,9 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(window()->window_id(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
-
-        if (response.error != 0) {
-            if (response.error != -1)
-                GUI::MessageBox::show_error(window(), String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+        auto response = FileSystemAccessClient::Client::the().try_open_file(window(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
+        if (response.is_error())
             return;
-        }
 
         if (m_document_dirty) {
             auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
@@ -104,7 +100,7 @@ HexEditorWidget::HexEditorWidget()
                 return;
         }
 
-        open_file(*response.fd, *response.chosen_file);
+        open_file(response.value());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -343,29 +339,11 @@ void HexEditorWidget::update_title()
     window()->set_title(builder.to_string());
 }
 
-void HexEditorWidget::open_file(int fd, String const& path)
+void HexEditorWidget::open_file(NonnullRefPtr<Core::File> file)
 {
-    VERIFY(path.starts_with("/"sv));
-    auto file = Core::File::construct();
-
-    if (!file->open(fd, Core::OpenMode::ReadWrite, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-        return;
-    }
-
-    if (file->is_device()) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open device files", path), "Error", GUI::MessageBox::Type::Error);
-        return;
-    }
-
-    if (file->is_directory()) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open directories", path), "Error", GUI::MessageBox::Type::Error);
-        return;
-    }
-
     m_document_dirty = false;
     m_editor->open_file(file);
-    set_path(path);
+    set_path(file->filename());
 }
 
 bool HexEditorWidget::request_close()
@@ -400,11 +378,9 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
         window()->move_to_front();
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto file_response = FileSystemAccessClient::Client::the().request_file(window()->window_id(), urls.first().path(), Core::OpenMode::ReadOnly);
-
-        if (file_response.error != 0)
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        if (response.is_error())
             return;
-
-        open_file(*file_response.fd, urls.first().path());
+        open_file(response.value());
     }
 }
