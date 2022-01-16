@@ -17,6 +17,7 @@ set(TEST_SOURCES
     TestSearch.cpp
     TestSnprintf.cpp
     TestStackSmash.cpp
+    TestStdio.cpp
     TestStrlcpy.cpp
     TestStrtodAccuracy.cpp
     TestWchar.cpp
