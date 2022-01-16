@@ -87,6 +87,28 @@ enum class PrimitiveType {
     Quads,
 };
 
+enum StencilOperation {
+    Decrement,
+    DecrementWrap,
+    Increment,
+    IncrementWrap,
+    Invert,
+    Keep,
+    Replace,
+    Zero,
+};
+
+enum StencilTestFunction {
+    Always,
+    Equal,
+    Greater,
+    GreaterOrEqual,
+    Less,
+    LessOrEqual,
+    Never,
+    NotEqual,
+};
+
 enum TexCoordGenerationCoordinate {
     None = 0x0,
     S = 0x1,

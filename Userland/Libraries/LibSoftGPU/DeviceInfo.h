@@ -15,6 +15,7 @@ struct DeviceInfo final {
     String device_name;
     unsigned num_texture_units;
     unsigned num_lights;
+    u8 stencil_bits;
 };
 
 }
