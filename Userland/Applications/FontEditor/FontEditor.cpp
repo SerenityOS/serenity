@@ -490,8 +490,10 @@ void FontEditorWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>&& 
     }
 
     deferred_invoke([this] {
+        auto glyph = m_glyph_map_widget->active_glyph();
         m_glyph_map_widget->set_focus(true);
-        m_glyph_map_widget->scroll_to_glyph(m_glyph_map_widget->active_glyph());
+        m_glyph_map_widget->scroll_to_glyph(glyph);
+        m_glyph_editor_widget->set_glyph(glyph);
         update_title();
     });
 
