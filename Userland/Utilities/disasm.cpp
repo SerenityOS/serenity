@@ -10,6 +10,7 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
 #include <LibELF/Image.h>
 #include <LibMain/Main.h>
 #include <LibX86/Disassembler.h>
@@ -27,7 +28,14 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
     args_parser.parse(args);
 
-    auto file = TRY(Core::MappedFile::map(path));
+    RefPtr<Core::MappedFile> file;
+    u8 const* asm_data = nullptr;
+    size_t asm_size = 0;
+    if ((TRY(Core::System::stat(path))).st_size > 0) {
+        file = TRY(Core::MappedFile::map(path));
+        asm_data = static_cast<u8 const*>(file->data());
+        asm_size = file->size();
+    }
 
     struct Symbol {
         size_t value;
@@ -41,8 +49,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     };
     Vector<Symbol> symbols;
 
-    u8 const* asm_data = static_cast<u8 const*>(file->data());
-    size_t asm_size = file->size();
     size_t file_offset = 0;
     Vector<Symbol>::Iterator current_symbol = symbols.begin();
     OwnPtr<X86::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
