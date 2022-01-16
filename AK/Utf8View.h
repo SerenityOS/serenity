@@ -65,7 +65,7 @@ public:
     {
     }
 
-    explicit Utf8View(StringView string)
+    explicit constexpr Utf8View(StringView string)
         : m_string(string)
     {
     }
