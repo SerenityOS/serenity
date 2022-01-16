@@ -387,37 +387,63 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 // 19.2.5 parseInt ( string, radix ), https://tc39.es/ecma262/#sec-parseint-string-radix
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 {
+    // 1. Let inputString be ? ToString(string).
     auto input_string = TRY(vm.argument(0).to_string(global_object));
 
-    // FIXME: There's a bunch of unnecessary string copying here.
-    double sign = 1;
-    auto s = input_string.trim_whitespace(TrimMode::Left);
-    if (!s.is_empty() && s[0] == '-')
-        sign = -1;
-    if (!s.is_empty() && (s[0] == '+' || s[0] == '-'))
-        s = s.substring(1, s.length() - 1);
+    // 2. Let S be ! TrimString(inputString, start).
+    auto string = MUST(trim_string(global_object, js_string(vm, input_string), TrimMode::Left));
 
+    // 3. Let sign be 1.
+    auto sign = 1;
+
+    // 4. If S is not empty and the first code unit of S is the code unit 0x002D (HYPHEN-MINUS), set sign to -1.
+    if (!string.is_empty() && string[0] == 0x2D)
+        sign = -1;
+    // 5. If S is not empty and the first code unit of S is the code unit 0x002B (PLUS SIGN) or the code unit 0x002D (HYPHEN-MINUS), remove the first code unit from S.
+    auto trimmed_view = string.view();
+    if (!string.is_empty() && (string[0] == 0x2B || string[0] == 0x2D))
+        trimmed_view = trimmed_view.substring_view(1);
+
+    // 6. Let R be ℝ(? ToInt32(radix)).
     auto radix = TRY(vm.argument(1).to_i32(global_object));
 
-    bool strip_prefix = true;
+    // 7. Let stripPrefix be true.
+    auto strip_prefix = true;
+
+    // 8. If R ≠ 0, then
     if (radix != 0) {
+        // a. If R < 2 or R > 36, return NaN.
         if (radix < 2 || radix > 36)
             return js_nan();
+
+        // b. If R ≠ 16, set stripPrefix to false.
         if (radix != 16)
             strip_prefix = false;
-    } else {
+    }
+    // 9. Else,
+    else {
+        // a. Set R to 10.
         radix = 10;
     }
 
+    // 10. If stripPrefix is true, then
     if (strip_prefix) {
-        if (s.length() >= 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
-            s = s.substring(2, s.length() - 2);
+        // a. If the length of S is at least 2 and the first two code units of S are either "0x" or "0X", then
+        if (trimmed_view.length() >= 2 && trimmed_view.substring_view(0, 2).equals_ignoring_case("0x"sv)) {
+            // i. Remove the first two code units from S.
+            trimmed_view = trimmed_view.substring_view(2);
+
+            // ii. Set R to 16.
             radix = 16;
         }
     }
 
-    auto parse_digit = [&](u32 code_point, i32 radix) -> Optional<i32> {
-        if (!is_ascii_alphanumeric(code_point) || radix <= 0)
+    // 11. If S contains a code unit that is not a radix-R digit, let end be the index within S of the first such code unit; otherwise, let end be the length of S.
+    // 12. Let Z be the substring of S from 0 to end.
+    // 13. If Z is empty, return NaN.
+    // 14. Let mathInt be the integer value that is represented by Z in radix-R notation, using the letters A-Z and a-z for digits with values 10 through 35. (However, if R is 10 and Z contains more than 20 significant digits, every significant digit after the 20th may be replaced by a 0 digit, at the option of the implementation; and if R is not 2, 4, 8, 10, 16, or 32, then mathInt may be an implementation-approximated integer representing the integer value denoted by Z in radix-R notation.)
+    auto parse_digit = [&](u32 code_point) -> Optional<u32> {
+        if (!is_ascii_alphanumeric(code_point))
             return {};
         auto digit = parse_ascii_base36_digit(code_point);
         if (digit >= (u32)radix)
@@ -427,8 +453,8 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 
     bool had_digits = false;
     double number = 0;
-    for (auto code_point : Utf8View(s)) {
-        auto digit = parse_digit(code_point, radix);
+    for (auto code_point : Utf8View(trimmed_view)) {
+        auto digit = parse_digit(code_point);
         if (!digit.has_value())
             break;
         had_digits = true;
@@ -439,6 +465,10 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     if (!had_digits)
         return js_nan();
 
+    // 15. If mathInt = 0, then
+    // a. If sign = -1, return -0𝔽.
+    // b. Return +0𝔽.
+    // 16. Return 𝔽(sign × mathInt).
     return Value(sign * number);
 }
 
