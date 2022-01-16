@@ -255,16 +255,6 @@ Result<Vector<Color>, String> PaletteWidget::load_palette_file(Core::File& file)
     return palette;
 }
 
-Result<Vector<Color>, String> PaletteWidget::load_palette_fd_and_close(int fd)
-{
-    auto file = Core::File::construct();
-    file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
-    if (file->has_error())
-        return String { file->error_string() };
-
-    return load_palette_file(file);
-}
-
 Result<Vector<Color>, String> PaletteWidget::load_palette_path(String const& file_path)
 {
     auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
@@ -275,20 +265,12 @@ Result<Vector<Color>, String> PaletteWidget::load_palette_path(String const& fil
     return load_palette_file(file);
 }
 
-Result<void, String> PaletteWidget::save_palette_fd_and_close(Vector<Color> palette, int fd)
+Result<void, String> PaletteWidget::save_palette_file(Vector<Color> palette, Core::File& file)
 {
-    auto file = Core::File::construct();
-    file->open(fd, Core::OpenMode::WriteOnly, Core::File::ShouldCloseFileDescriptor::Yes);
-    if (file->has_error())
-        return String { file->error_string() };
-
     for (auto& color : palette) {
-        file->write(color.to_string_without_alpha());
-        file->write("\n");
+        file.write(color.to_string_without_alpha());
+        file.write("\n");
     }
-
-    file->close();
-
     return {};
 }
 

@@ -71,13 +71,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     if (image_file) {
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), image_file);
-        if (response.error != 0) {
-            if (response.error != -1)
-                GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, image_file);
+        if (response.is_error())
             return 1;
-        }
-        main_widget->open_image_fd(*response.fd, *response.chosen_file);
+        main_widget->open_image(response.value());
     } else {
         main_widget->create_default_image();
     }

@@ -16,30 +16,22 @@
 
 namespace PixelPaint {
 
-ErrorOr<void> ProjectLoader::try_load_from_fd_and_close(int fd, StringView path)
+ErrorOr<void> ProjectLoader::try_load_from_file(Core::File& file)
 {
-    auto file = Core::File::construct();
-    file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
-    if (file->has_error())
-        return Error::from_errno(file->error());
-
-    auto contents = file->read_all();
+    auto contents = file.read_all();
 
     auto json_or_error = JsonValue::from_string(contents);
     if (json_or_error.is_error()) {
         m_is_raw_image = true;
 
-        auto mapped_file = TRY(Core::MappedFile::map_from_fd_and_close(fd, path));
-
         // FIXME: Find a way to avoid the memory copy here.
-        auto bitmap = TRY(Image::try_decode_bitmap(mapped_file->bytes()));
+        auto bitmap = TRY(Image::try_decode_bitmap(contents));
         auto image = TRY(Image::try_create_from_bitmap(move(bitmap)));
 
         m_image = image;
         return {};
     }
 
-    close(fd);
     auto& json = json_or_error.value().as_object();
     auto image = TRY(Image::try_create_from_pixel_paint_json(json));
 
