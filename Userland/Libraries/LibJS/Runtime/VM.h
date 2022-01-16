@@ -156,9 +156,6 @@ public:
 
     const StackInfo& stack_info() const { return m_stack_info; };
 
-    bool underscore_is_last_value() const { return m_underscore_is_last_value; }
-    void set_underscore_is_last_value(bool b) { m_underscore_is_last_value = b; }
-
     u32 execution_generation() const { return m_execution_generation; }
     void finish_execution_generation() { ++m_execution_generation; }
 
@@ -278,8 +275,6 @@ private:
     Symbol* m_well_known_symbol_##snake_name { nullptr };
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
-
-    bool m_underscore_is_last_value { false };
 
     u32 m_execution_generation { 0 };
 
