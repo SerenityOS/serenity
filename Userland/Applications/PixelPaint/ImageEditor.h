@@ -135,7 +135,7 @@ private:
     GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
 
-    Result<void, String> save_project_to_fd_and_close(int fd) const;
+    Result<void, String> save_project_to_file(Core::File&) const;
 
     int calculate_ruler_step_size() const;
     Gfx::IntRect mouse_indicator_rect_x() const;

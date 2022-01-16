@@ -130,11 +130,10 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         });
 
     m_open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
-        auto result = FileSystemAccessClient::Client::the().open_file(window.window_id());
-        if (result.error != 0)
+        auto response = FileSystemAccessClient::Client::the().try_open_file(&window);
+        if (response.is_error())
             return;
-
-        open_image_fd(*result.fd, *result.chosen_file);
+        open_image(response.value());
     });
 
     m_save_image_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -162,11 +161,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             "As &BMP", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto save_result = FileSystemAccessClient::Client::the().save_file(window.window_id(), "untitled", "bmp");
-                if (save_result.error != 0)
+                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "bmp");
+                if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-                auto result = editor->image().export_bmp_to_fd_and_close(*save_result.fd, preserve_alpha_channel == GUI::MessageBox::ExecYes);
+                auto result = editor->image().export_bmp_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecYes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, String::formatted("Export to BMP failed: {}", result.error()));
             }));
@@ -176,11 +175,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             "As &PNG", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto save_result = FileSystemAccessClient::Client::the().save_file(window.window_id(), "untitled", "png");
-                if (save_result.error != 0)
+                // TODO: fix bmp on line below?
+                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "png");
+                if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-                auto result = editor->image().export_png_to_fd_and_close(*save_result.fd, preserve_alpha_channel == GUI::MessageBox::ExecYes);
+                auto result = editor->image().export_png_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecYes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, String::formatted("Export to PNG failed: {}", result.error()));
             }));
@@ -305,11 +305,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "&Load Color Palette", [&](auto&) {
-            auto open_result = FileSystemAccessClient::Client::the().open_file(window.window_id(), "Load Color Palette");
-            if (open_result.error != 0)
+            auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Load Color Palette");
+            if (response.is_error())
                 return;
 
-            auto result = PixelPaint::PaletteWidget::load_palette_fd_and_close(*open_result.fd);
+            auto result = PixelPaint::PaletteWidget::load_palette_file(*response.value());
             if (result.is_error()) {
                 GUI::MessageBox::show_error(&window, String::formatted("Loading color palette failed: {}", result.error()));
                 return;
@@ -319,11 +319,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "Sa&ve Color Palette", [&](auto&) {
-            auto save_result = FileSystemAccessClient::Client::the().save_file(window.window_id(), "untitled", "palette");
-            if (save_result.error != 0)
+            auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "palette");
+            if (response.is_error())
                 return;
 
-            auto result = PixelPaint::PaletteWidget::save_palette_fd_and_close(m_palette_widget->colors(), *save_result.fd);
+            auto result = PixelPaint::PaletteWidget::save_palette_file(m_palette_widget->colors(), *response.value());
             if (result.is_error())
                 GUI::MessageBox::show_error(&window, String::formatted("Writing color palette failed: {}", result.error()));
         }));
@@ -700,18 +700,18 @@ void MainWidget::set_actions_enabled(bool enabled)
     m_zoom_combobox->set_enabled(enabled);
 }
 
-void MainWidget::open_image_fd(int fd, String const& path)
+void MainWidget::open_image(Core::File& file)
 {
-    auto try_load = m_loader.try_load_from_fd_and_close(fd, path);
+    auto try_load = m_loader.try_load_from_file(file);
 
     if (try_load.is_error()) {
-        GUI::MessageBox::show_error(window(), String::formatted("Unable to open file: {}, {}", path, try_load.error()));
+        GUI::MessageBox::show_error(window(), String::formatted("Unable to open file: {}, {}", file.filename(), try_load.error()));
         return;
     }
 
     auto& image = *m_loader.release_image();
     auto& editor = create_new_editor(image);
-    editor.set_path(path);
+    editor.set_path(file.filename());
     editor.undo_stack().set_current_unmodified();
     m_layer_list_widget->set_image(&image);
 }
@@ -862,11 +862,10 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (url.protocol() != "file")
             continue;
 
-        auto result = FileSystemAccessClient::Client::the().request_file(window()->window_id(), url.path(), Core::OpenMode::ReadOnly);
-        if (result.error != 0)
-            continue;
-
-        open_image_fd(*result.fd, *result.chosen_file);
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), url.path(), Core::OpenMode::ReadOnly);
+        if (response.is_error())
+            return;
+        open_image(response.value());
     }
 }
 }

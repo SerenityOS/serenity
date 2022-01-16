@@ -35,7 +35,7 @@ public:
 
     void initialize_menubar(GUI::Window&);
 
-    void open_image_fd(int fd, String const& path);
+    void open_image(Core::File&);
     void create_default_image();
 
     bool request_close();
