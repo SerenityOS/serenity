@@ -42,7 +42,7 @@ public:
     bool start_controller();
     u32 get_admin_q_dept();
 
-    u16 submit_admin_command(struct NVMeSubmission& sub, bool sync = false)
+    u16 submit_admin_command(NVMeSubmission& sub, bool sync = false)
     {
         // First queue is always the admin queue
         if (sync) {

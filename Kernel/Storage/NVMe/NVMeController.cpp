@@ -42,6 +42,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize()
     PCI::enable_bus_mastering(m_pci_device_id.address());
     m_bar = PCI::get_BAR0(m_pci_device_id.address()) & BAR_ADDR_MASK;
     static_assert(sizeof(ControllerRegister) == REG_SQ0TDBL_START);
+    static_assert(sizeof(NVMeSubmission) == (1 << SQ_WIDTH));
 
     // Map only until doorbell register for the controller
     // Queues will individually map the doorbell register respectively
@@ -163,8 +164,8 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
         NVMeSubmission sub {};
         u16 status = 0;
         sub.op = OP_ADMIN_IDENTIFY;
-        sub.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(prp_dma_buffer->paddr().as_ptr()));
-        sub.cdw10 = NVMe_CNS_ID_ACTIVE_NS & 0xff;
+        sub.identify.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(prp_dma_buffer->paddr().as_ptr()));
+        sub.identify.cns = NVMe_CNS_ID_ACTIVE_NS & 0xff;
         status = submit_admin_command(sub, true);
         if (status) {
             dmesgln("Failed to identify active namespace command");
@@ -185,9 +186,9 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
             if (nsid == 0)
                 break;
             sub.op = OP_ADMIN_IDENTIFY;
-            sub.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(prp_dma_buffer->paddr().as_ptr()));
-            sub.cdw10 = NVMe_CNS_ID_NS & 0xff;
-            sub.nsid = nsid;
+            sub.identify.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(prp_dma_buffer->paddr().as_ptr()));
+            sub.identify.cns = NVMe_CNS_ID_NS & 0xff;
+            sub.identify.nsid = nsid;
             status = submit_admin_command(sub, true);
             if (status) {
                 dmesgln("Failed identify namespace with nsid {}", nsid);
@@ -296,15 +297,12 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(u8 irq)
 
 UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 irq, u8 qid)
 {
-    NVMeSubmission sub {};
     OwnPtr<Memory::Region> cq_dma_region;
     NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_pages;
     OwnPtr<Memory::Region> sq_dma_region;
     NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_pages;
     auto cq_size = round_up_to_power_of_two(CQ_SIZE(IO_QUEUE_SIZE), 4096);
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(IO_QUEUE_SIZE), 4096);
-
-    static_assert(sizeof(NVMeSubmission) == (1 << SQ_WIDTH));
 
     {
         auto buffer = TRY(MM.allocate_dma_buffer_pages(cq_size, "IO CQ queue", Memory::Region::Access::ReadWrite, cq_dma_pages));
@@ -321,25 +319,29 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 irq, u8 qid)
     }
 
     {
+        NVMeSubmission sub {};
         sub.op = OP_ADMIN_CREATE_COMPLETION_QUEUE;
-        sub.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first().paddr().as_ptr()));
+        sub.create_cq.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first().paddr().as_ptr()));
+        sub.create_cq.cqid = qid;
         // The queue size is 0 based
-        sub.cdw10 = AK::convert_between_host_and_little_endian(((IO_QUEUE_SIZE - 1) << 16 | qid));
+        sub.create_cq.qsize = AK::convert_between_host_and_little_endian(IO_QUEUE_SIZE - 1);
         auto flags = QUEUE_IRQ_ENABLED | QUEUE_PHY_CONTIGUOUS;
         // TODO: Eventually move to MSI.
         // For now using pin based interrupts. Clear the first 16 bits
         // to use pin-based interrupts.
-        sub.cdw11 = AK::convert_between_host_and_little_endian(flags & 0xFFFF);
+        sub.create_cq.cq_flags = AK::convert_between_host_and_little_endian(flags & 0xFFFF);
         submit_admin_command(sub, true);
     }
     {
+        NVMeSubmission sub {};
         sub.op = OP_ADMIN_CREATE_SUBMISSION_QUEUE;
-        sub.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first().paddr().as_ptr()));
+        sub.create_sq.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first().paddr().as_ptr()));
+        sub.create_sq.sqid = qid;
         // The queue size is 0 based
-        sub.cdw10 = AK::convert_between_host_and_little_endian(((IO_QUEUE_SIZE - 1) << 16 | qid));
+        sub.create_sq.qsize = AK::convert_between_host_and_little_endian(IO_QUEUE_SIZE - 1);
         auto flags = QUEUE_IRQ_ENABLED | QUEUE_PHY_CONTIGUOUS;
-        // The qid used below points to the completion queue qid
-        sub.cdw11 = AK::convert_between_host_and_little_endian(qid << 16 | flags);
+        sub.create_sq.cqid = qid;
+        sub.create_sq.sq_flags = AK::convert_between_host_and_little_endian(flags);
         submit_admin_command(sub, true);
     }
 
