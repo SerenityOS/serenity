@@ -27,6 +27,7 @@ static long long g_num_pixels;
 static long long g_num_pixels_shaded;
 static long long g_num_pixels_blended;
 static long long g_num_sampler_calls;
+static long long g_num_stencil_writes;
 static long long g_num_quads;
 
 using IntVector2 = Gfx::Vector2<int>;
@@ -303,6 +304,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
             VERIFY_NOT_REACHED();
         }
 
+        INCREASE_STATISTICS_COUNTER(g_num_stencil_writes, maskcount(pixel_mask));
         store4_masked(stencil_value, stencil_ptrs[0], stencil_ptrs[1], stencil_ptrs[2], stencil_ptrs[3], pixel_mask);
     };
 
@@ -1182,8 +1184,9 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
             (milliseconds > 0) ? 1000.0 * frame_counter / milliseconds : 9999.0));
         builder.append(String::formatted("Triangles    : {}\n", g_num_rasterized_triangles));
         builder.append(String::formatted("SIMD usage   : {}%\n", g_num_quads > 0 ? g_num_pixels_shaded * 25 / g_num_quads : 0));
-        builder.append(String::formatted("Pixels       : {}, Shaded: {}%, Blended: {}%, Overdraw: {}%\n",
+        builder.append(String::formatted("Pixels       : {}, Stencil: {}%, Shaded: {}%, Blended: {}%, Overdraw: {}%\n",
             g_num_pixels,
+            g_num_pixels > 0 ? g_num_stencil_writes * 100 / g_num_pixels : 0,
             g_num_pixels > 0 ? g_num_pixels_shaded * 100 / g_num_pixels : 0,
             g_num_pixels_shaded > 0 ? g_num_pixels_blended * 100 / g_num_pixels_shaded : 0,
             num_rendertarget_pixels > 0 ? g_num_pixels_shaded * 100 / num_rendertarget_pixels - 100 : 0));
@@ -1200,6 +1203,7 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
     g_num_pixels_shaded = 0;
     g_num_pixels_blended = 0;
     g_num_sampler_calls = 0;
+    g_num_stencil_writes = 0;
     g_num_quads = 0;
 
     auto& font = Gfx::FontDatabase::default_fixed_width_font();
