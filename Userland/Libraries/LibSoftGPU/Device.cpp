@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
 #include <AK/Math.h>
+#include <AK/NumericLimits.h>
 #include <AK/SIMDExtras.h>
 #include <AK/SIMDMath.h>
 #include <LibCore/ElapsedTimer.h>
@@ -82,11 +84,11 @@ static Vector4<f32x4> to_vec4(u32x4 rgba)
     };
 }
 
-static Gfx::IntRect window_coordinates_to_target_coordinates(Gfx::IntRect const window_rect, Gfx::IntRect const target_rect)
+Gfx::IntRect Device::window_coordinates_to_target_coordinates(Gfx::IntRect const& window_rect)
 {
     return {
         window_rect.x(),
-        target_rect.height() - window_rect.height() - window_rect.y(),
+        m_render_target->rect().height() - window_rect.height() - window_rect.y(),
         window_rect.width(),
         window_rect.height(),
     };
@@ -213,7 +215,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
 
     auto render_bounds = m_render_target->rect();
     if (m_options.scissor_enabled)
-        render_bounds.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box, m_render_target->rect()));
+        render_bounds.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
 
     // Obey top-left rule:
     // This sets up "zero" for later pixel coverage tests.
@@ -229,7 +231,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
         zero.set_y(0);
 
     // This function calculates the 3 edge values for the pixel relative to the triangle.
-    auto calculate_edge_values4 = [v0, v1, v2](const Vector2<i32x4>& p) -> Vector3<i32x4> {
+    auto calculate_edge_values4 = [v0, v1, v2](Vector2<i32x4> const& p) -> Vector3<i32x4> {
         return {
             edge_function4(v1, v2, p),
             edge_function4(v2, v0, p),
@@ -238,7 +240,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
     };
 
     // This function tests whether a point as identified by its 3 edge values lies within the triangle
-    auto test_point4 = [zero](const Vector3<i32x4>& edges) -> i32x4 {
+    auto test_point4 = [zero](Vector3<i32x4> const& edges) -> i32x4 {
         return edges.x() >= zero.x()
             && edges.y() >= zero.y()
             && edges.z() >= zero.z();
@@ -257,8 +259,6 @@ void Device::rasterize_triangle(const Triangle& triangle)
     float const vertex1_eye_absz = fabs(vertex1.eye_coordinates.z());
     float const vertex2_eye_absz = fabs(vertex2.eye_coordinates.z());
 
-    // FIXME: implement stencil testing
-
     int const render_bounds_left = render_bounds.x();
     int const render_bounds_right = render_bounds.x() + render_bounds.width();
     int const render_bounds_top = render_bounds.y();
@@ -269,10 +269,46 @@ void Device::rasterize_triangle(const Triangle& triangle)
         expand4(subpixel_factor / 2),
     };
 
+    // Stencil configuration and writing
+    auto const stencil_configuration = m_stencil_configuration[Face::Front];
+    auto const stencil_reference_value = stencil_configuration.reference_value & stencil_configuration.test_mask;
+
+    auto write_to_stencil = [](u8* stencil_ptrs[4], i32x4 stencil_value, StencilOperation op, u8 reference_value, u8 write_mask, i32x4 pixel_mask) {
+        if (write_mask == 0 || op == StencilOperation::Keep)
+            return;
+
+        switch (op) {
+        case StencilOperation::Decrement:
+            stencil_value = (stencil_value & ~write_mask) | (max(stencil_value - 1, expand4(0)) & write_mask);
+            break;
+        case StencilOperation::DecrementWrap:
+            stencil_value = (stencil_value & ~write_mask) | (((stencil_value - 1) & 0xFF) & write_mask);
+            break;
+        case StencilOperation::Increment:
+            stencil_value = (stencil_value & ~write_mask) | (min(stencil_value + 1, expand4(0xFF)) & write_mask);
+            break;
+        case StencilOperation::IncrementWrap:
+            stencil_value = (stencil_value & ~write_mask) | (((stencil_value + 1) & 0xFF) & write_mask);
+            break;
+        case StencilOperation::Invert:
+            stencil_value ^= write_mask;
+            break;
+        case StencilOperation::Replace:
+            stencil_value = (stencil_value & ~write_mask) | (reference_value & write_mask);
+            break;
+        case StencilOperation::Zero:
+            stencil_value &= ~write_mask;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        store4_masked(stencil_value, stencil_ptrs[0], stencil_ptrs[1], stencil_ptrs[2], stencil_ptrs[3], pixel_mask);
+    };
+
     // Iterate over all blocks within the bounds of the triangle
     for (int by = by0; by < by1; by += 2) {
         for (int bx = bx0; bx < bx1; bx += 2) {
-
             PixelQuad quad;
 
             quad.screen_coordinates = {
@@ -306,14 +342,70 @@ void Device::rasterize_triangle(const Triangle& triangle)
 
             int coverage_bits = maskbits(quad.mask);
 
+            // Stencil testing
+            u8* stencil_ptrs[4];
+            i32x4 stencil_value;
+            if (m_options.enable_stencil_test) {
+                stencil_ptrs[0] = coverage_bits & 1 ? &m_stencil_buffer->scanline(by)[bx] : nullptr;
+                stencil_ptrs[1] = coverage_bits & 2 ? &m_stencil_buffer->scanline(by)[bx + 1] : nullptr;
+                stencil_ptrs[2] = coverage_bits & 4 ? &m_stencil_buffer->scanline(by + 1)[bx] : nullptr;
+                stencil_ptrs[3] = coverage_bits & 8 ? &m_stencil_buffer->scanline(by + 1)[bx + 1] : nullptr;
+
+                stencil_value = load4_masked(stencil_ptrs[0], stencil_ptrs[1], stencil_ptrs[2], stencil_ptrs[3], quad.mask);
+                stencil_value &= stencil_configuration.test_mask;
+
+                i32x4 stencil_test_passed;
+                switch (stencil_configuration.test_function) {
+                case StencilTestFunction::Always:
+                    stencil_test_passed = expand4(~0);
+                    break;
+                case StencilTestFunction::Equal:
+                    stencil_test_passed = stencil_value == stencil_reference_value;
+                    break;
+                case StencilTestFunction::Greater:
+                    stencil_test_passed = stencil_value > stencil_reference_value;
+                    break;
+                case StencilTestFunction::GreaterOrEqual:
+                    stencil_test_passed = stencil_value >= stencil_reference_value;
+                    break;
+                case StencilTestFunction::Less:
+                    stencil_test_passed = stencil_value < stencil_reference_value;
+                    break;
+                case StencilTestFunction::LessOrEqual:
+                    stencil_test_passed = stencil_value <= stencil_reference_value;
+                    break;
+                case StencilTestFunction::Never:
+                    stencil_test_passed = expand4(0);
+                    break;
+                case StencilTestFunction::NotEqual:
+                    stencil_test_passed = stencil_value != stencil_reference_value;
+                    break;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+
+                // Update stencil buffer for pixels that failed the stencil test
+                write_to_stencil(
+                    stencil_ptrs,
+                    stencil_value,
+                    stencil_configuration.on_stencil_test_fail,
+                    stencil_reference_value,
+                    stencil_configuration.write_mask,
+                    quad.mask & ~stencil_test_passed);
+
+                // Update coverage mask + early quad rejection
+                quad.mask &= stencil_test_passed;
+                if (none(quad.mask))
+                    continue;
+            }
+
+            // Depth testing
             float* depth_ptrs[4] = {
                 coverage_bits & 1 ? &m_depth_buffer->scanline(by)[bx] : nullptr,
                 coverage_bits & 2 ? &m_depth_buffer->scanline(by)[bx + 1] : nullptr,
                 coverage_bits & 4 ? &m_depth_buffer->scanline(by + 1)[bx] : nullptr,
                 coverage_bits & 8 ? &m_depth_buffer->scanline(by + 1)[bx + 1] : nullptr,
             };
-
-            // AND the depth mask onto the coverage mask
             if (m_options.enable_depth_test) {
                 auto depth = load4_masked(depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
 
@@ -321,31 +413,35 @@ void Device::rasterize_triangle(const Triangle& triangle)
                 // FIXME: Also apply depth_offset_factor which depends on the depth gradient
                 quad.depth += m_options.depth_offset_constant * NumericLimits<float>::epsilon();
 
+                i32x4 depth_test_passed;
                 switch (m_options.depth_func) {
                 case DepthTestFunction::Always:
+                    depth_test_passed = expand4(~0);
                     break;
                 case DepthTestFunction::Never:
-                    quad.mask ^= quad.mask;
+                    depth_test_passed = expand4(0);
                     break;
                 case DepthTestFunction::Greater:
-                    quad.mask &= quad.depth > depth;
+                    depth_test_passed = quad.depth > depth;
                     break;
                 case DepthTestFunction::GreaterOrEqual:
-                    quad.mask &= quad.depth >= depth;
+                    depth_test_passed = quad.depth >= depth;
                     break;
                 case DepthTestFunction::NotEqual:
 #ifdef __SSE__
-                    quad.mask &= quad.depth != depth;
+                    depth_test_passed = quad.depth != depth;
 #else
-                    quad.mask[0] = bit_cast<u32>(quad.depth[0]) != bit_cast<u32>(depth[0]) ? -1 : 0;
-                    quad.mask[1] = bit_cast<u32>(quad.depth[1]) != bit_cast<u32>(depth[1]) ? -1 : 0;
-                    quad.mask[2] = bit_cast<u32>(quad.depth[2]) != bit_cast<u32>(depth[2]) ? -1 : 0;
-                    quad.mask[3] = bit_cast<u32>(quad.depth[3]) != bit_cast<u32>(depth[3]) ? -1 : 0;
+                    depth_test_passed = i32x4 {
+                        bit_cast<u32>(quad.depth[0]) != bit_cast<u32>(depth[0]) ? -1 : 0,
+                        bit_cast<u32>(quad.depth[1]) != bit_cast<u32>(depth[1]) ? -1 : 0,
+                        bit_cast<u32>(quad.depth[2]) != bit_cast<u32>(depth[2]) ? -1 : 0,
+                        bit_cast<u32>(quad.depth[3]) != bit_cast<u32>(depth[3]) ? -1 : 0,
+                    };
 #endif
                     break;
                 case DepthTestFunction::Equal:
 #ifdef __SSE__
-                    quad.mask &= quad.depth == depth;
+                    depth_test_passed = quad.depth == depth;
 #else
                     //
                     // This is an interesting quirk that occurs due to us using the x87 FPU when Serenity is
@@ -358,23 +454,50 @@ void Device::rasterize_triangle(const Triangle& triangle)
                     // the first 32-bits of this depth value is "good enough" that if we get a hit on it being
                     // equal, we can pretty much guarantee that it's actually equal.
                     //
-                    quad.mask[0] = bit_cast<u32>(quad.depth[0]) == bit_cast<u32>(depth[0]) ? -1 : 0;
-                    quad.mask[1] = bit_cast<u32>(quad.depth[1]) == bit_cast<u32>(depth[1]) ? -1 : 0;
-                    quad.mask[2] = bit_cast<u32>(quad.depth[2]) == bit_cast<u32>(depth[2]) ? -1 : 0;
-                    quad.mask[3] = bit_cast<u32>(quad.depth[3]) == bit_cast<u32>(depth[3]) ? -1 : 0;
+                    depth_test_passed = i32x4 {
+                        bit_cast<u32>(quad.depth[0]) == bit_cast<u32>(depth[0]) ? -1 : 0,
+                        bit_cast<u32>(quad.depth[1]) == bit_cast<u32>(depth[1]) ? -1 : 0,
+                        bit_cast<u32>(quad.depth[2]) == bit_cast<u32>(depth[2]) ? -1 : 0,
+                        bit_cast<u32>(quad.depth[3]) == bit_cast<u32>(depth[3]) ? -1 : 0,
+                    };
 #endif
                     break;
                 case DepthTestFunction::LessOrEqual:
-                    quad.mask &= quad.depth <= depth;
+                    depth_test_passed = quad.depth <= depth;
                     break;
                 case DepthTestFunction::Less:
-                    quad.mask &= quad.depth < depth;
+                    depth_test_passed = quad.depth < depth;
                     break;
+                default:
+                    VERIFY_NOT_REACHED();
                 }
 
-                // Nice, no pixels passed the depth test -> block rejected by early z
+                // Update stencil buffer for pixels that failed the depth test
+                if (m_options.enable_stencil_test) {
+                    write_to_stencil(
+                        stencil_ptrs,
+                        stencil_value,
+                        stencil_configuration.on_depth_test_fail,
+                        stencil_reference_value,
+                        stencil_configuration.write_mask,
+                        quad.mask & ~depth_test_passed);
+                }
+
+                // Update coverage mask + early quad rejection
+                quad.mask &= depth_test_passed;
                 if (none(quad.mask))
                     continue;
+            }
+
+            // Update stencil buffer for passed pixels
+            if (m_options.enable_stencil_test) {
+                write_to_stencil(
+                    stencil_ptrs,
+                    stencil_value,
+                    stencil_configuration.on_pass,
+                    stencil_reference_value,
+                    stencil_configuration.write_mask,
+                    quad.mask);
             }
 
             INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, maskcount(quad.mask));
@@ -415,9 +538,8 @@ void Device::rasterize_triangle(const Triangle& triangle)
             }
 
             // Write to depth buffer
-            if (m_options.enable_depth_test && m_options.enable_depth_write) {
+            if (m_options.enable_depth_test && m_options.enable_depth_write)
                 store4_masked(quad.depth, depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
-            }
 
             // We will not update the color buffer at all
             if (!m_options.color_mask || !m_options.enable_color_write)
@@ -465,8 +587,9 @@ void Device::rasterize_triangle(const Triangle& triangle)
 }
 
 Device::Device(const Gfx::IntSize& size)
-    : m_render_target { Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size).release_value_but_fixme_should_propagate_errors() }
-    , m_depth_buffer { adopt_own(*new DepthBuffer(size)) }
+    : m_render_target(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size).release_value_but_fixme_should_propagate_errors())
+    , m_depth_buffer(make<DepthBuffer>(size))
+    , m_stencil_buffer(MUST(StencilBuffer::try_create(size)))
 {
     m_options.scissor_box = m_render_target->rect();
     m_options.viewport = m_render_target->rect();
@@ -478,7 +601,8 @@ DeviceInfo Device::info() const
         .vendor_name = "SerenityOS",
         .device_name = "SoftGPU",
         .num_texture_units = NUM_SAMPLERS,
-        .num_lights = NUM_LIGHTS
+        .num_lights = NUM_LIGHTS,
+        .stencil_bits = sizeof(u8) * 8,
     };
 }
 
@@ -626,7 +750,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     }
 
     // Now let's transform each triangle and send that to the GPU
-    auto const viewport = window_coordinates_to_target_coordinates(m_options.viewport, m_render_target->rect());
+    auto const viewport = window_coordinates_to_target_coordinates(m_options.viewport);
     auto const viewport_half_width = viewport.width() / 2.0f;
     auto const viewport_half_height = viewport.height() / 2.0f;
     auto const viewport_center_x = viewport.x() + viewport_half_width;
@@ -956,7 +1080,7 @@ void Device::clear_color(const FloatVector4& color)
 
     if (m_options.scissor_enabled) {
         auto fill_rect = m_render_target->rect();
-        fill_rect.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box, fill_rect));
+        fill_rect.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
         Gfx::Painter painter { *m_render_target };
         painter.fill_rect(fill_rect, fill_color);
         return;
@@ -970,11 +1094,21 @@ void Device::clear_depth(float depth)
     wait_for_all_threads();
 
     if (m_options.scissor_enabled) {
-        m_depth_buffer->clear(window_coordinates_to_target_coordinates(m_options.scissor_box, m_render_target->rect()), depth);
+        m_depth_buffer->clear(window_coordinates_to_target_coordinates(m_options.scissor_box), depth);
         return;
     }
 
     m_depth_buffer->clear(depth);
+}
+
+void Device::clear_stencil(u8 value)
+{
+    Gfx::IntRect clear_rect = m_stencil_buffer->rect();
+
+    if (m_options.scissor_enabled)
+        clear_rect.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
+
+    m_stencil_buffer->clear(clear_rect, value);
 }
 
 void Device::blit_to_color_buffer_at_raster_position(Gfx::Bitmap const& source)
@@ -1148,6 +1282,11 @@ void Device::set_material_state(Face face, Material const& material)
     m_materials[face] = material;
 }
 
+void Device::set_stencil_configuration(Face face, StencilConfiguration const& stencil_configuration)
+{
+    m_stencil_configuration[face] = stencil_configuration;
+}
+
 void Device::set_raster_position(RasterPosition const& raster_position)
 {
     m_raster_position = raster_position;
@@ -1192,7 +1331,7 @@ Gfx::IntRect Device::raster_rect_in_target_coordinates(Gfx::IntSize size)
         size.width(),
         size.height(),
     };
-    return window_coordinates_to_target_coordinates(raster_rect, m_render_target->rect());
+    return window_coordinates_to_target_coordinates(raster_rect);
 }
 
 }
