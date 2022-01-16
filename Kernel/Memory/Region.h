@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +8,7 @@
 
 #include <AK/EnumBits.h>
 #include <AK/IntrusiveList.h>
+#include <AK/IntrusiveRedBlackTree.h>
 #include <AK/Weakable.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
@@ -219,11 +220,11 @@ private:
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
     bool m_syscall_region : 1 { false };
-    IntrusiveListNode<Region> m_memory_manager_list_node;
+
+    IntrusiveRedBlackTreeNode<FlatPtr, Region, RawPtr<Region>> m_tree_node;
     IntrusiveListNode<Region> m_vmobject_list_node;
 
 public:
-    using ListInMemoryManager = IntrusiveList<&Region::m_memory_manager_list_node>;
     using ListInVMObject = IntrusiveList<&Region::m_vmobject_list_node>;
 };
 
