@@ -12,14 +12,14 @@ namespace Kernel::Memory {
 InodeVMObject::InodeVMObject(Inode& inode, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
     : VMObject(move(new_physical_pages))
     , m_inode(inode)
-    , m_dirty_pages(page_count(), false)
+    , m_dirty_pages(Bitmap::must_create_but_fixme_should_propagate_errors(page_count(), false))
 {
 }
 
 InodeVMObject::InodeVMObject(InodeVMObject const& other, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
     : VMObject(move(new_physical_pages))
     , m_inode(other.m_inode)
-    , m_dirty_pages(page_count(), false)
+    , m_dirty_pages(Bitmap::must_create_but_fixme_should_propagate_errors(page_count(), false))
 {
     for (size_t i = 0; i < page_count(); ++i)
         m_dirty_pages.set(i, other.m_dirty_pages.get(i));

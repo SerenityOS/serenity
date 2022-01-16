@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #pragma once
 
 #include <AK/BitmapView.h>
+#include <AK/Error.h>
 #include <AK/Noncopyable.h>
 #include <AK/Optional.h>
 #include <AK/Platform.h>
@@ -22,12 +24,20 @@ class Bitmap : public BitmapView {
 public:
     Bitmap() = default;
 
-    Bitmap(size_t size, bool default_value)
-        : BitmapView(static_cast<u8*>(kmalloc(ceil_div(size, static_cast<size_t>(8)))), size)
-        , m_is_owning(true)
+    static ErrorOr<Bitmap> try_create(size_t size, bool default_value)
     {
         VERIFY(size != 0);
-        fill(default_value);
+        u8* data = static_cast<u8*>(kmalloc(ceil_div(size, static_cast<size_t>(8))));
+        if (!data)
+            return Error::from_errno(ENOMEM);
+        Bitmap bitmap { data, size, true };
+        bitmap.fill(default_value);
+        return bitmap;
+    }
+
+    static Bitmap must_create_but_fixme_should_propagate_errors(size_t size, bool default_value)
+    {
+        return MUST(try_create(size, default_value));
     }
 
     Bitmap(u8* data, size_t size, bool is_owning = false)
