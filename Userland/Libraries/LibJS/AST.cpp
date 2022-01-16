@@ -4045,6 +4045,8 @@ Completion ImportStatement::execute(Interpreter& interpreter, GlobalObject& glob
     return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "'import' in modules");
 }
 
+FlyString ExportStatement::local_name_for_default = "*default*";
+
 // 16.2.3.7 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-exports-runtime-semantics-evaluation
 Completion ExportStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
@@ -4111,14 +4113,14 @@ void ImportStatement::dump(int indent) const
     }
 }
 
-bool ExportStatement::has_export(StringView export_name) const
+bool ExportStatement::has_export(FlyString const& export_name) const
 {
     return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
         return entry.export_name == export_name;
     });
 }
 
-bool ImportStatement::has_bound_name(StringView name) const
+bool ImportStatement::has_bound_name(FlyString const& name) const
 {
     return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
         return entry.local_name == name;
