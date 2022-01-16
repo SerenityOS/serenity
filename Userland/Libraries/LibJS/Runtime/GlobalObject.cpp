@@ -9,6 +9,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Hex.h>
 #include <AK/Platform.h>
+#include <AK/UnicodeUtils.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Console.h>
@@ -450,14 +451,55 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 // 19.2.6.1.1 Encode ( string, unescapedSet ), https://tc39.es/ecma262/#sec-encode
 static ThrowCompletionOr<String> encode([[maybe_unused]] JS::GlobalObject& global_object, const String& string, StringView unescaped_set)
 {
+    auto& vm = global_object.vm();
+    auto utf16_string = Utf16String(string);
+
+    // 1. Let strLen be the number of code units in string.
+    auto string_length = utf16_string.length_in_code_units();
+
+    // 2. Let R be the empty String.
     StringBuilder encoded_builder;
-    for (unsigned char code_unit : string) {
-        if (unescaped_set.contains(code_unit)) {
+
+    // 3. Let k be 0.
+    auto k = 0u;
+    // 4. Repeat,
+    while (k < string_length) {
+        // a. If k = strLen, return R.
+        // Handled below
+
+        // b. Let C be the code unit at index k within string.
+        auto code_unit = utf16_string.code_unit_at(k);
+        // c. If C is in unescapedSet, then
+        // NOTE: We assume the unescaped set only contains ascii characters as unescaped_set is a StringView.
+        if (code_unit < 0x80 && unescaped_set.contains(code_unit)) {
+            // i. Set k to k + 1.
+            k++;
+
+            // ii. Set R to the string-concatenation of R and C.
             encoded_builder.append(code_unit);
-            continue;
         }
-        // FIXME: check for unpaired surrogates and throw URIError
-        encoded_builder.appendff("%{:02X}", code_unit);
+        // d. Else,
+        else {
+            // i. Let cp be ! CodePointAt(string, k).
+            auto code_point = code_point_at(utf16_string.view(), k);
+            // ii. If cp.[[IsUnpairedSurrogate]] is true, throw a URIError exception.
+            if (code_point.is_unpaired_surrogate)
+                return vm.throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+
+            // iii. Set k to k + cp.[[CodeUnitCount]].
+            k += code_point.code_unit_count;
+
+            // iv. Let Octets be the List of octets resulting by applying the UTF-8 transformation to cp.[[CodePoint]].
+            // v. For each element octet of Octets, do
+            auto nwritten = AK::UnicodeUtils::code_point_to_utf8(code_point.code_point, [&encoded_builder](u8 octet) {
+                // 1. Set R to the string-concatenation of:
+                //  * R
+                //  * "%"
+                //  * the String representation of octet, formatted as a two-digit uppercase hexadecimal number, padded to the left with a zero if necessary
+                encoded_builder.appendff("%{:02X}", octet);
+            });
+            VERIFY(nwritten > 0);
+        }
     }
     return encoded_builder.build();
 }
