@@ -89,6 +89,8 @@ fi
 [ -z "$SERENITY_DISK_IMAGE" ] && {
     if [ "$SERENITY_RUN" = q35grub ] || [ "$SERENITY_RUN" = qgrub ]; then
         SERENITY_DISK_IMAGE="grub_disk_image"
+    elif [ "$SERENITY_RUN" = limine ]; then
+        SERENITY_DISK_IMAGE="limine_disk_image"
     elif [ "$SERENITY_RUN" = qextlinux ]; then
         SERENITY_DISK_IMAGE="extlinux_disk_image"
     else
@@ -374,6 +376,10 @@ elif [ "$SERENITY_RUN" = "q35grub" ]; then
         $SERENITY_VIRT_TECH_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh
+elif [ "$SERENITY_RUN" = "limine" ]; then
+    "$SERENITY_QEMU_BIN" \
+        $SERENITY_COMMON_QEMU_ARGS \
+        $SERENITY_VIRT_TECH_ARG
 elif [ "$SERENITY_RUN" = "ci" ]; then
     # Meta/run.sh ci: qemu in text mode
     echo "Running QEMU in CI"
