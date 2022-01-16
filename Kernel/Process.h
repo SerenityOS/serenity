@@ -585,7 +585,7 @@ private:
         return nullptr;
     }
 
-    mutable IntrusiveListNode<Process> m_list_node;
+    IntrusiveListNode<Process> m_list_node;
 
     NonnullOwnPtr<KString> m_name;
 
