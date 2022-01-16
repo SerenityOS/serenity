@@ -37,7 +37,7 @@ public:
     bool open_new_file(size_t size);
     void open_file(NonnullRefPtr<Core::File> file);
     void fill_selection(u8 fill_byte);
-    bool save_as(int fd);
+    bool save_as(NonnullRefPtr<Core::File>);
     bool save();
 
     void select_all();
