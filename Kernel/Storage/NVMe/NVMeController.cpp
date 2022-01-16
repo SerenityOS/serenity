@@ -48,7 +48,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize()
     m_controller_regs = TRY(Memory::map_typed_writable<volatile ControllerRegister>(PhysicalAddress(m_bar)));
 
     auto caps = m_controller_regs->cap;
-    m_ready_timeout = Time::from_milliseconds(CAP_TO(caps) * 500); // CAP.TO is in 500ms units
+    m_ready_timeout = Time::from_milliseconds((CAP_TO(caps) + 1) * 500); // CAP.TO is in 500ms units
 
     calculate_doorbell_stride();
     TRY(create_admin_queue(irq));
@@ -69,7 +69,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize()
 bool NVMeController::wait_for_ready(bool expected_ready_bit_value)
 {
     static constexpr size_t one_ms_io_delay = 1000;
-    auto wait_iterations = max(1, m_ready_timeout.to_milliseconds());
+    auto wait_iterations = m_ready_timeout.to_milliseconds();
 
     u32 expected_rdy = expected_ready_bit_value ? 1 : 0;
     while (((m_controller_regs->csts >> CSTS_RDY_BIT) & 0x1) != expected_rdy) {
