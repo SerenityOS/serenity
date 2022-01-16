@@ -169,14 +169,14 @@ FontEditorWidget::FontEditorWidget()
         if (m_path.is_empty())
             m_save_as_action->activate();
         else
-            save_as(m_path);
+            save_file(m_path);
     });
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         LexicalPath lexical_path(m_path.is_empty() ? "Untitled.font" : m_path);
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension());
         if (!save_path.has_value())
             return;
-        save_as(save_path.value());
+        save_file(save_path.value());
     });
     m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
         cut_selected_glyphs();
@@ -558,7 +558,7 @@ void FontEditorWidget::initialize_menubar(GUI::Window& window)
     help_menu.add_action(GUI::CommonActions::make_about_action("Font Editor", GUI::Icon::default_icon("app-font-editor"), &window));
 }
 
-bool FontEditorWidget::save_as(String const& path)
+bool FontEditorWidget::save_file(String const& path)
 {
     auto saved_font = m_edited_font->masked_character_set();
     auto ret_val = saved_font->write_to_file(path);
@@ -757,6 +757,7 @@ void FontEditorWidget::set_scale_and_save(i32 scale)
     Config::write_i32("FontEditor", "GlyphEditor", "Scale", scale);
     did_resize_glyph_editor();
 }
+
 void FontEditorWidget::copy_selected_glyphs()
 {
     ByteBuffer buffer;
