@@ -24,7 +24,7 @@ public:
     virtual ~FontEditorWidget() override;
 
     bool open_file(String const&);
-    bool save_as(String const&);
+    bool save_file(String const&);
     bool request_close();
     void update_title();
 
