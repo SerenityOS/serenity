@@ -222,6 +222,9 @@ u8 month_from_time(double t)
 // HourFromTime(t), https://tc39.es/ecma262/#eqn-HourFromTime
 u8 hour_from_time(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // 𝔽(floor(ℝ(t / msPerHour)) modulo HoursPerDay)
     return static_cast<u8>(modulo(floor(t / Date::ms_per_hour), Date::hours_per_day));
 }
@@ -229,6 +232,9 @@ u8 hour_from_time(double t)
 // MinFromTime(t), https://tc39.es/ecma262/#eqn-MinFromTime
 u8 min_from_time(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // 𝔽(floor(ℝ(t / msPerMinute)) modulo MinutesPerHour)
     return static_cast<u8>(modulo(floor(t / Date::ms_per_minute), Date::minutes_per_hour));
 }
@@ -236,6 +242,9 @@ u8 min_from_time(double t)
 // SecFromTime(t), https://tc39.es/ecma262/#eqn-SecFromTime
 u8 sec_from_time(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // 𝔽(floor(ℝ(t / msPerSecond)) modulo SecondsPerMinute)
     return static_cast<u8>(modulo(floor(t / Date::ms_per_second), Date::seconds_per_minute));
 }
@@ -243,6 +252,9 @@ u8 sec_from_time(double t)
 // msFromTime(t), https://tc39.es/ecma262/#eqn-msFromTime
 u16 ms_from_time(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // 𝔽(ℝ(t) modulo msPerSecond)
     return static_cast<u16>(modulo(t, Date::ms_per_second));
 }
@@ -250,6 +262,9 @@ u16 ms_from_time(double t)
 // 21.4.1.6 Week Day, https://tc39.es/ecma262/#sec-week-day
 u8 week_day(double t)
 {
+    if (!Value(t).is_finite_number())
+        return 0;
+
     // 𝔽(ℝ(Day(t) + 4𝔽) modulo 7)
     return static_cast<u8>(modulo(day(t) + 4, 7));
 }
