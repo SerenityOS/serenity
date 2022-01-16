@@ -13,10 +13,10 @@ class RoundingDialog : public GUI::Dialog {
     C_OBJECT(RoundingDialog);
 
 public:
-    static ExecResult show(GUI::Window* parent_window, unsigned& rounding_value);
+    static ExecResult show(GUI::Window* parent_window, StringView title, unsigned& rounding_value);
 
 private:
-    RoundingDialog(GUI::Window* parent_window);
+    RoundingDialog(GUI::Window* parent_window, StringView title);
     virtual ~RoundingDialog() override = default;
 
     RefPtr<GUI::SpinBox> m_rounding_spinbox;

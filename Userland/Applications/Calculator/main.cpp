@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto round_custom = GUI::Action::create_checkable(String::formatted(format, 0), [&](auto& action) {
         unsigned custom_rounding_length = widget->rounding_length();
 
-        if (RoundingDialog::show(window, custom_rounding_length) == GUI::Dialog::ExecResult::OK) {
+        if (RoundingDialog::show(window, "Choose custom rounding"sv, custom_rounding_length) == GUI::Dialog::ExecResult::OK) {
             action.set_text(String::formatted(format, custom_rounding_length));
             widget->set_rounding_length(custom_rounding_length);
             last_rounding_mode.clear();
@@ -102,9 +102,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     widget->set_rounding_custom(round_custom, format);
 
+    auto shrink_action = GUI::Action::create("&Shrink...", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-cut.png"sv)), [&](auto&) {
+        unsigned shrink_length = widget->rounding_length();
+
+        if (RoundingDialog::show(window, "Choose shrinking length"sv, shrink_length) == GUI::Dialog::ExecResult::OK) {
+            round_custom->set_checked(true);
+            round_custom->set_text(String::formatted(format, shrink_length));
+            widget->set_rounding_length(shrink_length);
+            widget->shrink(shrink_length);
+        }
+    });
+
     preview_actions.add_action(*round_custom);
     preview_actions.set_exclusive(true);
     round_menu.add_action(*round_custom);
+    round_menu.add_action(*shrink_action);
 
     round_menu.action_at(last_rounding_mode.value())->activate();
 

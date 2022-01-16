@@ -11,9 +11,9 @@
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextEditor.h>
 
-RoundingDialog::ExecResult RoundingDialog::show(GUI::Window* parent_window, unsigned& rounding_value)
+RoundingDialog::ExecResult RoundingDialog::show(GUI::Window* parent_window, StringView title, unsigned& rounding_value)
 {
-    auto dialog = RoundingDialog::construct(parent_window);
+    auto dialog = RoundingDialog::construct(parent_window, title);
 
     if (parent_window) {
         dialog->set_icon(parent_window->icon());
@@ -32,12 +32,12 @@ RoundingDialog::ExecResult RoundingDialog::show(GUI::Window* parent_window, unsi
     return GUI::Dialog::ExecResult::OK;
 }
 
-RoundingDialog::RoundingDialog(GUI::Window* parent_window)
+RoundingDialog::RoundingDialog(GUI::Window* parent_window, StringView title)
     : Dialog(parent_window)
 {
     resize(m_dialog_length, m_dialog_height);
     set_resizable(false);
-    set_title("Choose custom rounding");
+    set_title(title);
 
     auto& main_widget = set_main_widget<GUI::Widget>();
 
