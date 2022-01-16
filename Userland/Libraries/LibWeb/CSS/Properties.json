@@ -955,6 +955,7 @@
       "percentage"
     ],
     "valid-identifiers": [
+      "auto",
       "none"
     ],
     "quirks": [
@@ -969,6 +970,7 @@
       "percentage"
     ],
     "valid-identifiers": [
+      "auto",
       "none"
     ],
     "quirks": [
