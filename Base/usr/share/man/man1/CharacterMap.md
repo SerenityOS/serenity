@@ -1,6 +1,6 @@
 ## Name
 
-Character Map
+![Icon](/res/icons/16x16/app-character-map.png) Character Map
 
 [Open](file:///bin/CharacterMap)
 
@@ -30,3 +30,4 @@ $ CharacterMap --search "yak"
 ## See Also
 
 * [`FontEditor`(1)](help://man/1/FontEditor) To edit the fonts instead of just viewing them.
+
