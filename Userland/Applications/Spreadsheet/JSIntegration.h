@@ -49,7 +49,7 @@ class WorkbookObject final : public JS::Object {
     JS_OBJECT(WorkbookObject, JS::Object);
 
 public:
-    WorkbookObject(Workbook&);
+    WorkbookObject(Workbook&, JS::GlobalObject&);
 
     virtual ~WorkbookObject() override;
 

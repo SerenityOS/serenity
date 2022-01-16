@@ -577,8 +577,7 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
             eval_result = {};
     } else {
         auto& ast_interpreter = vm.interpreter();
-        // FIXME: We need to use evaluate_statements() here because Program::execute() calls global_declaration_instantiation() when it shouldn't
-        eval_result = TRY(program->evaluate_statements(ast_interpreter, caller_realm));
+        eval_result = TRY(program->execute(ast_interpreter, caller_realm));
     }
 
     return eval_result.value_or(js_undefined());

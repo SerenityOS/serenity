@@ -115,9 +115,8 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
     // 20. If result.[[Type]] is normal, then
     if (!eval_result.is_throw_completion()) {
         // TODO: Optionally use bytecode interpreter?
-        // FIXME: We need to use evaluate_statements() here because Program::execute() calls global_declaration_instantiation() when it shouldn't
         // a. Set result to the result of evaluating body.
-        result = program->evaluate_statements(vm.interpreter(), eval_realm.global_object());
+        result = program->execute(vm.interpreter(), eval_realm.global_object());
     }
 
     // 21. If result.[[Type]] is normal and result.[[Value]] is empty, then
