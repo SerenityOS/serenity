@@ -17,6 +17,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Device.h>
+#include <LibSoftGPU/Enums.h>
 
 using AK::dbgln;
 
@@ -3089,9 +3090,8 @@ void SoftwareGLContext::sync_light_state()
         m_rasterizer.set_light_state(light_id, light);
     }
 
-    for (auto material_id = 0u; material_id < 2u; material_id++) {
+    auto update_material_state = [&](SoftGPU::Face face, SoftGPU::Material const& current_material_state) {
         SoftGPU::Material material;
-        auto const& current_material_state = m_material_states.at(material_id);
 
         material.ambient = current_material_state.ambient;
         material.diffuse = current_material_state.diffuse;
@@ -3103,8 +3103,10 @@ void SoftwareGLContext::sync_light_state()
         material.diffuse_color_index = current_material_state.diffuse_color_index;
         material.specular_color_index = current_material_state.specular_color_index;
 
-        m_rasterizer.set_material_state(material_id, material);
-    }
+        m_rasterizer.set_material_state(face, material);
+    };
+    update_material_state(SoftGPU::Face::Front, m_material_states[Face::Front]);
+    update_material_state(SoftGPU::Face::Back, m_material_states[Face::Back]);
 }
 
 void SoftwareGLContext::sync_device_texcoord_config()
@@ -3261,14 +3263,14 @@ void SoftwareGLContext::gl_materialf(GLenum face, GLenum pname, GLfloat param)
 
     switch (face) {
     case GL_FRONT:
-        m_material_states.at(MaterialFace::Front).shininess = param;
+        m_material_states[Face::Front].shininess = param;
         break;
     case GL_BACK:
-        m_material_states.at(MaterialFace::Back).shininess = param;
+        m_material_states[Face::Back].shininess = param;
         break;
     case GL_FRONT_AND_BACK:
-        m_material_states.at(MaterialFace::Front).shininess = param;
-        m_material_states.at(MaterialFace::Back).shininess = param;
+        m_material_states[Face::Front].shininess = param;
+        m_material_states[Face::Back].shininess = param;
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -3310,14 +3312,14 @@ void SoftwareGLContext::gl_materialfv(GLenum face, GLenum pname, GLfloat const* 
 
     switch (face) {
     case GL_FRONT:
-        update_material(m_material_states.at(MaterialFace::Front), pname, params);
+        update_material(m_material_states[Face::Front], pname, params);
         break;
     case GL_BACK:
-        update_material(m_material_states.at(MaterialFace::Back), pname, params);
+        update_material(m_material_states[Face::Back], pname, params);
         break;
     case GL_FRONT_AND_BACK:
-        update_material(m_material_states.at(MaterialFace::Front), pname, params);
-        update_material(m_material_states.at(MaterialFace::Back), pname, params);
+        update_material(m_material_states[Face::Front], pname, params);
+        update_material(m_material_states[Face::Back], pname, params);
         break;
     }
 

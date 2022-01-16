@@ -58,6 +58,11 @@ enum class DepthTestFunction {
     Greater,
 };
 
+enum Face {
+    Front = 0,
+    Back = 1,
+};
+
 enum FogMode {
     Linear,
     Exp,

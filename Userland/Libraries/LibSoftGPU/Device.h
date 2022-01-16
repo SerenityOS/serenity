@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -118,7 +119,7 @@ public:
 
     void set_sampler_config(unsigned, SamplerConfig const&);
     void set_light_state(unsigned, Light const&);
-    void set_material_state(unsigned, Material const&);
+    void set_material_state(Face, Material const&);
 
     RasterPosition raster_position() const { return m_raster_position; }
     void set_raster_position(RasterPosition const& raster_position);

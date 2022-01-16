@@ -41,7 +41,7 @@ struct ContextParameter {
     } value;
 };
 
-enum MaterialFace : u8 {
+enum Face {
     Front = 0,
     Back = 1,
 };
