@@ -499,14 +499,14 @@ private:
 // NOTE: This is not used for identifier sizes, like `cover` and `contain`.
 class BackgroundSizeStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<BackgroundSizeStyleValue> create(Length size_x, Length size_y)
+    static NonnullRefPtr<BackgroundSizeStyleValue> create(LengthPercentage size_x, LengthPercentage size_y)
     {
         return adopt_ref(*new BackgroundSizeStyleValue(size_x, size_y));
     }
     virtual ~BackgroundSizeStyleValue() override { }
 
-    Length size_x() const { return m_size_x; }
-    Length size_y() const { return m_size_y; }
+    LengthPercentage size_x() const { return m_size_x; }
+    LengthPercentage size_y() const { return m_size_y; }
 
     virtual String to_string() const override
     {
@@ -514,15 +514,15 @@ public:
     }
 
 private:
-    BackgroundSizeStyleValue(Length size_x, Length size_y)
+    BackgroundSizeStyleValue(LengthPercentage size_x, LengthPercentage size_y)
         : StyleValue(Type::BackgroundSize)
         , m_size_x(size_x)
         , m_size_y(size_y)
     {
     }
 
-    Length m_size_x;
-    Length m_size_y;
+    LengthPercentage m_size_x;
+    LengthPercentage m_size_y;
 };
 
 class BorderStyleValue final : public StyleValue {
