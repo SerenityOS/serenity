@@ -47,15 +47,19 @@ Sheet::Sheet(Workbook& workbook)
     global_object().define_direct_property("thisSheet", &global_object(), JS::default_attributes); // Self-reference is unfortunate, but required.
 
     // Sadly, these have to be evaluated once per sheet.
-    auto file_or_error = Core::File::open("/res/js/Spreadsheet/runtime.js", Core::OpenMode::ReadOnly);
+    constexpr StringView runtime_file_path = "/res/js/Spreadsheet/runtime.js";
+    auto file_or_error = Core::File::open(runtime_file_path, Core::OpenMode::ReadOnly);
     if (!file_or_error.is_error()) {
         auto buffer = file_or_error.value()->read_all();
-        JS::Parser parser { JS::Lexer(buffer) };
-        if (parser.has_errors()) {
+        auto script_or_error = JS::Script::parse(buffer, interpreter().realm(), runtime_file_path);
+        if (script_or_error.is_error()) {
             warnln("Spreadsheet: Failed to parse runtime code");
-            parser.print_errors();
+            for (auto& error : script_or_error.error()) {
+                // FIXME: This doesn't print hints anymore
+                warnln("SyntaxError: {}", error.to_string());
+            }
         } else {
-            (void)interpreter().run(global_object(), parser.parse_program());
+            (void)interpreter().run(script_or_error.value());
             if (auto* exception = interpreter().exception()) {
                 warnln("Spreadsheet: Failed to run runtime code:");
                 for (auto& traceback_frame : exception->traceback()) {
@@ -159,14 +163,14 @@ Sheet::ValueAndException Sheet::evaluate(StringView source, Cell* on_behalf_of)
     TemporaryChange cell_change { m_current_cell_being_evaluated, on_behalf_of };
     ScopeGuard clear_exception { [&] { interpreter().vm().clear_exception(); } };
 
-    auto parser = JS::Parser(JS::Lexer(source));
-    auto program = parser.parse_program();
-    if (parser.has_errors() || interpreter().exception())
+    auto script_or_error = JS::Script::parse(source, interpreter().realm());
+    // FIXME: Convert parser errors to exceptions to show them to the user.
+    if (script_or_error.is_error() || interpreter().exception())
         return { JS::js_undefined(), interpreter().exception() };
 
-    auto result = interpreter().run(global_object(), program);
+    auto result = interpreter().run(script_or_error.value());
     if (result.is_error()) {
-        auto exc = interpreter().exception();
+        auto* exc = interpreter().exception();
         return { JS::js_undefined(), exc };
     }
     return { result.value(), {} };

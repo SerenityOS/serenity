@@ -243,15 +243,7 @@ Completion BlockStatement::execute(Interpreter& interpreter, GlobalObject& globa
 
 Completion Program::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    // FIXME: This tries to be "ScriptEvaluation" and "evaluating scriptBody" at once. It shouldn't.
-    //        Clean this up and update perform_eval() / perform_shadow_realm_eval()
-
     InterpreterNodeScope node_scope { interpreter, *this };
-
-    VERIFY(interpreter.lexical_environment() && interpreter.lexical_environment()->is_global_environment());
-    auto& global_env = static_cast<GlobalEnvironment&>(*interpreter.lexical_environment());
-
-    TRY(global_declaration_instantiation(interpreter, global_object, global_env));
 
     return evaluate_statements(interpreter, global_object);
 }

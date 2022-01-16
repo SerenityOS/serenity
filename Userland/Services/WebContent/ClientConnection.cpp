@@ -329,9 +329,11 @@ void ClientConnection::run_javascript(String const& js_source)
 
     auto& interpreter = page().top_level_browsing_context().active_document()->interpreter();
 
-    auto parser = JS::Parser(JS::Lexer(js_source));
-    auto program = parser.parse_program();
-    auto result = interpreter.run(interpreter.global_object(), *program);
+    auto script_or_error = JS::Script::parse(js_source, interpreter.realm(), "");
+    if (script_or_error.is_error())
+        return;
+
+    auto result = interpreter.run(script_or_error.value());
 
     if (result.is_error()) {
         dbgln("Exception :(");
