@@ -453,26 +453,41 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
 }
 
 static Utf8View const whitespace_characters = Utf8View("\x09\x0A\x0B\x0C\x0D\x20\xC2\xA0\xE1\x9A\x80\xE2\x80\x80\xE2\x80\x81\xE2\x80\x82\xE2\x80\x83\xE2\x80\x84\xE2\x80\x85\xE2\x80\x86\xE2\x80\x87\xE2\x80\x88\xE2\x80\x89\xE2\x80\x8A\xE2\x80\xAF\xE2\x81\x9F\xE3\x80\x80\xE2\x80\xA8\xE2\x80\xA9\xEF\xBB\xBF"sv);
+ThrowCompletionOr<String> trim_string(GlobalObject& global_object, Value input_value, TrimMode where)
+{
+    // 1. Let str be ? RequireObjectCoercible(string).
+    auto input_string = TRY(require_object_coercible(global_object, input_value));
+
+    // 2. Let S be ? ToString(str).
+    auto string = TRY(input_string.to_string(global_object));
+
+    // 3. If where is start, let T be the String value that is a copy of S with leading white space removed.
+    // 4. Else if where is end, let T be the String value that is a copy of S with trailing white space removed.
+    // 5. Else,
+    // a. Assert: where is start+end.
+    // b. Let T be the String value that is a copy of S with both leading and trailing white space removed.
+    auto trimmed_string = Utf8View(string).trim(whitespace_characters, where).as_string();
+
+    // 6. Return T.
+    return trimmed_string;
+}
 
 // 22.1.3.30 String.prototype.trim ( ), https://tc39.es/ecma262/#sec-string.prototype.trim
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
 {
-    auto string = TRY(ak_string_from(vm, global_object));
-    return js_string(vm, Utf8View(string).trim(whitespace_characters, TrimMode::Both).as_string());
+    return js_string(vm, TRY(trim_string(global_object, vm.this_value(global_object), TrimMode::Both)));
 }
 
 // 22.1.3.32 String.prototype.trimStart ( ), https://tc39.es/ecma262/#sec-string.prototype.trimstart
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
 {
-    auto string = TRY(ak_string_from(vm, global_object));
-    return js_string(vm, Utf8View(string).trim(whitespace_characters, TrimMode::Left).as_string());
+    return js_string(vm, TRY(trim_string(global_object, vm.this_value(global_object), TrimMode::Left)));
 }
 
 // 22.1.3.31 String.prototype.trimEnd ( ), https://tc39.es/ecma262/#sec-string.prototype.trimend
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
 {
-    auto string = TRY(ak_string_from(vm, global_object));
-    return js_string(vm, Utf8View(string).trim(whitespace_characters, TrimMode::Right).as_string());
+    return js_string(vm, TRY(trim_string(global_object, vm.this_value(global_object), TrimMode::Right)));
 }
 
 // 22.1.3.5 String.prototype.concat ( ...args ), https://tc39.es/ecma262/#sec-string.prototype.concat
