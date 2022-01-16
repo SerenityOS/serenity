@@ -1,6 +1,6 @@
 ## Name
 
-Breakout
+![Icon](/res/icons/16x16/app-breakout.png) Breakout
 
 ## Synopsis
 
