@@ -1547,6 +1547,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             sigint_handler();
         });
 
+        if (script_paths.size() > 1)
+            warnln("Warning: Multiple files supplied, this will concatenate the sources and resolve modules as if it was the first file");
+
         StringBuilder builder;
         for (auto& path : script_paths) {
             auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
@@ -1555,10 +1558,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             builder.append(source);
         }
 
-        StringBuilder source_name_builder;
-        source_name_builder.join(", ", script_paths);
+        // We resolve modules as if it is the first file
 
-        if (!parse_and_run(*interpreter, builder.string_view(), source_name_builder.string_view()))
+        if (!parse_and_run(*interpreter, builder.string_view(), script_paths[0]))
             return 1;
     }
 
