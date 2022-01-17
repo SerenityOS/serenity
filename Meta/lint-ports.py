@@ -197,16 +197,17 @@ def get_port_properties(port):
     """
 
     props = {}
-    for prop in PORT_PROPERTIES:
-        res = subprocess.run(f"cd {port}; exec ./package.sh showproperty {prop}", shell=True, capture_output=True)
-        if res.returncode == 0:
-            props[prop] = res.stdout.decode('utf-8').strip()
-        else:
-            print((
-                f'Executing "./package.sh showproperty {prop}" script for port {port} failed with '
-                f'exit code {res.returncode}, output from stderr:\n{res.stderr.decode("utf-8").strip()}'
-            ))
-            props[prop] = ''
+    package_sh_command = f"./package.sh showproperty {' '.join(PORT_PROPERTIES)}"
+    res = subprocess.run(f"cd {port}; exec {package_sh_command}", shell=True, capture_output=True)
+    if res.returncode == 0:
+        results = res.stdout.decode('utf-8').split('\n\n')
+        props = {prop: results[i].strip() for i, prop in enumerate(PORT_PROPERTIES)}
+    else:
+        print((
+            f'Executing "{package_sh_command}" script for port {port} failed with '
+            f'exit code {res.returncode}, output from stderr:\n{res.stderr.decode("utf-8").strip()}'
+        ))
+        props = {x: '' for x in PORT_PROPERTIES}
     return props
 
 
