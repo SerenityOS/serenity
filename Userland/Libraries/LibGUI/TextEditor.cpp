@@ -1408,7 +1408,11 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
 {
     ReflowDeferrer defer(*this);
     VERIFY(is_editable());
-    if (has_selection())
+
+    // If some text is selected and the input is a tab, indent the content instead of replacing it.
+    auto const should_indent_content = has_selection() && text == "\t";
+
+    if (has_selection() && !should_indent_content)
         delete_selection();
 
     // Check if adding a newline leaves the previous line as just whitespace.
@@ -1417,7 +1421,29 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         && clear_length > 0
         && current_line().leading_spaces() == clear_length;
 
-    execute<InsertTextCommand>(text, m_cursor);
+    if (!should_indent_content)
+        execute<InsertTextCommand>(text, m_cursor);
+    else {
+        auto const on_same_line = m_selection.start().line() == m_selection.end().line();
+        auto const same_line_and_first = on_same_line && m_selection.start().column() < m_selection.end().column();
+        auto const is_start_first = same_line_and_first || (m_selection.start().line() < m_selection.end().line());
+
+        auto const start_position = is_start_first ? m_selection.start() : m_selection.end();
+        auto const end_position = is_start_first ? m_selection.end() : m_selection.start();
+
+        execute<InsertTextCommand>(text, start_position);
+        size_t shift_distance = m_soft_tab_width - (start_position.column() % m_soft_tab_width);
+
+        m_selection.set_start(TextPosition(start_position.line(), start_position.column() + shift_distance));
+
+        if (!on_same_line) {
+            for (size_t i = start_position.line() + 1; i <= end_position.line(); i++)
+                execute<InsertTextCommand>(text, TextPosition(i, 0));
+            shift_distance = m_soft_tab_width;
+        }
+
+        m_selection.set_end({ end_position.line(), end_position.column() + shift_distance });
+    }
 
     if (should_clear_last_line) { // If it does leave just whitespace, clear it.
         auto const original_cursor_position = cursor();
