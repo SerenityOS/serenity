@@ -10,6 +10,7 @@
 #include <LibAudio/Loader.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <math.h>
 #include <stdio.h>
@@ -20,6 +21,8 @@ constexpr size_t LOAD_CHUNK_SIZE = 128 * KiB;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    TRY(Core::System::pledge("stdio rpath sendfd unix"));
+
     const char* path = nullptr;
     bool should_loop = false;
     bool show_sample_progress = false;
@@ -30,6 +33,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(show_sample_progress, "Show playback progress in samples", "sample-progress", 's');
     args_parser.parse(arguments);
 
+    TRY(Core::System::unveil(Core::File::absolute_path(path), "r"));
+    TRY(Core::System::unveil("/tmp/portal/audio", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+
     Core::EventLoop loop;
 
     auto audio_client = TRY(Audio::ClientConnection::try_create());
@@ -39,6 +46,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
     auto loader = maybe_loader.release_value();
+
+    TRY(Core::System::pledge("stdio sendfd"));
 
     outln("\033[34;1m Playing\033[0m: {}", path);
     outln("\033[34;1m  Format\033[0m: {} {} Hz, {}-bit, {}",
