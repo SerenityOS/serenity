@@ -74,14 +74,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (file_to_edit) {
         FileArgument parsed_argument(file_to_edit);
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), parsed_argument.filename());
+        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, parsed_argument.filename());
 
-        if (response.error == 0) {
-            if (!text_widget->read_file_and_close(*response.fd, *response.chosen_file))
+        if (response.is_error() && response.error().code() == ENOENT) {
+            text_widget->open_nonexistent_file(parsed_argument.filename());
+        } else {
+            if (!text_widget->read_file(*response.value()))
                 return 1;
             text_widget->editor().set_cursor_and_focus_line(parsed_argument.line().value_or(1) - 1, parsed_argument.column().value_or(0));
-        } else {
-            text_widget->open_nonexistent_file(parsed_argument.filename());
         }
     }
     text_widget->update_title();
