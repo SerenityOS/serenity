@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-profiler.png) Profiler - Serenity process profiler
+Profiler - Serenity process profiler
 
 [Open](file:///bin/Profiler)
 
