@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +11,7 @@
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
+#include <LibWeb/Layout/InlineLevelIterator.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 
 namespace Web::Layout {
@@ -74,24 +75,16 @@ float InlineFormattingContext::available_width_at_line(size_t line_index) const
 void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
 {
     VERIFY(containing_block().children_are_inline());
-    containing_block().line_boxes().clear();
+
+    generate_line_boxes(layout_mode);
+
     containing_block().for_each_child([&](auto& child) {
         VERIFY(child.is_inline());
         if (is<Box>(child) && child.is_absolutely_positioned()) {
             layout_absolutely_positioned_element(verify_cast<Box>(child));
             return;
         }
-
-        child.split_into_lines(*this, layout_mode);
     });
-
-    for (auto& line_box : containing_block().line_boxes()) {
-        line_box.trim_trailing_whitespace();
-    }
-
-    // If there's an empty line box at the bottom, just remove it instead of giving it height.
-    if (!containing_block().line_boxes().is_empty() && containing_block().line_boxes().last().fragments().is_empty())
-        containing_block().line_boxes().take_last();
 
     auto text_align = containing_block().computed_values().text_align();
     float min_line_height = containing_block().line_height();
@@ -232,6 +225,62 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
     // I don't think we should be here. Dump the box tree so we can take a look at it.
     dbgln("FIXME: I've been asked to dimension a non-replaced, non-inline-block box on a line:");
     dump_tree(box);
+}
+
+void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
+{
+    auto& line_boxes = containing_block().line_boxes();
+    line_boxes.clear();
+    containing_block().ensure_last_line_box();
+
+    InlineLevelIterator iterator(containing_block(), layout_mode);
+
+    float available_width = containing_block().width();
+
+    for (;;) {
+        auto item_opt = iterator.next(available_width);
+        if (!item_opt.has_value())
+            break;
+        auto& item = item_opt.value();
+
+        float current_line_width = line_boxes.last().width();
+
+        bool should_break_here = layout_mode == LayoutMode::AllPossibleLineBreaks || (current_line_width + item.width) > available_width;
+
+        if (should_break_here)
+            line_boxes.append(LineBox());
+
+        if (item.type == InlineLevelIterator::Item::Type::ForcedBreak) {
+            line_boxes.append(LineBox());
+            continue;
+        }
+
+        if (item.type == InlineLevelIterator::Item::Type::Element) {
+            auto& box = verify_cast<Layout::Box>(*item.node);
+            dimension_box_on_line(box, LayoutMode::Default);
+            line_boxes.last().add_fragment(box, 0, 0, box.width(), box.height());
+            continue;
+        }
+
+        if (item.type == InlineLevelIterator::Item::Type::Text) {
+            auto& text_node = verify_cast<Layout::TextNode>(*item.node);
+            line_boxes.last().add_fragment(
+                text_node,
+                item.offset_in_node,
+                item.length_in_node,
+                item.width,
+                text_node.font().glyph_height());
+            continue;
+        }
+    }
+
+    for (auto& line_box : containing_block().line_boxes()) {
+        line_box.trim_trailing_whitespace();
+    }
+
+    // If there's an empty line box at the bottom, just remove it instead of giving it height.
+    if (!containing_block().line_boxes().is_empty() && containing_block().line_boxes().last().fragments().is_empty())
+        containing_block().line_boxes().take_last();
 }
 
 }

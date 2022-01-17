@@ -215,6 +215,7 @@ set(SOURCES
     Layout/ImageBox.cpp
     Layout/InitialContainingBlock.cpp
     Layout/InlineFormattingContext.cpp
+    Layout/InlineLevelIterator.cpp
     Layout/InlineNode.cpp
     Layout/Label.cpp
     Layout/LayoutPosition.cpp
