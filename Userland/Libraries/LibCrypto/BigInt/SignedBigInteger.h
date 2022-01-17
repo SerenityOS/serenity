@@ -143,6 +143,11 @@ struct SignedDivisionResult {
 
 }
 
+template<>
+struct AK::Formatter<Crypto::SignedBigInteger> : AK::Formatter<Crypto::UnsignedBigInteger> {
+    ErrorOr<void> format(FormatBuilder&, Crypto::SignedBigInteger const&);
+};
+
 inline Crypto::SignedBigInteger
 operator""_sbigint(const char* string, size_t length)
 {
