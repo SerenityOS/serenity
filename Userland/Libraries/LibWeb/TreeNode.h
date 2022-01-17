@@ -140,9 +140,29 @@ public:
         return node;
     }
 
+    T* next_in_pre_order(T const* stay_within)
+    {
+        if (first_child())
+            return first_child();
+
+        T* node = static_cast<T*>(this);
+        T* next = nullptr;
+        while (!(next = node->next_sibling())) {
+            node = node->parent();
+            if (!node || node == stay_within)
+                return nullptr;
+        }
+        return next;
+    }
+
     T const* next_in_pre_order() const
     {
         return const_cast<TreeNode*>(this)->next_in_pre_order();
+    }
+
+    T const* next_in_pre_order(T const* stay_within) const
+    {
+        return const_cast<TreeNode*>(this)->next_in_pre_order(stay_within);
     }
 
     T* previous_in_pre_order()
