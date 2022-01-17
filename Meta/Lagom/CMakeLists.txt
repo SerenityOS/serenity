@@ -474,7 +474,7 @@ if (BUILD_LAGOM)
         # Lagom Utilities
         add_executable(adjtime_lagom ../../Userland/Utilities/adjtime.cpp)
         set_target_properties(adjtime_lagom PROPERTIES OUTPUT_NAME adjtime)
-        target_link_libraries(adjtime_lagom LagomCore)
+        target_link_libraries(adjtime_lagom LagomCore LagomMain)
 
         add_executable(disasm_lagom ../../Userland/Utilities/disasm.cpp)
         set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
