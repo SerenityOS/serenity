@@ -54,8 +54,8 @@ private:
 
     virtual bool is_anonymous() const override { return true; }
 
-    Bitmap& ensure_cow_map();
-    void ensure_or_reset_cow_map();
+    ErrorOr<Bitmap*> try_ensure_cow_map();
+    ErrorOr<void> try_ensure_or_reset_cow_map();
 
     Optional<CommittedPhysicalPageSet> m_unused_committed_pages;
     Bitmap m_cow_map;

@@ -50,7 +50,7 @@ ErrorOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
 
     // Both original and clone become COW. So create a COW map for ourselves
     // or reset all pages to be copied again if we were previously cloned
-    ensure_or_reset_cow_map();
+    TRY(try_ensure_or_reset_cow_map());
 
     if (m_unused_committed_pages.has_value() && !m_unused_committed_pages->is_empty()) {
         // The parent vmobject didn't use up all committed pages. When
@@ -156,7 +156,8 @@ AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other, NonnullRefP
     , m_shared_committed_cow_pages(move(shared_committed_cow_pages))
     , m_purgeable(other.m_purgeable)
 {
-    ensure_cow_map();
+    // FIXME: Propagate errors
+    MUST(try_ensure_cow_map());
 }
 
 AnonymousVMObject::~AnonymousVMObject()
@@ -251,19 +252,20 @@ NonnullRefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(Badge<Reg
     return m_unused_committed_pages->take_one();
 }
 
-Bitmap& AnonymousVMObject::ensure_cow_map()
+ErrorOr<Bitmap*> AnonymousVMObject::try_ensure_cow_map()
 {
     if (m_cow_map.is_null())
-        m_cow_map = Bitmap::must_create_but_fixme_should_propagate_errors(page_count(), true);
-    return m_cow_map;
+        m_cow_map = TRY(Bitmap::try_create(page_count(), true));
+    return &m_cow_map;
 }
 
-void AnonymousVMObject::ensure_or_reset_cow_map()
+ErrorOr<void> AnonymousVMObject::try_ensure_or_reset_cow_map()
 {
     if (m_cow_map.is_null())
-        ensure_cow_map();
+        TRY(try_ensure_cow_map());
     else
         m_cow_map.fill(true);
+    return {};
 }
 
 bool AnonymousVMObject::should_cow(size_t page_index, bool is_shared) const
@@ -278,7 +280,8 @@ bool AnonymousVMObject::should_cow(size_t page_index, bool is_shared) const
 
 void AnonymousVMObject::set_should_cow(size_t page_index, bool cow)
 {
-    ensure_cow_map().set(page_index, cow);
+    // FIXME: Propagate errors
+    MUST(try_ensure_cow_map())->set(page_index, cow);
 }
 
 size_t AnonymousVMObject::cow_pages() const
