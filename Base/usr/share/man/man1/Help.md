@@ -1,6 +1,6 @@
 ## Name
 
-Help
+![Icon](/res/icons/16x16/app-help.png) Help
 
 ## Synopsis
 
