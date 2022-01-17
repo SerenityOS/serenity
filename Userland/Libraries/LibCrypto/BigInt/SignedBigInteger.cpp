@@ -308,3 +308,10 @@ bool SignedBigInteger::operator>=(const SignedBigInteger& other) const
 }
 
 }
+
+ErrorOr<void> AK::Formatter<Crypto::SignedBigInteger>::format(FormatBuilder& fmtbuilder, const Crypto::SignedBigInteger& value)
+{
+    if (value.is_negative())
+        TRY(fmtbuilder.put_string("-"));
+    return Formatter<Crypto::UnsignedBigInteger>::format(fmtbuilder, value.unsigned_value());
+}
