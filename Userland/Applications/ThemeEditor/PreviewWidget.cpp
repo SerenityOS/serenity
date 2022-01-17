@@ -142,16 +142,16 @@ void PreviewWidget::set_preview_palette(const Gfx::Palette& palette)
     update();
 }
 
-void PreviewWidget::set_theme_from_file(String const& path, int fd)
+void PreviewWidget::set_theme_from_file(Core::File& file)
 {
-    auto file = Core::ConfigFile::open(path, fd);
-    auto theme = Gfx::load_system_theme(file);
+    auto config_file = Core::ConfigFile::open(file.filename(), file.leak_fd());
+    auto theme = Gfx::load_system_theme(config_file);
     VERIFY(theme.is_valid());
 
     m_preview_palette = Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(theme));
     set_preview_palette(m_preview_palette);
     if (on_theme_load_from_file)
-        on_theme_load_from_file(path);
+        on_theme_load_from_file(file.filename());
 }
 
 void PreviewWidget::set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter> color_filter)
@@ -264,11 +264,10 @@ void PreviewWidget::drop_event(GUI::DropEvent& event)
             return;
         }
 
-        auto result = FileSystemAccessClient::Client::the().request_file(window()->window_id(), urls.first().path(), Core::OpenMode::ReadOnly);
-        if (result.error != 0)
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        if (response.is_error())
             return;
-
-        set_theme_from_file(urls.first().path(), *result.fd);
+        set_theme_from_file(*response.value());
     }
 }
 
