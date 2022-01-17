@@ -25,7 +25,7 @@ public:
     virtual void die() override;
 
 private:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>);
+    explicit ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
     virtual void request_file_read_only_approved(i32, i32, String const&) override;
     virtual void request_file(i32, i32, String const&, Core::OpenMode const&) override;

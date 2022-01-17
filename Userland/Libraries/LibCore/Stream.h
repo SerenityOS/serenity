@@ -229,7 +229,7 @@ public:
     int fd() const { return m_fd; }
     void set_fd(int fd) { m_fd = fd; }
 
-    ErrorOr<size_t> read(Bytes);
+    ErrorOr<size_t> read(Bytes, int flags = 0);
     ErrorOr<size_t> write(ReadonlyBytes);
 
     bool is_eof() const { return !is_open() || m_last_read_was_eof; }
@@ -379,6 +379,7 @@ private:
 class LocalSocket final : public Socket {
 public:
     static ErrorOr<NonnullOwnPtr<LocalSocket>> connect(String const& path);
+    static ErrorOr<NonnullOwnPtr<LocalSocket>> adopt_fd(int fd);
 
     LocalSocket(LocalSocket&& other)
         : Socket(static_cast<Socket&&>(other))
@@ -409,6 +410,11 @@ public:
     virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.can_read_without_blocking(timeout); }
     virtual ErrorOr<void> set_blocking(bool enabled) override { return m_helper.set_blocking(enabled); }
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.set_close_on_exec(enabled); }
+
+    ErrorOr<int> receive_fd(int flags);
+    ErrorOr<void> send_fd(int fd);
+    ErrorOr<pid_t> peer_pid() const;
+    ErrorOr<size_t> read_without_waiting(Bytes buffer);
 
     virtual ~LocalSocket() { close(); }
 

@@ -23,7 +23,7 @@ namespace JS::Bytecode {
 
 class Generator {
 public:
-    static Executable generate(ASTNode const&, FunctionKind = FunctionKind::Regular);
+    static Executable generate(ASTNode const&, FunctionKind = FunctionKind::Normal);
 
     Register allocate_register();
 
@@ -130,7 +130,7 @@ private:
 
     u32 m_next_register { 2 };
     u32 m_next_block { 1 };
-    FunctionKind m_enclosing_function_kind { FunctionKind::Regular };
+    FunctionKind m_enclosing_function_kind { FunctionKind::Normal };
     Vector<Label> m_continuable_scopes;
     Vector<Label> m_breakable_scopes;
 };

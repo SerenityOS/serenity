@@ -121,7 +121,6 @@ public:
 
     friend class Thread;
     friend class Coredump;
-    friend class ProcFSProcessOpenFileDescriptions;
 
     // Helper class to temporarily unprotect a process's protected data so you can write to it.
     class ProtectedDataMutationScope {
@@ -567,7 +566,7 @@ public:
     ErrorOr<void> procfs_get_binary_link(KBufferBuilder& builder) const;
     ErrorOr<void> procfs_get_current_work_directory_link(KBufferBuilder& builder) const;
     mode_t binary_link_required_mode() const;
-    ErrorOr<size_t> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
+    ErrorOr<void> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_stacks_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
     ErrorOr<NonnullRefPtr<Inode>> lookup_stacks_directory(const ProcFS&, StringView name) const;
     ErrorOr<size_t> procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const;
@@ -585,7 +584,7 @@ private:
         return nullptr;
     }
 
-    mutable IntrusiveListNode<Process> m_list_node;
+    IntrusiveListNode<Process> m_list_node;
 
     NonnullOwnPtr<KString> m_name;
 

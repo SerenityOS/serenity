@@ -17,7 +17,7 @@ class Buffer;
 class ClientConnection final
     : public IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>
     , public AudioClientEndpoint {
-    C_OBJECT(ClientConnection)
+    IPC_CLIENT_CONNECTION(ClientConnection, "/tmp/portal/audio")
 public:
     void enqueue(Buffer const&);
     bool try_enqueue(Buffer const&);
@@ -29,7 +29,7 @@ public:
     Function<void(double volume)> on_client_volume_change;
 
 private:
-    ClientConnection();
+    ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
     virtual void finished_playing_buffer(i32) override;
     virtual void main_mix_muted_state_changed(bool) override;

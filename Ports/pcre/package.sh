@@ -2,6 +2,7 @@
 port=pcre
 version=8.45
 useconfigure=true
+use_fresh_config_sub=true
 files="https://downloads.sourceforge.net/project/pcre/pcre/${version}/pcre-${version}.tar.gz pcre-${version}.tar.gz
 https://downloads.sourceforge.net/project/pcre/pcre/${version}/pcre-${version}.tar.gz.sig pcre-${version}.tar.gz.sig"
 

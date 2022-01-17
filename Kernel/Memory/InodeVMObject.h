@@ -28,8 +28,8 @@ public:
     u32 executable_mappings() const;
 
 protected:
-    explicit InodeVMObject(Inode&, size_t);
-    explicit InodeVMObject(InodeVMObject const&);
+    explicit InodeVMObject(Inode&, FixedArray<RefPtr<PhysicalPage>>&&);
+    explicit InodeVMObject(InodeVMObject const&, FixedArray<RefPtr<PhysicalPage>>&&);
 
     InodeVMObject& operator=(InodeVMObject const&) = delete;
     InodeVMObject& operator=(InodeVMObject&&) = delete;

@@ -1,0 +1,32 @@
+From e8fd707250d04c8d782175bec85fc82c2fe9ac67 Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 23:30:03 -0800
+Subject: [PATCH 06/12] serenity: Disable signal code validation for Serenity
+
+We don't currently have a definition for SEGV_ACCERR, so
+this validation is meaningless for SerenityOS.
+---
+ stress-sigsegv.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/stress-sigsegv.c b/stress-sigsegv.c
+index 18b1ca6..e6bdf17 100644
+--- a/stress-sigsegv.c
++++ b/stress-sigsegv.c
+@@ -196,10 +196,13 @@ static int stress_sigsegv(const stress_args_t *args)
+ 				pr_fail("%s: expecting SIGSEGV/SIGILL/SIGBUS, got %s instead\n",
+ 					args->name, strsignal(signo));
+ 			}
++
++#if !defined(__serenity__)
+ 			if (verify && (signo == SIGBUS) && (code != SEGV_ACCERR)) {
+ 				pr_fail("%s: expecting SIGBUS si_code SEGV_ACCERR (%d), got %d instead\n",
+ 					args->name, SEGV_ACCERR, code);
+ 			}
++#endif
+ #endif
+ 			inc_counter(args);
+ 		} else {
+-- 
+2.34.1
+

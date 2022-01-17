@@ -1,6 +1,6 @@
 ## Name
 
-Chess
+![Icon](/res/icons/16x16/app-chess.png) Chess
 
 ## Synopsis
 

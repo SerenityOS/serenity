@@ -8,7 +8,7 @@
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/GeneratorObject.h>
-#include <LibJS/Runtime/GeneratorObjectPrototype.h>
+#include <LibJS/Runtime/GeneratorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
@@ -21,7 +21,7 @@ ThrowCompletionOr<GeneratorObject*> GeneratorObject::create(GlobalObject& global
         // We implement async functions by transforming them to generator function in the bytecode
         // interpreter. However an async function does not have a prototype and should not be
         // changed thus we hardcode the prototype.
-        generating_function_prototype = global_object.generator_object_prototype();
+        generating_function_prototype = global_object.generator_prototype();
     } else {
         generating_function_prototype = TRY(generating_function->get(global_object.vm().names.prototype));
     }

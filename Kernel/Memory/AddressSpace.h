@@ -74,12 +74,6 @@ private:
 
     RedBlackTree<FlatPtr, NonnullOwnPtr<Region>> m_regions;
 
-    struct RegionLookupCache {
-        Optional<VirtualRange> range;
-        WeakPtr<Region> region;
-    };
-    RegionLookupCache m_region_lookup_cache;
-
     bool m_enforces_syscall_regions { false };
 };
 

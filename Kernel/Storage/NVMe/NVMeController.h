@@ -10,6 +10,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/Time.h>
 #include <AK/Tuple.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
@@ -63,6 +64,7 @@ private:
     {
         m_dbl_stride = (m_controller_regs->cap >> CAP_DBL_SHIFT) & CAP_DBL_MASK;
     }
+    bool wait_for_ready(bool);
 
 private:
     PCI::DeviceIdentifier m_pci_device_id;
@@ -72,6 +74,7 @@ private:
     Memory::TypedMapping<volatile ControllerRegister> m_controller_regs;
     bool m_admin_queue_ready { false };
     size_t m_device_count {};
+    AK::Time m_ready_timeout;
     u32 m_bar;
     u8 m_dbl_stride;
     static Atomic<u8> controller_id;

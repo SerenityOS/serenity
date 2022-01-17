@@ -15,7 +15,7 @@ class ClientConnection final : public LanguageServers::ClientConnection {
     C_OBJECT(ClientConnection);
 
 private:
-    ClientConnection(NonnullRefPtr<Core::LocalSocket> socket)
+    ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
         : LanguageServers::ClientConnection(move(socket))
     {
         m_autocomplete_engine = make<CppComprehensionEngine>(m_filedb);

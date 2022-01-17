@@ -26,17 +26,6 @@ diff -Naur binutils-2.37/bfd/config.bfd binutils-2.37.serenity/bfd/config.bfd
    aarch64-*-darwin*)
      targ_defvec=aarch64_mach_o_vec
      targ_selvecs="arm_mach_o_vec mach_o_le_vec mach_o_be_vec mach_o_fat_vec"
-diff -Naur binutils-2.37/config.sub binutils-2.37.serenity/config.sub
---- binutils-2.37/config.sub	2021-07-08 13:37:19.000000000 +0200
-+++ binutils-2.37.serenity/config.sub	2021-07-28 18:03:58.972705458 +0200
-@@ -1700,6 +1700,7 @@
- 	# The portable systems comes first.
- 	# Each alternative MUST end in a * to match a version number.
- 	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
-+	     | serenity* \
- 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
- 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
- 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
 diff -Naur binutils-2.37/gas/configure.tgt binutils-2.37.serenity/gas/configure.tgt
 --- binutils-2.37/gas/configure.tgt	2021-07-08 13:37:19.000000000 +0200
 +++ binutils-2.37.serenity/gas/configure.tgt	2021-07-28 18:03:58.972705458 +0200

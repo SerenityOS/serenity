@@ -17,6 +17,11 @@ if [ "$#" -eq "0" ]; then
 else
     files=()
     for file in "$@"; do
+        # Skip ports, like we in the CI case above.
+        if [[ "${file}" =~ "Ports" ]]; then
+           continue
+        fi
+
         if [[ "${file}" == *".sh" && "${file}" != "Base/root/generate_manpages.sh" ]]; then
             files+=("${file}")
         fi

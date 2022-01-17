@@ -28,7 +28,7 @@ StringView current_time_zone()
         tzset();
     }
 
-    return tzname[0];
+    return canonicalize_time_zone(tzname[0]).value_or("UTC"sv);
 }
 
 Optional<TimeZone> __attribute__((weak)) time_zone_from_string([[maybe_unused]] StringView time_zone)

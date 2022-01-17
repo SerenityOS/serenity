@@ -351,6 +351,29 @@ function variance(cells) {
     return (count * squares - sums * sums) / count;
 }
 
+function mode(cells) {
+    const counts = numericReduce(
+        (map, x) => {
+            if (!map.has(x)) map.set(x, 0);
+            map.set(x, map.get(x) + 1);
+            return map;
+        },
+        new Map(),
+        cells
+    );
+
+    let mostCommonValue = undefined;
+    let mostCommonCount = -1;
+    counts.forEach((count, value) => {
+        if (count > mostCommonCount) {
+            mostCommonCount = count;
+            mostCommonValue = value;
+        }
+    });
+
+    return mostCommonValue;
+}
+
 function stddev(cells) {
     return Math.sqrt(variance(cells));
 }
@@ -728,14 +751,23 @@ variance.__documentation = JSON.stringify({
                 },
                 E4: {
                     kind: "Formula",
+                    source: "mode(R`A0:C4`)",
+                    value: "1",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "mode: %d",
+                    },
+                },
+                E5: {
+                    kind: "Formula",
                     source: "count(R`A0:C4`)",
-                    value: "15",
+                    value: "12",
                     type: "Numeric",
                     type_metadata: {
                         format: "count: %d",
                     },
                 },
-                E5: {
+                E6: {
                     kind: "Formula",
                     source: "sum(R`A0:C4`)",
                     value: "18",
@@ -768,6 +800,17 @@ variance.__documentation = JSON.stringify({
                     }, {}),
             },
         },
+    },
+});
+
+mode.__documentation = JSON.stringify({
+    name: "mode",
+    argc: 1,
+    argnames: ["cell names"],
+    doc: "Calculates the mode of the numeric values in the given range of cells, i.e. the value that appears most often",
+    examples: {
+        'mode(range("A2", "A14"))':
+            "Calculate the mode of the values in A2:A14, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 

@@ -41,14 +41,15 @@ public:
             { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png")) },
             { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png")) }
         };
-        NonnullRefPtr<AudioWidget> audio_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(volume_level_bitmaps))));
+        auto audio_client = TRY(Audio::ClientConnection::try_create());
+        NonnullRefPtr<AudioWidget> audio_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(audio_client), move(volume_level_bitmaps))));
         TRY(audio_widget->try_initialize_graphical_elements());
         return audio_widget;
     }
 
 private:
-    AudioWidget(Vector<VolumeBitmapPair, 5> volume_level_bitmaps)
-        : m_audio_client(Audio::ClientConnection::construct())
+    AudioWidget(NonnullRefPtr<Audio::ClientConnection> audio_client, Vector<VolumeBitmapPair, 5> volume_level_bitmaps)
+        : m_audio_client(move(audio_client))
         , m_volume_level_bitmaps(move(volume_level_bitmaps))
         , m_show_percent(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false))
     {

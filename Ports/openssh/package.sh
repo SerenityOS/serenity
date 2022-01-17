@@ -6,11 +6,13 @@ files="https://github.com/openssh/openssh-portable/archive/9ca7e9c861775dd6c6312
 auth_type=sha256
 depends=("zlib" "openssl")
 useconfigure=true
+use_fresh_config_sub=true
 configopts=("--prefix=/usr/local" "--disable-utmp" "--disable-strip" "--sysconfdir=/etc/ssh" "--with-ssl-dir=${SERENITY_INSTALL_ROOT}/usr/local/lib")
 
 export LDFLAGS="-lcrypt -lcore"
 
 pre_configure() {
+    ensure_new_config_sub
     run autoreconf
 }
 

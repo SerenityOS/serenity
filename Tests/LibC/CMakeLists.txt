@@ -9,6 +9,7 @@ set(TEST_SOURCES
     TestLibCSetjmp.cpp
     TestLibCString.cpp
     TestLibCTime.cpp
+    TestMalloc.cpp
     TestMemmem.cpp
     TestQsort.cpp
     TestRaise.cpp
@@ -17,6 +18,7 @@ set(TEST_SOURCES
     TestSearch.cpp
     TestSnprintf.cpp
     TestStackSmash.cpp
+    TestStdio.cpp
     TestStrlcpy.cpp
     TestStrtodAccuracy.cpp
     TestWchar.cpp

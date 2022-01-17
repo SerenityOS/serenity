@@ -12,6 +12,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Lexer.h>
+#include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/SourceRange.h>
 #include <stdio.h>
 
@@ -172,6 +173,9 @@ public:
     struct TokenMemoization {
         bool try_parse_arrow_function_expression_failed;
     };
+
+    // Needs to mess with m_state, and we're not going to expose a non-const getter for that :^)
+    friend ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic_function(GlobalObject&, FunctionObject&, FunctionObject*, FunctionKind, MarkedValueList const&);
 
 private:
     friend class ScopePusher;

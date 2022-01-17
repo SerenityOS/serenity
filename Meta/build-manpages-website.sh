@@ -105,3 +105,12 @@ pandoc -f gfm -t html5 -s \
 
 # Copy pre-made files
 cp Meta/Websites/man.serenityos.org/banner.png output/
+
+# Copy icons
+mkdir output/icons
+
+while read -r p; do
+  rsync -a --relative Base/res/icons/./"$p" output/icons/
+done < icons.txt
+
+rm icons.txt

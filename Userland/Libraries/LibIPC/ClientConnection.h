@@ -24,12 +24,12 @@ public:
     using ServerStub = typename ServerEndpoint::Stub;
     using IPCProxy = typename ClientEndpoint::template Proxy<ServerEndpoint>;
 
-    ClientConnection(ServerStub& stub, NonnullRefPtr<Core::LocalSocket> socket, int client_id)
+    ClientConnection(ServerStub& stub, NonnullOwnPtr<Core::Stream::LocalSocket> socket, int client_id)
         : IPC::Connection<ServerEndpoint, ClientEndpoint>(stub, move(socket))
         , ClientEndpoint::template Proxy<ServerEndpoint>(*this, {})
         , m_client_id(client_id)
     {
-        VERIFY(this->socket().is_connected());
+        VERIFY(this->socket().is_open());
         this->socket().on_ready_to_read = [this] {
             // FIXME: Do something about errors.
             (void)this->drain_messages_from_peer();

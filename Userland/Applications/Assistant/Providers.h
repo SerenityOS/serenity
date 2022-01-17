@@ -128,7 +128,7 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
-class Provider {
+class Provider : public RefCounted<Provider> {
 public:
     virtual ~Provider() = default;
 

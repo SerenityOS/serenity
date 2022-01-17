@@ -100,12 +100,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto mapped_file = TRY(Core::MappedFile::map(zip_file_path));
+    RefPtr<Core::MappedFile> mapped_file;
+    ReadonlyBytes input_bytes;
+    if (st.st_size > 0) {
+        mapped_file = TRY(Core::MappedFile::map(zip_file_path));
+        input_bytes = mapped_file->bytes();
+    }
 
     if (!quiet)
         warnln("Archive: {}", zip_file_path);
 
-    auto zip_file = Archive::Zip::try_create(mapped_file->bytes());
+    auto zip_file = Archive::Zip::try_create(input_bytes);
     if (!zip_file.has_value()) {
         warnln("Invalid zip file {}", zip_file_path);
         return 1;

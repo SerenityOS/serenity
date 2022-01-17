@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -645,10 +645,10 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 {
     SpinlockLocker lock(s_mm_lock);
-    auto* region_ptr = MM.m_kernel_regions.find_largest_not_above(vaddr.get());
-    if (!region_ptr)
+    auto* region = MM.m_kernel_regions.find_largest_not_above(vaddr.get());
+    if (!region || !region->contains(vaddr))
         return nullptr;
-    return (*region_ptr)->contains(vaddr) ? *region_ptr : nullptr;
+    return region;
 }
 
 Region* MemoryManager::find_user_region_from_vaddr_no_lock(AddressSpace& space, VirtualAddress vaddr)
@@ -1107,18 +1107,18 @@ bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vadd
     return validate_user_stack_no_lock(space, vaddr);
 }
 
-void MemoryManager::register_region(Region& region)
+void MemoryManager::register_kernel_region(Region& region)
 {
+    VERIFY(region.is_kernel());
     SpinlockLocker lock(s_mm_lock);
-    if (region.is_kernel())
-        m_kernel_regions.insert(region.vaddr().get(), &region);
+    m_kernel_regions.insert(region.vaddr().get(), region);
 }
 
-void MemoryManager::unregister_region(Region& region)
+void MemoryManager::unregister_kernel_region(Region& region)
 {
+    VERIFY(region.is_kernel());
     SpinlockLocker lock(s_mm_lock);
-    if (region.is_kernel())
-        m_kernel_regions.remove(region.vaddr().get());
+    m_kernel_regions.remove(region.vaddr().get());
 }
 
 void MemoryManager::dump_kernel_regions()
@@ -1132,8 +1132,7 @@ void MemoryManager::dump_kernel_regions()
     dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
         addr_padding, addr_padding, addr_padding);
     SpinlockLocker lock(s_mm_lock);
-    for (auto const* region_ptr : m_kernel_regions) {
-        auto const& region = *region_ptr;
+    for (auto const& region : m_kernel_regions) {
         dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}",
             region.vaddr().get(),
             region.vaddr().offset(region.size() - 1).get(),

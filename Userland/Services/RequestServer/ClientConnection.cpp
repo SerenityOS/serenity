@@ -15,7 +15,7 @@ namespace RequestServer {
 
 static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
-ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket)
+ClientConnection::ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
     : IPC::ClientConnection<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), 1)
 {
     s_connections.set(1, *this);

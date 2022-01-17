@@ -2,16 +2,19 @@
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2020, Nico Weber <thakis@chromium.org>
  * Copyright (c) 2021, Petróczi Zoltán <petroczizoltan@tutanota.com>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
+#include <AK/Time.h>
 #include <LibCore/DateTime.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/DateConstructor.h>
+#include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/VM.h>
 #include <sys/time.h>
@@ -20,7 +23,7 @@
 namespace JS {
 
 // 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
-static Value parse_simplified_iso8601(const String& iso_8601)
+static Value parse_simplified_iso8601(GlobalObject& global_object, const String& iso_8601)
 {
     // 21.4.1.15 Date Time String Format, https://tc39.es/ecma262/#sec-date-time-string-format
     GenericLexer lexer(iso_8601);
@@ -99,35 +102,25 @@ static Value parse_simplified_iso8601(const String& iso_8601)
 
     // We parsed a valid date simplified ISO 8601 string.
     VERIFY(year.has_value()); // A valid date string always has at least a year.
-    struct tm tm = {};
-    tm.tm_year = *year - 1900;
-    tm.tm_mon = !month.has_value() ? 0 : *month - 1;
-    tm.tm_mday = day.value_or(1);
-    tm.tm_hour = hours.value_or(0);
-    tm.tm_min = minutes.value_or(0);
-    tm.tm_sec = seconds.value_or(0);
+    auto time = AK::Time::from_timestamp(*year, month.value_or(1), day.value_or(1), hours.value_or(0), minutes.value_or(0), seconds.value_or(0), milliseconds.value_or(0));
+    auto time_ms = static_cast<double>(time.to_milliseconds());
 
     // https://tc39.es/ecma262/#sec-date.parse:
     // "When the UTC offset representation is absent, date-only forms are interpreted as a UTC time and date-time forms are interpreted as a local time."
-    time_t timestamp;
-    if (timezone.has_value() || !hours.has_value())
-        timestamp = timegm(&tm);
-    else
-        timestamp = mktime(&tm);
+    if (!timezone.has_value() && hours.has_value())
+        time_ms = utc_time(time_ms);
 
     if (timezone == '-')
-        timestamp += (*timezone_hours * 60 + *timezone_minutes) * 60;
+        time_ms += *timezone_hours * 3'600'000 + *timezone_minutes * 60'000;
     else if (timezone == '+')
-        timestamp -= (*timezone_hours * 60 + *timezone_minutes) * 60;
+        time_ms -= *timezone_hours * 3'600'000 + *timezone_minutes * 60'000;
 
-    // FIXME: reject timestamp if resulting value wouldn't fit in a double
-
-    return Value(1000.0 * timestamp + milliseconds.value_or(0));
+    return time_clip(global_object, Value(time_ms));
 }
 
-static Value parse_date_string(String const& date_string)
+static Value parse_date_string(GlobalObject& global_object, String const& date_string)
 {
-    auto value = parse_simplified_iso8601(date_string);
+    auto value = parse_simplified_iso8601(global_object, date_string);
     if (value.is_finite_number())
         return value;
 
@@ -165,26 +158,15 @@ DateConstructor::~DateConstructor()
 {
 }
 
-struct DatetimeAndMilliseconds {
-    Core::DateTime datetime;
-    i16 milliseconds { 0 };
-};
-
-static DatetimeAndMilliseconds now()
-{
-    struct timeval tv;
-    gettimeofday(&tv, nullptr);
-    auto datetime = Core::DateTime::now();
-    auto milliseconds = static_cast<i16>(tv.tv_usec / 1000);
-    return { datetime, milliseconds };
-}
-
 // 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
 ThrowCompletionOr<Value> DateConstructor::call()
 {
-    auto [datetime, milliseconds] = JS::now();
-    auto* date = Date::create(global_object(), datetime, milliseconds, false);
-    return js_string(heap(), date->string());
+    // 1. If NewTarget is undefined, then
+    //     a. Let now be the time value (UTC) identifying the current time.
+    auto now = AK::Time::now_realtime().to_milliseconds();
+
+    //     b. Return ToDateString(now).
+    return js_string(vm(), to_date_string(now));
 }
 
 // 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
@@ -193,91 +175,94 @@ ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
+    Value date_value;
+
+    // 2. Let numberOfArgs be the number of elements in values.
+    // 3. If numberOfArgs = 0, then
     if (vm.argument_count() == 0) {
-        auto [datetime, milliseconds] = JS::now();
-        return TRY(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
+        // a. Let dv be the time value (UTC) identifying the current time.
+        auto now = AK::Time::now_realtime().to_milliseconds();
+        date_value = Value(static_cast<double>(now));
     }
-
-    auto create_invalid_date = [&global_object, &new_target]() -> ThrowCompletionOr<Date*> {
-        auto datetime = Core::DateTime::create(1970, 1, 1, 0, 0, 0);
-        auto milliseconds = static_cast<i16>(0);
-        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, true);
-    };
-
-    if (vm.argument_count() == 1) {
+    // 4. Else if numberOfArgs = 1, then
+    else if (vm.argument_count() == 1) {
+        // a. Let value be values[0].
         auto value = vm.argument(0);
-        if (value.is_string())
-            value = parse_date_string(value.as_string().string());
-        else
-            value = TRY(value.to_number(global_object));
+        Value time_value;
 
-        if (!value.is_finite_number())
-            return TRY(create_invalid_date());
+        // b. If Type(value) is Object and value has a [[DateValue]] internal slot, then
+        if (value.is_object() && is<Date>(value.as_object())) {
+            // i. Let tv be ! thisTimeValue(value).
+            time_value = MUST(this_time_value(global_object, value));
+        }
+        // c. Else,
+        else {
+            // i. Let v be ? ToPrimitive(value).
+            auto primitive = TRY(value.to_primitive(global_object));
 
-        // A timestamp since the epoch, in UTC.
-        double value_as_double = value.as_double();
-        if (value_as_double > Date::time_clip)
-            return TRY(create_invalid_date());
-        auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
-        auto milliseconds = static_cast<i16>(fmod(value_as_double, 1000));
-        return TRY(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
+            // ii. If Type(v) is String, then
+            if (primitive.is_string()) {
+                // 1. Assert: The next step never returns an abrupt completion because Type(v) is String.
+                // 2. Let tv be the result of parsing v as a date, in exactly the same manner as for the parse method (21.4.3.2).
+                time_value = parse_date_string(global_object, primitive.as_string().string());
+            }
+            // iii. Else,
+            else {
+                // 1. Let tv be ? ToNumber(v).
+                time_value = TRY(primitive.to_number(global_object));
+            }
+        }
+
+        // d. Let dv be TimeClip(tv).
+        date_value = time_clip(global_object, time_value);
+    }
+    // 5. Else,
+    else {
+        // a. Assert: numberOfArgs ≥ 2.
+        // b. Let y be ? ToNumber(values[0]).
+        auto year = TRY(vm.argument(0).to_number(global_object));
+        // c. Let m be ? ToNumber(values[1]).
+        auto month = TRY(vm.argument(1).to_number(global_object));
+
+        auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
+            return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
+        };
+
+        // d. If numberOfArgs > 2, let dt be ? ToNumber(values[2]); else let dt be 1𝔽.
+        auto date = TRY(arg_or(2, 1));
+        // e. If numberOfArgs > 3, let h be ? ToNumber(values[3]); else let h be +0𝔽.
+        auto hours = TRY(arg_or(3, 0));
+        // f. If numberOfArgs > 4, let min be ? ToNumber(values[4]); else let min be +0𝔽.
+        auto minutes = TRY(arg_or(4, 0));
+        // g. If numberOfArgs > 5, let s be ? ToNumber(values[5]); else let s be +0𝔽.
+        auto seconds = TRY(arg_or(5, 0));
+        // h. If numberOfArgs > 6, let milli be ? ToNumber(values[6]); else let milli be +0𝔽.
+        auto milliseconds = TRY(arg_or(6, 0));
+
+        // i. If y is NaN, let yr be NaN.
+        // j. Else,
+        if (!year.is_nan()) {
+            // i. Let yi be ! ToIntegerOrInfinity(y).
+            auto year_double = MUST(year.to_integer_or_infinity(global_object));
+
+            // ii. If 0 ≤ yi ≤ 99, let yr be 1900𝔽 + 𝔽(yi); otherwise, let yr be y.
+            if (0 <= year_double && year_double <= 99)
+                year = Value(1900 + year_double);
+        }
+
+        // k. Let finalDate be MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)).
+        auto day = make_day(global_object, year, month, date);
+        auto time = make_time(global_object, hours, minutes, seconds, milliseconds);
+        auto final_date = make_date(day, time);
+
+        // l. Let dv be TimeClip(UTC(finalDate)).
+        date_value = time_clip(global_object, Value(utc_time(final_date.as_double())));
     }
 
-    // A date/time in components, in local time.
-    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
-        return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
-    };
-
-    auto year_value = TRY(vm.argument(0).to_number(global_object));
-    if (!year_value.is_finite_number())
-        return TRY(create_invalid_date());
-    auto year = year_value.as_i32();
-
-    auto month_index_value = TRY(vm.argument(1).to_number(global_object));
-    if (!month_index_value.is_finite_number())
-        return TRY(create_invalid_date());
-    auto month_index = month_index_value.as_i32();
-
-    auto day_value = TRY(arg_or(2, 1));
-    if (!day_value.is_finite_number())
-        return TRY(create_invalid_date());
-    auto day = day_value.as_i32();
-
-    auto hours_value = TRY(arg_or(3, 0));
-    if (!hours_value.is_finite_number())
-        return TRY(create_invalid_date());
-    auto hours = hours_value.as_i32();
-
-    auto minutes_value = TRY(arg_or(4, 0));
-    if (!minutes_value.is_finite_number())
-        return TRY(create_invalid_date());
-    auto minutes = minutes_value.as_i32();
-
-    auto seconds_value = TRY(arg_or(5, 0));
-    if (!seconds_value.is_finite_number())
-        return TRY(create_invalid_date());
-    auto seconds = seconds_value.as_i32();
-
-    auto milliseconds_value = TRY(arg_or(6, 0));
-    if (!milliseconds_value.is_finite_number())
-        return TRY(create_invalid_date());
-    auto milliseconds = milliseconds_value.as_i32();
-
-    seconds += milliseconds / 1000;
-    milliseconds %= 1000;
-    if (milliseconds < 0) {
-        seconds -= 1;
-        milliseconds += 1000;
-    }
-
-    if (year >= 0 && year <= 99)
-        year += 1900;
-    int month = month_index + 1;
-    auto datetime = Core::DateTime::create(year, month, day, hours, minutes, seconds);
-    auto time = datetime.timestamp() * 1000.0 + milliseconds;
-    if (time > Date::time_clip)
-        return TRY(create_invalid_date());
-    return TRY(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
+    // 6. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Date.prototype%", « [[DateValue]] »).
+    // 7. Set O.[[DateValue]] to dv.
+    // 8. Return O.
+    return TRY(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, date_value.as_double()));
 }
 
 // 21.4.3.1 Date.now ( ), https://tc39.es/ecma262/#sec-date.now
@@ -296,7 +281,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 
     auto date_string = TRY(vm.argument(0).to_string(global_object));
 
-    return parse_date_string(date_string);
+    return parse_date_string(global_object, date_string);
 }
 
 // 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc

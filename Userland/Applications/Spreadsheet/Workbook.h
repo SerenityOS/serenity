@@ -15,10 +15,11 @@ namespace Spreadsheet {
 
 class Workbook {
 public:
-    Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window* parent_window);
+    Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_window);
 
     Result<bool, String> save(StringView filename);
     Result<bool, String> load(StringView filename);
+    Result<bool, String> open_file(int fd, StringView filename);
 
     const String& current_filename() const { return m_current_filename; }
     bool set_filename(const String& filename);
@@ -48,7 +49,7 @@ private:
     JS::VM::InterpreterExecutionScope m_interpreter_scope;
     WorkbookObject* m_workbook_object { nullptr };
     JS::ExecutionContext m_main_execution_context;
-    GUI::Window* m_parent_window { nullptr };
+    GUI::Window& m_parent_window;
 
     String m_current_filename;
     bool m_dirty { false };

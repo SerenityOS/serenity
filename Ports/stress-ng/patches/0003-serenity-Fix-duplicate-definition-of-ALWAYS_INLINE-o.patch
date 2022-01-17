@@ -1,0 +1,29 @@
+From fc1915941417ecea79023636925448d2a0f06853 Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 20:58:41 -0800
+Subject: [PATCH 03/12] serenity: Fix duplicate definition of ALWAYS_INLINE on
+ serenity
+
+---
+ stress-ng.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/stress-ng.h b/stress-ng.h
+index 41fb906..837790b 100644
+--- a/stress-ng.h
++++ b/stress-ng.h
+@@ -1234,6 +1234,11 @@ typedef struct {
+ #define WEAK
+ #endif
+ 
++/* Serenity already defines this in sys/cdefs.h, just undefine it */
++#ifdef __serenity__
++    #undef ALWAYS_INLINE
++#endif
++
+ /* force inlining hint */
+ #if (defined(__GNUC__) && NEED_GNUC(3, 4, 0) 					\
+      && ((!defined(__s390__) && !defined(__s390x__)) || NEED_GNUC(6, 0, 1))) ||	\
+-- 
+2.34.1
+

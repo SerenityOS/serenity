@@ -1,6 +1,6 @@
 ## Name
 
-Inspector - Serenity process inspector
+![Icon](/res/icons/16x16/app-inspector.png) Inspector - Serenity process inspector
 
 [Open](file:///bin/Inspector)
 
@@ -28,4 +28,3 @@ via UNIX socket.
 ```sh
 $ Inspector $(pidof Shell)
 ```
-

@@ -29,14 +29,20 @@ namespace Web::HTML {
 
 WebSocketClientManager& WebSocketClientManager::the()
 {
-    static WebSocketClientManager* s_the;
+    static RefPtr<WebSocketClientManager> s_the;
     if (!s_the)
-        s_the = &WebSocketClientManager::construct().leak_ref();
+        s_the = WebSocketClientManager::try_create().release_value_but_fixme_should_propagate_errors();
     return *s_the;
 }
 
-WebSocketClientManager::WebSocketClientManager()
-    : m_websocket_client(Protocol::WebSocketClient::construct())
+ErrorOr<NonnullRefPtr<WebSocketClientManager>> WebSocketClientManager::try_create()
+{
+    auto websocket_client = TRY(Protocol::WebSocketClient::try_create());
+    return adopt_nonnull_ref_or_enomem(new (nothrow) WebSocketClientManager(move(websocket_client)));
+}
+
+WebSocketClientManager::WebSocketClientManager(NonnullRefPtr<Protocol::WebSocketClient> websocket_client)
+    : m_websocket_client(move(websocket_client))
 {
 }
 

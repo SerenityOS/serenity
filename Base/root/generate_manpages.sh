@@ -8,7 +8,6 @@ echo
 rm -rf generated_manpages || exit 1
 
 for i in ( \
-            (Eyes 1) \
             (UserspaceEmulator 1) \
             (TelnetServer 1) \
             (WebServer 1) \

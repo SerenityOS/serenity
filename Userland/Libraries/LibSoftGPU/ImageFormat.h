@@ -16,12 +16,17 @@ enum class ImageFormat {
     BGR888,
     RGBA8888,
     BGRA8888,
+    L8,
+    L8A8,
 };
 
 inline static constexpr size_t element_size(ImageFormat format)
 {
     switch (format) {
+    case ImageFormat::L8:
+        return 1;
     case ImageFormat::RGB565:
+    case ImageFormat::L8A8:
         return 2;
     case ImageFormat::RGB888:
     case ImageFormat::BGR888:
@@ -83,6 +88,26 @@ inline static FloatVector4 unpack_color(void const* ptr, ImageFormat format)
             1.0f
         };
     }
+    case ImageFormat::L8: {
+        auto luminance = *reinterpret_cast<u8 const*>(ptr);
+        auto clamped_luminance = luminance * one_over_255;
+        return {
+            clamped_luminance,
+            clamped_luminance,
+            clamped_luminance,
+            1.0f,
+        };
+    }
+    case ImageFormat::L8A8: {
+        auto luminance_and_alpha = reinterpret_cast<u8 const*>(ptr);
+        auto clamped_luminance = luminance_and_alpha[0] * one_over_255;
+        return {
+            clamped_luminance,
+            clamped_luminance,
+            clamped_luminance,
+            luminance_and_alpha[1] * one_over_255,
+        };
+    }
     default:
         VERIFY_NOT_REACHED();
     }
@@ -114,6 +139,13 @@ inline static void pack_color(FloatVector4 const& color, void* ptr, ImageFormat 
         return;
     case ImageFormat::RGB565:
         *reinterpret_cast<u16*>(ptr) = (r & 0x1f) | ((g & 0x3f) << 5) | ((b & 0x1f) << 11);
+        return;
+    case ImageFormat::L8:
+        *reinterpret_cast<u8*>(ptr) = r;
+        return;
+    case ImageFormat::L8A8:
+        reinterpret_cast<u8*>(ptr)[0] = r;
+        reinterpret_cast<u8*>(ptr)[1] = a;
         return;
     default:
         VERIFY_NOT_REACHED();

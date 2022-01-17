@@ -13,25 +13,23 @@ First, make sure you have a working toolchain and can build and run SerenityOS. 
 * Set `Add to version control` to `<None>`. Click Finish.
 * In your shell, go to your SerenityOS project directory, and invoke the `Meta/refresh-serenity-qtcreator.sh` script to regenerate the `serenity.files` file. You will also have to do this every time you delete or add a new file to the project.
 * Edit the `serenity.config` file (In Qt Creator, hit ^K or CMD+K on a Mac to open the search dialog, type the name of the file and hit return to open it)
-* Add the following `#define`s to the file: `SANITIZE_PTRS`, and `KERNEL`. Depending on what you are working on, you need to have that last define commented out. If you're planning on working in the userland, comment out `#define KERNEL`. If you're working on the Kernel, then uncomment `#define KERNEL`.
+* Add the following `#define`s to the file: `SANITIZE_PTRS`, `__serenity__` and `KERNEL`. `__serenity__` define is needed to recognize functions like `unveil`. Depending on what you are working on, you need to have that last define commented out. If you're planning on working in the userland, comment out `#define KERNEL`. If you're working on the Kernel, then uncomment `#define KERNEL`.
 * Edit the `serenity.cxxflags` file to say `-std=c++2a -m32`
-* Edit the `serenity.includes` file, add the following lines:
+* Edit the `serenity.includes` file to list the following lines:
 
 ```
 .
-..
-../..
 Userland/Services/
 Userland/Libraries/
 Userland/Libraries/LibC/
 Userland/Libraries/LibM/
 Userland/Libraries/LibPthread/
 Userland/Libraries/LibSystem/
-Toolchain/Local/i686/i686-pc-serenity/include/c++/10.2.0
-Build/
-Build/Userland/
-Build/Userland/Services/
-Build/Userland/Libraries/
+Toolchain/Local/i686/i686-pc-serenity/include/c++/11.2.0
+Build/i686/
+Build/i686/Userland/
+Build/i686/Userland/Services/
+Build/i686/Userland/Libraries/
 AK/
 ```
 

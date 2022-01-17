@@ -12,7 +12,7 @@ namespace InspectorServer {
 
 static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
-ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
+ClientConnection::ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, int client_id)
     : IPC::ClientConnection<InspectorClientEndpoint, InspectorServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);

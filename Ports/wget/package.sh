@@ -2,6 +2,8 @@
 port=wget
 version=1.21.1
 useconfigure="true"
+use_fresh_config_sub=true
+config_sub_path=build-aux/config.sub
 depends=("openssl")
 files="https://ftpmirror.gnu.org/gnu/wget/wget-${version}.tar.gz wget-${version}.tar.gz
 https://ftpmirror.gnu.org/gnu/wget/wget-${version}.tar.gz.sig wget-${version}.tar.gz.sig

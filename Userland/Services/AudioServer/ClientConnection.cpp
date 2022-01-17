@@ -22,7 +22,7 @@ void ClientConnection::for_each(Function<void(ClientConnection&)> callback)
         callback(connection);
 }
 
-ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socket, int client_id, Mixer& mixer)
+ClientConnection::ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> client_socket, int client_id, Mixer& mixer)
     : IPC::ClientConnection<AudioClientEndpoint, AudioServerEndpoint>(*this, move(client_socket), client_id)
     , m_mixer(mixer)
 {

@@ -4,6 +4,7 @@ set(SOURCES
     Device.cpp
     Image.cpp
     Sampler.cpp
+    StencilBuffer.cpp
 )
 
 add_compile_options(-Wno-psabi)

@@ -9,15 +9,15 @@
 
 namespace Kernel::Memory {
 
-InodeVMObject::InodeVMObject(Inode& inode, size_t size)
-    : VMObject(size)
+InodeVMObject::InodeVMObject(Inode& inode, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
+    : VMObject(move(new_physical_pages))
     , m_inode(inode)
     , m_dirty_pages(page_count(), false)
 {
 }
 
-InodeVMObject::InodeVMObject(InodeVMObject const& other)
-    : VMObject(other)
+InodeVMObject::InodeVMObject(InodeVMObject const& other, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
+    : VMObject(move(new_physical_pages))
     , m_inode(other.m_inode)
     , m_dirty_pages(page_count(), false)
 {

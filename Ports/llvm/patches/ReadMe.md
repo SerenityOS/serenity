@@ -32,3 +32,14 @@ stack-smashing protection and building position-independent executables by defau
 - [x] Should be merged to upstream?
 - [ ] Resolves issue(s) with our side of things
 - [ ] Hack
+
+## `llvm-backport-objcopy-update-section.patch`
+
+Backports support for `llvm-objcopy --update-section` used by our toolchain from reviews.llvm.org/D112116.
+
+### Status
+- [ ] Local?
+- [ ] Should be merged to upstream?
+- [ ] Resolves issues(s) with our side of things
+- [ ] Hack
+

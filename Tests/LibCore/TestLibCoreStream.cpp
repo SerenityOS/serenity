@@ -300,8 +300,8 @@ TEST_CASE(local_socket_read)
     auto local_server = Core::LocalServer::construct();
     EXPECT(local_server->listen("/tmp/test-socket"));
 
-    local_server->on_accept = [&](NonnullRefPtr<Core::LocalSocket> server_socket) {
-        EXPECT(server_socket->write(sent_data));
+    local_server->on_accept = [&](NonnullOwnPtr<Core::Stream::LocalSocket> server_socket) {
+        EXPECT(!server_socket->write(sent_data.bytes()).is_error());
 
         event_loop.quit(0);
         event_loop.pump();
@@ -346,14 +346,17 @@ TEST_CASE(local_socket_write)
     auto local_server = Core::LocalServer::construct();
     EXPECT(local_server->listen("/tmp/test-socket"));
 
-    local_server->on_accept = [&](NonnullRefPtr<Core::LocalSocket> server_socket) {
+    local_server->on_accept = [&](NonnullOwnPtr<Core::Stream::LocalSocket> server_socket) {
         // NOTE: For some reason LocalServer gives us a nonblocking socket..?
-        server_socket->set_blocking(true);
+        MUST(server_socket->set_blocking(true));
 
-        auto receive_buffer = server_socket->read_all();
-        EXPECT(!server_socket->error());
+        auto pending_bytes = MUST(server_socket->pending_bytes());
+        auto receive_buffer = ByteBuffer::create_uninitialized(pending_bytes).release_value();
+        auto maybe_nread = server_socket->read(receive_buffer);
+        EXPECT(!maybe_nread.is_error());
+        EXPECT(maybe_nread.value() == sent_data.length());
 
-        StringView received_data { receive_buffer.bytes() };
+        StringView received_data { receive_buffer.data(), maybe_nread.value() };
         EXPECT_EQ(sent_data, received_data);
 
         event_loop.quit(0);

@@ -34,7 +34,9 @@ Region::Region(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size
     VERIFY((m_range.size() % PAGE_SIZE) == 0);
 
     m_vmobject->add_region(*this);
-    MM.register_region(*this);
+
+    if (is_kernel())
+        MM.register_kernel_region(*this);
 }
 
 Region::~Region()
@@ -46,13 +48,20 @@ Region::~Region()
 
     m_vmobject->remove_region(*this);
 
-    MM.unregister_region(*this);
+    if (is_kernel())
+        MM.unregister_kernel_region(*this);
 
     if (m_page_directory) {
-        SpinlockLocker page_lock(m_page_directory->get_lock());
-        SpinlockLocker lock(s_mm_lock);
-        unmap(ShouldDeallocateVirtualRange::Yes);
-        VERIFY(!m_page_directory);
+        SpinlockLocker pd_locker(m_page_directory->get_lock());
+        if (!is_readable() && !is_writable() && !is_executable()) {
+            // If the region is "PROT_NONE", we didn't map it in the first place,
+            // so all we need to do here is deallocate the VM.
+            m_page_directory->range_allocator().deallocate(range());
+        } else {
+            SpinlockLocker mm_locker(s_mm_lock);
+            unmap_with_locks_held(ShouldDeallocateVirtualRange::Yes, ShouldFlushTLB::Yes, pd_locker, mm_locker);
+            VERIFY(!m_page_directory);
+        }
     }
 }
 
@@ -85,14 +94,15 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
     auto vmobject_clone = TRY(vmobject().try_clone());
 
     // Set up a COW region. The parent (this) region becomes COW as well!
-    remap();
+    if (is_writable())
+        remap();
 
     OwnPtr<KString> clone_region_name;
     if (m_name)
         clone_region_name = TRY(m_name->try_clone());
 
     auto clone_region = TRY(Region::try_create_user_accessible(
-        m_range, vmobject_clone, m_offset_in_vmobject, move(clone_region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
+        m_range, move(vmobject_clone), m_offset_in_vmobject, move(clone_region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
 
     if (m_stack) {
         VERIFY(is_readable());

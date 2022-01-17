@@ -2,6 +2,7 @@
 port=libmodplug
 version=0.8.8.5
 useconfigure=true
+use_fresh_config_sub=true
 configopts=("ac_cv_c_bigendian=no")
 files="https://download.sourceforge.net/modplug-xmms/libmodplug-${version}.tar.gz libmodplug-${version}.tar.gz 77462d12ee99476c8645cb5511363e3906b88b33a6b54362b4dbc0f39aa2daad"
 auth_type=sha256

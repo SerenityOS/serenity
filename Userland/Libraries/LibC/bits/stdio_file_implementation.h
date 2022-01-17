@@ -5,6 +5,7 @@
  */
 
 #include <AK/Array.h>
+#include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <LibC/bits/FILE.h>
 #include <LibC/bits/pthread_integration.h>
@@ -127,6 +128,10 @@ private:
     pid_t m_popen_child { -1 };
     Buffer m_buffer;
     __pthread_mutex_t m_mutex;
+    IntrusiveListNode<FILE> m_list_node;
+
+public:
+    using List = IntrusiveList<&FILE::m_list_node>;
 };
 
 class ScopedFileLock {

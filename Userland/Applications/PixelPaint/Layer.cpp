@@ -10,6 +10,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Painter.h>
 
 namespace PixelPaint {
 
@@ -127,6 +128,15 @@ RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
     }
 
     return result;
+}
+
+void Layer::erase_selection(Selection const& selection)
+{
+    Gfx::Painter painter { bitmap() };
+    auto const image_and_selection_intersection = m_image.rect().intersected(selection.bounding_rect());
+    auto const translated_to_layer_space = image_and_selection_intersection.translated(-location());
+    painter.clear_rect(translated_to_layer_space, Color::Transparent);
+    did_modify_bitmap(translated_to_layer_space);
 }
 
 }

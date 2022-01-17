@@ -25,7 +25,7 @@ public:
     static RefPtr<ClientConnection> client_connection_for(int client_id);
 
 private:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+    explicit ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
 
     virtual Messages::SQLServer::ConnectResponse connect(String const&) override;
     virtual Messages::SQLServer::SqlStatementResponse sql_statement(int, String const&) override;

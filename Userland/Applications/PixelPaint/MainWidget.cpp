@@ -26,6 +26,7 @@
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Rect.h>
 
 namespace PixelPaint {
 
@@ -467,7 +468,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             // FIXME: disable this action if there is no selection
             if (editor->selection().is_empty())
                 return;
-            auto crop_rect = editor->selection().bounding_rect();
+            auto crop_rect = editor->image().rect().intersected(editor->selection().bounding_rect());
             editor->image().crop(crop_rect);
             editor->selection().clear();
         }));
