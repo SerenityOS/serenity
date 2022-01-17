@@ -77,6 +77,11 @@ public:
     static ErrorOr<Parser> from_bytes(ReadonlyBytes);
     static ErrorOr<Parser> from_bytes(ByteBuffer&&);
 
+#ifndef KERNEL
+    static ErrorOr<Parser> from_framebuffer_device(int, size_t);
+    static ErrorOr<Parser> from_framebuffer_device(String const&, size_t);
+#endif
+
     String legacy_manufacturer_id() const;
     u16 product_code() const;
     u32 serial_number() const;
