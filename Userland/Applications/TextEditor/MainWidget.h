@@ -24,7 +24,7 @@ class MainWidget final : public GUI::Widget {
 
 public:
     virtual ~MainWidget() override;
-    bool read_file_and_close(int fd, String const& path);
+    bool read_file(Core::File&);
     void open_nonexistent_file(String const& path);
     bool request_close();
 

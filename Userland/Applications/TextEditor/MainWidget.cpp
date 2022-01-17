@@ -265,13 +265,9 @@ MainWidget::MainWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(window()->window_id());
-
-        if (response.error != 0) {
-            if (response.error != -1)
-                GUI::MessageBox::show_error(window(), String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
+        if (response.is_error())
             return;
-        }
 
         if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
@@ -281,25 +277,22 @@ MainWidget::MainWidget()
                 return;
         }
 
-        read_file_and_close(*response.fd, *response.chosen_file);
+        read_file(*response.value());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().save_file(window()->window_id(), m_name, m_extension);
-
-        if (response.error != 0) {
-            if (response.error != -1)
-                GUI::MessageBox::show_error(window(), String::formatted("Saving \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+        auto response = FileSystemAccessClient::Client::the().try_save_file(window(), m_name, m_extension);
+        if (response.is_error())
             return;
-        }
 
-        if (!m_editor->write_to_file_and_close(*response.fd)) {
+        auto file = response.release_value();
+        if (!m_editor->write_to_file(*file)) {
             GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
             return;
         }
 
-        set_path(*response.chosen_file);
-        dbgln("Wrote document to {}", *response.chosen_file);
+        set_path(file->filename());
+        dbgln("Wrote document to {}", file->filename());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -307,17 +300,11 @@ MainWidget::MainWidget()
             m_save_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().request_file(window()->window_id(), m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
-
-        if (response.error != 0) {
-            if (response.error != -1)
-                GUI::MessageBox::show_error(window(), String::formatted("Unable to save file: {}", strerror(response.error)));
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        if (response.is_error())
             return;
-        }
 
-        int fd = *response.fd;
-
-        if (!m_editor->write_to_file_and_close(fd)) {
+        if (!m_editor->write_to_file(*response.value())) {
             GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
         }
     });
@@ -678,32 +665,11 @@ void MainWidget::update_title()
     window()->set_title(builder.to_string());
 }
 
-bool MainWidget::read_file_and_close(int fd, String const& path)
+bool MainWidget::read_file(Core::File& file)
 {
-    VERIFY(path.starts_with("/"sv));
-    auto file = Core::File::construct();
-
-    if (!file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-        return false;
-    }
-
-    if (file->is_device()) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open device files", path), "Error", GUI::MessageBox::Type::Error);
-        return false;
-    }
-
-    if (file->is_directory()) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open directories", path), "Error", GUI::MessageBox::Type::Error);
-        return false;
-    }
-
-    m_editor->set_text(file->read_all());
-
-    set_path(path);
-
+    m_editor->set_text(file.read_all());
+    set_path(file.filename());
     m_editor->set_focus(true);
-
     return true;
 }
 
@@ -748,12 +714,10 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         }
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto file_response = FileSystemAccessClient::Client::the().request_file(window()->window_id(), urls.first().path(), Core::OpenMode::ReadOnly);
-
-        if (file_response.error != 0)
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        if (response.is_error())
             return;
-
-        read_file_and_close(*file_response.fd, urls.first().path());
+        read_file(*response.value());
     }
 }
 
