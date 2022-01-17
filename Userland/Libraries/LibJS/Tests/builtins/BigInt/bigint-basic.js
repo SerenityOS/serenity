@@ -40,6 +40,8 @@ describe("correct behavior", () => {
         expect(1n | 2n).toBe(3n);
         expect(5n ^ 3n).toBe(6n);
         expect(~1n).toBe(-2n);
+        expect(~-1n).toBe(0n);
+
         expect(5n << 2n).toBe(20n);
         expect(7n >> 1n).toBe(3n);
     });

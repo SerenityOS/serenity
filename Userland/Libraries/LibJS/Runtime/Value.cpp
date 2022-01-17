@@ -881,10 +881,7 @@ ThrowCompletionOr<Value> bitwise_not(GlobalObject& global_object, Value lhs)
     auto lhs_numeric = TRY(lhs.to_numeric(global_object));
     if (lhs_numeric.is_number())
         return Value(~TRY(lhs_numeric.to_i32(global_object)));
-    auto big_integer_bitwise_not = lhs_numeric.as_bigint().big_integer();
-    big_integer_bitwise_not = big_integer_bitwise_not.plus(Crypto::SignedBigInteger { 1 });
-    big_integer_bitwise_not.negate();
-    return Value(js_bigint(vm, big_integer_bitwise_not));
+    return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_not()));
 }
 
 // 13.5.4 Unary + Operator, https://tc39.es/ecma262/#sec-unary-plus-operator

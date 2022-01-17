@@ -467,6 +467,12 @@ TEST_CASE(test_bigint_bitwise_and_different_lengths)
     EXPECT_EQ(num1.bitwise_and(num2), "1180290"_bigint);
 }
 
+TEST_CASE(test_signed_bigint_bitwise_not)
+{
+    EXPECT_EQ("3"_sbigint.bitwise_not(), "-4"_sbigint);
+    EXPECT_EQ("-1"_sbigint.bitwise_not(), "0"_sbigint);
+}
+
 TEST_CASE(test_signed_bigint_bitwise_and)
 {
     auto num1 = "-1234567"_sbigint;
