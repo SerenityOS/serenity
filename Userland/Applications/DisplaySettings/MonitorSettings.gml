@@ -54,6 +54,13 @@
             @GUI::ComboBox {
                 name: "resolution_combo"
             }
+
+            @GUI::Label {
+                name: "display_dpi"
+                text: "96 dpi"
+                text_alignment: "CenterMiddle"
+                fixed_width: 50
+            }
         }
 
         @GUI::Widget {
