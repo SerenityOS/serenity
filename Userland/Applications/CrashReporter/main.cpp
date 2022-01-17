@@ -165,14 +165,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (unlink_on_exit)
         TRY(Core::System::unveil(coredump_path, "c"));
-    TRY(Core::System::unveil(executable_path.characters(), "r"));
-    TRY(Core::System::unveil("/bin/HackStudio", "rx"));
+
+    // If the executable is HackStudio, then the two unveil()s would conflict!
+    if (executable_path == "/bin/HackStudio") {
+        TRY(Core::System::unveil("/bin/HackStudio", "rx"));
+    } else {
+        TRY(Core::System::unveil(executable_path.characters(), "r"));
+        TRY(Core::System::unveil("/bin/HackStudio", "rx"));
+    }
+
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
     TRY(Core::System::unveil("/usr/lib", "r"));
-    coredump->for_each_library([](auto library_info) {
+    coredump->for_each_library([&executable_path](auto library_info) {
         // FIXME: Make for_each_library propagate ErrorOr values so we can use TRY.
-        if (library_info.path.starts_with('/'))
+        if (library_info.path.starts_with('/') && library_info.path != executable_path)
             MUST(Core::System::unveil(library_info.path, "r"));
     });
     TRY(Core::System::unveil(nullptr, nullptr));
