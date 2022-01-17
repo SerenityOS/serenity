@@ -97,6 +97,7 @@ public:
     virtual void gl_pixel_storei(GLenum pname, GLint param) = 0;
     virtual void gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height) = 0;
     virtual void gl_stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask) = 0;
+    virtual void gl_stencil_mask_separate(GLenum face, GLuint mask) = 0;
     virtual void gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) = 0;
     virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) = 0;
     virtual void gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer) = 0;
@@ -120,7 +121,7 @@ public:
     virtual void present() = 0;
 };
 
-OwnPtr<GLContext> create_context(Gfx::Bitmap&);
+NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap&);
 void make_context_current(GLContext*);
 void present_context(GLContext*);
 

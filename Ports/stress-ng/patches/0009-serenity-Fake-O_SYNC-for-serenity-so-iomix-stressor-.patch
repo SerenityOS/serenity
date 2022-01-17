@@ -1,0 +1,31 @@
+From 060317ca43157cf27f7444932b032e1380c1c3a3 Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 23:47:45 -0800
+Subject: [PATCH 09/12] serenity: Fake O_SYNC for serenity so iomix stressor
+ compiles
+
+Serenity doesn't yet support O_SYNC, so just make it compile.
+---
+ stress-iomix.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/stress-iomix.c b/stress-iomix.c
+index edf90f0..54176f8 100644
+--- a/stress-iomix.c
++++ b/stress-iomix.c
+@@ -25,6 +25,12 @@
+  */
+ #include "stress-ng.h"
+ 
++#ifdef __serenity__
++    /* Serenity doesn't yet support O_SYNC, so just make it compile */
++    #define  O_SYNC (0)
++#endif
++
++
+ typedef void (*stress_iomix_func)(const stress_args_t *args, const int fd, const off_t iomix_bytes);
+ 
+ static const stress_help_t help[] = {
+-- 
+2.34.1
+

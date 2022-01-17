@@ -27,6 +27,7 @@
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Date.h>
+#include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -70,6 +71,7 @@
 
 RefPtr<JS::VM> vm;
 Vector<String> repl_statements;
+JS::Handle<JS::Value> last_value = JS::make_handle(JS::js_undefined());
 
 class ReplObject final : public JS::GlobalObject {
     JS_OBJECT(ReplObject, JS::GlobalObject);
@@ -85,6 +87,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(load_file);
     JS_DECLARE_NATIVE_FUNCTION(save_to_file);
     JS_DECLARE_NATIVE_FUNCTION(load_json);
+    JS_DECLARE_NATIVE_FUNCTION(last_value_getter);
 };
 
 class ScriptObject final : public JS::GlobalObject {
@@ -311,7 +314,7 @@ static void print_function(JS::Object const& object, HashTable<JS::Object*>&)
 static void print_date(JS::Object const& object, HashTable<JS::Object*>&)
 {
     print_type("Date");
-    js_out(" \033[34;1m{}\033[0m", static_cast<JS::Date const&>(object).string());
+    js_out(" \033[34;1m{}\033[0m", JS::to_date_string(static_cast<JS::Date const&>(object).date_value()));
 }
 
 static void print_error(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
@@ -985,6 +988,9 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
         }
     };
 
+    if (!result.is_error())
+        last_value = JS::make_handle(result.value());
+
     if (result.is_error()) {
         handle_exception();
         return false;
@@ -1040,6 +1046,24 @@ void ReplObject::initialize_global_object()
     define_native_function("load", load_file, 1, attr);
     define_native_function("save", save_to_file, 1, attr);
     define_native_function("loadJSON", load_json, 1, attr);
+
+    define_native_accessor(
+        "_",
+        [](JS::VM&, JS::GlobalObject&) {
+            return last_value.value();
+        },
+        [](JS::VM& vm, JS::GlobalObject& global_object) -> JS::ThrowCompletionOr<JS::Value> {
+            VERIFY(is<ReplObject>(global_object));
+            outln("Disable writing last value to '_'");
+
+            // We must delete first otherwise this setter gets called recursively.
+            TRY(global_object.internal_delete(JS::PropertyKey { "_" }));
+
+            auto value = vm.argument(0);
+            TRY(global_object.internal_set(JS::PropertyKey { "_" }, value, &global_object));
+            return value;
+        },
+        attr);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
@@ -1262,7 +1286,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #ifdef JS_TRACK_ZOMBIE_CELLS
         interpreter->heap().set_zombify_dead_cells(zombify_dead_cells);
 #endif
-        interpreter->vm().set_underscore_is_last_value(true);
 
         auto& global_environment = interpreter->realm().global_environment();
 

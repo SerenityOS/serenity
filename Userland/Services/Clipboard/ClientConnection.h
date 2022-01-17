@@ -27,7 +27,7 @@ public:
     void notify_about_clipboard_change();
 
 private:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+    explicit ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
 
     virtual Messages::ClipboardServer::GetClipboardDataResponse get_clipboard_data() override;
     virtual void set_clipboard_data(Core::AnonymousBuffer const&, String const&, IPC::Dictionary const&) override;

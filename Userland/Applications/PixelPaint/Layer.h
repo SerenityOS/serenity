@@ -61,6 +61,8 @@ public:
 
     Image const& image() const { return m_image; }
 
+    void erase_selection(Selection const&);
+
 private:
     Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
 

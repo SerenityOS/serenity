@@ -1,0 +1,36 @@
+From 72e43b83f27b9ea385a28c4f1e3f65ec3e442706 Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Mon, 27 Dec 2021 23:47:22 -0800
+Subject: [PATCH 08/12] serenity: Make lsearch stressor a nop on Serenity
+
+---
+ stress-lsearch.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/stress-lsearch.c b/stress-lsearch.c
+index 60174a2..74a9ef9 100644
+--- a/stress-lsearch.c
++++ b/stress-lsearch.c
+@@ -31,6 +31,8 @@ static const stress_help_t help[] = {
+ 	{ NULL, NULL,		  NULL }
+ };
+ 
++#if !defined(__serenity__)
++
+ /*
+  *  stress_set_lsearch_size()
+  *      set lsearch size from given option string
+@@ -129,3 +131,10 @@ stressor_info_t stress_lsearch_info = {
+ 	.opt_set_funcs = opt_set_funcs,
+ 	.help = help
+ };
++#else
++stressor_info_t stress_lsearch_info = {
++	.stressor = stress_not_implemented,
++	.class = CLASS_CPU_CACHE | CLASS_CPU | CLASS_MEMORY,
++	.help = help
++};
++#endif
+-- 
+2.34.1
+

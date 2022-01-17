@@ -5,6 +5,7 @@
  */
 
 #include "HelpWindow.h"
+#include "LibFileSystemAccessClient/Client.h"
 #include "Spreadsheet.h"
 #include "SpreadsheetWidget.h"
 #include <AK/ScopeGuard.h>
@@ -80,10 +81,7 @@ int main(int argc, char* argv[])
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>(NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr);
-
-    if (filename)
-        spreadsheet_widget.load(filename);
+    auto& spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr);
 
     spreadsheet_widget.initialize_menubar(*window);
 
@@ -94,6 +92,17 @@ int main(int argc, char* argv[])
     };
 
     window->show();
+
+    if (filename) {
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), filename);
+
+        if (response.error != 0) {
+            if (response.error != -1)
+                GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+            return 1;
+        }
+        spreadsheet_widget.load_file(*response.fd, filename);
+    }
 
     return app->exec();
 }

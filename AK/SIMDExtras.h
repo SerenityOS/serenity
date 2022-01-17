@@ -109,6 +109,17 @@ ALWAYS_INLINE static f32x4 load4_masked(float const* a, float const* b, float co
     };
 }
 
+ALWAYS_INLINE static i32x4 load4_masked(u8 const* a, u8 const* b, u8 const* c, u8 const* d, i32x4 mask)
+{
+    int bits = maskbits(mask);
+    return i32x4 {
+        bits & 1 ? *a : 0,
+        bits & 2 ? *b : 0,
+        bits & 4 ? *c : 0,
+        bits & 8 ? *d : 0,
+    };
+}
+
 ALWAYS_INLINE static u32x4 load4_masked(u32 const* a, u32 const* b, u32 const* c, u32 const* d, i32x4 mask)
 {
     int bits = maskbits(mask);

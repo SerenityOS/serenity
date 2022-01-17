@@ -17,6 +17,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Device.h>
+#include <LibSoftGPU/Enums.h>
 
 using AK::dbgln;
 
@@ -164,7 +165,9 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = scissor_enabled } };
     }
     case GL_STENCIL_BITS:
-        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = m_device_info.stencil_bits } };
+    case GL_STENCIL_CLEAR_VALUE:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = m_clear_stencil } };
     case GL_STENCIL_TEST:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_stencil_test_enabled } };
     case GL_TEXTURE_1D:
@@ -238,9 +241,8 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
     if (mask & GL_DEPTH_BUFFER_BIT)
         m_rasterizer.clear_depth(static_cast<float>(m_clear_depth));
 
-    // FIXME: implement GL_STENCIL_BUFFER_BIT
     if (mask & GL_STENCIL_BUFFER_BIT)
-        dbgln_if(GL_DEBUG, "gl_clear(): GL_STENCIL_BUFFER_BIT is unimplemented");
+        m_rasterizer.clear_stencil(m_clear_stencil);
 }
 
 void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
@@ -267,9 +269,7 @@ void SoftwareGLContext::gl_clear_stencil(GLint s)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: "s is masked with 2^m - 1 , where m is the number of bits in the stencil buffer"
-
-    m_clear_stencil = s;
+    m_clear_stencil = static_cast<u8>(s & ((1 << m_device_info.stencil_bits) - 1));
 }
 
 void SoftwareGLContext::gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a)
@@ -696,6 +696,8 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         break;
     case GL_STENCIL_TEST:
         m_stencil_test_enabled = true;
+        rasterizer_options.enable_stencil_test = true;
+        update_rasterizer_options = true;
         break;
     case GL_TEXTURE_1D:
         m_active_texture_unit->set_texture_1d_enabled(true);
@@ -807,6 +809,8 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         break;
     case GL_STENCIL_TEST:
         m_stencil_test_enabled = false;
+        rasterizer_options.enable_stencil_test = false;
+        update_rasterizer_options = true;
         break;
     case GL_TEXTURE_1D:
         m_active_texture_unit->set_texture_1d_enabled(false);
@@ -915,7 +919,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
         internal_format = GL_RGBA;
 
     // We only support symbolic constants for now
-    RETURN_WITH_ERROR_IF(!(internal_format == GL_RGB || internal_format == GL_RGBA), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(internal_format == GL_RGB || internal_format == GL_RGBA || internal_format == GL_LUMINANCE8 || internal_format == GL_LUMINANCE8_ALPHA8), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(!(type == GL_UNSIGNED_BYTE || type == GL_UNSIGNED_SHORT_5_6_5), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
@@ -939,6 +943,14 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
 
         case GL_RGBA:
             device_format = SoftGPU::ImageFormat::RGBA8888;
+            break;
+
+        case GL_LUMINANCE8:
+            device_format = SoftGPU::ImageFormat::L8;
+            break;
+
+        case GL_LUMINANCE8_ALPHA8:
+            device_format = SoftGPU::ImageFormat::L8A8;
             break;
 
         default:
@@ -2243,29 +2255,42 @@ void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum for
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: we only support RGBA + GL_UNSIGNED_BYTE, implement all the others!
-    if (format != GL_RGBA) {
-        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for format {:#x} not implemented", format);
-        return;
-    } else if (type != GL_UNSIGNED_BYTE) {
-        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for type {:#x} not implemented", type);
+    // FIXME: we only support RGBA + UNSIGNED_BYTE and DEPTH_COMPONENT + UNSIGNED_SHORT, implement all combinations!
+    if (!((format == GL_RGBA && type == GL_UNSIGNED_BYTE) || (format == GL_DEPTH_COMPONENT && type == GL_UNSIGNED_SHORT))) {
+        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for format {:#x} and/or type {:#x} not implemented", format, type);
         return;
     }
 
-    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height });
-    RETURN_WITH_ERROR_IF(bitmap_or_error.is_error(), GL_OUT_OF_MEMORY);
-    auto bitmap = bitmap_or_error.release_value();
+    // FIXME: implement support for pixel parameters such as GL_UNPACK_ALIGNMENT
 
-    // FIXME: implement support for GL_UNPACK_ALIGNMENT and other pixel parameters
-    auto pixel_data = static_cast<u32 const*>(data);
-    for (int y = 0; y < height; ++y)
-        for (int x = 0; x < width; ++x)
-            bitmap->set_pixel(x, y, Color::from_rgba(*(pixel_data++)));
+    if (format == GL_RGBA) {
+        auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height });
+        RETURN_WITH_ERROR_IF(bitmap_or_error.is_error(), GL_OUT_OF_MEMORY);
+        auto bitmap = bitmap_or_error.release_value();
 
-    m_rasterizer.blit(
-        bitmap,
-        static_cast<int>(m_current_raster_position.window_coordinates.x()),
-        static_cast<int>(m_current_raster_position.window_coordinates.y()));
+        auto pixel_data = static_cast<u32 const*>(data);
+        for (int y = 0; y < height; ++y)
+            for (int x = 0; x < width; ++x)
+                bitmap->set_pixel(x, y, Color::from_rgba(*(pixel_data++)));
+
+        m_rasterizer.blit_to_color_buffer_at_raster_position(bitmap);
+    } else if (format == GL_DEPTH_COMPONENT) {
+        Vector<float> depth_values;
+        depth_values.ensure_capacity(width * height);
+
+        auto depth_data = static_cast<u16 const*>(data);
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                auto u16_value = *(depth_data++);
+                auto float_value = static_cast<float>(u16_value) / NumericLimits<u16>::max();
+                depth_values.append(float_value);
+            }
+        }
+
+        m_rasterizer.blit_to_depth_buffer_at_raster_position(depth_values, width, height);
+    } else {
+        VERIFY_NOT_REACHED();
+    }
 }
 
 void SoftwareGLContext::gl_depth_range(GLdouble min, GLdouble max)
@@ -2609,13 +2634,28 @@ void SoftwareGLContext::gl_stencil_func_separate(GLenum face, GLenum func, GLint
                              || func == GL_ALWAYS),
         GL_INVALID_ENUM);
 
-    // FIXME: "ref is clamped to the range 02^n - 1 , where n is the number of bitplanes in the stencil buffer"
+    ref = clamp(ref, 0, (1 << m_device_info.stencil_bits) - 1);
 
     StencilFunctionOptions new_options = { func, ref, mask };
     if (face == GL_FRONT || face == GL_FRONT_AND_BACK)
-        m_stencil_frontfacing_func = new_options;
+        m_stencil_function[Face::Front] = new_options;
     if (face == GL_BACK || face == GL_FRONT_AND_BACK)
-        m_stencil_backfacing_func = new_options;
+        m_stencil_function[Face::Back] = new_options;
+
+    m_stencil_configuration_dirty = true;
+}
+
+void SoftwareGLContext::gl_stencil_mask_separate(GLenum face, GLuint mask)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_stencil_mask_separate, face, mask);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    if (face == GL_FRONT || face == GL_FRONT_AND_BACK)
+        m_stencil_operation[Face::Front].write_mask = mask;
+    if (face == GL_BACK || face == GL_FRONT_AND_BACK)
+        m_stencil_operation[Face::Back].write_mask = mask;
+
+    m_stencil_configuration_dirty = true;
 }
 
 void SoftwareGLContext::gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass)
@@ -2625,39 +2665,26 @@ void SoftwareGLContext::gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum
 
     RETURN_WITH_ERROR_IF(!(face == GL_FRONT || face == GL_BACK || face == GL_FRONT_AND_BACK), GL_INVALID_ENUM);
 
-    RETURN_WITH_ERROR_IF(!(sfail == GL_KEEP
-                             || sfail == GL_ZERO
-                             || sfail == GL_REPLACE
-                             || sfail == GL_INCR
-                             || sfail == GL_INCR_WRAP
-                             || sfail == GL_DECR
-                             || sfail == GL_DECR_WRAP
-                             || sfail == GL_INVERT),
-        GL_INVALID_ENUM);
-    RETURN_WITH_ERROR_IF(!(dpfail == GL_KEEP
-                             || dpfail == GL_ZERO
-                             || dpfail == GL_REPLACE
-                             || dpfail == GL_INCR
-                             || dpfail == GL_INCR_WRAP
-                             || dpfail == GL_DECR
-                             || dpfail == GL_DECR_WRAP
-                             || dpfail == GL_INVERT),
-        GL_INVALID_ENUM);
-    RETURN_WITH_ERROR_IF(!(dppass == GL_KEEP
-                             || dppass == GL_ZERO
-                             || dppass == GL_REPLACE
-                             || dppass == GL_INCR
-                             || dppass == GL_INCR_WRAP
-                             || dppass == GL_DECR
-                             || dppass == GL_DECR_WRAP
-                             || dppass == GL_INVERT),
-        GL_INVALID_ENUM);
+    auto is_valid_op = [](GLenum op) -> bool {
+        return op == GL_KEEP || op == GL_ZERO || op == GL_REPLACE || op == GL_INCR || op == GL_INCR_WRAP
+            || op == GL_DECR || op == GL_DECR_WRAP || op == GL_INVERT;
+    };
+    RETURN_WITH_ERROR_IF(!is_valid_op(sfail), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!is_valid_op(dpfail), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!is_valid_op(dppass), GL_INVALID_ENUM);
 
-    StencilOperationOptions new_options = { sfail, dpfail, dppass };
+    auto update_stencil_operation = [&](Face face, GLenum sfail, GLenum dpfail, GLenum dppass) {
+        auto& stencil_operation = m_stencil_operation[face];
+        stencil_operation.op_fail = sfail;
+        stencil_operation.op_depth_fail = dpfail;
+        stencil_operation.op_pass = dppass;
+    };
     if (face == GL_FRONT || face == GL_FRONT_AND_BACK)
-        m_stencil_frontfacing_op = new_options;
+        update_stencil_operation(Face::Front, sfail, dpfail, dppass);
     if (face == GL_BACK || face == GL_FRONT_AND_BACK)
-        m_stencil_backfacing_op = new_options;
+        update_stencil_operation(Face::Back, sfail, dpfail, dppass);
+
+    m_stencil_configuration_dirty = true;
 }
 
 void SoftwareGLContext::gl_normal(GLfloat nx, GLfloat ny, GLfloat nz)
@@ -2686,8 +2713,7 @@ void SoftwareGLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_raster_pos, x, y, z, w);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_current_raster_position.window_coordinates = { x, y, z };
-    m_current_raster_position.clip_coordinate_value = w;
+    m_rasterizer.set_raster_position({ x, y, z, w }, m_model_view_matrix, m_projection_matrix);
 }
 
 void SoftwareGLContext::gl_line_width(GLfloat width)
@@ -2751,8 +2777,14 @@ void SoftwareGLContext::gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, 
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_bitmap, width, height, xorig, yorig, xmove, ymove, bitmap);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: implement gl_bitmap({}, {}, {}, {}, {}, {}, {})", width, height, xorig, yorig, xmove, ymove, bitmap);
+    if (bitmap != nullptr) {
+        // FIXME: implement
+        dbgln_if(GL_DEBUG, "gl_bitmap({}, {}, {}, {}, {}, {}, {}): unimplemented", width, height, xorig, yorig, xmove, ymove, bitmap);
+    }
+
+    auto raster_position = m_rasterizer.raster_position();
+    raster_position.window_coordinates += { xmove, ymove, 0.f, 0.f };
+    m_rasterizer.set_raster_position(raster_position);
 }
 
 void SoftwareGLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
@@ -2881,6 +2913,7 @@ void SoftwareGLContext::sync_device_config()
     sync_device_sampler_config();
     sync_device_texcoord_config();
     sync_light_state();
+    sync_stencil_configuration();
 }
 
 void SoftwareGLContext::sync_device_sampler_config()
@@ -3063,9 +3096,8 @@ void SoftwareGLContext::sync_light_state()
         m_rasterizer.set_light_state(light_id, light);
     }
 
-    for (auto material_id = 0u; material_id < 2u; material_id++) {
+    auto update_material_state = [&](SoftGPU::Face face, SoftGPU::Material const& current_material_state) {
         SoftGPU::Material material;
-        auto const& current_material_state = m_material_states.at(material_id);
 
         material.ambient = current_material_state.ambient;
         material.diffuse = current_material_state.diffuse;
@@ -3077,8 +3109,10 @@ void SoftwareGLContext::sync_light_state()
         material.diffuse_color_index = current_material_state.diffuse_color_index;
         material.specular_color_index = current_material_state.specular_color_index;
 
-        m_rasterizer.set_material_state(material_id, material);
-    }
+        m_rasterizer.set_material_state(face, material);
+    };
+    update_material_state(SoftGPU::Face::Front, m_material_states[Face::Front]);
+    update_material_state(SoftGPU::Face::Back, m_material_states[Face::Back]);
 }
 
 void SoftwareGLContext::sync_device_texcoord_config()
@@ -3142,12 +3176,80 @@ void SoftwareGLContext::sync_device_texcoord_config()
     m_rasterizer.set_options(options);
 }
 
+void SoftwareGLContext::sync_stencil_configuration()
+{
+    if (!m_stencil_configuration_dirty)
+        return;
+    m_stencil_configuration_dirty = false;
+
+    auto set_device_stencil = [&](SoftGPU::Face face, StencilFunctionOptions func, StencilOperationOptions op) {
+        SoftGPU::StencilConfiguration device_configuration;
+
+        // Stencil test function
+        auto map_func = [](GLenum func) -> SoftGPU::StencilTestFunction {
+            switch (func) {
+            case GL_ALWAYS:
+                return SoftGPU::StencilTestFunction::Always;
+            case GL_EQUAL:
+                return SoftGPU::StencilTestFunction::Equal;
+            case GL_GEQUAL:
+                return SoftGPU::StencilTestFunction::GreaterOrEqual;
+            case GL_GREATER:
+                return SoftGPU::StencilTestFunction::Greater;
+            case GL_LESS:
+                return SoftGPU::StencilTestFunction::Less;
+            case GL_LEQUAL:
+                return SoftGPU::StencilTestFunction::LessOrEqual;
+            case GL_NEVER:
+                return SoftGPU::StencilTestFunction::Never;
+            case GL_NOTEQUAL:
+                return SoftGPU::StencilTestFunction::NotEqual;
+            }
+            VERIFY_NOT_REACHED();
+        };
+        device_configuration.test_function = map_func(func.func);
+        device_configuration.reference_value = func.reference_value;
+        device_configuration.test_mask = func.mask;
+
+        // Stencil operation
+        auto map_operation = [](GLenum operation) -> SoftGPU::StencilOperation {
+            switch (operation) {
+            case GL_DECR:
+                return SoftGPU::StencilOperation::Decrement;
+            case GL_DECR_WRAP:
+                return SoftGPU::StencilOperation::DecrementWrap;
+            case GL_INCR:
+                return SoftGPU::StencilOperation::Increment;
+            case GL_INCR_WRAP:
+                return SoftGPU::StencilOperation::IncrementWrap;
+            case GL_INVERT:
+                return SoftGPU::StencilOperation::Invert;
+            case GL_KEEP:
+                return SoftGPU::StencilOperation::Keep;
+            case GL_REPLACE:
+                return SoftGPU::StencilOperation::Replace;
+            case GL_ZERO:
+                return SoftGPU::StencilOperation::Zero;
+            }
+            VERIFY_NOT_REACHED();
+        };
+        device_configuration.on_stencil_test_fail = map_operation(op.op_fail);
+        device_configuration.on_depth_test_fail = map_operation(op.op_depth_fail);
+        device_configuration.on_pass = map_operation(op.op_pass);
+        device_configuration.write_mask = op.write_mask;
+
+        m_rasterizer.set_stencil_configuration(face, device_configuration);
+    };
+    set_device_stencil(SoftGPU::Face::Front, m_stencil_function[Face::Front], m_stencil_operation[Face::Front]);
+    set_device_stencil(SoftGPU::Face::Back, m_stencil_function[Face::Back], m_stencil_operation[Face::Back]);
+}
+
 void SoftwareGLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_lightf, light, pname, param);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_rasterizer.info().num_lights), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_device_info.num_lights), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(!(pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION || pname != GL_SPOT_EXPONENT || pname != GL_SPOT_CUTOFF), GL_INVALID_ENUM);
 
     auto& light_state = m_light_states.at(light - GL_LIGHT0);
@@ -3179,7 +3281,7 @@ void SoftwareGLContext::gl_lightfv(GLenum light, GLenum pname, GLfloat const* pa
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_lightfv, light, pname, params);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_rasterizer.info().num_lights), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_device_info.num_lights), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_POSITION || pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION || pname == GL_SPOT_CUTOFF || pname == GL_SPOT_EXPONENT || pname == GL_SPOT_DIRECTION), GL_INVALID_ENUM);
 
     auto& light_state = m_light_states.at(light - GL_LIGHT0);
@@ -3235,14 +3337,14 @@ void SoftwareGLContext::gl_materialf(GLenum face, GLenum pname, GLfloat param)
 
     switch (face) {
     case GL_FRONT:
-        m_material_states.at(MaterialFace::Front).shininess = param;
+        m_material_states[Face::Front].shininess = param;
         break;
     case GL_BACK:
-        m_material_states.at(MaterialFace::Back).shininess = param;
+        m_material_states[Face::Back].shininess = param;
         break;
     case GL_FRONT_AND_BACK:
-        m_material_states.at(MaterialFace::Front).shininess = param;
-        m_material_states.at(MaterialFace::Back).shininess = param;
+        m_material_states[Face::Front].shininess = param;
+        m_material_states[Face::Back].shininess = param;
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -3284,14 +3386,14 @@ void SoftwareGLContext::gl_materialfv(GLenum face, GLenum pname, GLfloat const* 
 
     switch (face) {
     case GL_FRONT:
-        update_material(m_material_states.at(MaterialFace::Front), pname, params);
+        update_material(m_material_states[Face::Front], pname, params);
         break;
     case GL_BACK:
-        update_material(m_material_states.at(MaterialFace::Back), pname, params);
+        update_material(m_material_states[Face::Back], pname, params);
         break;
     case GL_FRONT_AND_BACK:
-        update_material(m_material_states.at(MaterialFace::Front), pname, params);
-        update_material(m_material_states.at(MaterialFace::Back), pname, params);
+        update_material(m_material_states[Face::Front], pname, params);
+        update_material(m_material_states[Face::Back], pname, params);
         break;
     }
 

@@ -24,7 +24,7 @@ RemoteProcess::RemoteProcess(pid_t pid)
     , m_object_graph_model(RemoteObjectGraphModel::create(*this))
 {
     s_the = this;
-    m_client = InspectorServerClient::construct();
+    m_client = InspectorServerClient::try_create().release_value_but_fixme_should_propagate_errors();
 }
 
 void RemoteProcess::handle_identify_response(const JsonObject& response)

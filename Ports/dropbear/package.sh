@@ -8,6 +8,7 @@ https://mirror.dropbear.nl/mirror/releases/dropbear-key-2015.asc dropbear-key-20
 auth_type="sig"
 auth_opts=("--keyring" "./dropbear-key-2015.asc" "dropbear-${version}.tar.bz2.asc")
 useconfigure=true
+use_fresh_config_sub=true
 # don't care about zlib, less deps is better
 configopts=("--disable-zlib")
 # Serenity's utmp is not fully compatible with what dropbear expects.

@@ -6,9 +6,23 @@
 
 #pragma once
 
+#include <LibCore/Stream.h>
 #include <LibIPC/Connection.h>
 
 namespace IPC {
+
+#define IPC_CLIENT_CONNECTION(klass, socket_path)                                                      \
+    C_OBJECT_ABSTRACT(klass)                                                                           \
+public:                                                                                                \
+    template<typename Klass = klass, class... Args>                                                    \
+    static ErrorOr<NonnullRefPtr<klass>> try_create(Args&&... args)                                    \
+    {                                                                                                  \
+        auto socket = TRY(Core::Stream::LocalSocket::connect(socket_path));                            \
+        /* We want to rate-limit our clients */                                                        \
+        TRY(socket->set_blocking(true));                                                               \
+                                                                                                       \
+        return adopt_nonnull_ref_or_enomem(new (nothrow) Klass(move(socket), forward<Args>(args)...)); \
+    }
 
 template<typename ClientEndpoint, typename ServerEndpoint>
 class ServerConnection : public IPC::Connection<ClientEndpoint, ServerEndpoint>
@@ -18,19 +32,10 @@ public:
     using ClientStub = typename ClientEndpoint::Stub;
     using IPCProxy = typename ServerEndpoint::template Proxy<ClientEndpoint>;
 
-    ServerConnection(ClientStub& local_endpoint, StringView address)
-        : Connection<ClientEndpoint, ServerEndpoint>(local_endpoint, Core::LocalSocket::construct())
+    ServerConnection(ClientStub& local_endpoint, NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+        : Connection<ClientEndpoint, ServerEndpoint>(local_endpoint, move(socket))
         , ServerEndpoint::template Proxy<ClientEndpoint>(*this, {})
     {
-        // We want to rate-limit our clients
-        this->socket().set_blocking(true);
-
-        if (!this->socket().connect(Core::SocketAddress::local(address))) {
-            perror("connect");
-            VERIFY_NOT_REACHED();
-        }
-
-        VERIFY(this->socket().is_connected());
     }
 
     virtual void die() override

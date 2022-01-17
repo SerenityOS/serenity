@@ -7,6 +7,7 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -80,8 +81,13 @@ void LocalServer::setup_notifier()
     m_notifier = Notifier::construct(m_fd, Notifier::Event::Read, this);
     m_notifier->on_ready_to_read = [this] {
         if (on_accept) {
-            if (auto client_socket = accept())
-                on_accept(client_socket.release_nonnull());
+            auto maybe_client_socket = accept();
+            if (maybe_client_socket.is_error()) {
+                dbgln("LocalServer::on_ready_to_read: Error accepting a connection: {} (FIXME: should propagate!)", maybe_client_socket.error());
+                return;
+            }
+
+            on_accept(maybe_client_socket.release_value());
         }
     };
 }
@@ -134,7 +140,7 @@ bool LocalServer::listen(const String& address)
     return true;
 }
 
-RefPtr<LocalSocket> LocalServer::accept()
+ErrorOr<NonnullOwnPtr<Stream::LocalSocket>> LocalServer::accept()
 {
     VERIFY(m_listening);
     sockaddr_un un;
@@ -145,8 +151,7 @@ RefPtr<LocalSocket> LocalServer::accept()
     int accepted_fd = ::accept(m_fd, (sockaddr*)&un, &un_size);
 #endif
     if (accepted_fd < 0) {
-        perror("accept");
-        return nullptr;
+        return Error::from_syscall("accept", -errno);
     }
 
 #ifdef AK_OS_MACOS
@@ -155,7 +160,7 @@ RefPtr<LocalSocket> LocalServer::accept()
     (void)fcntl(accepted_fd, F_SETFD, FD_CLOEXEC);
 #endif
 
-    return LocalSocket::construct(accepted_fd);
+    return Stream::LocalSocket::adopt_fd(accepted_fd);
 }
 
 }

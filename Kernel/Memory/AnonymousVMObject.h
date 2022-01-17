@@ -41,10 +41,10 @@ public:
 private:
     class SharedCommittedCowPages;
 
-    explicit AnonymousVMObject(size_t, AllocationStrategy, Optional<CommittedPhysicalPageSet>);
-    explicit AnonymousVMObject(PhysicalAddress, size_t);
-    explicit AnonymousVMObject(Span<NonnullRefPtr<PhysicalPage>>);
-    explicit AnonymousVMObject(AnonymousVMObject const&, NonnullRefPtr<SharedCommittedCowPages>);
+    explicit AnonymousVMObject(FixedArray<RefPtr<PhysicalPage>>&&, AllocationStrategy, Optional<CommittedPhysicalPageSet>);
+    explicit AnonymousVMObject(PhysicalAddress, FixedArray<RefPtr<PhysicalPage>>&&);
+    explicit AnonymousVMObject(FixedArray<RefPtr<PhysicalPage>>&&);
+    explicit AnonymousVMObject(AnonymousVMObject const&, NonnullRefPtr<SharedCommittedCowPages>, FixedArray<RefPtr<PhysicalPage>>&&);
 
     virtual StringView class_name() const override { return "AnonymousVMObject"sv; }
 

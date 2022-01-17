@@ -10,8 +10,8 @@
 
 namespace Protocol {
 
-RequestClient::RequestClient()
-    : IPC::ServerConnection<RequestClientEndpoint, RequestServerEndpoint>(*this, "/tmp/portal/request")
+RequestClient::RequestClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    : IPC::ServerConnection<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket))
 {
 }
 

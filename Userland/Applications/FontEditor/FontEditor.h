@@ -9,12 +9,12 @@
 #include "UndoGlyph.h"
 #include <LibConfig/Listener.h>
 #include <LibGUI/ActionGroup.h>
+#include <LibGUI/GlyphMapWidget.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/BitmapFont.h>
 
 class GlyphEditorWidget;
-class GlyphMapWidget;
 
 class FontEditorWidget final
     : public GUI::Widget
@@ -24,7 +24,7 @@ public:
     virtual ~FontEditorWidget() override;
 
     bool open_file(String const&);
-    bool save_as(String const&);
+    bool save_file(String const&);
     bool request_close();
     void update_title();
 
@@ -62,7 +62,7 @@ private:
 
     RefPtr<Gfx::BitmapFont> m_edited_font;
 
-    RefPtr<GlyphMapWidget> m_glyph_map_widget;
+    RefPtr<GUI::GlyphMapWidget> m_glyph_map_widget;
     RefPtr<GlyphEditorWidget> m_glyph_editor_widget;
 
     RefPtr<GUI::Action> m_new_action;

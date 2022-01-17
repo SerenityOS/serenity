@@ -46,16 +46,30 @@ static constexpr u8 DBL_REG_SIZE = 8;
 // CAP
 static constexpr u8 CAP_DBL_SHIFT = 32;
 static constexpr u8 CAP_DBL_MASK = 0xf;
+static constexpr u8 CAP_TO_SHIFT = 24;
+static constexpr u64 CAP_TO_MASK = 0xff << CAP_TO_SHIFT;
 static constexpr u16 MQES(u64 cap)
 {
     return (cap & 0xffff) + 1;
 }
 
+static constexpr u32 CAP_TO(u64 cap)
+{
+    return (cap & CAP_TO_MASK) >> CAP_TO_SHIFT;
+}
+
 // CC – Controller Configuration
 static constexpr u8 CC_EN_BIT = 0x0;
 static constexpr u8 CSTS_RDY_BIT = 0x0;
+static constexpr u8 CSTS_SHST_SHIFT = 2;
+static constexpr u32 CSTS_SHST_MASK = 0x3 << CSTS_SHST_SHIFT;
 static constexpr u8 CC_IOSQES_BIT = 16;
 static constexpr u8 CC_IOCQES_BIT = 20;
+
+static constexpr u32 CSTS_SHST(u32 x)
+{
+    return (x & CSTS_SHST_MASK) >> CSTS_SHST_SHIFT;
+}
 
 static constexpr u16 CC_AQA_MASK = (0xfff);
 static constexpr u16 ACQ_SIZE(u32 x)

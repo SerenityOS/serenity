@@ -178,6 +178,12 @@ void ScreenNumberOverlay::pick_font()
         // with default_font.name(). But the default font currently does not provide larger sizes
         auto size = font.glyph_height();
         if (size * 2 <= screen_number_content_rect_size.height() && size > best_font_size) {
+            for (unsigned ch = '0'; ch <= '9'; ch++) {
+                if (!font.contains_glyph(ch)) {
+                    // Skip this font, it doesn't have glyphs for digits
+                    return;
+                }
+            }
             best_font_name = font.qualified_name();
             best_font_size = size;
         }

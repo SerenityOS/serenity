@@ -56,7 +56,7 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) con
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitmap_data)
 {
     // Spawn a new ImageDecoder service process and connect to it.
-    auto client = ImageDecoderClient::Client::construct();
+    auto client = TRY(ImageDecoderClient::Client::try_create());
 
     // FIXME: Find a way to avoid the memory copying here.
     auto maybe_decoded_image = client->decode_image(bitmap_data);

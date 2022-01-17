@@ -19,7 +19,7 @@ void ClientConnection::for_each_client(Function<void(ClientConnection&)> callbac
     }
 }
 
-ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
+ClientConnection::ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, int client_id)
     : IPC::ClientConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);

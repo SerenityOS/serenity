@@ -180,6 +180,8 @@ jobs:
         run: ccache -s
       - name: Lint (Phase 2/2)
         working-directory: ${{ github.workspace }}/Meta
+        env:
+          SERENITY_ARCH: ${{ matrix.arch }}
         run: ./check-symbols.sh
 
       - name: Create Serenity Rootfs

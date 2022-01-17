@@ -84,6 +84,7 @@ public:
         pal.set_color(ColorRole::Background, color);
         set_palette(pal);
         update();
+        m_color = color;
     }
 
     Function<void(Color const&)> on_color_change;

@@ -24,7 +24,7 @@ struct Result {
 class Client final
     : public IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>
     , public FileSystemAccessClientEndpoint {
-    C_OBJECT(Client)
+    IPC_CLIENT_CONNECTION(Client, "/tmp/portal/filesystemaccess")
 
 public:
     Result request_file_read_only_approved(i32 parent_window_id, String const& path);
@@ -38,8 +38,8 @@ protected:
     void die() override;
 
 private:
-    explicit Client()
-        : IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, "/tmp/portal/filesystemaccess")
+    explicit Client(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+        : IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, move(socket))
     {
     }
 

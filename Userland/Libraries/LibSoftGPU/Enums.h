@@ -58,6 +58,11 @@ enum class DepthTestFunction {
     Greater,
 };
 
+enum Face {
+    Front = 0,
+    Back = 1,
+};
+
 enum FogMode {
     Linear,
     Exp,
@@ -80,6 +85,28 @@ enum class PrimitiveType {
     TriangleStrip,
     TriangleFan,
     Quads,
+};
+
+enum StencilOperation {
+    Decrement,
+    DecrementWrap,
+    Increment,
+    IncrementWrap,
+    Invert,
+    Keep,
+    Replace,
+    Zero,
+};
+
+enum StencilTestFunction {
+    Always,
+    Equal,
+    Greater,
+    GreaterOrEqual,
+    Less,
+    LessOrEqual,
+    Never,
+    NotEqual,
 };
 
 enum TexCoordGenerationCoordinate {

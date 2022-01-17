@@ -47,11 +47,14 @@ ErrorOr<void> NVMeController::initialize()
     // Queues will individually map the doorbell register respectively
     m_controller_regs = TRY(Memory::map_typed_writable<volatile ControllerRegister>(PhysicalAddress(m_bar)));
 
+    auto caps = m_controller_regs->cap;
+    m_ready_timeout = Time::from_milliseconds(CAP_TO(caps) * 500); // CAP.TO is in 500ms units
+
     calculate_doorbell_stride();
     TRY(create_admin_queue(irq));
     VERIFY(m_admin_queue_ready == true);
 
-    VERIFY(IO_QUEUE_SIZE < MQES(m_controller_regs->cap));
+    VERIFY(IO_QUEUE_SIZE < MQES(caps));
     dbgln_if(NVME_DEBUG, "NVMe: IO queue depth is: {}", IO_QUEUE_SIZE);
 
     // Create an IO queue per core
@@ -63,14 +66,37 @@ ErrorOr<void> NVMeController::initialize()
     return {};
 }
 
+bool NVMeController::wait_for_ready(bool expected_ready_bit_value)
+{
+    static constexpr size_t one_ms_io_delay = 1000;
+    auto wait_iterations = max(1, m_ready_timeout.to_milliseconds());
+
+    u32 expected_rdy = expected_ready_bit_value ? 1 : 0;
+    while (((m_controller_regs->csts >> CSTS_RDY_BIT) & 0x1) != expected_rdy) {
+        IO::delay(one_ms_io_delay);
+
+        if (--wait_iterations == 0) {
+            if (((m_controller_regs->csts >> CSTS_RDY_BIT) & 0x1) != expected_rdy) {
+                dbgln_if(NVME_DEBUG, "NVMEController: CSTS.RDY still not set to {} after {} ms", expected_rdy, m_ready_timeout.to_milliseconds());
+                return false;
+            }
+            break;
+        }
+    }
+    return true;
+}
+
 bool NVMeController::reset_controller()
 {
-    volatile u32 cc, csts;
-    csts = m_controller_regs->csts;
-    if ((csts & (1 << CSTS_RDY_BIT)) != 0x1)
-        return false;
+    if ((m_controller_regs->cc & (1 << CC_EN_BIT)) != 0) {
+        // If the EN bit is already set, we need to wait
+        // until the RDY bit is 1, otherwise the behavior is undefined
+        if (!wait_for_ready(true))
+            return false;
+    }
 
-    cc = m_controller_regs->cc;
+    auto cc = m_controller_regs->cc;
+
     cc = cc & ~(1 << CC_EN_BIT);
 
     m_controller_regs->cc = cc;
@@ -78,8 +104,8 @@ bool NVMeController::reset_controller()
     IO::delay(10);
     full_memory_barrier();
 
-    csts = m_controller_regs->csts;
-    if ((csts & (1 << CSTS_RDY_BIT)) != 0x0)
+    // Wait until the RDY bit is cleared
+    if (!wait_for_ready(false))
         return false;
 
     return true;
@@ -87,12 +113,14 @@ bool NVMeController::reset_controller()
 
 bool NVMeController::start_controller()
 {
-    volatile u32 cc, csts;
-    csts = m_controller_regs->csts;
-    if ((csts & (1 << CSTS_RDY_BIT)) != 0x0)
-        return false;
+    if (!(m_controller_regs->cc & (1 << CC_EN_BIT))) {
+        // If the EN bit is not already set, we need to wait
+        // until the RDY bit is 0, otherwise the behavior is undefined
+        if (!wait_for_ready(false))
+            return false;
+    }
 
-    cc = m_controller_regs->cc;
+    auto cc = m_controller_regs->cc;
 
     cc = cc | (1 << CC_EN_BIT);
     cc = cc | (CQ_WIDTH << CC_IOCQES_BIT);
@@ -102,8 +130,9 @@ bool NVMeController::start_controller()
 
     IO::delay(10);
     full_memory_barrier();
-    csts = m_controller_regs->csts;
-    if ((csts & (1 << CSTS_RDY_BIT)) != 0x1)
+
+    // Wait until the RDY bit is set
+    if (!wait_for_ready(true))
         return false;
 
     return true;

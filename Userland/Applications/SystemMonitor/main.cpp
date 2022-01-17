@@ -670,7 +670,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
     auto& cpu_graph_group_box = graphs_container->add<GUI::GroupBox>("CPU usage");
     cpu_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
 
-    static constexpr size_t cpu_graphs_per_row = 4;
+    size_t cpu_graphs_per_row = min(4, ProcessModel::the().cpus().size());
     auto cpu_graph_rows = ceil_div(ProcessModel::the().cpus().size(), cpu_graphs_per_row);
     cpu_graph_group_box.set_fixed_height(120u * cpu_graph_rows);
 
@@ -698,7 +698,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
             cpu_graphs.append(cpu_graph);
         }
     }
-    ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) {
+    ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) mutable {
         float sum_cpu = 0;
         for (size_t i = 0; i < cpus.size(); ++i) {
             cpu_graphs[i].add_value({ static_cast<size_t>(cpus[i].total_cpu_percent), static_cast<size_t>(cpus[i].total_cpu_percent_kernel) });

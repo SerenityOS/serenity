@@ -98,6 +98,7 @@ extern "C" {
 #define GL_COLOR_MATERIAL 0x0B57
 #define GL_FOG_START 0x0B63
 #define GL_FOG_END 0x0B64
+#define GL_STENCIL_CLEAR_VALUE 0x0B91
 #define GL_MATRIX_MODE 0x0BA0
 #define GL_NORMALIZE 0x0BA1
 #define GL_VIEWPORT 0x0BA2
@@ -239,7 +240,9 @@ extern "C" {
 #define GL_RGB 0x1907
 #define GL_RGBA 0x1908
 #define GL_LUMINANCE 0x1909
+#define GL_LUMINANCE8 0x8040
 #define GL_LUMINANCE_ALPHA 0x190A
+#define GL_LUMINANCE8_ALPHA8 0x8045
 #define GL_BGR 0x190B
 #define GL_BGRA 0x190C
 #define GL_BITMAP 0x1A00
@@ -603,9 +606,10 @@ GLAPI void glLightModelfv(GLenum pname, GLfloat const* params);
 GLAPI void glLightModeli(GLenum pname, GLint param);
 GLAPI void glStencilFunc(GLenum func, GLint ref, GLuint mask);
 GLAPI void glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
+GLAPI void glStencilMask(GLuint mask);
+GLAPI void glStencilMaskSeparate(GLenum face, GLuint mask);
 GLAPI void glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass);
 GLAPI void glStencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
-GLAPI void glStencilMask(GLuint mask);
 GLAPI void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz);
 GLAPI void glNormal3fv(GLfloat const* v);
 GLAPI void glNormalPointer(GLenum type, GLsizei stride, void const* pointer);

@@ -12,9 +12,9 @@ namespace GUI {
 
 WindowManagerServerConnection& WindowManagerServerConnection::the()
 {
-    static WindowManagerServerConnection* s_connection = nullptr;
+    static RefPtr<WindowManagerServerConnection> s_connection = nullptr;
     if (!s_connection)
-        s_connection = new WindowManagerServerConnection;
+        s_connection = WindowManagerServerConnection::try_create().release_value_but_fixme_should_propagate_errors();
     return *s_connection;
 }
 

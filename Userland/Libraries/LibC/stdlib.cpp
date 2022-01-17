@@ -189,8 +189,7 @@ void exit(int status)
 
     extern void _fini();
     _fini();
-    fflush(stdout);
-    fflush(stderr);
+    fflush(nullptr);
 
 #ifndef _DYNAMIC_LOADER
     __pthread_key_destroy_for_current_thread();

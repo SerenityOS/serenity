@@ -20,7 +20,7 @@ public:
     ~SpreadsheetWidget();
 
     void save(StringView filename);
-    void load(StringView filename);
+    void load_file(int fd, StringView filename);
     bool request_close();
     void add_sheet();
     void add_sheet(NonnullRefPtr<Sheet>&&);
@@ -45,7 +45,7 @@ public:
 private:
     virtual void resize_event(GUI::ResizeEvent&) override;
 
-    explicit SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);
+    explicit SpreadsheetWidget(GUI::Window& window, NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);
 
     void setup_tabs(NonnullRefPtrVector<Sheet> new_sheets);
 

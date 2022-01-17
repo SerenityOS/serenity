@@ -2,6 +2,7 @@
 port=nano
 version=5.8
 useconfigure="true"
+use_fresh_config_sub=true
 files="https://www.nano-editor.org/dist/v5/nano-${version}.tar.xz nano-${version}.tar.xz
 https://www.nano-editor.org/dist/v5/nano-${version}.tar.xz.asc nano-${version}.tar.xz.asc"
 configopts=("--target=${SERENITY_ARCH}-pc-serenity" "--disable-browser" "--disable-utf8")

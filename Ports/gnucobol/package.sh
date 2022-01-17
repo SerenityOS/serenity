@@ -2,6 +2,7 @@
 port=gnucobol
 version=3.1.2
 useconfigure="true"
+use_fresh_config_sub="true"
 depends=("gmp" "gcc" "bash" "ncurses")
 files="https://ftpmirror.gnu.org/gnu/gnucobol/gnucobol-${version}.tar.bz2 gnucobol-${version}.tar.bz2
 https://ftpmirror.gnu.org/gnu/gnucobol/gnucobol-${version}.tar.bz2.sig gnucobol-${version}.tar.bz2.sig

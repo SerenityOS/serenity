@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,7 @@
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GeneratorObject.h>
-#include <LibJS/Runtime/GeneratorObjectPrototype.h>
+#include <LibJS/Runtime/GeneratorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
@@ -32,7 +33,7 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
 {
     Object* prototype = nullptr;
     switch (kind) {
-    case FunctionKind::Regular:
+    case FunctionKind::Normal:
         prototype = global_object.function_prototype();
         break;
     case FunctionKind::Generator:
@@ -46,6 +47,11 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
         break;
     }
     return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, private_scope, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function);
+}
+
+ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, FlyString name, Object& prototype, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+{
+    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, private_scope, prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function);
 }
 
 ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, PrivateEnvironment* private_scope, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
@@ -99,13 +105,13 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
     if (!m_is_arrow_function) {
         Object* prototype = nullptr;
         switch (m_kind) {
-        case FunctionKind::Regular:
+        case FunctionKind::Normal:
             prototype = vm.heap().allocate<Object>(global_object, *global_object.new_ordinary_function_prototype_object_shape());
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case FunctionKind::Generator:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-            prototype = global_object.generator_object_prototype();
+            prototype = global_object.generator_prototype();
             break;
         case FunctionKind::Async:
             break;
@@ -787,7 +793,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
         // NOTE: Running the bytecode should eventually return a completion.
         // Until it does, we assume "return" and include the undefined fallback from the call site.
-        if (m_kind == FunctionKind::Regular)
+        if (m_kind == FunctionKind::Normal)
             return { Completion::Type::Return, result.value_or(js_undefined()), {} };
 
         auto generator_object = TRY(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
@@ -813,7 +819,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         VM::InterpreterExecutionScope scope(*ast_interpreter);
 
         // FunctionBody : FunctionStatementList
-        if (m_kind == FunctionKind::Regular) {
+        if (m_kind == FunctionKind::Normal) {
             // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
             TRY(function_declaration_instantiation(ast_interpreter));
 

@@ -1,0 +1,27 @@
+From 88be19427b96ec99d861b7b6eae7bdad0c7f3bd5 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Fri, 14 Jan 2022 23:35:20 +0330
+Subject: [PATCH 1/4] Enforce UTF-8 as the locale encoding
+
+By defining `_Py_FORCE_UTF8_LOCALE` as some other platforms already do,
+we can enforce UTF-8 as the encoding.
+---
+ Include/pyport.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Include/pyport.h b/Include/pyport.h
+index 6ab0ae4..dffd616 100644
+--- a/Include/pyport.h
++++ b/Include/pyport.h
+@@ -843,7 +843,7 @@ extern _invalid_parameter_handler _Py_silent_invalid_parameter_handler;
+ #  error "Py_TRACE_REFS ABI is not compatible with release and debug ABI"
+ #endif
+ 
+-#if defined(__ANDROID__) || defined(__VXWORKS__)
++#if defined(__ANDROID__) || defined(__VXWORKS__) || defined(__serenity__)
+    // Use UTF-8 as the locale encoding, ignore the LC_CTYPE locale.
+    // See _Py_GetLocaleEncoding(), PyUnicode_DecodeLocale()
+    // and PyUnicode_EncodeLocale().
+-- 
+2.34.1
+

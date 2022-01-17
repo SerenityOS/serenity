@@ -514,22 +514,6 @@ draw_jpg(); // TODO: Make this code handle jpg in addition to the png support.
 
 Explain *why* the code does something. The code itself should already say what is happening.
 
-###### Wrong:
-
-```cpp
-i++; // Increment i.
-```
-
-```cpp
-// If the user clicks, toggle the timer state.
-catdog_widget.on_click = [&] {
-    if (advice_timer->is_active())
-        advice_timer->stop();
-    else
-        advice_timer->start();
-};
-```
-
 ###### Right:
 
 ```cpp
@@ -550,6 +534,22 @@ catdog_widget.on_click = [&] {
 
 ```cpp
 page_index++;
+```
+
+###### Wrong:
+
+```cpp
+i++; // Increment i.
+```
+
+```cpp
+// If the user clicks, toggle the timer state.
+catdog_widget.on_click = [&] {
+    if (advice_timer->is_active())
+        advice_timer->stop();
+    else
+        advice_timer->start();
+};
 ```
 
 ### Overriding Virtual Methods

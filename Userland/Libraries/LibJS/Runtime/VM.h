@@ -123,6 +123,11 @@ public:
     Realm const* current_realm() const { return running_execution_context().realm; }
     Realm* current_realm() { return running_execution_context().realm; }
 
+    // https://tc39.es/ecma262/#active-function-object
+    // The value of the Function component of the running execution context is also called the active function object.
+    FunctionObject const* active_function_object() const { return running_execution_context().function; }
+    FunctionObject* active_function_object() { return running_execution_context().function; }
+
     bool in_strict_mode() const;
 
     size_t argument_count() const
@@ -150,9 +155,6 @@ public:
     ThrowCompletionOr<Value> resolve_this_binding(GlobalObject&);
 
     const StackInfo& stack_info() const { return m_stack_info; };
-
-    bool underscore_is_last_value() const { return m_underscore_is_last_value; }
-    void set_underscore_is_last_value(bool b) { m_underscore_is_last_value = b; }
 
     u32 execution_generation() const { return m_execution_generation; }
     void finish_execution_generation() { ++m_execution_generation; }
@@ -273,8 +275,6 @@ private:
     Symbol* m_well_known_symbol_##snake_name { nullptr };
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
-
-    bool m_underscore_is_last_value { false };
 
     u32 m_execution_generation { 0 };
 

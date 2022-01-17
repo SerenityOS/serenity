@@ -2,6 +2,7 @@
 port=libicu
 version=69.1
 useconfigure=true
+use_fresh_config_sub=true
 workdir=icu/source
 configopts=("--with-cross-build=$(pwd)/${workdir}/../host-build")
 files="https://github.com/unicode-org/icu/releases/download/release-${version//./-}/icu4c-${version//./_}-src.tgz icu4c-${version//./_}-src.tgz 4cba7b7acd1d3c42c44bb0c14be6637098c7faf2b330ce876bc5f3b915d09745"

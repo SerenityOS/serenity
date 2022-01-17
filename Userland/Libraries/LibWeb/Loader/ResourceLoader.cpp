@@ -21,14 +21,21 @@ namespace Web {
 
 ResourceLoader& ResourceLoader::the()
 {
-    static ResourceLoader* s_the;
+    static RefPtr<ResourceLoader> s_the;
     if (!s_the)
-        s_the = &ResourceLoader::construct().leak_ref();
+        s_the = ResourceLoader::try_create().release_value_but_fixme_should_propagate_errors();
     return *s_the;
 }
 
-ResourceLoader::ResourceLoader()
-    : m_protocol_client(Protocol::RequestClient::construct())
+ErrorOr<NonnullRefPtr<ResourceLoader>> ResourceLoader::try_create()
+{
+
+    auto protocol_client = TRY(Protocol::RequestClient::try_create());
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ResourceLoader(move(protocol_client)));
+}
+
+ResourceLoader::ResourceLoader(NonnullRefPtr<Protocol::RequestClient> protocol_client)
+    : m_protocol_client(move(protocol_client))
     , m_user_agent(default_user_agent)
 {
 }

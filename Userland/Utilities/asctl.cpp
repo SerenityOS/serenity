@@ -29,7 +29,7 @@ enum AudioVariable : u32 {
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
-    auto audio_client = Audio::ClientConnection::construct();
+    auto audio_client = TRY(Audio::ClientConnection::try_create());
 
     String command = String::empty();
     Vector<StringView> command_arguments;

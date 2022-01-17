@@ -308,7 +308,7 @@ static ErrorOr<void> parse_number_system_digits(String core_supplemental_path, U
 
 static String parse_identifiers(String pattern, StringView replacement, UnicodeLocaleData& locale_data, NumberFormat& format)
 {
-    static Utf8View whitespace { "\u0020\u00a0\u200f"sv };
+    static constexpr Utf8View whitespace { "\u0020\u00a0\u200f"sv };
 
     while (true) {
         Utf8View utf8_pattern { pattern };

@@ -1,0 +1,38 @@
+From aaa210d6039aa02ff3bc7998d39c6befa791cfdd Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Wed, 12 Jan 2022 22:15:37 +0330
+Subject: [PATCH 3/7] /bin/bash
+
+This patch swaps out /bin/sh for /bin/bash in two scripts that need it.
+
+- [X] Local?
+- [ ] Should be merged to upstream?
+- [ ] Resolves issue(s) with our side of things
+- [ ] Hack
+---
+ bootstrap | 2 +-
+ configure | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/bootstrap b/bootstrap
+index a487375a..8db931d1 100755
+--- a/bootstrap
++++ b/bootstrap
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/bin/bash
+ # Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
+ # file Copyright.txt or https://cmake.org/licensing for details.
+ 
+diff --git a/configure b/configure
+index 11622160..0e6fc25d 100755
+--- a/configure
++++ b/configure
+@@ -1,3 +1,3 @@
+-#!/bin/sh
++#!/bin/bash
+ cmake_source_dir=`cd "\`dirname \"$0\"\`";pwd`
+ exec "${cmake_source_dir}/bootstrap" "$@"
+-- 
+2.34.1
+

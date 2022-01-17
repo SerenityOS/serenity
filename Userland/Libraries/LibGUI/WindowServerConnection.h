@@ -16,13 +16,13 @@ namespace GUI {
 class WindowServerConnection final
     : public IPC::ServerConnection<WindowClientEndpoint, WindowServerEndpoint>
     , public WindowClientEndpoint {
-    C_OBJECT(WindowServerConnection)
+    IPC_CLIENT_CONNECTION(WindowServerConnection, "/tmp/portal/window")
 public:
     static WindowServerConnection& the();
     i32 expose_client_id() { return m_client_id; }
 
 private:
-    WindowServerConnection();
+    WindowServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
     virtual void fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, String const&, String const&, i32) override;
     virtual void paint(i32, Gfx::IntSize const&, Vector<Gfx::IntRect> const&) override;

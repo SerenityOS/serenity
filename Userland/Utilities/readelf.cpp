@@ -311,7 +311,7 @@ int main(int argc, char** argv)
     RefPtr<ELF::DynamicObject> object = nullptr;
 
     if (elf_image.is_dynamic()) {
-        if (interpreter_path.is_null()) {
+        if (interpreter_path.is_empty()) {
             interpreter_path = "/usr/lib/Loader.so"sv;
             warnln("Warning: Dynamic ELF object has no interpreter path. Using: {}", interpreter_path);
         }

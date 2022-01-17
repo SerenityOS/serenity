@@ -56,7 +56,7 @@ private:
 };
 
 struct ImportDialog {
-    static Result<NonnullRefPtrVector<Sheet>, String> make_and_run_for(GUI::Window* parent, StringView mime, Core::File& file, Workbook&);
+    static Result<NonnullRefPtrVector<Sheet>, String> make_and_run_for(GUI::Window& parent, StringView mime, Core::File& file, Workbook&);
 };
 
 }

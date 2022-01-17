@@ -23,8 +23,8 @@ public:
 private:
     virtual bool is_shared_inode() const override { return true; }
 
-    explicit SharedInodeVMObject(Inode&, size_t);
-    explicit SharedInodeVMObject(SharedInodeVMObject const&);
+    explicit SharedInodeVMObject(Inode&, FixedArray<RefPtr<PhysicalPage>>&&);
+    explicit SharedInodeVMObject(SharedInodeVMObject const&, FixedArray<RefPtr<PhysicalPage>>&&);
 
     virtual StringView class_name() const override { return "SharedInodeVMObject"sv; }
 

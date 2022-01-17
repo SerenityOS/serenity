@@ -2,6 +2,8 @@
 port=libgcrypt
 version=1.9.2
 useconfigure=true
+use_fresh_config_sub=true
+config_sub_path=build-aux/config.sub
 configopts=("--with-libgpg-error-prefix=${SERENITY_INSTALL_ROOT}/usr/local")
 depends=("libgpg-error")
 files="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${version}.tar.bz2 libgcrypt-${version}.tar.bz2 b2c10d091513b271e47177274607b1ffba3d95b188bbfa8797f948aec9053c5a"

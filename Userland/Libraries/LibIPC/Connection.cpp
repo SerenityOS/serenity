@@ -11,10 +11,9 @@
 
 namespace IPC {
 
-ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullRefPtr<Core::LocalSocket> socket, u32 local_endpoint_magic)
+ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::Stream::LocalSocket> socket, u32 local_endpoint_magic)
     : m_local_stub(local_stub)
     , m_socket(move(socket))
-    , m_notifier(Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read, this))
     , m_local_endpoint_magic(local_endpoint_magic)
 {
     m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
@@ -42,7 +41,7 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
 
 #ifdef __serenity__
     for (auto& fd : buffer.fds) {
-        if (auto result = Core::System::sendfd(m_socket->fd(), fd.value()); result.is_error()) {
+        if (auto result = m_socket->send_fd(fd.value()); result.is_error()) {
             dbgln("{}", result.error());
             shutdown();
             return result;
@@ -53,23 +52,29 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
         warnln("fd passing is not supported on this platform, sorry :(");
 #endif
 
-    size_t total_nwritten = 0;
-    while (total_nwritten < buffer.data.size()) {
-        auto nwritten = write(m_socket->fd(), buffer.data.data() + total_nwritten, buffer.data.size() - total_nwritten);
-        if (nwritten < 0) {
-            switch (errno) {
-            case EPIPE:
-                shutdown();
-                return Error::from_string_literal("IPC::Connection::post_message: Disconnected from peer"sv);
-            case EAGAIN:
-                shutdown();
-                return Error::from_string_literal("IPC::Connection::post_message: Peer buffer overflowed"sv);
-            default:
-                shutdown();
-                return Error::from_syscall("IPC::Connection::post_message write"sv, -errno);
+    ReadonlyBytes bytes_to_write { buffer.data.span() };
+    while (!bytes_to_write.is_empty()) {
+        auto maybe_nwritten = m_socket->write(bytes_to_write);
+        if (maybe_nwritten.is_error()) {
+            auto error = maybe_nwritten.release_error();
+            if (error.is_errno()) {
+                switch (error.code()) {
+                case EPIPE:
+                    shutdown();
+                    return Error::from_string_literal("IPC::Connection::post_message: Disconnected from peer"sv);
+                case EAGAIN:
+                    shutdown();
+                    return Error::from_string_literal("IPC::Connection::post_message: Peer buffer overflowed"sv);
+                default:
+                    shutdown();
+                    return Error::from_syscall("IPC::Connection::post_message write"sv, -error.code());
+                }
+            } else {
+                return error;
             }
         }
-        total_nwritten += nwritten;
+
+        bytes_to_write = bytes_to_write.slice(maybe_nwritten.value());
     }
 
     m_responsiveness_timer->start();
@@ -78,7 +83,6 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
 
 void ConnectionBase::shutdown()
 {
-    m_notifier->close();
     m_socket->close();
     die();
 }
@@ -99,21 +103,14 @@ void ConnectionBase::handle_messages()
 
 void ConnectionBase::wait_for_socket_to_become_readable()
 {
-    fd_set read_fds;
-    FD_ZERO(&read_fds);
-    FD_SET(m_socket->fd(), &read_fds);
-    for (;;) {
-        if (auto rc = select(m_socket->fd() + 1, &read_fds, nullptr, nullptr, nullptr); rc < 0) {
-            if (errno == EINTR)
-                continue;
-            perror("wait_for_specific_endpoint_message: select");
-            VERIFY_NOT_REACHED();
-        } else {
-            VERIFY(rc > 0);
-            VERIFY(FD_ISSET(m_socket->fd(), &read_fds));
-            break;
-        }
+    auto maybe_did_become_readable = m_socket->can_read_without_blocking(-1);
+    if (maybe_did_become_readable.is_error()) {
+        dbgln("ConnectionBase::wait_for_socket_to_become_readable: {}", maybe_did_become_readable.error());
+        warnln("ConnectionBase::wait_for_socket_to_become_readable: {}", maybe_did_become_readable.error());
+        VERIFY_NOT_REACHED();
     }
+
+    VERIFY(maybe_did_become_readable.value());
 }
 
 ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without_blocking()
@@ -125,15 +122,21 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
         m_unprocessed_bytes.clear();
     }
 
+    u8 buffer[4096];
     while (m_socket->is_open()) {
-        u8 buffer[4096];
-        ssize_t nread = recv(m_socket->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
-        if (nread < 0) {
-            if (errno == EAGAIN)
+        auto maybe_nread = m_socket->read_without_waiting({ buffer, 4096 });
+        if (maybe_nread.is_error()) {
+            auto error = maybe_nread.release_error();
+            if (error.is_syscall() && error.code() == EAGAIN) {
                 break;
-            perror("recv");
-            exit(1);
+            }
+
+            dbgln("ConnectionBase::read_as_much_as_possible_from_socket_without_blocking: {}", error);
+            warnln("ConnectionBase::read_as_much_as_possible_from_socket_without_blocking: {}", error);
+            VERIFY_NOT_REACHED();
         }
+
+        auto nread = maybe_nread.release_value();
         if (nread == 0) {
             if (bytes.is_empty()) {
                 deferred_invoke([this] { shutdown(); });
@@ -141,6 +144,7 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
             }
             break;
         }
+
         bytes.append(buffer, nread);
     }
 

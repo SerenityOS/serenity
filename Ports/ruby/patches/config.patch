@@ -1,14 +1,3 @@
---- ruby-3.0.2/tool/config.sub	2021-07-07 03:08:35.000000000 -0700
-+++ ruby-3.0.2/tool/config.sub	2021-09-15 10:18:47.677232027 -0700
-@@ -1695,7 +1695,7 @@
- 	# Now accept the basic system types.
- 	# The portable systems comes first.
- 	# Each alternative MUST end in a * to match a version number.
--	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
-+	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | serenity* | irix* \
- 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
- 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
- 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
 --- ruby-3.0.2/configure	2021-09-16 14:10:42.314091669 -0700
 +++ ruby-3.0.2/configure	2021-09-18 19:14:21.633876942 -0700
 @@ -28610,7 +28610,7 @@

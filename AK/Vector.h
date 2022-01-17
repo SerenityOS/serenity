@@ -46,6 +46,8 @@ private:
     static constexpr bool contains_reference = IsLvalueReference<T>;
     using StorageType = Conditional<contains_reference, RawPtr<RemoveReference<T>>, T>;
 
+    using VisibleType = RemoveReference<T>;
+
     template<typename U>
     static constexpr bool CanBePlacedInsideVector = Detail::CanBePlacedInsideVectorHelper<StorageType, contains_reference>::template value<U>;
 
@@ -125,7 +127,7 @@ public:
         return m_outline_buffer;
     }
 
-    ALWAYS_INLINE T const& at(size_t i) const
+    ALWAYS_INLINE VisibleType const& at(size_t i) const
     {
         VERIFY(i < m_size);
         if constexpr (contains_reference)
@@ -134,7 +136,7 @@ public:
             return data()[i];
     }
 
-    ALWAYS_INLINE T& at(size_t i)
+    ALWAYS_INLINE VisibleType& at(size_t i)
     {
         VERIFY(i < m_size);
         if constexpr (contains_reference)
@@ -143,17 +145,17 @@ public:
             return data()[i];
     }
 
-    ALWAYS_INLINE T const& operator[](size_t i) const { return at(i); }
-    ALWAYS_INLINE T& operator[](size_t i) { return at(i); }
+    ALWAYS_INLINE VisibleType const& operator[](size_t i) const { return at(i); }
+    ALWAYS_INLINE VisibleType& operator[](size_t i) { return at(i); }
 
-    T const& first() const { return at(0); }
-    T& first() { return at(0); }
+    VisibleType const& first() const { return at(0); }
+    VisibleType& first() { return at(0); }
 
-    T const& last() const { return at(size() - 1); }
-    T& last() { return at(size() - 1); }
+    VisibleType const& last() const { return at(size() - 1); }
+    VisibleType& last() { return at(size() - 1); }
 
     template<typename TUnaryPredicate>
-    Optional<T> first_matching(TUnaryPredicate predicate)
+    Optional<VisibleType> first_matching(TUnaryPredicate predicate) requires(!contains_reference)
     {
         for (size_t i = 0; i < size(); ++i) {
             if (predicate(at(i))) {
@@ -164,7 +166,7 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    Optional<T> last_matching(TUnaryPredicate predicate)
+    Optional<VisibleType> last_matching(TUnaryPredicate predicate) requires(!contains_reference)
     {
         for (ssize_t i = size() - 1; i >= 0; --i) {
             if (predicate(at(i))) {
@@ -182,21 +184,21 @@ public:
         return TypedTransfer<StorageType>::compare(data(), other.data(), size());
     }
 
-    bool contains_slow(T const& value) const
+    bool contains_slow(VisibleType const& value) const
     {
         for (size_t i = 0; i < size(); ++i) {
-            if (Traits<T>::equals(at(i), value))
+            if (Traits<VisibleType>::equals(at(i), value))
                 return true;
         }
         return false;
     }
 
-    bool contains_in_range(T const& value, size_t const start, size_t const end) const
+    bool contains_in_range(VisibleType const& value, size_t const start, size_t const end) const
     {
         VERIFY(start <= end);
         VERIFY(end < size());
         for (size_t i = start; i <= end; ++i) {
-            if (Traits<T>::equals(at(i), value))
+            if (Traits<VisibleType>::equals(at(i), value))
                 return true;
         }
         return false;
@@ -689,8 +691,8 @@ public:
         MUST(try_resize_and_keep_capacity(new_size));
     }
 
-    using ConstIterator = SimpleIterator<Vector const, T const>;
-    using Iterator = SimpleIterator<Vector, T>;
+    using ConstIterator = SimpleIterator<Vector const, VisibleType const>;
+    using Iterator = SimpleIterator<Vector, VisibleType>;
 
     ConstIterator begin() const { return ConstIterator::begin(*this); }
     Iterator begin() { return Iterator::begin(*this); }
@@ -710,17 +712,17 @@ public:
         return AK::find_if(begin(), end(), forward<TUnaryPredicate>(finder));
     }
 
-    ConstIterator find(T const& value) const
+    ConstIterator find(VisibleType const& value) const
     {
         return AK::find(begin(), end(), value);
     }
 
-    Iterator find(T const& value)
+    Iterator find(VisibleType const& value)
     {
         return AK::find(begin(), end(), value);
     }
 
-    Optional<size_t> find_first_index(T const& value) const
+    Optional<size_t> find_first_index(VisibleType const& value) const
     {
         if (auto const index = AK::find_index(begin(), end(), value);
             index < size()) {
