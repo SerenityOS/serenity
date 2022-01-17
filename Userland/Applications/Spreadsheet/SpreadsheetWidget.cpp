@@ -124,15 +124,10 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         if (!load_path.has_value())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window()->window_id(), *load_path);
-
-        if (response.error != 0) {
-            if (response.error != -1)
-                GUI::MessageBox::show_error(window(), String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), *load_path);
+        if (response.is_error())
             return;
-        }
-
-        load_file(*response.fd, *load_path);
+        load_file(*response.value());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -400,9 +395,9 @@ void SpreadsheetWidget::save(StringView filename)
         GUI::MessageBox::show_error(window(), result.error());
 }
 
-void SpreadsheetWidget::load_file(int fd, StringView filename)
+void SpreadsheetWidget::load_file(Core::File& file)
 {
-    auto result = m_workbook->open_file(fd, filename);
+    auto result = m_workbook->open_file(file);
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), result.error());
         return;

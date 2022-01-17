@@ -19,7 +19,7 @@ public:
 
     Result<bool, String> save(StringView filename);
     Result<bool, String> load(StringView filename);
-    Result<bool, String> open_file(int fd, StringView filename);
+    Result<bool, String> open_file(Core::File&);
 
     const String& current_filename() const { return m_current_filename; }
     bool set_filename(const String& filename);
