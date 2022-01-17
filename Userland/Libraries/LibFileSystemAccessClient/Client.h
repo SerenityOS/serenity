@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, timmot <tiwwot@protonmail.com>
+ * Copyright (c) 2022, Mustafa Quraish <mustafa@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,13 +17,7 @@
 
 namespace FileSystemAccessClient {
 
-struct Result {
-    i32 error;
-    Optional<i32> fd;
-    Optional<String> chosen_file;
-};
-
-using FileResult = ErrorOr<NonnullRefPtr<Core::File>>;
+using Result = ErrorOr<NonnullRefPtr<Core::File>>;
 
 class Client final
     : public IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>
@@ -30,15 +25,10 @@ class Client final
     IPC_CLIENT_CONNECTION(Client, "/tmp/portal/filesystemaccess")
 
 public:
-    Result request_file_read_only_approved(i32 parent_window_id, String const& path);
-    Result request_file(i32 parent_window_id, String const& path, Core::OpenMode mode);
-    Result open_file(i32 parent_window_id, String const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
-    Result save_file(i32 parent_window_id, String const& name, String const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
-
-    FileResult try_request_file_read_only_approved(GUI::Window* parent_window, String const& path);
-    FileResult try_request_file(GUI::Window* parent_window, String const& path, Core::OpenMode mode);
-    FileResult try_open_file(GUI::Window* parent_window, String const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
-    FileResult try_save_file(GUI::Window* parent_window, String const& name, String const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
+    Result try_request_file_read_only_approved(GUI::Window* parent_window, String const& path);
+    Result try_request_file(GUI::Window* parent_window, String const& path, Core::OpenMode mode);
+    Result try_open_file(GUI::Window* parent_window, String const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
+    Result try_save_file(GUI::Window* parent_window, String const& name, String const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
 
     static Client& the();
 
@@ -54,7 +44,6 @@ private:
     virtual void handle_prompt_end(i32 error, Optional<IPC::File> const& fd, Optional<String> const& chosen_file) override;
 
     RefPtr<Core::Promise<Result>> m_promise;
-    RefPtr<Core::Promise<FileResult>> m_file_promise;
     GUI::Window* m_parent_window { nullptr };
 };
 
