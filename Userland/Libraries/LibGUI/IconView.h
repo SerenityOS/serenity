@@ -61,6 +61,8 @@ private:
 
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
+    virtual void on_automatic_scrolling_timer_fired() override;
+
     struct ItemData {
         Gfx::IntRect text_rect;
         Optional<Gfx::IntRect> text_rect_wrapped;
@@ -122,7 +124,6 @@ private:
     void update_item_rects(int item_index, ItemData& item_data) const;
     void get_item_rects(int item_index, ItemData& item_data, const Gfx::Font&) const;
     bool update_rubber_banding(const Gfx::IntPoint&);
-    void scroll_out_of_view_timer_fired();
     int items_per_page() const;
 
     void rebuild_item_cache() const;
@@ -156,10 +157,10 @@ private:
     bool m_always_wrap_item_labels { false };
 
     bool m_rubber_banding { false };
-    RefPtr<Core::Timer> m_out_of_view_timer;
     Gfx::IntPoint m_out_of_view_position;
     Gfx::IntPoint m_rubber_band_origin;
     Gfx::IntPoint m_rubber_band_current;
+    Gfx::IntPoint m_rubber_band_scroll_delta;
 
     FlowDirection m_flow_direction { FlowDirection::LeftToRight };
 

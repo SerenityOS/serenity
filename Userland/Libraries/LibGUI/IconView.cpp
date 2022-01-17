@@ -241,8 +241,7 @@ void IconView::mouseup_event(MouseEvent& event)
 {
     if (m_rubber_banding && event.button() == MouseButton::Primary) {
         m_rubber_banding = false;
-        if (m_out_of_view_timer)
-            m_out_of_view_timer->stop();
+        set_automatic_scrolling_timer(false);
         update(to_widget_rect(Gfx::IntRect::from_two_points(m_rubber_band_origin, m_rubber_band_current)));
     }
     AbstractView::mouseup_event(event);
@@ -324,32 +323,17 @@ bool IconView::update_rubber_banding(const Gfx::IntPoint& input_position)
     return false;
 }
 
-#define SCROLL_OUT_OF_VIEW_HOT_MARGIN 20
-
 void IconView::mousemove_event(MouseEvent& event)
 {
     if (!model())
         return AbstractView::mousemove_event(event);
 
-    if (m_rubber_banding) {
-        auto in_view_rect = widget_inner_rect();
-        in_view_rect.shrink(SCROLL_OUT_OF_VIEW_HOT_MARGIN, SCROLL_OUT_OF_VIEW_HOT_MARGIN);
-        if (!in_view_rect.contains(event.position())) {
-            if (!m_out_of_view_timer) {
-                m_out_of_view_timer = add<Core::Timer>();
-                m_out_of_view_timer->set_interval(100);
-                m_out_of_view_timer->on_timeout = [this] {
-                    scroll_out_of_view_timer_fired();
-                };
-            }
+    m_rubber_band_scroll_delta = automatic_scroll_delta_from_position(event.position());
 
-            m_out_of_view_position = event.position();
-            if (!m_out_of_view_timer->is_active())
-                m_out_of_view_timer->start();
-        } else {
-            if (m_out_of_view_timer)
-                m_out_of_view_timer->stop();
-        }
+    if (m_rubber_banding) {
+        m_out_of_view_position = event.position();
+        set_automatic_scrolling_timer(!m_rubber_band_scroll_delta.is_null());
+
         if (update_rubber_banding(event.position()))
             return;
     }
@@ -357,27 +341,15 @@ void IconView::mousemove_event(MouseEvent& event)
     AbstractView::mousemove_event(event);
 }
 
-void IconView::scroll_out_of_view_timer_fired()
+void IconView::on_automatic_scrolling_timer_fired()
 {
-    auto scroll_to = to_content_position(m_out_of_view_position);
-    // Adjust the scroll-to position by SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2
-    // depending on which direction we're scrolling. This allows us to
-    // start scrolling before we actually leave the visible area, which
-    // is important when there is no space to further move the mouse. The
-    // speed of scrolling is determined by the distance between the mouse
-    // pointer and the widget's inner rect shrunken by the hot margin
-    auto in_view_rect = widget_inner_rect().shrunken(SCROLL_OUT_OF_VIEW_HOT_MARGIN, SCROLL_OUT_OF_VIEW_HOT_MARGIN);
-    int adjust_x = 0, adjust_y = 0;
-    if (m_out_of_view_position.y() > in_view_rect.bottom())
-        adjust_y = (SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + min(SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.y() - in_view_rect.bottom());
-    else if (m_out_of_view_position.y() < in_view_rect.top())
-        adjust_y = -(SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + max(-SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.y() - in_view_rect.top());
-    if (m_out_of_view_position.x() > in_view_rect.right())
-        adjust_x = (SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + min(SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.x() - in_view_rect.right());
-    else if (m_out_of_view_position.x() < in_view_rect.left())
-        adjust_x = -(SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + max(-SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.x() - in_view_rect.left());
+    AbstractView::on_automatic_scrolling_timer_fired();
 
-    AbstractScrollableWidget::scroll_into_view({ scroll_to.translated(adjust_x, adjust_y), { 1, 1 } }, true, true);
+    if (m_rubber_band_scroll_delta.is_null())
+        return;
+
+    vertical_scrollbar().increase_slider_by(m_rubber_band_scroll_delta.y());
+    horizontal_scrollbar().increase_slider_by(m_rubber_band_scroll_delta.x());
     update_rubber_banding(m_out_of_view_position);
 }
 
