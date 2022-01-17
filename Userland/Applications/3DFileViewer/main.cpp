@@ -36,8 +36,7 @@ class GLContextWidget final : public GUI::Frame {
 
 public:
     bool load_path(String const& fname);
-    bool load_fd_and_close(int fd, String const& fname);
-    bool load_file(Core::File& file, String const& fname);
+    bool load_file(Core::File& file);
     void toggle_rotate_x() { m_rotate_x = !m_rotate_x; }
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
     void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
@@ -258,23 +257,12 @@ bool GLContextWidget::load_path(String const& filename)
         return false;
     }
 
-    return load_file(file, filename);
+    return load_file(file);
 }
 
-bool GLContextWidget::load_fd_and_close(int fd, String const& filename)
+bool GLContextWidget::load_file(Core::File& file)
 {
-    auto file = Core::File::construct();
-
-    if (!file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-        return false;
-    }
-
-    return load_file(file, filename);
-}
-
-bool GLContextWidget::load_file(Core::File& file, String const& filename)
-{
+    auto const& filename = file.filename();
     if (!filename.ends_with(".obj")) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: invalid file type", filename), "Error", GUI::MessageBox::Type::Error);
         return false;
@@ -310,13 +298,12 @@ bool GLContextWidget::load_file(Core::File& file, String const& filename)
         if (!bitmap_or_error.is_error())
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     } else {
-        auto result = FileSystemAccessClient::Client::the().request_file(window()->window_id(), builder.string_view(), Core::OpenMode::ReadOnly);
-
-        if (result.error != 0) {
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), builder.string_view(), Core::OpenMode::ReadOnly);
+        if (response.is_error())
             return false;
-        }
 
-        auto bitmap_or_error = Gfx::Bitmap::try_load_from_fd_and_close(*result.fd, *result.chosen_file);
+        auto texture_file = response.value();
+        auto bitmap_or_error = Gfx::Bitmap::try_load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
         if (!bitmap_or_error.is_error())
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     }
@@ -370,13 +357,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& file_menu = window->add_menu("&File");
 
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto result = FileSystemAccessClient::Client::the().open_file(window->window_id());
-
-        if (result.error != 0)
+        auto response = FileSystemAccessClient::Client::the().try_open_file(window);
+        if (response.is_error())
             return;
 
-        if (widget->load_fd_and_close(*result.fd, *result.chosen_file)) {
-            auto canonical_path = Core::File::absolute_path(*result.chosen_file);
+        auto file = response.value();
+        if (widget->load_file(*file)) {
+            auto canonical_path = Core::File::absolute_path(file->filename());
             window->set_title(String::formatted("{} - 3D File Viewer", canonical_path));
         }
     }));
