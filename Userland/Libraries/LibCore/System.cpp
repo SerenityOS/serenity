@@ -936,4 +936,9 @@ ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev)
 #endif
 }
 
+ErrorOr<void> mkfifo(StringView pathname, mode_t mode)
+{
+    return mknod(pathname, mode | S_IFIFO, 0);
+}
+
 }
