@@ -1,6 +1,6 @@
 ## Name
 
-Snake
+![Icon](/res/icons/16x16/app-snake.png) Snake
 
 ## Synopsis
 
