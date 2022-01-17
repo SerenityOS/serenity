@@ -543,18 +543,22 @@ do_uninstall() {
     uninstall
 }
 do_showproperty() {
-    if ! declare -p "${1}" > /dev/null 2>&1; then
-        echo "Property '$1' is not set." >&2
-        exit 1
-    fi
-    property_declaration="$(declare -p "${1}")"
-    if [[ "$property_declaration" =~ "declare -a" ]]; then
-        prop_array="${1}[@]"
-        # Some magic to avoid empty arrays being considered unset.
-        echo "${!prop_array+"${!prop_array}"}"
-    else
-        echo ${!1}
-    fi
+    while [ $# -gt 0 ]; do
+        if ! declare -p "${1}" > /dev/null 2>&1; then
+            echo "Property '$1' is not set." >&2
+            exit 1
+        fi
+        property_declaration="$(declare -p "${1}")"
+        if [[ "$property_declaration" =~ "declare -a" ]]; then
+            prop_array="${1}[@]"
+            # Some magic to avoid empty arrays being considered unset.
+            echo "${!prop_array+"${!prop_array}"}"
+        else
+            echo ${!1}
+        fi
+        printf '\n'
+        shift
+    done
 }
 do_all() {
     do_installdepends
