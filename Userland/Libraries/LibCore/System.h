@@ -32,7 +32,6 @@ namespace Core::System {
 
 #ifdef __serenity__
 ErrorOr<void> beep();
-ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
 ErrorOr<void> unveil(StringView path, StringView permissions);
 ErrorOr<void> sendfd(int sockfd, int fd);
 ErrorOr<int> recvfd(int sockfd, int options);
@@ -51,6 +50,7 @@ ErrorOr<Optional<struct spwd>> getspnam(StringView name);
 ErrorOr<int> accept4(int sockfd, struct sockaddr*, socklen_t*, int flags);
 #endif
 
+ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
 #if defined(__APPLE__) || defined(__OpenBSD__)
 ErrorOr<sig_t> signal(int signal, sig_t handler);

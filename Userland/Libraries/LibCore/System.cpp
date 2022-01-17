@@ -44,16 +44,6 @@ ErrorOr<void> beep()
     return {};
 }
 
-ErrorOr<void> pledge(StringView promises, StringView execpromises)
-{
-    Syscall::SC_pledge_params params {
-        { promises.characters_without_null_termination(), promises.length() },
-        { execpromises.characters_without_null_termination(), execpromises.length() },
-    };
-    int rc = syscall(SC_pledge, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("pledge"sv, rc, {});
-}
-
 ErrorOr<void> unveil(StringView path, StringView permissions)
 {
     Syscall::SC_unveil_params params {
@@ -159,6 +149,22 @@ ErrorOr<int> accept4(int sockfd, sockaddr* address, socklen_t* address_length, i
     return fd;
 }
 #endif
+
+ErrorOr<void> pledge(StringView promises, StringView execpromises)
+{
+#ifdef __serenity__
+    Syscall::SC_pledge_params params {
+        { promises.characters_without_null_termination(), promises.length() },
+        { execpromises.characters_without_null_termination(), execpromises.length() },
+    };
+    int rc = syscall(SC_pledge, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("pledge"sv, rc, {});
+#else
+    (void)promises;
+    (void)execpromises;
+    return {};
+#endif
+}
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action)
 {
