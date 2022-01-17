@@ -39,7 +39,7 @@ private:
     void create_frame();
     void create_resolution_list();
     void load_current_settings();
-    void selected_screen_index_changed();
+    void selected_screen_index_or_resolution_changed();
 
     size_t m_selected_screen_index { 0 };
 
@@ -52,6 +52,7 @@ private:
     RefPtr<GUI::ComboBox> m_resolution_combo;
     RefPtr<GUI::RadioButton> m_display_scale_radio_1x;
     RefPtr<GUI::RadioButton> m_display_scale_radio_2x;
+    RefPtr<GUI::Label> m_dpi_label;
 
     bool m_showing_screen_numbers { false };
 };
