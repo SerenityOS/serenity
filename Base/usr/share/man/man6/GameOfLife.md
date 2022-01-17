@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-gameoflife.png) GameOfLife
+GameOfLife
 
 ## Synopsis
 

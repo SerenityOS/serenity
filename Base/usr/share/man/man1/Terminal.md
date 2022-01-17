@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-terminal.png) Terminal - Serenity terminal emulator
+Terminal - Serenity terminal emulator
 
 [Open](file:///bin/Terminal)
 

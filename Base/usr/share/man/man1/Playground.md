@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-playground.png) Playground - GUI Markup Language (GML) editor
+Playground - GUI Markup Language (GML) editor
 
 [Open](file:///bin/Playground)
 
@@ -32,4 +32,3 @@ $ Playground /home/anon/example.gml
 ## See also
 
 * [`gml-format`(1)](help://man/1/gml-format) For automated GML formatting
-

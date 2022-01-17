@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-eyes.png) Eyes
+Eyes
 
 ## Synopsis
 
@@ -18,4 +18,3 @@ $ Eyes [--num-eyes number] [--max-in-row number] [--grid-rows number] [--grid-co
 * `-c number`, `--grid-cols number`: Number of columns in grid (incompatible with --number)
 
 <!-- Auto-generated through ArgsParser -->
-
