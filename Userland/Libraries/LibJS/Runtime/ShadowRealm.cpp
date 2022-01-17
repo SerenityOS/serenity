@@ -93,7 +93,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
     eval_context.realm = &eval_realm;
 
     // 15. Set evalContext's ScriptOrModule to null.
-    // FIXME: Our execution context struct currently does not track this item.
+    // Note: This is already the default value.
 
     // 16. Set evalContext's VariableEnvironment to varEnv.
     eval_context.variable_environment = variable_environment;

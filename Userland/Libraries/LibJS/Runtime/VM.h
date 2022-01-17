@@ -239,6 +239,8 @@ public:
     void save_execution_context_stack();
     void restore_execution_context_stack();
 
+    ScriptOrModule get_active_script_or_module() const;
+
 private:
     explicit VM(OwnPtr<CustomData>);
 

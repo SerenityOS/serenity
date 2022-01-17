@@ -85,7 +85,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
     callee_context.realm = callee_realm;
 
     // 7. Set the ScriptOrModule of calleeContext to null.
-    // FIXME: Our execution context struct currently does not track this item.
+    // Note: This is already the default value.
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
 
@@ -150,7 +150,7 @@ ThrowCompletionOr<Object*> NativeFunction::internal_construct(MarkedValueList ar
     callee_context.realm = callee_realm;
 
     // 7. Set the ScriptOrModule of calleeContext to null.
-    // FIXME: Our execution context struct currently does not track this item.
+    // Note: This is already the default value.
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
 

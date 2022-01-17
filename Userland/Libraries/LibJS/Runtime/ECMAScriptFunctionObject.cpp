@@ -71,12 +71,19 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, String source
     , m_is_arrow_function(is_arrow_function)
 {
     // NOTE: This logic is from OrdinaryFunctionCreate, https://tc39.es/ecma262/#sec-ordinaryfunctioncreate
+
+    // 9. If thisMode is lexical-this, set F.[[ThisMode]] to lexical.
     if (m_is_arrow_function)
         m_this_mode = ThisMode::Lexical;
+    // 10. Else if Strict is true, set F.[[ThisMode]] to strict.
     else if (m_strict)
         m_this_mode = ThisMode::Strict;
     else
+        // 11. Else, set F.[[ThisMode]] to global.
         m_this_mode = ThisMode::Global;
+
+    // 15. Set F.[[ScriptOrModule]] to GetActiveScriptOrModule().
+    m_script_or_module = vm().get_active_script_or_module();
 
     // 15.1.3 Static Semantics: IsSimpleParameterList, https://tc39.es/ecma262/#sec-static-semantics-issimpleparameterlist
     m_has_simple_parameter_list = all_of(m_formal_parameters, [&](auto& parameter) {
@@ -595,7 +602,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
     callee_context.realm = callee_realm;
 
     // 6. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
-    // FIXME: Our execution context struct currently does not track this item.
+    callee_context.script_or_module = m_script_or_module;
 
     // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
     auto* local_environment = new_function_environment(*this, new_target);

@@ -109,6 +109,7 @@ private:
     NonnullRefPtr<Statement> m_ecmascript_code;                   // [[ECMAScriptCode]]
     ConstructorKind m_constructor_kind { ConstructorKind::Base }; // [[ConstructorKind]]
     Realm* m_realm { nullptr };                                   // [[Realm]]
+    ScriptOrModule m_script_or_module;                            // [[ScriptOrModule]]
     ThisMode m_this_mode { ThisMode::Global };                    // [[ThisMode]]
     bool m_strict { false };                                      // [[Strict]]
     Object* m_home_object { nullptr };                            // [[HomeObject]]
