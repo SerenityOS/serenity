@@ -83,6 +83,10 @@ public:
 #endif
 
     String legacy_manufacturer_id() const;
+#ifndef KERNEL
+    String manufacturer_name() const;
+#endif
+
     u16 product_code() const;
     u32 serial_number() const;
 

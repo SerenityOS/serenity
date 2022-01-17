@@ -13,6 +13,10 @@
 #    include <Kernel/API/FB.h>
 #    include <fcntl.h>
 #    include <unistd.h>
+
+#    ifdef ENABLE_PNP_IDS_DATA
+#        include <LibEDID/LibEDID/PnpIDs.h>
+#    endif
 #endif
 
 namespace EDID {
@@ -551,6 +555,18 @@ String Parser::legacy_manufacturer_id() const
     };
     return id;
 }
+
+#ifndef KERNEL
+String Parser::manufacturer_name() const
+{
+    auto manufacturer_id = legacy_manufacturer_id();
+#    ifdef ENABLE_PNP_IDS_DATA
+    if (auto pnp_id_data = PnpIDs::find_by_manufacturer_id(manufacturer_id); pnp_id_data.has_value())
+        return pnp_id_data.value().manufacturer_name;
+#    endif
+    return manufacturer_id;
+}
+#endif
 
 u16 Parser::product_code() const
 {
