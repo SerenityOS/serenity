@@ -51,15 +51,9 @@ bool Workbook::set_filename(const String& filename)
     return true;
 }
 
-Result<bool, String> Workbook::open_file(int fd, StringView filename)
+Result<bool, String> Workbook::open_file(Core::File& file)
 {
-    auto file = Core::File::construct();
-
-    if (!file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
-        return String::formatted("Opening \"{}\" failed: {}", file, strerror(errno));
-    }
-
-    auto mime = Core::guess_mime_type_based_on_filename(filename);
+    auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
     // Make an import dialog, we might need to import it.
     auto result = ImportDialog::make_and_run_for(m_parent_window, mime, file, *this);
@@ -68,25 +62,24 @@ Result<bool, String> Workbook::open_file(int fd, StringView filename)
 
     m_sheets = result.release_value();
 
-    set_filename(filename);
+    set_filename(file.filename());
 
     return true;
 }
 
 Result<bool, String> Workbook::load(StringView filename)
 {
-    auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(m_parent_window.window_id(), filename);
-    if (response.error != 0) {
+    auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(&m_parent_window, filename);
+    if (response.is_error()) {
         StringBuilder sb;
         sb.append("Failed to open ");
         sb.append(filename);
         sb.append(" for reading. Error: ");
-        sb.appendff("{}", response.error);
-
+        sb.appendff("{}", response.error());
         return sb.to_string();
     }
 
-    return open_file(*response.fd, filename);
+    return open_file(*response.value());
 }
 
 Result<bool, String> Workbook::save(StringView filename)
