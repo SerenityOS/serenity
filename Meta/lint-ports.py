@@ -221,13 +221,11 @@ def check_package_files(ports):
     """
 
     all_good = True
-    for port in ports:
+    for port in ports.keys():
         package_file = f"{port}/package.sh"
         if not os.path.exists(package_file):
             continue
-
-        props = get_port_properties(port)
-
+        props = ports[port]
         if not props['auth_type'] in ('sha256', 'sig', ''):
             print(f"Ports/{port} uses invalid signature algorithm '{props['auth_type']}' for 'auth_type'")
             all_good = False
@@ -469,7 +467,7 @@ def run():
         for port in sorted(ports_set - from_table_set):
             print(f"    {port}")
 
-    if not check_package_files(ports.keys()):
+    if not check_package_files(ports):
         all_good = False
 
     if not check_available_ports(from_table, ports):
