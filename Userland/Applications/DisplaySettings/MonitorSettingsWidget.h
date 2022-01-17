@@ -8,6 +8,7 @@
 
 #include "MonitorWidget.h"
 #include <LibCore/Timer.h>
+#include <LibEDID/EDID.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/RadioButton.h>
@@ -45,6 +46,7 @@ private:
 
     WindowServer::ScreenLayout m_screen_layout;
     Vector<String> m_screens;
+    Vector<Optional<EDID::Parser>> m_screen_edids;
     Vector<Gfx::IntSize> m_resolutions;
 
     RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;

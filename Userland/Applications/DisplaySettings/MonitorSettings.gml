@@ -24,7 +24,7 @@
         @GUI::Label {
             text: "Screen:"
             text_alignment: "CenterLeft"
-            fixed_width: 95
+            fixed_width: 55
         }
 
         @GUI::ComboBox {
