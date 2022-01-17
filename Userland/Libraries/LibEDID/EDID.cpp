@@ -8,6 +8,13 @@
 #include <AK/QuickSort.h>
 #include <LibEDID/EDID.h>
 
+#ifndef KERNEL
+#    include <AK/ScopeGuard.h>
+#    include <Kernel/API/FB.h>
+#    include <fcntl.h>
+#    include <unistd.h>
+#endif
+
 namespace EDID {
 
 // clang doesn't like passing around pointers to members in packed structures,
@@ -335,6 +342,53 @@ ErrorOr<Parser> Parser::from_bytes(ByteBuffer&& bytes)
         return parse_result.error();
     return edid;
 }
+
+#ifndef KERNEL
+ErrorOr<Parser> Parser::from_framebuffer_device(int framebuffer_fd, size_t head)
+{
+    RawBytes edid_bytes;
+    FBHeadEDID edid_info {};
+    edid_info.head_index = head;
+    edid_info.bytes = &edid_bytes[0];
+    edid_info.bytes_size = sizeof(edid_bytes);
+    if (fb_get_head_edid(framebuffer_fd, &edid_info) < 0) {
+        int err = errno;
+        if (err == EOVERFLOW) {
+            // We need a bigger buffer with at least bytes_size bytes
+            auto edid_byte_buffer = ByteBuffer::create_zeroed(edid_info.bytes_size);
+            if (!edid_byte_buffer.has_value())
+                return Error::from_errno(ENOMEM);
+            edid_info.bytes = edid_byte_buffer.value().data();
+            if (fb_get_head_edid(framebuffer_fd, &edid_info) < 0) {
+                err = errno;
+                return Error::from_errno(err);
+            }
+
+            return from_bytes(edid_byte_buffer.release_value());
+        }
+
+        return Error::from_errno(err);
+    }
+
+    auto edid_byte_buffer = ByteBuffer::copy((void const*)edid_bytes, sizeof(edid_bytes));
+    if (!edid_byte_buffer.has_value())
+        return Error::from_errno(ENOMEM);
+    return from_bytes(edid_byte_buffer.release_value());
+}
+
+ErrorOr<Parser> Parser::from_framebuffer_device(String const& framebuffer_device, size_t head)
+{
+    int framebuffer_fd = open(framebuffer_device.characters(), O_RDWR | O_CLOEXEC);
+    if (framebuffer_fd < 0) {
+        int err = errno;
+        return Error::from_errno(err);
+    }
+    ScopeGuard fd_guard([&] {
+        close(framebuffer_fd);
+    });
+    return from_framebuffer_device(framebuffer_fd, head);
+}
+#endif
 
 Parser::Parser(ReadonlyBytes bytes)
     : m_bytes(move(bytes))
