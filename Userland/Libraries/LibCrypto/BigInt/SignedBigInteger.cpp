@@ -160,7 +160,12 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(const UnsignedBigInteger&
 
 FLATTEN SignedBigInteger SignedBigInteger::bitwise_not() const
 {
-    return { unsigned_value().bitwise_not(), !m_sign };
+    // Bitwise operators assume two's complement, while SignedBigInteger uses sign-magnitude.
+    // In two's complement, -x := ~x + 1.
+    // Hence, ~x == -x -1 == -(x + 1).
+    SignedBigInteger result = plus(SignedBigInteger { 1 });
+    result.negate();
+    return result;
 }
 
 FLATTEN SignedBigInteger SignedBigInteger::multiplied_by(UnsignedBigInteger const& other) const
