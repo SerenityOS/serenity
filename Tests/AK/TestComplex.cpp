@@ -23,6 +23,42 @@ STATICTEST_CASE(Complex_basic_math)
     EXPECT(i != z);
     EXPECT(i != r);
     EXPECT(i == i);
+
+    auto basic_math = [&](auto const& c) {
+        auto n = c;
+        EXPECT(c == c);
+        EXPECT(!(c != c));
+
+        EXPECT_EQ(c + c, 2 * c);
+        EXPECT_EQ(c + 0, c);
+        EXPECT_EQ(0 + c, +c);
+        EXPECT_EQ(n += 0, c);
+
+        EXPECT_EQ(c - c, 0);
+        EXPECT_EQ(c - 0, c);
+        EXPECT_EQ(0 - c, -c);
+        EXPECT_EQ(n -= 0, c);
+
+        EXPECT_EQ(c * r, c);
+        EXPECT_EQ(c * 1, c);
+        EXPECT_EQ(1 * c, c);
+        EXPECT_EQ(n *= 1, c);
+
+        EXPECT_EQ(c / r, c);
+        EXPECT_EQ(c / 1, c);
+        EXPECT_EQ(n /= 1, c);
+
+        EXPECT_EQ(+c, 0 + c);
+        EXPECT_EQ(-c, 0 - c);
+    };
+
+    basic_math(z);
+
+    basic_math(r);
+    EXPECT_EQ(1 / r, r);
+
+    basic_math(i);
+    EXPECT_EQ(1 / i, -i);
 }
 RUN_STATICTEST_CASE(Complex_basic_math);
 

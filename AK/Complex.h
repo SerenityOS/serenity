@@ -145,7 +145,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator+(const U& a)
+    constexpr Complex<T> operator+(const U& a) const
     {
         Complex<T> x = *this;
         x += a;
@@ -153,7 +153,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator-(const Complex<U>& a)
+    constexpr Complex<T> operator-(const Complex<U>& a) const
     {
         Complex<T> x = *this;
         x -= a;
@@ -161,7 +161,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator-(const U& a)
+    constexpr Complex<T> operator-(const U& a) const
     {
         Complex<T> x = *this;
         x -= a;
@@ -177,7 +177,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator*(const U& a)
+    constexpr Complex<T> operator*(const U& a) const
     {
         Complex<T> x = *this;
         x *= a;
@@ -193,7 +193,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator/(const U& a)
+    constexpr Complex<T> operator/(const U& a) const
     {
         Complex<T> x = *this;
         x /= a;
@@ -207,17 +207,23 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
+    constexpr bool operator==(const U& a) const
+    {
+        return (this->real() == a) && (this->imag() == 0);
+    }
+
+    template<AK::Concepts::Arithmetic U>
     constexpr bool operator!=(const Complex<U>& a) const
     {
         return !(*this == a);
     }
 
-    constexpr Complex<T> operator+()
+    constexpr Complex<T> operator+() const
     {
         return *this;
     }
 
-    constexpr Complex<T> operator-()
+    constexpr Complex<T> operator-() const
     {
         return Complex<T>(-m_real, -m_imag);
     }
