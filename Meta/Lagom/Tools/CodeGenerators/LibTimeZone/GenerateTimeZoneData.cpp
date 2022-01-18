@@ -33,6 +33,10 @@ struct DateTime {
 struct TimeZoneOffset {
     i64 offset { 0 };
     Optional<DateTime> until;
+
+    Optional<String> dst_rule;
+    Optional<i32> dst_rule_index;
+    i64 dst_offset { 0 };
 };
 
 struct DaylightSavingsOffset {
@@ -76,10 +80,12 @@ struct AK::Formatter<TimeZoneOffset> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZoneOffset const& time_zone_offset)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {} }}",
             time_zone_offset.offset,
             time_zone_offset.until.value_or({}),
-            time_zone_offset.until.has_value());
+            time_zone_offset.until.has_value(),
+            time_zone_offset.dst_rule_index.value_or(-1),
+            time_zone_offset.dst_offset);
     }
 };
 
@@ -158,6 +164,14 @@ static i64 parse_time_offset(StringView segment)
     return (hours * 3600) + sign * ((minutes * 60) + seconds);
 }
 
+static void parse_dst_rule(StringView segment, TimeZoneOffset& time_zone)
+{
+    if (segment.contains(':'))
+        time_zone.dst_offset = parse_time_offset(segment);
+    else if (segment != "-"sv)
+        time_zone.dst_rule = segment;
+}
+
 static Vector<TimeZoneOffset>& parse_zone(StringView zone_line, TimeZoneData& time_zone_data)
 {
     auto segments = zone_line.split_view_if([](char ch) { return (ch == '\t') || (ch == ' '); });
@@ -168,6 +182,7 @@ static Vector<TimeZoneOffset>& parse_zone(StringView zone_line, TimeZoneData& ti
 
     TimeZoneOffset time_zone {};
     time_zone.offset = parse_time_offset(segments[2]);
+    parse_dst_rule(segments[3], time_zone);
 
     if (segments.size() > 5)
         time_zone.until = parse_date_time(segments.span().slice(5));
@@ -188,6 +203,7 @@ static void parse_zone_continuation(StringView zone_line, Vector<TimeZoneOffset>
     // STDOFF RULES FORMAT [UNTIL]
     TimeZoneOffset time_zone {};
     time_zone.offset = parse_time_offset(segments[0]);
+    parse_dst_rule(segments[1], time_zone);
 
     if (segments.size() > 3)
         time_zone.until = parse_date_time(segments.span().slice(3));
@@ -265,6 +281,19 @@ static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& t
     return {};
 }
 
+static void set_dst_rule_indices(TimeZoneData& time_zone_data)
+{
+    for (auto& time_zone : time_zone_data.time_zones) {
+        for (auto& time_zone_offset : time_zone.value) {
+            if (!time_zone_offset.dst_rule.has_value())
+                continue;
+
+            auto dst_rule_index = time_zone_data.dst_offset_names.find_first_index(*time_zone_offset.dst_rule);
+            time_zone_offset.dst_rule_index = static_cast<i32>(dst_rule_index.value());
+        }
+    }
+}
+
 static String format_identifier(StringView owner, String identifier)
 {
     constexpr auto gmt_time_zones = Array { "Etc/GMT"sv, "GMT"sv };
@@ -318,6 +347,8 @@ static void generate_time_zone_data_implementation(Core::File& file, TimeZoneDat
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    set_dst_rule_indices(time_zone_data);
+
     generator.append(R"~~~(
 #include <AK/Array.h>
 #include <AK/BinarySearch.h>
@@ -355,6 +386,9 @@ struct TimeZoneOffset {
 
     DateTime until {};
     bool has_until { false };
+
+    i32 dst_rule { -1 };
+    i64 dst_offset { 0 };
 };
 
 struct DaylightSavingsOffset {
