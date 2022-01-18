@@ -16,6 +16,8 @@
 namespace Unicode {
 
 Optional<String> code_point_display_name(u32 code_point);
+Optional<StringView> code_point_abbreviation(u32 code_point);
+
 u32 canonical_combining_class(u32 code_point);
 Span<SpecialCasing const* const> special_case_mapping(u32 code_point);
 
