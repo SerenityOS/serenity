@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -4041,8 +4041,12 @@ void ScopeNode::add_hoisted_function(NonnullRefPtr<FunctionDeclaration> declarat
 Completion ImportStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    dbgln("Modules are not fully supported yet!");
-    return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "'import' in modules");
+
+    if (!m_module_request.assertions.is_empty())
+        return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "import statement with assertions/options");
+
+    // 1. Return NormalCompletion(empty).
+    return normal_completion({});
 }
 
 FlyString ExportStatement::local_name_for_default = "*default*";
@@ -4051,12 +4055,82 @@ FlyString ExportStatement::local_name_for_default = "*default*";
 Completion ExportStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    if (m_statement) {
-        // 1. Return the result of evaluating <Thing>.
+
+    if (!is_default_export()) {
+        if (m_statement) {
+            // 1. Return the result of evaluating <Thing>.
+            return m_statement->execute(interpreter, global_object);
+        }
+
+        // 1. Return NormalCompletion(empty).
+        return normal_completion({});
+    }
+
+    VERIFY(m_statement);
+
+    // ExportDeclaration : export default HoistableDeclaration
+    if (is<FunctionDeclaration>(*m_statement)) {
+        // 1. Return the result of evaluating HoistableDeclaration.
         return m_statement->execute(interpreter, global_object);
     }
 
-    // 1. Return NormalCompletion(empty).
+    // ExportDeclaration : export default ClassDeclaration
+    // ClassDeclaration: class BindingIdentifier[?Yield, ?Await] ClassTail[?Yield, ?Await]
+    if (is<ClassDeclaration>(*m_statement)) {
+        auto const& class_declaration = static_cast<ClassDeclaration const&>(*m_statement);
+
+        // 1. Let value be ? BindingClassDeclarationEvaluation of ClassDeclaration.
+        auto value = TRY(binding_class_declaration_evaluation(interpreter, global_object, class_declaration.m_class_expression));
+
+        // 2. Let className be the sole element of BoundNames of ClassDeclaration.
+        // 3. If className is "*default*", then
+        // Note: We never go into step 3. since a ClassDeclaration always has a name and "*default*" is not a class name.
+        (void)value;
+
+        // 4. Return NormalCompletion(empty).
+        return normal_completion({});
+    }
+
+    // ExportDeclaration : export default ClassDeclaration
+    // ClassDeclaration: [+Default] class ClassTail [?Yield, ?Await]
+    if (is<ClassExpression>(*m_statement)) {
+        auto& class_expression = static_cast<ClassExpression const&>(*m_statement);
+
+        // 1. Let value be ? BindingClassDeclarationEvaluation of ClassDeclaration.
+        auto value = TRY(binding_class_declaration_evaluation(interpreter, global_object, class_expression));
+
+        // 2. Let className be the sole element of BoundNames of ClassDeclaration.
+        // 3. If className is "*default*", then
+        if (!class_expression.has_name()) {
+            // Note: This can only occur if the class does not have a name since "*default*" is normally not valid.
+
+            // a. Let env be the running execution context's LexicalEnvironment.
+            auto* env = interpreter.lexical_environment();
+
+            // b. Perform ? InitializeBoundName("*default*", value, env).
+            TRY(initialize_bound_name(global_object, ExportStatement::local_name_for_default, value, env));
+        }
+
+        // 4. Return NormalCompletion(empty).
+        return normal_completion({});
+    }
+
+    // ExportDeclaration : export default AssignmentExpression ;
+
+    // 1. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
+    //     a. Let value be ? NamedEvaluation of AssignmentExpression with argument "default".
+    // 2. Else,
+    //     a. Let rhs be the result of evaluating AssignmentExpression.
+    //     b. Let value be ? GetValue(rhs).
+    auto value = TRY(interpreter.vm().named_evaluation_if_anonymous_function(global_object, *m_statement, "default"));
+
+    // 3. Let env be the running execution context's LexicalEnvironment.
+    auto* env = interpreter.lexical_environment();
+
+    // 4. Perform ? InitializeBoundName("*default*", value, env).
+    TRY(initialize_bound_name(global_object, ExportStatement::local_name_for_default, value, env));
+
+    // 5. Return NormalCompletion(empty).
     return normal_completion({});
 }
 
@@ -4091,6 +4165,12 @@ void ExportStatement::dump(int indent) const
             entry.kind == ExportEntry::Kind::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null",
             entry.kind != ExportEntry::Kind::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null",
             string_or_null(entry.export_name));
+    }
+
+    if (m_statement) {
+        print_indent(indent + 1);
+        outln("(Statement)");
+        m_statement->dump(indent + 2);
     }
 }
 
