@@ -218,11 +218,11 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_xor(const UnsignedBigInte
     return result;
 }
 
-FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_not() const
+FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_not_fill_to_size(size_t size) const
 {
     UnsignedBigInteger result;
 
-    UnsignedBigIntegerAlgorithms::bitwise_not_without_allocation(*this, result);
+    UnsignedBigIntegerAlgorithms::bitwise_not_fill_to_size_without_allocation(*this, size, result);
 
     return result;
 }

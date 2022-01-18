@@ -87,7 +87,7 @@ public:
     UnsignedBigInteger bitwise_or(const UnsignedBigInteger& other) const;
     UnsignedBigInteger bitwise_and(const UnsignedBigInteger& other) const;
     UnsignedBigInteger bitwise_xor(const UnsignedBigInteger& other) const;
-    UnsignedBigInteger bitwise_not() const;
+    UnsignedBigInteger bitwise_not_fill_to_size(size_t) const;
     UnsignedBigInteger shift_left(size_t num_bits) const;
     UnsignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     UnsignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
