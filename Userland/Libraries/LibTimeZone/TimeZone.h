@@ -20,6 +20,9 @@ Optional<TimeZone> time_zone_from_string(StringView time_zone);
 StringView time_zone_to_string(TimeZone time_zone);
 Optional<StringView> canonicalize_time_zone(StringView time_zone);
 
+Optional<DaylightSavingsRule> daylight_savings_rule_from_string(StringView daylight_savings_rule);
+StringView daylight_savings_rule_to_string(DaylightSavingsRule daylight_savings_rule);
+
 Optional<i64> get_time_zone_offset(TimeZone time_zone, AK::Time time);
 Optional<i64> get_time_zone_offset(StringView time_zone, AK::Time time);
 
