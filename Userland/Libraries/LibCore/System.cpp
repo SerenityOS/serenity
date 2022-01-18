@@ -540,6 +540,14 @@ ErrorOr<pid_t> posix_spawnp(StringView const path, posix_spawn_file_actions_t* c
     return child_pid;
 }
 
+ErrorOr<off_t> lseek(int fd, off_t offset, int whence)
+{
+    off_t rc = ::lseek(fd, offset, whence);
+    if (rc < 0)
+        return Error::from_syscall("lseek", -errno);
+    return rc;
+}
+
 ErrorOr<WaitPidResult> waitpid(pid_t waitee, int options)
 {
     int wstatus;
