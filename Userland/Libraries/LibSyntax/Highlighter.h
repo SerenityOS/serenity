@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,6 +17,7 @@ namespace Syntax {
 enum class Language {
     Cpp,
     CSS,
+    GitCommit,
     GML,
     HTML,
     INI,
