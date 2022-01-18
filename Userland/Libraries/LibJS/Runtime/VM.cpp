@@ -81,6 +81,13 @@ VM::VM(OwnPtr<CustomData> custom_data)
         return finish_dynamic_import(move(referencing_script_or_module), specifier, promise_capability, promise);
     };
 
+    host_get_import_meta_properties = [&](SourceTextModule const&) -> HashMap<PropertyKey, Value> {
+        return {};
+    };
+
+    host_finalize_import_meta = [&](Object*, SourceTextModule const&) {
+    };
+
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     m_well_known_symbol_##snake_name = js_symbol(*this, "Symbol." #SymbolName, false);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
