@@ -87,6 +87,7 @@ ErrorOr<Optional<struct passwd>> getpwuid(uid_t);
 ErrorOr<Optional<struct group>> getgrgid(gid_t);
 ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts);
 ErrorOr<pid_t> posix_spawnp(StringView const path, posix_spawn_file_actions_t* const file_actions, posix_spawnattr_t* const attr, char* const arguments[], char* const envp[]);
+ErrorOr<off_t> lseek(int fd, off_t, int whence);
 
 struct WaitPidResult {
     pid_t pid;
