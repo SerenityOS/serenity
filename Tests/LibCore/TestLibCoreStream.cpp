@@ -350,11 +350,12 @@ TEST_CASE(local_socket_write)
         // NOTE: For some reason LocalServer gives us a nonblocking socket..?
         MUST(server_socket->set_blocking(true));
 
+        EXPECT(MUST(server_socket->can_read_without_blocking(100)));
         auto pending_bytes = MUST(server_socket->pending_bytes());
         auto receive_buffer = ByteBuffer::create_uninitialized(pending_bytes).release_value();
         auto maybe_nread = server_socket->read(receive_buffer);
         EXPECT(!maybe_nread.is_error());
-        EXPECT(maybe_nread.value() == sent_data.length());
+        EXPECT_EQ(maybe_nread.value(), sent_data.length());
 
         StringView received_data { receive_buffer.data(), maybe_nread.value() };
         EXPECT_EQ(sent_data, received_data);
