@@ -146,8 +146,6 @@ public:
 
     Gfx::FloatPoint box_type_agnostic_position() const;
 
-    float font_size() const;
-
     enum class SelectionState {
         None,        // No selection
         Start,       // Selection starts in this Node
@@ -204,7 +202,6 @@ public:
 
     const Gfx::Font& font() const { return *m_font; }
     float line_height() const { return m_line_height; }
-    float font_size() const { return m_font_size; }
     Vector<CSS::BackgroundLayerData> const& background_layers() const { return computed_values().background_layers(); }
     const CSS::ImageStyleValue* list_style_image() const { return m_list_style_image; }
 
@@ -221,7 +218,6 @@ private:
     CSS::ComputedValues m_computed_values;
     RefPtr<Gfx::Font> m_font;
     float m_line_height { 0 };
-    float m_font_size { 0 };
     RefPtr<CSS::ImageStyleValue> m_list_style_image;
 
     bool m_has_definite_height { false };
@@ -253,13 +249,6 @@ inline const Gfx::Font& Node::font() const
     if (m_has_style)
         return static_cast<const NodeWithStyle*>(this)->font();
     return parent()->font();
-}
-
-inline float Node::font_size() const
-{
-    if (m_has_style)
-        return static_cast<const NodeWithStyle*>(this)->font_size();
-    return parent()->font_size();
 }
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const

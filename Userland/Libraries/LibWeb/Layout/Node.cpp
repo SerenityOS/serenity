@@ -206,16 +206,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     m_line_height = specified_style.line_height(*this);
 
     {
-        constexpr int default_font_size = 10;
-        auto parent_font_size = parent() == nullptr ? default_font_size : parent()->font_size();
-        auto length = specified_style.length_or_fallback(CSS::PropertyID::FontSize, CSS::Length(default_font_size, CSS::Length::Type::Px));
-        // FIXME: em sizes return 0 here, for some reason
-        m_font_size = length.resolved_or_zero(*this, parent_font_size).to_px(*this);
-        if (m_font_size == 0)
-            m_font_size = default_font_size;
-    }
-
-    {
         auto attachments = specified_style.property(CSS::PropertyID::BackgroundAttachment);
         auto clips = specified_style.property(CSS::PropertyID::BackgroundClip);
         auto images = specified_style.property(CSS::PropertyID::BackgroundImage);
@@ -539,7 +529,6 @@ NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
     auto wrapper = adopt_ref(*new BlockContainer(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
     wrapper->m_font = m_font;
-    wrapper->m_font_size = m_font_size;
     wrapper->m_line_height = m_line_height;
     return wrapper;
 }
