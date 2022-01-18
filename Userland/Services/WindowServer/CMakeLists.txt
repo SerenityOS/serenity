@@ -36,6 +36,7 @@ set(SOURCES
     WindowManagerServerEndpoint.h
     WindowManagerClientEndpoint.h
     WMClientConnection.cpp
+    KeymapSwitcher.cpp
 )
 
 serenity_bin(WindowServer)
