@@ -19,14 +19,11 @@ template<AK::Concepts::Arithmetic T>
 class [[gnu::packed]] Complex {
 public:
     constexpr Complex()
-        : m_real(0)
-        , m_imag(0)
     {
     }
 
     constexpr Complex(T real)
         : m_real(real)
-        , m_imag((T)0)
     {
     }
 
@@ -226,8 +223,8 @@ public:
     }
 
 private:
-    T m_real;
-    T m_imag;
+    T m_real { 0 };
+    T m_imag { 0 };
 };
 
 // reverse associativity operators for scalars
