@@ -85,7 +85,7 @@ public:
     template<AK::Concepts::Arithmetic U>
     constexpr Complex<T> operator+=(const U& x)
     {
-        m_real += x.real();
+        m_real += x;
         return *this;
     }
 
@@ -100,7 +100,7 @@ public:
     template<AK::Concepts::Arithmetic U>
     constexpr Complex<T> operator-=(const U& x)
     {
-        m_real -= x.real();
+        m_real -= x;
         return *this;
     }
 
