@@ -15,6 +15,7 @@ set(SOURCES
     Bytecode/Pass/UnifySameBlocks.cpp
     Bytecode/StringTable.cpp
     Console.cpp
+    CyclicModule.cpp
     Heap/BlockAllocator.cpp
     Heap/CellAllocator.cpp
     Heap/Handle.cpp
