@@ -41,7 +41,7 @@ struct ContextParameter {
     } value;
 };
 
-enum MaterialFace : u8 {
+enum Face {
     Front = 0,
     Back = 1,
 };
@@ -128,6 +128,7 @@ public:
     virtual void gl_pixel_storei(GLenum pname, GLint param) override;
     virtual void gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height) override;
     virtual void gl_stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask) override;
+    virtual void gl_stencil_mask_separate(GLenum face, GLuint mask) override;
     virtual void gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) override;
     virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) override;
     virtual void gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer) override;
@@ -154,6 +155,7 @@ private:
     void sync_device_sampler_config();
     void sync_device_texcoord_config();
     void sync_light_state();
+    void sync_stencil_configuration();
 
     template<typename T>
     T* store_in_listing(T value)
@@ -195,7 +197,7 @@ private:
 
     FloatVector4 m_clear_color { 0.0f, 0.0f, 0.0f, 0.0f };
     double m_clear_depth { 1.0 };
-    GLint m_clear_stencil { 0 };
+    u8 m_clear_stencil { 0 };
 
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
     FloatVector4 m_current_vertex_tex_coord = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -225,22 +227,22 @@ private:
 
     // Stencil configuration
     bool m_stencil_test_enabled { false };
+    bool m_stencil_configuration_dirty { true };
 
     struct StencilFunctionOptions {
         GLenum func { GL_ALWAYS };
         GLint reference_value { 0 };
         GLuint mask { NumericLimits<GLuint>::max() };
     };
-    StencilFunctionOptions m_stencil_backfacing_func;
-    StencilFunctionOptions m_stencil_frontfacing_func;
+    Array<StencilFunctionOptions, 2u> m_stencil_function;
 
     struct StencilOperationOptions {
         GLenum op_fail { GL_KEEP };
         GLenum op_depth_fail { GL_KEEP };
         GLenum op_pass { GL_KEEP };
+        GLuint write_mask { NumericLimits<GLuint>::max() };
     };
-    StencilOperationOptions m_stencil_backfacing_op;
-    StencilOperationOptions m_stencil_frontfacing_op;
+    Array<StencilOperationOptions, 2u> m_stencil_operation;
 
     GLenum m_current_read_buffer = GL_BACK;
     GLenum m_current_draw_buffer = GL_BACK;
@@ -362,6 +364,7 @@ private:
             decltype(&SoftwareGLContext::gl_polygon_offset),
             decltype(&SoftwareGLContext::gl_scissor),
             decltype(&SoftwareGLContext::gl_stencil_func_separate),
+            decltype(&SoftwareGLContext::gl_stencil_mask_separate),
             decltype(&SoftwareGLContext::gl_stencil_op_separate),
             decltype(&SoftwareGLContext::gl_normal),
             decltype(&SoftwareGLContext::gl_raster_pos),

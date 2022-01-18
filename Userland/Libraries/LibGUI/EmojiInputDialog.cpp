@@ -38,6 +38,8 @@ static Vector<u32> supported_emoji_code_points()
 EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     : Dialog(parent_window)
 {
+    // FIXME: Dialog should automatically adjust to content
+    set_minimum_size(190, 190);
     set_frameless(true);
 
     auto& main_widget = set_main_widget<Frame>();
@@ -51,7 +53,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     auto code_points = supported_emoji_code_points();
 
     size_t index = 0;
-    size_t columns = 6;
+    size_t columns = 10;
     size_t rows = ceil_div(code_points.size(), columns);
 
     for (size_t row = 0; row < rows && index < code_points.size(); ++row) {
@@ -64,7 +66,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
                 builder.append(Utf32View(&code_points[index++], 1));
                 auto emoji_text = builder.to_string();
                 auto& button = horizontal_container.add<Button>(emoji_text);
-                button.set_fixed_size(16, 16);
+                button.set_fixed_size(18, 18);
                 button.set_button_style(Gfx::ButtonStyle::Coolbar);
                 button.on_click = [this, button = &button](auto) {
                     m_selected_emoji_text = button->text();

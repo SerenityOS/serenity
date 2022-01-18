@@ -17,6 +17,7 @@ struct CodePoint {
 };
 
 CodePoint code_point_at(Utf16View const& string, size_t position);
+ThrowCompletionOr<String> trim_string(GlobalObject&, Value string, TrimMode where);
 
 class StringPrototype final : public StringObject {
     JS_OBJECT(StringPrototype, StringObject);

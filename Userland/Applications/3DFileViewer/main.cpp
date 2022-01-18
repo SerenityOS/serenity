@@ -187,16 +187,26 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     // Disco time ;)
     GLfloat const light0_position[4] = { -4.0f, 0.0f, 0.0f, 0.0f };
     GLfloat const light0_diffuse[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
+    GLfloat const light0_specular[4] = { 0.75f, 0.75f, 0.75f };
     GLfloat const light1_position[4] = { 4.0f, 0.0f, 0.0f, 0.0f };
     GLfloat const light1_diffuse[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
+    GLfloat const light1_specular[4] = { 0.75f, 0.75f, 0.75f };
     GLfloat const light2_position[4] = { 0.0f, 5.0f, 0.0f, 0.0f };
     GLfloat const light2_diffuse[4] = { 0.0f, 0.0f, 1.0f, 0.0f };
+    GLfloat const light2_specular[4] = { 0.75f, 0.75f, 0.75f };
     glLightfv(GL_LIGHT0, GL_POSITION, &light0_position[0]);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, &light0_diffuse[0]);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, &light0_specular[0]);
     glLightfv(GL_LIGHT1, GL_POSITION, &light1_position[0]);
     glLightfv(GL_LIGHT1, GL_DIFFUSE, &light1_diffuse[0]);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, &light1_specular[0]);
     glLightfv(GL_LIGHT2, GL_POSITION, &light2_position[0]);
     glLightfv(GL_LIGHT2, GL_DIFFUSE, &light2_diffuse[0]);
+    glLightfv(GL_LIGHT2, GL_SPECULAR, &light2_specular[0]);
+
+    GLfloat const material_specular_color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glMaterialf(GL_FRONT, GL_SHININESS, 45.0f);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, &material_specular_color[0]);
     glPopMatrix();
 
     if (m_texture_enabled) {

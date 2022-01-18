@@ -121,7 +121,6 @@ public:
 
     friend class Thread;
     friend class Coredump;
-    friend class ProcFSProcessOpenFileDescriptions;
 
     // Helper class to temporarily unprotect a process's protected data so you can write to it.
     class ProtectedDataMutationScope {
@@ -585,7 +584,7 @@ private:
         return nullptr;
     }
 
-    mutable IntrusiveListNode<Process> m_list_node;
+    IntrusiveListNode<Process> m_list_node;
 
     NonnullOwnPtr<KString> m_name;
 

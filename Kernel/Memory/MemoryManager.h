@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/HashTable.h>
+#include <AK/IntrusiveRedBlackTree.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <Kernel/Forward.h>
@@ -293,7 +294,7 @@ private:
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
 
-    RedBlackTree<FlatPtr, Region*> m_kernel_regions;
+    IntrusiveRedBlackTree<&Region::m_tree_node> m_kernel_regions;
 
     Vector<UsedMemoryRange> m_used_memory_ranges;
     Vector<PhysicalMemoryRange> m_physical_memory_ranges;

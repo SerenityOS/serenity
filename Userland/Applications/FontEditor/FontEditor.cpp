@@ -169,38 +169,27 @@ FontEditorWidget::FontEditorWidget()
         if (m_path.is_empty())
             m_save_as_action->activate();
         else
-            save_as(m_path);
+            save_file(m_path);
     });
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         LexicalPath lexical_path(m_path.is_empty() ? "Untitled.font" : m_path);
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension());
         if (!save_path.has_value())
             return;
-        save_as(save_path.value());
+        save_file(save_path.value());
     });
     m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
         cut_selected_glyphs();
-        if (m_edited_font->is_fixed_width())
-            m_glyph_editor_present_checkbox->set_checked(false, GUI::AllowCallback::No);
-        else
-            m_glyph_editor_width_spinbox->set_value(0, GUI::AllowCallback::No);
-        update_statusbar();
     });
     m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
         copy_selected_glyphs();
     });
     m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
         paste_glyphs();
-        update_statusbar();
     });
     m_paste_action->set_enabled(GUI::Clipboard::the().fetch_mime_type() == "glyph/x-fonteditor");
     m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) {
         delete_selected_glyphs();
-        if (m_edited_font->is_fixed_width())
-            m_glyph_editor_present_checkbox->set_checked(false, GUI::AllowCallback::No);
-        else
-            m_glyph_editor_width_spinbox->set_value(0, GUI::AllowCallback::No);
-        update_statusbar();
     });
     m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
         undo();
@@ -501,8 +490,10 @@ void FontEditorWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>&& 
     }
 
     deferred_invoke([this] {
+        auto glyph = m_glyph_map_widget->active_glyph();
         m_glyph_map_widget->set_focus(true);
-        m_glyph_map_widget->scroll_to_glyph(m_glyph_map_widget->active_glyph());
+        m_glyph_map_widget->scroll_to_glyph(glyph);
+        m_glyph_editor_widget->set_glyph(glyph);
         update_title();
     });
 
@@ -569,7 +560,7 @@ void FontEditorWidget::initialize_menubar(GUI::Window& window)
     help_menu.add_action(GUI::CommonActions::make_about_action("Font Editor", GUI::Icon::default_icon("app-font-editor"), &window));
 }
 
-bool FontEditorWidget::save_as(String const& path)
+bool FontEditorWidget::save_file(String const& path)
 {
     auto saved_font = m_edited_font->masked_character_set();
     auto ret_val = saved_font->write_to_file(path);
@@ -737,7 +728,10 @@ void FontEditorWidget::drop_event(GUI::DropEvent& event)
 
 void FontEditorWidget::did_resize_glyph_editor()
 {
-    constexpr int glyph_toolbars_width = 100;
+    constexpr int button_width = 22;
+    constexpr int buttons_per_bar = 4;
+    constexpr int spacing = (buttons_per_bar - 1) * 2 + 10;
+    constexpr int glyph_toolbars_width = button_width * buttons_per_bar + spacing;
     m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
     m_left_column_container->set_fixed_width(max(m_glyph_editor_widget->preferred_width(), glyph_toolbars_width));
 }
@@ -765,6 +759,7 @@ void FontEditorWidget::set_scale_and_save(i32 scale)
     Config::write_i32("FontEditor", "GlyphEditor", "Scale", scale);
     did_resize_glyph_editor();
 }
+
 void FontEditorWidget::copy_selected_glyphs()
 {
     ByteBuffer buffer;
@@ -853,7 +848,13 @@ void FontEditorWidget::paste_glyphs()
             m_glyph_editor_widget->on_glyph_altered(glyph);
     }
 
+    if (m_edited_font->is_fixed_width())
+        m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_raw_glyph(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
+    else
+        m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
+
     m_glyph_editor_widget->update();
+    update_statusbar();
 }
 
 void FontEditorWidget::delete_selected_glyphs()
@@ -879,4 +880,12 @@ void FontEditorWidget::delete_selected_glyphs()
 
     for (int i = selection.start(); i < selection.start() + selection.size(); i++)
         delete_glyph(i);
+
+    if (m_edited_font->is_fixed_width())
+        m_glyph_editor_present_checkbox->set_checked(false, GUI::AllowCallback::No);
+    else
+        m_glyph_editor_width_spinbox->set_value(0, GUI::AllowCallback::No);
+
+    m_glyph_editor_widget->update();
+    update_statusbar();
 }

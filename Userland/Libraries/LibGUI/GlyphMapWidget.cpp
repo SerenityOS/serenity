@@ -160,7 +160,38 @@ void GlyphMapWidget::mousedown_event(MouseEvent& event)
             m_selection.set_size(1);
             m_selection.set_start(glyph);
         }
+        m_in_drag_select = true;
         set_active_glyph(glyph, ShouldResetSelection::No);
+    }
+}
+
+void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
+{
+    Frame::mouseup_event(event);
+
+    if (!m_in_drag_select)
+        return;
+
+    if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value()) {
+        auto glyph = maybe_glyph.value();
+        m_selection.extend_to(glyph);
+        m_in_drag_select = false;
+        set_active_glyph(glyph, ShouldResetSelection::No);
+    }
+}
+
+void GlyphMapWidget::mousemove_event(GUI::MouseEvent& event)
+{
+    Frame::mousemove_event(event);
+
+    if (!m_in_drag_select)
+        return;
+
+    if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value()) {
+        auto glyph = maybe_glyph.value();
+        m_selection.extend_to(glyph);
+        scroll_to_glyph(glyph);
+        update();
     }
 }
 

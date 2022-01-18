@@ -1,6 +1,6 @@
 ## Name
 
-Pong
+![Icon](/res/icons/16x16/app-pong.png) Pong
 
 ## Synopsis
 

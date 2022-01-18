@@ -978,6 +978,51 @@ ThrowCompletionOr<Value> unsigned_right_shift(GlobalObject& global_object, Value
     return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperator, "unsigned right-shift");
 }
 
+// https://tc39.es/ecma262/#string-concatenation
+static PrimitiveString* concatenate_strings(GlobalObject& global_object, PrimitiveString const& lhs, PrimitiveString const& rhs)
+{
+    auto& vm = global_object.vm();
+
+    if (lhs.has_utf16_string() && rhs.has_utf16_string()) {
+        auto const& lhs_string = lhs.utf16_string();
+        auto const& rhs_string = rhs.utf16_string();
+
+        Vector<u16, 1> combined;
+        combined.ensure_capacity(lhs_string.length_in_code_units() + rhs_string.length_in_code_units());
+        combined.extend(lhs_string.string());
+        combined.extend(rhs_string.string());
+
+        return js_string(vm, Utf16String(move(combined)));
+    }
+
+    Utf8View lhs_string { lhs.string() };
+    Utf8View rhs_string { rhs.string() };
+
+    StringBuilder builder(lhs_string.length() + rhs_string.length());
+    Optional<u16> high_surrogate;
+
+    for (auto it = lhs_string.begin(); it != lhs_string.end(); ++it) {
+        if (!it.peek(1).has_value() && Utf16View::is_high_surrogate(*it) && !rhs_string.is_empty())
+            high_surrogate = *it;
+        else
+            builder.append_code_point(*it);
+    }
+
+    if (high_surrogate.has_value()) {
+        auto low_surrogate = *rhs_string.begin();
+
+        if (Utf16View::is_low_surrogate(low_surrogate)) {
+            builder.append_code_point(Utf16View::decode_surrogate_pair(*high_surrogate, low_surrogate));
+            rhs_string = rhs_string.substring_view(3); // A low surrogate encoded as UTF-8 is 3 bytes.
+        } else {
+            builder.append_code_point(*high_surrogate);
+        }
+    }
+
+    builder.append(rhs_string.as_string());
+    return js_string(vm, builder.to_string());
+}
+
 // 13.8.1 The Addition Operator ( + ), https://tc39.es/ecma262/#sec-addition-operator-plus
 ThrowCompletionOr<Value> add(GlobalObject& global_object, Value lhs, Value rhs)
 {
@@ -995,28 +1040,10 @@ ThrowCompletionOr<Value> add(GlobalObject& global_object, Value lhs, Value rhs)
     auto lhs_primitive = TRY(lhs.to_primitive(global_object));
     auto rhs_primitive = TRY(rhs.to_primitive(global_object));
 
-    if (lhs_primitive.is_string() && rhs_primitive.is_string()) {
-        auto const& lhs_string = lhs_primitive.as_string();
-        auto const& rhs_string = rhs_primitive.as_string();
-
-        if (lhs_string.has_utf16_string() && rhs_string.has_utf16_string()) {
-            auto const& lhs_utf16_string = lhs_string.utf16_string();
-            auto const& rhs_utf16_string = rhs_string.utf16_string();
-
-            Vector<u16, 1> combined;
-            combined.ensure_capacity(lhs_utf16_string.length_in_code_units() + rhs_utf16_string.length_in_code_units());
-            combined.extend(lhs_utf16_string.string());
-            combined.extend(rhs_utf16_string.string());
-            return Value(js_string(vm.heap(), Utf16String(move(combined))));
-        }
-    }
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
-        auto lhs_string = TRY(lhs_primitive.to_string(global_object));
-        auto rhs_string = TRY(rhs_primitive.to_string(global_object));
-        StringBuilder builder(lhs_string.length() + rhs_string.length());
-        builder.append(lhs_string);
-        builder.append(rhs_string);
-        return Value(js_string(vm, builder.to_string()));
+        auto lhs_string = TRY(lhs_primitive.to_primitive_string(global_object));
+        auto rhs_string = TRY(rhs_primitive.to_primitive_string(global_object));
+        return concatenate_strings(global_object, *lhs_string, *rhs_string);
     }
 
     auto lhs_numeric = TRY(lhs_primitive.to_numeric(global_object));

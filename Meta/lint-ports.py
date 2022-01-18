@@ -197,16 +197,17 @@ def get_port_properties(port):
     """
 
     props = {}
-    for prop in PORT_PROPERTIES:
-        res = subprocess.run(f"cd {port}; exec ./package.sh showproperty {prop}", shell=True, capture_output=True)
-        if res.returncode == 0:
-            props[prop] = res.stdout.decode('utf-8').strip()
-        else:
-            print((
-                f'Executing "./package.sh showproperty {prop}" script for port {port} failed with '
-                f'exit code {res.returncode}, output from stderr:\n{res.stderr.decode("utf-8").strip()}'
-            ))
-            props[prop] = ''
+    package_sh_command = f"./package.sh showproperty {' '.join(PORT_PROPERTIES)}"
+    res = subprocess.run(f"cd {port}; exec {package_sh_command}", shell=True, capture_output=True)
+    if res.returncode == 0:
+        results = res.stdout.decode('utf-8').split('\n\n')
+        props = {prop: results[i].strip() for i, prop in enumerate(PORT_PROPERTIES)}
+    else:
+        print((
+            f'Executing "{package_sh_command}" script for port {port} failed with '
+            f'exit code {res.returncode}, output from stderr:\n{res.stderr.decode("utf-8").strip()}'
+        ))
+        props = {x: '' for x in PORT_PROPERTIES}
     return props
 
 
@@ -221,13 +222,11 @@ def check_package_files(ports):
     """
 
     all_good = True
-    for port in ports:
+    for port in ports.keys():
         package_file = f"{port}/package.sh"
         if not os.path.exists(package_file):
             continue
-
-        props = get_port_properties(port)
-
+        props = ports[port]
         if not props['auth_type'] in ('sha256', 'sig', ''):
             print(f"Ports/{port} uses invalid signature algorithm '{props['auth_type']}' for 'auth_type'")
             all_good = False
@@ -469,7 +468,7 @@ def run():
         for port in sorted(ports_set - from_table_set):
             print(f"    {port}")
 
-    if not check_package_files(ports.keys()):
+    if not check_package_files(ports):
         all_good = False
 
     if not check_available_ports(from_table, ports):
