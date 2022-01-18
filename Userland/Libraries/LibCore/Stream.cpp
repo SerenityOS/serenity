@@ -459,11 +459,7 @@ ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(SocketAddress const& addres
     auto fd = TRY(create_fd(SocketDomain::Inet, SocketType::Stream));
     socket->m_helper.set_fd(fd);
 
-    auto result = connect_inet(fd, address);
-    if (result.is_error()) {
-        ::close(fd);
-        return result.release_error();
-    }
+    TRY(connect_inet(fd, address));
 
     socket->setup_notifier();
     return socket;
@@ -509,11 +505,7 @@ ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(SocketAddress const& addres
     auto fd = TRY(create_fd(SocketDomain::Inet, SocketType::Datagram));
     socket->m_helper.set_fd(fd);
 
-    auto result = connect_inet(fd, address);
-    if (result.is_error()) {
-        ::close(fd);
-        return result.release_error();
-    }
+    TRY(connect_inet(fd, address));
 
     socket->setup_notifier();
     return socket;
@@ -526,11 +518,7 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(String const& path)
     auto fd = TRY(create_fd(SocketDomain::Local, SocketType::Stream));
     socket->m_helper.set_fd(fd);
 
-    auto result = connect_local(fd, path);
-    if (result.is_error()) {
-        ::close(fd);
-        return result.release_error();
-    }
+    TRY(connect_local(fd, path));
 
     socket->setup_notifier();
     return socket;
