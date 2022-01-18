@@ -8,6 +8,24 @@
 
 #include <AK/Complex.h>
 
+STATICTEST_CASE(Complex_basic_math)
+{
+    auto const z = Complex<double>();
+    auto const r = complex_real_unit<double>;
+    auto const i = complex_imag_unit<double>;
+
+    EXPECT(z == z);
+    EXPECT(z != r);
+    EXPECT(z != i);
+    EXPECT(r != z);
+    EXPECT(r == r);
+    EXPECT(r != i);
+    EXPECT(i != z);
+    EXPECT(i != r);
+    EXPECT(i == i);
+}
+RUN_STATICTEST_CASE(Complex_basic_math);
+
 TEST_CASE(Complex)
 {
     auto a = Complex<float> { 1.f, 1.f };

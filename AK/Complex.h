@@ -137,7 +137,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator+(const Complex<U>& a)
+    constexpr Complex<T> operator+(const Complex<U>& a) const
     {
         Complex<T> x = *this;
         x += a;
@@ -169,7 +169,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator*(const Complex<U>& a)
+    constexpr Complex<T> operator*(const Complex<U>& a) const
     {
         Complex<T> x = *this;
         x *= a;
@@ -185,7 +185,7 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr Complex<T> operator/(const Complex<U>& a)
+    constexpr Complex<T> operator/(const Complex<U>& a) const
     {
         Complex<T> x = *this;
         x /= a;
@@ -262,9 +262,9 @@ constexpr Complex<T> operator/(const U& a, const Complex<T>& b)
 
 // some identities
 template<AK::Concepts::Arithmetic T>
-static constinit Complex<T> complex_real_unit = Complex<T>((T)1, (T)0);
+static constexpr Complex<T> complex_real_unit = Complex<T>((T)1, (T)0);
 template<AK::Concepts::Arithmetic T>
-static constinit Complex<T> complex_imag_unit = Complex<T>((T)0, (T)1);
+static constexpr Complex<T> complex_imag_unit = Complex<T>((T)0, (T)1);
 
 template<AK::Concepts::Arithmetic T, AK::Concepts::Arithmetic U>
 static constexpr bool approx_eq(const Complex<T>& a, const Complex<U>& b, const double margin = 0.000001)
