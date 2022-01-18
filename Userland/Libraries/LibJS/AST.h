@@ -426,6 +426,9 @@ public:
     NonnullRefPtrVector<ImportStatement> const& imports() const { return m_imports; }
     NonnullRefPtrVector<ExportStatement> const& exports() const { return m_exports; }
 
+    bool has_top_level_await() const { return m_has_top_level_await; }
+    void set_has_top_level_await() { m_has_top_level_await = true; }
+
     ThrowCompletionOr<void> global_declaration_instantiation(Interpreter& interpreter, GlobalObject& global_object, GlobalEnvironment& global_environment) const;
 
 private:
@@ -436,6 +439,7 @@ private:
 
     NonnullRefPtrVector<ImportStatement> m_imports;
     NonnullRefPtrVector<ExportStatement> m_exports;
+    bool m_has_top_level_await { false };
 };
 
 class BlockStatement final : public ScopeNode {
