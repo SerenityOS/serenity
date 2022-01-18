@@ -152,8 +152,6 @@ UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
                 s_the->set_system_timer(*apic_timer);
             }
         }
-
-        s_the->m_time_page_region = MM.allocate_kernel_region(PAGE_SIZE, "Time page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
     } else {
         VERIFY(s_the.is_initialized());
         if (auto* apic_timer = APIC::the().get_timer()) {
@@ -183,6 +181,7 @@ time_t TimeManagement::boot_time() const
 }
 
 UNMAP_AFTER_INIT TimeManagement::TimeManagement()
+    : m_time_page_region(MM.allocate_kernel_region(PAGE_SIZE, "Time page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value_but_fixme_should_propagate_errors())
 {
     bool probe_non_legacy_hardware_timers = !(kernel_command_line().is_legacy_time_enabled());
     if (ACPI::is_enabled()) {
@@ -436,16 +435,16 @@ bool TimeManagement::disable_profile_timer()
 
 void TimeManagement::update_time_page()
 {
-    auto* page = time_page();
-    u32 update_iteration = AK::atomic_fetch_add(&page->update2, 1u, AK::MemoryOrder::memory_order_acquire);
-    page->clocks[CLOCK_REALTIME_COARSE] = m_epoch_time;
-    page->clocks[CLOCK_MONOTONIC_COARSE] = monotonic_time(TimePrecision::Coarse).to_timespec();
-    AK::atomic_store(&page->update1, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
+    auto& page = time_page();
+    u32 update_iteration = AK::atomic_fetch_add(&page.update2, 1u, AK::MemoryOrder::memory_order_acquire);
+    page.clocks[CLOCK_REALTIME_COARSE] = m_epoch_time;
+    page.clocks[CLOCK_MONOTONIC_COARSE] = monotonic_time(TimePrecision::Coarse).to_timespec();
+    AK::atomic_store(&page.update1, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
 }
 
-TimePage* TimeManagement::time_page()
+TimePage& TimeManagement::time_page()
 {
-    return static_cast<TimePage*>((void*)m_time_page_region->vaddr().as_ptr());
+    return *static_cast<TimePage*>((void*)m_time_page_region->vaddr().as_ptr());
 }
 
 Memory::VMObject& TimeManagement::time_page_vmobject()
