@@ -1290,6 +1290,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool syntax_highlight = !disable_syntax_highlight;
 
     vm = JS::VM::create();
+    vm->enable_default_host_import_module_dynamically_hook();
+
     // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -
     // which is, as far as I can tell, correct - a promise is created, rejected without handler, and a
     // handler then attached to it. The Node.js REPL doesn't warn in this case, so it's something we

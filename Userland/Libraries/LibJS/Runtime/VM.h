@@ -251,6 +251,8 @@ public:
     Function<HashMap<PropertyKey, Value>(SourceTextModule const&)> host_get_import_meta_properties;
     Function<void(Object*, SourceTextModule const&)> host_finalize_import_meta;
 
+    void enable_default_host_import_module_dynamically_hook();
+
 private:
     explicit VM(OwnPtr<CustomData>);
 
@@ -261,6 +263,9 @@ private:
 
     ThrowCompletionOr<NonnullRefPtr<Module>> resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier);
     ThrowCompletionOr<void> link_and_eval_module(SourceTextModule& module);
+
+    void import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability promise_capability);
+    void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability promise_capability, Promise* inner_promise);
 
     Exception* m_exception { nullptr };
 
