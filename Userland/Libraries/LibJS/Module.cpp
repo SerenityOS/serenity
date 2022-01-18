@@ -8,9 +8,10 @@
 
 namespace JS {
 
-Module::Module(Realm& realm)
+Module::Module(Realm& realm, StringView filename)
     : m_vm(realm.vm())
     , m_realm(make_handle(&realm))
+    , m_filename(filename)
 {
 }
 

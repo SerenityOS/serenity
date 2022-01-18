@@ -19,11 +19,13 @@ public:
     Realm& realm() { return *m_realm.cell(); }
     Realm const& realm() const { return *m_realm.cell(); }
 
+    StringView filename() const { return m_filename; }
+
     Environment* environment() { return m_environment.cell(); }
     Object* namespace_() { return m_namespace.cell(); }
 
 protected:
-    explicit Module(Realm&);
+    explicit Module(Realm&, StringView filename);
 
 private:
     // Handles are not safe unless we keep the VM alive.
@@ -32,6 +34,9 @@ private:
     Handle<Realm> m_realm;             // [[Realm]]
     Handle<Environment> m_environment; // [[Environment]]
     Handle<Object> m_namespace;        // [[Namespace]]
+
+    // Needed for potential lookups of modules.
+    String m_filename;
 };
 
 }
