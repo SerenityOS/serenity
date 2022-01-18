@@ -526,8 +526,8 @@ TEST_CASE(test_signed_bigint_bitwise_xor)
     auto num1 = "-3"_sbigint;
     auto num2 = "1"_sbigint;
     EXPECT_EQ(num1.bitwise_xor(num1), "0"_sbigint);
-    EXPECT_EQ(num1.bitwise_xor(num2), "-2"_sbigint);
-    EXPECT_EQ(num2.bitwise_xor(num1), "-2"_sbigint);
+    EXPECT_EQ(num1.bitwise_xor(num2), "-4"_sbigint);
+    EXPECT_EQ(num2.bitwise_xor(num1), "-4"_sbigint);
     EXPECT_EQ(num2.bitwise_xor(num2), "0"_sbigint);
 }
 
