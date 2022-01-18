@@ -50,6 +50,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 event_mask |= PERF_EVENT_PAGE_FAULT;
             else if (event_type == "syscall")
                 event_mask |= PERF_EVENT_SYSCALL;
+            else if (event_type == "read")
+                event_mask |= PERF_EVENT_READ;
             else {
                 warnln("Unknown event type '{}' specified.", event_type);
                 exit(1);
