@@ -10,6 +10,7 @@
 #include <AK/Assertions.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
+#include <math.h>
 
 // Kernel and Userspace pull in the definitions from different places.
 // Avoid trying to figure out which one.
@@ -76,6 +77,14 @@ constexpr int years_to_days_since_epoch(int year)
 constexpr int days_since_epoch(int year, int month, int day)
 {
     return years_to_days_since_epoch(year) + day_of_year(year, month, day);
+}
+
+constexpr i64 seconds_since_epoch_to_year(i64 seconds)
+{
+    constexpr double seconds_per_year = 60.0 * 60.0 * 24.0 * 365.2425;
+
+    auto years_since_epoch = static_cast<double>(seconds) / seconds_per_year;
+    return 1970 + static_cast<i64>(floor(years_since_epoch));
 }
 
 /*
@@ -338,6 +347,7 @@ using AK::days_in_month;
 using AK::days_in_year;
 using AK::days_since_epoch;
 using AK::is_leap_year;
+using AK::seconds_since_epoch_to_year;
 using AK::Time;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
