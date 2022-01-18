@@ -1284,8 +1284,6 @@ public:
 
     StringView name() const { return m_class_expression->name(); }
 
-    ThrowCompletionOr<Value> binding_class_declaration_evaluation(Interpreter& interpreter, GlobalObject& global_object) const;
-
 private:
     NonnullRefPtr<ClassExpression> m_class_expression;
 };
