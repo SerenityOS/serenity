@@ -234,7 +234,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     PrivateEnvironment* private_scope = nullptr;
 
     // 31. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, privateScope).
-    auto* function = ECMAScriptFunctionObject::create(global_object, "anonymous", *prototype, expr->body(), expr->parameters(), expr->function_length(), scope, private_scope, expr->kind(), expr->is_strict_mode(), expr->might_need_arguments_object(), contains_direct_call_to_eval);
+    auto* function = ECMAScriptFunctionObject::create(global_object, "anonymous", *prototype, move(source_text), expr->body(), expr->parameters(), expr->function_length(), scope, private_scope, expr->kind(), expr->is_strict_mode(), expr->might_need_arguments_object(), contains_direct_call_to_eval);
 
     // FIXME: Remove the name argument from create() and do this instead.
     // 32. Perform SetFunctionName(F, "anonymous").

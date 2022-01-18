@@ -29,10 +29,10 @@ public:
         Global,
     };
 
-    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false);
-    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, Object& prototype, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false);
+    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false);
+    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, Object& prototype, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false);
 
-    ECMAScriptFunctionObject(FlyString name, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function);
+    ECMAScriptFunctionObject(FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function);
     virtual void initialize(GlobalObject&) override;
     virtual ~ECMAScriptFunctionObject();
 
@@ -61,6 +61,9 @@ public:
 
     Object* home_object() const { return m_home_object; }
     void set_home_object(Object* home_object) { m_home_object = home_object; }
+
+    String const& source_text() const { return m_source_text; }
+    void set_source_text(String source_text) { m_source_text = move(source_text); }
 
     struct InstanceField {
         Variant<PropertyKey, PrivateName> name;
@@ -108,6 +111,7 @@ private:
     ThisMode m_this_mode { ThisMode::Global };                    // [[ThisMode]]
     bool m_strict { false };                                      // [[Strict]]
     Object* m_home_object { nullptr };                            // [[HomeObject]]
+    String m_source_text;                                         // [[SourceText]]
     Vector<InstanceField> m_fields;                               // [[Fields]]
     Vector<PrivateElement> m_private_methods;                     // [[PrivateMethods]]
     bool m_is_class_constructor { false };                        // [[IsClassConstructor]]
