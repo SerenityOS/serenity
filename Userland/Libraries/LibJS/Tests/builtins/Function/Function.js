@@ -33,7 +33,7 @@ describe("correct behavior", () => {
         expect(new Function("-->")()).toBeUndefined();
 
         expect(new Function().name).toBe("anonymous");
-        expect(new Function().toString()).toBe("function anonymous() {\n  ???\n}");
+        expect(new Function().toString()).toBe("function anonymous(\n) {\n\n}");
     });
 });
 
