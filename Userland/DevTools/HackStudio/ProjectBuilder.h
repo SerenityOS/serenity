@@ -37,8 +37,13 @@ private:
     String generate_cmake_file_content() const;
     ErrorOr<void> update_active_file(StringView active_file);
 
-    static void generate_cmake_library_definitions(StringBuilder&);
-    static void generate_cmake_library_dependencies(StringBuilder&);
+    struct LibraryInfo {
+        String path;
+        Vector<String> dependencies {};
+    };
+    static HashMap<String, NonnullOwnPtr<LibraryInfo>> get_defined_libraries();
+    static void for_each_library_definition(Function<void(String, String)>);
+    static void for_each_library_dependencies(Function<void(String, Vector<StringView>)>);
     static ErrorOr<String> component_name(StringView cmake_file_path);
     static ErrorOr<void> verify_cmake_is_installed();
 
