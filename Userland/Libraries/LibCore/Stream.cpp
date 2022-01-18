@@ -141,18 +141,7 @@ ErrorOr<void> File::open_path(StringView const& filename, mode_t permissions)
     if (!has_flag(m_mode, OpenMode::Nonblocking))
         flags |= O_NONBLOCK;
 
-#ifdef __serenity__
-    int fd = ::serenity_open(filename.characters_without_null_termination(), filename.length(), flags, permissions);
-#else
-    String filename_with_null_terminator { filename };
-    int fd = ::open(filename_with_null_terminator.characters(), flags, permissions);
-#endif
-
-    if (fd < 0) {
-        return Error::from_errno(errno);
-    }
-
-    m_fd = fd;
+    m_fd = TRY(System::open(filename.characters_without_null_termination(), flags, permissions));
     return {};
 }
 
@@ -168,13 +157,9 @@ ErrorOr<size_t> File::read(Bytes buffer)
         return Error::from_errno(EBADF);
     }
 
-    ssize_t rc = ::read(m_fd, buffer.data(), buffer.size());
-    if (rc < 0) {
-        return Error::from_errno(errno);
-    }
-
-    m_last_read_was_eof = rc == 0;
-    return rc;
+    ssize_t nread = TRY(System::read(m_fd, buffer));
+    m_last_read_was_eof = nread == 0;
+    return nread;
 }
 
 ErrorOr<size_t> File::write(ReadonlyBytes buffer)
@@ -184,16 +169,10 @@ ErrorOr<size_t> File::write(ReadonlyBytes buffer)
         return Error::from_errno(EBADF);
     }
 
-    ssize_t rc = ::write(m_fd, buffer.data(), buffer.size());
-    if (rc < 0) {
-        return Error::from_errno(errno);
-    }
-
-    return rc;
+    return TRY(System::write(m_fd, buffer));
 }
 
 bool File::is_eof() const { return m_last_read_was_eof; }
-
 bool File::is_open() const { return m_fd >= 0; }
 
 void File::close()
@@ -205,12 +184,12 @@ void File::close()
     // NOTE: The closing of the file can be interrupted by a signal, in which
     // case EINTR will be returned by the close syscall. So let's try closing
     // the file until we aren't interrupted by rude signals. :^)
-    int rc;
+    ErrorOr<void> result;
     do {
-        rc = ::close(m_fd);
-    } while (rc < 0 && errno == EINTR);
+        result = System::close(m_fd);
+    } while (result.is_error() && result.error().code() == EINTR);
 
-    VERIFY(rc == 0);
+    VERIFY(!result.is_error());
     m_fd = -1;
 }
 
@@ -231,13 +210,9 @@ ErrorOr<off_t> File::seek(i64 offset, SeekMode mode)
         VERIFY_NOT_REACHED();
     }
 
-    off_t rc = lseek(m_fd, offset, syscall_mode);
-    if (rc < 0) {
-        return Error::from_errno(errno);
-    }
-
+    off_t seek_result = TRY(System::lseek(m_fd, offset, syscall_mode));
     m_last_read_was_eof = false;
-    return rc;
+    return seek_result;
 }
 
 ErrorOr<int> Socket::create_fd(SocketDomain domain, SocketType type)
@@ -266,12 +241,7 @@ ErrorOr<int> Socket::create_fd(SocketDomain domain, SocketType type)
         VERIFY_NOT_REACHED();
     }
 
-    int rc = ::socket(socket_domain, socket_type, 0);
-    if (rc < 0) {
-        return Error::from_errno(errno);
-    }
-
-    return rc;
+    return System::socket(socket_domain, socket_type, 0);
 }
 
 ErrorOr<IPv4Address> Socket::resolve_host(String const& host, SocketType type)
@@ -294,11 +264,12 @@ ErrorOr<IPv4Address> Socket::resolve_host(String const& host, SocketType type)
     hints.ai_flags = 0;
     hints.ai_protocol = 0;
 
+    // FIXME: Convert this to Core::System
     struct addrinfo* results = nullptr;
     int rc = getaddrinfo(host.characters(), nullptr, &hints, &results);
     if (rc != 0) {
         if (rc == EAI_SYSTEM) {
-            return Error::from_errno(errno);
+            return Error::from_syscall("getaddrinfo", -errno);
         }
 
         return Error::from_string_literal(gai_strerror(rc));
@@ -322,23 +293,13 @@ ErrorOr<void> Socket::connect_local(int fd, String const& path)
     }
 
     auto addr = maybe_sockaddr.release_value();
-    int rc = ::connect(fd, bit_cast<struct sockaddr*>(&addr), sizeof(addr));
-    if (rc < 0) {
-        return Error::from_errno(errno);
-    }
-
-    return {};
+    return System::connect(fd, bit_cast<struct sockaddr*>(&addr), sizeof(addr));
 }
 
 ErrorOr<void> Socket::connect_inet(int fd, SocketAddress const& address)
 {
     auto addr = address.to_sockaddr_in();
-    int rc = ::connect(fd, bit_cast<struct sockaddr*>(&addr), sizeof(addr));
-    if (rc < 0) {
-        return Error::from_errno(errno);
-    }
-
-    return {};
+    return System::connect(fd, bit_cast<struct sockaddr*>(&addr), sizeof(addr));
 }
 
 ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer, int flags)
@@ -347,19 +308,16 @@ ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer, int flags)
         return Error::from_errno(ENOTCONN);
     }
 
-    ssize_t rc = ::recv(m_fd, buffer.data(), buffer.size(), flags);
-    if (rc < 0) {
-        return Error::from_syscall("recv", -errno);
-    }
+    ssize_t nread = TRY(System::recv(m_fd, buffer.data(), buffer.size(), flags));
+    m_last_read_was_eof = nread == 0;
 
-    m_last_read_was_eof = rc == 0;
     // If a socket read is EOF, then no more data can be read from it because
     // the protocol has disconnected. In this case, we can just disable the
     // notifier if we have one.
     if (m_last_read_was_eof && m_notifier)
         m_notifier->set_enabled(false);
 
-    return rc;
+    return nread;
 }
 
 ErrorOr<size_t> PosixSocketHelper::write(ReadonlyBytes buffer)
@@ -368,12 +326,7 @@ ErrorOr<size_t> PosixSocketHelper::write(ReadonlyBytes buffer)
         return Error::from_errno(ENOTCONN);
     }
 
-    ssize_t rc = ::send(m_fd, buffer.data(), buffer.size(), 0);
-    if (rc < 0) {
-        return Error::from_errno(errno);
-    }
-
-    return rc;
+    return TRY(System::send(m_fd, buffer.data(), buffer.size(), 0));
 }
 
 void PosixSocketHelper::close()
@@ -385,12 +338,12 @@ void PosixSocketHelper::close()
     if (m_notifier)
         m_notifier->set_enabled(false);
 
-    int rc;
+    ErrorOr<void> result;
     do {
-        rc = ::close(m_fd);
-    } while (rc < 0 && errno == EINTR);
+        result = System::close(m_fd);
+    } while (result.is_error() && result.error().code() == EINTR);
 
-    VERIFY(rc == 0);
+    VERIFY(!result.is_error());
     m_fd = -1;
 }
 
@@ -398,13 +351,14 @@ ErrorOr<bool> PosixSocketHelper::can_read_without_blocking(int timeout) const
 {
     struct pollfd the_fd = { .fd = m_fd, .events = POLLIN, .revents = 0 };
 
+    // FIXME: Convert this to Core::System
     int rc;
     do {
         rc = ::poll(&the_fd, 1, timeout);
     } while (rc < 0 && errno == EINTR);
 
     if (rc < 0) {
-        return Error::from_errno(errno);
+        return Error::from_syscall("poll", -errno);
     }
 
     return (the_fd.revents & POLLIN) > 0;
@@ -413,30 +367,19 @@ ErrorOr<bool> PosixSocketHelper::can_read_without_blocking(int timeout) const
 ErrorOr<void> PosixSocketHelper::set_blocking(bool enabled)
 {
     int value = enabled ? 0 : 1;
-    int rc = ::ioctl(m_fd, FIONBIO, &value);
-
-    if (rc < 0) {
-        return Error::from_errno(errno);
-    }
-
-    return {};
+    return System::ioctl(m_fd, FIONBIO, &value);
 }
 
 ErrorOr<void> PosixSocketHelper::set_close_on_exec(bool enabled)
 {
-    int flags = ::fcntl(m_fd, F_GETFD);
-    if (flags < 0)
-        return Error::from_errno(errno);
+    int flags = TRY(System::fcntl(m_fd, F_GETFD));
 
     if (enabled)
         flags |= FD_CLOEXEC;
     else
         flags &= ~FD_CLOEXEC;
 
-    int rc = ::fcntl(m_fd, F_SETFD, flags);
-    if (rc < 0)
-        return Error::from_errno(errno);
-
+    TRY(System::fcntl(m_fd, F_SETFD, flags));
     return {};
 }
 
@@ -484,11 +427,7 @@ ErrorOr<size_t> PosixSocketHelper::pending_bytes() const
     }
 
     int value;
-    int rc = ::ioctl(m_fd, FIONREAD, &value);
-    if (rc < 0) {
-        return Error::from_errno(errno);
-    }
-
+    TRY(System::ioctl(m_fd, FIONREAD, &value));
     return static_cast<size_t>(value);
 }
 
@@ -573,21 +512,13 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
 #endif
 
 #ifdef AK_OS_MACOS
-    if (getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size) < 0)
-#elif defined(__FreeBSD__)
-    if (getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERCRED, &creds, &creds_size) < 0)
-#else
-    if (getsockopt(m_helper.fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0)
-#endif
-    {
-        return Error::from_syscall("getsockopt", -errno);
-    }
-
-#ifdef AK_OS_MACOS
+    TRY(System::getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size));
     return pid;
 #elif defined(__FreeBSD__)
+    TRY(System::getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERCRED, &creds, &creds_size));
     return creds.cr_pid;
 #else
+    TRY(System::getsockopt(m_helper.fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size));
     return creds.pid;
 #endif
 }
