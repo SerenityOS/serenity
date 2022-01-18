@@ -109,9 +109,6 @@ public:
 
     SignedBigInteger plus(const UnsignedBigInteger& other) const;
     SignedBigInteger minus(const UnsignedBigInteger& other) const;
-    SignedBigInteger bitwise_or(const UnsignedBigInteger& other) const;
-    SignedBigInteger bitwise_and(const UnsignedBigInteger& other) const;
-    SignedBigInteger bitwise_xor(const UnsignedBigInteger& other) const;
     SignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     SignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
 
