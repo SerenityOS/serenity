@@ -5,11 +5,16 @@
  */
 
 #include "Language.h"
+#include <AK/LexicalPath.h>
 
 namespace HackStudio {
 
-Language language_from_file_extension(const String& extension)
+Language language_from_file(const LexicalPath& file)
 {
+    if (file.title() == "COMMIT_EDITMSG")
+        return Language::GitCommit;
+
+    auto extension = file.extension();
     VERIFY(!extension.starts_with("."));
     if (extension == "c" || extension == "cc" || extension == "cxx" || extension == "cpp" || extension == "c++"
         || extension == "h" || extension == "hh" || extension == "hxx" || extension == "hpp" || extension == "h++")
@@ -40,12 +45,18 @@ Language language_from_name(const String& name)
         return Language::JavaScript;
     if (name == "Shell")
         return Language::Shell;
+    if (name == "GitCommit")
+        return Language::GitCommit;
 
     return Language::Unknown;
 }
 
-String language_name_from_file_extension(const String& extension)
+String language_name_from_file(const LexicalPath& file)
 {
+    if (file.title() == "COMMIT_EDITMSG")
+        return "GitCommit";
+
+    auto extension = file.extension();
     VERIFY(!extension.starts_with("."));
     if (extension == "c" || extension == "cc" || extension == "cxx" || extension == "cpp" || extension == "c++"
         || extension == "h" || extension == "hh" || extension == "hxx" || extension == "hpp" || extension == "h++")
