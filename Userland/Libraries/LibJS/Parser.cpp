@@ -2138,7 +2138,12 @@ RefPtr<BindingPattern> Parser::synthesize_binding_pattern(Expression const& expr
         return error.position.has_value() && range.contains(*error.position);
     });
     // Make a parser and parse the source for this expression as a binding pattern.
-    auto source = m_state.lexer.source().substring_view(expression.source_range().start.offset - 2, expression.source_range().end.offset - expression.source_range().start.offset);
+    // NOTE: There's currently a fundamental problem that we pass the *next* (a.k.a. `current_token`)
+    // token's position to most nodes' SourceRange when using `rule_start.position(), position()`.
+    // This means that `source` will contain the subsequent token's trivia, if any (which is fine).
+    auto source_start_offset = expression.source_range().start.offset;
+    auto source_end_offset = expression.source_range().end.offset;
+    auto source = m_state.lexer.source().substring_view(source_start_offset, source_end_offset - source_start_offset);
     Lexer lexer { source, m_state.lexer.filename(), expression.source_range().start.line, expression.source_range().start.column };
     Parser parser { lexer };
 

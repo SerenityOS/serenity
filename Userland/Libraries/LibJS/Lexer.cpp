@@ -832,7 +832,7 @@ Token Lexer::next()
             m_filename,
             m_line_number,
             m_line_column - 1,
-            m_position);
+            value_start + 1);
         m_hit_invalid_unicode.clear();
         // Do not produce any further tokens.
         VERIFY(is_eof());
@@ -845,7 +845,7 @@ Token Lexer::next()
             m_filename,
             value_start_line_number,
             value_start_column_number,
-            m_position);
+            value_start - 1);
     }
 
     if (identifier.has_value())
@@ -889,7 +889,7 @@ Token Lexer::force_slash_as_regex()
         m_filename,
         m_current_token.line_number(),
         m_current_token.line_column(),
-        m_position);
+        value_start - 1);
 
     if constexpr (LEXER_DEBUG) {
         dbgln("------------------------------");
