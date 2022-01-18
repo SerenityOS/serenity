@@ -184,12 +184,18 @@ FLATTEN SignedDivisionResult SignedBigInteger::divided_by(UnsignedBigInteger con
 
 FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const SignedBigInteger& other) const
 {
-    auto result = bitwise_or(other.unsigned_value());
+    // See bitwise_and() for derivations.
+    if (!is_negative() && !other.is_negative())
+        return { unsigned_value().bitwise_or(other.unsigned_value()), false };
 
-    // The sign bit will have to be OR'd manually.
-    result.m_sign = is_negative() || other.is_negative();
+    size_t index = max(unsigned_value().one_based_index_of_highest_set_bit(), other.unsigned_value().one_based_index_of_highest_set_bit());
+    if (is_negative() && !other.is_negative())
+        return { unsigned_value().bitwise_not_fill_to_one_based_index(index).plus(1).bitwise_or(other.unsigned_value()).bitwise_not_fill_to_one_based_index(index).plus(1), true };
 
-    return result;
+    if (!is_negative() && other.is_negative())
+        return { unsigned_value().bitwise_or(other.unsigned_value().bitwise_not_fill_to_one_based_index(index).plus(1)).bitwise_not_fill_to_one_based_index(index).plus(1), true };
+
+    return { unsigned_value().minus(1).bitwise_and(other.unsigned_value().minus(1)).plus(1), true };
 }
 
 FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const SignedBigInteger& other) const
@@ -200,12 +206,16 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const SignedBigInteger& o
     // These two just use that -x == ~x + 1 (see below).
 
     // -A & B == (~A + 1) & B.
-    if (is_negative() && !other.is_negative())
-        return { unsigned_value().bitwise_not_fill_to_size(other.trimmed_length()).plus(1).bitwise_and(other.unsigned_value()), false };
+    if (is_negative() && !other.is_negative()) {
+        size_t index = other.unsigned_value().one_based_index_of_highest_set_bit();
+        return { unsigned_value().bitwise_not_fill_to_one_based_index(index).plus(1).bitwise_and(other.unsigned_value()), false };
+    }
 
     // A & -B == A & (~B + 1).
-    if (!is_negative() && other.is_negative())
-        return { unsigned_value().bitwise_and(other.unsigned_value().bitwise_not_fill_to_size(trimmed_length()).plus(1)), false };
+    if (!is_negative() && other.is_negative()) {
+        size_t index = unsigned_value().one_based_index_of_highest_set_bit();
+        return { unsigned_value().bitwise_and(other.unsigned_value().bitwise_not_fill_to_one_based_index(index).plus(1)), false };
+    }
 
     // Both numbers are negative.
     // x + ~x == 0xff...ff, up to however many bits x is wide.

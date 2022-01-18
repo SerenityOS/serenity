@@ -131,9 +131,9 @@ FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_xor_without_allocation(
 /**
  * Complexity: O(N) where N is the number of words
  */
-FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_not_fill_to_size_without_allocation(
+FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_not_fill_to_one_based_index_without_allocation(
     UnsignedBigInteger const& right,
-    size_t size,
+    size_t index,
     UnsignedBigInteger& output)
 {
     // If the value is invalid, the output value is invalid as well.
@@ -141,17 +141,23 @@ FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_not_fill_to_size_without_allo
         output.invalidate();
         return;
     }
-    if (size == 0) {
+
+    if (index == 0) {
         output.set_to_0();
         return;
     }
+    size_t size = (index + UnsignedBigInteger::BITS_IN_WORD - 1) / UnsignedBigInteger::BITS_IN_WORD;
 
     output.m_words.resize_and_keep_capacity(size);
-    size_t i;
-    for (i = 0; i < min(size, right.length()); ++i)
-        output.m_words[i] = ~right.words()[i];
-    for (; i < size; ++i)
-        output.m_words[i] = NumericLimits<UnsignedBigInteger::Word>::max();
+    VERIFY(size > 0);
+    for (size_t i = 0; i < size - 1; ++i)
+        output.m_words[i] = ~(i < right.length() ? right.words()[i] : 0);
+
+    index -= (size - 1) * UnsignedBigInteger::BITS_IN_WORD;
+    auto last_word_index = size - 1;
+    auto last_word = last_word_index < right.length() ? right.words()[last_word_index] : 0;
+
+    output.m_words[last_word_index] = (NumericLimits<UnsignedBigInteger::Word>::max() >> (UnsignedBigInteger::BITS_IN_WORD - index)) & ~last_word;
 }
 
 /**
