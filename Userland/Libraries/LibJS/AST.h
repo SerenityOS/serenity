@@ -484,6 +484,7 @@ public:
     };
 
     FlyString const& name() const { return m_name; }
+    String const& source_text() const { return m_source_text; }
     Statement const& body() const { return *m_body; }
     Vector<Parameter> const& parameters() const { return m_parameters; };
     i32 function_length() const { return m_function_length; }
@@ -494,8 +495,9 @@ public:
     FunctionKind kind() const { return m_kind; }
 
 protected:
-    FunctionNode(FlyString name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+    FunctionNode(FlyString name, String source_text, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
         : m_name(move(name))
+        , m_source_text(move(source_text))
         , m_body(move(body))
         , m_parameters(move(parameters))
         , m_function_length(function_length)
@@ -520,6 +522,7 @@ protected:
 
 private:
     FlyString m_name;
+    String m_source_text;
     NonnullRefPtr<Statement> m_body;
     Vector<Parameter> const m_parameters;
     const i32 m_function_length;
@@ -536,9 +539,9 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(SourceRange source_range, FlyString const& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval)
+    FunctionDeclaration(SourceRange source_range, FlyString const& name, String source_text, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval)
         : Declaration(source_range)
-        , FunctionNode(name, move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false)
+        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false)
     {
     }
 
@@ -562,9 +565,9 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(SourceRange source_range, FlyString const& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function = false)
+    FunctionExpression(SourceRange source_range, FlyString const& name, String source_text, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function = false)
         : Expression(source_range)
-        , FunctionNode(name, move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function)
+        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function)
     {
     }
 
@@ -1232,9 +1235,10 @@ public:
 
 class ClassExpression final : public Expression {
 public:
-    ClassExpression(SourceRange source_range, String name, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassElement> elements)
+    ClassExpression(SourceRange source_range, String name, String source_text, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassElement> elements)
         : Expression(source_range)
         , m_name(move(name))
+        , m_source_text(move(source_text))
         , m_constructor(move(constructor))
         , m_super_class(move(super_class))
         , m_elements(move(elements))
@@ -1242,6 +1246,7 @@ public:
     }
 
     StringView name() const { return m_name; }
+    String const& source_text() const { return m_source_text; }
     RefPtr<FunctionExpression> constructor() const { return m_constructor; }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
@@ -1255,6 +1260,7 @@ private:
     virtual bool is_class_expression() const override { return true; }
 
     String m_name;
+    String m_source_text;
     RefPtr<FunctionExpression> m_constructor;
     RefPtr<Expression> m_super_class;
     NonnullRefPtrVector<ClassElement> m_elements;

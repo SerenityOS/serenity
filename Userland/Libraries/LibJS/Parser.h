@@ -45,7 +45,7 @@ public:
     NonnullRefPtr<Program> parse_program(bool starts_in_strict_mode = false);
 
     template<typename FunctionNodeType>
-    NonnullRefPtr<FunctionNodeType> parse_function_node(u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName);
+    NonnullRefPtr<FunctionNodeType> parse_function_node(u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName, Optional<Position> const& function_start = {});
     Vector<FunctionNode::Parameter> parse_formal_parameters(int& function_length, u8 parse_options = 0);
 
     enum class AllowDuplicates {
