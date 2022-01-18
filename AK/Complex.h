@@ -127,7 +127,7 @@ public:
         const T real = m_real;
         const T divisor = x.real() * x.real() + x.imag() * x.imag();
         m_real = (real * x.real() + m_imag * x.imag()) / divisor;
-        m_imag = (m_imag * x.real() - x.real() * x.imag()) / divisor;
+        m_imag = (m_imag * x.real() - real * x.imag()) / divisor;
         return *this;
     }
 
