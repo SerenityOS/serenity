@@ -3190,7 +3190,39 @@ void ImportCall::dump(int indent) const
 Completion ImportCall::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "'import(...)' in modules");
+    // 1. Let referencingScriptOrModule be ! GetActiveScriptOrModule().
+    auto referencing_script_or_module = interpreter.vm().get_active_script_or_module();
+
+    if (m_options)
+        return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "import call with assertions/options");
+
+    // 2. Let argRef be the result of evaluating AssignmentExpression.
+    // 3. Let specifier be ? GetValue(argRef).
+    auto specifier = TRY(m_specifier->execute(interpreter, global_object));
+
+    // 4. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    auto promise_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
+
+    VERIFY(!interpreter.exception());
+    // 5. Let specifierString be ToString(specifier).
+    auto specifier_string = specifier->to_string(global_object);
+
+    // 6. IfAbruptRejectPromise(specifierString, promiseCapability).
+    // Note: Since we have to use completions and not ThrowCompletionOr's in AST we have to do this manually.
+    if (specifier_string.is_throw_completion()) {
+        // FIXME: We shouldn't have to clear this exception
+        interpreter.vm().clear_exception();
+        (void)TRY(call(global_object, promise_capability.reject, js_undefined(), *specifier_string.throw_completion().value()));
+        return Value { promise_capability.promise };
+    }
+
+    ModuleRequest request { specifier_string.release_value() };
+
+    // 7. Perform ! HostImportModuleDynamically(referencingScriptOrModule, specifierString, promiseCapability).
+    interpreter.vm().host_import_module_dynamically(referencing_script_or_module, request, promise_capability);
+
+    // 8. Return promiseCapability.[[Promise]].
+    return Value { promise_capability.promise };
 }
 
 // 13.2.3.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation

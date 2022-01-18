@@ -29,6 +29,7 @@
     M(DescWriteNonWritable, "Cannot write to non-writable property '{}'")                                                               \
     M(DetachedArrayBuffer, "ArrayBuffer is detached")                                                                                   \
     M(DivisionByZero, "Division by zero")                                                                                               \
+    M(DynamicImportNotAllowed, "Dynamic Imports are not allowed")                                                                       \
     M(FinalizationRegistrySameTargetAndValue, "Target and held value must not be the same")                                             \
     M(GetCapabilitiesExecutorCalledMultipleTimes, "GetCapabilitiesExecutor was called multiple times")                                  \
     M(GlobalEnvironmentAlreadyHasBinding, "Global environment already has binding '{}'")                                                \
@@ -68,6 +69,7 @@
     M(MissingRequiredProperty, "Required property {} is missing or undefined")                                                          \
     M(ModuleNoEnvironment, "Cannot find module environment for imported binding")                                                       \
     M(ModuleNotFound, "Cannot find/open module: '{}'")                                                                                  \
+    M(ModuleNotFoundNoReferencingScript, "Cannot resolve module {} without any active script or module")                                \
     M(NegativeExponent, "Exponent must be positive")                                                                                    \
     M(NonExtensibleDefine, "Cannot define property {} on non-extensible object")                                                        \
     M(NotAConstructor, "{} is not a constructor")                                                                                       \

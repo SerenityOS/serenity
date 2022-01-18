@@ -182,8 +182,10 @@ int main(int argc, char** argv)
     if (g_main_hook)
         g_main_hook();
 
-    if (!g_vm)
+    if (!g_vm) {
         g_vm = JS::VM::create();
+        g_vm->enable_default_host_import_module_dynamically_hook();
+    }
 
     Test::JS::TestRunner test_runner(test_root, common_path, print_times, print_progress, print_json);
     test_runner.run(test_glob);
