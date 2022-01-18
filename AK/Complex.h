@@ -232,7 +232,7 @@ private:
 
 // reverse associativity operators for scalars
 template<AK::Concepts::Arithmetic T, AK::Concepts::Arithmetic U>
-constexpr Complex<T> operator+(const U& b, const Complex<T>& a)
+constexpr Complex<T> operator+(const U& a, const Complex<T>& b)
 {
     Complex<T> x = a;
     x += b;
@@ -240,7 +240,7 @@ constexpr Complex<T> operator+(const U& b, const Complex<T>& a)
 }
 
 template<AK::Concepts::Arithmetic T, AK::Concepts::Arithmetic U>
-constexpr Complex<T> operator-(const U& b, const Complex<T>& a)
+constexpr Complex<T> operator-(const U& a, const Complex<T>& b)
 {
     Complex<T> x = a;
     x -= b;
@@ -248,7 +248,7 @@ constexpr Complex<T> operator-(const U& b, const Complex<T>& a)
 }
 
 template<AK::Concepts::Arithmetic T, AK::Concepts::Arithmetic U>
-constexpr Complex<T> operator*(const U& b, const Complex<T>& a)
+constexpr Complex<T> operator*(const U& a, const Complex<T>& b)
 {
     Complex<T> x = a;
     x *= b;
@@ -256,7 +256,7 @@ constexpr Complex<T> operator*(const U& b, const Complex<T>& a)
 }
 
 template<AK::Concepts::Arithmetic T, AK::Concepts::Arithmetic U>
-constexpr Complex<T> operator/(const U& b, const Complex<T>& a)
+constexpr Complex<T> operator/(const U& a, const Complex<T>& b)
 {
     Complex<T> x = a;
     x /= b;
