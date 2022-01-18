@@ -22,8 +22,9 @@ CodeDocument::CodeDocument(const String& file_path, Client* client)
     : TextDocument(client)
     , m_file_path(file_path)
 {
-    m_language = language_from_file_extension(LexicalPath::extension(file_path));
-    m_language_name = language_name_from_file_extension(LexicalPath::extension(file_path));
+    auto lexical_path = LexicalPath(file_path);
+    m_language = language_from_file(lexical_path);
+    m_language_name = language_name_from_file(lexical_path);
 }
 
 CodeDocument::CodeDocument(Client* client)
