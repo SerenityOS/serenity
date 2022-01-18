@@ -42,6 +42,8 @@ set(SOURCES
     FontPicker.cpp
     FontPickerDialogGML.h
     Frame.cpp
+    GitCommitLexer.cpp
+    GitCommitSyntaxHighlighter.cpp
     GlyphMapWidget.cpp
     GMLAutocompleteProvider.cpp
     GMLFormatter.cpp
