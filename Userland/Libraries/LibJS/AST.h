@@ -1344,6 +1344,8 @@ public:
     StringView name() const { return m_class_expression->name(); }
 
 private:
+    friend ExportStatement;
+
     NonnullRefPtr<ClassExpression> m_class_expression;
 };
 
