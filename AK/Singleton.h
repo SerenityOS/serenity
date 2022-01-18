@@ -12,6 +12,8 @@
 #ifdef KERNEL
 #    include <Kernel/Arch/Processor.h>
 #    include <Kernel/Arch/ScopedCritical.h>
+#else
+#    include <sched.h>
 #endif
 
 #ifndef __serenity__
@@ -58,7 +60,7 @@ public:
 #ifdef KERNEL
                 Kernel::Processor::wait_check();
 #else
-                // TODO: yield
+                sched_yield();
 #endif
                 obj = obj_var.load(AK::memory_order_acquire);
             }
