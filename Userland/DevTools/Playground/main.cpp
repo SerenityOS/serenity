@@ -91,6 +91,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     editor->set_autocomplete_provider(make<GUI::GMLAutocompleteProvider>());
     editor->set_should_autocomplete_automatically(true);
     editor->set_automatic_indentation_enabled(true);
+    editor->set_ruler_visible(true);
 
     String file_path;
     auto update_title = [&] {
