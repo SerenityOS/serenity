@@ -231,7 +231,7 @@ ErrorOr<void> Socket::getsockopt(OpenFileDescription&, int level, int option, Us
         return copy_to_user(value_size, &size);
     }
     default:
-        dbgln("setsockopt({}) at SOL_SOCKET not implemented.", option);
+        dbgln("getsockopt({}) at SOL_SOCKET not implemented.", option);
         return ENOPROTOOPT;
     }
 }
