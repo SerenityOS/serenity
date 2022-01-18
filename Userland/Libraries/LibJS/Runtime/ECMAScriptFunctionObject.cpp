@@ -693,21 +693,20 @@ void ECMAScriptFunctionObject::async_function_start(PromiseCapability const& pro
     // 3. NOTE: Copying the execution state is required for AsyncBlockStart to resume its execution. It is ill-defined to resume a currently executing context.
 
     // 4. Perform ! AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext).
-    async_block_start(promise_capability, async_context);
+    async_block_start(vm, m_ecmascript_code, promise_capability, async_context);
 }
 
 // 27.7.5.2 AsyncBlockStart ( promiseCapability, asyncBody, asyncContext ), https://tc39.es/ecma262/#sec-asyncblockstart
-void ECMAScriptFunctionObject::async_block_start(PromiseCapability const& promise_capability, ExecutionContext& async_context)
+void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, PromiseCapability const& promise_capability, ExecutionContext& async_context)
 {
-    auto& vm = this->vm();
-
+    auto& global_object = vm.current_realm()->global_object();
     // 1. Assert: promiseCapability is a PromiseCapability Record.
 
     // 2. Let runningContext be the running execution context.
     auto& running_context = vm.running_execution_context();
 
     // 3. Set the code evaluation state of asyncContext such that when evaluation is resumed for that execution context the following steps will be performed:
-    auto* execution_steps = NativeFunction::create(global_object(), "", [async_body = m_ecmascript_code, &promise_capability](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+    auto* execution_steps = NativeFunction::create(global_object, "", [&async_body, &promise_capability](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
         // a. Let result be the result of evaluating asyncBody.
         auto result = async_body->execute(vm.interpreter(), global_object);
 
@@ -740,7 +739,7 @@ void ECMAScriptFunctionObject::async_block_start(PromiseCapability const& promis
     });
 
     // 4. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
-    auto push_result = vm.push_execution_context(async_context, global_object());
+    auto push_result = vm.push_execution_context(async_context, global_object);
     if (push_result.is_error())
         return;
 
