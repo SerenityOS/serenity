@@ -22,7 +22,7 @@ public:
     Program const& parse_node() const { return *m_ecmascript_code; }
 
 private:
-    explicit SourceTextModule(Realm&, NonnullRefPtr<Program>);
+    explicit SourceTextModule(Realm&, StringView filename, NonnullRefPtr<Program>);
 
     NonnullRefPtr<Program> m_ecmascript_code; // [[ECMAScriptCode]]
 };

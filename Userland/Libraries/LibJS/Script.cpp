@@ -23,13 +23,14 @@ Result<NonnullRefPtr<Script>, Vector<Parser::Error>> Script::parse(StringView so
         return parser.errors();
 
     // 3. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
-    return adopt_ref(*new Script(realm, move(body)));
+    return adopt_ref(*new Script(realm, filename, move(body)));
 }
 
-Script::Script(Realm& realm, NonnullRefPtr<Program> parse_node)
+Script::Script(Realm& realm, StringView filename, NonnullRefPtr<Program> parse_node)
     : m_vm(realm.vm())
     , m_realm(make_handle(&realm))
     , m_parse_node(move(parse_node))
+    , m_filename(filename)
 {
 }
 
