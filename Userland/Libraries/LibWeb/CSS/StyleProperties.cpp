@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -94,15 +94,33 @@ NonnullRefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bol
     return Gfx::FontDatabase::default_font();
 }
 
-float StyleProperties::line_height(const Layout::Node& layout_node) const
+float StyleProperties::line_height(Layout::Node const& layout_node) const
 {
-    auto line_height_length = length_or_fallback(CSS::PropertyID::LineHeight, Length::make_auto());
-    if (line_height_length.is_absolute())
-        return line_height_length.to_px(layout_node);
-    auto font_size = length_or_fallback(CSS::PropertyID::FontSize, Length::make_auto());
-    if (font_size.is_absolute())
-        return font_size.to_px(layout_node);
-    return (float)computed_font().glyph_height() * 1.4f;
+    constexpr float font_height_to_line_height_multiplier = 1.4f;
+
+    if (auto maybe_line_height = property(CSS::PropertyID::LineHeight); maybe_line_height.has_value()) {
+        auto line_height = maybe_line_height.release_value();
+
+        if (line_height->is_identifier() && line_height->to_identifier() == ValueID::Normal)
+            return Length(1, Length::Type::Em).to_px(layout_node) * font_height_to_line_height_multiplier;
+
+        if (line_height->is_length()) {
+            auto line_height_length = line_height->to_length();
+            if (!line_height_length.is_undefined_or_auto())
+                return line_height_length.to_px(layout_node);
+        }
+
+        if (line_height->is_numeric())
+            return Length(line_height->to_number(), Length::Type::Em).to_px(layout_node);
+
+        if (line_height->is_percentage()) {
+            // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
+            auto& percentage = line_height->as_percentage().percentage();
+            return Length(percentage.as_fraction(), Length::Type::Em).to_px(layout_node);
+        }
+    }
+
+    return Length(font_height_to_line_height_multiplier, Length::Type::Em).to_px(layout_node);
 }
 
 Optional<int> StyleProperties::z_index() const
