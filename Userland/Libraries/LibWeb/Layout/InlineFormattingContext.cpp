@@ -25,23 +25,18 @@ InlineFormattingContext::~InlineFormattingContext()
 {
 }
 
-struct AvailableSpaceForLineInfo {
-    float left { 0 };
-    float right { 0 };
-};
-
-static AvailableSpaceForLineInfo available_space_for_line(const InlineFormattingContext& context, size_t line_index)
+InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::available_space_for_line(size_t line_index) const
 {
-    if (!context.parent()->is_block_formatting_context())
-        return { 0, context.context_box().width() };
+    if (!parent()->is_block_formatting_context())
+        return { 0, context_box().width() };
 
     AvailableSpaceForLineInfo info;
 
     // FIXME: This is a total hack guess since we don't actually know the final y position of lines here!
-    float line_height = context.containing_block().line_height();
+    float line_height = containing_block().line_height();
     float y = (line_index * line_height);
 
-    auto& bfc = static_cast<const BlockFormattingContext&>(*context.parent());
+    auto const& bfc = static_cast<BlockFormattingContext const&>(*parent());
 
     for (ssize_t i = bfc.left_floating_boxes().size() - 1; i >= 0; --i) {
         auto& floating_box = *bfc.left_floating_boxes().at(i);
@@ -52,7 +47,7 @@ static AvailableSpaceForLineInfo available_space_for_line(const InlineFormatting
         }
     }
 
-    info.right = context.containing_block().width();
+    info.right = containing_block().width();
 
     for (ssize_t i = bfc.right_floating_boxes().size() - 1; i >= 0; --i) {
         auto& floating_box = *bfc.right_floating_boxes().at(i);
@@ -68,7 +63,7 @@ static AvailableSpaceForLineInfo available_space_for_line(const InlineFormatting
 
 float InlineFormattingContext::available_width_at_line(size_t line_index) const
 {
-    auto info = available_space_for_line(*this, line_index);
+    auto info = available_space_for_line(line_index);
     return info.right - info.left;
 }
 
@@ -98,7 +93,7 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
             max_height = max(max_height, fragment.height());
         }
 
-        float x_offset = available_space_for_line(*this, line_index).left;
+        float x_offset = available_space_for_line(line_index).left;
 
         float excess_horizontal_space = (float)containing_block().width() - line_box.width();
 
