@@ -237,6 +237,16 @@ public:
         m_identifier_and_argument_index_associations.ensure(index).append(move(identifier));
     }
 
+    void set_contains_await_expression()
+    {
+        m_contains_await_expression = true;
+    }
+
+    bool contains_await_expression() const
+    {
+        return m_contains_await_expression;
+    }
+
 private:
     void throw_identifier_declared(FlyString const& name, NonnullRefPtr<Declaration> const& declaration)
     {
@@ -263,6 +273,7 @@ private:
 
     bool m_contains_access_to_arguments_object { false };
     bool m_contains_direct_call_to_eval { false };
+    bool m_contains_await_expression { false };
 };
 
 class OperatorPrecedenceTable {
@@ -524,6 +535,10 @@ void Parser::parse_module(Program& program)
             consume();
         }
     }
+
+    VERIFY(m_state.current_scope_pusher);
+    if (m_state.current_scope_pusher->contains_await_expression())
+        program.set_has_top_level_await();
 
     for (auto& export_statement : program.exports()) {
         if (export_statement.has_statement())
@@ -2341,6 +2356,8 @@ NonnullRefPtr<AwaitExpression> Parser::parse_await_expression()
     auto precedence = g_operator_precedence.get(TokenType::Await);
     auto associativity = operator_associativity(TokenType::Await);
     auto argument = parse_expression(precedence, associativity);
+
+    m_state.current_scope_pusher->set_contains_await_expression();
 
     return create_ast_node<AwaitExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(argument));
 }
