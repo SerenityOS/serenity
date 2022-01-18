@@ -995,31 +995,38 @@ static PrimitiveString* concatenate_strings(GlobalObject& global_object, Primiti
         return js_string(vm, Utf16String(move(combined)));
     }
 
-    Utf8View lhs_string { lhs.string() };
-    Utf8View rhs_string { rhs.string() };
-
+    auto const& lhs_string = lhs.string();
+    auto const& rhs_string = rhs.string();
     StringBuilder builder(lhs_string.length() + rhs_string.length());
-    Optional<u16> high_surrogate;
 
-    for (auto it = lhs_string.begin(); it != lhs_string.end(); ++it) {
-        if (!it.peek(1).has_value() && Utf16View::is_high_surrogate(*it) && !rhs_string.is_empty())
-            high_surrogate = *it;
-        else
-            builder.append_code_point(*it);
-    }
+    auto return_combined_strings = [&]() {
+        builder.append(lhs_string);
+        builder.append(rhs_string);
+        return js_string(vm, builder.to_string());
+    };
 
-    if (high_surrogate.has_value()) {
-        auto low_surrogate = *rhs_string.begin();
+    // Surrogates encoded as UTF-8 are 3 bytes.
+    if ((lhs_string.length() < 3) || (rhs_string.length() < 3))
+        return return_combined_strings();
 
-        if (Utf16View::is_low_surrogate(low_surrogate)) {
-            builder.append_code_point(Utf16View::decode_surrogate_pair(*high_surrogate, low_surrogate));
-            rhs_string = rhs_string.substring_view(3); // A low surrogate encoded as UTF-8 is 3 bytes.
-        } else {
-            builder.append_code_point(*high_surrogate);
-        }
-    }
+    auto lhs_leading_byte = static_cast<u8>(lhs_string[lhs_string.length() - 3]);
+    auto rhs_leading_byte = static_cast<u8>(rhs_string[0]);
 
-    builder.append(rhs_string.as_string());
+    if ((lhs_leading_byte & 0xf0) != 0xe0)
+        return return_combined_strings();
+    if ((rhs_leading_byte & 0xf0) != 0xe0)
+        return return_combined_strings();
+
+    auto high_surrogate = *Utf8View(lhs_string.substring_view(lhs_string.length() - 3)).begin();
+    auto low_surrogate = *Utf8View(rhs_string).begin();
+
+    if (!Utf16View::is_high_surrogate(high_surrogate) || !Utf16View::is_low_surrogate(low_surrogate))
+        return return_combined_strings();
+
+    builder.append(lhs_string.substring_view(0, lhs_string.length() - 3));
+    builder.append_code_point(Utf16View::decode_surrogate_pair(high_surrogate, low_surrogate));
+    builder.append(rhs_string.substring_view(3));
+
     return js_string(vm, builder.to_string());
 }
 
