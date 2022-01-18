@@ -37,8 +37,14 @@ describe("correct behavior", () => {
 
     test("bitwise operators", () => {
         expect(12n & 5n).toBe(4n);
+        expect(3n & -2n).toBe(2n);
+        expect(-3n & -2n).toBe(-4n);
+        expect(-3n & 2n).toBe(0n);
+
         expect(1n | 2n).toBe(3n);
+
         expect(5n ^ 3n).toBe(6n);
+
         expect(~1n).toBe(-2n);
         expect(~-1n).toBe(0n);
 

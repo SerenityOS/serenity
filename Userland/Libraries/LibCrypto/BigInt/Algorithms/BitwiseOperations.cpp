@@ -7,6 +7,7 @@
 
 #include "UnsignedBigIntegerAlgorithms.h"
 #include <AK/BuiltinWrappers.h>
+#include <AK/NumericLimits.h>
 
 namespace Crypto {
 
@@ -130,8 +131,9 @@ FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_xor_without_allocation(
 /**
  * Complexity: O(N) where N is the number of words
  */
-FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_not_without_allocation(
+FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_not_fill_to_size_without_allocation(
     UnsignedBigInteger const& right,
+    size_t size,
     UnsignedBigInteger& output)
 {
     // If the value is invalid, the output value is invalid as well.
@@ -139,22 +141,17 @@ FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_not_without_allocation(
         output.invalidate();
         return;
     }
-    if (right.length() == 0) {
+    if (size == 0) {
         output.set_to_0();
         return;
     }
 
-    output.m_words.resize_and_keep_capacity(right.length());
-
-    if (right.length() > 1) {
-        for (size_t i = 0; i < right.length() - 1; ++i)
-            output.m_words[i] = ~right.words()[i];
-    }
-
-    auto last_word_index = right.length() - 1;
-    auto last_word = right.words()[last_word_index];
-
-    output.m_words[last_word_index] = ((u32)0xffffffffffffffff >> count_leading_zeroes(last_word)) & ~last_word;
+    output.m_words.resize_and_keep_capacity(size);
+    size_t i;
+    for (i = 0; i < min(size, right.length()); ++i)
+        output.m_words[i] = ~right.words()[i];
+    for (; i < size; ++i)
+        output.m_words[i] = NumericLimits<UnsignedBigInteger::Word>::max();
 }
 
 /**

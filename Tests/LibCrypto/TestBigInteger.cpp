@@ -478,9 +478,11 @@ TEST_CASE(test_signed_bigint_bitwise_and)
     auto num1 = "-1234567"_sbigint;
     auto num2 = "1234567"_sbigint;
     EXPECT_EQ(num1.bitwise_and(num1), num1);
-    EXPECT_EQ(num1.bitwise_and(num2), num2);
-    EXPECT_EQ(num2.bitwise_and(num1), num2);
+    EXPECT_EQ(num1.bitwise_and(num2), "1"_sbigint);
+    EXPECT_EQ(num2.bitwise_and(num1), "1"_sbigint);
     EXPECT_EQ(num2.bitwise_and(num2), num2);
+
+    EXPECT_EQ("-3"_sbigint.bitwise_and("-2"_sbigint), "-4"_sbigint);
 }
 
 TEST_CASE(test_bigint_bitwise_xor)
