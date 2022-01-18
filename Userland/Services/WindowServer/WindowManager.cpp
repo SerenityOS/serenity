@@ -36,6 +36,7 @@ WindowManager& WindowManager::the()
 
 WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
     : m_switcher(WindowSwitcher::construct())
+    , m_keymap_switcher(KeymapSwitcher::construct())
     , m_palette(palette)
 {
     s_the = this;
@@ -1554,6 +1555,11 @@ void WindowManager::process_key_event(KeyEvent& event)
     }
     if (m_switcher->is_visible()) {
         m_switcher->on_key_event(event);
+        return;
+    }
+
+    if (event.type() == Event::KeyDown && (event.modifiers() == (Mod_Alt | Mod_Shift) && (event.key() == Key_Shift || event.key() == Key_Alt))) {
+        m_keymap_switcher->next_keymap();
         return;
     }
 
