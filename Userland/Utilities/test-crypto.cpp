@@ -2996,7 +2996,7 @@ static void bigint_signed_bitwise()
         I_TEST((Signed BigInteger | Bitwise or handles sign));
         auto num1 = "-1234567"_sbigint;
         auto num2 = "1234567"_sbigint;
-        if (num1.bitwise_or(num2) == num1) {
+        if (num1.bitwise_or(num2) == "-1"_sbigint) {
             PASS;
         } else {
             FAIL(Invalid value);

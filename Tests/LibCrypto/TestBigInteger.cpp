@@ -427,6 +427,26 @@ TEST_CASE(test_bigint_big_endian_export)
     EXPECT(memcmp(exported + 3, "hello", 5) == 0);
 }
 
+TEST_CASE(test_bigint_one_based_index_of_highest_set_bit)
+{
+    auto num1 = "1234567"_bigint;
+    auto num2 = "1234567"_bigint;
+    EXPECT_EQ("0"_bigint.one_based_index_of_highest_set_bit(), 0u);
+    EXPECT_EQ("1"_bigint.one_based_index_of_highest_set_bit(), 1u);
+    EXPECT_EQ("7"_bigint.one_based_index_of_highest_set_bit(), 3u);
+    EXPECT_EQ("4294967296"_bigint.one_based_index_of_highest_set_bit(), 33u);
+}
+
+TEST_CASE(test_signed_bigint_bitwise_not_fill_to_one_based_index)
+{
+    EXPECT_EQ("0"_bigint.bitwise_not_fill_to_one_based_index(0), "0"_bigint);
+    EXPECT_EQ("0"_bigint.bitwise_not_fill_to_one_based_index(1), "1"_bigint);
+    EXPECT_EQ("0"_bigint.bitwise_not_fill_to_one_based_index(2), "3"_bigint);
+    EXPECT_EQ("0"_bigint.bitwise_not_fill_to_one_based_index(4), "15"_bigint);
+    EXPECT_EQ("0"_bigint.bitwise_not_fill_to_one_based_index(32), "4294967295"_bigint);
+    EXPECT_EQ("0"_bigint.bitwise_not_fill_to_one_based_index(33), "8589934591"_bigint);
+}
+
 TEST_CASE(test_bigint_bitwise_or)
 {
     auto num1 = "1234567"_bigint;
@@ -448,9 +468,11 @@ TEST_CASE(test_signed_bigint_bitwise_or)
     auto num1 = "-1234567"_sbigint;
     auto num2 = "1234567"_sbigint;
     EXPECT_EQ(num1.bitwise_or(num1), num1);
-    EXPECT_EQ(num1.bitwise_or(num2), num1);
-    EXPECT_EQ(num2.bitwise_or(num1), num1);
+    EXPECT_EQ(num1.bitwise_or(num2), "-1"_sbigint);
+    EXPECT_EQ(num2.bitwise_or(num1), "-1"_sbigint);
     EXPECT_EQ(num2.bitwise_or(num2), num2);
+
+    EXPECT_EQ("0"_sbigint.bitwise_or("-1"_sbigint), "-1"_sbigint);
 }
 
 TEST_CASE(test_bigint_bitwise_and)

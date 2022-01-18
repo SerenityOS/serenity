@@ -40,8 +40,10 @@ describe("correct behavior", () => {
         expect(3n & -2n).toBe(2n);
         expect(-3n & -2n).toBe(-4n);
         expect(-3n & 2n).toBe(0n);
+        expect(0xffff_ffffn & -1n).toBe(0xffff_ffffn);
 
         expect(1n | 2n).toBe(3n);
+        expect(0n | -1n).toBe(-1n);
 
         expect(5n ^ 3n).toBe(6n);
 

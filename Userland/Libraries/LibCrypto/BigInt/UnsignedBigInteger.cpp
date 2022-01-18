@@ -5,6 +5,7 @@
  */
 
 #include "UnsignedBigInteger.h"
+#include <AK/BuiltinWrappers.h>
 #include <AK/CharacterTypes.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringHash.h>
@@ -173,6 +174,17 @@ void UnsignedBigInteger::resize_with_leading_zeros(size_t new_length)
     }
 }
 
+size_t UnsignedBigInteger::one_based_index_of_highest_set_bit() const
+{
+    size_t number_of_words = trimmed_length();
+    size_t index = 0;
+    if (number_of_words > 0) {
+        index += (number_of_words - 1) * BITS_IN_WORD;
+        index += BITS_IN_WORD - count_leading_zeroes(m_words[number_of_words - 1]);
+    }
+    return index;
+}
+
 FLATTEN UnsignedBigInteger UnsignedBigInteger::plus(const UnsignedBigInteger& other) const
 {
     UnsignedBigInteger result;
@@ -218,11 +230,11 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_xor(const UnsignedBigInte
     return result;
 }
 
-FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_not_fill_to_size(size_t size) const
+FLATTEN UnsignedBigInteger UnsignedBigInteger::bitwise_not_fill_to_one_based_index(size_t size) const
 {
     UnsignedBigInteger result;
 
-    UnsignedBigIntegerAlgorithms::bitwise_not_fill_to_size_without_allocation(*this, size, result);
+    UnsignedBigIntegerAlgorithms::bitwise_not_fill_to_one_based_index_without_allocation(*this, size, result);
 
     return result;
 }
