@@ -241,6 +241,13 @@ public:
 
     ScriptOrModule get_active_script_or_module() const;
 
+    Function<ThrowCompletionOr<NonnullRefPtr<Module>>(ScriptOrModule, ModuleRequest const&)> host_resolve_imported_module;
+    Function<void(ScriptOrModule, ModuleRequest const&, PromiseCapability)> host_import_module_dynamically;
+    Function<void(ScriptOrModule, ModuleRequest const&, PromiseCapability, Promise*)> host_finish_dynamic_import;
+
+    Function<HashMap<PropertyKey, Value>(SourceTextModule const&)> host_get_import_meta_properties;
+    Function<void(Object*, SourceTextModule const&)> host_finalize_import_meta;
+
 private:
     explicit VM(OwnPtr<CustomData>);
 
