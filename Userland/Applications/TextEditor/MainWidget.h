@@ -119,6 +119,7 @@ private:
     RefPtr<GUI::Action> m_css_highlight;
     RefPtr<GUI::Action> m_js_highlight;
     RefPtr<GUI::Action> m_html_highlight;
+    RefPtr<GUI::Action> m_git_highlight;
     RefPtr<GUI::Action> m_gml_highlight;
     RefPtr<GUI::Action> m_ini_highlight;
     RefPtr<GUI::Action> m_shell_highlight;
