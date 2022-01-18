@@ -44,6 +44,7 @@ describe("correct behavior", () => {
 
         expect(1n | 2n).toBe(3n);
         expect(0n | -1n).toBe(-1n);
+        expect(0n | -2n).toBe(-2n);
 
         expect(5n ^ 3n).toBe(6n);
 
