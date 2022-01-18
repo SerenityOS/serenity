@@ -150,8 +150,32 @@ ThrowCompletionOr<Value> ModuleNamespaceObject::internal_get(PropertyKey const& 
 
     // 4. Let m be O.[[Module]].
     // 5. Let binding be ! m.ResolveExport(P).
-    // FIXME: Add steps 5 through 12
-    return vm().throw_completion<ReferenceError>(global_object(), ErrorType::ModuleNoEnvironment);
+    auto binding = MUST(m_module->resolve_export(vm(), property_key.to_string()));
+
+    // 6. Assert: binding is a ResolvedBinding Record.
+    VERIFY(binding.is_valid());
+
+    // 7. Let targetModule be binding.[[Module]].
+    auto* target_module = binding.module;
+
+    // 8. Assert: targetModule is not undefined.
+    VERIFY(target_module);
+
+    // 9. If binding.[[BindingName]] is namespace, then
+    if (binding.is_namespace()) {
+        // a. Return ? GetModuleNamespace(targetModule).
+        return TRY(target_module->get_module_namespace(vm()));
+    }
+
+    // 10. Let targetEnv be targetModule.[[Environment]].
+    auto* target_environment = target_module->environment();
+
+    // 11. If targetEnv is empty, throw a ReferenceError exception.
+    if (!target_environment)
+        return vm().throw_completion<ReferenceError>(global_object(), ErrorType::ModuleNoEnvironment);
+
+    // 12. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
+    return target_environment->get_binding_value(global_object(), binding.export_name, true);
 }
 
 // 10.4.6.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-set-p-v-receiver
