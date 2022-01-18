@@ -238,12 +238,7 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const SignedBigInteger& o
 
 FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(const SignedBigInteger& other) const
 {
-    auto result = bitwise_xor(other.unsigned_value());
-
-    // The sign bit will have to be XOR'd manually.
-    result.m_sign = is_negative() ^ other.is_negative();
-
-    return result;
+    return bitwise_or(other).minus(bitwise_and(other));
 }
 
 bool SignedBigInteger::operator==(const UnsignedBigInteger& other) const
