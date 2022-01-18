@@ -143,21 +143,6 @@ FLATTEN SignedBigInteger SignedBigInteger::minus(const UnsignedBigInteger& other
     return { other.minus(m_unsigned_data), true };
 }
 
-FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const UnsignedBigInteger& other) const
-{
-    return { unsigned_value().bitwise_or(other), m_sign };
-}
-
-FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const UnsignedBigInteger& other) const
-{
-    return { unsigned_value().bitwise_and(other), false };
-}
-
-FLATTEN SignedBigInteger SignedBigInteger::bitwise_xor(const UnsignedBigInteger& other) const
-{
-    return { unsigned_value().bitwise_xor(other), m_sign };
-}
-
 FLATTEN SignedBigInteger SignedBigInteger::bitwise_not() const
 {
     // Bitwise operators assume two's complement, while SignedBigInteger uses sign-magnitude.
