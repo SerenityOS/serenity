@@ -76,7 +76,7 @@ public:
     Memory::VMObject& time_page_vmobject();
 
 private:
-    TimePage* time_page();
+    TimePage& time_page();
     void update_time_page();
 
     bool probe_and_set_legacy_hardware_timers();
@@ -108,7 +108,7 @@ private:
     Atomic<u32> m_profile_enable_count { 0 };
     RefPtr<HardwareTimerBase> m_profile_timer;
 
-    OwnPtr<Memory::Region> m_time_page_region;
+    NonnullOwnPtr<Memory::Region> m_time_page_region;
 };
 
 }
