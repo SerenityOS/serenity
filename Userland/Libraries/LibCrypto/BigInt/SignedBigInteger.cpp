@@ -173,12 +173,20 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const SignedBigInteger& ot
     if (!is_negative() && !other.is_negative())
         return { unsigned_value().bitwise_or(other.unsigned_value()), false };
 
-    size_t index = max(unsigned_value().one_based_index_of_highest_set_bit(), other.unsigned_value().one_based_index_of_highest_set_bit());
-    if (is_negative() && !other.is_negative())
-        return { unsigned_value().bitwise_not_fill_to_one_based_index(index).plus(1).bitwise_or(other.unsigned_value()).bitwise_not_fill_to_one_based_index(index).plus(1), true };
+    // -A | B == (~A + 1) | B == ~(A - 1) | B. The result is negative, so need to two's complement at the end to move the sign into the m_sign field.
+    // That can be simplified to:
+    //   -(-A | B) == ~(~(A - 1) | B) + 1 = (A - 1) & ~B + 1
+    // This saves one ~.
+    if (is_negative() && !other.is_negative()) {
+        size_t index = unsigned_value().one_based_index_of_highest_set_bit();
+        return { unsigned_value().minus(1).bitwise_and(other.unsigned_value().bitwise_not_fill_to_one_based_index(index)).plus(1), true };
+    }
 
-    if (!is_negative() && other.is_negative())
-        return { unsigned_value().bitwise_or(other.unsigned_value().bitwise_not_fill_to_one_based_index(index).plus(1)).bitwise_not_fill_to_one_based_index(index).plus(1), true };
+    // -(A | -B) == ~A & (B - 1) + 1
+    if (!is_negative() && other.is_negative()) {
+        size_t index = other.unsigned_value().one_based_index_of_highest_set_bit();
+        return { unsigned_value().bitwise_not_fill_to_one_based_index(index).bitwise_and(other.unsigned_value().minus(1)).plus(1), true };
+    }
 
     return { unsigned_value().minus(1).bitwise_and(other.unsigned_value().minus(1)).plus(1), true };
 }
