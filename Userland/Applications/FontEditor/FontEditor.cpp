@@ -8,7 +8,6 @@
 #include "GlyphEditorWidget.h"
 #include "NewFontDialog.h"
 #include <AK/StringBuilder.h>
-#include <AK/UnicodeUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
@@ -679,8 +678,8 @@ void FontEditorWidget::update_statusbar()
     StringBuilder builder;
     builder.appendff("U+{:04X} (", glyph);
 
-    if (AK::UnicodeUtils::is_unicode_control_code_point(glyph)) {
-        builder.append(AK::UnicodeUtils::get_unicode_control_code_point_alias(glyph).value());
+    if (auto abbreviation = Unicode::code_point_abbreviation(glyph); abbreviation.has_value()) {
+        builder.append(*abbreviation);
     } else if (Gfx::get_char_bidi_class(glyph) == Gfx::BidirectionalClass::STRONG_RTL) {
         // FIXME: This is a necessary hack, as RTL text will mess up the painting of the statusbar text.
         // For now, replace RTL glyphs with U+FFFD, the replacement character.
