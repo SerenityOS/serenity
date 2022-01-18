@@ -62,6 +62,18 @@ void set_suite_setup_function(Function<void()> setup);
     static struct __TESTCASE_TYPE(x) __TESTCASE_TYPE(x);                                                \
     static void __TESTCASE_FUNC(x)()
 
+#define STATICTEST_CASE(x)                                                                              \
+    static constexpr void __TESTCASE_FUNC(x)();                                                         \
+    struct __TESTCASE_TYPE(x) {                                                                         \
+        __TESTCASE_TYPE(x)                                                                              \
+        () { add_test_case_to_suite(adopt_ref(*new ::Test::TestCase(#x, __TESTCASE_FUNC(x), false))); } \
+    };                                                                                                  \
+    static struct __TESTCASE_TYPE(x) __TESTCASE_TYPE(x);                                                \
+    static constexpr void __TESTCASE_FUNC(x)()
+
+#define RUN_STATICTEST_CASE(x) \
+    static_assert([]() {__TESTCASE_FUNC(x)();return true; }())
+
 #define __BENCHMARK_FUNC(x) __benchmark_##x
 #define __BENCHMARK_TYPE(x) __BenchmarkCase_##x
 
