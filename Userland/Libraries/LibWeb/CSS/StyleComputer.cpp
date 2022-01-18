@@ -755,21 +755,23 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             font_metrics = Gfx::FontDatabase::default_font().metrics('M');
 
         Optional<Length> maybe_length;
-        if (font_size->is_length()) {
-            maybe_length = font_size->to_length();
-            if (maybe_length->is_percentage()) {
-                auto parent_font_size = size;
-                if (element && element->parent_element() && element->parent_element()->layout_node() && element->parent_element()->specified_css_values()) {
-                    auto value = element->parent_element()->specified_css_values()->property(CSS::PropertyID::FontSize).value();
-                    if (value->is_length()) {
-                        auto length = static_cast<LengthStyleValue const&>(*value).to_length();
-                        if (length.is_absolute() || length.is_relative())
-                            parent_font_size = length.to_px(viewport_rect, font_metrics, root_font_size);
-                    }
+        if (font_size->is_percentage()) {
+            // Percentages refer to parent element's font size
+            auto percentage = font_size->as_percentage().percentage();
+            auto parent_font_size = size;
+            if (element && element->parent_element() && element->parent_element()->layout_node() && element->parent_element()->specified_css_values()) {
+                auto value = element->parent_element()->specified_css_values()->property(CSS::PropertyID::FontSize).value();
+                if (value->is_length()) {
+                    auto length = static_cast<LengthStyleValue const&>(*value).to_length();
+                    if (length.is_absolute() || length.is_relative())
+                        parent_font_size = length.to_px(viewport_rect, font_metrics, root_font_size);
                 }
-
-                maybe_length = Length::make_px(maybe_length->raw_value() / 100.0f * (parent_font_size));
             }
+            maybe_length = Length::make_px(percentage.as_fraction() * parent_font_size);
+
+        } else if (font_size->is_length()) {
+            maybe_length = font_size->to_length();
+
         } else if (font_size->is_calculated()) {
             Length length = Length(0, Length::Type::Calculated);
             length.set_calculated_style(verify_cast<CalculatedStyleValue>(font_size.ptr()));
