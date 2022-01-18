@@ -1701,6 +1701,43 @@ Completion ClassExpression::execute(Interpreter& interpreter, GlobalObject& glob
     return Value { value };
 }
 
+// 15.7.15 Runtime Semantics: BindingClassDeclarationEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation
+static ThrowCompletionOr<Value> binding_class_declaration_evaluation(Interpreter& interpreter, GlobalObject& global_object, ClassExpression const& class_expression)
+{
+    // ClassDeclaration : class ClassTail
+    if (!class_expression.has_name()) {
+        // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and "default".
+        auto value = TRY(class_expression.class_definition_evaluation(interpreter, global_object, {}, "default"));
+
+        // 2. Set value.[[SourceText]] to the source text matched by ClassDeclaration.
+        value->set_source_text(class_expression.source_text());
+
+        // 3. Return value.
+        return value;
+    }
+
+    // ClassDeclaration : class BindingIdentifier ClassTail
+
+    // 1. Let className be StringValue of BindingIdentifier.
+    auto class_name = class_expression.name();
+    VERIFY(!class_name.is_empty());
+
+    // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
+    auto value = TRY(class_expression.class_definition_evaluation(interpreter, global_object, class_name, class_name));
+
+    // 3. Set value.[[SourceText]] to the source text matched by ClassDeclaration.
+    value->set_source_text(class_expression.source_text());
+
+    // 4. Let env be the running execution context's LexicalEnvironment.
+    auto* env = interpreter.lexical_environment();
+
+    // 5. Perform ? InitializeBoundName(className, value, env).
+    TRY(initialize_bound_name(global_object, class_name, value, env));
+
+    // 6. Return value.
+    return value;
+}
+
 // 15.7.16 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation
 // ClassDeclaration : class BindingIdentifier ClassTail
 Completion ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -1708,7 +1745,7 @@ Completion ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& glo
     InterpreterNodeScope node_scope { interpreter, *this };
 
     // 1. Perform ? BindingClassDeclarationEvaluation of this ClassDeclaration.
-    (void)TRY(binding_class_declaration_evaluation(interpreter, global_object));
+    (void)TRY(binding_class_declaration_evaluation(interpreter, global_object, m_class_expression));
 
     // 2. Return NormalCompletion(empty).
     return normal_completion({});
@@ -1877,29 +1914,6 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     }
 
     return class_constructor;
-}
-
-// 15.7.15 Runtime Semantics: BindingClassDeclarationEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation
-ThrowCompletionOr<Value> ClassDeclaration::binding_class_declaration_evaluation(Interpreter& interpreter, GlobalObject& global_object) const
-{
-    // 1. Let className be StringValue of BindingIdentifier.
-    auto class_name = m_class_expression->name();
-    VERIFY(!class_name.is_empty());
-
-    // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
-    auto* value = TRY(m_class_expression->class_definition_evaluation(interpreter, global_object, class_name, class_name));
-
-    // 3. Set value.[[SourceText]] to the source text matched by ClassDeclaration.
-    value->set_source_text(m_class_expression->source_text());
-
-    // 4. Let env be the running execution context's LexicalEnvironment.
-    auto* env = interpreter.lexical_environment();
-
-    // 5. Perform ? InitializeBoundName(className, value, env).
-    TRY(initialize_bound_name(global_object, class_name, value, env));
-
-    // 6. Return value.
-    return value;
 }
 
 void ASTNode::dump(int indent) const
