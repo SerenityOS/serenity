@@ -55,8 +55,6 @@ Length Length::resolved(const Length& fallback_for_undefined, const Layout::Node
         return fallback_for_undefined;
     if (is_calculated())
         return Length(resolve_calculated_value(layout_node, reference_for_percent), Type::Px);
-    if (is_percentage())
-        return make_px(raw_value() / 100.0f * reference_for_percent);
     if (is_relative())
         return make_px(to_px(layout_node));
     return *this;
@@ -257,8 +255,6 @@ const char* Length::unit_name() const
         return "rem";
     case Type::Auto:
         return "auto";
-    case Type::Percentage:
-        return "%";
     case Type::Undefined:
         return "undefined";
     case Type::Vh:

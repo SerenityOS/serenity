@@ -16,7 +16,6 @@ class Length {
 public:
     enum class Type {
         Undefined,
-        Percentage,
         Calculated,
         Auto,
         Cm,
@@ -52,7 +51,6 @@ public:
 
     bool is_undefined_or_auto() const { return m_type == Type::Undefined || m_type == Type::Auto; }
     bool is_undefined() const { return m_type == Type::Undefined; }
-    bool is_percentage() const { return m_type == Type::Percentage || m_type == Type::Calculated; }
     bool is_auto() const { return m_type == Type::Auto; }
     bool is_calculated() const { return m_type == Type::Calculated; }
 

@@ -2184,12 +2184,7 @@ Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_v
     if (dimension->is_length())
         return dimension->length();
 
-    // FIXME: This is a temporary hack until Length is split up fully.
-    if (dimension->is_percentage()) {
-        auto percentage = dimension->percentage();
-        return Length { (float)percentage.value(), Length::Type::Percentage };
-    }
-
+    // FIXME: auto isn't a length!
     if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"))
         return Length::make_auto();
 
