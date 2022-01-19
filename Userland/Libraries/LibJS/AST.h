@@ -1254,7 +1254,7 @@ public:
 
     bool has_name() const { return !m_name.is_empty(); }
 
-    ThrowCompletionOr<Value> class_definition_evaluation(Interpreter& interpreter, GlobalObject& global_object, FlyString const& binding_name = {}, FlyString const& class_name = {}) const;
+    ThrowCompletionOr<ECMAScriptFunctionObject*> class_definition_evaluation(Interpreter& interpreter, GlobalObject& global_object, FlyString const& binding_name = {}, FlyString const& class_name = {}) const;
 
 private:
     virtual bool is_class_expression() const override { return true; }
