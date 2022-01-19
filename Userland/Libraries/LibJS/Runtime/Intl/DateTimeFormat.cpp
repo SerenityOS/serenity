@@ -937,7 +937,6 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
             // iii. Let fv be a String value representing v in the form given by f; the String value depends upon the implementation and the effective locale of dateTimeFormat.
             //      The String value may also depend on the value of the [[InDST]] field of tm if f is "short", "long", "shortOffset", or "longOffset".
             //      If the implementation does not have a localized representation of f, then use the String value of v itself.
-            // FIXME: This should take [[InDST]] into account.
             auto formatted_value = Unicode::format_time_zone(data_locale, value, style, local_time.time_since_epoch());
 
             // iv. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
@@ -1530,9 +1529,6 @@ ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double t
             .second = sec_from_time(zoned_time),
             // msFromTime(tz) specified in es2022's Hours, Minutes, Second, and Milliseconds.
             .millisecond = ms_from_time(zoned_time),
-            // Calculate true or false using the best available information about the specified calendar and timeZone, including current and historical information about time zone offsets from UTC and daylight saving time rules.
-            // FIXME: Implement this.
-            .in_dst = false,
         };
     }
 

@@ -161,6 +161,7 @@ enum class OptionDefaults {
 };
 
 // Table 5: Record returned by ToLocalTime, https://tc39.es/ecma402/#table-datetimeformat-tolocaltime-record
+// Note: [[InDST]] is not included here - it is handled by LibUnicode / LibTimeZone.
 struct LocalTime {
     AK::Time time_since_epoch() const
     {
@@ -178,7 +179,6 @@ struct LocalTime {
     u8 minute { 0 };       // [[Minute]]
     u8 second { 0 };       // [[Second]]
     u16 millisecond { 0 }; // [[Millisecond]]
-    bool in_dst { false }; // [[InDST]]
 };
 
 struct PatternPartitionWithSource : public PatternPartition {
