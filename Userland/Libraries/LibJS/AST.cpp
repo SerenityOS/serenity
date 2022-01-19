@@ -1692,13 +1692,13 @@ Completion ClassExpression::execute(Interpreter& interpreter, GlobalObject& glob
 
     // 1. Let className be StringValue of BindingIdentifier.
     // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
-    auto value = TRY(class_definition_evaluation(interpreter, global_object, m_name, m_name.is_null() ? "" : m_name));
+    auto* value = TRY(class_definition_evaluation(interpreter, global_object, m_name, m_name.is_null() ? "" : m_name));
 
     // FIXME:
     // 3. Set value.[[SourceText]] to the source text matched by ClassExpression.
 
     // 4. Return value.
-    return value;
+    return Value { value };
 }
 
 // 15.7.16 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation
@@ -1715,7 +1715,7 @@ Completion ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& glo
 }
 
 // 15.7.14 Runtime Semantics: ClassDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
-ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interpreter& interpreter, GlobalObject& global_object, FlyString const& binding_name, FlyString const& class_name) const
+ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_evaluation(Interpreter& interpreter, GlobalObject& global_object, FlyString const& binding_name, FlyString const& class_name) const
 {
     auto& vm = interpreter.vm();
     auto* environment = vm.lexical_environment();
@@ -1876,7 +1876,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
             }));
     }
 
-    return Value(class_constructor);
+    return class_constructor;
 }
 
 // 15.7.15 Runtime Semantics: BindingClassDeclarationEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation
@@ -1887,7 +1887,7 @@ ThrowCompletionOr<Value> ClassDeclaration::binding_class_declaration_evaluation(
     VERIFY(!class_name.is_empty());
 
     // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
-    auto value = TRY(m_class_expression->class_definition_evaluation(interpreter, global_object, class_name, class_name));
+    auto* value = TRY(m_class_expression->class_definition_evaluation(interpreter, global_object, class_name, class_name));
 
     // FIXME:
     // 3. Set value.[[SourceText]] to the source text matched by ClassDeclaration.
