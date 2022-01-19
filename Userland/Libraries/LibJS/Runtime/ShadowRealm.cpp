@@ -8,6 +8,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
+#include <LibJS/Runtime/ModuleNamespaceObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/PromiseReaction.h>
@@ -164,32 +165,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
     TRY(vm.push_execution_context(eval_context, eval_realm.global_object()));
 
     // 10. Perform ! HostImportModuleDynamically(null, specifierString, innerCapability).
-    // FIXME: We don't have this yet. We generally have very little support for modules and imports.
-    //        So, in the meantime we just do the "Failure path" step, and pretend to call FinishDynamicImport
-    //        with the rejected promise. This should be easy to complete once those missing module AOs are added.
-
-    // HostImportModuleDynamically: At some future time, the host environment must perform
-    // FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, promise),
-    // where promise is a Promise rejected with an error representing the cause of failure.
-    auto* promise = Promise::create(global_object);
-    promise->reject(Error::create(global_object, String::formatted("Import of '{}' from '{}' failed", export_name_string, specifier_string)));
-
-    // FinishDynamicImport, 5. Perform ! PerformPromiseThen(innerPromise, onFulfilled, onRejected).
-    promise->perform_then(
-        NativeFunction::create(global_object, "", [](auto&, auto&) -> ThrowCompletionOr<Value> {
-            // Not called because we hardcoded a rejection above.
-            TODO();
-        }),
-        NativeFunction::create(global_object, "", [reject = make_handle(inner_capability.reject)](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
-            auto error = vm.argument(0);
-
-            // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
-            MUST(call(global_object, reject.cell(), js_undefined(), error));
-
-            // b. Return undefined.
-            return js_undefined();
-        }),
-        {});
+    vm.host_import_module_dynamically(Empty {}, ModuleRequest { move(specifier_string) }, inner_capability);
 
     // 11. Suspend evalContext and remove it from the execution context stack.
     // NOTE: We don't support this concept yet.
@@ -208,7 +184,9 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
         "",
         [string = move(export_name_string)](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
             // 1. Assert: exports is a module namespace exotic object.
+            VERIFY(vm.argument(0).is_object());
             auto& exports = vm.argument(0).as_object();
+            VERIFY(is<ModuleNamespaceObject>(exports));
 
             // 2. Let f be the active function object.
             auto* function = vm.running_execution_context().function;
