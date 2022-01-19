@@ -2548,18 +2548,25 @@ void SoftwareGLContext::gl_polygon_mode(GLenum face, GLenum mode)
     auto options = m_rasterizer.options();
 
     // FIXME: This must support different polygon modes for front- and backside
-    switch (mode) {
-    case GL_POINT:
-        options.polygon_mode = SoftGPU::PolygonMode::Point;
-        break;
-    case GL_LINE:
-        options.polygon_mode = SoftGPU::PolygonMode::Line;
-        break;
-    case GL_FILL:
-        options.polygon_mode = SoftGPU::PolygonMode::Fill;
-        break;
+    if (face == GL_BACK) {
+        dbgln_if(GL_DEBUG, "gl_polygon_mode(GL_BACK, {:#x}): unimplemented", mode);
+        return;
     }
 
+    auto map_mode = [](GLenum mode) -> SoftGPU::PolygonMode {
+        switch (mode) {
+        case GL_FILL:
+            return SoftGPU::PolygonMode::Fill;
+        case GL_LINE:
+            return SoftGPU::PolygonMode::Line;
+        case GL_POINT:
+            return SoftGPU::PolygonMode::Point;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    options.polygon_mode = map_mode(mode);
     m_rasterizer.set_options(options);
 }
 
