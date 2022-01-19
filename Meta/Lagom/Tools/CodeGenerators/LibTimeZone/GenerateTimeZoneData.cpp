@@ -450,7 +450,7 @@ static constexpr Array<@type@, @size@> @name@ { {
     append_string_conversions("DaylightSavingsRule"sv, "daylight_savings_rule"sv, time_zone_data.dst_offset_names);
 
     generator.append(R"~~~(
-static i64 get_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
+static Offset get_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
 {
     auto const& dst_rules = s_dst_offsets[time_zone_offset.dst_rule];
 
@@ -487,17 +487,17 @@ static i64 get_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
     }
 
     if (!standard_offset || !daylight_offset)
-        return 0;
+        return {};
 
     auto standard_time_in_effect = time_in_effect_for_rule(*standard_offset);
     auto daylight_time_in_effect = time_in_effect_for_rule(*daylight_offset);
 
     if ((time < daylight_time_in_effect) || (time >= standard_time_in_effect))
-        return standard_offset->offset;
-    return daylight_offset->offset;
+        return { standard_offset->offset, InDST::No };
+    return { daylight_offset->offset, InDST::Yes };
 }
 
-Optional<i64> get_time_zone_offset(TimeZone time_zone, AK::Time time)
+Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
 {
     auto const& time_zone_offsets = s_time_zone_offsets[to_underlying(time_zone)];
 
@@ -512,13 +512,16 @@ Optional<i64> get_time_zone_offset(TimeZone time_zone, AK::Time time)
     VERIFY(index < time_zone_offsets.size());
     auto const& time_zone_offset = time_zone_offsets[index];
 
-    i64 dst_offset = 0;
-    if (time_zone_offset.dst_rule != -1)
+    Offset dst_offset {};
+    if (time_zone_offset.dst_rule != -1) {
         dst_offset = get_dst_offset(time_zone_offset, time);
-    else
-        dst_offset = time_zone_offset.dst_offset;
+    } else {
+        auto in_dst = time_zone_offset.dst_offset == 0 ? InDST::No : InDST::Yes;
+        dst_offset = { time_zone_offset.dst_offset, in_dst };
+    }
 
-    return time_zone_offset.offset + dst_offset;
+    dst_offset.seconds += time_zone_offset.offset;
+    return dst_offset;
 }
 
 }

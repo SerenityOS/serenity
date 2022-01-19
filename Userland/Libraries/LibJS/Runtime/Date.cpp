@@ -286,7 +286,8 @@ double local_tza(double time, [[maybe_unused]] bool is_utc, Optional<StringView>
 
     auto time_since_epoch = Value(time).is_finite_number() ? AK::Time::from_milliseconds(time) : AK::Time::max();
     auto maybe_offset = TimeZone::get_time_zone_offset(time_zone, time_since_epoch);
-    return maybe_offset.value_or(0) * 1000;
+
+    return maybe_offset.has_value() ? static_cast<double>(maybe_offset->seconds) * 1000 : 0;
 }
 
 // 21.4.1.8 LocalTime ( t ), https://tc39.es/ecma262/#sec-localtime

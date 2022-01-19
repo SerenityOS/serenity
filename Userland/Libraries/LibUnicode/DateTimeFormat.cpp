@@ -208,21 +208,21 @@ static Optional<String> format_time_zone_offset(StringView locale, StringView ti
     if (!number_system.has_value())
         return {};
 
-    auto offset_seconds = TimeZone::get_time_zone_offset(time_zone, time);
-    if (!offset_seconds.has_value())
+    auto offset = TimeZone::get_time_zone_offset(time_zone, time);
+    if (!offset.has_value())
         return {};
-    if (*offset_seconds == 0)
+    if (offset->seconds == 0)
         return formats->gmt_zero_format;
 
-    auto sign = *offset_seconds > 0 ? formats->symbol_ahead_sign : formats->symbol_behind_sign;
-    auto separator = *offset_seconds > 0 ? formats->symbol_ahead_separator : formats->symbol_behind_separator;
-    *offset_seconds = llabs(*offset_seconds);
+    auto sign = offset->seconds > 0 ? formats->symbol_ahead_sign : formats->symbol_behind_sign;
+    auto separator = offset->seconds > 0 ? formats->symbol_ahead_separator : formats->symbol_behind_separator;
+    offset->seconds = llabs(offset->seconds);
 
-    auto offset_hours = *offset_seconds / 3'600;
-    *offset_seconds %= 3'600;
+    auto offset_hours = offset->seconds / 3'600;
+    offset->seconds %= 3'600;
 
-    auto offset_minutes = *offset_seconds / 60;
-    *offset_seconds %= 60;
+    auto offset_minutes = offset->seconds / 60;
+    offset->seconds %= 60;
 
     StringBuilder builder;
     builder.append(sign);
@@ -231,8 +231,8 @@ static Optional<String> format_time_zone_offset(StringView locale, StringView ti
     // The long format always uses 2-digit hours field and minutes field, with optional 2-digit seconds field.
     case CalendarPatternStyle::LongOffset:
         builder.appendff("{:02}{}{:02}", offset_hours, separator, offset_minutes);
-        if (*offset_seconds > 0)
-            builder.appendff("{}{:02}", separator, *offset_seconds);
+        if (offset->seconds > 0)
+            builder.appendff("{}{:02}", separator, offset->seconds);
         break;
 
     // The short format is intended for the shortest representation and uses hour fields without leading zero, with optional 2-digit minutes and seconds fields.
@@ -240,8 +240,8 @@ static Optional<String> format_time_zone_offset(StringView locale, StringView ti
         builder.appendff("{}", offset_hours);
         if (offset_minutes > 0) {
             builder.appendff("{}{:02}", separator, offset_minutes);
-            if (*offset_seconds > 0)
-                builder.appendff("{}{:02}", separator, *offset_seconds);
+            if (offset->seconds > 0)
+                builder.appendff("{}{:02}", separator, offset->seconds);
         }
         break;
 
@@ -250,8 +250,8 @@ static Optional<String> format_time_zone_offset(StringView locale, StringView ti
     }
 
     // The digits used for hours, minutes and seconds fields in this format are the locale's default decimal digits.
-    auto offset = replace_digits_for_number_system(*number_system, builder.build());
-    return formats->gmt_format.replace("{0}"sv, offset);
+    auto result = replace_digits_for_number_system(*number_system, builder.build());
+    return formats->gmt_format.replace("{0}"sv, result);
 }
 
 // https://unicode.org/reports/tr35/tr35-dates.html#Time_Zone_Format_Terminology
