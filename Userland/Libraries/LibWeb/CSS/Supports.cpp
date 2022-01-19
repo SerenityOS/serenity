@@ -12,27 +12,31 @@ namespace Web::CSS {
 Supports::Supports(NonnullOwnPtr<Condition>&& condition)
     : m_condition(move(condition))
 {
-    auto result = m_condition->evaluate();
-    if (result == MatchResult::Unknown) {
-        dbgln("!!! Evaluation of CSS Supports returned 'Unknown'!");
-    }
-    m_matches = result == MatchResult::True;
+    m_matches = m_condition->evaluate();
 }
 
-MatchResult Supports::Condition::evaluate() const
+bool Supports::Condition::evaluate() const
 {
     switch (type) {
     case Type::Not:
-        return negate(children.first().evaluate());
+        return !children.first().evaluate();
     case Type::And:
-        return evaluate_and(children, [](auto& child) { return child.evaluate(); });
+        for (auto& child : children) {
+            if (!child.evaluate())
+                return false;
+        }
+        return true;
     case Type::Or:
-        return evaluate_or(children, [](auto& child) { return child.evaluate(); });
+        for (auto& child : children) {
+            if (child.evaluate())
+                return true;
+        }
+        return false;
     }
     VERIFY_NOT_REACHED();
 }
 
-MatchResult Supports::InParens::evaluate() const
+bool Supports::InParens::evaluate() const
 {
     return value.visit(
         [&](NonnullOwnPtr<Condition> const& condition) {
@@ -41,17 +45,15 @@ MatchResult Supports::InParens::evaluate() const
         [&](Feature const& feature) {
             return feature.evaluate();
         },
-        [&](GeneralEnclosed const& general_enclosed) {
-            return general_enclosed.evaluate();
+        [&](GeneralEnclosed const&) {
+            return false;
         });
 }
 
-MatchResult Supports::Feature::evaluate() const
+bool Supports::Feature::evaluate() const
 {
     auto style_property = Parser({}, declaration).parse_as_declaration();
-    if (style_property.has_value())
-        return MatchResult::True;
-    return MatchResult::False;
+    return style_property.has_value();
 }
 
 }
