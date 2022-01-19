@@ -384,6 +384,8 @@ struct TimeZoneNames {
     unsigned hash() const
     {
         auto hash = pair_int_hash(short_standard_name, long_standard_name);
+        hash = pair_int_hash(hash, short_daylight_name);
+        hash = pair_int_hash(hash, long_daylight_name);
         hash = pair_int_hash(hash, short_generic_name);
         hash = pair_int_hash(hash, long_generic_name);
 
@@ -394,12 +396,17 @@ struct TimeZoneNames {
     {
         return (short_standard_name == other.short_standard_name)
             && (long_standard_name == other.long_standard_name)
+            && (short_daylight_name == other.short_daylight_name)
+            && (long_daylight_name == other.long_daylight_name)
             && (short_generic_name == other.short_generic_name)
             && (long_generic_name == other.long_generic_name);
     }
 
     StringIndexType short_standard_name { 0 };
     StringIndexType long_standard_name { 0 };
+
+    StringIndexType short_daylight_name { 0 };
+    StringIndexType long_daylight_name { 0 };
 
     StringIndexType short_generic_name { 0 };
     StringIndexType long_generic_name { 0 };
@@ -410,9 +417,11 @@ struct AK::Formatter<TimeZoneNames> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZoneNames const& time_zone)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {} }}",
             time_zone.short_standard_name,
             time_zone.long_standard_name,
+            time_zone.short_daylight_name,
+            time_zone.long_daylight_name,
             time_zone.short_generic_name,
             time_zone.long_generic_name);
     }
@@ -1423,16 +1432,14 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
     if (meta_zone_object.is_null())
         return {};
 
-    auto parse_name = [&](StringView type, JsonObject const& meta_zone_object, Span<StringView const> keys) -> Optional<StringIndexType> {
+    auto parse_name = [&](StringView type, JsonObject const& meta_zone_object, StringView key) -> Optional<StringIndexType> {
         auto const& names = meta_zone_object.get(type);
         if (!names.is_object())
             return {};
 
-        for (auto key : keys) {
-            auto const& name = names.as_object().get(key);
-            if (name.is_string())
-                return locale_data.unique_strings.ensure(name.as_string());
-        }
+        auto const& name = names.as_object().get(key);
+        if (name.is_string())
+            return locale_data.unique_strings.ensure(name.as_string());
 
         return {};
     };
@@ -1468,22 +1475,25 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
     time_zone_formats.gmt_zero_format = locale_data.unique_strings.ensure(gmt_zero_format_string.as_string());
 
     auto parse_time_zone = [&](StringView meta_zone, JsonObject const& meta_zone_object) {
-        constexpr auto standard_keys = Array { "standard"sv, "daylight"sv };
-        constexpr auto generic_keys = Array { "generic"sv };
-
         auto golden_zones = locale_data.meta_zones.find(meta_zone);
         if (golden_zones == locale_data.meta_zones.end())
             return;
 
         TimeZoneNames time_zone_names {};
 
-        if (auto name = parse_name("long"sv, meta_zone_object, standard_keys); name.has_value())
+        if (auto name = parse_name("long"sv, meta_zone_object, "standard"sv); name.has_value())
             time_zone_names.long_standard_name = name.value();
-        if (auto name = parse_name("short"sv, meta_zone_object, standard_keys); name.has_value())
+        if (auto name = parse_name("short"sv, meta_zone_object, "standard"sv); name.has_value())
             time_zone_names.short_standard_name = name.value();
-        if (auto name = parse_name("long"sv, meta_zone_object, generic_keys); name.has_value())
+
+        if (auto name = parse_name("long"sv, meta_zone_object, "daylight"sv); name.has_value())
+            time_zone_names.long_daylight_name = name.value();
+        if (auto name = parse_name("short"sv, meta_zone_object, "daylight"sv); name.has_value())
+            time_zone_names.short_daylight_name = name.value();
+
+        if (auto name = parse_name("long"sv, meta_zone_object, "generic"sv); name.has_value())
             time_zone_names.long_generic_name = name.value();
-        if (auto name = parse_name("short"sv, meta_zone_object, generic_keys); name.has_value())
+        if (auto name = parse_name("short"sv, meta_zone_object, "generic"sv); name.has_value())
             time_zone_names.short_generic_name = name.value();
 
         auto time_zone_index = locale_data.unique_time_zones.ensure(move(time_zone_names));
@@ -1814,6 +1824,9 @@ struct CalendarData {
 struct TimeZoneNames {
     @string_index_type@ short_standard_name { 0 };
     @string_index_type@ long_standard_name { 0 };
+
+    @string_index_type@ short_daylight_name { 0 };
+    @string_index_type@ long_daylight_name { 0 };
 
     @string_index_type@ short_generic_name { 0 };
     @string_index_type@ long_generic_name { 0 };
