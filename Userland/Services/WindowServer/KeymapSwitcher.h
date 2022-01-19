@@ -9,6 +9,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
+#include <LibCore/FileWatcher.h>
 #include <LibCore/Object.h>
 #include <LibKeyboard/CharacterMap.h>
 #include <WindowServer/WMClientConnection.h>
@@ -20,8 +21,6 @@ class KeymapSwitcher final : public Core::Object {
 public:
     virtual ~KeymapSwitcher() override;
 
-    void refresh();
-
     void next_keymap();
 
     Function<void(String const& keymap)> on_keymap_change;
@@ -29,11 +28,17 @@ public:
     String get_current_keymap() const;
 
 private:
+    void refresh();
+
     KeymapSwitcher();
 
     Vector<AK::String> m_keymaps;
 
     void setkeymap(AK::String const&);
+
+    RefPtr<Core::FileWatcher> m_file_watcher;
+
+    const char* m_keyboard_config = "/etc/Keyboard.ini";
 };
 
 }

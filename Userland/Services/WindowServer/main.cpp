@@ -25,6 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp", "cw"));
     TRY(Core::System::unveil("/etc/WindowServer.ini", "rwc"));
+    TRY(Core::System::unveil("/etc/Keyboard.ini", "r"));
     TRY(Core::System::unveil("/dev", "rw"));
     TRY(Core::System::unveil("/bin/keymap", "x"));
     TRY(Core::System::unveil("/proc/keymap", "r"));
