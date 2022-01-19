@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -242,6 +242,7 @@ int main(int argc, char** argv)
     static bool display_unwind_info = false;
     static bool display_dynamic_section = false;
     static bool display_hardening = false;
+    StringView string_dump_section {};
 
     Core::ArgsParser args_parser;
     args_parser.add_option(display_all, "Display all", "all", 'a');
@@ -256,6 +257,7 @@ int main(int argc, char** argv)
     args_parser.add_option(display_relocations, "Display relocations", "relocs", 'r');
     args_parser.add_option(display_unwind_info, "Display unwind info", "unwind", 'u');
     args_parser.add_option(display_hardening, "Display security hardening info", "checksec", 'c');
+    args_parser.add_option(string_dump_section, "Display the contents of a section as strings", "string-dump", 'p', "section-name");
     args_parser.add_positional_argument(path, "ELF path", "path");
     args_parser.parse(argc, argv);
 
@@ -717,5 +719,19 @@ int main(int argc, char** argv)
         outln();
     }
 
+    if (!string_dump_section.is_null()) {
+        auto maybe_section = elf_image.lookup_section(string_dump_section);
+        if (maybe_section.has_value()) {
+            outln("String dump of section \'{}\':", string_dump_section);
+            StringView data(maybe_section->raw_data(), maybe_section->size());
+            data.for_each_split_view('\0', false, [&data](auto string) {
+                auto offset = string.characters_without_null_termination() - data.characters_without_null_termination();
+                outln("[{:6x}] {}", offset, string);
+            });
+        } else {
+            warnln("Could not find section \'{}\'", string_dump_section);
+            return 1;
+        }
+    }
     return 0;
 }
