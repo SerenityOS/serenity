@@ -10,4 +10,5 @@ endpoint WindowManagerClient
     super_key_pressed(i32 wm_id) =|
     super_space_key_pressed(i32 wm_id) =|
     workspace_changed(i32 wm_id, u32 row, u32 column) =|
+    keymap_changed(i32 wm_id, [UTF8] String keymap) =|
 }

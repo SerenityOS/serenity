@@ -70,4 +70,10 @@ void WindowManagerServerConnection::workspace_changed(i32 wm_id, u32 row, u32 co
         Core::EventLoop::current().post_event(*window, make<WMWorkspaceChangedEvent>(wm_id, row, column));
 }
 
+void WindowManagerServerConnection::keymap_changed(i32 wm_id, String const& keymap)
+{
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMKeymapChangedEvent>(wm_id, keymap));
+}
+
 }
