@@ -168,6 +168,8 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = 0 } };
     case GL_PACK_SWAP_BYTES:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = false } };
+    case GL_POLYGON_OFFSET_FILL:
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_depth_offset_enabled } };
     case GL_RED_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_SCISSOR_BOX: {
@@ -723,6 +725,11 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         rasterizer_options.normalization_enabled = true;
         update_rasterizer_options = true;
         break;
+    case GL_POLYGON_OFFSET_FILL:
+        m_depth_offset_enabled = true;
+        rasterizer_options.depth_offset_enabled = true;
+        update_rasterizer_options = true;
+        break;
     case GL_SCISSOR_TEST:
         rasterizer_options.scissor_enabled = true;
         update_rasterizer_options = true;
@@ -834,6 +841,11 @@ void SoftwareGLContext::gl_disable(GLenum capability)
     case GL_NORMALIZE:
         m_normalize = false;
         rasterizer_options.normalization_enabled = false;
+        update_rasterizer_options = true;
+        break;
+    case GL_POLYGON_OFFSET_FILL:
+        m_depth_offset_enabled = false;
+        rasterizer_options.depth_offset_enabled = false;
         update_rasterizer_options = true;
         break;
     case GL_SCISSOR_TEST:
