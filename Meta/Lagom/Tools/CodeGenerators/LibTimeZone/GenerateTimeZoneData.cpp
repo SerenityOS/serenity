@@ -450,9 +450,55 @@ static constexpr Array<@type@, @size@> @name@ { {
     append_string_conversions("DaylightSavingsRule"sv, "daylight_savings_rule"sv, time_zone_data.dst_offset_names);
 
     generator.append(R"~~~(
+static i64 get_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
+{
+    auto const& dst_rules = s_dst_offsets[time_zone_offset.dst_rule];
+
+    DaylightSavingsOffset const* standard_offset = nullptr;
+    DaylightSavingsOffset const* daylight_offset = nullptr;
+
+    auto time_in_effect_for_rule = [&](auto const& dst_rule) {
+        auto in_effect = dst_rule.in_effect;
+        in_effect.year = seconds_since_epoch_to_year(time.to_seconds());
+
+        return in_effect.time_since_epoch();
+    };
+
+    auto preferred_rule = [&](auto* current_offset, auto& new_offset) {
+        if (!current_offset)
+            return &new_offset;
+
+        auto new_time_in_effect = time_in_effect_for_rule(new_offset);
+        return (time >= new_time_in_effect) ? &new_offset : current_offset;
+    };
+
+    for (size_t index = 0; (index < dst_rules.size()) && (!standard_offset || !daylight_offset); ++index) {
+        auto const& dst_rule = dst_rules[index];
+
+        auto year_from = AK::Time::from_timestamp(dst_rule.year_from, 1, 1, 0, 0, 0, 0);
+        auto year_to = AK::Time::from_timestamp(dst_rule.year_to + 1, 1, 1, 0, 0, 0, 0);
+        if ((time < year_from) || (time >= year_to))
+            continue;
+
+        if (dst_rule.offset == 0)
+            standard_offset = preferred_rule(standard_offset, dst_rule);
+        else
+            daylight_offset = preferred_rule(daylight_offset, dst_rule);
+    }
+
+    if (!standard_offset || !daylight_offset)
+        return 0;
+
+    auto standard_time_in_effect = time_in_effect_for_rule(*standard_offset);
+    auto daylight_time_in_effect = time_in_effect_for_rule(*daylight_offset);
+
+    if ((time < daylight_time_in_effect) || (time >= standard_time_in_effect))
+        return standard_offset->offset;
+    return daylight_offset->offset;
+}
+
 Optional<i64> get_time_zone_offset(TimeZone time_zone, AK::Time time)
 {
-    // FIXME: This implementation completely ignores DST.
     auto const& time_zone_offsets = s_time_zone_offsets[to_underlying(time_zone)];
 
     size_t index = 0;
@@ -464,7 +510,15 @@ Optional<i64> get_time_zone_offset(TimeZone time_zone, AK::Time time)
     }
 
     VERIFY(index < time_zone_offsets.size());
-    return time_zone_offsets[index].offset;
+    auto const& time_zone_offset = time_zone_offsets[index];
+
+    i64 dst_offset = 0;
+    if (time_zone_offset.dst_rule != -1)
+        dst_offset = get_dst_offset(time_zone_offset, time);
+    else
+        dst_offset = time_zone_offset.dst_offset;
+
+    return time_zone_offset.offset + dst_offset;
 }
 
 }
