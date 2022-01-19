@@ -524,6 +524,22 @@ Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
     return dst_offset;
 }
 
+Span<StringView const> all_time_zones()
+{
+    static constexpr auto all_time_zones = Array {
+        )~~~");
+
+    for (auto const& time_zone : time_zone_data.time_zone_names) {
+        generator.set("time_zone", time_zone);
+        generator.append("\"@time_zone@\"sv, ");
+    }
+
+    generator.append(R"~~~(
+    };
+
+    return all_time_zones;
+}
+
 }
 )~~~");
 
