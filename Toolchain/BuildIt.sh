@@ -380,6 +380,7 @@ pushd "$DIR/Build/$ARCH"
                                             --enable-lto \
                                             --enable-threads=posix \
                                             --enable-initfini-array \
+                                            --with-linker-hash-style=gnu \
                                             ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
 
         echo "XXX build gcc and libgcc"
