@@ -1431,18 +1431,12 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         auto const start_position = is_start_first ? m_selection.start() : m_selection.end();
         auto const end_position = is_start_first ? m_selection.end() : m_selection.start();
 
-        execute<InsertTextCommand>(text, start_position);
-        size_t shift_distance = m_soft_tab_width - (start_position.column() % m_soft_tab_width);
+        m_selection.set_start({ start_position.line(), 0 });
 
-        m_selection.set_start(TextPosition(start_position.line(), start_position.column() + shift_distance));
+        for (size_t i = start_position.line(); i <= end_position.line(); i++)
+            execute<InsertTextCommand>(text, TextPosition(i, 0));
 
-        if (!on_same_line) {
-            for (size_t i = start_position.line() + 1; i <= end_position.line(); i++)
-                execute<InsertTextCommand>(text, TextPosition(i, 0));
-            shift_distance = m_soft_tab_width;
-        }
-
-        m_selection.set_end({ end_position.line(), end_position.column() + shift_distance });
+        m_selection.set_end({ end_position.line(), end_position.column() + m_soft_tab_width });
     }
 
     if (should_clear_last_line) { // If it does leave just whitespace, clear it.
