@@ -2763,12 +2763,12 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<St
         }
     };
 
-    auto zero_offset = Length::make_px(0);
-    auto center_offset = Length { 50, Length::Type::Percentage };
+    LengthPercentage zero_offset = Length::make_px(0);
+    LengthPercentage center_offset = Percentage { 50 };
 
     struct EdgeOffset {
         PositionEdge edge;
-        Length offset;
+        LengthPercentage offset;
         bool edge_provided;
         bool offset_provided;
     };
@@ -2790,6 +2790,17 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<St
         tokens.next_token();
         auto value = maybe_value.release_nonnull();
 
+        if (value->is_percentage()) {
+            if (!horizontal.has_value()) {
+                horizontal = EdgeOffset { PositionEdge::Left, value->as_percentage().percentage(), false, true };
+            } else if (!vertical.has_value()) {
+                vertical = EdgeOffset { PositionEdge::Top, value->as_percentage().percentage(), false, true };
+            } else {
+                return error();
+            }
+            continue;
+        }
+
         if (value->has_length()) {
             if (!horizontal.has_value()) {
                 horizontal = EdgeOffset { PositionEdge::Left, value->to_length(), false, true };
@@ -2804,24 +2815,24 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<St
         if (value->has_identifier()) {
             auto identifier = value->to_identifier();
             if (is_horizontal(identifier)) {
-                Length offset = zero_offset;
+                LengthPercentage offset = zero_offset;
                 bool offset_provided = false;
                 if (tokens.has_next_token()) {
-                    auto maybe_offset = parse_length(tokens.peek_token());
-                    if (maybe_offset.has_value()) {
-                        offset = maybe_offset.value();
+                    auto maybe_offset = parse_dimension(tokens.peek_token());
+                    if (maybe_offset.has_value() && maybe_offset.value().is_length_percentage()) {
+                        offset = maybe_offset.value().length_percentage();
                         offset_provided = true;
                         tokens.next_token();
                     }
                 }
                 horizontal = EdgeOffset { *to_edge(identifier), offset, true, offset_provided };
             } else if (is_vertical(identifier)) {
-                Length offset = zero_offset;
+                LengthPercentage offset = zero_offset;
                 bool offset_provided = false;
                 if (tokens.has_next_token()) {
-                    auto maybe_offset = parse_length(tokens.peek_token());
-                    if (maybe_offset.has_value()) {
-                        offset = maybe_offset.value();
+                    auto maybe_offset = parse_dimension(tokens.peek_token());
+                    if (maybe_offset.has_value() && maybe_offset.value().is_length_percentage()) {
+                        offset = maybe_offset.value().length_percentage();
                         offset_provided = true;
                         tokens.next_token();
                     }

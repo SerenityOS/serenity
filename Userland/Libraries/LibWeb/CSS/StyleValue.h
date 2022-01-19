@@ -1215,21 +1215,21 @@ private:
 
 class PositionStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, Length const& offset_x, PositionEdge edge_y, Length const& offset_y)
+    static NonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
     {
         return adopt_ref(*new PositionStyleValue(edge_x, offset_x, edge_y, offset_y));
     }
     virtual ~PositionStyleValue() override { }
 
     PositionEdge edge_x() const { return m_edge_x; }
-    Length const& offset_x() const { return m_offset_x; }
+    LengthPercentage const& offset_x() const { return m_offset_x; }
     PositionEdge edge_y() const { return m_edge_y; }
-    Length const& offset_y() const { return m_offset_y; }
+    LengthPercentage const& offset_y() const { return m_offset_y; }
 
     virtual String to_string() const override;
 
 private:
-    PositionStyleValue(PositionEdge edge_x, Length const& offset_x, PositionEdge edge_y, Length const& offset_y)
+    PositionStyleValue(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
         : StyleValue(Type::Position)
         , m_edge_x(edge_x)
         , m_offset_x(offset_x)
@@ -1239,9 +1239,9 @@ private:
     }
 
     PositionEdge m_edge_x;
-    Length m_offset_x;
+    LengthPercentage m_offset_x;
     PositionEdge m_edge_y;
-    Length m_offset_y;
+    LengthPercentage m_offset_y;
 };
 
 class StringStyleValue : public StyleValue {
