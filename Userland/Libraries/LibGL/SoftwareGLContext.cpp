@@ -43,15 +43,17 @@ static constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
             return;                                                  \
     }
 
-#define RETURN_WITH_ERROR_IF(condition, error) \
-    if (condition) {                           \
-        if (m_error == GL_NO_ERROR)            \
-            m_error = error;                   \
-        return;                                \
+#define RETURN_WITH_ERROR_IF(condition, error)                    \
+    if (condition) {                                              \
+        dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error); \
+        if (m_error == GL_NO_ERROR)                               \
+            m_error = error;                                      \
+        return;                                                   \
     }
 
 #define RETURN_VALUE_WITH_ERROR_IF(condition, error, return_value) \
     if (condition) {                                               \
+        dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error);  \
         if (m_error == GL_NO_ERROR)                                \
             m_error = error;                                       \
         return return_value;                                       \
