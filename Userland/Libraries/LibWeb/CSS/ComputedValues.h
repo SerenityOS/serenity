@@ -45,9 +45,9 @@ struct BackgroundLayerData {
     CSS::BackgroundBox origin { CSS::BackgroundBox::PaddingBox };
     CSS::BackgroundBox clip { CSS::BackgroundBox::BorderBox };
     CSS::PositionEdge position_edge_x { CSS::PositionEdge::Left };
-    CSS::Length position_offset_x { CSS::Length::make_px(0) };
+    CSS::LengthPercentage position_offset_x { CSS::Length::make_px(0) };
     CSS::PositionEdge position_edge_y { CSS::PositionEdge::Top };
-    CSS::Length position_offset_y { CSS::Length::make_px(0) };
+    CSS::LengthPercentage position_offset_y { CSS::Length::make_px(0) };
     CSS::BackgroundSize size_type { CSS::BackgroundSize::LengthPercentage };
     CSS::LengthPercentage size_x { CSS::Length::make_auto() };
     CSS::LengthPercentage size_y { CSS::Length::make_auto() };

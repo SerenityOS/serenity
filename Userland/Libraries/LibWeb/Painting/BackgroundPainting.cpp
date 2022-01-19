@@ -143,14 +143,18 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         int space_y = background_positioning_area.height() - image_rect.height();
 
         // Position
-        int offset_x = layer.position_offset_x.resolved_or_zero(layout_node, space_x).to_px(layout_node);
+        int offset_x = layer.position_offset_x.resolved(CSS::Length::make_px(space_x))
+                           .resolved_or_zero(layout_node, space_x)
+                           .to_px(layout_node);
         if (layer.position_edge_x == CSS::PositionEdge::Right) {
             image_rect.set_right_without_resize(background_positioning_area.right() - offset_x);
         } else {
             image_rect.set_left(background_positioning_area.left() + offset_x);
         }
 
-        int offset_y = layer.position_offset_y.resolved_or_zero(layout_node, space_y).to_px(layout_node);
+        int offset_y = layer.position_offset_y.resolved(CSS::Length::make_px(space_y))
+                           .resolved_or_zero(layout_node, space_y)
+                           .to_px(layout_node);
         if (layer.position_edge_y == CSS::PositionEdge::Bottom) {
             image_rect.set_bottom_without_resize(background_positioning_area.bottom() - offset_y);
         } else {
