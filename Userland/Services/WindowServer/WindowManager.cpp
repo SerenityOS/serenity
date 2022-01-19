@@ -53,6 +53,18 @@ WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
 
     reload_config();
 
+    m_keymap_switcher->on_keymap_change = [&](String const& keymap) {
+        for_each_window_manager([&keymap](WMClientConnection& conn) {
+            if (!(conn.event_mask() & WMEventMask::KeymapChanged))
+                return IterationDecision::Continue;
+            if (conn.window_id() < 0)
+                return IterationDecision::Continue;
+
+            conn.async_keymap_changed(conn.window_id(), keymap);
+            return IterationDecision::Continue;
+        });
+    };
+
     Compositor::the().did_construct_window_manager({});
 }
 

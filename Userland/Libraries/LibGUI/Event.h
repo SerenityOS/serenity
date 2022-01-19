@@ -67,6 +67,7 @@ public:
         WM_SuperKeyPressed,
         WM_SuperSpaceKeyPressed,
         WM_WorkspaceChanged,
+        WM_KeymapChanged,
         __End_WM_Events,
     };
 
@@ -226,6 +227,20 @@ public:
 private:
     const unsigned m_current_row;
     const unsigned m_current_column;
+};
+
+class WMKeymapChangedEvent : public WMEvent {
+public:
+    explicit WMKeymapChangedEvent(int client_id, String const& keymap)
+        : WMEvent(Event::Type::WM_KeymapChanged, client_id, 0)
+        , m_keymap(keymap)
+    {
+    }
+
+    String const& keymap() const { return m_keymap; }
+
+private:
+    const String m_keymap;
 };
 
 class MultiPaintEvent final : public Event {

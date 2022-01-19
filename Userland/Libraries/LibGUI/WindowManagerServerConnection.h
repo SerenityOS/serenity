@@ -35,6 +35,7 @@ private:
     virtual void super_key_pressed(i32) override;
     virtual void super_space_key_pressed(i32) override;
     virtual void workspace_changed(i32, u32, u32) override;
+    virtual void keymap_changed(i32, String const&) override;
 };
 
 }

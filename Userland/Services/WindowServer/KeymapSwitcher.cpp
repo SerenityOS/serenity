@@ -12,17 +12,8 @@
 
 namespace WindowServer {
 
-static KeymapSwitcher* s_the;
-
-KeymapSwitcher& KeymapSwitcher::the()
-{
-    VERIFY(s_the);
-    return *s_the;
-}
-
 KeymapSwitcher::KeymapSwitcher()
 {
-    s_the = this;
 }
 
 KeymapSwitcher::~KeymapSwitcher()
@@ -80,10 +71,7 @@ String KeymapSwitcher::get_current_keymap() const
     auto json = JsonValue::from_string(proc_keymap->read_all()).release_value_but_fixme_should_propagate_errors();
     auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has("keymap"));
-    auto keymap = keymap_object.get("keymap").to_string();
-    dbgln("Current keymap is: {}", keymap);
-
-    return keymap;
+    return keymap_object.get("keymap").to_string();
 }
 
 void KeymapSwitcher::setkeymap(const AK::String& keymap)
@@ -94,6 +82,8 @@ void KeymapSwitcher::setkeymap(const AK::String& keymap)
         perror("posix_spawn");
         dbgln("Failed to call /bin/keymap, error: {} ({})", errno, strerror(errno));
     }
+    if (on_keymap_change)
+        on_keymap_change(keymap);
 }
 
 }
