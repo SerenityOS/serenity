@@ -1014,6 +1014,36 @@ float nearbyintf(float value) NOEXCEPT
 {
     return internal_to_integer(value, RoundingMode { fegetround() });
 }
+
+double fdim(double x, double y) NOEXCEPT
+{
+    if (isnan(x))
+        return x;
+    if (isnan(y))
+        return y;
+    
+    return x > y ? x - y : 0.0;
+}
+
+float fdimf(float x, float y) NOEXCEPT
+{
+    if (isnan(x))
+        return x;
+    if (isnan(y))
+        return y;
+    
+    return x > y ? x - y : 0.0f;
+}
+
+long double fdiml(long double x, long double y) NOEXCEPT
+{
+    if (isnan(x))
+        return x;
+    if (isnan(y))
+        return y;
+    
+    return x > y ? x - y : 0.0L;
+}
 }
 
 #ifdef __clang__
