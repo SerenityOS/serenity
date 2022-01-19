@@ -433,15 +433,15 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     if (auto width = specified_style.property(CSS::PropertyID::Width); width.has_value() && !width.value()->has_auto())
         m_has_definite_width = true;
-    computed_values.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
-    computed_values.set_min_width(specified_style.length_or_fallback(CSS::PropertyID::MinWidth, {}));
-    computed_values.set_max_width(specified_style.length_or_fallback(CSS::PropertyID::MaxWidth, {}));
+    computed_values.set_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::Width, CSS::Length {}));
+    computed_values.set_min_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::MinWidth, CSS::Length {}));
+    computed_values.set_max_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::MaxWidth, CSS::Length {}));
 
     if (auto height = specified_style.property(CSS::PropertyID::Height); height.has_value() && !height.value()->has_auto())
         m_has_definite_height = true;
-    computed_values.set_height(specified_style.length_or_fallback(CSS::PropertyID::Height, {}));
-    computed_values.set_min_height(specified_style.length_or_fallback(CSS::PropertyID::MinHeight, {}));
-    computed_values.set_max_height(specified_style.length_or_fallback(CSS::PropertyID::MaxHeight, {}));
+    computed_values.set_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::Height, CSS::Length {}));
+    computed_values.set_min_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::MinHeight, CSS::Length {}));
+    computed_values.set_max_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::MaxHeight, CSS::Length {}));
 
     computed_values.set_offset(specified_style.length_box(CSS::PropertyID::Left, CSS::PropertyID::Top, CSS::PropertyID::Right, CSS::PropertyID::Bottom, CSS::Length::make_auto()));
     computed_values.set_margin(specified_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom, CSS::Length::make_px(0)));

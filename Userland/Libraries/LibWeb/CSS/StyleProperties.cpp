@@ -47,28 +47,55 @@ Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID pr
     return it->value;
 }
 
-Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fallback) const
+Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fallback) const
 {
-    auto value = property(id);
-    if (!value.has_value())
+    auto maybe_value = property(id);
+    if (!maybe_value.has_value())
         return fallback;
+    auto& value = maybe_value.value();
 
-    if (value.value()->is_calculated()) {
+    if (value->is_calculated()) {
         Length length = Length(0, Length::Type::Calculated);
-        length.set_calculated_style(&value.value()->as_calculated());
+        length.set_calculated_style(&value->as_calculated());
         return length;
     }
 
-    return value.value()->to_length();
+    if (value->has_length())
+        return value->to_length();
+
+    return fallback;
+}
+
+LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID id, LengthPercentage const& fallback) const
+{
+    auto maybe_value = property(id);
+    if (!maybe_value.has_value())
+        return fallback;
+    auto& value = maybe_value.value();
+
+    if (value->is_calculated()) {
+        // FIXME: Handle percentages here
+        Length length = Length(0, Length::Type::Calculated);
+        length.set_calculated_style(&value->as_calculated());
+        return length;
+    }
+
+    if (value->is_percentage())
+        return value->as_percentage().percentage();
+
+    if (value->has_length())
+        return value->to_length();
+
+    return fallback;
 }
 
 LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id, const CSS::Length& default_value) const
 {
     LengthBox box;
-    box.left = length_or_fallback(left_id, default_value);
-    box.top = length_or_fallback(top_id, default_value);
-    box.right = length_or_fallback(right_id, default_value);
-    box.bottom = length_or_fallback(bottom_id, default_value);
+    box.left = length_percentage_or_fallback(left_id, default_value);
+    box.top = length_percentage_or_fallback(top_id, default_value);
+    box.right = length_percentage_or_fallback(right_id, default_value);
+    box.bottom = length_percentage_or_fallback(bottom_id, default_value);
     return box;
 }
 
