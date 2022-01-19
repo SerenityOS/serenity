@@ -6,7 +6,6 @@
 
 #include <AK/Array.h>
 #include <AK/StringBuilder.h>
-#include <LibTimeZone/TimeZone.h>
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
@@ -195,10 +194,10 @@ Optional<StringView> __attribute__((weak)) get_calendar_weekday_symbol(StringVie
 Optional<StringView> __attribute__((weak)) get_calendar_day_period_symbol(StringView, StringView, CalendarPatternStyle, DayPeriod) { return {}; }
 Optional<StringView> __attribute__((weak)) get_calendar_day_period_symbol_for_hour(StringView, StringView, CalendarPatternStyle, u8) { return {}; }
 
-Optional<StringView> __attribute__((weak)) get_time_zone_name(StringView, StringView, CalendarPatternStyle) { return {}; }
+Optional<StringView> __attribute__((weak)) get_time_zone_name(StringView, StringView, CalendarPatternStyle, TimeZone::InDST) { return {}; }
 Optional<TimeZoneFormat> __attribute__((weak)) get_time_zone_format(StringView) { return {}; }
 
-static Optional<String> format_time_zone_offset(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time)
+static Optional<String> format_time_zone_offset(StringView locale, CalendarPatternStyle style, i64 offset_seconds)
 {
     auto formats = get_time_zone_format(locale);
     if (!formats.has_value())
@@ -208,21 +207,18 @@ static Optional<String> format_time_zone_offset(StringView locale, StringView ti
     if (!number_system.has_value())
         return {};
 
-    auto offset = TimeZone::get_time_zone_offset(time_zone, time);
-    if (!offset.has_value())
-        return {};
-    if (offset->seconds == 0)
+    if (offset_seconds == 0)
         return formats->gmt_zero_format;
 
-    auto sign = offset->seconds > 0 ? formats->symbol_ahead_sign : formats->symbol_behind_sign;
-    auto separator = offset->seconds > 0 ? formats->symbol_ahead_separator : formats->symbol_behind_separator;
-    offset->seconds = llabs(offset->seconds);
+    auto sign = offset_seconds > 0 ? formats->symbol_ahead_sign : formats->symbol_behind_sign;
+    auto separator = offset_seconds > 0 ? formats->symbol_ahead_separator : formats->symbol_behind_separator;
+    offset_seconds = llabs(offset_seconds);
 
-    auto offset_hours = offset->seconds / 3'600;
-    offset->seconds %= 3'600;
+    auto offset_hours = offset_seconds / 3'600;
+    offset_seconds %= 3'600;
 
-    auto offset_minutes = offset->seconds / 60;
-    offset->seconds %= 60;
+    auto offset_minutes = offset_seconds / 60;
+    offset_seconds %= 60;
 
     StringBuilder builder;
     builder.append(sign);
@@ -231,8 +227,8 @@ static Optional<String> format_time_zone_offset(StringView locale, StringView ti
     // The long format always uses 2-digit hours field and minutes field, with optional 2-digit seconds field.
     case CalendarPatternStyle::LongOffset:
         builder.appendff("{:02}{}{:02}", offset_hours, separator, offset_minutes);
-        if (offset->seconds > 0)
-            builder.appendff("{}{:02}", separator, offset->seconds);
+        if (offset_seconds > 0)
+            builder.appendff("{}{:02}", separator, offset_seconds);
         break;
 
     // The short format is intended for the shortest representation and uses hour fields without leading zero, with optional 2-digit minutes and seconds fields.
@@ -240,8 +236,8 @@ static Optional<String> format_time_zone_offset(StringView locale, StringView ti
         builder.appendff("{}", offset_hours);
         if (offset_minutes > 0) {
             builder.appendff("{}{:02}", separator, offset_minutes);
-            if (offset->seconds > 0)
-                builder.appendff("{}{:02}", separator, offset->seconds);
+            if (offset_seconds > 0)
+                builder.appendff("{}{:02}", separator, offset_seconds);
         }
         break;
 
@@ -257,18 +253,22 @@ static Optional<String> format_time_zone_offset(StringView locale, StringView ti
 // https://unicode.org/reports/tr35/tr35-dates.html#Time_Zone_Format_Terminology
 String format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time)
 {
+    auto offset = TimeZone::get_time_zone_offset(time_zone, time);
+    if (!offset.has_value())
+        return time_zone;
+
     switch (style) {
     case CalendarPatternStyle::Short:
     case CalendarPatternStyle::Long:
     case CalendarPatternStyle::ShortGeneric:
     case CalendarPatternStyle::LongGeneric:
-        if (auto name = get_time_zone_name(locale, time_zone, style); name.has_value())
+        if (auto name = get_time_zone_name(locale, time_zone, style, offset->in_dst); name.has_value())
             return *name;
         break;
 
     case CalendarPatternStyle::ShortOffset:
     case CalendarPatternStyle::LongOffset:
-        return format_time_zone_offset(locale, time_zone, style, time).value_or(time_zone);
+        return format_time_zone_offset(locale, style, offset->seconds).value_or(time_zone);
 
     default:
         VERIFY_NOT_REACHED();

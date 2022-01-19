@@ -1057,8 +1057,10 @@ String time_zone_string(double time)
     auto tz_name = TimeZone::current_time_zone();
 
     // Most implementations seem to prefer the long-form display name of the time zone. Not super important, but we may as well match that behavior.
-    if (auto long_name = Unicode::get_time_zone_name(Unicode::default_locale(), tz_name, Unicode::CalendarPatternStyle::Long); long_name.has_value())
-        tz_name = long_name.release_value();
+    if (auto maybe_offset = TimeZone::get_time_zone_offset(tz_name, AK::Time::from_milliseconds(time)); maybe_offset.has_value()) {
+        if (auto long_name = Unicode::get_time_zone_name(Unicode::default_locale(), tz_name, Unicode::CalendarPatternStyle::Long, maybe_offset->in_dst); long_name.has_value())
+            tz_name = long_name.release_value();
+    }
 
     // 7. Return the string-concatenation of offsetSign, offsetHour, offsetMin, and tzName.
     return String::formatted("{}{:02}{:02} ({})", offset_sign, offset_hour, offset_min, tz_name);
