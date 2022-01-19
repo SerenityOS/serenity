@@ -1194,10 +1194,6 @@ public:
     Percentage const& percentage() const { return m_percentage; }
     Percentage& percentage() { return m_percentage; }
 
-    // FIXME: This is a temporary hack until we fully separate Length and Percentage.
-    bool has_length() const override { return true; }
-    Length to_length() const override { return { m_percentage.value(), Length::Type::Percentage }; }
-
     virtual String to_string() const override
     {
         return m_percentage.to_string();
