@@ -203,7 +203,7 @@ static bool matches(CSS::Selector const& selector, int component_list_index, DOM
         for (auto* ancestor = element.parent(); ancestor; ancestor = ancestor->parent()) {
             if (!is<DOM::Element>(*ancestor))
                 continue;
-            if (matches(selector, component_list_index - 1, verify_cast<DOM::Element>(*ancestor)))
+            if (matches(selector, component_list_index - 1, static_cast<DOM::Element const&>(*ancestor)))
                 return true;
         }
         return false;
@@ -211,7 +211,7 @@ static bool matches(CSS::Selector const& selector, int component_list_index, DOM
         VERIFY(component_list_index != 0);
         if (!element.parent() || !is<DOM::Element>(*element.parent()))
             return false;
-        return matches(selector, component_list_index - 1, verify_cast<DOM::Element>(*element.parent()));
+        return matches(selector, component_list_index - 1, static_cast<DOM::Element const&>(*element.parent()));
     case CSS::Selector::Combinator::NextSibling:
         VERIFY(component_list_index != 0);
         if (auto* sibling = element.previous_element_sibling())
