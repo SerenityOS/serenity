@@ -12,6 +12,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/InlineLevelIterator.h>
+#include <LibWeb/Layout/LineBuilder.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 
 namespace Web::Layout {
@@ -25,16 +26,12 @@ InlineFormattingContext::~InlineFormattingContext()
 {
 }
 
-InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::available_space_for_line(size_t line_index) const
+InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::available_space_for_line(float y) const
 {
     if (!parent()->is_block_formatting_context())
         return { 0, context_box().width() };
 
     AvailableSpaceForLineInfo info;
-
-    // FIXME: This is a total hack guess since we don't actually know the final y position of lines here!
-    float line_height = containing_block().line_height();
-    float y = (line_index * line_height);
 
     auto const& bfc = static_cast<BlockFormattingContext const&>(*parent());
 
@@ -61,12 +58,6 @@ InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::avai
     return info;
 }
 
-float InlineFormattingContext::available_width_at_line(size_t line_index) const
-{
-    auto info = available_space_for_line(line_index);
-    return info.right - info.left;
-}
-
 void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
 {
     VERIFY(containing_block().children_are_inline());
@@ -81,90 +72,32 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
         }
     });
 
-    auto text_align = containing_block().computed_values().text_align();
     float min_line_height = containing_block().line_height();
+    float max_line_width = 0;
     float content_height = 0;
-    float max_linebox_width = 0;
 
-    for (size_t line_index = 0; line_index < containing_block().line_boxes().size(); ++line_index) {
-        auto& line_box = containing_block().line_boxes()[line_index];
+    for (auto& line_box : containing_block().line_boxes()) {
         float max_height = min_line_height;
         for (auto& fragment : line_box.fragments()) {
             max_height = max(max_height, fragment.height());
         }
-
-        float x_offset = available_space_for_line(line_index).left;
-
-        float excess_horizontal_space = (float)containing_block().width() - line_box.width();
-
-        switch (text_align) {
-        case CSS::TextAlign::Center:
-        case CSS::TextAlign::LibwebCenter:
-            x_offset += excess_horizontal_space / 2;
-            break;
-        case CSS::TextAlign::Right:
-            x_offset += excess_horizontal_space;
-            break;
-        case CSS::TextAlign::Left:
-        case CSS::TextAlign::Justify:
-        default:
-            break;
-        }
-
-        float excess_horizontal_space_including_whitespace = excess_horizontal_space;
-        int whitespace_count = 0;
-        if (text_align == CSS::TextAlign::Justify) {
-            for (auto& fragment : line_box.fragments()) {
-                if (fragment.is_justifiable_whitespace()) {
-                    ++whitespace_count;
-                    excess_horizontal_space_including_whitespace += fragment.width();
-                }
-            }
-        }
-
-        float justified_space_width = whitespace_count ? (excess_horizontal_space_including_whitespace / (float)whitespace_count) : 0;
-
-        for (size_t i = 0; i < line_box.fragments().size(); ++i) {
-            auto& fragment = line_box.fragments()[i];
-
-            if (fragment.type() == LineBoxFragment::Type::Leading || fragment.type() == LineBoxFragment::Type::Trailing) {
-                fragment.set_height(max_height);
-            }
-
-            // Vertically align everyone's bottom to the line.
-            // FIXME: Support other kinds of vertical alignment.
-            fragment.set_offset({ roundf(x_offset + fragment.offset().x()), content_height + (max_height - fragment.height()) });
-
-            if (text_align == CSS::TextAlign::Justify
-                && fragment.is_justifiable_whitespace()
-                && fragment.width() != justified_space_width) {
-                float diff = justified_space_width - fragment.width();
-                fragment.set_width(justified_space_width);
-                // Shift subsequent sibling fragments to the right to adjust for change in width.
-                for (size_t j = i + 1; j < line_box.fragments().size(); ++j) {
-                    auto offset = line_box.fragments()[j].offset();
-                    offset.translate_by(diff, 0);
-                    line_box.fragments()[j].set_offset(offset);
-                }
-            }
-        }
-
-        if (!line_box.fragments().is_empty()) {
-            float left_edge = line_box.fragments().first().offset().x();
-            float right_edge = line_box.fragments().last().offset().x() + line_box.fragments().last().width();
-            float final_line_box_width = right_edge - left_edge;
-            line_box.m_width = final_line_box_width;
-            max_linebox_width = max(max_linebox_width, final_line_box_width);
-        }
-
+        max_line_width = max(max_line_width, line_box.width());
         content_height += max_height;
     }
 
     if (layout_mode != LayoutMode::Default) {
-        containing_block().set_width(max_linebox_width);
+        containing_block().set_width(max_line_width);
     }
 
     containing_block().set_height(content_height);
+}
+
+float InlineFormattingContext::available_width_at_line(size_t line_index) const
+{
+    // TODO: Remove this function, along with the old-style splitting functions.
+    VERIFY_NOT_REACHED();
+    auto info = available_space_for_line(line_index);
+    return info.right - info.left;
 }
 
 void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_mode)
@@ -224,48 +157,40 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
 
 void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 {
-    auto& line_boxes = containing_block().line_boxes();
-    line_boxes.clear();
+    containing_block().line_boxes().clear();
     containing_block().ensure_last_line_box();
 
     InlineLevelIterator iterator(containing_block(), layout_mode);
-
-    float available_width = containing_block().width();
+    LineBuilder line_builder(*this);
 
     for (;;) {
-        auto item_opt = iterator.next(available_width);
+        auto item_opt = iterator.next(line_builder.available_width_for_current_line());
         if (!item_opt.has_value())
             break;
         auto& item = item_opt.value();
 
-        float current_line_width = line_boxes.last().width();
+        line_builder.break_if_needed(layout_mode, item.width);
 
-        bool should_break_here = layout_mode == LayoutMode::AllPossibleLineBreaks || (current_line_width + item.width) > available_width;
-
-        if (should_break_here)
-            line_boxes.append(LineBox());
-
-        if (item.type == InlineLevelIterator::Item::Type::ForcedBreak) {
-            line_boxes.append(LineBox());
-            continue;
-        }
-
-        if (item.type == InlineLevelIterator::Item::Type::Element) {
+        switch (item.type) {
+        case InlineLevelIterator::Item::Type::ForcedBreak:
+            line_builder.break_line();
+            break;
+        case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
-            dimension_box_on_line(box, LayoutMode::Default);
-            line_boxes.last().add_fragment(box, 0, 0, box.width(), box.height());
-            continue;
+            dimension_box_on_line(box, layout_mode);
+            line_builder.append_box(box);
+            break;
         }
-
-        if (item.type == InlineLevelIterator::Item::Type::Text) {
+        case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
-            line_boxes.last().add_fragment(
+            line_builder.append_text_chunk(
                 text_node,
                 item.offset_in_node,
                 item.length_in_node,
                 item.width,
                 text_node.font().glyph_height());
-            continue;
+            break;
+        }
         }
     }
 

@@ -27,14 +27,14 @@ public:
 
     void dimension_box_on_line(Box&, LayoutMode);
 
-private:
     struct AvailableSpaceForLineInfo {
         float left { 0 };
         float right { 0 };
     };
 
-    AvailableSpaceForLineInfo available_space_for_line(size_t line_index) const;
+    AvailableSpaceForLineInfo available_space_for_line(float y) const;
 
+private:
     void generate_line_boxes(LayoutMode);
 };
 
