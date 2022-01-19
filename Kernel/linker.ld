@@ -59,10 +59,12 @@ SECTIONS
     {
         start_heap_ctors = .;
         *libkernel_heap.a:*(.ctors)
+        *libkernel_heap.a:*(.init_array)
         end_heap_ctors = .;
 
         start_ctors = .;
         *(.ctors)
+        *(.init_array)
         end_ctors = .;
 
         *(.rodata*)
