@@ -5,7 +5,7 @@ readelf
 ## Synopsis
 
 ```sh
-$ readelf [--all] [--file-header] [--program-headers] [--section-headers] [--headers] [--syms] [--dyn-syms] [--dynamic] [--notes] [--relocs] [--unwind] [--checksec] <path>
+$ readelf [--all] [--file-header] [--program-headers] [--section-headers] [--headers] [--syms] [--dyn-syms] [--dynamic] [--notes] [--relocs] [--unwind] [--checksec] [--string-dump section-name] <path>
 ```
 
 ## Options:
@@ -24,6 +24,7 @@ $ readelf [--all] [--file-header] [--program-headers] [--section-headers] [--hea
 * `-r`, `--relocs`: Display relocations
 * `-u`, `--unwind`: Display unwind info
 * `-c`, `--checksec`: Display security hardening info
+* `-p section-name`, `--string-dump section-name`: Display the contents of a section as strings
 
 ## Arguments:
 
