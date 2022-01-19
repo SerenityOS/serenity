@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -239,6 +239,9 @@ public:
     void save_execution_context_stack();
     void restore_execution_context_stack();
 
+    // Do not call this method unless you are sure this is the only and first module to be loaded in this vm.
+    ThrowCompletionOr<void> link_and_eval_module(Badge<Interpreter>, SourceTextModule& module);
+
     ScriptOrModule get_active_script_or_module() const;
 
     Function<ThrowCompletionOr<NonnullRefPtr<Module>>(ScriptOrModule, ModuleRequest const&)> host_resolve_imported_module;
@@ -255,6 +258,9 @@ private:
 
     ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object);
     ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment, GlobalObject& global_object);
+
+    ThrowCompletionOr<NonnullRefPtr<Module>> resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier);
+    ThrowCompletionOr<void> link_and_eval_module(SourceTextModule& module);
 
     Exception* m_exception { nullptr };
 
@@ -277,6 +283,17 @@ private:
 
     PrimitiveString* m_empty_string { nullptr };
     PrimitiveString* m_single_ascii_character_strings[128] {};
+
+    struct StoredModule {
+        ScriptOrModule referencing_script_or_module;
+        String filepath;
+        NonnullRefPtr<Module> module;
+        bool has_once_started_linking { false };
+    };
+
+    StoredModule* get_stored_module(ScriptOrModule const& script_or_module, String const& filepath);
+
+    Vector<StoredModule> m_loaded_modules;
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     Symbol* m_well_known_symbol_##snake_name { nullptr };

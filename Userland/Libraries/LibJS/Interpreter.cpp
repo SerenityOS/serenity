@@ -130,11 +130,31 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
     return *result.value();
 }
 
-ThrowCompletionOr<Value> Interpreter::run(SourceTextModule&)
+ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
 {
-    auto* error = InternalError::create(global_object(), "Can't run modules directly yet :^(");
-    vm().throw_exception(global_object(), Value { error });
-    return throw_completion(error);
+    // FIXME: This is not a entry point as defined in the spec, but is convenient.
+    //        To avoid work we use link_and_eval_module however that can already be
+    //        dangerous if the vm loaded other modules.
+    auto& vm = this->vm();
+    VERIFY(!vm.exception());
+
+    VM::InterpreterExecutionScope scope(*this);
+
+    auto evaluated_or_error = vm.link_and_eval_module({}, module);
+    // This error does not set vm.exception so we set that here for the stuff that needs it
+    if (evaluated_or_error.is_throw_completion()) {
+        auto* error = vm.heap().allocate<Exception>(global_object(), *(evaluated_or_error.throw_completion().value()));
+        vm.set_exception(*error);
+        return evaluated_or_error.throw_completion();
+    }
+    VERIFY(!vm.exception());
+
+    vm.run_queued_promise_jobs();
+
+    vm.run_queued_finalization_registry_cleanup_jobs();
+
+    VERIFY(!vm.exception());
+    return js_undefined();
 }
 
 GlobalObject& Interpreter::global_object()
