@@ -1,14 +1,16 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
+#include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/File.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -26,6 +28,7 @@
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/TemporaryClearException.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibJS/SourceTextModule.h>
 
 namespace JS {
 
@@ -42,6 +45,10 @@ VM::VM(OwnPtr<CustomData> custom_data)
     for (size_t i = 0; i < 128; ++i) {
         m_single_ascii_character_strings[i] = m_heap.allocate_without_global_object<PrimitiveString>(String::formatted("{:c}", i));
     }
+
+    host_resolve_imported_module = [&](ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier) {
+        return resolve_imported_module(move(referencing_script_or_module), specifier);
+    };
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     m_well_known_symbol_##snake_name = js_symbol(*this, "Symbol." #SymbolName, false);
@@ -680,6 +687,165 @@ ScriptOrModule VM::get_active_script_or_module() const
     // Note: Since it is not empty we have 0 and since we got here all the
     //       above contexts don't have a non-null ScriptOrModule
     return m_execution_context_stack[0]->script_or_module;
+}
+
+VM::StoredModule* VM::get_stored_module(ScriptOrModule const&, String const& filepath)
+{
+    // Note the spec says:
+    // Each time this operation is called with a specific referencingScriptOrModule, specifier pair as arguments
+    // it must return the same Module Record instance if it completes normally.
+    // Currently, we ignore the referencing script or module but this might not be correct in all cases.
+    auto end_or_module = m_loaded_modules.find_if([&](StoredModule const& stored_module) {
+        return stored_module.filepath == filepath;
+    });
+    if (end_or_module.is_end())
+        return nullptr;
+    return &(*end_or_module);
+}
+
+ThrowCompletionOr<void> VM::link_and_eval_module(Badge<Interpreter>, SourceTextModule& module)
+{
+    return link_and_eval_module(module);
+}
+
+ThrowCompletionOr<void> VM::link_and_eval_module(SourceTextModule& module)
+{
+    auto filepath = module.filename();
+
+    auto module_or_end = m_loaded_modules.find_if([&](StoredModule const& stored_module) {
+        return stored_module.module.ptr() == &module;
+    });
+
+    StoredModule* stored_module;
+
+    if (module_or_end.is_end()) {
+        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Warning introducing module via link_and_eval_module {}", module.filename());
+        if (m_loaded_modules.size() > 0) {
+            dbgln("Using link_and_eval module as entry point is not allowed if it is not the first module!");
+            VERIFY_NOT_REACHED();
+        }
+        m_loaded_modules.empend(
+            &module,
+            module.filename(),
+            module,
+            true);
+        stored_module = &m_loaded_modules.last();
+    } else {
+        stored_module = module_or_end.operator->();
+        if (stored_module->has_once_started_linking) {
+            dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Module already has started linking once {}", module.filename());
+            return {};
+        }
+        stored_module->has_once_started_linking = true;
+    }
+
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Linking module {}", filepath);
+    auto linked_or_error = module.link(*this);
+    if (linked_or_error.is_error())
+        return linked_or_error.throw_completion();
+
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Linking passed, now evaluating module {}", filepath);
+    auto evaluated_or_error = module.evaluate(*this);
+
+    VERIFY(!exception());
+
+    if (evaluated_or_error.is_error())
+        return evaluated_or_error.throw_completion();
+
+    auto* evaluated_value = evaluated_or_error.value();
+
+    run_queued_promise_jobs();
+    VERIFY(m_promise_jobs.is_empty());
+
+    // FIXME: This will break if we start doing promises actually asynchronously.
+    VERIFY(evaluated_value->state() != Promise::State::Pending);
+
+    if (evaluated_value->state() == Promise::State::Rejected) {
+        VERIFY(!exception());
+        return JS::throw_completion(evaluated_value->result());
+    }
+
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Evaluating passed for module {}", module.filename());
+    return {};
+}
+
+// 16.2.1.7 HostResolveImportedModule ( referencingScriptOrModule, specifier ), https://tc39.es/ecma262/#sec-hostresolveimportedmodule
+ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier)
+{
+    if (!specifier.assertions.is_empty())
+        return throw_completion<InternalError>(current_realm()->global_object(), ErrorType::NotImplemented, "HostResolveImportedModule with assertions");
+
+    // An implementation of HostResolveImportedModule must conform to the following requirements:
+    //  - If it completes normally, the [[Value]] slot of the completion must contain an instance of a concrete subclass of Module Record.
+    //  - If a Module Record corresponding to the pair referencingScriptOrModule, specifier does not exist or cannot be created, an exception must be thrown.
+    //  - Each time this operation is called with a specific referencingScriptOrModule, specifier pair as arguments it must return the same Module Record instance if it completes normally.
+
+    StringView base_filename = referencing_script_or_module.visit(
+        [&](Empty) {
+            return "."sv;
+        },
+        [&](auto* script_or_module) {
+            return script_or_module->filename();
+        });
+
+    LexicalPath base_path { base_filename };
+    auto filepath = LexicalPath::absolute_path(base_path.dirname(), specifier.module_specifier);
+
+#if JS_MODULE_DEBUG
+    String referencing_module_string = referencing_script_or_module.visit(
+        [&](Empty) -> String {
+            return ".";
+        },
+        [&](auto* script_or_module) {
+            if constexpr (IsSame<Script*, decltype(script_or_module)>) {
+                return String::formatted("Script @ {}", script_or_module);
+            }
+            return String::formatted("Module @ {}", script_or_module);
+        });
+
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}, {})", referencing_module_string, filepath);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE]     resolved {} + {} -> {}", base_path, specifier.module_specifier, filepath);
+#endif
+
+    auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filepath);
+    if (loaded_module_or_end != nullptr) {
+        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}) already loaded at {}", filepath, loaded_module_or_end->module.ptr());
+        return loaded_module_or_end->module;
+    }
+
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filepath);
+
+    auto& global_object = current_realm()->global_object();
+
+    auto file_or_error = Core::File::open(filepath, Core::OpenMode::ReadOnly);
+
+    if (file_or_error.is_error()) {
+        return throw_completion<SyntaxError>(global_object, ErrorType::ModuleNotFound, specifier.module_specifier);
+    }
+
+    // FIXME: Don't read the file in one go.
+    auto file_content = file_or_error.value()->read_all();
+    StringView content_view { file_content.data(), file_content.size() };
+
+    // Note: We treat all files as module, so if a script does not have exports it just runs it.
+    auto module_or_errors = SourceTextModule::parse(content_view, *current_realm(), filepath);
+
+    if (module_or_errors.is_error()) {
+        VERIFY(module_or_errors.error().size() > 0);
+        return throw_completion<SyntaxError>(global_object, module_or_errors.error().first().to_string());
+    }
+
+    auto module = module_or_errors.release_value();
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module(...) parsed {} to {}", filepath, module.ptr());
+
+    // We have to set it here already in case it references itself.
+    m_loaded_modules.empend(
+        referencing_script_or_module,
+        filepath,
+        module,
+        false);
+
+    return module;
 }
 
 }
