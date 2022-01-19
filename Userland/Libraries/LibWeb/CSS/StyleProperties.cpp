@@ -194,18 +194,22 @@ Optional<CSS::FlexWrap> StyleProperties::flex_wrap() const
 
 Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
 {
-    auto value = property(CSS::PropertyID::FlexBasis);
-    if (!value.has_value())
+    auto maybe_value = property(CSS::PropertyID::FlexBasis);
+    if (!maybe_value.has_value())
         return {};
+    auto& value = maybe_value.value();
 
-    if (value.value()->is_identifier() && value.value()->to_identifier() == CSS::ValueID::Content)
+    if (value->is_identifier() && value->to_identifier() == CSS::ValueID::Content)
         return { { CSS::FlexBasis::Content, {} } };
 
-    if (value.value()->has_auto())
+    if (value->has_auto())
         return { { CSS::FlexBasis::Auto, {} } };
 
-    if (value.value()->has_length())
-        return { { CSS::FlexBasis::Length, value.value()->to_length() } };
+    if (value->is_percentage())
+        return { { CSS::FlexBasis::LengthPercentage, value->as_percentage().percentage() } };
+
+    if (value->has_length())
+        return { { CSS::FlexBasis::LengthPercentage, value->to_length() } };
 
     return {};
 }

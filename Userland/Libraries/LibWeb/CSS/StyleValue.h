@@ -112,7 +112,7 @@ enum class Cursor {
 
 enum class FlexBasis {
     Content,
-    Length,
+    LengthPercentage,
     Auto,
 };
 
@@ -1185,7 +1185,7 @@ private:
 
 class PercentageStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<PercentageStyleValue> create(Percentage&& percentage)
+    static NonnullRefPtr<PercentageStyleValue> create(Percentage percentage)
     {
         return adopt_ref(*new PercentageStyleValue(move(percentage)));
     }

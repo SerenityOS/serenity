@@ -69,9 +69,9 @@ struct Transformation {
 
 struct FlexBasisData {
     CSS::FlexBasis type { CSS::FlexBasis::Auto };
-    CSS::Length length {};
+    Optional<CSS::LengthPercentage> length_percentage;
 
-    bool is_definite() const { return type == CSS::FlexBasis::Length; }
+    bool is_definite() const { return type == CSS::FlexBasis::LengthPercentage; }
 };
 
 struct BoxShadowData {
