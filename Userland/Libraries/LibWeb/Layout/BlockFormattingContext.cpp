@@ -80,7 +80,7 @@ void BlockFormattingContext::apply_transformations_to_children(Box& box)
                         continue;
                     transformation.values.first().visit(
                         [&](CSS::Length& value) {
-                            transform_y_offset += value.resolved_or_zero(child_box, child_box.width()).to_px(child_box);
+                            transform_y_offset += value.resolved_or_zero(child_box).to_px(child_box);
                         },
                         [&](float value) {
                             transform_y_offset += value;
@@ -128,13 +128,13 @@ void BlockFormattingContext::compute_width(Box& box)
 
     auto margin_left = CSS::Length::make_auto();
     auto margin_right = CSS::Length::make_auto();
-    const auto padding_left = computed_values.padding().left.resolved(width_of_containing_block_as_length).resolved_or_zero(box, width_of_containing_block);
-    const auto padding_right = computed_values.padding().right.resolved(width_of_containing_block_as_length).resolved_or_zero(box, width_of_containing_block);
+    const auto padding_left = computed_values.padding().left.resolved(width_of_containing_block_as_length).resolved_or_zero(box);
+    const auto padding_right = computed_values.padding().right.resolved(width_of_containing_block_as_length).resolved_or_zero(box);
 
     auto try_compute_width = [&](const auto& a_width) {
         CSS::Length width = a_width;
-        margin_left = computed_values.margin().left.resolved(width_of_containing_block_as_length).resolved_or_zero(box, width_of_containing_block);
-        margin_right = computed_values.margin().right.resolved(width_of_containing_block_as_length).resolved_or_zero(box, width_of_containing_block);
+        margin_left = computed_values.margin().left.resolved(width_of_containing_block_as_length).resolved_or_zero(box);
+        margin_right = computed_values.margin().right.resolved(width_of_containing_block_as_length).resolved_or_zero(box);
 
         float total_px = computed_values.border_left().width + computed_values.border_right().width;
         for (auto& value : { margin_left, padding_left, width, padding_right, margin_right }) {
@@ -208,14 +208,14 @@ void BlockFormattingContext::compute_width(Box& box)
         return width;
     };
 
-    auto specified_width = computed_values.width().resolved(width_of_containing_block_as_length).resolved_or_auto(box, width_of_containing_block);
+    auto specified_width = computed_values.width().resolved(width_of_containing_block_as_length).resolved_or_auto(box);
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = try_compute_width(specified_width);
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    auto specified_max_width = computed_values.max_width().resolved(width_of_containing_block_as_length).resolved_or_auto(box, width_of_containing_block);
+    auto specified_max_width = computed_values.max_width().resolved(width_of_containing_block_as_length).resolved_or_auto(box);
     if (!specified_max_width.is_auto()) {
         if (used_width.to_px(box) > specified_max_width.to_px(box)) {
             used_width = try_compute_width(specified_max_width);
@@ -224,7 +224,7 @@ void BlockFormattingContext::compute_width(Box& box)
 
     // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
     //    but this time using the value of 'min-width' as the computed value for 'width'.
-    auto specified_min_width = computed_values.min_width().resolved(width_of_containing_block_as_length).resolved_or_auto(box, width_of_containing_block);
+    auto specified_min_width = computed_values.min_width().resolved(width_of_containing_block_as_length).resolved_or_auto(box);
     if (!specified_min_width.is_auto()) {
         if (used_width.to_px(box) < specified_min_width.to_px(box)) {
             used_width = try_compute_width(specified_min_width);
@@ -248,10 +248,10 @@ void BlockFormattingContext::compute_width_for_floating_box(Box& box)
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto zero_value = CSS::Length::make_px(0);
 
-    auto margin_left = computed_values.margin().left.resolved(width_of_containing_block_as_length).resolved_or_zero(box, width_of_containing_block);
-    auto margin_right = computed_values.margin().right.resolved(width_of_containing_block_as_length).resolved_or_zero(box, width_of_containing_block);
-    const auto padding_left = computed_values.padding().left.resolved(width_of_containing_block_as_length).resolved_or_zero(box, width_of_containing_block);
-    const auto padding_right = computed_values.padding().right.resolved(width_of_containing_block_as_length).resolved_or_zero(box, width_of_containing_block);
+    auto margin_left = computed_values.margin().left.resolved(width_of_containing_block_as_length).resolved_or_zero(box);
+    auto margin_right = computed_values.margin().right.resolved(width_of_containing_block_as_length).resolved_or_zero(box);
+    const auto padding_left = computed_values.padding().left.resolved(width_of_containing_block_as_length).resolved_or_zero(box);
+    const auto padding_right = computed_values.padding().right.resolved(width_of_containing_block_as_length).resolved_or_zero(box);
 
     // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
     if (margin_left.is_auto())
@@ -259,7 +259,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box& box)
     if (margin_right.is_auto())
         margin_right = zero_value;
 
-    auto width = computed_values.width().resolved(width_of_containing_block_as_length).resolved_or_auto(box, width_of_containing_block);
+    auto width = computed_values.width().resolved(width_of_containing_block_as_length).resolved_or_auto(box);
 
     // If 'width' is computed as 'auto', the used value is the "shrink-to-fit" width.
     if (width.is_auto()) {
@@ -277,7 +277,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box& box)
         width = CSS::Length(min(max(result.preferred_minimum_width, available_width), result.preferred_width), CSS::Length::Type::Px);
     }
 
-    float final_width = width.resolved_or_zero(box, width_of_containing_block).to_px(box);
+    float final_width = width.resolved_or_zero(box).to_px(box);
     box.set_width(final_width);
     box.box_model().margin.left = margin_left.to_px(box);
     box.box_model().margin.right = margin_right.to_px(box);
@@ -311,15 +311,15 @@ float BlockFormattingContext::compute_theoretical_height(Box const& box)
             || (computed_values.height().is_percentage() && !is_absolute(containing_block.computed_values().height()))) {
             height = compute_auto_height_for_block_level_element(box, ConsiderFloats::No);
         } else {
-            height = computed_values.height().resolved(containing_block_height).resolved_or_auto(box, containing_block.height()).to_px(box);
+            height = computed_values.height().resolved(containing_block_height).resolved_or_auto(box).to_px(box);
         }
     }
 
-    auto specified_max_height = computed_values.max_height().resolved(containing_block_height).resolved_or_auto(box, containing_block.height());
+    auto specified_max_height = computed_values.max_height().resolved(containing_block_height).resolved_or_auto(box);
     if (!specified_max_height.is_auto()
         && !(computed_values.max_height().is_percentage() && !is_absolute(containing_block.computed_values().height())))
         height = min(height, specified_max_height.to_px(box));
-    auto specified_min_height = computed_values.min_height().resolved(containing_block_height).resolved_or_auto(box, containing_block.height());
+    auto specified_min_height = computed_values.min_height().resolved(containing_block_height).resolved_or_auto(box);
     if (!specified_min_height.is_auto()
         && !(computed_values.min_height().is_percentage() && !is_absolute(containing_block.computed_values().height())))
         height = max(height, specified_min_height.to_px(box));
@@ -335,13 +335,13 @@ void BlockFormattingContext::compute_height(Box& box)
     // First, resolve the top/bottom parts of the surrounding box model.
 
     // FIXME: While negative values are generally allowed for margins, for now just ignore those for height calculation
-    box.box_model().margin.top = max(computed_values.margin().top.resolved(width_of_containing_block_as_length).resolved_or_zero(box, containing_block.width()).to_px(box), 0);
-    box.box_model().margin.bottom = max(computed_values.margin().bottom.resolved(width_of_containing_block_as_length).resolved_or_zero(box, containing_block.width()).to_px(box), 0);
+    box.box_model().margin.top = max(computed_values.margin().top.resolved(width_of_containing_block_as_length).resolved_or_zero(box).to_px(box), 0);
+    box.box_model().margin.bottom = max(computed_values.margin().bottom.resolved(width_of_containing_block_as_length).resolved_or_zero(box).to_px(box), 0);
 
     box.box_model().border.top = computed_values.border_top().width;
     box.box_model().border.bottom = computed_values.border_bottom().width;
-    box.box_model().padding.top = computed_values.padding().top.resolved(width_of_containing_block_as_length).resolved_or_zero(box, containing_block.width()).to_px(box);
-    box.box_model().padding.bottom = computed_values.padding().bottom.resolved(width_of_containing_block_as_length).resolved_or_zero(box, containing_block.width()).to_px(box);
+    box.box_model().padding.top = computed_values.padding().top.resolved(width_of_containing_block_as_length).resolved_or_zero(box).to_px(box);
+    box.box_model().padding.bottom = computed_values.padding().bottom.resolved(width_of_containing_block_as_length).resolved_or_zero(box).to_px(box);
 
     auto height = compute_theoretical_height(box);
     box.set_height(height);
@@ -357,8 +357,8 @@ void BlockFormattingContext::compute_position(Box& box)
     float width_of_containing_block = box.containing_block()->width();
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
-    auto specified_left = computed_values.offset().left.resolved(width_of_containing_block_as_length).resolved_or_zero(box, width_of_containing_block);
-    auto specified_right = computed_values.offset().right.resolved(width_of_containing_block_as_length).resolved_or_zero(box, width_of_containing_block);
+    auto specified_left = computed_values.offset().left.resolved(width_of_containing_block_as_length).resolved_or_zero(box);
+    auto specified_right = computed_values.offset().right.resolved(width_of_containing_block_as_length).resolved_or_zero(box);
 
     if (specified_left.is_auto() && specified_right.is_auto()) {
         // If both 'left' and 'right' are 'auto' (their initial values), the used values are '0' (i.e., the boxes stay in their original position).
@@ -440,12 +440,12 @@ void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(B
     auto& replaced_element_box_model = child_box.box_model();
     auto width_of_containing_block = CSS::Length::make_px(containing_block.width());
 
-    replaced_element_box_model.margin.top = child_box.computed_values().margin().top.resolved(width_of_containing_block).resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
-    replaced_element_box_model.margin.bottom = child_box.computed_values().margin().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
+    replaced_element_box_model.margin.top = child_box.computed_values().margin().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
+    replaced_element_box_model.margin.bottom = child_box.computed_values().margin().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
     replaced_element_box_model.border.top = child_box.computed_values().border_top().width;
     replaced_element_box_model.border.bottom = child_box.computed_values().border_bottom().width;
-    replaced_element_box_model.padding.top = child_box.computed_values().padding().top.resolved(width_of_containing_block).resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
-    replaced_element_box_model.padding.bottom = child_box.computed_values().padding().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
+    replaced_element_box_model.padding.top = child_box.computed_values().padding().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
+    replaced_element_box_model.padding.bottom = child_box.computed_values().padding().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
 
     float x = replaced_element_box_model.margin.left
         + replaced_element_box_model.border.left
@@ -463,12 +463,12 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     auto& computed_values = child_box.computed_values();
     auto width_of_containing_block = CSS::Length::make_px(containing_block.width());
 
-    box_model.margin.top = computed_values.margin().top.resolved(width_of_containing_block).resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
-    box_model.margin.bottom = computed_values.margin().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
+    box_model.margin.top = computed_values.margin().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
+    box_model.margin.bottom = computed_values.margin().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
     box_model.border.top = computed_values.border_top().width;
     box_model.border.bottom = computed_values.border_bottom().width;
-    box_model.padding.top = computed_values.padding().top.resolved(width_of_containing_block).resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
-    box_model.padding.bottom = computed_values.padding().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
+    box_model.padding.top = computed_values.padding().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
+    box_model.padding.bottom = computed_values.padding().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
 
     float x = box_model.margin.left
         + box_model.border.left
