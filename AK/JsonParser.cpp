@@ -191,6 +191,7 @@ ErrorOr<JsonValue> JsonParser::parse_number()
     Vector<char, 128> fraction_buffer;
 
     bool is_double = false;
+    bool all_zero = true;
     for (;;) {
         char ch = peek();
         if (ch == '.') {
@@ -202,6 +203,9 @@ ErrorOr<JsonValue> JsonParser::parse_number()
             continue;
         }
         if (ch == '-' || (ch >= '0' && ch <= '9')) {
+            if (ch != '-' && ch != '0')
+                all_zero = false;
+
             if (is_double) {
                 if (ch == '-')
                     return Error::from_string_literal("JsonParser: Error while parsing number"sv);
@@ -229,6 +233,10 @@ ErrorOr<JsonValue> JsonParser::parse_number()
     StringView number_string(number_buffer.data(), number_buffer.size());
 
 #ifndef KERNEL
+    // Check for negative zero which needs to be forced to be represented with a double
+    if (number_string.starts_with('-') && all_zero)
+        return JsonValue(-0.0);
+
     if (is_double) {
         // FIXME: This logic looks shaky.
         int whole = 0;
