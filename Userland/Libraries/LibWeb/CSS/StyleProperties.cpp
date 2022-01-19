@@ -174,11 +174,8 @@ float StyleProperties::opacity() const
     if (value->has_number())
         return clamp(value->to_number(), 0.0f, 1.0f);
 
-    if (value->has_length()) {
-        auto length = value->to_length();
-        if (length.is_percentage())
-            return clamp(length.raw_value() / 100.0f, 0.0f, 1.0f);
-    }
+    if (value->is_percentage())
+        return clamp(value->as_percentage().percentage().as_fraction(), 0.0f, 1.0f);
 
     return 1.0f;
 }
