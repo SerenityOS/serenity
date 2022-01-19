@@ -271,11 +271,13 @@ pushd "$DIR/Tarballs"
             git init > /dev/null
             git add . > /dev/null
             git commit -am "BASE" > /dev/null
+            git am "$DIR"/Patches/gcc-support-mold-linker.patch > /dev/null
             git apply "$DIR"/Patches/gcc.patch > /dev/null
         else
+            patch -p1 < "$DIR/Patches/gcc-support-mold-linker.patch" > /dev/null
             patch -p1 < "$DIR/Patches/gcc.patch" > /dev/null
         fi
-        $MD5SUM "$DIR/Patches/gcc.patch" > .patch.applied
+        $MD5SUM "$DIR/Patches/gcc.patch" "$DIR/Patches/gcc-support-mold-linker.patch" > .patch.applied
     popd
 
     if [ "$SYSTEM_NAME" = "Darwin" ]; then

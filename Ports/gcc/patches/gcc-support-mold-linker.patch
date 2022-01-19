@@ -1,0 +1,129 @@
+From 37f6a0c24bb07efb29a2222d984e4d793c165aef Mon Sep 17 00:00:00 2001
+From: Martin Liska <mliska@suse.cz>
+Date: Tue, 21 Dec 2021 17:43:55 +0100
+Subject: [PATCH] Support ld.mold linker.
+
+gcc/ChangeLog:
+
+	* collect2.c (main): Add ld.mold.
+	* common.opt: Add -fuse-ld=mold.
+	* doc/invoke.texi: Document it.
+	* gcc.c (driver_handle_option): Handle -fuse-ld=mold.
+	* opts.c (common_handle_option): Likewise.
+---
+ gcc/collect2.c      | 10 +++++++---
+ gcc/common.opt      |  4 ++++
+ gcc/doc/invoke.texi |  4 ++++
+ gcc/gcc.c           |  4 ++++
+ gcc/opts.c          |  1 +
+ 5 files changed, 20 insertions(+), 3 deletions(-)
+
+diff --git a/gcc/collect2.c b/gcc/collect2.c
+index 0c8af2987..6bb5cf9a4 100644
+--- a/gcc/collect2.c
++++ b/gcc/collect2.c
+@@ -785,6 +785,7 @@ main (int argc, char **argv)
+       USE_GOLD_LD,
+       USE_BFD_LD,
+       USE_LLD_LD,
++      USE_MOLD_LD,
+       USE_LD_MAX
+     } selected_linker = USE_DEFAULT_LD;
+   static const char *const ld_suffixes[USE_LD_MAX] =
+@@ -793,7 +794,8 @@ main (int argc, char **argv)
+       PLUGIN_LD_SUFFIX,
+       "ld.gold",
+       "ld.bfd",
+-      "ld.lld"
++      "ld.lld",
++      "ld.mold"
+     };
+   static const char *const real_ld_suffix = "real-ld";
+   static const char *const collect_ld_suffix = "collect-ld";
+@@ -970,6 +972,8 @@ main (int argc, char **argv)
+ 	  selected_linker = USE_GOLD_LD;
+ 	else if (strcmp (argv[i], "-fuse-ld=lld") == 0)
+ 	  selected_linker = USE_LLD_LD;
++	else if (strcmp (argv[i], "-fuse-ld=mold") == 0)
++	  selected_linker = USE_MOLD_LD;
+ 	else if (strncmp (argv[i], "-o", 2) == 0)
+ 	  {
+ 	    /* Parse the output filename if it's given so that we can make
+@@ -1082,7 +1086,7 @@ main (int argc, char **argv)
+   ld_file_name = 0;
+ #ifdef DEFAULT_LINKER
+   if (selected_linker == USE_BFD_LD || selected_linker == USE_GOLD_LD ||
+-      selected_linker == USE_LLD_LD)
++      selected_linker == USE_LLD_LD || selected_linker == USE_MOLD_LD)
+     {
+       char *linker_name;
+ # ifdef HOST_EXECUTABLE_SUFFIX
+@@ -1317,7 +1321,7 @@ main (int argc, char **argv)
+ 	      else if (!use_collect_ld
+ 		       && strncmp (arg, "-fuse-ld=", 9) == 0)
+ 		{
+-		  /* Do not pass -fuse-ld={bfd|gold|lld} to the linker. */
++		  /* Do not pass -fuse-ld={bfd|gold|lld|mold} to the linker. */
+ 		  ld1--;
+ 		  ld2--;
+ 		}
+diff --git a/gcc/common.opt b/gcc/common.opt
+index 6fab7c3ca..8617124f9 100644
+--- a/gcc/common.opt
++++ b/gcc/common.opt
+@@ -2967,6 +2967,10 @@ fuse-ld=lld
+ Common Driver Negative(fuse-ld=lld)
+ Use the lld LLVM linker instead of the default linker.
+ 
++fuse-ld=mold
++Common Driver Negative(fuse-ld=mold)
++Use the Modern linker (MOLD) linker instead of the default linker.
++
+ fuse-linker-plugin
+ Common Undocumented Var(flag_use_linker_plugin)
+ 
+diff --git a/gcc/doc/invoke.texi b/gcc/doc/invoke.texi
+index 7f13ffb79..31932cf2c 100644
+--- a/gcc/doc/invoke.texi
++++ b/gcc/doc/invoke.texi
+@@ -15601,6 +15601,10 @@ Use the @command{gold} linker instead of the default linker.
+ @opindex fuse-ld=lld
+ Use the LLVM @command{lld} linker instead of the default linker.
+ 
++@item -fuse-ld=mold
++@opindex fuse-ld=mold
++Use the Modern Linker (@command{mold}) instead of the default linker.
++
+ @cindex Libraries
+ @item -l@var{library}
+ @itemx -l @var{library}
+diff --git a/gcc/gcc.c b/gcc/gcc.c
+index 4d790f9dd..ce6366946 100644
+--- a/gcc/gcc.c
++++ b/gcc/gcc.c
+@@ -4189,6 +4189,10 @@ driver_handle_option (struct gcc_options *opts,
+        use_ld = ".gold";
+        break;
+ 
++    case OPT_fuse_ld_mold:
++       use_ld = ".mold";
++       break;
++
+     case OPT_fcompare_debug_second:
+       compare_debug_second = 1;
+       break;
+diff --git a/gcc/opts.c b/gcc/opts.c
+index 24bb64198..9192ca757 100644
+--- a/gcc/opts.c
++++ b/gcc/opts.c
+@@ -2875,6 +2875,7 @@ common_handle_option (struct gcc_options *opts,
+     case OPT_fuse_ld_bfd:
+     case OPT_fuse_ld_gold:
+     case OPT_fuse_ld_lld:
++    case OPT_fuse_ld_mold:
+     case OPT_fuse_linker_plugin:
+       /* No-op. Used by the driver and passed to us because it starts with f.*/
+       break;
+-- 
+2.34.1
+
