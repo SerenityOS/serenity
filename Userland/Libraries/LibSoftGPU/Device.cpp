@@ -413,7 +413,8 @@ void Device::rasterize_triangle(const Triangle& triangle)
 
                 quad.depth = interpolate(vertex0.window_coordinates.z(), vertex1.window_coordinates.z(), vertex2.window_coordinates.z(), quad.barycentrics);
                 // FIXME: Also apply depth_offset_factor which depends on the depth gradient
-                quad.depth += m_options.depth_offset_constant * NumericLimits<float>::epsilon();
+                if (m_options.depth_offset_enabled)
+                    quad.depth += m_options.depth_offset_constant * NumericLimits<float>::epsilon();
 
                 i32x4 depth_test_passed;
                 switch (m_options.depth_func) {

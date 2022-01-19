@@ -66,6 +66,7 @@ struct RasterizerOptions {
     bool enable_color_write { true };
     float depth_offset_factor { 0 };
     float depth_offset_constant { 0 };
+    bool depth_offset_enabled { false };
     bool enable_culling { false };
     WindingOrder front_face { WindingOrder::CounterClockwise };
     bool cull_back { true };

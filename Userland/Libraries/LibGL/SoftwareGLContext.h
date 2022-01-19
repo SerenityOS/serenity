@@ -212,7 +212,8 @@ private:
     GLenum m_error = GL_NO_ERROR;
     bool m_in_draw_state = false;
 
-    bool m_depth_test_enabled = false;
+    bool m_depth_test_enabled { false };
+    bool m_depth_offset_enabled { false };
 
     bool m_cull_faces = false;
     GLenum m_front_face = GL_CCW;
