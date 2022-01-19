@@ -80,6 +80,56 @@ TEST_CASE(time_zone_name)
     }
 }
 
+TEST_CASE(time_zone_name_dst)
+{
+    struct TestData {
+        StringView locale;
+        Unicode::CalendarPatternStyle style;
+        StringView time_zone;
+        StringView expected_result;
+    };
+
+    constexpr auto test_data = Array {
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "UTC"sv, "Coordinated Universal Time"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "UTC"sv, "UTC"sv },
+
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "UTC"sv, "التوقيت العالمي المنسق"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "UTC"sv, "UTC"sv },
+
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "America/Los_Angeles"sv, "Pacific Daylight Time"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "America/Los_Angeles"sv, "PDT"sv },
+
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "America/Los_Angeles"sv, "توقيت المحيط الهادي الصيفي"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "America/Los_Angeles"sv, "غرينتش-٧"sv },
+
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "America/Vancouver"sv, "Pacific Daylight Time"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "America/Vancouver"sv, "PDT"sv },
+
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "America/Vancouver"sv, "توقيت المحيط الهادي الصيفي"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "America/Vancouver"sv, "غرينتش-٧"sv },
+
+        // FIXME: This should be "British Summer Time", but the CLDR puts that one name in a section we aren't parsing.
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "Europe/London"sv, "GMT+01:00"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "Europe/London"sv, "GMT+1"sv },
+
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "Europe/London"sv, "غرينتش+٠١:٠٠"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "Europe/London"sv, "غرينتش+١"sv },
+
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Long, "Africa/Accra"sv, "Greenwich Mean Time"sv },
+        TestData { "en"sv, Unicode::CalendarPatternStyle::Short, "Africa/Accra"sv, "GMT"sv },
+
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Long, "Africa/Accra"sv, "توقيت غرينتش"sv },
+        TestData { "ar"sv, Unicode::CalendarPatternStyle::Short, "Africa/Accra"sv, "غرينتش"sv },
+    };
+
+    constexpr auto sep_19_2022 = AK::Time::from_seconds(1663553728); // Monday, September 19, 2022 2:15:28 AM
+
+    for (auto const& test : test_data) {
+        auto time_zone = Unicode::format_time_zone(test.locale, test.time_zone, test.style, sep_19_2022);
+        EXPECT_EQ(time_zone, test.expected_result);
+    }
+}
+
 TEST_CASE(format_time_zone_offset)
 {
     constexpr auto jan_1_1833 = AK::Time::from_seconds(-4323283200); // Tuesday, January 1, 1833 12:00:00 AM

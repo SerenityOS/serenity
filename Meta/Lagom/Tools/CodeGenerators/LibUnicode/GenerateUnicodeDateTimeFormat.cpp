@@ -2207,17 +2207,17 @@ static TimeZoneNames const* find_time_zone_names(StringView locale, StringView t
     return &s_time_zones[time_zone_index];
 }
 
-Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style)
+Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style, TimeZone::InDST in_dst)
 {
     if (auto const* data = find_time_zone_names(locale, time_zone); data != nullptr) {
         size_t name_index = 0;
 
         switch (style) {
         case CalendarPatternStyle::Short:
-            name_index = data->short_standard_name;
+            name_index = (in_dst == TimeZone::InDST::No) ? data->short_standard_name : data->short_daylight_name;
             break;
         case CalendarPatternStyle::Long:
-            name_index = data->long_standard_name;
+            name_index = (in_dst == TimeZone::InDST::No) ? data->long_standard_name : data->long_daylight_name;
             break;
         case CalendarPatternStyle::ShortGeneric:
             name_index = data->short_generic_name;
