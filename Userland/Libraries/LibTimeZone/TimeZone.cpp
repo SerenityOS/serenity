@@ -31,6 +31,16 @@ StringView current_time_zone()
     return canonicalize_time_zone(tzname[0]).value_or("UTC"sv);
 }
 
+Span<StringView const> __attribute__((weak)) all_time_zones()
+{
+#if !ENABLE_TIME_ZONE_DATA
+    static constexpr auto utc = Array { "UTC"sv };
+    return utc;
+#else
+    return {};
+#endif
+}
+
 Optional<TimeZone> __attribute__((weak)) time_zone_from_string([[maybe_unused]] StringView time_zone)
 {
 #if !ENABLE_TIME_ZONE_DATA
