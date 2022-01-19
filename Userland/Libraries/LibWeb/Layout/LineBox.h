@@ -32,6 +32,8 @@ public:
 private:
     friend class BlockContainer;
     friend class InlineFormattingContext;
+    friend class LineBuilder;
+
     NonnullOwnPtrVector<LineBoxFragment> m_fragments;
     float m_width { 0 };
 };

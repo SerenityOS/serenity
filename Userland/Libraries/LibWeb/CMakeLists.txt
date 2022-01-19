@@ -221,6 +221,7 @@ set(SOURCES
     Layout/LayoutPosition.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
+    Layout/LineBuilder.cpp
     Layout/ListItemBox.cpp
     Layout/ListItemMarkerBox.cpp
     Layout/Node.cpp
