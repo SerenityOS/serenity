@@ -743,12 +743,16 @@ void TextEditor::keydown_event(KeyEvent& event)
         auto const start_position = is_start_first ? m_selection.start() : m_selection.end();
         auto const end_position = is_start_first ? m_selection.end() : m_selection.start();
 
-        execute<IndentTextCommand>(TextRange(start_position, end_position));
-
         m_selection.set_start({ start_position.line(), 0 });
 
-        m_selection.set_end({ end_position.line(), end_position.column() + m_soft_tab_width });
+        if (event.modifiers() == KeyModifier::Mod_Shift) {
+            execute<ReverseIndentTextCommand>(TextRange(start_position, end_position));
+            m_selection.set_end({ end_position.line(), end_position.column() - m_soft_tab_width });
+            return;
+        }
 
+        execute<IndentTextCommand>(TextRange(start_position, end_position));
+        m_selection.set_end({ end_position.line(), end_position.column() + m_soft_tab_width });
         return;
     }
 

@@ -79,6 +79,8 @@ public:
     void remove_line(size_t line_index);
     void remove_all_lines();
     void insert_line(size_t line_index, NonnullOwnPtr<TextDocumentLine>);
+    void indent_lines(const TextRange&);
+    void unindent_lines(const TextRange&);
 
     void register_client(Client&);
     void unregister_client(Client&);
@@ -242,6 +244,20 @@ public:
 
 private:
     TextRange m_range;
+    size_t m_tab_width { 0 };
+};
+
+class ReverseIndentTextCommand : public TextDocumentUndoCommand {
+public:
+    ReverseIndentTextCommand(TextDocument&, const TextRange&);
+    virtual void undo() override;
+    virtual void redo() override;
+    virtual String action_text() const override;
+    const TextRange& range() const { return m_range; }
+
+private:
+    TextRange m_range;
+    size_t m_tab_width { 0 };
 };
 
 }

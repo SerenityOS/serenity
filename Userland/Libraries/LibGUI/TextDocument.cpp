@@ -906,10 +906,11 @@ String IndentTextCommand::action_text() const
 
 void IndentTextCommand::redo()
 {
-    const size_t tab_width = m_client->soft_tab_width();
+    if (m_tab_width == 0)
+        m_tab_width = m_client->soft_tab_width();
 
     StringBuilder builder;
-    for (size_t i = 0; i < tab_width; ++i)
+    for (size_t i = 0; i < m_tab_width; ++i)
         builder.append(' ');
 
     auto const text = builder.build();
@@ -920,8 +921,77 @@ void IndentTextCommand::redo()
 
 void IndentTextCommand::undo()
 {
-    m_document.remove(m_range);
-    m_document.set_all_cursors(m_range.start());
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
+        auto const view = m_document.line(i).view();
+
+        if (view.length() < 4)
+            continue;
+
+        bool valid_line = true;
+        for (size_t j = 0; j < m_tab_width; j++) {
+            if (view.at(j) != ' ') {
+                valid_line = false;
+                break;
+            }
+        }
+
+        if (!valid_line)
+            continue;
+
+        m_document.remove({ { i, 0 }, { i, m_tab_width } });
+    }
+}
+
+ReverseIndentTextCommand::ReverseIndentTextCommand(TextDocument& document, const TextRange& range)
+    : TextDocumentUndoCommand(document)
+    , m_range(range)
+{
+}
+
+String ReverseIndentTextCommand::action_text() const
+{
+    return "Reverse-indent Text";
+}
+
+void ReverseIndentTextCommand::redo()
+{
+    if (m_tab_width == 0)
+        m_tab_width = m_client->soft_tab_width();
+
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
+        auto const view = m_document.line(i).view();
+
+        if (view.length() < 4)
+            continue;
+
+        bool valid_line = true;
+        for (size_t j = 0; j < m_tab_width; j++) {
+            if (view.at(j) != ' ') {
+                valid_line = false;
+                break;
+            }
+        }
+
+        if (!valid_line)
+            continue;
+
+        m_document.remove({ { i, 0 }, { i, m_tab_width } });
+    }
+}
+
+void ReverseIndentTextCommand::undo()
+{
+    if (m_tab_width == 0)
+        m_tab_width = m_client->soft_tab_width();
+
+    StringBuilder builder;
+    for (size_t i = 0; i < m_tab_width; ++i)
+        builder.append(' ');
+
+    auto const text = builder.build();
+
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++)
+        m_document.insert_at({ i, 0 }, text, m_client);
 }
 
 TextPosition TextDocument::insert_at(const TextPosition& position, StringView text, const Client* client)
