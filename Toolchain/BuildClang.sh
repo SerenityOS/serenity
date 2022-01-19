@@ -294,6 +294,10 @@ pushd "$DIR/Build/clang"
     done
 popd
 
+pushd "$DIR/Local/clang/bin/"
+    buildstep "mold_symlink" ln -s ../../mold/bin/mold ld.mold
+popd
+
 # === SAVE TO CACHE ===
 
 pushd "$DIR"
