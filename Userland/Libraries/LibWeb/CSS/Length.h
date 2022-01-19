@@ -147,3 +147,11 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<Web::CSS::Length> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Length const& length)
+    {
+        return Formatter<StringView>::format(builder, length.to_string());
+    }
+};
