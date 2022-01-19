@@ -139,3 +139,19 @@ public:
 };
 
 }
+
+template<>
+struct AK::Formatter<Web::CSS::Percentage> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Percentage const& percentage)
+    {
+        return Formatter<StringView>::format(builder, percentage.to_string());
+    }
+};
+
+template<>
+struct AK::Formatter<Web::CSS::LengthPercentage> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::LengthPercentage const& length_percentage)
+    {
+        return Formatter<StringView>::format(builder, length_percentage.to_string());
+    }
+};
