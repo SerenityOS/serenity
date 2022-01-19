@@ -232,4 +232,16 @@ private:
     TextRange m_range;
 };
 
+class IndentTextCommand : public TextDocumentUndoCommand {
+public:
+    IndentTextCommand(TextDocument&, const TextRange&);
+    virtual void undo() override;
+    virtual void redo() override;
+    virtual String action_text() const override;
+    const TextRange& range() const { return m_range; }
+
+private:
+    TextRange m_range;
+};
+
 }

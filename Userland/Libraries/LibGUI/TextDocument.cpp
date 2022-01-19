@@ -893,6 +893,37 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(new_cursor);
 }
 
+IndentTextCommand::IndentTextCommand(TextDocument& document, const TextRange& range)
+    : TextDocumentUndoCommand(document)
+    , m_range(range)
+{
+}
+
+String IndentTextCommand::action_text() const
+{
+    return "Indent Text";
+}
+
+void IndentTextCommand::redo()
+{
+    const size_t tab_width = m_client->soft_tab_width();
+
+    StringBuilder builder;
+    for (size_t i = 0; i < tab_width; ++i)
+        builder.append(' ');
+
+    auto const text = builder.build();
+
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++)
+        m_document.insert_at({ i, 0 }, text, m_client);
+}
+
+void IndentTextCommand::undo()
+{
+    m_document.remove(m_range);
+    m_document.set_all_cursors(m_range.start());
+}
+
 TextPosition TextDocument::insert_at(const TextPosition& position, StringView text, const Client* client)
 {
     TextPosition cursor = position;
@@ -992,5 +1023,4 @@ void TextDocument::set_unmodified()
 {
     m_undo_stack.set_current_unmodified();
 }
-
 }

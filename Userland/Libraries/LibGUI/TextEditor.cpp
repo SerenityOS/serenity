@@ -735,6 +735,23 @@ void TextEditor::select_all()
 
 void TextEditor::keydown_event(KeyEvent& event)
 {
+    if (has_selection() && event.key() == KeyCode::Key_Tab) {
+        auto const on_same_line = m_selection.start().line() == m_selection.end().line();
+        auto const same_line_and_first = on_same_line && m_selection.start().column() < m_selection.end().column();
+        auto const is_start_first = same_line_and_first || (m_selection.start().line() < m_selection.end().line());
+
+        auto const start_position = is_start_first ? m_selection.start() : m_selection.end();
+        auto const end_position = is_start_first ? m_selection.end() : m_selection.start();
+
+        execute<IndentTextCommand>(TextRange(start_position, end_position));
+
+        m_selection.set_start({ start_position.line(), 0 });
+
+        m_selection.set_end({ end_position.line(), end_position.column() + m_soft_tab_width });
+
+        return;
+    }
+
     if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
         TemporaryChange change { m_should_keep_autocomplete_box, true };
         if (m_autocomplete_box->apply_suggestion() == AutocompleteProvider::Entry::HideAutocompleteAfterApplying::Yes)
@@ -1409,10 +1426,7 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
     ReflowDeferrer defer(*this);
     VERIFY(is_editable());
 
-    // If some text is selected and the input is a tab, indent the content instead of replacing it.
-    auto const should_indent_content = has_selection() && text == "\t";
-
-    if (has_selection() && !should_indent_content)
+    if (has_selection())
         delete_selection();
 
     // Check if adding a newline leaves the previous line as just whitespace.
@@ -1421,23 +1435,7 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         && clear_length > 0
         && current_line().leading_spaces() == clear_length;
 
-    if (!should_indent_content)
-        execute<InsertTextCommand>(text, m_cursor);
-    else {
-        auto const on_same_line = m_selection.start().line() == m_selection.end().line();
-        auto const same_line_and_first = on_same_line && m_selection.start().column() < m_selection.end().column();
-        auto const is_start_first = same_line_and_first || (m_selection.start().line() < m_selection.end().line());
-
-        auto const start_position = is_start_first ? m_selection.start() : m_selection.end();
-        auto const end_position = is_start_first ? m_selection.end() : m_selection.start();
-
-        m_selection.set_start({ start_position.line(), 0 });
-
-        for (size_t i = start_position.line(); i <= end_position.line(); i++)
-            execute<InsertTextCommand>(text, TextPosition(i, 0));
-
-        m_selection.set_end({ end_position.line(), end_position.column() + m_soft_tab_width });
-    }
+    execute<InsertTextCommand>(text, m_cursor);
 
     if (should_clear_last_line) { // If it does leave just whitespace, clear it.
         auto const original_cursor_position = cursor();
