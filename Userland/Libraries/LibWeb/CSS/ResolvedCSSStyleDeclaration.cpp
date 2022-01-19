@@ -439,6 +439,13 @@ static NonnullRefPtr<StyleValue> value_or_default(Optional<StyleProperty> proper
     return default_style;
 }
 
+static NonnullRefPtr<StyleValue> style_value_for_length_percentage(LengthPercentage const& length_percentage)
+{
+    if (length_percentage.is_percentage())
+        return PercentageStyleValue::create(length_percentage.percentage());
+    return LengthStyleValue::create(length_percentage.length());
+}
+
 RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
     switch (property_id) {
@@ -474,8 +481,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         switch (layout_node.computed_values().flex_basis().type) {
         case FlexBasis::Content:
             return IdentifierStyleValue::create(CSS::ValueID::Content);
-        case FlexBasis::Length:
-            return LengthStyleValue::create(layout_node.computed_values().flex_basis().length);
+        case FlexBasis::LengthPercentage:
+            return style_value_for_length_percentage(*layout_node.computed_values().flex_basis().length_percentage);
         case FlexBasis::Auto:
             return IdentifierStyleValue::create(CSS::ValueID::Auto);
         default:

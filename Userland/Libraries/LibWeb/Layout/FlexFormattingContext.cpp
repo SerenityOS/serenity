@@ -17,9 +17,12 @@
 
 namespace Web::Layout {
 
-static float get_pixel_size(Box const& box, CSS::Length const& length)
+static float get_pixel_size(Box const& box, CSS::LengthPercentage const& length_percentage)
 {
-    return length.resolved(CSS::Length::make_px(0), box, box.containing_block()->width()).to_px(box);
+    auto inner_main_size = CSS::Length::make_px(box.containing_block()->width());
+    return length_percentage.resolved(inner_main_size)
+        .resolved(CSS::Length::make_px(0), box, box.containing_block()->width())
+        .to_px(box);
 }
 
 FlexFormattingContext::FlexFormattingContext(Box& flex_container, FormattingContext* parent)
@@ -461,7 +464,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
         if (used_flex_basis.is_definite()) {
-            auto specified_base_size = get_pixel_size(child_box, used_flex_basis.length);
+            auto specified_base_size = get_pixel_size(child_box, used_flex_basis.length_percentage.value());
             if (specified_base_size == 0)
                 return calculated_main_size(flex_item.box);
             return specified_base_size;
