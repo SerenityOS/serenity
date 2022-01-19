@@ -3,10 +3,10 @@ describe("normal behavior", () => {
         expect(ShadowRealm.prototype.importValue).toHaveLength(2);
     });
 
-    test("basic functionality", () => {
+    test("fails if module cannot be loaded", () => {
         // NOTE: The actual import is currently not implemented and always pretends to fail for now.
         const shadowRealm = new ShadowRealm();
-        const promise = shadowRealm.importValue("./myModule.js", "foo");
+        const promise = shadowRealm.importValue("./file_should_not_exist.js", "foo");
         let error;
         promise.catch(value => {
             error = value;
@@ -14,7 +14,53 @@ describe("normal behavior", () => {
         expect(promise).toBeInstanceOf(Promise);
         runQueuedPromiseJobs();
         expect(error).toBeInstanceOf(TypeError);
-        expect(error.message).toBe("Import of 'foo' from './myModule.js' failed");
+        expect(error.message).toBe("Cannot find/open module: './file_should_not_exist.js'");
+    });
+
+    test("basic functionality", () => {
+        const shadowRealm = new ShadowRealm();
+        const promise = shadowRealm.importValue("./external-module.mjs", "foo");
+        expect(promise).toBeInstanceOf(Promise);
+        let error = null;
+        let passed = false;
+        promise
+            .then(value => {
+                expect(value).toBe("Well hello shadows");
+                expect(typeof value).toBe("string");
+
+                expect(value).not.toHaveProperty("default", null);
+                expect(value).not.toHaveProperty("bar", null);
+                passed = true;
+            })
+            .catch(value => {
+                error = value;
+            });
+        runQueuedPromiseJobs();
+        expect(error).toBeNull();
+        expect(passed).toBeTrue();
+    });
+
+    test("value from async module", () => {
+        const shadowRealm = new ShadowRealm();
+        const promise = shadowRealm.importValue("./async-module.mjs", "foo");
+        expect(promise).toBeInstanceOf(Promise);
+        let error = null;
+        let passed = false;
+        promise
+            .then(value => {
+                expect(value).toBe("Well hello async shadows");
+                expect(typeof value).toBe("string");
+
+                expect(value).not.toHaveProperty("default", null);
+                expect(value).not.toHaveProperty("bar", null);
+                passed = true;
+            })
+            .catch(value => {
+                error = value;
+            });
+        runQueuedPromiseJobs();
+        expect(error).toBeNull();
+        expect(passed).toBeTrue();
     });
 });
 
