@@ -36,14 +36,14 @@ void InlineNode::split_into_lines(InlineFormattingContext& context, LayoutMode l
     };
 
     if (is_not_undefined_or_auto(computed_values().padding().left)) {
-        float padding_left = computed_values().padding().left.resolved(CSS::Length::make_px(containing_block.width())).resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);
+        float padding_left = computed_values().padding().left.resolved(CSS::Length::make_px(containing_block.width())).resolved(CSS::Length::make_px(0), *this).to_px(*this);
         containing_block.ensure_last_line_box().add_fragment(*this, 0, 0, padding_left, 0, LineBoxFragment::Type::Leading);
     }
 
     NodeWithStyleAndBoxModelMetrics::split_into_lines(context, layout_mode);
 
     if (is_not_undefined_or_auto(computed_values().padding().right)) {
-        float padding_right = computed_values().padding().right.resolved(CSS::Length::make_px(containing_block.width())).resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);
+        float padding_right = computed_values().padding().right.resolved(CSS::Length::make_px(containing_block.width())).resolved(CSS::Length::make_px(0), *this).to_px(*this);
         containing_block.ensure_last_line_box().add_fragment(*this, 0, 0, padding_right, 0, LineBoxFragment::Type::Trailing);
     }
 }
@@ -66,9 +66,9 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
 
             if (auto computed_box_shadow = computed_values().box_shadow(); computed_box_shadow.has_value()) {
                 auto box_shadow_data = Painting::BoxShadowData {
-                    .offset_x = (int)computed_box_shadow->offset_x.resolved_or_zero(*this, rect.width()).to_px(*this),
-                    .offset_y = (int)computed_box_shadow->offset_y.resolved_or_zero(*this, rect.height()).to_px(*this),
-                    .blur_radius = (int)computed_box_shadow->blur_radius.resolved_or_zero(*this, rect.width()).to_px(*this),
+                    .offset_x = (int)computed_box_shadow->offset_x.resolved_or_zero(*this).to_px(*this),
+                    .offset_y = (int)computed_box_shadow->offset_y.resolved_or_zero(*this).to_px(*this),
+                    .blur_radius = (int)computed_box_shadow->blur_radius.resolved_or_zero(*this).to_px(*this),
                     .color = computed_box_shadow->color
                 };
                 Painting::paint_box_shadow(context, enclosing_int_rect(rect), box_shadow_data);

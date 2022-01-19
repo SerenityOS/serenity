@@ -45,9 +45,9 @@ public:
     static Length make_px(float value);
     Length percentage_of(Percentage const&) const;
 
-    Length resolved(const Length& fallback_for_undefined, const Layout::Node& layout_node, float reference_for_percent) const;
-    Length resolved_or_auto(const Layout::Node& layout_node, float reference_for_percent) const;
-    Length resolved_or_zero(const Layout::Node& layout_node, float reference_for_percent) const;
+    Length resolved(Length const& fallback_for_undefined, Layout::Node const& layout_node) const;
+    Length resolved_or_auto(Layout::Node const& layout_node) const;
+    Length resolved_or_zero(Layout::Node const& layout_node) const;
 
     bool is_undefined_or_auto() const { return m_type == Type::Undefined || m_type == Type::Auto; }
     bool is_undefined() const { return m_type == Type::Undefined; }
@@ -136,7 +136,7 @@ public:
     float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const;
 
 private:
-    float resolve_calculated_value(const Layout::Node& layout_node, float reference_for_percent) const;
+    float resolve_calculated_value(Layout::Node const& layout_node) const;
 
     const char* unit_name() const;
 
