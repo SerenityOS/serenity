@@ -104,12 +104,12 @@ public:
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     Optional<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
-    const CSS::Length& width() const { return m_noninherited.width; }
-    const CSS::Length& min_width() const { return m_noninherited.min_width; }
-    const CSS::Length& max_width() const { return m_noninherited.max_width; }
-    const CSS::Length& height() const { return m_noninherited.height; }
-    const CSS::Length& min_height() const { return m_noninherited.min_height; }
-    const CSS::Length& max_height() const { return m_noninherited.max_height; }
+    CSS::LengthPercentage const& width() const { return m_noninherited.width; }
+    CSS::LengthPercentage const& min_width() const { return m_noninherited.min_width; }
+    CSS::LengthPercentage const& max_width() const { return m_noninherited.max_width; }
+    CSS::LengthPercentage const& height() const { return m_noninherited.height; }
+    CSS::LengthPercentage const& min_height() const { return m_noninherited.min_height; }
+    CSS::LengthPercentage const& max_height() const { return m_noninherited.max_height; }
 
     const CSS::LengthBox& offset() const { return m_noninherited.offset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
@@ -169,12 +169,12 @@ protected:
         Optional<int> z_index;
         CSS::TextDecorationLine text_decoration_line { InitialValues::text_decoration_line() };
         CSS::Position position { InitialValues::position() };
-        CSS::Length width;
-        CSS::Length min_width;
-        CSS::Length max_width;
-        CSS::Length height;
-        CSS::Length min_height;
-        CSS::Length max_height;
+        CSS::LengthPercentage width { Length::make_auto() };
+        CSS::LengthPercentage min_width { Length::make_auto() };
+        CSS::LengthPercentage max_width { Length::make_auto() };
+        CSS::LengthPercentage height { Length::make_auto() };
+        CSS::LengthPercentage min_height { Length::make_auto() };
+        CSS::LengthPercentage max_height { Length::make_auto() };
         CSS::LengthBox offset;
         CSS::LengthBox margin;
         CSS::LengthBox padding;
@@ -222,12 +222,12 @@ public:
     void set_text_transform(CSS::TextTransform value) { m_inherited.text_transform = value; }
     void set_position(CSS::Position position) { m_noninherited.position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_inherited.white_space = value; }
-    void set_width(const CSS::Length& width) { m_noninherited.width = width; }
-    void set_min_width(const CSS::Length& width) { m_noninherited.min_width = width; }
-    void set_max_width(const CSS::Length& width) { m_noninherited.max_width = width; }
-    void set_height(const CSS::Length& height) { m_noninherited.height = height; }
-    void set_min_height(const CSS::Length& height) { m_noninherited.min_height = height; }
-    void set_max_height(const CSS::Length& height) { m_noninherited.max_height = height; }
+    void set_width(CSS::LengthPercentage const& width) { m_noninherited.width = width; }
+    void set_min_width(CSS::LengthPercentage const& width) { m_noninherited.min_width = width; }
+    void set_max_width(CSS::LengthPercentage const& width) { m_noninherited.max_width = width; }
+    void set_height(CSS::LengthPercentage const& height) { m_noninherited.height = height; }
+    void set_min_height(CSS::LengthPercentage const& height) { m_noninherited.min_height = height; }
+    void set_max_height(CSS::LengthPercentage const& height) { m_noninherited.max_height = height; }
     void set_offset(const CSS::LengthBox& offset) { m_noninherited.offset = offset; }
     void set_margin(const CSS::LengthBox& margin) { m_noninherited.margin = margin; }
     void set_padding(const CSS::LengthBox& padding) { m_noninherited.padding = padding; }

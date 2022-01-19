@@ -191,16 +191,17 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
     if (box.is_inline_block()) {
         auto& inline_block = const_cast<BlockContainer&>(verify_cast<BlockContainer>(box));
 
-        if (inline_block.computed_values().width().is_undefined_or_auto()) {
+        if (inline_block.computed_values().width().is_length() && inline_block.computed_values().width().length().is_undefined_or_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);
+            auto width_of_containing_block = CSS::Length::make_px(containing_block().width());
 
-            auto margin_left = inline_block.computed_values().margin().left.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
+            auto margin_left = inline_block.computed_values().margin().left.resolved(width_of_containing_block).resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
             auto border_left_width = inline_block.computed_values().border_left().width;
-            auto padding_left = inline_block.computed_values().padding().left.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
+            auto padding_left = inline_block.computed_values().padding().left.resolved(width_of_containing_block).resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
 
-            auto margin_right = inline_block.computed_values().margin().right.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
+            auto margin_right = inline_block.computed_values().margin().right.resolved(width_of_containing_block).resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
             auto border_right_width = inline_block.computed_values().border_right().width;
-            auto padding_right = inline_block.computed_values().padding().right.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
+            auto padding_right = inline_block.computed_values().padding().right.resolved(width_of_containing_block).resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
 
             auto available_width = containing_block().width()
                 - margin_left
@@ -213,14 +214,16 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
             auto width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
             inline_block.set_width(width);
         } else {
-            inline_block.set_width(inline_block.computed_values().width().resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block));
+            auto container_width = CSS::Length::make_px(containing_block().width());
+            inline_block.set_width(inline_block.computed_values().width().resolved(container_width).resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block));
         }
         (void)layout_inside(inline_block, layout_mode);
 
-        if (inline_block.computed_values().height().is_undefined_or_auto()) {
+        if (inline_block.computed_values().height().is_length() && inline_block.computed_values().height().length().is_undefined_or_auto()) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
         } else {
-            inline_block.set_height(inline_block.computed_values().height().resolved_or_zero(inline_block, containing_block().height()).to_px(inline_block));
+            auto container_height = CSS::Length::make_px(containing_block().height());
+            inline_block.set_height(inline_block.computed_values().height().resolved(container_height).resolved_or_zero(inline_block, containing_block().height()).to_px(inline_block));
         }
         return;
     }
