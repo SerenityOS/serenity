@@ -17,7 +17,7 @@ enum OptionId {
 };
 
 class FindDialog : public GUI::Dialog {
-    C_OBJECT(FindDialog);
+    C_OBJECT(FindDialog)
 
 public:
     static int show(GUI::Window* parent_window, String& out_tex, ByteBuffer& out_buffer, bool& find_all);

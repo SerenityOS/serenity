@@ -17,7 +17,7 @@ REGISTER_WIDGET(GUI, Breadcrumbbar)
 namespace GUI {
 
 class BreadcrumbButton : public Button {
-    C_OBJECT(BreadcrumbButton);
+    C_OBJECT(BreadcrumbButton)
 
 public:
     virtual ~BreadcrumbButton() override { }

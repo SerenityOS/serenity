@@ -19,7 +19,7 @@ class WebContentClient;
 class OutOfProcessWebView final
     : public GUI::AbstractScrollableWidget
     , public Web::WebViewHooks {
-    C_OBJECT(OutOfProcessWebView);
+    C_OBJECT(OutOfProcessWebView)
 
 public:
     virtual ~OutOfProcessWebView() override;

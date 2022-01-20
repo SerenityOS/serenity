@@ -12,7 +12,7 @@
 namespace Breakout {
 
 class Game final : public GUI::Widget {
-    C_OBJECT(Game);
+    C_OBJECT(Game)
 
 public:
     static const int game_width = 480;

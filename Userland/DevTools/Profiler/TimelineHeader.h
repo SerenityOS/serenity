@@ -14,7 +14,7 @@ class Profile;
 struct Process;
 
 class TimelineHeader final : public GUI::Frame {
-    C_OBJECT(TimelineHeader);
+    C_OBJECT(TimelineHeader)
 
 public:
     virtual ~TimelineHeader();

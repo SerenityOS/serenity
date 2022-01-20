@@ -15,7 +15,7 @@ namespace GUI {
 class ComboBoxEditor;
 
 class ComboBox : public Frame {
-    C_OBJECT(ComboBox);
+    C_OBJECT(ComboBox)
 
 public:
     virtual ~ComboBox() override;

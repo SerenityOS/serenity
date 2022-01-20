@@ -11,7 +11,7 @@
 namespace GUI {
 
 class ScrollableContainerWidget : public GUI::AbstractScrollableWidget {
-    C_OBJECT(ScrollableContainerWidget);
+    C_OBJECT(ScrollableContainerWidget)
 
 public:
     virtual ~ScrollableContainerWidget();

@@ -17,7 +17,7 @@ namespace FileSystemAccessServer {
 
 class ClientConnection final
     : public IPC::ClientConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint> {
-    C_OBJECT(ClientConnection);
+    C_OBJECT(ClientConnection)
 
 public:
     ~ClientConnection() override;

@@ -14,7 +14,7 @@
 namespace Spreadsheet {
 
 class SpreadsheetWidget final : public GUI::Widget {
-    C_OBJECT(SpreadsheetWidget);
+    C_OBJECT(SpreadsheetWidget)
 
 public:
     ~SpreadsheetWidget();

@@ -22,7 +22,7 @@ REGISTER_WIDGET(PixelPaint, PaletteWidget);
 namespace PixelPaint {
 
 class ColorWidget : public GUI::Frame {
-    C_OBJECT(ColorWidget);
+    C_OBJECT(ColorWidget)
 
 public:
     virtual ~ColorWidget() override
@@ -63,7 +63,7 @@ private:
 };
 
 class SelectedColorWidget : public GUI::Frame {
-    C_OBJECT(SelectedColorWidget);
+    C_OBJECT(SelectedColorWidget)
 
 public:
     virtual ~SelectedColorWidget() override { }

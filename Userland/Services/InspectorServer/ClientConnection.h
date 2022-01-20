@@ -15,7 +15,7 @@ namespace InspectorServer {
 
 class ClientConnection final
     : public IPC::ClientConnection<InspectorClientEndpoint, InspectorServerEndpoint> {
-    C_OBJECT(ClientConnection);
+    C_OBJECT(ClientConnection)
 
 public:
     ~ClientConnection() override;

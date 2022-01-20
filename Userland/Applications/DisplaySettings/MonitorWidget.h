@@ -11,7 +11,7 @@
 namespace DisplaySettings {
 
 class MonitorWidget final : public GUI::Widget {
-    C_OBJECT(MonitorWidget);
+    C_OBJECT(MonitorWidget)
 
 public:
     bool set_wallpaper(String path);

@@ -12,7 +12,7 @@
 namespace GUI {
 
 class AbstractWizardPage : public Widget {
-    C_OBJECT_ABSTRACT(AbstractWizardPage);
+    C_OBJECT_ABSTRACT(AbstractWizardPage)
 
 public:
     virtual ~AbstractWizardPage() override;

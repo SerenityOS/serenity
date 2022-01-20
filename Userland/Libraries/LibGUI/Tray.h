@@ -12,7 +12,7 @@
 namespace GUI {
 
 class Tray : public GUI::Frame {
-    C_OBJECT(Tray);
+    C_OBJECT(Tray)
 
 public:
     virtual ~Tray() override;

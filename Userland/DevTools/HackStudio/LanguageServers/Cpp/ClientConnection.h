@@ -12,7 +12,7 @@
 namespace LanguageServers::Cpp {
 
 class ClientConnection final : public LanguageServers::ClientConnection {
-    C_OBJECT(ClientConnection);
+    C_OBJECT(ClientConnection)
 
 private:
     ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)

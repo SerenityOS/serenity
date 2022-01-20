@@ -19,7 +19,7 @@
 namespace Taskbar {
 
 class ClockWidget final : public GUI::Frame {
-    C_OBJECT(ClockWidget);
+    C_OBJECT(ClockWidget)
 
 public:
     virtual ~ClockWidget() override;

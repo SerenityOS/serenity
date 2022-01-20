@@ -19,7 +19,7 @@ namespace Threading {
 TYPEDEF_DISTINCT_ORDERED_ID(intptr_t, ThreadError);
 
 class Thread final : public Core::Object {
-    C_OBJECT(Thread);
+    C_OBJECT(Thread)
 
 public:
     virtual ~Thread();

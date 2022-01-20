@@ -14,7 +14,7 @@
 
 class CatDog final : public GUI::Widget
     , GUI::MouseTracker {
-    C_OBJECT(CatDog);
+    C_OBJECT(CatDog)
 
 public:
     virtual void timer_event(Core::TimerEvent&) override;

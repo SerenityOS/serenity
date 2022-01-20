@@ -11,7 +11,7 @@
 namespace GUI {
 
 class RadioButton : public AbstractButton {
-    C_OBJECT(RadioButton);
+    C_OBJECT(RadioButton)
 
 public:
     virtual ~RadioButton() override;

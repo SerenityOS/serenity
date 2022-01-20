@@ -58,7 +58,7 @@ static const Color s_palette[] = {
 };
 
 class Fire : public GUI::Frame {
-    C_OBJECT(Fire);
+    C_OBJECT(Fire)
 
 public:
     virtual ~Fire() override;

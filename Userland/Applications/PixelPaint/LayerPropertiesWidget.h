@@ -13,7 +13,7 @@ namespace PixelPaint {
 class Layer;
 
 class LayerPropertiesWidget final : public GUI::Widget {
-    C_OBJECT(LayerPropertiesWidget);
+    C_OBJECT(LayerPropertiesWidget)
 
 public:
     virtual ~LayerPropertiesWidget() override;

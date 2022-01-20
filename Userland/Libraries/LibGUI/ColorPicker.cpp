@@ -19,7 +19,7 @@
 namespace GUI {
 
 class ColorButton : public AbstractButton {
-    C_OBJECT(ColorButton);
+    C_OBJECT(ColorButton)
 
 public:
     virtual ~ColorButton() override;
@@ -43,7 +43,7 @@ private:
 };
 
 class ColorField final : public GUI::Frame {
-    C_OBJECT(ColorField);
+    C_OBJECT(ColorField)
 
 public:
     Function<void(Color)> on_pick;
@@ -74,7 +74,7 @@ private:
 };
 
 class ColorSlider final : public GUI::Frame {
-    C_OBJECT(ColorSlider);
+    C_OBJECT(ColorSlider)
 
 public:
     Function<void(double)> on_pick;
@@ -100,7 +100,7 @@ private:
 };
 
 class ColorPreview final : public GUI::Widget {
-    C_OBJECT(ColorPreview);
+    C_OBJECT(ColorPreview)
 
 public:
     void set_color(Color);
@@ -113,7 +113,7 @@ private:
 };
 
 class CustomColorWidget final : public GUI::Widget {
-    C_OBJECT(CustomColorWidget);
+    C_OBJECT(CustomColorWidget)
 
 public:
     Function<void(Color)> on_pick;

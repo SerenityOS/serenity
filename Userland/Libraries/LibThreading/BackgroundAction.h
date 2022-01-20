@@ -35,7 +35,7 @@ private:
 template<typename Result>
 class BackgroundAction final : public Core::Object
     , private BackgroundActionBase {
-    C_OBJECT(BackgroundAction);
+    C_OBJECT(BackgroundAction)
 
 public:
     void cancel()

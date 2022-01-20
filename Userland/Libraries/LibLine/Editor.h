@@ -132,7 +132,7 @@ struct Configuration {
     [](auto& editor) { editor.name();  return false; }
 
 class Editor : public Core::Object {
-    C_OBJECT(Editor);
+    C_OBJECT(Editor)
 
 public:
     enum class Error {

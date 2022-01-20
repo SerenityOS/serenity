@@ -13,7 +13,7 @@
 namespace GUI {
 
 class AbstractZoomPanWidget : public GUI::Frame {
-    C_OBJECT(AbstractZoomPanWidget);
+    C_OBJECT(AbstractZoomPanWidget)
 
 public:
     void set_scale(float scale);

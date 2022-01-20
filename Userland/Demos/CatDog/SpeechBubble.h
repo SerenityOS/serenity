@@ -9,7 +9,7 @@
 #include <LibGUI/Widget.h>
 
 class SpeechBubble final : public GUI::Widget {
-    C_OBJECT(SpeechBubble);
+    C_OBJECT(SpeechBubble)
 
 public:
     virtual void paint_event(GUI::PaintEvent&) override;

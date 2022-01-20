@@ -12,7 +12,7 @@
 #include <LibGUI/TextBox.h>
 
 class CharacterSearchWidget final : public GUI::Widget {
-    C_OBJECT(CharacterSearchWidget);
+    C_OBJECT(CharacterSearchWidget)
 
 public:
     virtual ~CharacterSearchWidget() override;

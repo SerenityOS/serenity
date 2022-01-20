@@ -18,7 +18,7 @@ namespace ThemeEditor {
 class MiniWidgetGallery;
 
 class PreviewWidget final : public GUI::Frame {
-    C_OBJECT(PreviewWidget);
+    C_OBJECT(PreviewWidget)
 
 public:
     virtual ~PreviewWidget() override;

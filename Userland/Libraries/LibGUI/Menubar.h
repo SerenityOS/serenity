@@ -17,7 +17,7 @@
 namespace GUI {
 
 class Menubar : public Core::Object {
-    C_OBJECT(Menubar);
+    C_OBJECT(Menubar)
 
 public:
     virtual ~Menubar() override;

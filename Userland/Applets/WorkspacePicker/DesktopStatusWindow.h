@@ -11,7 +11,7 @@
 class DesktopStatusWidget;
 
 class DesktopStatusWindow : public GUI::Window {
-    C_OBJECT(DesktopStatusWindow);
+    C_OBJECT(DesktopStatusWindow)
 
 public:
     virtual ~DesktopStatusWindow() override;

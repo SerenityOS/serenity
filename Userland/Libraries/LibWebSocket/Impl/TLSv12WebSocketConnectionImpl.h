@@ -17,7 +17,7 @@
 namespace WebSocket {
 
 class TLSv12WebSocketConnectionImpl final : public AbstractWebSocketImpl {
-    C_OBJECT(TLSv12WebSocketConnectionImpl);
+    C_OBJECT(TLSv12WebSocketConnectionImpl)
 
 public:
     virtual ~TLSv12WebSocketConnectionImpl() override;

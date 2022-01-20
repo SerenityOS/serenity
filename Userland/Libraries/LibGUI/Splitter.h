@@ -11,7 +11,7 @@
 namespace GUI {
 
 class Splitter : public Widget {
-    C_OBJECT(Splitter);
+    C_OBJECT(Splitter)
 
 public:
     virtual ~Splitter() override;

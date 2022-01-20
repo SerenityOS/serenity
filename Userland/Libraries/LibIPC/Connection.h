@@ -27,7 +27,7 @@
 namespace IPC {
 
 class ConnectionBase : public Core::Object {
-    C_OBJECT_ABSTRACT(ConnectionBase);
+    C_OBJECT_ABSTRACT(ConnectionBase)
 
 public:
     virtual ~ConnectionBase() override;

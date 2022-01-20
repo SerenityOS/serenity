@@ -11,7 +11,7 @@
 namespace GUI {
 
 class PasswordInputDialog : public Dialog {
-    C_OBJECT(PasswordInputDialog);
+    C_OBJECT(PasswordInputDialog)
 
 public:
     virtual ~PasswordInputDialog() override;

@@ -18,7 +18,7 @@
 namespace DisplaySettings {
 
 class BackgroundSettingsWidget : public GUI::SettingsWindow::Tab {
-    C_OBJECT(BackgroundSettingsWidget);
+    C_OBJECT(BackgroundSettingsWidget)
 
 public:
     virtual ~BackgroundSettingsWidget() override;

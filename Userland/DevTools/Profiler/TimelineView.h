@@ -14,7 +14,7 @@ class Profile;
 class TimelineTrack;
 
 class TimelineView final : public GUI::Widget {
-    C_OBJECT(TimelineView);
+    C_OBJECT(TimelineView)
 
 public:
     virtual ~TimelineView() override;

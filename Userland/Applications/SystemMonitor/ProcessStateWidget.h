@@ -9,7 +9,7 @@
 #include <LibGUI/Widget.h>
 
 class ProcessStateWidget final : public GUI::Widget {
-    C_OBJECT(ProcessStateWidget);
+    C_OBJECT(ProcessStateWidget)
 
 public:
     virtual ~ProcessStateWidget() override;

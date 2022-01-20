@@ -13,7 +13,7 @@
 namespace GUI {
 
 class FontPicker final : public GUI::Dialog {
-    C_OBJECT(FontPicker);
+    C_OBJECT(FontPicker)
 
 public:
     virtual ~FontPicker() override;

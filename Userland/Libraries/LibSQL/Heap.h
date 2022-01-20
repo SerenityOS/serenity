@@ -30,7 +30,7 @@ constexpr static u32 BLOCKSIZE = 1024;
  * Currently only B-Trees and tuple stores are implemented.
  */
 class Heap : public Core::Object {
-    C_OBJECT(Heap);
+    C_OBJECT(Heap)
 
 public:
     virtual ~Heap() override;

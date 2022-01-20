@@ -40,7 +40,7 @@ Toolbar::~Toolbar()
 }
 
 class ToolbarButton final : public Button {
-    C_OBJECT(ToolbarButton);
+    C_OBJECT(ToolbarButton)
 
 public:
     virtual ~ToolbarButton() override { }

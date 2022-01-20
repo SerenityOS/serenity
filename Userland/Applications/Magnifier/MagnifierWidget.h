@@ -11,7 +11,7 @@
 #include <LibGfx/Filters/ColorBlindnessFilter.h>
 
 class MagnifierWidget final : public GUI::Frame {
-    C_OBJECT(MagnifierWidget);
+    C_OBJECT(MagnifierWidget)
 
 public:
     virtual ~MagnifierWidget();

@@ -13,7 +13,7 @@
 namespace DisplaySettings {
 
 class DesktopSettingsWidget : public GUI::SettingsWindow::Tab {
-    C_OBJECT(DesktopSettingsWidget);
+    C_OBJECT(DesktopSettingsWidget)
 
 public:
     virtual ~DesktopSettingsWidget() override;

@@ -15,7 +15,7 @@ namespace SQLServer {
 
 class ClientConnection final
     : public IPC::ClientConnection<SQLClientEndpoint, SQLServerEndpoint> {
-    C_OBJECT(ClientConnection);
+    C_OBJECT(ClientConnection)
 
 public:
     virtual ~ClientConnection() override;

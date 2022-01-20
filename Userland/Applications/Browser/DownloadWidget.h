@@ -17,7 +17,7 @@
 namespace Browser {
 
 class DownloadWidget final : public GUI::Widget {
-    C_OBJECT(DownloadWidget);
+    C_OBJECT(DownloadWidget)
 
 public:
     virtual ~DownloadWidget() override;

@@ -31,7 +31,7 @@ struct FilterParameters {
 
 template<size_t N>
 class GenericConvolutionFilterInputDialog : public GUI::Dialog {
-    C_OBJECT(GenericConvolutionFilterInputDialog);
+    C_OBJECT(GenericConvolutionFilterInputDialog)
 
 public:
     Matrix<N, float> const& matrix() const { return m_matrix; }

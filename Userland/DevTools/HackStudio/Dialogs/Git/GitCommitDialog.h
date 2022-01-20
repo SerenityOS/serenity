@@ -18,7 +18,7 @@ namespace HackStudio {
 using OnCommitCallback = Function<void(String const& message)>;
 
 class GitCommitDialog final : public GUI::Dialog {
-    C_OBJECT(GitCommitDialog);
+    C_OBJECT(GitCommitDialog)
 
 public:
     OnCommitCallback on_commit;

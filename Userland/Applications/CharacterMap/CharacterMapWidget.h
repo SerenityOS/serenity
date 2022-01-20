@@ -11,7 +11,7 @@
 #include <LibGUI/Statusbar.h>
 
 class CharacterMapWidget final : public GUI::Widget {
-    C_OBJECT(CharacterMapWidget);
+    C_OBJECT(CharacterMapWidget)
 
 public:
     virtual ~CharacterMapWidget() override;

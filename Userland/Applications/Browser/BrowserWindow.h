@@ -18,7 +18,7 @@ class CookieJar;
 class Tab;
 
 class BrowserWindow final : public GUI::Window {
-    C_OBJECT(BrowserWindow);
+    C_OBJECT(BrowserWindow)
 
 public:
     virtual ~BrowserWindow() override;

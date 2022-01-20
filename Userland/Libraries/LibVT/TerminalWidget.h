@@ -24,7 +24,7 @@ class TerminalWidget final
     : public GUI::Frame
     , public VT::TerminalClient
     , public GUI::Clipboard::ClipboardClient {
-    C_OBJECT(TerminalWidget);
+    C_OBJECT(TerminalWidget)
 
 public:
     virtual ~TerminalWidget() override;

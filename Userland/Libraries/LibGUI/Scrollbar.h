@@ -12,7 +12,7 @@
 namespace GUI {
 
 class Scrollbar : public AbstractSlider {
-    C_OBJECT(Scrollbar);
+    C_OBJECT(Scrollbar)
 
 public:
     virtual ~Scrollbar() override;

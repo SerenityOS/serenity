@@ -21,7 +21,7 @@
 namespace GUI {
 
 class Application : public Core::Object {
-    C_OBJECT(Application);
+    C_OBJECT(Application)
 
 public:
     static Application* the();

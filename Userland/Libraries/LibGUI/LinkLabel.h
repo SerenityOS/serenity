@@ -11,7 +11,7 @@
 namespace GUI {
 
 class LinkLabel : public Label {
-    C_OBJECT(LinkLabel);
+    C_OBJECT(LinkLabel)
 
 public:
     Function<void()> on_click;

@@ -18,7 +18,7 @@
 namespace WebSocket {
 
 class TCPWebSocketConnectionImpl final : public AbstractWebSocketImpl {
-    C_OBJECT(TCPWebSocketConnectionImpl);
+    C_OBJECT(TCPWebSocketConnectionImpl)
 
 public:
     virtual ~TCPWebSocketConnectionImpl() override;

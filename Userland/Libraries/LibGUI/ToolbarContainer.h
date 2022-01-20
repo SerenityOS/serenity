@@ -12,7 +12,7 @@
 namespace GUI {
 
 class ToolbarContainer : public Frame {
-    C_OBJECT(ToolbarContainer);
+    C_OBJECT(ToolbarContainer)
 
 public:
 private:

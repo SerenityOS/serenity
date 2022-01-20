@@ -33,7 +33,7 @@
 namespace {
 
 class UnregisteredWidget final : public GUI::Widget {
-    C_OBJECT(UnregisteredWidget);
+    C_OBJECT(UnregisteredWidget)
 
 private:
     UnregisteredWidget(const String& class_name);

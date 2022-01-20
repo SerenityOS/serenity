@@ -58,7 +58,7 @@ private:
 };
 
 class HashIndex : public Index {
-    C_OBJECT(HashIndex);
+    C_OBJECT(HashIndex)
 
 public:
     ~HashIndex() override = default;

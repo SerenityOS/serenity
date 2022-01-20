@@ -14,7 +14,7 @@
 namespace WebServer {
 
 class Client final : public Core::Object {
-    C_OBJECT(Client);
+    C_OBJECT(Client)
 
 public:
     void start();

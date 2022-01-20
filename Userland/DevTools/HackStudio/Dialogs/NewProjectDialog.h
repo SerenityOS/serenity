@@ -19,7 +19,7 @@
 namespace HackStudio {
 
 class NewProjectDialog : public GUI::Dialog {
-    C_OBJECT(NewProjectDialog);
+    C_OBJECT(NewProjectDialog)
 
 public:
     static int show(GUI::Window* parent_window);

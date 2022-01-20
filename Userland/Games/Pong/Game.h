@@ -20,7 +20,7 @@ namespace Pong {
 
 class Game final : public GUI::Widget
     , GUI::MouseTracker {
-    C_OBJECT(Game);
+    C_OBJECT(Game)
 
 public:
     static const int game_width = 560;

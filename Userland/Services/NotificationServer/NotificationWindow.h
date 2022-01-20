@@ -12,7 +12,7 @@
 namespace NotificationServer {
 
 class NotificationWindow final : public GUI::Window {
-    C_OBJECT(NotificationWindow);
+    C_OBJECT(NotificationWindow)
 
 public:
     virtual ~NotificationWindow() override;

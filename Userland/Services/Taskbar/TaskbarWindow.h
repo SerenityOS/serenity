@@ -15,7 +15,7 @@
 #include <Services/WindowServer/ScreenLayout.h>
 
 class TaskbarWindow final : public GUI::Window {
-    C_OBJECT(TaskbarWindow);
+    C_OBJECT(TaskbarWindow)
 
 public:
     virtual ~TaskbarWindow() override;

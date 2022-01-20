@@ -16,7 +16,7 @@
 #include <LibGfx/Palette.h>
 
 class SquareButton final : public GUI::Button {
-    C_OBJECT(SquareButton);
+    C_OBJECT(SquareButton)
 
 public:
     Function<void()> on_secondary_click;
@@ -43,7 +43,7 @@ private:
 };
 
 class SquareLabel final : public GUI::Label {
-    C_OBJECT(SquareLabel);
+    C_OBJECT(SquareLabel)
 
 public:
     Function<void()> on_chord_click;

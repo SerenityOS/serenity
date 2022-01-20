@@ -20,7 +20,7 @@ namespace LookupServer {
 class DNSAnswer;
 
 class LookupServer final : public Core::Object {
-    C_OBJECT(LookupServer);
+    C_OBJECT(LookupServer)
 
 public:
     static LookupServer& the();

@@ -18,7 +18,7 @@ namespace GUI {
 class FilePicker final
     : public Dialog
     , private ModelClient {
-    C_OBJECT(FilePicker);
+    C_OBJECT(FilePicker)
 
 public:
     enum class Mode {

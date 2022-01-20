@@ -9,7 +9,7 @@
 #include <LibGUI/Widget.h>
 
 class ProcessMemoryMapWidget final : public GUI::Widget {
-    C_OBJECT(ProcessMemoryMapWidget);
+    C_OBJECT(ProcessMemoryMapWidget)
 
 public:
     virtual ~ProcessMemoryMapWidget() override;

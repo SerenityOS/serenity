@@ -15,7 +15,7 @@
 namespace GUI {
 
 class Button : public AbstractButton {
-    C_OBJECT(Button);
+    C_OBJECT(Button)
 
 public:
     virtual ~Button() override;

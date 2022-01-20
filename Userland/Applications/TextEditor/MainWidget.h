@@ -20,7 +20,7 @@
 namespace TextEditor {
 
 class MainWidget final : public GUI::Widget {
-    C_OBJECT(MainWidget);
+    C_OBJECT(MainWidget)
 
 public:
     virtual ~MainWidget() override;

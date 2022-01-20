@@ -14,7 +14,7 @@ namespace GUI {
 class NotificationServerConnection;
 
 class Notification : public Core::Object {
-    C_OBJECT(Notification);
+    C_OBJECT(Notification)
 
     friend class NotificationServerConnection;
 

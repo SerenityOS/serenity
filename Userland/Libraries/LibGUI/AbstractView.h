@@ -18,7 +18,7 @@ class AbstractView
     : public AbstractScrollableWidget
     , public ModelClient {
 
-    C_OBJECT_ABSTRACT(AbstractView);
+    C_OBJECT_ABSTRACT(AbstractView)
 
 public:
     enum class CursorMovement {

@@ -11,7 +11,7 @@
 namespace GUI {
 
 class Breadcrumbbar : public GUI::Widget {
-    C_OBJECT(Breadcrumbbar);
+    C_OBJECT(Breadcrumbbar)
 
 public:
     virtual ~Breadcrumbbar() override;

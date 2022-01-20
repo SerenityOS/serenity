@@ -16,7 +16,7 @@
 
 template<typename EnumT>
 requires(IsEnum<EnumT>) class ProcessorParameterDropdown : public GUI::ComboBox {
-    C_OBJECT(ProcessorParameterDropdown);
+    C_OBJECT(ProcessorParameterDropdown)
 
 public:
     ProcessorParameterDropdown(LibDSP::ProcessorEnumParameter<EnumT>& parameter, Vector<String> modes)

@@ -12,7 +12,7 @@
 namespace GUI {
 
 class AbstractScrollableWidget : public Frame {
-    C_OBJECT_ABSTRACT(AbstractScrollableWidget);
+    C_OBJECT_ABSTRACT(AbstractScrollableWidget)
 
 public:
     virtual ~AbstractScrollableWidget() override;
@@ -81,7 +81,7 @@ protected:
 
 private:
     class AbstractScrollableWidgetScrollbar final : public Scrollbar {
-        C_OBJECT(AbstractScrollableWidgetScrollbar);
+        C_OBJECT(AbstractScrollableWidgetScrollbar)
 
     private:
         explicit AbstractScrollableWidgetScrollbar(AbstractScrollableWidget& owner, Gfx::Orientation orientation)

@@ -11,7 +11,7 @@
 namespace GUI {
 
 class OpacitySlider : public AbstractSlider {
-    C_OBJECT(OpacitySlider);
+    C_OBJECT(OpacitySlider)
 
 public:
     virtual ~OpacitySlider() override;

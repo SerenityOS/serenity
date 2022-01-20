@@ -12,7 +12,7 @@
 namespace HackStudio {
 
 class EvaluateExpressionDialog : public GUI::Dialog {
-    C_OBJECT(EvaluateExpressionDialog);
+    C_OBJECT(EvaluateExpressionDialog)
 
 private:
     explicit EvaluateExpressionDialog(Window* parent_window);

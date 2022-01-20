@@ -26,7 +26,7 @@ enum class GraphType {
 };
 
 class GraphWidget final : public GUI::Frame {
-    C_OBJECT(GraphWidget);
+    C_OBJECT(GraphWidget)
 
 public:
     static constexpr size_t history_size = 24;

@@ -12,7 +12,7 @@
 #include <LibGfx/Palette.h>
 
 class DesktopStatusWidget : public GUI::Widget {
-    C_OBJECT(DesktopStatusWidget);
+    C_OBJECT(DesktopStatusWidget)
 
 public:
     virtual ~DesktopStatusWidget() override

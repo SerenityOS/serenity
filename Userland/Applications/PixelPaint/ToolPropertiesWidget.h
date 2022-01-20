@@ -16,7 +16,7 @@ namespace PixelPaint {
 class Tool;
 
 class ToolPropertiesWidget final : public GUI::Widget {
-    C_OBJECT(ToolPropertiesWidget);
+    C_OBJECT(ToolPropertiesWidget)
 
 public:
     virtual ~ToolPropertiesWidget() override;

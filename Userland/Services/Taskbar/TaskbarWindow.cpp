@@ -27,7 +27,7 @@
 #include <stdio.h>
 
 class TaskbarWidget final : public GUI::Widget {
-    C_OBJECT(TaskbarWidget);
+    C_OBJECT(TaskbarWidget)
 
 public:
     virtual ~TaskbarWidget() override { }

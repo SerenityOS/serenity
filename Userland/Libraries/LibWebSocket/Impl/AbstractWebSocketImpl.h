@@ -15,7 +15,7 @@
 namespace WebSocket {
 
 class AbstractWebSocketImpl : public Core::Object {
-    C_OBJECT_ABSTRACT(AbstractWebSocketImpl);
+    C_OBJECT_ABSTRACT(AbstractWebSocketImpl)
 
 public:
     virtual ~AbstractWebSocketImpl() override;

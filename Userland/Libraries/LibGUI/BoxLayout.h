@@ -13,7 +13,7 @@
 namespace GUI {
 
 class BoxLayout : public Layout {
-    C_OBJECT(BoxLayout);
+    C_OBJECT(BoxLayout)
 
 public:
     virtual ~BoxLayout() override { }
@@ -34,7 +34,7 @@ private:
 };
 
 class VerticalBoxLayout final : public BoxLayout {
-    C_OBJECT(VerticalBoxLayout);
+    C_OBJECT(VerticalBoxLayout)
 
 private:
     explicit VerticalBoxLayout()
@@ -45,7 +45,7 @@ private:
 };
 
 class HorizontalBoxLayout final : public BoxLayout {
-    C_OBJECT(HorizontalBoxLayout);
+    C_OBJECT(HorizontalBoxLayout)
 
 private:
     explicit HorizontalBoxLayout()

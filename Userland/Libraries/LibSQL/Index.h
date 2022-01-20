@@ -31,7 +31,7 @@ private:
 };
 
 class Index : public Core::Object {
-    C_OBJECT_ABSTRACT(Index);
+    C_OBJECT_ABSTRACT(Index)
 
 public:
     ~Index() override = default;

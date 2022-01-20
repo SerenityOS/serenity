@@ -21,7 +21,7 @@ namespace SQL {
  * of tables, columns, indexes, and other SQL objects.
  */
 class Database : public Core::Object {
-    C_OBJECT(Database);
+    C_OBJECT(Database)
 
 public:
     ~Database() override;

@@ -15,7 +15,7 @@
 #include <LibGfx/Bitmap.h>
 
 class ChessWidget final : public GUI::Frame {
-    C_OBJECT(ChessWidget);
+    C_OBJECT(ChessWidget)
 
 public:
     virtual ~ChessWidget() override;

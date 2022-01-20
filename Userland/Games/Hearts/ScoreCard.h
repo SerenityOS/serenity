@@ -13,7 +13,7 @@
 namespace Hearts {
 
 class ScoreCard : public GUI::Frame {
-    C_OBJECT(ScoreCard);
+    C_OBJECT(ScoreCard)
 
     Gfx::IntSize recommended_size();
 

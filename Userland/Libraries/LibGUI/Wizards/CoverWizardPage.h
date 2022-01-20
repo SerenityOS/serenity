@@ -14,7 +14,7 @@
 namespace GUI {
 
 class CoverWizardPage : public AbstractWizardPage {
-    C_OBJECT(CoverWizardPage);
+    C_OBJECT(CoverWizardPage)
 
     ImageWidget& banner_image_widget() { return *m_banner_image_widget; }
 

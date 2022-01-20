@@ -25,7 +25,7 @@ class Tool;
 class ImageEditor final
     : public GUI::AbstractZoomPanWidget
     , public ImageClient {
-    C_OBJECT(ImageEditor);
+    C_OBJECT(ImageEditor)
 
 public:
     virtual ~ImageEditor() override;

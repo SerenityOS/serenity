@@ -13,7 +13,7 @@
 namespace PixelPaint {
 
 class EditGuideDialog final : public GUI::Dialog {
-    C_OBJECT(EditGuideDialog);
+    C_OBJECT(EditGuideDialog)
 
 public:
     String const offset() const { return m_offset; }

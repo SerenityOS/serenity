@@ -11,7 +11,7 @@
 namespace GUI {
 
 class SeparatorWidget : public Widget {
-    C_OBJECT(SeparatorWidget);
+    C_OBJECT(SeparatorWidget)
 
 public:
     virtual ~SeparatorWidget() override;

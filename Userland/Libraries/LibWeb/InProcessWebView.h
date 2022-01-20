@@ -19,7 +19,7 @@ class InProcessWebView final
     : public GUI::AbstractScrollableWidget
     , public WebViewHooks
     , public PageClient {
-    C_OBJECT(InProcessWebView);
+    C_OBJECT(InProcessWebView)
 
 public:
     virtual ~InProcessWebView() override;

@@ -12,7 +12,7 @@
 namespace GUI {
 
 class ColorInput final : public TextEditor {
-    C_OBJECT(ColorInput);
+    C_OBJECT(ColorInput)
 
 public:
     virtual ~ColorInput() override;

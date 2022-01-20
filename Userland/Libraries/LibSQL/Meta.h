@@ -25,7 +25,7 @@ namespace SQL {
  */
 
 class Relation : public Core::Object {
-    C_OBJECT_ABSTRACT(Relation);
+    C_OBJECT_ABSTRACT(Relation)
 
 public:
     u32 hash() const;
@@ -55,7 +55,7 @@ private:
 };
 
 class SchemaDef : public Relation {
-    C_OBJECT(SchemaDef);
+    C_OBJECT(SchemaDef)
 
 public:
     Key key() const override;
@@ -68,7 +68,7 @@ private:
 };
 
 class ColumnDef : public Relation {
-    C_OBJECT(ColumnDef);
+    C_OBJECT(ColumnDef)
 
 public:
     Key key() const override;
@@ -93,7 +93,7 @@ private:
 };
 
 class KeyPartDef : public ColumnDef {
-    C_OBJECT(KeyPartDef);
+    C_OBJECT(KeyPartDef)
 
 public:
     Order sort_order() const { return m_sort_order; }
@@ -105,7 +105,7 @@ private:
 };
 
 class IndexDef : public Relation {
-    C_OBJECT(IndexDef);
+    C_OBJECT(IndexDef)
 
 public:
     ~IndexDef() override = default;
@@ -130,7 +130,7 @@ private:
 };
 
 class TableDef : public Relation {
-    C_OBJECT(TableDef);
+    C_OBJECT(TableDef)
 
 public:
     Key key() const override;

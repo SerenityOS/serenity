@@ -13,7 +13,7 @@
 namespace FileManager {
 
 class FileOperationProgressWidget : public GUI::Widget {
-    C_OBJECT(FileOperationProgressWidget);
+    C_OBJECT(FileOperationProgressWidget)
 
 public:
     virtual ~FileOperationProgressWidget() override;

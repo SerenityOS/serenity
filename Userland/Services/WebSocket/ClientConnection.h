@@ -16,7 +16,7 @@ namespace WebSocket {
 
 class ClientConnection final
     : public IPC::ClientConnection<WebSocketClientEndpoint, WebSocketServerEndpoint> {
-    C_OBJECT(ClientConnection);
+    C_OBJECT(ClientConnection)
 
 public:
     ~ClientConnection() override;

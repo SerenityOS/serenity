@@ -26,7 +26,7 @@
 namespace ThemeEditor {
 
 class MiniWidgetGallery final : public GUI::Widget {
-    C_OBJECT(MiniWidgetGallery);
+    C_OBJECT(MiniWidgetGallery)
 
 public:
     void set_preview_palette(const Gfx::Palette& palette)

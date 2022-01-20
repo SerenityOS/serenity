@@ -11,7 +11,7 @@
 namespace GUI {
 
 class ValueSlider : public AbstractSlider {
-    C_OBJECT(ValueSlider);
+    C_OBJECT(ValueSlider)
 
 public:
     enum class KnobStyle {

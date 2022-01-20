@@ -31,7 +31,7 @@ extern Core::ObjectClassRegistration registration_Layout;
 namespace GUI {
 
 class Layout : public Core::Object {
-    C_OBJECT_ABSTRACT(Layout);
+    C_OBJECT_ABSTRACT(Layout)
 
 public:
     virtual ~Layout();

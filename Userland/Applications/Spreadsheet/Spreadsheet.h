@@ -23,7 +23,7 @@
 namespace Spreadsheet {
 
 class Sheet : public Core::Object {
-    C_OBJECT(Sheet);
+    C_OBJECT(Sheet)
 
 public:
     constexpr static size_t default_row_count = 100;

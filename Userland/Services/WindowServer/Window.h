@@ -76,7 +76,7 @@ enum class WindowMinimizedState : u32 {
 };
 
 class Window final : public Core::Object {
-    C_OBJECT(Window);
+    C_OBJECT(Window)
 
 public:
     virtual ~Window() override;

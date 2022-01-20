@@ -18,7 +18,7 @@ class ImageEditor;
 class SelectedColorWidget;
 
 class PaletteWidget final : public GUI::Frame {
-    C_OBJECT(PaletteWidget);
+    C_OBJECT(PaletteWidget)
 
 public:
     virtual ~PaletteWidget() override;

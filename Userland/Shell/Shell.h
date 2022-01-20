@@ -69,7 +69,7 @@ namespace Shell {
 class Shell;
 
 class Shell : public Core::Object {
-    C_OBJECT(Shell);
+    C_OBJECT(Shell)
 
 public:
     constexpr static auto local_init_file_path = "~/.shellrc";

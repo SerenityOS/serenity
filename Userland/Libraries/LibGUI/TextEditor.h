@@ -28,7 +28,7 @@ class TextEditor
     , public TextDocument::Client
     , public Syntax::HighlighterClient
     , public Clipboard::ClipboardClient {
-    C_OBJECT(TextEditor);
+    C_OBJECT(TextEditor)
 
 public:
     enum Type {

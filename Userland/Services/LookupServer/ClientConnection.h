@@ -15,7 +15,7 @@ namespace LookupServer {
 
 class ClientConnection final
     : public IPC::ClientConnection<LookupClientEndpoint, LookupServerEndpoint> {
-    C_OBJECT(ClientConnection);
+    C_OBJECT(ClientConnection)
 
 public:
     virtual ~ClientConnection() override;

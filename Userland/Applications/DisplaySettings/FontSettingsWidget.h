@@ -12,7 +12,7 @@
 namespace DisplaySettings {
 
 class FontSettingsWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(FontSettingsWidget);
+    C_OBJECT(FontSettingsWidget)
 
 public:
     virtual ~FontSettingsWidget() override;

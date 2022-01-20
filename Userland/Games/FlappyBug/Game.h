@@ -19,7 +19,7 @@
 namespace FlappyBug {
 
 class Game final : public GUI::Frame {
-    C_OBJECT(Game);
+    C_OBJECT(Game)
 
 public:
     static const int game_width = 560;

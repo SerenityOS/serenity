@@ -13,7 +13,7 @@
 class Field;
 
 class CustomGameDialog : public GUI::Dialog {
-    C_OBJECT(CustomGameDialog);
+    C_OBJECT(CustomGameDialog)
 
 public:
     static int show(GUI::Window* parent_window, Field& field);

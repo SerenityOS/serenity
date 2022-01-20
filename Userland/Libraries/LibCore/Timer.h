@@ -12,7 +12,7 @@
 namespace Core {
 
 class Timer final : public Object {
-    C_OBJECT(Timer);
+    C_OBJECT(Timer)
 
 public:
     static NonnullRefPtr<Timer> create_repeating(int interval_ms, Function<void()>&& timeout_handler, Object* parent = nullptr)

@@ -17,7 +17,7 @@
 namespace Spreadsheet {
 
 class CellEditor final : public GUI::TextEditor {
-    C_OBJECT(CellEditor);
+    C_OBJECT(CellEditor)
 
 public:
     virtual ~CellEditor() { }
@@ -86,7 +86,7 @@ private:
 };
 
 class SpreadsheetView final : public GUI::Widget {
-    C_OBJECT(SpreadsheetView);
+    C_OBJECT(SpreadsheetView)
 
 public:
     ~SpreadsheetView();

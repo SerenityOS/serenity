@@ -15,7 +15,7 @@
 namespace WindowServer {
 
 class MenuManager final : public Core::Object {
-    C_OBJECT(MenuManager);
+    C_OBJECT(MenuManager)
 
 public:
     static MenuManager& the();

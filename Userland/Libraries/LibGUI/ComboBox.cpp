@@ -20,7 +20,7 @@ REGISTER_WIDGET(GUI, ComboBox)
 namespace GUI {
 
 class ComboBoxEditor final : public TextEditor {
-    C_OBJECT(ComboBoxEditor);
+    C_OBJECT(ComboBoxEditor)
 
 public:
     Function<void(int delta)> on_mousewheel;

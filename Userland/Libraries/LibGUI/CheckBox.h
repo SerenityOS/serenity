@@ -11,7 +11,7 @@
 namespace GUI {
 
 class CheckBox : public AbstractButton {
-    C_OBJECT(CheckBox);
+    C_OBJECT(CheckBox)
 
 public:
     virtual ~CheckBox() override;

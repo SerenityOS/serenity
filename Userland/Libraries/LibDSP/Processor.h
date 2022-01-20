@@ -18,7 +18,7 @@ namespace LibDSP {
 
 // A processor processes notes or audio into notes or audio. Processors are e.g. samplers, synthesizers, effects, arpeggiators etc.
 class Processor : public Core::Object {
-    C_OBJECT_ABSTRACT(Processor);
+    C_OBJECT_ABSTRACT(Processor)
 
 public:
     virtual ~Processor()

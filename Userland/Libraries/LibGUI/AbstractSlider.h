@@ -11,7 +11,7 @@
 namespace GUI {
 
 class AbstractSlider : public Widget {
-    C_OBJECT_ABSTRACT(AbstractSlider);
+    C_OBJECT_ABSTRACT(AbstractSlider)
 
 public:
     virtual ~AbstractSlider() override;

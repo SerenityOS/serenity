@@ -11,7 +11,7 @@
 #include <LibGUI/Frame.h>
 
 class SnakeGame : public GUI::Frame {
-    C_OBJECT(SnakeGame);
+    C_OBJECT(SnakeGame)
 
 public:
     virtual ~SnakeGame() override;

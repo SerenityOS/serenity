@@ -12,7 +12,7 @@
 namespace Core {
 template<typename Result>
 class Promise : public Object {
-    C_OBJECT(Promise);
+    C_OBJECT(Promise)
 
 public:
     Function<void(Result&)> on_resolved;

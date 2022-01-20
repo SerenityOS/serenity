@@ -12,7 +12,7 @@
 namespace GUI {
 
 class AbstractButton : public Widget {
-    C_OBJECT_ABSTRACT(AbstractButton);
+    C_OBJECT_ABSTRACT(AbstractButton)
 
 public:
     virtual ~AbstractButton() override;

@@ -19,7 +19,7 @@
 #include <LibGUI/Widget.h>
 
 class BoardWidget final : public GUI::Widget {
-    C_OBJECT(BoardWidget);
+    C_OBJECT(BoardWidget)
 
 public:
     virtual void paint_event(GUI::PaintEvent&) override;

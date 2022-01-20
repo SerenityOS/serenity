@@ -18,7 +18,7 @@ namespace Profiler {
 
 class FlameGraphView final : public GUI::Widget
     , GUI::ModelClient {
-    C_OBJECT(FlameGraphView);
+    C_OBJECT(FlameGraphView)
 
 public:
     virtual ~FlameGraphView() override = default;

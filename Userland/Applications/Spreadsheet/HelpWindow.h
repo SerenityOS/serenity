@@ -15,7 +15,7 @@
 namespace Spreadsheet {
 
 class HelpWindow : public GUI::Window {
-    C_OBJECT(HelpWindow);
+    C_OBJECT(HelpWindow)
 
 public:
     static NonnullRefPtr<HelpWindow> the(GUI::Window* window)

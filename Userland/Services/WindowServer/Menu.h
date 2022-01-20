@@ -25,7 +25,7 @@ class Menubar;
 class Window;
 
 class Menu final : public Core::Object {
-    C_OBJECT(Menu);
+    C_OBJECT(Menu)
 
 public:
     virtual ~Menu() override;

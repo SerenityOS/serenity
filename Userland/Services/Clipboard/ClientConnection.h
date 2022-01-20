@@ -15,7 +15,7 @@ namespace Clipboard {
 
 class ClientConnection final
     : public IPC::ClientConnection<ClipboardClientEndpoint, ClipboardServerEndpoint> {
-    C_OBJECT(ClientConnection);
+    C_OBJECT(ClientConnection)
 
 public:
     virtual ~ClientConnection() override;

@@ -12,7 +12,7 @@
 #include <LibGfx/BitmapFont.h>
 
 class NewFontDialog final : public GUI::WizardDialog {
-    C_OBJECT(NewFontDialog);
+    C_OBJECT(NewFontDialog)
 
 public:
     auto new_font_metadata()

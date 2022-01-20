@@ -11,7 +11,7 @@
 namespace GUI {
 
 class Slider : public AbstractSlider {
-    C_OBJECT(Slider);
+    C_OBJECT(Slider)
 
 public:
     enum class KnobSizeMode {
@@ -61,7 +61,7 @@ private:
 };
 
 class VerticalSlider final : public Slider {
-    C_OBJECT(VerticalSlider);
+    C_OBJECT(VerticalSlider)
 
 public:
     virtual ~VerticalSlider() override { }
@@ -74,7 +74,7 @@ private:
 };
 
 class HorizontalSlider final : public Slider {
-    C_OBJECT(HorizontalSlider);
+    C_OBJECT(HorizontalSlider)
 
 public:
     virtual ~HorizontalSlider() override { }

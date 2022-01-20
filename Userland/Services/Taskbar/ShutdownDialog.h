@@ -10,7 +10,7 @@
 #include <LibGUI/Dialog.h>
 
 class ShutdownDialog : public GUI::Dialog {
-    C_OBJECT(ShutdownDialog);
+    C_OBJECT(ShutdownDialog)
 
 public:
     static Vector<char const*> show();

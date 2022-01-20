@@ -15,7 +15,7 @@ namespace Browser {
 class BookmarksBarWidget final
     : public GUI::Widget
     , private GUI::ModelClient {
-    C_OBJECT(BookmarksBarWidget);
+    C_OBJECT(BookmarksBarWidget)
 
 public:
     static BookmarksBarWidget& the();

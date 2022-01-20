@@ -12,7 +12,7 @@
 namespace GUI {
 
 class HeaderView final : public Widget {
-    C_OBJECT(HeaderView);
+    C_OBJECT(HeaderView)
 
 public:
     virtual ~HeaderView() override;

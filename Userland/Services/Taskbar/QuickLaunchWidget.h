@@ -15,7 +15,7 @@ namespace Taskbar {
 
 class QuickLaunchWidget : public GUI::Frame
     , public Config::Listener {
-    C_OBJECT(QuickLaunchWidget);
+    C_OBJECT(QuickLaunchWidget)
 
 public:
     virtual ~QuickLaunchWidget() override;

@@ -10,7 +10,7 @@
 #include <LibGUI/Frame.h>
 
 class BoardView final : public GUI::Frame {
-    C_OBJECT(BoardView);
+    C_OBJECT(BoardView)
 
 public:
     virtual ~BoardView() override;

@@ -11,7 +11,7 @@
 #include <LibGUI/Dialog.h>
 
 class GoToOffsetDialog : public GUI::Dialog {
-    C_OBJECT(GoToOffsetDialog);
+    C_OBJECT(GoToOffsetDialog)
 
 public:
     static int show(GUI::Window* parent_window, int& history_offset, int& out_offset, int selection_offset, int end);

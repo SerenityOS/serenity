@@ -21,7 +21,7 @@
 namespace GUI {
 
 class Application::TooltipWindow final : public Window {
-    C_OBJECT(TooltipWindow);
+    C_OBJECT(TooltipWindow)
 
 public:
     void set_tooltip(const String& tooltip)

@@ -9,7 +9,7 @@
 #include <LibGUI/Widget.h>
 
 class ProcessFileDescriptorMapWidget final : public GUI::Widget {
-    C_OBJECT(ProcessFileDescriptorMapWidget);
+    C_OBJECT(ProcessFileDescriptorMapWidget)
 
 public:
     virtual ~ProcessFileDescriptorMapWidget() override;

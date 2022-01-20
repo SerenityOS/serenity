@@ -15,7 +15,7 @@
 #include <LibGUI/TextBox.h>
 
 class PropertiesWindow final : public GUI::Window {
-    C_OBJECT(PropertiesWindow);
+    C_OBJECT(PropertiesWindow)
 
 public:
     virtual ~PropertiesWindow() override;

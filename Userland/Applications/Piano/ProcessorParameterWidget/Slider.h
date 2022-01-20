@@ -15,7 +15,7 @@
 class ProcessorParameterSlider
     : public GUI::Slider
     , public WidgetWithLabel {
-    C_OBJECT(ProcessorParameterSlider);
+    C_OBJECT(ProcessorParameterSlider)
 
 public:
     ProcessorParameterSlider(Orientation, LibDSP::ProcessorRangeParameter&, RefPtr<GUI::Label>);

@@ -11,7 +11,7 @@
 namespace FileManager {
 
 class DesktopWidget final : public GUI::Widget {
-    C_OBJECT(DesktopWidget);
+    C_OBJECT(DesktopWidget)
 
 public:
     virtual ~DesktopWidget() override;

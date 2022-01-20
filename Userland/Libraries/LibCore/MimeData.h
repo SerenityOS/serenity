@@ -14,7 +14,7 @@
 namespace Core {
 
 class MimeData : public Object {
-    C_OBJECT(MimeData);
+    C_OBJECT(MimeData)
 
 public:
     virtual ~MimeData() { }

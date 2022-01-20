@@ -14,7 +14,7 @@
 namespace Spreadsheet {
 
 class CellTypeDialog : public GUI::Dialog {
-    C_OBJECT(CellTypeDialog);
+    C_OBJECT(CellTypeDialog)
 
 public:
     CellTypeMetadata metadata() const;

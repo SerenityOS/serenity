@@ -41,7 +41,7 @@ class DirectoryView final
     : public GUI::StackWidget
     , private GUI::ModelClient
     , public Config::Listener {
-    C_OBJECT(DirectoryView);
+    C_OBJECT(DirectoryView)
 
 public:
     enum class Mode {

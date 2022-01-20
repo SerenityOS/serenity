@@ -24,7 +24,7 @@
 #include <unistd.h>
 
 class MainFrame final : public GUI::Frame {
-    C_OBJECT(MainFrame);
+    C_OBJECT(MainFrame)
 
 public:
     virtual void timer_event(Core::TimerEvent&) override

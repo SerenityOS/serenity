@@ -13,7 +13,7 @@
 namespace MouseSettings {
 
 class DoubleClickArrowWidget final : public GUI::Widget {
-    C_OBJECT(DoubleClickArrowWidget);
+    C_OBJECT(DoubleClickArrowWidget)
 
 public:
     virtual ~DoubleClickArrowWidget() override;

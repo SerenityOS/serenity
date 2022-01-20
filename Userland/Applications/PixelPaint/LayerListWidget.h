@@ -15,7 +15,7 @@ namespace PixelPaint {
 class LayerListWidget final
     : public GUI::AbstractScrollableWidget
     , ImageClient {
-    C_OBJECT(LayerListWidget);
+    C_OBJECT(LayerListWidget)
 
 public:
     virtual ~LayerListWidget() override;

@@ -13,7 +13,7 @@
 namespace GUI {
 
 class Label : public Frame {
-    C_OBJECT(Label);
+    C_OBJECT(Label)
 
 public:
     virtual ~Label() override;

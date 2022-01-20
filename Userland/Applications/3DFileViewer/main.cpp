@@ -32,7 +32,7 @@ static constexpr u16 RENDER_WIDTH = 640;
 static constexpr u16 RENDER_HEIGHT = 480;
 
 class GLContextWidget final : public GUI::Frame {
-    C_OBJECT(GLContextWidget);
+    C_OBJECT(GLContextWidget)
 
 public:
     bool load_path(String const& fname);

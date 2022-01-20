@@ -14,7 +14,7 @@
 #include <LibGUI/Wizards/WizardPage.h>
 
 class DemoWizardDialog : public GUI::WizardDialog {
-    C_OBJECT(DemoWizardDialog);
+    C_OBJECT(DemoWizardDialog)
 
 public:
     String page_1_location() { return m_page_1_location_text_box->get_text(); }

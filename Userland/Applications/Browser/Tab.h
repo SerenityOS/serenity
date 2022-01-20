@@ -26,7 +26,7 @@ class InspectorWidget;
 class ConsoleWidget;
 
 class Tab final : public GUI::Widget {
-    C_OBJECT(Tab);
+    C_OBJECT(Tab)
 
     // FIXME: This should go away eventually.
     friend class BrowserWindow;

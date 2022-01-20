@@ -17,7 +17,7 @@
 namespace DisplaySettings {
 
 class MonitorSettingsWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(MonitorSettingsWidget);
+    C_OBJECT(MonitorSettingsWidget)
 
 public:
     ~MonitorSettingsWidget() override

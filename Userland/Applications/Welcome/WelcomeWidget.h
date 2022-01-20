@@ -10,7 +10,7 @@
 #include <LibWeb/OutOfProcessWebView.h>
 
 class WelcomeWidget final : public GUI::Widget {
-    C_OBJECT(WelcomeWidget);
+    C_OBJECT(WelcomeWidget)
 
 public:
     virtual ~WelcomeWidget() override;

@@ -14,7 +14,7 @@
 namespace GUI {
 
 class WizardPage : public AbstractWizardPage {
-    C_OBJECT(WizardPage);
+    C_OBJECT(WizardPage)
 
     Widget& body_widget() { return *m_body_widget; };
 

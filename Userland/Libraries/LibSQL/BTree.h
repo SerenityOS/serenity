@@ -94,7 +94,7 @@ private:
 };
 
 class BTree : public Index {
-    C_OBJECT(BTree);
+    C_OBJECT(BTree)
 
 public:
     ~BTree() override = default;

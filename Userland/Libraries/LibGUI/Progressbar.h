@@ -53,7 +53,7 @@ private:
 };
 
 class VerticalProgressbar final : public Progressbar {
-    C_OBJECT(VerticalProgressbar);
+    C_OBJECT(VerticalProgressbar)
 
 public:
     virtual ~VerticalProgressbar() override { }
@@ -66,7 +66,7 @@ private:
 };
 
 class HorizontalProgressbar final : public Progressbar {
-    C_OBJECT(HorizontalProgressbar);
+    C_OBJECT(HorizontalProgressbar)
 
 public:
     virtual ~HorizontalProgressbar() override { }

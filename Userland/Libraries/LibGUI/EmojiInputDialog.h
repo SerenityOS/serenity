@@ -11,7 +11,7 @@
 namespace GUI {
 
 class EmojiInputDialog final : public Dialog {
-    C_OBJECT(EmojiInputDialog);
+    C_OBJECT(EmojiInputDialog)
 
 public:
     const String& selected_emoji_text() const { return m_selected_emoji_text; }

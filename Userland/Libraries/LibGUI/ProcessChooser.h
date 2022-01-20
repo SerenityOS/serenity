@@ -13,7 +13,7 @@
 namespace GUI {
 
 class ProcessChooser final : public GUI::Dialog {
-    C_OBJECT(ProcessChooser);
+    C_OBJECT(ProcessChooser)
 
 public:
     virtual ~ProcessChooser() override;

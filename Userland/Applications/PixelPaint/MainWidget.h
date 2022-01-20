@@ -28,7 +28,7 @@
 namespace PixelPaint {
 
 class MainWidget : public GUI::Widget {
-    C_OBJECT(MainWidget);
+    C_OBJECT(MainWidget)
 
 public:
     virtual ~MainWidget() {};
