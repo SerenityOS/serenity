@@ -21,7 +21,6 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/TabWidget.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
 #include <unistd.h>
 
 namespace Browser {
@@ -31,6 +30,26 @@ String g_home_url;
 Vector<String> g_content_filters;
 IconBag g_icon_bag;
 
+}
+
+static ErrorOr<void> load_content_filters()
+{
+    auto file = TRY(Core::Stream::File::open(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::Stream::OpenMode::Read));
+    auto ad_filter_list = TRY(Core::Stream::BufferedFile::create(move(file)));
+    auto maybe_buffer = ByteBuffer::create_uninitialized(4096);
+    if (maybe_buffer.has_value()) {
+        auto buffer = maybe_buffer.release_value();
+
+        while (TRY(ad_filter_list->can_read_line())) {
+            auto length = TRY(ad_filter_list->read_line(buffer));
+            StringView line { buffer.data(), length };
+            dbgln("Content filter for {}", line);
+            if (!line.is_empty())
+                Browser::g_content_filters.append(line);
+        }
+    }
+
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -74,16 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
 
-    auto ad_filter_list_or_error = Core::File::open(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::OpenMode::ReadOnly);
-    if (!ad_filter_list_or_error.is_error()) {
-        auto& ad_filter_list = *ad_filter_list_or_error.value();
-        while (!ad_filter_list.eof()) {
-            auto line = ad_filter_list.read_line();
-            if (line.is_empty())
-                continue;
-            Browser::g_content_filters.append(move(line));
-        }
-    }
+    TRY(load_content_filters());
 
     URL first_url = Browser::g_home_url;
     if (specified_url) {
