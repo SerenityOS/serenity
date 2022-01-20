@@ -23,13 +23,19 @@ public:
     void append_box(Box&);
     void append_text_chunk(TextNode&, size_t offset_in_node, size_t length_in_node, float width, float height);
 
-    void break_if_needed(LayoutMode, float next_item_width, bool should_force_break);
+    void break_if_needed(LayoutMode layout_mode, float next_item_width, bool should_force_break)
+    {
+        if (should_break(layout_mode, next_item_width, should_force_break))
+            break_line();
+    }
 
     float available_width_for_current_line() const { return m_available_width_for_current_line; }
 
     void update_last_line();
 
 private:
+    bool should_break(LayoutMode, float next_item_width, bool should_force_break);
+
     InlineFormattingContext& m_context;
     float m_available_width_for_current_line { 0 };
     float m_current_y { 0 };
