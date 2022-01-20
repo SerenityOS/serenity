@@ -404,6 +404,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (text_decoration_line.has_value())
         computed_values.set_text_decoration_line(text_decoration_line.value());
 
+    auto text_decoration_style = specified_style.text_decoration_style();
+    if (text_decoration_style.has_value())
+        computed_values.set_text_decoration_style(text_decoration_style.value());
+
     auto text_transform = specified_style.text_transform();
     if (text_transform.has_value())
         computed_values.set_text_transform(text_transform.value());

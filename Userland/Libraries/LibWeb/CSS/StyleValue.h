@@ -233,6 +233,14 @@ enum class TextDecorationLine {
     Blink,
 };
 
+enum class TextDecorationStyle {
+    Solid,
+    Double,
+    Dotted,
+    Dashed,
+    Wavy,
+};
+
 enum class TextTransform {
     None,
     Capitalize,
