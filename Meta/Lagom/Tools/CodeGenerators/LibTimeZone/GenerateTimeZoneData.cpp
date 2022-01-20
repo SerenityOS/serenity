@@ -23,6 +23,7 @@ struct DateTime {
 
     Optional<u8> last_weekday;
     Optional<u8> after_weekday;
+    Optional<u8> before_weekday;
 
     Optional<u8> hour;
     Optional<u8> minute;
@@ -32,12 +33,26 @@ struct DateTime {
 struct TimeZoneOffset {
     i64 offset { 0 };
     Optional<DateTime> until;
+
+    Optional<String> dst_rule;
+    Optional<i32> dst_rule_index;
+    i64 dst_offset { 0 };
+};
+
+struct DaylightSavingsOffset {
+    i64 offset { 0 };
+    u16 year_from { 0 };
+    u16 year_to { 0 };
+    DateTime in_effect;
 };
 
 struct TimeZoneData {
     HashMap<String, Vector<TimeZoneOffset>> time_zones;
     Vector<String> time_zone_names;
     Vector<Alias> time_zone_aliases;
+
+    HashMap<String, Vector<DaylightSavingsOffset>> dst_offsets;
+    Vector<String> dst_offset_names;
 };
 
 }
@@ -47,12 +62,13 @@ struct AK::Formatter<DateTime> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, DateTime const& date_time)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
             date_time.year,
             date_time.month.value_or(1),
             date_time.day.value_or(1),
             date_time.last_weekday.value_or(0),
             date_time.after_weekday.value_or(0),
+            date_time.before_weekday.value_or(0),
             date_time.hour.value_or(0),
             date_time.minute.value_or(0),
             date_time.second.value_or(0));
@@ -64,10 +80,25 @@ struct AK::Formatter<TimeZoneOffset> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZoneOffset const& time_zone_offset)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {} }}",
             time_zone_offset.offset,
             time_zone_offset.until.value_or({}),
-            time_zone_offset.until.has_value());
+            time_zone_offset.until.has_value(),
+            time_zone_offset.dst_rule_index.value_or(-1),
+            time_zone_offset.dst_offset);
+    }
+};
+
+template<>
+struct AK::Formatter<DaylightSavingsOffset> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, DaylightSavingsOffset const& dst_offset)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {}, {}, {} }}",
+            dst_offset.offset,
+            dst_offset.year_from,
+            dst_offset.year_to,
+            dst_offset.in_effect);
     }
 };
 
@@ -98,6 +129,12 @@ static Optional<DateTime> parse_date_time(Span<StringView const> segments)
 
             auto day = segments[2].substring_view(*index + ">="sv.length());
             date_time.day = day.to_uint().value();
+        } else if (auto index = segments[2].find("<="sv); index.has_value()) {
+            auto weekday = segments[2].substring_view(0, *index);
+            date_time.before_weekday = find_index(weekdays.begin(), weekdays.end(), weekday);
+
+            auto day = segments[2].substring_view(*index + "<="sv.length());
+            date_time.day = day.to_uint().value();
         } else {
             date_time.day = segments[2].to_uint().value();
         }
@@ -127,6 +164,14 @@ static i64 parse_time_offset(StringView segment)
     return (hours * 3600) + sign * ((minutes * 60) + seconds);
 }
 
+static void parse_dst_rule(StringView segment, TimeZoneOffset& time_zone)
+{
+    if (segment.contains(':'))
+        time_zone.dst_offset = parse_time_offset(segment);
+    else if (segment != "-"sv)
+        time_zone.dst_rule = segment;
+}
+
 static Vector<TimeZoneOffset>& parse_zone(StringView zone_line, TimeZoneData& time_zone_data)
 {
     auto segments = zone_line.split_view_if([](char ch) { return (ch == '\t') || (ch == ' '); });
@@ -137,6 +182,7 @@ static Vector<TimeZoneOffset>& parse_zone(StringView zone_line, TimeZoneData& ti
 
     TimeZoneOffset time_zone {};
     time_zone.offset = parse_time_offset(segments[2]);
+    parse_dst_rule(segments[3], time_zone);
 
     if (segments.size() > 5)
         time_zone.until = parse_date_time(segments.span().slice(5));
@@ -157,6 +203,7 @@ static void parse_zone_continuation(StringView zone_line, Vector<TimeZoneOffset>
     // STDOFF RULES FORMAT [UNTIL]
     TimeZoneOffset time_zone {};
     time_zone.offset = parse_time_offset(segments[0]);
+    parse_dst_rule(segments[1], time_zone);
 
     if (segments.size() > 3)
         time_zone.until = parse_date_time(segments.span().slice(3));
@@ -174,6 +221,35 @@ static void parse_link(StringView link_line, TimeZoneData& time_zone_data)
     auto alias = segments[2];
 
     time_zone_data.time_zone_aliases.append({ target, alias });
+}
+
+static void parse_rule(StringView rule_line, TimeZoneData& time_zone_data)
+{
+    auto segments = rule_line.split_view_if([](char ch) { return (ch == '\t') || (ch == ' '); });
+
+    // Rule NAME FROM TO TYPE IN ON AT SAVE LETTER/S
+    VERIFY(segments[0] == "Rule"sv);
+    auto name = segments[1];
+
+    DaylightSavingsOffset dst_offset {};
+    dst_offset.offset = parse_time_offset(segments[8]);
+    dst_offset.year_from = segments[2].to_uint().value();
+
+    if (segments[3] == "only")
+        dst_offset.year_to = dst_offset.year_from;
+    else if (segments[3] == "max"sv)
+        dst_offset.year_to = NumericLimits<u16>::max();
+    else
+        dst_offset.year_to = segments[3].to_uint().value();
+
+    auto in_effect = Array { "0"sv, segments[5], segments[6], segments[7] };
+    dst_offset.in_effect = parse_date_time(in_effect).release_value();
+
+    auto& dst_offsets = time_zone_data.dst_offsets.ensure(name);
+    dst_offsets.append(move(dst_offset));
+
+    if (!time_zone_data.dst_offset_names.contains_slow(name))
+        time_zone_data.dst_offset_names.append(name);
 }
 
 static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& time_zone_data)
@@ -197,10 +273,25 @@ static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& t
 
             if (line.starts_with("Link"sv))
                 parse_link(line, time_zone_data);
+            else if (line.starts_with("Rule"sv))
+                parse_rule(line, time_zone_data);
         }
     }
 
     return {};
+}
+
+static void set_dst_rule_indices(TimeZoneData& time_zone_data)
+{
+    for (auto& time_zone : time_zone_data.time_zones) {
+        for (auto& time_zone_offset : time_zone.value) {
+            if (!time_zone_offset.dst_rule.has_value())
+                continue;
+
+            auto dst_rule_index = time_zone_data.dst_offset_names.find_first_index(*time_zone_offset.dst_rule);
+            time_zone_offset.dst_rule_index = static_cast<i32>(dst_rule_index.value());
+        }
+    }
 }
 
 static String format_identifier(StringView owner, String identifier)
@@ -242,6 +333,7 @@ namespace TimeZone {
 )~~~");
 
     generate_enum(generator, format_identifier, "TimeZone"sv, {}, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
+    generate_enum(generator, format_identifier, "DaylightSavingsRule"sv, {}, time_zone_data.dst_offset_names);
 
     generator.append(R"~~~(
 }
@@ -254,6 +346,8 @@ static void generate_time_zone_data_implementation(Core::File& file, TimeZoneDat
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
+
+    set_dst_rule_indices(time_zone_data);
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -270,7 +364,7 @@ namespace TimeZone {
 struct DateTime {
     AK::Time time_since_epoch() const
     {
-        // FIXME: This implementation does not take last_weekday or after_weekday into account.
+        // FIXME: This implementation does not take last_weekday, after_weekday, or before_weekday into account.
         return AK::Time::from_timestamp(year, month, day, hour, minute, second, 0);
     }
 
@@ -280,6 +374,7 @@ struct DateTime {
 
     u8 last_weekday { 0 };
     u8 after_weekday { 0 };
+    u8 before_weekday { 0 };
 
     u8 hour { 0 };
     u8 minute { 0 };
@@ -291,19 +386,30 @@ struct TimeZoneOffset {
 
     DateTime until {};
     bool has_until { false };
+
+    i32 dst_rule { -1 };
+    i64 dst_offset { 0 };
+};
+
+struct DaylightSavingsOffset {
+    i64 offset { 0 };
+    u16 year_from { 0 };
+    u16 year_to { 0 };
+    DateTime in_effect {};
 };
 )~~~");
 
-    auto append_time_zone_offsets = [&](auto const& name, auto const& time_zone_offsets) {
+    auto append_offsets = [&](auto const& name, auto type, auto const& offsets) {
         generator.set("name", name);
-        generator.set("size", String::number(time_zone_offsets.size()));
+        generator.set("type", type);
+        generator.set("size", String::number(offsets.size()));
 
         generator.append(R"~~~(
-static constexpr Array<TimeZoneOffset, @size@> @name@ { {
+static constexpr Array<@type@, @size@> @name@ { {
 )~~~");
 
-        for (auto const& time_zone_offset : time_zone_offsets)
-            generator.append(String::formatted("    {},\n", time_zone_offset));
+        for (auto const& offset : offsets)
+            generator.append(String::formatted("    {},\n", offset));
 
         generator.append("} };\n");
     };
@@ -311,10 +417,16 @@ static constexpr Array<TimeZoneOffset, @size@> @name@ { {
     generate_mapping(generator, time_zone_data.time_zone_names, "TimeZoneOffset"sv, "s_time_zone_offsets"sv, "s_time_zone_offsets_{}", format_identifier,
         [&](auto const& name, auto const& value) {
             auto const& time_zone_offsets = time_zone_data.time_zones.find(value)->value;
-            append_time_zone_offsets(name, time_zone_offsets);
+            append_offsets(name, "TimeZoneOffset"sv, time_zone_offsets);
         });
 
-    auto append_string_conversions = [&](StringView enum_title, StringView enum_snake, auto const& values, auto const& aliases) {
+    generate_mapping(generator, time_zone_data.dst_offset_names, "DaylightSavingsOffset"sv, "s_dst_offsets"sv, "s_dst_offsets_{}", format_identifier,
+        [&](auto const& name, auto const& value) {
+            auto const& dst_offsets = time_zone_data.dst_offsets.find(value)->value;
+            append_offsets(name, "DaylightSavingsOffset"sv, dst_offsets);
+        });
+
+    auto append_string_conversions = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
         HashValueMap<String> hashes;
         hashes.ensure_capacity(values.size());
 
@@ -335,11 +447,58 @@ static constexpr Array<TimeZoneOffset, @size@> @name@ { {
     };
 
     append_string_conversions("TimeZone"sv, "time_zone"sv, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
+    append_string_conversions("DaylightSavingsRule"sv, "daylight_savings_rule"sv, time_zone_data.dst_offset_names);
 
     generator.append(R"~~~(
-Optional<i64> get_time_zone_offset(TimeZone time_zone, AK::Time time)
+static Offset get_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
 {
-    // FIXME: This implementation completely ignores DST.
+    auto const& dst_rules = s_dst_offsets[time_zone_offset.dst_rule];
+
+    DaylightSavingsOffset const* standard_offset = nullptr;
+    DaylightSavingsOffset const* daylight_offset = nullptr;
+
+    auto time_in_effect_for_rule = [&](auto const& dst_rule) {
+        auto in_effect = dst_rule.in_effect;
+        in_effect.year = seconds_since_epoch_to_year(time.to_seconds());
+
+        return in_effect.time_since_epoch();
+    };
+
+    auto preferred_rule = [&](auto* current_offset, auto& new_offset) {
+        if (!current_offset)
+            return &new_offset;
+
+        auto new_time_in_effect = time_in_effect_for_rule(new_offset);
+        return (time >= new_time_in_effect) ? &new_offset : current_offset;
+    };
+
+    for (size_t index = 0; (index < dst_rules.size()) && (!standard_offset || !daylight_offset); ++index) {
+        auto const& dst_rule = dst_rules[index];
+
+        auto year_from = AK::Time::from_timestamp(dst_rule.year_from, 1, 1, 0, 0, 0, 0);
+        auto year_to = AK::Time::from_timestamp(dst_rule.year_to + 1, 1, 1, 0, 0, 0, 0);
+        if ((time < year_from) || (time >= year_to))
+            continue;
+
+        if (dst_rule.offset == 0)
+            standard_offset = preferred_rule(standard_offset, dst_rule);
+        else
+            daylight_offset = preferred_rule(daylight_offset, dst_rule);
+    }
+
+    if (!standard_offset || !daylight_offset)
+        return {};
+
+    auto standard_time_in_effect = time_in_effect_for_rule(*standard_offset);
+    auto daylight_time_in_effect = time_in_effect_for_rule(*daylight_offset);
+
+    if ((time < daylight_time_in_effect) || (time >= standard_time_in_effect))
+        return { standard_offset->offset, InDST::No };
+    return { daylight_offset->offset, InDST::Yes };
+}
+
+Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
+{
     auto const& time_zone_offsets = s_time_zone_offsets[to_underlying(time_zone)];
 
     size_t index = 0;
@@ -351,7 +510,18 @@ Optional<i64> get_time_zone_offset(TimeZone time_zone, AK::Time time)
     }
 
     VERIFY(index < time_zone_offsets.size());
-    return time_zone_offsets[index].offset;
+    auto const& time_zone_offset = time_zone_offsets[index];
+
+    Offset dst_offset {};
+    if (time_zone_offset.dst_rule != -1) {
+        dst_offset = get_dst_offset(time_zone_offset, time);
+    } else {
+        auto in_dst = time_zone_offset.dst_offset == 0 ? InDST::No : InDST::Yes;
+        dst_offset = { time_zone_offset.dst_offset, in_dst };
+    }
+
+    dst_offset.seconds += time_zone_offset.offset;
+    return dst_offset;
 }
 
 }

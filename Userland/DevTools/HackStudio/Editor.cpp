@@ -21,6 +21,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/GMLAutocompleteProvider.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
+#include <LibGUI/GitCommitSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
@@ -605,6 +606,9 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
         break;
     case Language::CSS:
         set_syntax_highlighter(make<Web::CSS::SyntaxHighlighter>());
+        break;
+    case Language::GitCommit:
+        set_syntax_highlighter(make<GUI::GitCommitSyntaxHighlighter>());
         break;
     case Language::GML:
         set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());

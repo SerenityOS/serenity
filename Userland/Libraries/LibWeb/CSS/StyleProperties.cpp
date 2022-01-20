@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -47,28 +47,55 @@ Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID pr
     return it->value;
 }
 
-Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fallback) const
+Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fallback) const
 {
-    auto value = property(id);
-    if (!value.has_value())
+    auto maybe_value = property(id);
+    if (!maybe_value.has_value())
         return fallback;
+    auto& value = maybe_value.value();
 
-    if (value.value()->is_calculated()) {
+    if (value->is_calculated()) {
         Length length = Length(0, Length::Type::Calculated);
-        length.set_calculated_style(&value.value()->as_calculated());
+        length.set_calculated_style(&value->as_calculated());
         return length;
     }
 
-    return value.value()->to_length();
+    if (value->has_length())
+        return value->to_length();
+
+    return fallback;
+}
+
+LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID id, LengthPercentage const& fallback) const
+{
+    auto maybe_value = property(id);
+    if (!maybe_value.has_value())
+        return fallback;
+    auto& value = maybe_value.value();
+
+    if (value->is_calculated()) {
+        // FIXME: Handle percentages here
+        Length length = Length(0, Length::Type::Calculated);
+        length.set_calculated_style(&value->as_calculated());
+        return length;
+    }
+
+    if (value->is_percentage())
+        return value->as_percentage().percentage();
+
+    if (value->has_length())
+        return value->to_length();
+
+    return fallback;
 }
 
 LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id, const CSS::Length& default_value) const
 {
     LengthBox box;
-    box.left = length_or_fallback(left_id, default_value);
-    box.top = length_or_fallback(top_id, default_value);
-    box.right = length_or_fallback(right_id, default_value);
-    box.bottom = length_or_fallback(bottom_id, default_value);
+    box.left = length_percentage_or_fallback(left_id, default_value);
+    box.top = length_percentage_or_fallback(top_id, default_value);
+    box.right = length_percentage_or_fallback(right_id, default_value);
+    box.bottom = length_percentage_or_fallback(bottom_id, default_value);
     return box;
 }
 
@@ -94,15 +121,33 @@ NonnullRefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bol
     return Gfx::FontDatabase::default_font();
 }
 
-float StyleProperties::line_height(const Layout::Node& layout_node) const
+float StyleProperties::line_height(Layout::Node const& layout_node) const
 {
-    auto line_height_length = length_or_fallback(CSS::PropertyID::LineHeight, Length::make_auto());
-    if (line_height_length.is_absolute())
-        return line_height_length.to_px(layout_node);
-    auto font_size = length_or_fallback(CSS::PropertyID::FontSize, Length::make_auto());
-    if (font_size.is_absolute())
-        return font_size.to_px(layout_node);
-    return (float)computed_font().glyph_height() * 1.4f;
+    constexpr float font_height_to_line_height_multiplier = 1.4f;
+
+    if (auto maybe_line_height = property(CSS::PropertyID::LineHeight); maybe_line_height.has_value()) {
+        auto line_height = maybe_line_height.release_value();
+
+        if (line_height->is_identifier() && line_height->to_identifier() == ValueID::Normal)
+            return Length(1, Length::Type::Em).to_px(layout_node) * font_height_to_line_height_multiplier;
+
+        if (line_height->is_length()) {
+            auto line_height_length = line_height->to_length();
+            if (!line_height_length.is_undefined_or_auto())
+                return line_height_length.to_px(layout_node);
+        }
+
+        if (line_height->is_numeric())
+            return Length(line_height->to_number(), Length::Type::Em).to_px(layout_node);
+
+        if (line_height->is_percentage()) {
+            // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
+            auto& percentage = line_height->as_percentage().percentage();
+            return Length(percentage.as_fraction(), Length::Type::Em).to_px(layout_node);
+        }
+    }
+
+    return Length(font_height_to_line_height_multiplier, Length::Type::Em).to_px(layout_node);
 }
 
 Optional<int> StyleProperties::z_index() const
@@ -129,11 +174,8 @@ float StyleProperties::opacity() const
     if (value->has_number())
         return clamp(value->to_number(), 0.0f, 1.0f);
 
-    if (value->has_length()) {
-        auto length = value->to_length();
-        if (length.is_percentage())
-            return clamp(length.raw_value() / 100.0f, 0.0f, 1.0f);
-    }
+    if (value->is_percentage())
+        return clamp(value->as_percentage().percentage().as_fraction(), 0.0f, 1.0f);
 
     return 1.0f;
 }
@@ -176,18 +218,22 @@ Optional<CSS::FlexWrap> StyleProperties::flex_wrap() const
 
 Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
 {
-    auto value = property(CSS::PropertyID::FlexBasis);
-    if (!value.has_value())
+    auto maybe_value = property(CSS::PropertyID::FlexBasis);
+    if (!maybe_value.has_value())
         return {};
+    auto& value = maybe_value.value();
 
-    if (value.value()->is_identifier() && value.value()->to_identifier() == CSS::ValueID::Content)
+    if (value->is_identifier() && value->to_identifier() == CSS::ValueID::Content)
         return { { CSS::FlexBasis::Content, {} } };
 
-    if (value.value()->has_auto())
+    if (value->has_auto())
         return { { CSS::FlexBasis::Auto, {} } };
 
-    if (value.value()->has_length())
-        return { { CSS::FlexBasis::Length, value.value()->to_length() } };
+    if (value->is_percentage())
+        return { { CSS::FlexBasis::LengthPercentage, value->as_percentage().percentage() } };
+
+    if (value->has_length())
+        return { { CSS::FlexBasis::LengthPercentage, value->to_length() } };
 
     return {};
 }
@@ -686,16 +732,6 @@ Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) c
     default:
         return {};
     }
-}
-
-Optional<BackgroundRepeatData> StyleProperties::background_repeat() const
-{
-    auto value = property(CSS::PropertyID::BackgroundRepeat);
-    if (!value.has_value() || !value.value()->is_background_repeat())
-        return {};
-
-    auto& background_repeat = value.value()->as_background_repeat();
-    return BackgroundRepeatData { background_repeat.repeat_x(), background_repeat.repeat_y() };
 }
 
 Optional<CSS::BoxShadowData> StyleProperties::box_shadow() const

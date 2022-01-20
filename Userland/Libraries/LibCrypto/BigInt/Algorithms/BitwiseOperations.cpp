@@ -7,6 +7,7 @@
 
 #include "UnsignedBigIntegerAlgorithms.h"
 #include <AK/BuiltinWrappers.h>
+#include <AK/NumericLimits.h>
 
 namespace Crypto {
 
@@ -130,8 +131,9 @@ FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_xor_without_allocation(
 /**
  * Complexity: O(N) where N is the number of words
  */
-FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_not_without_allocation(
+FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_not_fill_to_one_based_index_without_allocation(
     UnsignedBigInteger const& right,
+    size_t index,
     UnsignedBigInteger& output)
 {
     // If the value is invalid, the output value is invalid as well.
@@ -139,22 +141,23 @@ FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_not_without_allocation(
         output.invalidate();
         return;
     }
-    if (right.length() == 0) {
+
+    if (index == 0) {
         output.set_to_0();
         return;
     }
+    size_t size = (index + UnsignedBigInteger::BITS_IN_WORD - 1) / UnsignedBigInteger::BITS_IN_WORD;
 
-    output.m_words.resize_and_keep_capacity(right.length());
+    output.m_words.resize_and_keep_capacity(size);
+    VERIFY(size > 0);
+    for (size_t i = 0; i < size - 1; ++i)
+        output.m_words[i] = ~(i < right.length() ? right.words()[i] : 0);
 
-    if (right.length() > 1) {
-        for (size_t i = 0; i < right.length() - 1; ++i)
-            output.m_words[i] = ~right.words()[i];
-    }
+    index -= (size - 1) * UnsignedBigInteger::BITS_IN_WORD;
+    auto last_word_index = size - 1;
+    auto last_word = last_word_index < right.length() ? right.words()[last_word_index] : 0;
 
-    auto last_word_index = right.length() - 1;
-    auto last_word = right.words()[last_word_index];
-
-    output.m_words[last_word_index] = ((u32)0xffffffffffffffff >> count_leading_zeroes(last_word)) & ~last_word;
+    output.m_words[last_word_index] = (NumericLimits<UnsignedBigInteger::Word>::max() >> (UnsignedBigInteger::BITS_IN_WORD - index)) & ~last_word;
 }
 
 /**

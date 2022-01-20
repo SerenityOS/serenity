@@ -103,9 +103,9 @@ void Box::paint_box_shadow(PaintContext& context)
         return;
 
     auto resolved_box_shadow_data = Painting::BoxShadowData {
-        .offset_x = (int)box_shadow_data->offset_x.resolved_or_zero(*this, width()).to_px(*this),
-        .offset_y = (int)box_shadow_data->offset_y.resolved_or_zero(*this, width()).to_px(*this),
-        .blur_radius = (int)box_shadow_data->blur_radius.resolved_or_zero(*this, width()).to_px(*this),
+        .offset_x = (int)box_shadow_data->offset_x.resolved_or_zero(*this).to_px(*this),
+        .offset_y = (int)box_shadow_data->offset_y.resolved_or_zero(*this).to_px(*this),
+        .blur_radius = (int)box_shadow_data->blur_radius.resolved_or_zero(*this).to_px(*this),
         .color = box_shadow_data->color
     };
     Painting::paint_box_shadow(context, enclosing_int_rect(bordered_rect()), resolved_box_shadow_data);

@@ -20,6 +20,7 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
+#include <LibGUI/GitCommitSyntaxHighlighter.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/Menu.h>
@@ -586,6 +587,13 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_html_highlight);
     syntax_menu.add_action(*m_html_highlight);
 
+    m_git_highlight = GUI::Action::create_checkable("Git Commit", [&](auto&) {
+        m_editor->set_syntax_highlighter(make<GUI::GitCommitSyntaxHighlighter>());
+        m_editor->update();
+    });
+    syntax_actions.add_action(*m_git_highlight);
+    syntax_menu.add_action(*m_git_highlight);
+
     m_gml_highlight = GUI::Action::create_checkable("&GML", [&](auto&) {
         m_editor->set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
         m_editor->update();
@@ -639,6 +647,8 @@ void MainWidget::set_path(StringView path)
         m_cpp_highlight->activate();
     } else if (m_extension == "js" || m_extension == "mjs" || m_extension == "json") {
         m_js_highlight->activate();
+    } else if (m_name == "COMMIT_EDITMSG") {
+        m_git_highlight->activate();
     } else if (m_extension == "gml") {
         m_gml_highlight->activate();
     } else if (m_extension == "ini" || m_extension == "af") {

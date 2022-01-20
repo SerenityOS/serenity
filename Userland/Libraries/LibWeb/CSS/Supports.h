@@ -16,20 +16,21 @@
 
 namespace Web::CSS {
 
+// https://www.w3.org/TR/css-conditional-3/#at-supports
 class Supports final : public RefCounted<Supports> {
     friend class Parser;
 
 public:
     struct Feature {
         String declaration;
-        MatchResult evaluate() const;
+        bool evaluate() const;
     };
 
     struct Condition;
     struct InParens {
         Variant<NonnullOwnPtr<Condition>, Feature, GeneralEnclosed> value;
 
-        MatchResult evaluate() const;
+        bool evaluate() const;
     };
 
     struct Condition {
@@ -41,7 +42,7 @@ public:
         Type type;
         Vector<InParens> children;
 
-        MatchResult evaluate() const;
+        bool evaluate() const;
     };
 
     static NonnullRefPtr<Supports> create(NonnullOwnPtr<Condition>&& condition)

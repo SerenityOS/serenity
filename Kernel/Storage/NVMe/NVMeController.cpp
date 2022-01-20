@@ -18,7 +18,7 @@
 namespace Kernel {
 Atomic<u8> NVMeController::controller_id {};
 
-ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(const Kernel::PCI::DeviceIdentifier& device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(const Kernel::PCI::DeviceIdentifier& device_identifier)
 {
     auto controller = TRY(adopt_nonnull_ref_or_enomem(new NVMeController(device_identifier)));
     TRY(controller->initialize());
@@ -26,13 +26,13 @@ ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(const Kern
     return controller;
 }
 
-NVMeController::NVMeController(const PCI::DeviceIdentifier& device_identifier)
+UNMAP_AFTER_INIT NVMeController::NVMeController(const PCI::DeviceIdentifier& device_identifier)
     : PCI::Device(device_identifier.address())
     , m_pci_device_id(device_identifier)
 {
 }
 
-ErrorOr<void> NVMeController::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize()
 {
     // Nr of queues = one queue per core
     auto nr_of_queues = Processor::count();
@@ -42,13 +42,14 @@ ErrorOr<void> NVMeController::initialize()
     PCI::enable_bus_mastering(m_pci_device_id.address());
     m_bar = PCI::get_BAR0(m_pci_device_id.address()) & BAR_ADDR_MASK;
     static_assert(sizeof(ControllerRegister) == REG_SQ0TDBL_START);
+    static_assert(sizeof(NVMeSubmission) == (1 << SQ_WIDTH));
 
     // Map only until doorbell register for the controller
     // Queues will individually map the doorbell register respectively
     m_controller_regs = TRY(Memory::map_typed_writable<volatile ControllerRegister>(PhysicalAddress(m_bar)));
 
     auto caps = m_controller_regs->cap;
-    m_ready_timeout = Time::from_milliseconds(CAP_TO(caps) * 500); // CAP.TO is in 500ms units
+    m_ready_timeout = Time::from_milliseconds((CAP_TO(caps) + 1) * 500); // CAP.TO is in 500ms units
 
     calculate_doorbell_stride();
     TRY(create_admin_queue(irq));
@@ -69,7 +70,7 @@ ErrorOr<void> NVMeController::initialize()
 bool NVMeController::wait_for_ready(bool expected_ready_bit_value)
 {
     static constexpr size_t one_ms_io_delay = 1000;
-    auto wait_iterations = max(1, m_ready_timeout.to_milliseconds());
+    auto wait_iterations = m_ready_timeout.to_milliseconds();
 
     u32 expected_rdy = expected_ready_bit_value ? 1 : 0;
     while (((m_controller_regs->csts >> CSTS_RDY_BIT) & 0x1) != expected_rdy) {
@@ -101,7 +102,6 @@ bool NVMeController::reset_controller()
 
     m_controller_regs->cc = cc;
 
-    IO::delay(10);
     full_memory_barrier();
 
     // Wait until the RDY bit is cleared
@@ -128,7 +128,6 @@ bool NVMeController::start_controller()
 
     m_controller_regs->cc = cc;
 
-    IO::delay(10);
     full_memory_barrier();
 
     // Wait until the RDY bit is set
@@ -138,7 +137,7 @@ bool NVMeController::start_controller()
     return true;
 }
 
-u32 NVMeController::get_admin_q_dept()
+UNMAP_AFTER_INIT u32 NVMeController::get_admin_q_dept()
 {
     u32 aqa = m_controller_regs->aqa;
     // Queue depth is 0 based
@@ -147,7 +146,7 @@ u32 NVMeController::get_admin_q_dept()
     return q_depth;
 }
 
-ErrorOr<void> NVMeController::identify_and_init_namespaces()
+UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
 {
 
     RefPtr<Memory::PhysicalPage> prp_dma_buffer;
@@ -165,8 +164,8 @@ ErrorOr<void> NVMeController::identify_and_init_namespaces()
         NVMeSubmission sub {};
         u16 status = 0;
         sub.op = OP_ADMIN_IDENTIFY;
-        sub.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(prp_dma_buffer->paddr().as_ptr()));
-        sub.cdw10 = NVMe_CNS_ID_ACTIVE_NS & 0xff;
+        sub.identify.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(prp_dma_buffer->paddr().as_ptr()));
+        sub.identify.cns = NVMe_CNS_ID_ACTIVE_NS & 0xff;
         status = submit_admin_command(sub, true);
         if (status) {
             dmesgln("Failed to identify active namespace command");
@@ -187,9 +186,9 @@ ErrorOr<void> NVMeController::identify_and_init_namespaces()
             if (nsid == 0)
                 break;
             sub.op = OP_ADMIN_IDENTIFY;
-            sub.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(prp_dma_buffer->paddr().as_ptr()));
-            sub.cdw10 = NVMe_CNS_ID_NS & 0xff;
-            sub.nsid = nsid;
+            sub.identify.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(prp_dma_buffer->paddr().as_ptr()));
+            sub.identify.cns = NVMe_CNS_ID_NS & 0xff;
+            sub.identify.nsid = nsid;
             status = submit_admin_command(sub, true);
             if (status) {
                 dmesgln("Failed identify namespace with nsid {}", nsid);
@@ -213,7 +212,7 @@ ErrorOr<void> NVMeController::identify_and_init_namespaces()
     return {};
 }
 
-Tuple<u64, u8> NVMeController::get_ns_features(IdentifyNamespace& identify_data_struct)
+UNMAP_AFTER_INIT Tuple<u64, u8> NVMeController::get_ns_features(IdentifyNamespace& identify_data_struct)
 {
     auto flbas = identify_data_struct.flbas & FLBA_SIZE_MASK;
     auto namespace_size = identify_data_struct.nsze;
@@ -253,7 +252,7 @@ void NVMeController::complete_current_request([[maybe_unused]] AsyncDeviceReques
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> NVMeController::create_admin_queue(u8 irq)
+UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(u8 irq)
 {
     auto qdepth = get_admin_q_dept();
     OwnPtr<Memory::Region> cq_dma_region;
@@ -296,17 +295,14 @@ ErrorOr<void> NVMeController::create_admin_queue(u8 irq)
     return {};
 }
 
-ErrorOr<void> NVMeController::create_io_queue(u8 irq, u8 qid)
+UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 irq, u8 qid)
 {
-    NVMeSubmission sub {};
     OwnPtr<Memory::Region> cq_dma_region;
     NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_pages;
     OwnPtr<Memory::Region> sq_dma_region;
     NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_pages;
     auto cq_size = round_up_to_power_of_two(CQ_SIZE(IO_QUEUE_SIZE), 4096);
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(IO_QUEUE_SIZE), 4096);
-
-    static_assert(sizeof(NVMeSubmission) == (1 << SQ_WIDTH));
 
     {
         auto buffer = TRY(MM.allocate_dma_buffer_pages(cq_size, "IO CQ queue", Memory::Region::Access::ReadWrite, cq_dma_pages));
@@ -323,25 +319,29 @@ ErrorOr<void> NVMeController::create_io_queue(u8 irq, u8 qid)
     }
 
     {
+        NVMeSubmission sub {};
         sub.op = OP_ADMIN_CREATE_COMPLETION_QUEUE;
-        sub.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first().paddr().as_ptr()));
+        sub.create_cq.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first().paddr().as_ptr()));
+        sub.create_cq.cqid = qid;
         // The queue size is 0 based
-        sub.cdw10 = AK::convert_between_host_and_little_endian(((IO_QUEUE_SIZE - 1) << 16 | qid));
+        sub.create_cq.qsize = AK::convert_between_host_and_little_endian(IO_QUEUE_SIZE - 1);
         auto flags = QUEUE_IRQ_ENABLED | QUEUE_PHY_CONTIGUOUS;
         // TODO: Eventually move to MSI.
         // For now using pin based interrupts. Clear the first 16 bits
         // to use pin-based interrupts.
-        sub.cdw11 = AK::convert_between_host_and_little_endian(flags & 0xFFFF);
+        sub.create_cq.cq_flags = AK::convert_between_host_and_little_endian(flags & 0xFFFF);
         submit_admin_command(sub, true);
     }
     {
+        NVMeSubmission sub {};
         sub.op = OP_ADMIN_CREATE_SUBMISSION_QUEUE;
-        sub.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first().paddr().as_ptr()));
+        sub.create_sq.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first().paddr().as_ptr()));
+        sub.create_sq.sqid = qid;
         // The queue size is 0 based
-        sub.cdw10 = AK::convert_between_host_and_little_endian(((IO_QUEUE_SIZE - 1) << 16 | qid));
+        sub.create_sq.qsize = AK::convert_between_host_and_little_endian(IO_QUEUE_SIZE - 1);
         auto flags = QUEUE_IRQ_ENABLED | QUEUE_PHY_CONTIGUOUS;
-        // The qid used below points to the completion queue qid
-        sub.cdw11 = AK::convert_between_host_and_little_endian(qid << 16 | flags);
+        sub.create_sq.cqid = qid;
+        sub.create_sq.sq_flags = AK::convert_between_host_and_little_endian(flags);
         submit_admin_command(sub, true);
     }
 

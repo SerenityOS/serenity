@@ -175,10 +175,10 @@ i64 get_iana_time_zone_offset_nanoseconds(BigInt const& epoch_nanoseconds, Strin
     else
         time = Time::from_seconds(*seconds.to_base(10).to_int<i64>());
 
-    auto offset_seconds = ::TimeZone::get_time_zone_offset(*time_zone, time);
-    VERIFY(offset_seconds.has_value());
+    auto offset = ::TimeZone::get_time_zone_offset(*time_zone, time);
+    VERIFY(offset.has_value());
 
-    return *offset_seconds * 1'000'000'000;
+    return offset->seconds * 1'000'000'000;
 }
 
 // 11.6.5 GetIANATimeZoneNextTransition ( epochNanoseconds, timeZoneIdentifier ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezonenexttransition

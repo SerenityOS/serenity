@@ -147,14 +147,45 @@ String ProjectBuilder::generate_cmake_file_content() const
 {
     StringBuilder builder;
     builder.appendff("add_subdirectory({})\n", LexicalPath::dirname(m_serenity_component_cmake_file));
-    generate_cmake_library_definitions(builder);
-    builder.append('\n');
-    generate_cmake_library_dependencies(builder);
+
+    auto defined_libraries = get_defined_libraries();
+    for (auto& library : defined_libraries) {
+        builder.appendff("add_library({} SHARED IMPORTED GLOBAL)\n", library.key);
+        builder.appendff("set_target_properties({} PROPERTIES IMPORTED_LOCATION {})\n", library.key, library.value->path);
+
+        if (library.key == "LibCStaticWithoutDeps"sv || library.key == "DumpLayoutTree"sv)
+            continue;
+
+        // We need to specify the dependencies for each defined library in CMake because some applications do not specify
+        // all of their direct dependencies in the CMakeLists file.
+        // For example, a target may directly use LibGFX but only specify LibGUI as a dependency (which in turn depends on LibGFX).
+        // In this example, if we don't specify the dependencies of LibGUI in the CMake file, linking will fail because of undefined LibGFX symbols.
+        builder.appendff("target_link_libraries({} INTERFACE {})\n", library.key, String::join(' ', library.value->dependencies));
+    }
 
     return builder.to_string();
 }
 
-void ProjectBuilder::generate_cmake_library_definitions(StringBuilder& builder)
+HashMap<String, NonnullOwnPtr<ProjectBuilder::LibraryInfo>> ProjectBuilder::get_defined_libraries()
+{
+    HashMap<String, NonnullOwnPtr<ProjectBuilder::LibraryInfo>> libraries;
+
+    for_each_library_definition([&libraries](String name, String path) {
+        libraries.set(name, make<ProjectBuilder::LibraryInfo>(move(path)));
+    });
+    for_each_library_dependencies([&libraries](String name, Vector<StringView> const& dependencies) {
+        auto library = libraries.get(name);
+        if (!library.has_value())
+            return;
+        for (auto const& dependency : dependencies) {
+            if (libraries.contains(dependency))
+                library.value()->dependencies.append(dependency);
+        }
+    });
+    return libraries;
+}
+
+void ProjectBuilder::for_each_library_definition(Function<void(String, String)> func)
 {
     Vector<String> arguments = { "sh", "-c", "find Userland/Libraries -name CMakeLists.txt | xargs grep serenity_lib" };
     auto res = Core::command("/bin/sh", arguments, {});
@@ -165,7 +196,6 @@ void ProjectBuilder::generate_cmake_library_definitions(StringBuilder& builder)
 
     static const Regex<ECMA262> parse_library_definition(R"~~~(.+:serenity_lib[c]?\((\w+) (\w+)\).*)~~~");
     for (auto& line : res.value().stdout.split('\n')) {
-
         RegexResult result;
         if (!parse_library_definition.search(line, result))
             continue;
@@ -174,13 +204,15 @@ void ProjectBuilder::generate_cmake_library_definitions(StringBuilder& builder)
 
         auto library_name = result.capture_group_matches.at(0).at(0).view.string_view();
         auto library_obj_name = result.capture_group_matches.at(0).at(1).view.string_view();
-        builder.appendff("add_library({} SHARED IMPORTED GLOBAL)\n", library_name);
         auto so_path = String::formatted("{}.so", LexicalPath::join("/usr/lib"sv, String::formatted("lib{}", library_obj_name)).string());
-        builder.appendff("set_target_properties({} PROPERTIES IMPORTED_LOCATION {})\n", library_name, so_path);
+        func(library_name, so_path);
     }
+
+    // ssp is defined with "add_library" so it doesn't get picked up with the current logic for finding library definitions.
+    func("ssp", "/usr/lib/libssp.a");
 }
 
-void ProjectBuilder::generate_cmake_library_dependencies(StringBuilder& builder)
+void ProjectBuilder::for_each_library_dependencies(Function<void(String, Vector<StringView>)> func)
 {
     Vector<String> arguments = { "sh", "-c", "find Userland/Libraries -name CMakeLists.txt | xargs grep target_link_libraries" };
     auto res = Core::command("/bin/sh", arguments, {});
@@ -199,10 +231,9 @@ void ProjectBuilder::generate_cmake_library_dependencies(StringBuilder& builder)
             continue;
 
         auto library_name = result.capture_group_matches.at(0).at(0).view.string_view();
-        auto dependencies = result.capture_group_matches.at(0).at(1).view.string_view();
-        if (library_name == "LibCStaticWithoutDeps"sv || library_name == "DumpLayoutTree"sv)
-            continue;
-        builder.appendff("target_link_libraries({} INTERFACE {})\n", library_name, dependencies);
+        auto dependencies_string = result.capture_group_matches.at(0).at(1).view.string_view();
+
+        func(library_name, dependencies_string.split_view(" "));
     }
 }
 

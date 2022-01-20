@@ -25,6 +25,7 @@
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
+#include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>
@@ -111,7 +112,7 @@ enum class Cursor {
 
 enum class FlexBasis {
     Content,
-    Length,
+    LengthPercentage,
     Auto,
 };
 
@@ -284,6 +285,7 @@ public:
         ListStyle,
         Numeric,
         Overflow,
+        Percentage,
         Position,
         String,
         TextDecoration,
@@ -314,6 +316,7 @@ public:
     bool is_list_style() const { return type() == Type::ListStyle; }
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_overflow() const { return type() == Type::Overflow; }
+    bool is_percentage() const { return type() == Type::Percentage; }
     bool is_position() const { return type() == Type::Position; }
     bool is_string() const { return type() == Type::String; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
@@ -343,6 +346,7 @@ public:
     ListStyleStyleValue const& as_list_style() const;
     NumericStyleValue const& as_numeric() const;
     OverflowStyleValue const& as_overflow() const;
+    PercentageStyleValue const& as_percentage() const;
     PositionStyleValue const& as_position() const;
     StringStyleValue const& as_string() const;
     TextDecorationStyleValue const& as_text_decoration() const;
@@ -370,6 +374,7 @@ public:
     ListStyleStyleValue& as_list_style() { return const_cast<ListStyleStyleValue&>(const_cast<StyleValue const&>(*this).as_list_style()); }
     NumericStyleValue& as_numeric() { return const_cast<NumericStyleValue&>(const_cast<StyleValue const&>(*this).as_numeric()); }
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
+    PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
     StringStyleValue& as_string() { return const_cast<StringStyleValue&>(const_cast<StyleValue const&>(*this).as_string()); }
     TextDecorationStyleValue& as_text_decoration() { return const_cast<TextDecorationStyleValue&>(const_cast<StyleValue const&>(*this).as_text_decoration()); }
@@ -463,37 +468,6 @@ private:
     size_t m_layer_count;
 };
 
-class PositionStyleValue final : public StyleValue {
-public:
-    static NonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, Length const& offset_x, PositionEdge edge_y, Length const& offset_y)
-    {
-        return adopt_ref(*new PositionStyleValue(edge_x, offset_x, edge_y, offset_y));
-    }
-    virtual ~PositionStyleValue() override { }
-
-    PositionEdge edge_x() const { return m_edge_x; }
-    Length const& offset_x() const { return m_offset_x; }
-    PositionEdge edge_y() const { return m_edge_y; }
-    Length const& offset_y() const { return m_offset_y; }
-
-    virtual String to_string() const override;
-
-private:
-    PositionStyleValue(PositionEdge edge_x, Length const& offset_x, PositionEdge edge_y, Length const& offset_y)
-        : StyleValue(Type::Position)
-        , m_edge_x(edge_x)
-        , m_offset_x(offset_x)
-        , m_edge_y(edge_y)
-        , m_offset_y(offset_y)
-    {
-    }
-
-    PositionEdge m_edge_x;
-    Length m_offset_x;
-    PositionEdge m_edge_y;
-    Length m_offset_y;
-};
-
 class BackgroundRepeatStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<BackgroundRepeatStyleValue> create(Repeat repeat_x, Repeat repeat_y)
@@ -525,14 +499,14 @@ private:
 // NOTE: This is not used for identifier sizes, like `cover` and `contain`.
 class BackgroundSizeStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<BackgroundSizeStyleValue> create(Length size_x, Length size_y)
+    static NonnullRefPtr<BackgroundSizeStyleValue> create(LengthPercentage size_x, LengthPercentage size_y)
     {
         return adopt_ref(*new BackgroundSizeStyleValue(size_x, size_y));
     }
     virtual ~BackgroundSizeStyleValue() override { }
 
-    Length size_x() const { return m_size_x; }
-    Length size_y() const { return m_size_y; }
+    LengthPercentage size_x() const { return m_size_x; }
+    LengthPercentage size_y() const { return m_size_y; }
 
     virtual String to_string() const override
     {
@@ -540,15 +514,15 @@ public:
     }
 
 private:
-    BackgroundSizeStyleValue(Length size_x, Length size_y)
+    BackgroundSizeStyleValue(LengthPercentage size_x, LengthPercentage size_y)
         : StyleValue(Type::BackgroundSize)
         , m_size_x(size_x)
         , m_size_y(size_y)
     {
     }
 
-    Length m_size_x;
-    Length m_size_y;
+    LengthPercentage m_size_x;
+    LengthPercentage m_size_y;
 };
 
 class BorderStyleValue final : public StyleValue {
@@ -590,18 +564,15 @@ private:
 
 class BorderRadiusStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<BorderRadiusStyleValue> create(Length const& horizontal_radius, Length const& vertical_radius)
+    static NonnullRefPtr<BorderRadiusStyleValue> create(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
     {
         return adopt_ref(*new BorderRadiusStyleValue(horizontal_radius, vertical_radius));
     }
     virtual ~BorderRadiusStyleValue() override { }
 
-    Length const& horizontal_radius() const { return m_horizontal_radius; }
-    Length const& vertical_radius() const { return m_vertical_radius; }
+    LengthPercentage const& horizontal_radius() const { return m_horizontal_radius; }
+    LengthPercentage const& vertical_radius() const { return m_vertical_radius; }
     bool is_elliptical() const { return m_is_elliptical; }
-
-    // FIXME: Remove this once we support elliptical border-radius in Layout/Node.
-    virtual Length to_length() const override { return horizontal_radius(); }
 
     virtual String to_string() const override
     {
@@ -619,7 +590,7 @@ public:
     }
 
 private:
-    BorderRadiusStyleValue(Length const& horizontal_radius, Length const& vertical_radius)
+    BorderRadiusStyleValue(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
         : StyleValue(Type::BorderRadius)
         , m_horizontal_radius(horizontal_radius)
         , m_vertical_radius(vertical_radius)
@@ -629,13 +600,21 @@ private:
 
     virtual void visit_lengths(Function<void(CSS::Length&)> visitor) override
     {
-        visitor(m_horizontal_radius);
-        visitor(m_vertical_radius);
+        if (!m_horizontal_radius.is_percentage()) {
+            Length temp = m_horizontal_radius.length();
+            visitor(temp);
+            m_horizontal_radius = move(temp);
+        }
+        if (!m_vertical_radius.is_percentage()) {
+            Length temp = m_vertical_radius.length();
+            visitor(temp);
+            m_vertical_radius = move(temp);
+        }
     }
 
     bool m_is_elliptical;
-    Length m_horizontal_radius;
-    Length m_vertical_radius;
+    LengthPercentage m_horizontal_radius;
+    LengthPercentage m_vertical_radius;
 };
 
 class BoxShadowStyleValue final : public StyleValue {
@@ -1202,6 +1181,63 @@ private:
 
     NonnullRefPtr<StyleValue> m_overflow_x;
     NonnullRefPtr<StyleValue> m_overflow_y;
+};
+
+class PercentageStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<PercentageStyleValue> create(Percentage percentage)
+    {
+        return adopt_ref(*new PercentageStyleValue(move(percentage)));
+    }
+    virtual ~PercentageStyleValue() override { }
+
+    Percentage const& percentage() const { return m_percentage; }
+    Percentage& percentage() { return m_percentage; }
+
+    virtual String to_string() const override
+    {
+        return m_percentage.to_string();
+    }
+
+private:
+    PercentageStyleValue(Percentage&& percentage)
+        : StyleValue(Type::Percentage)
+        , m_percentage(percentage)
+    {
+    }
+
+    Percentage m_percentage;
+};
+
+class PositionStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
+    {
+        return adopt_ref(*new PositionStyleValue(edge_x, offset_x, edge_y, offset_y));
+    }
+    virtual ~PositionStyleValue() override { }
+
+    PositionEdge edge_x() const { return m_edge_x; }
+    LengthPercentage const& offset_x() const { return m_offset_x; }
+    PositionEdge edge_y() const { return m_edge_y; }
+    LengthPercentage const& offset_y() const { return m_offset_y; }
+
+    virtual String to_string() const override;
+
+private:
+    PositionStyleValue(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
+        : StyleValue(Type::Position)
+        , m_edge_x(edge_x)
+        , m_offset_x(offset_x)
+        , m_edge_y(edge_y)
+        , m_offset_y(offset_y)
+    {
+    }
+
+    PositionEdge m_edge_x;
+    LengthPercentage m_offset_x;
+    PositionEdge m_edge_y;
+    LengthPercentage m_offset_y;
 };
 
 class StringStyleValue : public StyleValue {

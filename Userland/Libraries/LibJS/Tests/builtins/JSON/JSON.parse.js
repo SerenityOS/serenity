@@ -35,3 +35,11 @@ test("syntax errors", () => {
         }).toThrow(SyntaxError);
     });
 });
+
+test("negative zero", () => {
+    ["-0", " \n-0", "-0  \t", "\n\t -0\n   ", "-0.0"].forEach(testCase => {
+        expect(JSON.parse(testCase)).toEqual(-0.0);
+    });
+
+    expect(JSON.parse(-0)).toEqual(0);
+});

@@ -12,6 +12,7 @@
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibTimeZone/TimeZone.h>
 #include <LibUnicode/Forward.h>
 
 namespace Unicode {
@@ -210,7 +211,7 @@ Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringVie
 Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour);
 
 String format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time);
-Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style);
+Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style, TimeZone::InDST in_dst);
 Optional<TimeZoneFormat> get_time_zone_format(StringView locale);
 
 }

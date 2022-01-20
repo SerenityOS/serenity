@@ -22,9 +22,6 @@ void AsyncGeneratorFunctionConstructor::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
 
-    // 27.4.2.2 AsyncGeneratorFunction.prototype, https://tc39.es/ecma262/#sec-asyncgeneratorfunction-prototype
-    define_direct_property(vm.names.prototype, global_object.async_generator_function_prototype(), 0);
-
     // 27.4.2.1 AsyncGeneratorFunction.length, https://tc39.es/ecma262/#sec-asyncgeneratorfunction-length
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 

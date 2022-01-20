@@ -702,7 +702,11 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     }
 
     save_state();
-    auto rule_start = push_start();
+    auto rule_start = (expect_parens && !is_async)
+        // Someone has consumed the opening parenthesis for us! Start there.
+        ? RulePosition { *this, m_rule_starts.last() }
+        // We've not encountered one yet, so the rule start is actually here.
+        : push_start();
 
     ArmedScopeGuard state_rollback_guard = [&] {
         load_state();
@@ -819,9 +823,12 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         }
     }
 
+    auto function_start_offset = rule_start.position().offset;
+    auto function_end_offset = position().offset - m_state.current_token.trivia().length();
+    auto source_text = String { m_state.lexer.source().substring_view(function_start_offset, function_end_offset - function_start_offset) };
     return create_ast_node<FunctionExpression>(
-        { m_state.current_token.filename(), rule_start.position(), position() }, "", move(body),
-        move(parameters), function_length, function_kind, body->in_strict_mode(),
+        { m_state.current_token.filename(), rule_start.position(), position() }, "", move(source_text),
+        move(body), move(parameters), function_length, function_kind, body->in_strict_mode(),
         /* might_need_arguments_object */ false, contains_direct_call_to_eval, /* is_arrow_function */ true);
 }
 
@@ -1066,6 +1073,8 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             continue;
         }
 
+        auto function_start = position();
+
         if (match(TokenType::Async)) {
             auto lookahead_token = next_token();
             if (lookahead_token.type() != TokenType::Semicolon && lookahead_token.type() != TokenType::CurlyClose
@@ -1086,6 +1095,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 if (match(TokenType::Identifier)) {
                     consume();
                     is_static = true;
+                    function_start = position();
                     if (match(TokenType::Async)) {
                         consume();
                         is_async = true;
@@ -1242,7 +1252,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
             if (is_async)
                 parse_options |= FunctionNodeParseOptions::IsAsyncFunction;
-            auto function = parse_function_node<FunctionExpression>(parse_options);
+            auto function = parse_function_node<FunctionExpression>(parse_options, function_start);
             if (is_constructor) {
                 constructor = move(function);
             } else if (!property_key.is_null()) {
@@ -1295,13 +1305,13 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             constructor_body->append(create_ast_node<ReturnStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(super_call)));
 
             constructor = create_ast_node<FunctionExpression>(
-                { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
-                Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, FunctionKind::Normal,
+                { m_state.current_token.filename(), rule_start.position(), position() }, class_name, "",
+                move(constructor_body), Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, FunctionKind::Normal,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         } else {
             constructor = create_ast_node<FunctionExpression>(
-                { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
-                Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Normal,
+                { m_state.current_token.filename(), rule_start.position(), position() }, class_name, "",
+                move(constructor_body), Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Normal,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         }
     }
@@ -1316,7 +1326,11 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             syntax_error(String::formatted("Reference to undeclared private field or method '{}'", private_name));
     }
 
-    return create_ast_node<ClassExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(class_name), move(constructor), move(super_class), move(elements));
+    auto function_start_offset = rule_start.position().offset;
+    auto function_end_offset = position().offset - m_state.current_token.trivia().length();
+    auto source_text = String { m_state.lexer.source().substring_view(function_start_offset, function_end_offset - function_start_offset) };
+
+    return create_ast_node<ClassExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(class_name), move(source_text), move(constructor), move(super_class), move(elements));
 }
 
 Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
@@ -1640,6 +1654,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         }
 
         auto type = m_state.current_token.type();
+        auto function_start = position();
 
         if (match(TokenType::Async)) {
             auto lookahead_token = next_token();
@@ -1701,7 +1716,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
             if (function_kind == FunctionKind::Async || function_kind == FunctionKind::AsyncGenerator)
                 parse_options |= FunctionNodeParseOptions::IsAsyncFunction;
-            auto function = parse_function_node<FunctionExpression>(parse_options);
+            auto function = parse_function_node<FunctionExpression>(parse_options, function_start);
             properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, function, property_type, true));
         } else if (match(TokenType::Colon)) {
             if (!property_name) {
@@ -2138,7 +2153,12 @@ RefPtr<BindingPattern> Parser::synthesize_binding_pattern(Expression const& expr
         return error.position.has_value() && range.contains(*error.position);
     });
     // Make a parser and parse the source for this expression as a binding pattern.
-    auto source = m_state.lexer.source().substring_view(expression.source_range().start.offset - 2, expression.source_range().end.offset - expression.source_range().start.offset);
+    // NOTE: There's currently a fundamental problem that we pass the *next* (a.k.a. `current_token`)
+    // token's position to most nodes' SourceRange when using `rule_start.position(), position()`.
+    // This means that `source` will contain the subsequent token's trivia, if any (which is fine).
+    auto source_start_offset = expression.source_range().start.offset;
+    auto source_end_offset = expression.source_range().end.offset;
+    auto source = m_state.lexer.source().substring_view(source_start_offset, source_end_offset - source_start_offset);
     Lexer lexer { source, m_state.lexer.filename(), expression.source_range().start.line, expression.source_range().start.column };
     Parser parser { lexer };
 
@@ -2446,9 +2466,11 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
 }
 
 template<typename FunctionNodeType>
-NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
+NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options, Optional<Position> const& function_start)
 {
-    auto rule_start = push_start();
+    auto rule_start = function_start.has_value()
+        ? RulePosition { *this, *function_start }
+        : push_start();
     VERIFY(!(parse_options & FunctionNodeParseOptions::IsGetterFunction && parse_options & FunctionNodeParseOptions::IsSetterFunction));
 
     TemporaryChange super_property_access_rollback(m_state.allow_super_property_lookup, !!(parse_options & FunctionNodeParseOptions::AllowSuperPropertyLookup));
@@ -2524,9 +2546,12 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     if (has_strict_directive)
         check_identifier_name_for_assignment_validity(name, true);
 
+    auto function_start_offset = rule_start.position().offset;
+    auto function_end_offset = position().offset - m_state.current_token.trivia().length();
+    auto source_text = String { m_state.lexer.source().substring_view(function_start_offset, function_end_offset - function_start_offset) };
     return create_ast_node<FunctionNodeType>(
         { m_state.current_token.filename(), rule_start.position(), position() },
-        name, move(body), move(parameters), function_length,
+        name, move(source_text), move(body), move(parameters), function_length,
         function_kind, has_strict_directive, m_state.function_might_need_arguments_object,
         contains_direct_call_to_eval);
 }

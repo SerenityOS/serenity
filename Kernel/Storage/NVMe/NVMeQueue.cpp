@@ -20,7 +20,7 @@ ErrorOr<NonnullRefPtr<NVMeQueue>> NVMeQueue::try_create(u16 qid, u8 irq, u32 q_d
     return queue;
 }
 
-NVMeQueue::NVMeQueue(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs)
+UNMAP_AFTER_INIT NVMeQueue::NVMeQueue(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs)
     : IRQHandler(irq)
     , m_qid(qid)
     , m_admin_queue(qid == 0)
@@ -38,7 +38,7 @@ NVMeQueue::NVMeQueue(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma
     m_cqe_array = { reinterpret_cast<NVMeCompletion*>(m_cq_dma_region->vaddr().as_ptr()), m_qdepth };
 }
 
-ErrorOr<void> NVMeQueue::create()
+UNMAP_AFTER_INIT ErrorOr<void> NVMeQueue::create()
 {
     // DMA region for RW operation. For now the requests don't exceed more than 4096 bytes(Storage device takes of it)
     auto buffer = TRY(MM.allocate_dma_buffer_page("Admin CQ queue", Memory::Region::Access::ReadWrite, m_rw_dma_page));
@@ -93,7 +93,7 @@ bool NVMeQueue::handle_irq(const RegisterState&)
     return nr_of_processed_cqes ? true : false;
 }
 
-void NVMeQueue::submit_sqe(struct NVMeSubmission& sub)
+void NVMeQueue::submit_sqe(NVMeSubmission& sub)
 {
     SpinlockLocker lock(m_sq_lock);
     // For now let's use sq tail as a unique command id.
@@ -144,12 +144,11 @@ void NVMeQueue::read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 
     m_current_request = request;
 
     sub.op = OP_NVME_READ;
-    sub.nsid = nsid;
-    sub.cdw10 = AK::convert_between_host_and_little_endian(index & 0xFFFFFFFF);
-    sub.cdw11 = AK::convert_between_host_and_little_endian(index >> 32);
+    sub.rw.nsid = nsid;
+    sub.rw.slba = AK::convert_between_host_and_little_endian(index);
     // No. of lbas is 0 based
-    sub.cdw12 = AK::convert_between_host_and_little_endian((count - 1) & 0xFFFF);
-    sub.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(m_rw_dma_page->paddr().as_ptr()));
+    sub.rw.length = AK::convert_between_host_and_little_endian((count - 1) & 0xFFFF);
+    sub.rw.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(m_rw_dma_page->paddr().as_ptr()));
 
     full_memory_barrier();
     submit_sqe(sub);
@@ -166,12 +165,11 @@ void NVMeQueue::write(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32
         return;
     }
     sub.op = OP_NVME_WRITE;
-    sub.nsid = nsid;
-    sub.cdw10 = AK::convert_between_host_and_little_endian(index & 0xFFFFFFFF);
-    sub.cdw11 = AK::convert_between_host_and_little_endian(index >> 32);
+    sub.rw.nsid = nsid;
+    sub.rw.slba = AK::convert_between_host_and_little_endian(index);
     // No. of lbas is 0 based
-    sub.cdw12 = AK::convert_between_host_and_little_endian((count - 1) & 0xFFFF);
-    sub.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(m_rw_dma_page->paddr().as_ptr()));
+    sub.rw.length = AK::convert_between_host_and_little_endian((count - 1) & 0xFFFF);
+    sub.rw.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(m_rw_dma_page->paddr().as_ptr()));
 
     full_memory_barrier();
     submit_sqe(sub);

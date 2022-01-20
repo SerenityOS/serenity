@@ -63,17 +63,20 @@ Optional<StringView> canonicalize_time_zone(StringView time_zone)
     return canonical_time_zone;
 }
 
-Optional<i64> __attribute__((weak)) get_time_zone_offset([[maybe_unused]] TimeZone time_zone, AK::Time)
+Optional<DaylightSavingsRule> __attribute__((weak)) daylight_savings_rule_from_string(StringView) { return {}; }
+StringView __attribute__((weak)) daylight_savings_rule_to_string(DaylightSavingsRule) { return {}; }
+
+Optional<Offset> __attribute__((weak)) get_time_zone_offset([[maybe_unused]] TimeZone time_zone, AK::Time)
 {
 #if !ENABLE_TIME_ZONE_DATA
     VERIFY(time_zone == TimeZone::UTC);
-    return 0;
+    return Offset {};
 #else
     return {};
 #endif
 }
 
-Optional<i64> get_time_zone_offset(StringView time_zone, AK::Time time)
+Optional<Offset> get_time_zone_offset(StringView time_zone, AK::Time time)
 {
     if (auto maybe_time_zone = time_zone_from_string(time_zone); maybe_time_zone.has_value())
         return get_time_zone_offset(*maybe_time_zone, time);

@@ -139,6 +139,12 @@ OverflowStyleValue const& StyleValue::as_overflow() const
     return static_cast<OverflowStyleValue const&>(*this);
 }
 
+PercentageStyleValue const& StyleValue::as_percentage() const
+{
+    VERIFY(is_percentage());
+    return static_cast<PercentageStyleValue const&>(*this);
+}
+
 PositionStyleValue const& StyleValue::as_position() const
 {
     VERIFY(is_position());

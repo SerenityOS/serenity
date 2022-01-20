@@ -522,7 +522,8 @@ void Device::rasterize_triangle(const Triangle& triangle)
                 quad.vertex_color = expand4(vertex0.color);
             }
 
-            quad.uv = interpolate(expand4(vertex0.tex_coord), expand4(vertex1.tex_coord), expand4(vertex2.tex_coord), quad.barycentrics);
+            for (size_t i = 0; i < NUM_SAMPLERS; ++i)
+                quad.texture_coordinates[i] = interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics);
 
             if (m_options.fog_enabled) {
                 // Calculate depth of fragment for fog
@@ -605,21 +606,22 @@ DeviceInfo Device::info() const
         .num_texture_units = NUM_SAMPLERS,
         .num_lights = NUM_LIGHTS,
         .stencil_bits = sizeof(u8) * 8,
+        .supports_npot_textures = true,
     };
 }
 
 static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const& options)
 {
-    auto generate_coordinate = [&](size_t config_index) -> float {
-        auto mode = options.texcoord_generation_config[config_index].mode;
+    auto generate_coordinate = [&](size_t texcoord_index, size_t config_index) -> float {
+        auto mode = options.texcoord_generation_config[texcoord_index][config_index].mode;
 
         switch (mode) {
         case TexCoordGenerationMode::ObjectLinear: {
-            auto coefficients = options.texcoord_generation_config[config_index].coefficients;
+            auto coefficients = options.texcoord_generation_config[texcoord_index][config_index].coefficients;
             return coefficients.dot(vertex.position);
         }
         case TexCoordGenerationMode::EyeLinear: {
-            auto coefficients = options.texcoord_generation_config[config_index].coefficients;
+            auto coefficients = options.texcoord_generation_config[texcoord_index][config_index].coefficients;
             return coefficients.dot(vertex.eye_coordinates);
         }
         case TexCoordGenerationMode::SphereMap: {
@@ -665,13 +667,16 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
         }
     };
 
-    auto const enabled_coords = options.texcoord_generation_enabled_coordinates;
-    vertex.tex_coord = {
-        ((enabled_coords & TexCoordGenerationCoordinate::S) > 0) ? generate_coordinate(0) : vertex.tex_coord.x(),
-        ((enabled_coords & TexCoordGenerationCoordinate::T) > 0) ? generate_coordinate(1) : vertex.tex_coord.y(),
-        ((enabled_coords & TexCoordGenerationCoordinate::R) > 0) ? generate_coordinate(2) : vertex.tex_coord.z(),
-        ((enabled_coords & TexCoordGenerationCoordinate::Q) > 0) ? generate_coordinate(3) : vertex.tex_coord.w(),
-    };
+    for (size_t i = 0; i < vertex.tex_coords.size(); ++i) {
+        auto& tex_coord = vertex.tex_coords[i];
+        auto const enabled_coords = options.texcoord_generation_enabled_coordinates[i];
+        tex_coord = {
+            ((enabled_coords & TexCoordGenerationCoordinate::S) > 0) ? generate_coordinate(i, 0) : tex_coord.x(),
+            ((enabled_coords & TexCoordGenerationCoordinate::T) > 0) ? generate_coordinate(i, 1) : tex_coord.y(),
+            ((enabled_coords & TexCoordGenerationCoordinate::R) > 0) ? generate_coordinate(i, 2) : tex_coord.z(),
+            ((enabled_coords & TexCoordGenerationCoordinate::Q) > 0) ? generate_coordinate(i, 3) : tex_coord.w(),
+        };
+    }
 }
 
 void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix3x3 const& normal_transform,
@@ -950,6 +955,15 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         }
     }
 
+    // Generate texture coordinates if at least one coordinate is enabled
+    bool texture_coordinate_generation_enabled = false;
+    for (auto const coordinates_enabled : m_options.texcoord_generation_enabled_coordinates) {
+        if (coordinates_enabled != TexCoordGenerationCoordinate::None) {
+            texture_coordinate_generation_enabled = true;
+            break;
+        }
+    }
+
     for (auto& triangle : m_processed_triangles) {
         // Let's calculate the (signed) area of the triangle
         // https://cp-algorithms.com/geometry/oriented-triangle-area.html
@@ -985,18 +999,18 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
             triangle.vertices[2].normal.normalize();
         }
 
-        // Generate texture coordinates if at least one coordinate is enabled
-        if (m_options.texcoord_generation_enabled_coordinates != TexCoordGenerationCoordinate::None) {
+        if (texture_coordinate_generation_enabled) {
             generate_texture_coordinates(triangle.vertices[0], m_options);
             generate_texture_coordinates(triangle.vertices[1], m_options);
             generate_texture_coordinates(triangle.vertices[2], m_options);
         }
 
         // Apply texture transformation
-        // FIXME: implement multi-texturing: texcoords should be stored per texture unit
-        triangle.vertices[0].tex_coord = texture_transform * triangle.vertices[0].tex_coord;
-        triangle.vertices[1].tex_coord = texture_transform * triangle.vertices[1].tex_coord;
-        triangle.vertices[2].tex_coord = texture_transform * triangle.vertices[2].tex_coord;
+        for (size_t i = 0; i < NUM_SAMPLERS; ++i) {
+            triangle.vertices[0].tex_coords[i] = texture_transform * triangle.vertices[0].tex_coords[i];
+            triangle.vertices[1].tex_coords[i] = texture_transform * triangle.vertices[1].tex_coords[i];
+            triangle.vertices[2].tex_coords[i] = texture_transform * triangle.vertices[2].tex_coords[i];
+        }
 
         rasterize_triangle(triangle);
     }
@@ -1010,7 +1024,7 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
         // FIXME: implement GL_TEXTURE_1D, GL_TEXTURE_3D and GL_TEXTURE_CUBE_MAP
         auto const& sampler = m_samplers[i];
 
-        auto texel = sampler.sample_2d({ quad.uv.x(), quad.uv.y() });
+        auto texel = sampler.sample_2d({ quad.texture_coordinates[i].x(), quad.texture_coordinates[i].y() });
         INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
 
         // FIXME: Implement more blend modes

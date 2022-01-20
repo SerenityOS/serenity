@@ -109,9 +109,6 @@ public:
 
     SignedBigInteger plus(const UnsignedBigInteger& other) const;
     SignedBigInteger minus(const UnsignedBigInteger& other) const;
-    SignedBigInteger bitwise_or(const UnsignedBigInteger& other) const;
-    SignedBigInteger bitwise_and(const UnsignedBigInteger& other) const;
-    SignedBigInteger bitwise_xor(const UnsignedBigInteger& other) const;
     SignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     SignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
 
@@ -142,6 +139,11 @@ struct SignedDivisionResult {
 };
 
 }
+
+template<>
+struct AK::Formatter<Crypto::SignedBigInteger> : AK::Formatter<Crypto::UnsignedBigInteger> {
+    ErrorOr<void> format(FormatBuilder&, Crypto::SignedBigInteger const&);
+};
 
 inline Crypto::SignedBigInteger
 operator""_sbigint(const char* string, size_t length)

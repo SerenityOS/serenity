@@ -195,6 +195,16 @@ void glTexCoord4fv(const GLfloat* v)
     g_gl_context->gl_tex_coord(v[0], v[1], v[2], v[3]);
 }
 
+void glMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t)
+{
+    glMultiTexCoord2f(target, s, t);
+}
+
+void glMultiTexCoord2f(GLenum target, GLfloat s, GLfloat t)
+{
+    g_gl_context->gl_multi_tex_coord(target, s, t, 0.0f, 1.0f);
+}
+
 void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
 {
     g_gl_context->gl_normal(nx, ny, nz);

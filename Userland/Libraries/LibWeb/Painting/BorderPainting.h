@@ -17,7 +17,7 @@ struct BorderRadiusData {
     float bottom_right { 0 };
     float bottom_left { 0 };
 };
-BorderRadiusData normalized_border_radius_data(Layout::Node const&, Gfx::FloatRect const&, CSS::Length top_left_radius, CSS::Length top_right_radius, CSS::Length bottom_right_radius, CSS::Length bottom_left_radius);
+BorderRadiusData normalized_border_radius_data(Layout::Node const&, Gfx::FloatRect const&, CSS::LengthPercentage top_left_radius, CSS::LengthPercentage top_right_radius, CSS::LengthPercentage bottom_right_radius, CSS::LengthPercentage bottom_left_radius);
 
 enum class BorderEdge {
     Top,

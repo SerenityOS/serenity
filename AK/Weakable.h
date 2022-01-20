@@ -14,6 +14,8 @@
 #ifdef KERNEL
 #    include <Kernel/Arch/Processor.h>
 #    include <Kernel/Arch/ScopedCritical.h>
+#else
+#    include <sched.h>
 #endif
 
 namespace AK {
@@ -79,7 +81,7 @@ public:
 #ifdef KERNEL
             Kernel::Processor::wait_check();
 #else
-            // TODO: yield?
+            sched_yield();
 #endif
             current_consumers = m_consumers.load(AK::MemoryOrder::memory_order_acquire) & ~1u;
         }

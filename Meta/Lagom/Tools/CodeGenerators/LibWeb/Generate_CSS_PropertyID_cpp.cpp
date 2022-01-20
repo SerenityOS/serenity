@@ -307,12 +307,12 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
 )~~~");
                         } else if (type_name == "length") {
                             property_generator.append(R"~~~(
-        if ((style_value.has_length() && !style_value.to_length().is_percentage()) || style_value.is_calculated())
+        if (style_value.has_length() || style_value.is_calculated())
             return true;
 )~~~");
                         } else if (type_name == "percentage") {
                             property_generator.append(R"~~~(
-        if ((style_value.has_length() && style_value.to_length().is_percentage()) || style_value.is_calculated())
+        if (style_value.is_percentage() || style_value.is_calculated())
             return true;
 )~~~");
                         } else if (type_name == "number" || type_name == "integer") {

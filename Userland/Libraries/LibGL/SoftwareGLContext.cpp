@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/QuickSort.h>
+#include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -75,6 +76,29 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
     light0.diffuse_intensity = { 1.0f, 1.0f, 1.0f, 1.0f };
     light0.specular_intensity = { 1.0f, 1.0f, 1.0f, 1.0f };
     m_light_state_is_dirty = true;
+
+    m_client_side_texture_coord_array_enabled.resize(m_device_info.num_texture_units);
+    m_client_tex_coord_pointer.resize(m_device_info.num_texture_units);
+    m_current_vertex_tex_coord.resize(m_device_info.num_texture_units);
+    for (auto& tex_coord : m_current_vertex_tex_coord)
+        tex_coord = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+    // Initialize the texture coordinate generation coefficients
+    // Indices 0,1,2,3 refer to the S,T,R and Q coordinate of the respective texture
+    // coordinate generation config.
+    m_texture_coordinate_generation.resize(m_device_info.num_texture_units);
+    for (auto& texture_coordinate_generation : m_texture_coordinate_generation) {
+        texture_coordinate_generation[0].object_plane_coefficients = { 1.0f, 0.0f, 0.0f, 0.0f };
+        texture_coordinate_generation[0].eye_plane_coefficients = { 1.0f, 0.0f, 0.0f, 0.0f };
+        texture_coordinate_generation[1].object_plane_coefficients = { 0.0f, 1.0f, 0.0f, 0.0f };
+        texture_coordinate_generation[1].eye_plane_coefficients = { 0.0f, 1.0f, 0.0f, 0.0f };
+        texture_coordinate_generation[2].object_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f };
+        texture_coordinate_generation[2].eye_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f };
+        texture_coordinate_generation[3].object_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f };
+        texture_coordinate_generation[3].eye_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f };
+    }
+
+    build_extension_string();
 }
 
 Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
@@ -182,7 +206,7 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
     case GL_TEXTURE_GEN_R:
     case GL_TEXTURE_GEN_S:
     case GL_TEXTURE_GEN_T: {
-        auto generation_enabled = texture_coordinate_generation(name).enabled;
+        auto generation_enabled = texture_coordinate_generation(m_active_texture_unit_index, name).enabled;
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = generation_enabled } };
     }
     case GL_UNPACK_ALIGNMENT:
@@ -431,7 +455,7 @@ GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
     case GL_VERSION:
         return reinterpret_cast<GLubyte*>(const_cast<char*>("1.5"));
     case GL_EXTENSIONS:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>(""));
+        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_extensions.characters()));
     case GL_SHADING_LANGUAGE_VERSION:
         return reinterpret_cast<GLubyte*>(const_cast<char*>("0.0"));
     default:
@@ -612,18 +636,27 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
 
     vertex.position = { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(w) };
     vertex.color = m_current_vertex_color;
-    vertex.tex_coord = m_current_vertex_tex_coord;
+    for (size_t i = 0; i < m_device_info.num_texture_units; ++i)
+        vertex.tex_coords[i] = m_current_vertex_tex_coord[i];
     vertex.normal = m_current_vertex_normal;
 
     m_vertex_list.append(vertex);
 }
 
-// FIXME: We need to add `r` and `q` to our GLVertex?!
 void SoftwareGLContext::gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_coord, s, t, r, q);
 
-    m_current_vertex_tex_coord = { s, t, r, q };
+    m_current_vertex_tex_coord[0] = { s, t, r, q };
+}
+
+void SoftwareGLContext::gl_multi_tex_coord(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_multi_tex_coord, target, s, t, r, q);
+
+    RETURN_WITH_ERROR_IF(target < GL_TEXTURE0 || target >= GL_TEXTURE0 + m_device_info.num_texture_units, GL_INVALID_ENUM);
+
+    m_current_vertex_tex_coord[target - GL_TEXTURE0] = { s, t, r, q };
 }
 
 void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height)
@@ -730,7 +763,7 @@ void SoftwareGLContext::gl_enable(GLenum capability)
     case GL_TEXTURE_GEN_R:
     case GL_TEXTURE_GEN_S:
     case GL_TEXTURE_GEN_T:
-        texture_coordinate_generation(capability).enabled = true;
+        texture_coordinate_generation(m_active_texture_unit_index, capability).enabled = true;
         m_texcoord_generation_dirty = true;
         break;
     default:
@@ -832,7 +865,7 @@ void SoftwareGLContext::gl_disable(GLenum capability)
     case GL_TEXTURE_GEN_R:
     case GL_TEXTURE_GEN_S:
     case GL_TEXTURE_GEN_T:
-        texture_coordinate_generation(capability).enabled = false;
+        texture_coordinate_generation(m_active_texture_unit_index, capability).enabled = false;
         m_texcoord_generation_dirty = true;
         break;
     default:
@@ -924,8 +957,10 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
     // Check if width and height are a power of 2
-    RETURN_WITH_ERROR_IF((width & (width - 1)) != 0, GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
+    if (!m_device_info.supports_npot_textures) {
+        RETURN_WITH_ERROR_IF((width & (width - 1)) != 0, GL_INVALID_VALUE);
+        RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
+    }
     RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
 
     if (level == 0) {
@@ -1848,9 +1883,10 @@ GLboolean SoftwareGLContext::gl_is_texture(GLuint texture)
 
 void SoftwareGLContext::gl_active_texture(GLenum texture)
 {
-    RETURN_WITH_ERROR_IF(texture < GL_TEXTURE0 || texture > GL_TEXTURE31, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(texture < GL_TEXTURE0 || texture >= GL_TEXTURE0 + m_device_info.num_texture_units, GL_INVALID_ENUM);
 
-    m_active_texture_unit = &m_texture_units.at(texture - GL_TEXTURE0);
+    m_active_texture_unit_index = texture - GL_TEXTURE0;
+    m_active_texture_unit = &m_texture_units.at(m_active_texture_unit_index);
 }
 
 void SoftwareGLContext::gl_get_booleanv(GLenum pname, GLboolean* data)
@@ -1996,7 +2032,7 @@ void SoftwareGLContext::gl_enable_client_state(GLenum cap)
         break;
 
     case GL_TEXTURE_COORD_ARRAY:
-        m_client_side_texture_coord_array_enabled = true;
+        m_client_side_texture_coord_array_enabled[m_client_active_texture] = true;
         break;
 
     default:
@@ -2018,12 +2054,19 @@ void SoftwareGLContext::gl_disable_client_state(GLenum cap)
         break;
 
     case GL_TEXTURE_COORD_ARRAY:
-        m_client_side_texture_coord_array_enabled = false;
+        m_client_side_texture_coord_array_enabled[m_client_active_texture] = false;
         break;
 
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
+}
+
+void SoftwareGLContext::gl_client_active_texture(GLenum target)
+{
+    RETURN_WITH_ERROR_IF(target < GL_TEXTURE0 || target >= GL_TEXTURE0 + m_device_info.num_texture_units, GL_INVALID_ENUM);
+
+    m_client_active_texture = target - GL_TEXTURE0;
 }
 
 void SoftwareGLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
@@ -2074,10 +2117,12 @@ void SoftwareGLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei st
 
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
-    m_client_tex_coord_pointer.size = size;
-    m_client_tex_coord_pointer.type = type;
-    m_client_tex_coord_pointer.stride = stride;
-    m_client_tex_coord_pointer.pointer = pointer;
+    auto& tex_coord_pointer = m_client_tex_coord_pointer[m_client_active_texture];
+
+    tex_coord_pointer.size = size;
+    tex_coord_pointer.type = type;
+    tex_coord_pointer.stride = stride;
+    tex_coord_pointer.pointer = pointer;
 }
 
 void SoftwareGLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
@@ -2129,21 +2174,23 @@ void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
     auto last = first + count;
     gl_begin(mode);
     for (int i = first; i < last; i++) {
-        if (m_client_side_texture_coord_array_enabled) {
-            float tex_coords[4] { 0, 0, 0, 0 };
-            read_from_vertex_attribute_pointer(m_client_tex_coord_pointer, i, tex_coords, false);
-            gl_tex_coord(tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+        for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
+            if (m_client_side_texture_coord_array_enabled[t]) {
+                float tex_coords[4] { 0, 0, 0, 0 };
+                read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords, false);
+                gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+            }
         }
 
         if (m_client_side_color_array_enabled) {
             float color[4] { 0, 0, 0, 1 };
             read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
-            glColor4fv(color);
+            gl_color(color[0], color[1], color[2], color[3]);
         }
 
         float vertex[4] { 0, 0, 0, 1 };
         read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex, false);
-        glVertex4fv(vertex);
+        gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
     }
     gl_end();
 }
@@ -2188,21 +2235,23 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
             break;
         }
 
-        if (m_client_side_texture_coord_array_enabled) {
-            float tex_coords[4] { 0, 0, 0, 0 };
-            read_from_vertex_attribute_pointer(m_client_tex_coord_pointer, i, tex_coords, false);
-            gl_tex_coord(tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+        for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
+            if (m_client_side_texture_coord_array_enabled[t]) {
+                float tex_coords[4] { 0, 0, 0, 0 };
+                read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords, false);
+                gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+            }
         }
 
         if (m_client_side_color_array_enabled) {
             float color[4] { 0, 0, 0, 1 };
             read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
-            glColor4fv(color);
+            gl_color(color[0], color[1], color[2], color[3]);
         }
 
         float vertex[4] { 0, 0, 0, 1 };
         read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex, false);
-        glVertex4fv(vertex);
+        gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
     }
     gl_end();
 }
@@ -2854,7 +2903,7 @@ void SoftwareGLContext::gl_tex_gen(GLenum coord, GLenum pname, GLint param)
     RETURN_WITH_ERROR_IF(coord == GL_Q && (param == GL_REFLECTION_MAP || param == GL_NORMAL_MAP), GL_INVALID_ENUM);
 
     GLenum const capability = GL_TEXTURE_GEN_S + (coord - GL_S);
-    texture_coordinate_generation(capability).generation_mode = param;
+    texture_coordinate_generation(m_active_texture_unit_index, capability).generation_mode = param;
     m_texcoord_generation_dirty = true;
 }
 
@@ -2883,11 +2932,11 @@ void SoftwareGLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat co
         RETURN_WITH_ERROR_IF((coord == GL_R || coord == GL_Q) && param == GL_SPHERE_MAP, GL_INVALID_ENUM);
         RETURN_WITH_ERROR_IF(coord == GL_Q && (param == GL_REFLECTION_MAP || param == GL_NORMAL_MAP), GL_INVALID_ENUM);
 
-        texture_coordinate_generation(capability).generation_mode = param;
+        texture_coordinate_generation(m_active_texture_unit_index, capability).generation_mode = param;
         break;
     }
     case GL_OBJECT_PLANE:
-        texture_coordinate_generation(capability).object_plane_coefficients = { params[0], params[1], params[2], params[3] };
+        texture_coordinate_generation(m_active_texture_unit_index, capability).object_plane_coefficients = { params[0], params[1], params[2], params[3] };
         break;
     case GL_EYE_PLANE: {
         auto const& inverse_model_view = m_model_view_matrix.inverse();
@@ -2899,7 +2948,7 @@ void SoftwareGLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat co
         // "The returned values are those maintained in eye coordinates. They are not equal to the values
         //  specified using glTexGen, unless the modelview matrix was identity when glTexGen was called."
 
-        texture_coordinate_generation(capability).eye_plane_coefficients = inverse_model_view * input_coefficients;
+        texture_coordinate_generation(m_active_texture_unit_index, capability).eye_plane_coefficients = inverse_model_view * input_coefficients;
         break;
     }
     default:
@@ -3128,55 +3177,58 @@ void SoftwareGLContext::sync_device_texcoord_config()
 
     auto options = m_rasterizer.options();
 
-    u8 enabled_coordinates = SoftGPU::TexCoordGenerationCoordinate::None;
-    for (GLenum capability = GL_TEXTURE_GEN_S; capability <= GL_TEXTURE_GEN_Q; ++capability) {
-        auto const context_coordinate_config = texture_coordinate_generation(capability);
-        if (!context_coordinate_config.enabled)
-            continue;
+    for (size_t i = 0; i < m_device_info.num_texture_units; ++i) {
 
-        SoftGPU::TexCoordGenerationConfig* texcoord_generation_config;
-        switch (capability) {
-        case GL_TEXTURE_GEN_S:
-            enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::S;
-            texcoord_generation_config = &options.texcoord_generation_config[0];
-            break;
-        case GL_TEXTURE_GEN_T:
-            enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::T;
-            texcoord_generation_config = &options.texcoord_generation_config[1];
-            break;
-        case GL_TEXTURE_GEN_R:
-            enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::R;
-            texcoord_generation_config = &options.texcoord_generation_config[2];
-            break;
-        case GL_TEXTURE_GEN_Q:
-            enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::Q;
-            texcoord_generation_config = &options.texcoord_generation_config[3];
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
+        u8 enabled_coordinates = SoftGPU::TexCoordGenerationCoordinate::None;
+        for (GLenum capability = GL_TEXTURE_GEN_S; capability <= GL_TEXTURE_GEN_Q; ++capability) {
+            auto const context_coordinate_config = texture_coordinate_generation(i, capability);
+            if (!context_coordinate_config.enabled)
+                continue;
 
-        switch (context_coordinate_config.generation_mode) {
-        case GL_OBJECT_LINEAR:
-            texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::ObjectLinear;
-            texcoord_generation_config->coefficients = context_coordinate_config.object_plane_coefficients;
-            break;
-        case GL_EYE_LINEAR:
-            texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::EyeLinear;
-            texcoord_generation_config->coefficients = context_coordinate_config.eye_plane_coefficients;
-            break;
-        case GL_SPHERE_MAP:
-            texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::SphereMap;
-            break;
-        case GL_REFLECTION_MAP:
-            texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::ReflectionMap;
-            break;
-        case GL_NORMAL_MAP:
-            texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::NormalMap;
-            break;
+            SoftGPU::TexCoordGenerationConfig* texcoord_generation_config;
+            switch (capability) {
+            case GL_TEXTURE_GEN_S:
+                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::S;
+                texcoord_generation_config = &options.texcoord_generation_config[i][0];
+                break;
+            case GL_TEXTURE_GEN_T:
+                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::T;
+                texcoord_generation_config = &options.texcoord_generation_config[i][1];
+                break;
+            case GL_TEXTURE_GEN_R:
+                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::R;
+                texcoord_generation_config = &options.texcoord_generation_config[i][2];
+                break;
+            case GL_TEXTURE_GEN_Q:
+                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::Q;
+                texcoord_generation_config = &options.texcoord_generation_config[i][3];
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+
+            switch (context_coordinate_config.generation_mode) {
+            case GL_OBJECT_LINEAR:
+                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::ObjectLinear;
+                texcoord_generation_config->coefficients = context_coordinate_config.object_plane_coefficients;
+                break;
+            case GL_EYE_LINEAR:
+                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::EyeLinear;
+                texcoord_generation_config->coefficients = context_coordinate_config.eye_plane_coefficients;
+                break;
+            case GL_SPHERE_MAP:
+                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::SphereMap;
+                break;
+            case GL_REFLECTION_MAP:
+                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::ReflectionMap;
+                break;
+            case GL_NORMAL_MAP:
+                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::NormalMap;
+                break;
+            }
         }
+        options.texcoord_generation_enabled_coordinates[i] = enabled_coordinates;
     }
-    options.texcoord_generation_enabled_coordinates = enabled_coordinates;
 
     m_rasterizer.set_options(options);
 }
@@ -3247,6 +3299,22 @@ void SoftwareGLContext::sync_stencil_configuration()
     };
     set_device_stencil(SoftGPU::Face::Front, m_stencil_function[Face::Front], m_stencil_operation[Face::Front]);
     set_device_stencil(SoftGPU::Face::Back, m_stencil_function[Face::Back], m_stencil_operation[Face::Back]);
+}
+
+void SoftwareGLContext::build_extension_string()
+{
+    Vector<StringView> extensions;
+
+    // FIXME: npot texture support became a required core feature starting with OpenGL 2.0 (https://www.khronos.org/opengl/wiki/NPOT_Texture)
+    // Ideally we would verify if the selected device adheres to the requested OpenGL context version before context creation
+    // and refuse to create a context if it doesn't.
+    if (m_device_info.supports_npot_textures)
+        extensions.append("GL_ARB_texture_non_power_of_two");
+
+    if (m_device_info.num_texture_units > 1)
+        extensions.append("GL_ARB_multitexture");
+
+    m_extensions = String::join(" ", extensions);
 }
 
 void SoftwareGLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)

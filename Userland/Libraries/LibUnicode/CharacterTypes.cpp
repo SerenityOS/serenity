@@ -22,6 +22,7 @@
 namespace Unicode {
 
 Optional<String> __attribute__((weak)) code_point_display_name(u32) { return {}; }
+Optional<StringView> __attribute__((weak)) code_point_abbreviation(u32) { return {}; }
 u32 __attribute__((weak)) canonical_combining_class(u32) { return {}; }
 Span<SpecialCasing const* const> __attribute__((weak)) special_case_mapping(u32) { return {}; }
 

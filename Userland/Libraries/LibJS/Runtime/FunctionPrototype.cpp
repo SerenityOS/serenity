@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -94,50 +94,30 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 // 20.2.3.5 Function.prototype.toString ( ), https://tc39.es/ecma262/#sec-function.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-    String function_name;
-    String function_parameters;
-    String function_body;
+    // 1. Let func be the this value.
+    auto function_value = vm.this_value(global_object);
 
-    if (is<ECMAScriptFunctionObject>(this_object)) {
-        auto& function = static_cast<ECMAScriptFunctionObject&>(*this_object);
-        StringBuilder parameters_builder;
-        auto first = true;
-        for (auto& parameter : function.formal_parameters()) {
-            // FIXME: Also stringify binding patterns.
-            if (auto* name_ptr = parameter.binding.get_pointer<FlyString>()) {
-                if (!first)
-                    parameters_builder.append(", ");
-                first = false;
-                parameters_builder.append(*name_ptr);
-                if (parameter.default_value) {
-                    // FIXME: See note below
-                    parameters_builder.append(" = TODO");
-                }
-            }
-        }
-        function_name = function.name();
-        function_parameters = parameters_builder.build();
-        // FIXME: ASTNodes should be able to dump themselves to source strings - something like this:
-        // auto& body = static_cast<ECMAScriptFunctionObject*>(this_object)->body();
-        // function_body = body.to_source();
-        function_body = "  ???";
-    } else {
-        // This is "implementation-defined" - other engines don't include a name for
-        // ProxyObject and BoundFunction, only NativeFunction - let's do the same here.
-        if (is<NativeFunction>(this_object))
-            function_name = static_cast<NativeFunction&>(*this_object).name();
-        function_body = "  [native code]";
+    // If func is not a function, let's bail out early. The order of this step is not observable.
+    if (!function_value.is_function()) {
+        // 5. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
     }
 
-    auto function_source = String::formatted(
-        "function {}({}) {{\n{}\n}}",
-        function_name.is_null() ? "" : function_name,
-        function_parameters.is_null() ? "" : function_parameters,
-        function_body);
-    return js_string(vm, function_source);
+    auto& function = function_value.as_function();
+
+    // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]] is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
+    if (is<ECMAScriptFunctionObject>(function)) {
+        // a. Return ! CodePointsToString(func.[[SourceText]]).
+        return js_string(vm, static_cast<ECMAScriptFunctionObject&>(function).source_text());
+    }
+
+    // 3. If func is a built-in function object, return an implementation-defined String source code representation of func. The representation must have the syntax of a NativeFunction. Additionally, if func has an [[InitialName]] internal slot and func.[[InitialName]] is a String, the portion of the returned String that would be matched by NativeFunctionAccessor[opt] PropertyName must be the value of func.[[InitialName]].
+    if (is<NativeFunction>(function))
+        return js_string(vm, String::formatted("function {}() {{ [native code] }}", static_cast<NativeFunction&>(function).name()));
+
+    // 4. If Type(func) is Object and IsCallable(func) is true, return an implementation-defined String source code representation of func. The representation must have the syntax of a NativeFunction.
+    // NOTE: ProxyObject, BoundFunction, WrappedFunction
+    return js_string(vm, "function () { [native code] }");
 }
 
 // 20.2.3.6 Function.prototype [ @@hasInstance ] ( V ), https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance

@@ -100,6 +100,7 @@ public:
     virtual void gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data) override;
     virtual void gl_tex_parameter(GLenum target, GLenum pname, GLfloat param) override;
     virtual void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q) override;
+    virtual void gl_multi_tex_coord(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q) override;
     virtual void gl_tex_env(GLenum target, GLenum pname, GLfloat param) override;
     virtual void gl_bind_texture(GLenum target, GLuint texture) override;
     virtual GLboolean gl_is_texture(GLuint texture) override;
@@ -107,6 +108,7 @@ public:
     virtual void gl_depth_mask(GLboolean flag) override;
     virtual void gl_enable_client_state(GLenum cap) override;
     virtual void gl_disable_client_state(GLenum cap) override;
+    virtual void gl_client_active_texture(GLenum target) override;
     virtual void gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
     virtual void gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
     virtual void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
@@ -157,6 +159,8 @@ private:
     void sync_light_state();
     void sync_stencil_configuration();
 
+    void build_extension_string();
+
     template<typename T>
     T* store_in_listing(T value)
     {
@@ -200,7 +204,7 @@ private:
     u8 m_clear_stencil { 0 };
 
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    FloatVector4 m_current_vertex_tex_coord = { 0.0f, 0.0f, 0.0f, 1.0f };
+    Vector<FloatVector4> m_current_vertex_tex_coord;
     FloatVector3 m_current_vertex_normal = { 0.0f, 0.0f, 1.0f };
 
     Vector<SoftGPU::Vertex> m_vertex_list;
@@ -250,50 +254,31 @@ private:
     // Client side arrays
     bool m_client_side_vertex_array_enabled = false;
     bool m_client_side_color_array_enabled = false;
-    bool m_client_side_texture_coord_array_enabled = false;
+    Vector<bool> m_client_side_texture_coord_array_enabled;
+    size_t m_client_active_texture = 0;
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
     // Texture objects
     TextureNameAllocator m_name_allocator;
     HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
-    Vector<TextureUnit, 32> m_texture_units;
+    Vector<TextureUnit> m_texture_units;
     TextureUnit* m_active_texture_unit;
+    size_t m_active_texture_unit_index { 0 };
 
     // Texture coordinate generation state
     struct TextureCoordinateGeneration {
         bool enabled { false };
         GLenum generation_mode { GL_EYE_LINEAR };
-        FloatVector4 object_plane_coefficients;
-        FloatVector4 eye_plane_coefficients;
+        FloatVector4 object_plane_coefficients { 0.0f, 0.0f, 0.0f, 0.0f };
+        FloatVector4 eye_plane_coefficients { 0.0f, 0.0f, 0.0f, 0.0f };
     };
-    Array<TextureCoordinateGeneration, 4> m_texture_coordinate_generation {
-        // S
-        TextureCoordinateGeneration {
-            .object_plane_coefficients = { 1.0f, 0.0f, 0.0f, 0.0f },
-            .eye_plane_coefficients = { 1.0f, 0.0f, 0.0f, 0.0f },
-        },
-        // T
-        TextureCoordinateGeneration {
-            .object_plane_coefficients = { 0.0f, 1.0f, 0.0f, 0.0f },
-            .eye_plane_coefficients = { 0.0f, 1.0f, 0.0f, 0.0f },
-        },
-        // R
-        TextureCoordinateGeneration {
-            .object_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
-            .eye_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
-        },
-        // Q
-        TextureCoordinateGeneration {
-            .object_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
-            .eye_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
-        },
-    };
+    Vector<Array<TextureCoordinateGeneration, 4>> m_texture_coordinate_generation;
     bool m_texcoord_generation_dirty { true };
 
-    ALWAYS_INLINE TextureCoordinateGeneration& texture_coordinate_generation(GLenum capability)
+    ALWAYS_INLINE TextureCoordinateGeneration& texture_coordinate_generation(size_t texture_unit, GLenum capability)
     {
-        return m_texture_coordinate_generation[capability - GL_TEXTURE_GEN_S];
+        return m_texture_coordinate_generation[texture_unit][capability - GL_TEXTURE_GEN_S];
     }
 
     SoftGPU::Device m_rasterizer;
@@ -415,7 +400,7 @@ private:
 
     VertexAttribPointer m_client_vertex_pointer;
     VertexAttribPointer m_client_color_pointer;
-    VertexAttribPointer m_client_tex_coord_pointer;
+    Vector<VertexAttribPointer> m_client_tex_coord_pointer;
 
     u8 m_pack_alignment { 4 };
     GLsizei m_unpack_row_length { 0 };
@@ -432,6 +417,9 @@ private:
     bool m_color_material_enabled { false };
     GLenum m_color_material_face { GL_FRONT_AND_BACK };
     GLenum m_color_material_mode { GL_AMBIENT_AND_DIFFUSE };
+
+    // GL Extension string
+    String m_extensions;
 };
 
 }

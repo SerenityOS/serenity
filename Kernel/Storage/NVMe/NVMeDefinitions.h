@@ -9,9 +9,6 @@
 #include <AK/Endian.h>
 #include <AK/Types.h>
 
-struct NVMeCompletion;
-struct NVMeSubmission;
-
 struct ControllerRegister {
     u64 cap;
     u32 vs;
@@ -129,7 +126,7 @@ enum IOCommandOpcode {
 static constexpr u8 QUEUE_PHY_CONTIGUOUS = (1 << 0);
 static constexpr u8 QUEUE_IRQ_ENABLED = (1 << 1);
 
-struct NVMeCompletion {
+struct [[gnu::packed]] NVMeCompletion {
     LittleEndian<u32> cmd_spec;
     LittleEndian<u32> res;
 
@@ -140,18 +137,15 @@ struct NVMeCompletion {
     LittleEndian<u16> status; /* did the command fail, and if so, why? */
 };
 
-struct DataPtr {
+struct [[gnu::packed]] DataPtr {
     LittleEndian<u64> prp1;
     LittleEndian<u64> prp2;
 };
 
-struct NVMeSubmission {
-    LittleEndian<u8> op;
-    LittleEndian<u8> flags;
-    LittleEndian<u16> cmdid;
+struct [[gnu::packed]] NVMeGenericCmd {
     LittleEndian<u32> nsid;
     LittleEndian<u64> rsvd;
-    LittleEndian<u64> meta_ptr;
+    LittleEndian<u64> metadata;
     struct DataPtr data_ptr;
     LittleEndian<u32> cdw10;
     LittleEndian<u32> cdw11;
@@ -159,4 +153,65 @@ struct NVMeSubmission {
     LittleEndian<u32> cdw13;
     LittleEndian<u32> cdw14;
     LittleEndian<u32> cdw15;
+};
+
+struct [[gnu::packed]] NVMeRWCmd {
+    LittleEndian<u32> nsid;
+    LittleEndian<u64> rsvd;
+    LittleEndian<u64> metadata;
+    struct DataPtr data_ptr;
+    LittleEndian<u64> slba;
+    LittleEndian<u16> length;
+    LittleEndian<u16> control;
+    LittleEndian<u32> dsmgmt;
+    LittleEndian<u32> reftag;
+    LittleEndian<u16> apptag;
+    LittleEndian<u16> appmask;
+};
+
+struct [[gnu::packed]] NVMeIdentifyCmd {
+    LittleEndian<u32> nsid;
+    LittleEndian<u64> rsvd1[2];
+    struct DataPtr data_ptr;
+    u8 cns;
+    u8 rsvd2;
+    LittleEndian<u16> ctrlid;
+    u8 rsvd3[3];
+    u8 csi;
+    u64 rsvd4[2];
+};
+
+struct [[gnu::packed]] NVMeCreateCQCmd {
+    u32 rsvd1[5];
+    LittleEndian<u64> prp1;
+    u64 rsvd2;
+    LittleEndian<u16> cqid;
+    LittleEndian<u16> qsize;
+    LittleEndian<u16> cq_flags;
+    LittleEndian<u16> irq_vector;
+    u64 rsvd12[2];
+};
+
+struct [[gnu::packed]] NVMeCreateSQCmd {
+    u32 rsvd1[5];
+    LittleEndian<u64> prp1;
+    u64 rsvd2;
+    LittleEndian<u16> sqid;
+    LittleEndian<u16> qsize;
+    LittleEndian<u16> sq_flags;
+    LittleEndian<u16> cqid;
+    u64 rsvd12[2];
+};
+
+struct [[gnu::packed]] NVMeSubmission {
+    u8 op;
+    u8 flags;
+    LittleEndian<u16> cmdid;
+    union [[gnu::packed]] {
+        NVMeGenericCmd generic;
+        NVMeIdentifyCmd identify;
+        NVMeRWCmd rw;
+        NVMeCreateCQCmd create_cq;
+        NVMeCreateSQCmd create_sq;
+    };
 };

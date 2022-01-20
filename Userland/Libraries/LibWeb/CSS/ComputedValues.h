@@ -36,6 +36,7 @@ public:
     static float flex_grow() { return 0.0f; }
     static float flex_shrink() { return 1.0f; }
     static float opacity() { return 1.0f; }
+    static CSS::Length border_radius() { return Length::make_px(0); }
 };
 
 struct BackgroundLayerData {
@@ -44,12 +45,12 @@ struct BackgroundLayerData {
     CSS::BackgroundBox origin { CSS::BackgroundBox::PaddingBox };
     CSS::BackgroundBox clip { CSS::BackgroundBox::BorderBox };
     CSS::PositionEdge position_edge_x { CSS::PositionEdge::Left };
-    CSS::Length position_offset_x { CSS::Length::make_px(0) };
+    CSS::LengthPercentage position_offset_x { CSS::Length::make_px(0) };
     CSS::PositionEdge position_edge_y { CSS::PositionEdge::Top };
-    CSS::Length position_offset_y { CSS::Length::make_px(0) };
+    CSS::LengthPercentage position_offset_y { CSS::Length::make_px(0) };
     CSS::BackgroundSize size_type { CSS::BackgroundSize::LengthPercentage };
-    CSS::Length size_x { CSS::Length::make_auto() };
-    CSS::Length size_y { CSS::Length::make_auto() };
+    CSS::LengthPercentage size_x { CSS::Length::make_auto() };
+    CSS::LengthPercentage size_y { CSS::Length::make_auto() };
     CSS::Repeat repeat_x { CSS::Repeat::Repeat };
     CSS::Repeat repeat_y { CSS::Repeat::Repeat };
 };
@@ -68,9 +69,9 @@ struct Transformation {
 
 struct FlexBasisData {
     CSS::FlexBasis type { CSS::FlexBasis::Auto };
-    CSS::Length length {};
+    Optional<CSS::LengthPercentage> length_percentage;
 
-    bool is_definite() const { return type == CSS::FlexBasis::Length; }
+    bool is_definite() const { return type == CSS::FlexBasis::LengthPercentage; }
 };
 
 struct BoxShadowData {
@@ -78,11 +79,6 @@ struct BoxShadowData {
     CSS::Length offset_y {};
     CSS::Length blur_radius {};
     Color color {};
-};
-
-struct BackgroundRepeatData {
-    CSS::Repeat repeat_x;
-    CSS::Repeat repeat_y;
 };
 
 class ComputedValues {
@@ -108,12 +104,12 @@ public:
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     Optional<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
-    const CSS::Length& width() const { return m_noninherited.width; }
-    const CSS::Length& min_width() const { return m_noninherited.min_width; }
-    const CSS::Length& max_width() const { return m_noninherited.max_width; }
-    const CSS::Length& height() const { return m_noninherited.height; }
-    const CSS::Length& min_height() const { return m_noninherited.min_height; }
-    const CSS::Length& max_height() const { return m_noninherited.max_height; }
+    CSS::LengthPercentage const& width() const { return m_noninherited.width; }
+    CSS::LengthPercentage const& min_width() const { return m_noninherited.min_width; }
+    CSS::LengthPercentage const& max_width() const { return m_noninherited.max_width; }
+    CSS::LengthPercentage const& height() const { return m_noninherited.height; }
+    CSS::LengthPercentage const& min_height() const { return m_noninherited.min_height; }
+    CSS::LengthPercentage const& max_height() const { return m_noninherited.max_height; }
 
     const CSS::LengthBox& offset() const { return m_noninherited.offset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
@@ -124,10 +120,10 @@ public:
     const BorderData& border_right() const { return m_noninherited.border_right; }
     const BorderData& border_bottom() const { return m_noninherited.border_bottom; }
 
-    const CSS::Length& border_bottom_left_radius() const { return m_noninherited.border_bottom_left_radius; }
-    const CSS::Length& border_bottom_right_radius() const { return m_noninherited.border_bottom_right_radius; }
-    const CSS::Length& border_top_left_radius() const { return m_noninherited.border_top_left_radius; }
-    const CSS::Length& border_top_right_radius() const { return m_noninherited.border_top_right_radius; }
+    const CSS::LengthPercentage& border_bottom_left_radius() const { return m_noninherited.border_bottom_left_radius; }
+    const CSS::LengthPercentage& border_bottom_right_radius() const { return m_noninherited.border_bottom_right_radius; }
+    const CSS::LengthPercentage& border_top_left_radius() const { return m_noninherited.border_top_left_radius; }
+    const CSS::LengthPercentage& border_top_right_radius() const { return m_noninherited.border_top_right_radius; }
 
     CSS::Overflow overflow_x() const { return m_noninherited.overflow_x; }
     CSS::Overflow overflow_y() const { return m_noninherited.overflow_y; }
@@ -140,7 +136,7 @@ public:
 
     Optional<Color> fill() const { return m_inherited.fill; }
     Optional<Color> stroke() const { return m_inherited.stroke; }
-    Optional<Length> const& stroke_width() const { return m_inherited.stroke_width; }
+    Optional<LengthPercentage> const& stroke_width() const { return m_inherited.stroke_width; }
 
     Vector<CSS::Transformation> transformations() const { return m_noninherited.transformations; }
 
@@ -163,7 +159,7 @@ protected:
 
         Optional<Color> fill;
         Optional<Color> stroke;
-        Optional<Length> stroke_width;
+        Optional<LengthPercentage> stroke_width;
     } m_inherited;
 
     struct {
@@ -173,12 +169,12 @@ protected:
         Optional<int> z_index;
         CSS::TextDecorationLine text_decoration_line { InitialValues::text_decoration_line() };
         CSS::Position position { InitialValues::position() };
-        CSS::Length width;
-        CSS::Length min_width;
-        CSS::Length max_width;
-        CSS::Length height;
-        CSS::Length min_height;
-        CSS::Length max_height;
+        CSS::LengthPercentage width { Length::make_auto() };
+        CSS::LengthPercentage min_width { Length::make_auto() };
+        CSS::LengthPercentage max_width { Length::make_auto() };
+        CSS::LengthPercentage height { Length::make_auto() };
+        CSS::LengthPercentage min_height { Length::make_auto() };
+        CSS::LengthPercentage max_height { Length::make_auto() };
         CSS::LengthBox offset;
         CSS::LengthBox margin;
         CSS::LengthBox padding;
@@ -186,10 +182,10 @@ protected:
         BorderData border_top;
         BorderData border_right;
         BorderData border_bottom;
-        Length border_bottom_left_radius;
-        Length border_bottom_right_radius;
-        Length border_top_left_radius;
-        Length border_top_right_radius;
+        LengthPercentage border_bottom_left_radius { InitialValues::border_radius() };
+        LengthPercentage border_bottom_right_radius { InitialValues::border_radius() };
+        LengthPercentage border_top_left_radius { InitialValues::border_radius() };
+        LengthPercentage border_top_right_radius { InitialValues::border_radius() };
         Color background_color { InitialValues::background_color() };
         Vector<BackgroundLayerData> background_layers;
         CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
@@ -226,12 +222,12 @@ public:
     void set_text_transform(CSS::TextTransform value) { m_inherited.text_transform = value; }
     void set_position(CSS::Position position) { m_noninherited.position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_inherited.white_space = value; }
-    void set_width(const CSS::Length& width) { m_noninherited.width = width; }
-    void set_min_width(const CSS::Length& width) { m_noninherited.min_width = width; }
-    void set_max_width(const CSS::Length& width) { m_noninherited.max_width = width; }
-    void set_height(const CSS::Length& height) { m_noninherited.height = height; }
-    void set_min_height(const CSS::Length& height) { m_noninherited.min_height = height; }
-    void set_max_height(const CSS::Length& height) { m_noninherited.max_height = height; }
+    void set_width(CSS::LengthPercentage const& width) { m_noninherited.width = width; }
+    void set_min_width(CSS::LengthPercentage const& width) { m_noninherited.min_width = width; }
+    void set_max_width(CSS::LengthPercentage const& width) { m_noninherited.max_width = width; }
+    void set_height(CSS::LengthPercentage const& height) { m_noninherited.height = height; }
+    void set_min_height(CSS::LengthPercentage const& height) { m_noninherited.min_height = height; }
+    void set_max_height(CSS::LengthPercentage const& height) { m_noninherited.max_height = height; }
     void set_offset(const CSS::LengthBox& offset) { m_noninherited.offset = offset; }
     void set_margin(const CSS::LengthBox& margin) { m_noninherited.margin = margin; }
     void set_padding(const CSS::LengthBox& padding) { m_noninherited.padding = padding; }
@@ -239,10 +235,10 @@ public:
     void set_overflow_y(CSS::Overflow value) { m_noninherited.overflow_y = value; }
     void set_list_style_type(CSS::ListStyleType value) { m_inherited.list_style_type = value; }
     void set_display(CSS::Display value) { m_noninherited.display = value; }
-    void set_border_bottom_left_radius(CSS::Length value) { m_noninherited.border_bottom_left_radius = value; }
-    void set_border_bottom_right_radius(CSS::Length value) { m_noninherited.border_bottom_right_radius = value; }
-    void set_border_top_left_radius(CSS::Length value) { m_noninherited.border_top_left_radius = value; }
-    void set_border_top_right_radius(CSS::Length value) { m_noninherited.border_top_right_radius = value; }
+    void set_border_bottom_left_radius(CSS::LengthPercentage value) { m_noninherited.border_bottom_left_radius = value; }
+    void set_border_bottom_right_radius(CSS::LengthPercentage value) { m_noninherited.border_bottom_right_radius = value; }
+    void set_border_top_left_radius(CSS::LengthPercentage value) { m_noninherited.border_top_left_radius = value; }
+    void set_border_top_right_radius(CSS::LengthPercentage value) { m_noninherited.border_top_right_radius = value; }
     BorderData& border_left() { return m_noninherited.border_left; }
     BorderData& border_top() { return m_noninherited.border_top; }
     BorderData& border_right() { return m_noninherited.border_right; }
@@ -261,7 +257,7 @@ public:
 
     void set_fill(Color value) { m_inherited.fill = value; }
     void set_stroke(Color value) { m_inherited.stroke = value; }
-    void set_stroke_width(Length value) { m_inherited.stroke_width = value; }
+    void set_stroke_width(LengthPercentage value) { m_inherited.stroke_width = value; }
 };
 
 }

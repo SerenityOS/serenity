@@ -52,8 +52,11 @@ GLboolean glIsTexture(GLuint texture)
     return g_gl_context->gl_is_texture(texture);
 }
 
-// Note: This is an _extremely_ misleading API name. This sets the active
-// texture unit, NOT the active texture itself...
+void glActiveTextureARB(GLenum texture)
+{
+    glActiveTexture(texture);
+}
+
 void glActiveTexture(GLenum texture)
 {
     g_gl_context->gl_active_texture(texture);

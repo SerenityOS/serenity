@@ -206,16 +206,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     m_line_height = specified_style.line_height(*this);
 
     {
-        constexpr int default_font_size = 10;
-        auto parent_font_size = parent() == nullptr ? default_font_size : parent()->font_size();
-        auto length = specified_style.length_or_fallback(CSS::PropertyID::FontSize, CSS::Length(default_font_size, CSS::Length::Type::Px));
-        // FIXME: em sizes return 0 here, for some reason
-        m_font_size = length.resolved_or_zero(*this, parent_font_size).to_px(*this);
-        if (m_font_size == 0)
-            m_font_size = default_font_size;
-    }
-
-    {
         auto attachments = specified_style.property(CSS::PropertyID::BackgroundAttachment);
         auto clips = specified_style.property(CSS::PropertyID::BackgroundClip);
         auto images = specified_style.property(CSS::PropertyID::BackgroundImage);
@@ -341,20 +331,20 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     // FIXME: BorderXRadius properties are now BorderRadiusStyleValues, so make use of that.
     auto border_bottom_left_radius = specified_style.property(CSS::PropertyID::BorderBottomLeftRadius);
-    if (border_bottom_left_radius.has_value())
-        computed_values.set_border_bottom_left_radius(border_bottom_left_radius.value()->to_length());
+    if (border_bottom_left_radius.has_value() && border_bottom_left_radius.value()->is_border_radius())
+        computed_values.set_border_bottom_left_radius(border_bottom_left_radius.value()->as_border_radius().horizontal_radius());
 
     auto border_bottom_right_radius = specified_style.property(CSS::PropertyID::BorderBottomRightRadius);
-    if (border_bottom_right_radius.has_value())
-        computed_values.set_border_bottom_right_radius(border_bottom_right_radius.value()->to_length());
+    if (border_bottom_right_radius.has_value() && border_bottom_right_radius.value()->is_border_radius())
+        computed_values.set_border_bottom_right_radius(border_bottom_right_radius.value()->as_border_radius().horizontal_radius());
 
     auto border_top_left_radius = specified_style.property(CSS::PropertyID::BorderTopLeftRadius);
-    if (border_top_left_radius.has_value())
-        computed_values.set_border_top_left_radius(border_top_left_radius.value()->to_length());
+    if (border_top_left_radius.has_value() && border_top_left_radius.value()->is_border_radius())
+        computed_values.set_border_top_left_radius(border_top_left_radius.value()->as_border_radius().horizontal_radius());
 
     auto border_top_right_radius = specified_style.property(CSS::PropertyID::BorderTopRightRadius);
-    if (border_top_right_radius.has_value())
-        computed_values.set_border_top_right_radius(border_top_right_radius.value()->to_length());
+    if (border_top_right_radius.has_value() && border_top_right_radius.value()->is_border_radius())
+        computed_values.set_border_top_right_radius(border_top_right_radius.value()->as_border_radius().horizontal_radius());
 
     computed_values.set_display(specified_style.display());
 
@@ -443,15 +433,15 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     if (auto width = specified_style.property(CSS::PropertyID::Width); width.has_value() && !width.value()->has_auto())
         m_has_definite_width = true;
-    computed_values.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
-    computed_values.set_min_width(specified_style.length_or_fallback(CSS::PropertyID::MinWidth, {}));
-    computed_values.set_max_width(specified_style.length_or_fallback(CSS::PropertyID::MaxWidth, {}));
+    computed_values.set_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::Width, CSS::Length {}));
+    computed_values.set_min_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::MinWidth, CSS::Length {}));
+    computed_values.set_max_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::MaxWidth, CSS::Length {}));
 
     if (auto height = specified_style.property(CSS::PropertyID::Height); height.has_value() && !height.value()->has_auto())
         m_has_definite_height = true;
-    computed_values.set_height(specified_style.length_or_fallback(CSS::PropertyID::Height, {}));
-    computed_values.set_min_height(specified_style.length_or_fallback(CSS::PropertyID::MinHeight, {}));
-    computed_values.set_max_height(specified_style.length_or_fallback(CSS::PropertyID::MaxHeight, {}));
+    computed_values.set_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::Height, CSS::Length {}));
+    computed_values.set_min_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::MinHeight, CSS::Length {}));
+    computed_values.set_max_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::MaxHeight, CSS::Length {}));
 
     computed_values.set_offset(specified_style.length_box(CSS::PropertyID::Left, CSS::PropertyID::Top, CSS::PropertyID::Right, CSS::PropertyID::Bottom, CSS::Length::make_auto()));
     computed_values.set_margin(specified_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom, CSS::Length::make_px(0)));
@@ -470,7 +460,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         if (border.line_style == CSS::LineStyle::None)
             border.width = 0;
         else
-            border.width = specified_style.length_or_fallback(width_property, {}).resolved_or_zero(*this, 0).to_px(*this);
+            border.width = specified_style.length_or_fallback(width_property, {}).resolved_or_zero(*this).to_px(*this);
     };
 
     do_border_style(computed_values.border_left(), CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftStyle);
@@ -539,7 +529,6 @@ NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
     auto wrapper = adopt_ref(*new BlockContainer(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
     wrapper->m_font = m_font;
-    wrapper->m_font_size = m_font_size;
     wrapper->m_line_height = m_line_height;
     return wrapper;
 }
