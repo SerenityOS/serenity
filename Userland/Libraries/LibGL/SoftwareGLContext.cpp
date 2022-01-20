@@ -1941,12 +1941,15 @@ void SoftwareGLContext::get_floating_point(GLenum pname, T* params)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // Handle special matrix cases first
-    auto flatten_and_assign_matrix = [&params](const FloatMatrix4x4& matrix) {
+    // Handle matrix retrieval first
+    auto flatten_and_assign_matrix = [&params](FloatMatrix4x4 const& matrix) {
         auto elements = matrix.elements();
-        for (size_t i = 0; i < 4; ++i)
-            for (size_t j = 0; j < 4; ++j)
-                params[i * 4 + j] = static_cast<T>(elements[i][j]);
+        for (size_t i = 0; i < 4; ++i) {
+            for (size_t j = 0; j < 4; ++j) {
+                // Return transposed matrix since OpenGL defines them as column-major
+                params[i * 4 + j] = static_cast<T>(elements[j][i]);
+            }
+        }
     };
     switch (pname) {
     case GL_MODELVIEW_MATRIX:
