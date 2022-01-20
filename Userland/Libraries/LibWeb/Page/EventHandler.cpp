@@ -117,6 +117,9 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
     if (!layout_root())
         return false;
 
+    if (modifiers & KeyModifier::Mod_Shift)
+        swap(wheel_delta_x, wheel_delta_y);
+
     // FIXME: Support wheel events in subframes.
 
     auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
