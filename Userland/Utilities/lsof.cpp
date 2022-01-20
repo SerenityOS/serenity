@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
 #include <AK/JsonValue.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -99,25 +99,14 @@ static void display_entry(const OpenFile& file, const Core::ProcessStatistics& s
     outln("{:28} {:>4} {:>4} {:10} {:>4} {}", statistics.name, file.pid, statistics.pgid, statistics.username, file.fd, file.full_name);
 }
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath proc", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath proc"));
 
-    if (unveil("/proc", "r") < 0) {
-        perror("unveil /proc");
-        return 1;
-    }
-
+    TRY(Core::System::unveil("/proc", "r"));
     // needed by ProcessStatisticsReader::get_all()
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil /etc/passwd");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     bool arg_all_processes { false };
     int arg_fd { -1 };
@@ -127,7 +116,7 @@ int main(int argc, char* argv[])
     pid_t arg_pid { -1 };
     const char* arg_filename { nullptr };
 
-    if (argc == 1)
+    if (arguments.strings.size() == 1)
         arg_all_processes = true;
     else {
         Core::ArgsParser parser;
@@ -137,7 +126,7 @@ int main(int argc, char* argv[])
         parser.add_option(arg_uid, "Select by login/UID", nullptr, 'u', "login/UID");
         parser.add_option(arg_pgid, "Select by process group ID", nullptr, 'g', "PGID");
         parser.add_positional_argument(arg_filename, "Filename", "filename", Core::ArgsParser::Required::No);
-        parser.parse(argc, argv);
+        parser.parse(arguments);
     }
     {
         // try convert UID to int
