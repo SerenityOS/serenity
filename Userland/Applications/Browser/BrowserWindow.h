@@ -41,6 +41,7 @@ private:
     explicit BrowserWindow(CookieJar&, URL);
 
     void build_menus();
+    ErrorOr<void> load_search_engines(GUI::Menu& settings_menu);
     void set_window_title_for_tab(Tab const&);
 
     RefPtr<GUI::Action> m_go_back_action;
