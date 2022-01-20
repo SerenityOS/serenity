@@ -1980,14 +1980,12 @@ void SoftwareGLContext::get_floating_point(GLenum pname, T* params)
         *params = parameter.value.boolean_value ? GL_TRUE : GL_FALSE;
         break;
     case GL_DOUBLE:
-        for (size_t i = 0; i < parameter.count; ++i) {
+        for (size_t i = 0; i < parameter.count; ++i)
             params[i] = parameter.value.double_list[i];
-        }
         break;
     case GL_INT:
-        for (size_t i = 0; i < parameter.count; ++i) {
+        for (size_t i = 0; i < parameter.count; ++i)
             params[i] = parameter.value.integer_list[i];
-        }
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -2015,9 +2013,8 @@ void SoftwareGLContext::gl_get_integerv(GLenum pname, GLint* data)
         break;
     }
     case GL_INT:
-        for (size_t i = 0; i < parameter.count; ++i) {
+        for (size_t i = 0; i < parameter.count; ++i)
             data[i] = parameter.value.integer_list[i];
-        }
         break;
     default:
         VERIFY_NOT_REACHED();

@@ -733,8 +733,8 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         Triangle triangle;
         triangle.vertices[0] = vertices.at(0); // Root vertex is always the vertex defined first
 
-        for (size_t i = 1; i < vertices.size() - 1; i++) // This is technically `n-2` triangles. We start at index 1
-        {
+        // This is technically `n-2` triangles. We start at index 1
+        for (size_t i = 1; i < vertices.size() - 1; i++) {
             triangle.vertices[1] = vertices.at(i);
             triangle.vertices[2] = vertices.at(i + 1);
             m_triangle_list.append(triangle);
