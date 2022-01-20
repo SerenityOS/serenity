@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
@@ -25,6 +26,7 @@ struct Offset {
 };
 
 StringView current_time_zone();
+ErrorOr<void> change_time_zone(StringView time_zone);
 Span<StringView const> all_time_zones();
 
 Optional<TimeZone> time_zone_from_string(StringView time_zone);
