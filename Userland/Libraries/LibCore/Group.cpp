@@ -5,6 +5,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/ScopeGuard.h>
 #include <LibCore/Group.h>
 #include <LibCore/System.h>
 
@@ -48,10 +49,12 @@ ErrorOr<void> Group::add_group(Group& group)
     if (!file)
         return Error::from_errno(errno);
 
+    ScopeGuard file_guard { [&] {
+        fclose(file);
+    } };
+
     if (putgrent(&gr, file) < 0)
         return Error::from_errno(errno);
-
-    fclose(file);
 
     return {};
 }
