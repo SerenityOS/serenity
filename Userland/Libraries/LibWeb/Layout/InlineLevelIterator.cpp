@@ -7,6 +7,7 @@
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InlineLevelIterator.h>
 #include <LibWeb/Layout/InlineNode.h>
+#include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 
 namespace Web::Layout {
@@ -73,6 +74,11 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
         return Item {
             .type = Item::Type::ForcedBreak,
         };
+    }
+
+    if (is<Layout::ListItemMarkerBox>(*m_current_node)) {
+        skip_to_next();
+        return next(available_width);
     }
 
     if (!is<Layout::Box>(*m_current_node)) {
