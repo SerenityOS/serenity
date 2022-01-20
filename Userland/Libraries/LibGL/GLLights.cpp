@@ -62,3 +62,13 @@ void glShadeModel(GLenum mode)
 {
     g_gl_context->gl_shade_model(mode);
 }
+
+void glGetLightfv(GLenum light, GLenum pname, GLfloat* params)
+{
+    g_gl_context->gl_get_light(light, pname, params, GL_FLOAT);
+}
+
+void glGetLightiv(GLenum light, GLenum pname, GLint* params)
+{
+    g_gl_context->gl_get_light(light, pname, params, GL_INT);
+}
