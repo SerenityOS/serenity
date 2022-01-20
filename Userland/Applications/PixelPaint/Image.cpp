@@ -88,11 +88,8 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
         auto name = layer_object.get("name").as_string();
 
         auto bitmap_base64_encoded = layer_object.get("bitmap").as_string();
-        auto bitmap_data = decode_base64(bitmap_base64_encoded);
-        if (!bitmap_data.has_value())
-            return Error::from_string_literal("Base64 decode failed"sv);
-
-        auto bitmap = TRY(try_decode_bitmap(bitmap_data.value()));
+        auto bitmap_data = TRY(decode_base64(bitmap_base64_encoded));
+        auto bitmap = TRY(try_decode_bitmap(bitmap_data));
         auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
 
         auto width = layer_object.get("width").to_i32();

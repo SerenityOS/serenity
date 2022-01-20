@@ -46,12 +46,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio"));
 
     if (decode) {
-        auto decoded = decode_base64(StringView(buffer));
-        if (!decoded.has_value()) {
-            warnln("base64: invalid input");
-            return 1;
-        }
-        fwrite(decoded.value().data(), sizeof(u8), decoded.value().size(), stdout);
+        auto decoded = TRY(decode_base64(StringView(buffer)));
+        fwrite(decoded.data(), sizeof(u8), decoded.size(), stdout);
         return 0;
     }
 
