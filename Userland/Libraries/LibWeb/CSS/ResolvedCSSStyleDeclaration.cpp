@@ -163,6 +163,23 @@ static CSS::ValueID to_css_value_id(CSS::TextDecorationLine value)
     VERIFY_NOT_REACHED();
 }
 
+static CSS::ValueID to_css_value_id(CSS::TextDecorationStyle value)
+{
+    switch (value) {
+    case TextDecorationStyle::Solid:
+        return CSS::ValueID::Solid;
+    case TextDecorationStyle::Double:
+        return CSS::ValueID::Double;
+    case TextDecorationStyle::Dotted:
+        return CSS::ValueID::Dotted;
+    case TextDecorationStyle::Dashed:
+        return CSS::ValueID::Dashed;
+    case TextDecorationStyle::Wavy:
+        return CSS::ValueID::Wavy;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 static CSS::ValueID to_css_value_id(CSS::Cursor value)
 {
     switch (value) {
@@ -460,6 +477,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_align()));
     case CSS::PropertyID::TextDecorationLine:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_decoration_line()));
+    case CSS::PropertyID::TextDecorationStyle:
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_decoration_style()));
     case CSS::PropertyID::TextTransform:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_transform()));
     case CSS::PropertyID::Position:
