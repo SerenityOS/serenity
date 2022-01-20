@@ -169,8 +169,6 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             break;
         auto& item = item_opt.value();
 
-        line_builder.break_if_needed(layout_mode, item.width);
-
         switch (item.type) {
         case InlineLevelIterator::Item::Type::ForcedBreak:
             line_builder.break_line();
@@ -178,11 +176,13 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
             dimension_box_on_line(box, layout_mode);
+            line_builder.break_if_needed(layout_mode, box.width(), item.should_force_break);
             line_builder.append_box(box);
             break;
         }
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
+            line_builder.break_if_needed(layout_mode, item.width, item.should_force_break);
             line_builder.append_text_chunk(
                 text_node,
                 item.offset_in_node,

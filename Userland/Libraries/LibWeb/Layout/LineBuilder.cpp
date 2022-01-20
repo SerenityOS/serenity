@@ -46,9 +46,10 @@ void LineBuilder::append_text_chunk(TextNode& text_node, size_t offset_in_node, 
     m_max_height_on_current_line = max(m_max_height_on_current_line, height);
 }
 
-void LineBuilder::break_if_needed(LayoutMode layout_mode, float next_item_width)
+void LineBuilder::break_if_needed(LayoutMode layout_mode, float next_item_width, bool should_force_break)
 {
     if (layout_mode == LayoutMode::AllPossibleLineBreaks
+        || should_force_break
         || (m_context.containing_block().line_boxes().last().width() + next_item_width) > m_available_width_for_current_line)
         break_line();
 }

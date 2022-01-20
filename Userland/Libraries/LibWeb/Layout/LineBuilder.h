@@ -23,7 +23,7 @@ public:
     void append_box(Box&);
     void append_text_chunk(TextNode&, size_t offset_in_node, size_t length_in_node, float width, float height);
 
-    void break_if_needed(LayoutMode, float next_item_width);
+    void break_if_needed(LayoutMode, float next_item_width, bool should_force_break);
 
     float available_width_for_current_line() const { return m_available_width_for_current_line; }
 

@@ -62,6 +62,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
             .offset_in_node = chunk.start,
             .length_in_node = chunk.length,
             .width = chunk_width,
+            .should_force_break = m_text_node_context->do_respect_linebreaks && chunk.has_breaking_newline,
         };
 
         return item;

@@ -31,6 +31,7 @@ public:
         size_t offset_in_node { 0 };
         size_t length_in_node { 0 };
         float width { 0.0f };
+        bool should_force_break { false };
     };
 
     explicit InlineLevelIterator(Layout::Box& container, LayoutMode layout_mode)
