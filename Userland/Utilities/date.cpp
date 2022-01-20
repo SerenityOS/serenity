@@ -13,7 +13,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio settime", nullptr));
+    TRY(Core::System::pledge("stdio settime rpath", nullptr));
 
     bool print_unix_date = false;
     bool print_iso_8601 = false;

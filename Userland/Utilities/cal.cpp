@@ -90,7 +90,8 @@ static void clean_buffers()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio"));
+    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     int day = 0;
