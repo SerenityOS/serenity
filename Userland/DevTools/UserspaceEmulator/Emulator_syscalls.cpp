@@ -458,7 +458,7 @@ int Emulator::virt$setsockopt(FlatPtr params_addr)
 
     if (params.option == SO_RCVTIMEO || params.option == SO_TIMESTAMP) {
         auto host_value_buffer_result = ByteBuffer::create_zeroed(params.value_size);
-        if (!host_value_buffer_result.has_value())
+        if (host_value_buffer_result.is_error())
             return -ENOMEM;
         auto& host_value_buffer = host_value_buffer_result.value();
         mmu().copy_from_vm(host_value_buffer.data(), (FlatPtr)params.value, params.value_size);
@@ -592,7 +592,7 @@ int Emulator::virt$get_process_name(FlatPtr buffer, int size)
     if (size < 0)
         return -EINVAL;
     auto host_buffer_result = ByteBuffer::create_zeroed((size_t)size);
-    if (!host_buffer_result.has_value())
+    if (host_buffer_result.is_error())
         return -ENOMEM;
     auto& host_buffer = host_buffer_result.value();
     int rc = syscall(SC_get_process_name, host_buffer.data(), host_buffer.size());
@@ -635,7 +635,7 @@ int Emulator::virt$recvmsg(int sockfd, FlatPtr msg_addr, int flags)
     Vector<iovec, 1> iovs;
     for (const auto& iov : mmu_iovs) {
         auto buffer_result = ByteBuffer::create_uninitialized(iov.iov_len);
-        if (!buffer_result.has_value())
+        if (buffer_result.is_error())
             return -ENOMEM;
         buffers.append(buffer_result.release_value());
         iovs.append({ buffers.last().data(), buffers.last().size() });
@@ -644,7 +644,7 @@ int Emulator::virt$recvmsg(int sockfd, FlatPtr msg_addr, int flags)
     ByteBuffer control_buffer;
     if (mmu_msg.msg_control) {
         auto buffer_result = ByteBuffer::create_uninitialized(mmu_msg.msg_controllen);
-        if (!buffer_result.has_value())
+        if (buffer_result.is_error())
             return -ENOMEM;
         control_buffer = buffer_result.release_value();
     }
@@ -686,7 +686,7 @@ int Emulator::virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags)
     ByteBuffer control_buffer;
     if (mmu_msg.msg_control) {
         auto buffer_result = ByteBuffer::create_uninitialized(mmu_msg.msg_controllen);
-        if (!buffer_result.has_value())
+        if (buffer_result.is_error())
             return -ENOMEM;
         control_buffer = buffer_result.release_value();
     }
@@ -770,7 +770,7 @@ int Emulator::virt$getgroups(ssize_t count, FlatPtr groups)
         return syscall(SC_getgroups, 0, nullptr);
 
     auto buffer_result = ByteBuffer::create_uninitialized(count * sizeof(gid_t));
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return -ENOMEM;
     auto& buffer = buffer_result.value();
     int rc = syscall(SC_getgroups, count, buffer.data());
@@ -905,7 +905,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
     String name_str;
     if (params.name.characters) {
         auto buffer_result = ByteBuffer::create_uninitialized(params.name.length);
-        if (!buffer_result.has_value())
+        if (buffer_result.is_error())
             return -ENOMEM;
         auto& name = buffer_result.value();
         mmu().copy_from_vm(name.data(), (FlatPtr)params.name.characters, params.name.length);
@@ -1052,7 +1052,7 @@ u32 Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
     if (size < 0)
         return -EINVAL;
     auto buffer_result = ByteBuffer::create_uninitialized(size);
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return -ENOMEM;
     auto& local_buffer = buffer_result.value();
     int nread = syscall(SC_read, fd, local_buffer.data(), local_buffer.size());
@@ -1082,7 +1082,7 @@ void Emulator::virt$exit(int status)
 ssize_t Emulator::virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags)
 {
     auto buffer_result = ByteBuffer::create_uninitialized(buffer_size);
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return -ENOMEM;
     auto& host_buffer = buffer_result.value();
     int rc = syscall(SC_getrandom, host_buffer.data(), host_buffer.size(), flags);
@@ -1095,7 +1095,7 @@ ssize_t Emulator::virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned in
 int Emulator::virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t size)
 {
     auto buffer_result = ByteBuffer::create_uninitialized(size);
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return -ENOMEM;
     auto& host_buffer = buffer_result.value();
     int rc = syscall(SC_get_dir_entries, fd, host_buffer.data(), host_buffer.size());
@@ -1279,7 +1279,7 @@ int Emulator::virt$realpath(FlatPtr params_addr)
 
     auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
     auto buffer_result = ByteBuffer::create_zeroed(params.buffer.size);
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return -ENOMEM;
     auto& host_buffer = buffer_result.value();
 
@@ -1298,7 +1298,7 @@ int Emulator::virt$gethostname(FlatPtr buffer, ssize_t buffer_size)
     if (buffer_size < 0)
         return -EINVAL;
     auto buffer_result = ByteBuffer::create_zeroed(buffer_size);
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return -ENOMEM;
     auto& host_buffer = buffer_result.value();
     int rc = syscall(SC_gethostname, host_buffer.data(), host_buffer.size());
@@ -1386,7 +1386,7 @@ int Emulator::virt$setpgid(pid_t pid, pid_t pgid)
 int Emulator::virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size)
 {
     auto buffer_result = ByteBuffer::create_zeroed(buffer_size);
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return -ENOMEM;
     auto& host_buffer = buffer_result.value();
     int rc = syscall(SC_ttyname, fd, host_buffer.data(), host_buffer.size());
@@ -1399,7 +1399,7 @@ int Emulator::virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size)
 int Emulator::virt$getcwd(FlatPtr buffer, size_t buffer_size)
 {
     auto buffer_result = ByteBuffer::create_zeroed(buffer_size);
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return -ENOMEM;
     auto& host_buffer = buffer_result.value();
     int rc = syscall(SC_getcwd, host_buffer.data(), host_buffer.size());
@@ -1528,7 +1528,7 @@ int Emulator::virt$readlink(FlatPtr params_addr)
 
     auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
     auto buffer_result = ByteBuffer::create_zeroed(params.buffer.size);
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return -ENOMEM;
     auto& host_buffer = buffer_result.value();
 

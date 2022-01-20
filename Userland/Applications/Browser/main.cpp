@@ -36,17 +36,13 @@ static ErrorOr<void> load_content_filters()
 {
     auto file = TRY(Core::Stream::File::open(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::Stream::OpenMode::Read));
     auto ad_filter_list = TRY(Core::Stream::BufferedFile::create(move(file)));
-    auto maybe_buffer = ByteBuffer::create_uninitialized(4096);
-    if (maybe_buffer.has_value()) {
-        auto buffer = maybe_buffer.release_value();
-
-        while (TRY(ad_filter_list->can_read_line())) {
-            auto length = TRY(ad_filter_list->read_line(buffer));
-            StringView line { buffer.data(), length };
-            dbgln("Content filter for {}", line);
-            if (!line.is_empty())
-                Browser::g_content_filters.append(line);
-        }
+    auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+    while (TRY(ad_filter_list->can_read_line())) {
+        auto length = TRY(ad_filter_list->read_line(buffer));
+        StringView line { buffer.data(), length };
+        dbgln("Content filter for {}", line);
+        if (!line.is_empty())
+            Browser::g_content_filters.append(line);
     }
 
     return {};

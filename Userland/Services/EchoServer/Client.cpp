@@ -27,10 +27,7 @@ ErrorOr<void> Client::drain_socket()
 {
     NonnullRefPtr<Client> protect(*this);
 
-    auto maybe_buffer = ByteBuffer::create_uninitialized(1024);
-    if (!maybe_buffer.has_value())
-        return ENOMEM;
-    auto buffer = maybe_buffer.release_value();
+    auto buffer = TRY(ByteBuffer::create_uninitialized(1024));
 
     while (TRY(m_socket->can_read_without_blocking())) {
         auto nread = TRY(m_socket->read(buffer));

@@ -45,8 +45,8 @@ Optional<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
     // FIXME: Integrate this padding into AK/Hex?
 
     auto output_result = ByteBuffer::create_zeroed(bytes.size() / 2 + 1);
-    if (!output_result.has_value())
-        return output_result;
+    if (output_result.is_error())
+        return {};
 
     auto output = output_result.release_value();
 
@@ -120,7 +120,10 @@ Optional<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
             buff.append(reinterpret_cast<u8*>(&number)[3 - i]);
     }
 
-    return ByteBuffer::copy(buff.span());
+    auto result = ByteBuffer::copy(buff.span());
+    if (result.is_error())
+        return {};
+    return result.release_value();
 };
 
 Optional<ByteBuffer> Filter::decode_lzw(ReadonlyBytes)

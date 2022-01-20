@@ -281,10 +281,7 @@ ErrorOr<ByteBuffer> BochsGraphicsAdapter::get_edid(size_t output_port_index) con
     if (output_port_index != 0)
         return Error::from_errno(ENODEV);
 
-    auto bytes = ByteBuffer::copy(const_cast<u8 const*>(m_registers->edid_data), sizeof(m_registers->edid_data));
-    if (!bytes.has_value())
-        return Error::from_errno(ENOMEM);
-    return bytes.release_value();
+    return ByteBuffer::copy(const_cast<u8 const*>(m_registers->edid_data), sizeof(m_registers->edid_data));
 }
 
 }

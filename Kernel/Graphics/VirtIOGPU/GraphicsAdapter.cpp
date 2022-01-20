@@ -214,12 +214,8 @@ ErrorOr<ByteBuffer> GraphicsAdapter::get_edid(size_t output_port_index) const
     if (output_port_index >= VIRTIO_GPU_MAX_SCANOUTS)
         return Error::from_errno(ENODEV);
     auto& edid = m_scanouts[output_port_index].edid;
-    if (edid.has_value()) {
-        auto bytes = ByteBuffer::copy(edid.value().bytes());
-        if (!bytes.has_value())
-            return Error::from_errno(ENOMEM);
-        return bytes.release_value();
-    }
+    if (edid.has_value())
+        return ByteBuffer::copy(edid.value().bytes());
     return ByteBuffer {};
 }
 
@@ -243,11 +239,8 @@ auto GraphicsAdapter::query_edid(u32 scanout_id) -> ErrorOr<Optional<EDID::Parse
     if (response.size == 0)
         return Error::from_string_literal("VirtIO::GraphicsAdapter: Failed to get EDID, empty buffer");
 
-    auto edid_buffer = ByteBuffer::copy(response.edid, response.size);
-    if (!edid_buffer.has_value())
-        return Error::from_errno(ENOMEM);
-
-    auto edid = TRY(EDID::Parser::from_bytes(edid_buffer.release_value()));
+    auto edid_buffer = TRY(ByteBuffer::copy(response.edid, response.size));
+    auto edid = TRY(EDID::Parser::from_bytes(move(edid_buffer)));
     return edid;
 }
 

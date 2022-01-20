@@ -13,7 +13,7 @@ namespace JS {
 ArrayBuffer* ArrayBuffer::create(GlobalObject& global_object, size_t byte_length)
 {
     auto buffer = ByteBuffer::create_zeroed(byte_length);
-    if (!buffer.has_value()) {
+    if (buffer.is_error()) {
         global_object.vm().throw_exception<RangeError>(global_object, ErrorType::NotEnoughMemoryToAllocate, byte_length);
         return nullptr;
     }
@@ -62,11 +62,11 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_objec
 
     // 2. Let block be ? CreateByteDataBlock(byteLength).
     auto block = ByteBuffer::create_zeroed(byte_length);
-    if (!block.has_value())
+    if (block.is_error())
         return global_object.vm().throw_completion<RangeError>(global_object, ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
     // 3. Set obj.[[ArrayBufferData]] to block.
-    obj->set_buffer(move(*block));
+    obj->set_buffer(block.release_value());
 
     // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
 

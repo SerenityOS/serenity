@@ -140,10 +140,7 @@ ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKe
     // NOTE: We copy the `data` to write into a local buffer before taking the cache lock.
     //       This makes sure any page faults caused by accessing the data will occur before
     //       we tie down the cache.
-    auto buffered_data_or_error = ByteBuffer::create_uninitialized(count);
-    if (!buffered_data_or_error.has_value())
-        return ENOMEM;
-    auto buffered_data = buffered_data_or_error.release_value();
+    auto buffered_data = TRY(ByteBuffer::create_uninitialized(count));
 
     TRY(data.read(buffered_data.bytes()));
 

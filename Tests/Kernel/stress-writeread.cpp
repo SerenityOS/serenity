@@ -85,7 +85,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     auto buffer_result = AK::ByteBuffer::create_zeroed(block_size);
-    if (!buffer_result.has_value()) {
+    if (buffer_result.is_error()) {
         warnln("Failed to allocate a buffer of {} bytes", block_size);
         return EXIT_FAILURE;
     }

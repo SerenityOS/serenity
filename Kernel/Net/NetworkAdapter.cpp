@@ -34,11 +34,11 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
 {
     size_t size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
     auto buffer_result = NetworkByteBuffer::create_zeroed(size_in_bytes);
-    if (!buffer_result.has_value()) {
+    if (buffer_result.is_error()) {
         dbgln("Dropping ARP packet targeted at {} as there is not enough memory to buffer it", packet.target_hardware_address().to_string());
         return;
     }
-    auto* eth = (EthernetFrameHeader*)buffer_result->data();
+    auto* eth = (EthernetFrameHeader*)buffer_result.value().data();
     eth->set_source(mac_address());
     eth->set_destination(destination);
     eth->set_ether_type(EtherType::ARP);

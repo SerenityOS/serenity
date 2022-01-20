@@ -184,7 +184,7 @@ static void allocate_tls()
 
     auto page_aligned_size = align_up_to(s_total_tls_size, PAGE_SIZE);
     auto initial_tls_data_result = ByteBuffer::create_zeroed(page_aligned_size);
-    if (!initial_tls_data_result.has_value()) {
+    if (initial_tls_data_result.is_error()) {
         dbgln("Failed to allocate initial TLS data");
         VERIFY_NOT_REACHED();
     }

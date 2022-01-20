@@ -8,14 +8,10 @@
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/System.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/File.h>
-#include <errno.h>
 #include <fcntl.h>
-#include <string.h>
-#include <sys/socket.h>
 
 namespace IPC {
 
@@ -125,10 +121,7 @@ ErrorOr<void> Decoder::decode(ByteBuffer& value)
         return {};
     }
 
-    if (auto buffer_result = ByteBuffer::create_uninitialized(length); buffer_result.has_value())
-        value = buffer_result.release_value();
-    else
-        return Error::from_errno(ENOMEM);
+    value = TRY(ByteBuffer::create_uninitialized(length));
 
     m_stream >> value.bytes();
     return m_stream.try_handle_any_error();

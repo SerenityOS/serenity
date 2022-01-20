@@ -97,7 +97,7 @@ Optional<ByteBuffer> decode_base64(StringView input)
             output.append(out2);
     }
 
-    return ByteBuffer::copy(output);
+    return ByteBuffer::copy(output).release_value_but_fixme_should_propagate_errors();
 }
 
 String encode_base64(ReadonlyBytes input)

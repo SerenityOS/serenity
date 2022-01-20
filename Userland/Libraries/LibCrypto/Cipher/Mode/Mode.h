@@ -26,7 +26,7 @@ public:
 
     const T& cipher() const { return m_cipher; }
 
-    Optional<ByteBuffer> create_aligned_buffer(size_t input_size) const
+    ErrorOr<ByteBuffer> create_aligned_buffer(size_t input_size) const
     {
         size_t remainder = (input_size + T::block_size()) % T::block_size();
         if (remainder == 0)
