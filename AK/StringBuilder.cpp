@@ -84,7 +84,7 @@ void StringBuilder::appendvf(char const* fmt, va_list ap)
 ByteBuffer StringBuilder::to_byte_buffer() const
 {
     // FIXME: Handle OOM failure.
-    return ByteBuffer::copy(data(), length()).release_value();
+    return ByteBuffer::copy(data(), length()).release_value_but_fixme_should_propagate_errors();
 }
 
 String StringBuilder::to_string() const

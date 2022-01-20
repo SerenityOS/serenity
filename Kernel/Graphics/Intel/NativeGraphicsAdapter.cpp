@@ -661,12 +661,8 @@ ErrorOr<ByteBuffer> IntelNativeGraphicsAdapter::get_edid(size_t output_port_inde
         return Error::from_errno(ENODEV);
     }
 
-    if (m_crt_edid.has_value()) {
-        auto bytes = ByteBuffer::copy(m_crt_edid_bytes, sizeof(m_crt_edid_bytes));
-        if (!bytes.has_value())
-            return Error::from_errno(ENOMEM);
-        return bytes.release_value();
-    }
+    if (m_crt_edid.has_value())
+        return ByteBuffer::copy(m_crt_edid_bytes, sizeof(m_crt_edid_bytes));
 
     return ByteBuffer {};
 }

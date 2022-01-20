@@ -75,7 +75,7 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& clie
     request.set_headers(headers);
 
     auto allocated_body_result = ByteBuffer::copy(body);
-    if (!allocated_body_result.has_value())
+    if (allocated_body_result.is_error())
         return {};
     request.set_body(allocated_body_result.release_value());
 

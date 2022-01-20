@@ -64,7 +64,7 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
 
     auto digest = hash.digest();
     auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
-    if (!result_buffer.has_value()) {
+    if (result_buffer.is_error()) {
         auto* error = wrap(wrapper()->global_object(), DOM::OperationError::create("Failed to create result buffer"));
         promise->reject(error);
         return promise;

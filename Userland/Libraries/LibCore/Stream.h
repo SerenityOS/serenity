@@ -479,11 +479,9 @@ public:
         if (!stream->is_open())
             return Error::from_errno(ENOTCONN);
 
-        auto maybe_buffer = ByteBuffer::create_uninitialized(buffer_size);
-        if (!maybe_buffer.has_value())
-            return Error::from_errno(ENOMEM);
+        auto buffer = TRY(ByteBuffer::create_uninitialized(buffer_size));
 
-        return adopt_nonnull_own_or_enomem(new BufferedType<T>(move(stream), maybe_buffer.release_value()));
+        return adopt_nonnull_own_or_enomem(new BufferedType<T>(move(stream), move(buffer)));
     }
 
     T& stream() { return *m_stream; }

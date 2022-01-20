@@ -53,7 +53,7 @@ String InspectableProcess::wait_for_response()
         return {};
     }
 
-    auto data_buffer = ByteBuffer::create_uninitialized(length).release_value();
+    auto data_buffer = ByteBuffer::create_uninitialized(length).release_value_but_fixme_should_propagate_errors();
     auto remaining_data_buffer = data_buffer.bytes();
 
     while (!remaining_data_buffer.is_empty()) {

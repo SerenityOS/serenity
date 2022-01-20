@@ -37,7 +37,7 @@ public:
     PacketBuilder(MessageType type, Version version, size_t size_hint = 0xfdf)
     {
         // FIXME: Handle possible OOM situation.
-        m_packet_data = ByteBuffer::create_uninitialized(size_hint + 16).release_value();
+        m_packet_data = ByteBuffer::create_uninitialized(size_hint + 16).release_value_but_fixme_should_propagate_errors();
         m_current_length = 5;
         m_packet_data[0] = (u8)type;
         ByteReader::store(m_packet_data.offset_pointer(1), AK::convert_between_host_and_network_endian((u16)version));

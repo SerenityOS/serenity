@@ -56,7 +56,7 @@ Clipboard::DataAndType Clipboard::fetch_data_and_type() const
     if (!response.data().is_valid())
         return {};
     auto data = ByteBuffer::copy(response.data().data<void>(), response.data().size());
-    if (!data.has_value())
+    if (data.is_error())
         return {};
 
     auto type = response.mime_type();

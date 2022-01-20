@@ -193,7 +193,7 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
     }
 
     auto premaster_key_result = ByteBuffer::copy(random_bytes, bytes);
-    if (!premaster_key_result.has_value()) {
+    if (premaster_key_result.is_error()) {
         dbgln("RSA premaster key generation failed, not enough memory");
         return;
     }
@@ -245,7 +245,7 @@ void TLSv12::build_dhe_rsa_pre_master_secret(PacketBuilder& builder)
     auto dh_random = Crypto::NumberTheory::random_number(0, dh_p);
     auto dh_Yc = Crypto::NumberTheory::ModularPower(dh_g, dh_random, dh_p);
     auto dh_Yc_bytes_result = ByteBuffer::create_uninitialized(dh_key_size);
-    if (!dh_Yc_bytes_result.has_value()) {
+    if (dh_Yc_bytes_result.is_error()) {
         dbgln("Failed to build DHE_RSA premaster secret: not enough memory");
         return;
     }
@@ -254,7 +254,7 @@ void TLSv12::build_dhe_rsa_pre_master_secret(PacketBuilder& builder)
 
     auto premaster_key = Crypto::NumberTheory::ModularPower(dh_Ys, dh_random, dh_p);
     auto premaster_key_result = ByteBuffer::create_uninitialized(dh_key_size);
-    if (!premaster_key_result.has_value()) {
+    if (premaster_key_result.is_error()) {
         dbgln("Failed to build DHE_RSA premaster secret: not enough memory");
         return;
     }

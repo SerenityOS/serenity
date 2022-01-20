@@ -224,7 +224,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*weak_this);
                 // FIXME: Handle OOM failure.
-                auto response_data = ByteBuffer::copy(data).release_value();
+                auto response_data = ByteBuffer::copy(data).release_value_but_fixme_should_propagate_errors();
                 // FIXME: There's currently no difference between transmitted and length.
                 u64 transmitted = response_data.size();
                 u64 length = response_data.size();

@@ -361,25 +361,21 @@ ErrorOr<Parser> Parser::from_framebuffer_device(int framebuffer_fd, size_t head)
         int err = errno;
         if (err == EOVERFLOW) {
             // We need a bigger buffer with at least bytes_size bytes
-            auto edid_byte_buffer = ByteBuffer::create_zeroed(edid_info.bytes_size);
-            if (!edid_byte_buffer.has_value())
-                return Error::from_errno(ENOMEM);
-            edid_info.bytes = edid_byte_buffer.value().data();
+            auto edid_byte_buffer = TRY(ByteBuffer::create_zeroed(edid_info.bytes_size));
+            edid_info.bytes = edid_byte_buffer.data();
             if (fb_get_head_edid(framebuffer_fd, &edid_info) < 0) {
                 err = errno;
                 return Error::from_errno(err);
             }
 
-            return from_bytes(edid_byte_buffer.release_value());
+            return from_bytes(move(edid_byte_buffer));
         }
 
         return Error::from_errno(err);
     }
 
-    auto edid_byte_buffer = ByteBuffer::copy((void const*)edid_bytes, sizeof(edid_bytes));
-    if (!edid_byte_buffer.has_value())
-        return Error::from_errno(ENOMEM);
-    return from_bytes(edid_byte_buffer.release_value());
+    auto edid_byte_buffer = TRY(ByteBuffer::copy((void const*)edid_bytes, sizeof(edid_bytes)));
+    return from_bytes(move(edid_byte_buffer));
 }
 
 ErrorOr<Parser> Parser::from_framebuffer_device(String const& framebuffer_device, size_t head)

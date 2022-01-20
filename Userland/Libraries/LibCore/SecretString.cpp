@@ -12,14 +12,13 @@ namespace Core {
 
 SecretString SecretString::take_ownership(char*& cstring, size_t length)
 {
-    auto buffer = ByteBuffer::copy(cstring, length);
-    VERIFY(buffer.has_value());
+    auto buffer = ByteBuffer::copy(cstring, length).release_value_but_fixme_should_propagate_errors();
 
     secure_zero(cstring, length);
     free(cstring);
     cstring = nullptr;
 
-    return SecretString(buffer.release_value());
+    return SecretString(move(buffer));
 }
 
 SecretString SecretString::take_ownership(ByteBuffer&& buffer)

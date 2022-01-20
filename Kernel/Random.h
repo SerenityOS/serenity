@@ -29,9 +29,9 @@ public:
     using HashType = HashT;
     using DigestType = typename HashT::DigestType;
 
-    // FIXME: Do something other than VERIFY()'ing inside Optional in case of OOM.
+    // FIXME: Do something other than VERIFY()'ing in case of OOM.
     FortunaPRNG()
-        : m_counter(ByteBuffer::create_zeroed(BlockType::block_size()).release_value())
+        : m_counter(ByteBuffer::create_zeroed(BlockType::block_size()).release_value_but_fixme_should_propagate_errors())
     {
     }
 
@@ -101,7 +101,7 @@ private:
         } else {
             auto buffer_result = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
             // If there's no memory left to copy this into, bail out.
-            if (!buffer_result.has_value())
+            if (buffer_result.is_error())
                 return;
 
             m_key = buffer_result.release_value();

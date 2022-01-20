@@ -421,11 +421,11 @@ void NE2000NetworkAdapter::receive()
             u8 drop_buffer[NE2K_PAGE_SIZE];
             Bytes buffer { drop_buffer, array_size(drop_buffer) };
             bool will_drop { false };
-            if (!packet_result.has_value()) {
+            if (packet_result.is_error()) {
                 dbgln("NE2000NetworkAdapter: Not enough memory for packet with length = {}, dropping.", header.length);
                 will_drop = true;
             } else {
-                buffer = packet_result->bytes();
+                buffer = packet_result.value().bytes();
             }
 
             int current_offset = 0;
