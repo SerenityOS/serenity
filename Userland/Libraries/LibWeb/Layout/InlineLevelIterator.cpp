@@ -11,11 +11,28 @@
 
 namespace Web::Layout {
 
+// This is similar to Layout::Node::next_in_pre_order() but will not descend into inline-block nodes.
+static Layout::Node* next_inline_node_in_pre_order(Layout::Node& current, Layout::Node const* stay_within)
+{
+    if (current.first_child() && current.first_child()->is_inline() && !current.is_inline_block())
+        return current.first_child();
+
+    Layout::Node* node = &current;
+    Layout::Node* next = nullptr;
+    while (!(next = node->next_sibling())) {
+        node = node->parent();
+        if (!node || node == stay_within)
+            return nullptr;
+    }
+
+    return next;
+}
+
 void InlineLevelIterator::skip_to_next()
 {
     VERIFY(m_current_node);
     do {
-        m_current_node = m_current_node->next_in_pre_order(&m_container);
+        m_current_node = next_inline_node_in_pre_order(*m_current_node, &m_container);
     } while (m_current_node && !m_current_node->is_inline());
 }
 
