@@ -54,6 +54,40 @@ void Request::stream_into(OutputStream& stream)
     };
 }
 
+void Request::stream_into(Core::Stream::Stream& stream)
+{
+    VERIFY(!m_internal_stream_data);
+
+    auto notifier = Core::Notifier::construct(fd(), Core::Notifier::Read);
+
+    m_internal_stream_data = make<InternalStreamData>(fd());
+    m_internal_stream_data->read_notifier = notifier;
+
+    auto user_on_finish = move(on_finish);
+    on_finish = [this](auto success, auto total_size) {
+        m_internal_stream_data->success = success;
+        m_internal_stream_data->total_size = total_size;
+        m_internal_stream_data->request_done = true;
+    };
+
+    notifier->on_ready_to_read = [this, &stream, user_on_finish = move(user_on_finish)] {
+        constexpr size_t buffer_size = 4096;
+        static char buf[buffer_size];
+        auto nread = m_internal_stream_data->read_stream.read({ buf, buffer_size });
+        if (!stream.write_or_error({ buf, nread })) {
+            // FIXME: What do we do here?
+            TODO();
+        }
+
+        if (m_internal_stream_data->read_stream.eof() && m_internal_stream_data->request_done) {
+            m_internal_stream_data->read_notifier->close();
+            user_on_finish(m_internal_stream_data->success, m_internal_stream_data->total_size);
+        } else {
+            m_internal_stream_data->read_stream.handle_any_error();
+        }
+    };
+}
+
 void Request::set_should_buffer_all_input(bool value)
 {
     if (m_should_buffer_all_input == value)

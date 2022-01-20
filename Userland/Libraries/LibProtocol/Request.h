@@ -15,6 +15,7 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Notifier.h>
+#include <LibCore/Stream.h>
 #include <LibIPC/Forward.h>
 
 namespace Protocol {
@@ -38,6 +39,7 @@ public:
     bool stop();
 
     void stream_into(OutputStream&);
+    void stream_into(Core::Stream::Stream&);
 
     bool should_buffer_all_input() const { return m_should_buffer_all_input; }
     /// Note: Will override `on_finish', and `on_headers_received', and expects `on_buffered_request_finish' to be set!
