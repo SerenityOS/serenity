@@ -615,6 +615,7 @@ GLAPI void glLightfv(GLenum light, GLenum pname, GLfloat const* param);
 GLAPI void glLightModelf(GLenum pname, GLfloat param);
 GLAPI void glLightModelfv(GLenum pname, GLfloat const* params);
 GLAPI void glLightModeli(GLenum pname, GLint param);
+GLAPI void glLightModeliv(GLenum pname, GLint const* params);
 GLAPI void glStencilFunc(GLenum func, GLint ref, GLuint mask);
 GLAPI void glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
 GLAPI void glStencilMask(GLuint mask);
