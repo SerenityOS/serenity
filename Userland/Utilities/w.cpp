@@ -20,6 +20,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::pledge("stdio rpath"));
     TRY(Core::System::unveil("/dev", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/var/run/utmp", "r"));
     TRY(Core::System::unveil("/proc", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

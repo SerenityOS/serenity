@@ -102,7 +102,7 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio"));
+    TRY(Core::System::pledge("stdio rpath"));
 
     auto date = Core::DateTime::now();
     outln("Today is {}", DiscordianDate(date).to_string());
