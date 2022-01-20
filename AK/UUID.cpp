@@ -19,21 +19,21 @@ UUID::UUID(Array<u8, 16> uuid_buffer)
 void UUID::convert_string_view_to_uuid(StringView uuid_string_view)
 {
     VERIFY(uuid_string_view.length() == 36);
-    auto first_unit = decode_hex(uuid_string_view.substring_view(0, 8));
-    auto second_unit = decode_hex(uuid_string_view.substring_view(9, 4));
-    auto third_unit = decode_hex(uuid_string_view.substring_view(14, 4));
-    auto fourth_unit = decode_hex(uuid_string_view.substring_view(19, 4));
-    auto fifth_unit = decode_hex(uuid_string_view.substring_view(24, 12));
+    auto first_unit = MUST(decode_hex(uuid_string_view.substring_view(0, 8)));
+    auto second_unit = MUST(decode_hex(uuid_string_view.substring_view(9, 4)));
+    auto third_unit = MUST(decode_hex(uuid_string_view.substring_view(14, 4)));
+    auto fourth_unit = MUST(decode_hex(uuid_string_view.substring_view(19, 4)));
+    auto fifth_unit = MUST(decode_hex(uuid_string_view.substring_view(24, 12)));
 
-    VERIFY(first_unit.value().size() == 4 && second_unit.value().size() == 2
-        && third_unit.value().size() == 2 && fourth_unit.value().size() == 2
-        && fifth_unit.value().size() == 6);
+    VERIFY(first_unit.size() == 4 && second_unit.size() == 2
+        && third_unit.size() == 2 && fourth_unit.size() == 2
+        && fifth_unit.size() == 6);
 
-    m_uuid_buffer.span().overwrite(0, first_unit.value().data(), first_unit.value().size());
-    m_uuid_buffer.span().overwrite(4, second_unit.value().data(), second_unit.value().size());
-    m_uuid_buffer.span().overwrite(6, third_unit.value().data(), third_unit.value().size());
-    m_uuid_buffer.span().overwrite(8, fourth_unit.value().data(), fourth_unit.value().size());
-    m_uuid_buffer.span().overwrite(10, fifth_unit.value().data(), fifth_unit.value().size());
+    m_uuid_buffer.span().overwrite(0, first_unit.data(), first_unit.size());
+    m_uuid_buffer.span().overwrite(4, second_unit.data(), second_unit.size());
+    m_uuid_buffer.span().overwrite(6, third_unit.data(), third_unit.size());
+    m_uuid_buffer.span().overwrite(8, fourth_unit.data(), fourth_unit.size());
+    m_uuid_buffer.span().overwrite(10, fifth_unit.data(), fifth_unit.size());
 }
 
 UUID::UUID(StringView uuid_string_view)

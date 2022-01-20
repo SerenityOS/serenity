@@ -39,8 +39,12 @@ Optional<ByteBuffer> Filter::decode(ReadonlyBytes bytes, FlyString const& encodi
 
 Optional<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
 {
-    if (bytes.size() % 2 == 0)
-        return decode_hex(bytes);
+    if (bytes.size() % 2 == 0) {
+        auto decode_result = decode_hex(bytes);
+        if (decode_result.is_error())
+            return {};
+        return decode_result.release_value();
+    }
 
     // FIXME: Integrate this padding into AK/Hex?
 
