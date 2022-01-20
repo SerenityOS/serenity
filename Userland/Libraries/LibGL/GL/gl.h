@@ -586,6 +586,8 @@ GLAPI void glGetBooleanv(GLenum pname, GLboolean* data);
 GLAPI void glGetDoublev(GLenum pname, GLdouble* params);
 GLAPI void glGetFloatv(GLenum pname, GLfloat* params);
 GLAPI void glGetIntegerv(GLenum pname, GLint* data);
+GLAPI void glGetLightfv(GLenum light, GLenum pname, GLfloat* params);
+GLAPI void glGetLightiv(GLenum light, GLenum pname, GLint* params);
 GLAPI void glDepthMask(GLboolean flag);
 GLAPI void glEnableClientState(GLenum cap);
 GLAPI void glDisableClientState(GLenum cap);

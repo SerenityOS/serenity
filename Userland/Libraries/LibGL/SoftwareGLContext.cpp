@@ -3516,4 +3516,65 @@ void SoftwareGLContext::gl_color_material(GLenum face, GLenum mode)
     m_light_state_is_dirty = true;
 }
 
+void SoftwareGLContext::gl_get_light(GLenum light, GLenum pname, void* params, GLenum type)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_get_light, light, pname, params, type);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light > GL_LIGHT0 + m_device_info.num_lights, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_SPOT_DIRECTION || pname == GL_SPOT_EXPONENT || pname == GL_SPOT_CUTOFF || pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION), GL_INVALID_ENUM);
+
+    if (type == GL_FLOAT)
+        get_light_param<GLfloat>(light, pname, static_cast<GLfloat*>(params));
+    else if (type == GL_INT)
+        get_light_param<GLint>(light, pname, static_cast<GLint*>(params));
+    else
+        VERIFY_NOT_REACHED();
+}
+
+template<typename T>
+void SoftwareGLContext::get_light_param(GLenum light, GLenum pname, T* params)
+{
+    auto const& light_state = m_light_states[light - GL_LIGHT0];
+    switch (pname) {
+    case GL_AMBIENT:
+        params[0] = light_state.ambient_intensity.x();
+        params[1] = light_state.ambient_intensity.y();
+        params[2] = light_state.ambient_intensity.z();
+        params[3] = light_state.ambient_intensity.w();
+        break;
+    case GL_DIFFUSE:
+        params[0] = light_state.diffuse_intensity.x();
+        params[1] = light_state.diffuse_intensity.y();
+        params[2] = light_state.diffuse_intensity.z();
+        params[3] = light_state.diffuse_intensity.w();
+        break;
+    case GL_SPECULAR:
+        params[0] = light_state.specular_intensity.x();
+        params[1] = light_state.specular_intensity.y();
+        params[2] = light_state.specular_intensity.z();
+        params[3] = light_state.specular_intensity.w();
+        break;
+    case GL_SPOT_DIRECTION:
+        params[0] = light_state.spotlight_direction.x();
+        params[1] = light_state.spotlight_direction.y();
+        params[2] = light_state.spotlight_direction.z();
+        break;
+    case GL_SPOT_EXPONENT:
+        *params = light_state.spotlight_exponent;
+        break;
+    case GL_SPOT_CUTOFF:
+        *params = light_state.spotlight_cutoff_angle;
+        break;
+    case GL_CONSTANT_ATTENUATION:
+        *params = light_state.constant_attenuation;
+        break;
+    case GL_LINEAR_ATTENUATION:
+        *params = light_state.linear_attenuation;
+        break;
+    case GL_QUADRATIC_ATTENUATION:
+        *params = light_state.quadratic_attenuation;
+        break;
+    }
+}
+
 }
