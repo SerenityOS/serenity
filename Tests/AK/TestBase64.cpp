@@ -14,7 +14,7 @@ TEST_CASE(test_decode)
 {
     auto decode_equal = [&](const char* input, const char* expected) {
         auto decoded_option = decode_base64(StringView(input));
-        EXPECT(decoded_option.has_value());
+        EXPECT(!decoded_option.is_error());
         auto decoded = decoded_option.release_value();
         EXPECT(String::copy(decoded) == String(expected));
         EXPECT(StringView(expected).length() <= calculate_base64_decoded_length(StringView(input).bytes()));
@@ -31,10 +31,10 @@ TEST_CASE(test_decode)
 
 TEST_CASE(test_decode_invalid)
 {
-    EXPECT(!decode_base64(StringView("asdf\xffqwe")).has_value());
-    EXPECT(!decode_base64(StringView("asdf\x80qwe")).has_value());
-    EXPECT(!decode_base64(StringView("asdf:qwe")).has_value());
-    EXPECT(!decode_base64(StringView("asdf=qwe")).has_value());
+    EXPECT(decode_base64(StringView("asdf\xffqwe")).is_error());
+    EXPECT(decode_base64(StringView("asdf\x80qwe")).is_error());
+    EXPECT(decode_base64(StringView("asdf:qwe")).is_error());
+    EXPECT(decode_base64(StringView("asdf=qwe")).is_error());
 }
 
 TEST_CASE(test_encode)

@@ -162,8 +162,8 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
         ByteBuffer data;
         if (url.data_payload_is_base64()) {
             auto data_maybe = decode_base64(url.data_payload());
-            if (!data_maybe.has_value()) {
-                auto error_message = "Base64 data contains an invalid character"sv;
+            if (data_maybe.is_error()) {
+                auto error_message = data_maybe.error().string_literal();
                 log_failure(request, error_message);
                 error_callback(error_message, {});
                 return;
