@@ -480,6 +480,10 @@ if (BUILD_LAGOM)
         set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
         target_link_libraries(disasm_lagom LagomCore LagomELF LagomX86 LagomMain)
 
+        add_executable(fontdump_lagom ../../Userland/Utilities/fontdump.cpp)
+        set_target_properties(fontdump_lagom PROPERTIES OUTPUT_NAME fontdump)
+        target_link_libraries(fontdump_lagom LagomCore LagomMain LagomGfx)
+
         add_executable(gml-format_lagom ../../Userland/Utilities/gml-format.cpp)
         set_target_properties(gml-format_lagom PROPERTIES OUTPUT_NAME gml-format)
         target_link_libraries(gml-format_lagom LagomCore LagomGML LagomMain)
