@@ -1071,8 +1071,10 @@ RefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
     if (dict->contains(CommonNames::Filter)) {
         auto filter_type = dict->get_name(m_document, CommonNames::Filter)->name();
         auto maybe_bytes = Filter::decode(bytes, filter_type);
-        if (!maybe_bytes.has_value())
+        if (maybe_bytes.is_error()) {
+            warnln("Failed to decode filter: {}", maybe_bytes.error().string_literal());
             return {};
+        }
         return make_object<EncodedStreamObject>(dict, move(maybe_bytes.value()));
     }
 
