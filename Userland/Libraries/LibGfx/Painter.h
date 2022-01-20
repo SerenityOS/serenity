@@ -59,6 +59,7 @@ public:
     void set_pixel(IntPoint const&, Color);
     void set_pixel(int x, int y, Color color) { set_pixel({ x, y }, color); }
     void draw_line(IntPoint const&, IntPoint const&, Color, int thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent);
+    void draw_triangle_wave(IntPoint const&, IntPoint const&, Color color, int amplitude, int thickness = 1);
     void draw_quadratic_bezier_curve(IntPoint const& control_point, IntPoint const&, IntPoint const&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
     void draw_cubic_bezier_curve(IntPoint const& control_point_0, IntPoint const& control_point_1, IntPoint const&, IntPoint const&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
     void draw_elliptical_arc(IntPoint const& p1, IntPoint const& p2, IntPoint const& center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
