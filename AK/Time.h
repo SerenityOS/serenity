@@ -10,7 +10,6 @@
 #include <AK/Assertions.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
-#include <math.h>
 
 // Kernel and Userspace pull in the definitions from different places.
 // Avoid trying to figure out which one.
@@ -83,8 +82,17 @@ constexpr i64 seconds_since_epoch_to_year(i64 seconds)
 {
     constexpr double seconds_per_year = 60.0 * 60.0 * 24.0 * 365.2425;
 
+    // NOTE: We are not using floor() from <math.h> to avoid LibC / DynamicLoader dependency issues.
+    auto round_down = [](double value) -> i64 {
+        auto as_i64 = static_cast<i64>(value);
+
+        if ((value == as_i64) || (as_i64 >= 0))
+            return as_i64;
+        return as_i64 - 1;
+    };
+
     auto years_since_epoch = static_cast<double>(seconds) / seconds_per_year;
-    return 1970 + static_cast<i64>(floor(years_since_epoch));
+    return 1970 + round_down(years_since_epoch);
 }
 
 /*
