@@ -1229,10 +1229,10 @@ int Emulator::virt$execve(FlatPtr params_addr)
     Vector<char*> envp;
 
     argv.append(const_cast<char*>("/bin/UserspaceEmulator"));
-    argv.append(const_cast<char*>(path.characters()));
     if (g_report_to_debug)
         argv.append(const_cast<char*>("--report-to-debug"));
     argv.append(const_cast<char*>("--"));
+    argv.append(const_cast<char*>(path.characters()));
 
     auto create_string_vector = [](auto& output_vector, auto& input_vector) {
         for (auto& string : input_vector)
