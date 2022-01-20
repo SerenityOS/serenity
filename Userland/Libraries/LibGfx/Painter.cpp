@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1822,6 +1823,25 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
                 error -= 2 * dy;
             }
         }
+    }
+}
+
+void Painter::draw_triangle_wave(IntPoint const& a_p1, IntPoint const& a_p2, Color color, int amplitude, int thickness)
+{
+    // FIXME: Support more than horizontal waves
+    VERIFY(a_p1.y() == a_p2.y());
+
+    auto const p1 = thickness > 1 ? a_p1.translated(-(thickness / 2), -(thickness / 2)) : a_p1;
+    auto const p2 = thickness > 1 ? a_p2.translated(-(thickness / 2), -(thickness / 2)) : a_p2;
+
+    auto point1 = to_physical(p1);
+    auto point2 = to_physical(p2);
+
+    auto y = point1.y();
+
+    for (int x = 0; x <= point2.x() - point1.x(); ++x) {
+        auto y_offset = abs(x % (2 * amplitude) - amplitude) - amplitude;
+        draw_physical_pixel({ point1.x() + x, y + y_offset }, color, thickness);
     }
 }
 
