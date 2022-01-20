@@ -16,7 +16,7 @@ set(SOURCES
 )
 
 serenity_lib(LibUnicode unicode)
-target_link_libraries(LibUnicode LibCore LibTimeZone)
+target_link_libraries(LibUnicode LibCore)
 target_compile_definitions(LibUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
 
 if (DEFINED UNICODE_DATA_SOURCES)
