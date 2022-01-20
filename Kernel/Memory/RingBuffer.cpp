@@ -10,8 +10,15 @@
 
 namespace Kernel::Memory {
 
-RingBuffer::RingBuffer(StringView region_name, size_t capacity)
-    : m_region(MM.allocate_contiguous_kernel_region(page_round_up(capacity).release_value_but_fixme_should_propagate_errors(), region_name, Region::Access::Read | Region::Access::Write).release_value())
+ErrorOr<NonnullOwnPtr<RingBuffer>> RingBuffer::try_create(StringView region_name, size_t capacity)
+{
+    auto region_size = TRY(page_round_up(capacity));
+    auto region = TRY(MM.allocate_contiguous_kernel_region(region_size, region_name, Region::Access::Read | Region::Access::Write));
+    return adopt_nonnull_own_or_enomem(new (nothrow) RingBuffer(move(region), capacity));
+}
+
+RingBuffer::RingBuffer(NonnullOwnPtr<Memory::Region> region, size_t capacity)
+    : m_region(move(region))
     , m_capacity_in_bytes(capacity)
 {
 }
