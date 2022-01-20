@@ -15,7 +15,7 @@ namespace Core {
 
 class Group {
 public:
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
     static ErrorOr<void> add_group(Group& group);
 #endif
 

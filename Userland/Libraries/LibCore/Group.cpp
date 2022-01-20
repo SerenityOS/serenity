@@ -10,7 +10,7 @@
 
 namespace Core {
 
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
 ErrorOr<void> Group::add_group(Group& group)
 {
     if (group.name().is_empty())
