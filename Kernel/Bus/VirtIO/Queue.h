@@ -37,9 +37,9 @@ public:
     void enable_interrupts();
     void disable_interrupts();
 
-    PhysicalAddress descriptor_area() const { return to_physical(m_descriptors.ptr()); }
-    PhysicalAddress driver_area() const { return to_physical(m_driver.ptr()); }
-    PhysicalAddress device_area() const { return to_physical(m_device.ptr()); }
+    PhysicalAddress descriptor_area() const { return to_physical(m_descriptors); }
+    PhysicalAddress driver_area() const { return to_physical(m_driver); }
+    PhysicalAddress device_area() const { return to_physical(m_device); }
 
     bool new_data_available() const;
     bool has_free_slots() const;
@@ -90,9 +90,9 @@ private:
     u16 m_used_tail { 0 };
     u16 m_driver_index_shadow { 0 };
 
-    OwnPtr<QueueDescriptor> m_descriptors { nullptr };
-    OwnPtr<QueueDriver> m_driver { nullptr };
-    OwnPtr<QueueDevice> m_device { nullptr };
+    QueueDescriptor* m_descriptors { nullptr };
+    QueueDriver* m_driver { nullptr };
+    QueueDevice* m_device { nullptr };
     OwnPtr<Memory::Region> m_queue_region;
     Spinlock m_lock;
 
