@@ -130,7 +130,7 @@ set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES})
 set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs -fno-builtin-fwrite")
 
 add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
-target_link_libraries(LibCStaticWithoutDeps ssp)
+target_link_libraries(LibCStaticWithoutDeps ssp LibTimeZone)
 add_dependencies(LibCStaticWithoutDeps LibM LibSystem LibUBSanitizer)
 
 add_custom_target(LibCStatic
@@ -154,7 +154,7 @@ set_property(
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nolibc")
 serenity_libc(LibC c)
 add_dependencies(LibC crti crt0 crt0_shared crtn)
-target_link_libraries(LibC ssp system)
+target_link_libraries(LibC ssp system LibTimeZone)
 
 # We mark LibCStatic as a dependency of LibC because this triggers the build of the LibCStatic target
 add_dependencies(LibC LibM LibSystem LibCStatic)
