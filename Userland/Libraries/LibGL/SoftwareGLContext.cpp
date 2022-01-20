@@ -3556,4 +3556,64 @@ void SoftwareGLContext::get_light_param(GLenum light, GLenum pname, T* params)
     }
 }
 
+void SoftwareGLContext::gl_get_material(GLenum face, GLenum pname, void* params, GLenum type)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_get_material, face, pname, params, type);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_EMISSION), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(face == GL_FRONT || face == GL_BACK), GL_INVALID_ENUM);
+
+    Face material_face = Front;
+    switch (face) {
+    case GL_FRONT:
+        material_face = Front;
+        break;
+    case GL_BACK:
+        material_face = Back;
+        break;
+    }
+
+    if (type == GL_FLOAT)
+        get_material_param<GLfloat>(material_face, pname, static_cast<GLfloat*>(params));
+    else if (type == GL_INT)
+        get_material_param<GLint>(material_face, pname, static_cast<GLint*>(params));
+    else
+        VERIFY_NOT_REACHED();
+}
+
+template<typename T>
+void SoftwareGLContext::get_material_param(Face face, GLenum pname, T* params)
+{
+    auto const& material = m_material_states[face];
+    switch (pname) {
+    case GL_AMBIENT:
+        params[0] = static_cast<T>(material.ambient.x());
+        params[1] = static_cast<T>(material.ambient.y());
+        params[2] = static_cast<T>(material.ambient.z());
+        params[3] = static_cast<T>(material.ambient.w());
+        break;
+    case GL_DIFFUSE:
+        params[0] = static_cast<T>(material.diffuse.x());
+        params[1] = static_cast<T>(material.diffuse.y());
+        params[2] = static_cast<T>(material.diffuse.z());
+        params[3] = static_cast<T>(material.diffuse.w());
+        break;
+    case GL_SPECULAR:
+        params[0] = static_cast<T>(material.specular.x());
+        params[1] = static_cast<T>(material.specular.y());
+        params[2] = static_cast<T>(material.specular.z());
+        params[3] = static_cast<T>(material.specular.w());
+        break;
+    case GL_EMISSION:
+        params[0] = static_cast<T>(material.emissive.x());
+        params[1] = static_cast<T>(material.emissive.y());
+        params[2] = static_cast<T>(material.emissive.z());
+        params[3] = static_cast<T>(material.emissive.w());
+        break;
+    case GL_SHININESS:
+        *params = material.shininess;
+        break;
+    }
+}
+
 }

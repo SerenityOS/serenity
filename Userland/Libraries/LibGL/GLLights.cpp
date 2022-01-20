@@ -72,3 +72,13 @@ void glGetLightiv(GLenum light, GLenum pname, GLint* params)
 {
     g_gl_context->gl_get_light(light, pname, params, GL_INT);
 }
+
+void glGetMaterialfv(GLenum face, GLenum pname, GLfloat* params)
+{
+    g_gl_context->gl_get_material(face, pname, params, GL_FLOAT);
+}
+
+void glGetMaterialiv(GLenum face, GLenum pname, GLint* params)
+{
+    g_gl_context->gl_get_material(face, pname, params, GL_INT);
+}
