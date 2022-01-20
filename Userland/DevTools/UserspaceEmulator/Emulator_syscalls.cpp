@@ -1225,6 +1225,11 @@ int Emulator::virt$execve(FlatPtr params_addr)
     for (auto& argument : arguments)
         reportln("=={}==    - {}", getpid(), argument);
 
+    if (access(path.characters(), X_OK) < 0) {
+        if (errno == ENOENT || errno == EACCES)
+            return -errno;
+    }
+
     Vector<char*> argv;
     Vector<char*> envp;
 
