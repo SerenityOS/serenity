@@ -158,7 +158,6 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
 void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 {
     containing_block().line_boxes().clear();
-    containing_block().ensure_last_line_box();
 
     InlineLevelIterator iterator(containing_block(), layout_mode);
     LineBuilder line_builder(*this);

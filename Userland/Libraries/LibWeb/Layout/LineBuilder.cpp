@@ -36,13 +36,13 @@ void LineBuilder::begin_new_line()
 
 void LineBuilder::append_box(Box& box)
 {
-    m_context.containing_block().line_boxes().last().add_fragment(box, 0, 0, box.width(), box.height());
+    m_context.containing_block().ensure_last_line_box().add_fragment(box, 0, 0, box.width(), box.height());
     m_max_height_on_current_line = max(m_max_height_on_current_line, box.height());
 }
 
 void LineBuilder::append_text_chunk(TextNode& text_node, size_t offset_in_node, size_t length_in_node, float width, float height)
 {
-    m_context.containing_block().line_boxes().last().add_fragment(text_node, offset_in_node, length_in_node, width, height);
+    m_context.containing_block().ensure_last_line_box().add_fragment(text_node, offset_in_node, length_in_node, width, height);
     m_max_height_on_current_line = max(m_max_height_on_current_line, height);
 }
 
@@ -54,7 +54,9 @@ bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width, bo
         return true;
     if (layout_mode == LayoutMode::OnlyRequiredLineBreaks)
         return false;
-    auto current_line_width = m_context.containing_block().line_boxes().last().width();
+    auto current_line_width = 0.0f;
+    if (!m_context.containing_block().line_boxes().is_empty())
+        current_line_width = m_context.containing_block().line_boxes().last().width();
     return (current_line_width + next_item_width) > m_available_width_for_current_line;
 }
 
