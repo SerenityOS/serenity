@@ -18,19 +18,19 @@ namespace AK {
 template<size_t precision, typename Underlying>
 class FixedPoint {
     using This = FixedPoint<precision, Underlying>;
-    constexpr static Underlying radix_mask = (1 << precision) - 1;
+    constexpr static Underlying radix_mask = (static_cast<Underlying>(1) << precision) - 1;
 
 public:
     constexpr FixedPoint() = default;
     template<Integral I>
     constexpr FixedPoint(I value)
-        : m_value(value << precision)
+        : m_value(static_cast<Underlying>(value) << precision)
     {
     }
 
     template<FloatingPoint F>
     constexpr FixedPoint(F value)
-        : m_value(static_cast<Underlying>(value * (1u << precision)))
+        : m_value(static_cast<Underlying>(value * (static_cast<Underlying>(1) << precision)))
     {
     }
 
