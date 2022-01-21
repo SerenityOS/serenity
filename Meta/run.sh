@@ -277,6 +277,17 @@ if [ "$SERENITY_ARCH" != "aarch64" ]; then
     fi
 fi
 
+[ -z "$SERENITY_COMMON_QEMU_ISA_PC_ARGS" ] && SERENITY_COMMON_QEMU_ISA_PC_ARGS="
+$SERENITY_EXTRA_QEMU_ARGS
+-m $SERENITY_RAM_SIZE
+-cpu pentium3
+-machine isapc
+-d guest_errors
+-chardev stdio,id=stdout,mux=on
+-device isa-debugcon,chardev=stdout
+$SERENITY_BOOT_DRIVE
+"
+
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
 -m $SERENITY_RAM_SIZE
@@ -370,6 +381,17 @@ elif [ "$SERENITY_RUN" = "q35" ]; then
         $SERENITY_VIRT_TECH_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh \
+        -kernel Kernel/Prekernel/Prekernel \
+        -initrd Kernel/Kernel \
+        -append "${SERENITY_KERNEL_CMDLINE}"
+elif [ "$SERENITY_RUN" = "isapc" ]; then
+    # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
+    echo "Starting SerenityOS with QEMU ISA-PC machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
+    "$SERENITY_QEMU_BIN" \
+        $SERENITY_COMMON_QEMU_ISA_PC_ARGS \
+        $SERENITY_VIRT_TECH_ARG \
+        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
+        -device ne2k_isa,netdev=breh \
         -kernel Kernel/Prekernel/Prekernel \
         -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
