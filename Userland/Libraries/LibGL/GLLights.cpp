@@ -36,10 +36,11 @@ void glLightModelfv(GLenum pname, GLfloat const* params)
 {
     switch (pname) {
     case GL_LIGHT_MODEL_AMBIENT:
-        g_gl_context->gl_light_model(pname, params[0], 0.0f, 0.0f, 0.0f);
+        g_gl_context->gl_light_model(pname, params[0], params[1], params[2], params[3]);
         break;
     default:
-        g_gl_context->gl_light_model(pname, params[0], params[1], params[2], params[3]);
+        g_gl_context->gl_light_model(pname, params[0], 0.0f, 0.0f, 0.0f);
+        break;
     }
 }
 
