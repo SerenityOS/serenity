@@ -17,7 +17,7 @@
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/UnixTypes.h>
-#include <LibKeyboard/CharacterMap.h>
+#include <LibKeyboard/CharacterMapData.h>
 
 namespace Kernel {
 
@@ -39,11 +39,12 @@ public:
 
     void enumerate();
 
-    const String& keymap_name() const { return m_character_map.character_map_name(); }
-    const Keyboard::CharacterMapData& character_maps() const { return m_character_map.character_map_data(); }
-    const Keyboard::CharacterMap& character_map() const { return m_character_map; }
+    StringView keymap_name() const { return m_character_map_name->view(); }
+    Keyboard::CharacterMapData const& character_map() const { return m_character_map; }
+    u32 get_char_from_character_map(KeyEvent) const;
+
     void set_client(KeyboardClient* client) { m_client = client; }
-    void set_maps(const Keyboard::CharacterMapData& character_map, const String& character_map_name);
+    void set_maps(NonnullOwnPtr<KString> character_map_name, Keyboard::CharacterMapData const& character_map);
 
 private:
     size_t generate_minor_device_number_for_mouse();
@@ -51,7 +52,8 @@ private:
 
     size_t m_mouse_minor_number { 0 };
     size_t m_keyboard_minor_number { 0 };
-    Keyboard::CharacterMap m_character_map;
+    NonnullOwnPtr<KString> m_character_map_name;
+    Keyboard::CharacterMapData m_character_map;
     KeyboardClient* m_client { nullptr };
     RefPtr<I8042Controller> m_i8042_controller;
     NonnullRefPtrVector<HIDDevice> m_hid_devices;

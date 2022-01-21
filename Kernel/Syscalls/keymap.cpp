@@ -33,7 +33,7 @@ ErrorOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_pa
     if (map_name->length() > map_name_max_size)
         return ENAMETOOLONG;
 
-    HIDManagement::the().set_maps(character_map_data, map_name->view());
+    HIDManagement::the().set_maps(move(map_name), character_map_data);
     return 0;
 }
 
@@ -44,7 +44,7 @@ ErrorOr<FlatPtr> Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_pa
     auto params = TRY(copy_typed_from_user(user_params));
 
     String keymap_name = HIDManagement::the().keymap_name();
-    const Keyboard::CharacterMapData& character_maps = HIDManagement::the().character_maps();
+    Keyboard::CharacterMapData const& character_maps = HIDManagement::the().character_map();
 
     TRY(copy_to_user(params.map, character_maps.map, CHAR_MAP_SIZE * sizeof(u32)));
     TRY(copy_to_user(params.shift_map, character_maps.shift_map, CHAR_MAP_SIZE * sizeof(u32)));
