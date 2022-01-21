@@ -658,7 +658,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 editor->fit_image_to_view(ImageEditor::FitType::Height);
                 return;
             case s_zoom_level_fit_image:
-                editor->fit_image_to_view(ImageEditor::FitType::Image);
+                editor->fit_image_to_view(ImageEditor::FitType::Both);
                 return;
             }
         }

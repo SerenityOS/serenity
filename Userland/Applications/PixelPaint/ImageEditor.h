@@ -63,13 +63,7 @@ public:
 
     Layer* layer_at_editor_position(Gfx::IntPoint const&);
 
-    enum class FitType {
-        Width,
-        Height,
-        Image
-    };
-
-    void fit_image_to_view(FitType type = FitType::Image);
+    void fit_image_to_view(FitType type = FitType::Both);
 
     Color primary_color() const { return m_primary_color; }
     void set_primary_color(Color);
