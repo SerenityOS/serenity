@@ -99,12 +99,28 @@ void LineBuilder::update_last_line()
 
     float justified_space_width = whitespace_count > 0 ? (excess_horizontal_space_including_whitespace / static_cast<float>(whitespace_count)) : 0;
 
+    // HACK: This is where we determine the baseline of this line box.
+    //       We use the bottommost value of all the font baselines on the line and all the inline-block heights.
+    // FIXME: Support all the various CSS baseline properties, etc.
+    float max_height = max(m_max_height_on_current_line, m_context.containing_block().line_height());
+    float line_box_baseline = 0;
+    for (auto& fragment : line_box.fragments()) {
+        float fragment_baseline;
+        if (fragment.layout_node().is_box()) {
+            fragment_baseline = static_cast<Box const&>(fragment.layout_node()).height();
+        } else {
+            float font_baseline = fragment.layout_node().font().baseline();
+            fragment_baseline = (max_height / 2.0f) + (font_baseline / 2.0f);
+        }
+        line_box_baseline = max(line_box_baseline, fragment_baseline);
+    }
+
     for (size_t i = 0; i < line_box.fragments().size(); ++i) {
         auto& fragment = line_box.fragments()[i];
 
-        // Vertically align everyone's bottom to the line.
+        // Vertically align everyone's bottom to the baseline.
         // FIXME: Support other kinds of vertical alignment.
-        fragment.set_offset({ roundf(x_offset + fragment.offset().x()), m_current_y + (m_max_height_on_current_line - fragment.height()) });
+        fragment.set_offset({ roundf(x_offset + fragment.offset().x()), m_current_y + (line_box_baseline - fragment.height()) });
 
         if (text_align == CSS::TextAlign::Justify
             && fragment.is_justifiable_whitespace()
