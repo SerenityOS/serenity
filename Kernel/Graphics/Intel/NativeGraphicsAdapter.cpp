@@ -178,7 +178,7 @@ Optional<IntelNativeGraphicsAdapter::PLLSettings> IntelNativeGraphicsAdapter::cr
 }
 
 IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
-    : VGACompatibleAdapter(address)
+    : PCIVGACompatibleAdapter(address)
     , m_registers(PCI::get_BAR0(address) & 0xfffffffc)
     , m_framebuffer_addr(PCI::get_BAR2(address) & 0xfffffffc)
 {
