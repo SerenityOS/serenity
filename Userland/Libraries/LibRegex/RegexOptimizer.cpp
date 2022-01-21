@@ -376,7 +376,7 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
             if (candidate.new_target_block.has_value()) {
                 // Insert a fork-stay targeted at the second block.
                 bytecode.insert(candidate.forking_block.start, (ByteCodeValueType)OpCodeId::ForkStay);
-                bytecode.insert(candidate.forking_block.start + 1, candidate.new_target_block->start - candidate.forking_block.start);
+                bytecode.insert(candidate.forking_block.start + 1, candidate.new_target_block->start - candidate.forking_block.start + 2);
                 needed_patches.insert(candidate.forking_block.start, 2u);
             }
         }
@@ -427,9 +427,9 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
                     if (patch_it.key() == ip)
                         return;
 
-                    if (patch_point.value < 0 && target_offset < patch_it.key() && ip > patch_it.key())
+                    if (patch_point.value < 0 && target_offset <= patch_it.key() && ip > patch_it.key())
                         bytecode[patch_point.offset] += (patch_point.should_negate ? 1 : -1) * (*patch_it);
-                    else if (patch_point.value > 0 && target_offset > patch_it.key() && ip < patch_it.key())
+                    else if (patch_point.value > 0 && target_offset >= patch_it.key() && ip < patch_it.key())
                         bytecode[patch_point.offset] += (patch_point.should_negate ? -1 : 1) * (*patch_it);
                 };
 
