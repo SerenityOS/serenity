@@ -53,6 +53,7 @@ describe("equal dates are squashed", () => {
             year: "numeric",
             month: "long",
             day: "2-digit",
+            timeZone: "UTC",
         });
         expect(en.formatRange(d0, d0)).toBe("January 23, 1989");
         expect(en.formatRange(d1, d1)).toBe("December 07, 2021");
@@ -61,6 +62,7 @@ describe("equal dates are squashed", () => {
             year: "numeric",
             month: "long",
             day: "2-digit",
+            timeZone: "UTC",
         });
         expect(ja.formatRange(d0, d0)).toBe("1989/1月/23");
         expect(ja.formatRange(d1, d1)).toBe("2021/12月/07");
@@ -142,7 +144,7 @@ describe("dateStyle", () => {
 
     test("all", () => {
         data.forEach(d => {
-            const en = new Intl.DateTimeFormat("en", { dateStyle: d.date });
+            const en = new Intl.DateTimeFormat("en", { dateStyle: d.date, timeZone: "UTC" });
             expect(en.formatRange(d0, d1)).toBe(d.en);
 
             // If this test is to be changed, take care to note the "long" style for the ja locale is an intentionally
@@ -151,7 +153,7 @@ describe("dateStyle", () => {
             // "y/MM/dd～y/MM/dd" - the month field there conflicts with a 2-digit style. This exercises the step in the
             // FormatDateTimePattern AO to choose the style from rangeFormatOptions instead of dateTimeFormat (step 15.f.i
             // as of when this test was written).
-            const ja = new Intl.DateTimeFormat("ja", { dateStyle: d.date });
+            const ja = new Intl.DateTimeFormat("ja", { dateStyle: d.date, timeZone: "UTC" });
             expect(ja.formatRange(d0, d1)).toBe(d.ja);
         });
     });
