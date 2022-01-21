@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,22 +7,22 @@
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/Console/TextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Graphics/VGACompatibleAdapter.h>
+#include <Kernel/Graphics/VGA/PCIAdapter.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<VGACompatibleAdapter> VGACompatibleAdapter::initialize_with_preset_resolution(PCI::DeviceIdentifier const& pci_device_identifier, PhysicalAddress m_framebuffer_address, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch)
+UNMAP_AFTER_INIT NonnullRefPtr<PCIVGACompatibleAdapter> PCIVGACompatibleAdapter::initialize_with_preset_resolution(PCI::DeviceIdentifier const& pci_device_identifier, PhysicalAddress m_framebuffer_address, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch)
 {
-    return adopt_ref(*new VGACompatibleAdapter(pci_device_identifier.address(), m_framebuffer_address, framebuffer_width, framebuffer_height, framebuffer_pitch));
+    return adopt_ref(*new PCIVGACompatibleAdapter(pci_device_identifier.address(), m_framebuffer_address, framebuffer_width, framebuffer_height, framebuffer_pitch));
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<VGACompatibleAdapter> VGACompatibleAdapter::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT NonnullRefPtr<PCIVGACompatibleAdapter> PCIVGACompatibleAdapter::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    return adopt_ref(*new VGACompatibleAdapter(pci_device_identifier.address()));
+    return adopt_ref(*new PCIVGACompatibleAdapter(pci_device_identifier.address()));
 }
 
-UNMAP_AFTER_INIT void VGACompatibleAdapter::initialize_framebuffer_devices()
+UNMAP_AFTER_INIT void PCIVGACompatibleAdapter::initialize_framebuffer_devices()
 {
     // We might not have any pre-set framebuffer, so if that's the case - don't try to initialize one.
     if (m_framebuffer_address.is_null())
@@ -36,14 +36,14 @@ UNMAP_AFTER_INIT void VGACompatibleAdapter::initialize_framebuffer_devices()
     VERIFY(!m_framebuffer_device->try_to_initialize().is_error());
 }
 
-UNMAP_AFTER_INIT VGACompatibleAdapter::VGACompatibleAdapter(PCI::Address address)
+UNMAP_AFTER_INIT PCIVGACompatibleAdapter::PCIVGACompatibleAdapter(PCI::Address address)
     : PCI::Device(address)
 {
     m_framebuffer_console = Graphics::TextModeConsole::initialize();
     GraphicsManagement::the().set_console(*m_framebuffer_console);
 }
 
-UNMAP_AFTER_INIT VGACompatibleAdapter::VGACompatibleAdapter(PCI::Address address, PhysicalAddress framebuffer_address, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch)
+UNMAP_AFTER_INIT PCIVGACompatibleAdapter::PCIVGACompatibleAdapter(PCI::Address address, PhysicalAddress framebuffer_address, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch)
     : PCI::Device(address)
     , m_framebuffer_address(framebuffer_address)
     , m_framebuffer_width(framebuffer_width)
@@ -54,33 +54,19 @@ UNMAP_AFTER_INIT VGACompatibleAdapter::VGACompatibleAdapter(PCI::Address address
     GraphicsManagement::the().set_console(*m_framebuffer_console);
 }
 
-void VGACompatibleAdapter::enable_consoles()
+void PCIVGACompatibleAdapter::enable_consoles()
 {
     VERIFY(m_framebuffer_console);
     if (m_framebuffer_device)
         m_framebuffer_device->deactivate_writes();
     m_framebuffer_console->enable();
 }
-void VGACompatibleAdapter::disable_consoles()
+void PCIVGACompatibleAdapter::disable_consoles()
 {
     VERIFY(m_framebuffer_device);
     VERIFY(m_framebuffer_console);
     m_framebuffer_console->disable();
     m_framebuffer_device->activate_writes();
-}
-
-bool VGACompatibleAdapter::try_to_set_resolution(size_t, size_t, size_t)
-{
-    return false;
-}
-bool VGACompatibleAdapter::set_y_offset(size_t, size_t)
-{
-    return false;
-}
-
-ErrorOr<ByteBuffer> VGACompatibleAdapter::get_edid(size_t) const
-{
-    return Error::from_errno(ENOTSUP);
 }
 
 }
