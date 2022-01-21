@@ -170,7 +170,7 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint const& 
                 int glyph_x = 0;
                 size_t i = 0;
                 for (; i < view.length(); ++i) {
-                    int advance = font().glyph_width(view.code_points()[i]) + font().glyph_spacing();
+                    int advance = font().glyph_or_emoji_width(view.code_points()[i]) + font().glyph_spacing();
                     if ((glyph_x + (advance / 2)) >= position.x())
                         break;
                     glyph_x += advance;
