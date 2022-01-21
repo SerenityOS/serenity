@@ -7,15 +7,6 @@ a {
     cursor: pointer;
 }
 
-head,
-link,
-meta,
-script,
-style,
-title {
-    display: none;
-}
-
 body {
     margin: 8px;
 }
@@ -186,10 +177,6 @@ colgroup {
     display: table-column-group;
 }
 
-basefont {
-    display: block;
-}
-
 blockquote {
     margin-left: 25px;
     margin-right: 25px;
@@ -242,4 +229,23 @@ details {
 summary {
     display: block;
     font-weight: bold;
+}
+
+/* 15.3.1 Hidden elements
+ * https://html.spec.whatwg.org/multipage/rendering.html#hidden-elements
+ */
+/* FIXME: Add `noframes` once frames are implemented. */
+/* FIXME: Add `noembed` once <embed> is implemented. */
+/* FIXME: Add `rp` once <ruby> is implemented. */
+[hidden], area, base, basefont, datalist, head, link, meta, /*noembed,*/
+/*noframes,*/ param, /*rp,*/ script, style, template, title {
+  display: none;
+}
+
+embed[hidden] { display: inline; height: 0; width: 0; }
+
+input[type=hidden i] { display: none !important; }
+
+@media (scripting) {
+  noscript { display: none !important; }
 }
