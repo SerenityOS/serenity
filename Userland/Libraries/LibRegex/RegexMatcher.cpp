@@ -449,6 +449,8 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
                         (*it) = state;
                         it->instruction_position = state.fork_at_position;
                         it->initiating_fork = *input.fork_to_replace;
+                        it->capture_group_matches = state.capture_group_matches;
+                        it->matches = state.matches;
                         found = true;
                         break;
                     }

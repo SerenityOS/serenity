@@ -223,7 +223,6 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
     //     -------------------------
     //     bb1       |  RE1
     // can be rewritten as:
-    //     loop.hdr  | ForkStay bb1 (if RE1 matches _something_, empty otherwise)
     //     -------------------------
     //     bb0       | RE0
     //               | ForkReplaceX bb0
@@ -370,15 +369,6 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
                 VERIFY_NOT_REACHED();
         } else {
             VERIFY_NOT_REACHED();
-        }
-
-        if (candidate.form == AlternateForm::DirectLoopWithoutHeader) {
-            if (candidate.new_target_block.has_value()) {
-                // Insert a fork-stay targeted at the second block.
-                bytecode.insert(candidate.forking_block.start, (ByteCodeValueType)OpCodeId::ForkStay);
-                bytecode.insert(candidate.forking_block.start + 1, candidate.new_target_block->start - candidate.forking_block.start + 2);
-                needed_patches.insert(candidate.forking_block.start, 2u);
-            }
         }
     }
 
