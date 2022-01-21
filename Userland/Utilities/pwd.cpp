@@ -11,7 +11,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio"));
+    TRY(Core::System::pledge("rpath stdio"));
     outln(TRY(Core::System::getcwd()));
     return 0;
 }
