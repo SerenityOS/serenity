@@ -5,20 +5,17 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    const char* mount_point = nullptr;
+    StringView mount_point;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(mount_point, "Mount point", "mountpoint");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    if (umount(mount_point) < 0) {
-        perror("umount");
-        return 1;
-    }
+    TRY(Core::System::umount(mount_point));
     return 0;
 }
