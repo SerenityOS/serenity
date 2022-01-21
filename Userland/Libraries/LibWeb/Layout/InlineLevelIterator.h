@@ -47,7 +47,7 @@ public:
 private:
     void skip_to_next();
 
-    void enter_text_node(Layout::TextNode&);
+    void enter_text_node(Layout::TextNode&, bool previous_is_empty_or_ends_in_whitespace);
 
     Layout::BlockContainer& m_container;
     Layout::Node* m_current_node { nullptr };

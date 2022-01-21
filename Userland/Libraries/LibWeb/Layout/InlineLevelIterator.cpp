@@ -45,8 +45,10 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
     if (is<Layout::TextNode>(*m_current_node)) {
         auto& text_node = static_cast<Layout::TextNode&>(*m_current_node);
 
-        if (!m_text_node_context.has_value())
-            enter_text_node(text_node);
+        if (!m_text_node_context.has_value()) {
+            bool previous_is_empty_or_ends_in_whitespace = m_container.line_boxes().is_empty() || m_container.line_boxes().last().is_empty_or_ends_in_whitespace();
+            enter_text_node(text_node, previous_is_empty_or_ends_in_whitespace);
+        }
 
         auto chunk_opt = m_text_node_context->chunk_iterator.next();
         if (!chunk_opt.has_value()) {
@@ -104,7 +106,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
     };
 }
 
-void InlineLevelIterator::enter_text_node(Layout::TextNode& text_node)
+void InlineLevelIterator::enter_text_node(Layout::TextNode& text_node, bool previous_is_empty_or_ends_in_whitespace)
 {
     bool do_collapse = true;
     bool do_wrap_lines = true;
@@ -128,8 +130,7 @@ void InlineLevelIterator::enter_text_node(Layout::TextNode& text_node)
         do_respect_linebreaks = true;
     }
 
-    // FIXME: Pass the correct value for the last boolean!
-    text_node.compute_text_for_rendering(do_collapse, true);
+    text_node.compute_text_for_rendering(do_collapse, previous_is_empty_or_ends_in_whitespace);
 
     m_text_node_context = TextNodeContext {
         .do_collapse = do_collapse,
