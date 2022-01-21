@@ -241,7 +241,14 @@ ErrorOr<int> Socket::create_fd(SocketDomain domain, SocketType type)
         VERIFY_NOT_REACHED();
     }
 
-    return System::socket(socket_domain, socket_type, 0);
+    // Let's have a safe default of CLOEXEC. :^)
+#ifdef SOCK_CLOEXEC
+    return System::socket(socket_domain, socket_type | SOCK_CLOEXEC, 0);
+#else
+    auto fd = TRY(System::socket(socket_domain, socket_type, 0));
+    TRY(System::fcntl(fd, F_SETFD, FD_CLOEXEC));
+    return fd;
+#endif
 }
 
 ErrorOr<IPv4Address> Socket::resolve_host(String const& host, SocketType type)
