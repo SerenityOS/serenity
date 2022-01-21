@@ -27,6 +27,11 @@ UNMAP_AFTER_INIT void CommandLine::early_initialize(const char* cmd_line)
     s_cmd_line[length] = '\0';
 }
 
+bool CommandLine::was_initialized()
+{
+    return s_the != nullptr;
+}
+
 const CommandLine& kernel_command_line()
 {
     VERIFY(s_the);

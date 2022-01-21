@@ -33,6 +33,8 @@ void __panic(const char* file, unsigned int line, const char* function)
 
     critical_dmesgln("at {}:{} in {}", file, line, function);
     dump_backtrace(PrintToScreen::Yes);
+    if (!CommandLine::was_initialized())
+        Processor::halt();
     switch (kernel_command_line().panic_mode()) {
     case PanicMode::Shutdown:
         __shutdown();
