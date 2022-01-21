@@ -354,10 +354,6 @@ set(VT_SOURCES
     ../Userland/Libraries/LibVT/EscapeSequenceParser.cpp
 )
 
-set(KEYBOARD_SOURCES
-    ../Userland/Libraries/LibKeyboard/CharacterMap.cpp
-)
-
 set(CRYPTO_SOURCES
     ../Userland/Libraries/LibCrypto/Cipher/AES.cpp
     ../Userland/Libraries/LibCrypto/Hash/SHA2.cpp
@@ -372,7 +368,6 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
         ${SOURCES}
         ${ELF_SOURCES}
         ${VT_SOURCES}
-        ${KEYBOARD_SOURCES}
         ${CRYPTO_SOURCES}
     )
 else()
