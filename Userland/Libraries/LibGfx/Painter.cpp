@@ -1226,17 +1226,13 @@ FLATTEN void Painter::draw_glyph(IntPoint const& point, u32 code_point, Font con
 
 void Painter::draw_emoji(IntPoint const& point, Gfx::Bitmap const& emoji, Font const& font)
 {
-    if (!font.is_fixed_width())
-        blit(point, emoji, emoji.rect());
-    else {
-        IntRect dst_rect {
-            point.x(),
-            point.y(),
-            font.glyph_width('x'),
-            font.glyph_height()
-        };
-        draw_scaled_bitmap(dst_rect, emoji, emoji.rect());
-    }
+    IntRect dst_rect {
+        point.x(),
+        point.y(),
+        font.glyph_height() * emoji.width() / emoji.height(),
+        font.glyph_height()
+    };
+    draw_scaled_bitmap(dst_rect, emoji, emoji.rect());
 }
 
 void Painter::draw_glyph_or_emoji(IntPoint const& point, u32 code_point, Font const& font, Color color)
