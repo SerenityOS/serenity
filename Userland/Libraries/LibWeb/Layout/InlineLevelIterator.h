@@ -32,6 +32,7 @@ public:
         size_t length_in_node { 0 };
         float width { 0.0f };
         bool should_force_break { false };
+        bool is_collapsible_whitespace { false };
     };
 
     explicit InlineLevelIterator(Layout::Box& container, LayoutMode layout_mode)

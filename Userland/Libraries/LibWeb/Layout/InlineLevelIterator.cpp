@@ -64,6 +64,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
             .length_in_node = chunk.length,
             .width = chunk_width,
             .should_force_break = m_text_node_context->do_respect_linebreaks && chunk.has_breaking_newline,
+            .is_collapsible_whitespace = m_text_node_context->do_collapse && chunk.is_all_whitespace,
         };
 
         return item;

@@ -168,6 +168,10 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             break;
         auto& item = item_opt.value();
 
+        // Ignore collapsible whitespace chunks at the start of line, and if the last fragment already ends in whitespace.
+        if (item.is_collapsible_whitespace && containing_block().line_boxes().last().is_empty_or_ends_in_whitespace())
+            continue;
+
         switch (item.type) {
         case InlineLevelIterator::Item::Type::ForcedBreak:
             line_builder.break_line();
