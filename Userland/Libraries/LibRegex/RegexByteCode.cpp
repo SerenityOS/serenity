@@ -900,6 +900,21 @@ Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<MatchInput>
         } else if (compare_type == CharacterCompareType::Reference) {
             auto ref = m_bytecode->at(offset++);
             result.empend(String::formatted("number={}", ref));
+            if (input.has_value()) {
+                if (state().capture_group_matches.size() > input->match_index) {
+                    auto& match = state().capture_group_matches[input->match_index];
+                    if (match.size() > ref) {
+                        auto& group = match[ref];
+                        result.empend(String::formatted("left={}", group.left_column));
+                        result.empend(String::formatted("right={}", group.left_column + group.view.length_in_code_units()));
+                        result.empend(String::formatted("contents='{}'", group.view));
+                    } else {
+                        result.empend(String::formatted("(invalid ref, max={})", match.size() - 1));
+                    }
+                } else {
+                    result.empend(String::formatted("(invalid index {}, max={})", input->match_index, state().capture_group_matches.size() - 1));
+                }
+            }
         } else if (compare_type == CharacterCompareType::String) {
             auto& length = m_bytecode->at(offset++);
             StringBuilder str_builder;
