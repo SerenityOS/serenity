@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Assertions.h>
 #include <AK/Badge.h>
 #include <AK/Debug.h>
 #include <AK/Format.h>
@@ -675,9 +676,17 @@ try_select_again:
     }
     if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {
         int wake_events[8];
-        auto nread = read(s_wake_pipe_fds[0], wake_events, sizeof(wake_events));
+        ssize_t nread;
+        // We might receive another signal while read()ing here. The signal will go to the handle_signal properly,
+        // but we get interrupted. Therefore, just retry while we were interrupted.
+        do {
+            errno = 0;
+            nread = read(s_wake_pipe_fds[0], wake_events, sizeof(wake_events));
+            if (nread == 0)
+                break;
+        } while (nread < 0 && errno == EINTR);
         if (nread < 0) {
-            perror("read from wake pipe");
+            perror("Core::EventLoop::wait_for_event: read from wake pipe");
             VERIFY_NOT_REACHED();
         }
         VERIFY(nread > 0);
