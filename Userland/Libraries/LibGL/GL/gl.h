@@ -420,7 +420,7 @@ extern "C" {
 // Texture Environment and Parameters
 #define GL_MODULATE 0x2100
 #define GL_TEXTURE_ENV_MODE 0x2200
-#define GL_DECAL 0x2102
+#define GL_DECAL 0x2101
 #define GL_TEXTURE_ENV 0x2300
 #define GL_NEAREST 0x2600
 #define GL_LINEAR 0x2601
