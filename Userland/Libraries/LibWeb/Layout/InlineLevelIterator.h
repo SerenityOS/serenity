@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
-#include <LibWeb/Layout/Box.h>
+#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/TextNode.h>
 
 namespace Web::Layout {
@@ -35,7 +35,7 @@ public:
         bool is_collapsible_whitespace { false };
     };
 
-    explicit InlineLevelIterator(Layout::Box& container, LayoutMode layout_mode)
+    explicit InlineLevelIterator(Layout::BlockContainer& container, LayoutMode layout_mode)
         : m_container(container)
         , m_current_node(container.first_child())
         , m_layout_mode(layout_mode)
@@ -49,7 +49,7 @@ private:
 
     void enter_text_node(Layout::TextNode&);
 
-    Layout::Box& m_container;
+    Layout::BlockContainer& m_container;
     Layout::Node* m_current_node { nullptr };
     LayoutMode const m_layout_mode;
 
