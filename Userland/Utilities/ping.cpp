@@ -30,6 +30,10 @@ static int min_ms;
 static int max_ms;
 static const char* host;
 static int payload_size = -1;
+// variable part of header can be 0 to 40 bytes
+// https://datatracker.ietf.org/doc/html/rfc791#section-3.1
+static constexpr int max_optional_header_size_in_bytes = 40;
+static constexpr int min_header_size_in_bytes = 5;
 
 static void closing_statistics()
 {
@@ -161,14 +165,13 @@ int main(int argc, char** argv)
             total_pings++;
 
         for (;;) {
-            // FIXME: IPv4 headers are not actually fixed-size, handle other sizes.
-            auto pong_packet_result = ByteBuffer::create_uninitialized(sizeof(struct ip) + sizeof(struct icmphdr) + payload_size);
+            auto pong_packet_result = ByteBuffer::create_uninitialized(
+                sizeof(struct ip) + max_optional_header_size_in_bytes + sizeof(struct icmphdr) + payload_size);
             if (!pong_packet_result.has_value()) {
                 warnln("failed to allocate a large enough buffer for the pong packet");
                 return 1;
             }
             auto& pong_packet = pong_packet_result.value();
-            struct icmphdr* pong_hdr = reinterpret_cast<struct icmphdr*>(pong_packet.data() + sizeof(struct ip));
             socklen_t peer_address_size = sizeof(peer_address);
             rc = recvfrom(fd, pong_packet.data(), pong_packet.size(), 0, (struct sockaddr*)&peer_address, &peer_address_size);
             if (rc < 0) {
@@ -180,6 +183,13 @@ int main(int argc, char** argv)
                 return 1;
             }
 
+            i8 internet_header_length = *pong_packet.data() & 0x0F;
+            if (internet_header_length < min_header_size_in_bytes) {
+                outln("ping: illegal ihl field value {:x}", internet_header_length);
+                continue;
+            }
+
+            struct icmphdr* pong_hdr = reinterpret_cast<struct icmphdr*>(pong_packet.data() + (internet_header_length * 4));
             if (pong_hdr->type != ICMP_ECHOREPLY)
                 continue;
             if (pong_hdr->code != 0)
