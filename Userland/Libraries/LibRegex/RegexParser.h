@@ -254,6 +254,20 @@ private:
 
     size_t ensure_total_number_of_capturing_parenthesis();
 
+    void enter_capture_group_scope() { m_capture_groups_in_scope.empend(); }
+
+    void exit_capture_group_scope()
+    {
+        auto last = m_capture_groups_in_scope.take_last();
+        m_capture_groups_in_scope.last().extend(move(last));
+    }
+
+    void clear_all_capture_groups_in_scope(ByteCode& stack)
+    {
+        for (auto& index : m_capture_groups_in_scope.last())
+            stack.insert_bytecode_clear_capture_group(index);
+    };
+
     // ECMA-262's flavour of regex is a bit weird in that it allows backrefs to reference "future" captures, and such backrefs
     // always match the empty string. So we have to know how many capturing parenthesis there are, but we don't want to always
     // parse it twice, so we'll just do so when it's actually needed.
