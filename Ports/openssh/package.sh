@@ -12,7 +12,6 @@ configopts=("--prefix=/usr/local" "--disable-utmp" "--disable-strip" "--sysconfd
 export LDFLAGS="-lcrypt -lcore"
 
 pre_configure() {
-    ensure_new_config_sub
     run autoreconf
 }
 
