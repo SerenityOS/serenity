@@ -134,8 +134,6 @@ public:
     void removed_from(Node&) { }
     void children_changed() { }
 
-    virtual void split_into_lines(InlineFormattingContext&, LayoutMode);
-
     bool is_visible() const { return m_visible; }
     void set_visible(bool visible) { m_visible = visible; }
 

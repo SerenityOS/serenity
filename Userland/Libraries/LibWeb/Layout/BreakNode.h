@@ -21,8 +21,6 @@ public:
 private:
     virtual bool is_break_node() const final { return true; }
     virtual void paint(PaintContext&, PaintPhase) override;
-
-    virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 };
 
 template<>

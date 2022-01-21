@@ -27,27 +27,6 @@ InlineNode::~InlineNode()
 {
 }
 
-void InlineNode::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
-{
-    auto& containing_block = context.containing_block();
-
-    auto is_not_undefined_or_auto = [](auto const& length_percentage) {
-        return !(length_percentage.is_length() && length_percentage.length().is_undefined_or_auto());
-    };
-
-    if (is_not_undefined_or_auto(computed_values().padding().left)) {
-        float padding_left = computed_values().padding().left.resolved(CSS::Length::make_px(containing_block.width())).resolved(CSS::Length::make_px(0), *this).to_px(*this);
-        containing_block.ensure_last_line_box().add_fragment(*this, 0, 0, padding_left, 0, LineBoxFragment::Type::Leading);
-    }
-
-    NodeWithStyleAndBoxModelMetrics::split_into_lines(context, layout_mode);
-
-    if (is_not_undefined_or_auto(computed_values().padding().right)) {
-        float padding_right = computed_values().padding().right.resolved(CSS::Length::make_px(containing_block.width())).resolved(CSS::Length::make_px(0), *this).to_px(*this);
-        containing_block.ensure_last_line_box().add_fragment(*this, 0, 0, padding_right, 0, LineBoxFragment::Type::Trailing);
-    }
-}
-
 void InlineNode::paint(PaintContext& context, PaintPhase phase)
 {
     auto& painter = context.painter();

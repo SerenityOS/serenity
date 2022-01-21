@@ -115,13 +115,6 @@ InitialContainingBlock& Node::root()
     return *document().layout_node();
 }
 
-void Node::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
-{
-    for_each_child([&](auto& child) {
-        child.split_into_lines(context, layout_mode);
-    });
-}
-
 void Node::set_needs_display()
 {
     if (auto* block = containing_block()) {
