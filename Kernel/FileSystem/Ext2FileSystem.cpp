@@ -1174,7 +1174,8 @@ ErrorOr<void> Ext2FSInode::add_child(Inode& child, StringView name, mode_t mode)
     TRY(write_directory(entries));
     TRY(populate_lookup_cache());
 
-    TRY(m_lookup_cache.try_set(name, child.index()));
+    auto cache_entry_name = TRY(KString::try_create(name));
+    TRY(m_lookup_cache.try_set(move(cache_entry_name), child.index()));
     did_add_child(child.identifier(), name);
     return {};
 }
@@ -1187,7 +1188,7 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
 
     TRY(populate_lookup_cache());
 
-    auto it = m_lookup_cache.find(name);
+    auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key->view() == name; });
     if (it == m_lookup_cache.end())
         return ENOENT;
     auto child_inode_index = (*it).value;
@@ -1205,7 +1206,7 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
 
     TRY(write_directory(entries));
 
-    m_lookup_cache.remove(name);
+    m_lookup_cache.remove(it);
 
     auto child_inode = TRY(fs().get_inode(child_id));
     TRY(child_inode->decrement_link_count());
@@ -1527,10 +1528,11 @@ ErrorOr<void> Ext2FSInode::populate_lookup_cache() const
     MutexLocker locker(m_inode_lock);
     if (!m_lookup_cache.is_empty())
         return {};
-    HashMap<String, InodeIndex> children;
+    HashMap<NonnullOwnPtr<KString>, InodeIndex> children;
 
     TRY(traverse_as_directory([&children](auto& entry) -> ErrorOr<void> {
-        TRY(children.try_set(entry.name, entry.inode.index()));
+        auto entry_name = TRY(KString::try_create(entry.name));
+        TRY(children.try_set(move(entry_name), entry.inode.index()));
         return {};
     }));
 
@@ -1548,7 +1550,7 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
     InodeIndex inode_index;
     {
         MutexLocker locker(m_inode_lock);
-        auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key == name; });
+        auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key->view() == name; });
         if (it == m_lookup_cache.end()) {
             dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): '{}' not found", identifier(), name);
             return ENOENT;
