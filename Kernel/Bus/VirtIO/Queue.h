@@ -28,10 +28,10 @@ enum class BufferType {
 
 class Queue {
 public:
-    Queue(u16 queue_size, u16 notify_offset);
+    static ErrorOr<NonnullOwnPtr<Queue>> try_create(u16 queue_size, u16 notify_offset);
+
     ~Queue();
 
-    bool is_null() const { return !m_queue_region; }
     u16 notify_offset() const { return m_notify_offset; }
 
     void enable_interrupts();
@@ -52,6 +52,8 @@ public:
     bool should_notify() const;
 
 private:
+    Queue(NonnullOwnPtr<Memory::Region> queue_region, u16 queue_size, u16 notify_offset);
+
     void reclaim_buffer_chain(u16 chain_start_index, u16 chain_end_index, size_t length_of_chain);
 
     PhysicalAddress to_physical(const void* ptr) const
@@ -93,7 +95,7 @@ private:
     QueueDescriptor* m_descriptors { nullptr };
     QueueDriver* m_driver { nullptr };
     QueueDevice* m_device { nullptr };
-    OwnPtr<Memory::Region> m_queue_region;
+    NonnullOwnPtr<Memory::Region> m_queue_region;
     Spinlock m_lock;
 
     friend class QueueChain;
