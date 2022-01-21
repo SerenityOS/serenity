@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         window->set_title(String::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_string(), (int)(scale * 100)));
 
-        if (scale == 100 && !widget->scaled_for_first_image()) {
+        if (!widget->scaled_for_first_image()) {
             widget->set_scaled_for_first_image(true);
             widget->resize_window();
         }
