@@ -31,7 +31,6 @@ static void print_account_gids(const Core::Account& account)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::unveil("/etc/passwd", "r"));
-    TRY(Core::System::unveil("/etc/shadow", "r"));
     TRY(Core::System::unveil("/etc/group", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
     TRY(Core::System::pledge("stdio rpath", nullptr));
@@ -44,12 +43,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (usernames.is_empty()) {
-        auto account = TRY(Core::Account::from_uid(geteuid()));
+        auto account = TRY(Core::Account::from_uid(geteuid(), Core::Account::Read::PasswdOnly));
         print_account_gids(account);
     }
 
     for (auto username : usernames) {
-        auto result = Core::Account::from_name(username);
+        auto result = Core::Account::from_name(username, Core::Account::Read::PasswdOnly);
         if (result.is_error()) {
             warnln("{} '{}'", result.error(), username);
             continue;
