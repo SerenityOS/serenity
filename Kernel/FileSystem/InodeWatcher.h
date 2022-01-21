@@ -69,7 +69,7 @@ private:
     struct Event {
         int wd { 0 };
         InodeWatcherEvent::Type type { InodeWatcherEvent::Type::Invalid };
-        String path;
+        OwnPtr<KString> path;
     };
     CircularQueue<Event, 32> m_queue;
     Checked<int> m_wd_counter { 1 };
