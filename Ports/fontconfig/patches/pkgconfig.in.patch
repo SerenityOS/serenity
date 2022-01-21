@@ -1,0 +1,10 @@
+--- fontconfig-2.13.94/fontconfig.pc.in	2022-01-22 00:48:25.582046535 +1100
++++ fontconfig-2.13.94/fontconfig.pc.in	2022-01-22 00:48:10.821896885 +1100
+@@ -13,6 +13,6 @@
+ Version: @VERSION@
+ Requires: @PKGCONFIG_REQUIRES@
+ Requires.private: @PKGCONFIG_REQUIRES_PRIVATELY@
+-Libs: -L${libdir} -lfontconfig
++Libs: -L${libdir} -lfontconfig -lxml2 -ldl
+ Libs.private: @ICONV_LIBS@ @PKG_EXPAT_LIBS@
+ Cflags: -I${includedir} @ICONV_CFLAGS@ @PKG_EXPAT_CFLAGS@
