@@ -250,7 +250,7 @@ void SoftwareGLContext::gl_begin(GLenum mode)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_begin, mode);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(mode < GL_TRIANGLES || mode > GL_POLYGON, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(mode > GL_POLYGON, GL_INVALID_ENUM);
 
     m_current_draw_mode = mode;
     m_in_draw_state = true; // Certain commands will now generate an error
@@ -330,7 +330,7 @@ void SoftwareGLContext::gl_end()
         && m_current_draw_mode != GL_POLYGON) {
 
         m_vertex_list.clear_with_capacity();
-        dbgln_if(GL_DEBUG, "gl_end: draw mode {:#x} unsupported", m_current_draw_mode);
+        dbgln_if(GL_DEBUG, "gl_end(): draw mode {:#x} unsupported", m_current_draw_mode);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
