@@ -155,7 +155,7 @@ void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color
 
 void TextModeConsole::clear_vga_row(u16 row)
 {
-    clear(row * width(), width(), width());
+    clear(0, row, width());
 }
 
 void TextModeConsole::write(char ch, bool critical)
