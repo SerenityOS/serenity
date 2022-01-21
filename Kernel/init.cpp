@@ -299,8 +299,10 @@ void init_stage2(void*)
     }
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
-    PCI::initialize();
-    PCISerialDevice::detect();
+    if (!kernel_command_line().is_pci_disabled()) {
+        PCI::initialize();
+        PCISerialDevice::detect();
+    }
 
     VirtualFileSystem::initialize();
 
@@ -321,10 +323,14 @@ void init_stage2(void*)
 
     auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
 
-    USB::USBManagement::initialize();
+    if (!kernel_command_line().is_pci_disabled()) {
+        USB::USBManagement::initialize();
+    }
     FirmwareSysFSDirectory::initialize();
 
-    VirtIO::detect();
+    if (!kernel_command_line().is_pci_disabled()) {
+        VirtIO::detect();
+    }
 
     NetworkingManagement::the().initialize();
     Syscall::initialize();
