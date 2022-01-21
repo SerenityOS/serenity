@@ -1,5 +1,5 @@
 test("basic functionality", () => {
-    let d = new Date(2000, 2, 1);
+    let d = new Date(2000, 11, 15);
 
     d.setHours(2);
     expect(d.getHours()).toBe(2);
