@@ -489,14 +489,7 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
             return true;
         case ExecutionResult::Failed:
             if (!states_to_try_next.is_empty()) {
-                auto next_state = states_to_try_next.take_last();
-                // Note: ECMA262 quirk: Note 3, https://tc39.es/ecma262/#sec-runtime-semantics-canonicalize-ch
-                //       capture groups defined in lookarounds "leak" outside the regex,
-                //       but their contents are empty if the lookaround fails.
-                //       This is done by manually clearing the groups where needed, and leaking their contents here.
-                if constexpr (IsSame<Parser, ECMA262>)
-                    swap(next_state.capture_group_matches, state.capture_group_matches);
-                state = move(next_state);
+                state = states_to_try_next.take_last();
                 continue;
             }
             return false;
@@ -506,11 +499,7 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
                     return {};
                 return false;
             }
-            auto next_state = states_to_try_next.take_last();
-            // See note above about an ECMA262 quirk.
-            if constexpr (IsSame<Parser, ECMA262>)
-                swap(next_state.capture_group_matches, state.capture_group_matches);
-            state = move(next_state);
+            state = states_to_try_next.take_last();
             ++recursion_level;
             continue;
         }
