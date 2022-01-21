@@ -9,6 +9,7 @@
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
@@ -949,6 +950,11 @@ UNMAP_AFTER_INIT ProcFSSystemDirectory::ProcFSSystemDirectory(const ProcFSRootDi
 {
 }
 
+UNMAP_AFTER_INIT void ProcFSRootDirectory::add_pci_node(Badge<PCI::Access>)
+{
+    m_components.append(ProcFSPCI::must_create());
+}
+
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_create()
 {
     auto directory = adopt_ref(*new (nothrow) ProcFSRootDirectory);
@@ -961,7 +967,6 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_cr
     directory->m_components.append(ProcFSDmesg::must_create());
     directory->m_components.append(ProcFSInterrupts::must_create());
     directory->m_components.append(ProcFSKeymap::must_create());
-    directory->m_components.append(ProcFSPCI::must_create());
     directory->m_components.append(ProcFSDevices::must_create());
     directory->m_components.append(ProcFSUptime::must_create());
     directory->m_components.append(ProcFSCommandLine::must_create());
