@@ -88,9 +88,7 @@ UNMAP_AFTER_INIT bool Access::find_and_register_pci_host_bridges_from_acpi_mcfg_
 
 UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddress mcfg_table)
 {
-    if (Access::is_initialized())
-        return false;
-
+    VERIFY(!Access::is_initialized());
     auto* access = new Access();
     if (!access->find_and_register_pci_host_bridges_from_acpi_mcfg_table(mcfg_table))
         return false;
@@ -101,9 +99,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddres
 
 UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
 {
-    if (Access::is_initialized()) {
-        return false;
-    }
+    VERIFY(!Access::is_initialized());
     auto* access = new Access();
     auto host_bridge = HostBridge::must_create_with_io_access();
     access->add_host_controller(move(host_bridge));
