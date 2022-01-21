@@ -15,6 +15,7 @@
 #include <Kernel/Firmware/SysFSFirmware.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Memory/Region.h>
+#include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VirtualAddress.h>
 
@@ -89,7 +90,7 @@ private:
     u8 get_table_revision(PhysicalAddress);
     void process_fadt_data();
 
-    bool validate_reset_register();
+    bool validate_reset_register(Memory::TypedMapping<Structures::FADT> const&);
     void access_generic_address(const Structures::GenericAddressStructure&, u32 value);
 
     PhysicalAddress m_rsdp;
