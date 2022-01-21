@@ -56,7 +56,8 @@ List of options:
 
 * **`panic`** - This parameter expects **`halt`** or **`shutdown`**. This is particularly useful in CI contexts.
 
-* **`pci_ecam`** - This parameter expects **`on`** or **`off`**.
+* **`pci`** - This parameter expects **`ecam`**, **`io`** or **`none`**. When selecting **`none`**
+  the kernel will not use PCI resources/devices.
 
 * **`root`** - This parameter configures the device to use as the root file system. It defaults to **`/dev/hda`** if unspecified.
 

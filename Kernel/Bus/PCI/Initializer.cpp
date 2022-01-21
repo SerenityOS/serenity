@@ -36,6 +36,7 @@ UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type()
 
 UNMAP_AFTER_INIT void initialize()
 {
+    VERIFY(kernel_command_line().pci_access_level() != PCIAccessLevel::None);
     switch (detect_optimal_access_type()) {
     case PCIAccessLevel::MemoryAddressing: {
         auto mcfg = ACPI::Parser::the()->find_table("MCFG");
