@@ -314,7 +314,7 @@ int BitmapFont::glyph_or_emoji_width_for_variable_width_font(u32 code_point) con
     auto* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr)
         return glyph_width(0xFFFD);
-    return emoji->size().width();
+    return glyph_height() * emoji->width() / emoji->height();
 }
 
 int BitmapFont::width(StringView view) const { return unicode_view_width(Utf8View(view)); }
