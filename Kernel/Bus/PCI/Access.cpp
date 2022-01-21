@@ -11,6 +11,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/HostBridge.h>
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
+#include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -35,6 +36,11 @@ Access& Access::the()
 bool Access::is_initialized()
 {
     return (s_access != nullptr);
+}
+
+bool Access::is_disabled()
+{
+    return g_pci_access_is_disabled_from_commandline || g_pci_access_io_probe_failed;
 }
 
 UNMAP_AFTER_INIT bool Access::find_and_register_pci_host_bridges_from_acpi_mcfg_table(PhysicalAddress mcfg_table)
