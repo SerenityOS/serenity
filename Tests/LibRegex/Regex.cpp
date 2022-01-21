@@ -914,6 +914,8 @@ TEST_CASE(optimizer_atomic_groups)
         Tuple { "(1+)\\1"sv, "11"sv, true },
         Tuple { "(1+)1"sv, "11"sv, true },
         Tuple { "(1+)0"sv, "10"sv, true },
+        // Rewrite should not skip over first required iteration of <x>+.
+        Tuple { "a+"sv, ""sv, false },
     };
 
     for (auto& test : tests) {
