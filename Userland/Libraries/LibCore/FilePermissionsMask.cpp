@@ -13,7 +13,8 @@
 namespace Core {
 
 enum State {
-    Reference,
+    Classes,
+    Operation,
     Mode
 };
 
@@ -48,47 +49,59 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringV
 {
     auto mask = FilePermissionsMask();
 
-    u8 state = State::Reference;
+    u8 state = State::Classes;
     u8 classes = 0;
     u8 operation = 0;
 
     for (auto ch : string) {
         switch (state) {
-        case State::Reference: {
+        case State::Classes: {
             // one or more [ugoa] terminated by one operator [+-=]
-            if (ch == 'u')
+            if (ch == 'u') {
                 classes |= ClassFlag::User;
-            else if (ch == 'g')
+                state = State::Operation;
+                break;
+            } else if (ch == 'g') {
                 classes |= ClassFlag::Group;
-            else if (ch == 'o')
+                state = State::Operation;
+                break;
+            } else if (ch == 'o') {
                 classes |= ClassFlag::Other;
-            else if (ch == 'a')
+                state = State::Operation;
+                break;
+            } else if (ch == 'a') {
                 classes = ClassFlag::User | ClassFlag::Group | ClassFlag::Other;
-            else {
-                if (classes == 0)
-                    return Error::from_string_literal("invalid access class: expected 'u', 'g', 'o' or 'a' "sv);
-
-                if (ch == '+')
-                    operation = Operation::Add;
-                else if (ch == '-')
-                    operation = Operation::Remove;
-                else if (ch == '=')
-                    operation = Operation::Assign;
-                else
-                    return Error::from_string_literal("invalid operation: expected '+', '-' or '='"sv);
-
-                state = State::Mode;
+                state = State::Operation;
+                break;
             }
+        }
+            [[fallthrough]];
+        case State::Operation: {
+            if (ch == '+')
+                operation = Operation::Add;
+            else if (ch == '-')
+                operation = Operation::Remove;
+            else if (ch == '=')
+                operation = Operation::Assign;
+            else if (classes == 0)
+                return Error::from_string_literal("invalid access class: expected 'u', 'g', 'o' or 'a' "sv);
+            else
+                return Error::from_string_literal("invalid operation: expected '+', '-' or '='"sv);
 
+            // if an operation was specified without a class, assume all
+            if (classes == 0)
+                classes = ClassFlag::User | ClassFlag::Group | ClassFlag::Other;
+
+            state = State::Mode;
             break;
         }
 
         case State::Mode: {
             // one or more [rwx] terminated by a comma
 
-            // End of mode part, expect reference next
+            // End of mode part, expect class next
             if (ch == ',') {
-                state = State::Reference;
+                state = State::Classes;
                 classes = operation = 0;
                 continue;
             }
