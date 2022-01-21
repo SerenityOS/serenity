@@ -39,6 +39,7 @@ ErrorOr<int> recvfd(int sockfd, int options);
 ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destination_buf);
 ErrorOr<void> setgroups(Span<gid_t const>);
 ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags);
+ErrorOr<void> umount(StringView mount_point);
 ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data);
 #endif
 
