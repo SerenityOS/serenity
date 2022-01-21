@@ -329,8 +329,11 @@ ALWAYS_INLINE ExecutionResult OpCode_ClearCaptureGroup::execute(MatchInput const
 {
     if (input.match_index < state.capture_group_matches.size()) {
         auto& group = state.capture_group_matches[input.match_index];
-        if (id() < group.size())
-            group[id()].reset();
+        auto group_id = id();
+        if (group_id >= group.size())
+            group.resize(group_id + 1);
+
+        group[group_id].reset();
     }
     return ExecutionResult::Continue;
 }
