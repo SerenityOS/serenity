@@ -2843,6 +2843,9 @@ void SimpleVariable::highlight_in_editor(Line::Editor& editor, Shell& shell, Hig
 
 HitTestResult SimpleVariable::hit_test_position(size_t offset) const
 {
+    if (!position().contains(offset))
+        return {};
+
     if (m_slice && m_slice->position().contains(offset))
         return m_slice->hit_test_position(offset);
 
