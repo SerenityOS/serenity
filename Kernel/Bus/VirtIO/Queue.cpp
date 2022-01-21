@@ -9,19 +9,28 @@
 
 namespace Kernel::VirtIO {
 
-Queue::Queue(u16 queue_size, u16 notify_offset)
-    : m_queue_size(queue_size)
-    , m_notify_offset(notify_offset)
-    , m_free_buffers(queue_size)
+ErrorOr<NonnullOwnPtr<Queue>> Queue::try_create(u16 queue_size, u16 notify_offset)
 {
     size_t size_of_descriptors = sizeof(QueueDescriptor) * queue_size;
     size_t size_of_driver = sizeof(QueueDriver) + queue_size * sizeof(u16);
     size_t size_of_device = sizeof(QueueDevice) + queue_size * sizeof(QueueDeviceItem);
-    auto queue_region_size = Memory::page_round_up(size_of_descriptors + size_of_driver + size_of_device).release_value_but_fixme_should_propagate_errors();
+    auto queue_region_size = TRY(Memory::page_round_up(size_of_descriptors + size_of_driver + size_of_device));
+    OwnPtr<Memory::Region> queue_region;
     if (queue_region_size <= PAGE_SIZE)
-        m_queue_region = MM.allocate_kernel_region(queue_region_size, "VirtIO Queue", Memory::Region::Access::ReadWrite).release_value();
+        queue_region = TRY(MM.allocate_kernel_region(queue_region_size, "VirtIO Queue"sv, Memory::Region::Access::ReadWrite));
     else
-        m_queue_region = MM.allocate_contiguous_kernel_region(queue_region_size, "VirtIO Queue", Memory::Region::Access::ReadWrite).release_value();
+        queue_region = TRY(MM.allocate_contiguous_kernel_region(queue_region_size, "VirtIO Queue"sv, Memory::Region::Access::ReadWrite));
+    return adopt_nonnull_own_or_enomem(new (nothrow) Queue(queue_region.release_nonnull(), queue_size, notify_offset));
+}
+
+Queue::Queue(NonnullOwnPtr<Memory::Region> queue_region, u16 queue_size, u16 notify_offset)
+    : m_queue_size(queue_size)
+    , m_notify_offset(notify_offset)
+    , m_free_buffers(queue_size)
+    , m_queue_region(move(queue_region))
+{
+    size_t size_of_descriptors = sizeof(QueueDescriptor) * queue_size;
+    size_t size_of_driver = sizeof(QueueDriver) + queue_size * sizeof(u16);
     // TODO: ensure alignment!!!
     u8* ptr = m_queue_region->vaddr().as_ptr();
     memset(ptr, 0, m_queue_region->size());
@@ -29,9 +38,8 @@ Queue::Queue(u16 queue_size, u16 notify_offset)
     m_driver = reinterpret_cast<QueueDriver*>(ptr + size_of_descriptors);
     m_device = reinterpret_cast<QueueDevice*>(ptr + size_of_descriptors + size_of_driver);
 
-    for (auto i = 0; i + 1 < queue_size; i++) {
-        m_descriptors[i].next = i + 1; // link all of the descriptors in a line
-    }
+    for (auto i = 0; i + 1 < queue_size; i++)
+        m_descriptors[i].next = i + 1; // link all the descriptors in a line
 
     enable_interrupts();
 }
