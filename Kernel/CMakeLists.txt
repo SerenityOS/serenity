@@ -96,6 +96,8 @@ set(KERNEL_SOURCES
     Storage/ATA/ATADiskDevice.cpp
     Storage/ATA/ATAPIDiscDevice.cpp
     Storage/ATA/BMIDEChannel.cpp
+    Storage/ATA/ISAIDEController.cpp
+    Storage/ATA/PCIIDEController.cpp
     Storage/ATA/IDEController.cpp
     Storage/ATA/IDEChannel.cpp
     Storage/Partition/DiskPartition.cpp
