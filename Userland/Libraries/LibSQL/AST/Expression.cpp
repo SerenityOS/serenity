@@ -242,9 +242,26 @@ Value MatchExpression::evaluate(ExecutionContext& context) const
         auto result = regex.match(lhs_value.to_string(), PosixFlags::Insensitive | PosixFlags::Unicode);
         return Value(invert_expression() ? !result.success : result.success);
     }
+    case MatchOperator::Regexp: {
+        Value lhs_value = lhs()->evaluate(context);
+        Value rhs_value = rhs()->evaluate(context);
+
+        auto regex = Regex<PosixExtended>(rhs_value.to_string());
+        auto err = regex.parser_result.error;
+        if (err != regex::Error::NoError) {
+            StringBuilder builder;
+            builder.append("Regular expression: ");
+            builder.append(get_error_string(err));
+
+            context.result->set_error(SQLErrorCode::SyntaxError, builder.build());
+            return Value(false);
+        }
+
+        auto result = regex.match(lhs_value.to_string(), PosixFlags::Insensitive | PosixFlags::Unicode);
+        return Value(invert_expression() ? !result.success : result.success);
+    }
     case MatchOperator::Glob:
     case MatchOperator::Match:
-    case MatchOperator::Regexp:
     default:
         VERIFY_NOT_REACHED();
     }
