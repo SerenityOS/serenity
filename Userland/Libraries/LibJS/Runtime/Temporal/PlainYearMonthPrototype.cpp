@@ -280,8 +280,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::add)
     // 11. Let date be ? CreateTemporalDate(yearMonth.[[ISOYear]], yearMonth.[[ISOMonth]], day, calendar).
     auto* date = TRY(create_temporal_date(global_object, year_month->iso_year(), year_month->iso_month(), day, calendar));
 
-    // 12. Let durationToAdd be ? CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto* duration_to_add = TRY(create_temporal_duration(global_object, duration.years, duration.months, duration.weeks, balance_result.days, 0, 0, 0, 0, 0, 0));
+    // 12. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
+    auto* duration_to_add = MUST(create_temporal_duration(global_object, duration.years, duration.months, duration.weeks, balance_result.days, 0, 0, 0, 0, 0, 0));
 
     // 13. Let optionsCopy be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* options_copy = Object::create(global_object, global_object.object_prototype());
@@ -352,8 +352,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::subtract)
     // 11. Let date be ? CreateTemporalDate(yearMonth.[[ISOYear]], yearMonth.[[ISOMonth]], day, calendar).
     auto* date = TRY(create_temporal_date(global_object, year_month->iso_year(), year_month->iso_month(), day, calendar));
 
-    // 12. Let durationToAdd be ? CreateTemporalDuration(−duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto* duration_to_add = TRY(create_temporal_duration(global_object, -duration.years, -duration.months, -duration.weeks, -balance_result.days, 0, 0, 0, 0, 0, 0));
+    // 12. Let durationToAdd be ! CreateTemporalDuration(−duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
+    auto* duration_to_add = MUST(create_temporal_duration(global_object, -duration.years, -duration.months, -duration.weeks, -balance_result.days, 0, 0, 0, 0, 0, 0));
 
     // 13. Let optionsCopy be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* options_copy = Object::create(global_object, global_object.object_prototype());
@@ -449,15 +449,15 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::until)
 
     // 22. If smallestUnit is "month" and roundingIncrement = 1, then
     if (smallest_unit == "month"sv && rounding_increment == 1) {
-        // a. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
-        return TRY(create_temporal_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
+        // a. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+        return MUST(create_temporal_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
     }
 
     // 23. Let result be ? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate).
     auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date));
 
-    // 24. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
-    return TRY(create_temporal_duration(global_object, round_result.years, round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
+    // 24. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+    return MUST(create_temporal_duration(global_object, round_result.years, round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 // 9.3.15 Temporal.PlainYearMonth.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.since
@@ -532,15 +532,15 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::since)
 
     // 23. If smallestUnit is "month" and roundingIncrement = 1, then
     if (smallest_unit == "month"sv && rounding_increment == 1) {
-        // a. Return ? CreateTemporalDuration(−result.[[Years]], −result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
-        return TRY(create_temporal_duration(global_object, -result->years(), -result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
+        // a. Return ! CreateTemporalDuration(−result.[[Years]], −result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+        return MUST(create_temporal_duration(global_object, -result->years(), -result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
     }
 
     // 24. Let result be ? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate).
     auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date));
 
-    // 25. Return ? CreateTemporalDuration(−result.[[Years]], −result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
-    return TRY(create_temporal_duration(global_object, -round_result.years, -round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
+    // 25. Return ! CreateTemporalDuration(−result.[[Years]], −result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+    return MUST(create_temporal_duration(global_object, -round_result.years, -round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 // 9.3.16 Temporal.PlainYearMonth.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.equals
