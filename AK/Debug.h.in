@@ -26,10 +26,6 @@
 #cmakedefine01 CALLBACK_MACHINE_DEBUG
 #endif
 
-#ifndef CHTTPJOB_DEBUG
-#cmakedefine01 CHTTPJOB_DEBUG
-#endif
-
 #ifndef CNETWORKJOB_DEBUG
 #cmakedefine01 CNETWORKJOB_DEBUG
 #endif
@@ -200,6 +196,10 @@
 
 #ifndef HTML_SCRIPT_DEBUG
 #cmakedefine01 HTML_SCRIPT_DEBUG
+#endif
+
+#ifndef HTTPJOB_DEBUG
+#cmakedefine01 HTTPJOB_DEBUG
 #endif
 
 #ifndef HTTPSJOB_DEBUG
