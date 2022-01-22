@@ -725,6 +725,7 @@ bool ISO8601Parser::parse_time_zone_numeric_utc_offset()
         if (parse_time_zone_utc_offset_second())
             (void)parse_time_zone_utc_offset_fraction();
     }
+    m_state.parse_result.time_zone_numeric_utc_offset = transaction.parsed_string_view();
     transaction.commit();
     return true;
 }
