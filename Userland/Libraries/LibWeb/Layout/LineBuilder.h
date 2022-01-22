@@ -33,6 +33,8 @@ public:
 
     void update_last_line();
 
+    void remove_last_line_if_empty();
+
 private:
     bool should_break(LayoutMode, float next_item_width, bool should_force_break);
 
@@ -40,6 +42,8 @@ private:
     float m_available_width_for_current_line { 0 };
     float m_current_y { 0 };
     float m_max_height_on_current_line { 0 };
+
+    bool m_last_line_needs_update { false };
 };
 
 }

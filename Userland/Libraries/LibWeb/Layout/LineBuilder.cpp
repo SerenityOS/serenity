@@ -12,11 +12,13 @@ namespace Web::Layout {
 LineBuilder::LineBuilder(InlineFormattingContext& context)
     : m_context(context)
 {
+    begin_new_line();
 }
 
 LineBuilder::~LineBuilder()
 {
-    update_last_line();
+    if (m_last_line_needs_update)
+        update_last_line();
 }
 
 void LineBuilder::break_line()
@@ -32,6 +34,8 @@ void LineBuilder::begin_new_line()
     auto space = m_context.available_space_for_line(m_current_y);
     m_available_width_for_current_line = space.right - space.left;
     m_max_height_on_current_line = 0;
+
+    m_last_line_needs_update = true;
 }
 
 void LineBuilder::append_box(Box& box)
@@ -54,14 +58,17 @@ bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width, bo
         return true;
     if (layout_mode == LayoutMode::OnlyRequiredLineBreaks)
         return false;
-    auto current_line_width = 0.0f;
-    if (!m_context.containing_block().line_boxes().is_empty())
-        current_line_width = m_context.containing_block().line_boxes().last().width();
+    auto const& line_boxes = m_context.containing_block().line_boxes();
+    if (line_boxes.is_empty() || line_boxes.last().is_empty())
+        return false;
+    auto current_line_width = m_context.containing_block().line_boxes().last().width();
     return (current_line_width + next_item_width) > m_available_width_for_current_line;
 }
 
 void LineBuilder::update_last_line()
 {
+    m_last_line_needs_update = false;
+
     if (m_context.containing_block().line_boxes().is_empty())
         return;
 
@@ -141,6 +148,16 @@ void LineBuilder::update_last_line()
         float right_edge = line_box.fragments().last().offset().x() + line_box.fragments().last().width();
         float final_line_box_width = right_edge - left_edge;
         line_box.m_width = final_line_box_width;
+    }
+}
+
+void LineBuilder::remove_last_line_if_empty()
+{
+    // If there's an empty line box at the bottom, just remove it instead of giving it height.
+    auto& line_boxes = m_context.containing_block().line_boxes();
+    if (!line_boxes.is_empty() && line_boxes.last().fragments().is_empty()) {
+        line_boxes.take_last();
+        m_last_line_needs_update = false;
     }
 }
 

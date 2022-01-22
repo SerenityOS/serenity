@@ -201,9 +201,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         line_box.trim_trailing_whitespace();
     }
 
-    // If there's an empty line box at the bottom, just remove it instead of giving it height.
-    if (!containing_block().line_boxes().is_empty() && containing_block().line_boxes().last().fragments().is_empty())
-        containing_block().line_boxes().take_last();
+    line_builder.remove_last_line_if_empty();
 }
 
 }
