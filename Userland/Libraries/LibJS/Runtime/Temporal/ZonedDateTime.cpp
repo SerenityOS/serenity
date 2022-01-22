@@ -215,7 +215,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         }
 
         // g. Let offsetString be result.[[TimeZoneOffsetString]].
-        offset_string = move(parsed_result.time_zone.offset);
+        offset_string = move(parsed_result.time_zone.offset_string);
 
         // h. If result.[[TimeZoneZ]] is true, then
         if (parsed_result.time_zone.z) {
