@@ -7,6 +7,7 @@
  */
 
 #include <AK/StdLibExtras.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
@@ -321,6 +322,8 @@ void VirtualConsole::flush_dirty_lines()
 
 void VirtualConsole::beep()
 {
+    if (!kernel_command_line().is_pc_speaker_enabled())
+        return;
     PCSpeaker::tone_on(440);
     IO::delay(10000);
     PCSpeaker::tone_off();
