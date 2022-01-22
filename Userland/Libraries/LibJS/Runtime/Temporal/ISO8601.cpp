@@ -974,10 +974,15 @@ bool ISO8601Parser::parse_time_zone_name_required()
 bool ISO8601Parser::parse_time_zone()
 {
     // TimeZone :
-    //     TimeZoneOffsetRequired
-    //     TimeZoneNameRequired
-    return parse_time_zone_offset_required()
-        || parse_time_zone_name_required();
+    //     TimeZoneUTCOffset TimeZoneBracketedAnnotation[opt]
+    //     TimeZoneBracketedAnnotation
+    StateTransaction transaction { *this };
+    if (parse_time_zone_utc_offset())
+        (void)parse_time_zone_bracketed_annotation();
+    else if (!parse_time_zone_bracketed_annotation())
+        return false;
+    transaction.commit();
+    return true;
 }
 
 // https://tc39.es/proposal-temporal/#prod-CalendarName
