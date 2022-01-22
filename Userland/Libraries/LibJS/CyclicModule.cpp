@@ -126,7 +126,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_linking(VM& vm, Vector<Module*
     (void)TRY(initialize_environment(vm));
 
     // 11. Assert: module occurs exactly once in stack.
-    auto count = 0;
+    size_t count = 0;
     for (auto* module : stack) {
         if (module == this)
             count++;
