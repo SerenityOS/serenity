@@ -76,8 +76,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         FileArgument parsed_argument(file_to_edit);
         auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, parsed_argument.filename());
 
-        if (response.is_error() && response.error().code() == ENOENT) {
-            text_widget->open_nonexistent_file(parsed_argument.filename());
+        if (response.is_error()) {
+            if (response.error().code() == ENOENT)
+                text_widget->open_nonexistent_file(parsed_argument.filename());
+            else
+                return 1;
         } else {
             if (!text_widget->read_file(*response.value()))
                 return 1;
