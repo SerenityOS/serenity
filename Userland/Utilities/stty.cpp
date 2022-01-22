@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
+ * Copyright (c) 2022, Alex Major
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +14,8 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -527,28 +530,19 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
     return {};
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio tty rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/dev", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio tty rpath"));
+    TRY(Core::System::unveil("/dev", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     String device_file;
     bool stty_readable = false;
     bool all_settings = false;
 
     // Core::ArgsParser can't handle the weird syntax of stty, so we use getopt_long instead.
+    int argc = arguments.argc;
+    char** argv = arguments.argv;
     opterr = 0; // We handle unknown flags gracefully by starting to parse the arguments in `apply_modes`.
     int optc;
     bool should_quit = false;
@@ -588,35 +582,24 @@ int main(int argc, char** argv)
 
     ScopeGuard file_close_guard = [&] { close(terminal_fd); };
 
-    termios initial_termios;
-    if (tcgetattr(terminal_fd, &initial_termios) < 0) {
-        perror("tcgetattr");
-        exit(1);
-    }
+    termios initial_termios = TRY(Core::System::tcgetattr(terminal_fd));
 
     winsize initial_winsize;
-    if (ioctl(terminal_fd, TIOCGWINSZ, &initial_winsize) < 0) {
-        perror("ioctl(TIOCGWINSZ)");
-        exit(1);
-    }
+    TRY(Core::System::ioctl(terminal_fd, TIOCGWINSZ, &initial_winsize));
 
     if (optind < argc) {
         if (stty_readable || all_settings) {
             warnln("Modes cannot be set when printing settings");
             exit(1);
         }
+
         auto result = apply_modes(argc - optind, argv + optind, initial_termios, initial_winsize);
         if (result.is_error())
             return result.error();
 
-        if (tcsetattr(terminal_fd, TCSADRAIN, &initial_termios) < 0) {
-            perror("tcsetattr");
-            exit(1);
-        }
-        if (ioctl(terminal_fd, TIOCSWINSZ, &initial_winsize) < 0) {
-            perror("ioctl(TIOCSWINSZ)");
-            exit(1);
-        }
+        TRY(Core::System::tcsetattr(terminal_fd, TCSADRAIN, initial_termios));
+        TRY(Core::System::ioctl(terminal_fd, TIOCSWINSZ, &initial_winsize));
+
     } else if (stty_readable) {
         print_stty_readable(initial_termios);
     } else {
