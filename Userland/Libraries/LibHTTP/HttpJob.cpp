@@ -24,13 +24,13 @@ void HttpJob::start(NonnullRefPtr<Core::Socket> socket)
     };
     m_socket->set_idle(false);
     if (m_socket->is_connected()) {
-        dbgln("Reusing previous connection for {}", url());
+        dbgln_if(CHTTPJOB_DEBUG, "Reusing previous connection for {}", url());
         deferred_invoke([this] {
             dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_connected callback");
             on_socket_connected();
         });
     } else {
-        dbgln("Creating new connection for {}", url());
+        dbgln_if(CHTTPJOB_DEBUG, "Creating new connection for {}", url());
         m_socket->on_connected = [this] {
             dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_connected callback");
             on_socket_connected();
