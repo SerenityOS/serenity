@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-hearts.png) Hearts - The Hearts card game
+![Icon](file:///res/icons/16x16/app-hearts.png) Hearts - The Hearts card game
 
 ## Synopsis
 

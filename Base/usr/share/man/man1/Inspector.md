@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-inspector.png) Inspector - Serenity process inspector
+![Icon](file:///res/icons/16x16/app-inspector.png) Inspector - Serenity process inspector
 
 [Open](file:///bin/Inspector)
 

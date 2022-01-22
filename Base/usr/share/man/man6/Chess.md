@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-chess.png) Chess
+![Icon](file:///res/icons/16x16/app-chess.png) Chess
 
 ## Synopsis
 

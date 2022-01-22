@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-eyes.png) Eyes
+![Icon](file:///res/icons/16x16/app-eyes.png) Eyes
 
 ## Synopsis
 

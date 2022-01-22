@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-character-map.png) Character Map
+![Icon](file:///res/icons/16x16/app-character-map.png) Character Map
 
 [Open](file:///bin/CharacterMap)
 

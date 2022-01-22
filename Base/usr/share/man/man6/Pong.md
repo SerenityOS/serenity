@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-pong.png) Pong
+![Icon](file:///res/icons/16x16/app-pong.png) Pong
 
 ## Synopsis
 

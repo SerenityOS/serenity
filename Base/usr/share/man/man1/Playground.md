@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-playground.png) Playground - GUI Markup Language (GML) editor
+![Icon](file:///res/icons/16x16/app-playground.png) Playground - GUI Markup Language (GML) editor
 
 [Open](file:///bin/Playground)
 

@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-minesweeper.png) Minesweeper
+![Icon](file:///res/icons/16x16/app-minesweeper.png) Minesweeper
 
 ## Synopsis
 

@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-font-editor.png) FontEditor - Serenity font editor
+![Icon](file:///res/icons/16x16/app-font-editor.png) FontEditor - Serenity font editor
 
 [Open](file:///bin/FontEditor)
 
