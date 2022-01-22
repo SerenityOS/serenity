@@ -17,22 +17,22 @@ void HttpJob::start(NonnullRefPtr<Core::Socket> socket)
     VERIFY(!m_socket);
     m_socket = move(socket);
     m_socket->on_error = [this] {
-        dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_error callback");
+        dbgln_if(HTTPJOB_DEBUG, "HttpJob: on_error callback");
         deferred_invoke([this] {
             did_fail(Core::NetworkJob::Error::ConnectionFailed);
         });
     };
     m_socket->set_idle(false);
     if (m_socket->is_connected()) {
-        dbgln_if(CHTTPJOB_DEBUG, "Reusing previous connection for {}", url());
+        dbgln_if(HTTPJOB_DEBUG, "Reusing previous connection for {}", url());
         deferred_invoke([this] {
-            dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_connected callback");
+            dbgln_if(HTTPJOB_DEBUG, "HttpJob: on_connected callback");
             on_socket_connected();
         });
     } else {
-        dbgln_if(CHTTPJOB_DEBUG, "Creating new connection for {}", url());
+        dbgln_if(HTTPJOB_DEBUG, "Creating new connection for {}", url());
         m_socket->on_connected = [this] {
-            dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_connected callback");
+            dbgln_if(HTTPJOB_DEBUG, "HttpJob: on_connected callback");
             on_socket_connected();
         };
         bool success = m_socket->connect(m_request.url().host(), m_request.url().port_or_default());
