@@ -55,18 +55,6 @@ const Gfx::Font& Menu::font() const
     return Gfx::FontDatabase::default_font();
 }
 
-static const char* s_checked_bitmap_data = {
-    "         "
-    "       # "
-    "      ## "
-    "     ### "
-    " ## ###  "
-    " #####   "
-    "  ###    "
-    "   #     "
-    "         "
-};
-
 static const char* s_submenu_arrow_bitmap_data = {
     "         "
     "   #     "
@@ -79,9 +67,6 @@ static const char* s_submenu_arrow_bitmap_data = {
     "         "
 };
 
-static Gfx::CharacterBitmap* s_checked_bitmap;
-static const int s_checked_bitmap_width = 9;
-static const int s_checked_bitmap_height = 9;
 static const int s_submenu_arrow_bitmap_width = 9;
 static const int s_submenu_arrow_bitmap_height = 9;
 static const int s_item_icon_width = 16;
@@ -199,9 +184,6 @@ void Menu::draw()
     painter.draw_rect(rect, Color::Black);
     painter.fill_rect(rect.shrunken(2, 2), palette.menu_base());
 
-    if (!s_checked_bitmap)
-        s_checked_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
-
     bool has_checkable_items = false;
     bool has_items_with_icon = false;
     for (auto& item : m_items) {
@@ -258,14 +240,9 @@ void Menu::draw(MenuItem const& item, bool is_drawing_all)
                 radio_rect.center_vertically_within(text_rect);
                 Gfx::StylePainter::paint_radio_button(painter, radio_rect, palette, item.is_checked(), false);
             } else {
-                Gfx::IntRect checkmark_rect { item.rect().x() + 7, 0, s_checked_bitmap_width, s_checked_bitmap_height };
-                checkmark_rect.center_vertically_within(text_rect);
-                Gfx::IntRect checkbox_rect = checkmark_rect.inflated(4, 4);
-                painter.fill_rect(checkbox_rect, palette.base());
-                Gfx::StylePainter::paint_frame(painter, checkbox_rect, palette, Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
-                if (item.is_checked()) {
-                    painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, palette.button_text());
-                }
+                Gfx::IntRect checkbox_rect { item.rect().x() + 5, 0, 13, 13 };
+                checkbox_rect.center_vertically_within(text_rect);
+                Gfx::StylePainter::paint_check_box(painter, checkbox_rect, palette, item.is_enabled(), item.is_checked(), false);
             }
         } else if (item.icon()) {
             Gfx::IntRect icon_rect { item.rect().x() + 3, 0, s_item_icon_width, s_item_icon_width };
