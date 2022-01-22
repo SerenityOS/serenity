@@ -72,6 +72,8 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringV
                     operation = Operation::Remove;
                 else if (ch == '=')
                     operation = Operation::Assign;
+                else if (classes == 0)
+                    return Error::from_string_literal("invalid class: expected 'u', 'g', 'o' or 'a'"sv);
                 else
                     return Error::from_string_literal("invalid operation: expected '+', '-' or '='"sv);
 
@@ -104,7 +106,7 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringV
             else if (ch == 'x')
                 write_bits = 1;
             else
-                return Error::from_string_literal("invalid symbolic permission"sv);
+                return Error::from_string_literal("invalid symbolic permission: expected 'r', 'w' or 'x'"sv);
 
             mode_t clear_bits = operation == Operation::Assign ? 7 : write_bits;
 
