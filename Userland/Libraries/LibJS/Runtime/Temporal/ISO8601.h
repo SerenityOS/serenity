@@ -31,6 +31,7 @@ struct ParseResult {
     Optional<StringView> time_second_not_valid_month;
     Optional<StringView> calendar_name;
     Optional<StringView> utc_designator;
+    Optional<StringView> time_zone_numeric_utc_offset;
     Optional<StringView> time_zone_utc_offset_sign;
     Optional<StringView> time_zone_utc_offset_hour;
     Optional<StringView> time_zone_utc_offset_minute;
