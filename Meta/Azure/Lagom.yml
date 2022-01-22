@@ -103,6 +103,7 @@ jobs:
 
     - ${{ if eq(parameters.lagom_lints, true) }}:
       - script: |
+          set -e
           ./Meta/check-markdown.sh
           git ls-files '*.ipc' | xargs ./Meta/Lagom/Build/Tools/IPCMagicLinter/IPCMagicLinter
         displayName: 'Run lints that require Lagom'
