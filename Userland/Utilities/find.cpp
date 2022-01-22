@@ -382,18 +382,32 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
             return command;
         fatal_error("Unmatched \033[1m(");
     } else if (arg == "-type") {
+        if (args.is_empty())
+            fatal_error("-type: requires additional arguments");
         return make<TypeCommand>(args.take_first());
     } else if (arg == "-links") {
+        if (args.is_empty())
+            fatal_error("-links: requires additional arguments");
         return make<LinksCommand>(args.take_first());
     } else if (arg == "-user") {
+        if (args.is_empty())
+            fatal_error("-user: requires additional arguments");
         return make<UserCommand>(args.take_first());
     } else if (arg == "-group") {
+        if (args.is_empty())
+            fatal_error("-group: requires additional arguments");
         return make<GroupCommand>(args.take_first());
     } else if (arg == "-size") {
+        if (args.is_empty())
+            fatal_error("-size: requires additional arguments");
         return make<SizeCommand>(args.take_first());
     } else if (arg == "-name") {
+        if (args.is_empty())
+            fatal_error("-name: requires additional arguments");
         return make<NameCommand>(args.take_first(), CaseSensitivity::CaseSensitive);
     } else if (arg == "-iname") {
+        if (args.is_empty())
+            fatal_error("-iname: requires additional arguments");
         return make<NameCommand>(args.take_first(), CaseSensitivity::CaseInsensitive);
     } else if (arg == "-print") {
         g_have_seen_action_command = true;
@@ -402,6 +416,8 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
         g_have_seen_action_command = true;
         return make<PrintCommand>(0);
     } else if (arg == "-exec") {
+        if (args.is_empty())
+            fatal_error("-exec: requires additional arguments");
         g_have_seen_action_command = true;
         Vector<char*> command_argv;
         while (!args.is_empty()) {
