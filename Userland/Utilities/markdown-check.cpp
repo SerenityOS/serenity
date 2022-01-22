@@ -167,6 +167,11 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
         outln("Not checking local link {}", href);
         return RecursionDecision::Recurse;
     }
+    if (href.starts_with("/res/icons/")) {
+        // TODO: Resolve relative to $SERENITY_SOURCE_DIR/Base/
+        outln("Not checking icon link {}", href);
+        return RecursionDecision::Recurse;
+    }
 
     String label = StringCollector::from(*link_node.text);
     Optional<size_t> last_hash = href.find_last('#');
