@@ -10,6 +10,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
+#include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Sections.h>
@@ -320,8 +321,9 @@ void VirtualConsole::flush_dirty_lines()
 
 void VirtualConsole::beep()
 {
-    // TODO
-    dbgln("Beep!1");
+    PCSpeaker::tone_on(440);
+    IO::delay(10000);
+    PCSpeaker::tone_off();
 }
 
 void VirtualConsole::set_window_title(StringView)
