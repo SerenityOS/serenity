@@ -105,14 +105,14 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
     }
     auto& connection = sockets_for_url[index];
     if (!connection.has_started) {
-        dbgln("Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
+        dbgln_if(REQUESTSERVER_DEBUG, "Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
         connection.has_started = true;
         connection.removal_timer->stop();
         connection.timer.start();
         connection.current_url = url;
         start_job(*connection.socket);
     } else {
-        dbgln("Enqueue request for URL {} in {} - {}", url, &connection, connection.socket);
+        dbgln_if(REQUESTSERVER_DEBUG, "Enqueue request for URL {} in {} - {}", url, &connection, connection.socket);
         connection.request_queue.append(move(start_job));
     }
     return connection;
