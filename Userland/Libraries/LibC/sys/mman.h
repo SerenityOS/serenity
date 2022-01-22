@@ -23,5 +23,6 @@ void* allocate_tls(const char* initial_data, size_t);
 int mlock(const void*, size_t);
 int munlock(const void*, size_t);
 int msync(void*, size_t, int flags);
+int mlocking(const void*, size_t);
 
 __END_DECLS
