@@ -35,8 +35,8 @@ InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::avai
 
     auto const& bfc = static_cast<BlockFormattingContext const&>(*parent());
 
-    for (ssize_t i = bfc.left_floating_boxes().size() - 1; i >= 0; --i) {
-        auto& floating_box = *bfc.left_floating_boxes().at(i);
+    for (ssize_t i = bfc.left_side_floats().boxes.size() - 1; i >= 0; --i) {
+        auto const& floating_box = bfc.left_side_floats().boxes.at(i);
         auto rect = floating_box.margin_box_as_relative_rect();
         if (rect.contains_vertically(y)) {
             info.left = rect.right() + 1;
@@ -46,8 +46,8 @@ InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::avai
 
     info.right = containing_block().width();
 
-    for (ssize_t i = bfc.right_floating_boxes().size() - 1; i >= 0; --i) {
-        auto& floating_box = *bfc.right_floating_boxes().at(i);
+    for (ssize_t i = bfc.right_side_floats().boxes.size() - 1; i >= 0; --i) {
+        auto const& floating_box = bfc.right_side_floats().boxes.at(i);
         auto rect = floating_box.margin_box_as_relative_rect();
         if (rect.contains_vertically(y)) {
             info.right = rect.left() - 1;

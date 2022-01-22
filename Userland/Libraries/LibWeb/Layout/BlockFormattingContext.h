@@ -23,8 +23,8 @@ public:
 
     bool is_initial() const;
 
-    const Vector<Box*>& left_floating_boxes() const { return m_left_floating_boxes; }
-    const Vector<Box*>& right_floating_boxes() const { return m_right_floating_boxes; }
+    auto const& left_side_floats() const { return m_left_floats; }
+    auto const& right_side_floats() const { return m_right_floats; }
 
     static float compute_theoretical_height(Box const&);
     void compute_width(Box&);
@@ -50,14 +50,18 @@ private:
     void layout_inline_children(BlockContainer&, LayoutMode);
 
     void place_block_level_replaced_element_in_normal_flow(Box& child, BlockContainer const&);
-    void place_block_level_non_replaced_element_in_normal_flow(Box& child, BlockContainer const&);
+    void place_block_level_non_replaced_element_in_normal_flow(Box& float_side, BlockContainer const&);
 
     void layout_floating_child(Box& child, BlockContainer const& containing_block);
 
     void apply_transformations_to_children(Box&);
 
-    Vector<Box*> m_left_floating_boxes;
-    Vector<Box*> m_right_floating_boxes;
+    struct FloatSideData {
+        Vector<Box&> boxes;
+    };
+
+    FloatSideData m_left_floats;
+    FloatSideData m_right_floats;
 };
 
 }

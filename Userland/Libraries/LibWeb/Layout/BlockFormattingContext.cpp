@@ -515,22 +515,22 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         }
     }
 
-    auto clear_floating_boxes = [&](auto& floating_boxes) {
-        if (!floating_boxes.is_empty()) {
+    auto clear_floating_boxes = [&](auto& float_side) {
+        if (!float_side.boxes.is_empty()) {
             float clearance_y = 0;
-            for (auto* floating_box : floating_boxes) {
-                clearance_y = max(clearance_y, floating_box->effective_offset().y() + floating_box->border_box_height());
+            for (auto& floating_box : float_side.boxes) {
+                clearance_y = max(clearance_y, floating_box.effective_offset().y() + floating_box.border_box_height());
             }
             y = max(y, clearance_y);
-            floating_boxes.clear();
+            float_side.boxes.clear();
         }
     };
 
     // Flex-items don't float and also don't clear.
     if ((computed_values.clear() == CSS::Clear::Left || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
-        clear_floating_boxes(m_left_floating_boxes);
+        clear_floating_boxes(m_left_floats);
     if ((computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
-        clear_floating_boxes(m_right_floating_boxes);
+        clear_floating_boxes(m_right_floats);
 
     child_box.set_offset(x, y);
 }
@@ -601,8 +601,8 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
 
     // Next, float to the left and/or right
     if (box.computed_values().float_() == CSS::Float::Left) {
-        if (!m_left_floating_boxes.is_empty()) {
-            auto& previous_floating_box = *m_left_floating_boxes.last();
+        if (!m_left_floats.boxes.is_empty()) {
+            auto& previous_floating_box = m_left_floats.boxes.last();
             auto previous_rect = rect_in_coordinate_space(previous_floating_box, root());
             if (previous_rect.contains_vertically(y_in_root)) {
                 // This box touches another already floating box. Stack to the right.
@@ -611,16 +611,16 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
                 // This box does not touch another floating box, go all the way to the left.
                 x = box.box_model().margin_box().left;
                 // Also, forget all previous left-floating boxes while we're here since they're no longer relevant.
-                m_left_floating_boxes.clear();
+                m_left_floats.boxes.clear();
             }
         } else {
             // This is the first left-floating box. Go all the way to the left.
             x = box.box_model().margin_box().left;
         }
-        m_left_floating_boxes.append(&box);
+        m_left_floats.boxes.append(box);
     } else if (box.computed_values().float_() == CSS::Float::Right) {
-        if (!m_right_floating_boxes.is_empty()) {
-            auto& previous_floating_box = *m_right_floating_boxes.last();
+        if (!m_right_floats.boxes.is_empty()) {
+            auto& previous_floating_box = m_right_floats.boxes.last();
             auto previous_rect = rect_in_coordinate_space(previous_floating_box, root());
             if (previous_rect.contains_vertically(y_in_root)) {
                 // This box touches another already floating box. Stack to the left.
@@ -629,13 +629,13 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
                 // This box does not touch another floating box, go all the way to the right.
                 x = containing_block.width() - box.box_model().margin_box().right - box.width();
                 // Also, forget all previous right-floating boxes while we're here since they're no longer relevant.
-                m_right_floating_boxes.clear();
+                m_right_floats.boxes.clear();
             }
         } else {
             // This is the first right-floating box. Go all the way to the right.
             x = containing_block.width() - box.box_model().margin_box().right - box.width();
         }
-        m_right_floating_boxes.append(&box);
+        m_right_floats.boxes.append(box);
     }
 
     box.set_offset(x, box.effective_offset().y());
