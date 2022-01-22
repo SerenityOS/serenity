@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -50,30 +50,21 @@ ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_ta
     // 2. Set identifier to ? ToString(identifier).
     auto identifier = TRY(vm.argument(0).to_string(global_object));
 
-    String canonical;
-
-    // 3. If identifier satisfies the syntax of a TimeZoneNumericUTCOffset (see 13.33), then
-    if (is_valid_time_zone_numeric_utc_offset_syntax(identifier)) {
-        // a. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(identifier).
-        auto offset_nanoseconds = TRY(parse_time_zone_offset_string(global_object, identifier));
-
-        // b. Let canonical be ! FormatTimeZoneOffsetString(offsetNanoseconds).
-        canonical = format_time_zone_offset_string(offset_nanoseconds);
-    }
-    // 4. Else,
-    else {
+    // 3. Let parseResult be ParseText(! StringToCodePoints(identifier), TimeZoneNumericUTCOffset).
+    // 4. If parseResult is a List of errors, then
+    if (!is_valid_time_zone_numeric_utc_offset_syntax(identifier)) {
         // a. If ! IsValidTimeZoneName(identifier) is false, then
         if (!is_valid_time_zone_name(identifier)) {
             // i. Throw a RangeError exception.
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, identifier);
         }
 
-        // b. Let canonical be ! CanonicalizeTimeZoneName(identifier).
-        canonical = canonicalize_time_zone_name(identifier);
+        // b. Set identifier to ! CanonicalizeTimeZoneName(identifier).
+        identifier = canonicalize_time_zone_name(identifier);
     }
 
-    // 5. Return ? CreateTemporalTimeZone(canonical, NewTarget).
-    return TRY(create_temporal_time_zone(global_object, canonical, &new_target));
+    // 5. Return ? CreateTemporalTimeZone(identifier, NewTarget).
+    return TRY(create_temporal_time_zone(global_object, identifier, &new_target));
 }
 
 // 11.3.2 Temporal.TimeZone.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.from
