@@ -429,8 +429,8 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
         // a. If ParseText(! StringToCodePoints(parseResult.[[Name]], TimeZoneNumericUTCOffset)) is not a List of errors, then
         if (is_valid_time_zone_numeric_utc_offset_syntax(*parse_result.name)) {
             // i. If parseResult.[[OffsetString]] is not undefined, and ! ParseTimeZoneOffsetString(parseResult.[[OffsetString]]) ≠ ! ParseTimeZoneOffsetString(parseResult.[[Name]]), throw a RangeError exception.
-            if (parse_result.offset.has_value() && (MUST(parse_time_zone_offset_string(global_object, *parse_result.offset)) != MUST(parse_time_zone_offset_string(global_object, *parse_result.name))))
-                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalTimeZoneOffsetStringMismatch, *parse_result.offset, *parse_result.name);
+            if (parse_result.offset_string.has_value() && (MUST(parse_time_zone_offset_string(global_object, *parse_result.offset_string)) != MUST(parse_time_zone_offset_string(global_object, *parse_result.name))))
+                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalTimeZoneOffsetStringMismatch, *parse_result.offset_string, *parse_result.name);
         }
         // b. Else,
         else {
@@ -448,7 +448,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
         return MUST(create_temporal_time_zone(global_object, "UTC"sv));
 
     // 6. Return ! CreateTemporalTimeZone(parseResult.[[OffsetString]]).
-    return MUST(create_temporal_time_zone(global_object, *parse_result.offset));
+    return MUST(create_temporal_time_zone(global_object, *parse_result.offset_string));
 }
 
 // 11.6.11 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor

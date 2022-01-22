@@ -658,8 +658,8 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         // c. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
         calendar = TRY(to_temporal_calendar_with_iso_default(global_object, parsed_result.date_time.calendar.has_value() ? js_string(vm, *parsed_result.date_time.calendar) : js_undefined()));
 
-        // d. Let offsetString be result.[[TimeZoneOffset]].
-        offset_string = parsed_result.time_zone.offset.has_value() ? js_string(vm, *parsed_result.time_zone.offset) : js_undefined();
+        // d. Let offsetString be result.[[TimeZoneOffsetString]].
+        offset_string = parsed_result.time_zone.offset_string.has_value() ? js_string(vm, *parsed_result.time_zone.offset_string) : js_undefined();
 
         // e. Let timeZoneName be result.[[TimeZoneIANAName]].
         auto time_zone_name = parsed_result.time_zone.name;
@@ -1244,7 +1244,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
     auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));
 
     // 5. Let offsetString be timeZoneResult.[[OffsetString]].
-    auto offset_string = time_zone_result.offset;
+    auto offset_string = time_zone_result.offset_string;
 
     // 6. If timeZoneResult.[[Z]] is true, then
     if (time_zone_result.z) {
@@ -1559,7 +1559,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
     auto result = MUST(parse_iso_date_time(global_object, *parse_result));
 
     bool z;
-    Optional<String> offset;
+    Optional<String> offset_string;
     Optional<String> time_zone;
 
     // 4. If isoString satisfies the syntax of a TemporalZonedDateTimeString (see 13.33), then
@@ -1571,8 +1571,8 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
         // b. Let z be timeZoneResult.[[Z]].
         z = time_zone_result.z;
 
-        // c. Let offset be timeZoneResult.[[Offset]].
-        offset = time_zone_result.offset;
+        // c. Let offsetString be timeZoneResult.[[OffsetString]].
+        offset_string = time_zone_result.offset_string;
 
         // d. Let timeZone be timeZoneResult.[[Name]].
         time_zone = time_zone_result.name;
@@ -1582,12 +1582,12 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
         // a. Let z be false.
         z = false;
 
-        // b. Let offset be undefined.
+        // b. Let offsetString be undefined.
         // c. Let timeZone be undefined.
     }
 
-    // 6. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]], [[TimeZoneZ]]: z, [[TimeZoneOffset]]: offset, [[TimeZoneIANAName]]: timeZone }.
-    return TemporalZonedDateTime { .date_time = move(result), .time_zone = { .z = z, .offset = move(offset), .name = move(time_zone) } };
+    // 6. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]], [[TimeZoneZ]]: z, [[TimeZoneOffsetString]]: offsetString, [[TimeZoneIANAName]]: timeZone }.
+    return TemporalZonedDateTime { .date_time = move(result), .time_zone = { .z = z, .offset_string = move(offset_string), .name = move(time_zone) } };
 }
 
 // 13.42 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
@@ -1647,10 +1647,10 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     // 4. If z is not undefined, then
     if (z_part.has_value()) {
         // a. Return the Record { [[Z]]: true, [[OffsetString]]: undefined, [[Name]]: name }.
-        return TemporalTimeZone { .z = true, .offset = {}, .name = name_part.has_value() ? String { *name_part } : Optional<String> {} };
+        return TemporalTimeZone { .z = true, .offset_string = {}, .name = name_part.has_value() ? String { *name_part } : Optional<String> {} };
     }
 
-    Optional<String> offset;
+    Optional<String> offset_string;
     // 5. If hours is undefined, then
     if (!hours_part.has_value()) {
         // a. Let offsetString be undefined.
@@ -1704,11 +1704,11 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         auto offset_nanoseconds = sign * (((hours * 60 + minutes) * 60 + seconds) * 1000000000.0 + nanoseconds);
 
         // j. Let offsetString be ! FormatTimeZoneOffsetString(offsetNanoseconds).
-        offset = format_time_zone_offset_string(offset_nanoseconds);
+        offset_string = format_time_zone_offset_string(offset_nanoseconds);
     }
 
     // 7. Return the Record { [[Z]]: false, [[OffsetString]]: offsetString, [[Name]]: name }.
-    return TemporalTimeZone { .z = false, .offset = offset, .name = name_part.has_value() ? String { *name_part } : Optional<String> {} };
+    return TemporalTimeZone { .z = false, .offset_string = offset_string, .name = name_part.has_value() ? String { *name_part } : Optional<String> {} };
 }
 
 // 13.44 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring

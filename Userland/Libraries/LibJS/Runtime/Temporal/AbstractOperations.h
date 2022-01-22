@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -68,7 +68,7 @@ struct TemporalTime {
 
 struct TemporalTimeZone {
     bool z;
-    Optional<String> offset;
+    Optional<String> offset_string;
     Optional<String> name;
 };
 
