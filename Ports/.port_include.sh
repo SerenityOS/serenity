@@ -380,9 +380,7 @@ func_defined patch_internal || patch_internal() {
     fi
 }
 func_defined pre_configure || pre_configure() {
-    if "$use_fresh_config_sub"; then
-        ensure_new_config_sub
-    fi
+    :
 }
 func_defined configure || configure() {
     chmod +x "${workdir}"/"$configscript"
@@ -505,6 +503,9 @@ do_configure() {
     ensure_build
     if [ "$useconfigure" = "true" ]; then
         echo "Configuring $port..."
+        if "$use_fresh_config_sub"; then
+            ensure_new_config_sub
+        fi
         pre_configure
         configure
         post_configure

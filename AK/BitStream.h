@@ -12,6 +12,7 @@
 
 namespace AK {
 
+// Obsoleted by LibCore/{Big, Little}EndianInputBitStream.
 class InputBitStream final : public InputStream {
 public:
     explicit InputBitStream(InputStream& stream)

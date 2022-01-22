@@ -18,6 +18,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
 #include <termios.h>
@@ -40,6 +41,7 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
 ErrorOr<void> setgroups(Span<gid_t const>);
 ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags);
 ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data);
+ErrorOr<void> disown(pid_t pid);
 #endif
 
 #ifndef AK_OS_BSD_GENERIC
@@ -87,6 +89,7 @@ ErrorOr<Optional<struct passwd>> getpwuid(uid_t);
 ErrorOr<Optional<struct group>> getgrgid(gid_t);
 ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts);
 ErrorOr<pid_t> posix_spawnp(StringView const path, posix_spawn_file_actions_t* const file_actions, posix_spawnattr_t* const attr, char* const arguments[], char* const envp[]);
+ErrorOr<off_t> lseek(int fd, off_t, int whence);
 
 struct WaitPidResult {
     pid_t pid;
@@ -111,6 +114,7 @@ ErrorOr<void> unlink(StringView path);
 ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
 ErrorOr<struct utsname> uname();
 ErrorOr<Array<int, 2>> pipe2(int flags);
+ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta);
 
 ErrorOr<int> socket(int domain, int type, int protocol);
 ErrorOr<void> bind(int sockfd, struct sockaddr const*, socklen_t);

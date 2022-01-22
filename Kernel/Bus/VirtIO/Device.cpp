@@ -327,9 +327,10 @@ bool Device::setup_queue(u16 queue_index)
 
     u16 queue_notify_offset = config_read16(*m_common_cfg, COMMON_CFG_QUEUE_NOTIFY_OFF);
 
-    auto queue = make<Queue>(queue_size, queue_notify_offset);
-    if (queue->is_null())
+    auto queue_or_error = Queue::try_create(queue_size, queue_notify_offset);
+    if (queue_or_error.is_error())
         return false;
+    auto queue = queue_or_error.release_value();
 
     config_write64(*m_common_cfg, COMMON_CFG_QUEUE_DESC, queue->descriptor_area().get());
     config_write64(*m_common_cfg, COMMON_CFG_QUEUE_DRIVER, queue->driver_area().get());

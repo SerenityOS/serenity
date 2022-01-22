@@ -123,7 +123,7 @@ public:
 
     void insert_at_cursor_or_replace_selection(StringView);
     bool write_to_file(String const& path);
-    bool write_to_file_and_close(int fd);
+    bool write_to_file(Core::File&);
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
     size_t number_of_words() const;

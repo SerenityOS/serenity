@@ -224,7 +224,10 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
             }
         }
 
-        for (; view_index < view_length; ++view_index) {
+        for (; view_index <= view_length; ++view_index) {
+            if (view_index == view_length && input.regex_options.has_flag_set(AllFlags::Multiline))
+                break;
+
             auto& match_length_minimum = m_pattern->parser_result.match_length_minimum;
             // FIXME: More performant would be to know the remaining minimum string
             //        length needed to match from the current position onwards within
@@ -446,6 +449,8 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
                         (*it) = state;
                         it->instruction_position = state.fork_at_position;
                         it->initiating_fork = *input.fork_to_replace;
+                        it->capture_group_matches = state.capture_group_matches;
+                        it->matches = state.matches;
                         found = true;
                         break;
                     }

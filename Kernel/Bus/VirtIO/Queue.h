@@ -28,18 +28,18 @@ enum class BufferType {
 
 class Queue {
 public:
-    Queue(u16 queue_size, u16 notify_offset);
+    static ErrorOr<NonnullOwnPtr<Queue>> try_create(u16 queue_size, u16 notify_offset);
+
     ~Queue();
 
-    bool is_null() const { return !m_queue_region; }
     u16 notify_offset() const { return m_notify_offset; }
 
     void enable_interrupts();
     void disable_interrupts();
 
-    PhysicalAddress descriptor_area() const { return to_physical(m_descriptors.ptr()); }
-    PhysicalAddress driver_area() const { return to_physical(m_driver.ptr()); }
-    PhysicalAddress device_area() const { return to_physical(m_device.ptr()); }
+    PhysicalAddress descriptor_area() const { return to_physical(m_descriptors); }
+    PhysicalAddress driver_area() const { return to_physical(m_driver); }
+    PhysicalAddress device_area() const { return to_physical(m_device); }
 
     bool new_data_available() const;
     bool has_free_slots() const;
@@ -52,6 +52,8 @@ public:
     bool should_notify() const;
 
 private:
+    Queue(NonnullOwnPtr<Memory::Region> queue_region, u16 queue_size, u16 notify_offset);
+
     void reclaim_buffer_chain(u16 chain_start_index, u16 chain_end_index, size_t length_of_chain);
 
     PhysicalAddress to_physical(const void* ptr) const
@@ -90,10 +92,10 @@ private:
     u16 m_used_tail { 0 };
     u16 m_driver_index_shadow { 0 };
 
-    OwnPtr<QueueDescriptor> m_descriptors { nullptr };
-    OwnPtr<QueueDriver> m_driver { nullptr };
-    OwnPtr<QueueDevice> m_device { nullptr };
-    OwnPtr<Memory::Region> m_queue_region;
+    QueueDescriptor* m_descriptors { nullptr };
+    QueueDriver* m_driver { nullptr };
+    QueueDevice* m_device { nullptr };
+    NonnullOwnPtr<Memory::Region> m_queue_region;
     Spinlock m_lock;
 
     friend class QueueChain;

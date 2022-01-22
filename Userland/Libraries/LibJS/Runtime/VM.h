@@ -83,11 +83,9 @@ public:
 
     bool did_reach_stack_space_limit() const
     {
-#ifdef HAS_ADDRESS_SANITIZER
+        // Address sanitizer (ASAN) used to check for more space but
+        // currently we can't detect the stack size with it enabled.
         return m_stack_info.size_free() < 32 * KiB;
-#else
-        return m_stack_info.size_free() < 16 * KiB;
-#endif
     }
 
     ThrowCompletionOr<void> push_execution_context(ExecutionContext& context, GlobalObject& global_object)

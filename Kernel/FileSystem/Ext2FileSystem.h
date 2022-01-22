@@ -73,7 +73,7 @@ private:
     Ext2FSInode(Ext2FS&, InodeIndex);
 
     mutable Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
-    mutable HashMap<String, InodeIndex> m_lookup_cache;
+    mutable HashMap<NonnullOwnPtr<KString>, InodeIndex> m_lookup_cache;
     ext2_inode m_raw_inode {};
 };
 

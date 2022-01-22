@@ -34,7 +34,7 @@ const d = Date.UTC(1989, 0, 23, 7, 8, 9, 45);
 
 describe("dateStyle", () => {
     test("full", () => {
-        const en = new Intl.DateTimeFormat("en", { dateStyle: "full" });
+        const en = new Intl.DateTimeFormat("en", { dateStyle: "full", timeZone: "UTC" });
         expect(en.formatToParts(d)).toEqual([
             { type: "weekday", value: "Monday" },
             { type: "literal", value: ", " },
@@ -45,7 +45,7 @@ describe("dateStyle", () => {
             { type: "year", value: "1989" },
         ]);
 
-        const ar = new Intl.DateTimeFormat("ar", { dateStyle: "full" });
+        const ar = new Intl.DateTimeFormat("ar", { dateStyle: "full", timeZone: "UTC" });
         expect(ar.formatToParts(d)).toEqual([
             { type: "weekday", value: "الاثنين" },
             { type: "literal", value: "، " },
@@ -58,7 +58,7 @@ describe("dateStyle", () => {
     });
 
     test("long", () => {
-        const en = new Intl.DateTimeFormat("en", { dateStyle: "long" });
+        const en = new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" });
         expect(en.formatToParts(d)).toEqual([
             { type: "month", value: "January" },
             { type: "literal", value: " " },
@@ -67,7 +67,7 @@ describe("dateStyle", () => {
             { type: "year", value: "1989" },
         ]);
 
-        const ar = new Intl.DateTimeFormat("ar", { dateStyle: "long" });
+        const ar = new Intl.DateTimeFormat("ar", { dateStyle: "long", timeZone: "UTC" });
         expect(ar.formatToParts(d)).toEqual([
             { type: "day", value: "٢٣" },
             { type: "literal", value: " " },
@@ -78,7 +78,7 @@ describe("dateStyle", () => {
     });
 
     test("medium", () => {
-        const en = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
+        const en = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" });
         expect(en.formatToParts(d)).toEqual([
             { type: "month", value: "Jan" },
             { type: "literal", value: " " },
@@ -87,7 +87,7 @@ describe("dateStyle", () => {
             { type: "year", value: "1989" },
         ]);
 
-        const ar = new Intl.DateTimeFormat("ar", { dateStyle: "medium" });
+        const ar = new Intl.DateTimeFormat("ar", { dateStyle: "medium", timeZone: "UTC" });
         expect(ar.formatToParts(d)).toEqual([
             { type: "day", value: "٢٣" },
             { type: "literal", value: "‏/" },
@@ -98,7 +98,7 @@ describe("dateStyle", () => {
     });
 
     test("short", () => {
-        const en = new Intl.DateTimeFormat("en", { dateStyle: "short" });
+        const en = new Intl.DateTimeFormat("en", { dateStyle: "short", timeZone: "UTC" });
         expect(en.formatToParts(d)).toEqual([
             { type: "month", value: "1" },
             { type: "literal", value: "/" },
@@ -107,7 +107,7 @@ describe("dateStyle", () => {
             { type: "year", value: "89" },
         ]);
 
-        const ar = new Intl.DateTimeFormat("ar", { dateStyle: "short" });
+        const ar = new Intl.DateTimeFormat("ar", { dateStyle: "short", timeZone: "UTC" });
         expect(ar.formatToParts(d)).toEqual([
             { type: "day", value: "٢٣" },
             { type: "literal", value: "‏/" },

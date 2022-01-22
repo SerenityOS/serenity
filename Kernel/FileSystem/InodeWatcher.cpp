@@ -37,10 +37,9 @@ ErrorOr<size_t> InodeWatcher::read(OpenFileDescription&, u64, UserOrKernelBuffer
 
     auto event = m_queue.dequeue();
 
-    size_t name_length = event.path.length() + 1;
     size_t bytes_to_write = sizeof(InodeWatcherEvent);
-    if (!event.path.is_null())
-        bytes_to_write += name_length;
+    if (event.path)
+        bytes_to_write += event.path->length() + 1;
 
     if (buffer_size < bytes_to_write)
         return EINVAL;
@@ -53,10 +52,11 @@ ErrorOr<size_t> InodeWatcher::read(OpenFileDescription&, u64, UserOrKernelBuffer
         memcpy(bytes.offset(offset), &event.type, sizeof(InodeWatcherEvent::type));
         offset += sizeof(InodeWatcherEvent::type);
 
-        if (!event.path.is_null()) {
+        if (event.path) {
+            size_t name_length = event.path->length() + 1;
             memcpy(bytes.offset(offset), &name_length, sizeof(InodeWatcherEvent::name_length));
             offset += sizeof(InodeWatcherEvent::name_length);
-            memcpy(bytes.offset(offset), event.path.characters(), name_length);
+            memcpy(bytes.offset(offset), event.path->characters(), name_length);
         } else {
             memset(bytes.offset(offset), 0, sizeof(InodeWatcherEvent::name_length));
         }
@@ -98,7 +98,10 @@ void InodeWatcher::notify_inode_event(Badge<Inode>, InodeIdentifier inode_id, In
     if (!(watcher.event_mask & static_cast<unsigned>(event_type)))
         return;
 
-    m_queue.enqueue({ watcher.wd, event_type, name });
+    OwnPtr<KString> path;
+    if (!name.is_null())
+        path = KString::try_create(name).release_value_but_fixme_should_propagate_errors();
+    m_queue.enqueue({ watcher.wd, event_type, move(path) });
     evaluate_block_conditions();
 }
 

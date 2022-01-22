@@ -7,7 +7,7 @@ set(SOURCES
     GLLights.cpp
     GLLists.cpp
     GLMap.cpp
-    GLMat.cpp
+    GLMatrix.cpp
     GLStencil.cpp
     GLTexture.cpp
     GLUtils.cpp

@@ -393,7 +393,7 @@ void Menu::event(Core::Event& event)
         VERIFY(menu_window());
         auto& mouse_event = static_cast<const MouseEvent&>(event);
         auto previous_scroll_offset = m_scroll_offset;
-        m_scroll_offset += mouse_event.wheel_delta();
+        m_scroll_offset += mouse_event.wheel_delta_y();
         m_scroll_offset = clamp(m_scroll_offset, 0, m_max_scroll_offset);
         if (m_scroll_offset != previous_scroll_offset)
             redraw();

@@ -94,14 +94,10 @@ int main(int argc, char* argv[])
     window->show();
 
     if (filename) {
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), filename);
-
-        if (response.error != 0) {
-            if (response.error != -1)
-                GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, filename);
+        if (response.is_error())
             return 1;
-        }
-        spreadsheet_widget.load_file(*response.fd, filename);
+        spreadsheet_widget.load_file(*response.value());
     }
 
     return app->exec();

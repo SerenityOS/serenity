@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2022, Matthias Zimmerman <matthias291999@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -462,6 +463,22 @@ void ArgsParser::add_option(double& value, const char* help_string, const char* 
             auto opt = convert_to_double(s);
             value = opt.value_or(0.0);
             return opt.has_value();
+        }
+    };
+    add_option(move(option));
+}
+
+void ArgsParser::add_option(Optional<double>& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+{
+    Option option {
+        true,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&value](const char* s) {
+            value = convert_to_double(s);
+            return value.has_value();
         }
     };
     add_option(move(option));

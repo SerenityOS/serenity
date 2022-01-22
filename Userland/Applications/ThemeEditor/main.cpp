@@ -351,14 +351,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         path_input.set_text(preview_widget.preview_palette().path(selected_path_role));
     };
 
-    auto save_to_result = [&](FileSystemAccessClient::Result const& result) {
-        if (result.error != 0)
+    auto save_to_result = [&](auto const& response) {
+        if (response.is_error())
             return;
 
-        path = result.chosen_file;
         update_window_title();
-
-        auto theme = Core::ConfigFile::open(*result.chosen_file, *result.fd);
+        auto file = response.value();
+        auto theme = Core::ConfigFile::open(file->filename(), file->leak_fd());
         for (auto role : color_roles) {
             theme->write_entry("Colors", to_string(role), preview_widget.preview_palette().color(role).to_string());
         }
@@ -379,23 +378,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto result = FileSystemAccessClient::Client::the().open_file(window->window_id(), "Select theme file", "/res/themes");
-        if (result.error != 0)
+        auto response = FileSystemAccessClient::Client::the().try_open_file(window, "Select theme file", "/res/themes");
+        if (response.is_error())
             return;
-
-        preview_widget.set_theme_from_file(*result.chosen_file, *result.fd);
+        preview_widget.set_theme_from_file(*response.value());
     })));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_action([&](auto&) {
         if (path.has_value()) {
-            save_to_result(FileSystemAccessClient::Client::the().request_file(window->window_id(), *path, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
+            save_to_result(FileSystemAccessClient::Client::the().try_request_file(window, *path, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
         } else {
-            save_to_result(FileSystemAccessClient::Client::the().save_file(window->window_id(), "Theme", "ini"));
+            save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini"));
         }
     })));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        save_to_result(FileSystemAccessClient::Client::the().save_file(window->window_id(), "Theme", "ini"));
+        save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini"));
     })));
 
     TRY(file_menu->try_add_separator());

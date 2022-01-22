@@ -183,7 +183,7 @@ void OutOfProcessWebView::mousemove_event(GUI::MouseEvent& event)
 
 void OutOfProcessWebView::mousewheel_event(GUI::MouseEvent& event)
 {
-    client().async_mouse_wheel(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers(), event.wheel_delta());
+    client().async_mouse_wheel(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
 }
 
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)

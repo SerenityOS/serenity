@@ -73,7 +73,8 @@ UNMAP_AFTER_INIT void ACPISysFSDirectory::find_tables_and_register_them_as_compo
     size_t ssdt_count = 0;
     ACPI::Parser::the()->enumerate_static_tables([&](StringView signature, PhysicalAddress p_table, size_t length) {
         if (signature == "SSDT") {
-            components.append(ACPISysFSComponent::create(String::formatted("{:4s}{}", signature.characters_without_null_termination(), ssdt_count), p_table, length));
+            auto component_name = KString::formatted("{:4s}{}", signature.characters_without_null_termination(), ssdt_count).release_value_but_fixme_should_propagate_errors();
+            components.append(ACPISysFSComponent::create(component_name->view(), p_table, length));
             ssdt_count++;
             return;
         }
@@ -199,8 +200,10 @@ UNMAP_AFTER_INIT void Parser::process_fadt_data()
 
 bool Parser::can_reboot()
 {
-    auto fadt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
-    if (fadt->h.revision < 2)
+    auto fadt_or_error = Memory::map_typed<Structures::FADT>(m_fadt);
+    if (fadt_or_error.is_error())
+        return false;
+    if (fadt_or_error.value()->h.revision < 2)
         return false;
     return m_hardware_flags.reset_register_supported;
 }
@@ -272,11 +275,10 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
     VERIFY_NOT_REACHED();
 }
 
-bool Parser::validate_reset_register()
+bool Parser::validate_reset_register(Memory::TypedMapping<Structures::FADT> const& fadt)
 {
     // According to https://uefi.org/specs/ACPI/6.4/04_ACPI_Hardware_Specification/ACPI_Hardware_Specification.html#reset-register,
     // the reset register can only be located in I/O bus, PCI bus or memory-mapped.
-    auto fadt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
     return (fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::PCIConfigurationSpace || fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::SystemMemory || fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::SystemIO);
 }
 
@@ -289,8 +291,13 @@ void Parser::try_acpi_reboot()
     }
     dbgln_if(ACPI_DEBUG, "ACPI: Rebooting, probing FADT ({})", m_fadt);
 
-    auto fadt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
-    VERIFY(validate_reset_register());
+    auto fadt_or_error = Memory::map_typed<Structures::FADT>(m_fadt);
+    if (fadt_or_error.is_error()) {
+        dmesgln("ACPI: Failed probing FADT {}", fadt_or_error.error());
+        return;
+    }
+    auto fadt = fadt_or_error.release_value();
+    VERIFY(validate_reset_register(fadt));
     access_generic_address(fadt->reset_reg, fadt->reset_value);
     Processor::halt();
 }

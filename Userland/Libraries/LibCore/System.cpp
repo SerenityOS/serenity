@@ -2,6 +2,7 @@
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Matthias Zimmerman <matthias291999@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,8 +16,13 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/ptrace.h>
+#include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
+
+#ifdef __serenity__
+#    include <serenity.h>
+#endif
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
     if ((rc) < 0) {                                                  \
@@ -122,6 +128,12 @@ ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data)
     if (rc < 0)
         return Error::from_syscall("ptrace"sv, -errno);
     return rc;
+}
+
+ErrorOr<void> disown(pid_t pid)
+{
+    int rc = ::disown(pid);
+    HANDLE_SYSCALL_RETURN_VALUE("disown", rc, {});
 }
 #endif
 
@@ -540,6 +552,14 @@ ErrorOr<pid_t> posix_spawnp(StringView const path, posix_spawn_file_actions_t* c
     return child_pid;
 }
 
+ErrorOr<off_t> lseek(int fd, off_t offset, int whence)
+{
+    off_t rc = ::lseek(fd, offset, whence);
+    if (rc < 0)
+        return Error::from_syscall("lseek", -errno);
+    return rc;
+}
+
 ErrorOr<WaitPidResult> waitpid(pid_t waitee, int options)
 {
     int wstatus;
@@ -731,6 +751,18 @@ ErrorOr<struct utsname> uname()
         return Error::from_syscall("uname"sv, -errno);
 #endif
     return uts;
+}
+
+ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
+{
+#ifdef __serenity__
+    int rc = syscall(SC_adjtime, delta, old_delta);
+    HANDLE_SYSCALL_RETURN_VALUE("adjtime"sv, rc, {});
+#else
+    if (::adjtime(delta, old_delta) < 0)
+        return Error::from_syscall("adjtime"sv, -errno);
+    return {};
+#endif
 }
 
 ErrorOr<int> socket(int domain, int type, int protocol)

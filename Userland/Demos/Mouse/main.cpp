@@ -138,7 +138,7 @@ public:
 
     void mousewheel_event(GUI::MouseEvent& event) override
     {
-        m_wheel_delta_acc = (m_wheel_delta_acc + event.wheel_delta() + 36) % 36;
+        m_wheel_delta_acc = (m_wheel_delta_acc + event.wheel_delta_y() + 36) % 36;
         m_show_scroll_wheel = true;
         update();
         if (!has_timer())

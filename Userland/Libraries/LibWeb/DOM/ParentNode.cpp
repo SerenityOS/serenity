@@ -23,7 +23,8 @@ ExceptionOr<RefPtr<Element>> ParentNode::query_selector(StringView selector_text
     auto selectors = maybe_selectors.value();
 
     RefPtr<Element> result;
-    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
+    // FIXME: This should be shadow-including. https://drafts.csswg.org/selectors-4/#match-a-selector-against-a-tree
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
             if (SelectorEngine::matches(selector, element)) {
                 result = element;
@@ -45,7 +46,8 @@ ExceptionOr<NonnullRefPtr<NodeList>> ParentNode::query_selector_all(StringView s
     auto selectors = maybe_selectors.value();
 
     NonnullRefPtrVector<Node> elements;
-    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
+    // FIXME: This should be shadow-including. https://drafts.csswg.org/selectors-4/#match-a-selector-against-a-tree
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
             if (SelectorEngine::matches(selector, element)) {
                 elements.append(element);

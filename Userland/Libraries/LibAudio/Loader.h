@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
+#include <AK/Span.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
 #include <LibAudio/Buffer.h>
@@ -59,7 +59,7 @@ public:
 class Loader : public RefCounted<Loader> {
 public:
     static Result<NonnullRefPtr<Loader>, LoaderError> create(StringView path) { return adopt_ref(*new Loader(TRY(try_create(path)))); }
-    static Result<NonnullRefPtr<Loader>, LoaderError> create(ByteBuffer const& buffer) { return adopt_ref(*new Loader(TRY(try_create(buffer)))); }
+    static Result<NonnullRefPtr<Loader>, LoaderError> create(Bytes& buffer) { return adopt_ref(*new Loader(TRY(try_create(buffer)))); }
 
     LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) const { return m_plugin->get_more_samples(max_bytes_to_read_from_input); }
 
@@ -76,7 +76,7 @@ public:
 
 private:
     static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> try_create(StringView path);
-    static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> try_create(ByteBuffer const& buffer);
+    static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> try_create(Bytes& buffer);
 
     explicit Loader(NonnullOwnPtr<LoaderPlugin>);
 

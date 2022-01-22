@@ -2843,6 +2843,9 @@ void SimpleVariable::highlight_in_editor(Line::Editor& editor, Shell& shell, Hig
 
 HitTestResult SimpleVariable::hit_test_position(size_t offset) const
 {
+    if (!position().contains(offset))
+        return {};
+
     if (m_slice && m_slice->position().contains(offset))
         return m_slice->hit_test_position(offset);
 
@@ -3010,23 +3013,36 @@ void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, High
 Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
-    // '~/foo/bar' is special, we have to actually resolve the tilde
-    // then complete the bareword with that path prefix.
-    if (m_right->is_bareword() && m_left->is_tilde()) {
-        auto tilde_value = m_left->run(shell)->resolve_as_list(shell)[0];
-
-        auto corrected_offset = offset - matching_node->position().start_offset;
-        auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
-
-        if (corrected_offset > node->text().length())
-            return {};
-
-        auto text = node->text().substring(1, node->text().length() - 1);
-
-        return shell.complete_path(tilde_value, text, corrected_offset - 1, Shell::ExecutableOnly::No);
+    if (m_left->would_execute() || m_right->would_execute()) {
+        return {};
     }
 
-    return Node::complete_for_editor(shell, offset, hit_test_result);
+    // '~/foo/bar' is special, we have to actually resolve the tilde
+    // then complete the bareword with that path prefix.
+    auto left_values = m_left->run(shell)->resolve_as_list(shell);
+
+    if (left_values.is_empty())
+        return m_right->complete_for_editor(shell, offset, hit_test_result);
+
+    auto& left_value = left_values.first();
+
+    auto right_values = m_right->run(shell)->resolve_as_list(shell);
+    StringView right_value {};
+
+    auto corrected_offset = offset - matching_node->position().start_offset;
+
+    if (!right_values.is_empty())
+        right_value = right_values.first();
+
+    if (m_left->is_tilde() && !right_value.is_empty()) {
+        right_value = right_value.substring_view(1);
+        corrected_offset--;
+    }
+
+    if (corrected_offset > right_value.length())
+        return {};
+
+    return shell.complete_path(left_value, right_value, corrected_offset, Shell::ExecutableOnly::No);
 }
 
 HitTestResult Juxtaposition::hit_test_position(size_t offset) const

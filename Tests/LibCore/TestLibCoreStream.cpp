@@ -140,6 +140,18 @@ TEST_CASE(file_adopt_invalid_fd)
 
 // TCPSocket tests
 
+TEST_CASE(should_error_when_connection_fails)
+{
+    // NOTE: This is required here because Core::TCPSocket requires
+    //       Core::EventLoop through Core::Notifier.
+    Core::EventLoop event_loop;
+
+    auto maybe_tcp_socket = Core::Stream::TCPSocket::connect({ { 127, 0, 0, 1 }, 1234 });
+    EXPECT(maybe_tcp_socket.is_error());
+    EXPECT(maybe_tcp_socket.error().is_syscall());
+    EXPECT(maybe_tcp_socket.error().code() == ECONNREFUSED);
+}
+
 constexpr auto sent_data = "Mr. Watson, come here. I want to see you."sv;
 
 TEST_CASE(tcp_socket_read)
@@ -350,11 +362,12 @@ TEST_CASE(local_socket_write)
         // NOTE: For some reason LocalServer gives us a nonblocking socket..?
         MUST(server_socket->set_blocking(true));
 
+        EXPECT(MUST(server_socket->can_read_without_blocking(100)));
         auto pending_bytes = MUST(server_socket->pending_bytes());
         auto receive_buffer = ByteBuffer::create_uninitialized(pending_bytes).release_value();
         auto maybe_nread = server_socket->read(receive_buffer);
         EXPECT(!maybe_nread.is_error());
-        EXPECT(maybe_nread.value() == sent_data.length());
+        EXPECT_EQ(maybe_nread.value(), sent_data.length());
 
         StringView received_data { receive_buffer.data(), maybe_nread.value() };
         EXPECT_EQ(sent_data, received_data);

@@ -115,13 +115,8 @@ void HexEditor::set_position(size_t position)
     update_status();
 }
 
-bool HexEditor::save_as(int fd)
+bool HexEditor::save_as(NonnullRefPtr<Core::File> new_file)
 {
-    auto new_file = Core::File::construct();
-    if (!new_file->open(fd, Core::OpenMode::ReadWrite, Core::File::ShouldCloseFileDescriptor::Yes)) {
-        return false;
-    }
-
     if (m_document->type() == HexDocument::Type::File) {
         HexDocumentFile* fileDocument = static_cast<HexDocumentFile*>(m_document.ptr());
         if (!fileDocument->write_to_file(new_file))

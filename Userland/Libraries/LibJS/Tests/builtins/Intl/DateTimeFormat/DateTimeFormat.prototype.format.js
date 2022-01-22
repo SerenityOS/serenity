@@ -48,11 +48,11 @@ describe("dateStyle", () => {
 
     test("all", () => {
         data.forEach(d => {
-            const en = new Intl.DateTimeFormat("en", { dateStyle: d.date });
+            const en = new Intl.DateTimeFormat("en", { dateStyle: d.date, timeZone: "UTC" });
             expect(en.format(d0)).toBe(d.en0);
             expect(en.format(d1)).toBe(d.en1);
 
-            const ar = new Intl.DateTimeFormat("ar", { dateStyle: d.date });
+            const ar = new Intl.DateTimeFormat("ar", { dateStyle: d.date, timeZone: "UTC" });
             expect(ar.format(d0)).toBe(d.ar0);
             expect(ar.format(d1)).toBe(d.ar1);
         });
@@ -131,11 +131,11 @@ describe("weekday", () => {
 
     test("all", () => {
         data.forEach(d => {
-            const en = new Intl.DateTimeFormat("en", { weekday: d.weekday });
+            const en = new Intl.DateTimeFormat("en", { weekday: d.weekday, timeZone: "UTC" });
             expect(en.format(d0)).toBe(d.en0);
             expect(en.format(d1)).toBe(d.en1);
 
-            const ar = new Intl.DateTimeFormat("ar", { weekday: d.weekday });
+            const ar = new Intl.DateTimeFormat("ar", { weekday: d.weekday, timeZone: "UTC" });
             expect(ar.format(d0)).toBe(d.ar0);
             expect(ar.format(d1)).toBe(d.ar1);
         });
@@ -152,11 +152,11 @@ describe("era", () => {
 
     test("all", () => {
         data.forEach(d => {
-            const en = new Intl.DateTimeFormat("en", { era: d.era });
+            const en = new Intl.DateTimeFormat("en", { era: d.era, timeZone: "UTC" });
             expect(en.format(d0)).toBe(d.en0);
             expect(en.format(d1)).toBe(d.en1);
 
-            const ar = new Intl.DateTimeFormat("ar", { era: d.era });
+            const ar = new Intl.DateTimeFormat("ar", { era: d.era, timeZone: "UTC" });
             expect(ar.format(d0)).toBe(d.ar0);
             expect(ar.format(d1)).toBe(d.ar1);
         });
@@ -172,11 +172,11 @@ describe("year", () => {
 
     test("all", () => {
         data.forEach(d => {
-            const en = new Intl.DateTimeFormat("en", { year: d.year });
+            const en = new Intl.DateTimeFormat("en", { year: d.year, timeZone: "UTC" });
             expect(en.format(d0)).toBe(d.en0);
             expect(en.format(d1)).toBe(d.en1);
 
-            const ar = new Intl.DateTimeFormat("ar", { year: d.year });
+            const ar = new Intl.DateTimeFormat("ar", { year: d.year, timeZone: "UTC" });
             expect(ar.format(d0)).toBe(d.ar0);
             expect(ar.format(d1)).toBe(d.ar1);
         });
@@ -195,11 +195,11 @@ describe("month", () => {
 
     test("all", () => {
         data.forEach(d => {
-            const en = new Intl.DateTimeFormat("en", { month: d.month });
+            const en = new Intl.DateTimeFormat("en", { month: d.month, timeZone: "UTC" });
             expect(en.format(d0)).toBe(d.en0);
             expect(en.format(d1)).toBe(d.en1);
 
-            const ar = new Intl.DateTimeFormat("ar", { month: d.month });
+            const ar = new Intl.DateTimeFormat("ar", { month: d.month, timeZone: "UTC" });
             expect(ar.format(d0)).toBe(d.ar0);
             expect(ar.format(d1)).toBe(d.ar1);
         });
@@ -215,11 +215,11 @@ describe("day", () => {
 
     test("all", () => {
         data.forEach(d => {
-            const en = new Intl.DateTimeFormat("en", { day: d.day });
+            const en = new Intl.DateTimeFormat("en", { day: d.day, timeZone: "UTC" });
             expect(en.format(d0)).toBe(d.en0);
             expect(en.format(d1)).toBe(d.en1);
 
-            const ar = new Intl.DateTimeFormat("ar", { day: d.day });
+            const ar = new Intl.DateTimeFormat("ar", { day: d.day, timeZone: "UTC" });
             expect(ar.format(d0)).toBe(d.ar0);
             expect(ar.format(d1)).toBe(d.ar1);
         });

@@ -114,8 +114,8 @@ NonnullRefPtr<BitmapFont> BitmapFont::masked_character_set() const
 }
 
 BitmapFont::BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays)
-    : m_name(name)
-    , m_family(family)
+    : m_name(move(name))
+    , m_family(move(family))
     , m_range_mask_size(range_mask_size)
     , m_range_mask(range_mask)
     , m_rows(rows)
@@ -171,9 +171,9 @@ BitmapFont::~BitmapFont()
     }
 }
 
-RefPtr<BitmapFont> BitmapFont::load_from_memory(const u8* data)
+RefPtr<BitmapFont> BitmapFont::load_from_memory(u8 const* data)
 {
-    auto& header = *reinterpret_cast<const FontFileHeader*>(data);
+    auto const& header = *reinterpret_cast<const FontFileHeader*>(data);
     if (memcmp(header.magic, "!Fnt", 4)) {
         dbgln("header.magic != '!Fnt', instead it's '{:c}{:c}{:c}{:c}'", header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
         return nullptr;
@@ -207,7 +207,7 @@ RefPtr<BitmapFont> BitmapFont::load_from_file(String const& path)
     if (file_or_error.is_error())
         return nullptr;
 
-    auto font = load_from_memory((const u8*)file_or_error.value()->data());
+    auto font = load_from_memory((u8 const*)file_or_error.value()->data());
     if (!font)
         return nullptr;
 
@@ -245,10 +245,7 @@ bool BitmapFont::write_to_file(String const& path)
     stream << ReadonlyBytes { m_glyph_widths, m_glyph_count };
 
     stream.flush();
-    if (stream.handle_any_error())
-        return false;
-
-    return true;
+    return !stream.handle_any_error();
 }
 
 Glyph BitmapFont::glyph(u32 code_point) const
@@ -311,10 +308,10 @@ int BitmapFont::glyph_or_emoji_width_for_variable_width_font(u32 code_point) con
         return glyph_width(0xFFFD);
     }
 
-    auto* emoji = Emoji::emoji_for_code_point(code_point);
+    auto const* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr)
         return glyph_width(0xFFFD);
-    return emoji->size().width();
+    return glyph_height() * emoji->width() / emoji->height();
 }
 
 int BitmapFont::width(StringView view) const { return unicode_view_width(Utf8View(view)); }
@@ -355,7 +352,7 @@ String BitmapFont::variant() const
 {
     StringBuilder builder;
     builder.append(weight_to_name(weight()));
-    if (slope()) {
+    if (slope() != 0) {
         if (builder.string_view() == "Regular"sv)
             builder.clear();
         else

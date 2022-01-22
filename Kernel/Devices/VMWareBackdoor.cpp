@@ -211,16 +211,28 @@ MousePacket VMWareBackdoor::receive_mouse_packet()
     int x = command.bx;
     int y = command.cx;
     int z = static_cast<i8>(command.dx); // signed 8 bit value only!
+    int w = 0;
+
+    // horizontal scroll is reported as +-2 by qemu
+    // FIXME: Scroll only functions correctly when the sign is flipped there
+    if (z == 2) {
+        w = -1;
+        z = 0;
+    } else if (z == -2) {
+        w = 1;
+        z = 0;
+    }
 
     if constexpr (PS2MOUSE_DEBUG) {
         dbgln("Absolute Mouse: Buttons {:x}", buttons);
-        dbgln("Mouse: x={}, y={}, z={}", x, y, z);
+        dbgln("Mouse: x={}, y={}, z={}, w={}", x, y, z, w);
     }
 
     MousePacket packet;
     packet.x = x;
     packet.y = y;
     packet.z = z;
+    packet.w = w;
     if (buttons & VMMOUSE_LEFT_CLICK)
         packet.buttons |= MousePacket::LeftButton;
     if (buttons & VMMOUSE_RIGHT_CLICK)

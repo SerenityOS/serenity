@@ -111,7 +111,7 @@ Gfx::FloatRect AbstractZoomPanWidget::content_to_frame_rect(Gfx::IntRect const& 
 
 void AbstractZoomPanWidget::mousewheel_event(GUI::MouseEvent& event)
 {
-    float new_scale = scale() / AK::exp2(event.wheel_delta() / wheel_zoom_factor);
+    float new_scale = scale() / AK::exp2(event.wheel_delta_y() / wheel_zoom_factor);
     scale_centered(new_scale, event.position());
 }
 

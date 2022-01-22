@@ -13,7 +13,7 @@ namespace Kernel::Memory {
 
 class RingBuffer {
 public:
-    RingBuffer(StringView region_name, size_t capacity);
+    static ErrorOr<NonnullOwnPtr<RingBuffer>> try_create(StringView region_name, size_t capacity);
 
     bool has_space() const { return m_num_used_bytes < m_capacity_in_bytes; }
     bool copy_data_in(const UserOrKernelBuffer& buffer, size_t offset, size_t length, PhysicalAddress& start_of_copied_data, size_t& bytes_copied);
@@ -29,7 +29,9 @@ public:
     size_t bytes_till_end() const { return (m_capacity_in_bytes - ((m_start_of_used + m_num_used_bytes) % m_capacity_in_bytes)) % m_capacity_in_bytes; };
 
 private:
-    OwnPtr<Memory::Region> m_region;
+    RingBuffer(NonnullOwnPtr<Memory::Region> region, size_t capacity);
+
+    NonnullOwnPtr<Memory::Region> m_region;
     Spinlock m_lock;
     size_t m_start_of_used {};
     size_t m_num_used_bytes {};

@@ -43,15 +43,17 @@ static constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
             return;                                                  \
     }
 
-#define RETURN_WITH_ERROR_IF(condition, error) \
-    if (condition) {                           \
-        if (m_error == GL_NO_ERROR)            \
-            m_error = error;                   \
-        return;                                \
+#define RETURN_WITH_ERROR_IF(condition, error)                    \
+    if (condition) {                                              \
+        dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error); \
+        if (m_error == GL_NO_ERROR)                               \
+            m_error = error;                                      \
+        return;                                                   \
     }
 
 #define RETURN_VALUE_WITH_ERROR_IF(condition, error, return_value) \
     if (condition) {                                               \
+        dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error);  \
         if (m_error == GL_NO_ERROR)                                \
             m_error = error;                                       \
         return return_value;                                       \
@@ -168,6 +170,8 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = 0 } };
     case GL_PACK_SWAP_BYTES:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = false } };
+    case GL_POLYGON_OFFSET_FILL:
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_depth_offset_enabled } };
     case GL_RED_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_SCISSOR_BOX: {
@@ -723,6 +727,11 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         rasterizer_options.normalization_enabled = true;
         update_rasterizer_options = true;
         break;
+    case GL_POLYGON_OFFSET_FILL:
+        m_depth_offset_enabled = true;
+        rasterizer_options.depth_offset_enabled = true;
+        update_rasterizer_options = true;
+        break;
     case GL_SCISSOR_TEST:
         rasterizer_options.scissor_enabled = true;
         update_rasterizer_options = true;
@@ -834,6 +843,11 @@ void SoftwareGLContext::gl_disable(GLenum capability)
     case GL_NORMALIZE:
         m_normalize = false;
         rasterizer_options.normalization_enabled = false;
+        update_rasterizer_options = true;
+        break;
+    case GL_POLYGON_OFFSET_FILL:
+        m_depth_offset_enabled = false;
+        rasterizer_options.depth_offset_enabled = false;
         update_rasterizer_options = true;
         break;
     case GL_SCISSOR_TEST:
@@ -1927,12 +1941,15 @@ void SoftwareGLContext::get_floating_point(GLenum pname, T* params)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // Handle special matrix cases first
-    auto flatten_and_assign_matrix = [&params](const FloatMatrix4x4& matrix) {
+    // Handle matrix retrieval first
+    auto flatten_and_assign_matrix = [&params](FloatMatrix4x4 const& matrix) {
         auto elements = matrix.elements();
-        for (size_t i = 0; i < 4; ++i)
-            for (size_t j = 0; j < 4; ++j)
-                params[i * 4 + j] = static_cast<T>(elements[i][j]);
+        for (size_t i = 0; i < 4; ++i) {
+            for (size_t j = 0; j < 4; ++j) {
+                // Return transposed matrix since OpenGL defines them as column-major
+                params[i * 4 + j] = static_cast<T>(elements[j][i]);
+            }
+        }
     };
     switch (pname) {
     case GL_MODELVIEW_MATRIX:
@@ -1963,14 +1980,12 @@ void SoftwareGLContext::get_floating_point(GLenum pname, T* params)
         *params = parameter.value.boolean_value ? GL_TRUE : GL_FALSE;
         break;
     case GL_DOUBLE:
-        for (size_t i = 0; i < parameter.count; ++i) {
+        for (size_t i = 0; i < parameter.count; ++i)
             params[i] = parameter.value.double_list[i];
-        }
         break;
     case GL_INT:
-        for (size_t i = 0; i < parameter.count; ++i) {
+        for (size_t i = 0; i < parameter.count; ++i)
             params[i] = parameter.value.integer_list[i];
-        }
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -1998,9 +2013,8 @@ void SoftwareGLContext::gl_get_integerv(GLenum pname, GLint* data)
         break;
     }
     case GL_INT:
-        for (size_t i = 0; i < parameter.count; ++i) {
+        for (size_t i = 0; i < parameter.count; ++i)
             data[i] = parameter.value.integer_list[i];
-        }
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -2536,18 +2550,25 @@ void SoftwareGLContext::gl_polygon_mode(GLenum face, GLenum mode)
     auto options = m_rasterizer.options();
 
     // FIXME: This must support different polygon modes for front- and backside
-    switch (mode) {
-    case GL_POINT:
-        options.polygon_mode = SoftGPU::PolygonMode::Point;
-        break;
-    case GL_LINE:
-        options.polygon_mode = SoftGPU::PolygonMode::Line;
-        break;
-    case GL_FILL:
-        options.polygon_mode = SoftGPU::PolygonMode::Fill;
-        break;
+    if (face == GL_BACK) {
+        dbgln_if(GL_DEBUG, "gl_polygon_mode(GL_BACK, {:#x}): unimplemented", mode);
+        return;
     }
 
+    auto map_mode = [](GLenum mode) -> SoftGPU::PolygonMode {
+        switch (mode) {
+        case GL_FILL:
+            return SoftGPU::PolygonMode::Fill;
+        case GL_LINE:
+            return SoftGPU::PolygonMode::Line;
+        case GL_POINT:
+            return SoftGPU::PolygonMode::Point;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    options.polygon_mode = map_mode(mode);
     m_rasterizer.set_options(options);
 }
 

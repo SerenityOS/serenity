@@ -682,6 +682,8 @@ TEST_CASE(ECMA262_match)
         { "[\\0]"sv, "\0"sv, true, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
         { "[\\01]"sv, "\1"sv, true, ECMAScriptFlags::BrowserExtended },
         { "(\0|a)"sv, "a"sv, true }, // #9686, Should allow null bytes in pattern
+        { "(.*?)a(?!(a+)b\\2c)\\2(.*)"sv, "baaabaac"sv, true }, // #6042, Groups inside lookarounds may be referenced outside, but their contents appear empty if the pattern in the lookaround fails.
+        { "a|$"sv, "x"sv, true, (ECMAScriptFlags)regex::AllFlags::Global }, // #11940, Global (not the 'g' flag) regexps should attempt to match the zero-length end of the string too.
     };
     // clang-format on
 
@@ -914,6 +916,8 @@ TEST_CASE(optimizer_atomic_groups)
         Tuple { "(1+)\\1"sv, "11"sv, true },
         Tuple { "(1+)1"sv, "11"sv, true },
         Tuple { "(1+)0"sv, "10"sv, true },
+        // Rewrite should not skip over first required iteration of <x>+.
+        Tuple { "a+"sv, ""sv, false },
     };
 
     for (auto& test : tests) {

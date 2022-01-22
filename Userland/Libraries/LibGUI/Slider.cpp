@@ -139,7 +139,7 @@ void Slider::mouseup_event(MouseEvent& event)
 void Slider::mousewheel_event(MouseEvent& event)
 {
     auto acceleration_modifier = step();
-    auto wheel_delta = event.wheel_delta();
+    auto wheel_delta = event.wheel_delta_y();
 
     if (event.modifiers() == KeyModifier::Mod_Ctrl)
         acceleration_modifier *= 6;

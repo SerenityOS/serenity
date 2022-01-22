@@ -173,38 +173,28 @@ RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
     return cropped_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 }
 
-ErrorOr<void> Image::export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel)
+ErrorOr<void> Image::export_bmp_to_file(Core::File& file, bool preserve_alpha_channel)
 {
-    auto file = Core::File::construct();
-    file->open(fd, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate, Core::File::ShouldCloseFileDescriptor::Yes);
-    if (file->has_error())
-        return Error::from_errno(file->error());
-
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
     Gfx::BMPWriter dumper;
     auto encoded_data = dumper.dump(bitmap);
 
-    if (!file->write(encoded_data.data(), encoded_data.size()))
-        return Error::from_errno(file->error());
+    if (!file.write(encoded_data.data(), encoded_data.size()))
+        return Error::from_errno(file.error());
 
     return {};
 }
 
-ErrorOr<void> Image::export_png_to_fd_and_close(int fd, bool preserve_alpha_channel)
+ErrorOr<void> Image::export_png_to_file(Core::File& file, bool preserve_alpha_channel)
 {
-    auto file = Core::File::construct();
-    file->open(fd, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate, Core::File::ShouldCloseFileDescriptor::Yes);
-    if (file->has_error())
-        return Error::from_errno(file->error());
-
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
     auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
-    if (!file->write(encoded_data.data(), encoded_data.size()))
-        return Error::from_errno(file->error());
+    if (!file.write(encoded_data.data(), encoded_data.size()))
+        return Error::from_errno(file.error());
 
     return {};
 }

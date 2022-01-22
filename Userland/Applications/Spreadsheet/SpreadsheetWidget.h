@@ -20,7 +20,7 @@ public:
     ~SpreadsheetWidget();
 
     void save(StringView filename);
-    void load_file(int fd, StringView filename);
+    void load_file(Core::File&);
     bool request_close();
     void add_sheet();
     void add_sheet(NonnullRefPtr<Sheet>&&);

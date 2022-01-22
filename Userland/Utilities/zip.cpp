@@ -11,6 +11,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
+#include <LibCore/System.h>
 #include <LibCrypto/Checksum/CRC32.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -26,6 +27,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(recurse, "Travel the directory structure recursively", "recurse-paths", 'r');
     args_parser.add_option(force, "Overwrite existing zip file", "force", 'f');
     args_parser.parse(arguments);
+
+    TRY(Core::System::pledge("stdio rpath wpath cpath"));
+
+    auto cwd = TRY(Core::System::getcwd());
+    TRY(Core::System::unveil(LexicalPath::absolute_path(cwd, zip_path), "wc"));
+    for (auto const& source_path : source_paths) {
+        TRY(Core::System::unveil(LexicalPath::absolute_path(cwd, source_path), "r"));
+    }
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     String zip_file_path { zip_path };
     if (Core::File::exists(zip_file_path)) {

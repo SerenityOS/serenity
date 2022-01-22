@@ -237,7 +237,7 @@ void InProcessWebView::mouseup_event(GUI::MouseEvent& event)
 
 void InProcessWebView::mousewheel_event(GUI::MouseEvent& event)
 {
-    page().handle_mousewheel(to_content_position(event.position()), event.button(), event.modifiers(), event.wheel_delta());
+    page().handle_mousewheel(to_content_position(event.position()), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
     GUI::AbstractScrollableWidget::mousewheel_event(event);
 }
 

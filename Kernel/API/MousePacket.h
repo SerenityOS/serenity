@@ -12,6 +12,7 @@ struct MousePacket {
     int x { 0 };
     int y { 0 };
     int z { 0 };
+    int w { 0 };
 
     enum Button {
         LeftButton = 0x01,

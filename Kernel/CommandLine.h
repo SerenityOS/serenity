@@ -45,6 +45,7 @@ class CommandLine {
 public:
     static void early_initialize(const char* cmd_line);
     static void initialize();
+    static bool was_initialized();
 
     enum class Validate {
         Yes,

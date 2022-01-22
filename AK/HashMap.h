@@ -50,8 +50,10 @@ public:
 
     HashSetResult set(const K& key, const V& value) { return m_table.set({ key, value }); }
     HashSetResult set(const K& key, V&& value) { return m_table.set({ key, move(value) }); }
+    HashSetResult set(K&& key, V&& value) { return m_table.set({ move(key), move(value) }); }
     ErrorOr<HashSetResult> try_set(const K& key, const V& value) { return m_table.try_set({ key, value }); }
     ErrorOr<HashSetResult> try_set(const K& key, V&& value) { return m_table.try_set({ key, move(value) }); }
+    ErrorOr<HashSetResult> try_set(K&& key, V&& value) { return m_table.try_set({ move(key), move(value) }); }
 
     bool remove(const K& key)
     {

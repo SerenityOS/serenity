@@ -47,11 +47,26 @@ void AbstractScrollableWidget::handle_wheel_event(MouseEvent& event, Widget& eve
         event.ignore();
         return;
     }
-    // FIXME: The wheel delta multiplier should probably come from... somewhere?
+
+    int wheel_delta_x { 0 };
+    bool vertical_scroll_hijacked { false };
+
     if (event.shift() || &event_source == m_horizontal_scrollbar.ptr()) {
-        horizontal_scrollbar().increase_slider_by(event.wheel_delta() * 60);
-    } else {
-        vertical_scrollbar().increase_slider_by(event.wheel_delta() * 20);
+        wheel_delta_x = event.wheel_delta_y();
+        vertical_scroll_hijacked = true;
+    }
+
+    if (event.wheel_delta_x() != 0) {
+        wheel_delta_x = event.wheel_delta_x();
+    }
+
+    if (wheel_delta_x != 0) {
+        // FIXME: The wheel delta multiplier should probably come from... somewhere?
+        horizontal_scrollbar().increase_slider_by(wheel_delta_x * 60);
+    }
+
+    if (!vertical_scroll_hijacked && event.wheel_delta_y() != 0) {
+        vertical_scrollbar().increase_slider_by(event.wheel_delta_y() * 20);
     }
 }
 
@@ -283,5 +298,4 @@ Gfx::IntPoint AbstractScrollableWidget::to_widget_position(const Gfx::IntPoint& 
     widget_position.translate_by(frame_thickness(), frame_thickness());
     return widget_position;
 }
-
 }

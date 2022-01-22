@@ -170,7 +170,7 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint const& 
                 int glyph_x = 0;
                 size_t i = 0;
                 for (; i < view.length(); ++i) {
-                    int advance = font().glyph_width(view.code_points()[i]) + font().glyph_spacing();
+                    int advance = font().glyph_or_emoji_width(view.code_points()[i]) + font().glyph_spacing();
                     if ((glyph_x + (advance / 2)) >= position.x())
                         break;
                     glyph_x += advance;
@@ -1260,19 +1260,17 @@ void TextEditor::timer_event(Core::TimerEvent&)
 
 bool TextEditor::write_to_file(String const& path)
 {
-    int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    if (fd < 0) {
-        perror("open");
+    auto file = Core::File::construct(path);
+    if (!file->open(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate)) {
+        warnln("Error opening {}: {}", path, strerror(file->error()));
         return false;
     }
 
-    return write_to_file_and_close(fd);
+    return write_to_file(*file);
 }
 
-bool TextEditor::write_to_file_and_close(int fd)
+bool TextEditor::write_to_file(Core::File& file)
 {
-    ScopeGuard fd_guard = [fd] { close(fd); };
-
     off_t file_size = 0;
     if (line_count() == 1 && line(0).is_empty()) {
         // Truncate to zero.
@@ -1284,7 +1282,7 @@ bool TextEditor::write_to_file_and_close(int fd)
         file_size += line_count();
     }
 
-    if (ftruncate(fd, file_size) < 0) {
+    if (!file.truncate(file_size)) {
         perror("ftruncate");
         return false;
     }
@@ -1296,14 +1294,14 @@ bool TextEditor::write_to_file_and_close(int fd)
             auto& line = this->line(i);
             if (line.length()) {
                 auto line_as_utf8 = line.to_utf8();
-                ssize_t nwritten = write(fd, line_as_utf8.characters(), line_as_utf8.length());
+                ssize_t nwritten = file.write(line_as_utf8);
                 if (nwritten < 0) {
                     perror("write");
                     return false;
                 }
             }
             char ch = '\n';
-            ssize_t nwritten = write(fd, &ch, 1);
+            ssize_t nwritten = file.write((u8*)&ch, 1);
             if (nwritten != 1) {
                 perror("write");
                 return false;

@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/FlyString.h>
+#include <errno.h>
 
 namespace Audio {
 
@@ -47,6 +49,27 @@ struct LoaderError {
 
     LoaderError(LoaderError&) = default;
     LoaderError(LoaderError&&) = default;
+
+    LoaderError(Error&& error)
+    {
+        if (error.is_errno()) {
+            auto code = error.code();
+            description = String::formatted("{} ({})", strerror(code), code);
+            if (code == EBADF || code == EBUSY || code == EEXIST || code == EIO || code == EISDIR || code == ENOENT || code == ENOMEM || code == EPIPE)
+                category = Category::IO;
+        } else {
+            description = error.string_literal();
+        }
+    }
 };
 
 }
+
+// Convenience TRY-like macro to convert an Error to a LoaderError
+#define LOADER_TRY(expression)                                     \
+    ({                                                             \
+        auto _temporary_result = (expression);                     \
+        if (_temporary_result.is_error())                          \
+            return LoaderError(_temporary_result.release_error()); \
+        _temporary_result.release_value();                         \
+    })

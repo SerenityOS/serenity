@@ -36,7 +36,7 @@ private:
         if (!is_focused())
             set_focus(true);
         if (on_mousewheel)
-            on_mousewheel(event.wheel_delta());
+            on_mousewheel(event.wheel_delta_y());
     }
 
     virtual void keydown_event(KeyEvent& event) override

@@ -53,6 +53,7 @@ describe("equal dates are squashed", () => {
             year: "numeric",
             month: "long",
             day: "2-digit",
+            timeZone: "UTC",
         });
         expect(en.formatRangeToParts(d0, d0)).toEqual([
             { type: "month", value: "January", source: "shared" },
@@ -66,6 +67,7 @@ describe("equal dates are squashed", () => {
             year: "numeric",
             month: "long",
             day: "2-digit",
+            timeZone: "UTC",
         });
         expect(ja.formatRangeToParts(d0, d0)).toEqual([
             { type: "year", value: "1989", source: "shared" },
@@ -207,7 +209,7 @@ describe("equal dates are squashed", () => {
 
 describe("dateStyle", () => {
     test("full", () => {
-        const en = new Intl.DateTimeFormat("en", { dateStyle: "full" });
+        const en = new Intl.DateTimeFormat("en", { dateStyle: "full", timeZone: "UTC" });
         expect(en.formatRangeToParts(d0, d1)).toEqual([
             { type: "weekday", value: "Monday", source: "startRange" },
             { type: "literal", value: ", ", source: "startRange" },
@@ -226,7 +228,7 @@ describe("dateStyle", () => {
             { type: "year", value: "2021", source: "endRange" },
         ]);
 
-        const ja = new Intl.DateTimeFormat("ja", { dateStyle: "full" });
+        const ja = new Intl.DateTimeFormat("ja", { dateStyle: "full", timeZone: "UTC" });
         expect(ja.formatRangeToParts(d0, d1)).toEqual([
             { type: "year", value: "1989", source: "startRange" },
             { type: "literal", value: "年", source: "startRange" },
@@ -247,7 +249,7 @@ describe("dateStyle", () => {
     });
 
     test("long", () => {
-        const en = new Intl.DateTimeFormat("en", { dateStyle: "long" });
+        const en = new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" });
         expect(en.formatRangeToParts(d0, d1)).toEqual([
             { type: "month", value: "January", source: "startRange" },
             { type: "literal", value: " ", source: "startRange" },
@@ -262,7 +264,7 @@ describe("dateStyle", () => {
             { type: "year", value: "2021", source: "endRange" },
         ]);
 
-        const ja = new Intl.DateTimeFormat("ja", { dateStyle: "long" });
+        const ja = new Intl.DateTimeFormat("ja", { dateStyle: "long", timeZone: "UTC" });
         expect(ja.formatRangeToParts(d0, d1)).toEqual([
             { type: "year", value: "1989", source: "startRange" },
             { type: "literal", value: "/", source: "startRange" },
@@ -279,7 +281,7 @@ describe("dateStyle", () => {
     });
 
     test("medium", () => {
-        const en = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
+        const en = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" });
         expect(en.formatRangeToParts(d0, d1)).toEqual([
             { type: "month", value: "Jan", source: "startRange" },
             { type: "literal", value: " ", source: "startRange" },
@@ -294,7 +296,7 @@ describe("dateStyle", () => {
             { type: "year", value: "2021", source: "endRange" },
         ]);
 
-        const ja = new Intl.DateTimeFormat("ja", { dateStyle: "medium" });
+        const ja = new Intl.DateTimeFormat("ja", { dateStyle: "medium", timeZone: "UTC" });
         expect(ja.formatRangeToParts(d0, d1)).toEqual([
             { type: "year", value: "1989", source: "startRange" },
             { type: "literal", value: "/", source: "startRange" },
@@ -311,7 +313,7 @@ describe("dateStyle", () => {
     });
 
     test("short", () => {
-        const en = new Intl.DateTimeFormat("en", { dateStyle: "short" });
+        const en = new Intl.DateTimeFormat("en", { dateStyle: "short", timeZone: "UTC" });
         expect(en.formatRangeToParts(d0, d1)).toEqual([
             { type: "month", value: "1", source: "startRange" },
             { type: "literal", value: "/", source: "startRange" },
@@ -326,7 +328,7 @@ describe("dateStyle", () => {
             { type: "year", value: "21", source: "endRange" },
         ]);
 
-        const ja = new Intl.DateTimeFormat("ja", { dateStyle: "short" });
+        const ja = new Intl.DateTimeFormat("ja", { dateStyle: "short", timeZone: "UTC" });
         expect(ja.formatRangeToParts(d0, d1)).toEqual([
             { type: "year", value: "1989", source: "startRange" },
             { type: "literal", value: "/", source: "startRange" },
