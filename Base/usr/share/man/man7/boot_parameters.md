@@ -60,6 +60,8 @@ List of options:
 
 * **`root`** - This parameter configures the device to use as the root file system. It defaults to **`/dev/hda`** if unspecified.
 
+* **`pcspeaker`** - This parameter controls whether the kernel can use the PC speaker or not. It defaults to **`off`** and can be set to **`on`** to enable the PC speaker.
+
 * **`smp`** - This parameter expects a binary value of **`on`** or **`off`**. If enabled kernel will
   enable available APs (application processors) and use them with the BSP (Bootstrap processor) to
   schedule and run threads.

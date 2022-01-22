@@ -155,6 +155,16 @@ UNMAP_AFTER_INIT bool CommandLine::is_legacy_time_enabled() const
     return lookup("time"sv).value_or("modern"sv) == "legacy"sv;
 }
 
+bool CommandLine::is_pc_speaker_enabled() const
+{
+    auto value = lookup("pcspeaker"sv).value_or("off"sv);
+    if (value == "on"sv)
+        return true;
+    if (value == "off"sv)
+        return false;
+    PANIC("Unknown pcspeaker setting: {}", value);
+}
+
 UNMAP_AFTER_INIT bool CommandLine::is_force_pio() const
 {
     return contains("force_pio"sv);
