@@ -63,14 +63,12 @@ Ext2FS::~Ext2FS()
 {
 }
 
-bool Ext2FS::flush_super_block()
+ErrorOr<void> Ext2FS::flush_super_block()
 {
     MutexLocker locker(m_lock);
     VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
     auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
-    bool success = raw_write_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer);
-    VERIFY(success);
-    return true;
+    return raw_write_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer);
 }
 
 const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
@@ -87,8 +85,7 @@ ErrorOr<void> Ext2FS::initialize()
 
     VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
     auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
-    bool success = raw_read_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer);
-    VERIFY(success);
+    TRY(raw_read_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer));
 
     auto const& super_block = this->super_block();
     if constexpr (EXT2_DEBUG) {
@@ -679,7 +676,12 @@ void Ext2FS::flush_writes()
     {
         MutexLocker locker(m_lock);
         if (m_super_block_dirty) {
-            flush_super_block();
+            auto result = flush_super_block();
+            if (result.is_error()) {
+                dbgln("Ext2FS[{}]::flush_writes(): Failed to write superblock: {}", fsid(), result.error());
+                // FIXME: We should handle this error.
+                VERIFY_NOT_REACHED();
+            }
             m_super_block_dirty = false;
         }
         if (m_block_group_descriptors_dirty) {
