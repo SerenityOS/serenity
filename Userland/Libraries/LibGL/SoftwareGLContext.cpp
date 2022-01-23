@@ -20,8 +20,6 @@
 #include <LibSoftGPU/Device.h>
 #include <LibSoftGPU/Enums.h>
 
-using AK::dbgln;
-
 namespace GL {
 
 static constexpr size_t MODELVIEW_MATRIX_STACK_LIMIT = 64;
