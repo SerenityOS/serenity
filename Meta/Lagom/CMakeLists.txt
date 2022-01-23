@@ -630,16 +630,6 @@ if (BUILD_LAGOM)
             SKIP_RETURN_CODE 1)
 
         # Tests that are not LibTest based
-        # test-crypto
-        add_executable(test-crypto_lagom ../../Userland/Utilities/test-crypto.cpp)
-        set_target_properties(test-crypto_lagom PROPERTIES OUTPUT_NAME test-crypto)
-        target_link_libraries(test-crypto_lagom LagomCore LagomTLS LagomCrypto LagomLine)
-        add_test(
-            NAME Crypto
-            COMMAND test-crypto_lagom test -t -s google.com --ca-certs-file ../../Base/etc/ca_certs.ini
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
-
         # Shell
         file(GLOB SHELL_TESTS CONFIGURE_DEPENDS "../../Userland/Shell/Tests/*.sh")
         foreach(TEST_PATH ${SHELL_TESTS})
