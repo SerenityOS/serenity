@@ -92,14 +92,6 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
     containing_block().set_height(content_height);
 }
 
-float InlineFormattingContext::available_width_at_line(size_t line_index) const
-{
-    // TODO: Remove this function, along with the old-style splitting functions.
-    VERIFY_NOT_REACHED();
-    auto info = available_space_for_line(line_index);
-    return info.right - info.left;
-}
-
 void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_mode)
 {
     if (is<ReplacedBox>(box)) {

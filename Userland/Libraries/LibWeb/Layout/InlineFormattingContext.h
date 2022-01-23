@@ -23,8 +23,6 @@ public:
 
     virtual void run(Box&, LayoutMode) override;
 
-    float available_width_at_line(size_t line_index) const;
-
     void dimension_box_on_line(Box&, LayoutMode);
 
     struct AvailableSpaceForLineInfo {
