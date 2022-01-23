@@ -12,7 +12,7 @@ namespace Web::Layout {
 LineBuilder::LineBuilder(InlineFormattingContext& context)
     : m_context(context)
 {
-    begin_new_line();
+    begin_new_line(false);
 }
 
 LineBuilder::~LineBuilder()
@@ -25,12 +25,13 @@ void LineBuilder::break_line()
 {
     update_last_line();
     m_context.containing_block().line_boxes().append(LineBox());
-    begin_new_line();
+    begin_new_line(true);
 }
 
-void LineBuilder::begin_new_line()
+void LineBuilder::begin_new_line(bool increment_y)
 {
-    m_current_y += m_max_height_on_current_line;
+    if (increment_y)
+        m_current_y += max(m_max_height_on_current_line, m_context.containing_block().line_height());
     auto space = m_context.available_space_for_line(m_current_y);
     m_available_width_for_current_line = space.right - space.left;
     m_max_height_on_current_line = 0;

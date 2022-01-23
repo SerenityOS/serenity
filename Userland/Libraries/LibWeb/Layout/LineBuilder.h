@@ -19,7 +19,6 @@ public:
     ~LineBuilder();
 
     void break_line();
-    void begin_new_line();
     void append_box(Box&);
     void append_text_chunk(TextNode&, size_t offset_in_node, size_t length_in_node, float width, float height);
 
@@ -36,6 +35,8 @@ public:
     void remove_last_line_if_empty();
 
 private:
+    void begin_new_line(bool increment_y);
+
     bool should_break(LayoutMode, float next_item_width, bool should_force_break);
 
     InlineFormattingContext& m_context;
