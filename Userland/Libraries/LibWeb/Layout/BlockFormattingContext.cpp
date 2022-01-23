@@ -384,7 +384,7 @@ void BlockFormattingContext::compute_position(Box& box)
 
 void BlockFormattingContext::layout_inline_children(BlockContainer& block_container, LayoutMode layout_mode)
 {
-    InlineFormattingContext context(block_container, this);
+    InlineFormattingContext context(block_container, *this);
     context.run(block_container, layout_mode);
 }
 

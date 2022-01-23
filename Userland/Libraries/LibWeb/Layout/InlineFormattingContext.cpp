@@ -17,8 +17,8 @@
 
 namespace Web::Layout {
 
-InlineFormattingContext::InlineFormattingContext(BlockContainer& containing_block, FormattingContext* parent)
-    : FormattingContext(Type::Inline, containing_block, parent)
+InlineFormattingContext::InlineFormattingContext(BlockContainer& containing_block, BlockFormattingContext& parent)
+    : FormattingContext(Type::Inline, containing_block, &parent)
 {
 }
 
@@ -26,14 +26,21 @@ InlineFormattingContext::~InlineFormattingContext()
 {
 }
 
+BlockFormattingContext& InlineFormattingContext::parent()
+{
+    return static_cast<BlockFormattingContext&>(*FormattingContext::parent());
+}
+
+BlockFormattingContext const& InlineFormattingContext::parent() const
+{
+    return static_cast<BlockFormattingContext const&>(*FormattingContext::parent());
+}
+
 InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::available_space_for_line(float y) const
 {
-    if (!parent()->is_block_formatting_context())
-        return { 0, context_box().width() };
-
     AvailableSpaceForLineInfo info;
 
-    auto const& bfc = static_cast<BlockFormattingContext const&>(*parent());
+    auto const& bfc = parent();
 
     for (ssize_t i = bfc.left_side_floats().boxes.size() - 1; i >= 0; --i) {
         auto const& floating_box = bfc.left_side_floats().boxes.at(i);
