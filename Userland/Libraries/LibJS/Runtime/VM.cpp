@@ -595,16 +595,6 @@ Value VM::get_new_target()
     return verify_cast<FunctionEnvironment>(env).new_target();
 }
 
-// NOTE: This is only here because there's a million invocations of vm.call() - it used to be tied to the VM in weird ways.
-// We should update all of those and then remove this, along with the call() template functions in VM.h, and use the standalone call() AO.
-ThrowCompletionOr<Value> VM::call_internal(FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments)
-{
-    VERIFY(!exception());
-    VERIFY(!this_value.is_empty());
-
-    return JS::call_impl(function.global_object(), &function, this_value, move(arguments));
-}
-
 bool VM::in_strict_mode() const
 {
     if (execution_context_stack().is_empty())
