@@ -13,6 +13,8 @@
 
 namespace JS {
 
+void async_block_start(VM&, NonnullRefPtr<Statement> const& parse_node, PromiseCapability const&, ExecutionContext&);
+
 // 10.2 ECMAScript Function Objects, https://tc39.es/ecma262/#sec-ecmascript-function-objects
 class ECMAScriptFunctionObject final : public FunctionObject {
     JS_OBJECT(ECMAScriptFunctionObject, FunctionObject);
@@ -97,7 +99,6 @@ private:
     void ordinary_call_bind_this(ExecutionContext&, Value this_argument);
 
     void async_function_start(PromiseCapability const&);
-    void async_block_start(PromiseCapability const&, ExecutionContext&);
 
     ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
 
@@ -108,6 +109,7 @@ private:
     NonnullRefPtr<Statement> m_ecmascript_code;                   // [[ECMAScriptCode]]
     ConstructorKind m_constructor_kind { ConstructorKind::Base }; // [[ConstructorKind]]
     Realm* m_realm { nullptr };                                   // [[Realm]]
+    ScriptOrModule m_script_or_module;                            // [[ScriptOrModule]]
     ThisMode m_this_mode { ThisMode::Global };                    // [[ThisMode]]
     bool m_strict { false };                                      // [[Strict]]
     Object* m_home_object { nullptr };                            // [[HomeObject]]

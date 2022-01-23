@@ -13,7 +13,7 @@
 
 namespace Kernel::PCI {
 
-class MemoryBackedHostBridge final : public HostBridge {
+class MemoryBackedHostBridge : public HostBridge {
 public:
     static NonnullOwnPtr<MemoryBackedHostBridge> must_create(Domain const&, PhysicalAddress);
 
@@ -25,7 +25,7 @@ public:
     virtual u16 read16_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
     virtual u32 read32_field(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
 
-private:
+protected:
     MemoryBackedHostBridge(PCI::Domain const&, PhysicalAddress);
 
     // Memory-mapped access operations

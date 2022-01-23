@@ -153,6 +153,7 @@ class Heap;
 class HeapBlock;
 class Interpreter;
 class MarkedValueList;
+class Module;
 class NativeFunction;
 class ObjectEnvironment;
 class PrimitiveString;
@@ -165,9 +166,11 @@ class PropertyKey;
 class Realm;
 class Reference;
 class ScopeNode;
+class Script;
 class Shape;
 class Statement;
 class StringOrSymbol;
+class SourceTextModule;
 class Symbol;
 class Token;
 class Utf16String;
@@ -178,6 +181,7 @@ class WrappedFunction;
 enum class DeclarationKind;
 struct AlreadyResolved;
 struct JobCallback;
+struct ModuleRequest;
 struct PromiseCapability;
 
 // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype

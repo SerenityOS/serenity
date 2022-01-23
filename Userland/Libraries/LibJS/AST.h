@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -252,7 +252,7 @@ struct ModuleRequest {
 
     ModuleRequest() = default;
 
-    explicit ModuleRequest(String specifier)
+    explicit ModuleRequest(FlyString specifier)
         : module_specifier(move(specifier))
     {
     }
@@ -262,15 +262,36 @@ struct ModuleRequest {
         assertions.empend(move(key), move(value));
     }
 
-    String module_specifier;      // [[Specifier]]
+    FlyString module_specifier;   // [[Specifier]]
     Vector<Assertion> assertions; // [[Assertions]]
 };
 
 class ImportStatement final : public Statement {
 public:
     struct ImportEntry {
-        String import_name;
-        String local_name;
+        FlyString import_name;
+        FlyString local_name;
+
+        ImportEntry(FlyString import_name_, FlyString local_name_)
+            : import_name(move(import_name_))
+            , local_name(move(local_name_))
+        {
+        }
+
+        bool is_namespace() const
+        {
+            return import_name == "*"sv;
+        }
+
+        ModuleRequest const& module_request() const
+        {
+            VERIFY(m_module_request);
+            return *m_module_request;
+        }
+
+    private:
+        friend ImportStatement;
+        ModuleRequest* m_module_request;
     };
 
     explicit ImportStatement(SourceRange source_range, ModuleRequest from_module, Vector<ImportEntry> entries = {})
@@ -278,13 +299,17 @@ public:
         , m_module_request(move(from_module))
         , m_entries(move(entries))
     {
+        for (auto& entry : m_entries)
+            entry.m_module_request = &m_module_request;
     }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
 
     virtual void dump(int indent) const override;
 
-    bool has_bound_name(StringView name) const;
+    bool has_bound_name(FlyString const& name) const;
+    Vector<ImportEntry> const& entries() const { return m_entries; }
+    ModuleRequest const& module_request() const { return m_module_request; }
 
 private:
     ModuleRequest m_module_request;
@@ -293,32 +318,53 @@ private:
 
 class ExportStatement final : public Statement {
 public:
+    static FlyString local_name_for_default;
+
     struct ExportEntry {
         enum class Kind {
             ModuleRequest,
             LocalExport
         } kind;
         // Can always have
-        String export_name;
+        FlyString export_name;
 
         // Only if module request
         ModuleRequest module_request;
 
         // Has just one of ones below
-        String local_or_import_name;
+        FlyString local_or_import_name;
 
-        ExportEntry(String export_name, String local_name)
+        ExportEntry(FlyString export_name, FlyString local_name)
             : kind(Kind::LocalExport)
             , export_name(move(export_name))
             , local_or_import_name(move(local_name))
         {
         }
+
+        ExportEntry(ModuleRequest module_request_, FlyString import_name, FlyString export_name_)
+            : kind(Kind::ModuleRequest)
+            , export_name(move(export_name_))
+            , module_request(move(module_request_))
+            , local_or_import_name(move(import_name))
+        {
+        }
+
+        bool is_all_but_default() const
+        {
+            return kind == Kind::ModuleRequest && local_or_import_name == "*"sv && export_name.is_null();
+        }
+
+        bool is_all() const
+        {
+            return kind == Kind::ModuleRequest && local_or_import_name == "*"sv && !export_name.is_empty();
+        }
     };
 
-    explicit ExportStatement(SourceRange source_range, RefPtr<ASTNode> statement, Vector<ExportEntry> entries)
+    explicit ExportStatement(SourceRange source_range, RefPtr<ASTNode> statement, Vector<ExportEntry> entries, bool is_default_export)
         : Statement(source_range)
         , m_statement(move(statement))
         , m_entries(move(entries))
+        , m_is_default_export(is_default_export)
     {
     }
 
@@ -326,14 +372,23 @@ public:
 
     virtual void dump(int indent) const override;
 
-    bool has_export(StringView export_name) const;
+    bool has_export(FlyString const& export_name) const;
 
     bool has_statement() const { return m_statement; }
     Vector<ExportEntry> const& entries() const { return m_entries; }
 
+    bool is_default_export() const { return m_is_default_export; }
+
+    ASTNode const& statement() const
+    {
+        VERIFY(m_statement);
+        return *m_statement;
+    }
+
 private:
     RefPtr<ASTNode> m_statement;
     Vector<ExportEntry> m_entries;
+    bool m_is_default_export { false };
 };
 
 class Program final : public ScopeNode {
@@ -371,6 +426,9 @@ public:
     NonnullRefPtrVector<ImportStatement> const& imports() const { return m_imports; }
     NonnullRefPtrVector<ExportStatement> const& exports() const { return m_exports; }
 
+    bool has_top_level_await() const { return m_has_top_level_await; }
+    void set_has_top_level_await() { m_has_top_level_await = true; }
+
     ThrowCompletionOr<void> global_declaration_instantiation(Interpreter& interpreter, GlobalObject& global_object, GlobalEnvironment& global_environment) const;
 
 private:
@@ -381,6 +439,7 @@ private:
 
     NonnullRefPtrVector<ImportStatement> m_imports;
     NonnullRefPtrVector<ExportStatement> m_exports;
+    bool m_has_top_level_await { false };
 };
 
 class BlockStatement final : public ScopeNode {
@@ -1284,9 +1343,9 @@ public:
 
     StringView name() const { return m_class_expression->name(); }
 
-    ThrowCompletionOr<Value> binding_class_declaration_evaluation(Interpreter& interpreter, GlobalObject& global_object) const;
-
 private:
+    friend ExportStatement;
+
     NonnullRefPtr<ClassExpression> m_class_expression;
 };
 

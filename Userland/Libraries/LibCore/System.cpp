@@ -122,6 +122,15 @@ ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int fl
     HANDLE_SYSCALL_RETURN_VALUE("mount", rc, {});
 }
 
+ErrorOr<void> umount(StringView mount_point)
+{
+    if (mount_point.is_null())
+        return Error::from_errno(EFAULT);
+
+    int rc = syscall(SC_umount, mount_point.characters_without_null_termination(), mount_point.length());
+    HANDLE_SYSCALL_RETURN_VALUE("umount", rc, {});
+}
+
 ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data)
 {
     auto rc = ::ptrace(request, tid, address, data);

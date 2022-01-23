@@ -15,6 +15,8 @@
 
 namespace JS {
 
+using ScriptOrModule = Variant<Empty, Script*, Module*>;
+
 // 9.4 Execution Contexts, https://tc39.es/ecma262/#sec-execution-contexts
 struct ExecutionContext {
     explicit ExecutionContext(Heap& heap)
@@ -28,6 +30,7 @@ struct ExecutionContext {
 
         copy.function = function;
         copy.realm = realm;
+        copy.script_or_module = script_or_module;
         copy.lexical_environment = lexical_environment;
         copy.variable_environment = variable_environment;
         copy.private_environment = private_environment;
@@ -48,6 +51,7 @@ private:
 public:
     FunctionObject* function { nullptr };                // [[Function]]
     Realm* realm { nullptr };                            // [[Realm]]
+    ScriptOrModule script_or_module;                     // [[ScriptOrModule]]
     Environment* lexical_environment { nullptr };        // [[LexicalEnvironment]]
     Environment* variable_environment { nullptr };       // [[VariableEnvironment]]
     PrivateEnvironment* private_environment { nullptr }; // [[PrivateEnvironment]]

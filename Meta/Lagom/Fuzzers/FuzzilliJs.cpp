@@ -207,13 +207,11 @@ int main(int, char**)
 
         auto js = StringView(static_cast<const unsigned char*>(data_buffer.data()), script_size);
 
-        auto lexer = JS::Lexer(js);
-        auto parser = JS::Parser(lexer);
-        auto program = parser.parse_program();
-        if (parser.has_errors()) {
+        auto parse_result = JS::Script::parse(js, interpreter->realm());
+        if (parse_result.is_error()) {
             result = 1;
         } else {
-            auto completion = interpreter->run(interpreter->global_object(), *program);
+            auto completion = interpreter->run(parse_result.value());
             if (completion.is_error()) {
                 result = 1;
                 vm->clear_exception();

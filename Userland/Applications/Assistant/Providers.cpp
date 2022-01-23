@@ -16,9 +16,8 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Lexer.h>
-#include <LibJS/Parser.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Script.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <serenity.h>
@@ -93,12 +92,11 @@ void CalculatorProvider::query(String const& query, Function<void(NonnullRefPtrV
     auto interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
 
     auto source_code = query.substring(1);
-    auto parser = JS::Parser(JS::Lexer(source_code));
-    auto program = parser.parse_program();
-    if (parser.has_errors())
+    auto parse_result = JS::Script::parse(source_code, interpreter->realm());
+    if (parse_result.is_error())
         return;
 
-    auto completion = interpreter->run(interpreter->global_object(), *program);
+    auto completion = interpreter->run(parse_result.value());
     if (completion.is_error())
         return;
 

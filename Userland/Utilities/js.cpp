@@ -62,6 +62,7 @@
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/SourceTextModule.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
@@ -915,24 +916,22 @@ static bool write_to_file(String const& path)
 
 static bool parse_and_run(JS::Interpreter& interpreter, StringView source, StringView source_name)
 {
-    auto program_type = s_as_module ? JS::Program::Type::Module : JS::Program::Type::Script;
-    auto parser = JS::Parser(JS::Lexer(source), program_type);
-    auto program = parser.parse_program();
+    enum class ReturnEarly {
+        No,
+        Yes,
+    };
 
-    if (s_dump_ast)
-        program->dump(0);
+    JS::ThrowCompletionOr<JS::Value> result { JS::js_undefined() };
 
-    auto result = JS::ThrowCompletionOr<JS::Value> { JS::js_undefined() };
+    auto run_script_or_module = [&](Variant<NonnullRefPtr<JS::Script>, NonnullRefPtr<JS::SourceTextModule>> script_or_module) {
+        auto program = script_or_module.visit(
+            [](auto& visitor) -> NonnullRefPtr<JS::Program> {
+                return visitor->parse_node();
+            });
 
-    if (parser.has_errors()) {
-        auto error = parser.errors()[0];
-        if (!s_disable_source_location_hints) {
-            auto hint = error.source_location_hint(source);
-            if (!hint.is_empty())
-                js_outln("{}", hint);
-        }
-        result = vm->throw_completion<JS::SyntaxError>(interpreter.global_object(), error.to_string());
-    } else {
+        if (s_dump_ast)
+            program->dump(0);
+
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
             auto executable = JS::Bytecode::Generator::generate(*program);
             executable.name = source_name;
@@ -949,10 +948,45 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
                 JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object(), interpreter.realm());
                 result = bytecode_interpreter.run(executable);
             } else {
-                return true;
+                return ReturnEarly::Yes;
             }
         } else {
-            result = interpreter.run(interpreter.global_object(), *program);
+            result = script_or_module.visit(
+                [&](auto& visitor) {
+                    return interpreter.run(*visitor);
+                });
+        }
+
+        return ReturnEarly::No;
+    };
+
+    if (!s_as_module) {
+        auto script_or_error = JS::Script::parse(source, interpreter.realm(), source_name);
+        if (script_or_error.is_error()) {
+            auto error = script_or_error.error()[0];
+            auto hint = error.source_location_hint(source);
+            if (!hint.is_empty())
+                outln("{}", hint);
+            outln(error.to_string());
+            vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
+        } else {
+            auto return_early = run_script_or_module(move(script_or_error.value()));
+            if (return_early == ReturnEarly::Yes)
+                return true;
+        }
+    } else {
+        auto module_or_error = JS::SourceTextModule::parse(source, interpreter.realm(), source_name);
+        if (module_or_error.is_error()) {
+            auto error = module_or_error.error()[0];
+            auto hint = error.source_location_hint(source);
+            if (!hint.is_empty())
+                outln("{}", hint);
+            outln(error.to_string());
+            vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
+        } else {
+            auto return_early = run_script_or_module(move(module_or_error.value()));
+            if (return_early == ReturnEarly::Yes)
+                return true;
         }
     }
 
@@ -992,6 +1026,13 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
         last_value = JS::make_handle(result.value());
 
     if (result.is_error()) {
+        if (!vm->exception()) {
+            // Until js no longer relies on vm->exception() we have to set it in case the exception was cleared
+            VERIFY(result.throw_completion().value().has_value());
+            auto throw_value = result.release_error().release_value().release_value();
+            auto* exception = interpreter.heap().allocate<JS::Exception>(interpreter.global_object(), throw_value);
+            vm->set_exception(*exception);
+        }
         handle_exception();
         return false;
     } else if (s_print_last_result) {
@@ -1012,14 +1053,13 @@ static JS::ThrowCompletionOr<JS::Value> load_file_impl(JS::VM& vm, JS::GlobalObj
         return vm.throw_completion<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
     auto file_contents = file->read_all();
     auto source = StringView { file_contents };
-    auto parser = JS::Parser(JS::Lexer(source));
-    auto program = parser.parse_program();
-    if (parser.has_errors()) {
-        auto& error = parser.errors()[0];
+    auto script_or_error = JS::Script::parse(source, vm.interpreter().realm(), filename);
+    if (script_or_error.is_error()) {
+        auto& error = script_or_error.error()[0];
         return vm.throw_completion<JS::SyntaxError>(global_object, error.to_string());
     }
     // FIXME: Use eval()-like semantics and execute in current scope?
-    TRY(vm.interpreter().run(global_object, *program));
+    TRY(vm.interpreter().run(script_or_error.value()));
     return JS::js_undefined();
 }
 
@@ -1250,6 +1290,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool syntax_highlight = !disable_syntax_highlight;
 
     vm = JS::VM::create();
+    vm->enable_default_host_import_module_dynamically_hook();
+
     // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -
     // which is, as far as I can tell, correct - a promise is created, rejected without handler, and a
     // handler then attached to it. The Node.js REPL doesn't warn in this case, so it's something we
@@ -1505,6 +1547,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             sigint_handler();
         });
 
+        if (script_paths.size() > 1)
+            warnln("Warning: Multiple files supplied, this will concatenate the sources and resolve modules as if it was the first file");
+
         StringBuilder builder;
         for (auto& path : script_paths) {
             auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
@@ -1513,10 +1558,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             builder.append(source);
         }
 
-        StringBuilder source_name_builder;
-        source_name_builder.join(", ", script_paths);
+        // We resolve modules as if it is the first file
 
-        if (!parse_and_run(*interpreter, builder.string_view(), source_name_builder.string_view()))
+        if (!parse_and_run(*interpreter, builder.string_view(), script_paths[0]))
             return 1;
     }
 

@@ -29,7 +29,7 @@ Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_wind
     , m_main_execution_context(m_vm->heap())
     , m_parent_window(parent_window)
 {
-    m_workbook_object = m_vm->heap().allocate<WorkbookObject>(m_interpreter->global_object(), *this);
+    m_workbook_object = m_vm->heap().allocate<WorkbookObject>(m_interpreter->global_object(), *this, m_interpreter->global_object());
     m_interpreter->global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
 
     m_main_execution_context.current_node = nullptr;
@@ -40,6 +40,8 @@ Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_wind
     m_main_execution_context.realm = &m_interpreter->realm();
     m_main_execution_context.is_strict_mode = true;
     MUST(m_vm->push_execution_context(m_main_execution_context, m_interpreter->global_object()));
+
+    m_vm->enable_default_host_import_module_dynamically_hook();
 }
 
 bool Workbook::set_filename(const String& filename)

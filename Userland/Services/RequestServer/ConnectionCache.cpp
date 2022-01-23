@@ -5,6 +5,7 @@
  */
 
 #include "ConnectionCache.h"
+#include <AK/Debug.h>
 #include <LibCore/EventLoop.h>
 
 namespace RequestServer::ConnectionCache {
@@ -19,7 +20,7 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
         return;
     }
 
-    dbgln("Request for {} finished", url);
+    dbgln_if(REQUESTSERVER_DEBUG, "Request for {} finished", url);
 
     ConnectionKey key { url.host(), url.port_or_default() };
     auto fire_off_next_job = [&](auto& cache) {
@@ -40,7 +41,7 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
             connection->current_url = {};
             connection->removal_timer->on_timeout = [ptr = connection.ptr(), &cache_entry = *it->value, key = it->key, &cache]() mutable {
                 Core::deferred_invoke([&, key = move(key), ptr] {
-                    dbgln("Removing no-longer-used connection {} (socket {})", ptr, ptr->socket);
+                    dbgln_if(REQUESTSERVER_DEBUG, "Removing no-longer-used connection {} (socket {})", ptr, ptr->socket);
                     auto did_remove = cache_entry.remove_first_matching([&](auto& entry) { return entry == ptr; });
                     VERIFY(did_remove);
                     if (cache_entry.is_empty())
@@ -58,9 +59,9 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
             if (!is_connected) {
                 // Create another socket for the connection.
                 connection->socket = SocketType::construct(nullptr);
-                dbgln("Creating a new socket for {} -> {}", url, connection->socket);
+                dbgln_if(REQUESTSERVER_DEBUG, "Creating a new socket for {} -> {}", url, connection->socket);
             }
-            dbgln("Running next job in queue for connection {} @{}", &connection, connection->socket);
+            dbgln_if(REQUESTSERVER_DEBUG, "Running next job in queue for connection {} @{}", &connection, connection->socket);
             auto request = connection->request_queue.take_first();
             connection->timer.start();
             connection->current_url = url;

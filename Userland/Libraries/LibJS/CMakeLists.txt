@@ -15,6 +15,7 @@ set(SOURCES
     Bytecode/Pass/UnifySameBlocks.cpp
     Bytecode/StringTable.cpp
     Console.cpp
+    CyclicModule.cpp
     Heap/BlockAllocator.cpp
     Heap/CellAllocator.cpp
     Heap/Handle.cpp
@@ -115,6 +116,8 @@ set(SOURCES
     Runtime/MapPrototype.cpp
     Runtime/MarkedValueList.cpp
     Runtime/MathObject.cpp
+    Runtime/ModuleEnvironment.cpp
+    Runtime/ModuleNamespaceObject.cpp
     Runtime/NativeFunction.cpp
     Runtime/NumberConstructor.cpp
     Runtime/NumberObject.cpp

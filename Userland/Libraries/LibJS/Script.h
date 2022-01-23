@@ -24,14 +24,19 @@ public:
     Realm& realm() { return *m_realm.cell(); }
     Program const& parse_node() const { return *m_parse_node; }
 
+    StringView filename() const { return m_filename; }
+
 private:
-    Script(Realm&, NonnullRefPtr<Program>);
+    Script(Realm&, StringView filename, NonnullRefPtr<Program>);
 
     // Handles are not safe unless we keep the VM alive.
     NonnullRefPtr<VM> m_vm;
 
     Handle<Realm> m_realm;               // [[Realm]]
     NonnullRefPtr<Program> m_parse_node; // [[ECMAScriptCode]]
+
+    // Needed for potential lookups of modules.
+    String m_filename;
 };
 
 }

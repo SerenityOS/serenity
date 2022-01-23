@@ -108,6 +108,22 @@ UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
     return true;
 }
 
+void Access::add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController> controller, Function<void(DeviceIdentifier const&)> callback)
+{
+    MutexLocker locker(m_access_lock);
+    SpinlockLocker scan_locker(m_scan_lock);
+    auto domain_number = controller->domain_number();
+
+    VERIFY(!m_host_controllers.contains(domain_number));
+    // Note: We need to register the new controller as soon as possible, and
+    // definitely before enumerating devices behing that.
+    m_host_controllers.set(domain_number, move(controller));
+    m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](DeviceIdentifier const& device_identifier) -> void {
+        m_device_identifiers.append(device_identifier);
+        callback(device_identifier);
+    });
+}
+
 UNMAP_AFTER_INIT void Access::add_host_controller(NonnullOwnPtr<HostController> controller)
 {
     auto domain_number = controller->domain_number();

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -243,15 +243,7 @@ Completion BlockStatement::execute(Interpreter& interpreter, GlobalObject& globa
 
 Completion Program::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    // FIXME: This tries to be "ScriptEvaluation" and "evaluating scriptBody" at once. It shouldn't.
-    //        Clean this up and update perform_eval() / perform_shadow_realm_eval()
-
     InterpreterNodeScope node_scope { interpreter, *this };
-
-    VERIFY(interpreter.lexical_environment() && interpreter.lexical_environment()->is_global_environment());
-    auto& global_env = static_cast<GlobalEnvironment&>(*interpreter.lexical_environment());
-
-    TRY(global_declaration_instantiation(interpreter, global_object, global_env));
 
     return evaluate_statements(interpreter, global_object);
 }
@@ -1701,6 +1693,43 @@ Completion ClassExpression::execute(Interpreter& interpreter, GlobalObject& glob
     return Value { value };
 }
 
+// 15.7.15 Runtime Semantics: BindingClassDeclarationEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation
+static ThrowCompletionOr<Value> binding_class_declaration_evaluation(Interpreter& interpreter, GlobalObject& global_object, ClassExpression const& class_expression)
+{
+    // ClassDeclaration : class ClassTail
+    if (!class_expression.has_name()) {
+        // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and "default".
+        auto value = TRY(class_expression.class_definition_evaluation(interpreter, global_object, {}, "default"));
+
+        // 2. Set value.[[SourceText]] to the source text matched by ClassDeclaration.
+        value->set_source_text(class_expression.source_text());
+
+        // 3. Return value.
+        return value;
+    }
+
+    // ClassDeclaration : class BindingIdentifier ClassTail
+
+    // 1. Let className be StringValue of BindingIdentifier.
+    auto class_name = class_expression.name();
+    VERIFY(!class_name.is_empty());
+
+    // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
+    auto value = TRY(class_expression.class_definition_evaluation(interpreter, global_object, class_name, class_name));
+
+    // 3. Set value.[[SourceText]] to the source text matched by ClassDeclaration.
+    value->set_source_text(class_expression.source_text());
+
+    // 4. Let env be the running execution context's LexicalEnvironment.
+    auto* env = interpreter.lexical_environment();
+
+    // 5. Perform ? InitializeBoundName(className, value, env).
+    TRY(initialize_bound_name(global_object, class_name, value, env));
+
+    // 6. Return value.
+    return value;
+}
+
 // 15.7.16 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation
 // ClassDeclaration : class BindingIdentifier ClassTail
 Completion ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -1708,7 +1737,7 @@ Completion ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& glo
     InterpreterNodeScope node_scope { interpreter, *this };
 
     // 1. Perform ? BindingClassDeclarationEvaluation of this ClassDeclaration.
-    (void)TRY(binding_class_declaration_evaluation(interpreter, global_object));
+    (void)TRY(binding_class_declaration_evaluation(interpreter, global_object, m_class_expression));
 
     // 2. Return NormalCompletion(empty).
     return normal_completion({});
@@ -1877,29 +1906,6 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     }
 
     return class_constructor;
-}
-
-// 15.7.15 Runtime Semantics: BindingClassDeclarationEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation
-ThrowCompletionOr<Value> ClassDeclaration::binding_class_declaration_evaluation(Interpreter& interpreter, GlobalObject& global_object) const
-{
-    // 1. Let className be StringValue of BindingIdentifier.
-    auto class_name = m_class_expression->name();
-    VERIFY(!class_name.is_empty());
-
-    // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
-    auto* value = TRY(m_class_expression->class_definition_evaluation(interpreter, global_object, class_name, class_name));
-
-    // 3. Set value.[[SourceText]] to the source text matched by ClassDeclaration.
-    value->set_source_text(m_class_expression->source_text());
-
-    // 4. Let env be the running execution context's LexicalEnvironment.
-    auto* env = interpreter.lexical_environment();
-
-    // 5. Perform ? InitializeBoundName(className, value, env).
-    TRY(initialize_bound_name(global_object, class_name, value, env));
-
-    // 6. Return value.
-    return value;
 }
 
 void ASTNode::dump(int indent) const
@@ -3161,8 +3167,48 @@ Completion MetaProperty::execute(Interpreter& interpreter, GlobalObject& global_
 
     // ImportMeta : import . meta
     if (m_type == MetaProperty::Type::ImportMeta) {
-        // TODO: Implement me :^)
-        return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "'import.meta' in modules");
+        // 1. Let module be ! GetActiveScriptOrModule().
+        auto script_or_module = interpreter.vm().get_active_script_or_module();
+
+        // 2. Assert: module is a Source Text Module Record.
+        VERIFY(script_or_module.has<Module*>());
+        VERIFY(is<SourceTextModule>(*script_or_module.get<Module*>()));
+        auto& module = static_cast<SourceTextModule&>(*script_or_module.get<Module*>());
+
+        // 3. Let importMeta be module.[[ImportMeta]].
+        auto* import_meta = module.import_meta();
+
+        // 4. If importMeta is empty, then
+        if (import_meta == nullptr) {
+            // a. Set importMeta to ! OrdinaryObjectCreate(null).
+            import_meta = Object::create(global_object, nullptr);
+
+            // b. Let importMetaValues be ! HostGetImportMetaProperties(module).
+            auto import_meta_values = interpreter.vm().host_get_import_meta_properties(module);
+
+            // c. For each Record { [[Key]], [[Value]] } p of importMetaValues, do
+            for (auto& entry : import_meta_values) {
+                // i. Perform ! CreateDataPropertyOrThrow(importMeta, p.[[Key]], p.[[Value]]).
+                MUST(import_meta->create_data_property_or_throw(entry.key, entry.value));
+            }
+
+            // d. Perform ! HostFinalizeImportMeta(importMeta, module).
+            interpreter.vm().host_finalize_import_meta(import_meta, module);
+
+            // e. Set module.[[ImportMeta]] to importMeta.
+            module.set_import_meta({}, import_meta);
+
+            // f. Return importMeta.
+            return Value { import_meta };
+        }
+        // 5. Else,
+        else {
+            // a. Assert: Type(importMeta) is Object.
+            // Note: This is always true by the type.
+
+            // b. Return importMeta.
+            return Value { import_meta };
+        }
     }
 
     VERIFY_NOT_REACHED();
@@ -3184,7 +3230,39 @@ void ImportCall::dump(int indent) const
 Completion ImportCall::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "'import(...)' in modules");
+    // 1. Let referencingScriptOrModule be ! GetActiveScriptOrModule().
+    auto referencing_script_or_module = interpreter.vm().get_active_script_or_module();
+
+    if (m_options)
+        return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "import call with assertions/options");
+
+    // 2. Let argRef be the result of evaluating AssignmentExpression.
+    // 3. Let specifier be ? GetValue(argRef).
+    auto specifier = TRY(m_specifier->execute(interpreter, global_object));
+
+    // 4. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    auto promise_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
+
+    VERIFY(!interpreter.exception());
+    // 5. Let specifierString be ToString(specifier).
+    auto specifier_string = specifier->to_string(global_object);
+
+    // 6. IfAbruptRejectPromise(specifierString, promiseCapability).
+    // Note: Since we have to use completions and not ThrowCompletionOr's in AST we have to do this manually.
+    if (specifier_string.is_throw_completion()) {
+        // FIXME: We shouldn't have to clear this exception
+        interpreter.vm().clear_exception();
+        (void)TRY(call(global_object, promise_capability.reject, js_undefined(), *specifier_string.throw_completion().value()));
+        return Value { promise_capability.promise };
+    }
+
+    ModuleRequest request { specifier_string.release_value() };
+
+    // 7. Perform ! HostImportModuleDynamically(referencingScriptOrModule, specifierString, promiseCapability).
+    interpreter.vm().host_import_module_dynamically(referencing_script_or_module, request, promise_capability);
+
+    // 8. Return promiseCapability.[[Promise]].
+    return Value { promise_capability.promise };
 }
 
 // 13.2.3.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation
@@ -4035,20 +4113,96 @@ void ScopeNode::add_hoisted_function(NonnullRefPtr<FunctionDeclaration> declarat
 Completion ImportStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    dbgln("Modules are not fully supported yet!");
-    return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "'import' in modules");
+
+    if (!m_module_request.assertions.is_empty())
+        return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "import statement with assertions/options");
+
+    // 1. Return NormalCompletion(empty).
+    return normal_completion({});
 }
+
+FlyString ExportStatement::local_name_for_default = "*default*";
 
 // 16.2.3.7 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-exports-runtime-semantics-evaluation
 Completion ExportStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    if (m_statement) {
-        // 1. Return the result of evaluating <Thing>.
+
+    if (!is_default_export()) {
+        if (m_statement) {
+            // 1. Return the result of evaluating <Thing>.
+            return m_statement->execute(interpreter, global_object);
+        }
+
+        // 1. Return NormalCompletion(empty).
+        return normal_completion({});
+    }
+
+    VERIFY(m_statement);
+
+    // ExportDeclaration : export default HoistableDeclaration
+    if (is<FunctionDeclaration>(*m_statement)) {
+        // 1. Return the result of evaluating HoistableDeclaration.
         return m_statement->execute(interpreter, global_object);
     }
 
-    // 1. Return NormalCompletion(empty).
+    // ExportDeclaration : export default ClassDeclaration
+    // ClassDeclaration: class BindingIdentifier[?Yield, ?Await] ClassTail[?Yield, ?Await]
+    if (is<ClassDeclaration>(*m_statement)) {
+        auto const& class_declaration = static_cast<ClassDeclaration const&>(*m_statement);
+
+        // 1. Let value be ? BindingClassDeclarationEvaluation of ClassDeclaration.
+        auto value = TRY(binding_class_declaration_evaluation(interpreter, global_object, class_declaration.m_class_expression));
+
+        // 2. Let className be the sole element of BoundNames of ClassDeclaration.
+        // 3. If className is "*default*", then
+        // Note: We never go into step 3. since a ClassDeclaration always has a name and "*default*" is not a class name.
+        (void)value;
+
+        // 4. Return NormalCompletion(empty).
+        return normal_completion({});
+    }
+
+    // ExportDeclaration : export default ClassDeclaration
+    // ClassDeclaration: [+Default] class ClassTail [?Yield, ?Await]
+    if (is<ClassExpression>(*m_statement)) {
+        auto& class_expression = static_cast<ClassExpression const&>(*m_statement);
+
+        // 1. Let value be ? BindingClassDeclarationEvaluation of ClassDeclaration.
+        auto value = TRY(binding_class_declaration_evaluation(interpreter, global_object, class_expression));
+
+        // 2. Let className be the sole element of BoundNames of ClassDeclaration.
+        // 3. If className is "*default*", then
+        if (!class_expression.has_name()) {
+            // Note: This can only occur if the class does not have a name since "*default*" is normally not valid.
+
+            // a. Let env be the running execution context's LexicalEnvironment.
+            auto* env = interpreter.lexical_environment();
+
+            // b. Perform ? InitializeBoundName("*default*", value, env).
+            TRY(initialize_bound_name(global_object, ExportStatement::local_name_for_default, value, env));
+        }
+
+        // 4. Return NormalCompletion(empty).
+        return normal_completion({});
+    }
+
+    // ExportDeclaration : export default AssignmentExpression ;
+
+    // 1. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
+    //     a. Let value be ? NamedEvaluation of AssignmentExpression with argument "default".
+    // 2. Else,
+    //     a. Let rhs be the result of evaluating AssignmentExpression.
+    //     b. Let value be ? GetValue(rhs).
+    auto value = TRY(interpreter.vm().named_evaluation_if_anonymous_function(global_object, *m_statement, "default"));
+
+    // 3. Let env be the running execution context's LexicalEnvironment.
+    auto* env = interpreter.lexical_environment();
+
+    // 4. Perform ? InitializeBoundName("*default*", value, env).
+    TRY(initialize_bound_name(global_object, ExportStatement::local_name_for_default, value, env));
+
+    // 5. Return NormalCompletion(empty).
     return normal_completion({});
 }
 
@@ -4084,6 +4238,12 @@ void ExportStatement::dump(int indent) const
             entry.kind != ExportEntry::Kind::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null",
             string_or_null(entry.export_name));
     }
+
+    if (m_statement) {
+        print_indent(indent + 1);
+        outln("(Statement)");
+        m_statement->dump(indent + 2);
+    }
 }
 
 void ImportStatement::dump(int indent) const
@@ -4105,14 +4265,14 @@ void ImportStatement::dump(int indent) const
     }
 }
 
-bool ExportStatement::has_export(StringView export_name) const
+bool ExportStatement::has_export(FlyString const& export_name) const
 {
     return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
         return entry.export_name == export_name;
     });
 }
 
-bool ImportStatement::has_bound_name(StringView name) const
+bool ImportStatement::has_bound_name(FlyString const& name) const
 {
     return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
         return entry.local_name == name;

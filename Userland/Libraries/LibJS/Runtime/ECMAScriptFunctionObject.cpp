@@ -71,12 +71,19 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, String source
     , m_is_arrow_function(is_arrow_function)
 {
     // NOTE: This logic is from OrdinaryFunctionCreate, https://tc39.es/ecma262/#sec-ordinaryfunctioncreate
+
+    // 9. If thisMode is lexical-this, set F.[[ThisMode]] to lexical.
     if (m_is_arrow_function)
         m_this_mode = ThisMode::Lexical;
+    // 10. Else if Strict is true, set F.[[ThisMode]] to strict.
     else if (m_strict)
         m_this_mode = ThisMode::Strict;
     else
+        // 11. Else, set F.[[ThisMode]] to global.
         m_this_mode = ThisMode::Global;
+
+    // 15. Set F.[[ScriptOrModule]] to GetActiveScriptOrModule().
+    m_script_or_module = vm().get_active_script_or_module();
 
     // 15.1.3 Static Semantics: IsSimpleParameterList, https://tc39.es/ecma262/#sec-static-semantics-issimpleparameterlist
     m_has_simple_parameter_list = all_of(m_formal_parameters, [&](auto& parameter) {
@@ -595,7 +602,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
     callee_context.realm = callee_realm;
 
     // 6. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
-    // FIXME: Our execution context struct currently does not track this item.
+    callee_context.script_or_module = m_script_or_module;
 
     // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
     auto* local_environment = new_function_environment(*this, new_target);
@@ -693,21 +700,20 @@ void ECMAScriptFunctionObject::async_function_start(PromiseCapability const& pro
     // 3. NOTE: Copying the execution state is required for AsyncBlockStart to resume its execution. It is ill-defined to resume a currently executing context.
 
     // 4. Perform ! AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext).
-    async_block_start(promise_capability, async_context);
+    async_block_start(vm, m_ecmascript_code, promise_capability, async_context);
 }
 
 // 27.7.5.2 AsyncBlockStart ( promiseCapability, asyncBody, asyncContext ), https://tc39.es/ecma262/#sec-asyncblockstart
-void ECMAScriptFunctionObject::async_block_start(PromiseCapability const& promise_capability, ExecutionContext& async_context)
+void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, PromiseCapability const& promise_capability, ExecutionContext& async_context)
 {
-    auto& vm = this->vm();
-
+    auto& global_object = vm.current_realm()->global_object();
     // 1. Assert: promiseCapability is a PromiseCapability Record.
 
     // 2. Let runningContext be the running execution context.
     auto& running_context = vm.running_execution_context();
 
     // 3. Set the code evaluation state of asyncContext such that when evaluation is resumed for that execution context the following steps will be performed:
-    auto* execution_steps = NativeFunction::create(global_object(), "", [async_body = m_ecmascript_code, &promise_capability](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+    auto* execution_steps = NativeFunction::create(global_object, "", [&async_body, &promise_capability](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
         // a. Let result be the result of evaluating asyncBody.
         auto result = async_body->execute(vm.interpreter(), global_object);
 
@@ -740,7 +746,7 @@ void ECMAScriptFunctionObject::async_block_start(PromiseCapability const& promis
     });
 
     // 4. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
-    auto push_result = vm.push_execution_context(async_context, global_object());
+    auto push_result = vm.push_execution_context(async_context, global_object);
     if (push_result.is_error())
         return;
 

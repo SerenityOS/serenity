@@ -45,10 +45,10 @@ void HttpsJob::start(NonnullRefPtr<Core::Socket> socket)
     };
     m_socket->set_idle(false);
     if (m_socket->is_established()) {
-        dbgln("Reusing previous connection for {}", url());
+        dbgln_if(HTTPSJOB_DEBUG, "Reusing previous connection for {}", url());
         deferred_invoke([this] { on_socket_connected(); });
     } else {
-        dbgln("Creating a new connection for {}", url());
+        dbgln_if(HTTPSJOB_DEBUG, "Creating a new connection for {}", url());
         m_socket->set_root_certificates(m_override_ca_certificates ? *m_override_ca_certificates : DefaultRootCACertificates::the().certificates());
         m_socket->on_tls_connected = [this] {
             dbgln_if(HTTPSJOB_DEBUG, "HttpsJob: on_connected callback");

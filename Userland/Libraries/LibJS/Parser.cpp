@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
@@ -237,6 +237,16 @@ public:
         m_identifier_and_argument_index_associations.ensure(index).append(move(identifier));
     }
 
+    void set_contains_await_expression()
+    {
+        m_contains_await_expression = true;
+    }
+
+    bool contains_await_expression() const
+    {
+        return m_contains_await_expression;
+    }
+
 private:
     void throw_identifier_declared(FlyString const& name, NonnullRefPtr<Declaration> const& declaration)
     {
@@ -263,6 +273,7 @@ private:
 
     bool m_contains_access_to_arguments_object { false };
     bool m_contains_direct_call_to_eval { false };
+    bool m_contains_await_expression { false };
 };
 
 class OperatorPrecedenceTable {
@@ -524,6 +535,10 @@ void Parser::parse_module(Program& program)
             consume();
         }
     }
+
+    VERIFY(m_state.current_scope_pusher);
+    if (m_state.current_scope_pusher->contains_await_expression())
+        program.set_has_top_level_await();
 
     for (auto& export_statement : program.exports()) {
         if (export_statement.has_statement())
@@ -2342,6 +2357,8 @@ NonnullRefPtr<AwaitExpression> Parser::parse_await_expression()
     auto associativity = operator_associativity(TokenType::Await);
     auto argument = parse_expression(precedence, associativity);
 
+    m_state.current_scope_pusher->set_contains_await_expression();
+
     return create_ast_node<AwaitExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(argument));
 }
 
@@ -3675,13 +3692,18 @@ bool Parser::match_declaration() const
         || type == TokenType::Let;
 }
 
-Token Parser::next_token() const
+Token Parser::next_token(size_t steps) const
 {
     Lexer lookahead_lexer = m_state.lexer;
 
-    auto token_after = lookahead_lexer.next();
+    Token lookahead_token;
 
-    return token_after;
+    while (steps > 0) {
+        lookahead_token = lookahead_lexer.next();
+        steps--;
+    }
+
+    return lookahead_token;
 }
 
 bool Parser::try_match_let_declaration() const
@@ -3961,9 +3983,43 @@ bool Parser::match_assert_clause() const
     return !m_state.current_token.trivia_contains_line_terminator() && m_state.current_token.original_value() == "assert"sv;
 }
 
-// AssertClause, https://tc39.es/proposal-import-assertions/#prod-AssertClause
-void Parser::parse_assert_clause(ModuleRequest& request)
+FlyString Parser::consume_string_value()
 {
+    VERIFY(match(TokenType::StringLiteral));
+    auto string_token = consume();
+    FlyString value = parse_string_literal(string_token, false)->value();
+
+    // This also checks IsStringWellFormedUnicode which makes sure there is no unpaired surrogate
+    // Surrogates are at least 3 bytes
+    if (value.length() < 3)
+        return value;
+
+    Utf8View view { value.view().substring_view(value.length() - 3) };
+    VERIFY(view.length() <= 3);
+    auto codepoint = *view.begin();
+    if (Utf16View::is_high_surrogate(codepoint)) {
+        syntax_error("StringValue ending with unpaired high surrogate");
+        VERIFY(view.length() == 1);
+    }
+
+    return value;
+}
+
+// AssertClause, https://tc39.es/proposal-import-assertions/#prod-AssertClause
+ModuleRequest Parser::parse_module_request()
+{
+    // Does not include the 'from' since that is not always required.
+
+    if (!match(TokenType::StringLiteral)) {
+        expected("ModuleSpecifier (string)");
+        return ModuleRequest { "!!invalid!!" };
+    }
+
+    ModuleRequest request { consume_string_value() };
+
+    if (!match_assert_clause())
+        return request;
+
     VERIFY(m_state.current_token.original_value() == "assert"sv);
     consume(TokenType::Identifier);
     consume(TokenType::CurlyOpen);
@@ -3998,7 +4054,12 @@ void Parser::parse_assert_clause(ModuleRequest& request)
     }
 
     consume(TokenType::CurlyClose);
+
+    return request;
 }
+
+static FlyString namespace_string_value = "*";
+static FlyString default_string_value = "default";
 
 NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
 {
@@ -4015,10 +4076,8 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
     consume(TokenType::Import);
 
     if (match(TokenType::StringLiteral)) {
-        auto module_request = ModuleRequest(consume(TokenType::StringLiteral).value());
-        if (match_assert_clause())
-            parse_assert_clause(module_request);
-
+        //  import ModuleSpecifier ;
+        auto module_request = parse_module_request();
         return create_ast_node<ImportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(module_request));
     }
 
@@ -4039,10 +4098,19 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
 
     Vector<ImportWithLocation> entries_with_location;
 
+    // import ImportClause FromClause ;
+    //  ImportClause :
+    //      ImportedDefaultBinding
+    //      NameSpaceImport
+    //      NamedImports
+    //      ImportedDefaultBinding , NameSpaceImport
+    //      ImportedDefaultBinding , NamedImports
+
     if (match_imported_binding()) {
+        //  ImportedDefaultBinding : ImportedBinding
         auto id_position = position();
         auto bound_name = consume().value();
-        entries_with_location.append({ { "default", bound_name }, id_position });
+        entries_with_location.append({ { default_string_value, bound_name }, id_position });
 
         if (match(TokenType::Comma)) {
             consume(TokenType::Comma);
@@ -4054,6 +4122,7 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
     if (!continue_parsing) {
         // skip the rest
     } else if (match(TokenType::Asterisk)) {
+        //  NameSpaceImport : * as ImportedBinding
         consume(TokenType::Asterisk);
 
         if (!match_as())
@@ -4064,16 +4133,19 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
         if (match_imported_binding()) {
             auto namespace_position = position();
             auto namespace_name = consume().value();
-            entries_with_location.append({ { "*", namespace_name }, namespace_position });
+            entries_with_location.append({ { namespace_string_value, namespace_name }, namespace_position });
         } else {
             syntax_error(String::formatted("Unexpected token: {}", m_state.current_token.name()));
         }
 
     } else if (match(TokenType::CurlyOpen)) {
-        consume(TokenType::CurlyOpen);
+        // NamedImports :
+        //     { ImportSpecifier ,_opt } (repeated any amount of times)
 
+        consume(TokenType::CurlyOpen);
         while (!done() && !match(TokenType::CurlyClose)) {
             if (match_identifier_name()) {
+                // ImportSpecifier :  ImportedBinding
                 auto require_as = !match_imported_binding();
                 auto name_position = position();
                 auto name = consume().value();
@@ -4093,6 +4165,20 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
 
                     entries_with_location.append({ { name, name }, name_position });
                 }
+            } else if (match(TokenType::StringLiteral)) {
+                // ImportSpecifier : ModuleExportName as ImportedBinding
+                auto name = consume_string_value();
+
+                if (!match_as())
+                    expected("as");
+
+                consume(TokenType::Identifier);
+
+                auto alias_position = position();
+                auto alias = consume_identifier().value();
+                check_identifier_name_for_assignment_validity(alias);
+
+                entries_with_location.append({ { move(name), alias }, alias_position });
             } else {
                 expected("identifier");
                 break;
@@ -4113,10 +4199,7 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
     if (from_statement != "from"sv)
         syntax_error(String::formatted("Expected 'from' got {}", from_statement));
 
-    auto module_request = ModuleRequest(consume(TokenType::StringLiteral).value());
-
-    if (match_assert_clause())
-        parse_assert_clause(module_request);
+    auto module_request = parse_module_request();
 
     Vector<ImportStatement::ImportEntry> entries;
     entries.ensure_capacity(entries_with_location.size());
@@ -4178,29 +4261,99 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 
     RefPtr<ASTNode> expression = {};
 
+    bool is_default = false;
+
     if (match_default()) {
+        is_default = true;
         auto default_position = position();
         consume(TokenType::Default);
 
-        String local_name;
+        FlyString local_name;
 
-        if (match(TokenType::Class)) {
-            auto class_expression = parse_class_expression(false);
+        auto lookahead_token = next_token();
+
+        // Note: For some reason the spec here has declaration which can have no name
+        //       and the rest of the parser is just not setup for that. With these
+        //       hacks below we get through most things but we should probably figure
+        //       out a better solution. I have attempted to explain why/what these "hacks" do below.
+        //       The summary is treat named declarations just as declarations and hack around unnamed
+        //       declarations with expression see also SourceTextModule::initialize_environment.
+        //       As far as I'm aware the only problem (which is a tricky one) is:
+        //          `export default function() {}()`
+        //       Since we parse this as an expression you are immediately allowed to call it
+        //       which is incorrect and this should give a SyntaxError.
+        auto match_function_declaration = [&] {
+            // Hack part 1.
+            // Match a function declaration with a name, since we have async and generator
+            // and asyncgenerator variants this is quite complicated.
+            auto current_type = m_state.current_token.type();
+            Lexer lookahead_lexer = m_state.lexer;
+            lookahead_lexer.next();
+
+            if (current_type == TokenType::Function) {
+                if (lookahead_token.type() == TokenType::Asterisk)
+                    return lookahead_lexer.next().type() != TokenType::ParenOpen; // function * <name>
+                else
+                    return lookahead_token.type() != TokenType::ParenOpen; // function <name>
+            }
+
+            if (current_type == TokenType::Async) {
+                if (lookahead_token.type() != TokenType::Function)
+                    return false;
+
+                if (lookahead_token.trivia_contains_line_terminator())
+                    return false;
+
+                auto lookahead_two_token = lookahead_lexer.next();
+                if (lookahead_two_token.type() == TokenType::Asterisk)
+                    return lookahead_lexer.next().type() != TokenType::ParenOpen; // async function * <name>
+                else
+                    return lookahead_two_token.type() != TokenType::ParenOpen; // async function <name>
+            }
+
+            return false;
+        };
+
+        if (match_function_declaration()) {
+            auto function_declaration = parse_function_node<FunctionDeclaration>();
+            m_state.current_scope_pusher->add_declaration(function_declaration);
+            local_name = function_declaration->name();
+            expression = move(function_declaration);
+        } else if (match(TokenType::Class) && lookahead_token.type() != TokenType::CurlyOpen && lookahead_token.type() != TokenType::Extends) {
+            // Hack part 2.
+            // Attempt to detect classes with names only as those are declarations,
+            //   this actually seems to cover all cases already.
+            auto class_expression = parse_class_declaration();
+            m_state.current_scope_pusher->add_declaration(class_expression);
             local_name = class_expression->name();
             expression = move(class_expression);
-        } else if (match(TokenType::Function) || (match(TokenType::Async) && next_token().type() == TokenType::Function)) {
-            auto func_expr = parse_function_node<FunctionExpression>();
-            local_name = func_expr->name();
-            expression = move(func_expr);
+
         } else if (match_expression()) {
+            // Hack part 3.
+            // Even though the unnamed declarations look like expression we should
+            //   not treat them as such and thus not consume a semicolon after them.
+
+            bool special_case_declaration_without_name = match(TokenType::Class) || match(TokenType::Function) || (match(TokenType::Async) && lookahead_token.type() == TokenType::Function && !lookahead_token.trivia_contains_line_terminator());
             expression = parse_expression(2);
-            consume_or_insert_semicolon();
-            local_name = "*default*";
+
+            if (!special_case_declaration_without_name)
+                consume_or_insert_semicolon();
+
+            if (is<ClassExpression>(*expression)) {
+                auto const& class_expression = static_cast<ClassExpression&>(*expression);
+                if (class_expression.has_name())
+                    local_name = class_expression.name();
+            }
         } else {
             expected("Declaration or assignment expression");
+            local_name = "!!invalid!!";
         }
 
-        entries_with_location.append({ { "default", local_name }, default_position });
+        if (local_name.is_null()) {
+            local_name = ExportStatement::local_name_for_default;
+        }
+
+        entries_with_location.append({ { default_string_value, move(local_name) }, default_position });
     } else {
         enum FromSpecifier {
             NotAllowed,
@@ -4217,12 +4370,12 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
                 if (match_identifier_name()) {
                     auto namespace_position = position();
                     auto exported_name = consume().value();
-                    entries_with_location.append({ { exported_name, "*" }, namespace_position });
+                    entries_with_location.append({ { exported_name, namespace_string_value }, namespace_position });
                 } else {
                     expected("identifier");
                 }
             } else {
-                entries_with_location.append({ { {}, "*" }, asterisk_position });
+                entries_with_location.append({ { {}, namespace_string_value }, asterisk_position });
             }
             check_for_from = Required;
         } else if (match_declaration()) {
@@ -4238,6 +4391,7 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             } else {
                 VERIFY(is<VariableDeclaration>(*declaration));
                 auto& variables = static_cast<VariableDeclaration&>(*declaration);
+                VERIFY(variables.is_lexical_declaration());
                 for (auto& decl : variables.declarations()) {
                     decl.target().visit(
                         [&](NonnullRefPtr<Identifier> const& identifier) {
@@ -4254,6 +4408,7 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
         } else if (match(TokenType::Var)) {
             auto variable_position = position();
             auto variable_declaration = parse_variable_declaration();
+            m_state.current_scope_pusher->add_declaration(variable_declaration);
             for (auto& decl : variable_declaration->declarations()) {
                 decl.target().visit(
                     [&](NonnullRefPtr<Identifier> const& identifier) {
@@ -4268,26 +4423,39 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             expression = variable_declaration;
         } else if (match(TokenType::CurlyOpen)) {
             consume(TokenType::CurlyOpen);
+            check_for_from = Optional;
+
+            auto parse_export_specifier = [&](bool lhs) -> FlyString {
+                if (match_identifier_name()) {
+                    return consume().value();
+                }
+                if (match(TokenType::StringLiteral)) {
+                    // It is a Syntax Error if ReferencedBindings of NamedExports contains any StringLiterals.
+                    // Only for export { "a" as "b" }; // <-- no from
+                    if (lhs)
+                        check_for_from = Required;
+                    return consume_string_value();
+                }
+                expected("ExportSpecifier (string or identifier)");
+                return {};
+            };
 
             while (!done() && !match(TokenType::CurlyClose)) {
-                if (match_identifier_name()) {
-                    auto identifier_position = position();
-                    auto identifier = consume().value();
+                auto identifier_position = position();
+                auto identifier = parse_export_specifier(true);
 
-                    if (match_as()) {
-                        consume(TokenType::Identifier);
-                        if (match_identifier_name()) {
-                            auto export_name = consume().value();
-                            entries_with_location.append({ { export_name, identifier }, identifier_position });
-                        } else {
-                            expected("identifier name");
-                        }
-                    } else {
-                        entries_with_location.append({ { identifier, identifier }, identifier_position });
-                    }
-                } else {
-                    expected("identifier");
+                if (identifier.is_empty())
                     break;
+
+                if (match_as()) {
+                    consume(TokenType::Identifier);
+                    auto export_name = parse_export_specifier(false);
+                    if (export_name.is_empty())
+                        break;
+
+                    entries_with_location.append({ { move(export_name), move(identifier) }, identifier_position });
+                } else {
+                    entries_with_location.append({ { identifier, identifier }, identifier_position });
                 }
 
                 if (!match(TokenType::Comma))
@@ -4297,24 +4465,19 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             }
 
             consume(TokenType::CurlyClose);
-            check_for_from = Optional;
+
         } else {
             syntax_error("Unexpected token 'export'", rule_start.position());
         }
 
         if (check_for_from != NotAllowed && match_from()) {
             consume(TokenType::Identifier);
-            if (match(TokenType::StringLiteral)) {
-                auto from_specifier = ModuleRequest(consume().value());
+            auto from_specifier = parse_module_request();
 
-                if (match_assert_clause())
-                    parse_assert_clause(from_specifier);
-
-                for (auto& entry : entries_with_location)
-                    entry.to_module_request(from_specifier);
-            } else {
-                expected("ModuleSpecifier");
-            }
+            // FIXME: We can probably store only one module request
+            //        per ExportStatement like we do with ImportStatement.
+            for (auto& entry : entries_with_location)
+                entry.to_module_request(from_specifier);
         } else if (check_for_from == Required) {
             expected("from");
         }
@@ -4340,6 +4503,6 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
         entries.append(move(entry.entry));
     }
 
-    return create_ast_node<ExportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(entries));
+    return create_ast_node<ExportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(entries), is_default);
 }
 }

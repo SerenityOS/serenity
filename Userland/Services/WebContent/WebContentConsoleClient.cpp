@@ -9,7 +9,7 @@
 #include "WebContentConsoleClient.h"
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
-#include <LibJS/Parser.h>
+#include <LibJS/Script.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <WebContent/ConsoleGlobalObject.h>
 
@@ -28,13 +28,11 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<J
 
 void WebContentConsoleClient::handle_input(String const& js_source)
 {
-    auto parser = JS::Parser(JS::Lexer(js_source));
-    auto program = parser.parse_program();
-
+    auto script_or_error = JS::Script::parse(js_source, m_interpreter->realm(), "");
     StringBuilder output_html;
     auto result = JS::ThrowCompletionOr<JS::Value> { JS::js_undefined() };
-    if (parser.has_errors()) {
-        auto error = parser.errors()[0];
+    if (script_or_error.is_error()) {
+        auto error = script_or_error.error()[0];
         auto hint = error.source_location_hint(js_source);
         if (!hint.is_empty())
             output_html.append(String::formatted("<pre>{}</pre>", escape_html_entities(hint)));
@@ -47,7 +45,7 @@ void WebContentConsoleClient::handle_input(String const& js_source)
         auto& this_value_before = m_interpreter->realm().global_environment().global_this_value();
         m_interpreter->realm().set_global_object(*m_console_global_object.cell(), &global_object_before);
 
-        result = m_interpreter->run(*m_console_global_object.cell(), *program);
+        result = m_interpreter->run(script_or_error.value());
 
         m_interpreter->realm().set_global_object(global_object_before, &this_value_before);
     }

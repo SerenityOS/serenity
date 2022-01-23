@@ -306,7 +306,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
 
     auto load_writable_section = [&](auto& program_header) -> ErrorOr<void> {
         // Writable section: create a copy in memory.
-        VERIFY(program_header.alignment() == PAGE_SIZE);
+        VERIFY(program_header.alignment() % PAGE_SIZE == 0);
 
         if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
             dbgln("Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.");
@@ -324,7 +324,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
         auto range_end = VirtualAddress { rounded_range_end };
 
-        auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get()));
+        auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get(), program_header.alignment()));
         auto region = TRY(new_space->allocate_region(range, region_name->view(), prot, AllocationStrategy::Reserve));
 
         // It's not always the case with PIE executables (and very well shouldn't be) that the
@@ -348,7 +348,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
             return load_writable_section(program_header);
 
         // Non-writable section: map the executable itself in memory.
-        VERIFY(program_header.alignment() == PAGE_SIZE);
+        VERIFY(program_header.alignment() % PAGE_SIZE == 0);
         int prot = 0;
         if (program_header.is_readable())
             prot |= PROT_READ;
@@ -360,7 +360,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
         size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
         auto range_end = VirtualAddress { rounded_range_end };
-        auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get()));
+        auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get(), program_header.alignment()));
         auto region = TRY(new_space->allocate_region_with_vmobject(range, *vmobject, program_header.offset(), elf_name->view(), prot, true));
 
         if (should_allow_syscalls == ShouldAllowSyscalls::Yes)
