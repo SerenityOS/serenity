@@ -29,7 +29,7 @@ Lagom can be used to fuzz parts of SerenityOS's code base. This requires buildin
     # Or as a handy rebuild-rerun line:
     ninja FuzzJs && ./Fuzzers/FuzzJs
 
-(Note that we require clang >= 12, so depending on your package manager you may need to specify `clang++-12` and `clang-12` instead.)
+(Note that we require clang >= 13, so depending on your package manager you may need to specify `clang++-13` and `clang-13` instead.)
 
 Any fuzzing results (particularly slow inputs, crashes, etc.) will be dropped in the current directory.
 

@@ -18,10 +18,10 @@ steps:
         sudo apt-get purge -y clang-11 gcc-10
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
         sudo apt-get update
-        sudo apt-get install ccache gcc-11 g++-11 libstdc++-11-dev ninja-build unzip
+        sudo apt-get install ccache clang-13 gcc-11 g++-11 libstdc++-11-dev ninja-build unzip
 
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-13 100
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-13 100
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
 
