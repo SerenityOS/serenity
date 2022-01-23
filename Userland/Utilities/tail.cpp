@@ -6,7 +6,8 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <stdio.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -71,12 +72,9 @@ static off_t find_seek_pos(Core::File& file, int wanted_lines)
     return pos;
 }
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     bool follow = false;
     int line_count = DEFAULT_LINE_COUNT;
@@ -87,18 +85,10 @@ int main(int argc, char* argv[])
     args_parser.add_option(follow, "Output data as it is written to the file", "follow", 'f');
     args_parser.add_option(line_count, "Fetch the specified number of lines", "lines", 'n', "number");
     args_parser.add_positional_argument(file, "File path", "file");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    auto f = Core::File::construct(file);
-    if (!f->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", f->name(), f->error_string());
-        exit(1);
-    }
-
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    auto f = TRY(Core::File::open(file, Core::OpenMode::ReadOnly));
+    TRY(Core::System::pledge("stdio"));
 
     auto pos = find_seek_pos(*f, line_count);
     return tail_from_pos(*f, pos, follow);
