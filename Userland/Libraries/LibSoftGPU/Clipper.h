@@ -49,8 +49,8 @@ public:
     void clip_triangle_against_frustum(Vector<Vertex>& input_vecs);
 
 private:
-    bool point_within_clip_plane(const FloatVector4& vertex, ClipPlane plane);
-    Vertex clip_intersection_point(const Vertex& vec, const Vertex& prev_vec, ClipPlane plane_index);
+    bool point_within_clip_plane(FloatVector4 const& vertex, ClipPlane plane);
+    Vertex clip_intersection_point(Vertex const& vec, Vertex const& prev_vec, ClipPlane plane_index);
     Vector<Vertex> list_a;
     Vector<Vertex> list_b;
 };
