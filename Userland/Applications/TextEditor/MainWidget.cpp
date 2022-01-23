@@ -266,7 +266,7 @@ MainWidget::MainWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
+        auto response = FSAC::the().try_open_file(window());
         if (response.is_error())
             return;
 
@@ -282,7 +282,7 @@ MainWidget::MainWidget()
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_save_file(window(), m_name, m_extension);
+        auto response = FSAC::the().try_save_file(window(), m_name, m_extension);
         if (response.is_error())
             return;
 
@@ -301,7 +301,7 @@ MainWidget::MainWidget()
             m_save_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        auto response = FSAC::the().try_request_file(window(), m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
         if (response.is_error())
             return;
 
@@ -724,7 +724,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         }
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FSAC::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
         read_file(*response.value());

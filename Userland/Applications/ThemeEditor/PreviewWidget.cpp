@@ -264,7 +264,7 @@ void PreviewWidget::drop_event(GUI::DropEvent& event)
             return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FSAC::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
         set_theme_from_file(*response.value());

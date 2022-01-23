@@ -131,7 +131,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         });
 
     m_open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(&window);
+        auto response = FSAC::the().try_open_file(&window);
         if (response.is_error())
             return;
         open_image(response.value());
@@ -162,7 +162,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             "As &BMP", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "bmp");
+                auto response = FSAC::the().try_save_file(&window, "untitled", "bmp");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
@@ -177,7 +177,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto* editor = current_image_editor();
                 VERIFY(editor);
                 // TODO: fix bmp on line below?
-                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "png");
+                auto response = FSAC::the().try_save_file(&window, "untitled", "png");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
@@ -306,7 +306,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "&Load Color Palette", [&](auto&) {
-            auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Load Color Palette");
+            auto response = FSAC::the().try_open_file(&window, "Load Color Palette");
             if (response.is_error())
                 return;
 
@@ -320,7 +320,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "Sa&ve Color Palette", [&](auto&) {
-            auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "palette");
+            auto response = FSAC::the().try_save_file(&window, "untitled", "palette");
             if (response.is_error())
                 return;
 
@@ -863,7 +863,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (url.protocol() != "file")
             continue;
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), url.path(), Core::OpenMode::ReadOnly);
+        auto response = FSAC::the().try_request_file(window(), url.path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
         open_image(response.value());

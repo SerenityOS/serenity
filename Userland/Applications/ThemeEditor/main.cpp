@@ -378,7 +378,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window, "Select theme file", "/res/themes");
+        auto response = FSAC::the().try_open_file(window, "Select theme file", "/res/themes");
         if (response.is_error())
             return;
         preview_widget.set_theme_from_file(*response.value());
@@ -386,14 +386,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_action([&](auto&) {
         if (path.has_value()) {
-            save_to_result(FileSystemAccessClient::Client::the().try_request_file(window, *path, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
+            save_to_result(FSAC::the().try_request_file(window, *path, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
         } else {
-            save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini"));
+            save_to_result(FSAC::the().try_save_file(window, "Theme", "ini"));
         }
     })));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini"));
+        save_to_result(FSAC::the().try_save_file(window, "Theme", "ini"));
     })));
 
     TRY(file_menu->try_add_separator());

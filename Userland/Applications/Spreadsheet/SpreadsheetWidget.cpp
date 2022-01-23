@@ -124,7 +124,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         if (!load_path.has_value())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), *load_path);
+        auto response = FSAC::the().try_request_file_read_only_approved(window(), *load_path);
         if (response.is_error())
             return;
         load_file(*response.value());

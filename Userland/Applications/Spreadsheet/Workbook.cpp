@@ -71,7 +71,7 @@ Result<bool, String> Workbook::open_file(Core::File& file)
 
 Result<bool, String> Workbook::load(StringView filename)
 {
-    auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(&m_parent_window, filename);
+    auto response = FSAC::the().try_request_file_read_only_approved(&m_parent_window, filename);
     if (response.is_error()) {
         StringBuilder sb;
         sb.append("Failed to open ");

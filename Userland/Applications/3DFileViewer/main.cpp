@@ -298,7 +298,7 @@ bool GLContextWidget::load_file(Core::File& file)
         if (!bitmap_or_error.is_error())
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     } else {
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), builder.string_view(), Core::OpenMode::ReadOnly);
+        auto response = FSAC::the().try_request_file(window(), builder.string_view(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return false;
 
@@ -357,7 +357,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& file_menu = window->add_menu("&File");
 
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window);
+        auto response = FSAC::the().try_open_file(window);
         if (response.is_error())
             return;
 

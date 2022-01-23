@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     window->show();
 
     if (filename) {
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, filename);
+        auto response = FSAC::the().try_request_file_read_only_approved(window, filename);
         if (response.is_error())
             return 1;
         spreadsheet_widget.load_file(*response.value());

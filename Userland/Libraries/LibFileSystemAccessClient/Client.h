@@ -48,3 +48,12 @@ private:
 };
 
 }
+
+namespace FSAC {
+
+ALWAYS_INLINE FileSystemAccessClient::Client& the()
+{
+    return FileSystemAccessClient::Client::the();
+}
+
+}

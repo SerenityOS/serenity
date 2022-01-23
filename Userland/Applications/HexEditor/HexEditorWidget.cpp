@@ -88,7 +88,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
+        auto response = FSAC::the().try_open_file(window(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
         if (response.is_error())
             return;
 
@@ -118,7 +118,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_save_file(window(), m_name, m_extension, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+        auto response = FSAC::the().try_save_file(window(), m_name, m_extension, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
         if (response.is_error())
             return;
         auto file = response.release_value();
@@ -374,7 +374,7 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
         window()->move_to_front();
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FSAC::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
         open_file(response.value());
