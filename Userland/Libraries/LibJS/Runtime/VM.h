@@ -200,18 +200,6 @@ public:
 
     Value get_new_target();
 
-    template<typename... Args>
-    [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> call(FunctionObject& function, Value this_value, Args... args)
-    {
-        if constexpr (sizeof...(Args) > 0) {
-            MarkedValueList arguments_list { heap() };
-            (..., arguments_list.append(move(args)));
-            return call(function, this_value, move(arguments_list));
-        }
-
-        return call(function, this_value);
-    }
-
     CommonPropertyNames names;
 
     void run_queued_promise_jobs();
@@ -255,8 +243,6 @@ public:
 
 private:
     explicit VM(OwnPtr<CustomData>);
-
-    [[nodiscard]] ThrowCompletionOr<Value> call_internal(FunctionObject&, Value this_value, Optional<MarkedValueList> arguments);
 
     ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object);
     ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment, GlobalObject& global_object);
@@ -309,15 +295,6 @@ private:
 
     OwnPtr<CustomData> m_custom_data;
 };
-
-template<>
-[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> VM::call(FunctionObject& function, Value this_value, MarkedValueList arguments) { return call_internal(function, this_value, move(arguments)); }
-
-template<>
-[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> VM::call(FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments) { return call_internal(function, this_value, move(arguments)); }
-
-template<>
-[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> VM::call(FunctionObject& function, Value this_value) { return call(function, this_value, Optional<MarkedValueList> {}); }
 
 ALWAYS_INLINE Heap& Cell::heap() const
 {
