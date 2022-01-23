@@ -1,10 +1,8 @@
 set(SOURCES
     Clipper.cpp
-    DepthBuffer.cpp
     Device.cpp
     Image.cpp
     Sampler.cpp
-    StencilBuffer.cpp
 )
 
 add_compile_options(-Wno-psabi)

@@ -62,7 +62,17 @@ constexpr static auto interpolate(const T& v0, const T& v1, const T& v2, const V
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
 
-ALWAYS_INLINE static u32x4 to_rgba32(const Vector4<f32x4>& v)
+static ColorType to_bgra32(FloatVector4 const& color)
+{
+    auto clamped = color.clamped(0.0f, 1.0f);
+    auto r = static_cast<u8>(clamped.x() * 255);
+    auto g = static_cast<u8>(clamped.y() * 255);
+    auto b = static_cast<u8>(clamped.z() * 255);
+    auto a = static_cast<u8>(clamped.w() * 255);
+    return a << 24 | r << 16 | g << 8 | b;
+}
+
+ALWAYS_INLINE static u32x4 to_bgra32(Vector4<f32x4> const& v)
 {
     auto clamped = v.clamped(expand4(0.0f), expand4(1.0f));
     auto r = to_u32x4(clamped.x() * 255);
@@ -88,7 +98,7 @@ Gfx::IntRect Device::window_coordinates_to_target_coordinates(Gfx::IntRect const
 {
     return {
         window_rect.x(),
-        m_render_target->rect().height() - window_rect.height() - window_rect.y(),
+        m_frame_buffer->rect().height() - window_rect.height() - window_rect.y(),
         window_rect.width(),
         window_rect.height(),
     };
@@ -203,7 +213,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
 
     auto const one_over_area = 1.0f / area;
 
-    auto render_bounds = m_render_target->rect();
+    auto render_bounds = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
         render_bounds.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
 
@@ -259,11 +269,15 @@ void Device::rasterize_triangle(const Triangle& triangle)
         expand4(subpixel_factor / 2),
     };
 
+    auto color_buffer = m_frame_buffer->color_buffer();
+    auto depth_buffer = m_frame_buffer->depth_buffer();
+    auto stencil_buffer = m_frame_buffer->stencil_buffer();
+
     // Stencil configuration and writing
     auto const stencil_configuration = m_stencil_configuration[Face::Front];
     auto const stencil_reference_value = stencil_configuration.reference_value & stencil_configuration.test_mask;
 
-    auto write_to_stencil = [](u8* stencil_ptrs[4], i32x4 stencil_value, StencilOperation op, u8 reference_value, u8 write_mask, i32x4 pixel_mask) {
+    auto write_to_stencil = [](StencilType* stencil_ptrs[4], i32x4 stencil_value, StencilOperation op, StencilType reference_value, StencilType write_mask, i32x4 pixel_mask) {
         if (write_mask == 0 || op == StencilOperation::Keep)
             return;
 
@@ -334,13 +348,13 @@ void Device::rasterize_triangle(const Triangle& triangle)
             int coverage_bits = maskbits(quad.mask);
 
             // Stencil testing
-            u8* stencil_ptrs[4];
+            StencilType* stencil_ptrs[4];
             i32x4 stencil_value;
             if (m_options.enable_stencil_test) {
-                stencil_ptrs[0] = coverage_bits & 1 ? &m_stencil_buffer->scanline(by)[bx] : nullptr;
-                stencil_ptrs[1] = coverage_bits & 2 ? &m_stencil_buffer->scanline(by)[bx + 1] : nullptr;
-                stencil_ptrs[2] = coverage_bits & 4 ? &m_stencil_buffer->scanline(by + 1)[bx] : nullptr;
-                stencil_ptrs[3] = coverage_bits & 8 ? &m_stencil_buffer->scanline(by + 1)[bx + 1] : nullptr;
+                stencil_ptrs[0] = coverage_bits & 1 ? &stencil_buffer->scanline(by)[bx] : nullptr;
+                stencil_ptrs[1] = coverage_bits & 2 ? &stencil_buffer->scanline(by)[bx + 1] : nullptr;
+                stencil_ptrs[2] = coverage_bits & 4 ? &stencil_buffer->scanline(by + 1)[bx] : nullptr;
+                stencil_ptrs[3] = coverage_bits & 8 ? &stencil_buffer->scanline(by + 1)[bx + 1] : nullptr;
 
                 stencil_value = load4_masked(stencil_ptrs[0], stencil_ptrs[1], stencil_ptrs[2], stencil_ptrs[3], quad.mask);
                 stencil_value &= stencil_configuration.test_mask;
@@ -391,11 +405,11 @@ void Device::rasterize_triangle(const Triangle& triangle)
             }
 
             // Depth testing
-            float* depth_ptrs[4] = {
-                coverage_bits & 1 ? &m_depth_buffer->scanline(by)[bx] : nullptr,
-                coverage_bits & 2 ? &m_depth_buffer->scanline(by)[bx + 1] : nullptr,
-                coverage_bits & 4 ? &m_depth_buffer->scanline(by + 1)[bx] : nullptr,
-                coverage_bits & 8 ? &m_depth_buffer->scanline(by + 1)[bx + 1] : nullptr,
+            DepthType* depth_ptrs[4] = {
+                coverage_bits & 1 ? &depth_buffer->scanline(by)[bx] : nullptr,
+                coverage_bits & 2 ? &depth_buffer->scanline(by)[bx + 1] : nullptr,
+                coverage_bits & 4 ? &depth_buffer->scanline(by + 1)[bx] : nullptr,
+                coverage_bits & 8 ? &depth_buffer->scanline(by + 1)[bx + 1] : nullptr,
             };
             if (m_options.enable_depth_test) {
                 auto depth = load4_masked(depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
@@ -438,7 +452,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
                     //
                     // This is an interesting quirk that occurs due to us using the x87 FPU when Serenity is
                     // compiled for the i386 target. When we calculate our depth value to be stored in the buffer,
-                    // it is an 80-bit x87 floating point number, however, when stored into the DepthBuffer, this is
+                    // it is an 80-bit x87 floating point number, however, when stored into the depth buffer, this is
                     // truncated to 32 bits. This 38 bit loss of precision means that when x87 `FCOMP` is eventually
                     // used here the comparison fails.
                     // This could be solved by using a `long double` for the depth buffer, however this would take
@@ -538,11 +552,11 @@ void Device::rasterize_triangle(const Triangle& triangle)
             if (!m_options.color_mask || !m_options.enable_color_write)
                 continue;
 
-            Gfx::RGBA32* color_ptrs[4] = {
-                coverage_bits & 1 ? &m_render_target->scanline(by)[bx] : nullptr,
-                coverage_bits & 2 ? &m_render_target->scanline(by)[bx + 1] : nullptr,
-                coverage_bits & 4 ? &m_render_target->scanline(by + 1)[bx] : nullptr,
-                coverage_bits & 8 ? &m_render_target->scanline(by + 1)[bx + 1] : nullptr,
+            ColorType* color_ptrs[4] = {
+                coverage_bits & 1 ? &color_buffer->scanline(by)[bx] : nullptr,
+                coverage_bits & 2 ? &color_buffer->scanline(by)[bx + 1] : nullptr,
+                coverage_bits & 4 ? &color_buffer->scanline(by + 1)[bx] : nullptr,
+                coverage_bits & 8 ? &color_buffer->scanline(by + 1)[bx + 1] : nullptr,
             };
 
             u32x4 dst_u32;
@@ -552,7 +566,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
             if (m_options.enable_blending) {
                 INCREASE_STATISTICS_COUNTER(g_num_pixels_blended, maskcount(quad.mask));
 
-                // Blend color values from pixel_staging into m_render_target
+                // Blend color values from pixel_staging into color_buffer
                 Vector4<f32x4> const& src = quad.out_color;
                 auto dst = to_vec4(dst_u32);
 
@@ -572,20 +586,18 @@ void Device::rasterize_triangle(const Triangle& triangle)
             }
 
             if (m_options.color_mask == 0xffffffff)
-                store4_masked(to_rgba32(quad.out_color), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
+                store4_masked(to_bgra32(quad.out_color), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
             else
-                store4_masked((to_rgba32(quad.out_color) & m_options.color_mask) | (dst_u32 & ~m_options.color_mask), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
+                store4_masked((to_bgra32(quad.out_color) & m_options.color_mask) | (dst_u32 & ~m_options.color_mask), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
         }
     }
 }
 
-Device::Device(const Gfx::IntSize& size)
-    : m_render_target(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size).release_value_but_fixme_should_propagate_errors())
-    , m_depth_buffer(make<DepthBuffer>(size))
-    , m_stencil_buffer(MUST(StencilBuffer::try_create(size)))
+Device::Device(Gfx::IntSize const& size)
+    : m_frame_buffer(FrameBuffer<ColorType, DepthType, StencilType>::try_create(size).release_value_but_fixme_should_propagate_errors())
 {
-    m_options.scissor_box = m_render_target->rect();
-    m_options.viewport = m_render_target->rect();
+    m_options.scissor_box = m_frame_buffer->rect();
+    m_options.viewport = m_frame_buffer->rect();
 }
 
 DeviceInfo Device::info() const
@@ -595,7 +607,7 @@ DeviceInfo Device::info() const
         .device_name = "SoftGPU",
         .num_texture_units = NUM_SAMPLERS,
         .num_lights = NUM_LIGHTS,
-        .stencil_bits = sizeof(u8) * 8,
+        .stencil_bits = sizeof(StencilType) * 8,
         .supports_npot_textures = true,
     };
 }
@@ -1101,49 +1113,39 @@ ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)
     return any(quad.mask);
 }
 
-void Device::resize(const Gfx::IntSize& size)
+void Device::resize(Gfx::IntSize const& size)
 {
-    m_render_target = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size).release_value_but_fixme_should_propagate_errors();
-    m_depth_buffer = adopt_own(*new DepthBuffer(size));
+    auto frame_buffer_or_error = FrameBuffer<ColorType, DepthType, StencilType>::try_create(size);
+    m_frame_buffer = MUST(frame_buffer_or_error);
 }
 
-void Device::clear_color(const FloatVector4& color)
+void Device::clear_color(FloatVector4 const& color)
 {
-    uint8_t r = static_cast<uint8_t>(clamp(color.x(), 0.0f, 1.0f) * 255);
-    uint8_t g = static_cast<uint8_t>(clamp(color.y(), 0.0f, 1.0f) * 255);
-    uint8_t b = static_cast<uint8_t>(clamp(color.z(), 0.0f, 1.0f) * 255);
-    uint8_t a = static_cast<uint8_t>(clamp(color.w(), 0.0f, 1.0f) * 255);
-    auto const fill_color = Gfx::Color(r, g, b, a);
+    auto const fill_color = to_bgra32(color);
 
-    if (m_options.scissor_enabled) {
-        auto fill_rect = m_render_target->rect();
+    auto fill_rect = m_frame_buffer->rect();
+    if (m_options.scissor_enabled)
         fill_rect.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
-        Gfx::Painter painter { *m_render_target };
-        painter.fill_rect(fill_rect, fill_color);
-        return;
-    }
 
-    m_render_target->fill(fill_color);
+    m_frame_buffer->color_buffer()->fill(fill_color, fill_rect);
 }
 
-void Device::clear_depth(float depth)
+void Device::clear_depth(DepthType depth)
 {
-    if (m_options.scissor_enabled) {
-        m_depth_buffer->clear(window_coordinates_to_target_coordinates(m_options.scissor_box), depth);
-        return;
-    }
-
-    m_depth_buffer->clear(depth);
-}
-
-void Device::clear_stencil(u8 value)
-{
-    Gfx::IntRect clear_rect = m_stencil_buffer->rect();
-
+    auto clear_rect = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
         clear_rect.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
 
-    m_stencil_buffer->clear(clear_rect, value);
+    m_frame_buffer->depth_buffer()->fill(depth, clear_rect);
+}
+
+void Device::clear_stencil(StencilType value)
+{
+    auto clear_rect = m_frame_buffer->rect();
+    if (m_options.scissor_enabled)
+        clear_rect.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
+
+    m_frame_buffer->stencil_buffer()->fill(value, clear_rect);
 }
 
 void Device::blit_to_color_buffer_at_raster_position(Gfx::Bitmap const& source)
@@ -1154,12 +1156,11 @@ void Device::blit_to_color_buffer_at_raster_position(Gfx::Bitmap const& source)
     INCREASE_STATISTICS_COUNTER(g_num_pixels, source.width() * source.height());
     INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, source.width() * source.height());
 
-    Gfx::Painter painter { *m_render_target };
     auto const blit_rect = raster_rect_in_target_coordinates(source.size());
-    painter.blit({ blit_rect.x(), blit_rect.y() }, source, source.rect(), 1.0f, true);
+    m_frame_buffer->color_buffer()->blit_from_bitmap(source, blit_rect);
 }
 
-void Device::blit_to_depth_buffer_at_raster_position(Vector<float> const& depth_values, size_t width, size_t height)
+void Device::blit_to_depth_buffer_at_raster_position(Vector<DepthType> const& depth_values, int width, int height)
 {
     if (!m_raster_position.valid)
         return;
@@ -1168,21 +1169,19 @@ void Device::blit_to_depth_buffer_at_raster_position(Vector<float> const& depth_
     auto const y1 = raster_rect.y();
     auto const y2 = y1 + height;
     auto const x1 = raster_rect.x();
-    int const x2 = x1 + width;
+    auto const x2 = x1 + width;
 
     auto index = 0;
-    for (int y = y2 - 1; y >= y1; --y) {
-        auto depth_line = m_depth_buffer->scanline(y);
-        for (int x = x1; x < x2; ++x) {
-            depth_line[x] = depth_values.at(index++);
-        }
+    for (auto y = y2 - 1; y >= y1; --y) {
+        auto depth_line = m_frame_buffer->depth_buffer()->scanline(y);
+        for (auto x = x1; x < x2; ++x)
+            depth_line[x] = depth_values[index++];
     }
 }
 
-void Device::blit_to(Gfx::Bitmap& target)
+void Device::blit_color_buffer_to(Gfx::Bitmap& target)
 {
-    Gfx::Painter painter { target };
-    painter.blit({ 0, 0 }, *m_render_target, m_render_target->rect(), 1.0f, false);
+    m_frame_buffer->color_buffer()->blit_to_bitmap(target, m_frame_buffer->rect());
 
     if constexpr (ENABLE_STATISTICS_OVERLAY)
         draw_statistics_overlay(target);
@@ -1205,7 +1204,7 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
 
     if (milliseconds > MILLISECONDS_PER_STATISTICS_PERIOD) {
 
-        int num_rendertarget_pixels = m_render_target->width() * m_render_target->height();
+        int num_rendertarget_pixels = m_frame_buffer->rect().size().area();
 
         StringBuilder builder;
         builder.append(String::formatted("Timings      : {:.1}ms {:.1}FPS\n",
@@ -1258,33 +1257,34 @@ void Device::set_light_model_params(const LightModelParameters& lighting_model)
     m_lighting_model = lighting_model;
 }
 
-Gfx::RGBA32 Device::get_backbuffer_pixel(int x, int y)
+ColorType Device::get_color_buffer_pixel(int x, int y)
 {
     // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
-    if (x < 0 || y < 0 || x >= m_render_target->width() || y >= m_render_target->height())
+    if (x < 0 || y < 0 || x >= m_frame_buffer->rect().width() || y >= m_frame_buffer->rect().height())
         return 0;
 
-    return m_render_target->scanline(y)[x];
+    return m_frame_buffer->color_buffer()->scanline(y)[x];
 }
 
-float Device::get_depthbuffer_value(int x, int y)
+DepthType Device::get_depthbuffer_value(int x, int y)
 {
     // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
-    if (x < 0 || y < 0 || x >= m_render_target->width() || y >= m_render_target->height())
+    if (x < 0 || y < 0 || x >= m_frame_buffer->rect().width() || y >= m_frame_buffer->rect().height())
         return 1.0f;
 
-    return m_depth_buffer->scanline(y)[x];
+    return m_frame_buffer->depth_buffer()->scanline(y)[x];
 }
 
 NonnullRefPtr<Image> Device::create_image(ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers)
 {
+    VERIFY(format == ImageFormat::BGRA8888);
     VERIFY(width > 0);
     VERIFY(height > 0);
     VERIFY(depth > 0);
     VERIFY(levels > 0);
     VERIFY(layers > 0);
 
-    return adopt_ref(*new Image(format, width, height, depth, levels, layers));
+    return adopt_ref(*new Image(width, height, depth, levels, layers));
 }
 
 void Device::set_sampler_config(unsigned sampler, SamplerConfig const& config)
