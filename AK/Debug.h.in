@@ -26,10 +26,6 @@
 #cmakedefine01 CALLBACK_MACHINE_DEBUG
 #endif
 
-#ifndef CNETWORKJOB_DEBUG
-#cmakedefine01 CNETWORKJOB_DEBUG
-#endif
-
 #ifndef COMPOSE_DEBUG
 #cmakedefine01 COMPOSE_DEBUG
 #endif
@@ -300,6 +296,10 @@
 
 #ifndef MOVE_DEBUG
 #cmakedefine01 MOVE_DEBUG
+#endif
+
+#ifndef NETWORKJOB_DEBUG
+#cmakedefine01 NETWORKJOB_DEBUG
 #endif
 
 #ifndef NT_DEBUG
