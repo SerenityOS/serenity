@@ -41,7 +41,7 @@ UNMAP_AFTER_INIT NVMeQueue::NVMeQueue(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memor
 UNMAP_AFTER_INIT ErrorOr<void> NVMeQueue::create()
 {
     // DMA region for RW operation. For now the requests don't exceed more than 4096 bytes(Storage device takes of it)
-    auto buffer = TRY(MM.allocate_dma_buffer_page("Admin CQ queue", Memory::Region::Access::ReadWrite, m_rw_dma_page));
+    auto buffer = TRY(MM.allocate_dma_buffer_page("Admin CQ queue"sv, Memory::Region::Access::ReadWrite, m_rw_dma_page));
     m_rw_dma_region = move(buffer);
     return {};
 }
