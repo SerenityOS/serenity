@@ -64,6 +64,7 @@ ErrorOr<struct stat> fstat(int fd);
 ErrorOr<int> fcntl(int fd, int command, ...);
 ErrorOr<void*> mmap(void* address, size_t, int protection, int flags, int fd, off_t, size_t alignment = 0, StringView name = {});
 ErrorOr<void> munmap(void* address, size_t);
+ErrorOr<int> anon_create(size_t size, int options);
 ErrorOr<int> open(StringView path, int options, ...);
 ErrorOr<void> close(int fd);
 ErrorOr<void> ftruncate(int fd, off_t length);
