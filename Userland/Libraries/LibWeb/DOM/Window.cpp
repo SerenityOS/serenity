@@ -6,6 +6,7 @@
  */
 
 #include <LibGUI/DisplayLink.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
@@ -171,7 +172,7 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
         VERIFY(wrapper());
         auto& vm = wrapper()->vm();
 
-        [[maybe_unused]] auto rc = vm.call(strong_timer->callback(), wrapper());
+        [[maybe_unused]] auto rc = JS::call(wrapper()->global_object(), strong_timer->callback(), wrapper());
         if (vm.exception())
             vm.clear_exception();
     });
@@ -202,7 +203,7 @@ i32 Window::request_animation_frame(JS::FunctionObject& js_callback)
     auto callback = request_animation_frame_driver().add([this, handle = JS::make_handle(&js_callback)](i32 id) mutable {
         auto& function = *handle.cell();
         auto& vm = function.vm();
-        (void)vm.call(function, JS::js_undefined(), JS::Value(performance().now()));
+        (void)JS::call(function.global_object(), function, JS::js_undefined(), JS::Value(performance().now()));
         if (vm.exception())
             vm.clear_exception();
         m_request_animation_frame_callbacks.remove(id);
@@ -393,7 +394,7 @@ void Window::queue_microtask(JS::FunctionObject& callback)
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
     HTML::queue_a_microtask(associated_document(), [&callback, handle = JS::make_handle(&callback)]() {
         auto& vm = callback.vm();
-        [[maybe_unused]] auto rc = vm.call(callback, JS::js_null());
+        [[maybe_unused]] auto rc = JS::call(callback.global_object(), callback, JS::js_null());
         // FIXME: ...and if callback throws an exception, report the exception.
         if (vm.exception())
             vm.clear_exception();

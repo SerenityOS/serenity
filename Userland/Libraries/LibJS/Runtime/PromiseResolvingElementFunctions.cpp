@@ -73,7 +73,7 @@ ThrowCompletionOr<Value> PromiseAllResolveElementFunction::resolve_element()
         auto* values_array = Array::create_from(global_object, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return vm.call(*m_capability.resolve, js_undefined(), values_array);
+        return JS::call(global_object, *m_capability.resolve, js_undefined(), values_array);
     }
 
     // 11. Return undefined.
@@ -114,7 +114,7 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
         auto* values_array = Array::create_from(global_object, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return vm.call(*m_capability.resolve, js_undefined(), values_array);
+        return JS::call(global_object, *m_capability.resolve, js_undefined(), values_array);
     }
 
     // 15. Return undefined.
@@ -152,10 +152,10 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
     // 14. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
         // a. Let valuesArray be ! CreateArrayFromList(values).
-        auto values_array = Array::create_from(global_object, m_values.values());
+        auto* values_array = Array::create_from(global_object, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return vm.call(*m_capability.resolve, js_undefined(), values_array);
+        return JS::call(global_object, *m_capability.resolve, js_undefined(), values_array);
     }
 
     // 15. Return undefined.
@@ -187,11 +187,11 @@ ThrowCompletionOr<Value> PromiseAnyRejectElementFunction::resolve_element()
         auto* error = AggregateError::create(global_object);
 
         // b. Perform ! DefinePropertyOrThrow(error, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: ! CreateArrayFromList(errors) }).
-        auto errors_array = Array::create_from(global_object, m_values.values());
+        auto* errors_array = Array::create_from(global_object, m_values.values());
         MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
         // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
-        return vm.call(*m_capability.reject, js_undefined(), error);
+        return JS::call(global_object, *m_capability.reject, js_undefined(), error);
     }
 
     return js_undefined();

@@ -426,7 +426,7 @@ Completion CallExpression::execute(Interpreter& interpreter, GlobalObject& globa
         return perform_eval(script_value, global_object, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct);
     }
 
-    return vm.call(function, this_value, move(arg_list));
+    return call(global_object, function, this_value, move(arg_list));
 }
 
 // 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation

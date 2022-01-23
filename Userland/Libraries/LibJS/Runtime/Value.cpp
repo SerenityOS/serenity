@@ -11,6 +11,7 @@
 #include <AK/Utf8View.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
@@ -421,7 +422,7 @@ ThrowCompletionOr<Value> Value::to_primitive(GlobalObject& global_object, Prefer
         auto to_primitive_method = TRY(get_method(global_object, *vm.well_known_symbol_to_primitive()));
         if (to_primitive_method) {
             auto hint = get_hint_for_preferred_type();
-            auto result = TRY(vm.call(*to_primitive_method, *this, js_string(vm, hint)));
+            auto result = TRY(call(global_object, *to_primitive_method, *this, js_string(vm, hint)));
             if (!result.is_object())
                 return result;
             return vm.throw_completion<TypeError>(global_object, ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
@@ -1180,7 +1181,7 @@ ThrowCompletionOr<Value> instance_of(GlobalObject& global_object, Value lhs, Val
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, rhs.to_string_without_side_effects());
     auto has_instance_method = TRY(rhs.get_method(global_object, *vm.well_known_symbol_has_instance()));
     if (has_instance_method) {
-        auto has_instance_result = TRY(vm.call(*has_instance_method, rhs, lhs));
+        auto has_instance_result = TRY(call(global_object, *has_instance_method, rhs, lhs));
         return Value(has_instance_result.to_boolean());
     }
     if (!rhs.is_function())
@@ -1507,7 +1508,7 @@ ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, JS:
     if (!property.is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, property.to_string_without_side_effects());
 
-    return vm.call(property.as_function(), *this, move(arguments));
+    return call(global_object, property.as_function(), *this, move(arguments));
 }
 
 }

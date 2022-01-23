@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/NumberObject.h>
@@ -132,11 +133,11 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& glob
         auto* value_object = TRY(value.to_object(global_object));
         auto to_json = TRY(value_object->get(vm.names.toJSON));
         if (to_json.is_function())
-            value = TRY(vm.call(to_json.as_function(), value, js_string(vm, key.to_string())));
+            value = TRY(call(global_object, to_json.as_function(), value, js_string(vm, key.to_string())));
     }
 
     if (state.replacer_function)
-        value = TRY(vm.call(*state.replacer_function, holder, js_string(vm, key.to_string()), value));
+        value = TRY(call(global_object, *state.replacer_function, holder, js_string(vm, key.to_string()), value));
 
     if (value.is_object()) {
         auto& value_object = value.as_object();
@@ -431,7 +432,7 @@ ThrowCompletionOr<Value> JSONObject::internalize_json_property(GlobalObject& glo
         }
     }
 
-    return TRY(vm.call(reviver, Value(holder), js_string(vm, name.to_string()), value));
+    return TRY(call(global_object, reviver, holder, js_string(vm, name.to_string()), value));
 }
 
 }

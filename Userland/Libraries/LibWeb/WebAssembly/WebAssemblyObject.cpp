@@ -215,7 +215,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
                             for (auto& entry : arguments)
                                 argument_values.append(to_js_value(global_object, entry));
 
-                            auto result_or_error = vm.call(function, JS::js_undefined(), move(argument_values));
+                            auto result_or_error = JS::call(global_object, function, JS::js_undefined(), move(argument_values));
                             if (result_or_error.is_error()) {
                                 vm.clear_exception();
                                 return Wasm::Trap();

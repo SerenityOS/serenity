@@ -99,7 +99,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, O
     // 3. If fields is not undefined, then
     if (fields) {
         // a. Set fieldsArray to ? Call(fields, calendar, « fieldsArray »).
-        fields_array = TRY(vm.call(*fields, &calendar, fields_array));
+        fields_array = TRY(call(global_object, *fields, &calendar, fields_array));
     }
 
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).
