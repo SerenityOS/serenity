@@ -1220,7 +1220,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTime);
 
     // 20. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond, [[Calendar]]: calendar }.
-    return ISODateTime { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond, .calendar = calendar_part.has_value() ? *calendar_part : Optional<String>() };
+    return ISODateTime { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond, .calendar = Optional<String>(move(calendar_part)) };
 }
 
 // 13.34 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
@@ -1626,10 +1626,6 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
 {
     auto& vm = global_object.vm();
 
-    auto optional_string_view_to_optional_string = [](Optional<StringView> const& s) {
-        return s.has_value() ? String { *s } : Optional<String> {};
-    };
-
     // 1. Assert: Type(isoString) is String.
 
     // 2. Let parseResult be ParseText(! StringToCodePoints(isoString), TemporalTimeZoneString).
@@ -1655,7 +1651,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     // 7. If z is not empty, then
     if (z.has_value()) {
         // a. Return the Record { [[Z]]: true, [[OffsetString]]: undefined, [[Name]]: name }.
-        return TemporalTimeZone { .z = true, .offset_string = {}, .name = optional_string_view_to_optional_string(name) };
+        return TemporalTimeZone { .z = true, .offset_string = {}, .name = Optional<String>(move(name)) };
     }
 
     // 8. If offsetString is empty, then
@@ -1665,7 +1661,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     // NOTE: No-op.
 
     // 10. Return the Record { [[Z]]: false, [[OffsetString]]: offsetString, [[Name]]: name }.
-    return TemporalTimeZone { .z = false, .offset_string = optional_string_view_to_optional_string(offset_string), .name = optional_string_view_to_optional_string(name) };
+    return TemporalTimeZone { .z = false, .offset_string = Optional<String>(move(offset_string)), .name = Optional<String>(move(name)) };
 }
 
 // 13.44 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring

@@ -725,9 +725,9 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
             DictionaryMember member {
                 required,
                 move(type),
-                move(name),
+                name,
                 move(extended_attributes),
-                default_value.has_value() ? default_value.value() : Optional<String> {},
+                Optional<String>(move(default_value)),
             };
             dictionary.members.append(move(member));
         }
