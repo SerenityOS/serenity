@@ -56,8 +56,14 @@ private:
 
     void apply_transformations_to_children(Box&);
 
+    enum class FloatSide {
+        Left,
+        Right,
+    };
+
     struct FloatSideData {
         Vector<Box&> boxes;
+        float y_offset { 0 };
     };
 
     FloatSideData m_left_floats;

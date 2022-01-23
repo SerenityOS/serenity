@@ -515,7 +515,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         }
     }
 
-    auto clear_floating_boxes = [&](auto& float_side) {
+    auto clear_floating_boxes = [&](FloatSideData& float_side) {
         if (!float_side.boxes.is_empty()) {
             float clearance_y = 0;
             for (auto& floating_box : float_side.boxes) {
@@ -523,6 +523,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
             }
             y = max(y, clearance_y);
             float_side.boxes.clear();
+            float_side.y_offset = 0;
         }
     };
 
@@ -593,52 +594,91 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
     // First we place the box normally (to get the right y coordinate.)
     place_block_level_non_replaced_element_in_normal_flow(box, containing_block);
 
-    // Then we float it to the left or right.
-    float x = box.effective_offset().x();
+    auto float_box = [&](FloatSide side, FloatSideData& side_data) {
+        auto first_edge = [&](PixelBox const& thing) { return side == FloatSide::Left ? thing.left : thing.right; };
+        auto second_edge = [&](PixelBox const& thing) { return side == FloatSide::Right ? thing.left : thing.right; };
 
-    auto box_in_root_rect = rect_in_coordinate_space(box, root());
-    float y_in_root = box_in_root_rect.y();
+        // Then we float it to the left or right.
+        float x = box.effective_offset().x();
+
+        auto box_in_root_rect = rect_in_coordinate_space(box, root());
+        float y_in_root = box_in_root_rect.y();
+
+        float y = box.effective_offset().y();
+
+        if (side_data.boxes.is_empty()) {
+            // This is the first floating box on this side. Go all the way to the edge.
+            if (side == FloatSide::Left)
+                x = box.box_model().margin_box().left;
+            else
+                x = containing_block.width() - box.box_model().margin_box().right - box.width();
+            side_data.y_offset = 0;
+        } else {
+            auto& previous_box = side_data.boxes.last();
+            auto previous_rect = rect_in_coordinate_space(previous_box, root());
+
+            auto margin_collapsed_with_previous = max(
+                second_edge(previous_box.box_model().margin),
+                first_edge(box.box_model().margin));
+
+            float wanted_x = 0;
+            bool fits_on_line = false;
+
+            if (side == FloatSide::Left) {
+                auto previous_right_border_edge = previous_box.effective_offset().x()
+                    + previous_box.width()
+                    + previous_box.box_model().padding.right
+                    + previous_box.box_model().border.right
+                    + margin_collapsed_with_previous;
+
+                wanted_x = previous_right_border_edge + box.box_model().border.left + box.box_model().padding.left;
+                fits_on_line = (wanted_x + box.width() + box.box_model().padding.right + box.box_model().border.right + box.box_model().margin.right) <= containing_block.width();
+            } else {
+                auto previous_left_border_edge = previous_box.effective_offset().x()
+                    - previous_box.width()
+                    - previous_box.box_model().padding.left
+                    - previous_box.box_model().border.left
+                    - margin_collapsed_with_previous;
+
+                wanted_x = previous_left_border_edge - box.box_model().border.right - box.box_model().padding.right - box.width();
+                fits_on_line = (wanted_x - box.box_model().padding.left - box.box_model().border.left - box.box_model().margin.left) >= 0;
+            }
+
+            if (fits_on_line) {
+                if (previous_rect.contains_vertically(y_in_root + side_data.y_offset)) {
+                    // This box touches another already floating box. Stack after others.
+                    x = wanted_x;
+                } else {
+                    // This box does not touch another floating box, go all the way to the first edge.
+                    x = first_edge(box.box_model().margin_box());
+
+                    // Also, forget all previous boxes floated to this side while since they're no longer relevant.
+                    side_data.boxes.clear();
+                }
+            } else {
+                // We ran out of horizontal space on this "float line", and need to break.
+                x = first_edge(box.box_model().margin_box());
+                float lowest_border_edge = 0;
+                for (auto const& box : side_data.boxes)
+                    lowest_border_edge = max(lowest_border_edge, box.height() + box.box_model().border.bottom + box.box_model().margin.bottom);
+
+                side_data.y_offset += lowest_border_edge;
+
+                // Also, forget all previous boxes floated to this side while since they're no longer relevant.
+                side_data.boxes.clear();
+            }
+        }
+        y += side_data.y_offset;
+        side_data.boxes.append(box);
+
+        box.set_offset(x, y);
+    };
 
     // Next, float to the left and/or right
     if (box.computed_values().float_() == CSS::Float::Left) {
-        if (!m_left_floats.boxes.is_empty()) {
-            auto& previous_floating_box = m_left_floats.boxes.last();
-            auto previous_rect = rect_in_coordinate_space(previous_floating_box, root());
-            if (previous_rect.contains_vertically(y_in_root)) {
-                // This box touches another already floating box. Stack to the right.
-                x = previous_floating_box.margin_box_as_relative_rect().x() + previous_floating_box.margin_box_as_relative_rect().width() + box.box_model().margin_box().left;
-            } else {
-                // This box does not touch another floating box, go all the way to the left.
-                x = box.box_model().margin_box().left;
-                // Also, forget all previous left-floating boxes while we're here since they're no longer relevant.
-                m_left_floats.boxes.clear();
-            }
-        } else {
-            // This is the first left-floating box. Go all the way to the left.
-            x = box.box_model().margin_box().left;
-        }
-        m_left_floats.boxes.append(box);
+        float_box(FloatSide::Left, m_left_floats);
     } else if (box.computed_values().float_() == CSS::Float::Right) {
-        if (!m_right_floats.boxes.is_empty()) {
-            auto& previous_floating_box = m_right_floats.boxes.last();
-            auto previous_rect = rect_in_coordinate_space(previous_floating_box, root());
-            if (previous_rect.contains_vertically(y_in_root)) {
-                // This box touches another already floating box. Stack to the left.
-                x = previous_floating_box.margin_box_as_relative_rect().x() - box.box_model().margin_box().right - box.width();
-            } else {
-                // This box does not touch another floating box, go all the way to the right.
-                x = containing_block.width() - box.box_model().margin_box().right - box.width();
-                // Also, forget all previous right-floating boxes while we're here since they're no longer relevant.
-                m_right_floats.boxes.clear();
-            }
-        } else {
-            // This is the first right-floating box. Go all the way to the right.
-            x = containing_block.width() - box.box_model().margin_box().right - box.width();
-        }
-        m_right_floats.boxes.append(box);
+        float_box(FloatSide::Right, m_right_floats);
     }
-
-    box.set_offset(x, box.effective_offset().y());
 }
-
 }
