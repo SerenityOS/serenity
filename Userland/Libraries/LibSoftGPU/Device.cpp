@@ -1103,16 +1103,12 @@ ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)
 
 void Device::resize(const Gfx::IntSize& size)
 {
-    wait_for_all_threads();
-
     m_render_target = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size).release_value_but_fixme_should_propagate_errors();
     m_depth_buffer = adopt_own(*new DepthBuffer(size));
 }
 
 void Device::clear_color(const FloatVector4& color)
 {
-    wait_for_all_threads();
-
     uint8_t r = static_cast<uint8_t>(clamp(color.x(), 0.0f, 1.0f) * 255);
     uint8_t g = static_cast<uint8_t>(clamp(color.y(), 0.0f, 1.0f) * 255);
     uint8_t b = static_cast<uint8_t>(clamp(color.z(), 0.0f, 1.0f) * 255);
@@ -1132,8 +1128,6 @@ void Device::clear_color(const FloatVector4& color)
 
 void Device::clear_depth(float depth)
 {
-    wait_for_all_threads();
-
     if (m_options.scissor_enabled) {
         m_depth_buffer->clear(window_coordinates_to_target_coordinates(m_options.scissor_box), depth);
         return;
@@ -1156,8 +1150,6 @@ void Device::blit_to_color_buffer_at_raster_position(Gfx::Bitmap const& source)
 {
     if (!m_raster_position.valid)
         return;
-
-    wait_for_all_threads();
 
     INCREASE_STATISTICS_COUNTER(g_num_pixels, source.width() * source.height());
     INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, source.width() * source.height());
@@ -1189,8 +1181,6 @@ void Device::blit_to_depth_buffer_at_raster_position(Vector<float> const& depth_
 
 void Device::blit_to(Gfx::Bitmap& target)
 {
-    wait_for_all_threads();
-
     Gfx::Painter painter { target };
     painter.blit({ 0, 0 }, *m_render_target, m_render_target->rect(), 1.0f, false);
 
@@ -1255,30 +1245,17 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
     painter.draw_text(target.rect().translated(2, 2), debug_string, font, Gfx::TextAlignment::TopLeft, Gfx::Color::White);
 }
 
-void Device::wait_for_all_threads() const
-{
-    // FIXME: Wait for all render threads to finish when multithreading is being implemented
-}
-
 void Device::set_options(const RasterizerOptions& options)
 {
-    wait_for_all_threads();
-
     m_options = options;
 
     if (m_options.enable_blending)
         setup_blend_factors();
-
-    // FIXME: Recreate or reinitialize render threads here when multithreading is being implemented
 }
 
 void Device::set_light_model_params(const LightModelParameters& lighting_model)
 {
-    wait_for_all_threads();
-
     m_lighting_model = lighting_model;
-
-    // FIXME: Recreate or reinitialize render threads here when multithreading is being implemented
 }
 
 Gfx::RGBA32 Device::get_backbuffer_pixel(int x, int y)
