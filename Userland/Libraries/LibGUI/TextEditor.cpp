@@ -550,6 +550,7 @@ void TextEditor::paint_event(PaintEvent& event)
                         painter.fill_rect(span_rect, text_attributes.background_color.value());
                     }
                     draw_text(span_rect, text, *font, m_text_alignment, text_attributes);
+                    span_rect.translate_by(span_rect.width(), 0);
                 };
                 for (;;) {
                     if (span_index >= document().spans().size()) {
