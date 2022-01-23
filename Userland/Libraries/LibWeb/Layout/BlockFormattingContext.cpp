@@ -660,7 +660,7 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
                 x = first_edge(box.box_model().margin_box());
                 float lowest_border_edge = 0;
                 for (auto const& box : side_data.boxes)
-                    lowest_border_edge = max(lowest_border_edge, box.height() + box.box_model().border.bottom + box.box_model().margin.bottom);
+                    lowest_border_edge = max(lowest_border_edge, box.border_box_height());
 
                 side_data.y_offset += lowest_border_edge;
 
