@@ -8,9 +8,10 @@
 
 #include <AK/Concepts.h>
 #include <AK/Format.h>
-#include <AK/Math.h>
 #include <AK/Types.h>
-
+#ifndef KERNEL
+#    include <AK/Math.h>
+#endif
 namespace AK {
 
 // FIXME: this always uses round to nearest break-tie to even
@@ -25,29 +26,18 @@ class FixedPoint {
 
 public:
     constexpr FixedPoint() = default;
-    template<Integral I>
-    constexpr FixedPoint(I value)
-        : m_value(static_cast<Underlying>(value) << precision)
-    {
-    }
-
-    template<FloatingPoint F>
-    constexpr FixedPoint(F value)
-        : m_value(static_cast<Underlying>(value * (static_cast<Underlying>(1) << precision)))
-    {
-    }
-
     template<size_t P, typename U>
     explicit constexpr FixedPoint(FixedPoint<P, U> const& other)
         : m_value(other.template cast_to<precision, Underlying>().m_value)
     {
     }
 
-    template<FloatingPoint F>
-    explicit ALWAYS_INLINE operator F() const
+    template<Integral I>
+    constexpr FixedPoint(I value)
+        : m_value(static_cast<Underlying>(value) << precision)
     {
-        return (F)m_value * pow<F>(0.5, precision);
     }
+
     template<Integral I>
     explicit constexpr operator I() const
     {
@@ -65,6 +55,20 @@ public:
         }
         return value;
     }
+
+#ifndef KERNEL
+    template<FloatingPoint F>
+    constexpr FixedPoint(F value)
+        : m_value(static_cast<Underlying>(value * (static_cast<Underlying>(1) << precision)))
+    {
+    }
+
+    template<FloatingPoint F>
+    explicit ALWAYS_INLINE operator F() const
+    {
+        return (F)m_value * pow<F>(0.5, precision);
+    }
+#endif
 
     constexpr Underlying raw() const
     {
@@ -299,6 +303,7 @@ public:
         return (m_value >> precision) <= other || (m_value >> precision == other && (m_value & radix_mask));
     }
 
+#ifndef KERNEL
     // Casting from a float should be faster than casting to a float
     template<FloatingPoint F>
     bool operator==(F other) const { return *this == (This)other; }
@@ -312,6 +317,7 @@ public:
     bool operator<(F other) const { return *this < (This)other; }
     template<FloatingPoint F>
     bool operator<=(F other) const { return *this <= (This)other; }
+#endif
 
     template<size_t P, typename U>
     operator FixedPoint<P, U>() const
