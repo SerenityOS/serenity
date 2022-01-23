@@ -24,6 +24,9 @@ namespace AK {
 
 template<typename T>
 class [[nodiscard]] Optional {
+    template<typename U>
+    friend class Optional;
+
 public:
     using ValueType = T;
 
@@ -50,17 +53,31 @@ public:
 #endif
         : m_has_value(other.m_has_value)
     {
-        if (other.has_value()) {
+        if (other.has_value())
             new (&m_storage) T(other.value());
-        }
     }
 
     ALWAYS_INLINE Optional(Optional&& other)
         : m_has_value(other.m_has_value)
     {
-        if (other.has_value()) {
+        if (other.has_value())
             new (&m_storage) T(other.release_value());
-        }
+    }
+
+    template<typename U>
+    requires(IsConstructible<T, U const&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) ALWAYS_INLINE explicit Optional(Optional<U> const& other)
+        : m_has_value(other.m_has_value)
+    {
+        if (other.has_value())
+            new (&m_storage) T(other.value());
+    }
+
+    template<typename U>
+    requires(IsConstructible<T, U&&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) ALWAYS_INLINE explicit Optional(Optional<U>&& other)
+        : m_has_value(other.m_has_value)
+    {
+        if (other.has_value())
+            new (&m_storage) T(other.release_value());
     }
 
     template<typename U = T>
