@@ -569,20 +569,6 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     }
 }
 
-static Gfx::FloatRect rect_in_coordinate_space(const Box& box, const Box& context_box)
-{
-    Gfx::FloatRect rect = box.margin_box_as_relative_rect();
-    for (auto* ancestor = box.parent(); ancestor; ancestor = ancestor->parent()) {
-        if (is<Box>(*ancestor)) {
-            auto offset = verify_cast<Box>(*ancestor).effective_offset();
-            rect.translate_by(offset);
-        }
-        if (ancestor == &context_box)
-            break;
-    }
-    return rect;
-}
-
 void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer const& containing_block)
 {
     VERIFY(box.is_floating());
@@ -601,7 +587,7 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
         // Then we float it to the left or right.
         float x = box.effective_offset().x();
 
-        auto box_in_root_rect = rect_in_coordinate_space(box, root());
+        auto box_in_root_rect = box.margin_box_rect_in_ancestor_coordinate_space(root());
         float y_in_root = box_in_root_rect.y();
 
         float y = box.effective_offset().y();
@@ -615,7 +601,7 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
             side_data.y_offset = 0;
         } else {
             auto& previous_box = side_data.boxes.last();
-            auto previous_rect = rect_in_coordinate_space(previous_box, root());
+            auto previous_rect = previous_box.margin_box_rect_in_ancestor_coordinate_space(root());
 
             auto margin_collapsed_with_previous = max(
                 second_edge(previous_box.box_model().margin),

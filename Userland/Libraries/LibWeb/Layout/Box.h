@@ -164,6 +164,20 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) override;
     virtual void after_children_paint(PaintContext&, PaintPhase) override;
 
+    Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& ancestor_box)
+    {
+        auto rect = margin_box_as_relative_rect();
+        for (auto const* current = parent(); current; current = current->parent()) {
+            if (current == &ancestor_box)
+                break;
+            if (is<Box>(*current)) {
+                auto offset = static_cast<Box const&>(*current).effective_offset();
+                rect.translate_by(offset);
+            }
+        }
+        return rect;
+    }
+
 protected:
     Box(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
         : NodeWithStyleAndBoxModelMetrics(document, node, move(style))
