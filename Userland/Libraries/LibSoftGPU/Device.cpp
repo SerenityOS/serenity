@@ -246,9 +246,9 @@ void Device::rasterize_triangle(const Triangle& triangle)
     // clang-format on
 
     // Fog depths
-    float const vertex0_eye_absz = fabs(vertex0.eye_coordinates.z());
-    float const vertex1_eye_absz = fabs(vertex1.eye_coordinates.z());
-    float const vertex2_eye_absz = fabs(vertex2.eye_coordinates.z());
+    float const vertex0_eye_absz = fabsf(vertex0.eye_coordinates.z());
+    float const vertex1_eye_absz = fabsf(vertex1.eye_coordinates.z());
+    float const vertex2_eye_absz = fabsf(vertex2.eye_coordinates.z());
 
     int const render_bounds_left = render_bounds.x();
     int const render_bounds_right = render_bounds.x() + render_bounds.width();
