@@ -9,8 +9,11 @@ die() {
 
 if [ ! -d "limine" ]; then
     echo "limine not found, the script will now build it"
-    git clone --depth 1 --branch v2.74.6 --single-branch https://github.com/limine-bootloader/limine
-    make -C limine
+    git clone --depth 1 --branch v2.78.2 --single-branch https://github.com/limine-bootloader/limine
+    cd limine
+    ./autogen.sh
+    make all
+    cd ..
 fi
 
 if [ "$(id -u)" != 0 ]; then
@@ -86,8 +89,8 @@ script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
 echo "installing limine"
 mkdir -p esp/EFI/BOOT
-cp limine/build/bin/limine.sys esp
-cp limine/build/bin/BOOTX64.EFI esp/EFI/BOOT
+cp limine/bin/limine.sys esp
+cp limine/bin/BOOTX64.EFI esp/EFI/BOOT
 cp "$SERENITY_SOURCE_DIR"/Meta/limine.cfg esp
-limine/build/bin/limine-install "${dev}"
+limine/bin/limine-install "${dev}"
 echo "done"
