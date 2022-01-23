@@ -60,6 +60,19 @@ ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, Value function, 
     return function.as_function().internal_call(this_value, move(*arguments_list));
 }
 
+ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments_list)
+{
+    // 1. If argumentsList is not present, set argumentsList to a new empty List.
+    if (!arguments_list.has_value())
+        arguments_list = MarkedValueList { global_object.heap() };
+
+    // 2. If IsCallable(F) is false, throw a TypeError exception.
+    // Note: Called with a FunctionObject ref
+
+    // 3. Return ? F.[[Call]](V, argumentsList).
+    return function.internal_call(this_value, move(*arguments_list));
+}
+
 // 7.3.15 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
 ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Optional<MarkedValueList> arguments_list, FunctionObject* new_target)
 {
