@@ -19,6 +19,7 @@
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Device.h>
 #include <LibSoftGPU/Enums.h>
+#include <LibSoftGPU/ImageFormat.h>
 
 namespace GL {
 
@@ -982,28 +983,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
         // that constructing GL textures in any but the default mipmap order, going from level 0 upwards will cause mip levels to stay uninitialized.
         // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
         // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
-        SoftGPU::ImageFormat device_format;
-        switch (internal_format) {
-        case GL_RGB:
-            device_format = SoftGPU::ImageFormat::RGB888;
-            break;
-
-        case GL_RGBA:
-            device_format = SoftGPU::ImageFormat::RGBA8888;
-            break;
-
-        case GL_LUMINANCE8:
-            device_format = SoftGPU::ImageFormat::L8;
-            break;
-
-        case GL_LUMINANCE8_ALPHA8:
-            device_format = SoftGPU::ImageFormat::L8A8;
-            break;
-
-        default:
-            VERIFY_NOT_REACHED();
-        }
-        m_active_texture_unit->bound_texture_2d()->set_device_image(m_rasterizer.create_image(device_format, width, height, 1, 999, 1));
+        m_active_texture_unit->bound_texture_2d()->set_device_image(m_rasterizer.create_image(SoftGPU::ImageFormat::BGRA8888, width, height, 1, 999, 1));
         m_sampler_config_is_dirty = true;
     }
 
@@ -1730,7 +1710,7 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
                 else
                     color = m_frontbuffer->scanline(y + i)[x + j];
             } else {
-                color = m_rasterizer.get_backbuffer_pixel(x + j, y + i);
+                color = m_rasterizer.get_color_buffer_pixel(x + j, y + i);
             }
 
             float red = ((color >> 24) & 0xff) / 255.0f;
@@ -2979,7 +2959,7 @@ void SoftwareGLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat co
 
 void SoftwareGLContext::present()
 {
-    m_rasterizer.blit_to(*m_frontbuffer);
+    m_rasterizer.blit_color_buffer_to(*m_frontbuffer);
 }
 
 void SoftwareGLContext::sync_device_config()
