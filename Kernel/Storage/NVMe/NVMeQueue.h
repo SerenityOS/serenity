@@ -31,7 +31,6 @@ class NVMeQueue : public IRQHandler
 public:
     static ErrorOr<NonnullRefPtr<NVMeQueue>> try_create(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs);
     ErrorOr<void> create();
-    explicit NVMeQueue(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs);
     bool is_admin_queue() { return m_admin_queue; };
     void submit_sqe(NVMeSubmission&);
     u16 submit_sync_sqe(NVMeSubmission&);
@@ -41,6 +40,8 @@ public:
     void disable_interrupts() { disable_irq(); };
 
 private:
+    NVMeQueue(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs);
+
     virtual bool handle_irq(const RegisterState&) override;
 
     bool cqe_available();
