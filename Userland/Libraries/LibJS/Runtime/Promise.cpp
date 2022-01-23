@@ -37,7 +37,7 @@ ThrowCompletionOr<Object*> promise_resolve(GlobalObject& global_object, Object& 
     auto promise_capability = TRY(new_promise_capability(global_object, &constructor));
 
     // 3. Perform ? Call(promiseCapability.[[Resolve]], undefined, « x »).
-    (void)TRY(vm.call(*promise_capability.resolve, js_undefined(), value));
+    (void)TRY(call(global_object, *promise_capability.resolve, js_undefined(), value));
 
     // 4. Return promiseCapability.[[Promise]].
     return promise_capability.promise;

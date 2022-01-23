@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
 
 namespace JS {
@@ -64,7 +65,7 @@ void FinalizationRegistry::cleanup(FunctionObject* callback)
     for (auto it = m_records.begin(); it != m_records.end(); ++it) {
         if (it->target != nullptr)
             continue;
-        (void)vm.call(*cleanup_callback, js_undefined(), it->held_value);
+        (void)call(global_object(), *cleanup_callback, js_undefined(), it->held_value);
         it.remove(m_records);
         if (vm.exception())
             return;

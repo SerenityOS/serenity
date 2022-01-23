@@ -106,7 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto value = vm.argument(0);
 
             // i. Let result be ? Call(onFinally, undefined).
-            auto result = TRY(vm.call(on_finally, js_undefined()));
+            auto result = TRY(call(global_object, on_finally, js_undefined()));
 
             // ii. Let promise be ? PromiseResolve(C, result).
             auto* promise = TRY(promise_resolve(global_object, constructor, result));
@@ -132,7 +132,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto reason = vm.argument(0);
 
             // i. Let result be ? Call(onFinally, undefined).
-            auto result = TRY(vm.call(on_finally, js_undefined()));
+            auto result = TRY(call(global_object, on_finally, js_undefined()));
 
             // ii. Let promise be ? PromiseResolve(C, result).
             auto* promise = TRY(promise_resolve(global_object, constructor, result));

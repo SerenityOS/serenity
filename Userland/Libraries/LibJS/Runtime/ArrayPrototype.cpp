@@ -186,7 +186,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
             auto k_value = TRY(object->get(k));
 
             // ii. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-            auto selected = TRY(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
+            auto selected = TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
             // iii. If selected is true, then
             if (selected) {
@@ -236,7 +236,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
             auto k_value = TRY(object->get(property_name));
 
             // ii. Perform ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
-            TRY(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object));
+            TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(k), object));
         }
 
         // d. Set k to k + 1.
@@ -280,7 +280,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
             auto k_value = TRY(object->get(property_name));
 
             // ii. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
-            auto mapped_value = TRY(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object));
+            auto mapped_value = TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(k), object));
 
             // iii. Perform ? CreateDataPropertyOrThrow(A, Pk, mappedValue).
             TRY(array->create_data_property_or_throw(property_name, mapped_value));
@@ -391,7 +391,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
     auto join_function = TRY(this_object->get(vm.names.join));
     if (!join_function.is_function())
         return ObjectPrototype::to_string(vm, global_object);
-    return TRY(vm.call(join_function.as_function(), this_object));
+    return TRY(call(global_object, join_function.as_function(), this_object));
 }
 
 // 18.5.1 Array.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-array.prototype.tolocalestring
@@ -739,7 +739,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
             auto k_value = TRY(object->get(property_name));
 
             // ii. Set accumulator to ? Call(callbackfn, undefined, « accumulator, kValue, 𝔽(k), O »).
-            accumulator = TRY(vm.call(callback_function.as_function(), js_undefined(), accumulator, k_value, Value(k), object));
+            accumulator = TRY(call(global_object, callback_function.as_function(), js_undefined(), accumulator, k_value, Value(k), object));
         }
 
         // d. Set k to k + 1.
@@ -821,7 +821,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
             auto k_value = TRY(object->get(property_name));
 
             // ii. Set accumulator to ? Call(callbackfn, undefined, « accumulator, kValue, 𝔽(k), O »).
-            accumulator = TRY(vm.call(callback_function.as_function(), js_undefined(), accumulator, k_value, Value((size_t)k), object));
+            accumulator = TRY(call(global_object, callback_function.as_function(), js_undefined(), accumulator, k_value, Value((size_t)k), object));
         }
 
         // d. Set k to k - 1.
@@ -907,7 +907,7 @@ static ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_obj
         } else if (y.is_undefined()) {
             comparison_result = -1;
         } else if (compare_func) {
-            auto call_result = TRY(vm.call(*compare_func, js_undefined(), left[left_index], right[right_index]));
+            auto call_result = TRY(call(global_object, *compare_func, js_undefined(), left[left_index], right[right_index]));
             auto number = TRY(call_result.to_number(global_object));
             if (number.is_nan())
                 comparison_result = 0;
@@ -1128,7 +1128,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
         auto k_value = TRY(object->get(property_name));
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
-        auto test_result = TRY(vm.call(predicate.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
+        auto test_result = TRY(call(global_object, predicate.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
         // d. If testResult is true, return kValue.
         if (test_result)
@@ -1167,7 +1167,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
         auto k_value = TRY(object->get(property_name));
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
-        auto test_result = TRY(vm.call(predicate.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
+        auto test_result = TRY(call(global_object, predicate.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
         // d. If testResult is true, return 𝔽(k).
         if (test_result)
@@ -1206,7 +1206,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
         auto k_value = TRY(object->get(property_name));
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
-        auto test_result = TRY(vm.call(predicate.as_function(), this_arg, k_value, Value((double)k), object)).to_boolean();
+        auto test_result = TRY(call(global_object, predicate.as_function(), this_arg, k_value, Value((double)k), object)).to_boolean();
 
         // d. If testResult is true, return kValue.
         if (test_result)
@@ -1245,7 +1245,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
         auto k_value = TRY(object->get(property_name));
 
         // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
-        auto test_result = TRY(vm.call(predicate.as_function(), this_arg, k_value, Value((double)k), object)).to_boolean();
+        auto test_result = TRY(call(global_object, predicate.as_function(), this_arg, k_value, Value((double)k), object)).to_boolean();
 
         // d. If testResult is true, return 𝔽(k).
         if (test_result)
@@ -1289,7 +1289,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
             auto k_value = TRY(object->get(property_name));
 
             // ii. Let testResult be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-            auto test_result = TRY(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
+            auto test_result = TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
             // iii. If testResult is true, return true.
             if (test_result)
@@ -1334,7 +1334,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
             auto k_value = TRY(object->get(property_name));
 
             // ii. Let testResult be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-            auto test_result = TRY(vm.call(callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
+            auto test_result = TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
             // iii. If testResult is false, return false.
             if (!test_result)
@@ -1519,7 +1519,7 @@ static ThrowCompletionOr<size_t> flatten_into_array(GlobalObject& global_object,
         auto value = TRY(array.get(j));
 
         if (mapper_func)
-            value = TRY(vm.call(*mapper_func, this_arg, value, Value(j), &array));
+            value = TRY(call(global_object, *mapper_func, this_arg, value, Value(j), &array));
 
         if (depth > 0 && TRY(value.is_array(global_object))) {
             if (vm.did_reach_stack_space_limit())
@@ -1728,7 +1728,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by)
         auto k_value = TRY(this_object->get(index_property));
 
         // c. Let propertyKey be ? ToPropertyKey(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-        auto property_key_value = TRY(vm.call(callback_function.as_function(), this_arg, k_value, Value(index), this_object));
+        auto property_key_value = TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(index), this_object));
         auto property_key = TRY(property_key_value.to_property_key(global_object));
 
         // d. Perform ! AddValueToKeyedGroup(groups, propertyKey, kValue).
@@ -1795,7 +1795,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by_to_map)
         auto k_value = TRY(this_object->get(index_property));
 
         // c. Let key be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
-        auto key = TRY(vm.call(callback_function.as_function(), this_arg, k_value, Value(index), this_object));
+        auto key = TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(index), this_object));
 
         // d. If key is -0𝔽, set key to +0𝔽.
         if (key.is_negative_zero())

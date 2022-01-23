@@ -63,7 +63,7 @@ ThrowCompletionOr<Object*> MapConstructor::construct(FunctionObject& new_target)
 
         auto key = TRY(iterator_value.as_object().get(0));
         auto value = TRY(iterator_value.as_object().get(1));
-        TRY(vm.call(adder.as_function(), Value(map), key, value));
+        TRY(JS::call(global_object, adder.as_function(), map, key, value));
 
         return {};
     }));

@@ -751,7 +751,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
         return;
 
     // 5. Resume the suspended evaluation of asyncContext. Let result be the value returned by the resumed computation.
-    auto result = vm.call(*execution_steps, async_context.this_value.is_empty() ? js_undefined() : async_context.this_value);
+    auto result = call(global_object, *execution_steps, async_context.this_value.is_empty() ? js_undefined() : async_context.this_value);
 
     // 6. Assert: When we return here, asyncContext has already been removed from the execution context stack and runningContext is the currently running execution context.
     VERIFY(&vm.running_execution_context() == &running_context);

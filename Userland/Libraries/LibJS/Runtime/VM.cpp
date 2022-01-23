@@ -69,7 +69,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
                 auto error = vm.argument(0);
 
                 // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
-                MUST(JS::call(global_object, reject.cell(), js_undefined(), error));
+                MUST(call(global_object, reject.cell(), js_undefined(), error));
 
                 // b. Return undefined.
                 return js_undefined();
@@ -633,7 +633,7 @@ void VM::run_queued_promise_jobs()
             pushed_execution_context = true;
         }
 
-        [[maybe_unused]] auto result = call(*job, js_undefined());
+        [[maybe_unused]] auto result = call(job->global_object(), *job, js_undefined());
 
         // This doesn't match the spec, it actually defines that Job Abstract Closures must return
         // a normal completion. In reality that's not the case however, and all major engines clear
@@ -984,12 +984,12 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
         // e. If namespace is an abrupt completion, then
         if (namespace_.is_throw_completion()) {
             // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « namespace.[[Value]] »).
-            MUST(JS::call(global_object, promise_capability.reject, js_undefined(), *namespace_.throw_completion().value()));
+            MUST(call(global_object, promise_capability.reject, js_undefined(), *namespace_.throw_completion().value()));
         }
         // f. Else,
         else {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace.[[Value]] »).
-            MUST(JS::call(global_object, promise_capability.resolve, js_undefined(), namespace_.release_value()));
+            MUST(call(global_object, promise_capability.resolve, js_undefined(), namespace_.release_value()));
         }
         // g. Return undefined.
         return js_undefined();
@@ -1002,7 +1002,7 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     auto rejected_closure = [promise_capability](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
         auto error = vm.argument(0);
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
-        MUST(JS::call(global_object, promise_capability.reject, js_undefined(), error));
+        MUST(call(global_object, promise_capability.reject, js_undefined(), error));
         // b. Return undefined.
         return js_undefined();
     };

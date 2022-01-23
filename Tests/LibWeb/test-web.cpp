@@ -62,8 +62,8 @@ TESTJS_GLOBAL_FUNCTION(after_initial_page_load, afterInitialPageLoad)
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
     }
 
-    after_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &vm](auto& page_object) {
-        [[maybe_unused]] auto unused = vm.call(const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object);
+    after_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &global_object](auto& page_object) {
+        [[maybe_unused]] auto unused = JS::call(global_object, const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object);
     });
     return JS::js_undefined();
 }
@@ -76,8 +76,8 @@ TESTJS_GLOBAL_FUNCTION(before_initial_page_load, beforeInitialPageLoad)
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
     }
 
-    before_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &vm](auto& page_object) {
-        [[maybe_unused]] auto unused = vm.call(const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object);
+    before_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &global_object](auto& page_object) {
+        [[maybe_unused]] auto unused = JS::call(global_object, const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object);
     });
     return JS::js_undefined();
 }

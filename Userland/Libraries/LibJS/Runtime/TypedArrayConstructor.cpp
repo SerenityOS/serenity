@@ -84,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
             auto k_value = values[k];
             Value mapped_value;
             if (map_fn)
-                mapped_value = TRY(vm.call(*map_fn, this_arg, k_value, Value(k)));
+                mapped_value = TRY(JS::call(global_object, *map_fn, this_arg, k_value, Value(k)));
             else
                 mapped_value = k_value;
             TRY(target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes));
@@ -104,7 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
         auto k_value = TRY(array_like->get(k));
         Value mapped_value;
         if (map_fn)
-            mapped_value = TRY(vm.call(*map_fn, this_arg, k_value, Value(k)));
+            mapped_value = TRY(JS::call(global_object, *map_fn, this_arg, k_value, Value(k)));
         else
             mapped_value = k_value;
         TRY(target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes));

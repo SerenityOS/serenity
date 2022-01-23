@@ -6,6 +6,7 @@
 
 #include <AK/HashTable.h>
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/SetIterator.h>
 #include <LibJS/Runtime/SetPrototype.h>
 
@@ -86,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, vm.argument(0).to_string_without_side_effects());
     auto this_value = vm.this_value(global_object);
     for (auto& value : set->values())
-        TRY(vm.call(vm.argument(0).as_function(), vm.argument(1), value, value, this_value));
+        TRY(call(global_object, vm.argument(0).as_function(), vm.argument(1), value, value, this_value));
     return js_undefined();
 }
 

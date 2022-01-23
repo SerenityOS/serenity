@@ -109,7 +109,7 @@ static ThrowCompletionOr<void> for_each_item(VM& vm, GlobalObject& global_object
     for (size_t i = 0; i < initial_length; ++i) {
         auto value = TRY(typed_array->get(i));
 
-        auto callback_result = TRY(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array));
+        auto callback_result = TRY(call(global_object, *callback_function, this_value, value, Value((i32)i), typed_array));
 
         if (callback(i, value, callback_result) == IterationDecision::Break)
             break;
@@ -131,7 +131,7 @@ static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, GlobalObject& glo
     for (ssize_t i = (ssize_t)initial_length - 1; i >= 0; --i) {
         auto value = TRY(typed_array->get(i));
 
-        auto callback_result = TRY(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array));
+        auto callback_result = TRY(call(global_object, *callback_function, this_value, value, Value((i32)i), typed_array));
 
         if (callback(i, value, callback_result) == IterationDecision::Break)
             break;
@@ -470,7 +470,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
     for (; k < length; ++k) {
         auto k_value = MUST(typed_array->get(k));
 
-        accumulator = TRY(vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
+        accumulator = TRY(call(global_object, *callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
     }
 
     return accumulator;
@@ -500,7 +500,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
     for (; k >= 0; --k) {
         auto k_value = MUST(typed_array->get(k));
 
-        accumulator = TRY(vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
+        accumulator = TRY(call(global_object, *callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
     }
 
     return accumulator;
@@ -845,7 +845,7 @@ static ThrowCompletionOr<void> typed_array_merge_sort(GlobalObject& global_objec
         double comparison_result;
 
         if (compare_function) {
-            auto result = TRY(vm.call(*compare_function, js_undefined(), x, y));
+            auto result = TRY(call(global_object, *compare_function, js_undefined(), x, y));
 
             auto value = TRY(result.to_number(global_object));
 
@@ -1214,7 +1214,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
         auto value = MUST(typed_array->get(i));
 
         // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-        auto callback_result = TRY(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array)).to_boolean();
+        auto callback_result = TRY(call(global_object, *callback_function, this_value, value, Value((i32)i), typed_array)).to_boolean();
 
         // d. If selected is true, then
         if (callback_result) {
@@ -1277,7 +1277,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
         auto value = MUST(typed_array->get(i));
 
         // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
-        auto mapped_value = TRY(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array));
+        auto mapped_value = TRY(call(global_object, *callback_function, this_value, value, Value((i32)i), typed_array));
 
         // d. Perform ? Set(A, Pk, mappedValue, true).
         TRY(return_array->set(i, mapped_value, Object::ShouldThrowExceptions::Yes));

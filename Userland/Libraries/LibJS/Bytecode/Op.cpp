@@ -399,7 +399,7 @@ void Call::execute_impl(Bytecode::Interpreter& interpreter) const
     Value return_value;
 
     if (m_argument_count == 0 && m_type == CallType::Call) {
-        auto return_value_or_error = interpreter.vm().call(function, this_value);
+        auto return_value_or_error = call(interpreter.global_object(), function, this_value);
         if (!return_value_or_error.is_error())
             return_value = return_value_or_error.release_value();
     } else {
@@ -408,7 +408,7 @@ void Call::execute_impl(Bytecode::Interpreter& interpreter) const
             argument_values.append(interpreter.reg(m_arguments[i]));
         }
         if (m_type == CallType::Call) {
-            auto return_value_or_error = interpreter.vm().call(function, this_value, move(argument_values));
+            auto return_value_or_error = call(interpreter.global_object(), function, this_value, move(argument_values));
             if (return_value_or_error.is_error())
                 return;
             return_value = return_value_or_error.release_value();

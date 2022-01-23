@@ -614,7 +614,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     if (!separator_argument.is_nullish()) {
         auto splitter = TRY(separator_argument.get_method(global_object, *vm.well_known_symbol_split()));
         if (splitter)
-            return TRY(vm.call(*splitter, separator_argument, object, limit_argument));
+            return TRY(call(global_object, *splitter, separator_argument, object, limit_argument));
     }
 
     auto string = TRY(object.to_utf16_string(global_object));
@@ -739,7 +739,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
         if (auto* matcher = TRY(regexp.get_method(global_object, *vm.well_known_symbol_match())))
-            return TRY(vm.call(*matcher, regexp, this_object));
+            return TRY(call(global_object, *matcher, regexp, this_object));
     }
 
     auto string = TRY(this_object.to_utf16_string(global_object));
@@ -763,7 +763,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
                 return vm.throw_completion<TypeError>(global_object, ErrorType::StringNonGlobalRegExp);
         }
         if (auto* matcher = TRY(regexp.get_method(global_object, *vm.well_known_symbol_match_all())))
-            return TRY(vm.call(*matcher, regexp, this_object));
+            return TRY(call(global_object, *matcher, regexp, this_object));
     }
 
     auto string = TRY(this_object.to_utf16_string(global_object));
@@ -781,7 +781,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
 
     if (!search_value.is_nullish()) {
         if (auto* replacer = TRY(search_value.get_method(global_object, *vm.well_known_symbol_replace())))
-            return TRY(vm.call(*replacer, search_value, this_object, replace_value));
+            return TRY(call(global_object, *replacer, search_value, this_object, replace_value));
     }
 
     auto string = TRY(this_object.to_utf16_string(global_object));
@@ -800,7 +800,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     String replacement;
 
     if (replace_value.is_function()) {
-        auto result = TRY(vm.call(replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position.value()), js_string(vm, string)));
+        auto result = TRY(call(global_object, replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position.value()), js_string(vm, string)));
         replacement = TRY(result.to_string(global_object));
     } else {
         replacement = TRY(get_substitution(global_object, search_string.view(), string.view(), *position, {}, js_undefined(), replace_value));
@@ -834,7 +834,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
 
         auto* replacer = TRY(search_value.get_method(global_object, *vm.well_known_symbol_replace()));
         if (replacer)
-            return TRY(vm.call(*replacer, search_value, this_object, replace_value));
+            return TRY(call(global_object, *replacer, search_value, this_object, replace_value));
     }
 
     auto string = TRY(this_object.to_utf16_string(global_object));
@@ -865,7 +865,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
         String replacement;
 
         if (replace_value.is_function()) {
-            auto result = TRY(vm.call(replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position), js_string(vm, string)));
+            auto result = TRY(call(global_object, replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position), js_string(vm, string)));
             replacement = TRY(result.to_string(global_object));
         } else {
             replacement = TRY(get_substitution(global_object, search_string.view(), string.view(), position, {}, js_undefined(), replace_value));
@@ -890,7 +890,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
         if (auto* searcher = TRY(regexp.get_method(global_object, *vm.well_known_symbol_search())))
-            return TRY(vm.call(*searcher, regexp, this_object));
+            return TRY(call(global_object, *searcher, regexp, this_object));
     }
 
     auto string = TRY(this_object.to_utf16_string(global_object));
