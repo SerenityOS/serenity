@@ -25,11 +25,11 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     // Ensure the certificates are read out here.
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
-    TRY(Core::System::pledge("stdio inet accept unix sendfd recvfd"));
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+    TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     [[maybe_unused]] auto gemini = make<RequestServer::GeminiProtocol>();
