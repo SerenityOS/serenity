@@ -7,17 +7,15 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
-#include <stdio.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath tty", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath tty"));
 
     const char* filename = nullptr;
     bool html = false;
@@ -28,7 +26,7 @@ int main(int argc, char* argv[])
     args_parser.add_option(html, "Render to HTML rather than for the terminal", "html", 'H');
     args_parser.add_option(view_width, "Viewport width for the terminal (defaults to current terminal width)", "view-width", 0, "width");
     args_parser.add_positional_argument(filename, "Path to Markdown file", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!html && view_width == 0) {
         if (isatty(STDOUT_FILENO)) {
@@ -55,10 +53,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio"));
 
     auto buffer = file->read_all();
     dbgln("Read size {}", buffer.size());
@@ -73,4 +68,5 @@ int main(int argc, char* argv[])
 
     String res = html ? document->render_to_html() : document->render_for_terminal(view_width);
     out("{}", res);
+    return 0;
 }
