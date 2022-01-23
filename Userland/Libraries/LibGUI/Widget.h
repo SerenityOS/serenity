@@ -11,6 +11,7 @@
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCore/Object.h>
+#include <LibRx/BehaviorSubject.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/FocusPolicy.h>
 #include <LibGUI/Forward.h>
@@ -124,7 +125,11 @@ public:
     bool is_auto_focusable() const { return m_auto_focusable; }
     void set_auto_focusable(bool auto_focusable) { m_auto_focusable = auto_focusable; }
 
-    bool is_enabled() const { return m_enabled; }
+    NonnullRefPtr<Rx::BehaviorSubject<bool>> enabled_observable()
+    {
+        return m_enabled_observable;
+    }
+    bool is_enabled() const { return m_enabled_observable->value(); }
     void set_enabled(bool);
 
     bool updates_enabled() const { return m_updates_enabled; }
@@ -387,6 +392,8 @@ private:
     FocusPolicy m_focus_policy { FocusPolicy::NoFocus };
 
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_override_cursor { Gfx::StandardCursor::None };
+
+    NonnullRefPtr<Rx::BehaviorSubject<bool>> m_enabled_observable;
 };
 
 inline Widget* Widget::parent_widget()

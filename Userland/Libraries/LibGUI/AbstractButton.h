@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Pair.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/TextWrapping.h>
 
@@ -17,7 +18,7 @@ class AbstractButton : public Widget {
 public:
     virtual ~AbstractButton() override;
 
-    Function<void(bool)> on_checked;
+    Function<void(bool)> on_checked; // TODO: Remove
 
     void set_text(String);
     const String& text() const { return m_text; }
@@ -25,7 +26,8 @@ public:
     bool is_exclusive() const { return m_exclusive; }
     void set_exclusive(bool b) { m_exclusive = b; }
 
-    bool is_checked() const { return m_checked; }
+    NonnullRefPtr<Rx::BehaviorSubject<bool>> checked_observable() { return m_checked_observable; }
+    bool is_checked() const { return m_checked_observable->value(); }
     void set_checked(bool, AllowCallback = AllowCallback::Yes);
 
     bool is_checkable() const { return m_checkable; }
@@ -57,7 +59,8 @@ protected:
 
 private:
     String m_text;
-    bool m_checked { false };
+    NonnullRefPtr<Rx::BehaviorSubject<bool>> m_checked_observable;
+    void set_checked_continuation(bool checked);
     bool m_checkable { false };
     bool m_hovered { false };
     bool m_being_pressed { false };

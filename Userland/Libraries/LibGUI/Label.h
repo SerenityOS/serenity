@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibRx/BehaviorSubject.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibGfx/TextWrapping.h>
@@ -18,8 +19,9 @@ class Label : public Frame {
 public:
     virtual ~Label() override;
 
-    String text() const { return m_text; }
+    String text() const { return m_text_observable->value(); }
     void set_text(String);
+    NonnullRefPtr<Rx::BehaviorSubject<String>> text_observable() { return m_text_observable; }
 
     void set_icon(const Gfx::Bitmap*);
     void set_icon_from_path(String const&);
@@ -51,7 +53,7 @@ protected:
 private:
     void size_to_fit();
 
-    String m_text;
+    NonnullRefPtr<Rx::BehaviorSubject<String>> m_text_observable;
     RefPtr<Gfx::Bitmap> m_icon;
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     Gfx::TextWrapping m_text_wrapping { Gfx::TextWrapping::Wrap };

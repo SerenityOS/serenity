@@ -10,6 +10,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibRx/BehaviorSubject.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Action.h>
@@ -210,6 +211,8 @@ public:
     bool text_is_secret() const { return m_text_is_secret; }
     void set_text_is_secret(bool text_is_secret);
 
+    NonnullRefPtr<Rx::BehaviorSubject<String>> text_observable() { return m_text_observable; }
+
 protected:
     explicit TextEditor(Type = Type::MultiLine);
 
@@ -404,6 +407,8 @@ private:
     RefPtr<Gfx::Bitmap> m_icon;
 
     bool m_text_is_secret { false };
+
+    NonnullRefPtr<Rx::BehaviorSubject<String>> m_text_observable;
 };
 
 }

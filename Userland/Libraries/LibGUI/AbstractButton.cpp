@@ -14,6 +14,7 @@
 namespace GUI {
 
 AbstractButton::AbstractButton(String text)
+    : m_checked_observable(Rx::BehaviorSubject<bool>::construct(false, "AbstractButton"))
 {
     set_text(move(text));
 
@@ -30,6 +31,10 @@ AbstractButton::AbstractButton(String text)
     REGISTER_BOOL_PROPERTY("checked", is_checked, set_checked);
     REGISTER_BOOL_PROPERTY("checkable", is_checkable, set_checkable);
     REGISTER_BOOL_PROPERTY("exclusive", is_exclusive, set_exclusive);
+
+    m_checked_observable->subscribe([this](bool const& checked) {
+        set_checked_continuation(checked);
+    });
 }
 
 AbstractButton::~AbstractButton()
@@ -46,26 +51,28 @@ void AbstractButton::set_text(String text)
 
 void AbstractButton::set_checked(bool checked, AllowCallback allow_callback)
 {
-    if (m_checked == checked)
-        return;
-    m_checked = checked;
+    m_checked_observable->set_value(checked);
 
+    if (on_checked && allow_callback == AllowCallback::Yes)
+        on_checked(checked);
+}
+
+void AbstractButton::set_checked_continuation(bool checked)
+{
     if (is_exclusive() && checked && parent_widget()) {
         bool sibling_had_focus = false;
         parent_widget()->for_each_child_of_type<AbstractButton>([&](auto& sibling) {
+            if (&sibling == this)
+                return IterationDecision::Continue;
             if (!sibling.is_exclusive())
                 return IterationDecision::Continue;
             if (window() && window()->focused_widget() == &sibling)
                 sibling_had_focus = true;
             if (!sibling.is_checked())
                 return IterationDecision::Continue;
-            sibling.m_checked = false;
-            sibling.update();
-            if (sibling.on_checked)
-                sibling.on_checked(false);
+            sibling.set_checked(false);
             return IterationDecision::Continue;
         });
-        m_checked = true;
         if (sibling_had_focus)
             set_focus(true);
     }
@@ -80,8 +87,6 @@ void AbstractButton::set_checked(bool checked, AllowCallback allow_callback)
     }
 
     update();
-    if (on_checked && allow_callback == AllowCallback::Yes)
-        on_checked(checked);
 }
 
 void AbstractButton::set_checkable(bool checkable)

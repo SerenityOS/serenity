@@ -35,12 +35,32 @@ Widget::Widget()
     , m_foreground_role(Gfx::ColorRole::WindowText)
     , m_font(Gfx::FontDatabase::default_font())
     , m_palette(Application::the()->palette().impl())
+    , m_enabled_observable(Rx::BehaviorSubject<bool>::construct(true, "Widget"))
 {
     REGISTER_RECT_PROPERTY("relative_rect", relative_rect, set_relative_rect);
     REGISTER_BOOL_PROPERTY("fill_with_background_color", fill_with_background_color, set_fill_with_background_color);
     REGISTER_BOOL_PROPERTY("visible", is_visible, set_visible);
     REGISTER_BOOL_PROPERTY("focused", is_focused, set_focus);
     REGISTER_BOOL_PROPERTY("enabled", is_enabled, set_enabled);
+
+    m_enabled_observable->subscribe(Rx::CallbackObserver<bool>::construct([this](bool enabled) {
+        for_each_child_widget([enabled](auto& child) {
+            child.set_enabled(enabled);
+            return IterationDecision::Continue;
+        });
+
+        if (!enabled && window() && window()->focused_widget() == this) {
+            window()->did_disable_focused_widget({});
+        }
+
+        if (!enabled)
+            set_override_cursor(Gfx::StandardCursor::None);
+
+        Event e(Event::EnabledChange);
+        event(e);
+        update();
+    }));
+
     REGISTER_STRING_PROPERTY("tooltip", tooltip, set_tooltip);
 
     REGISTER_SIZE_PROPERTY("min_size", min_size, set_min_size);
@@ -833,25 +853,7 @@ bool Widget::spans_entire_window_horizontally() const
 
 void Widget::set_enabled(bool enabled)
 {
-    if (m_enabled == enabled)
-        return;
-    m_enabled = enabled;
-
-    for_each_child_widget([enabled](auto& child) {
-        child.set_enabled(enabled);
-        return IterationDecision::Continue;
-    });
-
-    if (!m_enabled && window() && window()->focused_widget() == this) {
-        window()->did_disable_focused_widget({});
-    }
-
-    if (!m_enabled)
-        set_override_cursor(Gfx::StandardCursor::None);
-
-    Event e(Event::EnabledChange);
-    event(e);
-    update();
+    m_enabled_observable->set_value(enabled);
 }
 
 void Widget::move_to_front()

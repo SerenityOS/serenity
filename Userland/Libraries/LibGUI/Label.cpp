@@ -17,7 +17,7 @@ REGISTER_WIDGET(GUI, Label)
 namespace GUI {
 
 Label::Label(String text)
-    : m_text(move(text))
+    : m_text_observable(Rx::BehaviorSubject<String>::construct(text, "Label"))
 {
     REGISTER_TEXT_ALIGNMENT_PROPERTY("text_alignment", text_alignment, set_text_alignment);
     REGISTER_TEXT_WRAPPING_PROPERTY("text_wrapping", text_wrapping, set_text_wrapping);
@@ -27,6 +27,13 @@ Label::Label(String text)
     set_frame_shape(Gfx::FrameShape::NoFrame);
 
     set_foreground_role(Gfx::ColorRole::WindowText);
+
+    m_text_observable->subscribe([&](auto) {
+        if (m_autosize)
+            size_to_fit();
+        update();
+        did_change_text();
+    });
 
     REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_BOOL_PROPERTY("autosize", is_autosize, set_autosize);
@@ -66,14 +73,9 @@ void Label::set_icon_from_path(String const& path)
 
 void Label::set_text(String text)
 {
-    if (text == m_text)
+    if (text == m_text_observable->value())
         return;
-    m_text = move(text);
-
-    if (m_autosize)
-        size_to_fit();
-    update();
-    did_change_text();
+    m_text_observable->set_value(text);
 }
 
 Gfx::IntRect Label::text_rect() const
@@ -111,13 +113,14 @@ void Label::paint_event(PaintEvent& event)
 
 void Label::size_to_fit()
 {
-    set_fixed_width(font().width(m_text));
+    set_fixed_width(font().width(text()));
 }
 
 int Label::preferred_height() const
 {
     // FIXME: The 4 is taken from Gfx::Painter and should be available as
     //        a constant instead.
-    return Gfx::TextLayout(&font(), Utf8View { m_text }, text_rect()).bounding_rect(Gfx::TextWrapping::Wrap, 4).height();
+    auto t = text(); // FIXME: figure out Utf8View construction from call result
+    return Gfx::TextLayout(&font(), Utf8View { t }, text_rect()).bounding_rect(Gfx::TextWrapping::Wrap, 4).height();
 }
 }

@@ -37,6 +37,7 @@ namespace GUI {
 
 TextEditor::TextEditor(Type type)
     : m_type(type)
+    , m_text_observable(Rx::BehaviorSubject<String>::construct(String::empty(), "TextEditor"))
 {
     REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_STRING_PROPERTY("placeholder", placeholder, set_placeholder);
@@ -64,6 +65,11 @@ TextEditor::TextEditor(Type type)
     m_automatic_selection_scroll_timer->stop();
     create_actions();
     set_editing_engine(make<RegularEditingEngine>());
+
+    auto text_observer = Rx::CallbackObserver<String>::construct([&](auto& string) {
+        set_text(string);
+    });
+    m_text_observable->subscribe(text_observer);
 }
 
 TextEditor::~TextEditor()
@@ -1544,6 +1550,7 @@ void TextEditor::did_change(AllowCallback allow_callback)
         m_has_pending_change_notification = true;
         deferred_invoke([this, allow_callback] {
             m_has_pending_change_notification = false;
+            m_text_observable->set_value(text());
             if (on_change && allow_callback == AllowCallback::Yes)
                 on_change();
         });
