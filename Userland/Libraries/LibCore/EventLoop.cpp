@@ -35,6 +35,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef __serenity__
+extern bool s_global_initializers_ran;
+#endif
+
 namespace Core {
 
 class InspectorServerConnection;
@@ -284,6 +288,18 @@ private:
 EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
     : m_private(make<Private>())
 {
+#ifdef __serenity__
+    if (!s_global_initializers_ran) {
+        // NOTE: Trying to have an event loop as a global variable will lead to initialization-order fiascos,
+        //       as the event loop constructor accesses and/or sets other global variables.
+        //       Therefore, we crash the program before ASAN catches us.
+        //       If you came here because of the assertion failure, please redesign your program to not have global event loops.
+        //       The common practice is to initialize the main event loop in the main function, and if necessary,
+        //       pass event loop references around or access them with EventLoop::with_main_locked() and EventLoop::current().
+        VERIFY_NOT_REACHED();
+    }
+#endif
+
     if (!s_event_loop_stack) {
         s_event_loop_stack = new Vector<EventLoop&>;
         s_timers = new HashMap<int, NonnullOwnPtr<EventLoopTimer>>;
