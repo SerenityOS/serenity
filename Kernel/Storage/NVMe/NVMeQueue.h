@@ -33,7 +33,7 @@ public:
     ErrorOr<void> create();
     explicit NVMeQueue(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs);
     bool is_admin_queue() { return m_admin_queue; };
-    bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
     void submit_sqe(NVMeSubmission&);
     u16 submit_sync_sqe(NVMeSubmission&);
     void read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 count);
