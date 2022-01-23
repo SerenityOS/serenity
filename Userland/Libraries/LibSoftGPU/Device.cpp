@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
 #include <AK/Math.h>
 #include <AK/NumericLimits.h>
 #include <AK/SIMDExtras.h>
