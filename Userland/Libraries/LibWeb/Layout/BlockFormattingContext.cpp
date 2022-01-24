@@ -407,6 +407,9 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
         }
 
         compute_width(child_box);
+        if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
+            place_block_level_element_in_normal_flow_vertically(child_box, block_container);
+
         (void)layout_inside(child_box, layout_mode);
         compute_height(child_box);
 
@@ -414,7 +417,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
             compute_position(child_box);
 
         if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
-            place_block_level_element_in_normal_flow(child_box, block_container);
+            place_block_level_element_in_normal_flow_horizontally(child_box, block_container);
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
         //        Instead, we should generate the marker box during the tree build.
@@ -446,19 +449,12 @@ void BlockFormattingContext::compute_vertical_box_model_metrics(Box& child_box, 
     box_model.padding.bottom = computed_values.padding().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
 }
 
-void BlockFormattingContext::place_block_level_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
+void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically(Box& child_box, BlockContainer const& containing_block)
 {
     auto& box_model = child_box.box_model();
     auto const& computed_values = child_box.computed_values();
 
     compute_vertical_box_model_metrics(child_box, containing_block);
-
-    float x = 0;
-    if (containing_block.computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
-        x = (containing_block.width() / 2) - child_box.width() / 2;
-    } else {
-        x = box_model.margin_box().left + box_model.offset.left;
-    }
 
     float y = box_model.margin_box().top
         + box_model.offset.top;
@@ -514,7 +510,21 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow(Box& child
     if ((computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
         clear_floating_boxes(m_right_floats);
 
-    child_box.set_offset(x, y);
+    child_box.set_offset(child_box.effective_offset().x(), y);
+}
+
+void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontally(Box& child_box, BlockContainer const& containing_block)
+{
+    auto& box_model = child_box.box_model();
+
+    float x = 0;
+    if (containing_block.computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
+        x = (containing_block.width() / 2) - child_box.width() / 2;
+    } else {
+        x = box_model.margin_box().left + box_model.offset.left;
+    }
+
+    child_box.set_offset(x, child_box.effective_offset().y());
 }
 
 void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_mode)
@@ -559,7 +569,8 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
     compute_height(box);
 
     // First we place the box normally (to get the right y coordinate.)
-    place_block_level_element_in_normal_flow(box, containing_block);
+    place_block_level_element_in_normal_flow_vertically(box, containing_block);
+    place_block_level_element_in_normal_flow_horizontally(box, containing_block);
 
     auto float_box = [&](FloatSide side, FloatSideData& side_data) {
         auto first_edge = [&](PixelBox const& thing) { return side == FloatSide::Left ? thing.left : thing.right; };
