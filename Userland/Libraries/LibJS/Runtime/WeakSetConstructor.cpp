@@ -56,7 +56,7 @@ ThrowCompletionOr<Object*> WeakSetConstructor::construct(FunctionObject& new_tar
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of WeakSet");
 
     (void)TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
-        TRY(vm.call(adder.as_function(), Value(weak_set), iterator_value));
+        TRY(JS::call(global_object, adder.as_function(), weak_set, iterator_value));
         return {};
     }));
 

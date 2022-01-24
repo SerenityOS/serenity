@@ -387,7 +387,7 @@ ThrowCompletionOr<Value> regexp_exec(GlobalObject& global_object, Object& regexp
     // 2. If IsCallable(exec) is true, then
     if (exec.is_function()) {
         // a. Let result be ? Call(exec, R, « S »).
-        auto result = TRY(vm.call(exec.as_function(), &regexp_object, js_string(vm, move(string))));
+        auto result = TRY(call(global_object, exec.as_function(), &regexp_object, js_string(vm, move(string))));
 
         // b. If Type(result) is neither Object nor Null, throw a TypeError exception.
         if (!result.is_object() && !result.is_null())
@@ -763,7 +763,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             }
 
             // v. Let replValue be ? Call(replaceValue, undefined, replacerArgs).
-            auto replace_result = TRY(vm.call(replace_value.as_function(), js_undefined(), move(replacer_args)));
+            auto replace_result = TRY(call(global_object, replace_value.as_function(), js_undefined(), move(replacer_args)));
 
             // vi. Let replacement be ? ToString(replValue).
             replacement = TRY(replace_result.to_string(global_object));

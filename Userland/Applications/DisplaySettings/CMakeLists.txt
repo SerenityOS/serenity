@@ -23,4 +23,4 @@ set(SOURCES
 )
 
 serenity_app(DisplaySettings ICON app-display-settings)
-target_link_libraries(DisplaySettings LibDesktop LibGUI LibConfig LibMain)
+target_link_libraries(DisplaySettings LibDesktop LibGUI LibConfig LibMain LibEDID)

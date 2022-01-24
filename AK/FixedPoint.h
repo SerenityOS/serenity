@@ -14,22 +14,32 @@
 namespace AK {
 
 // FIXME: this always uses round to nearest break-tie to even
-template<size_t precision, Integral Underlying = i32>
+// FIXME: use the Integral concept to constrain Underlying
+template<size_t precision, typename Underlying>
 class FixedPoint {
     using This = FixedPoint<precision, Underlying>;
-    constexpr static Underlying radix_mask = (1 << precision) - 1;
+    constexpr static Underlying radix_mask = (static_cast<Underlying>(1) << precision) - 1;
+
+    template<size_t P, typename U>
+    friend class FixedPoint;
 
 public:
     constexpr FixedPoint() = default;
     template<Integral I>
     constexpr FixedPoint(I value)
-        : m_value(value << precision)
+        : m_value(static_cast<Underlying>(value) << precision)
     {
     }
 
     template<FloatingPoint F>
     constexpr FixedPoint(F value)
-        : m_value(static_cast<Underlying>(value * (1u << precision)))
+        : m_value(static_cast<Underlying>(value * (static_cast<Underlying>(1) << precision)))
+    {
+    }
+
+    template<size_t P, typename U>
+    explicit constexpr FixedPoint(FixedPoint<P, U> const& other)
+        : m_value(other.template cast_to<precision, Underlying>().m_value)
     {
     }
 
@@ -303,7 +313,27 @@ public:
     template<FloatingPoint F>
     bool operator<=(F other) const { return *this <= (This)other; }
 
+    template<size_t P, typename U>
+    operator FixedPoint<P, U>() const
+    {
+        return cast_to<P, U>();
+    }
+
 private:
+    template<size_t P, typename U>
+    constexpr FixedPoint<P, U> cast_to() const
+    {
+        U raw_value = static_cast<U>(m_value >> precision) << P;
+        if constexpr (precision > P)
+            raw_value |= (m_value & radix_mask) >> (precision - P);
+        else if constexpr (precision < P)
+            raw_value |= static_cast<U>(m_value & radix_mask) << (P - precision);
+        else
+            raw_value |= m_value & radix_mask;
+
+        return FixedPoint<P, U>::create_raw(raw_value);
+    }
+
     static This create_raw(Underlying value)
     {
         This t {};
@@ -312,21 +342,6 @@ private:
     }
 
     Underlying m_value;
-};
-
-template<size_t precision, Integral Underlying>
-struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
-    Formatter() = default;
-    explicit Formatter(StandardFormatter formatter)
-        : StandardFormatter(formatter)
-    {
-    }
-
-    ErrorOr<void> format(FormatBuilder& builder, FixedPoint<precision, Underlying> value)
-    {
-        Formatter<double> formatter { *this };
-        return formatter.format(builder, (double)value);
-    }
 };
 
 }

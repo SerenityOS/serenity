@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,6 +26,16 @@ public:
     float available_width_at_line(size_t line_index) const;
 
     void dimension_box_on_line(Box&, LayoutMode);
+
+    struct AvailableSpaceForLineInfo {
+        float left { 0 };
+        float right { 0 };
+    };
+
+    AvailableSpaceForLineInfo available_space_for_line(float y) const;
+
+private:
+    void generate_line_boxes(LayoutMode);
 };
 
 }

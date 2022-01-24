@@ -725,9 +725,9 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
             DictionaryMember member {
                 required,
                 move(type),
-                move(name),
+                name,
                 move(extended_attributes),
-                default_value.has_value() ? default_value.value() : Optional<String> {},
+                Optional<String>(move(default_value)),
             };
             dictionary.members.append(move(member));
         }
@@ -3237,7 +3237,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
         generate_variable_statement(iterator_generator, "wrapped_key", interface.pair_iterator_types->get<0>(), "key");
         generate_variable_statement(iterator_generator, "wrapped_value", interface.pair_iterator_types->get<1>(), "value");
         iterator_generator.append(R"~~~(
-        TRY(vm.call(callback.as_function(), vm.argument(1), wrapped_value, wrapped_key, this_value));
+        TRY(call(global_object, callback.as_function(), vm.argument(1), wrapped_value, wrapped_key, this_value));
         return {};
     }));
 

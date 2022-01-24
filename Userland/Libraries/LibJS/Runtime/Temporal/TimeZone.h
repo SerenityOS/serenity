@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,11 +20,13 @@ public:
     // Needs to store values in the range -8.64 * 10^13 to 8.64 * 10^13
     using OffsetType = double;
 
-    TimeZone(String identifier, Object& prototype);
+    explicit TimeZone(Object& prototype);
     virtual ~TimeZone() override = default;
 
     [[nodiscard]] String const& identifier() const { return m_identifier; }
     [[nodiscard]] Optional<OffsetType> const& offset_nanoseconds() const { return m_offset_nanoseconds; }
+
+    void set_identifier(String identifier) { m_identifier = move(identifier); };
     void set_offset_nanoseconds(OffsetType offset_nanoseconds) { m_offset_nanoseconds = offset_nanoseconds; };
 
 private:

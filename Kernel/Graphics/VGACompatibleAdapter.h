@@ -31,6 +31,8 @@ public:
     virtual bool try_to_set_resolution(size_t output_port_index, size_t width, size_t height) override;
     virtual bool set_y_offset(size_t output_port_index, size_t y) override;
 
+    ErrorOr<ByteBuffer> get_edid(size_t output_port_index) const override;
+
 protected:
     explicit VGACompatibleAdapter(PCI::Address);
 

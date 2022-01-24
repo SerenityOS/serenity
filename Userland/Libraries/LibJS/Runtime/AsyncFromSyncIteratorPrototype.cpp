@@ -33,19 +33,17 @@ void AsyncFromSyncIteratorPrototype::initialize(GlobalObject& global_object)
 // 27.1.4.4 AsyncFromSyncIteratorContinuation ( result, promiseCapability ), https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation
 static ThrowCompletionOr<Object*> async_from_sync_iterator_continuation(GlobalObject& global_object, Object& result, PromiseCapability& promise_capability)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let done be IteratorComplete(result).
     // 2. IfAbruptRejectPromise(done, promiseCapability).
-    auto done = TRY_OR_REJECT(vm, promise_capability, iterator_complete(global_object, result));
+    auto done = TRY_OR_REJECT(global_object, promise_capability, iterator_complete(global_object, result));
 
     // 3. Let value be IteratorValue(result).
     // 4. IfAbruptRejectPromise(value, promiseCapability).
-    auto value = TRY_OR_REJECT(vm, promise_capability, iterator_value(global_object, result));
+    auto value = TRY_OR_REJECT(global_object, promise_capability, iterator_value(global_object, result));
 
     // 5. Let valueWrapper be PromiseResolve(%Promise%, value).
     // 6. IfAbruptRejectPromise(valueWrapper, promiseCapability).
-    auto value_wrapper = TRY_OR_REJECT(vm, promise_capability, promise_resolve(global_object, *global_object.promise_constructor(), value));
+    auto value_wrapper = TRY_OR_REJECT(global_object, promise_capability, promise_resolve(global_object, *global_object.promise_constructor(), value));
 
     // 7. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
     auto unwrap = [done](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
@@ -84,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::next)
     // 6. Else,
     //     a. Let result be IteratorNext(syncIteratorRecord).
     // 7. IfAbruptRejectPromise(result, promiseCapability).
-    auto* result = TRY_OR_REJECT(vm, promise_capability,
+    auto* result = TRY_OR_REJECT(global_object, promise_capability,
         (vm.argument_count() > 0 ? iterator_next(global_object, sync_iterator_record, vm.argument(0))
                                  : iterator_next(global_object, sync_iterator_record)));
 
@@ -107,7 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
 
     // 5. Let return be GetMethod(syncIterator, "return").
     // 6. IfAbruptRejectPromise(return, promiseCapability).
-    auto* return_method = TRY_OR_REJECT(vm, promise_capability, Value(sync_iterator).get_method(global_object, vm.names.return_));
+    auto* return_method = TRY_OR_REJECT(global_object, promise_capability, Value(sync_iterator).get_method(global_object, vm.names.return_));
 
     // 7. If return is undefined, then
     if (return_method == nullptr) {
@@ -115,7 +113,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
         auto* iter_result = create_iterator_result_object(global_object, vm.argument(0), true);
 
         // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iterResult »).
-        MUST(vm.call(*promise_capability.reject, js_undefined(), iter_result));
+        MUST(call(global_object, *promise_capability.reject, js_undefined(), iter_result));
 
         // c. Return promiseCapability.[[Promise]].
         return promise_capability.promise;
@@ -126,7 +124,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
     // 9. Else,
     //     a. Let result be Call(return, syncIterator).
     // 10. IfAbruptRejectPromise(result, promiseCapability).
-    auto result = TRY_OR_REJECT(vm, promise_capability,
+    auto result = TRY_OR_REJECT(global_object, promise_capability,
         (vm.argument_count() > 0 ? call(global_object, return_method, sync_iterator, vm.argument(0))
                                  : call(global_object, return_method, sync_iterator)));
 
@@ -134,7 +132,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
     if (!result.is_object()) {
         auto* error = TypeError::create(global_object, String::formatted(ErrorType::NotAnObject.message(), "SyncIteratorReturnResult"));
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-        MUST(vm.call(*promise_capability.reject, js_undefined(), error));
+        MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
         // b. Return promiseCapability.[[Promise]].
         return promise_capability.promise;
     }
@@ -158,12 +156,12 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
 
     // 5. Let throw be GetMethod(syncIterator, "throw").
     // 6. IfAbruptRejectPromise(throw, promiseCapability).
-    auto* throw_method = TRY_OR_REJECT(vm, promise_capability, Value(sync_iterator).get_method(global_object, vm.names.throw_));
+    auto* throw_method = TRY_OR_REJECT(global_object, promise_capability, Value(sync_iterator).get_method(global_object, vm.names.throw_));
 
     // 7. If throw is undefined, then
     if (throw_method == nullptr) {
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « value »).
-        MUST(vm.call(*promise_capability.reject, js_undefined(), vm.argument(0)));
+        MUST(call(global_object, *promise_capability.reject, js_undefined(), vm.argument(0)));
         // b. Return promiseCapability.[[Promise]].
         return promise_capability.promise;
     }
@@ -172,7 +170,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
     // 9. Else,
     //     a. Let result be Call(throw, syncIterator).
     // 10. IfAbruptRejectPromise(result, promiseCapability).
-    auto result = TRY_OR_REJECT(vm, promise_capability,
+    auto result = TRY_OR_REJECT(global_object, promise_capability,
         (vm.argument_count() > 0 ? call(global_object, throw_method, sync_iterator, vm.argument(0))
                                  : call(global_object, throw_method, sync_iterator)));
 
@@ -180,7 +178,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
     if (!result.is_object()) {
         auto* error = TypeError::create(global_object, String::formatted(ErrorType::NotAnObject.message(), "SyncIteratorThrowResult"));
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-        MUST(vm.call(*promise_capability.reject, js_undefined(), error));
+        MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
 
         // b. Return promiseCapability.[[Promise]].
         return promise_capability.promise;

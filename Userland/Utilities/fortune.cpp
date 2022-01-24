@@ -84,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
 
-    TRY(Core::System::pledge("stdio"));
+    TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto file_contents = file->read_all();

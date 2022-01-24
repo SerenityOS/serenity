@@ -9,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
+#include <Kernel/API/DeviceEvent.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
@@ -126,51 +127,19 @@ inline char offset_character_with_number(char base_char, u8 offset)
     return offsetted_char;
 }
 
-static void create_devfs_block_device(String name, mode_t mode, unsigned major, unsigned minor)
+static void create_devtmpfs_block_device(String name, mode_t mode, unsigned major, unsigned minor)
 {
     if (auto rc = mknod(name.characters(), mode | S_IFBLK, makedev(major, minor)); rc < 0)
         VERIFY_NOT_REACHED();
 }
 
-static void populate_devfs_block_devices()
-{
-    Core::DirIterator di("/sys/dev/block/", Core::DirIterator::SkipParentAndBaseDir);
-    if (di.has_error()) {
-        warnln("Failed to open /sys/dev/block - {}", di.error());
-        VERIFY_NOT_REACHED();
-    }
-    while (di.has_next()) {
-        auto entry_name = di.next_path().split(':');
-        VERIFY(entry_name.size() == 2);
-        auto major_number = entry_name[0].to_uint<unsigned>().value();
-        auto minor_number = entry_name[1].to_uint<unsigned>().value();
-        switch (major_number) {
-        case 29: {
-            create_devfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
-            break;
-        }
-        case 30: {
-            create_devfs_block_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
-            break;
-        }
-        case 3: {
-            create_devfs_block_device(String::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)), 0600, 3, minor_number);
-            break;
-        }
-        default:
-            warnln("Unknown block device {}:{}", major_number, minor_number);
-            break;
-        }
-    }
-}
-
-static void create_devfs_char_device(String name, mode_t mode, unsigned major, unsigned minor)
+static void create_devtmpfs_char_device(String name, mode_t mode, unsigned major, unsigned minor)
 {
     if (auto rc = mknod(name.characters(), mode | S_IFCHR, makedev(major, minor)); rc < 0)
         VERIFY_NOT_REACHED();
 }
 
-static void populate_devfs_char_devices()
+static void populate_devtmpfs_char_devices_based_on_sysfs()
 {
     Core::DirIterator di("/sys/dev/char/", Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
@@ -183,10 +152,10 @@ static void populate_devfs_char_devices()
         auto major_number = entry_name[0].to_uint<unsigned>().value();
         auto minor_number = entry_name[1].to_uint<unsigned>().value();
         switch (major_number) {
-        case 42: {
+        case 2: {
             switch (minor_number) {
-            case 42: {
-                create_devfs_char_device("/dev/audio", 0220, 42, 42);
+            case 10: {
+                create_devtmpfs_char_device("/dev/devctl", 0660, 2, 10);
                 break;
             }
             default:
@@ -194,10 +163,51 @@ static void populate_devfs_char_devices()
             }
             break;
         }
+
+        default:
+            break;
+        }
+    }
+}
+
+static void populate_devtmpfs_devices_based_on_devctl()
+{
+    auto f = Core::File::construct("/dev/devctl");
+    if (!f->open(Core::OpenMode::ReadOnly)) {
+        warnln("Failed to open /dev/devctl - {}", f->error_string());
+        VERIFY_NOT_REACHED();
+    }
+
+    DeviceEvent event;
+    while (f->read((u8*)&event, sizeof(DeviceEvent)) > 0) {
+        if (event.state != DeviceEvent::Inserted)
+            continue;
+        auto major_number = event.major_number;
+        auto minor_number = event.minor_number;
+        bool is_block_device = (event.is_block_device == 1);
+        switch (major_number) {
+        case 42: {
+            if (!is_block_device) {
+                switch (minor_number) {
+                case 42: {
+                    create_devtmpfs_char_device("/dev/audio", 0220, 42, 42);
+                    break;
+                }
+                default:
+                    warnln("Unknown character device {}:{}", major_number, minor_number);
+                }
+            }
+            break;
+        }
         case 29: {
+            if (is_block_device) {
+                create_devtmpfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
+                break;
+            }
+
             switch (minor_number) {
             case 0: {
-                create_devfs_char_device("/dev/full", 0660, 29, 0);
+                create_devtmpfs_char_device("/dev/full", 0660, 29, 0);
                 break;
             }
             default:
@@ -206,126 +216,153 @@ static void populate_devfs_char_devices()
             break;
         }
         case 229: {
-            create_devfs_char_device(String::formatted("/dev/hvc0p{}", minor_number), 0666, major_number, minor_number);
+            if (!is_block_device) {
+                create_devtmpfs_char_device(String::formatted("/dev/hvc0p{}", minor_number), 0666, major_number, minor_number);
+            }
             break;
         }
         case 10: {
-            switch (minor_number) {
-            case 0: {
-                create_devfs_char_device("/dev/mouse0", 0660, 10, 0);
-                break;
-            }
-            case 183: {
-                create_devfs_char_device("/dev/hwrng", 0660, 10, 183);
-                break;
-            }
-            default:
-                warnln("Unknown character device {}:{}", major_number, minor_number);
+            if (!is_block_device) {
+                switch (minor_number) {
+                case 0: {
+                    create_devtmpfs_char_device("/dev/mouse0", 0660, 10, 0);
+                    break;
+                }
+                case 183: {
+                    create_devtmpfs_char_device("/dev/hwrng", 0660, 10, 183);
+                    break;
+                }
+                default:
+                    warnln("Unknown character device {}:{}", major_number, minor_number);
+                }
             }
             break;
         }
         case 85: {
-            switch (minor_number) {
-            case 0: {
-                create_devfs_char_device("/dev/keyboard0", 0660, 85, 0);
-                break;
-            }
-            default:
-                warnln("Unknown character device {}:{}", major_number, minor_number);
+            if (!is_block_device) {
+                switch (minor_number) {
+                case 0: {
+                    create_devtmpfs_char_device("/dev/keyboard0", 0660, 85, 0);
+                    break;
+                }
+                default:
+                    warnln("Unknown character device {}:{}", major_number, minor_number);
+                }
             }
             break;
         }
         case 1: {
-            switch (minor_number) {
-            case 5: {
-                create_devfs_char_device("/dev/zero", 0666, 1, 5);
-                break;
+            if (!is_block_device) {
+                switch (minor_number) {
+                case 5: {
+                    create_devtmpfs_char_device("/dev/zero", 0666, 1, 5);
+                    break;
+                }
+                case 1: {
+                    create_devtmpfs_char_device("/dev/mem", 0660, 1, 1);
+                    break;
+                }
+                case 3: {
+                    create_devtmpfs_char_device("/dev/null", 0666, 1, 3);
+                    break;
+                }
+                case 8: {
+                    create_devtmpfs_char_device("/dev/random", 0666, 1, 8);
+                    break;
+                }
+                default:
+                    warnln("Unknown character device {}:{}", major_number, minor_number);
+                    break;
+                }
             }
-            case 1: {
-                create_devfs_char_device("/dev/mem", 0660, 1, 1);
-                break;
+            break;
+        }
+        case 30: {
+            if (is_block_device) {
+                create_devtmpfs_block_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
             }
-            case 3: {
-                create_devfs_char_device("/dev/null", 0666, 1, 3);
-                break;
-            }
-            case 8: {
-                create_devfs_char_device("/dev/random", 0666, 1, 8);
-                break;
-            }
-            default:
-                warnln("Unknown character device {}:{}", major_number, minor_number);
-                break;
+            break;
+        }
+        case 3: {
+            if (is_block_device) {
+                create_devtmpfs_block_device(String::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)), 0600, 3, minor_number);
             }
             break;
         }
         case 5: {
-            switch (minor_number) {
-            case 1: {
-                create_devfs_char_device("/dev/console", 0666, 5, 1);
-                break;
-            }
-            case 2: {
-                create_devfs_char_device("/dev/ptmx", 0666, 5, 2);
-                break;
-            }
-            default:
-                warnln("Unknown character device {}:{}", major_number, minor_number);
+            if (!is_block_device) {
+                switch (minor_number) {
+                case 1: {
+                    create_devtmpfs_char_device("/dev/console", 0666, 5, 1);
+                    break;
+                }
+                case 2: {
+                    create_devtmpfs_char_device("/dev/ptmx", 0666, 5, 2);
+                    break;
+                }
+                default:
+                    warnln("Unknown character device {}:{}", major_number, minor_number);
+                }
             }
             break;
         }
         case 4: {
-            switch (minor_number) {
-            case 0: {
-                create_devfs_char_device("/dev/tty0", 0620, 4, 0);
-                break;
-            }
-            case 1: {
-                create_devfs_char_device("/dev/tty1", 0620, 4, 1);
-                break;
-            }
-            case 2: {
-                create_devfs_char_device("/dev/tty2", 0620, 4, 2);
-                break;
-            }
-            case 3: {
-                create_devfs_char_device("/dev/tty3", 0620, 4, 3);
-                break;
-            }
-            case 64: {
-                create_devfs_char_device("/dev/ttyS0", 0620, 4, 64);
-                break;
-            }
-            case 65: {
-                create_devfs_char_device("/dev/ttyS1", 0620, 4, 65);
-                break;
-            }
-            case 66: {
-                create_devfs_char_device("/dev/ttyS2", 0620, 4, 66);
-                break;
-            }
-            case 67: {
-                create_devfs_char_device("/dev/ttyS3", 0666, 4, 67);
-                break;
-            }
-            default:
-                warnln("Unknown character device {}:{}", major_number, minor_number);
+            if (!is_block_device) {
+                switch (minor_number) {
+                case 0: {
+                    create_devtmpfs_char_device("/dev/tty0", 0620, 4, 0);
+                    break;
+                }
+                case 1: {
+                    create_devtmpfs_char_device("/dev/tty1", 0620, 4, 1);
+                    break;
+                }
+                case 2: {
+                    create_devtmpfs_char_device("/dev/tty2", 0620, 4, 2);
+                    break;
+                }
+                case 3: {
+                    create_devtmpfs_char_device("/dev/tty3", 0620, 4, 3);
+                    break;
+                }
+                case 64: {
+                    create_devtmpfs_char_device("/dev/ttyS0", 0620, 4, 64);
+                    break;
+                }
+                case 65: {
+                    create_devtmpfs_char_device("/dev/ttyS1", 0620, 4, 65);
+                    break;
+                }
+                case 66: {
+                    create_devtmpfs_char_device("/dev/ttyS2", 0620, 4, 66);
+                    break;
+                }
+                case 67: {
+                    create_devtmpfs_char_device("/dev/ttyS3", 0666, 4, 67);
+                    break;
+                }
+                default:
+                    warnln("Unknown character device {}:{}", major_number, minor_number);
+                }
             }
             break;
         }
         default:
-            warnln("Unknown character device {}:{}", major_number, minor_number);
+            if (!is_block_device)
+                warnln("Unknown character device {}:{}", major_number, minor_number);
+            else
+                warnln("Unknown block device {}:{}", major_number, minor_number);
             break;
         }
     }
 }
 
-static void populate_devfs()
+static void populate_devtmpfs()
 {
     mode_t old_mask = umask(0);
     printf("Changing umask %#o\n", old_mask);
-    populate_devfs_char_devices();
-    populate_devfs_block_devices();
+    populate_devtmpfs_char_devices_based_on_sysfs();
+    populate_devtmpfs_devices_based_on_devctl();
     umask(old_mask);
 }
 
@@ -341,7 +378,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     TRY(Core::System::symlink("/proc/self/fd/2", "/dev/stderr"));
     TRY(Core::System::symlink("/proc/self/tty", "/dev/tty"));
 
-    populate_devfs();
+    populate_devtmpfs();
 
     TRY(Core::System::mkdir("/dev/pts", 0755));
 

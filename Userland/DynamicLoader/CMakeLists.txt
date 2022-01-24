@@ -45,5 +45,6 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     target_link_libraries(Loader.so PRIVATE clang_rt.builtins)
 endif ()
 
+target_link_libraries(Loader.so PRIVATE LibTimeZone)
 target_link_options(Loader.so PRIVATE LINKER:--no-dynamic-linker)
 install(TARGETS Loader.so RUNTIME DESTINATION usr/lib/)

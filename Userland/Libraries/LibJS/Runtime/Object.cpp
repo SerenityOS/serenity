@@ -524,7 +524,7 @@ ThrowCompletionOr<Value> Object::private_get(PrivateName const& name)
         return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldGetAccessorWithoutGetter, name.description);
 
     // 8. Return ? Call(getter, Receiver).
-    return TRY(vm().call(*getter, this));
+    return TRY(call(global_object(), *getter, this));
 }
 
 // 7.3.31 PrivateSet ( O, P, value ), https://tc39.es/ecma262/#sec-privateset
@@ -549,7 +549,7 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
     if (!setter)
         return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldSetAccessorWithoutSetter, name.description);
 
-    TRY(vm().call(*setter, this, value));
+    TRY(call(global_object(), *setter, this, value));
     return {};
 }
 
@@ -558,7 +558,7 @@ ThrowCompletionOr<void> Object::define_field(Variant<PropertyKey, PrivateName> n
 {
     Value init_value = js_undefined();
     if (initializer)
-        init_value = TRY(vm().call(*initializer, this));
+        init_value = TRY(call(global_object(), *initializer, this));
 
     if (auto* property_name_ptr = name.get_pointer<PropertyKey>())
         TRY(create_data_property_or_throw(*property_name_ptr, init_value));
@@ -730,7 +730,6 @@ ThrowCompletionOr<bool> Object::internal_has_property(PropertyKey const& propert
 ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_name, Value receiver) const
 {
     VERIFY(!receiver.is_empty());
-    auto& vm = this->vm();
 
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
@@ -766,7 +765,7 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_name, 
         return js_undefined();
 
     // 8. Return ? Call(getter, Receiver).
-    return TRY(vm.call(*getter, receiver));
+    return TRY(call(global_object(), *getter, receiver));
 }
 
 // 10.1.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-set-p-v-receiver
@@ -788,8 +787,6 @@ ThrowCompletionOr<bool> Object::internal_set(PropertyKey const& property_name, V
 // 10.1.9.2 OrdinarySetWithOwnDescriptor ( O, P, V, Receiver, ownDesc ), https://tc39.es/ecma262/#sec-ordinarysetwithowndescriptor
 ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey const& property_name, Value value, Value receiver, Optional<PropertyDescriptor> own_descriptor)
 {
-    auto& vm = this->vm();
-
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
@@ -865,7 +862,7 @@ ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey con
         return false;
 
     // 7. Perform ? Call(setter, Receiver, « V »).
-    (void)TRY(vm.call(*setter, receiver, value));
+    (void)TRY(call(global_object(), *setter, receiver, value));
 
     // 8. Return true.
     return true;
@@ -1226,7 +1223,7 @@ ThrowCompletionOr<Value> Object::ordinary_to_primitive(Value::PreferredType pref
         // b. If IsCallable(method) is true, then
         if (method.is_function()) {
             // i. Let result be ? Call(method, O).
-            auto result = TRY(vm.call(method.as_function(), const_cast<Object*>(this)));
+            auto result = TRY(call(global_object(), method.as_function(), const_cast<Object*>(this)));
 
             // ii. If Type(result) is not Object, return result.
             if (!result.is_object())

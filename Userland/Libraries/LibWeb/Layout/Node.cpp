@@ -115,13 +115,6 @@ InitialContainingBlock& Node::root()
     return *document().layout_node();
 }
 
-void Node::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
-{
-    for_each_child([&](auto& child) {
-        child.split_into_lines(context, layout_mode);
-    });
-}
-
 void Node::set_needs_display()
 {
     if (auto* block = containing_block()) {
@@ -410,6 +403,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     auto text_decoration_line = specified_style.text_decoration_line();
     if (text_decoration_line.has_value())
         computed_values.set_text_decoration_line(text_decoration_line.value());
+
+    auto text_decoration_style = specified_style.text_decoration_style();
+    if (text_decoration_style.has_value())
+        computed_values.set_text_decoration_style(text_decoration_style.value());
 
     auto text_transform = specified_style.text_transform();
     if (text_transform.has_value())

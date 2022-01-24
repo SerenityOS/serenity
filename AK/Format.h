@@ -12,6 +12,7 @@
 #include <AK/AnyOf.h>
 #include <AK/Array.h>
 #include <AK/Error.h>
+#include <AK/FixedPoint.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
@@ -182,6 +183,19 @@ public:
         bool zero_pad = false,
         Align align = Align::Right,
         size_t min_width = 0,
+        char fill = ' ',
+        SignMode sign_mode = SignMode::OnlyIfNeeded);
+
+    ErrorOr<void> put_fixed_point(
+        i64 integer_value,
+        u64 fraction_value,
+        u64 fraction_one,
+        u8 base = 10,
+        bool upper_case = false,
+        bool zero_pad = false,
+        Align align = Align::Right,
+        size_t min_width = 0,
+        size_t precision = 6,
         char fill = ' ',
         SignMode sign_mode = SignMode::OnlyIfNeeded);
 
@@ -468,6 +482,41 @@ struct Formatter<long double> : StandardFormatter {
     ErrorOr<void> format(FormatBuilder&, long double value);
 };
 #endif
+
+template<size_t precision, typename Underlying>
+struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
+    Formatter() = default;
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
+    ErrorOr<void> format(FormatBuilder& builder, FixedPoint<precision, Underlying> value)
+    {
+        u8 base;
+        bool upper_case;
+        if (m_mode == Mode::Default || m_mode == Mode::Float) {
+            base = 10;
+            upper_case = false;
+        } else if (m_mode == Mode::Hexfloat) {
+            base = 16;
+            upper_case = false;
+        } else if (m_mode == Mode::HexfloatUppercase) {
+            base = 16;
+            upper_case = true;
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+
+        m_width = m_width.value_or(0);
+        m_precision = m_precision.value_or(6);
+
+        i64 integer = value.ltrunk();
+        constexpr u64 one = static_cast<Underlying>(1) << precision;
+        u64 fraction_raw = value.raw() & (one - 1);
+        return builder.put_fixed_point(integer, fraction_raw, one, base, upper_case, m_zero_pad, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode);
+    }
+};
 
 template<>
 struct Formatter<std::nullptr_t> : Formatter<FlatPtr> {

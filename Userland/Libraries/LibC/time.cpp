@@ -8,6 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <Kernel/API/TimePage.h>
+#include <LibTimeZone/TimeZone.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
@@ -155,7 +156,14 @@ struct tm* localtime_r(const time_t* t, struct tm* tm)
 {
     if (!t)
         return nullptr;
-    time_to_tm(tm, (*t) - timezone);
+
+    auto time_zone = TimeZone::current_time_zone();
+    auto time = AK::Time::from_seconds(*t);
+
+    if (auto offset = TimeZone::get_time_zone_offset(time_zone, time); offset.has_value())
+        time += AK::Time::from_seconds(offset->seconds);
+
+    time_to_tm(tm, time.to_seconds());
     return tm;
 }
 
@@ -196,7 +204,7 @@ char* asctime_r(const struct tm* tm, char* buffer)
     return buffer;
 }
 
-//FIXME: Some formats are not supported.
+// FIXME: Some formats are not supported.
 size_t strftime(char* destination, size_t max_size, const char* format, const struct tm* tm)
 {
     const char wday_short_names[7][4] = {

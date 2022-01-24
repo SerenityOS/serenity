@@ -10,6 +10,7 @@
 #include <LibCrypto/Forward.h>
 #include <LibJS/AST.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/Value.h>
@@ -25,6 +26,7 @@ Object* get_super_constructor(VM&);
 ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject&, Value actual_this, PropertyKey const&, bool strict);
 ThrowCompletionOr<Value> require_object_coercible(GlobalObject&, Value);
 ThrowCompletionOr<Value> call_impl(GlobalObject&, Value function, Value this_value, Optional<MarkedValueList> = {});
+ThrowCompletionOr<Value> call_impl(GlobalObject&, FunctionObject& function, Value this_value, Optional<MarkedValueList> = {});
 ThrowCompletionOr<Object*> construct(GlobalObject&, FunctionObject&, Optional<MarkedValueList> = {}, FunctionObject* new_target = nullptr);
 ThrowCompletionOr<size_t> length_of_array_like(GlobalObject&, Object const&);
 ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
@@ -59,7 +61,37 @@ ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value f
 }
 
 template<typename... Args>
+ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Optional<MarkedValueList> arguments_list)
+{
+    return call_impl(global_object, function, this_value, move(arguments_list));
+}
+
+template<typename... Args>
 ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Args... args)
+{
+    if constexpr (sizeof...(Args) > 0) {
+        MarkedValueList arguments_list { global_object.heap() };
+        (..., arguments_list.append(move(args)));
+        return call_impl(global_object, function, this_value, move(arguments_list));
+    }
+
+    return call_impl(global_object, function, this_value);
+}
+
+template<typename... Args>
+ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, MarkedValueList arguments_list)
+{
+    return call_impl(global_object, function, this_value, move(arguments_list));
+}
+
+template<typename... Args>
+ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments_list)
+{
+    return call_impl(global_object, function, this_value, move(arguments_list));
+}
+
+template<typename... Args>
+ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Args... args)
 {
     if constexpr (sizeof...(Args) > 0) {
         MarkedValueList arguments_list { global_object.heap() };

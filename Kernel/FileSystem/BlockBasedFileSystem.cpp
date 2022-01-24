@@ -169,44 +169,40 @@ ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKe
     });
 }
 
-bool BlockBasedFileSystem::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
+ErrorOr<void> BlockBasedFileSystem::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
 {
     auto base_offset = index.value() * m_logical_block_size;
-    auto nread = file_description().read(buffer, base_offset, m_logical_block_size);
-    VERIFY(!nread.is_error());
-    VERIFY(nread.value() == m_logical_block_size);
-    return true;
+    auto nread = TRY(file_description().read(buffer, base_offset, m_logical_block_size));
+    VERIFY(nread == m_logical_block_size);
+    return {};
 }
 
-bool BlockBasedFileSystem::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
+ErrorOr<void> BlockBasedFileSystem::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
 {
     auto base_offset = index.value() * m_logical_block_size;
-    auto nwritten = file_description().write(base_offset, buffer, m_logical_block_size);
-    VERIFY(!nwritten.is_error());
-    VERIFY(nwritten.value() == m_logical_block_size);
-    return true;
+    auto nwritten = TRY(file_description().write(base_offset, buffer, m_logical_block_size));
+    VERIFY(nwritten == m_logical_block_size);
+    return {};
 }
 
-bool BlockBasedFileSystem::raw_read_blocks(BlockIndex index, size_t count, UserOrKernelBuffer& buffer)
+ErrorOr<void> BlockBasedFileSystem::raw_read_blocks(BlockIndex index, size_t count, UserOrKernelBuffer& buffer)
 {
     auto current = buffer;
     for (auto block = index.value(); block < (index.value() + count); block++) {
-        if (!raw_read(BlockIndex { block }, current))
-            return false;
+        TRY(raw_read(BlockIndex { block }, current));
         current = current.offset(logical_block_size());
     }
-    return true;
+    return {};
 }
 
-bool BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t count, const UserOrKernelBuffer& buffer)
+ErrorOr<void> BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t count, const UserOrKernelBuffer& buffer)
 {
     auto current = buffer;
     for (auto block = index.value(); block < (index.value() + count); block++) {
-        if (!raw_write(block, current))
-            return false;
+        TRY(raw_write(block, current));
         current = current.offset(logical_block_size());
     }
-    return true;
+    return {};
 }
 
 ErrorOr<void> BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)

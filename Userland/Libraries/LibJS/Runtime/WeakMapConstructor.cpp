@@ -61,7 +61,7 @@ ThrowCompletionOr<Object*> WeakMapConstructor::construct(FunctionObject& new_tar
 
         auto key = TRY(iterator_value.as_object().get(0));
         auto value = TRY(iterator_value.as_object().get(1));
-        TRY(vm.call(adder.as_function(), Value(weak_map), key, value));
+        TRY(JS::call(global_object, adder.as_function(), weak_map, key, value));
 
         return {};
     }));

@@ -645,6 +645,27 @@ Optional<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
     }
 }
 
+Optional<CSS::TextDecorationStyle> StyleProperties::text_decoration_style() const
+{
+    auto value = property(CSS::PropertyID::TextDecorationStyle);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Solid:
+        return CSS::TextDecorationStyle::Solid;
+    case CSS::ValueID::Double:
+        return CSS::TextDecorationStyle::Double;
+    case CSS::ValueID::Dotted:
+        return CSS::TextDecorationStyle::Dotted;
+    case CSS::ValueID::Dashed:
+        return CSS::TextDecorationStyle::Dashed;
+    case CSS::ValueID::Wavy:
+        return CSS::TextDecorationStyle::Wavy;
+    default:
+        return {};
+    }
+}
+
 Optional<CSS::TextTransform> StyleProperties::text_transform() const
 {
     auto value = property(CSS::PropertyID::TextTransform);

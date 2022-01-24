@@ -6,6 +6,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/MapIterator.h>
 #include <LibJS/Runtime/MapPrototype.h>
 
@@ -73,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::for_each)
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, vm.argument(0).to_string_without_side_effects());
     auto this_value = vm.this_value(global_object);
     for (auto& entry : map->entries())
-        TRY(vm.call(vm.argument(0).as_function(), vm.argument(1), entry.value, entry.key, this_value));
+        TRY(call(global_object, vm.argument(0).as_function(), vm.argument(1), entry.value, entry.key, this_value));
     return js_undefined();
 }
 

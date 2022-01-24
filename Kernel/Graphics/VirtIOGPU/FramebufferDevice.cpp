@@ -140,6 +140,15 @@ ErrorOr<void> FramebufferDevice::flush_rectangle(size_t buffer_index, FBRect con
     return {};
 }
 
+ErrorOr<ByteBuffer> FramebufferDevice::get_edid(size_t head) const
+{
+    // Note: This FramebufferDevice class doesn't support multihead setup.
+    // We take care to verify this at the GenericFramebufferDevice::ioctl method
+    // so if we happen to accidentally have a value different than 0, assert.
+    VERIFY(head == 0);
+    return adapter()->get_edid(m_scanout.value());
+}
+
 FramebufferDevice::FramebufferDevice(GraphicsAdapter const& adapter, ScanoutID scanout)
     : GenericFramebufferDevice(adapter)
     , m_scanout(scanout)

@@ -25,8 +25,6 @@ public:
 
     virtual void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const override;
 
-    virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
-
     struct Chunk {
         Utf8View view;
         size_t start { 0 };
@@ -60,7 +58,6 @@ private:
     virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
     virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
     virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
-    void split_into_lines_by_rules(InlineFormattingContext&, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_respect_linebreaks);
     void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
     void paint_text_decoration(Gfx::Painter&, LineBoxFragment const&) const;
     virtual void paint(PaintContext&, PaintPhase) override;

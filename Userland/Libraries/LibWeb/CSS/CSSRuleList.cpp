@@ -80,22 +80,22 @@ DOM::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
 
 void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
 {
-    for (auto& rule : m_rules) {
+    for (auto const& rule : m_rules) {
         switch (rule.type()) {
         case CSSRule::Type::Style:
-            callback(verify_cast<CSSStyleRule>(rule));
+            callback(static_cast<CSSStyleRule const&>(rule));
             break;
         case CSSRule::Type::Import: {
-            auto const& import_rule = verify_cast<CSSImportRule>(rule);
+            auto const& import_rule = static_cast<CSSImportRule const&>(rule);
             if (import_rule.has_import_result())
                 import_rule.loaded_style_sheet()->for_each_effective_style_rule(callback);
             break;
         }
         case CSSRule::Type::Media:
-            verify_cast<CSSMediaRule>(rule).for_each_effective_style_rule(callback);
+            static_cast<CSSMediaRule const&>(rule).for_each_effective_style_rule(callback);
             break;
         case CSSRule::Type::Supports:
-            verify_cast<CSSSupportsRule>(rule).for_each_effective_style_rule(callback);
+            static_cast<CSSSupportsRule const&>(rule).for_each_effective_style_rule(callback);
             break;
         case CSSRule::Type::__Count:
             VERIFY_NOT_REACHED();

@@ -982,7 +982,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::until)
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
     // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, maximum.has_value() ? *maximum : Optional<double> {}, false));
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, Optional<double>(maximum), false));
 
     // 13. If largestUnit is not one of "year", "month", "week", or "day", then
     if (!largest_unit->is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
@@ -1059,7 +1059,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::since)
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
     // 13. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, maximum.has_value() ? *maximum : Optional<double> {}, false));
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, Optional<double>(maximum), false));
 
     // 14. If largestUnit is not one of "year", "month", "week", or "day", then
     if (!largest_unit->is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {

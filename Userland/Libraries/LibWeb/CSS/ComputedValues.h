@@ -21,6 +21,7 @@ public:
     static CSS::TextAlign text_align() { return CSS::TextAlign::Left; }
     static CSS::Position position() { return CSS::Position::Static; }
     static CSS::TextDecorationLine text_decoration_line() { return CSS::TextDecorationLine::None; }
+    static CSS::TextDecorationStyle text_decoration_style() { return CSS::TextDecorationStyle::Solid; }
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
     static CSS::Display display() { return CSS::Display { CSS::Display::Outside::Inline, CSS::Display::Inside::Flow }; }
     static Color color() { return Color::Black; }
@@ -91,6 +92,7 @@ public:
     Optional<int> const& z_index() const { return m_noninherited.z_index; }
     CSS::TextAlign text_align() const { return m_inherited.text_align; }
     CSS::TextDecorationLine text_decoration_line() const { return m_noninherited.text_decoration_line; }
+    CSS::TextDecorationStyle text_decoration_style() const { return m_noninherited.text_decoration_style; }
     CSS::TextTransform text_transform() const { return m_inherited.text_transform; }
     CSS::Position position() const { return m_noninherited.position; }
     CSS::WhiteSpace white_space() const { return m_inherited.white_space; }
@@ -168,6 +170,7 @@ protected:
         CSS::Display display { InitialValues::display() };
         Optional<int> z_index;
         CSS::TextDecorationLine text_decoration_line { InitialValues::text_decoration_line() };
+        CSS::TextDecorationStyle text_decoration_style { InitialValues::text_decoration_style() };
         CSS::Position position { InitialValues::position() };
         CSS::LengthPercentage width { Length::make_auto() };
         CSS::LengthPercentage min_width { Length::make_auto() };
@@ -219,6 +222,7 @@ public:
     void set_z_index(Optional<int> value) { m_noninherited.z_index = value; }
     void set_text_align(CSS::TextAlign text_align) { m_inherited.text_align = text_align; }
     void set_text_decoration_line(CSS::TextDecorationLine value) { m_noninherited.text_decoration_line = value; }
+    void set_text_decoration_style(CSS::TextDecorationStyle value) { m_noninherited.text_decoration_style = value; }
     void set_text_transform(CSS::TextTransform value) { m_inherited.text_transform = value; }
     void set_position(CSS::Position position) { m_noninherited.position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_inherited.white_space = value; }

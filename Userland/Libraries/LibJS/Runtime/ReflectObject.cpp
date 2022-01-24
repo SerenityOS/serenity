@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::apply)
 
     // 3. Perform PrepareForTailCall().
     // 4. Return ? Call(target, thisArgument, args).
-    return TRY(vm.call(target.as_function(), this_argument, move(args)));
+    return TRY(call(global_object, target.as_function(), this_argument, move(args)));
 }
 
 // 28.1.2 Reflect.construct ( target, argumentsList [ , newTarget ] ), https://tc39.es/ecma262/#sec-reflect.construct

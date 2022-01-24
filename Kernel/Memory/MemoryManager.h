@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/Concepts.h>
 #include <AK/HashTable.h>
 #include <AK/IntrusiveRedBlackTree.h>

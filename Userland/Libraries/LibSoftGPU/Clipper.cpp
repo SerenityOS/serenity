@@ -11,7 +11,7 @@
 
 namespace SoftGPU {
 
-bool Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plane)
+bool Clipper::point_within_clip_plane(FloatVector4 const& vertex, ClipPlane plane) const
 {
     switch (plane) {
     case ClipPlane::LEFT:
@@ -31,16 +31,16 @@ bool Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plan
     return false;
 }
 
-Vertex Clipper::clip_intersection_point(const Vertex& p1, const Vertex& p2, ClipPlane plane_index)
+Vertex Clipper::clip_intersection_point(Vertex const& p1, Vertex const& p2, ClipPlane plane_index) const
 {
     // See https://www.microsoft.com/en-us/research/wp-content/uploads/1978/01/p245-blinn.pdf
     // "Clipping Using Homogeneous Coordinates" Blinn/Newell, 1978
 
-    float w1 = p1.clip_coordinates.w();
-    float w2 = p2.clip_coordinates.w();
-    float x1 = clip_plane_normals[plane_index].dot(p1.clip_coordinates);
-    float x2 = clip_plane_normals[plane_index].dot(p2.clip_coordinates);
-    float a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
+    float const w1 = p1.clip_coordinates.w();
+    float const w2 = p2.clip_coordinates.w();
+    float const x1 = clip_plane_normals[plane_index].dot(p1.clip_coordinates);
+    float const x2 = clip_plane_normals[plane_index].dot(p2.clip_coordinates);
+    float const a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
 
     Vertex out;
     out.position = mix(p1.position, p2.position, a);
@@ -65,17 +65,17 @@ void Clipper::clip_triangle_against_frustum(Vector<Vertex>& input_verts)
         write_to->clear_with_capacity();
         // Save me, C++23
         for (size_t i = 0; i < read_from->size(); i++) {
-            const auto& curr_vec = read_from->at((i + 1) % read_from->size());
-            const auto& prev_vec = read_from->at(i);
+            auto const& curr_vec = read_from->at((i + 1) % read_from->size());
+            auto const& prev_vec = read_from->at(i);
 
             if (point_within_clip_plane(curr_vec.clip_coordinates, static_cast<ClipPlane>(plane))) {
                 if (!point_within_clip_plane(prev_vec.clip_coordinates, static_cast<ClipPlane>(plane))) {
-                    auto intersect = clip_intersection_point(prev_vec, curr_vec, static_cast<ClipPlane>(plane));
+                    auto const intersect = clip_intersection_point(prev_vec, curr_vec, static_cast<ClipPlane>(plane));
                     write_to->append(intersect);
                 }
                 write_to->append(curr_vec);
             } else if (point_within_clip_plane(prev_vec.clip_coordinates, static_cast<ClipPlane>(plane))) {
-                auto intersect = clip_intersection_point(prev_vec, curr_vec, static_cast<ClipPlane>(plane));
+                auto const intersect = clip_intersection_point(prev_vec, curr_vec, static_cast<ClipPlane>(plane));
                 write_to->append(intersect);
             }
         }

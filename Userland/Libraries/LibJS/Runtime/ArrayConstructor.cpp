@@ -127,7 +127,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
             Value mapped_value;
             if (map_fn) {
-                auto mapped_value_or_error = vm.call(*map_fn, this_arg, next_value, Value(k));
+                auto mapped_value_or_error = JS::call(global_object, *map_fn, this_arg, next_value, Value(k));
                 if (mapped_value_or_error.is_error())
                     return TRY(iterator_close(global_object, iterator, mapped_value_or_error.release_error()));
                 mapped_value = mapped_value_or_error.release_value();
@@ -160,7 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         auto k_value = TRY(array_like->get(k));
         Value mapped_value;
         if (map_fn)
-            mapped_value = TRY(vm.call(*map_fn, this_arg, k_value, Value(k)));
+            mapped_value = TRY(JS::call(global_object, *map_fn, this_arg, k_value, Value(k)));
         else
             mapped_value = k_value;
         TRY(array->create_data_property_or_throw(k, mapped_value));

@@ -62,31 +62,29 @@ static size_t compute_dac_multiplier(size_t pixel_clock_in_khz)
     }
 }
 
-static Graphics::Modesetting calculate_modesetting_from_edid(const Graphics::VideoInfoBlock& edid, size_t index)
+static Graphics::Modesetting calculate_modesetting_from_edid(EDID::Parser& edid, size_t index)
 {
-    Graphics::Modesetting mode;
-    VERIFY(edid.details[0].pixel_clock);
-    mode.pixel_clock_in_khz = edid.details[0].pixel_clock * 10;
+    auto details = edid.detailed_timing(index).release_value();
 
-    size_t horizontal_active = edid.details[index].horizontal_active | ((edid.details[index].horizontal_active_blank_msb >> 4) << 8);
-    size_t horizontal_blank = edid.details[index].horizontal_blank | ((edid.details[index].horizontal_active_blank_msb & 0xF) << 8);
-    size_t horizontal_sync_offset = edid.details[index].horizontal_sync_offset | ((edid.details[index].sync_msb >> 6) << 8);
-    size_t horizontal_sync_pulse = edid.details[index].horizontal_sync_pulse | (((edid.details[index].sync_msb >> 4) & 0x3) << 8);
+    Graphics::Modesetting mode;
+    VERIFY(details.pixel_clock_khz());
+    mode.pixel_clock_in_khz = details.pixel_clock_khz();
+
+    size_t horizontal_active = details.horizontal_addressable_pixels();
+    size_t horizontal_sync_offset = details.horizontal_front_porch_pixels();
 
     mode.horizontal.active = horizontal_active;
     mode.horizontal.sync_start = horizontal_active + horizontal_sync_offset;
-    mode.horizontal.sync_end = horizontal_active + horizontal_sync_offset + horizontal_sync_pulse;
-    mode.horizontal.total = horizontal_active + horizontal_blank;
+    mode.horizontal.sync_end = horizontal_active + horizontal_sync_offset + details.horizontal_sync_pulse_width_pixels();
+    mode.horizontal.total = horizontal_active + details.horizontal_blanking_pixels();
 
-    size_t vertical_active = edid.details[index].vertical_active | ((edid.details[index].vertical_active_blank_msb >> 4) << 8);
-    size_t vertical_blank = edid.details[index].vertical_blank | ((edid.details[index].vertical_active_blank_msb & 0xF) << 8);
-    size_t vertical_sync_offset = (edid.details[index].vertical_sync >> 4) | (((edid.details[index].sync_msb >> 2) & 0x3) << 4);
-    size_t vertical_sync_pulse = (edid.details[index].vertical_sync & 0xF) | ((edid.details[index].sync_msb & 0x3) << 4);
+    size_t vertical_active = details.vertical_addressable_lines();
+    size_t vertical_sync_offset = details.vertical_front_porch_lines();
 
     mode.vertical.active = vertical_active;
     mode.vertical.sync_start = vertical_active + vertical_sync_offset;
-    mode.vertical.sync_end = vertical_active + vertical_sync_offset + vertical_sync_pulse;
-    mode.vertical.total = vertical_active + vertical_blank;
+    mode.vertical.sync_end = vertical_active + vertical_sync_offset + details.vertical_sync_pulse_width_lines();
+    mode.vertical.total = vertical_active + details.vertical_blanking_lines();
     return mode;
 }
 
@@ -202,7 +200,7 @@ IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
     }
     gmbus_read_edid();
 
-    auto modesetting = calculate_modesetting_from_edid(m_crt_edid, 0);
+    auto modesetting = calculate_modesetting_from_edid(m_crt_edid.value(), 0);
     dmesgln("Intel Native Graphics Adapter @ {}, preferred resolution is {:d}x{:d}", pci_address(), modesetting.horizontal.active, modesetting.vertical.active);
     set_crt_resolution(modesetting.horizontal.active, modesetting.vertical.active);
     auto framebuffer_address = PhysicalAddress(PCI::get_BAR2(pci_address()) & 0xfffffff0);
@@ -377,9 +375,17 @@ void IntelNativeGraphicsAdapter::gmbus_read(unsigned address, u8* buf, size_t le
 
 void IntelNativeGraphicsAdapter::gmbus_read_edid()
 {
-    SpinlockLocker control_lock(m_control_lock);
-    gmbus_write(DDC2_I2C_ADDRESS, 0);
-    gmbus_read(DDC2_I2C_ADDRESS, (u8*)&m_crt_edid, sizeof(Graphics::VideoInfoBlock));
+    {
+        SpinlockLocker control_lock(m_control_lock);
+        gmbus_write(DDC2_I2C_ADDRESS, 0);
+        gmbus_read(DDC2_I2C_ADDRESS, (u8*)&m_crt_edid_bytes, sizeof(m_crt_edid_bytes));
+    }
+    if (auto parsed_edid = EDID::Parser::from_bytes({ m_crt_edid_bytes, sizeof(m_crt_edid_bytes) }); !parsed_edid.is_error()) {
+        m_crt_edid = parsed_edid.release_value();
+    } else {
+        dbgln("IntelNativeGraphicsAdapter: Parsing EDID failed: {}", parsed_edid.error());
+        m_crt_edid = {};
+    }
 }
 
 bool IntelNativeGraphicsAdapter::is_resolution_valid(size_t, size_t)
@@ -420,7 +426,7 @@ bool IntelNativeGraphicsAdapter::set_crt_resolution(size_t width, size_t height)
     }
 
     // FIXME: Get the requested resolution from the EDID!!
-    auto modesetting = calculate_modesetting_from_edid(m_crt_edid, 0);
+    auto modesetting = calculate_modesetting_from_edid(m_crt_edid.value(), 0);
 
     disable_output();
 
@@ -647,4 +653,22 @@ void IntelNativeGraphicsAdapter::initialize_framebuffer_devices()
     auto framebuffer_result = m_framebuffer_device->try_to_initialize();
     VERIFY(!framebuffer_result.is_error());
 }
+
+ErrorOr<ByteBuffer> IntelNativeGraphicsAdapter::get_edid(size_t output_port_index) const
+{
+    if (output_port_index != 0) {
+        dbgln("IntelNativeGraphicsAdapter: get_edid: Only one output supported");
+        return Error::from_errno(ENODEV);
+    }
+
+    if (m_crt_edid.has_value()) {
+        auto bytes = ByteBuffer::copy(m_crt_edid_bytes, sizeof(m_crt_edid_bytes));
+        if (!bytes.has_value())
+            return Error::from_errno(ENOMEM);
+        return bytes.release_value();
+    }
+
+    return ByteBuffer {};
+}
+
 }

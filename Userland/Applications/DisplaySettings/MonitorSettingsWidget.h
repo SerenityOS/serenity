@@ -8,6 +8,7 @@
 
 #include "MonitorWidget.h"
 #include <LibCore/Timer.h>
+#include <LibEDID/EDID.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/RadioButton.h>
@@ -39,12 +40,13 @@ private:
     void create_frame();
     void create_resolution_list();
     void load_current_settings();
-    void selected_screen_index_changed();
+    void selected_screen_index_or_resolution_changed();
 
     size_t m_selected_screen_index { 0 };
 
     WindowServer::ScreenLayout m_screen_layout;
     Vector<String> m_screens;
+    Vector<Optional<EDID::Parser>> m_screen_edids;
     Vector<Gfx::IntSize> m_resolutions;
 
     RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;
@@ -52,6 +54,7 @@ private:
     RefPtr<GUI::ComboBox> m_resolution_combo;
     RefPtr<GUI::RadioButton> m_display_scale_radio_1x;
     RefPtr<GUI::RadioButton> m_display_scale_radio_2x;
+    RefPtr<GUI::Label> m_dpi_label;
 
     bool m_showing_screen_numbers { false };
 };

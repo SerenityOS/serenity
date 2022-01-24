@@ -22,9 +22,8 @@
 namespace JS::Temporal {
 
 // 11 Temporal.TimeZone Objects, https://tc39.es/proposal-temporal/#sec-temporal-timezone-objects
-TimeZone::TimeZone(String identifier, Object& prototype)
+TimeZone::TimeZone(Object& prototype)
     : Object(prototype)
-    , m_identifier(move(identifier))
 {
 }
 
@@ -71,21 +70,32 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(GlobalObject& global_obje
         new_target = global_object.temporal_time_zone_constructor();
 
     // 2. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.TimeZone.prototype%", « [[InitializedTemporalTimeZone]], [[Identifier]], [[OffsetNanoseconds]] »).
-    // 3. Set object.[[Identifier]] to identifier.
-    auto* object = TRY(ordinary_create_from_constructor<TimeZone>(global_object, *new_target, &GlobalObject::temporal_time_zone_prototype, identifier));
+    auto* object = TRY(ordinary_create_from_constructor<TimeZone>(global_object, *new_target, &GlobalObject::temporal_time_zone_prototype));
 
-    // 4. If identifier satisfies the syntax of a TimeZoneNumericUTCOffset (see 13.33), then
-    if (is_valid_time_zone_numeric_utc_offset_syntax(identifier)) {
-        // a. Set object.[[OffsetNanoseconds]] to ! ParseTimeZoneOffsetString(identifier).
-        object->set_offset_nanoseconds(TRY(parse_time_zone_offset_string(global_object, identifier)));
-    }
-    // 5. Else,
-    else {
+    // 3. Let offsetNanosecondsResult be ParseTimeZoneOffsetString(identifier).
+    auto offset_nanoseconds_result = parse_time_zone_offset_string(global_object, identifier);
+
+    // 4. If offsetNanosecondsResult is an abrupt completion, then
+    if (offset_nanoseconds_result.is_throw_completion()) {
+        global_object.vm().clear_exception();
+
         // a. Assert: ! CanonicalizeTimeZoneName(identifier) is identifier.
         VERIFY(canonicalize_time_zone_name(identifier) == identifier);
 
-        // b. Set object.[[OffsetNanoseconds]] to undefined.
+        // b. Set object.[[Identifier]] to identifier.
+        object->set_identifier(identifier);
+
+        // c. Set object.[[OffsetNanoseconds]] to undefined.
         // NOTE: No-op.
+    }
+    // 5. Else,
+    else {
+        // a. Set object.[[Identifier]] to ! FormatTimeZoneOffsetString(identifier).
+        // TODO: `identifier` is wrong here. See: https://github.com/tc39/proposal-temporal/pull/2010
+        object->set_identifier(format_time_zone_offset_string(offset_nanoseconds_result.value()));
+
+        // b. Set object.[[OffsetNanoseconds]] to offsetNanosecondsResult.[[Value]].
+        object->set_offset_nanoseconds(offset_nanoseconds_result.value());
     }
 
     // 6. Return object.
@@ -429,8 +439,8 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
         // a. If ParseText(! StringToCodePoints(parseResult.[[Name]], TimeZoneNumericUTCOffset)) is not a List of errors, then
         if (is_valid_time_zone_numeric_utc_offset_syntax(*parse_result.name)) {
             // i. If parseResult.[[OffsetString]] is not undefined, and ! ParseTimeZoneOffsetString(parseResult.[[OffsetString]]) ≠ ! ParseTimeZoneOffsetString(parseResult.[[Name]]), throw a RangeError exception.
-            if (parse_result.offset.has_value() && (MUST(parse_time_zone_offset_string(global_object, *parse_result.offset)) != MUST(parse_time_zone_offset_string(global_object, *parse_result.name))))
-                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalTimeZoneOffsetStringMismatch, *parse_result.offset, *parse_result.name);
+            if (parse_result.offset_string.has_value() && (MUST(parse_time_zone_offset_string(global_object, *parse_result.offset_string)) != MUST(parse_time_zone_offset_string(global_object, *parse_result.name))))
+                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalTimeZoneOffsetStringMismatch, *parse_result.offset_string, *parse_result.name);
         }
         // b. Else,
         else {
@@ -448,7 +458,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
         return MUST(create_temporal_time_zone(global_object, "UTC"sv));
 
     // 6. Return ! CreateTemporalTimeZone(parseResult.[[OffsetString]]).
-    return MUST(create_temporal_time_zone(global_object, *parse_result.offset));
+    return MUST(create_temporal_time_zone(global_object, *parse_result.offset_string));
 }
 
 // 11.6.11 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor

@@ -17,8 +17,6 @@ public:
 
     virtual void paint(PaintContext&, PaintPhase) override;
 
-    virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
-
 private:
     template<typename Callback>
     void for_each_fragment(Callback);

@@ -24,7 +24,7 @@
         @GUI::Label {
             text: "Screen:"
             text_alignment: "CenterLeft"
-            fixed_width: 95
+            fixed_width: 55
         }
 
         @GUI::ComboBox {
@@ -53,6 +53,13 @@
 
             @GUI::ComboBox {
                 name: "resolution_combo"
+            }
+
+            @GUI::Label {
+                name: "display_dpi"
+                text: "96 dpi"
+                text_alignment: "CenterMiddle"
+                fixed_width: 50
             }
         }
 

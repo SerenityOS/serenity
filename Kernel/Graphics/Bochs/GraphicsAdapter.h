@@ -36,6 +36,8 @@ public:
 
     virtual bool vga_compatible() const override;
 
+    ErrorOr<ByteBuffer> get_edid(size_t output_port_index) const override;
+
 private:
     // ^GenericGraphicsAdapter
     virtual bool try_to_set_resolution(size_t output_port_index, size_t width, size_t height) override;

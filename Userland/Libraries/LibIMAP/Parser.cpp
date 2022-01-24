@@ -315,7 +315,7 @@ FetchResponseData Parser::parse_fetch_response()
             break;
         case FetchCommand::DataItemType::BodySection: {
             auto body = parse_nstring();
-            fetch_response.add_body_data(move(data_item), body.has_value() ? body.release_value() : Optional<String>());
+            fetch_response.add_body_data(move(data_item), Optional<String>(move(body)));
             break;
         }
         }
@@ -434,8 +434,8 @@ BodyStructure Parser::parse_one_part_body()
         auto data = BodyStructureData {
             type,
             subtype,
-            id.has_value() ? Optional<String>(id.value()) : Optional<String>(),
-            description.has_value() ? Optional<String>(description.value()) : Optional<String>(),
+            Optional<String>(move(id)),
+            Optional<String>(move(description)),
             encoding,
             params,
             num_octets,
@@ -496,8 +496,8 @@ BodyStructure Parser::parse_one_part_body()
         BodyStructureData data {
             type,
             subtype,
-            id.has_value() ? Optional<String>(id.value()) : Optional<String>(),
-            description.has_value() ? Optional<String>(description.value()) : Optional<String>(),
+            Optional<String>(move(id)),
+            Optional<String>(move(description)),
             encoding,
             params,
             num_octets,
@@ -522,8 +522,8 @@ BodyStructure Parser::parse_one_part_body()
         BodyStructureData data {
             type,
             subtype,
-            id.has_value() ? Optional<String>(id.value()) : Optional<String>(),
-            description.has_value() ? Optional<String>(description.value()) : Optional<String>(),
+            Optional<String>(move(id)),
+            Optional<String>(move(description)),
             encoding,
             params,
             num_octets,
@@ -802,18 +802,17 @@ Address Parser::parse_address()
 {
     consume("(");
     auto address = Address();
-    // I hate this so much. Why is there no Optional.map??
     auto name = parse_nstring();
-    address.name = name.has_value() ? Optional<String>(name.value()) : Optional<String>();
+    address.name = Optional<String>(move(name));
     consume(" ");
     auto source_route = parse_nstring();
-    address.source_route = source_route.has_value() ? Optional<String>(source_route.value()) : Optional<String>();
+    address.source_route = Optional<String>(move(source_route));
     consume(" ");
     auto mailbox = parse_nstring();
-    address.mailbox = mailbox.has_value() ? Optional<String>(mailbox.value()) : Optional<String>();
+    address.mailbox = Optional<String>(move(mailbox));
     consume(" ");
     auto host = parse_nstring();
-    address.host = host.has_value() ? Optional<String>(host.value()) : Optional<String>();
+    address.host = Optional<String>(move(host));
     consume(")");
     return address;
 }

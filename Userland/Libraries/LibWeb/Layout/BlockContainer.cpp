@@ -104,23 +104,6 @@ HitTestResult BlockContainer::hit_test(const Gfx::IntPoint& position, HitTestTyp
     return { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
 }
 
-void BlockContainer::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
-{
-    auto& containing_block = context.containing_block();
-    auto* line_box = &containing_block.ensure_last_line_box();
-
-    context.dimension_box_on_line(*this, layout_mode);
-
-    float available_width = context.available_width_at_line(containing_block.line_boxes().size() - 1);
-
-    if (layout_mode == LayoutMode::AllPossibleLineBreaks && line_box->width() > 0) {
-        line_box = &containing_block.add_line_box();
-    } else if (layout_mode == LayoutMode::Default && line_box->width() > 0 && line_box->width() + border_box_width() > available_width) {
-        line_box = &containing_block.add_line_box();
-    }
-    line_box->add_fragment(*this, 0, 0, border_box_width(), height());
-}
-
 bool BlockContainer::is_scrollable() const
 {
     // FIXME: Support horizontal scroll as well (overflow-x)
