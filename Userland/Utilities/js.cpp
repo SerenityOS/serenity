@@ -68,6 +68,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
 
 RefPtr<JS::VM> vm;
@@ -1286,6 +1287,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    tzset();
 
     bool syntax_highlight = !disable_syntax_highlight;
 

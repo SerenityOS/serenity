@@ -17,6 +17,7 @@
 #include <LibMain/Main.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 
 class Quote {
@@ -86,6 +87,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
+
+    tzset();
 
     auto file_contents = file->read_all();
     auto json = TRY(JsonValue::from_string(file_contents));

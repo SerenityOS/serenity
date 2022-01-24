@@ -29,6 +29,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(print_rfc_5322, "Print date in RFC 5322 format", "rfc-5322", 'R');
     args_parser.parse(arguments);
 
+    tzset();
+
     if (set_date != nullptr) {
         auto number = String(set_date).to_uint();
 

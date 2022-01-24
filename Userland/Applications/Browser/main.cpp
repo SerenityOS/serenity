@@ -21,6 +21,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/TabWidget.h>
 #include <LibMain/Main.h>
+#include <time.h>
 #include <unistd.h>
 
 namespace Browser {
@@ -81,6 +82,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/tmp/portal/request", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
+
+    tzset();
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
 
