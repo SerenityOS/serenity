@@ -136,8 +136,6 @@ public:
     float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const;
 
 private:
-    float resolve_calculated_value(Layout::Node const& layout_node) const;
-
     const char* unit_name() const;
 
     Type m_type { Type::Undefined };
