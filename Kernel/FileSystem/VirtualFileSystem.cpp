@@ -865,7 +865,7 @@ ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(Str
         if (path_lexer.is_eof())
             extra_iteration = false;
         auto part = path_lexer.consume_until('/');
-        path_lexer.consume_specific('/');
+        path_lexer.ignore();
 
         Custody& parent = custody;
         auto parent_metadata = parent.inode().metadata();
