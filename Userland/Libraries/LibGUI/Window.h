@@ -151,6 +151,10 @@ public:
         return *widget;
     }
 
+    Widget* default_return_key_widget() { return m_default_return_key_widget; }
+    Widget const* default_return_key_widget() const { return m_default_return_key_widget; }
+    void set_default_return_key_widget(Widget*);
+
     Widget* focused_widget() { return m_focused_widget; }
     const Widget* focused_widget() const { return m_focused_widget; }
     void set_focused_widget(Widget*, FocusSource = FocusSource::Programmatic);
@@ -265,6 +269,7 @@ private:
     float m_opacity_when_windowless { 1.0f };
     float m_alpha_hit_threshold { 0.0f };
     RefPtr<Widget> m_main_widget;
+    WeakPtr<Widget> m_default_return_key_widget;
     WeakPtr<Widget> m_focused_widget;
     WeakPtr<Widget> m_automatic_cursor_tracking_widget;
     WeakPtr<Widget> m_hovered_widget;

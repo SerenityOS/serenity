@@ -453,6 +453,10 @@ void Window::handle_key_event(KeyEvent& event)
         focus_a_widget_if_possible(FocusSource::Keyboard);
     }
 
+    if (m_default_return_key_widget && event.key() == Key_Return)
+        if (!m_focused_widget || !is<Button>(m_focused_widget.ptr()))
+            return default_return_key_widget()->dispatch_event(event, this);
+
     if (m_focused_widget)
         return m_focused_widget->dispatch_event(event, this);
     if (m_main_widget)
@@ -732,6 +736,13 @@ void Window::set_main_widget(Widget* widget)
     update();
 }
 
+void Window::set_default_return_key_widget(Widget* widget)
+{
+    if (m_default_return_key_widget == widget)
+        return;
+    m_default_return_key_widget = widget;
+}
+
 void Window::set_focused_widget(Widget* widget, FocusSource source)
 {
     if (m_focused_widget == widget)
@@ -742,6 +753,9 @@ void Window::set_focused_widget(Widget* widget, FocusSource source)
 
     if (!m_focused_widget && m_previously_focused_widget)
         m_focused_widget = m_previously_focused_widget;
+
+    if (m_default_return_key_widget && m_default_return_key_widget->on_focus_change)
+        m_default_return_key_widget->on_focus_change(m_default_return_key_widget->is_focused(), source);
 
     if (previously_focused_widget) {
         Core::EventLoop::current().post_event(*previously_focused_widget, make<FocusEvent>(Event::FocusOut, source));
