@@ -15,7 +15,7 @@ class WrappedFunction final : public FunctionObject {
     JS_OBJECT(WrappedFunction, FunctionObject);
 
 public:
-    static WrappedFunction* create(GlobalObject&, Realm& caller_realm, FunctionObject& target_function);
+    static ThrowCompletionOr<WrappedFunction*> create(GlobalObject&, Realm& caller_realm, FunctionObject& target_function);
 
     WrappedFunction(Realm&, FunctionObject&, Object& prototype);
     virtual ~WrappedFunction() = default;
