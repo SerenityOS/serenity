@@ -35,7 +35,5 @@ LoginWindow::LoginWindow(GUI::Window* parent)
         if (on_submit)
             on_submit();
     };
-
-    m_username->on_return_pressed = [&]() { m_log_in_button->click(); };
-    m_password->on_return_pressed = [&]() { m_log_in_button->click(); };
+    m_log_in_button->set_default(true);
 }
