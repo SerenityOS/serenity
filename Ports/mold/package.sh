@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=mold
-version=1.0.1
-files="https://github.com/rui314/mold/archive/refs/tags/v${version}.tar.gz mold-${version}.tgz b0d54602d1229c26583ee8a0132e53463c4d755f9dbc456475f388fd8a1aa3e4"
+version=1.0.2
+files="https://github.com/rui314/mold/archive/refs/tags/v${version}.tar.gz mold-${version}.tgz 1a5c4779d10c6c81d21092ea776504f51e6a4994121f536550c60a8e7bb6a028"
 auth_type=sha256
 depends=("zlib" "openssl")
-makeopts=("OS=SerenityOS" "EXTRA_LDFLAGS=-L${DESTDIR}/usr/local/lib -lcore" "-j$(nproc)")
+makeopts=("OS=SerenityOS" "LDFLAGS=-L${DESTDIR}/usr/local/lib" "-j$(nproc)")
 installopts=("OS=SerenityOS")

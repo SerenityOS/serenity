@@ -1,0 +1,27 @@
+From b1c7fb39e002ee60589a731a5908bfc8473760e1 Mon Sep 17 00:00:00 2001
+From: Andrew Kaster <akaster@serenityos.org>
+Date: Sun, 23 Jan 2022 17:58:07 -0700
+Subject: [PATCH 6/6] Disable __TBB_RESUMABLE_TASKS for serenity
+
+This feature requires ``<ucontext.h>``, which is not currently
+implemented for any supported SerenityOS targets
+---
+ third-party/tbb/include/oneapi/tbb/detail/_config.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/third-party/tbb/include/oneapi/tbb/detail/_config.h b/third-party/tbb/include/oneapi/tbb/detail/_config.h
+index 3e07302..3b42d9e 100644
+--- a/third-party/tbb/include/oneapi/tbb/detail/_config.h
++++ b/third-party/tbb/include/oneapi/tbb/detail/_config.h
+@@ -268,7 +268,7 @@
+     #define __TBB_CPP20_COMPARISONS_PRESENT __TBB_CPP20_PRESENT
+ #endif
+ 
+-#define __TBB_RESUMABLE_TASKS                           (!__TBB_WIN8UI_SUPPORT && !__ANDROID__ && !__QNXNTO__)
++#define __TBB_RESUMABLE_TASKS                           (!__TBB_WIN8UI_SUPPORT && !__ANDROID__ && !__QNXNTO__ && !__serenity__)
+ 
+ /* This macro marks incomplete code or comments describing ideas which are considered for the future.
+  * See also for plain comment with TODO and FIXME marks for small improvement opportunities.
+-- 
+2.25.1
+

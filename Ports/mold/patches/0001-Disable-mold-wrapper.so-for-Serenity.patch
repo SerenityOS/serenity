@@ -1,0 +1,40 @@
+From 70904f38faffd6917593a67326f124251ea03cd3 Mon Sep 17 00:00:00 2001
+From: Andrew Kaster <akaster@serenityos.org>
+Date: Sun, 23 Jan 2022 17:47:17 -0700
+Subject: [PATCH 1/6] Disable mold-wrapper.so for Serenity
+
+This feature depends on RTLD_NEXT capabilities which are not yet
+implemented in the Serenity DynamicLoader.
+---
+ Makefile | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index e2d7cd9..18262a1 100644
+--- a/Makefile
++++ b/Makefile
+@@ -119,7 +119,7 @@ ifeq ($(OS), Linux)
+   MOLD_WRAPPER_LDFLAGS = -Wl,-push-state -Wl,-no-as-needed -ldl -Wl,-pop-state
+ endif
+ 
+-all: mold mold-wrapper.so
++all: mold
+ 
+ mold: $(OBJS) $(MIMALLOC_LIB) $(TBB_LIB) $(XXHASH_LIB)
+ 	$(CXX) $(OBJS) -o $@ $(MOLD_LDFLAGS) $(LDFLAGS)
+@@ -172,9 +172,9 @@ install: all
+ 	$(INSTALL_PROGRAM) mold $D$(BINDIR)
+ 	$(STRIP) $D$(BINDIR)/mold
+ 
+-	$(INSTALL) -d $D$(LIBDIR)/mold
+-	$(INSTALL_DATA) mold-wrapper.so $D$(LIBDIR)/mold
+-	$(STRIP) $D$(LIBDIR)/mold/mold-wrapper.so
++	# $(INSTALL) -d $D$(LIBDIR)/mold
++	# $(INSTALL_DATA) mold-wrapper.so $D$(LIBDIR)/mold
++	# $(STRIP) $D$(LIBDIR)/mold/mold-wrapper.so
+ 
+ 	$(INSTALL) -d $D$(LIBEXECDIR)/mold
+ 	ln -sf $(BINDIR)/mold $D$(LIBEXECDIR)/mold/ld
+-- 
+2.25.1
+
