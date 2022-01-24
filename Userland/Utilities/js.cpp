@@ -973,17 +973,12 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
 
     JS::ThrowCompletionOr<JS::Value> result { JS::js_undefined() };
 
-    auto run_script_or_module = [&](Variant<NonnullRefPtr<JS::Script>, NonnullRefPtr<JS::SourceTextModule>> script_or_module) {
-        auto program = script_or_module.visit(
-            [](auto& visitor) -> NonnullRefPtr<JS::Program> {
-                return visitor->parse_node();
-            });
-
+    auto run_script_or_module = [&](auto& script_or_module) {
         if (s_dump_ast)
-            program->dump(0);
+            script_or_module->parse_node().dump(0);
 
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
-            auto executable = JS::Bytecode::Generator::generate(*program);
+            auto executable = JS::Bytecode::Generator::generate(script_or_module->parse_node());
             executable.name = source_name;
             if (s_opt_bytecode) {
                 auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
@@ -1001,10 +996,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
                 return ReturnEarly::Yes;
             }
         } else {
-            result = script_or_module.visit(
-                [&](auto& visitor) {
-                    return interpreter.run(*visitor);
-                });
+            result = interpreter.run(*script_or_module);
         }
 
         return ReturnEarly::No;
@@ -1020,7 +1012,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             outln(error.to_string());
             vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
         } else {
-            auto return_early = run_script_or_module(move(script_or_error.value()));
+            auto return_early = run_script_or_module(script_or_error.value());
             if (return_early == ReturnEarly::Yes)
                 return true;
         }
@@ -1034,7 +1026,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             outln(error.to_string());
             vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
         } else {
-            auto return_early = run_script_or_module(move(module_or_error.value()));
+            auto return_early = run_script_or_module(module_or_error.value());
             if (return_early == ReturnEarly::Yes)
                 return true;
         }
