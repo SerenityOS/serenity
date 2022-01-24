@@ -23,9 +23,9 @@ void StylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const
     current().paint_tab_button(painter, rect, palette, active, hovered, enabled, top, in_active_window);
 }
 
-void StylePainter::paint_button(Painter& painter, const IntRect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused)
+void StylePainter::paint_button(Painter& painter, const IntRect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused, bool default_button)
 {
-    current().paint_button(painter, rect, palette, button_style, pressed, hovered, checked, enabled, focused);
+    current().paint_button(painter, rect, palette, button_style, pressed, hovered, checked, enabled, focused, default_button);
 }
 
 void StylePainter::paint_frame(Painter& painter, const IntRect& rect, const Palette& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)

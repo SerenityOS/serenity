@@ -10,6 +10,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
@@ -24,6 +25,16 @@ Button::Button(String text)
     set_min_width(32);
     set_fixed_height(22);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
+
+    on_focus_change = [this](bool has_focus, auto) {
+        if (!is_default())
+            return;
+        if (!has_focus && is<Button>(window()->focused_widget()))
+            m_another_button_has_focus = true;
+        else
+            m_another_button_has_focus = false;
+        update();
+    };
 
     REGISTER_ENUM_PROPERTY(
         "button_style", button_style, set_button_style, Gfx::ButtonStyle,
@@ -46,7 +57,7 @@ void Button::paint_event(PaintEvent& event)
 
     bool paint_pressed = is_being_pressed() || (m_menu && m_menu->is_visible());
 
-    Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, paint_pressed, is_hovered(), is_checked(), is_enabled(), is_focused());
+    Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, paint_pressed, is_hovered(), is_checked(), is_enabled(), is_focused(), is_default() & !another_button_has_focus());
 
     if (text().is_empty() && !m_icon)
         return;
@@ -191,6 +202,21 @@ void Button::mousemove_event(MouseEvent& event)
         return;
     }
     AbstractButton::mousemove_event(event);
+}
+
+bool Button::is_default() const
+{
+    if (!window())
+        return false;
+    return this == window()->default_return_key_widget();
+}
+
+void Button::set_default(bool default_button)
+{
+    deferred_invoke([this, default_button] {
+        VERIFY(window());
+        window()->set_default_return_key_widget(default_button ? this : nullptr);
+    });
 }
 
 }

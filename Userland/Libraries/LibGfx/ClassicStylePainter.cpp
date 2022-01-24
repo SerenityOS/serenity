@@ -93,7 +93,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
     }
 }
 
-static void paint_button_new(Painter& painter, IntRect const& a_rect, Palette const& palette, ButtonStyle style, bool pressed, bool checked, bool hovered, bool enabled, bool focused)
+static void paint_button_new(Painter& painter, IntRect const& a_rect, Palette const& palette, ButtonStyle style, bool pressed, bool checked, bool hovered, bool enabled, bool focused, bool default_button)
 {
     Color button_color = palette.button();
     Color highlight_color = palette.threed_highlight();
@@ -111,7 +111,7 @@ static void paint_button_new(Painter& painter, IntRect const& a_rect, Palette co
     PainterStateSaver saver(painter);
 
     auto rect = a_rect;
-    if (focused) {
+    if (focused || default_button) {
         painter.draw_rect(a_rect, palette.threed_shadow2());
         rect.shrink(2, 2);
     }
@@ -165,10 +165,10 @@ static void paint_button_new(Painter& painter, IntRect const& a_rect, Palette co
     }
 }
 
-void ClassicStylePainter::paint_button(Painter& painter, IntRect const& rect, Palette const& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused)
+void ClassicStylePainter::paint_button(Painter& painter, IntRect const& rect, Palette const& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused, bool default_button)
 {
     if (button_style == ButtonStyle::Normal || button_style == ButtonStyle::ThickCap)
-        return paint_button_new(painter, rect, palette, button_style, pressed, checked, hovered, enabled, focused);
+        return paint_button_new(painter, rect, palette, button_style, pressed, checked, hovered, enabled, focused, default_button);
 
     if (button_style == ButtonStyle::Coolbar && !enabled)
         return;

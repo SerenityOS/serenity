@@ -48,6 +48,11 @@ public:
 
     void set_menu(RefPtr<GUI::Menu>);
 
+    bool is_default() const;
+    void set_default(bool);
+
+    bool another_button_has_focus() const { return m_another_button_has_focus; }
+
 protected:
     explicit Button(String text = {});
     virtual void mousedown_event(MouseEvent&) override;
@@ -61,6 +66,7 @@ private:
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     WeakPtr<Action> m_action;
     int m_icon_spacing { 4 };
+    bool m_another_button_has_focus { false };
 };
 
 }
