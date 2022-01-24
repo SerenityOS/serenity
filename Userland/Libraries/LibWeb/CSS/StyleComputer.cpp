@@ -873,6 +873,41 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
     }
 }
 
+// https://drafts.csswg.org/css-display/#transformations
+void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::Element const&) const
+{
+    // 2.7. Automatic Box Type Transformations
+
+    // Some layout effects require blockification or inlinification of the box type,
+    // which sets the box’s computed outer display type to block or inline (respectively).
+    // (This has no effect on display types that generate no box at all, such as none or contents.)
+
+    // Additionally:
+
+    // FIXME: If a block box (block flow) is inlinified, its inner display type is set to flow-root so that it remains a block container.
+    //
+    // FIXME: If an inline box (inline flow) is inlinified, it recursively inlinifies all of its in-flow children,
+    //        so that no block-level descendants break up the inline formatting context in which it participates.
+    //
+    // FIXME: For legacy reasons, if an inline block box (inline flow-root) is blockified, it becomes a block box (losing its flow-root nature).
+    //        For consistency, a run-in flow-root box also blockifies to a block box.
+    //
+    // FIXME: If a layout-internal box is blockified, its inner display type converts to flow so that it becomes a block container.
+    //        Inlinification has no effect on layout-internal boxes. (However, placement in such an inline context will typically cause them
+    //        to be wrapped in an appropriately-typed anonymous inline-level box.)
+
+    // Absolute positioning or floating an element blockifies the box’s display type. [CSS2]
+    auto display = style.display();
+    if (!display.is_none() && !display.is_contents() && !display.is_block_outside()) {
+        if (style.position() == CSS::Position::Absolute || style.position() == CSS::Position::Fixed || style.float_() != CSS::Float::None)
+            style.set_property(CSS::PropertyID::Display, IdentifierStyleValue::create(CSS::ValueID::Block));
+    }
+
+    // FIXME: Containment in a ruby container inlinifies the box’s display type, as described in [CSS-RUBY-1].
+
+    // FIXME: A parent with a grid or flex display value blockifies the box’s display type. [CSS-GRID-1] [CSS-FLEXBOX-1]
+}
+
 NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
 {
     auto style = StyleProperties::create();
@@ -896,6 +931,9 @@ NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& elemen
 
     // 4. Default the values, applying inheritance and 'initial' as needed
     compute_defaulted_values(style, &element);
+
+    // 5. Run automatic box type transformations
+    transform_box_type_if_needed(style, element);
 
     return style;
 }
