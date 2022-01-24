@@ -434,33 +434,10 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
     }
 }
 
-void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
-{
-    VERIFY(!containing_block.is_absolutely_positioned());
-    auto& replaced_element_box_model = child_box.box_model();
-    auto width_of_containing_block = CSS::Length::make_px(containing_block.width());
-
-    replaced_element_box_model.margin.top = child_box.computed_values().margin().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
-    replaced_element_box_model.margin.bottom = child_box.computed_values().margin().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
-    replaced_element_box_model.border.top = child_box.computed_values().border_top().width;
-    replaced_element_box_model.border.bottom = child_box.computed_values().border_bottom().width;
-    replaced_element_box_model.padding.top = child_box.computed_values().padding().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
-    replaced_element_box_model.padding.bottom = child_box.computed_values().padding().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
-
-    float x = replaced_element_box_model.margin.left
-        + replaced_element_box_model.border.left
-        + replaced_element_box_model.padding.left
-        + replaced_element_box_model.offset.left;
-
-    float y = replaced_element_box_model.margin_box().top + containing_block.box_model().offset.top;
-
-    child_box.set_offset(x, y);
-}
-
-void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
+void BlockFormattingContext::compute_vertical_box_model_metrics(Box& child_box, BlockContainer const& containing_block)
 {
     auto& box_model = child_box.box_model();
-    auto& computed_values = child_box.computed_values();
+    auto const& computed_values = child_box.computed_values();
     auto width_of_containing_block = CSS::Length::make_px(containing_block.width());
 
     box_model.margin.top = computed_values.margin().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
@@ -469,6 +446,31 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     box_model.border.bottom = computed_values.border_bottom().width;
     box_model.padding.top = computed_values.padding().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
     box_model.padding.bottom = computed_values.padding().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
+}
+
+void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
+{
+    VERIFY(!containing_block.is_absolutely_positioned());
+    auto& box_model = child_box.box_model();
+
+    compute_vertical_box_model_metrics(child_box, containing_block);
+
+    float x = box_model.margin.left
+        + box_model.border.left
+        + box_model.padding.left
+        + box_model.offset.left;
+
+    float y = box_model.margin_box().top + containing_block.box_model().offset.top;
+
+    child_box.set_offset(x, y);
+}
+
+void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
+{
+    auto& box_model = child_box.box_model();
+    auto const& computed_values = child_box.computed_values();
+
+    compute_vertical_box_model_metrics(child_box, containing_block);
 
     float x = box_model.margin.left
         + box_model.border.left
