@@ -46,6 +46,9 @@ struct Array {
     [[nodiscard]] constexpr T& operator[](size_t index) { return at(index); }
 
     template<typename T2, size_t Size2>
+    [[nodiscard]] constexpr bool operator==(T2 const (&other)[Size2]) const { return span() == Span(other); }
+
+    template<typename T2, size_t Size2>
     [[nodiscard]] constexpr bool operator==(Array<T2, Size2> const& other) const { return span() == other.span(); }
 
     using ConstIterator = SimpleIterator<Array const, T const>;
