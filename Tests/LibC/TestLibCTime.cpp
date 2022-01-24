@@ -17,6 +17,12 @@ public:
     {
     }
 
+    explicit TimeZoneGuard(char const* tz)
+        : m_tz(getenv("TZ"))
+    {
+        setenv("TZ", tz, 1);
+    }
+
     ~TimeZoneGuard()
     {
         if (m_tz)
@@ -31,6 +37,8 @@ private:
 
 TEST_CASE(asctime)
 {
+    TimeZoneGuard guard("UTC");
+
     time_t epoch = 0;
     auto result = asctime(localtime(&epoch));
     EXPECT_EQ(expected_epoch, StringView(result));
@@ -38,6 +46,8 @@ TEST_CASE(asctime)
 
 TEST_CASE(asctime_r)
 {
+    TimeZoneGuard guard("UTC");
+
     char buffer[26] {};
     time_t epoch = 0;
     auto result = asctime_r(localtime(&epoch), buffer);
@@ -46,6 +56,8 @@ TEST_CASE(asctime_r)
 
 TEST_CASE(ctime)
 {
+    TimeZoneGuard guard("UTC");
+
     time_t epoch = 0;
     auto result = ctime(&epoch);
 
@@ -54,6 +66,8 @@ TEST_CASE(ctime)
 
 TEST_CASE(ctime_r)
 {
+    TimeZoneGuard guard("UTC");
+
     char buffer[26] {};
     time_t epoch = 0;
     auto result = ctime_r(&epoch, buffer);
