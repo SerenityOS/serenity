@@ -582,6 +582,38 @@ Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
     return dst_offset;
 }
 
+Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, AK::Time time)
+{
+    auto const& time_zone_offset = find_time_zone_offset(time_zone, time);
+    Array<NamedOffset, 2> named_offsets;
+
+    auto format_name = [](auto format, auto offset) -> String {
+        if (offset == 0)
+            return s_string_list[format].replace("{}"sv, ""sv);
+        return String::formatted(s_string_list[format], s_string_list[offset]);
+    };
+
+    auto set_named_offset = [&](auto& named_offset, auto dst_offset, auto in_dst, auto format, auto offset) {
+        named_offset.seconds = time_zone_offset.offset + dst_offset;
+        named_offset.in_dst = in_dst;
+        named_offset.name = format_name(format, offset);
+    };
+
+    if (time_zone_offset.dst_rule != -1) {
+        auto offsets = find_dst_offsets(time_zone_offset, time);
+        auto in_dst = offsets[1]->offset == 0 ? InDST::No : InDST::Yes;
+
+        set_named_offset(named_offsets[0], offsets[0]->offset, InDST::No, time_zone_offset.standard_format, offsets[0]->format);
+        set_named_offset(named_offsets[1], offsets[1]->offset, in_dst, time_zone_offset.daylight_format, offsets[1]->format);
+    } else {
+        auto in_dst = time_zone_offset.dst_offset == 0 ? InDST::No : InDST::Yes;
+        set_named_offset(named_offsets[0], time_zone_offset.dst_offset, in_dst, time_zone_offset.standard_format, 0);
+        set_named_offset(named_offsets[1], time_zone_offset.dst_offset, in_dst, time_zone_offset.daylight_format, 0);
+    }
+
+    return named_offsets;
+}
+
 Span<StringView const> all_time_zones()
 {
     static constexpr auto all_time_zones = Array {

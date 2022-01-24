@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Error.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
@@ -25,6 +27,10 @@ struct Offset {
     InDST in_dst { InDST::No };
 };
 
+struct NamedOffset : public Offset {
+    String name;
+};
+
 StringView current_time_zone();
 ErrorOr<void> change_time_zone(StringView time_zone);
 Span<StringView const> all_time_zones();
@@ -38,5 +44,8 @@ StringView daylight_savings_rule_to_string(DaylightSavingsRule daylight_savings_
 
 Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time);
 Optional<Offset> get_time_zone_offset(StringView time_zone, AK::Time time);
+
+Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, AK::Time time);
+Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(StringView time_zone, AK::Time time);
 
 }
