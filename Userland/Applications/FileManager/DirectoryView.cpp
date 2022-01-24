@@ -102,6 +102,7 @@ void DirectoryView::handle_activation(GUI::ModelIndex const& index)
     struct stat st;
     if (stat(path.characters(), &st) < 0) {
         perror("stat");
+        GUI::MessageBox::show_error(window(), "No such file or directory (Was it moved?)");
         return;
     }
 
