@@ -455,12 +455,8 @@ void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(B
 
     compute_vertical_box_model_metrics(child_box, containing_block);
 
-    float x = box_model.margin.left
-        + box_model.border.left
-        + box_model.padding.left
-        + box_model.offset.left;
-
-    float y = box_model.margin_box().top + containing_block.box_model().offset.top;
+    float x = box_model.margin_box().left + box_model.offset.left;
+    float y = box_model.margin_box().top + box_model.offset.top;
 
     child_box.set_offset(x, y);
 }
@@ -472,13 +468,11 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
 
     compute_vertical_box_model_metrics(child_box, containing_block);
 
-    float x = box_model.margin.left
-        + box_model.border.left
-        + box_model.padding.left
-        + box_model.offset.left;
-
+    float x = 0;
     if (containing_block.computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
         x = (containing_block.width() / 2) - child_box.width() / 2;
+    } else {
+        x = box_model.margin_box().left + box_model.offset.left;
     }
 
     float y = box_model.margin_box().top
