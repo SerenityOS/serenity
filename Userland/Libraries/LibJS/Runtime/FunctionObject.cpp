@@ -76,6 +76,22 @@ void FunctionObject::set_function_name(Variant<PropertyKey, PrivateName> const& 
     MUST(define_property_or_throw(vm.names.name, PropertyDescriptor { .value = js_string(vm, move(name)), .writable = false, .enumerable = false, .configurable = true }));
 }
 
+// 10.2.10 SetFunctionLength ( F, length ), https://tc39.es/ecma262/#sec-setfunctionlength
+void FunctionObject::set_function_length(double length)
+{
+    auto& vm = this->vm();
+
+    // "length (a non-negative integer or +∞)"
+    VERIFY(trunc(length) == length || __builtin_isinf_sign(length) == 1);
+
+    // 1. Assert: F is an extensible object that does not have a "length" own property.
+    VERIFY(m_is_extensible);
+    VERIFY(!storage_has(vm.names.length));
+
+    // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
+    MUST(define_property_or_throw(vm.names.length, PropertyDescriptor { .value = Value { length }, .writable = false, .enumerable = false, .configurable = true }));
+}
+
 ThrowCompletionOr<BoundFunction*> FunctionObject::bind(Value bound_this_value, Vector<Value> arguments)
 {
     auto& vm = this->vm();

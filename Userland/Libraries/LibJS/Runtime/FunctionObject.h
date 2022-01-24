@@ -30,6 +30,7 @@ public:
     virtual const FlyString& name() const = 0;
 
     void set_function_name(Variant<PropertyKey, PrivateName> const& name_arg, Optional<StringView> const& prefix = {});
+    void set_function_length(double length);
     ThrowCompletionOr<BoundFunction*> bind(Value bound_this_value, Vector<Value> arguments);
 
     virtual bool is_strict_mode() const { return false; }
