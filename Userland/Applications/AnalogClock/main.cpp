@@ -14,6 +14,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <time.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -23,6 +24,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
+
+    tzset();
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-analog-clock"));
     auto window = TRY(GUI::Window::try_create());

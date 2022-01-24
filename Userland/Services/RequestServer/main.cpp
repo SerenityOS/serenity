@@ -16,6 +16,7 @@
 #include <RequestServer/HttpProtocol.h>
 #include <RequestServer/HttpsProtocol.h>
 #include <signal.h>
+#include <time.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
@@ -31,6 +32,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
+
+    tzset();
 
     [[maybe_unused]] auto gemini = make<RequestServer::GeminiProtocol>();
     [[maybe_unused]] auto http = make<RequestServer::HttpProtocol>();
