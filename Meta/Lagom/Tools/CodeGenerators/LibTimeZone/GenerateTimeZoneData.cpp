@@ -545,8 +545,14 @@ static Offset get_active_dst_offset(TimeZoneOffset const& time_zone_offset, AK::
     auto standard_time_in_effect = offsets[0]->time_in_effect(time);
     auto daylight_time_in_effect = offsets[1]->time_in_effect(time);
 
-    if ((time < daylight_time_in_effect) || (time >= standard_time_in_effect))
-        return { offsets[0]->offset, InDST::No };
+    if (daylight_time_in_effect < standard_time_in_effect) {
+        if ((time < daylight_time_in_effect) || (time >= standard_time_in_effect))
+            return { offsets[0]->offset, InDST::No };
+    } else {
+        if ((time >= standard_time_in_effect) && (time < daylight_time_in_effect))
+            return { offsets[0]->offset, InDST::No };
+    }
+
     return { offsets[1]->offset, InDST::Yes };
 }
 
