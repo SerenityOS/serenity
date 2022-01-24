@@ -427,6 +427,14 @@ struct TimeZoneOffset {
 };
 
 struct DaylightSavingsOffset {
+    AK::Time time_in_effect(AK::Time time) const
+    {
+        auto in_effect = this->in_effect;
+        in_effect.year = seconds_since_epoch_to_year(time.to_seconds());
+
+        return in_effect.time_since_epoch();
+    }
+
     i64 offset { 0 };
     u16 year_from { 0 };
     u16 year_to { 0 };
@@ -489,25 +497,18 @@ static constexpr Array<@type@, @size@> @name@ { {
     append_string_conversions("DaylightSavingsRule"sv, "daylight_savings_rule"sv, time_zone_data.dst_offset_names);
 
     generator.append(R"~~~(
-static Offset get_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
+static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset const& time_zone_offset, AK::Time time)
 {
     auto const& dst_rules = s_dst_offsets[time_zone_offset.dst_rule];
 
     DaylightSavingsOffset const* standard_offset = nullptr;
     DaylightSavingsOffset const* daylight_offset = nullptr;
 
-    auto time_in_effect_for_rule = [&](auto const& dst_rule) {
-        auto in_effect = dst_rule.in_effect;
-        in_effect.year = seconds_since_epoch_to_year(time.to_seconds());
-
-        return in_effect.time_since_epoch();
-    };
-
     auto preferred_rule = [&](auto* current_offset, auto& new_offset) {
         if (!current_offset)
             return &new_offset;
 
-        auto new_time_in_effect = time_in_effect_for_rule(new_offset);
+        auto new_time_in_effect = new_offset.time_in_effect(time);
         return (time >= new_time_in_effect) ? &new_offset : current_offset;
     };
 
@@ -525,18 +526,31 @@ static Offset get_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time ti
             daylight_offset = preferred_rule(daylight_offset, dst_rule);
     }
 
-    if (!standard_offset || !daylight_offset)
-        return {};
+    // In modern times, there will always be a standard rule in the TZDB, but that isn't true in
+    // all time zones in or before the early 1900s. For example, the "US" rules begin in 1918.
+    if (!standard_offset) {
+        static DaylightSavingsOffset const empty_offset {};
+        return { &empty_offset, &empty_offset };
+    }
 
-    auto standard_time_in_effect = time_in_effect_for_rule(*standard_offset);
-    auto daylight_time_in_effect = time_in_effect_for_rule(*daylight_offset);
-
-    if ((time < daylight_time_in_effect) || (time >= standard_time_in_effect))
-        return { standard_offset->offset, InDST::No };
-    return { daylight_offset->offset, InDST::Yes };
+    return { standard_offset, daylight_offset ? daylight_offset : standard_offset };
 }
 
-Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
+static Offset get_active_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
+{
+    auto offsets = find_dst_offsets(time_zone_offset, time);
+    if (offsets[0] == offsets[1])
+        return { offsets[0]->offset, InDST::No };
+
+    auto standard_time_in_effect = offsets[0]->time_in_effect(time);
+    auto daylight_time_in_effect = offsets[1]->time_in_effect(time);
+
+    if ((time < daylight_time_in_effect) || (time >= standard_time_in_effect))
+        return { offsets[0]->offset, InDST::No };
+    return { offsets[1]->offset, InDST::Yes };
+}
+
+static TimeZoneOffset const& find_time_zone_offset(TimeZone time_zone, AK::Time time)
 {
     auto const& time_zone_offsets = s_time_zone_offsets[to_underlying(time_zone)];
 
@@ -549,11 +563,16 @@ Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
     }
 
     VERIFY(index < time_zone_offsets.size());
-    auto const& time_zone_offset = time_zone_offsets[index];
+    return time_zone_offsets[index];
+}
+
+Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
+{
+    auto const& time_zone_offset = find_time_zone_offset(time_zone, time);
 
     Offset dst_offset {};
     if (time_zone_offset.dst_rule != -1) {
-        dst_offset = get_dst_offset(time_zone_offset, time);
+        dst_offset = get_active_dst_offset(time_zone_offset, time);
     } else {
         auto in_dst = time_zone_offset.dst_offset == 0 ? InDST::No : InDST::Yes;
         dst_offset = { time_zone_offset.dst_offset, in_dst };
