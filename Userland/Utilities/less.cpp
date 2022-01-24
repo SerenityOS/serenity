@@ -287,6 +287,9 @@ public:
         char* line = nullptr;
         size_t n = 0;
         ssize_t size = getline(&line, &n, m_file);
+        ScopeGuard guard([line] {
+            free(line);
+        });
 
         if (size == -1)
             return false;
@@ -296,7 +299,6 @@ public:
             --size;
 
         m_lines.append(String(line, size));
-        free(line);
         return true;
     }
 
