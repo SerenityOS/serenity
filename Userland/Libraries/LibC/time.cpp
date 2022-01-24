@@ -162,13 +162,7 @@ struct tm* localtime_r(const time_t* t, struct tm* tm)
     if (!t)
         return nullptr;
 
-    auto time_zone = TimeZone::current_time_zone();
-    auto time = AK::Time::from_seconds(*t);
-
-    if (auto offset = TimeZone::get_time_zone_offset(time_zone, time); offset.has_value())
-        time += AK::Time::from_seconds(offset->seconds);
-
-    time_to_tm(tm, time.to_seconds());
+    time_to_tm(tm, *t - timezone);
     return tm;
 }
 
