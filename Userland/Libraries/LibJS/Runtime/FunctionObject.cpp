@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,7 +9,6 @@
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
@@ -19,6 +19,61 @@ FunctionObject::FunctionObject(Object& prototype)
 
 FunctionObject::~FunctionObject()
 {
+}
+
+// 10.2.9 SetFunctionName ( F, name [ , prefix ] ), https://tc39.es/ecma262/#sec-setfunctionname
+void FunctionObject::set_function_name(Variant<PropertyKey, PrivateName> const& name_arg, Optional<StringView> const& prefix)
+{
+    auto& vm = this->vm();
+
+    // 1. Assert: F is an extensible object that does not have a "name" own property.
+    VERIFY(m_is_extensible);
+    VERIFY(!storage_has(vm.names.name));
+
+    String name;
+
+    // 2. If Type(name) is Symbol, then
+    if (auto const* property_key = name_arg.get_pointer<PropertyKey>(); property_key && property_key->is_symbol()) {
+        // a. Let description be name's [[Description]] value.
+        auto const& description = property_key->as_symbol()->raw_description();
+
+        // b. If description is undefined, set name to the empty String.
+        if (!description.has_value())
+            name = String::empty();
+        // c. Else, set name to the string-concatenation of "[", description, and "]".
+        else
+            name = String::formatted("[{}]", *description);
+    }
+    // 3. Else if name is a Private Name, then
+    else if (auto const* private_name = name_arg.get_pointer<PrivateName>()) {
+        // a. Set name to name.[[Description]].
+        name = private_name->description;
+    }
+    // NOTE: This is necessary as we use a different parameter name.
+    else {
+        name = name_arg.get<PropertyKey>().to_string();
+    }
+
+    // 4. If F has an [[InitialName]] internal slot, then
+    if (is<NativeFunction>(this)) {
+        // a. Set F.[[InitialName]] to name.
+        // TODO: Remove FunctionObject::name(), implement NativeFunction::initial_name(), and then do this.
+    }
+
+    // 5. If prefix is present, then
+    if (prefix.has_value()) {
+        // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
+        name = String::formatted("{} {}", *prefix, name);
+
+        // b. If F has an [[InitialName]] internal slot, then
+        if (is<NativeFunction>(this)) {
+            // i. Optionally, set F.[[InitialName]] to name.
+            // TODO: See above.
+        }
+    }
+
+    // 6. Return ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
+    MUST(define_property_or_throw(vm.names.name, PropertyDescriptor { .value = js_string(vm, move(name)), .writable = false, .enumerable = false, .configurable = true }));
 }
 
 ThrowCompletionOr<BoundFunction*> FunctionObject::bind(Value bound_this_value, Vector<Value> arguments)
