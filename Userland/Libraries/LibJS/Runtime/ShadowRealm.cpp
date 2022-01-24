@@ -31,7 +31,67 @@ void ShadowRealm::visit_edges(Visitor& visitor)
     visitor.visit(&m_shadow_realm);
 }
 
-// 3.1.1 PerformShadowRealmEval ( sourceText, callerRealm, evalRealm ), https://tc39.es/proposal-shadowrealm/#sec-performshadowrealmeval
+// 3.1.2 CopyNameAndLength ( F: a function object, Target: a function object, prefix: a String, optional argCount: a Number, ), https://tc39.es/proposal-shadowrealm/#sec-copynameandlength
+ThrowCompletionOr<void> copy_name_and_length(GlobalObject& global_object, FunctionObject& function, FunctionObject& target, StringView prefix, Optional<unsigned> arg_count)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If argCount is undefined, then set argCount to 0.
+    if (!arg_count.has_value())
+        arg_count = 0;
+
+    // 2. Let L be 0.
+    double length = 0;
+
+    // 3. Let targetHasLength be ? HasOwnProperty(Target, "length").
+    auto target_has_length = TRY(target.has_own_property(vm.names.length));
+
+    // 4. If targetHasLength is true, then
+    if (target_has_length) {
+        // a. Let targetLen be ? Get(Target, "length").
+        auto target_length = TRY(target.get(vm.names.length));
+
+        // b. If Type(targetLen) is Number, then
+        if (target_length.is_number()) {
+            // i. If targetLen is +∞𝔽, set L to +∞.
+            if (target_length.is_positive_infinity()) {
+                length = target_length.as_double();
+            }
+            // ii. Else if targetLen is -∞𝔽, set L to 0.
+            else if (target_length.is_negative_infinity()) {
+                length = 0;
+            }
+            // iii. Else,
+            else {
+                // 1. Let targetLenAsInt be ! ToIntegerOrInfinity(targetLen).
+                auto target_length_as_int = MUST(target_length.to_integer_or_infinity(global_object));
+
+                // 2. Assert: targetLenAsInt is finite.
+                VERIFY(!isinf(target_length_as_int));
+
+                // 3. Set L to max(targetLenAsInt - argCount, 0).
+                length = max(target_length_as_int - *arg_count, 0);
+            }
+        }
+    }
+
+    // 5. Perform ! SetFunctionLength(F, L).
+    function.set_function_length(length);
+
+    // 6. Let targetName be ? Get(Target, "name").
+    auto target_name = TRY(target.get(vm.names.name));
+
+    // 7. If Type(targetName) is not String, set targetName to the empty String.
+    if (!target_name.is_string())
+        target_name = js_string(vm, String::empty());
+
+    // 8. Perform ! SetFunctionName(F, targetName, prefix).
+    function.set_function_name({ target_name.as_string().string() }, prefix);
+
+    return {};
+}
+
+// 3.1.3 PerformShadowRealmEval ( sourceText, callerRealm, evalRealm ), https://tc39.es/proposal-shadowrealm/#sec-performshadowrealmeval
 ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, StringView source_text, Realm& caller_realm, Realm& eval_realm)
 {
     auto& vm = global_object.vm();
@@ -143,7 +203,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
     // NOTE: Also see "Editor's Note" in the spec regarding the TypeError above.
 }
 
-// 3.1.2 ShadowRealmImportValue ( specifierString, exportNameString, callerRealm, evalRealm, evalContext ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue
+// 3.1.4 ShadowRealmImportValue ( specifierString, exportNameString, callerRealm, evalRealm, evalContext ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue
 ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, String specifier_string, String export_name_string, Realm& caller_realm, Realm& eval_realm, ExecutionContext& eval_context)
 {
     auto& vm = global_object.vm();
@@ -227,7 +287,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
     return verify_cast<Promise>(inner_capability.promise)->perform_then(on_fulfilled, throw_type_error, promise_capability);
 }
 
-// 3.1.3 GetWrappedValue ( callerRealm, value ), https://tc39.es/proposal-shadowrealm/#sec-getwrappedvalue
+// 3.1.5 GetWrappedValue ( callerRealm, value ), https://tc39.es/proposal-shadowrealm/#sec-getwrappedvalue
 ThrowCompletionOr<Value> get_wrapped_value(GlobalObject& global_object, Realm& caller_realm, Value value)
 {
     auto& vm = global_object.vm();
@@ -240,8 +300,8 @@ ThrowCompletionOr<Value> get_wrapped_value(GlobalObject& global_object, Realm& c
         if (!value.is_function())
             return vm.throw_completion<TypeError>(global_object, ErrorType::ShadowRealmWrappedValueNonFunctionObject, value);
 
-        // b. Return ! WrappedFunctionCreate(callerRealm, value).
-        return WrappedFunction::create(global_object, caller_realm, value.as_function());
+        // b. Return ? WrappedFunctionCreate(callerRealm, value).
+        return TRY(WrappedFunction::create(global_object, caller_realm, value.as_function()));
     }
 
     // 3. Return value.
