@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,8 +16,10 @@
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventHandler.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
+#include <LibWeb/UIEvents/EventNames.h>
 
 namespace Web::DOM {
 
@@ -78,6 +80,40 @@ ExceptionOr<bool> EventTarget::dispatch_event_binding(NonnullRefPtr<Event> event
     return dispatch_event(event);
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#window-reflecting-body-element-event-handler-set
+static bool is_window_reflecting_body_element_event_handler(FlyString const& name)
+{
+    return name.is_one_of(
+        HTML::EventNames::blur,
+        HTML::EventNames::error,
+        HTML::EventNames::focus,
+        HTML::EventNames::load,
+        UIEvents::EventNames::resize,
+        "scroll");
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers
+static bool is_window_event_handler(FlyString const& name)
+{
+    return name.is_one_of(
+        HTML::EventNames::afterprint,
+        HTML::EventNames::beforeprint,
+        HTML::EventNames::beforeunload,
+        HTML::EventNames::hashchange,
+        HTML::EventNames::languagechange,
+        HTML::EventNames::message,
+        HTML::EventNames::messageerror,
+        HTML::EventNames::offline,
+        HTML::EventNames::online,
+        HTML::EventNames::pagehide,
+        HTML::EventNames::pageshow,
+        HTML::EventNames::popstate,
+        HTML::EventNames::rejectionhandled,
+        HTML::EventNames::storage,
+        HTML::EventNames::unhandledrejection,
+        HTML::EventNames::unload);
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#determining-the-target-of-an-event-handler
 static EventTarget* determine_target_of_event_handler(EventTarget& event_target, FlyString const& name)
 {
@@ -90,9 +126,10 @@ static EventTarget* determine_target_of_event_handler(EventTarget& event_target,
 
     auto& event_target_element = static_cast<HTML::HTMLElement&>(event_target);
 
-    // FIXME: 2. If name is not the name of an attribute member of the WindowEventHandlers interface mixin and the Window-reflecting
-    //           body element event handler set does not contain name, then return eventTarget.
-    (void)name;
+    // 2. If name is not the name of an attribute member of the WindowEventHandlers interface mixin and the Window-reflecting
+    //    body element event handler set does not contain name, then return eventTarget.
+    if (!is_window_event_handler(name) && !is_window_reflecting_body_element_event_handler(name))
+        return &event_target;
 
     // 3. If eventTarget's node document is not an active document, then return null.
     if (!event_target_element.document().is_active())
