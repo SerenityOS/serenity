@@ -672,11 +672,17 @@ u16 Parser::DetailedTiming::horizontal_blanking_pixels() const
     return ((u16)high << 8) | (u16)low;
 }
 
-u16 Parser::DetailedTiming::vertical_addressable_lines() const
+u16 Parser::DetailedTiming::vertical_addressable_lines_raw() const
 {
     u8 low = m_edid.read_host(&m_detailed_timings.vertical_addressable_lines_low);
     u8 high = m_edid.read_host(&m_detailed_timings.vertical_addressable_and_blanking_lines_high) >> 4;
     return ((u16)high << 8) | (u16)low;
+}
+
+u16 Parser::DetailedTiming::vertical_addressable_lines() const
+{
+    auto lines = vertical_addressable_lines_raw();
+    return is_interlaced() ? lines * 2 : lines;
 }
 
 u16 Parser::DetailedTiming::vertical_blanking_lines() const
@@ -745,9 +751,9 @@ bool Parser::DetailedTiming::is_interlaced() const
 
 FixedPoint<16, u32> Parser::DetailedTiming::refresh_rate() const
 {
-    // Blanking = front porch + sync pulse width = back porch
+    // Blanking = front porch + sync pulse width + back porch
     u32 total_horizontal_pixels = (u32)horizontal_addressable_pixels() + (u32)horizontal_blanking_pixels();
-    u32 total_vertical_lines = (u32)vertical_addressable_lines() + (u32)vertical_blanking_lines();
+    u32 total_vertical_lines = (u32)vertical_addressable_lines_raw() + (u32)vertical_blanking_lines();
     u32 total_pixels = total_horizontal_pixels * total_vertical_lines;
     if (total_pixels == 0)
         return {};
