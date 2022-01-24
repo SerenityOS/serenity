@@ -145,11 +145,14 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
 
 time_t mktime(struct tm* tm)
 {
+    tzset();
     return tm_to_time(tm, timezone);
 }
 
 struct tm* localtime(const time_t* t)
 {
+    tzset();
+
     static struct tm tm_buf;
     return localtime_r(t, &tm_buf);
 }
@@ -209,6 +212,8 @@ char* asctime_r(const struct tm* tm, char* buffer)
 // FIXME: Some formats are not supported.
 size_t strftime(char* destination, size_t max_size, const char* format, const struct tm* tm)
 {
+    tzset();
+
     const char wday_short_names[7][4] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };
