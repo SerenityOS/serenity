@@ -413,10 +413,8 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
         if (child_box.computed_values().position() == CSS::Position::Relative)
             compute_position(child_box);
 
-        if (is<ReplacedBox>(child_box))
-            place_block_level_replaced_element_in_normal_flow(child_box, block_container);
-        else if (is<BlockContainer>(child_box))
-            place_block_level_non_replaced_element_in_normal_flow(child_box, block_container);
+        if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
+            place_block_level_element_in_normal_flow(child_box, block_container);
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
         //        Instead, we should generate the marker box during the tree build.
@@ -448,20 +446,7 @@ void BlockFormattingContext::compute_vertical_box_model_metrics(Box& child_box, 
     box_model.padding.bottom = computed_values.padding().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
 }
 
-void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
-{
-    VERIFY(!containing_block.is_absolutely_positioned());
-    auto& box_model = child_box.box_model();
-
-    compute_vertical_box_model_metrics(child_box, containing_block);
-
-    float x = box_model.margin_box().left + box_model.offset.left;
-    float y = box_model.margin_box().top + box_model.offset.top;
-
-    child_box.set_offset(x, y);
-}
-
-void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
+void BlockFormattingContext::place_block_level_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
 {
     auto& box_model = child_box.box_model();
     auto const& computed_values = child_box.computed_values();
@@ -574,7 +559,7 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
     compute_height(box);
 
     // First we place the box normally (to get the right y coordinate.)
-    place_block_level_non_replaced_element_in_normal_flow(box, containing_block);
+    place_block_level_element_in_normal_flow(box, containing_block);
 
     auto float_box = [&](FloatSide side, FloatSideData& side_data) {
         auto first_edge = [&](PixelBox const& thing) { return side == FloatSide::Left ? thing.left : thing.right; };

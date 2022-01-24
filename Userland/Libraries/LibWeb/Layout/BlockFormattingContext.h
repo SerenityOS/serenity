@@ -50,9 +50,7 @@ private:
     void layout_inline_children(BlockContainer&, LayoutMode);
 
     void compute_vertical_box_model_metrics(Box& child_box, BlockContainer const& containing_block);
-
-    void place_block_level_replaced_element_in_normal_flow(Box& child, BlockContainer const&);
-    void place_block_level_non_replaced_element_in_normal_flow(Box& float_side, BlockContainer const&);
+    void place_block_level_element_in_normal_flow(Box& child_box, BlockContainer const&);
 
     void layout_floating_child(Box& child, BlockContainer const& containing_block);
 
