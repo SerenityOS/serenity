@@ -3401,6 +3401,61 @@ void SoftwareGLContext::gl_lightfv(GLenum light, GLenum pname, GLfloat const* pa
     m_light_state_is_dirty = true;
 }
 
+void SoftwareGLContext::gl_lightiv(GLenum light, GLenum pname, GLint const* params)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_lightiv, light, pname, params);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_device_info.num_lights), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_POSITION || pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION || pname == GL_SPOT_CUTOFF || pname == GL_SPOT_EXPONENT || pname == GL_SPOT_DIRECTION), GL_INVALID_ENUM);
+
+    auto& light_state = m_light_states[light - GL_LIGHT0];
+
+    auto const to_float_vector = [](GLfloat x, GLfloat y, GLfloat z, GLfloat w) {
+        return FloatVector4(x, y, z, w);
+    };
+
+    switch (pname) {
+    case GL_AMBIENT:
+        light_state.ambient_intensity = to_float_vector(params[0], params[1], params[2], params[3]);
+        break;
+    case GL_DIFFUSE:
+        light_state.diffuse_intensity = to_float_vector(params[0], params[1], params[2], params[3]);
+        break;
+    case GL_SPECULAR:
+        light_state.specular_intensity = to_float_vector(params[0], params[1], params[2], params[3]);
+        break;
+    case GL_POSITION:
+        light_state.position = to_float_vector(params[0], params[1], params[2], params[3]);
+        light_state.position = m_model_view_matrix * light_state.position;
+        break;
+    case GL_CONSTANT_ATTENUATION:
+        light_state.constant_attenuation = static_cast<float>(params[0]);
+        break;
+    case GL_LINEAR_ATTENUATION:
+        light_state.linear_attenuation = static_cast<float>(params[0]);
+        break;
+    case GL_QUADRATIC_ATTENUATION:
+        light_state.quadratic_attenuation = static_cast<float>(params[0]);
+        break;
+    case GL_SPOT_EXPONENT:
+        light_state.spotlight_exponent = static_cast<float>(params[0]);
+        break;
+    case GL_SPOT_CUTOFF:
+        light_state.spotlight_cutoff_angle = static_cast<float>(params[0]);
+        break;
+    case GL_SPOT_DIRECTION: {
+        FloatVector4 direction_vector = to_float_vector(params[0], params[1], params[2], 0.0f);
+        direction_vector = m_model_view_matrix * direction_vector;
+        light_state.spotlight_direction = direction_vector.xyz();
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_light_state_is_dirty = true;
+}
+
 void SoftwareGLContext::gl_materialf(GLenum face, GLenum pname, GLfloat param)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_materialf, face, pname, param);

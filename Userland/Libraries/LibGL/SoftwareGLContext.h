@@ -147,6 +147,7 @@ public:
     virtual void gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* params) override;
     virtual void gl_lightf(GLenum light, GLenum pname, GLfloat param) override;
     virtual void gl_lightfv(GLenum light, GLenum pname, GLfloat const* params) override;
+    virtual void gl_lightiv(GLenum light, GLenum pname, GLint const* params) override;
     virtual void gl_materialf(GLenum face, GLenum pname, GLfloat param) override;
     virtual void gl_materialfv(GLenum face, GLenum pname, GLfloat const* params) override;
     virtual void gl_color_material(GLenum face, GLenum mode) override;
@@ -373,6 +374,7 @@ private:
             decltype(&SoftwareGLContext::gl_fogi),
             decltype(&SoftwareGLContext::gl_lightf),
             decltype(&SoftwareGLContext::gl_lightfv),
+            decltype(&SoftwareGLContext::gl_lightiv),
             decltype(&SoftwareGLContext::gl_materialf),
             decltype(&SoftwareGLContext::gl_materialfv),
             decltype(&SoftwareGLContext::gl_color_material),

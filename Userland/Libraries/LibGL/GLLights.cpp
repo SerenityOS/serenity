@@ -27,6 +27,16 @@ void glLightfv(GLenum light, GLenum pname, GLfloat const* param)
     g_gl_context->gl_lightfv(light, pname, param);
 }
 
+void glLighti(GLenum light, GLenum pname, GLint param)
+{
+    g_gl_context->gl_lightf(light, pname, param);
+}
+
+void glLightiv(GLenum light, GLenum pname, GLint const* params)
+{
+    g_gl_context->gl_lightiv(light, pname, params);
+}
+
 void glLightModelf(GLenum pname, GLfloat param)
 {
     g_gl_context->gl_light_model(pname, param, 0.0f, 0.0f, 0.0f);
