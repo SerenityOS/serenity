@@ -590,6 +590,9 @@
     "initial": "black",
     "valid-types": [
       "color"
+    ],
+    "valid-identifiers": [
+      "none"
     ]
   },
   "flex": {
@@ -1168,9 +1171,12 @@
   },
   "stroke": {
     "inherited": true,
-    "initial": "transparent",
+    "initial": "none",
     "valid-types": [
       "color"
+    ],
+    "valid-identifiers": [
+      "none"
     ]
   },
   "stroke-width": {
