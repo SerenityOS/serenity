@@ -7,66 +7,60 @@
 #include <AK/LexicalPath.h>
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
-#include <errno.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-constexpr const char* default_template = "tmp.XXXXXXXXXX";
+constexpr StringView default_template = "tmp.XXXXXXXXXX";
 
-static char* generate_random_filename(const char* pattern)
+static String generate_random_filename(String const& pattern)
 {
-    char* new_filename = strdup(pattern);
-    int pattern_length = strlen(pattern);
+    StringBuilder new_filename { pattern.length() };
 
     constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
-    for (auto i = pattern_length - 1; i >= 0; --i) {
-        if (pattern[i] != 'X')
-            break;
-        new_filename[i] = random_characters[(get_random<u32>() % (sizeof(random_characters) - 1))];
+    for (size_t i = 0; i < pattern.length(); i++) {
+        if (pattern[i] == 'X')
+            new_filename.append(random_characters[(get_random<u32>() % (sizeof(random_characters) - 1))]);
+        else
+            new_filename.append(pattern[i]);
     }
 
-    return new_filename;
+    return new_filename.to_string();
 }
 
-static char* make_temp(const char* pattern, bool directory, bool dry_run)
+static ErrorOr<String> make_temp(String const& pattern, bool directory, bool dry_run)
 {
     for (int i = 0; i < 100; ++i) {
-        char* path = generate_random_filename(pattern);
+        auto path = generate_random_filename(pattern);
         if (dry_run) {
-            struct stat stat;
-            auto rc = lstat(path, &stat);
-            if (rc < 0 && errno == ENOENT)
+            auto stat_or_error = Core::System::lstat(path.view());
+            if (stat_or_error.is_error() && stat_or_error.error().code() == ENOENT)
                 return path;
         } else if (directory) {
-            if (!mkdir(path, 0700))
-                return path;
+            TRY(Core::System::mkdir(path.view(), 0700));
+            return path;
         } else {
-            auto fd = open(path, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-            if (fd >= 0) {
-                close(fd);
+            auto fd_or_error = Core::System::open(path.view(), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+            if (!fd_or_error.is_error()) {
+                TRY(Core::System::close(fd_or_error.value()));
                 return path;
             }
         }
-        free(path);
     }
-    return nullptr;
+    return String {};
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath wpath cpath", nullptr)) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
-    const char* file_template = nullptr;
+    StringView file_template;
     bool create_directory = false;
     bool dry_run = false;
     bool quiet = false;
-    const char* target_directory = nullptr;
+    StringView target_directory;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Create a temporary file or directory, safely, and print its name.");
@@ -75,10 +69,10 @@ int main(int argc, char** argv)
     args_parser.add_option(dry_run, "Do not create anything, just print a unique name", "dry-run", 'u');
     args_parser.add_option(quiet, "Do not print diagnostics about file/directory creation failure", "quiet", 'q');
     args_parser.add_option(target_directory, "Create TEMPLATE relative to DIR", "tmpdir", 'p', "DIR");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    if (!target_directory) {
-        if (file_template) { // If a custom template is specified we assume the target directory is the current directory
+    if (target_directory.is_empty()) {
+        if (!file_template.is_empty()) { // If a custom template is specified we assume the target directory is the current directory
             target_directory = getcwd(nullptr, 0);
         } else {
             LexicalPath template_path(file_template);
@@ -87,11 +81,11 @@ int main(int argc, char** argv)
         }
     }
 
-    if (!file_template) {
+    if (file_template.is_empty()) {
         file_template = default_template;
     }
 
-    if (!String(file_template).find("XXX").has_value()) {
+    if (!file_template.find("XXX").has_value()) {
         if (!quiet)
             warnln("Too few X's in template {}", file_template);
         return 1;
@@ -99,8 +93,8 @@ int main(int argc, char** argv)
 
     auto target_path = LexicalPath::join(target_directory, file_template).string();
 
-    char* final_path = make_temp(target_path.characters(), create_directory, dry_run);
-    if (!final_path) {
+    auto final_path = TRY(make_temp(target_path, create_directory, dry_run));
+    if (final_path.is_null()) {
         if (!quiet) {
             if (create_directory)
                 warnln("Failed to create directory via template {}", target_path.characters());
@@ -111,6 +105,6 @@ int main(int argc, char** argv)
     }
 
     outln("{}", final_path);
-    free(final_path);
+
     return 0;
 }

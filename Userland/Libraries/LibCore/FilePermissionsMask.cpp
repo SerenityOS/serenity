@@ -14,14 +14,14 @@ namespace Core {
 
 enum State {
     Classes,
-    Operation,
     Mode
 };
 
 enum ClassFlag {
     Other = 1,
     Group = 2,
-    User = 4
+    User = 4,
+    All = 7
 };
 
 enum Operation {
@@ -56,43 +56,34 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringV
     for (auto ch : string) {
         switch (state) {
         case State::Classes: {
-            // one or more [ugoa] terminated by one operator [+-=]
-            if (ch == 'u') {
+            // zero or more [ugoa] terminated by one operator [+-=]
+            if (ch == 'u')
                 classes |= ClassFlag::User;
-                state = State::Operation;
-                break;
-            } else if (ch == 'g') {
+            else if (ch == 'g')
                 classes |= ClassFlag::Group;
-                state = State::Operation;
-                break;
-            } else if (ch == 'o') {
+            else if (ch == 'o')
                 classes |= ClassFlag::Other;
-                state = State::Operation;
-                break;
-            } else if (ch == 'a') {
-                classes = ClassFlag::User | ClassFlag::Group | ClassFlag::Other;
-                state = State::Operation;
-                break;
+            else if (ch == 'a')
+                classes = ClassFlag::All;
+            else {
+                if (ch == '+')
+                    operation = Operation::Add;
+                else if (ch == '-')
+                    operation = Operation::Remove;
+                else if (ch == '=')
+                    operation = Operation::Assign;
+                else if (classes == 0)
+                    return Error::from_string_literal("invalid class: expected 'u', 'g', 'o' or 'a'"sv);
+                else
+                    return Error::from_string_literal("invalid operation: expected '+', '-' or '='"sv);
+
+                // if an operation was specified without a class, assume all
+                if (classes == 0)
+                    classes = ClassFlag::All;
+
+                state = State::Mode;
             }
-        }
-            [[fallthrough]];
-        case State::Operation: {
-            if (ch == '+')
-                operation = Operation::Add;
-            else if (ch == '-')
-                operation = Operation::Remove;
-            else if (ch == '=')
-                operation = Operation::Assign;
-            else if (classes == 0)
-                return Error::from_string_literal("invalid access class: expected 'u', 'g', 'o' or 'a' "sv);
-            else
-                return Error::from_string_literal("invalid operation: expected '+', '-' or '='"sv);
 
-            // if an operation was specified without a class, assume all
-            if (classes == 0)
-                classes = ClassFlag::User | ClassFlag::Group | ClassFlag::Other;
-
-            state = State::Mode;
             break;
         }
 
@@ -115,7 +106,7 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringV
             else if (ch == 'x')
                 write_bits = 1;
             else
-                return Error::from_string_literal("invalid symbolic permission"sv);
+                return Error::from_string_literal("invalid symbolic permission: expected 'r', 'w' or 'x'"sv);
 
             mode_t clear_bits = operation == Operation::Assign ? 7 : write_bits;
 

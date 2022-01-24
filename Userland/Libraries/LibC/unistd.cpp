@@ -706,6 +706,7 @@ int access(const char* pathname, int mode)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mknod.html
 int mknod(const char* pathname, mode_t mode, dev_t dev)
 {
     if (!pathname) {

@@ -1,9 +1,9 @@
-From e48745461894370e3b47c14fe53417dd2bc7515f Mon Sep 17 00:00:00 2001
+From 095c4671242dd8e719c544b97e7b737a553f3d8f Mon Sep 17 00:00:00 2001
 From: Andrew Kaster <akaster@serenityos.org>
 Date: Tue, 11 Jan 2022 01:04:20 -0700
-Subject: [PATCH 7/7] Stub out a definition of RTLD_NOLOAD
+Subject: [PATCH 5/6] Stub out a definition of RTLD_NOLOAD
 
-SerenityOs's DynamicLoader doesn't support this flag. However, we won't
+SerenityOS's DynamicLoader doesn't support this flag. However, we won't
 be dynamically loading any tbb extensions for the static library build
 mold uses, so we can just define it as a no-op as the code paths that
 use it will never be used.
@@ -12,7 +12,7 @@ use it will never be used.
  1 file changed, 1 insertion(+)
 
 diff --git a/third-party/tbb/src/tbb/dynamic_link.cpp b/third-party/tbb/src/tbb/dynamic_link.cpp
-index f9b25ee1..4bacaae8 100644
+index 3f13425..7dd2169 100644
 --- a/third-party/tbb/src/tbb/dynamic_link.cpp
 +++ b/third-party/tbb/src/tbb/dynamic_link.cpp
 @@ -53,6 +53,7 @@

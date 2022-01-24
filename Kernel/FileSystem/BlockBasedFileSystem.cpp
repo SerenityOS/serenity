@@ -63,10 +63,10 @@ public:
         return &entry;
     }
 
-    CacheEntry& ensure(BlockBasedFileSystem::BlockIndex block_index) const
+    ErrorOr<CacheEntry*> ensure(BlockBasedFileSystem::BlockIndex block_index) const
     {
         if (auto* entry = get(block_index))
-            return *entry;
+            return entry;
 
         if (m_clean_list.is_empty()) {
             // Not a single clean entry! Flush writes and try again.
@@ -81,12 +81,12 @@ public:
         m_clean_list.prepend(new_entry);
 
         m_hash.remove(new_entry.block_index);
-        m_hash.set(block_index, &new_entry);
+        TRY(m_hash.try_set(block_index, &new_entry));
 
         new_entry.block_index = block_index;
         new_entry.has_data = false;
 
-        return new_entry;
+        return &new_entry;
     }
 
     const CacheEntry* entries() const { return (const CacheEntry*)m_entries->data(); }
@@ -156,15 +156,15 @@ ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKe
             return {};
         }
 
-        auto& entry = cache->ensure(index);
+        auto entry = TRY(cache->ensure(index));
         if (count < block_size()) {
             // Fill the cache first.
             TRY(read_block(index, nullptr, block_size()));
         }
-        memcpy(entry.data + offset, buffered_data.data(), count);
+        memcpy(entry->data + offset, buffered_data.data(), count);
 
-        cache->mark_dirty(entry);
-        entry.has_data = true;
+        cache->mark_dirty(*entry);
+        entry->has_data = true;
         return {};
     });
 }
@@ -230,16 +230,16 @@ ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuf
             return {};
         }
 
-        auto& entry = cache->ensure(index);
-        if (!entry.has_data) {
+        auto* entry = TRY(cache->ensure(index));
+        if (!entry->has_data) {
             auto base_offset = index.value() * block_size();
-            auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
+            auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry->data);
             auto nread = TRY(file_description().read(entry_data_buffer, base_offset, block_size()));
             VERIFY(nread == block_size());
-            entry.has_data = true;
+            entry->has_data = true;
         }
         if (buffer)
-            TRY(buffer->write(entry.data + offset, count));
+            TRY(buffer->write(entry->data + offset, count));
         return {};
     });
 }

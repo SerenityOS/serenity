@@ -271,11 +271,13 @@ pushd "$DIR/Tarballs"
             git init > /dev/null
             git add . > /dev/null
             git commit -am "BASE" > /dev/null
+            git am "$DIR"/Patches/gcc-support-mold-linker.patch > /dev/null
             git apply "$DIR"/Patches/gcc.patch > /dev/null
         else
+            patch -p1 < "$DIR/Patches/gcc-support-mold-linker.patch" > /dev/null
             patch -p1 < "$DIR/Patches/gcc.patch" > /dev/null
         fi
-        $MD5SUM "$DIR/Patches/gcc.patch" > .patch.applied
+        $MD5SUM "$DIR/Patches/gcc.patch" "$DIR/Patches/gcc-support-mold-linker.patch" > .patch.applied
     popd
 
     if [ "$SYSTEM_NAME" = "Darwin" ]; then
@@ -379,6 +381,8 @@ pushd "$DIR/Build/$ARCH"
                                             --enable-default-pie \
                                             --enable-lto \
                                             --enable-threads=posix \
+                                            --enable-initfini-array \
+                                            --with-linker-hash-style=gnu \
                                             ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
 
         echo "XXX build gcc and libgcc"
@@ -393,6 +397,10 @@ pushd "$DIR/Build/$ARCH"
         buildstep "libstdc++/install" "$MAKE" install-target-libstdc++-v3 || exit 1
     popd
 
+popd
+
+pushd "$DIR/Local/$ARCH/$ARCH-pc-serenity/bin"
+    buildstep "mold_symlink" ln -s ../../../mold/bin/mold ld.mold
 popd
 
 
