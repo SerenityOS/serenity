@@ -112,7 +112,15 @@ constexpr static auto iota_array(T const offset = {})
     return Detail::integer_sequence_generate_array<T>(offset, MakeIntegerSequence<T, N>());
 }
 
+template<size_t Size>
+using ByteArray = Array<u8, Size>;
+
+template<size_t Size>
+using ReadonlyByteArray = Array<const u8, Size>;
+
 }
 
 using AK::Array;
+using AK::ByteArray;
 using AK::iota_array;
+using AK::ReadonlyByteArray;
