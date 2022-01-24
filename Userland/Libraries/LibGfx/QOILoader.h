@@ -9,19 +9,12 @@
 #include <AK/Forward.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibGfx/QOICommon.h>
 
 namespace Gfx {
 
 // Decoder for the "Quite OK Image" format (v1.0).
 // https://qoiformat.org/qoi-specification.pdf
-
-struct [[gnu::packed]] QOIHeader {
-    char magic[4];
-    u32 width;
-    u32 height;
-    u8 channels;
-    u8 colorspace;
-};
 
 struct QOILoadingContext {
     enum class State {

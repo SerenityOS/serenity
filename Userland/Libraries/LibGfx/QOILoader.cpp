@@ -11,16 +11,6 @@
 
 namespace Gfx {
 
-static constexpr auto QOI_MAGIC = "qoif"sv;
-static constexpr u8 QOI_OP_RGB = 0b11111110;
-static constexpr u8 QOI_OP_RGBA = 0b11111111;
-static constexpr u8 QOI_OP_INDEX = 0b00000000;
-static constexpr u8 QOI_OP_DIFF = 0b01000000;
-static constexpr u8 QOI_OP_LUMA = 0b10000000;
-static constexpr u8 QOI_OP_RUN = 0b11000000;
-static constexpr u8 QOI_MASK_2 = 0b11000000;
-static constexpr u8 END_MARKER[] = { 0, 0, 0, 0, 0, 0, 0, 1 };
-
 static ErrorOr<QOIHeader> decode_qoi_header(InputMemoryStream& stream)
 {
     QOIHeader header;
