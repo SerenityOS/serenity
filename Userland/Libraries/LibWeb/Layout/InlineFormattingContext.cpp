@@ -17,8 +17,8 @@
 
 namespace Web::Layout {
 
-InlineFormattingContext::InlineFormattingContext(BlockContainer& containing_block, FormattingContext* parent)
-    : FormattingContext(Type::Inline, containing_block, parent)
+InlineFormattingContext::InlineFormattingContext(BlockContainer& containing_block, BlockFormattingContext& parent)
+    : FormattingContext(Type::Inline, containing_block, &parent)
 {
 }
 
@@ -26,19 +26,30 @@ InlineFormattingContext::~InlineFormattingContext()
 {
 }
 
+BlockFormattingContext& InlineFormattingContext::parent()
+{
+    return static_cast<BlockFormattingContext&>(*FormattingContext::parent());
+}
+
+BlockFormattingContext const& InlineFormattingContext::parent() const
+{
+    return static_cast<BlockFormattingContext const&>(*FormattingContext::parent());
+}
+
 InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::available_space_for_line(float y) const
 {
-    if (!parent()->is_block_formatting_context())
-        return { 0, context_box().width() };
+    // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
+    auto box_in_root_rect = containing_block().margin_box_rect_in_ancestor_coordinate_space(parent().root());
+    float y_in_root = box_in_root_rect.y() + y;
 
     AvailableSpaceForLineInfo info;
 
-    auto const& bfc = static_cast<BlockFormattingContext const&>(*parent());
+    auto const& bfc = parent();
 
     for (ssize_t i = bfc.left_side_floats().boxes.size() - 1; i >= 0; --i) {
         auto const& floating_box = bfc.left_side_floats().boxes.at(i);
         auto rect = floating_box.margin_box_as_relative_rect();
-        if (rect.contains_vertically(y)) {
+        if (rect.contains_vertically(y_in_root)) {
             info.left = rect.right() + 1;
             break;
         }
@@ -49,7 +60,7 @@ InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::avai
     for (ssize_t i = bfc.right_side_floats().boxes.size() - 1; i >= 0; --i) {
         auto const& floating_box = bfc.right_side_floats().boxes.at(i);
         auto rect = floating_box.margin_box_as_relative_rect();
-        if (rect.contains_vertically(y)) {
+        if (rect.contains_vertically(y_in_root)) {
             info.right = rect.left() - 1;
             break;
         }
@@ -90,14 +101,6 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
     }
 
     containing_block().set_height(content_height);
-}
-
-float InlineFormattingContext::available_width_at_line(size_t line_index) const
-{
-    // TODO: Remove this function, along with the old-style splitting functions.
-    VERIFY_NOT_REACHED();
-    auto info = available_space_for_line(line_index);
-    return info.right - info.left;
 }
 
 void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_mode)

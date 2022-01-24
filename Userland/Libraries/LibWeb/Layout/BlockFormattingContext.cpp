@@ -384,7 +384,7 @@ void BlockFormattingContext::compute_position(Box& box)
 
 void BlockFormattingContext::layout_inline_children(BlockContainer& block_container, LayoutMode layout_mode)
 {
-    InlineFormattingContext context(block_container, this);
+    InlineFormattingContext context(block_container, *this);
     context.run(block_container, layout_mode);
 }
 
@@ -407,16 +407,17 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
         }
 
         compute_width(child_box);
+        if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
+            place_block_level_element_in_normal_flow_vertically(child_box, block_container);
+
         (void)layout_inside(child_box, layout_mode);
         compute_height(child_box);
 
         if (child_box.computed_values().position() == CSS::Position::Relative)
             compute_position(child_box);
 
-        if (is<ReplacedBox>(child_box))
-            place_block_level_replaced_element_in_normal_flow(child_box, block_container);
-        else if (is<BlockContainer>(child_box))
-            place_block_level_non_replaced_element_in_normal_flow(child_box, block_container);
+        if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
+            place_block_level_element_in_normal_flow_horizontally(child_box, block_container);
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
         //        Instead, we should generate the marker box during the tree build.
@@ -434,33 +435,10 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
     }
 }
 
-void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
-{
-    VERIFY(!containing_block.is_absolutely_positioned());
-    auto& replaced_element_box_model = child_box.box_model();
-    auto width_of_containing_block = CSS::Length::make_px(containing_block.width());
-
-    replaced_element_box_model.margin.top = child_box.computed_values().margin().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
-    replaced_element_box_model.margin.bottom = child_box.computed_values().margin().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
-    replaced_element_box_model.border.top = child_box.computed_values().border_top().width;
-    replaced_element_box_model.border.bottom = child_box.computed_values().border_bottom().width;
-    replaced_element_box_model.padding.top = child_box.computed_values().padding().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
-    replaced_element_box_model.padding.bottom = child_box.computed_values().padding().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
-
-    float x = replaced_element_box_model.margin.left
-        + replaced_element_box_model.border.left
-        + replaced_element_box_model.padding.left
-        + replaced_element_box_model.offset.left;
-
-    float y = replaced_element_box_model.margin_box().top + containing_block.box_model().offset.top;
-
-    child_box.set_offset(x, y);
-}
-
-void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(Box& child_box, BlockContainer const& containing_block)
+void BlockFormattingContext::compute_vertical_box_model_metrics(Box& child_box, BlockContainer const& containing_block)
 {
     auto& box_model = child_box.box_model();
-    auto& computed_values = child_box.computed_values();
+    auto const& computed_values = child_box.computed_values();
     auto width_of_containing_block = CSS::Length::make_px(containing_block.width());
 
     box_model.margin.top = computed_values.margin().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
@@ -469,15 +447,14 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     box_model.border.bottom = computed_values.border_bottom().width;
     box_model.padding.top = computed_values.padding().top.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
     box_model.padding.bottom = computed_values.padding().bottom.resolved(width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
+}
 
-    float x = box_model.margin.left
-        + box_model.border.left
-        + box_model.padding.left
-        + box_model.offset.left;
+void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically(Box& child_box, BlockContainer const& containing_block)
+{
+    auto& box_model = child_box.box_model();
+    auto const& computed_values = child_box.computed_values();
 
-    if (containing_block.computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
-        x = (containing_block.width() / 2) - child_box.width() / 2;
-    }
+    compute_vertical_box_model_metrics(child_box, containing_block);
 
     float y = box_model.margin_box().top
         + box_model.offset.top;
@@ -533,7 +510,21 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     if ((computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
         clear_floating_boxes(m_right_floats);
 
-    child_box.set_offset(x, y);
+    child_box.set_offset(child_box.effective_offset().x(), y);
+}
+
+void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontally(Box& child_box, BlockContainer const& containing_block)
+{
+    auto& box_model = child_box.box_model();
+
+    float x = 0;
+    if (containing_block.computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
+        x = (containing_block.width() / 2) - child_box.width() / 2;
+    } else {
+        x = box_model.margin_box().left + box_model.offset.left;
+    }
+
+    child_box.set_offset(x, child_box.effective_offset().y());
 }
 
 void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_mode)
@@ -569,20 +560,6 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     }
 }
 
-static Gfx::FloatRect rect_in_coordinate_space(const Box& box, const Box& context_box)
-{
-    Gfx::FloatRect rect = box.margin_box_as_relative_rect();
-    for (auto* ancestor = box.parent(); ancestor; ancestor = ancestor->parent()) {
-        if (is<Box>(*ancestor)) {
-            auto offset = verify_cast<Box>(*ancestor).effective_offset();
-            rect.translate_by(offset);
-        }
-        if (ancestor == &context_box)
-            break;
-    }
-    return rect;
-}
-
 void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer const& containing_block)
 {
     VERIFY(box.is_floating());
@@ -592,7 +569,8 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
     compute_height(box);
 
     // First we place the box normally (to get the right y coordinate.)
-    place_block_level_non_replaced_element_in_normal_flow(box, containing_block);
+    place_block_level_element_in_normal_flow_vertically(box, containing_block);
+    place_block_level_element_in_normal_flow_horizontally(box, containing_block);
 
     auto float_box = [&](FloatSide side, FloatSideData& side_data) {
         auto first_edge = [&](PixelBox const& thing) { return side == FloatSide::Left ? thing.left : thing.right; };
@@ -601,7 +579,7 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
         // Then we float it to the left or right.
         float x = box.effective_offset().x();
 
-        auto box_in_root_rect = rect_in_coordinate_space(box, root());
+        auto box_in_root_rect = box.margin_box_rect_in_ancestor_coordinate_space(root());
         float y_in_root = box_in_root_rect.y();
 
         float y = box.effective_offset().y();
@@ -615,7 +593,7 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
             side_data.y_offset = 0;
         } else {
             auto& previous_box = side_data.boxes.last();
-            auto previous_rect = rect_in_coordinate_space(previous_box, root());
+            auto previous_rect = previous_box.margin_box_rect_in_ancestor_coordinate_space(root());
 
             auto margin_collapsed_with_previous = max(
                 second_edge(previous_box.box_model().margin),
@@ -660,7 +638,7 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
                 x = first_edge(box.box_model().margin_box());
                 float lowest_border_edge = 0;
                 for (auto const& box : side_data.boxes)
-                    lowest_border_edge = max(lowest_border_edge, box.height() + box.box_model().border.bottom + box.box_model().margin.bottom);
+                    lowest_border_edge = max(lowest_border_edge, box.border_box_height());
 
                 side_data.y_offset += lowest_border_edge;
 

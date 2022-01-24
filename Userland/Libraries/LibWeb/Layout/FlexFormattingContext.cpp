@@ -455,7 +455,7 @@ float FlexFormattingContext::layout_for_maximum_main_size(Box& box)
         auto& block_container = verify_cast<BlockContainer>(box);
         BlockFormattingContext bfc(block_container, this);
         bfc.run(box, LayoutMode::Default);
-        InlineFormattingContext ifc(block_container, &bfc);
+        InlineFormattingContext ifc(block_container, bfc);
 
         if (is_row_layout()) {
             ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
@@ -805,7 +805,7 @@ float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box& box)
         auto& block_container = verify_cast<BlockContainer>(box);
         BlockFormattingContext bfc(block_container, this);
         bfc.run(box, LayoutMode::Default);
-        InlineFormattingContext ifc(block_container, &bfc);
+        InlineFormattingContext ifc(block_container, bfc);
         ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
 
         return is_row_layout() ? box.height() : box.width();

@@ -15,15 +15,16 @@ namespace Web::Layout {
 
 class InlineFormattingContext final : public FormattingContext {
 public:
-    InlineFormattingContext(BlockContainer& containing_block, FormattingContext* parent);
+    InlineFormattingContext(BlockContainer& containing_block, BlockFormattingContext& parent);
     ~InlineFormattingContext();
+
+    BlockFormattingContext& parent();
+    BlockFormattingContext const& parent() const;
 
     BlockContainer& containing_block() { return static_cast<BlockContainer&>(context_box()); }
     BlockContainer const& containing_block() const { return static_cast<BlockContainer const&>(context_box()); }
 
     virtual void run(Box&, LayoutMode) override;
-
-    float available_width_at_line(size_t line_index) const;
 
     void dimension_box_on_line(Box&, LayoutMode);
 
