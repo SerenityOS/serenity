@@ -147,6 +147,11 @@ TEST_CASE(get_time_zone_offset_with_dst)
     test_offset("Europe/Moscow"sv, -1596412800, offset(+1, 4, 31, 19), Yes); // Sunday, June 1, 1919 12:00:00 AM
     test_offset("Europe/Moscow"sv, -1592611200, offset(+1, 4, 00, 00), Yes); // Tuesday, July 15, 1919 12:00:00 AM
     test_offset("Europe/Moscow"sv, -1589068800, offset(+1, 3, 00, 00), No);  // Monday, August 25, 1919 12:00:00 AM
+
+    // Paraguay begins the year in DST.
+    test_offset("America/Asuncion"sv, 1642558528, offset(-1, 3, 00, 00), Yes); // Wednesday, January 19, 2022 2:15:28 AM
+    test_offset("America/Asuncion"sv, 1663553728, offset(-1, 4, 00, 00), No);  // Monday, September 19, 2022 2:15:28 AM
+    test_offset("America/Asuncion"sv, 1671453238, offset(-1, 3, 00, 00), Yes); // Monday, December 19, 2022 12:33:58 PM
 }
 
 TEST_CASE(get_named_time_zone_offsets)
