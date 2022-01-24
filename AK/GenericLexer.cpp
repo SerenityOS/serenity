@@ -84,6 +84,22 @@ StringView GenericLexer::consume_until(const char* stop)
     return m_input.substring_view(start, length);
 }
 
+// Consume and return characters until the string `stop` is found
+// The `stop` string is ignored, as it is user-defined
+StringView GenericLexer::consume_until(StringView stop)
+{
+    size_t start = m_index;
+    while (!is_eof() && !next_is(stop))
+        m_index++;
+    size_t length = m_index - start;
+
+    ignore(stop.length());
+
+    if (length == 0)
+        return {};
+    return m_input.substring_view(start, length);
+}
+
 /*
  * Consume a string surrounded by single or double quotes. The returned
  * StringView does not include the quotes. An escape character can be provided

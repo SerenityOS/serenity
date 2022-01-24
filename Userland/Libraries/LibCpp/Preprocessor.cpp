@@ -356,7 +356,7 @@ String Preprocessor::remove_escaped_newlines(StringView value)
     AK::StringBuilder processed_value;
     GenericLexer lexer { value };
     while (!lexer.is_eof()) {
-        processed_value.append(lexer.consume_until("\\\n"));
+        processed_value.append(lexer.consume_until("\\\n"sv));
     }
     return processed_value.to_string();
 }

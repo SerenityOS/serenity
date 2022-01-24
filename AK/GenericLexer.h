@@ -113,6 +113,7 @@ public:
     StringView consume_line();
     StringView consume_until(char);
     StringView consume_until(const char*);
+    StringView consume_until(StringView);
     StringView consume_quoted_string(char escape_char = 0);
     String consume_and_unescape_string(char escape_char = '\\');
 
