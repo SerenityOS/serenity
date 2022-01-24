@@ -81,6 +81,16 @@ void glMaterialfv(GLenum face, GLenum pname, GLfloat const* params)
     g_gl_context->gl_materialfv(face, pname, params);
 }
 
+void glMateriali(GLenum face, GLenum pname, GLint param)
+{
+    g_gl_context->gl_materialf(face, pname, param);
+}
+
+void glMaterialiv(GLenum face, GLenum pname, GLint const* params)
+{
+    g_gl_context->gl_materialiv(face, pname, params);
+}
+
 void glShadeModel(GLenum mode)
 {
     g_gl_context->gl_shade_model(mode);
