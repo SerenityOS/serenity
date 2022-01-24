@@ -92,6 +92,7 @@ void InputBox::build(InputType input_type)
         m_text_value = m_text_editor->text();
         done(ExecOK);
     };
+    m_ok_button->set_default(true);
 
     m_cancel_button = button_container_inner.add<Button>();
     m_cancel_button->set_text("Cancel");
@@ -100,9 +101,6 @@ void InputBox::build(InputType input_type)
         done(ExecCancel);
     };
 
-    m_text_editor->on_return_pressed = [this] {
-        m_ok_button->click();
-    };
     m_text_editor->on_escape_pressed = [this] {
         m_cancel_button->click();
     };
