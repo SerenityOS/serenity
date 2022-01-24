@@ -9,8 +9,7 @@ test("basic functionality", () => {
     expect(Number.isInteger(5 + 1 / 10000000000000000)).toBeTrue();
     expect(Number.isInteger(+2147483647 + 1)).toBeTrue();
     expect(Number.isInteger(-2147483648 - 1)).toBeTrue();
-    // FIXME: This should return true
-    // expect(Number.isInteger(99999999999999999999999999999999999)).toBeTrue();
+    expect(Number.isInteger(99999999999999999999999999999999999)).toBeTrue();
 
     expect(Number.isInteger(5 + 1 / 1000000000000000)).toBeFalse();
     expect(Number.isInteger(1.23)).toBeFalse();
