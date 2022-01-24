@@ -3549,6 +3549,53 @@ void SoftwareGLContext::gl_materialfv(GLenum face, GLenum pname, GLfloat const* 
     m_light_state_is_dirty = true;
 }
 
+void SoftwareGLContext::gl_materialiv(GLenum face, GLenum pname, GLint const* params)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_materialiv, face, pname, params);
+    RETURN_WITH_ERROR_IF(!(face == GL_FRONT || face == GL_BACK || face == GL_FRONT_AND_BACK), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_EMISSION || pname == GL_SHININESS || pname == GL_AMBIENT_AND_DIFFUSE), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF((pname == GL_SHININESS && *params > 128), GL_INVALID_VALUE);
+
+    auto update_material = [](SoftGPU::Material& material, GLenum pname, GLint const* params) {
+        switch (pname) {
+        case GL_AMBIENT:
+            material.ambient = { static_cast<float>(params[0]), static_cast<float>(params[1]), static_cast<float>(params[2]), static_cast<float>(params[3]) };
+            break;
+        case GL_DIFFUSE:
+            material.diffuse = { static_cast<float>(params[0]), static_cast<float>(params[1]), static_cast<float>(params[2]), static_cast<float>(params[3]) };
+            break;
+        case GL_SPECULAR:
+            material.specular = { static_cast<float>(params[0]), static_cast<float>(params[1]), static_cast<float>(params[2]), static_cast<float>(params[3]) };
+            break;
+        case GL_EMISSION:
+            material.emissive = { static_cast<float>(params[0]), static_cast<float>(params[1]), static_cast<float>(params[2]), static_cast<float>(params[3]) };
+            break;
+        case GL_SHININESS:
+            material.shininess = static_cast<float>(params[0]);
+            break;
+        case GL_AMBIENT_AND_DIFFUSE:
+            material.ambient = { static_cast<float>(params[0]), static_cast<float>(params[1]), static_cast<float>(params[2]), static_cast<float>(params[3]) };
+            material.diffuse = { static_cast<float>(params[0]), static_cast<float>(params[1]), static_cast<float>(params[2]), static_cast<float>(params[3]) };
+            break;
+        }
+    };
+
+    switch (face) {
+    case GL_FRONT:
+        update_material(m_material_states[Face::Front], pname, params);
+        break;
+    case GL_BACK:
+        update_material(m_material_states[Face::Back], pname, params);
+        break;
+    case GL_FRONT_AND_BACK:
+        update_material(m_material_states[Face::Front], pname, params);
+        update_material(m_material_states[Face::Back], pname, params);
+        break;
+    }
+
+    m_light_state_is_dirty = true;
+}
+
 void SoftwareGLContext::gl_color_material(GLenum face, GLenum mode)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_color_material, face, mode);
