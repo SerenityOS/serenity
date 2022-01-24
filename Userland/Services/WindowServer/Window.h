@@ -321,7 +321,7 @@ public:
     bool is_destroyed() const { return m_destroyed; }
     void destroy();
 
-    bool default_positioned() const { return m_default_positioned; }
+    bool is_default_positioned() const { return m_default_positioned; }
     void set_default_positioned(bool p) { m_default_positioned = p; }
 
     bool is_opaque() const

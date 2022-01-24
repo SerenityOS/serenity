@@ -2012,7 +2012,7 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint const
 
     Window const* overlap_window = nullptr;
     current_window_stack().for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& window) {
-        if (window.default_positioned() && (!overlap_window || overlap_window->window_id() < window.window_id())) {
+        if (window.is_default_positioned() && (!overlap_window || overlap_window->window_id() < window.window_id())) {
             overlap_window = &window;
         }
         return IterationDecision::Continue;
