@@ -349,6 +349,8 @@ public:
         {
         }
 
+        u16 vertical_addressable_lines_raw() const;
+
         Parser const& m_edid;
         Definitions::DetailedTiming const& m_detailed_timings;
     };
