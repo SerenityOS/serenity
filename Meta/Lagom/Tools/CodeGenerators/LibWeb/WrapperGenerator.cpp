@@ -230,6 +230,7 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
 
             if (lexer.consume_specific("//")) {
                 lexer.consume_until('\n');
+                lexer.ignore();
                 consumed = true;
             }
         }
@@ -276,7 +277,9 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
     while (lexer.consume_specific("#import")) {
         consume_whitespace();
         assert_specific('<');
-        imports.append(resolve_import(lexer.consume_until('>')));
+        auto path = lexer.consume_until('>');
+        lexer.ignore();
+        imports.append(resolve_import(path));
         consume_whitespace();
     }
 

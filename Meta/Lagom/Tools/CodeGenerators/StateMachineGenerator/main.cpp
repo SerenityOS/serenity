@@ -88,10 +88,12 @@ parse_state_machine(StringView input)
                 num = 16 * num + get_hex_value(c);
         } else {
             lexer.consume_specific('\'');
-            if (lexer.next_is('\\'))
+            if (lexer.next_is('\\')) {
                 num = (int)lexer.consume_escaped_character('\\');
-            else
+            } else {
                 num = lexer.consume_until('\'').to_int().value();
+                lexer.ignore();
+            }
             lexer.consume_specific('\'');
         }
         return num;
