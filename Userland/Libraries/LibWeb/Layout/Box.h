@@ -164,7 +164,7 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) override;
     virtual void after_children_paint(PaintContext&, PaintPhase) override;
 
-    Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& ancestor_box)
+    Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& ancestor_box) const
     {
         auto rect = margin_box_as_relative_rect();
         for (auto const* current = parent(); current; current = current->parent()) {

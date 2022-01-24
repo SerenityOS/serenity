@@ -38,6 +38,10 @@ BlockFormattingContext const& InlineFormattingContext::parent() const
 
 InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::available_space_for_line(float y) const
 {
+    // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
+    auto box_in_root_rect = containing_block().margin_box_rect_in_ancestor_coordinate_space(parent().root());
+    float y_in_root = box_in_root_rect.y() + y;
+
     AvailableSpaceForLineInfo info;
 
     auto const& bfc = parent();
@@ -45,7 +49,7 @@ InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::avai
     for (ssize_t i = bfc.left_side_floats().boxes.size() - 1; i >= 0; --i) {
         auto const& floating_box = bfc.left_side_floats().boxes.at(i);
         auto rect = floating_box.margin_box_as_relative_rect();
-        if (rect.contains_vertically(y)) {
+        if (rect.contains_vertically(y_in_root)) {
             info.left = rect.right() + 1;
             break;
         }
@@ -56,7 +60,7 @@ InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::avai
     for (ssize_t i = bfc.right_side_floats().boxes.size() - 1; i >= 0; --i) {
         auto const& floating_box = bfc.right_side_floats().boxes.at(i);
         auto rect = floating_box.margin_box_as_relative_rect();
-        if (rect.contains_vertically(y)) {
+        if (rect.contains_vertically(y_in_root)) {
             info.right = rect.left() - 1;
             break;
         }
