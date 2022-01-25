@@ -1,0 +1,23 @@
+/*
+ * Copyright (c) 2022, Tim Flynn <trflynn89@pm.me>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
+#include <LibJS/Runtime/PrototypeObject.h>
+
+namespace JS::Intl {
+
+class RelativeTimeFormatPrototype final : public PrototypeObject<RelativeTimeFormatPrototype, RelativeTimeFormat> {
+    JS_PROTOTYPE_OBJECT(RelativeTimeFormatPrototype, RelativeTimeFormat, Intl.RelativeTimeFormat);
+
+public:
+    explicit RelativeTimeFormatPrototype(GlobalObject&);
+    virtual void initialize(GlobalObject&) override;
+    virtual ~RelativeTimeFormatPrototype() override = default;
+};
+
+}
