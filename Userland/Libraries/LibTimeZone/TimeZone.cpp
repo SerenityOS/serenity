@@ -7,6 +7,7 @@
 #include <AK/String.h>
 #include <LibTimeZone/TimeZone.h>
 #include <stdio.h>
+#include <time.h>
 
 namespace TimeZone {
 
@@ -68,7 +69,7 @@ private:
     FILE* m_file { nullptr };
 };
 
-StringView current_time_zone()
+StringView system_time_zone()
 {
     TimeZoneFile time_zone_file("r");
 
@@ -77,6 +78,11 @@ StringView current_time_zone()
         return canonicalize_time_zone(time_zone.value()).value_or("UTC"sv);
 
     return "UTC"sv;
+}
+
+StringView current_time_zone()
+{
+    return canonicalize_time_zone(tzname[0]).value_or("UTC"sv);
 }
 
 ErrorOr<void> change_time_zone([[maybe_unused]] StringView time_zone)

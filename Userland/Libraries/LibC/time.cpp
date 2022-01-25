@@ -372,7 +372,7 @@ void tzset()
     if (char* tz = getenv("TZ"); tz != nullptr)
         time_zone = tz;
     else
-        time_zone = TimeZone::current_time_zone();
+        time_zone = TimeZone::system_time_zone();
 
     auto set_default_values = []() {
         timezone = 0;

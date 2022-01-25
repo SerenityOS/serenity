@@ -20,7 +20,7 @@ ClockSettingsWidget::ClockSettingsWidget()
     load_from_gml(clock_settings_widget_gml);
 
     static auto time_zones = TimeZone::all_time_zones();
-    m_time_zone = TimeZone::current_time_zone();
+    m_time_zone = TimeZone::system_time_zone();
 
     m_time_zone_combo_box = *find_descendant_of_type_named<GUI::ComboBox>("time_zone_input");
     m_time_zone_combo_box->set_only_allow_values_from_model(true);
