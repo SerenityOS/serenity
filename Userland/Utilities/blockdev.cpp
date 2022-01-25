@@ -10,11 +10,10 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
 
 static void fetch_ioctl(int fd, int request)
 {
-    size_t value;
+    u64 value;
     if (ioctl(fd, request, &value) < 0) {
         perror("ioctl");
         exit(1);
