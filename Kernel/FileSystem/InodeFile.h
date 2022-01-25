@@ -27,7 +27,7 @@ public:
     const Inode& inode() const { return *m_inode; }
     Inode& inode() { return *m_inode; }
 
-    virtual bool can_read(const OpenFileDescription&, size_t) const override { return true; }
+    virtual bool can_read(const OpenFileDescription&, u64) const override { return true; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override { return true; }
 
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;

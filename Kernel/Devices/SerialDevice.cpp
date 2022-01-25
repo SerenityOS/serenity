@@ -56,7 +56,7 @@ UNMAP_AFTER_INIT SerialDevice::~SerialDevice()
 {
 }
 
-bool SerialDevice::can_read(const OpenFileDescription&, size_t) const
+bool SerialDevice::can_read(const OpenFileDescription&, u64) const
 {
     return (get_line_status() & DataReady) != 0;
 }

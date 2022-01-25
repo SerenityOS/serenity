@@ -90,7 +90,7 @@ bool SlavePTY::can_write(const OpenFileDescription&, size_t) const
     return m_master->can_write_from_slave();
 }
 
-bool SlavePTY::can_read(const OpenFileDescription& description, size_t offset) const
+bool SlavePTY::can_read(const OpenFileDescription& description, u64 offset) const
 {
     if (m_master->is_closed())
         return true;

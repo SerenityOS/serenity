@@ -18,7 +18,7 @@ MouseDevice::~MouseDevice()
 {
 }
 
-bool MouseDevice::can_read(const OpenFileDescription&, size_t) const
+bool MouseDevice::can_read(const OpenFileDescription&, u64) const
 {
     SpinlockLocker lock(m_queue_lock);
     return !m_queue.is_empty();

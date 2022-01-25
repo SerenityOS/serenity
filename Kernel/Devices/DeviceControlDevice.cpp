@@ -17,7 +17,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<DeviceControlDevice> DeviceControlDevice::must_cr
     return device_control_device_or_error.release_value();
 }
 
-bool DeviceControlDevice::can_read(const OpenFileDescription&, size_t) const
+bool DeviceControlDevice::can_read(const OpenFileDescription&, u64) const
 {
     return true;
 }

@@ -44,7 +44,7 @@ public:
     static ErrorOr<NonnullRefPtr<InodeWatcher>> try_create();
     virtual ~InodeWatcher() override;
 
-    virtual bool can_read(const OpenFileDescription&, size_t) const override;
+    virtual bool can_read(const OpenFileDescription&, u64) const override;
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     // Can't write to an inode watcher.
     virtual bool can_write(const OpenFileDescription&, size_t) const override { return true; }

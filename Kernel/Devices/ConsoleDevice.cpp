@@ -32,7 +32,7 @@ UNMAP_AFTER_INIT ConsoleDevice::~ConsoleDevice()
 {
 }
 
-bool ConsoleDevice::can_read(const Kernel::OpenFileDescription&, size_t) const
+bool ConsoleDevice::can_read(const Kernel::OpenFileDescription&, u64) const
 {
     return false;
 }

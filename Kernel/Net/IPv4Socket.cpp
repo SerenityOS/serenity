@@ -161,7 +161,7 @@ ErrorOr<void> IPv4Socket::connect(OpenFileDescription& description, Userspace<co
     return protocol_connect(description, should_block);
 }
 
-bool IPv4Socket::can_read(const OpenFileDescription&, size_t) const
+bool IPv4Socket::can_read(const OpenFileDescription&, u64) const
 {
     if (m_role == Role::Listener)
         return can_accept();

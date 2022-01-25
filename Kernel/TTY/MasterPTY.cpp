@@ -72,7 +72,7 @@ ErrorOr<size_t> MasterPTY::write(OpenFileDescription&, u64, const UserOrKernelBu
     return size;
 }
 
-bool MasterPTY::can_read(const OpenFileDescription&, size_t) const
+bool MasterPTY::can_read(const OpenFileDescription&, u64) const
 {
     if (!m_slave)
         return true;

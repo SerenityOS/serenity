@@ -139,7 +139,7 @@ void TTY::process_output(u8 ch, Functor put_char)
     }
 }
 
-bool TTY::can_read(const OpenFileDescription&, size_t) const
+bool TTY::can_read(const OpenFileDescription&, u64) const
 {
     if (in_canonical_mode()) {
         return m_available_lines > 0;
