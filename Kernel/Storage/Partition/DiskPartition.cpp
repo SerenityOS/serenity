@@ -54,7 +54,7 @@ ErrorOr<size_t> DiskPartition::read(OpenFileDescription& fd, u64 offset, UserOrK
     return m_device.strong_ref()->read(fd, offset + adjust, outbuf, len);
 }
 
-bool DiskPartition::can_read(const OpenFileDescription& fd, size_t offset) const
+bool DiskPartition::can_read(const OpenFileDescription& fd, u64 offset) const
 {
     unsigned adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::can_read offset={}, adjust={}", offset, adjust);

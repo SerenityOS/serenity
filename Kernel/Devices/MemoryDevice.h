@@ -25,7 +25,7 @@ private:
     MemoryDevice();
 
     virtual StringView class_name() const override { return "MemoryDevice"sv; }
-    virtual bool can_read(const OpenFileDescription&, size_t) const override { return true; }
+    virtual bool can_read(const OpenFileDescription&, u64) const override { return true; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override { return false; }
     virtual bool is_seekable() const override { return true; }
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;

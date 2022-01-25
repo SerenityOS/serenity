@@ -85,7 +85,7 @@ void ConsolePort::handle_queue_update(Badge<VirtIO::Console>, u16 queue_index)
     }
 }
 
-bool ConsolePort::can_read(const OpenFileDescription&, size_t) const
+bool ConsolePort::can_read(const OpenFileDescription&, u64) const
 {
     return m_receive_buffer->used_bytes() > 0;
 }

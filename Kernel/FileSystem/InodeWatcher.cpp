@@ -22,7 +22,7 @@ InodeWatcher::~InodeWatcher()
     (void)close();
 }
 
-bool InodeWatcher::can_read(const OpenFileDescription&, size_t) const
+bool InodeWatcher::can_read(const OpenFileDescription&, u64) const
 {
     MutexLocker locker(m_lock);
     return !m_queue.is_empty();

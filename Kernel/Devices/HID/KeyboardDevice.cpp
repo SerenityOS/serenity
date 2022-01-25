@@ -280,7 +280,7 @@ UNMAP_AFTER_INIT KeyboardDevice::~KeyboardDevice()
 {
 }
 
-bool KeyboardDevice::can_read(const OpenFileDescription&, size_t) const
+bool KeyboardDevice::can_read(const OpenFileDescription&, u64) const
 {
     return !m_queue.is_empty();
 }

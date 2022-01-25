@@ -81,7 +81,7 @@ public:
     virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options);
     virtual ErrorOr<void> close();
 
-    virtual bool can_read(const OpenFileDescription&, size_t) const = 0;
+    virtual bool can_read(const OpenFileDescription&, u64) const = 0;
     virtual bool can_write(const OpenFileDescription&, size_t) const = 0;
 
     virtual ErrorOr<void> attach(OpenFileDescription&);
