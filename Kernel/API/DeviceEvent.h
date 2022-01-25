@@ -7,12 +7,12 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <sys/types.h>
 
 struct DeviceEvent {
     int state;
     int is_block_device;
-    unsigned major_number;
-    unsigned minor_number;
+    dev_t device_id;
 
     enum State {
         Removed = 0x01,

@@ -228,9 +228,9 @@ static void populate_devtmpfs_devices_based_on_devctl()
     while (f->read((u8*)&event, sizeof(DeviceEvent)) > 0) {
         if (event.state != DeviceEvent::Inserted)
             continue;
-        auto major_number = event.major_number;
-        auto minor_number = event.minor_number;
-        auto device_id = makedev(major_number, minor_number);
+        auto major_number = serenity_dev_major(event.device_id);
+        auto minor_number = serenity_dev_minor(event.device_id);
+        auto device_id = event.device_id;
         bool is_block_device = (event.is_block_device == 1);
 
         if (!is_block_device) {

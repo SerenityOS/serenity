@@ -69,7 +69,7 @@ void DeviceManagement::before_device_removal(Badge<Device>, Device& device)
     });
 
     {
-        DeviceEvent event { DeviceEvent::State::Removed, device.is_block_device(), device.major().value(), device.minor().value() };
+        DeviceEvent event { DeviceEvent::State::Removed, device.is_block_device(), device.id().value() };
         SpinlockLocker locker(m_event_queue_lock);
         m_event_queue.enqueue(event);
     }
@@ -93,7 +93,7 @@ void DeviceManagement::after_inserting_device(Badge<Device>, Device& device)
     });
 
     {
-        DeviceEvent event { DeviceEvent::State::Inserted, device.is_block_device(), device.major().value(), device.minor().value() };
+        DeviceEvent event { DeviceEvent::State::Inserted, device.is_block_device(), device.id().value() };
         SpinlockLocker locker(m_event_queue_lock);
         m_event_queue.enqueue(event);
     }
