@@ -57,7 +57,7 @@ public:
 
     RecursiveSpinlock& get_lock() const { return m_lock; }
 
-    size_t amount_clean_inode() const;
+    ErrorOr<size_t> amount_clean_inode() const;
     size_t amount_dirty_private() const;
     size_t amount_virtual() const;
     size_t amount_resident() const;

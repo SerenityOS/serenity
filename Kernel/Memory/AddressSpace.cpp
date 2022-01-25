@@ -341,13 +341,13 @@ size_t AddressSpace::amount_dirty_private() const
     return amount;
 }
 
-size_t AddressSpace::amount_clean_inode() const
+ErrorOr<size_t> AddressSpace::amount_clean_inode() const
 {
     SpinlockLocker lock(m_lock);
     HashTable<const InodeVMObject*> vmobjects;
     for (auto const& region : m_regions) {
         if (region->vmobject().is_inode())
-            vmobjects.set(&static_cast<const InodeVMObject&>(region->vmobject()));
+            TRY(vmobjects.try_set(&static_cast<const InodeVMObject&>(region->vmobject())));
     }
     size_t amount = 0;
     for (auto& vmobject : vmobjects)
