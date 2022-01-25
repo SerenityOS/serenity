@@ -659,7 +659,9 @@ void Process::die()
 
     VERIFY(m_threads_for_coredump.is_empty());
     for_each_thread([&](auto& thread) {
-        m_threads_for_coredump.append(thread);
+        auto result = m_threads_for_coredump.try_append(thread);
+        if (result.is_error())
+            dbgln("Failed to add thread {} to coredump due to OOM", thread.tid());
     });
 
     all_instances().with([&](const auto& list) {
