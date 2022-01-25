@@ -459,10 +459,9 @@ private:
             if (process.is_user_process()) {
                 StringBuilder pledge_builder;
 
-#define __ENUMERATE_PLEDGE_PROMISE(promise)      \
-    if (process.has_promised(Pledge::promise)) { \
-        pledge_builder.append(#promise " ");     \
-    }
+#define __ENUMERATE_PLEDGE_PROMISE(promise)    \
+    if (process.has_promised(Pledge::promise)) \
+        TRY(pledge_builder.try_append(#promise " "));
                 ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
 
