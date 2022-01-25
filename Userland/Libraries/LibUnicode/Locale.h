@@ -82,7 +82,6 @@ enum class Style : u8 {
     Long,
     Short,
     Narrow,
-    Numeric,
 };
 
 struct DisplayPattern {
