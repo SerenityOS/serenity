@@ -684,6 +684,8 @@ TEST_CASE(ECMA262_match)
         { "(\0|a)"sv, "a"sv, true }, // #9686, Should allow null bytes in pattern
         { "(.*?)a(?!(a+)b\\2c)\\2(.*)"sv, "baaabaac"sv, true }, // #6042, Groups inside lookarounds may be referenced outside, but their contents appear empty if the pattern in the lookaround fails.
         { "a|$"sv, "x"sv, true, (ECMAScriptFlags)regex::AllFlags::Global }, // #11940, Global (not the 'g' flag) regexps should attempt to match the zero-length end of the string too.
+        { "foo\nbar"sv, "foo\nbar"sv, true }, // #12126, ECMA262 regexp should match literal newlines without the 's' flag.
+        { "foo[^]bar"sv, "foo\nbar"sv, true }, // #12126, ECMA262 regexp should match newline with [^].
     };
     // clang-format on
 

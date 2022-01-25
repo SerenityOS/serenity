@@ -273,12 +273,23 @@ ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceStay::execute(MatchInput const& 
 
 ALWAYS_INLINE ExecutionResult OpCode_CheckBegin::execute(MatchInput const& input, MatchState& state) const
 {
-    if (0 == state.string_position && (input.regex_options & AllFlags::MatchNotBeginOfLine))
+    auto is_at_line_boundary = [&] {
+        if (state.string_position == 0)
+            return true;
+
+        if (input.regex_options.has_flag_set(AllFlags::Multiline) && input.regex_options.has_flag_set(AllFlags::Internal_ConsiderNewline)) {
+            auto input_view = input.view.substring_view(state.string_position - 1, 1)[0];
+            return input_view == '\n';
+        }
+
+        return false;
+    }();
+    if (is_at_line_boundary && (input.regex_options & AllFlags::MatchNotBeginOfLine))
         return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-    if ((0 == state.string_position && !(input.regex_options & AllFlags::MatchNotBeginOfLine))
-        || (0 != state.string_position && (input.regex_options & AllFlags::MatchNotBeginOfLine))
-        || (0 == state.string_position && (input.regex_options & AllFlags::Global)))
+    if ((is_at_line_boundary && !(input.regex_options & AllFlags::MatchNotBeginOfLine))
+        || (!is_at_line_boundary && (input.regex_options & AllFlags::MatchNotBeginOfLine))
+        || (is_at_line_boundary && (input.regex_options & AllFlags::Global)))
         return ExecutionResult::Continue;
 
     return ExecutionResult::Failed_ExecuteLowPrioForks;
@@ -315,11 +326,22 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckBoundary::execute(MatchInput const& in
 
 ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(MatchInput const& input, MatchState& state) const
 {
-    if (state.string_position == input.view.length() && (input.regex_options & AllFlags::MatchNotEndOfLine))
+    auto is_at_line_boundary = [&] {
+        if (state.string_position == input.view.length())
+            return true;
+
+        if (input.regex_options.has_flag_set(AllFlags::Multiline) && input.regex_options.has_flag_set(AllFlags::Internal_ConsiderNewline)) {
+            auto input_view = input.view.substring_view(state.string_position, 1)[0];
+            return input_view == '\n';
+        }
+
+        return false;
+    }();
+    if (is_at_line_boundary && (input.regex_options & AllFlags::MatchNotEndOfLine))
         return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-    if ((state.string_position == input.view.length() && !(input.regex_options & AllFlags::MatchNotEndOfLine))
-        || (state.string_position != input.view.length() && (input.regex_options & AllFlags::MatchNotEndOfLine || input.regex_options & AllFlags::MatchNotBeginOfLine)))
+    if ((is_at_line_boundary && !(input.regex_options & AllFlags::MatchNotEndOfLine))
+        || (!is_at_line_boundary && (input.regex_options & AllFlags::MatchNotEndOfLine || input.regex_options & AllFlags::MatchNotBeginOfLine)))
         return ExecutionResult::Continue;
 
     return ExecutionResult::Failed_ExecuteLowPrioForks;
@@ -461,8 +483,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             if (input.view.length() <= state.string_position)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-            VERIFY(!current_inversion_state());
-            advance_string_position(state, input.view);
+            auto input_view = input.view.substring_view(state.string_position, 1)[0];
+            if (input_view != '\n' || (input.regex_options.has_flag_set(AllFlags::SingleLine) && input.regex_options.has_flag_set(AllFlags::Internal_ConsiderNewline)))
+                advance_string_position(state, input.view, input_view);
 
         } else if (compare_type == CharacterCompareType::String) {
             VERIFY(!current_inversion_state());

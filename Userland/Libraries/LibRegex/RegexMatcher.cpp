@@ -41,7 +41,7 @@ Regex<Parser>::Regex(String pattern, typename ParserTraits<Parser>::OptionsType 
 
     run_optimization_passes();
     if (parser_result.error == regex::Error::NoError)
-        matcher = make<Matcher<Parser>>(this, regex_options);
+        matcher = make<Matcher<Parser>>(this, static_cast<decltype(regex_options.value())>(parser_result.options.value()));
 }
 
 template<class Parser>
@@ -51,7 +51,7 @@ Regex<Parser>::Regex(regex::Parser::Result parse_result, String pattern, typenam
 {
     run_optimization_passes();
     if (parser_result.error == regex::Error::NoError)
-        matcher = make<Matcher<Parser>>(this, regex_options);
+        matcher = make<Matcher<Parser>>(this, regex_options | static_cast<decltype(regex_options.value())>(parse_result.options.value()));
 }
 
 template<class Parser>
@@ -104,8 +104,10 @@ RegexResult Matcher<Parser>::match(RegexStringView view, Optional<typename Parse
 {
     AllOptions options = m_regex_options | regex_options.value_or({}).value();
 
-    if (options.has_flag_set(AllFlags::Multiline))
-        return match(view.lines(), regex_options); // FIXME: how do we know, which line ending a line has (1char or 2char)? This is needed to get the correct match offsets from start of string...
+    if constexpr (!IsSame<Parser, ECMA262>) {
+        if (options.has_flag_set(AllFlags::Multiline))
+            return match(view.lines(), regex_options); // FIXME: how do we know, which line ending a line has (1char or 2char)? This is needed to get the correct match offsets from start of string...
+    }
 
     Vector<RegexStringView> views;
     views.append(view);
