@@ -4,13 +4,13 @@ describe("correct behavior", () => {
     });
 
     test("locale only contains relevant extension keys", () => {
-        const en1 = Intl.NumberFormat("en-u-ca-islamicc");
+        const en1 = Intl.DateTimeFormat("en-u-co-case");
         expect(en1.resolvedOptions().locale).toBe("en");
 
-        const en2 = Intl.NumberFormat("en-u-nu-latn");
+        const en2 = Intl.DateTimeFormat("en-u-nu-latn");
         expect(en2.resolvedOptions().locale).toBe("en-u-nu-latn");
 
-        const en3 = Intl.NumberFormat("en-u-ca-islamicc-nu-latn");
+        const en3 = Intl.DateTimeFormat("en-u-co-case-nu-latn");
         expect(en3.resolvedOptions().locale).toBe("en-u-nu-latn");
     });
 
@@ -85,7 +85,7 @@ describe("correct behavior", () => {
         });
     });
 
-    test("style", () => {
+    test("timeZone", () => {
         const en = new Intl.DateTimeFormat("en", { timeZone: "EST" });
         expect(en.resolvedOptions().timeZone).toBe("EST");
 
