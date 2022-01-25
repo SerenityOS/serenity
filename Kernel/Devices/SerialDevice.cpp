@@ -77,7 +77,7 @@ ErrorOr<size_t> SerialDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer
     });
 }
 
-bool SerialDevice::can_write(const OpenFileDescription&, size_t) const
+bool SerialDevice::can_write(const OpenFileDescription&, u64) const
 {
     return (get_line_status() & EmptyTransmitterHoldingRegister) != 0;
 }

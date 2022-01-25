@@ -85,7 +85,7 @@ ErrorOr<size_t> SlavePTY::on_tty_write(const UserOrKernelBuffer& data, size_t si
     return m_master->on_slave_write(data, size);
 }
 
-bool SlavePTY::can_write(const OpenFileDescription&, size_t) const
+bool SlavePTY::can_write(const OpenFileDescription&, u64) const
 {
     return m_master->can_write_from_slave();
 }
