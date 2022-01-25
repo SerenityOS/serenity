@@ -11,6 +11,7 @@
 #include <AK/String.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
 
 namespace JS::Intl {
@@ -37,12 +38,6 @@ public:
     enum class CurrencySign {
         Standard,
         Accounting,
-    };
-
-    enum class UnitDisplay {
-        Short,
-        Narrow,
-        Long,
     };
 
     enum class RoundingType {
@@ -116,9 +111,9 @@ public:
     void set_unit(String unit) { m_unit = move(unit); }
 
     bool has_unit_display() const { return m_unit_display.has_value(); }
-    UnitDisplay unit_display() const { return *m_unit_display; }
-    StringView unit_display_string() const;
-    void set_unit_display(StringView unit_display);
+    Unicode::Style unit_display() const { return *m_unit_display; }
+    StringView unit_display_string() const { return Unicode::style_to_string(*m_unit_display); }
+    void set_unit_display(StringView unit_display) { m_unit_display = Unicode::style_from_string(unit_display); }
 
     int min_integer_digits() const { return m_min_integer_digits; }
     void set_min_integer_digits(int min_integer_digits) { m_min_integer_digits = min_integer_digits; }
@@ -177,7 +172,7 @@ private:
     Optional<CurrencyDisplay> m_currency_display {};        // [[CurrencyDisplay]]
     Optional<CurrencySign> m_currency_sign {};              // [[CurrencySign]]
     Optional<String> m_unit {};                             // [[Unit]]
-    Optional<UnitDisplay> m_unit_display {};                // [[UnitDisplay]]
+    Optional<Unicode::Style> m_unit_display {};             // [[UnitDisplay]]
     int m_min_integer_digits { 0 };                         // [[MinimumIntegerDigits]]
     Optional<int> m_min_fraction_digits {};                 // [[MinimumFractionDigits]]
     Optional<int> m_max_fraction_digits {};                 // [[MaximumFractionDigits]]
