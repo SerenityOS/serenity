@@ -25,7 +25,7 @@
 
 namespace Core {
 
-static Threading::MutexProtected<EventLoop*> s_main_event_loop;
+extern Threading::MutexProtected<EventLoop*> s_main_event_loop;
 
 class EventLoop {
 public:
