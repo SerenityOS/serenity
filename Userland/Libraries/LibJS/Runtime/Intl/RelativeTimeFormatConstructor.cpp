@@ -5,7 +5,9 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
 
@@ -26,6 +28,9 @@ void RelativeTimeFormatConstructor::initialize(GlobalObject& global_object)
     // 17.3.1 Intl.RelativeTimeFormat.prototype, https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype
     define_direct_property(vm.names.prototype, global_object.intl_relative_time_format_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 }
 
 // 17.2.1 Intl.RelativeTimeFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat
@@ -49,6 +54,21 @@ ThrowCompletionOr<Object*> RelativeTimeFormatConstructor::construct(FunctionObje
 
     // 3. Return ? InitializeRelativeTimeFormat(relativeTimeFormat, locales, options).
     return TRY(initialize_relative_time_format(global_object, *relative_time_format, locales, options));
+}
+
+// 17.3.2 Intl.RelativeTimeFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.supportedLocalesOf
+JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatConstructor::supported_locales_of)
+{
+    auto locales = vm.argument(0);
+    auto options = vm.argument(1);
+
+    // 1. Let availableLocales be %RelativeTimeFormat%.[[AvailableLocales]].
+
+    // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
+    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+
+    // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
+    return TRY(supported_locales(global_object, requested_locales, options));
 }
 
 }
