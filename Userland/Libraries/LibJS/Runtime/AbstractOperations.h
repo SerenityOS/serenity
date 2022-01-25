@@ -27,7 +27,7 @@ ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject&, Value 
 ThrowCompletionOr<Value> require_object_coercible(GlobalObject&, Value);
 ThrowCompletionOr<Value> call_impl(GlobalObject&, Value function, Value this_value, Optional<MarkedValueList> = {});
 ThrowCompletionOr<Value> call_impl(GlobalObject&, FunctionObject& function, Value this_value, Optional<MarkedValueList> = {});
-ThrowCompletionOr<Object*> construct(GlobalObject&, FunctionObject&, Optional<MarkedValueList> = {}, FunctionObject* new_target = nullptr);
+ThrowCompletionOr<Object*> construct_impl(GlobalObject&, FunctionObject&, Optional<MarkedValueList> = {}, FunctionObject* new_target = nullptr);
 ThrowCompletionOr<size_t> length_of_array_like(GlobalObject&, Object const&);
 ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
 ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
@@ -96,6 +96,29 @@ ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Functio
     }
 
     return call_impl(global_object, function, this_value);
+}
+
+// 7.3.15 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
+template<typename... Args>
+ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Args&&... args)
+{
+    if constexpr (sizeof...(Args) > 0) {
+        MarkedValueList arguments_list { global_object.heap() };
+        (..., arguments_list.append(forward<Args>(args)));
+        return construct_impl(global_object, function, move(arguments_list));
+    }
+
+    return construct_impl(global_object, function);
+}
+
+ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, MarkedValueList arguments_list, FunctionObject* new_target = nullptr)
+{
+    return construct_impl(global_object, function, move(arguments_list), new_target);
+}
+
+ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Optional<MarkedValueList> arguments_list, FunctionObject* new_target = nullptr)
+{
+    return construct_impl(global_object, function, move(arguments_list), new_target);
 }
 
 // 10.1.13 OrdinaryCreateFromConstructor ( constructor, intrinsicDefaultProto [ , internalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor
