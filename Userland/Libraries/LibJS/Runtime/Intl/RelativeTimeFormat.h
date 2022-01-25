@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibUnicode/Locale.h>
 
@@ -63,5 +64,7 @@ private:
     Numeric m_numeric { Numeric::Always };           // [[Numeric]]
     NumberFormat* m_number_format { nullptr };       // [[NumberFormat]]
 };
+
+ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, Value locales_value, Value options_value);
 
 }
