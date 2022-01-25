@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Aziz Berkay Yesilyurt <abyesilyurt@gmail.com>
+ * Copyright (c) 2022, Alex Major
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,6 +20,7 @@
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/PNGWriter.h>
 #include <LibGfx/Palette.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
 class SelectableLayover final : public GUI::Widget {
@@ -85,7 +87,7 @@ private:
     Gfx::Color const m_background_color;
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
@@ -101,13 +103,13 @@ int main(int argc, char** argv)
     args_parser.add_option(screen, "The index of the screen (default: -1 for all screens)", "screen", 's', "index");
     args_parser.add_option(select_region, "Select a region to capture", "region", 'r');
 
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (output_path.is_empty()) {
         output_path = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png");
     }
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
     Optional<Gfx::IntRect> crop_region;
     if (select_region) {
         auto window = GUI::Window::construct();
