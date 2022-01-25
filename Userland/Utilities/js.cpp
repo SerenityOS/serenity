@@ -37,6 +37,7 @@
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/Intl/Locale.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
+#include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -763,6 +764,20 @@ static void print_intl_date_time_format(JS::Object& object, HashTable<JS::Object
     });
 }
 
+static void print_intl_relative_time_format(JS::Object& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& date_time_format = static_cast<JS::Intl::RelativeTimeFormat&>(object);
+    print_type("Intl.RelativeTimeFormat");
+    js_out("\n  locale: ");
+    print_value(js_string(object.vm(), date_time_format.locale()), seen_objects);
+    js_out("\n  numberingSystem: ");
+    print_value(js_string(object.vm(), date_time_format.numbering_system()), seen_objects);
+    js_out("\n  style: ");
+    print_value(js_string(object.vm(), date_time_format.style_string()), seen_objects);
+    js_out("\n  numeric: ");
+    print_value(js_string(object.vm(), date_time_format.numeric_string()), seen_objects);
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -858,6 +873,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_intl_number_format(object, seen_objects);
         if (is<JS::Intl::DateTimeFormat>(object))
             return print_intl_date_time_format(object, seen_objects);
+        if (is<JS::Intl::RelativeTimeFormat>(object))
+            return print_intl_relative_time_format(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
