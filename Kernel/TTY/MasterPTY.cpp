@@ -79,7 +79,7 @@ bool MasterPTY::can_read(const OpenFileDescription&, u64) const
     return !m_buffer->is_empty();
 }
 
-bool MasterPTY::can_write(const OpenFileDescription&, size_t) const
+bool MasterPTY::can_write(const OpenFileDescription&, u64) const
 {
     return true;
 }

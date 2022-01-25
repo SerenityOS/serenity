@@ -68,7 +68,7 @@ ErrorOr<size_t> DiskPartition::write(OpenFileDescription& fd, u64 offset, const 
     return m_device.strong_ref()->write(fd, offset + adjust, inbuf, len);
 }
 
-bool DiskPartition::can_write(const OpenFileDescription& fd, size_t offset) const
+bool DiskPartition::can_write(const OpenFileDescription& fd, u64 offset) const
 {
     unsigned adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::can_write offset={}, adjust={}", offset, adjust);

@@ -180,7 +180,7 @@ StringView StorageDevice::early_storage_name() const
     return m_early_storage_device_name->view();
 }
 
-bool StorageDevice::can_write(const OpenFileDescription&, size_t offset) const
+bool StorageDevice::can_write(const OpenFileDescription&, u64 offset) const
 {
     return offset < (max_addressable_block() * block_size());
 }

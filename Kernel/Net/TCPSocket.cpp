@@ -614,7 +614,7 @@ void TCPSocket::retransmit_packets()
     });
 }
 
-bool TCPSocket::can_write(const OpenFileDescription& file_description, size_t size) const
+bool TCPSocket::can_write(const OpenFileDescription& file_description, u64 size) const
 {
     if (!IPv4Socket::can_write(file_description, size))
         return false;

@@ -147,7 +147,7 @@ bool TTY::can_read(const OpenFileDescription&, u64) const
     return !m_input_buffer.is_empty();
 }
 
-bool TTY::can_write(const OpenFileDescription&, size_t) const
+bool TTY::can_write(const OpenFileDescription&, u64) const
 {
     return true;
 }

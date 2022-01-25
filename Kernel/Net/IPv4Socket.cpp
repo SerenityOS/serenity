@@ -170,7 +170,7 @@ bool IPv4Socket::can_read(const OpenFileDescription&, u64) const
     return m_can_read;
 }
 
-bool IPv4Socket::can_write(const OpenFileDescription&, size_t) const
+bool IPv4Socket::can_write(const OpenFileDescription&, u64) const
 {
     return true;
 }

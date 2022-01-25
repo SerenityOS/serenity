@@ -115,7 +115,7 @@ ErrorOr<size_t> ConsolePort::read(OpenFileDescription& desc, u64, UserOrKernelBu
     return bytes_copied;
 }
 
-bool ConsolePort::can_write(const OpenFileDescription&, size_t) const
+bool ConsolePort::can_write(const OpenFileDescription&, u64) const
 {
     return m_console.get_queue(m_transmit_queue).has_free_slots() && m_transmit_buffer->has_space();
 }

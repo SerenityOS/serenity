@@ -32,7 +32,7 @@ public:
 
     // ^CharacterDevice
     virtual bool can_read(const OpenFileDescription&, u64) const override { return false; }
-    virtual bool can_write(const OpenFileDescription&, size_t) const override { return true; }
+    virtual bool can_write(const OpenFileDescription&, u64) const override { return true; }
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned, Userspace<void*>) override;
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
