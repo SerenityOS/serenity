@@ -127,7 +127,7 @@ u16 NVMeQueue::submit_sync_sqe(NVMeSubmission& sub)
             SpinlockLocker lock(m_cq_lock);
             index = m_cq_head - 1;
             if (index < 0)
-                index = IO_QUEUE_SIZE - 1;
+                index = m_qdepth - 1;
         }
         cqe_cid = m_cqe_array[index].command_id;
         Scheduler::yield();
