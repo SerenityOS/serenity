@@ -81,6 +81,17 @@ static size_t get_function_length(FunctionType& function)
     return length;
 }
 
+enum class SequenceStorageType {
+    Vector,          // Used to safely store non-JS values
+    MarkedValueList, // Used to safely store JS::Value
+    MarkedVector,    // Used to safely store anything that inherits JS::Cell, e.g. JS::Object
+};
+
+struct CppType {
+    String name;
+    SequenceStorageType sequence_storage_type;
+};
+
 struct Type : public RefCounted<Type> {
     Type() = default;
 
@@ -95,20 +106,6 @@ struct Type : public RefCounted<Type> {
     String name;
     bool nullable { false };
     bool is_string() const { return name.is_one_of("ByteString", "CSSOMString", "DOMString", "USVString"); }
-};
-
-struct ParameterizedType : public Type {
-    ParameterizedType() = default;
-
-    ParameterizedType(String name, bool nullable, NonnullRefPtrVector<Type> parameters)
-        : Type(move(name), nullable)
-        , parameters(move(parameters))
-    {
-    }
-
-    virtual ~ParameterizedType() override = default;
-
-    NonnullRefPtrVector<Type> parameters;
 };
 
 struct Parameter {
@@ -164,6 +161,22 @@ struct DictionaryMember {
 struct Dictionary {
     String parent_name;
     Vector<DictionaryMember> members;
+};
+
+struct ParameterizedType : public Type {
+    ParameterizedType() = default;
+
+    ParameterizedType(String name, bool nullable, NonnullRefPtrVector<Type> parameters)
+        : Type(move(name), nullable)
+        , parameters(move(parameters))
+    {
+    }
+
+    virtual ~ParameterizedType() override = default;
+
+    NonnullRefPtrVector<Type> parameters;
+
+    void generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, HashMap<String, Dictionary> const& dictionaries, size_t recursion_depth) const;
 };
 
 struct Interface {
@@ -752,6 +765,97 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
     return interface;
 }
 
+static bool is_wrappable_type(Type const& type)
+{
+    if (type.name == "Node")
+        return true;
+    if (type.name == "Document")
+        return true;
+    if (type.name == "Text")
+        return true;
+    if (type.name == "DocumentType")
+        return true;
+    if (type.name.ends_with("Element"))
+        return true;
+    if (type.name.ends_with("Event"))
+        return true;
+    if (type.name == "ImageData")
+        return true;
+    if (type.name == "Window")
+        return true;
+    if (type.name == "Range")
+        return true;
+    if (type.name == "Selection")
+        return true;
+    if (type.name == "Attribute")
+        return true;
+    if (type.name == "NamedNodeMap")
+        return true;
+    if (type.name == "TextMetrics")
+        return true;
+    return false;
+}
+
+static StringView sequence_storage_type_to_cpp_storage_type_name(SequenceStorageType sequence_storage_type)
+{
+    switch (sequence_storage_type) {
+    case SequenceStorageType::Vector:
+        return "Vector"sv;
+    case SequenceStorageType::MarkedValueList:
+        return "JS::MarkedValueList"sv;
+    case SequenceStorageType::MarkedVector:
+        return "JS::MarkedVector"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+static CppType idl_type_name_to_cpp_type(Type const& type)
+{
+    if (is_wrappable_type(type)) {
+        if (type.nullable)
+            return { .name = String::formatted("RefPtr<{}>", type.name), .sequence_storage_type = SequenceStorageType::Vector };
+
+        return { .name = String::formatted("NonnullRefPtr<{}>", type.name), .sequence_storage_type = SequenceStorageType::Vector };
+    }
+
+    if (type.is_string())
+        return { .name = "String", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "double" && !type.nullable)
+        return { .name = "double", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "boolean" && !type.nullable)
+        return { .name = "bool", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "unsigned long" && !type.nullable)
+        return { .name = "u32", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "unsigned short" && !type.nullable)
+        return { .name = "u16", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "long" && !type.nullable)
+        return { .name = "i32", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "any")
+        return { .name = "JS::Value", .sequence_storage_type = SequenceStorageType::MarkedValueList };
+
+    if (type.name == "sequence") {
+        auto& parameterized_type = verify_cast<ParameterizedType>(type);
+        auto& sequence_type = parameterized_type.parameters.first();
+        auto sequence_cpp_type = idl_type_name_to_cpp_type(sequence_type);
+        auto storage_type_name = sequence_storage_type_to_cpp_storage_type_name(sequence_cpp_type.sequence_storage_type);
+
+        if (sequence_cpp_type.sequence_storage_type == SequenceStorageType::MarkedValueList || sequence_cpp_type.sequence_storage_type == SequenceStorageType::MarkedVector)
+            return { .name = storage_type_name, .sequence_storage_type = SequenceStorageType::Vector };
+
+        return { .name = String::formatted("{}<{}>", storage_type_name, sequence_cpp_type.name), .sequence_storage_type = SequenceStorageType::Vector };
+    }
+
+    dbgln("Unimplemented type for idl_type_name_to_cpp_type: {}{}", type.name, type.nullable ? "?" : "");
+    TODO();
+}
+
 }
 
 static void generate_constructor_header(IDL::Interface const&);
@@ -914,42 +1018,12 @@ static bool should_emit_wrapper_factory(IDL::Interface const& interface)
     return true;
 }
 
-static bool is_wrappable_type(IDL::Type const& type)
-{
-    if (type.name == "Node")
-        return true;
-    if (type.name == "Document")
-        return true;
-    if (type.name == "Text")
-        return true;
-    if (type.name == "DocumentType")
-        return true;
-    if (type.name.ends_with("Element"))
-        return true;
-    if (type.name.ends_with("Event"))
-        return true;
-    if (type.name == "ImageData")
-        return true;
-    if (type.name == "Window")
-        return true;
-    if (type.name == "Range")
-        return true;
-    if (type.name == "Selection")
-        return true;
-    if (type.name == "Attribute")
-        return true;
-    if (type.name == "NamedNodeMap")
-        return true;
-    if (type.name == "TextMetrics")
-        return true;
-    return false;
-}
-
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false)
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0)
 {
     auto scoped_generator = generator.fork();
-    scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
+    auto acceptable_cpp_name = make_input_acceptable_cpp(cpp_name);
+    scoped_generator.set("cpp_name", acceptable_cpp_name);
     scoped_generator.set("js_name", js_name);
     scoped_generator.set("js_suffix", js_suffix);
     scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
@@ -1028,7 +1102,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
 )~~~");
         }
-    } else if (is_wrappable_type(*parameter.type)) {
+    } else if (IDL::is_wrappable_type(*parameter.type)) {
         if (!parameter.type->nullable) {
             scoped_generator.append(R"~~~(
     auto @cpp_name@_object = TRY(@js_name@@js_suffix@.to_object(global_object));
@@ -1222,6 +1296,29 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             VERIFY(dictionaries.contains(current_dictionary->parent_name));
             current_dictionary = &dictionaries.find(current_dictionary->parent_name)->value;
         }
+    } else if (parameter.type->name == "sequence") {
+        // https://webidl.spec.whatwg.org/#es-sequence
+
+        auto sequence_generator = scoped_generator.fork();
+        auto& parameterized_type = verify_cast<IDL::ParameterizedType>(*parameter.type);
+        sequence_generator.set("recursion_depth", String::number(recursion_depth));
+
+        // An ECMAScript value V is converted to an IDL sequence<T> value as follows:
+        // 1. If Type(V) is not Object, throw a TypeError.
+        // 2. Let method be ? GetMethod(V, @@iterator).
+        // 3. If method is undefined, throw a TypeError.
+        // 4. Return the result of creating a sequence from V and method.
+
+        sequence_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_object())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
+
+    auto* iterator_method@recursion_depth@ = TRY(@js_name@@js_suffix@.get_method(global_object, *vm.well_known_symbol_iterator()));
+    if (!iterator_method@recursion_depth@)
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotIterable, @js_name@@js_suffix@.to_string_without_side_effects());
+)~~~");
+
+        parameterized_type.generate_sequence_from_iterable(sequence_generator, acceptable_cpp_name, String::formatted("{}{}", js_name, js_suffix), String::formatted("iterator_method{}", recursion_depth), dictionaries, recursion_depth + 1);
     } else {
         dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type->name);
         VERIFY_NOT_REACHED();
@@ -1273,6 +1370,61 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
     }
 
     arguments_builder.join(", ", parameter_names);
+}
+
+// https://webidl.spec.whatwg.org/#create-sequence-from-iterable
+void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, size_t recursion_depth) const
+{
+    auto sequence_generator = generator.fork();
+    sequence_generator.set("cpp_name", cpp_name);
+    sequence_generator.set("iterable_cpp_name", iterable_cpp_name);
+    sequence_generator.set("iterator_method_cpp_name", iterator_method_cpp_name);
+    sequence_generator.set("recursion_depth", String::number(recursion_depth));
+    auto sequence_cpp_type = idl_type_name_to_cpp_type(parameters.first());
+    sequence_generator.set("sequence.type", sequence_cpp_type.name);
+    sequence_generator.set("sequence.storage_type", sequence_storage_type_to_cpp_storage_type_name(sequence_cpp_type.sequence_storage_type));
+
+    // To create an IDL value of type sequence<T> given an iterable iterable and an iterator getter method, perform the following steps:
+    // 1. Let iter be ? GetIterator(iterable, sync, method).
+    // 2. Initialize i to be 0.
+    // 3. Repeat
+    //      1. Let next be ? IteratorStep(iter).
+    //      2. If next is false, then return an IDL sequence value of type sequence<T> of length i, where the value of the element at index j is Sj.
+    //      3. Let nextItem be ? IteratorValue(next).
+    //      4. Initialize Si to the result of converting nextItem to an IDL value of type T.
+    //      5. Set i to i + 1.
+
+    sequence_generator.append(R"~~~(
+    auto iterator@recursion_depth@ = TRY(JS::get_iterator(global_object, @iterable_cpp_name@, JS::IteratorHint::Sync, @iterator_method_cpp_name@));
+)~~~");
+
+    if (sequence_cpp_type.sequence_storage_type == SequenceStorageType::Vector) {
+        sequence_generator.append(R"~~~(
+    @sequence.storage_type@<@sequence.type@> @cpp_name@;
+)~~~");
+    } else {
+        sequence_generator.append(R"~~~(
+    @sequence.storage_type@ @cpp_name@ { global_object.heap() };
+)~~~");
+    }
+
+    sequence_generator.append(R"~~~(
+    for (;;) {
+        auto* next@recursion_depth@ = TRY(JS::iterator_step(global_object, iterator@recursion_depth@));
+        if (!next@recursion_depth@)
+            break;
+
+        auto next_item@recursion_depth@ = TRY(JS::iterator_value(global_object, *next@recursion_depth@));
+)~~~");
+
+    // FIXME: Sequences types should be TypeWithExtendedAttributes, which would allow us to get [LegacyNullToEmptyString] here.
+    IDL::Parameter parameter { .type = parameters.first(), .name = iterable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
+    generate_to_cpp(sequence_generator, parameter, "next_item", String::number(recursion_depth), String::formatted("sequence_item{}", recursion_depth), dictionaries, false, false, {}, false, recursion_depth);
+
+    sequence_generator.append(R"~~~(
+        @cpp_name@.append(sequence_item@recursion_depth@);
+    }
+)~~~");
 }
 
 enum class WrappingReference {
@@ -2500,6 +2652,7 @@ void generate_constructor_implementation(IDL::Interface const& interface)
     generator.append(R"~~~(
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
@@ -2774,6 +2927,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
