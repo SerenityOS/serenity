@@ -182,15 +182,16 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     load_kernel_symbol_table();
 
+    s_bsp_processor.initialize(0);
+
+    CommandLine::initialize();
+    Memory::MemoryManager::initialize(0);
+
     DeviceManagement::initialize();
     SysFSComponentRegistry::initialize();
     DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());
     DeviceManagement::the().attach_console_device(*ConsoleDevice::must_create());
     DeviceManagement::the().attach_device_control_device(*DeviceControlDevice::must_create());
-    s_bsp_processor.initialize(0);
-
-    CommandLine::initialize();
-    Memory::MemoryManager::initialize(0);
 
     MM.unmap_prekernel();
 
