@@ -10,18 +10,12 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibUnicode/Locale.h>
 
 namespace JS::Intl {
 
 class DisplayNames final : public Object {
     JS_OBJECT(DisplayNames, Object);
-
-    enum class Style {
-        Invalid,
-        Narrow,
-        Short,
-        Long,
-    };
 
     enum class Type {
         Invalid,
@@ -51,9 +45,9 @@ public:
     String const& locale() const { return m_locale; }
     void set_locale(String locale) { m_locale = move(locale); }
 
-    Style style() const { return m_style; }
-    void set_style(StringView style);
-    StringView style_string() const;
+    Unicode::Style style() const { return m_style; }
+    void set_style(StringView style) { m_style = Unicode::style_from_string(style); }
+    StringView style_string() const { return Unicode::style_to_string(m_style); }
 
     Type type() const { return m_type; }
     void set_type(StringView type);
@@ -70,7 +64,7 @@ public:
 
 private:
     String m_locale;                                 // [[Locale]]
-    Style m_style { Style::Invalid };                // [[Style]]
+    Unicode::Style m_style { Unicode::Style::Long }; // [[Style]]
     Type m_type { Type::Invalid };                   // [[Type]]
     Fallback m_fallback { Fallback::Invalid };       // [[Fallback]]
     Optional<LanguageDisplay> m_language_display {}; // [[LanguageDisplay]]
