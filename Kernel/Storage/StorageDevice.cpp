@@ -105,6 +105,12 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
         remaining = 0;
     }
 
+    // We try to allocate the temporary block buffer for partial writes *before* we start any full block writes,
+    // to try and prevent partial writes
+    Optional<ByteBuffer> partial_write_block;
+    if (remaining > 0)
+        partial_write_block = TRY(ByteBuffer::create_zeroed(block_size()));
+
     dbgln_if(STORAGE_DEVICE_DEBUG, "StorageDevice::write() index={}, whole_blocks={}, remaining={}", index, whole_blocks, remaining);
 
     if (whole_blocks > 0) {
@@ -129,10 +135,7 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
     // partial write, we have to read the block's content first, modify it,
     // then write the whole block back to the disk.
     if (remaining > 0) {
-        // FIXME: Do something sensible with this OOM scenario.
-        auto data = ByteBuffer::create_zeroed(block_size()).release_value_but_fixme_should_propagate_errors();
-        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
-
+        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(partial_write_block->data());
         {
             auto read_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size()));
             auto result = read_request->wait();
@@ -151,7 +154,7 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
             }
         }
 
-        TRY(inbuf.read(data.data(), pos, remaining));
+        TRY(inbuf.read(partial_write_block->data(), pos, remaining));
 
         {
             auto write_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index + whole_blocks, 1, data_buffer, block_size()));
