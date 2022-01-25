@@ -323,7 +323,7 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
         return 0;
     }
 
-    if (const auto& regions = address_space().find_regions_intersecting(range_to_mprotect); regions.size()) {
+    if (const auto& regions = TRY(address_space().find_regions_intersecting(range_to_mprotect)); regions.size()) {
         size_t full_size_found = 0;
         // Check that all intersecting regions are compatible.
         for (const auto* region : regions) {
