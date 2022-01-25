@@ -354,14 +354,14 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
     return fits ? str.length() : 0;
 }
 
-long timezone;
-long altzone;
-char* tzname[2];
-int daylight;
-
 static char __tzname_standard[TZNAME_MAX];
 static char __tzname_daylight[TZNAME_MAX];
 constexpr const char* __utc = "UTC";
+
+long timezone = 0;
+long altzone = 0;
+char* tzname[2] = { const_cast<char*>(__utc), const_cast<char*>(__utc) };
+int daylight = 0;
 
 void tzset()
 {
