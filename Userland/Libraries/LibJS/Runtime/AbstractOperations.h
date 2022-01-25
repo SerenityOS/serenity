@@ -54,13 +54,11 @@ ThrowCompletionOr<Value> perform_eval(Value, GlobalObject&, CallerMode, EvalMode
 ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict);
 
 // 7.3.14 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
-template<typename... Args>
 ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, MarkedValueList arguments_list)
 {
     return call_impl(global_object, function, this_value, move(arguments_list));
 }
 
-template<typename... Args>
 ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Optional<MarkedValueList> arguments_list)
 {
     return call_impl(global_object, function, this_value, move(arguments_list));
@@ -78,13 +76,11 @@ ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value f
     return call_impl(global_object, function, this_value);
 }
 
-template<typename... Args>
 ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, MarkedValueList arguments_list)
 {
     return call_impl(global_object, function, this_value, move(arguments_list));
 }
 
-template<typename... Args>
 ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments_list)
 {
     return call_impl(global_object, function, this_value, move(arguments_list));
