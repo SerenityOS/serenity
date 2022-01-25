@@ -40,6 +40,13 @@ Length Length::make_px(float value)
     return Length(value, Type::Px);
 }
 
+Length Length::make_calculated(NonnullRefPtr<CalculatedStyleValue> calculated_style_value)
+{
+    Length length { 0, Type::Calculated };
+    length.m_calculated_style = move(calculated_style_value);
+    return length;
+}
+
 Length Length::percentage_of(Percentage const& percentage) const
 {
     if (is_undefined_or_auto()) {
@@ -69,11 +76,6 @@ Length Length::resolved_or_auto(Layout::Node const& layout_node) const
 Length Length::resolved_or_zero(Layout::Node const& layout_node) const
 {
     return resolved(make_px(0), layout_node);
-}
-
-void Length::set_calculated_style(CalculatedStyleValue* value)
-{
-    m_calculated_style = value;
 }
 
 float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const

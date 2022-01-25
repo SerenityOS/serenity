@@ -43,6 +43,7 @@ public:
 
     static Length make_auto();
     static Length make_px(float value);
+    static Length make_calculated(NonnullRefPtr<CalculatedStyleValue>);
     Length percentage_of(Percentage const&) const;
 
     Length resolved(Length const& fallback_for_undefined, Layout::Node const& layout_node) const;
@@ -130,8 +131,6 @@ public:
     {
         return !(*this == other);
     }
-
-    void set_calculated_style(CalculatedStyleValue* value);
 
     float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const;
 
