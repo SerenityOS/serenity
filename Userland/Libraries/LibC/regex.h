@@ -83,6 +83,7 @@ enum __RegexAllFlags {
     __Regex_SkipTrimEmptyMatches = __Regex_Global << 13,     // Do not remove empty capture group results.
     __Regex_Internal_Stateful = __Regex_Global << 14,        // Internal flag; enables stateful matches.
     __Regex_Internal_BrowserExtended = __Regex_Global << 15, // Internal flag; enable browser-specific ECMA262 extensions.
+    __Regex_Internal_ConsiderNewline = __Regex_Global << 16, // Internal flag; allow matchers to consider newlines as line separators.
     __Regex_Last = __Regex_SkipTrimEmptyMatches
 };
 
@@ -97,7 +98,6 @@ enum __RegexAllFlags {
 #define REG_NOTBOL __Regex_MatchNotBeginOfLine // The circumflex character (^), when taken as a special character, will not match the beginning of string.
 #define REG_NOTEOL __Regex_MatchNotEndOfLine   // The dollar sign ($), when taken as a special character, will not match the end of string.
 
-//static_assert (sizeof(FlagsUnderlyingType) * 8 >= regex::POSIXFlags::Last << 1), "flags type too small")
 #define REG_SEARCH __Regex_Last << 1
 
 int regcomp(regex_t*, const char*, int);

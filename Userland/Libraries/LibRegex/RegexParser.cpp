@@ -194,7 +194,8 @@ Parser::Result Parser::parse(Optional<AllOptions> regex_options)
         move(m_parser_state.match_length_minimum),
         move(m_parser_state.error),
         move(m_parser_state.error_token),
-        m_parser_state.named_capture_groups.keys()
+        m_parser_state.named_capture_groups.keys(),
+        m_parser_state.regex_options,
     };
 }
 
