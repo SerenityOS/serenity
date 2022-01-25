@@ -189,7 +189,7 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
         return {};
     }
 
-    if (const auto& regions = address_space().find_regions_intersecting(range_to_remap); regions.size()) {
+    if (const auto& regions = TRY(address_space().find_regions_intersecting(range_to_remap)); regions.size()) {
         size_t full_size_found = 0;
         // Check that all intersecting regions are compatible.
         for (const auto* region : regions) {

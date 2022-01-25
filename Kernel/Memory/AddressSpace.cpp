@@ -81,7 +81,7 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
     }
 
     // Try again while checking multiple regions at a time.
-    auto const& regions = find_regions_intersecting(range_to_unmap);
+    auto const& regions = TRY(find_regions_intersecting(range_to_unmap));
     if (regions.is_empty())
         return {};
 
@@ -237,7 +237,7 @@ Region* AddressSpace::find_region_containing(VirtualRange const& range)
     return (*candidate)->range().contains(range) ? candidate->ptr() : nullptr;
 }
 
-Vector<Region*> AddressSpace::find_regions_intersecting(VirtualRange const& range)
+ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange const& range)
 {
     Vector<Region*> regions = {};
     size_t total_size_collected = 0;
@@ -250,7 +250,7 @@ Vector<Region*> AddressSpace::find_regions_intersecting(VirtualRange const& rang
     for (auto iter = m_regions.begin_from((*found_region)->vaddr().get()); !iter.is_end(); ++iter) {
         const auto& iter_range = (*iter)->range();
         if (iter_range.base() < range.end() && iter_range.end() > range.base()) {
-            regions.append(*iter);
+            TRY(regions.try_append(*iter));
 
             total_size_collected += (*iter)->size() - iter_range.intersect(range).size();
             if (total_size_collected == range.size())
