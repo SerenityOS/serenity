@@ -187,7 +187,7 @@ ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<const gid_t*> us
     HashTable<gid_t> unique_extra_gids;
     for (auto& extra_gid : new_extra_gids) {
         if (extra_gid != gid())
-            unique_extra_gids.set(extra_gid);
+            TRY(unique_extra_gids.try_set(extra_gid));
     }
 
     ProtectedDataMutationScope scope { *this };
