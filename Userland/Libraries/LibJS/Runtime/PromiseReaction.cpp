@@ -6,7 +6,6 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PromiseReaction.h>
 
@@ -59,9 +58,7 @@ ThrowCompletionOr<PromiseCapability> new_promise_capability(GlobalObject& global
     executor->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
     // 6. Let promise be ? Construct(C, « executor »).
-    MarkedValueList arguments(vm.heap());
-    arguments.append(executor);
-    auto* promise = TRY(construct(global_object, constructor.as_function(), move(arguments)));
+    auto* promise = TRY(construct(global_object, constructor.as_function(), executor));
 
     // 7. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
     if (!promise_capability_functions.resolve.is_function())

@@ -148,13 +148,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     auto length = TRY(length_of_array_like(global_object, *array_like));
 
     Object* array;
-    if (constructor.is_constructor()) {
-        MarkedValueList arguments(vm.heap());
-        arguments.empend(length);
-        array = TRY(JS::construct(global_object, constructor.as_function(), move(arguments)));
-    } else {
+    if (constructor.is_constructor())
+        array = TRY(JS::construct(global_object, constructor.as_function(), Value(length)));
+    else
         array = TRY(Array::create(global_object, length));
-    }
 
     for (size_t k = 0; k < length; ++k) {
         auto k_value = TRY(array_like->get(k));
@@ -183,13 +180,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 {
     auto this_value = vm.this_value(global_object);
     Object* array;
-    if (this_value.is_constructor()) {
-        MarkedValueList arguments(vm.heap());
-        arguments.empend(vm.argument_count());
-        array = TRY(JS::construct(global_object, this_value.as_function(), move(arguments)));
-    } else {
+    if (this_value.is_constructor())
+        array = TRY(JS::construct(global_object, this_value.as_function(), Value(vm.argument_count())));
+    else
         array = TRY(Array::create(global_object, vm.argument_count()));
-    }
     for (size_t k = 0; k < vm.argument_count(); ++k)
         TRY(array->create_data_property_or_throw(k, vm.argument(k)));
     TRY(array->set(vm.names.length, Value(vm.argument_count()), Object::ShouldThrowExceptions::Yes));

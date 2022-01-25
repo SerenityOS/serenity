@@ -63,10 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     auto new_length = max(final - first, 0.0);
 
     auto* constructor = TRY(species_constructor(global_object, *array_buffer_object, *global_object.array_buffer_constructor()));
-
-    MarkedValueList arguments(vm.heap());
-    arguments.append(Value(new_length));
-    auto* new_array_buffer = TRY(construct(global_object, *constructor, move(arguments)));
+    auto* new_array_buffer = TRY(construct(global_object, *constructor, Value(new_length)));
 
     if (!is<ArrayBuffer>(new_array_buffer))
         return vm.throw_completion<TypeError>(global_object, ErrorType::SpeciesConstructorDidNotCreate, "an ArrayBuffer");
