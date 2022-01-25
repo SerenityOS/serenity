@@ -21,7 +21,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DateTimeFormat.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatConstructor.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibTimeZone/TimeZone.h>
@@ -890,11 +889,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
 
 static ThrowCompletionOr<Intl::DateTimeFormat*> construct_date_time_format(GlobalObject& global_object, Value locales, Value options)
 {
-    MarkedValueList arguments { global_object.vm().heap() };
-    arguments.append(locales);
-    arguments.append(options);
-
-    auto* date_time_format = TRY(construct(global_object, *global_object.intl_date_time_format_constructor(), move(arguments)));
+    auto* date_time_format = TRY(construct(global_object, *global_object.intl_date_time_format_constructor(), locales, options));
     return static_cast<Intl::DateTimeFormat*>(date_time_format);
 }
 

@@ -110,11 +110,8 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObj
     // 18. Set relativeTimeFormat.[[Numeric]] to numeric.
     relative_time_format.set_numeric(numeric.as_string().string());
 
-    MarkedValueList arguments { vm.heap() };
-    arguments.append(js_string(vm, locale));
-
     // 19. Let relativeTimeFormat.[[NumberFormat]] be ! Construct(%NumberFormat%, « locale »).
-    auto* number_format = MUST(construct(global_object, *global_object.intl_number_format_constructor(), move(arguments)));
+    auto* number_format = MUST(construct(global_object, *global_object.intl_number_format_constructor(), js_string(vm, locale)));
     relative_time_format.set_number_format(static_cast<NumberFormat*>(number_format));
 
     // 20. Let relativeTimeFormat.[[PluralRules]] be ! Construct(%PluralRules%, « locale »).

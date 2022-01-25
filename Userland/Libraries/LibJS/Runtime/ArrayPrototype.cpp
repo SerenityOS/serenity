@@ -142,9 +142,7 @@ static ThrowCompletionOr<Object*> array_species_create(GlobalObject& global_obje
     if (!constructor.is_constructor())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
 
-    MarkedValueList arguments(vm.heap());
-    arguments.append(Value(length));
-    return TRY(construct(global_object, constructor.as_function(), move(arguments)));
+    return TRY(construct(global_object, constructor.as_function(), Value(length)));
 }
 
 // 23.1.3.8 Array.prototype.filter ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.filter
