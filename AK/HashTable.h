@@ -205,6 +205,12 @@ public:
         rehash(capacity * 2);
     }
 
+    ErrorOr<void> try_ensure_capacity(size_t capacity)
+    {
+        VERIFY(capacity >= size());
+        return try_rehash(capacity * 2);
+    }
+
     [[nodiscard]] bool contains(T const& value) const
     {
         return find(value) != end();
