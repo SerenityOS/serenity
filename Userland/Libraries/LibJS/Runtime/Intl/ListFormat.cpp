@@ -9,7 +9,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/IteratorOperations.h>
-#include <LibUnicode/Locale.h>
 
 namespace JS::Intl {
 
@@ -41,33 +40,6 @@ StringView ListFormat::type_string() const
         return "disjunction"sv;
     case Type::Unit:
         return "unit"sv;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
-void ListFormat::set_style(StringView style)
-{
-    if (style == "narrow"sv) {
-        m_style = Style::Narrow;
-    } else if (style == "short"sv) {
-        m_style = Style::Short;
-    } else if (style == "long"sv) {
-        m_style = Style::Long;
-    } else {
-        VERIFY_NOT_REACHED();
-    }
-}
-
-StringView ListFormat::style_string() const
-{
-    switch (m_style) {
-    case Style::Narrow:
-        return "narrow"sv;
-    case Style::Short:
-        return "short"sv;
-    case Style::Long:
-        return "long"sv;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -123,7 +95,7 @@ Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables plac
 // 13.1.2 CreatePartsFromList ( listFormat, list ), https://tc39.es/ecma402/#sec-createpartsfromlist
 Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, Vector<String> const& list)
 {
-    auto list_patterns = Unicode::get_locale_list_patterns(list_format.locale(), list_format.type_string(), list_format.style_string());
+    auto list_patterns = Unicode::get_locale_list_patterns(list_format.locale(), list_format.type_string(), list_format.style());
     if (!list_patterns.has_value())
         return {};
 

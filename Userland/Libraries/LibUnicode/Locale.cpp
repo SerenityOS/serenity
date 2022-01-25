@@ -775,7 +775,6 @@ Optional<CalendarName> __attribute__((weak)) calendar_name_from_string(StringVie
 Optional<DateField> __attribute__((weak)) date_field_from_string(StringView) { return {}; }
 Optional<Key> __attribute__((weak)) key_from_string(StringView) { return {}; }
 Optional<ListPatternType> __attribute__((weak)) list_pattern_type_from_string(StringView) { return {}; }
-Optional<ListPatternStyle> __attribute__((weak)) list_pattern_style_from_string(StringView) { return {}; }
 Optional<DisplayPattern> __attribute__((weak)) get_locale_display_patterns(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_language_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_territory_mapping(StringView, StringView) { return {}; }
@@ -844,7 +843,7 @@ Vector<StringView> get_locale_key_mapping_list(StringView locale, StringView key
     return {};
 }
 
-Optional<ListPatterns> __attribute__((weak)) get_locale_list_patterns(StringView, StringView, StringView) { return {}; }
+Optional<ListPatterns> __attribute__((weak)) get_locale_list_patterns(StringView, StringView, Style) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_language_alias(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_territory_alias(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_script_tag_alias(StringView) { return {}; }
