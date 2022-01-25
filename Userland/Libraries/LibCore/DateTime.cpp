@@ -105,7 +105,7 @@ String DateTime::to_string(const String& format) const
     StringBuilder builder;
     const int format_len = format.length();
 
-    auto format_time_zone_offset = [&]() {
+    auto format_time_zone_offset = [&](bool with_separator) {
         auto offset_seconds = -timezone;
         StringView offset_sign;
 
@@ -118,8 +118,9 @@ String DateTime::to_string(const String& format) const
 
         auto offset_hours = offset_seconds / 3600;
         auto offset_minutes = (offset_seconds % 3600) / 60;
+        auto separator = with_separator ? ":"sv : ""sv;
 
-        builder.appendff("{}{:02}{:02}", offset_sign, offset_hours, offset_minutes);
+        builder.appendff("{}{:02}{}{:02}", offset_sign, offset_hours, separator, offset_minutes);
     };
 
     for (int i = 0; i < format_len; ++i) {
@@ -235,7 +236,15 @@ String DateTime::to_string(const String& format) const
                 builder.appendff("{}", tm.tm_year + 1900);
                 break;
             case 'z':
-                format_time_zone_offset();
+                format_time_zone_offset(false);
+                break;
+            case ':':
+                if (++i == format_len)
+                    return String::empty();
+                if (format[i] != 'z')
+                    return String::empty();
+
+                format_time_zone_offset(true);
                 break;
             case '%':
                 builder.append('%');
