@@ -2091,17 +2091,52 @@ RefPtr<StyleValue> Parser::parse_builtin_value(StyleComponentValueRule const& co
     return {};
 }
 
+RefPtr<StyleValue> Parser::parse_calculated_value(Vector<StyleComponentValueRule> const& component_values)
+{
+    auto calc_expression = parse_calc_expression(component_values);
+    if (calc_expression == nullptr)
+        return nullptr;
+
+    auto calc_type = calc_expression->resolved_type();
+    if (!calc_type.has_value()) {
+        dbgln("calc() resolved as invalid!!!");
+        return nullptr;
+    }
+
+    [[maybe_unused]] auto to_string = [](CalculatedStyleValue::ResolvedType type) {
+        switch (type) {
+        case CalculatedStyleValue::ResolvedType::Angle:
+            return "Angle"sv;
+        case CalculatedStyleValue::ResolvedType::Frequency:
+            return "Frequency"sv;
+        case CalculatedStyleValue::ResolvedType::Integer:
+            return "Integer"sv;
+        case CalculatedStyleValue::ResolvedType::Length:
+            return "Length"sv;
+        case CalculatedStyleValue::ResolvedType::Number:
+            return "Number"sv;
+        case CalculatedStyleValue::ResolvedType::Percentage:
+            return "Percentage"sv;
+        case CalculatedStyleValue::ResolvedType::Time:
+            return "Time"sv;
+        }
+        VERIFY_NOT_REACHED();
+    };
+    dbgln_if(CSS_PARSER_DEBUG, "Deduced calc() resolved type as: {}", to_string(calc_type.value()));
+
+    // FIXME: Either produce a string value of calc() here, or do so in CalculatedStyleValue::to_string().
+    return CalculatedStyleValue::create("(FIXME:calc to string)", calc_expression.release_nonnull(), calc_type.release_value());
+}
+
 RefPtr<StyleValue> Parser::parse_dynamic_value(StyleComponentValueRule const& component_value)
 {
     if (component_value.is_function()) {
         auto& function = component_value.function();
 
-        if (function.name().equals_ignoring_case("calc")) {
-            auto calc_expression = parse_calc_expression(function.values());
-            // FIXME: Either produce a string value of calc() here, or do so in CalculatedStyleValue::to_string().
-            if (calc_expression)
-                return CalculatedStyleValue::create("(FIXME:calc to string)", calc_expression.release_nonnull());
-        } else if (function.name().equals_ignoring_case("var")) {
+        if (function.name().equals_ignoring_case("calc"))
+            return parse_calculated_value(function.values());
+
+        if (function.name().equals_ignoring_case("var")) {
             // Declarations using `var()` should already be parsed as an UnresolvedStyleValue before this point.
             VERIFY_NOT_REACHED();
         }
@@ -4189,7 +4224,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
     // Note: The default value is not used or passed around.
     auto product_with_operator = make<CalculatedStyleValue::CalcProductPartWithOperator>(
         CalculatedStyleValue::ProductOperation::Multiply,
-        CalculatedStyleValue::CalcNumberValue(0));
+        CalculatedStyleValue::CalcNumberValue { 0 });
 
     tokens.skip_whitespace();
 
@@ -4227,7 +4262,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
     // Note: The default value is not used or passed around.
     auto number_product_with_operator = make<CalculatedStyleValue::CalcNumberProductPartWithOperator>(
         CalculatedStyleValue::ProductOperation::Multiply,
-        CalculatedStyleValue::CalcNumberValue(0));
+        CalculatedStyleValue::CalcNumberValue { 0 });
 
     tokens.skip_whitespace();
 
@@ -4259,7 +4294,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
 OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_product(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto calc_number_product = make<CalculatedStyleValue::CalcNumberProduct>(
-        CalculatedStyleValue::CalcNumberValue(0),
+        CalculatedStyleValue::CalcNumberValue { 0 },
         NonnullOwnPtrVector<CalculatedStyleValue::CalcNumberProductPartWithOperator> {});
 
     auto first_calc_number_value_or_error = parse_calc_number_value(tokens);
@@ -4330,20 +4365,20 @@ Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(
         auto block_values = TokenStream(first.block().values());
         auto calc_number_sum = parse_calc_number_sum(block_values);
         if (calc_number_sum)
-            return { calc_number_sum.release_nonnull() };
+            return CalculatedStyleValue::CalcNumberValue { calc_number_sum.release_nonnull() };
     }
 
     if (!first.is(Token::Type::Number))
         return {};
     tokens.next_token();
 
-    return first.token().number_value();
+    return CalculatedStyleValue::CalcNumberValue { static_cast<float>(first.token().number_value()) };
 }
 
 OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto calc_product = make<CalculatedStyleValue::CalcProduct>(
-        CalculatedStyleValue::CalcValue(0),
+        CalculatedStyleValue::CalcValue { 0 },
         NonnullOwnPtrVector<CalculatedStyleValue::CalcProductPartWithOperator> {});
 
     auto first_calc_value_or_error = parse_calc_value(tokens);

@@ -654,6 +654,16 @@ private:
 
 class CalculatedStyleValue : public StyleValue {
 public:
+    enum class ResolvedType {
+        Angle,
+        Frequency,
+        Integer,
+        Length,
+        Number,
+        Percentage,
+        Time,
+    };
+
     struct CalcSum;
     struct CalcSumPartWithOperator;
     struct CalcProduct;
@@ -663,8 +673,15 @@ public:
     struct CalcNumberProduct;
     struct CalcNumberProductPartWithOperator;
 
-    using CalcNumberValue = Variant<float, NonnullOwnPtr<CalcNumberSum>>;
-    using CalcValue = Variant<float, CSS::Length, NonnullOwnPtr<CalcSum>>;
+    struct CalcNumberValue {
+        Variant<float, NonnullOwnPtr<CalcNumberSum>> value;
+        Optional<ResolvedType> resolved_type() const;
+    };
+
+    struct CalcValue {
+        Variant<float, CSS::Length, NonnullOwnPtr<CalcSum>> value;
+        Optional<ResolvedType> resolved_type() const;
+    };
 
     enum class SumOperation {
         Add,
@@ -683,6 +700,8 @@ public:
 
         NonnullOwnPtr<CalcProduct> first_calc_product;
         NonnullOwnPtrVector<CalcSumPartWithOperator> zero_or_more_additional_calc_products;
+
+        Optional<ResolvedType> resolved_type() const;
     };
 
     struct CalcNumberSum {
@@ -692,63 +711,80 @@ public:
 
         NonnullOwnPtr<CalcNumberProduct> first_calc_number_product;
         NonnullOwnPtrVector<CalcNumberSumPartWithOperator> zero_or_more_additional_calc_number_products;
+
+        Optional<ResolvedType> resolved_type() const;
     };
 
     struct CalcProduct {
         CalcValue first_calc_value;
         NonnullOwnPtrVector<CalcProductPartWithOperator> zero_or_more_additional_calc_values;
+
+        Optional<ResolvedType> resolved_type() const;
     };
 
     struct CalcSumPartWithOperator {
         CalcSumPartWithOperator(SumOperation op, NonnullOwnPtr<CalcProduct> calc_product)
             : op(op)
-            , calc_product(move(calc_product)) {};
+            , value(move(calc_product)) {};
 
         SumOperation op;
-        NonnullOwnPtr<CalcProduct> calc_product;
+        NonnullOwnPtr<CalcProduct> value;
+
+        Optional<ResolvedType> resolved_type() const;
     };
 
     struct CalcProductPartWithOperator {
         ProductOperation op;
         Variant<CalcValue, CalcNumberValue> value;
+
+        Optional<ResolvedType> resolved_type() const;
     };
 
     struct CalcNumberProduct {
         CalcNumberValue first_calc_number_value;
         NonnullOwnPtrVector<CalcNumberProductPartWithOperator> zero_or_more_additional_calc_number_values;
+
+        Optional<ResolvedType> resolved_type() const;
     };
 
     struct CalcNumberProductPartWithOperator {
         ProductOperation op;
         CalcNumberValue value;
+
+        Optional<ResolvedType> resolved_type() const;
     };
 
     struct CalcNumberSumPartWithOperator {
         CalcNumberSumPartWithOperator(SumOperation op, NonnullOwnPtr<CalcNumberProduct> calc_number_product)
             : op(op)
-            , calc_number_product(move(calc_number_product)) {};
+            , value(move(calc_number_product)) {};
 
         SumOperation op;
-        NonnullOwnPtr<CalcNumberProduct> calc_number_product;
+        NonnullOwnPtr<CalcNumberProduct> value;
+
+        Optional<ResolvedType> resolved_type() const;
     };
 
-    static NonnullRefPtr<CalculatedStyleValue> create(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum)
+    static NonnullRefPtr<CalculatedStyleValue> create(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
     {
-        return adopt_ref(*new CalculatedStyleValue(expression_string, move(calc_sum)));
+        return adopt_ref(*new CalculatedStyleValue(expression_string, move(calc_sum), resolved_type));
     }
 
     String to_string() const override { return m_expression_string; }
+    ResolvedType resolved_type() const { return m_resolved_type; }
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
 
 private:
-    explicit CalculatedStyleValue(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum)
+    explicit CalculatedStyleValue(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
         : StyleValue(Type::Calculated)
+        , m_resolved_type(resolved_type)
         , m_expression_string(expression_string)
         , m_expression(move(calc_sum))
     {
     }
 
+    ResolvedType m_resolved_type;
     String m_expression_string;
     NonnullOwnPtr<CalcSum> m_expression;
 };
