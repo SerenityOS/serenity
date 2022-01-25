@@ -289,7 +289,7 @@ Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout
 
 static float resolve_calc_value(CalculatedStyleValue::CalcValue const& calc_value, Layout::Node const& layout_node)
 {
-    return calc_value.visit(
+    return calc_value.value.visit(
         [](float value) { return value; },
         [&](Length const& length) {
             return length.resolved_or_zero(layout_node).to_px(layout_node);
@@ -325,7 +325,7 @@ static float resolve_calc_number_sum(NonnullOwnPtr<CalculatedStyleValue::CalcNum
     auto value = resolve_calc_number_product(calc_number_sum->first_calc_number_product);
 
     for (auto& additional_product : calc_number_sum->zero_or_more_additional_calc_number_products) {
-        auto additional_value = resolve_calc_number_product(additional_product.calc_number_product);
+        auto additional_value = resolve_calc_number_product(additional_product.value);
         if (additional_product.op == CSS::CalculatedStyleValue::SumOperation::Add)
             value += additional_value;
         else if (additional_product.op == CSS::CalculatedStyleValue::SumOperation::Subtract)
@@ -339,7 +339,7 @@ static float resolve_calc_number_sum(NonnullOwnPtr<CalculatedStyleValue::CalcNum
 
 static float resolve_calc_number_value(CalculatedStyleValue::CalcNumberValue const& number_value)
 {
-    return number_value.visit(
+    return number_value.value.visit(
         [](float number) { return number; },
         [](NonnullOwnPtr<CalculatedStyleValue::CalcNumberSum> const& calc_number_sum) {
             return resolve_calc_number_sum(calc_number_sum);
@@ -374,7 +374,7 @@ static float resolve_calc_sum(NonnullOwnPtr<CalculatedStyleValue::CalcSum> const
     auto value = resolve_calc_product(calc_sum->first_calc_product, layout_node);
 
     for (auto& additional_product : calc_sum->zero_or_more_additional_calc_products) {
-        auto additional_value = resolve_calc_product(additional_product.calc_product, layout_node);
+        auto additional_value = resolve_calc_product(additional_product.value, layout_node);
         if (additional_product.op == CalculatedStyleValue::SumOperation::Add)
             value += additional_value;
         else if (additional_product.op == CalculatedStyleValue::SumOperation::Subtract)
@@ -384,6 +384,174 @@ static float resolve_calc_sum(NonnullOwnPtr<CalculatedStyleValue::CalcSum> const
     }
 
     return value;
+}
+
+static bool is_number(CalculatedStyleValue::ResolvedType type)
+{
+    return type == CalculatedStyleValue::ResolvedType::Number || type == CalculatedStyleValue::ResolvedType::Integer;
+}
+
+static bool is_dimension(CalculatedStyleValue::ResolvedType type)
+{
+    return type != CalculatedStyleValue::ResolvedType::Number
+        && type != CalculatedStyleValue::ResolvedType::Integer
+        && type != CalculatedStyleValue::ResolvedType::Percentage;
+}
+
+template<typename SumWithOperator>
+static Optional<CalculatedStyleValue::ResolvedType> resolve_sum_type(CalculatedStyleValue::ResolvedType first_type, NonnullOwnPtrVector<SumWithOperator> const& zero_or_more_additional_products)
+{
+    auto type = first_type;
+
+    for (auto const& product : zero_or_more_additional_products) {
+        auto maybe_product_type = product.resolved_type();
+        if (!maybe_product_type.has_value())
+            return {};
+        auto product_type = maybe_product_type.value();
+
+        // At + or -, check that both sides have the same type, or that one side is a <number> and the other is an <integer>.
+        // If both sides are the same type, resolve to that type.
+        if (product_type == type)
+            continue;
+
+        // If one side is a <number> and the other is an <integer>, resolve to <number>.
+        if (is_number(type) && is_number(product_type)) {
+            type = CalculatedStyleValue::ResolvedType::Number;
+            continue;
+        }
+
+        // FIXME: calc() handles <percentage> by allowing them to pretend to be whatever <dimension> type is allowed at this location.
+        //        Since we can't easily check what that type is, we just allow <percentage> to combine with any other <dimension> type.
+        if (type == CalculatedStyleValue::ResolvedType::Percentage && is_dimension(product_type)) {
+            type = product_type;
+            continue;
+        }
+        if (is_dimension(type) && product_type == CalculatedStyleValue::ResolvedType::Percentage)
+            continue;
+
+        return {};
+    }
+    return type;
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcSum::resolved_type() const
+{
+    auto maybe_type = first_calc_product->resolved_type();
+    if (!maybe_type.has_value())
+        return {};
+    auto type = maybe_type.value();
+    return resolve_sum_type(type, zero_or_more_additional_calc_products);
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberSum::resolved_type() const
+{
+    auto maybe_type = first_calc_number_product->resolved_type();
+    if (!maybe_type.has_value())
+        return {};
+    auto type = maybe_type.value();
+    return resolve_sum_type(type, zero_or_more_additional_calc_number_products);
+}
+
+template<typename ProductWithOperator>
+static Optional<CalculatedStyleValue::ResolvedType> resolve_product_type(CalculatedStyleValue::ResolvedType first_type, NonnullOwnPtrVector<ProductWithOperator> const& zero_or_more_additional_values)
+{
+    auto type = first_type;
+
+    for (auto const& value : zero_or_more_additional_values) {
+        auto maybe_value_type = value.resolved_type();
+        if (!maybe_value_type.has_value())
+            return {};
+        auto value_type = maybe_value_type.value();
+
+        if (value.op == CalculatedStyleValue::ProductOperation::Multiply) {
+            // At *, check that at least one side is <number>.
+            if (!(is_number(type) || is_number(value_type)))
+                return {};
+            // If both sides are <integer>, resolve to <integer>.
+            if (type == CalculatedStyleValue::ResolvedType::Integer && value_type == CalculatedStyleValue::ResolvedType::Integer) {
+                type = CalculatedStyleValue::ResolvedType::Integer;
+            } else {
+                // Otherwise, resolve to the type of the other side.
+                if (is_number(type))
+                    type = value_type;
+            }
+
+            continue;
+        } else {
+            VERIFY(value.op == CalculatedStyleValue::ProductOperation::Divide);
+            // At /, check that the right side is <number>.
+            if (!is_number(value_type))
+                return {};
+            // If the left side is <integer>, resolve to <number>.
+            if (type == CalculatedStyleValue::ResolvedType::Integer) {
+                type = CalculatedStyleValue::ResolvedType::Number;
+            } else {
+                // Otherwise, resolve to the type of the left side.
+            }
+
+            // FIXME: Division by zero makes the whole calc() expression invalid.
+        }
+    }
+    return type;
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcProduct::resolved_type() const
+{
+    auto maybe_type = first_calc_value.resolved_type();
+    if (!maybe_type.has_value())
+        return {};
+    auto type = maybe_type.value();
+    return resolve_product_type(type, zero_or_more_additional_calc_values);
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcSumPartWithOperator::resolved_type() const
+{
+    return value->resolved_type();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberProduct::resolved_type() const
+{
+    auto maybe_type = first_calc_number_value.resolved_type();
+    if (!maybe_type.has_value())
+        return {};
+    auto type = maybe_type.value();
+    return resolve_product_type(type, zero_or_more_additional_calc_number_values);
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberProductPartWithOperator::resolved_type() const
+{
+    return value.resolved_type();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberSumPartWithOperator::resolved_type() const
+{
+    return value->resolved_type();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcProductPartWithOperator::resolved_type() const
+{
+    return value.visit(
+        [](CalcValue const& calc_value) {
+            return calc_value.resolved_type();
+        },
+        [](CalcNumberValue const& calc_number_value) {
+            return calc_number_value.resolved_type();
+        });
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::resolved_type() const
+{
+    return value.visit(
+        [](float) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Number }; },
+        [](Length const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Length }; },
+        [](NonnullOwnPtr<CalcSum> const& sum) { return sum->resolved_type(); });
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberValue::resolved_type() const
+{
+    return value.visit(
+        [](float) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Number }; },
+        [](NonnullOwnPtr<CalcNumberSum> const& sum) { return sum->resolved_type(); });
 }
 
 // https://www.w3.org/TR/css-color-4/#serializing-sRGB-values

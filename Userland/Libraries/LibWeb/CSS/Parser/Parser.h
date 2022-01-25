@@ -213,6 +213,7 @@ private:
     RefPtr<StyleValue> parse_css_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_builtin_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_dynamic_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_calculated_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_dimension_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_numeric_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_identifier_value(StyleComponentValueRule const&);
