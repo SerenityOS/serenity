@@ -246,6 +246,9 @@ String DateTime::to_string(const String& format) const
 
                 format_time_zone_offset(true);
                 break;
+            case 'Z':
+                builder.append(tzname[0]);
+                break;
             case '%':
                 builder.append('%');
                 break;
