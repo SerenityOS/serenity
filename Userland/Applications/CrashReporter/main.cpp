@@ -297,10 +297,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             size_t thread_index = 0;
             coredump->for_each_thread_info([&](auto& thread_info) {
                 results.thread_backtraces.append(build_backtrace(*coredump, thread_info, thread_index, [&](size_t frame_index, size_t frame_count) {
-                    window->set_progress(100.0f * (float)(frame_index + 1) / (float)frame_count);
-                    progressbar.set_value(frame_index + 1);
-                    progressbar.set_max(frame_count);
-                    Core::EventLoop::wake();
+                    Core::EventLoop::with_main_locked([&](auto& main) {
+                        main->deferred_invoke([&] {
+                            window->set_progress(100.0f * (float)(frame_index + 1) / (float)frame_count);
+                            progressbar.set_value(frame_index + 1);
+                            progressbar.set_max(frame_count);
+                        });
+                    });
                 }));
                 results.thread_cpu_registers.append(build_cpu_registers(thread_info, thread_index));
                 ++thread_index;
