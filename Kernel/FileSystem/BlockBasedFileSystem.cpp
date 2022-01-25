@@ -212,7 +212,7 @@ ErrorOr<void> BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned coun
     return {};
 }
 
-ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, size_t offset, bool allow_cache) const
+ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, u64 offset, bool allow_cache) const
 {
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
@@ -221,7 +221,7 @@ ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuf
     return m_cache.with_exclusive([&](auto& cache) -> ErrorOr<void> {
         if (!allow_cache) {
             const_cast<BlockBasedFileSystem*>(this)->flush_specific_block_if_needed(index);
-            auto base_offset = index.value() * block_size() + offset;
+            u64 base_offset = index.value() * block_size() + offset;
             auto nread = TRY(file_description().read(*buffer, base_offset, count));
             VERIFY(nread == count);
             return {};
