@@ -91,7 +91,7 @@ public:
 
     bool has_watchers() const { return !m_watchers.is_empty(); }
 
-    void register_watcher(Badge<InodeWatcher>, InodeWatcher&);
+    ErrorOr<void> register_watcher(Badge<InodeWatcher>, InodeWatcher&);
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
 
     ErrorOr<NonnullRefPtr<FIFO>> fifo();
