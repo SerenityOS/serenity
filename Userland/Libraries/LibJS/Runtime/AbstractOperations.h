@@ -65,11 +65,11 @@ ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value f
 }
 
 template<typename... Args>
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Args... args)
+ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Args&&... args)
 {
     if constexpr (sizeof...(Args) > 0) {
         MarkedValueList arguments_list { global_object.heap() };
-        (..., arguments_list.append(move(args)));
+        (..., arguments_list.append(forward<Args>(args)));
         return call_impl(global_object, function, this_value, move(arguments_list));
     }
 
@@ -87,11 +87,11 @@ ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Functio
 }
 
 template<typename... Args>
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Args... args)
+ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Args&&... args)
 {
     if constexpr (sizeof...(Args) > 0) {
         MarkedValueList arguments_list { global_object.heap() };
-        (..., arguments_list.append(move(args)));
+        (..., arguments_list.append(forward<Args>(args)));
         return call_impl(global_object, function, this_value, move(arguments_list));
     }
 
