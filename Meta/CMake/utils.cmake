@@ -194,3 +194,19 @@ function(invoke_generator name generator version_file prefix header implementati
     add_custom_target("generate_${prefix}${name}" DEPENDS "${header}" "${implementation}")
     add_dependencies(all_generated "generate_${prefix}${name}")
 endfunction()
+
+function(download_file url path)
+    if (NOT EXISTS "${path}")
+        get_filename_component(file "${path}" NAME)
+        message(STATUS "Downloading file ${file} from ${url}")
+
+        file(DOWNLOAD "${url}" "${path}" INACTIVITY_TIMEOUT 10 STATUS download_result)
+        list(GET download_result 0 status_code)
+        list(GET download_result 1 error_message)
+
+        if (NOT status_code EQUAL 0)
+            file(REMOVE "${path}")
+            message(FATAL_ERROR "Failed to download ${url}: ${error_message}")
+        endif()
+    endif()
+endfunction()
