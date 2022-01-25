@@ -35,7 +35,7 @@ protected:
     ErrorOr<void> raw_read_blocks(BlockIndex index, size_t count, UserOrKernelBuffer&);
     ErrorOr<void> raw_write_blocks(BlockIndex index, size_t count, const UserOrKernelBuffer&);
 
-    ErrorOr<void> write_block(BlockIndex, const UserOrKernelBuffer&, size_t count, size_t offset = 0, bool allow_cache = true);
+    ErrorOr<void> write_block(BlockIndex, const UserOrKernelBuffer&, size_t count, u64 offset = 0, bool allow_cache = true);
     ErrorOr<void> write_blocks(BlockIndex, unsigned count, const UserOrKernelBuffer&, bool allow_cache = true);
 
     u64 m_logical_block_size { 512 };
