@@ -773,9 +773,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             maybe_length = font_size->to_length();
 
         } else if (font_size->is_calculated()) {
-            Length length = Length(0, Length::Type::Calculated);
-            length.set_calculated_style(verify_cast<CalculatedStyleValue>(font_size.ptr()));
-            maybe_length = length;
+            maybe_length = Length::make_calculated(font_size->as_calculated());
         }
         if (maybe_length.has_value()) {
             // FIXME: Support font-size: calc(...)

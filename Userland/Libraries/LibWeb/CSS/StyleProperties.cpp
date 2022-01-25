@@ -54,11 +54,8 @@ Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fal
         return fallback;
     auto& value = maybe_value.value();
 
-    if (value->is_calculated()) {
-        Length length = Length(0, Length::Type::Calculated);
-        length.set_calculated_style(&value->as_calculated());
-        return length;
-    }
+    if (value->is_calculated())
+        return Length::make_calculated(value->as_calculated());
 
     if (value->has_length())
         return value->to_length();
@@ -75,9 +72,7 @@ LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID 
 
     if (value->is_calculated()) {
         // FIXME: Handle percentages here
-        Length length = Length(0, Length::Type::Calculated);
-        length.set_calculated_style(&value->as_calculated());
-        return length;
+        return Length::make_calculated(value->as_calculated());
     }
 
     if (value->is_percentage())
