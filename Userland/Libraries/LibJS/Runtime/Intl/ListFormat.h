@@ -13,6 +13,7 @@
 #include <AK/Vector.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibUnicode/Locale.h>
 
 namespace JS::Intl {
 
@@ -27,13 +28,6 @@ public:
         Unit,
     };
 
-    enum class Style {
-        Invalid,
-        Narrow,
-        Short,
-        Long,
-    };
-
     ListFormat(Object& prototype);
     virtual ~ListFormat() override = default;
 
@@ -44,14 +38,14 @@ public:
     void set_type(StringView type);
     StringView type_string() const;
 
-    Style style() const { return m_style; }
-    void set_style(StringView style);
-    StringView style_string() const;
+    Unicode::Style style() const { return m_style; }
+    void set_style(StringView style) { m_style = Unicode::style_from_string(style); }
+    StringView style_string() const { return Unicode::style_to_string(m_style); }
 
 private:
-    String m_locale;                  // [[Locale]]
-    Type m_type { Type::Invalid };    // [[Type]]
-    Style m_style { Style::Invalid }; // [[Style]]
+    String m_locale;                                 // [[Locale]]
+    Type m_type { Type::Invalid };                   // [[Type]]
+    Unicode::Style m_style { Unicode::Style::Long }; // [[Style]]
 };
 
 using Placeables = HashMap<StringView, Variant<PatternPartition, Vector<PatternPartition>>>;

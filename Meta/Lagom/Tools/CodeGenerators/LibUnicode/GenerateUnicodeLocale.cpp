@@ -131,7 +131,7 @@ struct AK::Formatter<ListPatterns> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, ListPatterns const& patterns)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ ListPatternType::{}, ListPatternStyle::{}, {}, {}, {}, {} }}",
+            "{{ ListPatternType::{}, Style::{}, {}, {}, {}, {} }}",
             format_identifier({}, patterns.type),
             format_identifier({}, patterns.style),
             patterns.start,
@@ -217,7 +217,6 @@ struct UnicodeLocaleData {
     };
     Vector<String> keywords { "ca"sv, "nu"sv }; // FIXME: These should be parsed from BCP47. https://unicode-org.atlassian.net/browse/CLDR-15158
     Vector<String> list_pattern_types;
-    Vector<String> list_pattern_styles;
     HashMap<String, StringIndexType> language_aliases;
     HashMap<String, StringIndexType> territory_aliases;
     HashMap<String, StringIndexType> script_aliases;
@@ -507,8 +506,6 @@ static ErrorOr<void> parse_locale_list_patterns(String misc_path, UnicodeLocaleD
 
         if (!locale_data.list_pattern_types.contains_slow(type))
             locale_data.list_pattern_types.append(type);
-        if (!locale_data.list_pattern_styles.contains_slow(style))
-            locale_data.list_pattern_styles.append(style);
 
         ListPatterns list_pattern { type, style, start, middle, end, pair };
         list_patterns.append(locale_data.unique_list_patterns.ensure(move(list_pattern)));
@@ -953,7 +950,6 @@ namespace Unicode {
     generate_enum(generator, format_identifier, "Key"sv, {}, locale_data.keywords);
     generate_enum(generator, format_identifier, "Variant"sv, {}, locale_data.variants);
     generate_enum(generator, format_identifier, "ListPatternType"sv, {}, locale_data.list_pattern_types);
-    generate_enum(generator, format_identifier, "ListPatternStyle"sv, {}, locale_data.list_pattern_styles);
 
     generator.append(R"~~~(
 }
@@ -1003,7 +999,7 @@ struct DisplayPatternImpl {
 
 struct Patterns {
     ListPatternType type;
-    ListPatternStyle style;
+    Style style;
     @string_index_type@ start { 0 };
     @string_index_type@ middle { 0 };
     @string_index_type@ end { 0 };
@@ -1356,7 +1352,6 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     append_alias_search("subdivision"sv, locale_data.subdivision_aliases);
 
     append_from_string("ListPatternType"sv, "list_pattern_type"sv, locale_data.list_pattern_types);
-    append_from_string("ListPatternStyle"sv, "list_pattern_style"sv, locale_data.list_pattern_styles);
 
     generator.append(R"~~~(
 Optional<DisplayPattern> get_locale_display_patterns(StringView locale)
@@ -1372,7 +1367,7 @@ Optional<DisplayPattern> get_locale_display_patterns(StringView locale)
     return display_patterns.to_display_pattern();
 }
 
-Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView list_pattern_type, StringView list_pattern_style)
+Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView list_pattern_type, Style list_pattern_style)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
@@ -1380,10 +1375,6 @@ Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView li
 
     auto type_value = list_pattern_type_from_string(list_pattern_type);
     if (!type_value.has_value())
-        return {};
-
-    auto style_value = list_pattern_style_from_string(list_pattern_style);
-    if (!style_value.has_value())
         return {};
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
@@ -1394,7 +1385,7 @@ Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView li
     for (auto list_patterns_index : locale_list_patterns) {
         auto const& list_patterns = s_list_patterns.at(list_patterns_index);
 
-        if ((list_patterns.type == type_value) && (list_patterns.style == style_value)) {
+        if ((list_patterns.type == type_value) && (list_patterns.style == list_pattern_style)) {
             auto const& start = s_string_list[list_patterns.start];
             auto const& middle = s_string_list[list_patterns.middle];
             auto const& end = s_string_list[list_patterns.end];
