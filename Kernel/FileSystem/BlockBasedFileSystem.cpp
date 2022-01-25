@@ -131,7 +131,7 @@ ErrorOr<void> BlockBasedFileSystem::initialize()
     return {};
 }
 
-ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
+ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, u64 offset, bool allow_cache)
 {
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
@@ -147,7 +147,7 @@ ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKe
     return m_cache.with_exclusive([&](auto& cache) -> ErrorOr<void> {
         if (!allow_cache) {
             flush_specific_block_if_needed(index);
-            auto base_offset = index.value() * block_size() + offset;
+            u64 base_offset = index.value() * block_size() + offset;
             auto nwritten = TRY(file_description().write(base_offset, data, count));
             VERIFY(nwritten == count);
             return {};
