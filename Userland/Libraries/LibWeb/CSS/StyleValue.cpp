@@ -309,9 +309,9 @@ static float resolve_calc_number_product(NonnullOwnPtr<CalculatedStyleValue::Cal
 
     for (auto& additional_number_value : calc_number_product->zero_or_more_additional_calc_number_values) {
         auto additional_value = resolve_calc_number_value(additional_number_value.value);
-        if (additional_number_value.op == CalculatedStyleValue::CalcNumberProductPartWithOperator::Multiply)
+        if (additional_number_value.op == CalculatedStyleValue::ProductOperation::Multiply)
             value *= additional_value;
-        else if (additional_number_value.op == CalculatedStyleValue::CalcNumberProductPartWithOperator::Divide)
+        else if (additional_number_value.op == CalculatedStyleValue::ProductOperation::Divide)
             value /= additional_value;
         else
             VERIFY_NOT_REACHED();
@@ -326,9 +326,9 @@ static float resolve_calc_number_sum(NonnullOwnPtr<CalculatedStyleValue::CalcNum
 
     for (auto& additional_product : calc_number_sum->zero_or_more_additional_calc_number_products) {
         auto additional_value = resolve_calc_number_product(additional_product.calc_number_product);
-        if (additional_product.op == CSS::CalculatedStyleValue::CalcNumberSumPartWithOperator::Add)
+        if (additional_product.op == CSS::CalculatedStyleValue::SumOperation::Add)
             value += additional_value;
-        else if (additional_product.op == CSS::CalculatedStyleValue::CalcNumberSumPartWithOperator::Subtract)
+        else if (additional_product.op == CSS::CalculatedStyleValue::SumOperation::Subtract)
             value -= additional_value;
         else
             VERIFY_NOT_REACHED();
@@ -353,13 +353,13 @@ static float resolve_calc_product(NonnullOwnPtr<CalculatedStyleValue::CalcProduc
     for (auto& additional_value : calc_product->zero_or_more_additional_calc_values) {
         additional_value.value.visit(
             [&](CalculatedStyleValue::CalcValue const& calc_value) {
-                if (additional_value.op != CalculatedStyleValue::CalcProductPartWithOperator::Multiply)
+                if (additional_value.op != CalculatedStyleValue::ProductOperation::Multiply)
                     VERIFY_NOT_REACHED();
                 auto resolved_value = resolve_calc_value(calc_value, layout_node);
                 value *= resolved_value;
             },
             [&](CalculatedStyleValue::CalcNumberValue const& calc_number_value) {
-                if (additional_value.op != CalculatedStyleValue::CalcProductPartWithOperator::Divide)
+                if (additional_value.op != CalculatedStyleValue::ProductOperation::Divide)
                     VERIFY_NOT_REACHED();
                 auto resolved_calc_number_value = resolve_calc_number_value(calc_number_value);
                 value /= resolved_calc_number_value;
@@ -375,9 +375,9 @@ static float resolve_calc_sum(NonnullOwnPtr<CalculatedStyleValue::CalcSum> const
 
     for (auto& additional_product : calc_sum->zero_or_more_additional_calc_products) {
         auto additional_value = resolve_calc_product(additional_product.calc_product, layout_node);
-        if (additional_product.op == CalculatedStyleValue::CalcSumPartWithOperator::Operation::Add)
+        if (additional_product.op == CalculatedStyleValue::SumOperation::Add)
             value += additional_value;
-        else if (additional_product.op == CalculatedStyleValue::CalcSumPartWithOperator::Operation::Subtract)
+        else if (additional_product.op == CalculatedStyleValue::SumOperation::Subtract)
             value -= additional_value;
         else
             VERIFY_NOT_REACHED();
