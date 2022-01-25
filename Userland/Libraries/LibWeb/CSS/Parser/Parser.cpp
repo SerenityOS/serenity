@@ -4188,7 +4188,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
 {
     // Note: The default value is not used or passed around.
     auto product_with_operator = make<CalculatedStyleValue::CalcProductPartWithOperator>(
-        CalculatedStyleValue::CalcProductPartWithOperator::Multiply,
+        CalculatedStyleValue::ProductOperation::Multiply,
         CalculatedStyleValue::CalcNumberValue(0));
 
     tokens.skip_whitespace();
@@ -4201,7 +4201,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
     if (op == "*"sv) {
         tokens.next_token();
         tokens.skip_whitespace();
-        product_with_operator->op = CalculatedStyleValue::CalcProductPartWithOperator::Multiply;
+        product_with_operator->op = CalculatedStyleValue::ProductOperation::Multiply;
         auto parsed_calc_value = parse_calc_value(tokens);
         if (!parsed_calc_value.has_value())
             return nullptr;
@@ -4210,7 +4210,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
     } else if (op == "/"sv) {
         tokens.next_token();
         tokens.skip_whitespace();
-        product_with_operator->op = CalculatedStyleValue::CalcProductPartWithOperator::Divide;
+        product_with_operator->op = CalculatedStyleValue::ProductOperation::Divide;
         auto parsed_calc_number_value = parse_calc_number_value(tokens);
         if (!parsed_calc_number_value.has_value())
             return nullptr;
@@ -4226,7 +4226,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
 {
     // Note: The default value is not used or passed around.
     auto number_product_with_operator = make<CalculatedStyleValue::CalcNumberProductPartWithOperator>(
-        CalculatedStyleValue::CalcNumberProductPartWithOperator::Multiply,
+        CalculatedStyleValue::ProductOperation::Multiply,
         CalculatedStyleValue::CalcNumberValue(0));
 
     tokens.skip_whitespace();
@@ -4239,11 +4239,11 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
     if (op == "*"sv) {
         tokens.next_token();
         tokens.skip_whitespace();
-        number_product_with_operator->op = CalculatedStyleValue::CalcNumberProductPartWithOperator::Multiply;
+        number_product_with_operator->op = CalculatedStyleValue::ProductOperation::Multiply;
     } else if (op == "/"sv) {
         tokens.next_token();
         tokens.skip_whitespace();
-        number_product_with_operator->op = CalculatedStyleValue::CalcNumberProductPartWithOperator::Divide;
+        number_product_with_operator->op = CalculatedStyleValue::ProductOperation::Divide;
     } else {
         return nullptr;
     }
@@ -4287,12 +4287,12 @@ OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_n
     auto& token = tokens.next_token();
     tokens.skip_whitespace();
 
-    CalculatedStyleValue::CalcNumberSumPartWithOperator::Operation op;
+    CalculatedStyleValue::SumOperation op;
     auto delim = token.token().delim();
     if (delim == "+"sv)
-        op = CalculatedStyleValue::CalcNumberSumPartWithOperator::Operation::Add;
+        op = CalculatedStyleValue::SumOperation::Add;
     else if (delim == "-"sv)
-        op = CalculatedStyleValue::CalcNumberSumPartWithOperator::Operation::Subtract;
+        op = CalculatedStyleValue::SumOperation::Subtract;
     else
         return nullptr;
 
@@ -4373,12 +4373,12 @@ OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_par
     auto& token = tokens.next_token();
     tokens.skip_whitespace();
 
-    CalculatedStyleValue::CalcSumPartWithOperator::Operation op;
+    CalculatedStyleValue::SumOperation op;
     auto delim = token.token().delim();
     if (delim == "+"sv)
-        op = CalculatedStyleValue::CalcSumPartWithOperator::Operation::Add;
+        op = CalculatedStyleValue::SumOperation::Add;
     else if (delim == "-"sv)
-        op = CalculatedStyleValue::CalcSumPartWithOperator::Operation::Subtract;
+        op = CalculatedStyleValue::SumOperation::Subtract;
     else
         return nullptr;
 

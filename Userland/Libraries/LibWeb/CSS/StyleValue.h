@@ -666,6 +666,15 @@ public:
     using CalcNumberValue = Variant<float, NonnullOwnPtr<CalcNumberSum>>;
     using CalcValue = Variant<float, CSS::Length, NonnullOwnPtr<CalcSum>>;
 
+    enum class SumOperation {
+        Add,
+        Subtract,
+    };
+    enum class ProductOperation {
+        Multiply,
+        Divide,
+    };
+
     // This represents that: https://www.w3.org/TR/css-values-3/#calc-syntax
     struct CalcSum {
         CalcSum(NonnullOwnPtr<CalcProduct> first_calc_product, NonnullOwnPtrVector<CalcSumPartWithOperator> additional)
@@ -691,24 +700,16 @@ public:
     };
 
     struct CalcSumPartWithOperator {
-        enum Operation {
-            Add,
-            Subtract,
-        };
-
-        CalcSumPartWithOperator(Operation op, NonnullOwnPtr<CalcProduct> calc_product)
+        CalcSumPartWithOperator(SumOperation op, NonnullOwnPtr<CalcProduct> calc_product)
             : op(op)
             , calc_product(move(calc_product)) {};
 
-        Operation op;
+        SumOperation op;
         NonnullOwnPtr<CalcProduct> calc_product;
     };
 
     struct CalcProductPartWithOperator {
-        enum {
-            Multiply,
-            Divide,
-        } op;
+        ProductOperation op;
         Variant<CalcValue, CalcNumberValue> value;
     };
 
@@ -718,24 +719,16 @@ public:
     };
 
     struct CalcNumberProductPartWithOperator {
-        enum {
-            Multiply,
-            Divide,
-        } op;
+        ProductOperation op;
         CalcNumberValue value;
     };
 
     struct CalcNumberSumPartWithOperator {
-        enum Operation {
-            Add,
-            Subtract,
-        };
-
-        CalcNumberSumPartWithOperator(Operation op, NonnullOwnPtr<CalcNumberProduct> calc_number_product)
+        CalcNumberSumPartWithOperator(SumOperation op, NonnullOwnPtr<CalcNumberProduct> calc_number_product)
             : op(op)
             , calc_number_product(move(calc_number_product)) {};
 
-        Operation op;
+        SumOperation op;
         NonnullOwnPtr<CalcNumberProduct> calc_number_product;
     };
 
