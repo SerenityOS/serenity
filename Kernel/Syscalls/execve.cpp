@@ -691,7 +691,7 @@ static ErrorOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_execut
             if (first_page[i] == ' ') {
                 if (word_length > 0) {
                     auto word = TRY(KString::try_create(StringView { &first_page[word_start], word_length }));
-                    interpreter_words.append(move(word));
+                    TRY(interpreter_words.try_append(move(word)));
                 }
                 word_length = 0;
                 word_start = i + 1;
@@ -700,7 +700,7 @@ static ErrorOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_execut
 
         if (word_length > 0) {
             auto word = TRY(KString::try_create(StringView { &first_page[word_start], word_length }));
-            interpreter_words.append(move(word));
+            TRY(interpreter_words.try_append(move(word)));
         }
 
         if (!interpreter_words.is_empty())
