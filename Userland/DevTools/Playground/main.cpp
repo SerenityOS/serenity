@@ -165,6 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 GUI::MessageBox::show(window, "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
                 return;
             }
+            window->set_modified(false);
             update_title();
             return;
         }
@@ -229,8 +230,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
         auto formatted_gml = GUI::format_gml(source);
-        if (!formatted_gml.is_null()) {
+        if (!formatted_gml.is_null() && formatted_gml != source) {
             editor->set_text(formatted_gml);
+            window->set_modified(true);
+            update_title();
         } else {
             GUI::MessageBox::show(
                 window,
