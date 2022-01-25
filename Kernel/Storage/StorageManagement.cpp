@@ -28,7 +28,7 @@ namespace Kernel {
 static Singleton<StorageManagement> s_the;
 static Atomic<u32> s_device_minor_number;
 
-static constexpr StringView partition_uuid_prefix = "PARTUUID="sv;
+static constexpr StringView partition_uuid_prefix = "PARTUUID:"sv;
 
 UNMAP_AFTER_INIT StorageManagement::StorageManagement()
 {
