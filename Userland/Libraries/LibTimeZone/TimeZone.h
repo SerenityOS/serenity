@@ -31,6 +31,7 @@ struct NamedOffset : public Offset {
     String name;
 };
 
+StringView system_time_zone();
 StringView current_time_zone();
 ErrorOr<void> change_time_zone(StringView time_zone);
 Span<StringView const> all_time_zones();

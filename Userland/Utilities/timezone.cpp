@@ -32,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (time_zone.is_empty()) {
-        outln("{}", TimeZone::current_time_zone());
+        outln("{}", TimeZone::system_time_zone());
         return 0;
     }
 
