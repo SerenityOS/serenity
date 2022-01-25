@@ -26,7 +26,7 @@ public:
 protected:
     explicit BlockBasedFileSystem(OpenFileDescription&);
 
-    ErrorOr<void> read_block(BlockIndex, UserOrKernelBuffer*, size_t count, size_t offset = 0, bool allow_cache = true) const;
+    ErrorOr<void> read_block(BlockIndex, UserOrKernelBuffer*, size_t count, u64 offset = 0, bool allow_cache = true) const;
     ErrorOr<void> read_blocks(BlockIndex, unsigned count, UserOrKernelBuffer&, bool allow_cache = true) const;
 
     ErrorOr<void> raw_read(BlockIndex, UserOrKernelBuffer&);
