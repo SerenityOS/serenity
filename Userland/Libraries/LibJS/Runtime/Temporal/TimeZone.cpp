@@ -90,8 +90,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(GlobalObject& global_obje
     }
     // 5. Else,
     else {
-        // a. Set object.[[Identifier]] to ! FormatTimeZoneOffsetString(identifier).
-        // TODO: `identifier` is wrong here. See: https://github.com/tc39/proposal-temporal/pull/2010
+        // a. Set object.[[Identifier]] to ! FormatTimeZoneOffsetString(offsetNanosecondsResult.[[Value]]).
         object->set_identifier(format_time_zone_offset_string(offset_nanoseconds_result.value()));
 
         // b. Set object.[[OffsetNanoseconds]] to offsetNanosecondsResult.[[Value]].
