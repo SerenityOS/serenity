@@ -741,6 +741,31 @@ bool is_locale_available(StringView locale)
     return locale_from_string(locale).has_value();
 }
 
+Style style_from_string(StringView style)
+{
+    if (style == "narrow"sv)
+        return Style::Narrow;
+    if (style == "short"sv)
+        return Style::Short;
+    if (style == "long"sv)
+        return Style::Long;
+    VERIFY_NOT_REACHED();
+}
+
+StringView style_to_string(Style style)
+{
+    switch (style) {
+    case Style::Narrow:
+        return "narrow"sv;
+    case Style::Short:
+        return "short"sv;
+    case Style::Long:
+        return "long"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 Optional<Locale> __attribute__((weak)) locale_from_string(StringView) { return {}; }
 Optional<Language> __attribute__((weak)) language_from_string(StringView) { return {}; }
 Optional<Territory> __attribute__((weak)) territory_from_string(StringView) { return {}; }
