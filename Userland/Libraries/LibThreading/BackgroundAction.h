@@ -56,10 +56,10 @@ private:
         , m_action(move(action))
         , m_on_complete(move(on_complete))
     {
-        enqueue_work([this] {
+        enqueue_work([this, origin_event_loop = &Core::EventLoop::current()] {
             m_result = m_action(*this);
             if (m_on_complete) {
-                deferred_invoke([this] {
+                origin_event_loop->deferred_invoke([this] {
                     m_on_complete(m_result.release_value());
                     remove_from_parent();
                 });
