@@ -498,7 +498,7 @@ private:
             process_object.add("amount_virtual", process.address_space().amount_virtual());
             process_object.add("amount_resident", process.address_space().amount_resident());
             process_object.add("amount_dirty_private", process.address_space().amount_dirty_private());
-            process_object.add("amount_clean_inode", process.address_space().amount_clean_inode());
+            process_object.add("amount_clean_inode", TRY(process.address_space().amount_clean_inode()));
             process_object.add("amount_shared", process.address_space().amount_shared());
             process_object.add("amount_purgeable_volatile", process.address_space().amount_purgeable_volatile());
             process_object.add("amount_purgeable_nonvolatile", process.address_space().amount_purgeable_nonvolatile());
