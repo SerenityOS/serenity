@@ -10,7 +10,6 @@
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatFunction.h>
 #include <LibUnicode/CurrencyCode.h>
-#include <LibUnicode/Locale.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -140,34 +139,6 @@ StringView NumberFormat::currency_sign_string() const
         return "standard"sv;
     case CurrencySign::Accounting:
         return "accounting"sv;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
-void NumberFormat::set_unit_display(StringView unit_display)
-{
-    if (unit_display == "short"sv)
-        m_unit_display = UnitDisplay::Short;
-    else if (unit_display == "narrow"sv)
-        m_unit_display = UnitDisplay::Narrow;
-    else if (unit_display == "long"sv)
-        m_unit_display = UnitDisplay::Long;
-    else
-        VERIFY_NOT_REACHED();
-}
-
-StringView NumberFormat::unit_display_string() const
-{
-    VERIFY(m_unit_display.has_value());
-
-    switch (*m_unit_display) {
-    case UnitDisplay::Short:
-        return "short"sv;
-    case UnitDisplay::Narrow:
-        return "narrow"sv;
-    case UnitDisplay::Long:
-        return "long"sv;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -1293,20 +1264,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
         //     i. Let unit be "fallback".
         // e. Let patterns be patterns.[[<unit>]].
         // f. Let patterns be patterns.[[<unitDisplay>]].
-        Vector<Unicode::NumberFormat> formats;
-
-        switch (number_format.unit_display()) {
-        case NumberFormat::UnitDisplay::Long:
-            formats = Unicode::get_unit_formats(number_format.data_locale(), number_format.unit(), Unicode::Style::Long);
-            break;
-        case NumberFormat::UnitDisplay::Short:
-            formats = Unicode::get_unit_formats(number_format.data_locale(), number_format.unit(), Unicode::Style::Short);
-            break;
-        case NumberFormat::UnitDisplay::Narrow:
-            formats = Unicode::get_unit_formats(number_format.data_locale(), number_format.unit(), Unicode::Style::Narrow);
-            break;
-        }
-
+        auto formats = Unicode::get_unit_formats(number_format.data_locale(), number_format.unit(), number_format.unit_display());
         patterns = Unicode::select_pattern_with_plurality(formats, number);
         break;
     }
