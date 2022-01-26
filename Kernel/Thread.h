@@ -1412,7 +1412,7 @@ private:
     };
 
     void yield_without_releasing_big_lock(VerifyLockNotHeld verify_lock_not_held = VerifyLockNotHeld::Yes);
-    void drop_thread_count(bool);
+    void drop_thread_count();
 
     mutable IntrusiveListNode<Thread> m_global_thread_list_node;
 

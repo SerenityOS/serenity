@@ -512,14 +512,13 @@ void Thread::finalize()
         }
     }
 
-    drop_thread_count(false);
+    drop_thread_count();
 }
 
-void Thread::drop_thread_count(bool initializing_first_thread)
+void Thread::drop_thread_count()
 {
     bool is_last = process().remove_thread(*this);
-
-    if (!initializing_first_thread && is_last)
+    if (is_last)
         process().finalize();
 }
 
