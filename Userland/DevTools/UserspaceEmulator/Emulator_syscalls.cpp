@@ -1107,7 +1107,8 @@ int Emulator::virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t size)
 
 int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unused]] FlatPtr arg)
 {
-    if (request == TIOCGWINSZ) {
+    switch (request) {
+    case TIOCGWINSZ: {
         struct winsize ws;
         int rc = syscall(SC_ioctl, fd, TIOCGWINSZ, &ws);
         if (rc < 0)
@@ -1115,10 +1116,9 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
         mmu().copy_to_vm(arg, &ws, sizeof(winsize));
         return 0;
     }
-    if (request == TIOCSPGRP) {
+    case TIOCSPGRP:
         return syscall(SC_ioctl, fd, request, arg);
-    }
-    if (request == TCGETS) {
+    case TCGETS: {
         struct termios termios;
         int rc = syscall(SC_ioctl, fd, request, &termios);
         if (rc < 0)
@@ -1126,33 +1126,37 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
         mmu().copy_to_vm(arg, &termios, sizeof(termios));
         return rc;
     }
-    if (request == TCSETS || request == TCSETSF || request == TCSETSW) {
+    case TCSETS:
+    case TCSETSF:
+    case TCSETSW: {
         struct termios termios;
         mmu().copy_from_vm(&termios, arg, sizeof(termios));
         return syscall(SC_ioctl, fd, request, &termios);
     }
-    if (request == TIOCNOTTY || request == TIOCSCTTY) {
+    case TIOCNOTTY:
+    case TIOCSCTTY:
         return syscall(SC_ioctl, fd, request, 0);
-    }
-    if (request == FB_IOCTL_GET_PROPERTIES) {
+    case FB_IOCTL_GET_PROPERTIES: {
         size_t size = 0;
         auto rc = syscall(SC_ioctl, fd, request, &size);
         mmu().copy_to_vm(arg, &size, sizeof(size));
         return rc;
     }
-    if (request == FB_IOCTL_SET_HEAD_RESOLUTION) {
+    case FB_IOCTL_SET_HEAD_RESOLUTION: {
         FBHeadResolution user_resolution;
         mmu().copy_from_vm(&user_resolution, arg, sizeof(user_resolution));
         auto rc = syscall(SC_ioctl, fd, request, &user_resolution);
         mmu().copy_to_vm(arg, &user_resolution, sizeof(user_resolution));
         return rc;
     }
-    if (request == FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER) {
+    case FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER:
         return syscall(SC_ioctl, fd, request, arg);
+    default:
+        reportln("Unsupported ioctl: {}", request);
+        dump_backtrace();
+        TODO();
     }
-    reportln("Unsupported ioctl: {}", request);
-    dump_backtrace();
-    TODO();
+    VERIFY_NOT_REACHED();
 }
 
 int Emulator::virt$emuctl(FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
