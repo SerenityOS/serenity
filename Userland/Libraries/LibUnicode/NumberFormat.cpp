@@ -61,34 +61,6 @@ String replace_digits_for_number_system(StringView system, StringView number)
     return builder.build();
 }
 
-Optional<NumberFormat> select_pattern_with_plurality(Vector<NumberFormat> const& formats, double number)
-{
-    // FIXME: This is a rather naive and locale-unaware implementation Unicode's TR-35 pluralization
-    //        rules: https://www.unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
-    //        Once those rules are implemented for LibJS, we better use them instead.
-    auto find_plurality = [&](auto plurality) -> Optional<NumberFormat> {
-        if (auto it = formats.find_if([&](auto& patterns) { return patterns.plurality == plurality; }); it != formats.end())
-            return *it;
-        return {};
-    };
-
-    if (number == 0) {
-        if (auto patterns = find_plurality(NumberFormat::Plurality::Zero); patterns.has_value())
-            return patterns;
-    } else if (number == 1) {
-        if (auto patterns = find_plurality(NumberFormat::Plurality::One); patterns.has_value())
-            return patterns;
-    } else if (number == 2) {
-        if (auto patterns = find_plurality(NumberFormat::Plurality::Two); patterns.has_value())
-            return patterns;
-    } else if (number > 2) {
-        if (auto patterns = find_plurality(NumberFormat::Plurality::Many); patterns.has_value())
-            return patterns;
-    }
-
-    return find_plurality(NumberFormat::Plurality::Other);
-}
-
 // https://www.unicode.org/reports/tr35/tr35-numbers.html#Currencies
 Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView currency_display, [[maybe_unused]] StringView base_pattern)
 {
