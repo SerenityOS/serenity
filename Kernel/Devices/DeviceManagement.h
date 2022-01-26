@@ -59,7 +59,7 @@ public:
     template<typename DeviceType, typename... Args>
     static inline ErrorOr<NonnullRefPtr<DeviceType>> try_create_device(Args&&... args)
     {
-        auto device = TRY(adopt_nonnull_ref_or_enomem(new DeviceType(forward<Args>(args)...)));
+        auto device = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DeviceType(forward<Args>(args)...)));
         device->after_inserting();
         return device;
     }
