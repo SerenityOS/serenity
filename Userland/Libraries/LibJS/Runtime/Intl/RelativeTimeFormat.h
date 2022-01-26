@@ -51,7 +51,7 @@ public:
     void set_numeric(StringView numeric);
     StringView numeric_string() const;
 
-    NumberFormat* number_format() const { return m_number_format; }
+    NumberFormat& number_format() const { return *m_number_format; }
     void set_number_format(NumberFormat* number_format) { m_number_format = number_format; }
 
 private:
