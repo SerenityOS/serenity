@@ -41,7 +41,6 @@ public:
     // FIXME: Once we have a singleton for managing many sound cards, remove this from here
     void attach_audio_device(CharacterDevice const&);
 
-    bool is_device_event_queue_ready_to_read() const;
     Optional<DeviceEvent> dequeue_top_device_event(Badge<DeviceControlDevice>);
 
     void after_inserting_device(Badge<Device>, Device&);
