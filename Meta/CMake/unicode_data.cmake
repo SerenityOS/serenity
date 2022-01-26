@@ -117,6 +117,9 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     set(UNICODE_NUMBER_FORMAT_HEADER LibUnicode/UnicodeNumberFormat.h)
     set(UNICODE_NUMBER_FORMAT_IMPLEMENTATION LibUnicode/UnicodeNumberFormat.cpp)
 
+    set(UNICODE_RELATIVE_TIME_FORMAT_HEADER LibUnicode/UnicodeRelativeTimeFormat.h)
+    set(UNICODE_RELATIVE_TIME_FORMAT_IMPLEMENTATION LibUnicode/UnicodeRelativeTimeFormat.cpp)
+
     set(UNICODE_META_TARGET_PREFIX LibUnicode_)
 
     if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibUnicode") # Serenity build.
@@ -131,6 +134,9 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
         set(UNICODE_NUMBER_FORMAT_HEADER UnicodeNumberFormat.h)
         set(UNICODE_NUMBER_FORMAT_IMPLEMENTATION UnicodeNumberFormat.cpp)
+
+        set(UNICODE_RELATIVE_TIME_FORMAT_HEADER UnicodeRelativeTimeFormat.h)
+        set(UNICODE_RELATIVE_TIME_FORMAT_IMPLEMENTATION UnicodeRelativeTimeFormat.cpp)
 
         set(UNICODE_META_TARGET_PREFIX "")
     endif()
@@ -171,6 +177,15 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}"
         arguments -r "${CLDR_CORE_PATH}" -n "${CLDR_NUMBERS_PATH}" -u "${CLDR_UNITS_PATH}"
     )
+    invoke_generator(
+        "UnicodeRelativeTimeFormat"
+        Lagom::GenerateUnicodeRelativeTimeFormat
+        "${CLDR_VERSION_FILE}"
+        "${UNICODE_META_TARGET_PREFIX}"
+        "${UNICODE_RELATIVE_TIME_FORMAT_HEADER}"
+        "${UNICODE_RELATIVE_TIME_FORMAT_IMPLEMENTATION}"
+        arguments -d "${CLDR_DATES_PATH}"
+    )
 
     set(UNICODE_DATA_SOURCES
         ${UNICODE_DATA_HEADER}
@@ -181,5 +196,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         ${UNICODE_LOCALE_IMPLEMENTATION}
         ${UNICODE_NUMBER_FORMAT_HEADER}
         ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}
+        ${UNICODE_RELATIVE_TIME_FORMAT_HEADER}
+        ${UNICODE_RELATIVE_TIME_FORMAT_IMPLEMENTATION}
     )
 endif()
