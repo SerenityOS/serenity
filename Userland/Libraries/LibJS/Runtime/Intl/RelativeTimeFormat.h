@@ -10,8 +10,10 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibUnicode/Locale.h>
+#include <LibUnicode/RelativeTimeFormat.h>
 
 namespace JS::Intl {
 
@@ -65,6 +67,20 @@ private:
     NumberFormat* m_number_format { nullptr };       // [[NumberFormat]]
 };
 
+struct PatternPartitionWithUnit : public PatternPartition {
+    PatternPartitionWithUnit(StringView type, String value, StringView unit_string = {})
+        : PatternPartition(type, move(value))
+        , unit(unit_string)
+    {
+    }
+
+    StringView unit;
+};
+
 ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, Value locales_value, Value options_value);
+ThrowCompletionOr<Unicode::TimeUnit> singular_relative_time_unit(GlobalObject& global_object, StringView unit);
+ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_pattern(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, double value, StringView unit);
+Vector<PatternPartitionWithUnit> make_parts_list(StringView pattern, StringView unit, Vector<PatternPartition> parts);
+ThrowCompletionOr<String> format_relative_time(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, double value, StringView unit);
 
 }
