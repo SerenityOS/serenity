@@ -18,8 +18,8 @@ List of options:
 * **`acpi`** - This parameter expects one of the following values. **`on`** - Boot with full ACPI support, using ACPI 
    Machine Language interpretation (default). **`limited`** - Boot with limited ACPI support. **`off`** - Don't initialize ACPI at all.
 
-* **`ahci_reset_mode`** - This parameter expects one of the following values. **`controller`** - Reset just the AHCI controller on boot.
-   **`none`** - Don't perform any AHCI reset.  **`complete`** - Reset the AHCI controller, and all AHCI ports on boot.
+* **`ahci_reset_mode`** - This parameter expects one of the following values. **`controllers`** - Reset just the AHCI controller on boot (default).
+   **`aggressive`** - Reset the AHCI controller, and all AHCI ports on boot.
 
 * **`boot_prof`** - If present on the command line, global system profiling will be enabled
    as soon as possible during the boot sequence. Allowing you to profile startup of all applications.
