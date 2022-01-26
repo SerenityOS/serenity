@@ -97,11 +97,7 @@ Gfx::IntRect Device::window_coordinates_to_target_coordinates(Gfx::IntRect const
 
 void Device::setup_blend_factors()
 {
-    m_alpha_blend_factors.src_constant = { 0.0f, 0.0f, 0.0f, 0.0f };
-    m_alpha_blend_factors.src_factor_src_alpha = 0;
-    m_alpha_blend_factors.src_factor_dst_alpha = 0;
-    m_alpha_blend_factors.src_factor_src_color = 0;
-    m_alpha_blend_factors.src_factor_dst_color = 0;
+    m_alpha_blend_factors = {};
 
     switch (m_options.blend_source_factor) {
     case BlendFactor::Zero:
@@ -141,12 +137,6 @@ void Device::setup_blend_factors()
     default:
         VERIFY_NOT_REACHED();
     }
-
-    m_alpha_blend_factors.dst_constant = { 0.0f, 0.0f, 0.0f, 0.0f };
-    m_alpha_blend_factors.dst_factor_src_alpha = 0;
-    m_alpha_blend_factors.dst_factor_dst_alpha = 0;
-    m_alpha_blend_factors.dst_factor_src_color = 0;
-    m_alpha_blend_factors.dst_factor_dst_color = 0;
 
     switch (m_options.blend_destination_factor) {
     case BlendFactor::Zero:
