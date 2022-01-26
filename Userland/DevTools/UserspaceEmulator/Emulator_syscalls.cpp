@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Rummskartoffel <Rummskartoffel@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1151,6 +1152,11 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
     }
     case FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER:
         return syscall(SC_ioctl, fd, request, arg);
+    case FIONBIO: {
+        int enabled;
+        mmu().copy_from_vm(&enabled, arg, sizeof(int));
+        return syscall(SC_ioctl, fd, request, &enabled);
+    }
     default:
         reportln("Unsupported ioctl: {}", request);
         dump_backtrace();
