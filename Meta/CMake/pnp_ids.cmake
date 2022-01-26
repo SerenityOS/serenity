@@ -9,9 +9,9 @@ if(ENABLE_PNP_IDS_DOWNLOAD AND NOT EXISTS ${PNP_IDS_EXPORT_PATH})
     file(MAKE_DIRECTORY ${CMAKE_INSTALL_DATAROOTDIR})
     download_file("${PNP_IDS_URL}" "${PNP_IDS_EXPORT_PATH}")
 
-    set(PNP_IDS_HEADER LibEDID/PnpIDs.h)
-    set(PNP_IDS_IMPLEMENTATION LibEDID/PnpIDs.cpp)
-    set(PNP_IDS_TARGET_PREFIX LibEDID_)
+    set(PNP_IDS_HEADER PnpIDs.h)
+    set(PNP_IDS_IMPLEMENTATION PnpIDs.cpp)
+    set(PNP_IDS_TARGET_PREFIX "")
 
     invoke_generator(
         "PnpIDsData"
