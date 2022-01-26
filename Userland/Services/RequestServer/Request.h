@@ -21,7 +21,7 @@ public:
     virtual ~Request();
 
     i32 id() const { return m_id; }
-    URL url() const { return m_url; }
+    virtual URL url() const = 0;
 
     Optional<u32> status_code() const { return m_status_code; }
     Optional<u32> total_size() const { return m_total_size; }
@@ -50,7 +50,6 @@ private:
     ClientConnection& m_client;
     i32 m_id { 0 };
     int m_request_fd { -1 }; // Passed to client.
-    URL m_url;
     Optional<u32> m_status_code;
     Optional<u32> m_total_size {};
     size_t m_downloaded_size { 0 };

@@ -20,6 +20,8 @@ public:
 
     Gemini::GeminiJob const& job() const { return *m_job; }
 
+    virtual URL url() const override { return m_job->url(); }
+
 private:
     explicit GeminiRequest(ClientConnection&, NonnullRefPtr<Gemini::GeminiJob>, NonnullOwnPtr<OutputFileStream>&&);
 
