@@ -851,6 +851,11 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*>
         if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
             return E2BIG;
 
+        // NOTE: The caller is expected to always pass at least one argument by convention,
+        //       the program path that was passed as params.path.
+        if (params.arguments.length == 0)
+            return EINVAL;
+
         auto path = TRY(get_syscall_path_argument(params.path));
 
         auto copy_user_strings = [](const auto& list, auto& output) -> ErrorOr<void> {
