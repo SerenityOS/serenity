@@ -114,6 +114,8 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         if ((family == 6 && model >= 3) || (family == 0xf && model >= 0xe))
             set_feature(CPUFeature::CONSTANT_TSC);
     }
+    if (processor_info.edx() & (1 << 16))
+        set_feature(CPUFeature::PAT);
 
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 
@@ -188,6 +190,18 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
         // Turn on IA32_EFER.NXE
         MSR ia32_efer(MSR_IA32_EFER);
         ia32_efer.set(ia32_efer.get() | 0x800);
+    }
+
+    if (has_feature(CPUFeature::PAT)) {
+        MSR ia32_pat(MSR_IA32_PAT);
+        // Set PA4 to Write Comine. This allows us to
+        // use this mode by only setting the bit in the PTE
+        // and leaving all other bits in the upper levels unset,
+        // which maps to setting bit 3 of the index, resulting
+        // in the index value 0 or 4.
+        u64 pat = ia32_pat.get() & ~(0x7ull << 32);
+        pat |= 0x1ull << 32; // set WC mode for PA4
+        ia32_pat.set(pat);
     }
 
     if (has_feature(CPUFeature::SMEP)) {
@@ -309,6 +323,8 @@ NonnullOwnPtr<KString> Processor::features_string() const
             return "hypervisor"sv;
             // no default statement here intentionally so that we get
             // a warning if a new feature is forgotten to be added here
+        case CPUFeature::PAT:
+            return "pat"sv;
         }
         // Shouldn't ever happen
         return "???"sv;
