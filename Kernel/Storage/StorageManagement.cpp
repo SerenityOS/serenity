@@ -109,6 +109,24 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_storage_devices()
     }
 }
 
+UNMAP_AFTER_INIT void StorageManagement::dump_storage_devices_and_partitions() const
+{
+    dbgln("StorageManagement: Detected {} storage devices", m_storage_devices.size_slow());
+    for (auto const& storage_device : m_storage_devices) {
+        auto const& partitions = storage_device.partitions();
+        if (partitions.is_empty()) {
+            dbgln("  Device: {} (no partitions)", storage_device.early_storage_name());
+        } else {
+            dbgln("  Device: {} ({} partitions)", storage_device.early_storage_name(), partitions.size());
+            unsigned partition_number = 1;
+            for (auto const& partition : partitions) {
+                dbgln("    Partition: {} (UUID {})", partition_number, partition.metadata().unique_guid().to_string());
+                partition_number++;
+            }
+        }
+    }
+}
+
 UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(const StorageDevice& device) const
 {
     auto mbr_table_or_result = MBRPartitionTable::try_to_initialize(device);
@@ -191,6 +209,7 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
     }
 
     if (m_boot_block_device.is_null()) {
+        dump_storage_devices_and_partitions();
         PANIC("StorageManagement: boot device {} not found", m_boot_argument);
     }
 }
@@ -203,6 +222,9 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uu
     auto partition_uuid = UUID(m_boot_argument.substring_view(partition_uuid_prefix.length()));
 
     if (partition_uuid.to_string().length() != 36) {
+        // FIXME: It would be helpful to output the specified and detected UUIDs in this case,
+        //        but we never actually enter this path - if the length doesn't match, the UUID
+        //        constructor above crashes with a VERIFY in convert_string_view_to_uuid().
         PANIC("StorageManagement: Specified partition UUID is not valid");
     }
     for (auto& storage_device : m_storage_devices) {
@@ -237,6 +259,7 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
 {
     auto boot_device_description = boot_block_device();
     if (!boot_device_description) {
+        dump_storage_devices_and_partitions();
         PANIC("StorageManagement: Couldn't find a suitable device to boot from");
     }
     auto description_or_error = OpenFileDescription::try_create(boot_device_description.release_nonnull());
@@ -245,6 +268,7 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     auto file_system = Ext2FS::try_create(description_or_error.release_value()).release_value();
 
     if (auto result = file_system->initialize(); result.is_error()) {
+        dump_storage_devices_and_partitions();
         PANIC("StorageManagement: Couldn't open root filesystem: {}", result.error());
     }
     return file_system;
