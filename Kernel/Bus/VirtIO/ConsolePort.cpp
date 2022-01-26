@@ -12,13 +12,20 @@ namespace Kernel::VirtIO {
 
 unsigned ConsolePort::next_device_id = 0;
 
-ConsolePort::ConsolePort(unsigned port, VirtIO::Console& console)
+ErrorOr<NonnullRefPtr<ConsolePort>> ConsolePort::try_create(unsigned port, Console& console)
+{
+    auto receive_buffer = TRY(Memory::RingBuffer::try_create("VirtIO::ConsolePort Receive"sv, RINGBUFFER_SIZE));
+    auto transmit_buffer = TRY(Memory::RingBuffer::try_create("VirtIO::ConsolePort Transmit"sv, RINGBUFFER_SIZE));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ConsolePort(port, console, move(receive_buffer), move(transmit_buffer)));
+}
+
+ConsolePort::ConsolePort(unsigned port, VirtIO::Console& console, NonnullOwnPtr<Memory::RingBuffer> receive_buffer, NonnullOwnPtr<Memory::RingBuffer> transmit_buffer)
     : CharacterDevice(229, next_device_id++)
+    , m_receive_buffer(move(receive_buffer))
+    , m_transmit_buffer(move(transmit_buffer))
     , m_console(console)
     , m_port(port)
 {
-    m_receive_buffer = Memory::RingBuffer::try_create("VirtIO::ConsolePort Receive"sv, RINGBUFFER_SIZE).release_value_but_fixme_should_propagate_errors();
-    m_transmit_buffer = Memory::RingBuffer::try_create("VirtIO::ConsolePort Transmit"sv, RINGBUFFER_SIZE).release_value_but_fixme_should_propagate_errors();
     m_receive_queue = m_port == 0 ? 0 : m_port * 2 + 2;
     m_transmit_queue = m_port == 0 ? 1 : m_port * 2 + 3;
 }
