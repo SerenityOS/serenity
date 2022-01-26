@@ -49,6 +49,7 @@ StringView RelativeTimeFormat::numeric_string() const
     }
 }
 
+// 17.1.1 InitializeRelativeTimeFormat ( relativeTimeFormat, locales, options ), https://tc39.es/ecma402/#sec-InitializeRelativeTimeFormat
 ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, Value locales_value, Value options_value)
 {
     auto& vm = global_object.vm();
