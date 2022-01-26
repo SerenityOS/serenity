@@ -166,6 +166,7 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
         VERIFY(m_blocker == nullptr);
         break;
     default:
+        dbgln("Error: Attempting to block with invalid thread state - {}", state_string());
         VERIFY_NOT_REACHED();
     }
 
@@ -1319,7 +1320,6 @@ void Thread::track_lock_release(LockRank rank)
 
     m_lock_rank_mask ^= rank;
 }
-
 }
 
 ErrorOr<void> AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, Kernel::Thread const& value)
