@@ -39,6 +39,7 @@ struct ProcessorMessageEntry;
 #    define MSR_GS_BASE 0xc0000101
 #endif
 #define MSR_IA32_EFER 0xc0000080
+#define MSR_IA32_PAT 0x277
 
 // FIXME: Find a better place for these
 extern "C" void thread_context_first_enter(void);
