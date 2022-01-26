@@ -14,10 +14,12 @@ static void finalizer_task(void*)
 {
     Thread::current()->set_priority(THREAD_PRIORITY_LOW);
     for (;;) {
-        g_finalizer_wait_queue->wait_forever("FinalizerTask");
-
+        // The order of this if-else is important: We want to continue trying to finalize the threads in case
+        // Thread::finalize_dying_threads set g_finalizer_has_work back to true due to OOM conditions
         if (g_finalizer_has_work.exchange(false, AK::MemoryOrder::memory_order_acq_rel) == true)
             Thread::finalize_dying_threads();
+        else
+            g_finalizer_wait_queue->wait_forever("FinalizerTask");
     }
 };
 

@@ -529,8 +529,13 @@ void Thread::finalize_dying_threads()
     {
         SpinlockLocker lock(g_scheduler_lock);
         for_each_in_state(Thread::State::Dying, [&](Thread& thread) {
-            if (thread.is_finalizable())
-                dying_threads.append(&thread);
+            if (!thread.is_finalizable())
+                return;
+            auto result = dying_threads.try_append(&thread);
+            // We ignore allocation failures above the first 32 guaranteed thread slots, and
+            // just flag our future-selves to finalize these threads at a later point
+            if (result.is_error())
+                g_finalizer_has_work.store(true, AK::MemoryOrder::memory_order_release);
         });
     }
     for (auto* thread : dying_threads) {
