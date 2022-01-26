@@ -15,7 +15,7 @@
 #    include <unistd.h>
 
 #    ifdef ENABLE_PNP_IDS_DATA
-#        include <LibEDID/LibEDID/PnpIDs.h>
+#        include <LibEDID/PnpIDs.h>
 #    endif
 #endif
 
