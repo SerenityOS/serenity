@@ -18,6 +18,11 @@ If you only have VirtualBox installed:
 VBoxManage convertfromraw --format VDI /path/to/grub_disk_image /path/to/output/serenityos.vdi
 ``
 
+Set an identifier to the disk image, otherwise updating the disk image makes the identifiers no longer match up.
+``
+VBoxManage internalcommands sethduuid serenityos.vdi 19850209-0000-0000-0000-000000000000
+``
+
 Note that if you are on Windows and you do not have QEMU or VirtualBox in your PATH environment variable, you must be in the installation folder for the tool you're using. You will also need to put ``./`` in front of the command.
 
 ## Creating the virtual machine
@@ -34,19 +39,6 @@ Note that if you are on Windows and you do not have QEMU or VirtualBox in your P
 Reference image:
 
 ![](VirtualBox_Creation_Reference.png)
-
-## Note on updating the disk image
-When you go to update the disk image in the future and replace the current VDI, you will notice the virtual machine will no longer boot. This is because VirtualBox gives an identifier to the disk image, and changing the disk image makes the identifiers no longer match up.
-
-You will also notice that you cannot remove disk images from the **Hard Disk Selector**.
-
-The way around this is to use a different file name for each VDI you generate. You will then have to:
-1. Open **Settings** and go to **Storage**.
-2. Right click the current drive and click **Remove Attachment**.
-3. Click on the **Controller** and then click the add hard disk icon. Add the new VDI and click **Choose**.
-4. You should see the new drive attached. Make sure **Hard Disk** is set to **IDE Primary Master**.
-
-Yes, this is a mess. You can delete the old disk images without any issues. If you know a solution for this, *please* let us know.
 
 ## Configuring the virtual machine to boot Serenity
 Serenity will not be able to boot with the default configuration. There are a couple settings to adjust. Open **Settings** and:
