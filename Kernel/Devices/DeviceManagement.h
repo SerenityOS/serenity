@@ -56,6 +56,14 @@ public:
     ConsoleDevice& console_device();
 
     template<typename DeviceType, typename... Args>
+    static inline ErrorOr<NonnullRefPtr<DeviceType>> try_create_device(Args&&... args) requires(requires(Args... args) { DeviceType::try_create(args...); })
+    {
+        auto device = TRY(DeviceType::try_create(forward<Args>(args)...));
+        device->after_inserting();
+        return device;
+    }
+
+    template<typename DeviceType, typename... Args>
     static inline ErrorOr<NonnullRefPtr<DeviceType>> try_create_device(Args&&... args)
     {
         auto device = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DeviceType(forward<Args>(args)...)));
