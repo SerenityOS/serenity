@@ -1117,6 +1117,11 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
         mmu().copy_to_vm(arg, &ws, sizeof(winsize));
         return 0;
     }
+    case TIOCSWINSZ: {
+        struct winsize ws;
+        mmu().copy_from_vm(&ws, arg, sizeof(winsize));
+        return syscall(SC_ioctl, fd, request, &ws);
+    }
     case TIOCSPGRP:
         return syscall(SC_ioctl, fd, request, arg);
     case TCGETS: {
