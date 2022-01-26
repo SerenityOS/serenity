@@ -598,7 +598,7 @@ static Optional<Unicode::DayPeriod> day_period_from_string(StringView day_period
     if (day_period == "night2"sv)
         return Unicode::DayPeriod::Night2;
     return {};
-};
+}
 
 static ErrorOr<void> parse_hour_cycles(String core_path, UnicodeLocaleData& locale_data)
 {
@@ -643,7 +643,7 @@ static ErrorOr<void> parse_hour_cycles(String core_path, UnicodeLocaleData& loca
     });
 
     return {};
-};
+}
 
 static ErrorOr<void> parse_meta_zones(String core_path, UnicodeLocaleData& locale_data)
 {
@@ -675,7 +675,7 @@ static ErrorOr<void> parse_meta_zones(String core_path, UnicodeLocaleData& local
         locale_data.meta_zones.set("UTC"sv, { *time_zone });
 
     return {};
-};
+}
 
 static constexpr auto is_char(char ch)
 {
@@ -1576,7 +1576,7 @@ static ErrorOr<void> parse_day_periods(String core_path, UnicodeLocaleData& loca
     });
 
     return {};
-};
+}
 
 static ErrorOr<void> parse_all_locales(String core_path, String dates_path, UnicodeLocaleData& locale_data)
 {
