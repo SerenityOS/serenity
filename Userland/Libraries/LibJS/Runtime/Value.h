@@ -9,6 +9,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/BitCast.h>
+#include <AK/Concepts.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Function.h>
@@ -131,7 +132,8 @@ public:
     {
     }
 
-    explicit Value(bool value)
+    template<typename T>
+    requires(SameAs<RemoveCVReference<T>, bool>) explicit Value(T value)
         : m_type(Type::Boolean)
     {
         m_value.as_bool = value;
