@@ -88,20 +88,20 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 width = image.width();
                 height = image.height();
             } else if (x_is_auto) {
-                height = layer.size_y.resolved(CSS::Length::make_px(background_positioning_area.height()))
+                height = layer.size_y.resolved(layout_node, CSS::Length::make_px(background_positioning_area.height()))
                              .resolved_or_zero(layout_node)
                              .to_px(layout_node);
                 width = roundf(image.width() * ((float)height / (float)image.height()));
             } else if (y_is_auto) {
-                width = layer.size_x.resolved(CSS::Length::make_px(background_positioning_area.width()))
+                width = layer.size_x.resolved(layout_node, CSS::Length::make_px(background_positioning_area.width()))
                             .resolved_or_zero(layout_node)
                             .to_px(layout_node);
                 height = roundf(image.height() * ((float)width / (float)image.width()));
             } else {
-                width = layer.size_x.resolved(CSS::Length::make_px(background_positioning_area.width()))
+                width = layer.size_x.resolved(layout_node, CSS::Length::make_px(background_positioning_area.width()))
                             .resolved_or_zero(layout_node)
                             .to_px(layout_node);
-                height = layer.size_y.resolved(CSS::Length::make_px(background_positioning_area.height()))
+                height = layer.size_y.resolved(layout_node, CSS::Length::make_px(background_positioning_area.height()))
                              .resolved_or_zero(layout_node)
                              .to_px(layout_node);
             }
@@ -143,7 +143,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         int space_y = background_positioning_area.height() - image_rect.height();
 
         // Position
-        int offset_x = layer.position_offset_x.resolved(CSS::Length::make_px(space_x))
+        int offset_x = layer.position_offset_x.resolved(layout_node, CSS::Length::make_px(space_x))
                            .resolved_or_zero(layout_node)
                            .to_px(layout_node);
         if (layer.position_edge_x == CSS::PositionEdge::Right) {
@@ -152,7 +152,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             image_rect.set_left(background_positioning_area.left() + offset_x);
         }
 
-        int offset_y = layer.position_offset_y.resolved(CSS::Length::make_px(space_y))
+        int offset_y = layer.position_offset_y.resolved(layout_node, CSS::Length::make_px(space_y))
                            .resolved_or_zero(layout_node)
                            .to_px(layout_node);
         if (layer.position_edge_y == CSS::PositionEdge::Bottom) {

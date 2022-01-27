@@ -70,10 +70,8 @@ LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID 
         return fallback;
     auto& value = maybe_value.value();
 
-    if (value->is_calculated()) {
-        // FIXME: Handle percentages here
-        return Length::make_calculated(value->as_calculated());
-    }
+    if (value->is_calculated())
+        return LengthPercentage { value->as_calculated() };
 
     if (value->is_percentage())
         return value->as_percentage().percentage();
