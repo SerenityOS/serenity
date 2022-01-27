@@ -39,7 +39,7 @@ Variant FilteringProxyModel::data(ModelIndex const& index, ModelRole role) const
         return {};
 
     if ((size_t)index.row() > m_matching_indices.size() || index.row() < 0)
-        return 0;
+        return {};
 
     return m_matching_indices[index.row()].data(role);
 }
