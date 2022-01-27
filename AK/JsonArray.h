@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
@@ -27,10 +28,10 @@ public:
     {
     }
 
-    template<typename T>
-    JsonArray(Vector<T> const& vector)
+    template<IterableContainer ContainerT>
+    JsonArray(ContainerT const& source)
     {
-        for (auto& value : vector)
+        for (auto& value : source)
             m_values.append(move(value));
     }
 
