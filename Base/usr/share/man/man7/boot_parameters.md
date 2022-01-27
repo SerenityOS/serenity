@@ -66,7 +66,9 @@ List of options:
   enable available APs (application processors) and use them with the BSP (Bootstrap processor) to
   schedule and run threads.
   This parameter defaults to **`off`**. This parameter requires **`enable_ioapic`** to be enabled
-  and and a `MADT` (APIC) table to be available.
+  and a `MADT` (APIC) table to be available.
+
+* **`nvme_poll`** - This parameter configures the NVMe drive to use polling instead of interrupt driven completion.
 
 * **`system_mode`** - This parameter is not interpreted by the Kernel, and is made available at `/proc/system_mode`. SystemServer uses it to select the set of services that should be started. Common values are:
   - **`graphical`** (default) - Boots the system in the normal graphical mode.
