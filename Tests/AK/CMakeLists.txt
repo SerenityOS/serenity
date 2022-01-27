@@ -50,6 +50,7 @@ set(AK_TEST_SOURCES
     TestRedBlackTree.cpp
     TestRefPtr.cpp
     TestSinglyLinkedList.cpp
+    TestSize.cpp
     TestSourceGenerator.cpp
     TestSourceLocation.cpp
     TestSpan.cpp
