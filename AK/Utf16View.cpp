@@ -5,6 +5,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/Size.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Utf16View.h>
@@ -218,10 +219,7 @@ bool Utf16View::validate(size_t& valid_code_units) const
 
 size_t Utf16View::calculate_length_in_code_points() const
 {
-    size_t code_points = 0;
-    for ([[maybe_unused]] auto code_point : *this)
-        ++code_points;
-    return code_points;
+    return size(*this);
 }
 
 bool Utf16View::equals_ignoring_case(Utf16View const& other) const

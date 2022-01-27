@@ -7,6 +7,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Format.h>
+#include <AK/Size.h>
 #include <AK/Utf8View.h>
 
 namespace AK {
@@ -122,11 +123,7 @@ bool Utf8View::validate(size_t& valid_bytes) const
 
 size_t Utf8View::calculate_length() const
 {
-    size_t length = 0;
-    for ([[maybe_unused]] auto code_point : *this) {
-        ++length;
-    }
-    return length;
+    return size(*this);
 }
 
 bool Utf8View::starts_with(const Utf8View& start) const

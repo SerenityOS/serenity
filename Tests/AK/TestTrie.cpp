@@ -6,6 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/Size.h>
 #include <AK/StringView.h>
 #include <AK/Trie.h>
 
@@ -19,10 +20,7 @@ TEST_CASE(normal_behavior)
         dictionary.insert(it, view.end(), view, [](auto& parent, auto& it) -> Optional<String> { return String::formatted("{}{}", parent.metadata_value(), *it); });
     }
 
-    size_t i = 0;
-    for ([[maybe_unused]] auto& node : dictionary)
-        ++i;
-    EXPECT_EQ(i, total_chars);
+    EXPECT_EQ(size(dictionary), total_chars);
 
     for (auto& view : data) {
         auto it = view.begin();
