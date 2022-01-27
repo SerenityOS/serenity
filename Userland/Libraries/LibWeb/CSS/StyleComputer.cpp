@@ -714,8 +714,11 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             weight = Gfx::FontWeight::Bold;
         else
             weight = Gfx::FontWeight::Black;
+    } else if (font_weight->is_calculated()) {
+        auto maybe_weight = font_weight->as_calculated().resolve_integer();
+        if (maybe_weight.has_value())
+            weight = maybe_weight.value();
     }
-    // FIXME: calc() for font-weight
 
     bool bold = weight > Gfx::FontWeight::Regular;
 
@@ -777,6 +780,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         }
         if (maybe_length.has_value()) {
             // FIXME: Support font-size: calc(...)
+            //        Theoretically we can do this now, but to resolve it we need a layout_node which we might not have. :^(
             if (!maybe_length->is_calculated()) {
                 auto px = maybe_length.value().to_px(viewport_rect, font_metrics, root_font_size);
                 if (px != 0)
