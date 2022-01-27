@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <AK/Noncopyable.h>
+#include <AK/Unused.h>
 
 #if defined(KERNEL)
 #    include <Kernel/Arch/Processor.h>
@@ -49,12 +50,11 @@ private:
 
     static void set_thread_allocation_state(bool value)
     {
+        maybe_unused(value);
 #if defined(KERNEL)
         Processor::current_thread()->set_allocation_enabled(value);
 #elif defined(__serenity__)
         s_allocation_enabled = value;
-#else
-        (void)value;
 #endif
     }
 
