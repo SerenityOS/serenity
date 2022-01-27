@@ -35,6 +35,14 @@ struct LocaleResult {
 };
 
 struct PatternPartition {
+    PatternPartition() = default;
+
+    PatternPartition(StringView type_string, String value_string)
+        : type(type_string)
+        , value(move(value_string))
+    {
+    }
+
     StringView type;
     String value;
 };
