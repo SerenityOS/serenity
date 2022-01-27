@@ -703,11 +703,13 @@ public:
     struct CalcNumberValue {
         Variant<float, NonnullOwnPtr<CalcNumberSum>> value;
         Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcValue {
         Variant<float, CSS::Length, NonnullOwnPtr<CalcSum>> value;
         Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     // This represents that: https://www.w3.org/TR/css-values-3/#calc-syntax
@@ -720,6 +722,7 @@ public:
         NonnullOwnPtrVector<CalcSumPartWithOperator> zero_or_more_additional_calc_products;
 
         Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcNumberSum {
@@ -731,6 +734,7 @@ public:
         NonnullOwnPtrVector<CalcNumberSumPartWithOperator> zero_or_more_additional_calc_number_products;
 
         Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcProduct {
@@ -738,6 +742,7 @@ public:
         NonnullOwnPtrVector<CalcProductPartWithOperator> zero_or_more_additional_calc_values;
 
         Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcSumPartWithOperator {
@@ -749,6 +754,7 @@ public:
         NonnullOwnPtr<CalcProduct> value;
 
         Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcProductPartWithOperator {
@@ -756,6 +762,7 @@ public:
         Variant<CalcValue, CalcNumberValue> value;
 
         Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcNumberProduct {
@@ -763,6 +770,7 @@ public:
         NonnullOwnPtrVector<CalcNumberProductPartWithOperator> zero_or_more_additional_calc_number_values;
 
         Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcNumberProductPartWithOperator {
@@ -770,6 +778,7 @@ public:
         CalcNumberValue value;
 
         Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcNumberSumPartWithOperator {
@@ -781,6 +790,7 @@ public:
         NonnullOwnPtr<CalcNumberProduct> value;
 
         Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     static NonnullRefPtr<CalculatedStyleValue> create(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
@@ -792,6 +802,7 @@ public:
     ResolvedType resolved_type() const { return m_resolved_type; }
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
+    Optional<LengthPercentage> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
 
 private:
     explicit CalculatedStyleValue(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
