@@ -7,6 +7,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/StringView.h>
 
 #ifndef KERNEL
 #    include <AK/JsonParser.h>
@@ -182,6 +183,11 @@ JsonValue::JsonValue(const String& value)
         m_value.as_string = const_cast<StringImpl*>(value.impl());
         m_value.as_string->ref();
     }
+}
+
+JsonValue::JsonValue(StringView value)
+    : JsonValue(value.to_string())
+{
 }
 
 JsonValue::JsonValue(const JsonObject& value)
