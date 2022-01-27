@@ -22,7 +22,7 @@ PromotionDialog::PromotionDialog(ChessWidget& chess_widget)
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
 
-    for (auto& type : Vector({ Chess::Type::Queen, Chess::Type::Knight, Chess::Type::Rook, Chess::Type::Bishop })) {
+    for (auto const& type : { Chess::Type::Queen, Chess::Type::Knight, Chess::Type::Rook, Chess::Type::Bishop }) {
         auto& button = main_widget.add<GUI::Button>("");
         button.set_fixed_height(70);
         button.set_icon(chess_widget.get_piece_graphic({ chess_widget.board().turn(), type }));
