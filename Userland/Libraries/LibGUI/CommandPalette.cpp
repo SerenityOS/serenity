@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -26,7 +27,7 @@ public:
         __Count,
     };
 
-    ActionModel(NonnullRefPtrVector<GUI::Action>& actions)
+    ActionModel(Vector<NonnullRefPtr<GUI::Action>>& actions)
         : m_actions(actions)
     {
     }
@@ -49,7 +50,7 @@ public:
 
     virtual ModelIndex index(int row, int column = 0, ModelIndex const& = ModelIndex()) const override
     {
-        return create_index(row, column, m_actions.ptr_at(row).ptr());
+        return create_index(row, column, m_actions.at(row).ptr());
     }
 
     virtual Variant data(ModelIndex const& index, ModelRole role = ModelRole::Display) const override
@@ -85,7 +86,7 @@ public:
     }
 
 private:
-    NonnullRefPtrVector<GUI::Action> const& m_actions;
+    Vector<NonnullRefPtr<GUI::Action>> const& m_actions;
 };
 
 CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen_position)
@@ -170,6 +171,11 @@ void CommandPalette::collect_actions(GUI::Window& parent_window)
     m_actions.clear();
     for (auto& action : actions)
         m_actions.append(action);
+
+    quick_sort(m_actions, [&](auto& a, auto& b) {
+        // FIXME: This is so awkward. Don't be so awkward.
+        return Gfx::parse_ampersand_string(a->text()) < Gfx::parse_ampersand_string(b->text());
+    });
 }
 
 void CommandPalette::finish_with_index(GUI::ModelIndex const& filter_index)

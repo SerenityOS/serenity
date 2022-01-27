@@ -26,7 +26,7 @@ private:
     void finish_with_index(GUI::ModelIndex const&);
 
     RefPtr<GUI::Action> m_selected_action;
-    NonnullRefPtrVector<GUI::Action> m_actions;
+    Vector<NonnullRefPtr<GUI::Action>> m_actions;
 
     RefPtr<GUI::TextBox> m_text_box;
     RefPtr<GUI::TableView> m_table_view;
