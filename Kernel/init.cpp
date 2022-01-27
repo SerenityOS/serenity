@@ -330,7 +330,7 @@ void init_stage2(void*)
     (void)SB16::try_detect_and_create();
     AC97::detect();
 
-    StorageManagement::the().initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio());
+    StorageManagement::the().initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());
     if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {
         PANIC("VirtualFileSystem::mount_root failed");
     }
