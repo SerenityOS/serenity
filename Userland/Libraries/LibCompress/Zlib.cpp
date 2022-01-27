@@ -6,7 +6,6 @@
 
 #include <AK/Span.h>
 #include <AK/Types.h>
-#include <AK/Vector.h>
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Zlib.h>
 

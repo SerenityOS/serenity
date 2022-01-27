@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Vector.h>
 #include <LibGUI/AbstractTableView.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Button.h>
