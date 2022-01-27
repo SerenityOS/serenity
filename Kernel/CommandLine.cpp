@@ -175,6 +175,11 @@ UNMAP_AFTER_INIT StringView CommandLine::root_device() const
     return lookup("root"sv).value_or("/dev/hda"sv);
 }
 
+bool CommandLine::is_nvme_polling_enabled() const
+{
+    return contains("nvme_poll"sv);
+}
+
 UNMAP_AFTER_INIT AcpiFeatureLevel CommandLine::acpi_feature_level() const
 {
     auto value = kernel_command_line().lookup("acpi"sv).value_or("limited"sv);
