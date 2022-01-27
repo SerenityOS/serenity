@@ -39,7 +39,7 @@ void Inspector::parse_loaded_libraries(Function<void(float)> on_progress)
     m_reader->for_each_library([this, number_of_libraries, &library_index, &on_progress](Coredump::Reader::LibraryInfo library) {
         ++library_index;
         if (on_progress)
-            on_progress(library_index / (float)number_of_libraries);
+            on_progress(library_index / static_cast<float>(number_of_libraries));
 
         auto file_or_error = Core::MappedFile::map(library.path);
         if (file_or_error.is_error())

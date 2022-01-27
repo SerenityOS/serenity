@@ -79,7 +79,7 @@ Reader::~Reader()
 }
 
 Reader::NotesEntryIterator::NotesEntryIterator(const u8* notes_data)
-    : m_current((const ELF::Core::NotesEntry*)notes_data)
+    : m_current(bit_cast<const ELF::Core::NotesEntry*>(notes_data))
     , start(notes_data)
 {
 }
@@ -104,23 +104,23 @@ void Reader::NotesEntryIterator::next()
     VERIFY(!at_end());
     switch (type()) {
     case ELF::Core::NotesEntryHeader::Type::ProcessInfo: {
-        const auto* current = reinterpret_cast<const ELF::Core::ProcessInfo*>(m_current);
-        m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->json_data + strlen(current->json_data) + 1);
+        const auto* current = bit_cast<const ELF::Core::ProcessInfo*>(m_current);
+        m_current = bit_cast<const ELF::Core::NotesEntry*>(current->json_data + strlen(current->json_data) + 1);
         break;
     }
     case ELF::Core::NotesEntryHeader::Type::ThreadInfo: {
-        const auto* current = reinterpret_cast<const ELF::Core::ThreadInfo*>(m_current);
-        m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current + 1);
+        const auto* current = bit_cast<const ELF::Core::ThreadInfo*>(m_current);
+        m_current = bit_cast<const ELF::Core::NotesEntry*>(current + 1);
         break;
     }
     case ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo: {
-        const auto* current = reinterpret_cast<const ELF::Core::MemoryRegionInfo*>(m_current);
-        m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->region_name + strlen(current->region_name) + 1);
+        const auto* current = bit_cast<const ELF::Core::MemoryRegionInfo*>(m_current);
+        m_current = bit_cast<const ELF::Core::NotesEntry*>(current->region_name + strlen(current->region_name) + 1);
         break;
     }
     case ELF::Core::NotesEntryHeader::Type::Metadata: {
-        const auto* current = reinterpret_cast<const ELF::Core::Metadata*>(m_current);
-        m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->json_data + strlen(current->json_data) + 1);
+        const auto* current = bit_cast<const ELF::Core::Metadata*>(m_current);
+        m_current = bit_cast<const ELF::Core::NotesEntry*>(current->json_data + strlen(current->json_data) + 1);
         break;
     }
     default:
@@ -149,10 +149,11 @@ Optional<FlatPtr> Reader::peek_memory(FlatPtr address) const
 const JsonObject Reader::process_info() const
 {
     const ELF::Core::ProcessInfo* process_info_notes_entry = nullptr;
-    for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
+    NotesEntryIterator it(bit_cast<const u8*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
+    for (; !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::ProcessInfo)
             continue;
-        process_info_notes_entry = reinterpret_cast<const ELF::Core::ProcessInfo*>(it.current());
+        process_info_notes_entry = bit_cast<const ELF::Core::ProcessInfo*>(it.current());
         break;
     }
     if (!process_info_notes_entry)
@@ -203,10 +204,10 @@ u8 Reader::process_termination_signal() const
 {
     auto process_info = this->process_info();
     auto termination_signal = process_info.get("termination_signal");
-    auto signal_number = termination_signal.to_number<int>();
+    auto signal_number = termination_signal.to_number<u8>();
     if (signal_number <= SIGINVAL || signal_number >= NSIG)
         return SIGINVAL;
-    return (u8)signal_number;
+    return signal_number;
 }
 
 String Reader::process_executable_path() const
@@ -247,10 +248,11 @@ Vector<String> Reader::process_environment() const
 HashMap<String, String> Reader::metadata() const
 {
     const ELF::Core::Metadata* metadata_notes_entry = nullptr;
-    for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
+    NotesEntryIterator it(bit_cast<const u8*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
+    for (; !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::Metadata)
             continue;
-        metadata_notes_entry = reinterpret_cast<const ELF::Core::Metadata*>(it.current());
+        metadata_notes_entry = bit_cast<const ELF::Core::Metadata*>(it.current());
         break;
     }
     if (!metadata_notes_entry)
@@ -266,11 +268,6 @@ HashMap<String, String> Reader::metadata() const
     });
     return metadata;
 }
-
-struct LibraryData {
-    String name;
-    ELF::Image lib_elf;
-};
 
 const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
 {
@@ -293,7 +290,7 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
         if (file_or_error.is_error())
             return {};
         auto image = ELF::Image(file_or_error.value()->bytes());
-        cached_libs.set(path, make<LibraryData>(name, (FlatPtr)region->region_start, file_or_error.release_value(), move(image)));
+        cached_libs.set(path, make<LibraryData>(name, static_cast<FlatPtr>(region->region_start), file_or_error.release_value(), move(image)));
     }
 
     auto lib_data = cached_libs.get(path).value();
@@ -317,7 +314,7 @@ void Reader::for_each_library(Function<void(LibraryInfo)> func) const
             path = name;
         }
 
-        func(LibraryInfo { name, path, (FlatPtr)region.region_start });
+        func(LibraryInfo { name, path, static_cast<FlatPtr>(region.region_start) });
         return IterationDecision::Continue;
     });
 }
