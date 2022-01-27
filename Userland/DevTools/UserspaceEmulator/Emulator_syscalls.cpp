@@ -121,6 +121,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getpgrp();
     case SC_getpid:
         return virt$getpid();
+    case SC_getppid:
+        return virt$getppid();
     case SC_getrandom:
         return virt$getrandom(arg1, arg2, arg3);
     case SC_getsid:
@@ -971,6 +973,11 @@ u32 Emulator::virt$gettid()
 u32 Emulator::virt$getpid()
 {
     return getpid();
+}
+
+pid_t Emulator::virt$getppid()
+{
+    return getppid();
 }
 
 u32 Emulator::virt$pledge(u32)
