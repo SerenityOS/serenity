@@ -28,7 +28,7 @@ UNMAP_AFTER_INIT RandomDevice::~RandomDevice()
 {
 }
 
-bool RandomDevice::can_read(const OpenFileDescription&, size_t) const
+bool RandomDevice::can_read(const OpenFileDescription&, u64) const
 {
     return true;
 }

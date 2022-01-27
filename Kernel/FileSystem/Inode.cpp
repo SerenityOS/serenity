@@ -154,11 +154,12 @@ bool Inode::unbind_socket()
     return true;
 }
 
-void Inode::register_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
+ErrorOr<void> Inode::register_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!m_watchers.contains(&watcher));
-    m_watchers.set(&watcher);
+    TRY(m_watchers.try_set(&watcher));
+    return {};
 }
 
 void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)

@@ -381,8 +381,8 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         }
 
         // FIXME: Handle possible OOM situation here.
-        ByteBuffer wbuf = ByteBuffer::create_uninitialized(512).release_value();
-        ByteBuffer bbuf = ByteBuffer::create_uninitialized(512).release_value();
+        ByteBuffer wbuf = ByteBuffer::create_uninitialized(512).release_value_but_fixme_should_propagate_errors();
+        ByteBuffer bbuf = ByteBuffer::create_uninitialized(512).release_value_but_fixme_should_propagate_errors();
         u8* b = bbuf.data();
         u16* w = (u16*)wbuf.data();
 

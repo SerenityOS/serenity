@@ -46,6 +46,37 @@ describe("normal behavior", () => {
         expect(typeof wrappedFunction).toBe("function");
         expect(Object.getPrototypeOf(wrappedFunction)).toBe(Function.prototype);
 
+        expect(shadowRealm.evaluate("(function () {})").name).toBe("wrapped ");
+        expect(shadowRealm.evaluate("(function foo() {})").name).toBe("wrapped foo");
+        expect(shadowRealm.evaluate("(function () {})")).toHaveLength(0);
+        expect(shadowRealm.evaluate("(function (foo, bar) {})")).toHaveLength(2);
+        expect(
+            shadowRealm.evaluate(
+                "Object.defineProperty(function () {}, 'length', { get() { return -Infinity } })"
+            )
+        ).toHaveLength(0);
+        expect(
+            shadowRealm.evaluate(
+                "Object.defineProperty(function () {}, 'length', { get() { return Infinity } })"
+            )
+        ).toHaveLength(Infinity);
+
+        for (const property of ["name", "length"]) {
+            expect(() => {
+                shadowRealm.evaluate(
+                    `
+                    function foo() {}
+                    Object.defineProperty(foo, "${property}", {
+                        get() { throw Error(); }
+                    });
+                    `
+                );
+            }).toThrowWithMessage(
+                TypeError,
+                "Trying to copy target name and length did not complete normally"
+            );
+        }
+
         expect(() => {
             shadowRealm.evaluate("(function () { throw Error(); })")();
         }).toThrowWithMessage(

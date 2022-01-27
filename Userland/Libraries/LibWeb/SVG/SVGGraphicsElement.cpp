@@ -1,10 +1,11 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
 
 namespace Web::SVG {
@@ -14,25 +15,27 @@ SVGGraphicsElement::SVGGraphicsElement(DOM::Document& document, QualifiedName qu
 {
 }
 
-void SVGGraphicsElement::parse_attribute(FlyString const& name, String const& value)
+void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
-    SVGElement::parse_attribute(name, value);
-
-    if (name == "fill") {
-        m_fill_color = Gfx::Color::from_string(value).value_or(Color::Transparent);
-    } else if (name == "stroke") {
-        m_stroke_color = Gfx::Color::from_string(value).value_or(Color::Transparent);
-    } else if (name == "stroke-width") {
-        auto result = value.to_int();
-        if (result.has_value())
-            m_stroke_width = result.value();
-    }
+    CSS::ParsingContext parsing_context { document() };
+    for_each_attribute([&](auto& name, auto& value) {
+        if (name.equals_ignoring_case("fill")) {
+            // FIXME: The `fill` attribute and CSS `fill` property are not the same! But our support is limited enough that they are equivalent for now.
+            if (auto fill_value = parse_css_value(parsing_context, value, CSS::PropertyID::Fill))
+                style.set_property(CSS::PropertyID::Fill, fill_value.release_nonnull());
+        } else if (name.equals_ignoring_case("stroke")) {
+            // FIXME: The `stroke` attribute and CSS `stroke` property are not the same! But our support is limited enough that they are equivalent for now.
+            if (auto stroke_value = parse_css_value(parsing_context, value, CSS::PropertyID::Stroke))
+                style.set_property(CSS::PropertyID::Stroke, stroke_value.release_nonnull());
+        } else if (name.equals_ignoring_case("stroke-width")) {
+            if (auto stroke_width_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeWidth))
+                style.set_property(CSS::PropertyID::StrokeWidth, stroke_width_value.release_nonnull());
+        }
+    });
 }
 
 Optional<Gfx::Color> SVGGraphicsElement::fill_color() const
 {
-    if (m_fill_color.has_value())
-        return m_fill_color;
     if (!layout_node())
         return {};
     // FIXME: In the working-draft spec, `fill` is intended to be a shorthand, with `fill-color`
@@ -42,8 +45,6 @@ Optional<Gfx::Color> SVGGraphicsElement::fill_color() const
 
 Optional<Gfx::Color> SVGGraphicsElement::stroke_color() const
 {
-    if (m_stroke_color.has_value())
-        return m_stroke_color;
     if (!layout_node())
         return {};
     // FIXME: In the working-draft spec, `stroke` is intended to be a shorthand, with `stroke-color`
@@ -53,8 +54,6 @@ Optional<Gfx::Color> SVGGraphicsElement::stroke_color() const
 
 Optional<float> SVGGraphicsElement::stroke_width() const
 {
-    if (m_stroke_width.has_value())
-        return m_stroke_width;
     if (!layout_node())
         return {};
     // FIXME: Converting to pixels isn't really correct - values should be in "user units"

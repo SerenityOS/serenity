@@ -106,6 +106,9 @@ set(SOURCES
     Runtime/Intl/NumberFormatConstructor.cpp
     Runtime/Intl/NumberFormatFunction.cpp
     Runtime/Intl/NumberFormatPrototype.cpp
+    Runtime/Intl/RelativeTimeFormat.cpp
+    Runtime/Intl/RelativeTimeFormatConstructor.cpp
+    Runtime/Intl/RelativeTimeFormatPrototype.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp

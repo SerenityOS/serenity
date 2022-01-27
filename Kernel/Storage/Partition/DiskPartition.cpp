@@ -49,28 +49,28 @@ void DiskPartition::start_request(AsyncBlockDeviceRequest& request)
 
 ErrorOr<size_t> DiskPartition::read(OpenFileDescription& fd, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
 {
-    unsigned adjust = m_metadata.start_block() * block_size();
+    u64 adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::read offset={}, adjust={}, len={}", fd.offset(), adjust, len);
     return m_device.strong_ref()->read(fd, offset + adjust, outbuf, len);
 }
 
-bool DiskPartition::can_read(const OpenFileDescription& fd, size_t offset) const
+bool DiskPartition::can_read(const OpenFileDescription& fd, u64 offset) const
 {
-    unsigned adjust = m_metadata.start_block() * block_size();
+    u64 adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::can_read offset={}, adjust={}", offset, adjust);
     return m_device.strong_ref()->can_read(fd, offset + adjust);
 }
 
 ErrorOr<size_t> DiskPartition::write(OpenFileDescription& fd, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
-    unsigned adjust = m_metadata.start_block() * block_size();
+    u64 adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::write offset={}, adjust={}, len={}", offset, adjust, len);
     return m_device.strong_ref()->write(fd, offset + adjust, inbuf, len);
 }
 
-bool DiskPartition::can_write(const OpenFileDescription& fd, size_t offset) const
+bool DiskPartition::can_write(const OpenFileDescription& fd, u64 offset) const
 {
-    unsigned adjust = m_metadata.start_block() * block_size();
+    u64 adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::can_write offset={}, adjust={}", offset, adjust);
     return m_device.strong_ref()->can_write(fd, offset + adjust);
 }

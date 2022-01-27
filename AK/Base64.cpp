@@ -48,31 +48,24 @@ size_t calculate_base64_encoded_length(ReadonlyBytes input)
     return ((4 * input.size() / 3) + 3) & ~3;
 }
 
-Optional<ByteBuffer> decode_base64(StringView input)
+ErrorOr<ByteBuffer> decode_base64(StringView input)
 {
-    auto get = [&](const size_t offset, bool* is_padding) -> Optional<u8> {
+    auto get = [&](const size_t offset, bool* is_padding) -> ErrorOr<u8> {
         constexpr auto table = make_lookup_table();
         if (offset >= input.length())
             return 0;
         if (input[offset] == '=') {
             if (!is_padding)
-                return {};
+                return Error::from_string_literal("Invalid '=' character outside of padding in base64 data");
             *is_padding = true;
             return 0;
         }
         i16 result = table[static_cast<unsigned char>(input[offset])];
         if (result < 0)
-            return {};
+            return Error::from_string_literal("Invalid character in base64 data");
         VERIFY(result < 256);
         return { result };
     };
-#define TRY_GET(index, is_padding)                       \
-    ({                                                   \
-        auto _temporary_result = get(index, is_padding); \
-        if (!_temporary_result.has_value())              \
-            return {};                                   \
-        _temporary_result.value();                       \
-    })
 
     Vector<u8> output;
     output.ensure_capacity(calculate_base64_decoded_length(input));
@@ -81,10 +74,10 @@ Optional<ByteBuffer> decode_base64(StringView input)
         bool in2_is_padding = false;
         bool in3_is_padding = false;
 
-        const u8 in0 = TRY_GET(i, nullptr);
-        const u8 in1 = TRY_GET(i + 1, nullptr);
-        const u8 in2 = TRY_GET(i + 2, &in2_is_padding);
-        const u8 in3 = TRY_GET(i + 3, &in3_is_padding);
+        const u8 in0 = TRY(get(i, nullptr));
+        const u8 in1 = TRY(get(i + 1, nullptr));
+        const u8 in2 = TRY(get(i + 2, &in2_is_padding));
+        const u8 in3 = TRY(get(i + 3, &in3_is_padding));
 
         const u8 out0 = (in0 << 2) | ((in1 >> 4) & 3);
         const u8 out1 = ((in1 & 0xf) << 4) | ((in2 >> 2) & 0xf);

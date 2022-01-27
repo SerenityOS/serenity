@@ -78,6 +78,7 @@ private:
     void compute_font(StyleProperties&, DOM::Element const*) const;
     void compute_defaulted_values(StyleProperties&, DOM::Element const*) const;
     void absolutize_values(StyleProperties&, DOM::Element const*) const;
+    void transform_box_type_if_needed(StyleProperties&, DOM::Element const&) const;
 
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID) const;
 

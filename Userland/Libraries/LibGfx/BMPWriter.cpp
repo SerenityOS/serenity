@@ -46,7 +46,7 @@ static ByteBuffer write_pixel_data(const RefPtr<Bitmap> bitmap, int pixel_row_da
 {
     int image_size = pixel_row_data_size * bitmap->height();
     auto buffer_result = ByteBuffer::create_uninitialized(image_size);
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return {};
 
     auto buffer = buffer_result.release_value();
@@ -100,7 +100,7 @@ ByteBuffer BMPWriter::dump(const RefPtr<Bitmap> bitmap, DibHeader dib_header)
     int pixel_row_data_size = (m_bytes_per_pixel * 8 * bitmap->width() + 31) / 32 * 4;
     int image_size = pixel_row_data_size * bitmap->height();
     auto buffer_result = ByteBuffer::create_uninitialized(pixel_data_offset);
-    if (!buffer_result.has_value())
+    if (buffer_result.is_error())
         return {};
 
     auto buffer = buffer_result.release_value();

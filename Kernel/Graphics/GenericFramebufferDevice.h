@@ -33,8 +33,8 @@ public:
 
 private:
     // ^File
-    virtual bool can_read(const OpenFileDescription&, size_t) const override final { return true; }
-    virtual bool can_write(const OpenFileDescription&, size_t) const override final { return true; }
+    virtual bool can_read(const OpenFileDescription&, u64) const override final { return true; }
+    virtual bool can_write(const OpenFileDescription&, u64) const override final { return true; }
     virtual void start_request(AsyncBlockDeviceRequest& request) override final { request.complete(AsyncDeviceRequest::Failure); }
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; }

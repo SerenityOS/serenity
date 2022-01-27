@@ -131,7 +131,7 @@ ErrorOr<void> BlockBasedFileSystem::initialize()
     return {};
 }
 
-ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
+ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, u64 offset, bool allow_cache)
 {
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
@@ -140,17 +140,14 @@ ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKe
     // NOTE: We copy the `data` to write into a local buffer before taking the cache lock.
     //       This makes sure any page faults caused by accessing the data will occur before
     //       we tie down the cache.
-    auto buffered_data_or_error = ByteBuffer::create_uninitialized(count);
-    if (!buffered_data_or_error.has_value())
-        return ENOMEM;
-    auto buffered_data = buffered_data_or_error.release_value();
+    auto buffered_data = TRY(ByteBuffer::create_uninitialized(count));
 
     TRY(data.read(buffered_data.bytes()));
 
     return m_cache.with_exclusive([&](auto& cache) -> ErrorOr<void> {
         if (!allow_cache) {
             flush_specific_block_if_needed(index);
-            auto base_offset = index.value() * block_size() + offset;
+            u64 base_offset = index.value() * block_size() + offset;
             auto nwritten = TRY(file_description().write(base_offset, data, count));
             VERIFY(nwritten == count);
             return {};
@@ -215,7 +212,7 @@ ErrorOr<void> BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned coun
     return {};
 }
 
-ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, size_t offset, bool allow_cache) const
+ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, u64 offset, bool allow_cache) const
 {
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
@@ -224,7 +221,7 @@ ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuf
     return m_cache.with_exclusive([&](auto& cache) -> ErrorOr<void> {
         if (!allow_cache) {
             const_cast<BlockBasedFileSystem*>(this)->flush_specific_block_if_needed(index);
-            auto base_offset = index.value() * block_size() + offset;
+            u64 base_offset = index.value() * block_size() + offset;
             auto nread = TRY(file_description().read(*buffer, base_offset, count));
             VERIFY(nread == count);
             return {};

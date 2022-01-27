@@ -46,8 +46,8 @@ void Client::start()
         StringBuilder builder;
 
         auto maybe_buffer = ByteBuffer::create_uninitialized(m_socket->buffer_size());
-        if (!maybe_buffer.has_value()) {
-            warnln("Could not create buffer for client (possibly out of memory)");
+        if (maybe_buffer.is_error()) {
+            warnln("Could not create buffer for client: {}", maybe_buffer.error());
             die();
             return;
         }

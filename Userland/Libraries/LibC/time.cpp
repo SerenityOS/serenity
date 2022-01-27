@@ -11,7 +11,9 @@
 #include <LibTimeZone/TimeZone.h>
 #include <assert.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/times.h>
@@ -143,11 +145,14 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
 
 time_t mktime(struct tm* tm)
 {
+    tzset();
     return tm_to_time(tm, timezone);
 }
 
 struct tm* localtime(const time_t* t)
 {
+    tzset();
+
     static struct tm tm_buf;
     return localtime_r(t, &tm_buf);
 }
@@ -157,13 +162,7 @@ struct tm* localtime_r(const time_t* t, struct tm* tm)
     if (!t)
         return nullptr;
 
-    auto time_zone = TimeZone::current_time_zone();
-    auto time = AK::Time::from_seconds(*t);
-
-    if (auto offset = TimeZone::get_time_zone_offset(time_zone, time); offset.has_value())
-        time += AK::Time::from_seconds(offset->seconds);
-
-    time_to_tm(tm, time.to_seconds());
+    time_to_tm(tm, *t - timezone);
     return tm;
 }
 
@@ -207,6 +206,8 @@ char* asctime_r(const struct tm* tm, char* buffer)
 // FIXME: Some formats are not supported.
 size_t strftime(char* destination, size_t max_size, const char* format, const struct tm* tm)
 {
+    tzset();
+
     const char wday_short_names[7][4] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };
@@ -353,20 +354,49 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
     return fits ? str.length() : 0;
 }
 
-long timezone;
-long altzone;
-char* tzname[2];
-int daylight;
-
+static char __tzname_standard[TZNAME_MAX];
+static char __tzname_daylight[TZNAME_MAX];
 constexpr const char* __utc = "UTC";
+
+long timezone = 0;
+long altzone = 0;
+char* tzname[2] = { const_cast<char*>(__utc), const_cast<char*>(__utc) };
+int daylight = 0;
 
 void tzset()
 {
-    // FIXME: Here we pretend we are in UTC+0.
-    timezone = 0;
-    daylight = 0;
-    tzname[0] = const_cast<char*>(__utc);
-    tzname[1] = const_cast<char*>(__utc);
+    // FIXME: Actually parse the TZ environment variable, described here:
+    // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html#tag_08
+    StringView time_zone;
+
+    if (char* tz = getenv("TZ"); tz != nullptr)
+        time_zone = tz;
+    else
+        time_zone = TimeZone::system_time_zone();
+
+    auto set_default_values = []() {
+        timezone = 0;
+        altzone = 0;
+        daylight = 0;
+        tzname[0] = const_cast<char*>(__utc);
+        tzname[1] = const_cast<char*>(__utc);
+    };
+
+    if (auto offsets = TimeZone::get_named_time_zone_offsets(time_zone, AK::Time::now_realtime()); offsets.has_value()) {
+        if (!offsets->at(0).name.copy_characters_to_buffer(__tzname_standard, TZNAME_MAX))
+            return set_default_values();
+        if (!offsets->at(1).name.copy_characters_to_buffer(__tzname_daylight, TZNAME_MAX))
+            return set_default_values();
+
+        // timezone and altzone are seconds west of UTC, i.e. the offsets are negated.
+        timezone = -offsets->at(0).seconds;
+        altzone = -offsets->at(1).seconds;
+        daylight = timezone != altzone;
+        tzname[0] = __tzname_standard;
+        tzname[1] = __tzname_daylight;
+    } else {
+        set_default_values();
+    }
 }
 
 clock_t clock()

@@ -159,7 +159,7 @@ public:
 
     virtual ErrorOr<void> close() override;
 
-    virtual bool can_write(const OpenFileDescription&, size_t) const override;
+    virtual bool can_write(const OpenFileDescription&, u64) const override;
 
     static NetworkOrdered<u16> compute_tcp_checksum(IPv4Address const& source, IPv4Address const& destination, TCPPacket const&, u16 payload_size);
 

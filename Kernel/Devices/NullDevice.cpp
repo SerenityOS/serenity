@@ -28,7 +28,7 @@ UNMAP_AFTER_INIT NullDevice::~NullDevice()
 {
 }
 
-bool NullDevice::can_read(const OpenFileDescription&, size_t) const
+bool NullDevice::can_read(const OpenFileDescription&, u64) const
 {
     return true;
 }

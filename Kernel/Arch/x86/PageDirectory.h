@@ -95,6 +95,7 @@ public:
         UserSupervisor = 1 << 2,
         WriteThrough = 1 << 3,
         CacheDisabled = 1 << 4,
+        PAT = 1 << 7,
         Global = 1 << 8,
         NoExecute = 0x8000000000000000ULL,
     };
@@ -119,6 +120,9 @@ public:
 
     bool is_execute_disabled() const { return (raw() & NoExecute) == NoExecute; }
     void set_execute_disabled(bool b) { set_bit(NoExecute, b); }
+
+    bool is_pat() const { return (raw() & PAT) == PAT; }
+    void set_pat(bool b) { set_bit(PAT, b); }
 
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }

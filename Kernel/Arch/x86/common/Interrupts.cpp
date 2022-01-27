@@ -220,7 +220,7 @@ void handle_crash(RegisterState const& regs, char const* description, int signal
         PANIC("{} with !Thread::current()", description);
 
     auto crashed_in_kernel = (regs.cs & 3) == 0;
-    if (!crashed_in_kernel && !current_thread->should_ignore_signal(signal) && !current_thread->is_signal_masked(signal)) {
+    if (!crashed_in_kernel && current_thread->has_signal_handler(signal) && !current_thread->should_ignore_signal(signal) && !current_thread->is_signal_masked(signal)) {
         current_thread->send_urgent_signal_to_self(signal);
         return;
     }

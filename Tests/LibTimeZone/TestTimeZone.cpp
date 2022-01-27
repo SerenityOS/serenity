@@ -147,6 +147,36 @@ TEST_CASE(get_time_zone_offset_with_dst)
     test_offset("Europe/Moscow"sv, -1596412800, offset(+1, 4, 31, 19), Yes); // Sunday, June 1, 1919 12:00:00 AM
     test_offset("Europe/Moscow"sv, -1592611200, offset(+1, 4, 00, 00), Yes); // Tuesday, July 15, 1919 12:00:00 AM
     test_offset("Europe/Moscow"sv, -1589068800, offset(+1, 3, 00, 00), No);  // Monday, August 25, 1919 12:00:00 AM
+
+    // Paraguay begins the year in DST.
+    test_offset("America/Asuncion"sv, 1642558528, offset(-1, 3, 00, 00), Yes); // Wednesday, January 19, 2022 2:15:28 AM
+    test_offset("America/Asuncion"sv, 1663553728, offset(-1, 4, 00, 00), No);  // Monday, September 19, 2022 2:15:28 AM
+    test_offset("America/Asuncion"sv, 1671453238, offset(-1, 3, 00, 00), Yes); // Monday, December 19, 2022 12:33:58 PM
+}
+
+TEST_CASE(get_named_time_zone_offsets)
+{
+    auto test_named_offsets = [](auto time_zone, i64 time, i64 expected_standard_offset, i64 expected_daylight_offset, auto expected_standard_name, auto expected_daylight_name) {
+        auto actual_offsets = TimeZone::get_named_time_zone_offsets(time_zone, AK::Time::from_seconds(time));
+        VERIFY(actual_offsets.has_value());
+
+        EXPECT_EQ(actual_offsets->at(0).seconds, expected_standard_offset);
+        EXPECT_EQ(actual_offsets->at(1).seconds, expected_daylight_offset);
+        EXPECT_EQ(actual_offsets->at(0).name, expected_standard_name);
+        EXPECT_EQ(actual_offsets->at(1).name, expected_daylight_name);
+    };
+
+    test_named_offsets("America/New_York"sv, 1642558528, offset(-1, 5, 00, 00), offset(-1, 4, 00, 00), "EST"sv, "EDT"sv); // Wednesday, January 19, 2022 2:15:28 AM
+    test_named_offsets("UTC"sv, 1642558528, offset(+1, 0, 00, 00), offset(+1, 0, 00, 00), "UTC"sv, "UTC"sv);              // Wednesday, January 19, 2022 2:15:28 AM
+    test_named_offsets("GMT"sv, 1642558528, offset(+1, 0, 00, 00), offset(+1, 0, 00, 00), "GMT"sv, "GMT"sv);              // Wednesday, January 19, 2022 2:15:28 AM
+
+    // Phoenix does not observe DST.
+    test_named_offsets("America/Phoenix"sv, 1642558528, offset(-1, 7, 00, 00), offset(-1, 7, 00, 00), "MST"sv, "MST"sv); // Wednesday, January 19, 2022 2:15:28 AM
+
+    // Moscow's observed DST changed several times in 1919.
+    test_named_offsets("Europe/Moscow"sv, -1609459200, offset(+1, 2, 31, 19), offset(+1, 3, 31, 19), "MSK"sv, "MSD"sv);  // Wednesday, January 1, 1919 12:00:00 AM
+    test_named_offsets("Europe/Moscow"sv, -1596412800, offset(+1, 2, 31, 19), offset(+1, 4, 31, 19), "MSK"sv, "MDST"sv); // Sunday, June 1, 1919 12:00:00 AM
+    test_named_offsets("Europe/Moscow"sv, -1589068800, offset(+1, 3, 00, 00), offset(+1, 4, 00, 00), "MSK"sv, "MSD"sv);  // Monday, August 25, 1919 12:00:00 AM
 }
 
 #else

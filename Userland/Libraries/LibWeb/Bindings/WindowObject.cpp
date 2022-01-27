@@ -340,7 +340,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "atob");
     auto string = TRY(vm.argument(0).to_string(global_object));
     auto decoded = decode_base64(StringView(string));
-    if (!decoded.has_value())
+    if (decoded.is_error())
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::InvalidFormat, "Base64");
 
     // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.

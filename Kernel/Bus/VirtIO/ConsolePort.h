@@ -24,7 +24,8 @@ class Console;
 class ConsolePort
     : public CharacterDevice {
 public:
-    explicit ConsolePort(unsigned port, VirtIO::Console&);
+    static ErrorOr<NonnullRefPtr<ConsolePort>> try_create(unsigned port, VirtIO::Console&);
+
     void handle_queue_update(Badge<VirtIO::Console>, u16 queue_index);
 
     void set_open(Badge<VirtIO::Console>, bool state) { m_open = state; }
@@ -35,11 +36,13 @@ public:
 private:
     constexpr static size_t RINGBUFFER_SIZE = 2 * PAGE_SIZE;
 
+    ConsolePort(unsigned port, VirtIO::Console& console, NonnullOwnPtr<Memory::RingBuffer> receive_buffer, NonnullOwnPtr<Memory::RingBuffer> transmit_buffer);
+
     virtual StringView class_name() const override { return "VirtIOConsolePort"sv; }
 
-    virtual bool can_read(const OpenFileDescription&, size_t) const override;
+    virtual bool can_read(const OpenFileDescription&, u64) const override;
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const OpenFileDescription&, size_t) const override;
+    virtual bool can_write(const OpenFileDescription&, u64) const override;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
 
@@ -47,8 +50,8 @@ private:
     u16 m_receive_queue {};
     u16 m_transmit_queue {};
 
-    OwnPtr<Memory::RingBuffer> m_receive_buffer;
-    OwnPtr<Memory::RingBuffer> m_transmit_buffer;
+    NonnullOwnPtr<Memory::RingBuffer> m_receive_buffer;
+    NonnullOwnPtr<Memory::RingBuffer> m_transmit_buffer;
 
     VirtIO::Console& m_console;
     unsigned m_port;

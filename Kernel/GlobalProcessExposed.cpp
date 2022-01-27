@@ -459,10 +459,9 @@ private:
             if (process.is_user_process()) {
                 StringBuilder pledge_builder;
 
-#define __ENUMERATE_PLEDGE_PROMISE(promise)      \
-    if (process.has_promised(Pledge::promise)) { \
-        pledge_builder.append(#promise " ");     \
-    }
+#define __ENUMERATE_PLEDGE_PROMISE(promise)    \
+    if (process.has_promised(Pledge::promise)) \
+        TRY(pledge_builder.try_append(#promise " "));
                 ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
 
@@ -498,7 +497,7 @@ private:
             process_object.add("amount_virtual", process.address_space().amount_virtual());
             process_object.add("amount_resident", process.address_space().amount_resident());
             process_object.add("amount_dirty_private", process.address_space().amount_dirty_private());
-            process_object.add("amount_clean_inode", process.address_space().amount_clean_inode());
+            process_object.add("amount_clean_inode", TRY(process.address_space().amount_clean_inode()));
             process_object.add("amount_shared", process.address_space().amount_shared());
             process_object.add("amount_purgeable_volatile", process.address_space().amount_purgeable_volatile());
             process_object.add("amount_purgeable_nonvolatile", process.address_space().amount_purgeable_nonvolatile());

@@ -41,7 +41,6 @@ public:
     // FIXME: Once we have a singleton for managing many sound cards, remove this from here
     void attach_audio_device(CharacterDevice const&);
 
-    bool is_device_event_queue_ready_to_read() const;
     Optional<DeviceEvent> dequeue_top_device_event(Badge<DeviceControlDevice>);
 
     void after_inserting_device(Badge<Device>, Device&);
@@ -57,9 +56,17 @@ public:
     ConsoleDevice& console_device();
 
     template<typename DeviceType, typename... Args>
+    static inline ErrorOr<NonnullRefPtr<DeviceType>> try_create_device(Args&&... args) requires(requires(Args... args) { DeviceType::try_create(args...); })
+    {
+        auto device = TRY(DeviceType::try_create(forward<Args>(args)...));
+        device->after_inserting();
+        return device;
+    }
+
+    template<typename DeviceType, typename... Args>
     static inline ErrorOr<NonnullRefPtr<DeviceType>> try_create_device(Args&&... args)
     {
-        auto device = TRY(adopt_nonnull_ref_or_enomem(new DeviceType(forward<Args>(args)...)));
+        auto device = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DeviceType(forward<Args>(args)...)));
         device->after_inserting();
         return device;
     }

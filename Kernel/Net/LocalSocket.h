@@ -42,8 +42,8 @@ public:
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
     virtual ErrorOr<void> attach(OpenFileDescription&) override;
     virtual void detach(OpenFileDescription&) override;
-    virtual bool can_read(const OpenFileDescription&, size_t) const override;
-    virtual bool can_write(const OpenFileDescription&, size_t) const override;
+    virtual bool can_read(const OpenFileDescription&, u64) const override;
+    virtual bool can_write(const OpenFileDescription&, u64) const override;
     virtual ErrorOr<size_t> sendto(OpenFileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
     virtual ErrorOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
     virtual ErrorOr<void> getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;

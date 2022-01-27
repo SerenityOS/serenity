@@ -258,7 +258,7 @@ void LocalSocket::detach(OpenFileDescription& description)
     evaluate_block_conditions();
 }
 
-bool LocalSocket::can_read(const OpenFileDescription& description, size_t) const
+bool LocalSocket::can_read(const OpenFileDescription& description, u64) const
 {
     auto role = this->role(description);
     if (role == Role::Listener)
@@ -280,7 +280,7 @@ bool LocalSocket::has_attached_peer(const OpenFileDescription& description) cons
     return false;
 }
 
-bool LocalSocket::can_write(const OpenFileDescription& description, size_t) const
+bool LocalSocket::can_write(const OpenFileDescription& description, u64) const
 {
     auto role = this->role(description);
     if (role == Role::Accepted)

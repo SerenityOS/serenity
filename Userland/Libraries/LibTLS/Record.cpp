@@ -104,7 +104,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
             if (m_context.crypto.created == 1) {
                 // `buffer' will continue to be encrypted
                 auto buffer_result = ByteBuffer::create_uninitialized(length);
-                if (!buffer_result.has_value()) {
+                if (buffer_result.is_error()) {
                     dbgln("LibTLS: Failed to allocate enough memory");
                     VERIFY_NOT_REACHED();
                 }
@@ -124,7 +124,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         VERIFY(is_aead());
                         // We need enough space for a header, the data, a tag, and the IV
                         auto ct_buffer_result = ByteBuffer::create_uninitialized(length + header_size + iv_size + 16);
-                        if (!ct_buffer_result.has_value()) {
+                        if (ct_buffer_result.is_error()) {
                             dbgln("LibTLS: Failed to allocate enough memory for the ciphertext");
                             VERIFY_NOT_REACHED();
                         }
@@ -178,7 +178,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         VERIFY(!is_aead());
                         // We need enough space for a header, iv_length bytes of IV and whatever the packet contains
                         auto ct_buffer_result = ByteBuffer::create_uninitialized(length + header_size + iv_size);
-                        if (!ct_buffer_result.has_value()) {
+                        if (ct_buffer_result.is_error()) {
                             dbgln("LibTLS: Failed to allocate enough memory for the ciphertext");
                             VERIFY_NOT_REACHED();
                         }
@@ -201,7 +201,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         VERIFY(buffer_position == buffer.size());
 
                         auto iv_buffer_result = ByteBuffer::create_uninitialized(iv_size);
-                        if (!iv_buffer_result.has_value()) {
+                        if (iv_buffer_result.is_error()) {
                             dbgln("LibTLS: Failed to allocate memory for IV");
                             VERIFY_NOT_REACHED();
                         }
@@ -293,14 +293,14 @@ ByteBuffer TLSv12::hmac_message(ReadonlyBytes buf, const Optional<ReadonlyBytes>
     }
     auto digest = hmac.digest();
     auto mac_result = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
-    if (!mac_result.has_value()) {
+    if (mac_result.is_error()) {
         dbgln("Failed to calculate message HMAC: Not enough memory");
         return {};
     }
 
     if constexpr (TLS_DEBUG) {
         dbgln("HMAC of the block for sequence number {}", sequence_number);
-        print_buffer(*mac_result);
+        print_buffer(mac_result.value());
     }
 
     return mac_result.release_value();
@@ -367,7 +367,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 auto packet_length = length - iv_length() - 16;
                 auto payload = plain;
                 auto decrypted_result = ByteBuffer::create_uninitialized(packet_length);
-                if (!decrypted_result.has_value()) {
+                if (decrypted_result.is_error()) {
                     dbgln("Failed to allocate memory for the packet");
                     return_value = Error::DecryptionFailed;
                     return;
@@ -431,7 +431,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 auto iv_size = iv_length();
 
                 auto decrypted_result = cbc.create_aligned_buffer(length - iv_size);
-                if (!decrypted_result.has_value()) {
+                if (decrypted_result.is_error()) {
                     dbgln("Failed to allocate memory for the packet");
                     return_value = Error::DecryptionFailed;
                     return;

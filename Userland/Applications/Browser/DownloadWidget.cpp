@@ -8,9 +8,8 @@
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
-#include <LibCore/File.h>
-#include <LibCore/FileStream.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -46,13 +45,13 @@ DownloadWidget::DownloadWidget(const URL& url)
     };
 
     {
-        auto file_or_error = Core::File::open(m_destination_path, Core::OpenMode::WriteOnly);
+        auto file_or_error = Core::Stream::File::open(m_destination_path, Core::Stream::OpenMode::Write);
         if (file_or_error.is_error()) {
             GUI::MessageBox::show(window(), String::formatted("Cannot open {} for writing", m_destination_path), "Download failed", GUI::MessageBox::Type::Error);
             window()->close();
             return;
         }
-        m_output_file_stream = make<Core::OutputFileStream>(*file_or_error.value());
+        m_output_file_stream = file_or_error.release_value();
     }
 
     m_download->on_finish = [this](bool success, auto) { did_finish(success); };

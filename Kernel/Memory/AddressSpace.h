@@ -48,7 +48,7 @@ public:
     Region* find_region_from_range(VirtualRange const&);
     Region* find_region_containing(VirtualRange const&);
 
-    Vector<Region*> find_regions_intersecting(VirtualRange const&);
+    ErrorOr<Vector<Region*>> find_regions_intersecting(VirtualRange const&);
 
     bool enforces_syscall_regions() const { return m_enforces_syscall_regions; }
     void set_enforces_syscall_regions(bool b) { m_enforces_syscall_regions = b; }
@@ -57,7 +57,7 @@ public:
 
     RecursiveSpinlock& get_lock() const { return m_lock; }
 
-    size_t amount_clean_inode() const;
+    ErrorOr<size_t> amount_clean_inode() const;
     size_t amount_dirty_private() const;
     size_t amount_virtual() const;
     size_t amount_resident() const;

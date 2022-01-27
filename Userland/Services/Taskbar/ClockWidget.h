@@ -30,7 +30,11 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
 
-    void tick_clock() { update(); }
+    void tick_clock()
+    {
+        tzset();
+        update();
+    }
 
     void open();
     void close();

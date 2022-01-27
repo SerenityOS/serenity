@@ -99,13 +99,9 @@ public:
                         m_current_byte.clear();
                 }
             } else {
-                // FIXME: This returns Optional so TRY is not useable
-                auto temp_buffer = ByteBuffer::create_uninitialized(1);
-                if (!temp_buffer.has_value())
-                    return Error::from_string_literal("Couldn't allocate temporary byte buffer"sv);
-
-                TRY(m_stream.read(temp_buffer->bytes()));
-                m_current_byte = (*temp_buffer)[0];
+                auto temp_buffer = TRY(ByteBuffer::create_uninitialized(1));
+                TRY(m_stream.read(temp_buffer.bytes()));
+                m_current_byte = temp_buffer[0];
                 m_bit_offset = 0;
             }
         }

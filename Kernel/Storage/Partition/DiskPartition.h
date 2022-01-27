@@ -24,9 +24,9 @@ public:
 
     // ^BlockDevice
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const OpenFileDescription&, size_t) const override;
+    virtual bool can_read(const OpenFileDescription&, u64) const override;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const OpenFileDescription&, size_t) const override;
+    virtual bool can_write(const OpenFileDescription&, u64) const override;
 
     const DiskPartitionMetadata& metadata() const;
 

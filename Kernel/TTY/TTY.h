@@ -23,8 +23,8 @@ public:
 
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const OpenFileDescription&, size_t) const override;
-    virtual bool can_write(const OpenFileDescription&, size_t) const override;
+    virtual bool can_read(const OpenFileDescription&, u64) const override;
+    virtual bool can_write(const OpenFileDescription&, u64) const override;
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override final;
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 

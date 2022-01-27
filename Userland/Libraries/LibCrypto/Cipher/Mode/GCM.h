@@ -68,12 +68,12 @@ public:
     {
         auto iv_buf_result = ByteBuffer::copy(iv_in);
         // Not enough memory to figure out :shrug:
-        if (!iv_buf_result.has_value()) {
+        if (iv_buf_result.is_error()) {
             dbgln("GCM::encrypt: Not enough memory to allocate {} bytes for IV", iv_in.size());
             return;
         }
 
-        auto iv = iv_buf_result->bytes();
+        auto iv = iv_buf_result.value().bytes();
 
         // Increment the IV for block 0
         CTR<T>::increment(iv);
@@ -98,10 +98,10 @@ public:
     {
         auto iv_buf_result = ByteBuffer::copy(iv_in);
         // Not enough memory to figure out :shrug:
-        if (!iv_buf_result.has_value())
+        if (iv_buf_result.is_error())
             return VerificationConsistency::Inconsistent;
 
-        auto iv = iv_buf_result->bytes();
+        auto iv = iv_buf_result.value().bytes();
 
         // Increment the IV for block 0
         CTR<T>::increment(iv);

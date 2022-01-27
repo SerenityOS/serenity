@@ -73,13 +73,13 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
         break;
     case DisplayNames::Type::Currency:
         switch (display_names->style()) {
-        case DisplayNames::Style::Long:
+        case Unicode::Style::Long:
             result = Unicode::get_locale_long_currency_mapping(display_names->locale(), code.as_string().string());
             break;
-        case DisplayNames::Style::Short:
+        case Unicode::Style::Short:
             result = Unicode::get_locale_short_currency_mapping(display_names->locale(), code.as_string().string());
             break;
-        case DisplayNames::Style::Narrow:
+        case Unicode::Style::Narrow:
             result = Unicode::get_locale_narrow_currency_mapping(display_names->locale(), code.as_string().string());
             break;
         default:
@@ -91,13 +91,13 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
         break;
     case DisplayNames::Type::DateTimeField:
         switch (display_names->style()) {
-        case DisplayNames::Style::Long:
+        case Unicode::Style::Long:
             result = Unicode::get_locale_long_date_field_mapping(display_names->locale(), code.as_string().string());
             break;
-        case DisplayNames::Style::Short:
+        case Unicode::Style::Short:
             result = Unicode::get_locale_short_date_field_mapping(display_names->locale(), code.as_string().string());
             break;
-        case DisplayNames::Style::Narrow:
+        case Unicode::Style::Narrow:
             result = Unicode::get_locale_narrow_date_field_mapping(display_names->locale(), code.as_string().string());
             break;
         default:

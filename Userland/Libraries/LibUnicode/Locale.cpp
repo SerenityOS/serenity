@@ -741,6 +741,31 @@ bool is_locale_available(StringView locale)
     return locale_from_string(locale).has_value();
 }
 
+Style style_from_string(StringView style)
+{
+    if (style == "narrow"sv)
+        return Style::Narrow;
+    if (style == "short"sv)
+        return Style::Short;
+    if (style == "long"sv)
+        return Style::Long;
+    VERIFY_NOT_REACHED();
+}
+
+StringView style_to_string(Style style)
+{
+    switch (style) {
+    case Style::Narrow:
+        return "narrow"sv;
+    case Style::Short:
+        return "short"sv;
+    case Style::Long:
+        return "long"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 Optional<Locale> __attribute__((weak)) locale_from_string(StringView) { return {}; }
 Optional<Language> __attribute__((weak)) language_from_string(StringView) { return {}; }
 Optional<Territory> __attribute__((weak)) territory_from_string(StringView) { return {}; }
@@ -750,7 +775,6 @@ Optional<CalendarName> __attribute__((weak)) calendar_name_from_string(StringVie
 Optional<DateField> __attribute__((weak)) date_field_from_string(StringView) { return {}; }
 Optional<Key> __attribute__((weak)) key_from_string(StringView) { return {}; }
 Optional<ListPatternType> __attribute__((weak)) list_pattern_type_from_string(StringView) { return {}; }
-Optional<ListPatternStyle> __attribute__((weak)) list_pattern_style_from_string(StringView) { return {}; }
 Optional<DisplayPattern> __attribute__((weak)) get_locale_display_patterns(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_language_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_territory_mapping(StringView, StringView) { return {}; }
@@ -819,7 +843,7 @@ Vector<StringView> get_locale_key_mapping_list(StringView locale, StringView key
     return {};
 }
 
-Optional<ListPatterns> __attribute__((weak)) get_locale_list_patterns(StringView, StringView, StringView) { return {}; }
+Optional<ListPatterns> __attribute__((weak)) get_locale_list_patterns(StringView, StringView, Style) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_language_alias(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_territory_alias(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_script_tag_alias(StringView) { return {}; }

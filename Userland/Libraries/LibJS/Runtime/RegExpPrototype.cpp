@@ -600,10 +600,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     bool full_unicode = flags.contains('u');
 
     // 6. Let matcher be ? Construct(C, « R, flags »).
-    MarkedValueList arguments(vm.heap());
-    arguments.append(regexp_object);
-    arguments.append(js_string(vm, move(flags)));
-    auto* matcher = TRY(construct(global_object, *constructor, move(arguments)));
+    auto* matcher = TRY(construct(global_object, *constructor, regexp_object, js_string(vm, move(flags))));
 
     // 7. Let lastIndex be ? ToLength(? Get(R, "lastIndex")).
     auto last_index_value = TRY(regexp_object->get(vm.names.lastIndex));
@@ -894,10 +891,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto new_flags = flags.find('y').has_value() ? move(flags) : String::formatted("{}y", flags);
 
     // 10. Let splitter be ? Construct(C, « rx, newFlags »).
-    MarkedValueList arguments(vm.heap());
-    arguments.append(regexp_object);
-    arguments.append(js_string(vm, move(new_flags)));
-    auto* splitter = TRY(construct(global_object, *constructor, move(arguments)));
+    auto* splitter = TRY(construct(global_object, *constructor, regexp_object, js_string(vm, move(new_flags))));
 
     // 11. Let A be ! ArrayCreate(0).
     auto* array = MUST(Array::create(global_object, 0));

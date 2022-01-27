@@ -87,6 +87,9 @@ public:
     [[nodiscard]] bool is_mmap() const { return m_mmap; }
     void set_mmap(bool mmap) { m_mmap = mmap; }
 
+    [[nodiscard]] bool is_write_combine() const { return m_write_combine; }
+    ErrorOr<void> set_write_combine(bool);
+
     [[nodiscard]] bool is_user() const { return !is_kernel(); }
     [[nodiscard]] bool is_kernel() const { return vaddr().get() < USER_RANGE_BASE || vaddr().get() >= kernel_mapping_base; }
 
@@ -220,6 +223,7 @@ private:
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
     bool m_syscall_region : 1 { false };
+    bool m_write_combine : 1 { false };
 
     IntrusiveRedBlackTreeNode<FlatPtr, Region, RawPtr<Region>> m_tree_node;
     IntrusiveListNode<Region> m_vmobject_list_node;

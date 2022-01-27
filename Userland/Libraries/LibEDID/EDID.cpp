@@ -15,7 +15,7 @@
 #    include <unistd.h>
 
 #    ifdef ENABLE_PNP_IDS_DATA
-#        include <LibEDID/LibEDID/PnpIDs.h>
+#        include <LibEDID/PnpIDs.h>
 #    endif
 #endif
 
@@ -141,7 +141,7 @@ struct [[gnu::packed]] EDID {
     u8 checksum;
 };
 
-enum ExtensionBlockTag : u8 {
+enum class ExtensionBlockTag : u8 {
     CEA_861 = 0x2,
     VideoTimingBlock = 0x10,
     DisplayInformation = 0x40,
@@ -220,8 +220,10 @@ public:
     ErrorOr<IterationDecision> for_each_dtd(Function<IterationDecision(Parser::DetailedTiming const&)> callback) const
     {
         u8 dtd_start = m_edid.read_host(&m_block->cea861extension.dtd_start_offset);
-        if (dtd_start <= 4)
+        if (dtd_start < 4) {
+            // dtd_start == 4 means there are no data blocks, but there are still DTDs
             return IterationDecision::Continue;
+        }
 
         if (dtd_start > offsetof(Definitions::ExtensionBlock, checksum) - sizeof(Definitions::DetailedTiming))
             return Error::from_string_literal("CEA 861 extension block has invalid DTD list"sv);
@@ -359,25 +361,21 @@ ErrorOr<Parser> Parser::from_framebuffer_device(int framebuffer_fd, size_t head)
         int err = errno;
         if (err == EOVERFLOW) {
             // We need a bigger buffer with at least bytes_size bytes
-            auto edid_byte_buffer = ByteBuffer::create_zeroed(edid_info.bytes_size);
-            if (!edid_byte_buffer.has_value())
-                return Error::from_errno(ENOMEM);
-            edid_info.bytes = edid_byte_buffer.value().data();
+            auto edid_byte_buffer = TRY(ByteBuffer::create_zeroed(edid_info.bytes_size));
+            edid_info.bytes = edid_byte_buffer.data();
             if (fb_get_head_edid(framebuffer_fd, &edid_info) < 0) {
                 err = errno;
                 return Error::from_errno(err);
             }
 
-            return from_bytes(edid_byte_buffer.release_value());
+            return from_bytes(move(edid_byte_buffer));
         }
 
         return Error::from_errno(err);
     }
 
-    auto edid_byte_buffer = ByteBuffer::copy((void const*)edid_bytes, sizeof(edid_bytes));
-    if (!edid_byte_buffer.has_value())
-        return Error::from_errno(ENOMEM);
-    return from_bytes(edid_byte_buffer.release_value());
+    auto edid_byte_buffer = TRY(ByteBuffer::copy((void const*)edid_bytes, sizeof(edid_bytes)));
+    return from_bytes(move(edid_byte_buffer));
 }
 
 ErrorOr<Parser> Parser::from_framebuffer_device(String const& framebuffer_device, size_t head)
@@ -488,35 +486,39 @@ ErrorOr<IterationDecision> Parser::for_each_extension_block(Function<IterationDe
     if (sizeof(Definitions::EDID) + (size_t)raw_extension_block_count * sizeof(Definitions::ExtensionBlock) > m_bytes.size())
         return Error::from_string_literal("Truncated EDID");
 
-    auto validate_block_checksum = [&](Definitions::ExtensionBlock const& extension_map) {
+    auto validate_block_checksum = [&](Definitions::ExtensionBlock const& block) {
         u8 checksum = 0x0;
-        auto* bytes = (u8 const*)&extension_map;
-        for (size_t i = 0; i < sizeof(extension_map); i++)
+        auto* bytes = (u8 const*)&block;
+        for (size_t i = 0; i < sizeof(block); i++)
             checksum += bytes[i];
 
         return checksum == 0;
     };
 
-    size_t offset = sizeof(Definitions::EDID);
-    auto* raw_extension_blocks = (Definitions::ExtensionBlock const*)(m_bytes.data() + offset);
+    auto* raw_extension_blocks = (Definitions::ExtensionBlock const*)(m_bytes.data() + sizeof(Definitions::EDID));
     Definitions::ExtensionBlock const* current_extension_map = nullptr;
+
+    unsigned raw_index = 0;
     if (m_revision <= 3) {
         if (raw_extension_block_count > 1) {
             current_extension_map = &raw_extension_blocks[0];
-            if (read_host(&current_extension_map->tag) != Definitions::ExtensionBlockTag::ExtensionBlockMap)
+            raw_index++;
+            if (read_host(&current_extension_map->tag) != (u8)Definitions::ExtensionBlockTag::ExtensionBlockMap)
                 return Error::from_string_literal("Did not find extension map at block 1"sv);
             if (!validate_block_checksum(*current_extension_map))
                 return Error::from_string_literal("Extension block map checksum mismatch"sv);
         }
-    } else if (read_host(&raw_extension_blocks[0].tag) == Definitions::ExtensionBlockTag::ExtensionBlockMap) {
+    } else if (read_host(&raw_extension_blocks[0].tag) == (u8)Definitions::ExtensionBlockTag::ExtensionBlockMap) {
         current_extension_map = &raw_extension_blocks[0];
+        raw_index++;
     }
 
-    for (unsigned raw_index = 0; raw_index < raw_extension_block_count; raw_index++) {
+    for (; raw_index < raw_extension_block_count; raw_index++) {
         auto& raw_block = raw_extension_blocks[raw_index];
         u8 tag = read_host(&raw_block.tag);
+
         if (current_extension_map && raw_index == 127) {
-            if (tag != Definitions::ExtensionBlockTag::ExtensionBlockMap)
+            if (tag != (u8)Definitions::ExtensionBlockTag::ExtensionBlockMap)
                 return Error::from_string_literal("Did not find extension map at block 128"sv);
             current_extension_map = &raw_extension_blocks[127];
             if (!validate_block_checksum(*current_extension_map))
@@ -524,17 +526,16 @@ ErrorOr<IterationDecision> Parser::for_each_extension_block(Function<IterationDe
             continue;
         }
 
-        if (tag == Definitions::ExtensionBlockTag::ExtensionBlockMap)
+        if (tag == (u8)Definitions::ExtensionBlockTag::ExtensionBlockMap)
             return Error::from_string_literal("Unexpected extension map encountered"sv);
 
         if (!validate_block_checksum(raw_block))
             return Error::from_string_literal("Extension block checksum mismatch"sv);
 
+        size_t offset = (u8 const*)&raw_block - m_bytes.data();
         IterationDecision decision = callback(raw_index + 1, tag, raw_block.block.revision, m_bytes.slice(offset, sizeof(Definitions::ExtensionBlock)));
         if (decision != IterationDecision::Continue)
             return decision;
-
-        offset += sizeof(Definitions::ExtensionBlock);
     }
     return IterationDecision::Continue;
 }
@@ -672,11 +673,17 @@ u16 Parser::DetailedTiming::horizontal_blanking_pixels() const
     return ((u16)high << 8) | (u16)low;
 }
 
-u16 Parser::DetailedTiming::vertical_addressable_lines() const
+u16 Parser::DetailedTiming::vertical_addressable_lines_raw() const
 {
     u8 low = m_edid.read_host(&m_detailed_timings.vertical_addressable_lines_low);
     u8 high = m_edid.read_host(&m_detailed_timings.vertical_addressable_and_blanking_lines_high) >> 4;
     return ((u16)high << 8) | (u16)low;
+}
+
+u16 Parser::DetailedTiming::vertical_addressable_lines() const
+{
+    auto lines = vertical_addressable_lines_raw();
+    return is_interlaced() ? lines * 2 : lines;
 }
 
 u16 Parser::DetailedTiming::vertical_blanking_lines() const
@@ -745,9 +752,9 @@ bool Parser::DetailedTiming::is_interlaced() const
 
 FixedPoint<16, u32> Parser::DetailedTiming::refresh_rate() const
 {
-    // Blanking = front porch + sync pulse width = back porch
+    // Blanking = front porch + sync pulse width + back porch
     u32 total_horizontal_pixels = (u32)horizontal_addressable_pixels() + (u32)horizontal_blanking_pixels();
-    u32 total_vertical_lines = (u32)vertical_addressable_lines() + (u32)vertical_blanking_lines();
+    u32 total_vertical_lines = (u32)vertical_addressable_lines_raw() + (u32)vertical_blanking_lines();
     u32 total_pixels = total_horizontal_pixels * total_vertical_lines;
     if (total_pixels == 0)
         return {};
@@ -1027,7 +1034,7 @@ ErrorOr<IterationDecision> Parser::for_each_detailed_timing(Function<IterationDe
 
     Optional<Error> extension_error;
     auto result = for_each_extension_block([&](u8 block_id, u8 tag, u8, ReadonlyBytes bytes) {
-        if (tag != Definitions::ExtensionBlockTag::CEA_861)
+        if (tag != (u8)Definitions::ExtensionBlockTag::CEA_861)
             return IterationDecision::Continue;
 
         CEA861ExtensionBlock cea861(*this, (Definitions::ExtensionBlock const*)bytes.data());
@@ -1071,7 +1078,7 @@ ErrorOr<IterationDecision> Parser::for_each_short_video_descriptor(Function<Iter
 {
     Optional<Error> extension_error;
     auto result = for_each_extension_block([&](u8 block_id, u8 tag, u8, ReadonlyBytes bytes) {
-        if (tag != Definitions::ExtensionBlockTag::CEA_861)
+        if (tag != (u8)Definitions::ExtensionBlockTag::CEA_861)
             return IterationDecision::Continue;
 
         CEA861ExtensionBlock cea861(*this, (Definitions::ExtensionBlock const*)bytes.data());
@@ -1107,7 +1114,7 @@ ErrorOr<IterationDecision> Parser::for_each_display_descriptor(Function<Iteratio
 
     Optional<Error> extension_error;
     auto result = for_each_extension_block([&](u8, u8 tag, u8, ReadonlyBytes bytes) {
-        if (tag != Definitions::ExtensionBlockTag::CEA_861)
+        if (tag != (u8)Definitions::ExtensionBlockTag::CEA_861)
             return IterationDecision::Continue;
 
         CEA861ExtensionBlock cea861(*this, (Definitions::ExtensionBlock const*)bytes.data());

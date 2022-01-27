@@ -31,6 +31,7 @@ static bool parse_name(StringView name, OpenFile& file)
 {
     GenericLexer lexer(name);
     auto component1 = lexer.consume_until(':');
+    lexer.ignore();
 
     if (lexer.tell_remaining() == 0) {
         file.name = component1;
@@ -50,6 +51,7 @@ static bool parse_name(StringView name, OpenFile& file)
             }
 
             auto component3 = lexer.consume_until(')');
+            lexer.ignore();
             if (lexer.tell_remaining() != 0) {
                 dbgln("parse_name: expected EOF");
                 return false;

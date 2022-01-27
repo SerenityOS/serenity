@@ -16,6 +16,7 @@
 #include <Applications/Browser/BrowserWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/Stream.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -247,74 +248,9 @@ void BrowserWindow::build_menus()
 
     settings_menu.add_action(*m_change_homepage_action);
 
-    m_search_engine_actions.set_exclusive(true);
-    auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
-    search_engine_menu.set_icon(g_icon_bag.find);
-    bool search_engine_set = false;
-
-    m_disable_search_engine_action = GUI::Action::create_checkable(
-        "Disable", [](auto&) {
-            g_search_engine = {};
-            Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
-        },
-        this);
-    search_engine_menu.add_action(*m_disable_search_engine_action);
-    m_search_engine_actions.add_action(*m_disable_search_engine_action);
-    m_disable_search_engine_action->set_checked(true);
-
-    auto search_engines_file = Core::File::construct(Browser::search_engines_file_path());
-    if (search_engines_file->open(Core::OpenMode::ReadOnly)) {
-        if (auto maybe_json = JsonValue::from_string(search_engines_file->read_all()); !maybe_json.is_error() && maybe_json.value().is_array()) {
-            auto json = maybe_json.release_value().as_array();
-            for (auto& json_item : json.values()) {
-                if (!json_item.is_object())
-                    continue;
-                auto search_engine = json_item.as_object();
-                auto name = search_engine.get("title").to_string();
-                auto url_format = search_engine.get("url_format").to_string();
-
-                auto action = GUI::Action::create_checkable(
-                    name, [&, url_format](auto&) {
-                        g_search_engine = url_format;
-                        Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
-                    },
-                    this);
-                search_engine_menu.add_action(action);
-                m_search_engine_actions.add_action(action);
-
-                if (g_search_engine == url_format) {
-                    action->set_checked(true);
-                    search_engine_set = true;
-                }
-                action->set_status_tip(url_format);
-            }
-        }
-    }
-
-    auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
-        String search_engine;
-        if (GUI::InputBox::show(this, search_engine, "Enter URL template:", "Custom Search Engine", "https://host/search?q={}") != GUI::InputBox::ExecOK || search_engine.is_empty()) {
-            m_disable_search_engine_action->activate();
-            return;
-        }
-
-        auto argument_count = search_engine.count("{}"sv);
-        if (argument_count != 1) {
-            GUI::MessageBox::show(this, "Invalid format, must contain '{}' once!", "Error", GUI::MessageBox::Type::Error);
-            m_disable_search_engine_action->activate();
-            return;
-        }
-
-        g_search_engine = search_engine;
-        Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
-        action.set_status_tip(search_engine);
-    });
-    search_engine_menu.add_action(custom_search_engine_action);
-    m_search_engine_actions.add_action(custom_search_engine_action);
-
-    if (!search_engine_set && !g_search_engine.is_empty()) {
-        custom_search_engine_action->set_checked(true);
-        custom_search_engine_action->set_status_tip(g_search_engine);
+    auto load_search_engines_result = load_search_engines(settings_menu);
+    if (load_search_engines_result.is_error()) {
+        dbgln("Failed to open search-engines file: {}", load_search_engines_result.error());
     }
 
     auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme");
@@ -430,6 +366,84 @@ void BrowserWindow::build_menus()
 
     auto& help_menu = add_menu("&Help");
     help_menu.add_action(WindowActions::the().about_action());
+}
+
+ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
+{
+    m_search_engine_actions.set_exclusive(true);
+    auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
+    search_engine_menu.set_icon(g_icon_bag.find);
+    bool search_engine_set = false;
+
+    m_disable_search_engine_action = GUI::Action::create_checkable(
+        "Disable", [](auto&) {
+            g_search_engine = {};
+            Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
+        },
+        this);
+    search_engine_menu.add_action(*m_disable_search_engine_action);
+    m_search_engine_actions.add_action(*m_disable_search_engine_action);
+    m_disable_search_engine_action->set_checked(true);
+
+    auto search_engines_file = TRY(Core::Stream::File::open(Browser::search_engines_file_path(), Core::Stream::OpenMode::Read));
+    auto file_size = TRY(search_engines_file->size());
+    auto buffer = TRY(ByteBuffer::create_uninitialized(file_size));
+    if (search_engines_file->read_or_error(buffer)) {
+        StringView buffer_contents { buffer.bytes() };
+        if (auto json = TRY(JsonValue::from_string(buffer_contents)); json.is_array()) {
+            auto json_array = json.as_array();
+            for (auto& json_item : json_array.values()) {
+                if (!json_item.is_object())
+                    continue;
+                auto search_engine = json_item.as_object();
+                auto name = search_engine.get("title").to_string();
+                auto url_format = search_engine.get("url_format").to_string();
+
+                auto action = GUI::Action::create_checkable(
+                    name, [&, url_format](auto&) {
+                        g_search_engine = url_format;
+                        Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
+                    },
+                    this);
+                search_engine_menu.add_action(action);
+                m_search_engine_actions.add_action(action);
+
+                if (g_search_engine == url_format) {
+                    action->set_checked(true);
+                    search_engine_set = true;
+                }
+                action->set_status_tip(url_format);
+            }
+        }
+    }
+
+    auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
+        String search_engine;
+        if (GUI::InputBox::show(this, search_engine, "Enter URL template:", "Custom Search Engine", "https://host/search?q={}") != GUI::InputBox::ExecOK || search_engine.is_empty()) {
+            m_disable_search_engine_action->activate();
+            return;
+        }
+
+        auto argument_count = search_engine.count("{}"sv);
+        if (argument_count != 1) {
+            GUI::MessageBox::show(this, "Invalid format, must contain '{}' once!", "Error", GUI::MessageBox::Type::Error);
+            m_disable_search_engine_action->activate();
+            return;
+        }
+
+        g_search_engine = search_engine;
+        Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
+        action.set_status_tip(search_engine);
+    });
+    search_engine_menu.add_action(custom_search_engine_action);
+    m_search_engine_actions.add_action(custom_search_engine_action);
+
+    if (!search_engine_set && !g_search_engine.is_empty()) {
+        custom_search_engine_action->set_checked(true);
+        custom_search_engine_action->set_status_tip(g_search_engine);
+    }
+
+    return {};
 }
 
 GUI::TabWidget& BrowserWindow::tab_widget()

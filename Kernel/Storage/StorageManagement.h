@@ -43,6 +43,8 @@ private:
     void determine_boot_device();
     void determine_boot_device_with_partition_uuid();
 
+    void dump_storage_devices_and_partitions() const;
+
     OwnPtr<PartitionTable> try_to_initialize_partition_table(const StorageDevice&) const;
 
     RefPtr<BlockDevice> boot_block_device() const;

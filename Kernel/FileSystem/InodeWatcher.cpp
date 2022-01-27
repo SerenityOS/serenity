@@ -22,7 +22,7 @@ InodeWatcher::~InodeWatcher()
     (void)close();
 }
 
-bool InodeWatcher::can_read(const OpenFileDescription&, size_t) const
+bool InodeWatcher::can_read(const OpenFileDescription&, u64) const
 {
     MutexLocker locker(m_lock);
     return !m_queue.is_empty();
@@ -123,10 +123,20 @@ ErrorOr<int> InodeWatcher::register_inode(Inode& inode, unsigned event_mask)
 
     auto description = TRY(WatchDescription::create(wd, inode, event_mask));
 
-    m_inode_to_watches.set(inode.identifier(), description.ptr());
-    m_wd_to_watches.set(wd, move(description));
+    TRY(m_inode_to_watches.try_set(inode.identifier(), description.ptr()));
+    auto set_result = m_wd_to_watches.try_set(wd, move(description));
+    if (set_result.is_error()) {
+        m_inode_to_watches.remove(inode.identifier());
+        return set_result.release_error();
+    }
 
-    inode.register_watcher({}, *this);
+    auto register_result = inode.register_watcher({}, *this);
+    if (register_result.is_error()) {
+        m_inode_to_watches.remove(inode.identifier());
+        m_wd_to_watches.remove(wd);
+        return register_result.release_error();
+    }
+
     return wd;
 }
 

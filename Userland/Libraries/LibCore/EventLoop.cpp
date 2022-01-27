@@ -62,7 +62,7 @@ struct EventLoop::Private {
 };
 
 // The main event loop is global to the program, so it may be accessed from multiple threads.
-// NOTE: s_main_event_loop is not declared here as it is needed in the header.
+Threading::MutexProtected<EventLoop*> s_main_event_loop;
 static Threading::MutexProtected<NeverDestroyed<IDAllocator>> s_id_allocator;
 static Threading::MutexProtected<RefPtr<InspectorServerConnection>> s_inspector_server_connection;
 

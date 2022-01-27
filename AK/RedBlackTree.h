@@ -449,9 +449,14 @@ public:
         return &node->value;
     }
 
-    void insert(K key, const V& value)
+    ErrorOr<void> try_insert(K key, V const& value)
     {
-        insert(key, V(value));
+        return try_insert(key, V(value));
+    }
+
+    void insert(K key, V const& value)
+    {
+        MUST(try_insert(key, value));
     }
 
     ErrorOr<void> try_insert(K key, V&& value)

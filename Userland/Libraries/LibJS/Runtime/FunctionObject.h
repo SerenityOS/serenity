@@ -1,13 +1,17 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/Optional.h>
+#include <AK/StringView.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrivateEnvironment.h>
+#include <LibJS/Runtime/PropertyKey.h>
 
 namespace JS {
 
@@ -25,6 +29,8 @@ public:
 
     virtual const FlyString& name() const = 0;
 
+    void set_function_name(Variant<PropertyKey, PrivateName> const& name_arg, Optional<StringView> const& prefix = {});
+    void set_function_length(double length);
     ThrowCompletionOr<BoundFunction*> bind(Value bound_this_value, Vector<Value> arguments);
 
     virtual bool is_strict_mode() const { return false; }

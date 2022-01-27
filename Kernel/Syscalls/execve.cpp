@@ -40,7 +40,8 @@ struct LoadResult {
     WeakPtr<Memory::Region> stack_region;
 };
 
-static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
+static constexpr size_t auxiliary_vector_size = 15;
+static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
 
 static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, NonnullOwnPtrVector<KString>& environment)
 {
@@ -69,7 +70,7 @@ static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, N
 }
 
 static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Memory::Region& region, NonnullOwnPtrVector<KString> const& arguments,
-    NonnullOwnPtrVector<KString> const& environment, Vector<ELF::AuxiliaryValue> auxiliary_values)
+    NonnullOwnPtrVector<KString> const& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> auxiliary_values)
 {
     FlatPtr new_sp = region.range().end().get();
 
@@ -637,39 +638,38 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     return {};
 }
 
-static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation)
+static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation)
 {
-    Vector<ELF::AuxiliaryValue> auxv;
-    // PHDR/EXECFD
-    // PH*
-    auxv.append({ ELF::AuxiliaryValue::PageSize, PAGE_SIZE });
-    auxv.append({ ELF::AuxiliaryValue::BaseAddress, (void*)load_base });
+    return { {
+        // PHDR/EXECFD
+        // PH*
+        { ELF::AuxiliaryValue::PageSize, PAGE_SIZE },
+        { ELF::AuxiliaryValue::BaseAddress, (void*)load_base },
 
-    auxv.append({ ELF::AuxiliaryValue::Entry, (void*)entry_eip });
-    // NOTELF
-    auxv.append({ ELF::AuxiliaryValue::Uid, (long)uid.value() });
-    auxv.append({ ELF::AuxiliaryValue::EUid, (long)euid.value() });
-    auxv.append({ ELF::AuxiliaryValue::Gid, (long)gid.value() });
-    auxv.append({ ELF::AuxiliaryValue::EGid, (long)egid.value() });
+        { ELF::AuxiliaryValue::Entry, (void*)entry_eip },
+        // NOTELF
+        { ELF::AuxiliaryValue::Uid, (long)uid.value() },
+        { ELF::AuxiliaryValue::EUid, (long)euid.value() },
+        { ELF::AuxiliaryValue::Gid, (long)gid.value() },
+        { ELF::AuxiliaryValue::EGid, (long)egid.value() },
 
-    auxv.append({ ELF::AuxiliaryValue::Platform, Processor::platform_string() });
-    // FIXME: This is platform specific
-    auxv.append({ ELF::AuxiliaryValue::HwCap, (long)CPUID(1).edx() });
+        { ELF::AuxiliaryValue::Platform, Processor::platform_string() },
+        // FIXME: This is platform specific
+        { ELF::AuxiliaryValue::HwCap, (long)CPUID(1).edx() },
 
-    auxv.append({ ELF::AuxiliaryValue::ClockTick, (long)TimeManagement::the().ticks_per_second() });
+        { ELF::AuxiliaryValue::ClockTick, (long)TimeManagement::the().ticks_per_second() },
 
-    // FIXME: Also take into account things like extended filesystem permissions? That's what linux does...
-    auxv.append({ ELF::AuxiliaryValue::Secure, ((uid != euid) || (gid != egid)) ? 1 : 0 });
+        // FIXME: Also take into account things like extended filesystem permissions? That's what linux does...
+        { ELF::AuxiliaryValue::Secure, ((uid != euid) || (gid != egid)) ? 1 : 0 },
 
-    auxv.append({ ELF::AuxiliaryValue::Random, nullptr });
+        { ELF::AuxiliaryValue::Random, nullptr },
 
-    auxv.append({ ELF::AuxiliaryValue::ExecFilename, executable_path });
+        { ELF::AuxiliaryValue::ExecFilename, executable_path },
 
-    if (main_program_fd_allocation.has_value())
-        auxv.append({ ELF::AuxiliaryValue::ExecFileDescriptor, main_program_fd_allocation->fd });
+        main_program_fd_allocation.has_value() ? ELF::AuxiliaryValue { ELF::AuxiliaryValue::ExecFileDescriptor, main_program_fd_allocation->fd } : ELF::AuxiliaryValue { ELF::AuxiliaryValue::Ignore, 0L },
 
-    auxv.append({ ELF::AuxiliaryValue::Null, 0L });
-    return auxv;
+        { ELF::AuxiliaryValue::Null, 0L },
+    } };
 }
 
 static ErrorOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_executable(char const first_page[], size_t nread)
@@ -691,7 +691,7 @@ static ErrorOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_execut
             if (first_page[i] == ' ') {
                 if (word_length > 0) {
                     auto word = TRY(KString::try_create(StringView { &first_page[word_start], word_length }));
-                    interpreter_words.append(move(word));
+                    TRY(interpreter_words.try_append(move(word)));
                 }
                 word_length = 0;
                 word_start = i + 1;
@@ -700,7 +700,7 @@ static ErrorOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_execut
 
         if (word_length > 0) {
             auto word = TRY(KString::try_create(StringView { &first_page[word_start], word_length }));
-            interpreter_words.append(move(word));
+            TRY(interpreter_words.try_append(move(word)));
         }
 
         if (!interpreter_words.is_empty())
@@ -850,6 +850,11 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*>
 
         if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
             return E2BIG;
+
+        // NOTE: The caller is expected to always pass at least one argument by convention,
+        //       the program path that was passed as params.path.
+        if (params.arguments.length == 0)
+            return EINVAL;
 
         auto path = TRY(get_syscall_path_argument(params.path));
 

@@ -132,7 +132,7 @@ int main(int argc, char** argv)
 
     for (;;) {
         auto ping_packet_result = ByteBuffer::create_zeroed(sizeof(struct icmphdr) + payload_size);
-        if (!ping_packet_result.has_value()) {
+        if (ping_packet_result.is_error()) {
             warnln("failed to allocate a large enough buffer for the ping packet");
             return 1;
         }
@@ -167,7 +167,7 @@ int main(int argc, char** argv)
         for (;;) {
             auto pong_packet_result = ByteBuffer::create_uninitialized(
                 sizeof(struct ip) + max_optional_header_size_in_bytes + sizeof(struct icmphdr) + payload_size);
-            if (!pong_packet_result.has_value()) {
+            if (pong_packet_result.is_error()) {
                 warnln("failed to allocate a large enough buffer for the pong packet");
                 return 1;
             }

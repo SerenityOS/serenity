@@ -28,7 +28,7 @@ UNMAP_AFTER_INIT ZeroDevice::~ZeroDevice()
 {
 }
 
-bool ZeroDevice::can_read(const OpenFileDescription&, size_t) const
+bool ZeroDevice::can_read(const OpenFileDescription&, u64) const
 {
     return true;
 }

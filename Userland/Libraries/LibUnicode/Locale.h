@@ -82,7 +82,6 @@ enum class Style : u8 {
     Long,
     Short,
     Narrow,
-    Numeric,
 };
 
 struct DisplayPattern {
@@ -146,6 +145,9 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID&);
 String const& default_locale();
 bool is_locale_available(StringView locale);
 
+Style style_from_string(StringView style);
+StringView style_to_string(Style style);
+
 Optional<Locale> locale_from_string(StringView locale);
 Optional<Language> language_from_string(StringView language);
 Optional<Territory> territory_from_string(StringView territory);
@@ -155,7 +157,6 @@ Optional<CalendarName> calendar_name_from_string(StringView calendar);
 Optional<DateField> date_field_from_string(StringView calendar);
 Optional<Key> key_from_string(StringView key);
 Optional<ListPatternType> list_pattern_type_from_string(StringView list_pattern_type);
-Optional<ListPatternStyle> list_pattern_style_from_string(StringView list_pattern_style);
 
 Optional<DisplayPattern> get_locale_display_patterns(StringView locale);
 Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id);
@@ -174,7 +175,7 @@ Optional<StringView> get_locale_narrow_date_field_mapping(StringView locale, Str
 Optional<StringView> get_locale_key_mapping(StringView locale, StringView keyword);
 Vector<StringView> get_locale_key_mapping_list(StringView locale, StringView keyword);
 
-Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, StringView style);
+Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, Style style);
 
 Optional<StringView> resolve_language_alias(StringView language);
 Optional<StringView> resolve_territory_alias(StringView territory);

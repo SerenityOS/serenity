@@ -270,7 +270,7 @@ bool Parser::initialize_hint_tables()
         auto total_size = primary_size + overflow_size;
 
         auto buffer_result = ByteBuffer::create_uninitialized(total_size);
-        if (!buffer_result.has_value())
+        if (buffer_result.is_error())
             return false;
         possible_merged_stream_buffer = buffer_result.release_value();
         auto ok = !possible_merged_stream_buffer.try_append(primary_hint_stream->bytes()).is_error();
@@ -1071,8 +1071,10 @@ RefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
     if (dict->contains(CommonNames::Filter)) {
         auto filter_type = dict->get_name(m_document, CommonNames::Filter)->name();
         auto maybe_bytes = Filter::decode(bytes, filter_type);
-        if (!maybe_bytes.has_value())
+        if (maybe_bytes.is_error()) {
+            warnln("Failed to decode filter: {}", maybe_bytes.error().string_literal());
             return {};
+        }
         return make_object<EncodedStreamObject>(dict, move(maybe_bytes.value()));
     }
 

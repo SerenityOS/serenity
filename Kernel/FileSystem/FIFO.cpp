@@ -99,12 +99,12 @@ void FIFO::detach(Direction direction)
     evaluate_block_conditions();
 }
 
-bool FIFO::can_read(const OpenFileDescription&, size_t) const
+bool FIFO::can_read(const OpenFileDescription&, u64) const
 {
     return !m_buffer->is_empty() || !m_writers;
 }
 
-bool FIFO::can_write(const OpenFileDescription&, size_t) const
+bool FIFO::can_write(const OpenFileDescription&, u64) const
 {
     return m_buffer->space_for_writing() || !m_readers;
 }

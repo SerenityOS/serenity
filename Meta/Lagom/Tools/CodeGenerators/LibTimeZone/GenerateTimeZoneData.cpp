@@ -16,6 +16,9 @@
 
 namespace {
 
+using StringIndexType = u8;
+constexpr auto s_string_index_type = "u8"sv;
+
 struct DateTime {
     u16 year { 0 };
     Optional<u8> month;
@@ -37,6 +40,9 @@ struct TimeZoneOffset {
     Optional<String> dst_rule;
     Optional<i32> dst_rule_index;
     i64 dst_offset { 0 };
+
+    StringIndexType standard_format { 0 };
+    StringIndexType daylight_format { 0 };
 };
 
 struct DaylightSavingsOffset {
@@ -44,9 +50,13 @@ struct DaylightSavingsOffset {
     u16 year_from { 0 };
     u16 year_to { 0 };
     DateTime in_effect;
+
+    StringIndexType format { 0 };
 };
 
 struct TimeZoneData {
+    UniqueStringStorage<StringIndexType> unique_strings;
+
     HashMap<String, Vector<TimeZoneOffset>> time_zones;
     Vector<String> time_zone_names;
     Vector<Alias> time_zone_aliases;
@@ -80,12 +90,14 @@ struct AK::Formatter<TimeZoneOffset> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZoneOffset const& time_zone_offset)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {}, {} }}",
             time_zone_offset.offset,
             time_zone_offset.until.value_or({}),
             time_zone_offset.until.has_value(),
             time_zone_offset.dst_rule_index.value_or(-1),
-            time_zone_offset.dst_offset);
+            time_zone_offset.dst_offset,
+            time_zone_offset.standard_format,
+            time_zone_offset.daylight_format);
     }
 };
 
@@ -94,11 +106,12 @@ struct AK::Formatter<DaylightSavingsOffset> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, DaylightSavingsOffset const& dst_offset)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {} }}",
             dst_offset.offset,
             dst_offset.year_from,
             dst_offset.year_to,
-            dst_offset.in_effect);
+            dst_offset.in_effect,
+            dst_offset.format);
     }
 };
 
@@ -172,6 +185,19 @@ static void parse_dst_rule(StringView segment, TimeZoneOffset& time_zone)
         time_zone.dst_rule = segment;
 }
 
+static void parse_format(StringView format, TimeZoneData& time_zone_data, TimeZoneOffset& time_zone)
+{
+    auto formats = format.replace("%s"sv, "{}"sv).split('/');
+    VERIFY(formats.size() <= 2);
+
+    time_zone.standard_format = time_zone_data.unique_strings.ensure(formats[0]);
+
+    if (formats.size() == 2)
+        time_zone.daylight_format = time_zone_data.unique_strings.ensure(formats[1]);
+    else
+        time_zone.daylight_format = time_zone.standard_format;
+}
+
 static Vector<TimeZoneOffset>& parse_zone(StringView zone_line, TimeZoneData& time_zone_data)
 {
     auto segments = zone_line.split_view_if([](char ch) { return (ch == '\t') || (ch == ' '); });
@@ -183,6 +209,7 @@ static Vector<TimeZoneOffset>& parse_zone(StringView zone_line, TimeZoneData& ti
     TimeZoneOffset time_zone {};
     time_zone.offset = parse_time_offset(segments[2]);
     parse_dst_rule(segments[3], time_zone);
+    parse_format(segments[4], time_zone_data, time_zone);
 
     if (segments.size() > 5)
         time_zone.until = parse_date_time(segments.span().slice(5));
@@ -196,7 +223,7 @@ static Vector<TimeZoneOffset>& parse_zone(StringView zone_line, TimeZoneData& ti
     return time_zones;
 }
 
-static void parse_zone_continuation(StringView zone_line, Vector<TimeZoneOffset>& time_zones)
+static void parse_zone_continuation(StringView zone_line, TimeZoneData& time_zone_data, Vector<TimeZoneOffset>& time_zones)
 {
     auto segments = zone_line.split_view_if([](char ch) { return (ch == '\t') || (ch == ' '); });
 
@@ -204,6 +231,7 @@ static void parse_zone_continuation(StringView zone_line, Vector<TimeZoneOffset>
     TimeZoneOffset time_zone {};
     time_zone.offset = parse_time_offset(segments[0]);
     parse_dst_rule(segments[1], time_zone);
+    parse_format(segments[2], time_zone_data, time_zone);
 
     if (segments.size() > 3)
         time_zone.until = parse_date_time(segments.span().slice(3));
@@ -245,6 +273,9 @@ static void parse_rule(StringView rule_line, TimeZoneData& time_zone_data)
     auto in_effect = Array { "0"sv, segments[5], segments[6], segments[7] };
     dst_offset.in_effect = parse_date_time(in_effect).release_value();
 
+    if (segments[9] != "-"sv)
+        dst_offset.format = time_zone_data.unique_strings.ensure(segments[9]);
+
     auto& dst_offsets = time_zone_data.dst_offsets.ensure(name);
     dst_offsets.append(move(dst_offset));
 
@@ -267,7 +298,7 @@ static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& t
             last_parsed_zone = &parse_zone(line, time_zone_data);
         } else if (line.starts_with('\t')) {
             VERIFY(last_parsed_zone != nullptr);
-            parse_zone_continuation(line, *last_parsed_zone);
+            parse_zone_continuation(line, time_zone_data, *last_parsed_zone);
         } else {
             last_parsed_zone = nullptr;
 
@@ -346,6 +377,7 @@ static void generate_time_zone_data_implementation(Core::File& file, TimeZoneDat
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
+    generator.set("string_index_type"sv, s_string_index_type);
 
     set_dst_rule_indices(time_zone_data);
 
@@ -389,15 +421,30 @@ struct TimeZoneOffset {
 
     i32 dst_rule { -1 };
     i64 dst_offset { 0 };
+
+    @string_index_type@ standard_format { 0 };
+    @string_index_type@ daylight_format { 0 };
 };
 
 struct DaylightSavingsOffset {
+    AK::Time time_in_effect(AK::Time time) const
+    {
+        auto in_effect = this->in_effect;
+        in_effect.year = seconds_since_epoch_to_year(time.to_seconds());
+
+        return in_effect.time_since_epoch();
+    }
+
     i64 offset { 0 };
     u16 year_from { 0 };
     u16 year_to { 0 };
     DateTime in_effect {};
+
+    @string_index_type@ format { 0 };
 };
 )~~~");
+
+    time_zone_data.unique_strings.generate(generator);
 
     auto append_offsets = [&](auto const& name, auto type, auto const& offsets) {
         generator.set("name", name);
@@ -450,25 +497,18 @@ static constexpr Array<@type@, @size@> @name@ { {
     append_string_conversions("DaylightSavingsRule"sv, "daylight_savings_rule"sv, time_zone_data.dst_offset_names);
 
     generator.append(R"~~~(
-static Offset get_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
+static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset const& time_zone_offset, AK::Time time)
 {
     auto const& dst_rules = s_dst_offsets[time_zone_offset.dst_rule];
 
     DaylightSavingsOffset const* standard_offset = nullptr;
     DaylightSavingsOffset const* daylight_offset = nullptr;
 
-    auto time_in_effect_for_rule = [&](auto const& dst_rule) {
-        auto in_effect = dst_rule.in_effect;
-        in_effect.year = seconds_since_epoch_to_year(time.to_seconds());
-
-        return in_effect.time_since_epoch();
-    };
-
     auto preferred_rule = [&](auto* current_offset, auto& new_offset) {
         if (!current_offset)
             return &new_offset;
 
-        auto new_time_in_effect = time_in_effect_for_rule(new_offset);
+        auto new_time_in_effect = new_offset.time_in_effect(time);
         return (time >= new_time_in_effect) ? &new_offset : current_offset;
     };
 
@@ -486,18 +526,37 @@ static Offset get_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time ti
             daylight_offset = preferred_rule(daylight_offset, dst_rule);
     }
 
-    if (!standard_offset || !daylight_offset)
-        return {};
+    // In modern times, there will always be a standard rule in the TZDB, but that isn't true in
+    // all time zones in or before the early 1900s. For example, the "US" rules begin in 1918.
+    if (!standard_offset) {
+        static DaylightSavingsOffset const empty_offset {};
+        return { &empty_offset, &empty_offset };
+    }
 
-    auto standard_time_in_effect = time_in_effect_for_rule(*standard_offset);
-    auto daylight_time_in_effect = time_in_effect_for_rule(*daylight_offset);
-
-    if ((time < daylight_time_in_effect) || (time >= standard_time_in_effect))
-        return { standard_offset->offset, InDST::No };
-    return { daylight_offset->offset, InDST::Yes };
+    return { standard_offset, daylight_offset ? daylight_offset : standard_offset };
 }
 
-Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
+static Offset get_active_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
+{
+    auto offsets = find_dst_offsets(time_zone_offset, time);
+    if (offsets[0] == offsets[1])
+        return { offsets[0]->offset, InDST::No };
+
+    auto standard_time_in_effect = offsets[0]->time_in_effect(time);
+    auto daylight_time_in_effect = offsets[1]->time_in_effect(time);
+
+    if (daylight_time_in_effect < standard_time_in_effect) {
+        if ((time < daylight_time_in_effect) || (time >= standard_time_in_effect))
+            return { offsets[0]->offset, InDST::No };
+    } else {
+        if ((time >= standard_time_in_effect) && (time < daylight_time_in_effect))
+            return { offsets[0]->offset, InDST::No };
+    }
+
+    return { offsets[1]->offset, InDST::Yes };
+}
+
+static TimeZoneOffset const& find_time_zone_offset(TimeZone time_zone, AK::Time time)
 {
     auto const& time_zone_offsets = s_time_zone_offsets[to_underlying(time_zone)];
 
@@ -510,11 +569,16 @@ Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
     }
 
     VERIFY(index < time_zone_offsets.size());
-    auto const& time_zone_offset = time_zone_offsets[index];
+    return time_zone_offsets[index];
+}
+
+Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
+{
+    auto const& time_zone_offset = find_time_zone_offset(time_zone, time);
 
     Offset dst_offset {};
     if (time_zone_offset.dst_rule != -1) {
-        dst_offset = get_dst_offset(time_zone_offset, time);
+        dst_offset = get_active_dst_offset(time_zone_offset, time);
     } else {
         auto in_dst = time_zone_offset.dst_offset == 0 ? InDST::No : InDST::Yes;
         dst_offset = { time_zone_offset.dst_offset, in_dst };
@@ -522,6 +586,38 @@ Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
 
     dst_offset.seconds += time_zone_offset.offset;
     return dst_offset;
+}
+
+Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, AK::Time time)
+{
+    auto const& time_zone_offset = find_time_zone_offset(time_zone, time);
+    Array<NamedOffset, 2> named_offsets;
+
+    auto format_name = [](auto format, auto offset) -> String {
+        if (offset == 0)
+            return s_string_list[format].replace("{}"sv, ""sv);
+        return String::formatted(s_string_list[format], s_string_list[offset]);
+    };
+
+    auto set_named_offset = [&](auto& named_offset, auto dst_offset, auto in_dst, auto format, auto offset) {
+        named_offset.seconds = time_zone_offset.offset + dst_offset;
+        named_offset.in_dst = in_dst;
+        named_offset.name = format_name(format, offset);
+    };
+
+    if (time_zone_offset.dst_rule != -1) {
+        auto offsets = find_dst_offsets(time_zone_offset, time);
+        auto in_dst = offsets[1]->offset == 0 ? InDST::No : InDST::Yes;
+
+        set_named_offset(named_offsets[0], offsets[0]->offset, InDST::No, time_zone_offset.standard_format, offsets[0]->format);
+        set_named_offset(named_offsets[1], offsets[1]->offset, in_dst, time_zone_offset.daylight_format, offsets[1]->format);
+    } else {
+        auto in_dst = time_zone_offset.dst_offset == 0 ? InDST::No : InDST::Yes;
+        set_named_offset(named_offsets[0], time_zone_offset.dst_offset, in_dst, time_zone_offset.standard_format, 0);
+        set_named_offset(named_offsets[1], time_zone_offset.dst_offset, in_dst, time_zone_offset.daylight_format, 0);
+    }
+
+    return named_offsets;
 }
 
 Span<StringView const> all_time_zones()

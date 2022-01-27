@@ -133,7 +133,7 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
 {
     VERIFY(value.is_number() || value.is_bigint());
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
-    ByteBuffer raw_bytes = ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType)).release_value(); // FIXME: Handle possible OOM situation.
+    ByteBuffer raw_bytes = ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType)).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
     auto flip_if_needed = [&]() {
         if (is_little_endian)
             return;

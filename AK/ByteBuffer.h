@@ -61,35 +61,31 @@ public:
         return *this;
     }
 
-    [[nodiscard]] static Optional<ByteBuffer> create_uninitialized(size_t size)
+    [[nodiscard]] static ErrorOr<ByteBuffer> create_uninitialized(size_t size)
     {
         auto buffer = ByteBuffer();
-        if (buffer.try_resize(size).is_error())
-            return {};
+        TRY(buffer.try_resize(size));
         return { move(buffer) };
     }
 
-    [[nodiscard]] static Optional<ByteBuffer> create_zeroed(size_t size)
+    [[nodiscard]] static ErrorOr<ByteBuffer> create_zeroed(size_t size)
     {
-        auto buffer_result = create_uninitialized(size);
-        if (!buffer_result.has_value())
-            return {};
+        auto buffer = TRY(create_uninitialized(size));
 
-        auto& buffer = buffer_result.value();
         buffer.zero_fill();
         VERIFY(size == 0 || (buffer[0] == 0 && buffer[size - 1] == 0));
-        return buffer_result;
+        return { move(buffer) };
     }
 
-    [[nodiscard]] static Optional<ByteBuffer> copy(void const* data, size_t size)
+    [[nodiscard]] static ErrorOr<ByteBuffer> copy(void const* data, size_t size)
     {
-        auto buffer = create_uninitialized(size);
-        if (buffer.has_value() && size != 0)
-            __builtin_memcpy(buffer->data(), data, size);
-        return buffer;
+        auto buffer = TRY(create_uninitialized(size));
+        if (size != 0)
+            __builtin_memcpy(buffer.data(), data, size);
+        return { move(buffer) };
     }
 
-    [[nodiscard]] static Optional<ByteBuffer> copy(ReadonlyBytes bytes)
+    [[nodiscard]] static ErrorOr<ByteBuffer> copy(ReadonlyBytes bytes)
     {
         return copy(bytes.data(), bytes.size());
     }

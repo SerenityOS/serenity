@@ -31,19 +31,75 @@ void ShadowRealm::visit_edges(Visitor& visitor)
     visitor.visit(&m_shadow_realm);
 }
 
-// 3.1.1 PerformShadowRealmEval ( sourceText, callerRealm, evalRealm ), https://tc39.es/proposal-shadowrealm/#sec-performshadowrealmeval
+// 3.1.2 CopyNameAndLength ( F: a function object, Target: a function object, prefix: a String, optional argCount: a Number, ), https://tc39.es/proposal-shadowrealm/#sec-copynameandlength
+ThrowCompletionOr<void> copy_name_and_length(GlobalObject& global_object, FunctionObject& function, FunctionObject& target, StringView prefix, Optional<unsigned> arg_count)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If argCount is undefined, then set argCount to 0.
+    if (!arg_count.has_value())
+        arg_count = 0;
+
+    // 2. Let L be 0.
+    double length = 0;
+
+    // 3. Let targetHasLength be ? HasOwnProperty(Target, "length").
+    auto target_has_length = TRY(target.has_own_property(vm.names.length));
+
+    // 4. If targetHasLength is true, then
+    if (target_has_length) {
+        // a. Let targetLen be ? Get(Target, "length").
+        auto target_length = TRY(target.get(vm.names.length));
+
+        // b. If Type(targetLen) is Number, then
+        if (target_length.is_number()) {
+            // i. If targetLen is +∞𝔽, set L to +∞.
+            if (target_length.is_positive_infinity()) {
+                length = target_length.as_double();
+            }
+            // ii. Else if targetLen is -∞𝔽, set L to 0.
+            else if (target_length.is_negative_infinity()) {
+                length = 0;
+            }
+            // iii. Else,
+            else {
+                // 1. Let targetLenAsInt be ! ToIntegerOrInfinity(targetLen).
+                auto target_length_as_int = MUST(target_length.to_integer_or_infinity(global_object));
+
+                // 2. Assert: targetLenAsInt is finite.
+                VERIFY(!isinf(target_length_as_int));
+
+                // 3. Set L to max(targetLenAsInt - argCount, 0).
+                length = max(target_length_as_int - *arg_count, 0);
+            }
+        }
+    }
+
+    // 5. Perform ! SetFunctionLength(F, L).
+    function.set_function_length(length);
+
+    // 6. Let targetName be ? Get(Target, "name").
+    auto target_name = TRY(target.get(vm.names.name));
+
+    // 7. If Type(targetName) is not String, set targetName to the empty String.
+    if (!target_name.is_string())
+        target_name = js_string(vm, String::empty());
+
+    // 8. Perform ! SetFunctionName(F, targetName, prefix).
+    function.set_function_name({ target_name.as_string().string() }, prefix);
+
+    return {};
+}
+
+// 3.1.3 PerformShadowRealmEval ( sourceText: a String, callerRealm: a Realm Record, evalRealm: a Realm Record, ), https://tc39.es/proposal-shadowrealm/#sec-performshadowrealmeval
 ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, StringView source_text, Realm& caller_realm, Realm& eval_realm)
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(sourceText) is String.
-    // 2. Assert: callerRealm is a Realm Record.
-    // 3. Assert: evalRealm is a Realm Record.
-
-    // 4. Perform ? HostEnsureCanCompileStrings(callerRealm, evalRealm).
+    // 1. Perform ? HostEnsureCanCompileStrings(callerRealm, evalRealm).
     // FIXME: We don't have this host-defined abstract operation yet.
 
-    // 5. Perform the following substeps in an implementation-defined order, possibly interleaving parsing and error detection:
+    // 2. Perform the following substeps in an implementation-defined order, possibly interleaving parsing and error detection:
 
     // a. Let script be ParseText(! StringToCodePoints(sourceText), Script).
     auto parser = Parser(Lexer(source_text));
@@ -65,118 +121,114 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
     // g. If body Contains SuperCall is true, throw a SyntaxError exception.
     // FIXME: Implement these, we probably need a generic way of scanning the AST for certain nodes.
 
-    // 6. Let strictEval be IsStrict of script.
+    // 3. Let strictEval be IsStrict of script.
     auto strict_eval = program->is_strict_mode();
 
-    // 7. Let runningContext be the running execution context.
+    // 4. Let runningContext be the running execution context.
     // NOTE: This would be unused due to step 11 and is omitted for that reason.
 
-    // 8. Let lexEnv be NewDeclarativeEnvironment(evalRealm.[[GlobalEnv]]).
+    // 5. Let lexEnv be NewDeclarativeEnvironment(evalRealm.[[GlobalEnv]]).
     Environment* lexical_environment = new_declarative_environment(eval_realm.global_environment());
 
-    // 9. Let varEnv be evalRealm.[[GlobalEnv]].
+    // 6. Let varEnv be evalRealm.[[GlobalEnv]].
     Environment* variable_environment = &eval_realm.global_environment();
 
-    // 10. If strictEval is true, set varEnv to lexEnv.
+    // 7. If strictEval is true, set varEnv to lexEnv.
     if (strict_eval)
         variable_environment = lexical_environment;
 
-    // 11. If runningContext is not already suspended, suspend runningContext.
+    // 8. If runningContext is not already suspended, suspend runningContext.
     // NOTE: We don't support this concept yet.
 
-    // 12. Let evalContext be a new ECMAScript code execution context.
+    // 9. Let evalContext be a new ECMAScript code execution context.
     auto eval_context = ExecutionContext { vm.heap() };
 
-    // 13. Set evalContext's Function to null.
+    // 10. Set evalContext's Function to null.
     eval_context.function = nullptr;
 
-    // 14. Set evalContext's Realm to evalRealm.
+    // 11. Set evalContext's Realm to evalRealm.
     eval_context.realm = &eval_realm;
 
-    // 15. Set evalContext's ScriptOrModule to null.
+    // 12. Set evalContext's ScriptOrModule to null.
     // Note: This is already the default value.
 
-    // 16. Set evalContext's VariableEnvironment to varEnv.
+    // 13. Set evalContext's VariableEnvironment to varEnv.
     eval_context.variable_environment = variable_environment;
 
-    // 17. Set evalContext's LexicalEnvironment to lexEnv.
+    // 14. Set evalContext's LexicalEnvironment to lexEnv.
     eval_context.lexical_environment = lexical_environment;
 
     // Non-standard
     eval_context.is_strict_mode = strict_eval;
 
-    // 18. Push evalContext onto the execution context stack; evalContext is now the running execution context.
+    // 15. Push evalContext onto the execution context stack; evalContext is now the running execution context.
     TRY(vm.push_execution_context(eval_context, eval_realm.global_object()));
 
-    // 19. Let result be EvalDeclarationInstantiation(body, varEnv, lexEnv, null, strictEval).
+    // 16. Let result be EvalDeclarationInstantiation(body, varEnv, lexEnv, null, strictEval).
     auto eval_result = eval_declaration_instantiation(vm, eval_realm.global_object(), program, variable_environment, lexical_environment, nullptr, strict_eval);
 
     Completion result;
 
-    // 20. If result.[[Type]] is normal, then
+    // 17. If result.[[Type]] is normal, then
     if (!eval_result.is_throw_completion()) {
         // TODO: Optionally use bytecode interpreter?
         // a. Set result to the result of evaluating body.
         result = program->execute(vm.interpreter(), eval_realm.global_object());
     }
 
-    // 21. If result.[[Type]] is normal and result.[[Value]] is empty, then
+    // 18. If result.[[Type]] is normal and result.[[Value]] is empty, then
     if (result.type() == Completion::Type::Normal && !result.value().has_value()) {
         // a. Set result to NormalCompletion(undefined).
         result = normal_completion(js_undefined());
     }
 
-    // 22. Suspend evalContext and remove it from the execution context stack.
+    // 19. Suspend evalContext and remove it from the execution context stack.
     // NOTE: We don't support this concept yet.
     vm.pop_execution_context();
 
-    // 23. Resume the context that is now on the top of the execution context stack as the running execution context.
+    // 20. Resume the context that is now on the top of the execution context stack as the running execution context.
     // NOTE: We don't support this concept yet.
 
-    // 24. If result.[[Type]] is not normal, throw a TypeError exception.
+    // 21. If result.[[Type]] is not normal, throw a TypeError exception.
     if (result.type() != Completion::Type::Normal)
         return vm.throw_completion<TypeError>(global_object, ErrorType::ShadowRealmEvaluateAbruptCompletion);
 
-    // 25. Return ? GetWrappedValue(callerRealm, result.[[Value]]).
+    // 22. Return ? GetWrappedValue(callerRealm, result.[[Value]]).
     return get_wrapped_value(global_object, caller_realm, *result.value());
 
     // NOTE: Also see "Editor's Note" in the spec regarding the TypeError above.
 }
 
-// 3.1.2 ShadowRealmImportValue ( specifierString, exportNameString, callerRealm, evalRealm, evalContext ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue
+// 3.1.4 ShadowRealmImportValue ( specifierString: a String, exportNameString: a String, callerRealm: a Realm Record, evalRealm: a Realm Record, evalContext: an execution context, ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue
 ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, String specifier_string, String export_name_string, Realm& caller_realm, Realm& eval_realm, ExecutionContext& eval_context)
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(specifierString) is String.
-    // 2. Assert: Type(exportNameString) is String.
-    // 3. Assert: callerRealm is a Realm Record.
-    // 4. Assert: evalRealm is a Realm Record.
-    // 5. Assert: evalContext is an execution context associated to a ShadowRealm instance's [[ExecutionContext]].
+    // 1. Assert: evalContext is an execution context associated to a ShadowRealm instance's [[ExecutionContext]].
 
-    // 6. Let innerCapability be ! NewPromiseCapability(%Promise%).
+    // 2. Let innerCapability be ! NewPromiseCapability(%Promise%).
     auto inner_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
 
-    // 7. Let runningContext be the running execution context.
-    // 8. If runningContext is not already suspended, suspend runningContext.
+    // 3. Let runningContext be the running execution context.
+    // 4. If runningContext is not already suspended, suspend runningContext.
     // NOTE: We don't support this concept yet.
 
-    // 9. Push evalContext onto the execution context stack; evalContext is now the running execution context.
+    // 5. Push evalContext onto the execution context stack; evalContext is now the running execution context.
     TRY(vm.push_execution_context(eval_context, eval_realm.global_object()));
 
-    // 10. Perform ! HostImportModuleDynamically(null, specifierString, innerCapability).
+    // 6. Perform ! HostImportModuleDynamically(null, specifierString, innerCapability).
     vm.host_import_module_dynamically(Empty {}, ModuleRequest { move(specifier_string) }, inner_capability);
 
-    // 11. Suspend evalContext and remove it from the execution context stack.
+    // 7. Suspend evalContext and remove it from the execution context stack.
     // NOTE: We don't support this concept yet.
     vm.pop_execution_context();
 
-    // 12. Resume the context that is now on the top of the execution context stack as the running execution context.
+    // 8. Resume the context that is now on the top of the execution context stack as the running execution context.
     // NOTE: We don't support this concept yet.
 
-    // 13. Let steps be the steps of an ExportGetter function as described below.
-    // 14. Let onFulfilled be ! CreateBuiltinFunction(steps, 1, "", « [[ExportNameString]] », callerRealm).
-    // 15. Set onFulfilled.[[ExportNameString]] to exportNameString.
+    // 9. Let steps be the steps of an ExportGetter function as described below.
+    // 10. Let onFulfilled be ! CreateBuiltinFunction(steps, 1, "", « [[ExportNameString]] », callerRealm).
+    // 11. Set onFulfilled.[[ExportNameString]] to exportNameString.
     // FIXME: Support passing a realm to NativeFunction::create()
     (void)caller_realm;
     auto* on_fulfilled = NativeFunction::create(
@@ -214,7 +266,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
     on_fulfilled->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
     on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
-    // 16. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    // 12. Let promiseCapability be ! NewPromiseCapability(%Promise%).
     auto promise_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
 
     // NOTE: Even though the spec tells us to use %ThrowTypeError%, it's not observable if we actually do.
@@ -223,28 +275,26 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
         return vm.template throw_completion<TypeError>(global_object, vm.argument(0).as_object().get_without_side_effects(vm.names.message).as_string().string());
     });
 
-    // 17. Return ! PerformPromiseThen(innerCapability.[[Promise]], onFulfilled, callerRealm.[[Intrinsics]].[[%ThrowTypeError%]], promiseCapability).
+    // 13. Return ! PerformPromiseThen(innerCapability.[[Promise]], onFulfilled, callerRealm.[[Intrinsics]].[[%ThrowTypeError%]], promiseCapability).
     return verify_cast<Promise>(inner_capability.promise)->perform_then(on_fulfilled, throw_type_error, promise_capability);
 }
 
-// 3.1.3 GetWrappedValue ( callerRealm, value ), https://tc39.es/proposal-shadowrealm/#sec-getwrappedvalue
+// 3.1.5 GetWrappedValue ( callerRealm: a Realm Record, value: unknown, ), https://tc39.es/proposal-shadowrealm/#sec-getwrappedvalue
 ThrowCompletionOr<Value> get_wrapped_value(GlobalObject& global_object, Realm& caller_realm, Value value)
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: callerRealm is a Realm Record.
-
-    // 2. If Type(value) is Object, then
+    // 1. If Type(value) is Object, then
     if (value.is_object()) {
         // a. If IsCallable(value) is false, throw a TypeError exception.
         if (!value.is_function())
             return vm.throw_completion<TypeError>(global_object, ErrorType::ShadowRealmWrappedValueNonFunctionObject, value);
 
-        // b. Return ! WrappedFunctionCreate(callerRealm, value).
-        return WrappedFunction::create(global_object, caller_realm, value.as_function());
+        // b. Return ? WrappedFunctionCreate(callerRealm, value).
+        return TRY(WrappedFunction::create(global_object, caller_realm, value.as_function()));
     }
 
-    // 3. Return value.
+    // 2. Return value.
     return value;
 }
 

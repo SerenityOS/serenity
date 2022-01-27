@@ -506,6 +506,7 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
             case '[':
                 format_lexer.consume();
                 scanlist = format_lexer.consume_until(']');
+                format_lexer.ignore();
                 if (scanlist.starts_with('^')) {
                     scanlist = scanlist.substring_view(1);
                     invert_scanlist = true;

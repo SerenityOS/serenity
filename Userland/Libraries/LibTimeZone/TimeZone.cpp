@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Array.h>
 #include <AK/String.h>
 #include <LibTimeZone/TimeZone.h>
 #include <stdio.h>
+#include <time.h>
 
 namespace TimeZone {
 
@@ -69,7 +69,7 @@ private:
     FILE* m_file { nullptr };
 };
 
-StringView current_time_zone()
+StringView system_time_zone()
 {
     TimeZoneFile time_zone_file("r");
 
@@ -78,6 +78,11 @@ StringView current_time_zone()
         return canonicalize_time_zone(time_zone.value()).value_or("UTC"sv);
 
     return "UTC"sv;
+}
+
+StringView current_time_zone()
+{
+    return canonicalize_time_zone(tzname[0]).value_or("UTC"sv);
 }
 
 ErrorOr<void> change_time_zone([[maybe_unused]] StringView time_zone)
@@ -154,6 +159,27 @@ Optional<Offset> get_time_zone_offset(StringView time_zone, AK::Time time)
 {
     if (auto maybe_time_zone = time_zone_from_string(time_zone); maybe_time_zone.has_value())
         return get_time_zone_offset(*maybe_time_zone, time);
+    return {};
+}
+
+Optional<Array<NamedOffset, 2>> __attribute__((weak)) get_named_time_zone_offsets([[maybe_unused]] TimeZone time_zone, AK::Time)
+{
+#if !ENABLE_TIME_ZONE_DATA
+    VERIFY(time_zone == TimeZone::UTC);
+
+    NamedOffset utc_offset {};
+    utc_offset.name = "UTC"sv;
+
+    return Array { utc_offset, utc_offset };
+#else
+    return {};
+#endif
+}
+
+Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(StringView time_zone, AK::Time time)
+{
+    if (auto maybe_time_zone = time_zone_from_string(time_zone); maybe_time_zone.has_value())
+        return get_named_time_zone_offsets(*maybe_time_zone, time);
     return {};
 }
 

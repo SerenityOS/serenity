@@ -172,6 +172,9 @@ public:
                 return new_views;
             },
             [](Utf32View view) {
+                if (view.is_empty())
+                    return Vector<RegexStringView> { view };
+
                 Vector<RegexStringView> views;
                 u32 newline = '\n';
                 while (!view.is_empty()) {
@@ -187,6 +190,9 @@ public:
                 return views;
             },
             [](Utf16View view) {
+                if (view.is_empty())
+                    return Vector<RegexStringView> { view };
+
                 Vector<RegexStringView> views;
                 u16 newline = '\n';
                 while (!view.is_empty()) {
@@ -202,6 +208,9 @@ public:
                 return views;
             },
             [](Utf8View const& view) {
+                if (view.is_empty())
+                    return Vector<RegexStringView> { view };
+
                 Vector<RegexStringView> views;
                 auto it = view.begin();
                 auto previous_newline_position_it = it;

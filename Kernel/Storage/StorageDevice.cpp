@@ -28,11 +28,11 @@ StringView StorageDevice::class_name() const
 
 ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
 {
-    unsigned index = offset / block_size();
-    u16 whole_blocks = len / block_size();
+    u64 index = offset / block_size();
+    size_t whole_blocks = len / block_size();
     size_t remaining = len % block_size();
 
-    unsigned blocks_per_page = PAGE_SIZE / block_size();
+    size_t blocks_per_page = PAGE_SIZE / block_size();
 
     // PATAChannel will chuck a wobbly if we try to read more than PAGE_SIZE
     // at a time, because it uses a single page for its DMA buffer.
@@ -62,10 +62,7 @@ ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKern
     off_t pos = whole_blocks * block_size();
 
     if (remaining > 0) {
-        auto data_result = ByteBuffer::create_uninitialized(block_size());
-        if (!data_result.has_value())
-            return ENOMEM;
-        auto data = data_result.release_value();
+        auto data = TRY(ByteBuffer::create_uninitialized(block_size()));
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
         auto read_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size()));
         auto result = read_request->wait();
@@ -88,18 +85,18 @@ ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKern
     return pos + remaining;
 }
 
-bool StorageDevice::can_read(const OpenFileDescription&, size_t offset) const
+bool StorageDevice::can_read(const OpenFileDescription&, u64 offset) const
 {
     return offset < (max_addressable_block() * block_size());
 }
 
 ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
-    unsigned index = offset / block_size();
-    u16 whole_blocks = len / block_size();
+    u64 index = offset / block_size();
+    size_t whole_blocks = len / block_size();
     size_t remaining = len % block_size();
 
-    unsigned blocks_per_page = PAGE_SIZE / block_size();
+    size_t blocks_per_page = PAGE_SIZE / block_size();
 
     // PATAChannel will chuck a wobbly if we try to write more than PAGE_SIZE
     // at a time, because it uses a single page for its DMA buffer.
@@ -107,6 +104,12 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
         whole_blocks = blocks_per_page;
         remaining = 0;
     }
+
+    // We try to allocate the temporary block buffer for partial writes *before* we start any full block writes,
+    // to try and prevent partial writes
+    Optional<ByteBuffer> partial_write_block;
+    if (remaining > 0)
+        partial_write_block = TRY(ByteBuffer::create_zeroed(block_size()));
 
     dbgln_if(STORAGE_DEVICE_DEBUG, "StorageDevice::write() index={}, whole_blocks={}, remaining={}", index, whole_blocks, remaining);
 
@@ -132,10 +135,7 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
     // partial write, we have to read the block's content first, modify it,
     // then write the whole block back to the disk.
     if (remaining > 0) {
-        // FIXME: Do something sensible with this OOM scenario.
-        auto data = ByteBuffer::create_zeroed(block_size()).release_value();
-        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
-
+        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(partial_write_block->data());
         {
             auto read_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size()));
             auto result = read_request->wait();
@@ -154,7 +154,7 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
             }
         }
 
-        TRY(inbuf.read(data.data(), pos, remaining));
+        TRY(inbuf.read(partial_write_block->data(), pos, remaining));
 
         {
             auto write_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index + whole_blocks, 1, data_buffer, block_size()));
@@ -183,7 +183,7 @@ StringView StorageDevice::early_storage_name() const
     return m_early_storage_device_name->view();
 }
 
-bool StorageDevice::can_write(const OpenFileDescription&, size_t offset) const
+bool StorageDevice::can_write(const OpenFileDescription&, u64 offset) const
 {
     return offset < (max_addressable_block() * block_size());
 }
@@ -192,8 +192,8 @@ ErrorOr<void> StorageDevice::ioctl(OpenFileDescription&, unsigned request, Users
 {
     switch (request) {
     case STORAGE_DEVICE_GET_SIZE: {
-        size_t disk_size = m_max_addressable_block * block_size();
-        return copy_to_user(static_ptr_cast<size_t*>(arg), &disk_size);
+        u64 disk_size = m_max_addressable_block * block_size();
+        return copy_to_user(static_ptr_cast<u64*>(arg), &disk_size);
         break;
     }
     case STORAGE_DEVICE_GET_BLOCK_SIZE: {

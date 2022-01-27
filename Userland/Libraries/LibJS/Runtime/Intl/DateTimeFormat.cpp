@@ -12,7 +12,6 @@
 #include <LibJS/Runtime/Intl/DateTimeFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Utf16String.h>
@@ -828,11 +827,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
     auto const& data_locale = date_time_format.data_locale();
 
     auto construct_number_format = [&](auto* options) -> ThrowCompletionOr<NumberFormat*> {
-        MarkedValueList arguments { vm.heap() };
-        arguments.append(js_string(vm, locale));
-        arguments.append(options);
-
-        auto* number_format = TRY(construct(global_object, *global_object.intl_number_format_constructor(), move(arguments)));
+        auto* number_format = TRY(construct(global_object, *global_object.intl_number_format_constructor(), js_string(vm, locale), options));
         return static_cast<NumberFormat*>(number_format);
     };
 

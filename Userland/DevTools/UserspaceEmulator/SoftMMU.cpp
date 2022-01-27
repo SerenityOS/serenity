@@ -321,7 +321,7 @@ void SoftMMU::copy_from_vm(void* destination, const FlatPtr source, size_t size)
 
 ByteBuffer SoftMMU::copy_buffer_from_vm(const FlatPtr source, size_t size)
 {
-    auto buffer = ByteBuffer::create_uninitialized(size).release_value(); // FIXME: Handle possible OOM situation.
+    auto buffer = ByteBuffer::create_uninitialized(size).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
     copy_from_vm(buffer.data(), source, size);
     return buffer;
 }

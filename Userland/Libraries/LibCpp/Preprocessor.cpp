@@ -94,6 +94,7 @@ void Preprocessor::handle_preprocessor_statement(StringView line)
     lexer.consume_specific('#');
     consume_whitespace(lexer);
     auto keyword = lexer.consume_until(' ');
+    lexer.ignore();
     if (keyword.is_empty() || keyword.is_null() || keyword.is_whitespace())
         return;
 
@@ -165,6 +166,7 @@ void Preprocessor::handle_preprocessor_keyword(StringView keyword, GenericLexer&
         ++m_current_depth;
         if (m_state == State::Normal) {
             auto key = line_lexer.consume_until(' ');
+            line_lexer.ignore();
             if (m_definitions.contains(key)) {
                 m_depths_of_taken_branches.append(m_current_depth - 1);
                 return;
@@ -180,6 +182,7 @@ void Preprocessor::handle_preprocessor_keyword(StringView keyword, GenericLexer&
         ++m_current_depth;
         if (m_state == State::Normal) {
             auto key = line_lexer.consume_until(' ');
+            line_lexer.ignore();
             if (!m_definitions.contains(key)) {
                 m_depths_of_taken_branches.append(m_current_depth - 1);
                 return;
@@ -353,10 +356,12 @@ Optional<Preprocessor::Definition> Preprocessor::create_definition(StringView li
 
 String Preprocessor::remove_escaped_newlines(StringView value)
 {
+    static constexpr auto escaped_newline = "\\\n"sv;
     AK::StringBuilder processed_value;
     GenericLexer lexer { value };
     while (!lexer.is_eof()) {
-        processed_value.append(lexer.consume_until("\\\n"));
+        processed_value.append(lexer.consume_until(escaped_newline));
+        lexer.ignore(escaped_newline.length());
     }
     return processed_value.to_string();
 }

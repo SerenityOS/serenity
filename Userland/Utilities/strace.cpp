@@ -232,13 +232,9 @@ static ErrorOr<void> copy_from_process(const void* source, Bytes target)
 
 static ErrorOr<ByteBuffer> copy_from_process(const void* source, size_t length)
 {
-    auto buffer = ByteBuffer::create_uninitialized(length);
-    if (!buffer.has_value()) {
-        // Allocation failed. Inject an error:
-        return Error::from_errno(ENOMEM);
-    }
-    TRY(copy_from_process(source, buffer->bytes()));
-    return buffer.release_value();
+    auto buffer = TRY(ByteBuffer::create_uninitialized(length));
+    TRY(copy_from_process(source, buffer.bytes()));
+    return buffer;
 }
 
 template<typename T>

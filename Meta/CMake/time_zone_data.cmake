@@ -48,11 +48,7 @@ endfunction()
 if (ENABLE_TIME_ZONE_DATABASE_DOWNLOAD)
     remove_path_if_version_changed("${TZDB_VERSION}" "${TZDB_VERSION_FILE}" "${TZDB_PATH}")
 
-    if (NOT EXISTS "${TZDB_ZIP_PATH}")
-        message(STATUS "Downloading time zone database from ${TZDB_ZIP_URL}...")
-        file(DOWNLOAD "${TZDB_ZIP_URL}" "${TZDB_ZIP_PATH}" INACTIVITY_TIMEOUT 10)
-    endif()
-
+    download_file("${TZDB_ZIP_URL}" "${TZDB_ZIP_PATH}")
     extract_tzdb_file("${TZDB_AFRICA_SOURCE}" "${TZDB_AFRICA_PATH}")
     extract_tzdb_file("${TZDB_ANTARCTICA_SOURCE}" "${TZDB_ANTARCTICA_PATH}")
     extract_tzdb_file("${TZDB_ASIA_SOURCE}" "${TZDB_ASIA_PATH}")

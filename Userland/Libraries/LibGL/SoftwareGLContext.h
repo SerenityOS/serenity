@@ -147,9 +147,13 @@ public:
     virtual void gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* params) override;
     virtual void gl_lightf(GLenum light, GLenum pname, GLfloat param) override;
     virtual void gl_lightfv(GLenum light, GLenum pname, GLfloat const* params) override;
+    virtual void gl_lightiv(GLenum light, GLenum pname, GLint const* params) override;
     virtual void gl_materialf(GLenum face, GLenum pname, GLfloat param) override;
     virtual void gl_materialfv(GLenum face, GLenum pname, GLfloat const* params) override;
+    virtual void gl_materialiv(GLenum face, GLenum pname, GLint const* params) override;
     virtual void gl_color_material(GLenum face, GLenum mode) override;
+    virtual void gl_get_light(GLenum light, GLenum pname, void* params, GLenum type) override;
+    virtual void gl_get_material(GLenum face, GLenum pname, void* params, GLenum type) override;
     virtual void present() override;
 
 private:
@@ -181,6 +185,10 @@ private:
 
     template<typename T>
     void get_floating_point(GLenum pname, T* params);
+    template<typename T>
+    void get_light_param(GLenum light, GLenum pname, T* params);
+    template<typename T>
+    void get_material_param(Face face, GLenum pname, T* params);
 
     void invoke_list(size_t list_index);
     [[nodiscard]] bool should_append_to_listing() const { return m_current_listing_index.has_value(); }
@@ -368,9 +376,12 @@ private:
             decltype(&SoftwareGLContext::gl_fogi),
             decltype(&SoftwareGLContext::gl_lightf),
             decltype(&SoftwareGLContext::gl_lightfv),
+            decltype(&SoftwareGLContext::gl_lightiv),
             decltype(&SoftwareGLContext::gl_materialf),
             decltype(&SoftwareGLContext::gl_materialfv),
-            decltype(&SoftwareGLContext::gl_color_material)>;
+            decltype(&SoftwareGLContext::gl_materialiv),
+            decltype(&SoftwareGLContext::gl_color_material),
+            decltype(&SoftwareGLContext::gl_get_light)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;

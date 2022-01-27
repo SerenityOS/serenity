@@ -241,7 +241,7 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     auto dh_p_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(3)));
     auto dh_p = buffer.slice(5, dh_p_length);
     auto p_result = ByteBuffer::copy(dh_p);
-    if (!p_result.has_value()) {
+    if (p_result.is_error()) {
         dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
         return 0;
     }
@@ -250,7 +250,7 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     auto dh_g_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(5 + dh_p_length)));
     auto dh_g = buffer.slice(7 + dh_p_length, dh_g_length);
     auto g_result = ByteBuffer::copy(dh_g);
-    if (!g_result.has_value()) {
+    if (g_result.is_error()) {
         dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
         return 0;
     }
@@ -259,7 +259,7 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     auto dh_Ys_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(7 + dh_p_length + dh_g_length)));
     auto dh_Ys = buffer.slice(9 + dh_p_length + dh_g_length, dh_Ys_length);
     auto Ys_result = ByteBuffer::copy(dh_Ys);
-    if (!Ys_result.has_value()) {
+    if (Ys_result.is_error()) {
         dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
         return 0;
     }

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <AK/Optional.h>
+#include <AK/Error.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 
@@ -24,7 +24,7 @@ constexpr u8 decode_hex_digit(char digit)
     return 255;
 }
 
-Optional<ByteBuffer> decode_hex(StringView);
+ErrorOr<ByteBuffer> decode_hex(StringView);
 
 String encode_hex(ReadonlyBytes);
 

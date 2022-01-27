@@ -8,15 +8,14 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath cpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath cpath"));
 
     bool recursive = false;
     bool force = false;
@@ -30,10 +29,10 @@ int main(int argc, char** argv)
     args_parser.add_option(verbose, "Verbose", "verbose", 'v');
     args_parser.add_option(no_preserve_root, "Do not consider '/' specially", "no-preserve-root", 0);
     args_parser.add_positional_argument(paths, "Path(s) to remove", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!force && paths.is_empty()) {
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
