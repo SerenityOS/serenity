@@ -16,7 +16,7 @@ struct LEB128 {
     template<typename StreamT, typename ValueType = size_t>
     static bool read_unsigned(StreamT& stream, ValueType& result)
     {
-        [[maybe_unused]] size_t backup_offset = 0;
+        size_t backup_offset = 0;
         if constexpr (requires { stream.offset(); })
             backup_offset = stream.offset();
         InputStream& input_stream { stream };
@@ -59,7 +59,7 @@ struct LEB128 {
         // Note: We read into a u64 to simplify the parsing logic;
         //    result is range checked into ValueType after parsing.
         static_assert(sizeof(ValueType) <= sizeof(u64), "Error checking logic assumes 64 bits or less!");
-        [[maybe_unused]] size_t backup_offset = 0;
+        size_t backup_offset = 0;
         if constexpr (requires { stream.offset(); })
             backup_offset = stream.offset();
         InputStream& input_stream { stream };
