@@ -1154,6 +1154,8 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
         mmu().copy_from_vm(&termios, arg, sizeof(termios));
         return syscall(SC_ioctl, fd, request, &termios);
     }
+    case TCFLSH:
+        return syscall(SC_ioctl, fd, request, arg);
     case TIOCNOTTY:
     case TIOCSCTTY:
         return syscall(SC_ioctl, fd, request, 0);
