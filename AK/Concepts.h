@@ -83,6 +83,7 @@ using AK::Concepts::Integral;
 using AK::Concepts::IterableContainer;
 using AK::Concepts::IteratorFunction;
 using AK::Concepts::IteratorPairWith;
+using AK::Concepts::SameAs;
 using AK::Concepts::Signed;
 using AK::Concepts::Unsigned;
 using AK::Concepts::VoidFunction;
