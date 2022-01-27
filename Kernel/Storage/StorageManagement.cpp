@@ -44,7 +44,7 @@ bool StorageManagement::boot_argument_contains_partition_uuid()
     return m_boot_argument.starts_with(partition_uuid_prefix);
 }
 
-UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
+UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio, bool nvme_poll)
 {
     VERIFY(m_controllers.is_empty());
 
@@ -60,10 +60,10 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
                 static constexpr PCI::HardwareID vmd_device = { 0x8086, 0x9a0b };
                 if (device_identifier.hardware_id() == vmd_device) {
                     auto controller = PCI::VolumeManagementDevice::must_create(device_identifier);
-                    PCI::Access::the().add_host_controller_and_enumerate_attached_devices(move(controller), [this](PCI::DeviceIdentifier const& device_identifier) -> void {
+                    PCI::Access::the().add_host_controller_and_enumerate_attached_devices(move(controller), [this, nvme_poll](PCI::DeviceIdentifier const& device_identifier) -> void {
                         auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());
                         if (subclass_code == SubclassID::NVMeController) {
-                            auto controller = NVMeController::try_initialize(device_identifier);
+                            auto controller = NVMeController::try_initialize(device_identifier, nvme_poll);
                             if (controller.is_error()) {
                                 dmesgln("Unable to initialize NVMe controller: {}", controller.error());
                             } else {
@@ -84,7 +84,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
                 m_controllers.append(AHCIController::initialize(device_identifier));
             }
             if (subclass_code == SubclassID::NVMeController) {
-                auto controller = NVMeController::try_initialize(device_identifier);
+                auto controller = NVMeController::try_initialize(device_identifier, nvme_poll);
                 if (controller.is_error()) {
                     dmesgln("Unable to initialize NVMe controller: {}", controller.error());
                 } else {
@@ -274,11 +274,11 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     return file_system;
 }
 
-UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool force_pio)
+UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool force_pio, bool poll)
 {
     VERIFY(s_device_minor_number == 0);
     m_boot_argument = root_device;
-    enumerate_controllers(force_pio);
+    enumerate_controllers(force_pio, poll);
     enumerate_storage_devices();
     enumerate_disk_partitions();
     if (!boot_argument_contains_partition_uuid()) {

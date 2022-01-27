@@ -125,6 +125,7 @@ enum IOCommandOpcode {
 // FLAGS
 static constexpr u8 QUEUE_PHY_CONTIGUOUS = (1 << 0);
 static constexpr u8 QUEUE_IRQ_ENABLED = (1 << 1);
+static constexpr u8 QUEUE_IRQ_DISABLED = (0 << 1);
 
 struct [[gnu::packed]] NVMeCompletion {
     LittleEndian<u32> cmd_spec;
