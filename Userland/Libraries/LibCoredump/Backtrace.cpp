@@ -17,7 +17,7 @@
 
 namespace Coredump {
 
-ELFObjectInfo const* Backtrace::object_info_for_region(ELF::Core::MemoryRegionInfo const& region)
+ELFObjectInfo const* Backtrace::object_info_for_region(MemoryRegionInfo const& region)
 {
     auto path = region.object_name();
     if (!path.starts_with('/') && Core::File::looks_like_shared_library(path))
@@ -99,8 +99,8 @@ Backtrace::~Backtrace()
 
 void Backtrace::add_entry(const Reader& coredump, FlatPtr ip)
 {
-    auto* ip_region = coredump.region_containing(ip);
-    if (!ip_region) {
+    auto ip_region = coredump.region_containing(ip);
+    if (!ip_region.has_value()) {
         m_entries.append({ ip, {}, {}, {} });
         return;
     }
@@ -116,7 +116,7 @@ void Backtrace::add_entry(const Reader& coredump, FlatPtr ip)
     // the PT_LOAD header for the .text segment isn't the first one
     // in the object file.
     auto region = coredump.first_region_for_object(object_name);
-    auto* object_info = object_info_for_region(*region);
+    auto object_info = object_info_for_region(*region);
     if (!object_info)
         return;
 

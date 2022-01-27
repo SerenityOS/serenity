@@ -153,7 +153,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Vector<String> memory_regions;
     coredump->for_each_memory_region_info([&](auto& memory_region_info) {
-        memory_regions.append(String::formatted("{:p} - {:p}: {}", memory_region_info.region_start, memory_region_info.region_end, (const char*)memory_region_info.region_name));
+        memory_regions.append(String::formatted("{:p} - {:p}: {}", memory_region_info.region_start, memory_region_info.region_end, memory_region_info.region_name));
         return IterationDecision::Continue;
     });
 
