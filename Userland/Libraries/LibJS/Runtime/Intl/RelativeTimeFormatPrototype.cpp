@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatPrototype.h>
 
@@ -26,6 +27,7 @@ void RelativeTimeFormatPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.format, format, 2, attr);
+    define_native_function(vm.names.formatToParts, format_to_parts, 2, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
@@ -45,6 +47,23 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format)
     // 5. Return ? FormatRelativeTime(relativeTimeFormat, value, unit).
     auto formatted = TRY(format_relative_time(global_object, *relative_time_format, value.as_double(), unit));
     return js_string(vm, move(formatted));
+}
+
+// 17.4.4 Intl.RelativeTimeFormat.prototype.formatToParts ( value, unit ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype.formatToParts
+JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format_to_parts)
+{
+    // 1. Let relativeTimeFormat be the this value.
+    // 2. Perform ? RequireInternalSlot(relativeTimeFormat, [[InitializedRelativeTimeFormat]]).
+    auto* relative_time_format = TRY(typed_this_object(global_object));
+
+    // 3. Let value be ? ToNumber(value).
+    auto value = TRY(vm.argument(0).to_number(global_object));
+
+    // 4. Let unit be ? ToString(unit).
+    auto unit = TRY(vm.argument(1).to_string(global_object));
+
+    // 5. Return ? FormatRelativeTimeToParts(relativeTimeFormat, value, unit).
+    return TRY(format_relative_time_to_parts(global_object, *relative_time_format, value.as_double(), unit));
 }
 
 // 17.4.5 Intl.RelativeTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.relativetimeformat.prototype.resolvedoptions
