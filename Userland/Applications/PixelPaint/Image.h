@@ -14,7 +14,6 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
-#include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Span.h>
-#include <AK/Vector.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>

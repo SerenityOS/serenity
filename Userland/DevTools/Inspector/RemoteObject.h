@@ -9,7 +9,6 @@
 #include <AK/JsonObject.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 
 namespace Inspector {
 
