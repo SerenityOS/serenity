@@ -81,17 +81,9 @@
                 fixed_width: 32
             }
 
-            @GUI::Label {
-                text: "Use TLS:"
-                fixed_width: 80
-                text_alignment: "CenterLeft"
-                name: "tls_label"
-            }
-
             @GUI::CheckBox {
                 name: "tls_input"
-                fixed_width: 14
-
+                text: "Use TLS"
             }
         }
     }
