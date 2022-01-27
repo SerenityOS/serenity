@@ -7,6 +7,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
+#include <AK/IntegralMath.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/kstdio.h>
@@ -383,14 +384,7 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
         // place to start would be the following video from CppCon 2019:
         // https://youtu.be/4P_kbF0EbZM (Stephan T. Lavavej “Floating-Point <charconv>: Making Your Code 10x Faster With C++17's Final Boss”)
 
-#ifdef KERNEL
-        // We don't have pow() in kernel land
-        u64 scale = 10;
-        for (size_t i = 0; i < precision - 1; i++) // TODO: not efficient
-            scale *= 10;
-#else
-        u64 scale = pow(10.0, (double)precision);
-#endif
+        u64 scale = pow<u64>(10, precision);
 
         auto fraction = (scale * fraction_value) / fraction_one; // TODO: overflows
         if (is_negative)
