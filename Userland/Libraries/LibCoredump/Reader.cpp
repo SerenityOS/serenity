@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
 #include <AK/HashTable.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -139,8 +140,10 @@ Optional<FlatPtr> Reader::peek_memory(FlatPtr address) const
         return {};
 
     FlatPtr offset_in_region = address - region->region_start;
-    const char* region_data = image().program_header(region->program_header_index).raw_data();
-    return *(const FlatPtr*)(&region_data[offset_in_region]);
+    auto* region_data = bit_cast<const u8*>(image().program_header(region->program_header_index).raw_data());
+    FlatPtr value { 0 };
+    ByteReader::load(region_data + offset_in_region, value);
+    return value;
 }
 
 const JsonObject Reader::process_info() const
