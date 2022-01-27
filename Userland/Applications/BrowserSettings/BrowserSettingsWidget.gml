@@ -79,14 +79,9 @@
                 fixed_width: 32
             }
 
-            @GUI::Label {
-                text: "Show bookmarks:"
-                text_alignment: "CenterLeft"
-                fixed_width: 110
-            }
-
             @GUI::CheckBox {
                 name: "show_bookmarks_bar_checkbox"
+                text: "Show bookmarks"
             }
         }
     }
