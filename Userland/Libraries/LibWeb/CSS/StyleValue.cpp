@@ -574,6 +574,7 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::re
     return value.visit(
         [](float) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Number }; },
         [](Length const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Length }; },
+        [](Percentage const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Percentage }; },
         [](NonnullOwnPtr<CalcSum> const& sum) { return sum->resolved_type(); });
 }
 
@@ -603,6 +604,9 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve
         },
         [&](Length const& length) -> CalculatedStyleValue::CalculationResult {
             return CalculatedStyleValue::CalculationResult { length };
+        },
+        [&](Percentage const& percentage) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { percentage };
         },
         [&](NonnullOwnPtr<CalcSum> const& sum) -> CalculatedStyleValue::CalculationResult {
             return sum->resolve(layout_node, percentage_basis);

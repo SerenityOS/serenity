@@ -4210,10 +4210,16 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<S
         return CalculatedStyleValue::CalcValue { static_cast<float>(current_token.token().number_value()) };
 
     if (current_token.is(Token::Type::Dimension) || current_token.is(Token::Type::Percentage)) {
-        auto maybe_length = parse_length(current_token);
-        if (maybe_length.has_value() && !maybe_length.value().is_undefined())
-            return CalculatedStyleValue::CalcValue { maybe_length.value() };
-        return {};
+        auto maybe_dimension = parse_dimension(current_token);
+        if (!maybe_dimension.has_value())
+            return {};
+        auto& dimension = maybe_dimension.value();
+
+        if (dimension.is_length())
+            return CalculatedStyleValue::CalcValue { dimension.length() };
+        if (dimension.is_percentage())
+            return CalculatedStyleValue::CalcValue { dimension.percentage() };
+        VERIFY_NOT_REACHED();
     }
 
     return {};
