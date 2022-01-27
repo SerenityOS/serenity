@@ -378,6 +378,13 @@ describe("style=decimal", () => {
         expect(ar.format(12345)).toBe("\u0661\u0662\u066c\u0663\u0664\u0665");
         expect(ar.format(123456)).toBe("\u0661\u0662\u0663\u066c\u0664\u0665\u0666");
         expect(ar.format(1234567)).toBe("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0667");
+
+        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: true });
+        expect(plPl.format(123)).toBe("123");
+        expect(plPl.format(1234)).toBe("1234");
+        expect(plPl.format(12345)).toBe("12\u00a0345");
+        expect(plPl.format(123456)).toBe("123\u00a0456");
+        expect(plPl.format(1234567)).toBe("1\u00a0234\u00a0567");
     });
 
     test("useGrouping=false", () => {
@@ -401,6 +408,13 @@ describe("style=decimal", () => {
         expect(ar.format(12345)).toBe("\u0661\u0662\u0663\u0664\u0665");
         expect(ar.format(123456)).toBe("\u0661\u0662\u0663\u0664\u0665\u0666");
         expect(ar.format(1234567)).toBe("\u0661\u0662\u0663\u0664\u0665\u0666\u0667");
+
+        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: false });
+        expect(plPl.format(123)).toBe("123");
+        expect(plPl.format(1234)).toBe("1234");
+        expect(plPl.format(12345)).toBe("12345");
+        expect(plPl.format(123456)).toBe("123456");
+        expect(plPl.format(1234567)).toBe("1234567");
     });
 });
 
