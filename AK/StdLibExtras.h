@@ -69,6 +69,13 @@ constexpr SizeType array_size(T (&)[N])
 }
 
 template<typename T>
+requires requires { Detail::Decay<T> {}.size(); }
+constexpr auto array_size(T&& t) -> decltype(Detail::Decay<T> {}.size())
+{
+    return t.size();
+}
+
+template<typename T>
 constexpr T min(const T& a, const IdentityType<T>& b)
 {
     return b < a ? b : a;
