@@ -1122,6 +1122,12 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
         mmu().copy_from_vm(&ws, arg, sizeof(winsize));
         return syscall(SC_ioctl, fd, request, &ws);
     }
+    case TIOCGPGRP: {
+        pid_t pgid;
+        auto rc = syscall(SC_ioctl, fd, request, &pgid);
+        mmu().copy_to_vm(arg, &pgid, sizeof(pgid));
+        return rc;
+    }
     case TIOCSPGRP:
         return syscall(SC_ioctl, fd, request, arg);
     case TCGETS: {
