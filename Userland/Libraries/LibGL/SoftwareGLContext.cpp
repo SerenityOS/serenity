@@ -3154,22 +3154,8 @@ void SoftwareGLContext::sync_light_state()
     m_rasterizer.set_options(options);
 
     for (auto light_id = 0u; light_id < SoftGPU::NUM_LIGHTS; light_id++) {
-        SoftGPU::Light light;
         auto const& current_light_state = m_light_states.at(light_id);
-
-        light.is_enabled = current_light_state.is_enabled;
-        light.ambient_intensity = current_light_state.ambient_intensity;
-        light.diffuse_intensity = current_light_state.diffuse_intensity;
-        light.specular_intensity = current_light_state.specular_intensity;
-        light.position = current_light_state.position;
-        light.spotlight_direction = current_light_state.spotlight_direction;
-        light.spotlight_exponent = current_light_state.spotlight_exponent;
-        light.spotlight_cutoff_angle = current_light_state.spotlight_cutoff_angle;
-        light.constant_attenuation = current_light_state.constant_attenuation;
-        light.linear_attenuation = current_light_state.linear_attenuation;
-        light.quadratic_attenuation = current_light_state.quadratic_attenuation;
-
-        m_rasterizer.set_light_state(light_id, light);
+        m_rasterizer.set_light_state(light_id, current_light_state);
     }
 
     auto update_material_state = [&](SoftGPU::Face face, SoftGPU::Material const& current_material_state) {
