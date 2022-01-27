@@ -13,49 +13,92 @@
 
 namespace JS {
 
+// 2.7 Static Semantics: AssertClauseToAssertions, https://tc39.es/proposal-import-assertions/#sec-assert-clause-to-assertions
+static Vector<ModuleRequest::Assertion> assert_clause_to_assertions(Vector<ModuleRequest::Assertion> const& source_assertions, Vector<String> const& supported_import_assertions)
+{
+    // AssertClause : assert { AssertEntries ,opt }
+    // 1. Let assertions be AssertClauseToAssertions of AssertEntries.
+    Vector<ModuleRequest::Assertion> assertions;
+
+    // AssertEntries : AssertionKey : StringLiteral
+    // AssertEntries : AssertionKey : StringLiteral , AssertEntries
+    // 1. Let supportedAssertions be !HostGetSupportedImportAssertions().
+
+    for (auto& assertion : source_assertions) {
+        // 2. Let key be StringValue of AssertionKey.
+        // 3. If supportedAssertions contains key,
+        if (supported_import_assertions.contains_slow(assertion.key)) {
+            // a. Let entry be a Record { [[Key]]: key, [[Value]]: StringValue of StringLiteral }.
+            assertions.empend(assertion);
+        }
+    }
+
+    // 2. Sort assertions by the code point order of the [[Key]] of each element. NOTE: This sorting is observable only in that hosts are prohibited from distinguishing among assertions by the order they occur in.
+    // Note: The sorting is done in construction of the ModuleRequest object.
+
+    // 3. Return assertions.
+    return assertions;
+}
+
 // 16.2.1.3 Static Semantics: ModuleRequests, https://tc39.es/ecma262/#sec-static-semantics-modulerequests
-static Vector<FlyString> module_requests(Program const& program)
+static Vector<ModuleRequest> module_requests(Program& program, Vector<String> const& supported_import_assertions)
 {
     // A List of all the ModuleSpecifier strings used by the module represented by this record to request the importation of a module.
     // Note: The List is source text occurrence ordered!
     struct RequestedModuleAndSourceIndex {
-        FlyString requested_module;
-        u64 source_index;
-
-        bool operator<(RequestedModuleAndSourceIndex const& rhs) const
-        {
-            return source_index < rhs.source_index;
-        }
+        u64 source_index { 0 };
+        ModuleRequest* module_request { nullptr };
     };
 
     Vector<RequestedModuleAndSourceIndex> requested_modules_with_indices;
 
-    for (auto const& import_statement : program.imports()) {
-        requested_modules_with_indices.append({ import_statement.module_request().module_specifier.view(),
-            import_statement.source_range().start.offset });
+    for (auto& import_statement : program.imports()) {
+        requested_modules_with_indices.empend(import_statement.source_range().start.offset, &import_statement.module_request());
     }
 
-    for (auto const& export_statement : program.exports()) {
-        for (auto const& export_entry : export_statement.entries()) {
+    for (auto& export_statement : program.exports()) {
+        for (auto& export_entry : export_statement.entries()) {
             if (!export_entry.is_module_request())
                 continue;
-            requested_modules_with_indices.append({ export_entry.module_request().module_specifier.view(),
-                export_statement.source_range().start.offset });
+            requested_modules_with_indices.empend(export_statement.source_range().start.offset, &export_statement.module_request());
         }
     }
 
-    quick_sort(requested_modules_with_indices);
+    // Note: The List is source code occurrence ordered. https://tc39.es/proposal-import-assertions/#table-cyclic-module-fields
+    quick_sort(requested_modules_with_indices, [&](RequestedModuleAndSourceIndex const& lhs, RequestedModuleAndSourceIndex const& rhs) {
+        return lhs.source_index < rhs.source_index;
+    });
 
-    Vector<FlyString> requested_modules_in_source_order;
+    Vector<ModuleRequest> requested_modules_in_source_order;
     requested_modules_in_source_order.ensure_capacity(requested_modules_with_indices.size());
     for (auto& module : requested_modules_with_indices) {
-        requested_modules_in_source_order.append(module.requested_module);
+        // 2.10 Static Semantics: ModuleRequests https://tc39.es/proposal-import-assertions/#sec-static-semantics-modulerequests
+        if (module.module_request->assertions.is_empty()) {
+            //  ExportDeclaration : export ExportFromClause FromClause ;
+            //  ImportDeclaration : import ImportClause FromClause ;
+
+            // 1. Let specifier be StringValue of the StringLiteral contained in FromClause.
+            // 2. Return a ModuleRequest Record { [[Specifer]]: specifier, [[Assertions]]: an empty List }.
+            requested_modules_in_source_order.empend(module.module_request->module_specifier);
+        } else {
+            //  ExportDeclaration : export ExportFromClause FromClause AssertClause ;
+            //  ImportDeclaration : import ImportClause FromClause AssertClause ;
+
+            // 1. Let specifier be StringValue of the StringLiteral contained in FromClause.
+            // 2. Let assertions be AssertClauseToAssertions of AssertClause.
+            auto assertions = assert_clause_to_assertions(module.module_request->assertions, supported_import_assertions);
+            // Note: We have to modify the assertions in place because else it might keep non supported ones
+            module.module_request->assertions = move(assertions);
+
+            // 3. Return a ModuleRequest Record { [[Specifer]]: specifier, [[Assertions]]: assertions }.
+            requested_modules_in_source_order.empend(module.module_request->module_specifier, module.module_request->assertions);
+        }
     }
 
     return requested_modules_in_source_order;
 }
 
-SourceTextModule::SourceTextModule(Realm& realm, StringView filename, bool has_top_level_await, NonnullRefPtr<Program> body, Vector<FlyString> requested_modules,
+SourceTextModule::SourceTextModule(Realm& realm, StringView filename, bool has_top_level_await, NonnullRefPtr<Program> body, Vector<ModuleRequest> requested_modules,
     Vector<ImportEntry> import_entries, Vector<ExportEntry> local_export_entries,
     Vector<ExportEntry> indirect_export_entries, Vector<ExportEntry> star_export_entries,
     RefPtr<ExportStatement> default_export)
@@ -81,8 +124,12 @@ Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule:
     if (parser.has_errors())
         return parser.errors();
 
+    // Needed for 2.7 Static Semantics: AssertClauseToAssertions, https://tc39.es/proposal-import-assertions/#sec-assert-clause-to-assertions
+    // 1. Let supportedAssertions be !HostGetSupportedImportAssertions().
+    auto supported_assertions = realm.vm().host_get_supported_import_assertions();
+
     // 3. Let requestedModules be the ModuleRequests of body.
-    auto requested_modules = module_requests(*body);
+    auto requested_modules = module_requests(*body, supported_assertions);
 
     // 4. Let importEntries be ImportEntries of body.
     Vector<ImportEntry> import_entries;
@@ -288,9 +335,6 @@ Completion SourceTextModule::initialize_environment(VM& vm)
 
     // 7. For each ImportEntry Record in of module.[[ImportEntries]], do
     for (auto& import_entry : m_import_entries) {
-        if (!import_entry.module_request().assertions.is_empty())
-            return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "import statements with assertions");
-
         // a. Let importedModule be ! HostResolveImportedModule(module, in.[[ModuleRequest]]).
         auto imported_module = MUST(vm.host_resolve_imported_module(this, import_entry.module_request()));
         // b. NOTE: The above call cannot fail because imported module requests are a subset of module.[[RequestedModules]], and these have been resolved earlier in this algorithm.

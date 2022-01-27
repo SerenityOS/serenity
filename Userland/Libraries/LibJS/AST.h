@@ -257,6 +257,8 @@ struct ModuleRequest {
     {
     }
 
+    ModuleRequest(FlyString module_specifier, Vector<Assertion> assertions);
+
     void add_assertion(String key, String value)
     {
         assertions.empend(move(key), move(value));
@@ -309,6 +311,7 @@ public:
     bool has_bound_name(FlyString const& name) const;
     Vector<ImportEntry> const& entries() const { return m_entries; }
     ModuleRequest const& module_request() const { return m_module_request; }
+    ModuleRequest& module_request() { return m_module_request; }
 
 private:
     ModuleRequest m_module_request;
@@ -406,6 +409,12 @@ public:
         return *m_statement;
     }
 
+    ModuleRequest& module_request()
+    {
+        VERIFY(!m_module_request.module_specifier.is_null());
+        return m_module_request;
+    }
+
 private:
     RefPtr<ASTNode> m_statement;
     Vector<ExportEntry> m_entries;
@@ -447,6 +456,9 @@ public:
 
     NonnullRefPtrVector<ImportStatement> const& imports() const { return m_imports; }
     NonnullRefPtrVector<ExportStatement> const& exports() const { return m_exports; }
+
+    NonnullRefPtrVector<ImportStatement>& imports() { return m_imports; }
+    NonnullRefPtrVector<ExportStatement>& exports() { return m_exports; }
 
     bool has_top_level_await() const { return m_has_top_level_await; }
     void set_has_top_level_await() { m_has_top_level_await = true; }
