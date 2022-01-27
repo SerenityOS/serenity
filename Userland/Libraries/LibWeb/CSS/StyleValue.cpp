@@ -249,7 +249,6 @@ String BackgroundStyleValue::to_string() const
     return builder.to_string();
 }
 
-<<<<<<< HEAD
 String BackgroundRepeatStyleValue::to_string() const
 {
     return String::formatted("{} {}", CSS::to_string(m_repeat_x), CSS::to_string(m_repeat_y));
@@ -273,7 +272,8 @@ String BorderRadiusStyleValue::to_string() const
 String BoxShadowStyleValue::to_string() const
 {
     return String::formatted("{} {} {} {}", m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_color.to_string());
-=======
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
@@ -354,6 +354,7 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
             }
         },
         [&](Length const& length) {
+            VERIFY(layout_node);
             m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<float>());
         },
         [&](Percentage const& percentage) {
@@ -374,124 +375,45 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
             m_value = f / denominator;
         },
         [&](Length const& length) {
+            VERIFY(layout_node);
             m_value = Length::make_px(length.to_px(*layout_node) / denominator);
         },
         [&](Percentage const& percentage) {
             m_value = Percentage { percentage.value() / denominator };
         });
->>>>>>> d91d120251 (LibWeb: Implement CalculationResult type for calc() results)
 }
-
-static float resolve_calc_value(CalculatedStyleValue::CalcValue const& calc_value, Layout::Node const& layout_node);
-static float resolve_calc_number_value(CalculatedStyleValue::CalcNumberValue const&);
-static float resolve_calc_product(NonnullOwnPtr<CalculatedStyleValue::CalcProduct> const& calc_product, Layout::Node const& layout_node);
-static float resolve_calc_sum(NonnullOwnPtr<CalculatedStyleValue::CalcSum> const& calc_sum, Layout::Node const& layout_node);
-static float resolve_calc_number_sum(NonnullOwnPtr<CalculatedStyleValue::CalcNumberSum> const&);
-static float resolve_calc_number_product(NonnullOwnPtr<CalculatedStyleValue::CalcNumberProduct> const&);
 
 Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout_node) const
 {
-    auto length = resolve_calc_sum(m_expression, layout_node);
-    return Length::make_px(length);
-}
+    auto result = m_expression->resolve(&layout_node, {});
 
-static float resolve_calc_value(CalculatedStyleValue::CalcValue const& calc_value, Layout::Node const& layout_node)
-{
-    return calc_value.value.visit(
-        [](float value) { return value; },
-        [&](Length const& length) {
-            return length.resolved_or_zero(layout_node).to_px(layout_node);
+    return result.value().visit(
+        [&](float) -> Optional<Length> {
+            return {};
         },
-        [&](NonnullOwnPtr<CalculatedStyleValue::CalcSum> const& calc_sum) {
-            return resolve_calc_sum(calc_sum, layout_node);
+        [&](Length const& length) -> Optional<Length> {
+            return length;
         },
-        [](auto&) {
-            VERIFY_NOT_REACHED();
-            return 0.0f;
+        [&](Percentage const&) -> Optional<Length> {
+            return {};
         });
 }
 
-static float resolve_calc_number_product(NonnullOwnPtr<CalculatedStyleValue::CalcNumberProduct> const& calc_number_product)
+Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
 {
-    auto value = resolve_calc_number_value(calc_number_product->first_calc_number_value);
+    VERIFY(!percentage_basis.is_undefined());
+    auto result = m_expression->resolve(&layout_node, percentage_basis);
 
-    for (auto& additional_number_value : calc_number_product->zero_or_more_additional_calc_number_values) {
-        auto additional_value = resolve_calc_number_value(additional_number_value.value);
-        if (additional_number_value.op == CalculatedStyleValue::ProductOperation::Multiply)
-            value *= additional_value;
-        else if (additional_number_value.op == CalculatedStyleValue::ProductOperation::Divide)
-            value /= additional_value;
-        else
-            VERIFY_NOT_REACHED();
-    }
-
-    return value;
-}
-
-static float resolve_calc_number_sum(NonnullOwnPtr<CalculatedStyleValue::CalcNumberSum> const& calc_number_sum)
-{
-    auto value = resolve_calc_number_product(calc_number_sum->first_calc_number_product);
-
-    for (auto& additional_product : calc_number_sum->zero_or_more_additional_calc_number_products) {
-        auto additional_value = resolve_calc_number_product(additional_product.value);
-        if (additional_product.op == CSS::CalculatedStyleValue::SumOperation::Add)
-            value += additional_value;
-        else if (additional_product.op == CSS::CalculatedStyleValue::SumOperation::Subtract)
-            value -= additional_value;
-        else
-            VERIFY_NOT_REACHED();
-    }
-
-    return value;
-}
-
-static float resolve_calc_number_value(CalculatedStyleValue::CalcNumberValue const& number_value)
-{
-    return number_value.value.visit(
-        [](float number) { return number; },
-        [](NonnullOwnPtr<CalculatedStyleValue::CalcNumberSum> const& calc_number_sum) {
-            return resolve_calc_number_sum(calc_number_sum);
+    return result.value().visit(
+        [&](float) -> Optional<LengthPercentage> {
+            return {};
+        },
+        [&](Length const& length) -> Optional<LengthPercentage> {
+            return length;
+        },
+        [&](Percentage const& percentage) -> Optional<LengthPercentage> {
+            return percentage;
         });
-}
-
-static float resolve_calc_product(NonnullOwnPtr<CalculatedStyleValue::CalcProduct> const& calc_product, Layout::Node const& layout_node)
-{
-    auto value = resolve_calc_value(calc_product->first_calc_value, layout_node);
-
-    for (auto& additional_value : calc_product->zero_or_more_additional_calc_values) {
-        additional_value.value.visit(
-            [&](CalculatedStyleValue::CalcValue const& calc_value) {
-                if (additional_value.op != CalculatedStyleValue::ProductOperation::Multiply)
-                    VERIFY_NOT_REACHED();
-                auto resolved_value = resolve_calc_value(calc_value, layout_node);
-                value *= resolved_value;
-            },
-            [&](CalculatedStyleValue::CalcNumberValue const& calc_number_value) {
-                if (additional_value.op != CalculatedStyleValue::ProductOperation::Divide)
-                    VERIFY_NOT_REACHED();
-                auto resolved_calc_number_value = resolve_calc_number_value(calc_number_value);
-                value /= resolved_calc_number_value;
-            });
-    }
-
-    return value;
-}
-
-static float resolve_calc_sum(NonnullOwnPtr<CalculatedStyleValue::CalcSum> const& calc_sum, Layout::Node const& layout_node)
-{
-    auto value = resolve_calc_product(calc_sum->first_calc_product, layout_node);
-
-    for (auto& additional_product : calc_sum->zero_or_more_additional_calc_products) {
-        auto additional_value = resolve_calc_product(additional_product.value, layout_node);
-        if (additional_product.op == CalculatedStyleValue::SumOperation::Add)
-            value += additional_value;
-        else if (additional_product.op == CalculatedStyleValue::SumOperation::Subtract)
-            value -= additional_value;
-        else
-            VERIFY_NOT_REACHED();
-    }
-
-    return value;
 }
 
 static bool is_number(CalculatedStyleValue::ResolvedType type)
@@ -660,6 +582,132 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberVal
     return value.visit(
         [](float) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Number }; },
         [](NonnullOwnPtr<CalcNumberSum> const& sum) { return sum->resolved_type(); });
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberValue::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value.visit(
+        [&](float f) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { f };
+        },
+        [&](NonnullOwnPtr<CalcNumberSum> const& sum) -> CalculatedStyleValue::CalculationResult {
+            return sum->resolve(layout_node, percentage_basis);
+        });
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value.visit(
+        [&](float f) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { f };
+        },
+        [&](Length const& length) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { length };
+        },
+        [&](NonnullOwnPtr<CalcSum> const& sum) -> CalculatedStyleValue::CalculationResult {
+            return sum->resolve(layout_node, percentage_basis);
+        });
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSum::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    auto value = first_calc_product->resolve(layout_node, percentage_basis);
+
+    for (auto& additional_product : zero_or_more_additional_calc_products) {
+        auto additional_value = additional_product.resolve(layout_node, percentage_basis);
+
+        if (additional_product.op == CalculatedStyleValue::SumOperation::Add)
+            value.add(additional_value, layout_node, percentage_basis);
+        else if (additional_product.op == CalculatedStyleValue::SumOperation::Subtract)
+            value.subtract(additional_value, layout_node, percentage_basis);
+        else
+            VERIFY_NOT_REACHED();
+    }
+
+    return value;
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSum::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    auto value = first_calc_number_product->resolve(layout_node, percentage_basis);
+
+    for (auto& additional_product : zero_or_more_additional_calc_number_products) {
+        auto additional_value = additional_product.resolve(layout_node, percentage_basis);
+
+        if (additional_product.op == CSS::CalculatedStyleValue::SumOperation::Add)
+            value.add(additional_value, layout_node, percentage_basis);
+        else if (additional_product.op == CalculatedStyleValue::SumOperation::Subtract)
+            value.subtract(additional_value, layout_node, percentage_basis);
+        else
+            VERIFY_NOT_REACHED();
+    }
+
+    return value;
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    auto value = first_calc_value.resolve(layout_node, percentage_basis);
+
+    for (auto& additional_value : zero_or_more_additional_calc_values) {
+        additional_value.value.visit(
+            [&](CalculatedStyleValue::CalcValue const& calc_value) {
+                VERIFY(additional_value.op == CalculatedStyleValue::ProductOperation::Multiply);
+                auto resolved_value = calc_value.resolve(layout_node, percentage_basis);
+                value.multiply_by(resolved_value, layout_node);
+            },
+            [&](CalculatedStyleValue::CalcNumberValue const& calc_number_value) {
+                VERIFY(additional_value.op == CalculatedStyleValue::ProductOperation::Divide);
+                auto resolved_calc_number_value = calc_number_value.resolve(layout_node, percentage_basis);
+                value.divide_by(resolved_calc_number_value, layout_node);
+            });
+    }
+
+    return value;
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProduct::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    auto value = first_calc_number_value.resolve(layout_node, percentage_basis);
+
+    for (auto& additional_number_value : zero_or_more_additional_calc_number_values) {
+        auto additional_value = additional_number_value.resolve(layout_node, percentage_basis);
+
+        if (additional_number_value.op == CalculatedStyleValue::ProductOperation::Multiply)
+            value.multiply_by(additional_value, layout_node);
+        else if (additional_number_value.op == CalculatedStyleValue::ProductOperation::Divide)
+            value.divide_by(additional_value, layout_node);
+        else
+            VERIFY_NOT_REACHED();
+    }
+
+    return value;
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProductPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value.visit(
+        [&](CalcValue const& calc_value) {
+            return calc_value.resolve(layout_node, percentage_basis);
+        },
+        [&](CalcNumberValue const& calc_number_value) {
+            return calc_number_value.resolve(layout_node, percentage_basis);
+        });
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSumPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value->resolve(layout_node, percentage_basis);
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value.resolve(layout_node, percentage_basis);
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value->resolve(layout_node, percentage_basis);
 }
 
 // https://www.w3.org/TR/css-color-4/#serializing-sRGB-values
