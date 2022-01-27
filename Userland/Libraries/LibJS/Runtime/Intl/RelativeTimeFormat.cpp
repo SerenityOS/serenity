@@ -6,6 +6,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
@@ -311,6 +312,48 @@ ThrowCompletionOr<String> format_relative_time(GlobalObject& global_object, Rela
 
     // 4. Return result.
     return result.build();
+}
+
+// 17.1.6 FormatRelativeTimeToParts ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-FormatRelativeTimeToParts
+ThrowCompletionOr<Array*> format_relative_time_to_parts(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, double value, StringView unit)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let parts be ? PartitionRelativeTimePattern(relativeTimeFormat, value, unit).
+    auto parts = TRY(partition_relative_time_pattern(global_object, relative_time_format, value, unit));
+
+    // 2. Let result be ArrayCreate(0).
+    auto* result = MUST(Array::create(global_object, 0));
+
+    // 3. Let n be 0.
+    size_t n = 0;
+
+    // 4. For each Record { [[Type]], [[Value]], [[Unit]] } part in parts, do
+    for (auto& part : parts) {
+        // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
+        auto* object = Object::create(global_object, global_object.object_prototype());
+
+        // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
+        MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
+
+        // c. Perform ! CreateDataPropertyOrThrow(O, "value", part.[[Value]]).
+        MUST(object->create_data_property_or_throw(vm.names.value, js_string(vm, move(part.value))));
+
+        // d. If part.[[Unit]] is not empty, then
+        if (!part.unit.is_empty()) {
+            // i. Perform ! CreateDataPropertyOrThrow(O, "unit", part.[[Unit]]).
+            MUST(object->create_data_property_or_throw(vm.names.unit, js_string(vm, part.unit)));
+        }
+
+        // e. Perform ! CreateDataPropertyOrThrow(result, ! ToString(n), O).
+        MUST(result->create_data_property_or_throw(n, object));
+
+        // f. Increment n by 1.
+        ++n;
+    }
+
+    // 5. Return result.
+    return result;
 }
 
 }
