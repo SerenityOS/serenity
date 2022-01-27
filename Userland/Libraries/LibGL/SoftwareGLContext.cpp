@@ -3172,22 +3172,8 @@ void SoftwareGLContext::sync_light_state()
         m_rasterizer.set_light_state(light_id, light);
     }
 
-    auto update_material_state = [&](SoftGPU::Face face, SoftGPU::Material const& current_material_state) {
-        SoftGPU::Material material;
-
-        material.ambient = current_material_state.ambient;
-        material.diffuse = current_material_state.diffuse;
-        material.specular = current_material_state.specular;
-        material.emissive = current_material_state.emissive;
-        material.shininess = current_material_state.shininess;
-        material.ambient_color_index = current_material_state.ambient_color_index;
-        material.diffuse_color_index = current_material_state.diffuse_color_index;
-        material.specular_color_index = current_material_state.specular_color_index;
-
-        m_rasterizer.set_material_state(face, material);
-    };
-    update_material_state(SoftGPU::Face::Front, m_material_states[Face::Front]);
-    update_material_state(SoftGPU::Face::Back, m_material_states[Face::Back]);
+    m_rasterizer.set_material_state(SoftGPU::Face::Front, m_material_states[Face::Front]);
+    m_rasterizer.set_material_state(SoftGPU::Face::Back, m_material_states[Face::Back]);
 }
 
 void SoftwareGLContext::sync_device_texcoord_config()
