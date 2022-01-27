@@ -135,8 +135,8 @@ bool Reader::NotesEntryIterator::at_end() const
 
 Optional<FlatPtr> Reader::peek_memory(FlatPtr address) const
 {
-    const auto* region = region_containing(address);
-    if (!region)
+    auto region = region_containing(address);
+    if (!region.has_value())
         return {};
 
     FlatPtr offset_in_region = address - region->region_start;
@@ -167,12 +167,12 @@ const JsonObject Reader::process_info() const
     // FIXME: Maybe just cache this on the Reader instance after first access.
 }
 
-ELF::Core::MemoryRegionInfo const* Reader::first_region_for_object(StringView object_name) const
+Optional<MemoryRegionInfo> Reader::first_region_for_object(StringView object_name) const
 {
-    ELF::Core::MemoryRegionInfo const* ret = nullptr;
+    Optional<MemoryRegionInfo> ret;
     for_each_memory_region_info([&ret, &object_name](auto& region_info) {
         if (region_info.object_name() == object_name) {
-            ret = &region_info;
+            ret = region_info;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
@@ -180,12 +180,12 @@ ELF::Core::MemoryRegionInfo const* Reader::first_region_for_object(StringView ob
     return ret;
 }
 
-const ELF::Core::MemoryRegionInfo* Reader::region_containing(FlatPtr address) const
+Optional<MemoryRegionInfo> Reader::region_containing(FlatPtr address) const
 {
-    const ELF::Core::MemoryRegionInfo* ret = nullptr;
-    for_each_memory_region_info([&ret, address](const ELF::Core::MemoryRegionInfo& region_info) {
+    Optional<MemoryRegionInfo> ret;
+    for_each_memory_region_info([&ret, address](const auto& region_info) {
         if (region_info.region_start <= address && region_info.region_end >= address) {
-            ret = &region_info;
+            ret = region_info;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
@@ -272,8 +272,8 @@ HashMap<String, String> Reader::metadata() const
 const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
 {
     static HashMap<String, OwnPtr<LibraryData>> cached_libs;
-    auto* region = region_containing(address);
-    if (!region)
+    auto region = region_containing(address);
+    if (!region.has_value())
         return {};
 
     auto name = region->object_name();
@@ -300,7 +300,7 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
 void Reader::for_each_library(Function<void(LibraryInfo)> func) const
 {
     HashTable<String> libraries;
-    for_each_memory_region_info([&](ELF::Core::MemoryRegionInfo const& region) {
+    for_each_memory_region_info([&](auto const& region) {
         auto name = region.object_name();
         if (name.is_null() || libraries.contains(name))
             return IterationDecision::Continue;

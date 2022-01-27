@@ -45,7 +45,7 @@ public:
 
 private:
     void add_entry(const Reader&, FlatPtr ip);
-    ELFObjectInfo const* object_info_for_region(ELF::Core::MemoryRegionInfo const&);
+    ELFObjectInfo const* object_info_for_region(MemoryRegionInfo const&);
 
     bool m_skip_loader_so { false };
     ELF::Core::ThreadInfo m_thread_info;
