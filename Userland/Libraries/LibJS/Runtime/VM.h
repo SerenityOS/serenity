@@ -233,11 +233,13 @@ public:
     ScriptOrModule get_active_script_or_module() const;
 
     Function<ThrowCompletionOr<NonnullRefPtr<Module>>(ScriptOrModule, ModuleRequest const&)> host_resolve_imported_module;
-    Function<void(ScriptOrModule, ModuleRequest const&, PromiseCapability)> host_import_module_dynamically;
+    Function<void(ScriptOrModule, ModuleRequest, PromiseCapability)> host_import_module_dynamically;
     Function<void(ScriptOrModule, ModuleRequest const&, PromiseCapability, Promise*)> host_finish_dynamic_import;
 
     Function<HashMap<PropertyKey, Value>(SourceTextModule const&)> host_get_import_meta_properties;
     Function<void(Object*, SourceTextModule const&)> host_finalize_import_meta;
+
+    Function<Vector<String>()> host_get_supported_import_assertions;
 
     void enable_default_host_import_module_dynamically_hook();
 
@@ -247,11 +249,11 @@ private:
     ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object);
     ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment, GlobalObject& global_object);
 
-    ThrowCompletionOr<NonnullRefPtr<Module>> resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier);
+    ThrowCompletionOr<NonnullRefPtr<Module>> resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request);
     ThrowCompletionOr<void> link_and_eval_module(SourceTextModule& module);
 
-    void import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability promise_capability);
-    void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability promise_capability, Promise* inner_promise);
+    void import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability);
+    void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability, Promise* inner_promise);
 
     Exception* m_exception { nullptr };
 

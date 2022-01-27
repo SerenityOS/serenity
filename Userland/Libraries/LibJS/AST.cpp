@@ -9,6 +9,7 @@
 #include <AK/Demangle.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
+#include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
@@ -3227,41 +3228,111 @@ void ImportCall::dump(int indent) const
 }
 
 // 13.3.10.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-import-call-runtime-semantics-evaluation
+// Also includes assertions from proposal: https://tc39.es/proposal-import-assertions/#sec-import-call-runtime-semantics-evaluation
 Completion ImportCall::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    // 1. Let referencingScriptOrModule be ! GetActiveScriptOrModule().
+
+    // 2.1.1.1 EvaluateImportCall ( specifierExpression [ , optionsExpression ] ), https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
+    //  1. Let referencingScriptOrModule be ! GetActiveScriptOrModule().
     auto referencing_script_or_module = interpreter.vm().get_active_script_or_module();
 
-    if (m_options)
-        return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "import call with assertions/options");
-
-    // 2. Let argRef be the result of evaluating AssignmentExpression.
-    // 3. Let specifier be ? GetValue(argRef).
+    // 2. Let specifierRef be the result of evaluating specifierExpression.
+    // 3. Let specifier be ? GetValue(specifierRef).
     auto specifier = TRY(m_specifier->execute(interpreter, global_object));
 
-    // 4. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    auto options_value = js_undefined();
+    // 4. If optionsExpression is present, then
+    if (m_options) {
+        // a. Let optionsRef be the result of evaluating optionsExpression.
+        // b. Let options be ? GetValue(optionsRef).
+        options_value = TRY(m_options->execute(interpreter, global_object)).release_value();
+    }
+    // 5. Else,
+    // a. Let options be undefined.
+    // Note: options_value is undefined by default.
+
+    // 6. Let promiseCapability be ! NewPromiseCapability(%Promise%).
     auto promise_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
 
-    VERIFY(!interpreter.exception());
-    // 5. Let specifierString be ToString(specifier).
-    auto specifier_string = specifier->to_string(global_object);
+    // 7. Let specifierString be ToString(specifier).
+    // 8. IfAbruptRejectPromise(specifierString, promiseCapability).
+    auto specifier_string = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, specifier->to_string(global_object));
 
-    // 6. IfAbruptRejectPromise(specifierString, promiseCapability).
-    // Note: Since we have to use completions and not ThrowCompletionOr's in AST we have to do this manually.
-    if (specifier_string.is_throw_completion()) {
-        // FIXME: We shouldn't have to clear this exception
-        interpreter.vm().clear_exception();
-        (void)TRY(call(global_object, promise_capability.reject, js_undefined(), *specifier_string.throw_completion().value()));
-        return Value { promise_capability.promise };
+    // 9. Let assertions be a new empty List.
+    Vector<ModuleRequest::Assertion> assertions;
+
+    // 10. If options is not undefined, then
+    if (!options_value.is_undefined()) {
+        // a. If Type(options) is not Object,
+        if (!options_value.is_object()) {
+            auto* error = TypeError::create(global_object, String::formatted(ErrorType::NotAnObject.message(), "ImportOptions"));
+            // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
+            MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
+
+            // ii. Return promiseCapability.[[Promise]].
+            return Value { promise_capability.promise };
+        }
+
+        // b. Let assertionsObj be Get(options, "assert").
+        // c. IfAbruptRejectPromise(assertionsObj, promiseCapability).
+        auto assertion_object = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, options_value.get(global_object, interpreter.vm().names.assert));
+
+        // d. If assertionsObj is not undefined,
+        if (!assertion_object.is_undefined()) {
+            // i. If Type(assertionsObj) is not Object,
+            if (!assertion_object.is_object()) {
+                auto* error = TypeError::create(global_object, String::formatted(ErrorType::NotAnObject.message(), "ImportOptionsAssertions"));
+                // 1. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
+                MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
+
+                // 2. Return promiseCapability.[[Promise]].
+                return Value { promise_capability.promise };
+            }
+
+            // ii. Let keys be EnumerableOwnPropertyNames(assertionsObj, key).
+            // iii. IfAbruptRejectPromise(keys, promiseCapability).
+            auto keys = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, assertion_object.as_object().enumerable_own_property_names(Object::PropertyKind::Key));
+
+            // iv. Let supportedAssertions be ! HostGetSupportedImportAssertions().
+            auto supported_assertions = interpreter.vm().host_get_supported_import_assertions();
+
+            // v. For each String key of keys,
+            for (auto const& key : keys) {
+                auto property_key = MUST(key.to_property_key(global_object));
+
+                // 1. Let value be Get(assertionsObj, key).
+                // 2. IfAbruptRejectPromise(value, promiseCapability).
+                auto value = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, assertion_object.get(global_object, property_key));
+
+                // 3. If Type(value) is not String, then
+                if (!value.is_string()) {
+                    auto* error = TypeError::create(global_object, String::formatted(ErrorType::NotAString.message(), "Import Assertion option value"));
+                    // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
+                    MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
+
+                    // b. Return promiseCapability.[[Promise]].
+                    return Value { promise_capability.promise };
+                }
+
+                // 4. If supportedAssertions contains key, then
+                if (supported_assertions.contains_slow(property_key.to_string())) {
+                    // a. Append { [[Key]]: key, [[Value]]: value } to assertions.
+                    assertions.empend(property_key.to_string(), value.as_string().string());
+                }
+            }
+        }
+        // e. Sort assertions by the code point order of the [[Key]] of each element. NOTE: This sorting is observable only in that hosts are prohibited from distinguishing among assertions by the order they occur in.
+        // Note: This is done when constructing the ModuleRequest.
     }
 
-    ModuleRequest request { specifier_string.release_value() };
+    // 11. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Assertions]]: assertions }.
+    ModuleRequest request { specifier_string, assertions };
 
-    // 7. Perform ! HostImportModuleDynamically(referencingScriptOrModule, specifierString, promiseCapability).
-    interpreter.vm().host_import_module_dynamically(referencing_script_or_module, request, promise_capability);
+    // 12. Perform ! HostImportModuleDynamically(referencingScriptOrModule, moduleRequest, promiseCapability).
+    interpreter.vm().host_import_module_dynamically(referencing_script_or_module, move(request), promise_capability);
 
-    // 8. Return promiseCapability.[[Promise]].
+    // 13. Return promiseCapability.[[Promise]].
     return Value { promise_capability.promise };
 }
 
@@ -4110,12 +4181,9 @@ void ScopeNode::add_hoisted_function(NonnullRefPtr<FunctionDeclaration> declarat
 }
 
 // 16.2.1.11 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation
-Completion ImportStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
+Completion ImportStatement::execute(Interpreter& interpreter, GlobalObject&) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-
-    if (!m_module_request.assertions.is_empty())
-        return interpreter.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "import statement with assertions/options");
 
     // 1. Return NormalCompletion(empty).
     return normal_completion({});
@@ -4458,6 +4526,19 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
         TRY(global_environment.create_global_var_binding(var_name, false));
 
     return {};
+}
+
+ModuleRequest::ModuleRequest(FlyString module_specifier_, Vector<Assertion> assertions_)
+    : module_specifier(move(module_specifier_))
+    , assertions(move(assertions_))
+{
+    // Perform step 10.e. from EvaluateImportCall, https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
+    // or step 2. from 2.7 Static Semantics: AssertClauseToAssertions, https://tc39.es/proposal-import-assertions/#sec-assert-clause-to-assertions
+    // e. / 2. Sort assertions by the code point order of the [[Key]] of each element.
+    // NOTE: This sorting is observable only in that hosts are prohibited from distinguishing among assertions by the order they occur in.
+    quick_sort(assertions, [](Assertion const& lhs, Assertion const& rhs) {
+        return lhs.key < rhs.key;
+    });
 }
 
 }

@@ -88,6 +88,10 @@ VM::VM(OwnPtr<CustomData> custom_data)
     host_finalize_import_meta = [&](Object*, SourceTextModule const&) {
     };
 
+    host_get_supported_import_assertions = [&] {
+        return Vector<String> {};
+    };
+
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     m_well_known_symbol_##snake_name = js_symbol(*this, "Symbol." #SymbolName, false);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
@@ -805,15 +809,21 @@ ThrowCompletionOr<void> VM::link_and_eval_module(SourceTextModule& module)
 }
 
 // 16.2.1.7 HostResolveImportedModule ( referencingScriptOrModule, specifier ), https://tc39.es/ecma262/#sec-hostresolveimportedmodule
-ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier)
+ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request)
 {
-    if (!specifier.assertions.is_empty())
-        return throw_completion<InternalError>(current_realm()->global_object(), ErrorType::NotImplemented, "HostResolveImportedModule with assertions");
-
     // An implementation of HostResolveImportedModule must conform to the following requirements:
     //  - If it completes normally, the [[Value]] slot of the completion must contain an instance of a concrete subclass of Module Record.
-    //  - If a Module Record corresponding to the pair referencingScriptOrModule, specifier does not exist or cannot be created, an exception must be thrown.
-    //  - Each time this operation is called with a specific referencingScriptOrModule, specifier pair as arguments it must return the same Module Record instance if it completes normally.
+    //  - If a Module Record corresponding to the pair referencingScriptOrModule, moduleRequest does not exist or cannot be created, an exception must be thrown.
+    //  - Each time this operation is called with a specific referencingScriptOrModule, moduleRequest.[[Specifier]], moduleRequest.[[Assertions]] triple
+    //    as arguments it must return the same Module Record instance if it completes normally.
+    //    * It is recommended but not required that implementations additionally conform to the following stronger constraint:
+    //      each time this operation is called with a specific referencingScriptOrModule, moduleRequest.[[Specifier]] pair as arguments it must return the same Module Record instance if it completes normally.
+    //   - moduleRequest.[[Assertions]] must not influence the interpretation of the module or the module specifier;
+    //     instead, it may be used to determine whether the algorithm completes normally or with an abrupt completion.
+
+    // Multiple different referencingScriptOrModule, moduleRequest.[[Specifier]] pairs may map to the same Module Record instance.
+    // The actual mapping semantic is host-defined but typically a normalization process is applied to specifier as part of the mapping process.
+    // A typical normalization process would include actions such as alphabetic case folding and expansion of relative and abbreviated path specifiers.
 
     StringView base_filename = referencing_script_or_module.visit(
         [&](Empty) {
@@ -824,7 +834,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         });
 
     LexicalPath base_path { base_filename };
-    auto filepath = LexicalPath::absolute_path(base_path.dirname(), specifier.module_specifier);
+    auto filepath = LexicalPath::absolute_path(base_path.dirname(), module_request.module_specifier);
 
 #if JS_MODULE_DEBUG
     String referencing_module_string = referencing_script_or_module.visit(
@@ -839,7 +849,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         });
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}, {})", referencing_module_string, filepath);
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE]     resolved {} + {} -> {}", base_path, specifier.module_specifier, filepath);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE]     resolved {} + {} -> {}", base_path, module_request.module_specifier, filepath);
 #endif
 
     auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filepath);
@@ -855,7 +865,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
     auto file_or_error = Core::File::open(filepath, Core::OpenMode::ReadOnly);
 
     if (file_or_error.is_error()) {
-        return throw_completion<SyntaxError>(global_object, ErrorType::ModuleNotFound, specifier.module_specifier);
+        return throw_completion<SyntaxError>(global_object, ErrorType::ModuleNotFound, module_request.module_specifier);
     }
 
     // FIXME: Don't read the file in one go.
@@ -884,27 +894,27 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
 }
 
 // 16.2.1.8 HostImportModuleDynamically ( referencingScriptOrModule, specifier, promiseCapability ), https://tc39.es/ecma262/#sec-hostimportmoduledynamically
-void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability promise_capability)
+void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability)
 {
     auto& global_object = current_realm()->global_object();
 
     // Success path:
-    //  - At some future time, the host environment must perform FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, promise),
+    //  - At some future time, the host environment must perform FinishDynamicImport(referencingScriptOrModule, moduleRequest, promiseCapability, promise),
     //    where promise is a Promise resolved with undefined.
     //  - Any subsequent call to HostResolveImportedModule after FinishDynamicImport has completed,
-    //    given the arguments referencingScriptOrModule and specifier, must complete normally.
+    //    given the arguments referencingScriptOrModule and moduleRequest, must complete normally.
     //  - The completion value of any subsequent call to HostResolveImportedModule after FinishDynamicImport has completed,
-    //    given the arguments referencingScriptOrModule and specifier, must be a module which has already been evaluated,
+    //    given the arguments referencingScriptOrModule and moduleRequest, must be a module which has already been evaluated,
     //    i.e. whose Evaluate concrete method has already been called and returned a normal completion.
     // Failure path:
     //  - At some future time, the host environment must perform
-    //    FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, promise),
+    //    FinishDynamicImport(referencingScriptOrModule, moduleRequest, promiseCapability, promise),
     //    where promise is a Promise rejected with an error representing the cause of failure.
 
     auto* promise = Promise::create(global_object);
 
     ScopeGuard finish_dynamic_import = [&] {
-        host_finish_dynamic_import(referencing_script_or_module, specifier, promise_capability, promise);
+        host_finish_dynamic_import(referencing_script_or_module, move(module_request), promise_capability, promise);
     };
 
     // Generally within ECMA262 we always get a referencing_script_or_moulde. However, ShadowRealm gives an explicit null.
@@ -915,15 +925,15 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
         // If there is no ScriptOrModule in any of the execution contexts
         if (referencing_script_or_module.has<Empty>()) {
             // Throw an error for now
-            promise->reject(InternalError::create(global_object, String::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), specifier.module_specifier)));
+            promise->reject(InternalError::create(global_object, String::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier)));
             return;
         }
     }
 
     VERIFY(!exception());
     // Note: If host_resolve_imported_module returns a module it has been loaded successfully and the next call in finish_dynamic_import will retrieve it again.
-    auto module_or_error = host_resolve_imported_module(referencing_script_or_module, specifier);
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] HostImportModuleDynamically(..., {}) -> {}", specifier.module_specifier, module_or_error.is_error() ? "failed" : "passed");
+    auto module_or_error = host_resolve_imported_module(referencing_script_or_module, module_request);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] HostImportModuleDynamically(..., {}) -> {}", module_request.module_specifier, module_or_error.is_error() ? "failed" : "passed");
     if (module_or_error.is_throw_completion()) {
         // Note: We should not leak the exception thrown in host_resolve_imported_module.
         clear_exception();
@@ -952,17 +962,17 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
 }
 
 // 16.2.1.9 FinishDynamicImport ( referencingScriptOrModule, specifier, promiseCapability, innerPromise ), https://tc39.es/ecma262/#sec-finishdynamicimport
-void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability promise_capability, Promise* inner_promise)
+void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability, Promise* inner_promise)
 {
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] finish_dynamic_import on {}", specifier.module_specifier);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] finish_dynamic_import on {}", module_request.module_specifier);
 
     // 1. Let fulfilledClosure be a new Abstract Closure with parameters (result) that captures referencingScriptOrModule, specifier, and promiseCapability and performs the following steps when called:
-    auto fulfilled_closure = [referencing_script_or_module, specifier, promise_capability](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
+    auto fulfilled_closure = [referencing_script_or_module, module_request = move(module_request), promise_capability](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
         auto result = vm.argument(0);
         // a. Assert: result is undefined.
         VERIFY(result.is_undefined());
         // b. Let moduleRecord be ! HostResolveImportedModule(referencingScriptOrModule, specifier).
-        auto module_record = MUST(vm.host_resolve_imported_module(referencing_script_or_module, specifier));
+        auto module_record = MUST(vm.host_resolve_imported_module(referencing_script_or_module, module_request));
 
         // c. Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
         // Note: If HostResolveImportedModule returns a module evaluate will have been called on it.

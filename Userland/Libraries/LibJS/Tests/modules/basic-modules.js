@@ -9,14 +9,14 @@ function validTestModule(filename) {
     }
 }
 
-function expectModulePassed(filename) {
+function expectModulePassed(filename, options = undefined) {
     validTestModule(filename);
 
     let moduleLoaded = false;
     let moduleResult = null;
     let thrownError = null;
 
-    import(filename)
+    import(filename, options)
         .then(result => {
             moduleLoaded = true;
             moduleResult = result;
@@ -130,6 +130,11 @@ describe("testing behavior", () => {
     test("expectModulePassed works", () => {
         expectModulePassed("./single-const-export.mjs");
     });
+
+    test("can call expectModulePassed with options", () => {
+        expectModulePassed("./single-const-export.mjs", { key: "value" });
+        expectModulePassed("./single-const-export.mjs", { key1: "value1", key2: "value2" });
+    });
 });
 
 describe("in- and exports", () => {
@@ -172,6 +177,10 @@ describe("in- and exports", () => {
             "./indirect-export-without-default.mjs",
             "Invalid or ambiguous export entry 'default'"
         );
+    });
+
+    test("can import with (useless) assertions", () => {
+        expectModulePassed("./import-with-assertions.mjs");
     });
 });
 

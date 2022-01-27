@@ -10,7 +10,7 @@
 
 namespace JS {
 
-CyclicModule::CyclicModule(Realm& realm, StringView filename, bool has_top_level_await, Vector<FlyString> requested_modules)
+CyclicModule::CyclicModule(Realm& realm, StringView filename, bool has_top_level_await, Vector<ModuleRequest> requested_modules)
     : Module(realm, filename)
     , m_requested_modules(move(requested_modules))
     , m_has_top_level_await(has_top_level_await)
@@ -93,7 +93,14 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_linking(VM& vm, Vector<Module*
     // 8. Append module to stack.
     stack.append(this);
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module: {} has requested modules: [{}]", filename(), String::join(",", m_requested_modules));
+#if JS_MODULE_DEBUG
+    StringBuilder request_module_names;
+    for (auto& module_request : m_requested_modules) {
+        request_module_names.append(module_request.module_specifier);
+        request_module_names.append(", ");
+    }
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module: {} has requested modules: [{}]", filename(), request_module_names.string_view());
+#endif
 
     // 9. For each String required of module.[[RequestedModules]], do
     for (auto& required_string : m_requested_modules) {
@@ -300,8 +307,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Modu
     stack.append(this);
 
     // 11. For each String required of module.[[RequestedModules]], do
-    for (auto& required_string : m_requested_modules) {
-        ModuleRequest required { required_string };
+    for (auto& required : m_requested_modules) {
 
         // a. Let requiredModule be ! HostResolveImportedModule(module, required).
         auto* required_module = MUST(vm.host_resolve_imported_module(this, required)).ptr();
