@@ -707,7 +707,7 @@ public:
     };
 
     struct CalcValue {
-        Variant<float, CSS::Length, NonnullOwnPtr<CalcSum>> value;
+        Variant<float, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
