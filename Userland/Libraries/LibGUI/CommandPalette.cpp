@@ -20,6 +20,7 @@ namespace GUI {
 class ActionModel final : public GUI::Model {
 public:
     enum Column {
+        Icon,
         Text,
         Shortcut,
         __Count,
@@ -59,6 +60,10 @@ public:
         auto& action = *static_cast<GUI::Action*>(index.internal_data());
 
         switch (index.column()) {
+        case Column::Icon:
+            if (action.icon())
+                return *action.icon();
+            return "";
         case Column::Text:
             return Gfx::parse_ampersand_string(action.text());
         case Column::Shortcut:
