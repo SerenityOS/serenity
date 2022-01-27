@@ -249,6 +249,7 @@ String BackgroundStyleValue::to_string() const
     return builder.to_string();
 }
 
+<<<<<<< HEAD
 String BackgroundRepeatStyleValue::to_string() const
 {
     return String::formatted("{} {}", CSS::to_string(m_repeat_x), CSS::to_string(m_repeat_y));
@@ -272,6 +273,113 @@ String BorderRadiusStyleValue::to_string() const
 String BoxShadowStyleValue::to_string() const
 {
     return String::formatted("{} {} {} {}", m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_color.to_string());
+=======
+void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)
+{
+    add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
+}
+
+void CalculatedStyleValue::CalculationResult::subtract(CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)
+{
+    add_or_subtract_internal(SumOperation::Subtract, other, layout_node, percentage_basis);
+}
+
+void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)
+{
+    // We know from validation when resolving the type, that "both sides have the same type, or that one side is a <number> and the other is an <integer>".
+    // Though, having the same type may mean that one side is a <dimension> and the other a <percentage>.
+    // Note: This is almost identical to ::add()
+
+    m_value.visit(
+        [&](float f) {
+            if (op == SumOperation::Add)
+                m_value = f + other.m_value.get<float>();
+            else
+                m_value = f - other.m_value.get<float>();
+        },
+        [&](Length const& length) {
+            auto this_px = length.to_px(*layout_node);
+            if (other.m_value.has<Length>()) {
+                auto other_px = other.m_value.get<Length>().to_px(*layout_node);
+                if (op == SumOperation::Add)
+                    m_value = Length::make_px(this_px + other_px);
+                else
+                    m_value = Length::make_px(this_px - other_px);
+            } else {
+                VERIFY(!percentage_basis.is_undefined());
+
+                auto other_px = percentage_basis.percentage_of(other.m_value.get<Percentage>()).to_px(*layout_node);
+                if (op == SumOperation::Add)
+                    m_value = Length::make_px(this_px + other_px);
+                else
+                    m_value = Length::make_px(this_px - other_px);
+            }
+        },
+        [&](Percentage const& percentage) {
+            if (other.m_value.has<Percentage>()) {
+                if (op == SumOperation::Add)
+                    m_value = Percentage { percentage.value() + other.m_value.get<Percentage>().value() };
+                else
+                    m_value = Percentage { percentage.value() - other.m_value.get<Percentage>().value() };
+                return;
+            }
+
+            // Other side isn't a percentage, so the easiest way to handle it without duplicating all the logic, is just to swap `this` and `other`.
+            CalculationResult new_value = other;
+            if (op == SumOperation::Add)
+                new_value.add(*this, layout_node, percentage_basis);
+            else
+                new_value.subtract(*this, layout_node, percentage_basis);
+
+            *this = new_value;
+        });
+}
+
+void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult const& other, Layout::Node const* layout_node)
+{
+    // We know from validation when resolving the type, that at least one side must be a <number> or <integer>.
+    // Both of these are represented as a float.
+    VERIFY(m_value.has<float>() || other.m_value.has<float>());
+    bool other_is_number = other.m_value.has<float>();
+
+    m_value.visit(
+        [&](float f) {
+            if (other_is_number) {
+                m_value = f * other.m_value.get<float>();
+            } else {
+                // Avoid duplicating all the logic by swapping `this` and `other`.
+                CalculationResult new_value = other;
+                new_value.multiply_by(*this, layout_node);
+                *this = new_value;
+            }
+        },
+        [&](Length const& length) {
+            m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<float>());
+        },
+        [&](Percentage const& percentage) {
+            m_value = Percentage { percentage.value() * other.m_value.get<float>() };
+        });
+}
+
+void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const& other, Layout::Node const* layout_node)
+{
+    // We know from validation when resolving the type, that `other` must be a <number> or <integer>.
+    // Both of these are represented as a float.
+    float denominator = other.m_value.get<float>();
+    // FIXME: Dividing by 0 is invalid, and should be caught during parsing.
+    VERIFY(denominator != 0.0f);
+
+    m_value.visit(
+        [&](float f) {
+            m_value = f / denominator;
+        },
+        [&](Length const& length) {
+            m_value = Length::make_px(length.to_px(*layout_node) / denominator);
+        },
+        [&](Percentage const& percentage) {
+            m_value = Percentage { percentage.value() / denominator };
+        });
+>>>>>>> d91d120251 (LibWeb: Implement CalculationResult type for calc() results)
 }
 
 static float resolve_calc_value(CalculatedStyleValue::CalcValue const& calc_value, Layout::Node const& layout_node);
