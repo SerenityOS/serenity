@@ -69,10 +69,10 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     }
 
     if (change_type == BreakpointChange::Added) {
-        bool success = session->insert_breakpoint(reinterpret_cast<void*>(address.value().address));
+        bool success = session->insert_breakpoint(address.value().address);
         VERIFY(success);
     } else {
-        bool success = session->remove_breakpoint(reinterpret_cast<void*>(address.value().address));
+        bool success = session->remove_breakpoint(address.value().address);
         VERIFY(success);
     }
 }
@@ -125,7 +125,7 @@ void Debugger::start()
         dbgln("inserting breakpoint at: {}:{}", breakpoint.file_path, breakpoint.line_number);
         auto address = m_debug_session->get_address_from_source_position(breakpoint.file_path, breakpoint.line_number);
         if (address.has_value()) {
-            bool success = m_debug_session->insert_breakpoint(reinterpret_cast<void*>(address.value().address));
+            bool success = m_debug_session->insert_breakpoint(address.value().address);
             VERIFY(success);
         } else {
             dbgln("couldn't insert breakpoint");
@@ -227,8 +227,8 @@ bool Debugger::DebuggingState::should_stop_single_stepping(const Debug::DebugInf
 void Debugger::remove_temporary_breakpoints()
 {
     for (auto breakpoint_address : m_state.temporary_breakpoints()) {
-        VERIFY(m_debug_session->breakpoint_exists((void*)breakpoint_address));
-        bool rc = m_debug_session->remove_breakpoint((void*)breakpoint_address);
+        VERIFY(m_debug_session->breakpoint_exists(breakpoint_address));
+        bool rc = m_debug_session->remove_breakpoint(breakpoint_address);
         VERIFY(rc);
     }
     m_state.clear_temporary_breakpoints();
@@ -281,9 +281,9 @@ void Debugger::insert_temporary_breakpoint_at_return_address(const PtraceRegiste
 
 void Debugger::insert_temporary_breakpoint(FlatPtr address)
 {
-    if (m_debug_session->breakpoint_exists((void*)address))
+    if (m_debug_session->breakpoint_exists(address))
         return;
-    bool success = m_debug_session->insert_breakpoint(reinterpret_cast<void*>(address));
+    bool success = m_debug_session->insert_breakpoint(address);
     VERIFY(success);
     m_state.add_temporary_breakpoint(address);
 }

@@ -21,8 +21,8 @@ public:
     virtual ~Inspector() override = default;
 
     // ^Debug::ProcessInspector
-    virtual bool poke(void* address, FlatPtr data) override;
-    virtual Optional<FlatPtr> peek(void* address) const override;
+    virtual bool poke(FlatPtr address, FlatPtr data) override;
+    virtual Optional<FlatPtr> peek(FlatPtr address) const override;
     virtual PtraceRegisters get_registers() const override;
     virtual void set_registers(PtraceRegisters const&) override;
     virtual void for_each_loaded_library(Function<IterationDecision(Debug::LoadedLibrary const&)>) const override;

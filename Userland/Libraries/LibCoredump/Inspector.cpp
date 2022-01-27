@@ -51,11 +51,11 @@ void Inspector::parse_loaded_libraries(Function<void(float)> on_progress)
     });
 }
 
-bool Inspector::poke(void*, FlatPtr) { return false; }
+bool Inspector::poke(FlatPtr, FlatPtr) { return false; }
 
-Optional<FlatPtr> Inspector::peek(void* address) const
+Optional<FlatPtr> Inspector::peek(FlatPtr address) const
 {
-    return m_reader->peek_memory((FlatPtr)address);
+    return m_reader->peek_memory(address);
 }
 
 PtraceRegisters Inspector::get_registers() const

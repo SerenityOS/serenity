@@ -48,7 +48,7 @@ static void handle_print_registers(const PtraceRegisters& regs)
 #endif
 }
 
-static bool handle_disassemble_command(const String& command, void* first_instruction)
+static bool handle_disassemble_command(const String& command, FlatPtr first_instruction)
 {
     auto parts = command.split(' ');
     size_t number_of_instructions_to_disassemble = 5;
@@ -64,7 +64,7 @@ static bool handle_disassemble_command(const String& command, void* first_instru
     constexpr size_t dump_size = 0x100;
     ByteBuffer code;
     for (size_t i = 0; i < dump_size / sizeof(u32); ++i) {
-        auto value = g_debug_session->peek(reinterpret_cast<u32*>(first_instruction) + i);
+        auto value = g_debug_session->peek(first_instruction + i * sizeof(u32));
         if (!value.has_value())
             break;
         if (code.try_append(&value, sizeof(u32)).is_error())
@@ -80,7 +80,7 @@ static bool handle_disassemble_command(const String& command, void* first_instru
         if (!insn.has_value())
             break;
 
-        outln("    {:p} <+{}>:\t{}", offset + reinterpret_cast<size_t>(first_instruction), offset, insn.value().to_string(offset));
+        outln("    {:p} <+{}>:\t{}", offset + first_instruction, offset, insn.value().to_string(offset));
     }
 
     return true;
@@ -92,7 +92,7 @@ static bool handle_backtrace_command(const PtraceRegisters& regs)
     auto ebp_val = regs.ebp;
     auto eip_val = regs.eip;
     outln("Backtrace:");
-    while (g_debug_session->peek((u32*)eip_val).has_value() && g_debug_session->peek((u32*)ebp_val).has_value()) {
+    while (g_debug_session->peek(eip_val).has_value() && g_debug_session->peek(ebp_val).has_value()) {
         auto eip_symbol = g_debug_session->symbolicate(eip_val);
         auto source_position = g_debug_session->get_source_position(eip_val);
         String symbol_location = (eip_symbol.has_value() && eip_symbol->symbol != "") ? eip_symbol->symbol : "???";
@@ -101,8 +101,8 @@ static bool handle_backtrace_command(const PtraceRegisters& regs)
         } else {
             outln("{:p} in {}", eip_val, symbol_location);
         }
-        auto next_eip = g_debug_session->peek((u32*)(ebp_val + 4));
-        auto next_ebp = g_debug_session->peek((u32*)ebp_val);
+        auto next_eip = g_debug_session->peek(ebp_val + 4);
+        auto next_ebp = g_debug_session->peek(ebp_val);
         eip_val = (u32)next_eip.value();
         ebp_val = (u32)next_ebp.value();
     }
@@ -115,7 +115,7 @@ static bool handle_backtrace_command(const PtraceRegisters& regs)
 
 static bool insert_breakpoint_at_address(FlatPtr address)
 {
-    return g_debug_session->insert_breakpoint((void*)address);
+    return g_debug_session->insert_breakpoint(address);
 }
 
 static bool insert_breakpoint_at_source_position(const String& file, size_t line)
@@ -181,7 +181,7 @@ static bool handle_examine_command(const String& command)
         return false;
     }
     FlatPtr address = strtoul(argument.characters() + 2, nullptr, 16);
-    auto res = g_debug_session->peek((u32*)address);
+    auto res = g_debug_session->peek(address);
     if (!res.has_value()) {
         outln("Could not examine memory at address {:p}", address);
         return true;
@@ -309,7 +309,7 @@ int main(int argc, char** argv)
                 success = true;
 
             } else if (command.starts_with("dis")) {
-                success = handle_disassemble_command(command, reinterpret_cast<void*>(ip));
+                success = handle_disassemble_command(command, ip);
 
             } else if (command.starts_with("bp")) {
                 success = handle_breakpoint_command(command);

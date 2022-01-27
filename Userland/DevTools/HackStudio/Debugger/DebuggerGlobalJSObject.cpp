@@ -53,7 +53,7 @@ JS::ThrowCompletionOr<bool> DebuggerGlobalJSObject::internal_set(JS::PropertyKey
     auto& target_variable = **it;
     auto debugger_value = js_to_debugger(value, target_variable);
     if (debugger_value.has_value())
-        return Debugger::the().session()->poke((u32*)target_variable.location_data.address, debugger_value.value());
+        return Debugger::the().session()->poke(target_variable.location_data.address, debugger_value.value());
     auto error_string = String::formatted("Cannot convert JS value {} to variable {} of type {}", value.to_string_without_side_effects(), property_name.as_string(), target_variable.type_name);
     return vm().throw_completion<JS::TypeError>(const_cast<DebuggerGlobalJSObject&>(*this), move(error_string));
 }
@@ -66,19 +66,19 @@ Optional<JS::Value> DebuggerGlobalJSObject::debugger_to_js(const Debug::DebugInf
     auto variable_address = variable.location_data.address;
 
     if (variable.is_enum_type() || variable.type_name == "int") {
-        auto value = Debugger::the().session()->peek((u32*)variable_address);
+        auto value = Debugger::the().session()->peek(variable_address);
         VERIFY(value.has_value());
         return JS::Value((i32)value.value());
     }
 
     if (variable.type_name == "char") {
-        auto value = Debugger::the().session()->peek((u32*)variable_address);
+        auto value = Debugger::the().session()->peek(variable_address);
         VERIFY(value.has_value());
         return JS::Value((char)value.value());
     }
 
     if (variable.type_name == "bool") {
-        auto value = Debugger::the().session()->peek((u32*)variable_address);
+        auto value = Debugger::the().session()->peek(variable_address);
         VERIFY(value.has_value());
         return JS::Value(value.value() != 0);
     }

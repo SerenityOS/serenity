@@ -15,8 +15,8 @@ namespace Debug {
 class ProcessInspector {
 public:
     virtual ~ProcessInspector() { }
-    virtual bool poke(void* address, FlatPtr data) = 0;
-    virtual Optional<FlatPtr> peek(void* address) const = 0;
+    virtual bool poke(FlatPtr address, FlatPtr data) = 0;
+    virtual Optional<FlatPtr> peek(FlatPtr address) const = 0;
     virtual PtraceRegisters get_registers() const = 0;
     virtual void set_registers(PtraceRegisters const&) = 0;
     virtual void for_each_loaded_library(Function<IterationDecision(LoadedLibrary const&)>) const = 0;
