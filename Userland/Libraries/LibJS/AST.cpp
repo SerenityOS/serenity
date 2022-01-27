@@ -4231,12 +4231,17 @@ void ExportStatement::dump(int indent) const
 
     for (auto& entry : m_entries) {
         print_indent(indent + 2);
-        out("ModuleRequest: {}", entry.module_request.module_specifier);
-        dump_assert_clauses(entry.module_request);
-        outln(", ImportName: {}, LocalName: {}, ExportName: {}",
-            entry.kind == ExportEntry::Kind::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null",
-            entry.kind != ExportEntry::Kind::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null",
-            string_or_null(entry.export_name));
+        out("ExportName: {}, ImportName: {}, LocalName: {}, ModuleRequest: ",
+            string_or_null(entry.export_name),
+            entry.is_module_request() ? string_or_null(entry.local_or_import_name) : "null",
+            entry.is_module_request() ? "null" : string_or_null(entry.local_or_import_name));
+        if (entry.is_module_request()) {
+            out("{}", entry.m_module_request->module_specifier);
+            dump_assert_clauses(*entry.m_module_request);
+            outln();
+        } else {
+            outln("null");
+        }
     }
 
     if (m_statement) {
