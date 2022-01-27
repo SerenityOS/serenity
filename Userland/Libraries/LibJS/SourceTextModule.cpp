@@ -37,9 +37,9 @@ static Vector<FlyString> module_requests(Program const& program)
 
     for (auto const& export_statement : program.exports()) {
         for (auto const& export_entry : export_statement.entries()) {
-            if (export_entry.kind != ExportStatement::ExportEntry::Kind::ModuleRequest)
+            if (!export_entry.is_module_request())
                 continue;
-            requested_modules_with_indices.append({ export_entry.module_request.module_specifier.view(),
+            requested_modules_with_indices.append({ export_entry.module_request().module_specifier.view(),
                 export_statement.source_range().start.offset });
         }
     }
@@ -115,7 +115,8 @@ Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule:
             VERIFY(export_statement.has_statement());
 
             auto const& entry = export_statement.entries()[0];
-            VERIFY(entry.kind == ExportStatement::ExportEntry::Kind::LocalExport);
+            VERIFY(entry.kind == ExportStatement::ExportEntry::Kind::NamedExport);
+            VERIFY(!entry.is_module_request());
             VERIFY(import_entries.find_if(
                                      [&](ImportEntry const& import_entry) {
                                          return import_entry.local_name == entry.local_or_import_name;
@@ -127,7 +128,7 @@ Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule:
         for (auto const& export_entry : export_statement.entries()) {
 
             // a. If ee.[[ModuleRequest]] is null, then
-            if (export_entry.kind == ExportStatement::ExportEntry::Kind::LocalExport) {
+            if (!export_entry.is_module_request()) {
 
                 auto in_imported_bound_names = import_entries.find_if(
                     [&](ImportEntry const& import_entry) {
@@ -145,8 +146,10 @@ Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule:
                     auto& import_entry = *in_imported_bound_names;
 
                     // 2. If ie.[[ImportName]] is namespace-object, then
-                    if (import_entry.is_namespace()) {
+                    if (import_entry.is_namespace) {
                         // a. NOTE: This is a re-export of an imported module namespace object.
+                        VERIFY(export_entry.is_module_request() && export_entry.kind != ExportStatement::ExportEntry::Kind::NamedExport);
+
                         // b. Append ee to localExportEntries.
                         local_export_entries.empend(export_entry);
                     }
@@ -154,12 +157,12 @@ Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule:
                     else {
                         // a. NOTE: This is a re-export of a single name.
                         // b. Append the ExportEntry Record { [[ModuleRequest]]: ie.[[ModuleRequest]], [[ImportName]]: ie.[[ImportName]], [[LocalName]]: null, [[ExportName]]: ee.[[ExportName]] } to indirectExportEntries.
-                        indirect_export_entries.empend(import_entry.module_request(), import_entry.import_name, export_entry.export_name);
+                        indirect_export_entries.empend(ExportEntry::indirect_export_entry(import_entry.module_request(), import_entry.import_name, export_entry.export_name));
                     }
                 }
             }
             // b. Else if ee.[[ImportName]] is all-but-default, then
-            else if (export_entry.is_all_but_default()) {
+            else if (export_entry.kind == ExportStatement::ExportEntry::Kind::ModuleRequestAllButDefault) {
                 // i. Assert: ee.[[ExportName]] is null.
                 VERIFY(export_entry.export_name.is_null());
                 // ii. Append ee to starExportEntries.
@@ -230,7 +233,7 @@ ThrowCompletionOr<Vector<FlyString>> SourceTextModule::get_exported_names(VM& vm
     // 7. For each ExportEntry Record e of module.[[StarExportEntries]], do
     for (auto& entry : m_star_export_entries) {
         // a. Let requestedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-        auto requested_module = TRY(vm.host_resolve_imported_module(this, entry.module_request));
+        auto requested_module = TRY(vm.host_resolve_imported_module(this, entry.module_request()));
 
         // b. Let starNames be ? requestedModule.GetExportedNames(exportStarSet).
         auto star_names = TRY(requested_module->get_exported_names(vm, export_star_set));
@@ -293,7 +296,7 @@ Completion SourceTextModule::initialize_environment(VM& vm)
         // b. NOTE: The above call cannot fail because imported module requests are a subset of module.[[RequestedModules]], and these have been resolved earlier in this algorithm.
 
         // c. If in.[[ImportName]] is namespace-object, then
-        if (import_entry.is_namespace()) {
+        if (import_entry.is_namespace) {
             // i. Let namespace be ? GetModuleNamespace(importedModule).
             auto* namespace_ = TRY(imported_module->get_module_namespace(vm));
 
@@ -489,10 +492,10 @@ ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyS
             continue;
 
         // i. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-        auto imported_module = TRY(vm.host_resolve_imported_module(this, entry.module_request));
+        auto imported_module = TRY(vm.host_resolve_imported_module(this, entry.module_request()));
 
         // ii. If e.[[ImportName]] is all, then
-        if (entry.is_all()) {
+        if (entry.kind == ExportStatement::ExportEntry::Kind::ModuleRequestAll) {
             // 1. Assert: module does not provide the direct binding for this export.
             // FIXME: What does this mean? / How do we check this
 
@@ -529,7 +532,7 @@ ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyS
     // 8. For each ExportEntry Record e of module.[[StarExportEntries]], do
     for (auto& entry : m_star_export_entries) {
         // a. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-        auto imported_module = TRY(vm.host_resolve_imported_module(this, entry.module_request));
+        auto imported_module = TRY(vm.host_resolve_imported_module(this, entry.module_request()));
 
         // b. Let resolution be ? importedModule.ResolveExport(exportName, resolveSet).
         auto resolution = TRY(imported_module->resolve_export(vm, export_name, resolve_set));
