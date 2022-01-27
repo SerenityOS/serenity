@@ -250,7 +250,7 @@ private:
     ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment, GlobalObject& global_object);
 
     ThrowCompletionOr<NonnullRefPtr<Module>> resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request);
-    ThrowCompletionOr<void> link_and_eval_module(SourceTextModule& module);
+    ThrowCompletionOr<void> link_and_eval_module(Module& module);
 
     void import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability);
     void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability, Promise* inner_promise);
@@ -280,11 +280,12 @@ private:
     struct StoredModule {
         ScriptOrModule referencing_script_or_module;
         String filepath;
+        String type;
         NonnullRefPtr<Module> module;
         bool has_once_started_linking { false };
     };
 
-    StoredModule* get_stored_module(ScriptOrModule const& script_or_module, String const& filepath);
+    StoredModule* get_stored_module(ScriptOrModule const& script_or_module, String const& filepath, String const& type);
 
     Vector<StoredModule> m_loaded_modules;
 

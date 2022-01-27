@@ -29,6 +29,7 @@
 #include <LibJS/Runtime/TemporaryClearException.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/SourceTextModule.h>
+#include <LibJS/SyntheticModule.h>
 
 namespace JS {
 
@@ -89,7 +90,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
     };
 
     host_get_supported_import_assertions = [&] {
-        return Vector<String> {};
+        return Vector<String> { "type" };
     };
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
@@ -728,12 +729,18 @@ ScriptOrModule VM::get_active_script_or_module() const
     return m_execution_context_stack[0]->script_or_module;
 }
 
-VM::StoredModule* VM::get_stored_module(ScriptOrModule const&, String const& filepath)
+VM::StoredModule* VM::get_stored_module(ScriptOrModule const&, String const& filepath, String const&)
 {
     // Note the spec says:
     // Each time this operation is called with a specific referencingScriptOrModule, specifier pair as arguments
     // it must return the same Module Record instance if it completes normally.
     // Currently, we ignore the referencing script or module but this might not be correct in all cases.
+
+    // Editor's Note from https://tc39.es/proposal-json-modules/#sec-hostresolveimportedmodule
+    // The above text implies that is recommended but not required that hosts do not use moduleRequest.[[Assertions]]
+    // as part of the module cache key. In either case, an exception thrown from an import with a given assertion list
+    // does not rule out success of another import with the same specifier but a different assertion list.
+
     auto end_or_module = m_loaded_modules.find_if([&](StoredModule const& stored_module) {
         return stored_module.filepath == filepath;
     });
@@ -747,7 +754,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Badge<Interpreter>, SourceTextM
     return link_and_eval_module(module);
 }
 
-ThrowCompletionOr<void> VM::link_and_eval_module(SourceTextModule& module)
+ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
 {
     auto filepath = module.filename();
 
@@ -766,6 +773,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(SourceTextModule& module)
         m_loaded_modules.empend(
             &module,
             module.filename(),
+            String {}, // Null type
             module,
             true);
         stored_module = &m_loaded_modules.last();
@@ -852,7 +860,13 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE]     resolved {} + {} -> {}", base_path, module_request.module_specifier, filepath);
 #endif
 
-    auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filepath);
+    // We only allow "type" as a supported assertion so it is the only valid key that should ever arrive here.
+    VERIFY(module_request.assertions.is_empty() || (module_request.assertions.size() == 1 && module_request.assertions.first().key == "type"));
+    auto module_type = module_request.assertions.is_empty() ? String {} : module_request.assertions.first().value;
+
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module at {} has type {} [is_null={}]", module_request.module_specifier, module_type, module_type.is_null());
+
+    auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filepath, module_type);
     if (loaded_module_or_end != nullptr) {
         dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}) already loaded at {}", filepath, loaded_module_or_end->module.ptr());
         return loaded_module_or_end->module;
@@ -872,21 +886,32 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
     auto file_content = file_or_error.value()->read_all();
     StringView content_view { file_content.data(), file_content.size() };
 
-    // Note: We treat all files as module, so if a script does not have exports it just runs it.
-    auto module_or_errors = SourceTextModule::parse(content_view, *current_realm(), filepath);
+    auto module = TRY([&]() -> ThrowCompletionOr<NonnullRefPtr<Module>> {
+        // If assertions has an entry entry such that entry.[[Key]] is "type", let type be entry.[[Value]]. The following requirements apply:
+        // If type is "json", then this algorithm must either invoke ParseJSONModule and return the resulting Completion Record, or throw an exception.
+        if (module_type == "json"sv) {
+            dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing JSON module {}", filepath);
+            return parse_json_module(content_view, *current_realm(), filepath);
+        }
 
-    if (module_or_errors.is_error()) {
-        VERIFY(module_or_errors.error().size() > 0);
-        return throw_completion<SyntaxError>(global_object, module_or_errors.error().first().to_string());
-    }
+        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing as SourceTextModule module {}", filepath);
+        // Note: We treat all files as module, so if a script does not have exports it just runs it.
+        auto module_or_errors = SourceTextModule::parse(content_view, *current_realm(), filepath);
 
-    auto module = module_or_errors.release_value();
+        if (module_or_errors.is_error()) {
+            VERIFY(module_or_errors.error().size() > 0);
+            return throw_completion<SyntaxError>(global_object, module_or_errors.error().first().to_string());
+        }
+        return module_or_errors.release_value();
+    }());
+
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module(...) parsed {} to {}", filepath, module.ptr());
 
     // We have to set it here already in case it references itself.
     m_loaded_modules.empend(
         referencing_script_or_module,
         filepath,
+        module_type,
         module,
         false);
 
@@ -939,11 +964,8 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
         clear_exception();
         promise->reject(*module_or_error.throw_completion().value());
     } else {
-        // Note: If you are here because this VERIFY is failing overwrite host_import_module_dynamically
-        //       because this is LibJS internal logic which won't always work
         auto module = module_or_error.release_value();
-        VERIFY(is<SourceTextModule>(*module));
-        auto& source_text_module = static_cast<SourceTextModule&>(*module);
+        auto& source_text_module = static_cast<Module&>(*module);
 
         auto evaluated_or_error = link_and_eval_module(source_text_module);
 
