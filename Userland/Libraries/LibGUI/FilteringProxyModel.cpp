@@ -25,7 +25,7 @@ int FilteringProxyModel::row_count(ModelIndex const&) const
 int FilteringProxyModel::column_count(ModelIndex const& index) const
 {
     if (!index.is_valid())
-        return {};
+        return m_model->column_count({});
 
     if ((size_t)index.row() > m_matching_indices.size() || index.row() < 0)
         return 0;
