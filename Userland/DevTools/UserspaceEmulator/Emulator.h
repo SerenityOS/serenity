@@ -170,6 +170,7 @@ private:
     int virt$getpgid(pid_t);
     int virt$getpgrp();
     u32 virt$getpid();
+    pid_t virt$getppid();
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
     int virt$getsid(pid_t);
     int virt$getsockname(FlatPtr);
