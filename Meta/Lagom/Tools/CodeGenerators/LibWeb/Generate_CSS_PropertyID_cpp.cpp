@@ -307,12 +307,14 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
 )~~~");
                         } else if (type_name == "length") {
                             property_generator.append(R"~~~(
-        if (style_value.has_length() || style_value.is_calculated())
+        if (style_value.has_length()
+         || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Length))
             return true;
 )~~~");
                         } else if (type_name == "percentage") {
                             property_generator.append(R"~~~(
-        if (style_value.is_percentage() || style_value.is_calculated())
+        if (style_value.is_percentage()
+        || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Percentage))
             return true;
 )~~~");
                         } else if (type_name == "number" || type_name == "integer") {
@@ -327,7 +329,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                                 max_value = type_args.substring_view(comma_index + 1, type_args.length() - comma_index - 2);
                             }
                             test_generator.append(R"~~~(
-        if (style_value.has_@numbertype@())~~~");
+        if ((style_value.has_@numbertype@())~~~");
                             if (!min_value.is_empty()) {
                                 test_generator.set("minvalue", min_value);
                                 test_generator.append(" && (style_value.to_@numbertype@() >= @minvalue@)");
@@ -337,6 +339,10 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                                 test_generator.append(" && (style_value.to_@numbertype@() <= @maxvalue@)");
                             }
                             test_generator.append(R"~~~()
+        || (style_value.is_calculated() && (style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Integer)~~~");
+                            if (type_name == "number")
+                                test_generator.append(R"~~~(|| style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Number)~~~");
+                            test_generator.append(R"~~~()))
             return true;
 )~~~");
                         } else if (type_name == "string") {
