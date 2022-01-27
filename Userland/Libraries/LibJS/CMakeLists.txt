@@ -227,6 +227,7 @@ set(SOURCES
     Script.cpp
     SourceTextModule.cpp
     SyntaxHighlighter.cpp
+    SyntheticModule.cpp
     Token.cpp
 )
 
