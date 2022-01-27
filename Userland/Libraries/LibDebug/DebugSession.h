@@ -32,15 +32,15 @@ public:
     virtual ~DebugSession() override;
 
     // ^Debug::ProcessInspector
-    virtual bool poke(void* address, FlatPtr data) override;
-    virtual Optional<FlatPtr> peek(void* address) const override;
+    virtual bool poke(FlatPtr address, FlatPtr data) override;
+    virtual Optional<FlatPtr> peek(FlatPtr address) const override;
     virtual PtraceRegisters get_registers() const override;
     virtual void set_registers(PtraceRegisters const&) override;
     virtual void for_each_loaded_library(Function<IterationDecision(LoadedLibrary const&)>) const override;
 
     int pid() const { return m_debuggee_pid; }
 
-    bool poke_debug(u32 register_index, FlatPtr data);
+    bool poke_debug(u32 register_index, FlatPtr data) const;
     Optional<FlatPtr> peek_debug(u32 register_index) const;
 
     enum class BreakPointState {
@@ -49,7 +49,7 @@ public:
     };
 
     struct BreakPoint {
-        void* address { nullptr };
+        FlatPtr address { 0 };
         FlatPtr original_first_word { 0 };
         BreakPointState state { BreakPointState::Disabled };
     };
@@ -70,22 +70,22 @@ public:
 
     Optional<InsertBreakpointAtSourcePositionResult> insert_breakpoint(String const& filename, size_t line_number);
 
-    bool insert_breakpoint(void* address);
-    bool disable_breakpoint(void* address);
-    bool enable_breakpoint(void* address);
-    bool remove_breakpoint(void* address);
-    bool breakpoint_exists(void* address) const;
+    bool insert_breakpoint(FlatPtr address);
+    bool disable_breakpoint(FlatPtr address);
+    bool enable_breakpoint(FlatPtr address);
+    bool remove_breakpoint(FlatPtr address);
+    bool breakpoint_exists(FlatPtr address) const;
 
     struct WatchPoint {
-        void* address { nullptr };
+        FlatPtr address { 0 };
         u32 debug_register_index { 0 };
         u32 ebp { 0 };
     };
 
-    bool insert_watchpoint(void* address, u32 ebp);
-    bool remove_watchpoint(void* address);
-    bool disable_watchpoint(void* address);
-    bool watchpoint_exists(void* address) const;
+    bool insert_watchpoint(FlatPtr address, u32 ebp);
+    bool remove_watchpoint(FlatPtr address);
+    bool disable_watchpoint(FlatPtr address);
+    bool watchpoint_exists(FlatPtr address) const;
 
     void dump_breakpoints()
     {
@@ -104,7 +104,7 @@ public:
     int continue_debuggee_and_wait(ContinueType type = ContinueType::FreeRun);
 
     // Returns the new eip
-    void* single_step();
+    FlatPtr single_step();
 
     void detach();
 
@@ -141,8 +141,8 @@ private:
     String m_source_root;
     bool m_is_debuggee_dead { false };
 
-    HashMap<void*, BreakPoint> m_breakpoints;
-    HashMap<void*, WatchPoint> m_watchpoints;
+    HashMap<FlatPtr, BreakPoint> m_breakpoints;
+    HashMap<FlatPtr, WatchPoint> m_watchpoints;
 
     // Maps from library name to LoadedLibrary object
     HashMap<String, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
@@ -216,8 +216,8 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
                         found_ebp = true;
                         break;
                     }
-                    auto return_address = peek(reinterpret_cast<u32*>(current_ebp + sizeof(FlatPtr)));
-                    auto next_ebp = peek(reinterpret_cast<u32*>(current_ebp));
+                    auto return_address = peek(current_ebp + sizeof(FlatPtr));
+                    auto next_ebp = peek(current_ebp);
                     VERIFY(return_address.has_value());
                     VERIFY(next_ebp.has_value());
                     current_instruction = return_address.value();
@@ -235,11 +235,11 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
         Optional<BreakPoint> current_breakpoint;
 
         if (state == State::FreeRun || state == State::Syscall) {
-            current_breakpoint = m_breakpoints.get((void*)((uintptr_t)current_instruction - 1));
+            current_breakpoint = m_breakpoints.get(current_instruction - 1);
             if (current_breakpoint.has_value())
                 state = State::FreeRun;
         } else {
-            current_breakpoint = m_breakpoints.get((void*)current_instruction);
+            current_breakpoint = m_breakpoints.get(current_instruction);
         }
 
         if (current_breakpoint.has_value()) {
@@ -250,7 +250,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             //    because the cpu has just executed the INT3 we patched into the instruction.
             // 2. We restore the original first byte of the instruction,
             //    because it was patched with INT3.
-            auto breakpoint_addr = reinterpret_cast<uintptr_t>(current_breakpoint.value().address);
+            auto breakpoint_addr = bit_cast<FlatPtr>(current_breakpoint.value().address);
 #if ARCH(I386)
             regs.eip = breakpoint_addr;
 #else
@@ -278,8 +278,9 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
 
         bool did_single_step = false;
 
+        auto current_breakpoint_address = bit_cast<FlatPtr>(current_breakpoint.value().address);
         // Re-enable the breakpoint if it wasn't removed by the user
-        if (current_breakpoint.has_value() && m_breakpoints.contains(current_breakpoint.value().address)) {
+        if (current_breakpoint.has_value() && m_breakpoints.contains(current_breakpoint_address)) {
             // The current breakpoint was removed to make it transparent to the user.
             // We now want to re-enable it - the code execution flow could hit it again.
             // To re-enable the breakpoint, we first perform a single step and execute the
@@ -288,7 +289,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             // If the user manually inserted a breakpoint at the current instruction,
             // we need to disable that breakpoint because we want to singlestep over that
             // instruction (we re-enable it again later anyways).
-            if (m_breakpoints.contains(current_breakpoint.value().address) && m_breakpoints.get(current_breakpoint.value().address).value().state == BreakPointState::Enabled) {
+            if (m_breakpoints.contains(current_breakpoint_address) && m_breakpoints.get(current_breakpoint_address).value().state == BreakPointState::Enabled) {
                 disable_breakpoint(current_breakpoint.value().address);
             }
             auto stopped_address = single_step();

@@ -49,7 +49,7 @@ JS::ThrowCompletionOr<bool> DebuggerVariableJSObject::internal_set(const JS::Pro
     if (!new_value.has_value())
         return vm.throw_completion<JS::TypeError>(global_object(), String::formatted("Cannot convert JS value {} to variable {} of type {}", value.to_string_without_side_effects(), name, member.type_name));
 
-    Debugger::the().session()->poke((u32*)member.location_data.address, new_value.value());
+    Debugger::the().session()->poke(member.location_data.address, new_value.value());
     return true;
 }
 

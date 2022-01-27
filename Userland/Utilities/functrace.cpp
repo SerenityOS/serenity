@@ -68,9 +68,9 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
 #endif
 }
 
-static NonnullOwnPtr<HashMap<void*, X86::Instruction>> instrument_code()
+static NonnullOwnPtr<HashMap<FlatPtr, X86::Instruction>> instrument_code()
 {
-    auto instrumented = make<HashMap<void*, X86::Instruction>>();
+    auto instrumented = make<HashMap<FlatPtr, X86::Instruction>>();
     g_debug_session->for_each_loaded_library([&](const Debug::LoadedLibrary& lib) {
         lib.debug_info->elf().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
             if (section.name() != ".text")
@@ -80,7 +80,7 @@ static NonnullOwnPtr<HashMap<void*, X86::Instruction>> instrument_code()
             X86::Disassembler disassembler(stream);
             for (;;) {
                 auto offset = stream.offset();
-                void* instruction_address = (void*)(section.address() + offset + lib.base_address);
+                auto instruction_address = section.address() + offset + lib.base_address;
                 auto insn = disassembler.next();
                 if (!insn.has_value())
                     break;
@@ -150,7 +150,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             new_function = false;
             return Debug::DebugSession::ContinueBreakAtSyscall;
         }
-        auto instruction = instrumented->get((void*)ip).value();
+        auto instruction = instrumented->get(ip).value();
 
         if (instruction.mnemonic() == "RET") {
             if (depth != 0)
