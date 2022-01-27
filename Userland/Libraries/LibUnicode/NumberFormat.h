@@ -15,6 +15,7 @@
 namespace Unicode {
 
 struct NumberGroupings {
+    u8 minimum_grouping_digits { 0 };
     u8 primary_grouping_size { 0 };
     u8 secondary_grouping_size { 0 };
 };
