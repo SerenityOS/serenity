@@ -664,6 +664,33 @@ public:
         Time,
     };
 
+    enum class SumOperation {
+        Add,
+        Subtract,
+    };
+    enum class ProductOperation {
+        Multiply,
+        Divide,
+    };
+
+    class CalculationResult {
+    public:
+        CalculationResult(Variant<float, Length, Percentage> value)
+            : m_value(move(value))
+        {
+        }
+        void add(CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
+        void subtract(CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
+        void multiply_by(CalculationResult const& other, Layout::Node const*);
+        void divide_by(CalculationResult const& other, Layout::Node const*);
+
+        Variant<float, Length, Percentage> const& value() const { return m_value; }
+
+    private:
+        void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
+        Variant<float, Length, Percentage> m_value;
+    };
+
     struct CalcSum;
     struct CalcSumPartWithOperator;
     struct CalcProduct;
@@ -681,15 +708,6 @@ public:
     struct CalcValue {
         Variant<float, CSS::Length, NonnullOwnPtr<CalcSum>> value;
         Optional<ResolvedType> resolved_type() const;
-    };
-
-    enum class SumOperation {
-        Add,
-        Subtract,
-    };
-    enum class ProductOperation {
-        Multiply,
-        Divide,
     };
 
     // This represents that: https://www.w3.org/TR/css-values-3/#calc-syntax
