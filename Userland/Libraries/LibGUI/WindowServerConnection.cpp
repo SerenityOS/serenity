@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/CommandPalette.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/DisplayLink.h>
 #include <LibGUI/DragOperation.h>
@@ -192,6 +193,17 @@ void WindowServerConnection::key_down(i32 window_id, u32 code_point, u32 key, u3
         u32 emoji_code_point = *m_utf8_view.begin();
 
         key_event->m_code_point = emoji_code_point;
+    }
+
+    // FIXME: This shortcut should be configurable.
+    if (modifiers == (Mod_Ctrl | Mod_Shift) && key == Key_A) {
+        auto command_palette = CommandPalette::construct(*window);
+        if (command_palette->exec() != GUI::Dialog::ExecOK)
+            return;
+        auto* action = command_palette->selected_action();
+        VERIFY(action);
+        action->activate();
+        return;
     }
 
     Core::EventLoop::current().post_event(*window, move(key_event));
