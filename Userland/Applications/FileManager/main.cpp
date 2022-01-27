@@ -50,6 +50,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 using namespace FileManager;
@@ -87,6 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix"));
+    tzset();
 
     Config::pledge_domains({ "FileManager", "WindowManager" });
     Config::monitor_domain("FileManager");
