@@ -100,10 +100,11 @@ private:
 template<typename Func>
 void Reader::for_each_memory_region_info(Func func) const
 {
-    for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
+    NotesEntryIterator it(bit_cast<const u8*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
+    for (; !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo)
             continue;
-        auto& memory_region_info = reinterpret_cast<const ELF::Core::MemoryRegionInfo&>(*it.current());
+        auto& memory_region_info = *bit_cast<const ELF::Core::MemoryRegionInfo*>(it.current());
         IterationDecision decision = func(memory_region_info);
         if (decision == IterationDecision::Break)
             return;
@@ -113,10 +114,11 @@ void Reader::for_each_memory_region_info(Func func) const
 template<typename Func>
 void Reader::for_each_thread_info(Func func) const
 {
-    for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
+    NotesEntryIterator it(bit_cast<const u8*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
+    for (; !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::ThreadInfo)
             continue;
-        auto& thread_info = reinterpret_cast<const ELF::Core::ThreadInfo&>(*it.current());
+        auto& thread_info = *bit_cast<const ELF::Core::ThreadInfo*>(it.current());
         IterationDecision decision = func(thread_info);
         if (decision == IterationDecision::Break)
             return;

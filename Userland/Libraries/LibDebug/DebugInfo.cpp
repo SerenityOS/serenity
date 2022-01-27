@@ -231,7 +231,7 @@ static void parse_variable_location(Dwarf::DIE const& variable_die, DebugInfo::V
         break;
     }
     default:
-        dbgln("Warning: unhandled Dwarf location type: {}", (int)location_info.value().type());
+        dbgln("Warning: unhandled Dwarf location type: {}", to_underlying(location_info.value().type()));
     }
 }
 
@@ -429,14 +429,16 @@ Optional<Dwarf::LineProgram::DirectoryAndFile> DebugInfo::get_source_path_of_inl
 {
     auto caller_file = die.get_attribute(Dwarf::Attribute::CallFile);
     if (caller_file.has_value()) {
-        u32 file_index = 0;
+        size_t file_index = 0;
 
         if (caller_file->type() == Dwarf::AttributeValue::Type::UnsignedNumber) {
             file_index = caller_file->as_unsigned();
         } else if (caller_file->type() == Dwarf::AttributeValue::Type::SignedNumber) {
             // For some reason, the file_index is sometimes stored as a signed number.
-            VERIFY(caller_file->as_signed() >= 0);
-            file_index = (u32)caller_file->as_signed();
+            auto signed_file_index = caller_file->as_signed();
+            VERIFY(signed_file_index >= 0);
+            VERIFY(static_cast<u64>(signed_file_index) <= NumericLimits<size_t>::max());
+            file_index = static_cast<size_t>(caller_file->as_signed());
         } else {
             return {};
         }

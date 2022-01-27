@@ -80,11 +80,11 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command,
 
         auto parts = command.split(' ');
         VERIFY(!parts.is_empty());
-        const char** args = (const char**)calloc(parts.size() + 1, sizeof(const char*));
+        const char** args = bit_cast<const char**>(calloc(parts.size() + 1, sizeof(const char*)));
         for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
         }
-        const char** envp = (const char**)calloc(2, sizeof(const char*));
+        const char** envp = bit_cast<const char**>(calloc(2, sizeof(const char*)));
         // This causes loader to stop on a breakpoint before jumping to the entry point of the program.
         envp[0] = "_LOADER_BREAKPOINT=1";
         int rc = execvpe(args[0], const_cast<char**>(args), const_cast<char**>(envp));
