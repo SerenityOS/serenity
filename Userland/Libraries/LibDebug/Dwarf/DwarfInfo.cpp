@@ -9,6 +9,7 @@
 #include "AttributeValue.h"
 #include "CompilationUnit.h"
 
+#include <AK/ByteReader.h>
 #include <AK/MemoryStream.h>
 #include <LibDebug/DebugInfo.h>
 
@@ -344,8 +345,8 @@ void DwarfInfo::build_cached_dies() const
                 auto index = ranges->as_unsigned();
                 auto base = die.compilation_unit().range_lists_base();
                 // FIXME: This assumes that the format is DWARf32
-                auto offsets = reinterpret_cast<u32 const*>(debug_range_lists_data().offset(base));
-                offset = offsets[index] + base;
+                auto offsets = debug_range_lists_data().slice(base);
+                offset = ByteReader::load32(offsets.offset_pointer(index * sizeof(u32))) + base;
             }
 
             Vector<DIERange> entries;

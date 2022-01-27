@@ -6,6 +6,7 @@
 
 #include "CompilationUnit.h"
 #include "DIE.h"
+#include <AK/ByteReader.h>
 
 namespace Debug::Dwarf {
 
@@ -94,9 +95,11 @@ FlatPtr CompilationUnit::get_address(size_t index) const
     auto base = address_table_base();
     auto debug_addr_data = dwarf_info().debug_addr_data();
     VERIFY(base < debug_addr_data.size());
-    auto addresses = reinterpret_cast<FlatPtr const*>(debug_addr_data.offset(base));
-    VERIFY(base + index * sizeof(FlatPtr) < debug_addr_data.size());
-    return addresses[index];
+    auto addresses = debug_addr_data.slice(base);
+    VERIFY(index * sizeof(FlatPtr) < addresses.size());
+    FlatPtr value { 0 };
+    ByteReader::load<FlatPtr>(addresses.offset_pointer(index * sizeof(FlatPtr)), value);
+    return value;
 }
 
 char const* CompilationUnit::get_string(size_t index) const
@@ -105,9 +108,9 @@ char const* CompilationUnit::get_string(size_t index) const
     auto debug_str_offsets_data = dwarf_info().debug_str_offsets_data();
     VERIFY(base < debug_str_offsets_data.size());
     // FIXME: This assumes DWARF32
-    auto offsets = reinterpret_cast<u32 const*>(debug_str_offsets_data.offset(base));
-    VERIFY(base + index * sizeof(u32) < debug_str_offsets_data.size());
-    auto offset = offsets[index];
-    return reinterpret_cast<char const*>(dwarf_info().debug_strings_data().offset(offset));
+    auto offsets = debug_str_offsets_data.slice(base);
+    VERIFY(index * sizeof(u32) < offsets.size());
+    auto offset = ByteReader::load32(offsets.offset_pointer(index * sizeof(u32)));
+    return bit_cast<char const*>(dwarf_info().debug_strings_data().offset(offset));
 }
 }
