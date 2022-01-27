@@ -63,14 +63,14 @@ struct _RawPtr {
 namespace AK {
 
 template<typename T, typename SizeType = decltype(sizeof(T)), SizeType N>
-constexpr SizeType array_size(T (&)[N])
+constexpr SizeType size(T (&)[N])
 {
     return N;
 }
 
 template<typename T>
-requires requires { Detail::Decay<T> {}.size(); }
-constexpr auto array_size(T&& t) -> decltype(Detail::Decay<T> {}.size())
+requires requires { Detail::RemoveReference<T> {}.size(); }
+constexpr auto size(T&& t) -> decltype(Detail::RemoveReference<T> {}.size())
 {
     return t.size();
 }
@@ -173,7 +173,6 @@ __DEFINE_GENERIC_ABS(long double, 0.0L, fabsl);
 
 }
 
-using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
 using AK::exchange;
@@ -182,5 +181,6 @@ using AK::max;
 using AK::min;
 using AK::mix;
 using AK::RawPtr;
+using AK::size;
 using AK::swap;
 using AK::to_underlying;

@@ -347,7 +347,7 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
                 String string_value;                                         \
             } options[] = { __VA_ARGS__ };                                   \
             auto enum_value = getter();                                      \
-            for (size_t i = 0; i < array_size(options); ++i) {               \
+            for (size_t i = 0; i < AK::size(options); ++i) {                 \
                 auto& option = options[i];                                   \
                 if (enum_value == option.enum_value)                         \
                     return option.string_value;                              \
@@ -362,7 +362,7 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
             if (!value.is_string())                                          \
                 return false;                                                \
             auto string_value = value.as_string();                           \
-            for (size_t i = 0; i < array_size(options); ++i) {               \
+            for (size_t i = 0; i < AK::size(options); ++i) {                 \
                 auto& option = options[i];                                   \
                 if (string_value == option.string_value) {                   \
                     setter(option.enum_value);                               \

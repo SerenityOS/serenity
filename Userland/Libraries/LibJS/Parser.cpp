@@ -281,7 +281,7 @@ public:
     constexpr OperatorPrecedenceTable()
         : m_token_precedence()
     {
-        for (size_t i = 0; i < array_size(m_operator_precedence); ++i) {
+        for (size_t i = 0; i < size(m_operator_precedence); ++i) {
             auto& op = m_operator_precedence[i];
             m_token_precedence[static_cast<size_t>(op.token)] = op.precedence;
         }

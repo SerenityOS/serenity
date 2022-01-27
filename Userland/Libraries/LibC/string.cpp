@@ -299,7 +299,7 @@ const char* const sys_errlist[] = {
     ENUMERATE_ERRNO_CODES(__ENUMERATE_ERRNO_CODE)
 #undef __ENUMERATE_ERRNO_CODE
 };
-static_assert(array_size(sys_errlist) == (EMAXERRNO + 1));
+static_assert(size(sys_errlist) == (EMAXERRNO + 1));
 
 int sys_nerr = EMAXERRNO;
 

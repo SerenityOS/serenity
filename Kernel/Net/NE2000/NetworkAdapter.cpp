@@ -419,7 +419,7 @@ void NE2000NetworkAdapter::receive()
 
             auto packet_result = NetworkByteBuffer::create_uninitialized(bytes_in_packet);
             u8 drop_buffer[NE2K_PAGE_SIZE];
-            Bytes buffer { drop_buffer, array_size(drop_buffer) };
+            Bytes buffer { drop_buffer, size(drop_buffer) };
             bool will_drop { false };
             if (packet_result.is_error()) {
                 dbgln("NE2000NetworkAdapter: Not enough memory for packet with length = {}, dropping.", header.length);

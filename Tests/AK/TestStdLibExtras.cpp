@@ -69,22 +69,22 @@ TEST_CASE(swap_same_complex_object)
     EXPECT(value2.has<Type1>());
 }
 
-TEST_CASE(array_size_of_array)
+TEST_CASE(size_of_array)
 {
     constexpr Array<int, 8> array {};
-    static_assert(8u == array_size(array));
-    EXPECT_EQ(8u, array_size(array));
+    static_assert(8u == size(array));
+    EXPECT_EQ(8u, size(array));
 }
 
-TEST_CASE(array_size_of_c_array)
+TEST_CASE(size_of_c_array)
 {
     constexpr int array[8] {};
-    static_assert(8u == array_size(array));
-    EXPECT_EQ(8u, array_size(array));
+    static_assert(8u == size(array));
+    EXPECT_EQ(8u, size(array));
 }
 
-TEST_CASE(array_size_of_vector)
+TEST_CASE(size_of_vector)
 {
     Vector<int> vec {};
-    EXPECT_EQ(0u, array_size(vec));
+    EXPECT_EQ(0u, size(vec));
 }

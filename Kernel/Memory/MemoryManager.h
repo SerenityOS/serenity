@@ -54,7 +54,7 @@ static constexpr StringView UserMemoryRangeTypeNames[] {
     "Boot module",
     "Physical Pages"
 };
-static_assert(array_size(UserMemoryRangeTypeNames) == to_underlying(UsedMemoryRangeType::__Count));
+static_assert(size(UserMemoryRangeTypeNames) == to_underlying(UsedMemoryRangeType::__Count));
 
 struct UsedMemoryRange {
     UsedMemoryRangeType type {};

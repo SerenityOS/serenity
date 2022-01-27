@@ -78,7 +78,7 @@ extern "C" [[noreturn]] void init()
     // copy the ELF header and program headers because we might end up overwriting them
     ElfW(Ehdr) kernel_elf_header = *(ElfW(Ehdr)*)kernel_image;
     ElfW(Phdr) kernel_program_headers[16];
-    if (kernel_elf_header.e_phnum > array_size(kernel_program_headers))
+    if (kernel_elf_header.e_phnum > size(kernel_program_headers))
         halt();
     __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(ElfW(Phdr)) * kernel_elf_header.e_phnum);
 
@@ -124,7 +124,7 @@ extern "C" [[noreturn]] void init()
 
     __builtin_memset(boot_pd_kernel_pt0, 0, sizeof(boot_pd_kernel_pt0));
 
-    VERIFY((size_t)end_of_prekernel_image < array_size(boot_pd_kernel_pt0) * PAGE_SIZE);
+    VERIFY((size_t)end_of_prekernel_image < size(boot_pd_kernel_pt0) * PAGE_SIZE);
 
     /* pseudo-identity map 0M - end_of_prekernel_image */
     for (size_t i = 0; i < (FlatPtr)end_of_prekernel_image / PAGE_SIZE; i++)

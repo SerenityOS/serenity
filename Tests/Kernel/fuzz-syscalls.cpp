@@ -140,7 +140,7 @@ static void do_random_tests()
     for (size_t i = 0; i < fuzz_syscall_count; ++i) {
         // Construct a nice syscall:
         int syscall_fn = get_random_uniform(Syscall::Function::__Count);
-        randomize_from(direct_sc_args, array_size(direct_sc_args), interesting_values);
+        randomize_from(direct_sc_args, size(direct_sc_args), interesting_values);
         randomize_from(fake_sc_params, fake_params_count, interesting_values);
 
         if (is_deadly_syscall(syscall_fn)

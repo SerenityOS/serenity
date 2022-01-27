@@ -178,7 +178,7 @@ constexpr double note_frequencies[] = {
     3729.3100921447249,
     3951.0664100489994,
 };
-constexpr size_t note_count = array_size(note_frequencies);
+constexpr size_t note_count = size(note_frequencies);
 
 constexpr double middle_c = note_frequencies[36];
 

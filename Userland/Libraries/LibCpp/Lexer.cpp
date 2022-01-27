@@ -205,7 +205,7 @@ constexpr StringView s_known_types[] = {
 
 static bool is_keyword(StringView string)
 {
-    static HashTable<String> keywords(array_size(s_known_keywords));
+    static HashTable<String> keywords(size(s_known_keywords));
     if (keywords.is_empty()) {
         keywords.set_from(s_known_keywords);
     }
@@ -214,7 +214,7 @@ static bool is_keyword(StringView string)
 
 static bool is_known_type(StringView string)
 {
-    static HashTable<String> types(array_size(s_known_types));
+    static HashTable<String> types(size(s_known_types));
     if (types.is_empty()) {
         types.set_from(s_known_types);
     }

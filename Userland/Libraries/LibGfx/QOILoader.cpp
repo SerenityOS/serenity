@@ -27,7 +27,7 @@ static ErrorOr<QOIHeader> decode_qoi_header(InputMemoryStream& stream)
     stream >> Bytes { &header, sizeof(header) };
     if (stream.handle_any_error())
         return Error::from_string_literal("Invalid QOI image: end of stream while reading header"sv);
-    if (StringView { header.magic, array_size(header.magic) } != QOI_MAGIC)
+    if (StringView { header.magic, size(header.magic) } != QOI_MAGIC)
         return Error::from_string_literal("Invalid QOI image: incorrect header magic"sv);
     header.width = AK::convert_between_host_and_big_endian(header.width);
     header.height = AK::convert_between_host_and_big_endian(header.height);
@@ -37,7 +37,7 @@ static ErrorOr<QOIHeader> decode_qoi_header(InputMemoryStream& stream)
 static ErrorOr<Color> decode_qoi_op_rgb(InputMemoryStream& stream, Color pixel)
 {
     u8 bytes[4];
-    stream >> Bytes { &bytes, array_size(bytes) };
+    stream >> Bytes { &bytes, size(bytes) };
     if (stream.handle_any_error())
         return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_RGB chunk"sv);
     VERIFY(bytes[0] == QOI_OP_RGB);
@@ -49,7 +49,7 @@ static ErrorOr<Color> decode_qoi_op_rgb(InputMemoryStream& stream, Color pixel)
 static ErrorOr<Color> decode_qoi_op_rgba(InputMemoryStream& stream)
 {
     u8 bytes[5];
-    stream >> Bytes { &bytes, array_size(bytes) };
+    stream >> Bytes { &bytes, size(bytes) };
     if (stream.handle_any_error())
         return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_RGBA chunk"sv);
     VERIFY(bytes[0] == QOI_OP_RGBA);
@@ -92,7 +92,7 @@ static ErrorOr<Color> decode_qoi_op_diff(InputMemoryStream& stream, Color pixel)
 static ErrorOr<Color> decode_qoi_op_luma(InputMemoryStream& stream, Color pixel)
 {
     u8 bytes[2];
-    stream >> Bytes { &bytes, array_size(bytes) };
+    stream >> Bytes { &bytes, size(bytes) };
     if (stream.handle_any_error())
         return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_LUMA chunk"sv);
     VERIFY((bytes[0] & QOI_MASK_2) == QOI_OP_LUMA);
@@ -131,13 +131,13 @@ static ErrorOr<u8> decode_qoi_op_run(InputMemoryStream& stream)
 
 static ErrorOr<void> decode_qoi_end_marker(InputMemoryStream& stream)
 {
-    u8 bytes[array_size(END_MARKER)];
-    stream >> Bytes { &bytes, array_size(bytes) };
+    u8 bytes[size(END_MARKER)];
+    stream >> Bytes { &bytes, size(bytes) };
     if (stream.handle_any_error())
         return Error::from_string_literal("Invalid QOI image: end of stream while reading end marker"sv);
     if (!stream.eof())
         return Error::from_string_literal("Invalid QOI image: expected end of stream but more bytes are available"sv);
-    if (memcmp(&END_MARKER, &bytes, array_size(bytes)) != 0)
+    if (memcmp(&END_MARKER, &bytes, size(bytes)) != 0)
         return Error::from_string_literal("Invalid QOI image: incorrect end marker"sv);
     return {};
 }
