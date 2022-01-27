@@ -7,6 +7,8 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
@@ -55,18 +57,15 @@ static void closing_statistics()
     exit(0);
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio id inet unix sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio id inet unix sigaction"));
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(host, "Host to ping", "host");
     args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count");
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (payload_size < 0) {
         // Use the default.
