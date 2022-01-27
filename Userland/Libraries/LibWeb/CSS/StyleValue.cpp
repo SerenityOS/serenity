@@ -416,6 +416,30 @@ Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layou
         });
 }
 
+Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
+{
+    auto result = m_expression->resolve(nullptr, {});
+    if (result.value().has<Percentage>())
+        return result.value().get<Percentage>();
+    return {};
+}
+
+Optional<float> CalculatedStyleValue::resolve_number()
+{
+    auto result = m_expression->resolve(nullptr, {});
+    if (result.value().has<float>())
+        return result.value().get<float>();
+    return {};
+}
+
+Optional<i64> CalculatedStyleValue::resolve_integer()
+{
+    auto result = m_expression->resolve(nullptr, {});
+    if (result.value().has<float>())
+        return lroundf(result.value().get<float>());
+    return {};
+}
+
 static bool is_number(CalculatedStyleValue::ResolvedType type)
 {
     return type == CalculatedStyleValue::ResolvedType::Number || type == CalculatedStyleValue::ResolvedType::Integer;

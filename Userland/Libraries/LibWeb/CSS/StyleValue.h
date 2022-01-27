@@ -803,6 +803,9 @@ public:
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
     Optional<LengthPercentage> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
+    Optional<Percentage> resolve_percentage() const;
+    Optional<float> resolve_number();
+    Optional<i64> resolve_integer();
 
 private:
     explicit CalculatedStyleValue(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
