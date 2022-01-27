@@ -304,6 +304,7 @@ void GlobalObject::initialize_global_object()
     m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
     m_date_constructor_now_function = &m_date_constructor->get_without_side_effects(vm.names.now).as_function();
     m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
+    m_json_parse_function = &get_without_side_effects(vm.names.JSON).as_object().get_without_side_effects(vm.names.parse).as_function();
 }
 
 GlobalObject::~GlobalObject()
@@ -324,6 +325,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_date_constructor_now_function);
     visitor.visit(m_eval_function);
     visitor.visit(m_throw_type_error_function);
+    visitor.visit(m_json_parse_function);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);                                         \
