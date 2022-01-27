@@ -62,7 +62,7 @@ Optional<float> SVGGraphicsElement::stroke_width() const
         // Resolved relative to the "Scaled viewport size": https://www.w3.org/TR/2017/WD-fill-stroke-3-20170413/#scaled-viewport-size
         // FIXME: This isn't right, but it's something.
         auto scaled_viewport_size = CSS::Length::make_px((client_width() + client_height()) * 0.5f);
-        return width->resolved(scaled_viewport_size).to_px(*layout_node());
+        return width->resolved(*layout_node(), scaled_viewport_size).to_px(*layout_node());
     }
     return {};
 }

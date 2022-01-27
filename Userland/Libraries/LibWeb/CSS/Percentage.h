@@ -52,6 +52,13 @@ public:
     {
     }
 
+    PercentageOr(NonnullRefPtr<CalculatedStyleValue> calculated)
+        : m_value(move(calculated))
+    {
+    }
+
+    virtual ~PercentageOr() { }
+
     PercentageOr<T>& operator=(T t)
     {
         m_value = move(t);
@@ -65,6 +72,7 @@ public:
     }
 
     bool is_percentage() const { return m_value.template has<Percentage>(); }
+    bool is_calculated() const { return m_value.template has<NonnullRefPtr<CalculatedStyleValue>>(); }
 
     Percentage const& percentage() const
     {
@@ -72,12 +80,23 @@ public:
         return m_value.template get<Percentage>();
     }
 
-    T resolved(T const& reference_value) const
+    virtual T resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, [[maybe_unused]] T const& reference_value) const
     {
-        if (is_percentage())
-            return reference_value.percentage_of(m_value.template get<Percentage>());
+        VERIFY_NOT_REACHED();
+    }
 
-        return m_value.template get<T>();
+    T resolved(Layout::Node const& layout_node, T const& reference_value) const
+    {
+        return m_value.visit(
+            [&](T const& t) {
+                return t;
+            },
+            [&](Percentage const& percentage) {
+                return reference_value.percentage_of(percentage);
+            },
+            [&](NonnullRefPtr<CalculatedStyleValue> const& calculated) {
+                return resolve_calculated(calculated, layout_node, reference_value);
+            });
     }
 
     String to_string() const
@@ -90,6 +109,8 @@ public:
 
     bool operator==(PercentageOr<T> const& other) const
     {
+        if (is_calculated())
+            return false;
         if (is_percentage() != other.is_percentage())
             return false;
         if (is_percentage())
@@ -99,11 +120,11 @@ public:
     bool operator!=(PercentageOr<T> const& other) const { return !(*this == other); }
 
 protected:
-    bool is_non_percentage_value() const { return m_value.template has<T>(); }
-    T const& non_percentage_value() const { return m_value.template get<T>(); }
+    bool is_t() const { return m_value.template has<T>(); }
+    T const& get_t() const { return m_value.template get<T>(); }
 
 private:
-    Variant<T, Percentage> m_value;
+    Variant<T, Percentage, NonnullRefPtr<CalculatedStyleValue>> m_value;
 };
 
 template<typename T>
@@ -134,8 +155,9 @@ class LengthPercentage : public PercentageOr<Length> {
 public:
     using PercentageOr<Length>::PercentageOr;
 
-    bool is_length() const { return is_non_percentage_value(); }
-    Length const& length() const { return non_percentage_value(); }
+    bool is_length() const { return is_t(); }
+    Length const& length() const { return get_t(); }
+    virtual Length resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Length const& reference_value) const override;
 };
 
 }
