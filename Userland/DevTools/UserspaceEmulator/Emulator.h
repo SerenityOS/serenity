@@ -225,6 +225,7 @@ private:
     int virt$setuid(uid_t);
     int virt$shutdown(int sockfd, int how);
     int virt$sigaction(int, FlatPtr, FlatPtr);
+    int virt$sigprocmask(int how, FlatPtr set, FlatPtr old_set);
     int virt$sigreturn();
     int virt$socket(int, int, int);
     int virt$stat(FlatPtr);

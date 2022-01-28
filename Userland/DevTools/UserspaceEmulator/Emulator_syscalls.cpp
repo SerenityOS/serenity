@@ -233,6 +233,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$shutdown(arg1, arg2);
     case SC_sigaction:
         return virt$sigaction(arg1, arg2, arg3);
+    case SC_sigprocmask:
+        return virt$sigprocmask(arg1, arg2, arg3);
     case SC_sigreturn:
         return virt$sigreturn();
     case SC_socket:
@@ -1361,6 +1363,31 @@ int Emulator::virt$sigaction(int signum, FlatPtr act, FlatPtr oldact)
         host_oldact.sa_mask = old_handler.mask;
         host_oldact.sa_flags = old_handler.flags;
         mmu().copy_to_vm(oldact, &host_oldact, sizeof(host_oldact));
+    }
+    return 0;
+}
+
+int Emulator::virt$sigprocmask(int how, FlatPtr set, FlatPtr old_set)
+{
+    if (old_set) {
+        mmu().copy_to_vm(old_set, &m_signal_mask, sizeof(sigset_t));
+    }
+    if (set) {
+        sigset_t set_value;
+        mmu().copy_from_vm(&set_value, set, sizeof(sigset_t));
+        switch (how) {
+        case SIG_BLOCK:
+            m_signal_mask |= set_value;
+            break;
+        case SIG_SETMASK:
+            m_signal_mask = set_value;
+            break;
+        case SIG_UNBLOCK:
+            m_signal_mask &= ~set_value;
+            break;
+        default:
+            return -EINVAL;
+        }
     }
     return 0;
 }
