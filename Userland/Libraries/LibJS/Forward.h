@@ -73,6 +73,7 @@
     __JS_ENUMERATE(ListFormat, list_format, ListFormatPrototype, ListFormatConstructor)                  \
     __JS_ENUMERATE(Locale, locale, LocalePrototype, LocaleConstructor)                                   \
     __JS_ENUMERATE(NumberFormat, number_format, NumberFormatPrototype, NumberFormatConstructor)          \
+    __JS_ENUMERATE(PluralRules, plural_rules, PluralRulesPrototype, PluralRulesConstructor)              \
     __JS_ENUMERATE(RelativeTimeFormat, relative_time_format, RelativeTimeFormatPrototype, RelativeTimeFormatConstructor)
 
 #define JS_ENUMERATE_TEMPORAL_OBJECTS                                                                    \
