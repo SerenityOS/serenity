@@ -98,6 +98,15 @@ u8 InterruptManagement::get_irq_vector(u8 mapped_interrupt_vector)
     return mapped_interrupt_vector;
 }
 
+RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector)
+{
+    for (auto& irq_controller : m_interrupt_controllers) {
+        if (irq_controller->gsi_base() <= interrupt_vector && irq_controller->type() == controller_type)
+            return irq_controller;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 interrupt_vector)
 {
     if (m_interrupt_controllers.size() == 1 && m_interrupt_controllers[0]->type() == IRQControllerType::i8259) {
@@ -173,6 +182,8 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
         if (irq_controller->type() == IRQControllerType::i8259) {
             irq_controller->hard_disable();
             dbgln("Interrupts: Detected {} - Disabled", irq_controller->model());
+            SpuriousInterruptHandler::initialize_for_disabled_master_pic();
+            SpuriousInterruptHandler::initialize_for_disabled_slave_pic();
         } else {
             dbgln("Interrupts: Detected {}", irq_controller->model());
         }

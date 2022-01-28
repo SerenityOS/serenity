@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/x86/Interrupts.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
+#include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Sections.h>
 
@@ -14,6 +16,20 @@ UNMAP_AFTER_INIT void SpuriousInterruptHandler::initialize(u8 interrupt_number)
 {
     auto* handler = new SpuriousInterruptHandler(interrupt_number);
     handler->register_interrupt_handler();
+}
+
+void SpuriousInterruptHandler::initialize_for_disabled_master_pic()
+{
+    auto* handler = new SpuriousInterruptHandler(7);
+    register_disabled_interrupt_handler(7, *handler);
+    handler->enable_interrupt_vector_for_disabled_pic();
+}
+
+void SpuriousInterruptHandler::initialize_for_disabled_slave_pic()
+{
+    auto* handler = new SpuriousInterruptHandler(15);
+    register_disabled_interrupt_handler(15, *handler);
+    handler->enable_interrupt_vector_for_disabled_pic();
 }
 
 void SpuriousInterruptHandler::register_handler(GenericInterruptHandler& handler)
@@ -68,6 +84,12 @@ bool SpuriousInterruptHandler::handle_interrupt(const RegisterState& state)
     }
     dbgln("Spurious interrupt, vector {}", interrupt_number());
     return true;
+}
+
+void SpuriousInterruptHandler::enable_interrupt_vector_for_disabled_pic()
+{
+    m_enabled = true;
+    m_responsible_irq_controller = InterruptManagement::the().get_responsible_irq_controller(IRQControllerType::i8259, interrupt_number());
 }
 
 void SpuriousInterruptHandler::enable_interrupt_vector()

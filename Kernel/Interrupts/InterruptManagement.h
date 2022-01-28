@@ -54,6 +54,7 @@ public:
 
     bool smp_enabled() const { return m_smp_enabled; }
     RefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
+    RefPtr<IRQController> get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector);
 
     const Vector<ISAInterruptOverrideMetadata>& isa_overrides() const { return m_isa_interrupt_overrides; }
 
