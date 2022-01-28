@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,8 +14,6 @@
 namespace SoftGPU {
 
 class Clipper final {
-    static constexpr u8 NUMBER_OF_CLIPPING_PLANES = 6;
-
 public:
     enum class ClipPlane : u8 {
         LEFT = 0,
