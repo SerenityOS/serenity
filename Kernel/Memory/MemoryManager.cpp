@@ -957,7 +957,7 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
         if (region_or_error.is_error())
             TODO();
         auto cleanup_region = region_or_error.release_value();
-        fast_u32_fill((u32*)cleanup_region->vaddr().as_ptr(), 0, (PAGE_SIZE * count) / sizeof(u32));
+        memset(cleanup_region->vaddr().as_ptr(), 0, PAGE_SIZE * count);
     }
     m_system_memory_info.super_physical_pages_used += count;
     return physical_pages;
@@ -974,7 +974,9 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
         return {};
     }
 
-    fast_u32_fill((u32*)page->paddr().offset(physical_to_virtual_offset).as_ptr(), 0, PAGE_SIZE / sizeof(u32));
+    auto* ptr = quickmap_page(*page);
+    memset(ptr, 0, PAGE_SIZE);
+    unquickmap_page();
     ++m_system_memory_info.super_physical_pages_used;
     return page;
 }
