@@ -9,9 +9,12 @@
 #include <AK/Vector.h>
 #include <LibMain/Main.h>
 #include <string.h>
+#include <time.h>
 
 int main(int argc, char** argv)
 {
+    tzset();
+
     Vector<StringView> arguments;
     arguments.ensure_capacity(argc);
     for (int i = 0; i < argc; ++i)
