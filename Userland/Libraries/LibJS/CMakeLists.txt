@@ -106,6 +106,9 @@ set(SOURCES
     Runtime/Intl/NumberFormatConstructor.cpp
     Runtime/Intl/NumberFormatFunction.cpp
     Runtime/Intl/NumberFormatPrototype.cpp
+    Runtime/Intl/PluralRules.cpp
+    Runtime/Intl/PluralRulesConstructor.cpp
+    Runtime/Intl/PluralRulesPrototype.cpp
     Runtime/Intl/RelativeTimeFormat.cpp
     Runtime/Intl/RelativeTimeFormatConstructor.cpp
     Runtime/Intl/RelativeTimeFormatPrototype.cpp
