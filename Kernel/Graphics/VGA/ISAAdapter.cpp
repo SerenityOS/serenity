@@ -38,13 +38,4 @@ void ISAVGAAdapter::initialize_framebuffer_devices()
 {
 }
 
-bool ISAVGAAdapter::try_to_set_resolution(size_t, size_t, size_t)
-{
-    return false;
-}
-bool ISAVGAAdapter::set_y_offset(size_t, size_t)
-{
-    return false;
-}
-
 }

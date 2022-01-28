@@ -31,8 +31,8 @@ public:
 
     virtual ErrorOr<ByteBuffer> get_edid(size_t output_port_index) const = 0;
 
-    virtual bool try_to_set_resolution(size_t output_port_index, size_t width, size_t height) = 0;
-    virtual bool set_y_offset(size_t output_port_index, size_t y) = 0;
+    virtual ErrorOr<void> set_resolution(size_t output_port_index, size_t width, size_t height) = 0;
+    virtual ErrorOr<void> set_y_offset(size_t output_port_index, size_t y) = 0;
 
 protected:
     GenericGraphicsAdapter() = default;

@@ -24,9 +24,6 @@ public:
     // Note: We simply don't support old VGA framebuffer modes (like the 320x200 256-colors one)
     virtual bool framebuffer_devices_initialized() const override { return false; }
 
-    virtual bool try_to_set_resolution(size_t output_port_index, size_t width, size_t height) override;
-    virtual bool set_y_offset(size_t output_port_index, size_t y) override;
-
 private:
     ISAVGAAdapter();
 

@@ -198,10 +198,7 @@ ErrorOr<void> FramebufferDevice::set_head_resolution(size_t head, size_t width, 
     auto adapter = m_graphics_adapter.strong_ref();
     if (!adapter)
         return Error::from_errno(EIO);
-    auto result = adapter->try_to_set_resolution(0, width, height);
-    // FIXME: Find a better way to return here a ErrorOr<void>.
-    if (!result)
-        return Error::from_errno(ENOTSUP);
+    TRY(adapter->set_resolution(0, width, height));
     m_framebuffer_width = width;
     m_framebuffer_height = height;
     m_framebuffer_pitch = width * sizeof(u32);
@@ -218,16 +215,10 @@ ErrorOr<void> FramebufferDevice::set_head_buffer(size_t head, bool second_buffer
     if (!adapter)
         return Error::from_errno(EIO);
     if (second_buffer) {
-        if (!adapter->set_y_offset(0, m_framebuffer_height)) {
-            // FIXME: Find a better ErrorOr<void> here.
-            return Error::from_errno(ENOTSUP);
-        }
+        TRY(adapter->set_y_offset(0, m_framebuffer_height));
         m_y_offset = m_framebuffer_height;
     } else {
-        if (!adapter->set_y_offset(0, 0)) {
-            // FIXME: Find a better ErrorOr<void> here.
-            return Error::from_errno(ENOTSUP);
-        }
+        TRY(adapter->set_y_offset(0, 0));
         m_y_offset = 0;
     }
     return {};
