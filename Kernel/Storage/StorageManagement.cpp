@@ -219,7 +219,7 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uu
     VERIFY(!m_storage_devices.is_empty());
     VERIFY(m_boot_argument.starts_with(partition_uuid_prefix));
 
-    auto partition_uuid = UUID(m_boot_argument.substring_view(partition_uuid_prefix.length()));
+    auto partition_uuid = UUID(m_boot_argument.substring_view(partition_uuid_prefix.length()), UUID::Endianness::Mixed);
 
     if (partition_uuid.to_string().length() != 36) {
         // FIXME: It would be helpful to output the specified and detected UUIDs in this case,
