@@ -37,6 +37,7 @@
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/Intl/Locale.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
+#include <LibJS/Runtime/Intl/PluralRules.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Map.h>
@@ -778,6 +779,36 @@ static void print_intl_relative_time_format(JS::Object& object, HashTable<JS::Ob
     print_value(js_string(object.vm(), date_time_format.numeric_string()), seen_objects);
 }
 
+static void print_intl_plural_rules(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& plural_rules = static_cast<JS::Intl::PluralRules const&>(object);
+    print_type("Intl.PluralRules");
+    js_out("\n  locale: ");
+    print_value(js_string(object.vm(), plural_rules.locale()), seen_objects);
+    js_out("\n  type: ");
+    print_value(js_string(object.vm(), plural_rules.type_string()), seen_objects);
+    js_out("\n  minimumIntegerDigits: ");
+    print_value(JS::Value(plural_rules.min_integer_digits()), seen_objects);
+    if (plural_rules.has_min_fraction_digits()) {
+        js_out("\n  minimumFractionDigits: ");
+        print_value(JS::Value(plural_rules.min_fraction_digits()), seen_objects);
+    }
+    if (plural_rules.has_max_fraction_digits()) {
+        js_out("\n  maximumFractionDigits: ");
+        print_value(JS::Value(plural_rules.max_fraction_digits()), seen_objects);
+    }
+    if (plural_rules.has_min_significant_digits()) {
+        js_out("\n  minimumSignificantDigits: ");
+        print_value(JS::Value(plural_rules.min_significant_digits()), seen_objects);
+    }
+    if (plural_rules.has_max_significant_digits()) {
+        js_out("\n  maximumSignificantDigits: ");
+        print_value(JS::Value(plural_rules.max_significant_digits()), seen_objects);
+    }
+    js_out("\n  roundingType: ");
+    print_value(js_string(object.vm(), plural_rules.rounding_type_string()), seen_objects);
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -875,6 +906,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_intl_date_time_format(object, seen_objects);
         if (is<JS::Intl::RelativeTimeFormat>(object))
             return print_intl_relative_time_format(object, seen_objects);
+        if (is<JS::Intl::PluralRules>(object))
+            return print_intl_plural_rules(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
