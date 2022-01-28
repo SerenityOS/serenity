@@ -182,6 +182,10 @@
 #cmakedefine01 LOCK_RESTORE_DEBUG
 #endif
 
+#ifndef LOCK_SHARED_UPGRADE_DEBUG
+#cmakedefine01 LOCK_SHARED_UPGRADE_DEBUG
+#endif
+
 #ifndef LOCK_TRACE_DEBUG
 #cmakedefine01 LOCK_TRACE_DEBUG
 #endif
