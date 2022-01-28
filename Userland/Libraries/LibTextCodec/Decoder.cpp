@@ -11,78 +11,15 @@
 namespace TextCodec {
 
 namespace {
-Latin1Decoder& latin1_decoder()
-{
-    static Latin1Decoder* decoder = nullptr;
-    if (!decoder)
-        decoder = new Latin1Decoder;
-    return *decoder;
-}
-
-UTF8Decoder& utf8_decoder()
-{
-    static UTF8Decoder* decoder = nullptr;
-    if (!decoder)
-        decoder = new UTF8Decoder;
-    return *decoder;
-}
-
-UTF16BEDecoder& utf16be_decoder()
-{
-    static UTF16BEDecoder* decoder = nullptr;
-    if (!decoder)
-        decoder = new UTF16BEDecoder;
-    return *decoder;
-}
-
-Latin2Decoder& latin2_decoder()
-{
-    static Latin2Decoder* decoder = nullptr;
-    if (!decoder)
-        decoder = new Latin2Decoder;
-    return *decoder;
-}
-
-HebrewDecoder& hebrew_decoder()
-{
-    static HebrewDecoder* decoder = nullptr;
-    if (!decoder)
-        decoder = new HebrewDecoder;
-    return *decoder;
-}
-
-CyrillicDecoder& cyrillic_decoder()
-{
-    static CyrillicDecoder* decoder = nullptr;
-    if (!decoder)
-        decoder = new CyrillicDecoder;
-    return *decoder;
-}
-
-Koi8RDecoder& koi8r_decoder()
-{
-    static Koi8RDecoder* decoder = nullptr;
-    if (!decoder)
-        decoder = new Koi8RDecoder;
-    return *decoder;
-}
-
-Latin9Decoder& latin9_decoder()
-{
-    static Latin9Decoder* decoder = nullptr;
-    if (!decoder)
-        decoder = new Latin9Decoder;
-    return *decoder;
-}
-
-TurkishDecoder& turkish_decoder()
-{
-    static TurkishDecoder* decoder = nullptr;
-    if (!decoder)
-        decoder = new TurkishDecoder;
-    return *decoder;
-}
-
+Latin1Decoder s_latin1_decoder;
+UTF8Decoder s_utf8_decoder;
+UTF16BEDecoder s_utf16be_decoder;
+Latin2Decoder s_latin2_decoder;
+HebrewDecoder s_hebrew_decoder;
+CyrillicDecoder s_cyrillic_decoder;
+Koi8RDecoder s_koi8r_decoder;
+Latin9Decoder s_latin9_decoder;
+TurkishDecoder s_turkish_decoder;
 }
 
 Decoder* decoder_for(const String& a_encoding)
@@ -90,23 +27,23 @@ Decoder* decoder_for(const String& a_encoding)
     auto encoding = get_standardized_encoding(a_encoding);
     if (encoding.has_value()) {
         if (encoding.value().equals_ignoring_case("windows-1252"))
-            return &latin1_decoder();
+            return &s_latin1_decoder;
         if (encoding.value().equals_ignoring_case("utf-8"))
-            return &utf8_decoder();
+            return &s_utf8_decoder;
         if (encoding.value().equals_ignoring_case("utf-16be"))
-            return &utf16be_decoder();
+            return &s_utf16be_decoder;
         if (encoding.value().equals_ignoring_case("iso-8859-2"))
-            return &latin2_decoder();
+            return &s_latin2_decoder;
         if (encoding.value().equals_ignoring_case("windows-1255"))
-            return &hebrew_decoder();
+            return &s_hebrew_decoder;
         if (encoding.value().equals_ignoring_case("windows-1251"))
-            return &cyrillic_decoder();
+            return &s_cyrillic_decoder;
         if (encoding.value().equals_ignoring_case("koi8-r"))
-            return &koi8r_decoder();
+            return &s_koi8r_decoder;
         if (encoding.value().equals_ignoring_case("iso-8859-15"))
-            return &latin9_decoder();
+            return &s_latin9_decoder;
         if (encoding.value().equals_ignoring_case("windows-1254"))
-            return &turkish_decoder();
+            return &s_turkish_decoder;
     }
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
     return nullptr;
