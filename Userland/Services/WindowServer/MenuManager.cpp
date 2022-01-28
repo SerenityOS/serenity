@@ -137,6 +137,17 @@ void MenuManager::event(Core::Event& event)
                     m_current_menu->open_hovered_item(key_event.modifiers() & KeyModifier::Mod_Ctrl);
                 return;
             }
+
+            if (key_event.key() == Key_Space) {
+                auto* hovered_item = m_current_menu->hovered_item();
+                if (!hovered_item || !hovered_item->is_enabled())
+                    return;
+                if (!hovered_item->is_checkable())
+                    return;
+
+                m_current_menu->open_hovered_item(true);
+            }
+
             m_current_menu->dispatch_event(event);
         }
     }
