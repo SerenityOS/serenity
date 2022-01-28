@@ -85,10 +85,10 @@ void CharacterSearchWidget::search()
     auto query = m_search_input->text();
     if (query.is_empty())
         return;
-    for_each_character_containing(query, [&](auto code_point, auto& display_name) {
+    for_each_character_containing(query, [&](auto code_point, auto display_name) {
         StringBuilder builder;
         builder.append_code_point(code_point);
 
-        model.add_result({ code_point, builder.build(), display_name });
+        model.add_result({ code_point, builder.build(), move(display_name) });
     });
 }
