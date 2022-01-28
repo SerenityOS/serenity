@@ -12,6 +12,7 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <csignal>
@@ -542,6 +543,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(quit_at_eof, "Exit when the end of the file is reached", "quit-at-eof", 'e');
     args_parser.add_option(emulate_more, "Pretend that we are more(1)", "emulate-more", 'm');
     args_parser.parse(arguments);
+
+    if (String("-") != filename) {
+        TRY(Core::System::unveil(Core::File::absolute_path(filename), "r"));
+    }
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     FILE* file;
     if (String("-") == filename) {
