@@ -25,8 +25,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/proc", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    tzset();
-
     auto file = TRY(Core::File::open("/var/run/utmp", Core::OpenMode::ReadOnly));
     auto json = TRY(JsonValue::from_string(file->read_all()));
     if (!json.is_object()) {
