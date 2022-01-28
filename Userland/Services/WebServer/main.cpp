@@ -94,6 +94,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     outln("Listening on {}:{}", ipv4_address.value(), port);
 
+    TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/res/icons", "r"));
     TRY(Core::System::unveil(real_root_path.characters(), "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

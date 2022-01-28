@@ -690,21 +690,35 @@ do_dev() {
                 fi
 
                 echo "Importing patch $patch..."
-                git am "$patch" || {
+                git am "$patch" >/dev/null 2>&1 || {
                     git am --abort >/dev/null 2>&1 || true
-                    git apply < $patch || {
+                    if git apply < $patch; then
+                        git add -A
+                        if prompt_yes_no "- This patch does not appear to be a git patch, would you like to modify its changes before continuing?"; then
+                            >&2 echo "Apply any changes you want, commit them into the current repo and quit this shell to continue."
+
+                            launch_user_shell
+                        fi
+                        git commit --verbose
+                    else
                         # The patch didn't apply, oh no!
                         # Ask the user to figure it out :shrug:
+                        git am "$patch" || true
                         >&2 echo "- This patch does not apply, you'll be dropped into a shell to investigate and fix this, quit the shell when the problem is resolved."
+                        >&2 echo "Note that the patch needs to be committed into the current repository!"
                         launch_user_shell
-                    }
-                    git add -A
-                    if prompt_yes_no "- This patch does not appear to be a git patch, would you like to manually commit its changes?"; then
-                        >&2 echo "Apply any changes you want, commit them into the current repo and quit this shell to continue."
+                    fi
 
-                        launch_user_shell
-                    else
-                        git commit --verbose
+                    if ! git diff --quiet >/dev/null 2>&1; then
+                        >&2 echo "- It appears that there are uncommitted changes from applying the previous patch:"
+                        for line in $(git diff --color=always); do
+                            echo "|  $line"
+                        done
+                        if prompt_yes_no "- Would you like to drop them before moving on to the next patch?"; then
+                            git clean -xf
+                        else
+                            >&2 echo "- The uncommitted changes will be committed with the next patch or left in the tree."
+                        fi
                     fi
                 }
             done

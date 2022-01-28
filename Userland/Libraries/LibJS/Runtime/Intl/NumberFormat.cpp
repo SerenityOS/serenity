@@ -714,26 +714,28 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
 static Vector<StringView> separate_integer_into_groups(Unicode::NumberGroupings const& grouping_sizes, StringView integer)
 {
     Utf8View utf8_integer { integer };
+    if (utf8_integer.length() <= grouping_sizes.primary_grouping_size)
+        return { integer };
+
+    size_t index = utf8_integer.length() - grouping_sizes.primary_grouping_size;
+    if (index < grouping_sizes.minimum_grouping_digits)
+        return { integer };
+
     Vector<StringView> groups;
 
     auto add_group = [&](size_t index, size_t length) {
         groups.prepend(utf8_integer.unicode_substring_view(index, length).as_string());
     };
 
-    if (utf8_integer.length() > grouping_sizes.primary_grouping_size) {
-        size_t index = utf8_integer.length() - grouping_sizes.primary_grouping_size;
-        add_group(index, grouping_sizes.primary_grouping_size);
+    add_group(index, grouping_sizes.primary_grouping_size);
 
-        while (index > grouping_sizes.secondary_grouping_size) {
-            index -= grouping_sizes.secondary_grouping_size;
-            add_group(index, grouping_sizes.secondary_grouping_size);
-        }
-
-        if (index > 0)
-            add_group(0, index);
-    } else {
-        groups.append(integer);
+    while (index > grouping_sizes.secondary_grouping_size) {
+        index -= grouping_sizes.secondary_grouping_size;
+        add_group(index, grouping_sizes.secondary_grouping_size);
     }
+
+    if (index > 0)
+        add_group(0, index);
 
     return groups;
 }

@@ -25,7 +25,7 @@ int FilteringProxyModel::row_count(ModelIndex const&) const
 int FilteringProxyModel::column_count(ModelIndex const& index) const
 {
     if (!index.is_valid())
-        return {};
+        return m_model->column_count({});
 
     if ((size_t)index.row() > m_matching_indices.size() || index.row() < 0)
         return 0;
@@ -39,9 +39,11 @@ Variant FilteringProxyModel::data(ModelIndex const& index, ModelRole role) const
         return {};
 
     if ((size_t)index.row() > m_matching_indices.size() || index.row() < 0)
-        return 0;
+        return {};
 
-    return m_matching_indices[index.row()].data(role);
+    // FIXME: Support hierarchical models (with a non-empty index.parent()).
+    auto underlying_index = m_model->index(m_matching_indices[index.row()].row(), index.column(), {});
+    return underlying_index.data(role);
 }
 
 void FilteringProxyModel::invalidate()

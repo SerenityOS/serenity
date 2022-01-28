@@ -627,10 +627,6 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         PerformanceManager::add_process_exec_event(*this);
     }
 
-    {
-        SpinlockLocker lock(g_scheduler_lock);
-        new_main_thread->set_state(Thread::State::Runnable);
-    }
     u32 lock_count_to_restore;
     [[maybe_unused]] auto rc = big_lock().force_unlock_if_locked(lock_count_to_restore);
     VERIFY_INTERRUPTS_DISABLED();

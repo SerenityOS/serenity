@@ -164,6 +164,11 @@ ErrorOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread>&
     // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
     process->ref();
 
+    {
+        SpinlockLocker lock(g_scheduler_lock);
+        new_main_thread->set_state(Thread::State::Runnable);
+    }
+
     return process;
 }
 

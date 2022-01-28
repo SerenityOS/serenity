@@ -255,6 +255,7 @@ struct AK::Traits<Unit> : public GenericTraits<Unit> {
 struct Locale {
     Vector<NumberSystemIndexType> number_systems;
     HashMap<String, UnitIndexType> units {};
+    u8 minimum_grouping_digits { 0 };
 };
 
 struct UnicodeLocaleData {
@@ -455,6 +456,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
     auto const& main_object = numbers.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
+    auto const& minimum_grouping_digits = locale_numbers_object.as_object().get("minimumGroupingDigits"sv);
 
     Vector<Optional<NumberSystem>> number_systems;
     number_systems.resize(locale_data.number_systems.size());
@@ -605,6 +607,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
         locale.number_systems.append(system_index);
     }
 
+    locale.minimum_grouping_digits = minimum_grouping_digits.as_string().template to_uint<u8>().value();
     return {};
 }
 
@@ -872,6 +875,21 @@ struct Unit {
     locale_data.unique_systems.generate(generator, "NumberSystemData"sv, "s_number_systems"sv, 10);
     locale_data.unique_units.generate(generator, "Unit"sv, "s_units"sv, 10);
 
+    auto locales = locale_data.locales.keys();
+    quick_sort(locales);
+
+    generator.set("size", String::number(locales.size()));
+    generator.append(R"~~~(
+static constexpr Array<u8, @size@> s_minimum_grouping_digits { { )~~~");
+
+    bool first = true;
+    for (auto const& locale : locales) {
+        generator.append(first ? " " : ", ");
+        generator.append(String::number(locale_data.locales.find(locale)->value.minimum_grouping_digits));
+        first = false;
+    }
+    generator.append(" } };\n");
+
     auto append_map = [&](String name, auto type, auto const& map) {
         generator.set("name", name);
         generator.set("type", type);
@@ -959,8 +977,14 @@ Optional<StringView> get_number_system_symbol(StringView locale, StringView syst
 
 Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system)
 {
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return {};
+
+    u8 minimum_grouping_digits = s_minimum_grouping_digits[to_underlying(*locale_value) - 1];
+
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr)
-        return NumberGroupings { number_system->primary_grouping_size, number_system->secondary_grouping_size };
+        return NumberGroupings { minimum_grouping_digits, number_system->primary_grouping_size, number_system->secondary_grouping_size };
     return {};
 }
 
