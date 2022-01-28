@@ -38,13 +38,17 @@ ThrowCompletionOr<Value> PluralRulesConstructor::call()
 // 16.2.1 Intl.PluralRules ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.pluralrules
 ThrowCompletionOr<Object*> PluralRulesConstructor::construct(FunctionObject& new_target)
 {
+    auto& vm = this->vm();
     auto& global_object = this->global_object();
+
+    auto locales = vm.argument(0);
+    auto options = vm.argument(1);
 
     // 2. Let pluralRules be ? OrdinaryCreateFromConstructor(NewTarget, "%PluralRules.prototype%", « [[InitializedPluralRules]], [[Locale]], [[Type]], [[MinimumIntegerDigits]], [[MinimumFractionDigits]], [[MaximumFractionDigits]], [[MinimumSignificantDigits]], [[MaximumSignificantDigits]], [[RoundingType]] »).
     auto* plural_rules = TRY(ordinary_create_from_constructor<PluralRules>(global_object, new_target, &GlobalObject::intl_plural_rules_prototype));
 
     // 3. Return ? InitializePluralRules(pluralRules, locales, options).
-    return plural_rules;
+    return TRY(initialize_plural_rules(global_object, *plural_rules, locales, options));
 }
 
 }
