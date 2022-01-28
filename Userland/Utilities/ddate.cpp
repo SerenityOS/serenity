@@ -8,7 +8,6 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <time.h>
 #include <unistd.h>
 
 class DiscordianDate {
@@ -104,8 +103,6 @@ private:
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
-
-    tzset();
 
     auto date = Core::DateTime::now();
     outln("Today is {}", DiscordianDate(date).to_string());
