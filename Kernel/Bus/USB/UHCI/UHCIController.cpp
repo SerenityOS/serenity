@@ -76,7 +76,7 @@ ErrorOr<void> UHCIController::initialize()
     dmesgln("UHCI: I/O base {}", m_io_base);
     dmesgln("UHCI: Interrupt line: {}", interrupt_number());
 
-    spawn_port_proc();
+    spawn_port_process();
 
     TRY(reset());
     return start();
@@ -464,7 +464,7 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
     return transfer_size;
 }
 
-void UHCIController::spawn_port_proc()
+void UHCIController::spawn_port_process()
 {
     RefPtr<Thread> usb_hotplug_thread;
 
