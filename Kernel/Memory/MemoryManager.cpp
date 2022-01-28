@@ -645,6 +645,9 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 {
+    if (is_user_address(vaddr))
+        return nullptr;
+
     SpinlockLocker lock(s_mm_lock);
     auto* region = MM.m_kernel_regions.find_largest_not_above(vaddr.get());
     if (!region || !region->contains(vaddr))
