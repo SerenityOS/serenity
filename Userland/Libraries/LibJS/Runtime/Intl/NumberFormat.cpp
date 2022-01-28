@@ -15,9 +15,14 @@
 
 namespace JS::Intl {
 
+NumberFormatBase::NumberFormatBase(Object& prototype)
+    : Object(prototype)
+{
+}
+
 // 15 NumberFormat Objects, https://tc39.es/ecma402/#numberformat-objects
 NumberFormat::NumberFormat(Object& prototype)
-    : Object(prototype)
+    : NumberFormatBase(prototype)
 {
 }
 
@@ -144,7 +149,7 @@ StringView NumberFormat::currency_sign_string() const
     }
 }
 
-StringView NumberFormat::rounding_type_string() const
+StringView NumberFormatBase::rounding_type_string() const
 {
     switch (m_rounding_type) {
     case RoundingType::SignificantDigits:
@@ -248,7 +253,7 @@ static ALWAYS_INLINE int log10floor(double value)
 }
 
 // 15.1.1 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/ecma402/#sec-setnfdigitoptions
-ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation)
+ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_object, NumberFormatBase& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation)
 {
     auto& vm = global_object.vm();
 
@@ -348,17 +353,17 @@ ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_obj
     // 16. If needSd is false and needFd is false, then
     if (!need_significant_digits && !need_fraction_digits) {
         // a. Set intlObj.[[RoundingType]] to compactRounding.
-        intl_object.set_rounding_type(NumberFormat::RoundingType::CompactRounding);
+        intl_object.set_rounding_type(NumberFormatBase::RoundingType::CompactRounding);
     }
     // 17. Else if hasSd is true, then
     else if (has_significant_digits) {
         // a. Set intlObj.[[RoundingType]] to significantDigits.
-        intl_object.set_rounding_type(NumberFormat::RoundingType::SignificantDigits);
+        intl_object.set_rounding_type(NumberFormatBase::RoundingType::SignificantDigits);
     }
     // 18. Else,
     else {
         // a. Set intlObj.[[RoundingType]] to fractionDigits.
-        intl_object.set_rounding_type(NumberFormat::RoundingType::FractionDigits);
+        intl_object.set_rounding_type(NumberFormatBase::RoundingType::FractionDigits);
     }
 
     return {};
@@ -491,7 +496,7 @@ int currency_digits(StringView currency)
 }
 
 // 15.1.5 FormatNumericToString ( intlObject, x ), https://tc39.es/ecma402/#sec-formatnumberstring
-FormatResult format_numeric_to_string(NumberFormat& number_format, double number)
+FormatResult format_numeric_to_string(NumberFormatBase& intl_object, double number)
 {
     // 1. If x < 0 or x is -0𝔽, let isNegative be true; else let isNegative be false.
     bool is_negative = (number < 0.0) || Value(number).is_negative_zero();
@@ -504,21 +509,21 @@ FormatResult format_numeric_to_string(NumberFormat& number_format, double number
 
     RawFormatResult result {};
 
-    switch (number_format.rounding_type()) {
+    switch (intl_object.rounding_type()) {
     // 3. If intlObject.[[RoundingType]] is significantDigits, then
-    case NumberFormat::RoundingType::SignificantDigits:
+    case NumberFormatBase::RoundingType::SignificantDigits:
         // a. Let result be ToRawPrecision(x, intlObject.[[MinimumSignificantDigits]], intlObject.[[MaximumSignificantDigits]]).
-        result = to_raw_precision(number, number_format.min_significant_digits(), number_format.max_significant_digits());
+        result = to_raw_precision(number, intl_object.min_significant_digits(), intl_object.max_significant_digits());
         break;
 
     // 4. Else if intlObject.[[RoundingType]] is fractionDigits, then
-    case NumberFormat::RoundingType::FractionDigits:
+    case NumberFormatBase::RoundingType::FractionDigits:
         // a. Let result be ToRawFixed(x, intlObject.[[MinimumFractionDigits]], intlObject.[[MaximumFractionDigits]]).
-        result = to_raw_fixed(number, number_format.min_fraction_digits(), number_format.max_fraction_digits());
+        result = to_raw_fixed(number, intl_object.min_fraction_digits(), intl_object.max_fraction_digits());
         break;
 
     // 5. Else,
-    case NumberFormat::RoundingType::CompactRounding:
+    case NumberFormatBase::RoundingType::CompactRounding:
         // a. Assert: intlObject.[[RoundingType]] is compactRounding.
         // b. Let result be ToRawPrecision(x, 1, 2).
         result = to_raw_precision(number, 1, 2);
@@ -545,7 +550,7 @@ FormatResult format_numeric_to_string(NumberFormat& number_format, double number
     int digits = result.digits;
 
     // 9. Let minInteger be intlObject.[[MinimumIntegerDigits]].
-    int min_integer = number_format.min_integer_digits();
+    int min_integer = intl_object.min_integer_digits();
 
     // 10. If int < minInteger, then
     if (digits < min_integer) {
