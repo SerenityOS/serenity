@@ -1159,6 +1159,8 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
     case TIOCNOTTY:
     case TIOCSCTTY:
         return syscall(SC_ioctl, fd, request, 0);
+    case TIOCSTI:
+        return -EIO;
     case FB_IOCTL_GET_PROPERTIES: {
         size_t size = 0;
         auto rc = syscall(SC_ioctl, fd, request, &size);
