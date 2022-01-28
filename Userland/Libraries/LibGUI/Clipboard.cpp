@@ -44,10 +44,8 @@ void Clipboard::initialize(Badge<Application>)
 
 Clipboard& Clipboard::the()
 {
-    static Clipboard* s_the;
-    if (!s_the)
-        s_the = new Clipboard;
-    return *s_the;
+    static Clipboard s_the;
+    return s_the;
 }
 
 Clipboard::DataAndType Clipboard::fetch_data_and_type() const

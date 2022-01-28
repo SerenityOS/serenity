@@ -11,8 +11,8 @@ namespace Web {
 
 ContentFilter& ContentFilter::the()
 {
-    static ContentFilter* filter = new ContentFilter;
-    return *filter;
+    static ContentFilter filter;
+    return filter;
 }
 
 ContentFilter::ContentFilter()

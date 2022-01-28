@@ -31,10 +31,8 @@ private:
 
 static HashMap<i32, RefPtr<DisplayLinkCallback>>& callbacks()
 {
-    static HashMap<i32, RefPtr<DisplayLinkCallback>>* map;
-    if (!map)
-        map = new HashMap<i32, RefPtr<DisplayLinkCallback>>;
-    return *map;
+    static HashMap<i32, RefPtr<DisplayLinkCallback>> s_map;
+    return s_map;
 }
 
 static i32 s_next_callback_id = 1;
