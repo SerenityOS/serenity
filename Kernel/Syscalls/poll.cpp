@@ -45,6 +45,8 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> use
     }
 
     Thread::SelectBlocker::FDVector fds_info;
+    TRY(fds_info.try_ensure_capacity(params.nfds));
+
     for (size_t i = 0; i < params.nfds; i++) {
         auto& pfd = fds_copy[i];
         auto description = TRY(fds().open_file_description(pfd.fd));
@@ -57,7 +59,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> use
             block_flags |= BlockFlags::ReadPriority;
         if (pfd.events & POLLWRBAND)
             block_flags |= BlockFlags::WritePriority;
-        TRY(fds_info.try_append({ move(description), block_flags }));
+        fds_info.unchecked_append({ move(description), block_flags });
     }
 
     auto* current_thread = Thread::current();
