@@ -2341,8 +2341,8 @@ void SoftwareGLContext::gl_depth_range(GLdouble min, GLdouble max)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     auto options = m_rasterizer.options();
-    options.depth_min = clamp(min, 0.f, 1.f);
-    options.depth_max = clamp(max, 0.f, 1.f);
+    options.depth_min = clamp<float>(min, 0.f, 1.f);
+    options.depth_max = clamp<float>(max, 0.f, 1.f);
     m_rasterizer.set_options(options);
 }
 
