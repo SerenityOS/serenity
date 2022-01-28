@@ -15,13 +15,10 @@
 
 namespace Gfx {
 
-static FontDatabase* s_the;
-
 FontDatabase& FontDatabase::the()
 {
-    if (!s_the)
-        s_the = new FontDatabase;
-    return *s_the;
+    static FontDatabase s_the;
+    return s_the;
 }
 
 static RefPtr<Font> s_default_font;

@@ -10,10 +10,8 @@ namespace Clipboard {
 
 Storage& Storage::the()
 {
-    static Storage* s_the;
-    if (!s_the)
-        s_the = new Storage;
-    return *s_the;
+    static Storage s_the;
+    return s_the;
 }
 
 Storage::Storage()

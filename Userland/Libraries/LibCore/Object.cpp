@@ -258,10 +258,8 @@ void Object::set_event_filter(Function<bool(Core::Event&)> filter)
 
 static HashMap<StringView, ObjectClassRegistration*>& object_classes()
 {
-    static HashMap<StringView, ObjectClassRegistration*>* map;
-    if (!map)
-        map = new HashMap<StringView, ObjectClassRegistration*>;
-    return *map;
+    static HashMap<StringView, ObjectClassRegistration*> s_map;
+    return s_map;
 }
 
 ObjectClassRegistration::ObjectClassRegistration(StringView class_name, Function<RefPtr<Object>()> factory, ObjectClassRegistration* parent_class)
