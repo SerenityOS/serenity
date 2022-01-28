@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,12 +12,32 @@
 #include <LibGUI/CommandPalette.h>
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/Painter.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Painter.h>
 
 namespace GUI {
+
+class IconOrRadioButtonDelegate final : public GUI::TableCellPaintingDelegate {
+public:
+    virtual ~IconOrRadioButtonDelegate() override { }
+
+    bool should_paint(ModelIndex const& index) override
+    {
+        return index.data().is_bool();
+    }
+
+    virtual void paint(GUI::Painter& painter, Gfx::IntRect const& cell_rect, Gfx::Palette const& palette, ModelIndex const& index) override
+    {
+        auto checked = index.data().as_bool();
+
+        Gfx::IntRect radio_rect { 0, 0, 12, 12 };
+        radio_rect.center_within(cell_rect);
+        Gfx::StylePainter::paint_radio_button(painter, radio_rect, palette, checked, false);
+    }
+};
 
 class ActionModel final : public GUI::Model {
 public:
@@ -64,6 +85,8 @@ public:
         case Column::Icon:
             if (action.icon())
                 return *action.icon();
+            if (action.is_checkable())
+                return action.is_checked();
             return "";
         case Column::Text:
             return Gfx::parse_ampersand_string(action.text());
@@ -112,6 +135,7 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
     m_filter_model = MUST(GUI::FilteringProxyModel::create(*m_model));
     m_filter_model->set_filter_term("");
 
+    m_table_view->set_column_painting_delegate(0, make<IconOrRadioButtonDelegate>());
     m_table_view->set_model(*m_filter_model);
 
     m_text_box->on_change = [this] {
