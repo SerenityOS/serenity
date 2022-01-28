@@ -572,11 +572,12 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         return &quickmap_pt(PhysicalAddress(pde.page_table_base()))[page_table_index];
 
     bool did_purge = false;
-    auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
-    if (!page_table) {
+    auto page_table_or_error = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
+    if (page_table_or_error.is_error()) {
         dbgln("MM: Unable to allocate page table to map {}", vaddr);
         return nullptr;
     }
+    auto page_table = page_table_or_error.release_value();
     if (did_purge) {
         // If any memory had to be purged, ensure_pte may have been called as part
         // of the purging process. So we need to re-map the pd in this case to ensure
@@ -892,7 +893,7 @@ NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_user_physical_page
     return page.release_nonnull();
 }
 
-RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
+ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
 {
     SpinlockLocker lock(s_mm_lock);
     auto page = find_free_user_physical_page(false);
@@ -918,7 +919,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
         });
         if (!page) {
             dmesgln("MM: no user physical pages available");
-            return {};
+            return ENOMEM;
         }
     }
 
@@ -930,7 +931,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
 
     if (did_purge)
         *did_purge = purged_pages;
-    return page;
+    return page.release_nonnull();
 }
 
 ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)

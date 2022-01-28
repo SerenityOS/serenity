@@ -322,11 +322,12 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
         page = m_shared_committed_cow_pages->take_one();
     } else {
         dbgln_if(PAGE_FAULT_DEBUG, "    >> It's a COW page and it's time to COW!");
-        page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
-        if (page.is_null()) {
+        auto page_or_error = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
+        if (page_or_error.is_error()) {
             dmesgln("MM: handle_cow_fault was unable to allocate a physical page");
             return PageFaultResponse::OutOfMemory;
         }
+        page = page_or_error.release_value();
     }
 
     dbgln_if(PAGE_FAULT_DEBUG, "      >> COW {} <- {}", page->paddr(), page_slot->paddr());
