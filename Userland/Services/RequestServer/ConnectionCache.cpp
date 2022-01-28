@@ -50,17 +50,7 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
             };
             connection->removal_timer->start();
         } else {
-            using SocketType = RemoveCVReference<decltype(*connection->socket)>;
-            bool is_connected;
-            if constexpr (IsSame<SocketType, TLS::TLSv12>)
-                is_connected = connection->socket->is_established();
-            else
-                is_connected = connection->socket->is_connected();
-            if (!is_connected) {
-                // Create another socket for the connection.
-                connection->socket = SocketType::construct(nullptr);
-                dbgln_if(REQUESTSERVER_DEBUG, "Creating a new socket for {} -> {}", url, connection->socket);
-            }
+            recreate_socket_if_needed(*connection, url);
             dbgln_if(REQUESTSERVER_DEBUG, "Running next job in queue for connection {} @{}", &connection, connection->socket);
             auto request = connection->request_queue.take_first();
             connection->timer.start();
