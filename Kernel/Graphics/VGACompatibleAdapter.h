@@ -22,8 +22,14 @@ public:
 
     virtual bool vga_compatible() const override final { return true; }
 
-    virtual bool try_to_set_resolution(size_t, size_t, size_t) override { return false; }
-    virtual bool set_y_offset(size_t, size_t) override { return false; }
+    virtual ErrorOr<void> set_resolution(size_t, size_t, size_t) override
+    {
+        return Error::from_errno(ENOTSUP);
+    }
+    virtual ErrorOr<void> set_y_offset(size_t, size_t) override
+    {
+        return Error::from_errno(ENOTSUP);
+    }
 
     ErrorOr<ByteBuffer> get_edid(size_t) const override { return Error::from_errno(ENOTSUP); }
 

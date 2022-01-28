@@ -97,8 +97,8 @@ private:
     virtual bool modesetting_capable() const override { return false; }
     virtual bool double_framebuffering_capable() const override { return false; }
 
-    virtual bool try_to_set_resolution(size_t, size_t, size_t) override { return false; }
-    virtual bool set_y_offset(size_t, size_t) override { return false; }
+    virtual ErrorOr<void> set_resolution(size_t, size_t, size_t) override { return Error::from_errno(ENOTSUP); }
+    virtual ErrorOr<void> set_y_offset(size_t, size_t) override { return Error::from_errno(ENOTSUP); }
 
     struct Scanout {
         RefPtr<Graphics::VirtIOGPU::FramebufferDevice> framebuffer;
