@@ -593,6 +593,9 @@ void Emulator::dispatch_one_pending_signal()
     VERIFY(signum != -1);
     m_pending_signals &= ~(1 << signum);
 
+    if (((1 << (signum - 1)) & m_signal_mask) != 0)
+        return;
+
     auto& handler = m_signal_handler[signum];
 
     if (handler.handler == 0) {
