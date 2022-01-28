@@ -291,7 +291,8 @@ void TreeView::paint_event(PaintEvent& event)
                 Gfx::IntRect cell_rect(horizontal_padding() + x_offset, rect.y(), column_width, row_height());
                 auto cell_index = model.index(index.row(), column_index, index.parent());
 
-                if (auto* delegate = column_painting_delegate(column_index)) {
+                auto* delegate = column_painting_delegate(column_index);
+                if (delegate && delegate->should_paint(cell_index)) {
                     delegate->paint(painter, cell_rect, palette(), cell_index);
                 } else {
                     auto data = cell_index.data();

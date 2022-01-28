@@ -98,7 +98,8 @@ void TableView::paint_event(PaintEvent& event)
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
             auto cell_index = model()->index(row_index, column_index);
 
-            if (auto* delegate = column_painting_delegate(column_index)) {
+            auto* delegate = column_painting_delegate(column_index);
+            if (delegate && delegate->should_paint(cell_index)) {
                 delegate->paint(painter, cell_rect, palette(), cell_index);
             } else {
                 auto data = cell_index.data();
