@@ -741,12 +741,9 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page)
 {
-    dma_buffer_page = allocate_supervisor_physical_page();
-    if (dma_buffer_page.is_null())
-        return ENOMEM;
+    dma_buffer_page = TRY(allocate_supervisor_physical_page());
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
-    auto region_or_error = allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access, Region::Cacheable::No);
-    return region_or_error;
+    return allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access, Region::Cacheable::No);
 }
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access)
@@ -956,22 +953,21 @@ ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_su
     return physical_pages;
 }
 
-RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
+ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_supervisor_physical_page()
 {
     SpinlockLocker lock(s_mm_lock);
     auto page = m_super_physical_region->take_free_page();
 
     if (!page) {
         dmesgln("MM: no super physical pages available");
-        VERIFY_NOT_REACHED();
-        return {};
+        return ENOMEM;
     }
 
     auto* ptr = quickmap_page(*page);
     memset(ptr, 0, PAGE_SIZE);
     unquickmap_page();
     ++m_system_memory_info.super_physical_pages_used;
-    return page;
+    return page.release_nonnull();
 }
 
 void MemoryManager::enter_process_address_space(Process& process)
