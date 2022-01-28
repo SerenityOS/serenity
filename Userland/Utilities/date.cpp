@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else if (print_rfc_3339) {
         outln("{}", date.to_string("%Y-%m-%d %H:%M:%S%:z"));
     } else {
-        outln("{}", date.to_string());
+        outln("{}", date.to_string("%Y-%m-%d %H:%M:%S %Z"));
     }
     return 0;
 }
