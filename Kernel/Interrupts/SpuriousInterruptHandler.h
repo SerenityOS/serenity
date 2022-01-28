@@ -16,6 +16,8 @@ namespace Kernel {
 class SpuriousInterruptHandler final : public GenericInterruptHandler {
 public:
     static void initialize(u8 interrupt_number);
+    static void initialize_for_disabled_master_pic();
+    static void initialize_for_disabled_slave_pic();
     virtual ~SpuriousInterruptHandler();
     virtual bool handle_interrupt(const RegisterState& regs) override;
 
@@ -31,6 +33,8 @@ public:
     virtual HandlerType type() const override { return HandlerType::SpuriousInterruptHandler; }
     virtual StringView purpose() const override;
     virtual StringView controller() const override;
+
+    void enable_interrupt_vector_for_disabled_pic();
 
 private:
     void enable_interrupt_vector();

@@ -8,6 +8,7 @@
 #include <AK/Types.h>
 
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
+#include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
@@ -42,6 +43,7 @@ READONLY_AFTER_INIT static DescriptorTablePointer s_idtr;
 READONLY_AFTER_INIT static IDTEntry s_idt[256];
 
 static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_COUNT];
+static GenericInterruptHandler* s_disabled_interrupt_handler[2];
 
 static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interrupts };
 
@@ -496,10 +498,24 @@ void handle_interrupt(TrapFrame* trap)
 {
     clac();
     auto& regs = *trap->regs;
-    VERIFY(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
-    u8 irq = (u8)(regs.isr_number - 0x50);
-    s_entropy_source_interrupts.add_random_event(irq);
-    auto* handler = s_interrupt_handler[irq];
+
+    GenericInterruptHandler* handler = nullptr;
+    // Note: we declare interrupt service routine offset 0x20 to 0x2f as
+    // reserved for when the PIC is disabled, so we can still route spurious
+    // IRQs to a different interrupt handlers at different location.
+    if (regs.isr_number >= pic_disabled_vector_base && regs.isr_number <= pic_disabled_vector_end) {
+        u8 irq = (u8)(regs.isr_number - pic_disabled_vector_base);
+        if (irq == 7) {
+            handler = s_disabled_interrupt_handler[0];
+        } else if (irq == 15) {
+            handler = s_disabled_interrupt_handler[1];
+        }
+    } else {
+        VERIFY(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
+        u8 irq = (u8)(regs.isr_number - IRQ_VECTOR_BASE);
+        s_entropy_source_interrupts.add_random_event(irq);
+        handler = s_interrupt_handler[irq];
+    }
     VERIFY(handler);
     handler->increment_invoking_counter();
     handler->handle_interrupt(regs);
@@ -527,6 +543,18 @@ static void revert_to_unused_handler(u8 interrupt_number)
 {
     auto handler = new UnhandledInterruptHandler(interrupt_number);
     handler->register_interrupt_handler();
+}
+
+void register_disabled_interrupt_handler(u8 number, GenericInterruptHandler& handler)
+{
+    if (number == 15) {
+        s_disabled_interrupt_handler[0] = &handler;
+        return;
+    } else if (number == 7) {
+        s_disabled_interrupt_handler[1] = &handler;
+        return;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
@@ -637,10 +665,58 @@ UNMAP_AFTER_INIT void idt_init()
     register_interrupt_handler(0x0f, _exception15);
     register_interrupt_handler(0x10, _exception16);
 
-    for (u8 i = 0x11; i < 0x50; i++)
+    for (u8 i = 0x11; i < 0x20; i++)
         register_interrupt_handler(i, unimp_trap);
 
     dbgln("Initializing unhandled interrupt handlers");
+    register_interrupt_handler(0x20, interrupt_32_asm_entry);
+    register_interrupt_handler(0x21, interrupt_33_asm_entry);
+    register_interrupt_handler(0x22, interrupt_34_asm_entry);
+    register_interrupt_handler(0x23, interrupt_35_asm_entry);
+    register_interrupt_handler(0x24, interrupt_36_asm_entry);
+    register_interrupt_handler(0x25, interrupt_37_asm_entry);
+    register_interrupt_handler(0x26, interrupt_38_asm_entry);
+    register_interrupt_handler(0x27, interrupt_39_asm_entry);
+    register_interrupt_handler(0x28, interrupt_40_asm_entry);
+    register_interrupt_handler(0x29, interrupt_41_asm_entry);
+    register_interrupt_handler(0x2a, interrupt_42_asm_entry);
+    register_interrupt_handler(0x2b, interrupt_43_asm_entry);
+    register_interrupt_handler(0x2c, interrupt_44_asm_entry);
+    register_interrupt_handler(0x2d, interrupt_45_asm_entry);
+    register_interrupt_handler(0x2e, interrupt_46_asm_entry);
+    register_interrupt_handler(0x2f, interrupt_47_asm_entry);
+    register_interrupt_handler(0x30, interrupt_48_asm_entry);
+    register_interrupt_handler(0x31, interrupt_49_asm_entry);
+    register_interrupt_handler(0x32, interrupt_50_asm_entry);
+    register_interrupt_handler(0x33, interrupt_51_asm_entry);
+    register_interrupt_handler(0x34, interrupt_52_asm_entry);
+    register_interrupt_handler(0x35, interrupt_53_asm_entry);
+    register_interrupt_handler(0x36, interrupt_54_asm_entry);
+    register_interrupt_handler(0x37, interrupt_55_asm_entry);
+    register_interrupt_handler(0x38, interrupt_56_asm_entry);
+    register_interrupt_handler(0x39, interrupt_57_asm_entry);
+    register_interrupt_handler(0x3a, interrupt_58_asm_entry);
+    register_interrupt_handler(0x3b, interrupt_59_asm_entry);
+    register_interrupt_handler(0x3c, interrupt_60_asm_entry);
+    register_interrupt_handler(0x3d, interrupt_61_asm_entry);
+    register_interrupt_handler(0x3e, interrupt_62_asm_entry);
+    register_interrupt_handler(0x3f, interrupt_63_asm_entry);
+    register_interrupt_handler(0x40, interrupt_64_asm_entry);
+    register_interrupt_handler(0x41, interrupt_65_asm_entry);
+    register_interrupt_handler(0x42, interrupt_66_asm_entry);
+    register_interrupt_handler(0x43, interrupt_67_asm_entry);
+    register_interrupt_handler(0x44, interrupt_68_asm_entry);
+    register_interrupt_handler(0x45, interrupt_69_asm_entry);
+    register_interrupt_handler(0x46, interrupt_70_asm_entry);
+    register_interrupt_handler(0x47, interrupt_71_asm_entry);
+    register_interrupt_handler(0x48, interrupt_72_asm_entry);
+    register_interrupt_handler(0x49, interrupt_73_asm_entry);
+    register_interrupt_handler(0x4a, interrupt_74_asm_entry);
+    register_interrupt_handler(0x4b, interrupt_75_asm_entry);
+    register_interrupt_handler(0x4c, interrupt_76_asm_entry);
+    register_interrupt_handler(0x4d, interrupt_77_asm_entry);
+    register_interrupt_handler(0x4e, interrupt_78_asm_entry);
+    register_interrupt_handler(0x4f, interrupt_79_asm_entry);
     register_interrupt_handler(0x50, interrupt_80_asm_entry);
     register_interrupt_handler(0x51, interrupt_81_asm_entry);
     register_interrupt_handler(0x52, interrupt_82_asm_entry);
