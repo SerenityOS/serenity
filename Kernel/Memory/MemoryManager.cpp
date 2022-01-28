@@ -759,12 +759,9 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages)
 {
     VERIFY(!(size % PAGE_SIZE));
-    dma_buffer_pages = allocate_contiguous_supervisor_physical_pages(size);
-    if (dma_buffer_pages.is_empty())
-        return ENOMEM;
+    dma_buffer_pages = TRY(allocate_contiguous_supervisor_physical_pages(size));
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
-    auto region_or_error = allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access, Region::Cacheable::No);
-    return region_or_error;
+    return allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access, Region::Cacheable::No);
 }
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access)
@@ -939,7 +936,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
     return page;
 }
 
-NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
+ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(s_mm_lock);
@@ -948,15 +945,11 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
 
     if (physical_pages.is_empty()) {
         dmesgln("MM: no super physical pages available");
-        VERIFY_NOT_REACHED();
-        return {};
+        return ENOMEM;
     }
 
     {
-        auto region_or_error = MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write);
-        if (region_or_error.is_error())
-            TODO();
-        auto cleanup_region = region_or_error.release_value();
+        auto cleanup_region = TRY(MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write));
         memset(cleanup_region->vaddr().as_ptr(), 0, PAGE_SIZE * count);
     }
     m_system_memory_info.super_physical_pages_used += count;
