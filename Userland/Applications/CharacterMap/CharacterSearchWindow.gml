@@ -15,7 +15,7 @@
         }
     }
 
-    @GUI::ListView {
-        name: "results_list"
+    @GUI::TableView {
+        name: "results_table"
     }
 }

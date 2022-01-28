@@ -8,7 +8,7 @@
 
 #include "CharacterMapWidget.h"
 #include <LibGUI/Button.h>
-#include <LibGUI/ListView.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 
 class CharacterSearchWidget final : public GUI::Widget {
@@ -26,5 +26,5 @@ private:
 
     RefPtr<GUI::TextBox> m_search_input;
     RefPtr<GUI::Button> m_search_button;
-    RefPtr<GUI::ListView> m_results_list;
+    RefPtr<GUI::TableView> m_results_table;
 };
