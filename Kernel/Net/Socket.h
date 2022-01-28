@@ -132,7 +132,7 @@ protected:
 
     ErrorOr<void> so_error() const
     {
-        VERIFY(m_mutex.is_locked_by_current_thread());
+        VERIFY(m_mutex.is_exclusively_locked_by_current_thread());
         return m_so_error;
     }
 

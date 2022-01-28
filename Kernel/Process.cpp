@@ -105,7 +105,7 @@ void Process::kill_threads_except_self()
     });
 
     u32 dropped_lock_count = 0;
-    if (big_lock().force_unlock_if_locked(dropped_lock_count) != LockMode::Unlocked)
+    if (big_lock().force_unlock_exclusive_if_locked(dropped_lock_count) != LockMode::Unlocked)
         dbgln("Process {} big lock had {} locks", *this, dropped_lock_count);
 }
 

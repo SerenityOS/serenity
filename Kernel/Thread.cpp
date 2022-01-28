@@ -193,7 +193,7 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
         // Yield to the scheduler, and wait for us to resume unblocked.
         VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
         VERIFY(Processor::in_critical());
-        if (&lock != &big_lock && big_lock.is_locked_by_current_thread()) {
+        if (&lock != &big_lock && big_lock.is_exclusively_locked_by_current_thread()) {
             // We're locking another lock and already hold the big lock...
             // We need to release the big lock
             yield_and_release_relock_big_lock();
@@ -390,7 +390,7 @@ void Thread::exit(void* exit_value)
 void Thread::yield_without_releasing_big_lock(VerifyLockNotHeld verify_lock_not_held)
 {
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
-    VERIFY(verify_lock_not_held == VerifyLockNotHeld::No || !process().big_lock().is_locked_by_current_thread());
+    VERIFY(verify_lock_not_held == VerifyLockNotHeld::No || !process().big_lock().is_exclusively_locked_by_current_thread());
     // Disable interrupts here. This ensures we don't accidentally switch contexts twice
     InterruptDisabler disable;
     Scheduler::yield(); // flag a switch
@@ -415,7 +415,7 @@ void Thread::yield_and_release_relock_big_lock()
 
 LockMode Thread::unlock_process_if_locked(u32& lock_count_to_restore)
 {
-    return process().big_lock().force_unlock_if_locked(lock_count_to_restore);
+    return process().big_lock().force_unlock_exclusive_if_locked(lock_count_to_restore);
 }
 
 void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
@@ -433,7 +433,7 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 
     if (previous_locked != LockMode::Unlocked) {
         // We've unblocked, relock the process if needed and carry on.
-        process().big_lock().restore_lock(previous_locked, lock_count_to_restore);
+        process().big_lock().restore_exclusive_lock(lock_count_to_restore);
     }
 }
 
