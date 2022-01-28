@@ -73,16 +73,15 @@ static void clip_plane(Vector<Vertex>& read_list, Vector<Vertex>& write_list, Cl
         auto const& curr_vec = read_from->at((i + 1) % read_from->size());
         auto const& prev_vec = read_from->at(i);
 
-        if (point_within_clip_plane(curr_vec.clip_coordinates, plane)) {
-            if (!point_within_clip_plane(prev_vec.clip_coordinates, plane)) {
-                auto const intersect = clip_intersection_point(prev_vec, curr_vec, plane);
-                write_to->append(intersect);
-            }
-            write_to->append(curr_vec);
-        } else if (point_within_clip_plane(prev_vec.clip_coordinates, plane)) {
+        bool const is_curr_point_within_clip_plane = point_within_clip_plane(curr_vec.clip_coordinates, plane);
+        bool const is_prev_point_within_clip_plane = point_within_clip_plane(prev_vec.clip_coordinates, plane);
+        if (is_curr_point_within_clip_plane != is_prev_point_within_clip_plane) {
             auto const intersect = clip_intersection_point(prev_vec, curr_vec, plane);
             write_to->append(intersect);
         }
+
+        if (is_curr_point_within_clip_plane)
+            write_to->append(curr_vec);
     }
     swap(write_list, read_list);
 }
