@@ -77,7 +77,6 @@ static bool is_a_tty = false;
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty"));
-    tzset();
 
     struct winsize ws;
     int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
