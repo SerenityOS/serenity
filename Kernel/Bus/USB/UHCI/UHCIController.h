@@ -42,7 +42,7 @@ public:
     virtual ErrorOr<void> reset() override;
     virtual ErrorOr<void> stop() override;
     virtual ErrorOr<void> start() override;
-    void spawn_port_process();
+    ErrorOr<void> spawn_port_process();
 
     virtual ErrorOr<size_t> submit_control_transfer(Transfer& transfer) override;
 
