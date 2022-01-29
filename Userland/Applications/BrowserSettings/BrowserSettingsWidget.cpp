@@ -59,14 +59,8 @@ BrowserSettingsWidget::BrowserSettingsWidget()
 {
     load_from_gml(browser_settings_widget_gml);
 
-    auto& homepage_image_label = *find_descendant_of_type_named<GUI::Label>("homepage_image_label");
-    homepage_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/home.png").release_value_but_fixme_should_propagate_errors());
-
     m_homepage_url_textbox = find_descendant_of_type_named<GUI::TextBox>("homepage_url_textbox");
     m_homepage_url_textbox->set_text(Config::read_string("Browser", "Preferences", "Home", default_homepage_url));
-
-    auto& appearance_image_label = *find_descendant_of_type_named<GUI::Label>("appearance_image_label");
-    appearance_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/color-chooser.png").release_value_but_fixme_should_propagate_errors());
 
     m_color_scheme_combobox = find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combobox");
     m_color_scheme_combobox->set_only_allow_values_from_model(true);
@@ -76,9 +70,6 @@ BrowserSettingsWidget::BrowserSettingsWidget()
 
     m_show_bookmarks_bar_checkbox = find_descendant_of_type_named<GUI::CheckBox>("show_bookmarks_bar_checkbox");
     m_show_bookmarks_bar_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "ShowBookmarksBar", default_show_bookmarks_bar), GUI::AllowCallback::No);
-
-    auto& search_engine_image_label = *find_descendant_of_type_named<GUI::Label>("search_engine_image_label");
-    search_engine_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/search-engine.png").release_value_but_fixme_should_propagate_errors());
 
     m_enable_search_engine_checkbox = find_descendant_of_type_named<GUI::CheckBox>("enable_search_engine_checkbox");
     m_search_engine_combobox_group = find_descendant_of_type_named<GUI::Widget>("search_engine_combobox_group");
@@ -109,9 +100,6 @@ BrowserSettingsWidget::BrowserSettingsWidget()
         m_custom_search_engine_group->set_enabled(m_is_custom_search_engine);
     };
     set_search_engine_url(Config::read_string("Browser", "Preferences", "SearchEngine", default_search_engine));
-
-    auto& download_image_label = *find_descendant_of_type_named<GUI::Label>("download_image_label");
-    download_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/downloads.png").release_value_but_fixme_should_propagate_errors());
 
     m_auto_close_download_windows_checkbox = find_descendant_of_type_named<GUI::CheckBox>("auto_close_download_windows_checkbox");
     m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", default_auto_close_download_windows), GUI::AllowCallback::No);
