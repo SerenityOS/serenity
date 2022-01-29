@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Math.h>
 #include <AK/Weakable.h>
 #include <Kernel/Devices/Device.h>
 
@@ -56,6 +57,7 @@ public:
     virtual ~BlockDevice() override;
 
     size_t block_size() const { return m_block_size; }
+    u8 block_size_log() const { return m_block_size_log; }
     virtual bool is_seekable() const override { return true; }
 
     bool read_block(u64 index, UserOrKernelBuffer&);
@@ -70,12 +72,15 @@ protected:
     {
         // 512 is the minimum sector size in most block devices
         VERIFY(m_block_size >= 512);
+        VERIFY(is_power_of_two(m_block_size));
+        m_block_size_log = AK::log2(m_block_size);
     }
 
 private:
     virtual bool is_block_device() const final { return true; }
 
     size_t m_block_size { 0 };
+    u8 m_block_size_log { 0 };
 };
 
 }
