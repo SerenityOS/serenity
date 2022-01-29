@@ -15,6 +15,7 @@ public:
     struct Resolution {
         size_t width;
         size_t height;
+        size_t bpp;
         Optional<size_t> refresh_rate;
     };
 
