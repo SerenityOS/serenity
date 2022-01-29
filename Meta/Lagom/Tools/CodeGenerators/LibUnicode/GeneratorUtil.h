@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,10 +23,10 @@
 #include <LibUnicode/Locale.h>
 
 template<class T>
-inline constexpr bool StorageTypeIsList = false;
+constexpr bool StorageTypeIsList = false;
 
 template<class T>
-inline constexpr bool StorageTypeIsList<Vector<T>> = true;
+constexpr bool StorageTypeIsList<Vector<T>> = true;
 
 template<typename T>
 concept IntegralOrEnum = Integral<T> || Enum<T>;

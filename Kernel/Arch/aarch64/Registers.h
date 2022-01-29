@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, James Mintram <me@jamesrm.com>
  * Copyright (c) 2021, Marcin Undak <mcinek@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -145,7 +146,7 @@ struct TCR_EL1 {
         return tcr_el1;
     }
 
-    static inline constexpr TCR_EL1 reset_value()
+    static constexpr TCR_EL1 reset_value()
     {
         return {};
     }
@@ -220,7 +221,7 @@ struct SCTLR_EL1 {
         return sctlr;
     }
 
-    static inline constexpr SCTLR_EL1 reset_value()
+    static constexpr SCTLR_EL1 reset_value()
     {
         SCTLR_EL1 system_control_register_el1 = {};
         system_control_register_el1.LSMAOE = 1;

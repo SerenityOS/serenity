@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -168,11 +169,11 @@ struct Blank {
 };
 
 template<typename A, typename P>
-inline constexpr bool IsTypeInPack = false;
+constexpr bool IsTypeInPack = false;
 
 // IsTypeInPack<T, Pack<Ts...>> will just return whether 'T' exists in 'Ts'.
 template<typename T, typename... Ts>
-inline constexpr bool IsTypeInPack<T, ParameterPack<Ts...>> = (IsSame<T, Ts> || ...);
+constexpr bool IsTypeInPack<T, ParameterPack<Ts...>> = (IsSame<T, Ts> || ...);
 
 // Replaces T with Blank<T> if it exists in Qs.
 template<typename T, typename... Qs>

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,10 +35,10 @@ struct Formatter {
 };
 
 template<typename T, typename = void>
-inline constexpr bool HasFormatter = true;
+constexpr bool HasFormatter = true;
 
 template<typename T>
-inline constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defined> = false;
+constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defined> = false;
 
 constexpr size_t max_format_arguments = 256;
 

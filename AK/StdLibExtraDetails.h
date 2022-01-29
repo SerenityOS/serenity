@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -65,75 +66,75 @@ template<typename...>
 using VoidType = void;
 
 template<class T>
-inline constexpr bool IsLvalueReference = false;
+constexpr bool IsLvalueReference = false;
 
 template<class T>
-inline constexpr bool IsLvalueReference<T&> = true;
+constexpr bool IsLvalueReference<T&> = true;
 
 template<class T>
-inline constexpr bool __IsPointerHelper = false;
+constexpr bool __IsPointerHelper = false;
 
 template<class T>
-inline constexpr bool __IsPointerHelper<T*> = true;
+constexpr bool __IsPointerHelper<T*> = true;
 
 template<class T>
-inline constexpr bool IsPointer = __IsPointerHelper<RemoveCV<T>>;
+constexpr bool IsPointer = __IsPointerHelper<RemoveCV<T>>;
 
 template<class>
-inline constexpr bool IsFunction = false;
+constexpr bool IsFunction = false;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...)> = true;
+constexpr bool IsFunction<Ret(Args...)> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...)> = true;
+constexpr bool IsFunction<Ret(Args..., ...)> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) const> = true;
+constexpr bool IsFunction<Ret(Args...) const> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) const> = true;
+constexpr bool IsFunction<Ret(Args..., ...) const> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) volatile> = true;
+constexpr bool IsFunction<Ret(Args...) volatile> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) volatile> = true;
+constexpr bool IsFunction<Ret(Args..., ...) volatile> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) const volatile> = true;
+constexpr bool IsFunction<Ret(Args...) const volatile> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) const volatile> = true;
+constexpr bool IsFunction<Ret(Args..., ...) const volatile> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...)&> = true;
+constexpr bool IsFunction<Ret(Args...)&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...)&> = true;
+constexpr bool IsFunction<Ret(Args..., ...)&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) const&> = true;
+constexpr bool IsFunction<Ret(Args...) const&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) const&> = true;
+constexpr bool IsFunction<Ret(Args..., ...) const&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) volatile&> = true;
+constexpr bool IsFunction<Ret(Args...) volatile&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) volatile&> = true;
+constexpr bool IsFunction<Ret(Args..., ...) volatile&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) const volatile&> = true;
+constexpr bool IsFunction<Ret(Args...) const volatile&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) const volatile&> = true;
+constexpr bool IsFunction<Ret(Args..., ...) const volatile&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) &&> = true;
+constexpr bool IsFunction<Ret(Args...) &&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) &&> = true;
+constexpr bool IsFunction<Ret(Args..., ...) &&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) const&&> = true;
+constexpr bool IsFunction<Ret(Args...) const&&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) const&&> = true;
+constexpr bool IsFunction<Ret(Args..., ...) const&&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) volatile&&> = true;
+constexpr bool IsFunction<Ret(Args...) volatile&&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) volatile&&> = true;
+constexpr bool IsFunction<Ret(Args..., ...) volatile&&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) const volatile&&> = true;
+constexpr bool IsFunction<Ret(Args...) const volatile&&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) const volatile&&> = true;
+constexpr bool IsFunction<Ret(Args..., ...) const volatile&&> = true;
 
 template<class T>
-inline constexpr bool IsRvalueReference = false;
+constexpr bool IsRvalueReference = false;
 template<class T>
-inline constexpr bool IsRvalueReference<T&&> = true;
+constexpr bool IsRvalueReference<T&&> = true;
 
 template<class T>
 struct __RemovePointer {
@@ -159,10 +160,10 @@ template<typename T>
 using RemovePointer = typename __RemovePointer<T>::Type;
 
 template<typename T, typename U>
-inline constexpr bool IsSame = false;
+constexpr bool IsSame = false;
 
 template<typename T>
-inline constexpr bool IsSame<T, T> = true;
+constexpr bool IsSame<T, T> = true;
 
 template<bool condition, class TrueType, class FalseType>
 struct __Conditional {
@@ -178,7 +179,7 @@ template<bool condition, class TrueType, class FalseType>
 using Conditional = typename __Conditional<condition, TrueType, FalseType>::Type;
 
 template<typename T>
-inline constexpr bool IsNullPointer = IsSame<decltype(nullptr), RemoveCV<T>>;
+constexpr bool IsNullPointer = IsSame<decltype(nullptr), RemoveCV<T>>;
 
 template<typename T>
 struct __RemoveReference {
@@ -344,62 +345,62 @@ template<typename... Ts>
 using CommonType = typename __CommonType<Ts...>::Type;
 
 template<class T>
-inline constexpr bool IsVoid = IsSame<void, RemoveCV<T>>;
+constexpr bool IsVoid = IsSame<void, RemoveCV<T>>;
 
 template<class T>
-inline constexpr bool IsConst = false;
+constexpr bool IsConst = false;
 
 template<class T>
-inline constexpr bool IsConst<const T> = true;
+constexpr bool IsConst<const T> = true;
 
 template<typename T>
-inline constexpr bool IsEnum = __is_enum(T);
+constexpr bool IsEnum = __is_enum(T);
 
 template<typename T>
-inline constexpr bool IsUnion = __is_union(T);
+constexpr bool IsUnion = __is_union(T);
 
 template<typename T>
-inline constexpr bool IsClass = __is_class(T);
+constexpr bool IsClass = __is_class(T);
 
 template<typename Base, typename Derived>
-inline constexpr bool IsBaseOf = __is_base_of(Base, Derived);
+constexpr bool IsBaseOf = __is_base_of(Base, Derived);
 
 template<typename T>
-inline constexpr bool __IsIntegral = false;
+constexpr bool __IsIntegral = false;
 
 template<>
-inline constexpr bool __IsIntegral<bool> = true;
+constexpr bool __IsIntegral<bool> = true;
 template<>
-inline constexpr bool __IsIntegral<unsigned char> = true;
+constexpr bool __IsIntegral<unsigned char> = true;
 template<>
-inline constexpr bool __IsIntegral<char8_t> = true;
+constexpr bool __IsIntegral<char8_t> = true;
 template<>
-inline constexpr bool __IsIntegral<char16_t> = true;
+constexpr bool __IsIntegral<char16_t> = true;
 template<>
-inline constexpr bool __IsIntegral<char32_t> = true;
+constexpr bool __IsIntegral<char32_t> = true;
 template<>
-inline constexpr bool __IsIntegral<unsigned short> = true;
+constexpr bool __IsIntegral<unsigned short> = true;
 template<>
-inline constexpr bool __IsIntegral<unsigned int> = true;
+constexpr bool __IsIntegral<unsigned int> = true;
 template<>
-inline constexpr bool __IsIntegral<unsigned long> = true;
+constexpr bool __IsIntegral<unsigned long> = true;
 template<>
-inline constexpr bool __IsIntegral<unsigned long long> = true;
-
-template<typename T>
-inline constexpr bool IsIntegral = __IsIntegral<MakeUnsigned<RemoveCV<T>>>;
+constexpr bool __IsIntegral<unsigned long long> = true;
 
 template<typename T>
-inline constexpr bool __IsFloatingPoint = false;
-template<>
-inline constexpr bool __IsFloatingPoint<float> = true;
-template<>
-inline constexpr bool __IsFloatingPoint<double> = true;
-template<>
-inline constexpr bool __IsFloatingPoint<long double> = true;
+constexpr bool IsIntegral = __IsIntegral<MakeUnsigned<RemoveCV<T>>>;
 
 template<typename T>
-inline constexpr bool IsFloatingPoint = __IsFloatingPoint<RemoveCV<T>>;
+constexpr bool __IsFloatingPoint = false;
+template<>
+constexpr bool __IsFloatingPoint<float> = true;
+template<>
+constexpr bool __IsFloatingPoint<double> = true;
+template<>
+constexpr bool __IsFloatingPoint<long double> = true;
+
+template<typename T>
+constexpr bool IsFloatingPoint = __IsFloatingPoint<RemoveCV<T>>;
 
 template<typename ReferenceType, typename T>
 using CopyConst = Conditional<IsConst<ReferenceType>, AddConst<T>, RemoveConst<T>>;
@@ -411,16 +412,16 @@ template<typename... _Ignored>
 constexpr auto DependentFalse = false;
 
 template<typename T>
-inline constexpr bool IsSigned = IsSame<T, MakeSigned<T>>;
+constexpr bool IsSigned = IsSame<T, MakeSigned<T>>;
 
 template<typename T>
-inline constexpr bool IsUnsigned = IsSame<T, MakeUnsigned<T>>;
+constexpr bool IsUnsigned = IsSame<T, MakeUnsigned<T>>;
 
 template<typename T>
-inline constexpr bool IsArithmetic = IsIntegral<T> || IsFloatingPoint<T>;
+constexpr bool IsArithmetic = IsIntegral<T> || IsFloatingPoint<T>;
 
 template<typename T>
-inline constexpr bool IsFundamental = IsArithmetic<T> || IsVoid<T> || IsNullPointer<T>;
+constexpr bool IsFundamental = IsArithmetic<T> || IsVoid<T> || IsNullPointer<T>;
 
 template<typename T, T... Ts>
 struct IntegerSequence {
@@ -491,71 +492,71 @@ template<typename T, unsigned ExpectedSize>
 using AssertSize = __AssertSize<T, ExpectedSize, sizeof(T)>;
 
 template<typename T>
-inline constexpr bool IsPOD = __is_pod(T);
+constexpr bool IsPOD = __is_pod(T);
 
 template<typename T>
-inline constexpr bool IsTrivial = __is_trivial(T);
+constexpr bool IsTrivial = __is_trivial(T);
 
 template<typename T>
-inline constexpr bool IsTriviallyCopyable = __is_trivially_copyable(T);
+constexpr bool IsTriviallyCopyable = __is_trivially_copyable(T);
 
 template<typename T, typename... Args>
-inline constexpr bool IsCallableWithArguments = requires(T t) { t(declval<Args>()...); };
+constexpr bool IsCallableWithArguments = requires(T t) { t(declval<Args>()...); };
 
 template<typename T, typename... Args>
-inline constexpr bool IsConstructible = requires { ::new T(declval<Args>()...); };
+constexpr bool IsConstructible = requires { ::new T(declval<Args>()...); };
 
 template<typename T, typename... Args>
-inline constexpr bool IsTriviallyConstructible = __is_trivially_constructible(T, Args...);
+constexpr bool IsTriviallyConstructible = __is_trivially_constructible(T, Args...);
 
 template<typename From, typename To>
-inline constexpr bool IsConvertible = requires { declval<void (*)(To)>()(declval<From>()); };
+constexpr bool IsConvertible = requires { declval<void (*)(To)>()(declval<From>()); };
 
 template<typename T, typename U>
-inline constexpr bool IsAssignable = requires { declval<T>() = declval<U>(); };
+constexpr bool IsAssignable = requires { declval<T>() = declval<U>(); };
 
 template<typename T, typename U>
-inline constexpr bool IsTriviallyAssignable = __is_trivially_assignable(T, U);
+constexpr bool IsTriviallyAssignable = __is_trivially_assignable(T, U);
 
 template<typename T>
-inline constexpr bool IsDestructible = requires { declval<T>().~T(); };
+constexpr bool IsDestructible = requires { declval<T>().~T(); };
 
 template<typename T>
 #if defined(__clang__)
-inline constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);
+constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);
 #else
-inline constexpr bool IsTriviallyDestructible = __has_trivial_destructor(T) && IsDestructible<T>;
+constexpr bool IsTriviallyDestructible = __has_trivial_destructor(T) && IsDestructible<T>;
 #endif
 
 template<typename T>
-inline constexpr bool IsCopyConstructible = IsConstructible<T, AddLvalueReference<AddConst<T>>>;
+constexpr bool IsCopyConstructible = IsConstructible<T, AddLvalueReference<AddConst<T>>>;
 
 template<typename T>
-inline constexpr bool IsTriviallyCopyConstructible = IsTriviallyConstructible<T, AddLvalueReference<AddConst<T>>>;
+constexpr bool IsTriviallyCopyConstructible = IsTriviallyConstructible<T, AddLvalueReference<AddConst<T>>>;
 
 template<typename T>
-inline constexpr bool IsCopyAssignable = IsAssignable<AddLvalueReference<T>, AddLvalueReference<AddConst<T>>>;
+constexpr bool IsCopyAssignable = IsAssignable<AddLvalueReference<T>, AddLvalueReference<AddConst<T>>>;
 
 template<typename T>
-inline constexpr bool IsTriviallyCopyAssignable = IsTriviallyAssignable<AddLvalueReference<T>, AddLvalueReference<AddConst<T>>>;
+constexpr bool IsTriviallyCopyAssignable = IsTriviallyAssignable<AddLvalueReference<T>, AddLvalueReference<AddConst<T>>>;
 
 template<typename T>
-inline constexpr bool IsMoveConstructible = IsConstructible<T, AddRvalueReference<T>>;
+constexpr bool IsMoveConstructible = IsConstructible<T, AddRvalueReference<T>>;
 
 template<typename T>
-inline constexpr bool IsTriviallyMoveConstructible = IsTriviallyConstructible<T, AddRvalueReference<T>>;
+constexpr bool IsTriviallyMoveConstructible = IsTriviallyConstructible<T, AddRvalueReference<T>>;
 
 template<typename T>
-inline constexpr bool IsMoveAssignable = IsAssignable<AddLvalueReference<T>, AddRvalueReference<T>>;
+constexpr bool IsMoveAssignable = IsAssignable<AddLvalueReference<T>, AddRvalueReference<T>>;
 
 template<typename T>
-inline constexpr bool IsTriviallyMoveAssignable = IsTriviallyAssignable<AddLvalueReference<T>, AddRvalueReference<T>>;
+constexpr bool IsTriviallyMoveAssignable = IsTriviallyAssignable<AddLvalueReference<T>, AddRvalueReference<T>>;
 
 template<typename T, template<typename...> typename U>
-inline constexpr bool IsSpecializationOf = false;
+constexpr bool IsSpecializationOf = false;
 
 template<template<typename...> typename U, typename... Us>
-inline constexpr bool IsSpecializationOf<U<Us...>, U> = true;
+constexpr bool IsSpecializationOf<U<Us...>, U> = true;
 
 template<typename T>
 struct __decay {
@@ -574,12 +575,12 @@ template<typename T>
 using Decay = typename __decay<T>::type;
 
 template<typename T, typename U>
-inline constexpr bool IsPointerOfType = IsPointer<Decay<U>>&& IsSame<T, RemoveCV<RemovePointer<Decay<U>>>>;
+constexpr bool IsPointerOfType = IsPointer<Decay<U>>&& IsSame<T, RemoveCV<RemovePointer<Decay<U>>>>;
 
 template<typename T, typename U>
-inline constexpr bool IsHashCompatible = false;
+constexpr bool IsHashCompatible = false;
 template<typename T>
-inline constexpr bool IsHashCompatible<T, T> = true;
+constexpr bool IsHashCompatible<T, T> = true;
 
 }
 using AK::Detail::AddConst;

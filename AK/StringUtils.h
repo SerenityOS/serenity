@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Fei Wu <f.eiwu@yahoo.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ namespace AK {
 
 namespace Detail {
 template<Concepts::AnyString T, Concepts::AnyString U>
-inline constexpr bool IsHashCompatible<T, U> = true;
+constexpr bool IsHashCompatible<T, U> = true;
 }
 
 enum class CaseSensitivity {

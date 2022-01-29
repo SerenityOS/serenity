@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,12 +24,12 @@ requires(sizeof(T) >= sizeof(u64) && IsUnsigned<T>) class UFixedBigInt;
 
 // FIXME: This breaks formatting
 // template<typename T>
-// constexpr inline bool Detail::IsIntegral<UFixedBigInt<T>> = true;
+// constexpr bool Detail::IsIntegral<UFixedBigInt<T>> = true;
 
 template<typename T>
-constexpr inline bool Detail::IsUnsigned<UFixedBigInt<T>> = true;
+constexpr bool Detail::IsUnsigned<UFixedBigInt<T>> = true;
 template<typename T>
-constexpr inline bool Detail::IsSigned<UFixedBigInt<T>> = false;
+constexpr bool Detail::IsSigned<UFixedBigInt<T>> = false;
 
 template<typename T>
 struct NumericLimits<UFixedBigInt<T>> {

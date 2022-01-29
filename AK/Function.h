@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2016 Apple Inc. All rights reserved.
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -40,11 +41,11 @@ template<typename>
 class Function;
 
 template<typename F>
-inline constexpr bool IsFunctionPointer = (IsPointer<F> && IsFunction<RemovePointer<F>>);
+constexpr bool IsFunctionPointer = (IsPointer<F> && IsFunction<RemovePointer<F>>);
 
 // Not a function pointer, and not an lvalue reference.
 template<typename F>
-inline constexpr bool IsFunctionObject = (!IsFunctionPointer<F> && IsRvalueReference<F&&>);
+constexpr bool IsFunctionObject = (!IsFunctionPointer<F> && IsRvalueReference<F&&>);
 
 template<typename Out, typename... In>
 class Function<Out(In...)> {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nick Johnson <sylvyrfysh@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,7 +10,7 @@
 #include "Concepts.h"
 
 template<Unsigned IntType>
-inline constexpr int popcount(IntType value)
+constexpr int popcount(IntType value)
 {
 #if defined(__GNUC__) || defined(__clang__)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
@@ -37,7 +38,7 @@ inline constexpr int popcount(IntType value)
 // this function can be called with zero, the use of
 // count_trailing_zeroes_safe is preferred.
 template<Unsigned IntType>
-inline constexpr int count_trailing_zeroes(IntType value)
+constexpr int count_trailing_zeroes(IntType value)
 {
 #if defined(__GNUC__) || defined(__clang__)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
@@ -62,7 +63,7 @@ inline constexpr int count_trailing_zeroes(IntType value)
 // the given number is zero, this function will return the number of bits
 // bits in the IntType.
 template<Unsigned IntType>
-inline constexpr int count_trailing_zeroes_safe(IntType value)
+constexpr int count_trailing_zeroes_safe(IntType value)
 {
     if (value == 0)
         return 8 * sizeof(IntType);
@@ -75,7 +76,7 @@ inline constexpr int count_trailing_zeroes_safe(IntType value)
 // this function can be called with zero, the use of
 // count_leading_zeroes_safe is preferred.
 template<Unsigned IntType>
-inline constexpr int count_leading_zeroes(IntType value)
+constexpr int count_leading_zeroes(IntType value)
 {
 #if defined(__GNUC__) || defined(__clang__)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
@@ -101,7 +102,7 @@ inline constexpr int count_leading_zeroes(IntType value)
 // the given number is zero, this function will return the number of bits
 // in the IntType.
 template<Unsigned IntType>
-inline constexpr int count_leading_zeroes_safe(IntType value)
+constexpr int count_leading_zeroes_safe(IntType value)
 {
     if (value == 0)
         return 8 * sizeof(IntType);
@@ -112,7 +113,7 @@ inline constexpr int count_leading_zeroes_safe(IntType value)
 // the given number is zero, this function will return the number of bits
 // in the IntType.
 template<Integral IntType>
-inline constexpr int bit_scan_forward(IntType value)
+constexpr int bit_scan_forward(IntType value)
 {
 #if defined(__GNUC__) || defined(__clang__)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -65,8 +66,8 @@ extern HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<TLS::
 void request_did_finish(URL const&, Core::Socket const*);
 void dump_jobs();
 
-constexpr static inline size_t MaxConcurrentConnectionsPerURL = 2;
-constexpr static inline size_t ConnectionKeepAliveTimeMilliseconds = 10'000;
+constexpr static size_t MaxConcurrentConnectionsPerURL = 2;
+constexpr static size_t ConnectionKeepAliveTimeMilliseconds = 10'000;
 
 template<typename T>
 void recreate_socket_if_needed(T& connection, URL const& url)
