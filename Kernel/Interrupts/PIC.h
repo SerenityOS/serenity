@@ -10,6 +10,9 @@
 #include <Kernel/Interrupts/IRQController.h>
 
 namespace Kernel {
+
+static constexpr size_t pic_disabled_vector_base = 0x20;
+
 class PIC final : public IRQController {
 public:
     PIC();

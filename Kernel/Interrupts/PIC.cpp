@@ -148,7 +148,7 @@ void PIC::complete_eoi() const
 void PIC::hard_disable()
 {
     InterruptDisabler disabler;
-    remap(0x20);
+    remap(pic_disabled_vector_base);
     IO::out8(PIC0_CMD, 0xff);
     IO::out8(PIC1_CMD, 0xff);
     m_cached_irq_mask = 0xffff;
