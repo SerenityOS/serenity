@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/Segmenter.h>
@@ -28,6 +29,9 @@ void SegmenterConstructor::initialize(GlobalObject& global_object)
     // 18.2.1 Intl.Segmenter.prototype, https://tc39.es/ecma402/#sec-intl.segmenter.prototype
     define_direct_property(vm.names.prototype, global_object.intl_segmenter_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 }
 
 // 18.1.1 Intl.Segmenter ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.segmenter
@@ -81,6 +85,21 @@ ThrowCompletionOr<Object*> SegmenterConstructor::construct(FunctionObject& new_t
 
     // 14. Return segmenter.
     return segmenter;
+}
+
+// 18.2.2 Intl.Segmenter.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.segmenter.supportedlocalesof
+JS_DEFINE_NATIVE_FUNCTION(SegmenterConstructor::supported_locales_of)
+{
+    auto locales = vm.argument(0);
+    auto options = vm.argument(1);
+
+    // 1. Let availableLocales be %Segmenter%.[[AvailableLocales]].
+
+    // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
+    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+
+    // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
+    return TRY(supported_locales(global_object, requested_locales, options));
 }
 
 }
