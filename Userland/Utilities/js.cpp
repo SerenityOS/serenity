@@ -41,6 +41,7 @@
 #include <LibJS/Runtime/Intl/PluralRules.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/Intl/Segmenter.h>
+#include <LibJS/Runtime/Intl/Segments.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -841,6 +842,16 @@ static void print_intl_segmenter(JS::Object const& object, HashTable<JS::Object*
     print_value(js_string(object.vm(), segmenter.segmenter_granularity_string()), seen_objects);
 }
 
+static void print_intl_segments(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& segments = static_cast<JS::Intl::Segments const&>(object);
+    print_type("Segments");
+    out("\n  string: ");
+    print_value(js_string(object.vm(), segments.segments_string()), seen_objects);
+    out("\n  segmenter: ");
+    print_value(&segments.segments_segmenter(), seen_objects);
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -944,6 +955,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_intl_collator(object, seen_objects);
         if (is<JS::Intl::Segmenter>(object))
             return print_intl_segmenter(object, seen_objects);
+        if (is<JS::Intl::Segments>(object))
+            return print_intl_segments(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
