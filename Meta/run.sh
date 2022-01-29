@@ -38,8 +38,10 @@ if [ "$(uname)" = "Darwin" ]; then
         [ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-aarch64"
     fi
 
-    if $SERENITY_QEMU_BIN --accel help | grep -q hvf; then
-        SERENITY_VIRT_TECH_ARG="--accel hvf"
+    if [ "$(uname -m)" = "x86_64" ]; then
+        if $SERENITY_QEMU_BIN --accel help | grep -q hvf; then
+            SERENITY_VIRT_TECH_ARG="--accel hvf"
+        fi
     fi
 fi
 
