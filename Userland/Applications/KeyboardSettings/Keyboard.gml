@@ -23,7 +23,7 @@
             @GUI::Label {
                 fixed_width: 32
                 fixed_height: 32
-                name: "character_map_image_label"
+                icon: "/res/icons/32x32/app-keyboard-mapper.png"
             }
 
             @GUI::Widget
@@ -59,6 +59,7 @@
                     text: "Test your current keymap below"
                     text_alignment: "CenterLeft"
                 }
+
                 @GUI::Button {
                     text: "Clear"
                     name: "button_clear_test_typing_area"
@@ -85,7 +86,7 @@
         @GUI::Label {
             fixed_width: 32
             fixed_height: 32
-            name: "num_lock_image_label"
+            icon: "/res/icons/32x32/app-calculator.png"
         }
 
         @GUI::CheckBox {
