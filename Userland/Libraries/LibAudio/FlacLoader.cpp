@@ -8,6 +8,7 @@
 #include <AK/FixedArray.h>
 #include <AK/FlyString.h>
 #include <AK/Format.h>
+#include <AK/IntegralMath.h>
 #include <AK/Math.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>

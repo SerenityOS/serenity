@@ -8,7 +8,7 @@
 
 #include "RollWidget.h"
 #include "TrackManager.h"
-#include <AK/Math.h>
+#include <AK/IntegralMath.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGfx/Font.h>
