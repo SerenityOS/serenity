@@ -173,7 +173,7 @@ void WindowServerConnection::key_down(i32 window_id, u32 code_point, u32 key, u3
 
     if (auto* action = action_for_key_event(*window, *key_event)) {
         if (action->is_enabled()) {
-            action->flash_menubar_menu();
+            action->flash_menubar_menu(*window);
             action->activate();
             return;
         }
@@ -202,6 +202,7 @@ void WindowServerConnection::key_down(i32 window_id, u32 code_point, u32 key, u3
             return;
         auto* action = command_palette->selected_action();
         VERIFY(action);
+        action->flash_menubar_menu(*window);
         action->activate();
         return;
     }
