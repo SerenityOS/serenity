@@ -92,7 +92,7 @@ ErrorOr<void> BochsGraphicsAdapter::set_resolution(size_t output_port_index, siz
 {
     if (output_port_index != 0)
         return Error::from_errno(ENODEV);
-    return m_display_connector->set_resolution({ width, height, {} });
+    return m_display_connector->set_resolution({ width, height, 32, {} });
 }
 ErrorOr<void> BochsGraphicsAdapter::set_y_offset(size_t output_port_index, size_t y)
 {

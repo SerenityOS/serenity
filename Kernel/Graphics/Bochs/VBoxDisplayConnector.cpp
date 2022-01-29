@@ -50,6 +50,11 @@ ErrorOr<void> VBoxDisplayConnector::set_resolution(Resolution const& resolution)
     MutexLocker locker(m_modeset_lock);
     size_t width = resolution.width;
     size_t height = resolution.height;
+    size_t bpp = resolution.bpp;
+    if (bpp != 32) {
+        dbgln_if(BXVGA_DEBUG, "VBoxDisplayConnector - no support for non-32bpp resolutions");
+        return Error::from_errno(ENOTSUP);
+    }
 
     dbgln_if(BXVGA_DEBUG, "VBoxDisplayConnector resolution registers set to - {}x{}", width, height);
 
@@ -70,7 +75,8 @@ ErrorOr<void> VBoxDisplayConnector::set_resolution(Resolution const& resolution)
 ErrorOr<DisplayConnector::Resolution> VBoxDisplayConnector::get_resolution()
 {
     MutexLocker locker(m_modeset_lock);
-    return Resolution { get_register_with_io(to_underlying(BochsDISPIRegisters::XRES)), get_register_with_io(to_underlying(BochsDISPIRegisters::YRES)), {} };
+    auto width = get_register_with_io(to_underlying(BochsDISPIRegisters::XRES));
+    return Resolution { width, get_register_with_io(to_underlying(BochsDISPIRegisters::YRES)), 32, {} };
 }
 
 ErrorOr<void> VBoxDisplayConnector::set_y_offset(size_t y_offset)
