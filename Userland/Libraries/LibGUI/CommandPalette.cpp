@@ -7,6 +7,7 @@
 
 #include <AK/QuickSort.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CommandPalette.h>
@@ -20,22 +21,40 @@
 
 namespace GUI {
 
-class IconOrRadioButtonDelegate final : public GUI::TableCellPaintingDelegate {
+enum class IconFlags : unsigned {
+    Checkable = 0,
+    Exclusive = 1,
+    Checked = 2,
+};
+
+AK_ENUM_BITWISE_OPERATORS(IconFlags);
+
+class ActionIconDelegate final : public GUI::TableCellPaintingDelegate {
 public:
-    virtual ~IconOrRadioButtonDelegate() override { }
+    virtual ~ActionIconDelegate() override { }
 
     bool should_paint(ModelIndex const& index) override
     {
-        return index.data().is_bool();
+        return index.data().is_u32();
     }
 
     virtual void paint(GUI::Painter& painter, Gfx::IntRect const& cell_rect, Gfx::Palette const& palette, ModelIndex const& index) override
     {
-        auto checked = index.data().as_bool();
+        auto flags = static_cast<IconFlags>(index.data().as_u32());
+        VERIFY(has_flag(flags, IconFlags::Checkable));
 
-        Gfx::IntRect radio_rect { 0, 0, 12, 12 };
-        radio_rect.center_within(cell_rect);
-        Gfx::StylePainter::paint_radio_button(painter, radio_rect, palette, checked, false);
+        auto exclusive = has_flag(flags, IconFlags::Exclusive);
+        auto checked = has_flag(flags, IconFlags::Checked);
+
+        if (exclusive) {
+            Gfx::IntRect radio_rect { 0, 0, 12, 12 };
+            radio_rect.center_within(cell_rect);
+            Gfx::StylePainter::paint_radio_button(painter, radio_rect, palette, checked, false);
+        } else {
+            Gfx::IntRect radio_rect { 0, 0, 13, 13 };
+            radio_rect.center_within(cell_rect);
+            Gfx::StylePainter::paint_check_box(painter, radio_rect, palette, true, checked, false);
+        }
     }
 };
 
@@ -85,8 +104,17 @@ public:
         case Column::Icon:
             if (action.icon())
                 return *action.icon();
-            if (action.is_checkable())
-                return action.is_checked();
+            if (action.is_checkable()) {
+                auto flags = IconFlags::Checkable;
+
+                if (action.is_checked())
+                    flags |= IconFlags::Checked;
+
+                if (action.group() && action.group()->is_exclusive())
+                    flags |= IconFlags::Exclusive;
+
+                return (u32)flags;
+            }
             return "";
         case Column::Text:
             return Gfx::parse_ampersand_string(action.text());
@@ -135,7 +163,7 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
     m_filter_model = MUST(GUI::FilteringProxyModel::create(*m_model));
     m_filter_model->set_filter_term("");
 
-    m_table_view->set_column_painting_delegate(0, make<IconOrRadioButtonDelegate>());
+    m_table_view->set_column_painting_delegate(0, make<ActionIconDelegate>());
     m_table_view->set_model(*m_filter_model);
 
     m_text_box->on_change = [this] {
