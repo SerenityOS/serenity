@@ -115,6 +115,9 @@ set(SOURCES
     Runtime/Intl/RelativeTimeFormat.cpp
     Runtime/Intl/RelativeTimeFormatConstructor.cpp
     Runtime/Intl/RelativeTimeFormatPrototype.cpp
+    Runtime/Intl/Segmenter.cpp
+    Runtime/Intl/SegmenterConstructor.cpp
+    Runtime/Intl/SegmenterPrototype.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp

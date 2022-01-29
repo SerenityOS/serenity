@@ -240,6 +240,7 @@ namespace JS {
     P(getYear)                               \
     P(global)                                \
     P(globalThis)                            \
+    P(granularity)                           \
     P(group)                                 \
     P(groupBy)                               \
     P(groupByToMap)                          \
