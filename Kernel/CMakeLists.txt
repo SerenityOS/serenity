@@ -73,6 +73,7 @@ set(KERNEL_SOURCES
     Devices/HID/VMWareMouseDevice.cpp
     GlobalProcessExposed.cpp
     Graphics/Bochs/GraphicsAdapter.cpp
+    Graphics/Console/BootFramebufferConsole.cpp
     Graphics/Console/GenericFramebufferConsole.cpp
     Graphics/Console/ContiguousFramebufferConsole.cpp
     Graphics/Console/TextModeConsole.cpp
