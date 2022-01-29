@@ -111,6 +111,10 @@ int main(int argc, char** argv)
     auto parse_parameter = [&](Vector<Parameter>& storage) {
         for (;;) {
             Parameter parameter;
+            if (lexer.is_eof()) {
+                warnln("EOF when parsing parameter");
+                VERIFY_NOT_REACHED();
+            }
             consume_whitespace();
             if (lexer.peek() == ')')
                 break;
@@ -128,7 +132,10 @@ int main(int argc, char** argv)
                     consume_whitespace();
                 }
             }
+            // FIXME: This is not entirely correct. Types can have spaces, for example `HashMap<int, String>`.
+            //        Maybe we should use LibCpp::Parser for parsing types.
             parameter.type = lexer.consume_until([](char ch) { return isspace(ch); });
+            VERIFY(!lexer.is_eof());
             consume_whitespace();
             parameter.name = lexer.consume_until([](char ch) { return isspace(ch) || ch == ',' || ch == ')'; });
             consume_whitespace();
