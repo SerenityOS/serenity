@@ -354,7 +354,7 @@ static ThrowCompletionOr<String> resolve_best_locale(GlobalObject& global_object
     return locale;
 }
 
-// 18.1.2 String.prototype.toLocaleLowerCase ( [ locales ] ), https://tc39.es/ecma402/#sup-string.prototype.tolocalelowercase
+// 19.1.2 String.prototype.toLocaleLowerCase ( [ locales ] ), https://tc39.es/ecma402/#sup-string.prototype.tolocalelowercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_lowercase)
 {
     auto string = TRY(ak_string_from(vm, global_object));
@@ -363,7 +363,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_lowercase)
     return js_string(vm, move(lowercase));
 }
 
-// 18.1.3 String.prototype.toLocaleUpperCase ( [ locales ] ), https://tc39.es/ecma402/#sup-string.prototype.tolocaleuppercase
+// 19.1.3 String.prototype.toLocaleUpperCase ( [ locales ] ), https://tc39.es/ecma402/#sup-string.prototype.tolocaleuppercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
 {
     auto string = TRY(ak_string_from(vm, global_object));
