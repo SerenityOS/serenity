@@ -307,7 +307,7 @@ bool Scheduler::context_switch(Thread* thread)
 
     // NOTE: from_thread at this point reflects the thread we were
     // switched from, and thread reflects Thread::current()
-    enter_current(*from_thread, false);
+    enter_current(*from_thread);
     VERIFY(thread == Thread::current());
 
     if (thread->process().is_user_process() && thread->previous_mode() != Thread::PreviousMode::KernelMode && thread->current_trap()) {
@@ -321,7 +321,7 @@ bool Scheduler::context_switch(Thread* thread)
     return true;
 }
 
-void Scheduler::enter_current(Thread& prev_thread, bool is_first)
+void Scheduler::enter_current(Thread& prev_thread)
 {
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
 
@@ -337,15 +337,6 @@ void Scheduler::enter_current(Thread& prev_thread, bool is_first)
         // the finalizer. Note that as soon as we leave the scheduler lock
         // the finalizer may free from_thread!
         notify_finalizer();
-    } else if (!is_first) {
-        // Check if we have any signals we should deliver (even if we don't
-        // end up switching to another thread).
-        if (!current_thread->is_in_block() && current_thread->previous_mode() != Thread::PreviousMode::KernelMode && current_thread->current_trap()) {
-            SpinlockLocker lock(current_thread->get_lock());
-            if (current_thread->state() == Thread::Running && current_thread->pending_signals_for_state()) {
-                current_thread->dispatch_one_pending_signal();
-            }
-        }
     }
 }
 

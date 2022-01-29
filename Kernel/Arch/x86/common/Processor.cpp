@@ -1285,7 +1285,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 
     VERIFY(to_thread == Thread::current());
 
-    Scheduler::enter_current(*from_thread, true);
+    Scheduler::enter_current(*from_thread);
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);

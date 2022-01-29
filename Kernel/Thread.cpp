@@ -158,8 +158,6 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
     SpinlockLocker block_lock(m_block_lock);
     // We need to hold m_block_lock so that nobody can unblock a blocker as soon
     // as it is constructed and registered elsewhere
-    VERIFY(!m_in_block);
-    TemporaryChange in_block_change(m_in_block, true);
 
     ScopeGuard finalize_guard([&] {
         blocker.finalize();
@@ -264,8 +262,7 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
         TimerQueue::the().cancel_timer(*m_block_timer);
     }
     if (previous_locked != LockMode::Unlocked) {
-        // NOTE: this may trigger another call to Thread::block(), so
-        // we need to do this after we're all done and restored m_in_block!
+        // NOTE: This may trigger another call to Thread::block().
         relock_process(previous_locked, lock_count_to_restore);
     }
     return result;

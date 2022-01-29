@@ -39,7 +39,7 @@ public:
     static bool pick_next();
     static bool yield();
     static bool context_switch(Thread*);
-    static void enter_current(Thread& prev_thread, bool is_first);
+    static void enter_current(Thread& prev_thread);
     static void leave_on_first_switch(u32 flags);
     static void prepare_after_exec();
     static void prepare_for_idle_loop();

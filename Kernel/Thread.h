@@ -822,11 +822,6 @@ public:
     [[nodiscard]] bool should_be_stopped() const;
     [[nodiscard]] bool is_stopped() const { return m_state == Stopped; }
     [[nodiscard]] bool is_blocked() const { return m_state == Blocked; }
-    [[nodiscard]] bool is_in_block() const
-    {
-        SpinlockLocker lock(m_block_lock);
-        return m_in_block;
-    }
 
     u32 cpu() const { return m_cpu.load(AK::MemoryOrder::memory_order_consume); }
     void set_cpu(u32 cpu) { m_cpu.store(cpu, AK::MemoryOrder::memory_order_release); }
@@ -1279,7 +1274,6 @@ private:
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
     bool m_initialized { false };
-    bool m_in_block { false };
     bool m_is_idle_thread { false };
     bool m_is_crashing { false };
     bool m_is_promise_violation_pending { false };
