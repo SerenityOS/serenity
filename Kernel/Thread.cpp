@@ -245,12 +245,6 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
         break;
     }
 
-    if (blocker.was_interrupted_by_signal()) {
-        SpinlockLocker scheduler_lock(g_scheduler_lock);
-        SpinlockLocker lock(m_lock);
-        dispatch_one_pending_signal();
-    }
-
     // Notify the blocker that we are no longer blocking. It may need
     // to clean up now while we're still holding m_lock
     auto result = blocker.end_blocking({}, did_timeout); // calls was_unblocked internally
