@@ -18,7 +18,7 @@ ErrorOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::rpath));
 
-    auto fd_allocation = TRY(m_fds.allocate());
+    auto fd_allocation = TRY(allocate_fd());
     auto watcher = TRY(InodeWatcher::try_create());
     auto description = TRY(OpenFileDescription::try_create(move(watcher)));
 
@@ -26,12 +26,14 @@ ErrorOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
     if (flags & static_cast<unsigned>(InodeWatcherFlags::Nonblock))
         description->set_blocking(false);
 
-    m_fds[fd_allocation.fd].set(move(description));
+    return m_fds.with([&](auto& fds) -> ErrorOr<FlatPtr> {
+        fds[fd_allocation.fd].set(move(description));
 
-    if (flags & static_cast<unsigned>(InodeWatcherFlags::CloseOnExec))
-        m_fds[fd_allocation.fd].set_flags(m_fds[fd_allocation.fd].flags() | FD_CLOEXEC);
+        if (flags & static_cast<unsigned>(InodeWatcherFlags::CloseOnExec))
+            fds[fd_allocation.fd].set_flags(fds[fd_allocation.fd].flags() | FD_CLOEXEC);
 
-    return fd_allocation.fd;
+        return fd_allocation.fd;
+    });
 }
 
 ErrorOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall::SC_inode_watcher_add_watch_params*> user_params)
@@ -40,7 +42,7 @@ ErrorOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall::S
     TRY(require_promise(Pledge::rpath));
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto description = TRY(fds().open_file_description(params.fd));
+    auto description = TRY(open_file_description(params.fd));
     if (!description->is_inode_watcher())
         return EBADF;
     auto* inode_watcher = description->inode_watcher();
@@ -55,7 +57,7 @@ ErrorOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall::S
 ErrorOr<FlatPtr> Process::sys$inode_watcher_remove_watch(int fd, int wd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    auto description = TRY(fds().open_file_description(fd));
+    auto description = TRY(open_file_description(fd));
     if (!description->is_inode_watcher())
         return EBADF;
     TRY(description->inode_watcher()->unregister_by_wd(wd));

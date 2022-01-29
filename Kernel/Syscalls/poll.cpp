@@ -49,7 +49,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> use
 
     for (size_t i = 0; i < params.nfds; i++) {
         auto& pfd = fds_copy[i];
-        auto description = TRY(fds().open_file_description(pfd.fd));
+        auto description = TRY(m_fds.with([&](auto& fds) { return fds.open_file_description(pfd.fd); }));
         BlockFlags block_flags = BlockFlags::Exception; // always want POLLERR, POLLHUP, POLLNVAL
         if (pfd.events & POLLIN)
             block_flags |= BlockFlags::Read;

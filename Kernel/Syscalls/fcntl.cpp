@@ -15,7 +15,7 @@ ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
     dbgln_if(IO_DEBUG, "sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);
-    auto description = TRY(fds().open_file_description(fd));
+    auto description = TRY(open_file_description(fd));
     // NOTE: The FD flags are not shared between OpenFileDescription objects.
     //       This means that dup() doesn't copy the FD_CLOEXEC flag!
     switch (cmd) {
@@ -23,14 +23,16 @@ ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
         int arg_fd = (int)arg;
         if (arg_fd < 0)
             return EINVAL;
-        auto fd_allocation = TRY(m_fds.allocate(arg_fd));
-        m_fds[fd_allocation.fd].set(*description);
-        return fd_allocation.fd;
+        return m_fds.with([&](auto& fds) -> ErrorOr<FlatPtr> {
+            auto fd_allocation = TRY(fds.allocate(arg_fd));
+            fds[fd_allocation.fd].set(*description);
+            return fd_allocation.fd;
+        });
     }
     case F_GETFD:
-        return m_fds[fd].flags();
+        return m_fds.with([fd](auto& fds) { return fds[fd].flags(); });
     case F_SETFD:
-        m_fds[fd].set_flags(arg);
+        m_fds.with([fd, arg](auto& fds) { fds[fd].set_flags(arg); });
         break;
     case F_GETFL:
         return description->file_flags();

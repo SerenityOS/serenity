@@ -32,7 +32,7 @@ ErrorOr<FlatPtr> Process::sys$writev(int fd, Userspace<const struct iovec*> iov,
             return EINVAL;
     }
 
-    auto description = TRY(fds().open_file_description(fd));
+    auto description = TRY(open_file_description(fd));
     if (!description->is_writable())
         return EBADF;
 
@@ -97,7 +97,7 @@ ErrorOr<FlatPtr> Process::sys$write(int fd, Userspace<const u8*> data, size_t si
         return EINVAL;
 
     dbgln_if(IO_DEBUG, "sys$write({}, {}, {})", fd, data.ptr(), size);
-    auto description = TRY(fds().open_file_description(fd));
+    auto description = TRY(open_file_description(fd));
     if (!description->is_writable())
         return EBADF;
 

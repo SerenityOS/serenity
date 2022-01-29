@@ -12,7 +12,7 @@ ErrorOr<FlatPtr> Process::sys$fsync(int fd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
-    auto description = TRY(fds().open_file_description(fd));
+    auto description = TRY(open_file_description(fd));
     TRY(description->sync());
     return 0;
 }

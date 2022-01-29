@@ -15,7 +15,7 @@ ErrorOr<FlatPtr> Process::sys$fchown(int fd, UserID uid, GroupID gid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::chown));
-    auto description = TRY(fds().open_file_description(fd));
+    auto description = TRY(open_file_description(fd));
     TRY(description->chown(uid, gid));
     return 0;
 }
@@ -31,7 +31,7 @@ ErrorOr<FlatPtr> Process::sys$chown(Userspace<const Syscall::SC_chown_params*> u
     if (params.dirfd == AT_FDCWD) {
         base = current_directory();
     } else {
-        auto base_description = TRY(fds().open_file_description(params.dirfd));
+        auto base_description = TRY(open_file_description(params.dirfd));
         if (!base_description->custody())
             return EINVAL;
         base = base_description->custody();

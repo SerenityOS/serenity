@@ -481,7 +481,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     // (For dynamically linked executable) Allocate an FD for passing the main executable to the dynamic loader.
     Optional<ScopedDescriptionAllocation> main_program_fd_allocation;
     if (has_interpreter)
-        main_program_fd_allocation = TRY(m_fds.allocate());
+        main_program_fd_allocation = TRY(allocate_fd());
 
     // We commit to the new executable at this point. There is no turning back!
 
@@ -536,14 +536,16 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     clear_futex_queues_on_exec();
 
-    fds().change_each([&](auto& file_description_metadata) {
-        if (file_description_metadata.is_valid() && file_description_metadata.flags() & FD_CLOEXEC)
-            file_description_metadata = {};
+    m_fds.with([&](auto& fds) {
+        fds.change_each([&](auto& file_description_metadata) {
+            if (file_description_metadata.is_valid() && file_description_metadata.flags() & FD_CLOEXEC)
+                file_description_metadata = {};
+        });
     });
 
     if (main_program_fd_allocation.has_value()) {
         main_program_description->set_readable(true);
-        m_fds[main_program_fd_allocation->fd].set(move(main_program_description), FD_CLOEXEC);
+        m_fds.with([&](auto& fds) { fds[main_program_fd_allocation->fd].set(move(main_program_description), FD_CLOEXEC); });
     }
 
     new_main_thread = nullptr;

@@ -22,7 +22,7 @@ ErrorOr<FlatPtr> Process::sys$chmod(Userspace<Syscall::SC_chmod_params const*> u
     if (params.dirfd == AT_FDCWD) {
         base = current_directory();
     } else {
-        auto base_description = TRY(fds().open_file_description(params.dirfd));
+        auto base_description = TRY(open_file_description(params.dirfd));
         if (!base_description->custody())
             return EINVAL;
         base = base_description->custody();
@@ -36,7 +36,7 @@ ErrorOr<FlatPtr> Process::sys$fchmod(int fd, mode_t mode)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::fattr));
-    auto description = TRY(fds().open_file_description(fd));
+    auto description = TRY(open_file_description(fd));
     TRY(description->chmod(mode));
     return 0;
 }
