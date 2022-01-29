@@ -91,6 +91,7 @@ struct Traits<NonnullOwnPtr<Kernel::KString>> : public GenericTraits<NonnullOwnP
     using ConstPeekType = Kernel::KString const*;
     static unsigned hash(NonnullOwnPtr<Kernel::KString> const& p) { return string_hash(p->characters(), p->length()); }
     static bool equals(NonnullOwnPtr<Kernel::KString> const& a, NonnullOwnPtr<Kernel::KString> const& b) { return a->view() == b->view(); }
+    static bool equals(StringView a, NonnullOwnPtr<Kernel::KString> const& b) { return a == b->view(); }
 };
 
 template<>
@@ -112,6 +113,19 @@ struct Traits<OwnPtr<Kernel::KString>> : public GenericTraits<OwnPtr<Kernel::KSt
 
         return a->view() == b->view();
     }
+    static bool equals(StringView a, OwnPtr<Kernel::KString> const& b)
+    {
+        if (!b)
+            return a.is_null();
+        return a == b->view();
+    }
 };
+
+namespace Detail {
+template<>
+inline constexpr bool IsHashCompatible<StringView, NonnullOwnPtr<Kernel::KString>> = true;
+template<>
+inline constexpr bool IsHashCompatible<StringView, OwnPtr<Kernel::KString>> = true;
+}
 
 }
