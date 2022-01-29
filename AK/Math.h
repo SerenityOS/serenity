@@ -295,12 +295,6 @@ constexpr T log2(T x)
     return ret;
 }
 
-template<Integral T>
-constexpr T log2(T x)
-{
-    return x ? (8 * sizeof(T) - 1) - count_leading_zeroes(static_cast<MakeUnsigned<T>>(x)) : 0;
-}
-
 template<FloatingPoint T>
 constexpr T log10(T x)
 {
@@ -353,11 +347,7 @@ constexpr T exp2(T exponent)
         : "0"(exponent));
     return res;
 }
-template<Integral T>
-constexpr T exp2(T exponent)
-{
-    return 1u << exponent;
-}
+
 }
 
 using Exponentials::exp;

@@ -6,7 +6,7 @@
 
 #include "GameSizeDialog.h"
 #include "Game.h"
-#include <AK/Math.h>
+#include <AK/IntegralMath.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>

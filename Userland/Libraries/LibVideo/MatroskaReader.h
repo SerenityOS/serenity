@@ -8,7 +8,7 @@
 
 #include "MatroskaDocument.h"
 #include <AK/Debug.h>
-#include <AK/Math.h>
+#include <AK/IntegralMath.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
