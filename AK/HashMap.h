@@ -119,17 +119,16 @@ public:
         return m_table.find(hash, predicate);
     }
 
-    // FIXME: Use some sort of Traits to get the comparison operation
     template<Concepts::HashCompatible<K> Key>
-    requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] IteratorType find(Key const& value)
+    requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] IteratorType find(Key const& key)
     {
-        return m_table.find(Traits<Key>::hash(value), [&](auto& entry) { return value == entry.key; });
+        return m_table.find(Traits<Key>::hash(key), [&](auto& entry) { return Traits<K>::equals(key, entry.key); });
     }
 
     template<Concepts::HashCompatible<K> Key>
-    requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] ConstIteratorType find(Key const& value) const
+    requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] ConstIteratorType find(Key const& key) const
     {
-        return m_table.find(Traits<Key>::hash(value), [&](auto& entry) { return value == entry.key; });
+        return m_table.find(Traits<Key>::hash(key), [&](auto& entry) { return Traits<K>::equals(key, entry.key); });
     }
 
     void ensure_capacity(size_t capacity) { m_table.ensure_capacity(capacity); }

@@ -342,13 +342,12 @@ public:
     {
         return find(TraitsForT::hash(value), [&](auto& other) { return TraitsForT::equals(value, other); });
     }
-    // FIXME: Use some Traits to get the comparison operation
     // FIXME: Support for predicates, while guaranteeing that the predicate call
     //        does not call a non trivial constructor each time invoked
     template<Concepts::HashCompatible<T> K>
     requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] Iterator find(K const& value)
     {
-        return find(Traits<K>::hash(value), [&](auto& other) { return value == other; });
+        return find(Traits<K>::hash(value), [&](auto& other) { return Traits<T>::equals(other, value); });
     }
 
     template<Concepts::HashCompatible<T> K, typename TUnaryPredicate>
@@ -360,7 +359,7 @@ public:
     template<Concepts::HashCompatible<T> K>
     requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] ConstIterator find(K const& value) const
     {
-        return find(Traits<K>::hash(value), [&](auto& other) { return value == other; });
+        return find(Traits<K>::hash(value), [&](auto& other) { return Traits<T>::equals(other, value); });
     }
 
     template<Concepts::HashCompatible<T> K, typename TUnaryPredicate>
