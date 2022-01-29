@@ -18,6 +18,7 @@ StorageDevice::StorageDevice(MajorNumber major, MinorNumber minor, size_t sector
     : BlockDevice(major, minor, sector_size)
     , m_early_storage_device_name(move(device_name))
     , m_max_addressable_block(max_addressable_block)
+    , m_blocks_per_page(PAGE_SIZE / block_size())
 {
 }
 
@@ -32,12 +33,10 @@ ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKern
     size_t whole_blocks = len / block_size();
     size_t remaining = len % block_size();
 
-    size_t blocks_per_page = PAGE_SIZE / block_size();
-
     // PATAChannel will chuck a wobbly if we try to read more than PAGE_SIZE
     // at a time, because it uses a single page for its DMA buffer.
-    if (whole_blocks >= blocks_per_page) {
-        whole_blocks = blocks_per_page;
+    if (whole_blocks >= m_blocks_per_page) {
+        whole_blocks = m_blocks_per_page;
         remaining = 0;
     }
 
@@ -96,12 +95,10 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
     size_t whole_blocks = len / block_size();
     size_t remaining = len % block_size();
 
-    size_t blocks_per_page = PAGE_SIZE / block_size();
-
     // PATAChannel will chuck a wobbly if we try to write more than PAGE_SIZE
     // at a time, because it uses a single page for its DMA buffer.
-    if (whole_blocks >= blocks_per_page) {
-        whole_blocks = blocks_per_page;
+    if (whole_blocks >= m_blocks_per_page) {
+        whole_blocks = m_blocks_per_page;
         remaining = 0;
     }
 
