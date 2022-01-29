@@ -281,7 +281,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
     return js_string(vm, String::formatted("{:0.{1}}", number, static_cast<size_t>(fraction_digits)));
 }
 
-// 18.2.1 Number.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-number.prototype.tolocalestring
+// 19.2.1 Number.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-number.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_locale_string)
 {
     auto locales = vm.argument(0);
