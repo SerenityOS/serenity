@@ -83,7 +83,7 @@ void BochsDisplayConnector::set_framebuffer_to_little_endian_format()
 
 ErrorOr<void> BochsDisplayConnector::set_safe_resolution()
 {
-    DisplayConnector::Resolution safe_resolution { 1024, 768, {} };
+    DisplayConnector::Resolution safe_resolution { 1024, 768, 32, {} };
     return set_resolution(safe_resolution);
 }
 
@@ -106,7 +106,7 @@ ErrorOr<void> BochsDisplayConnector::set_y_offset(size_t y_offset)
 ErrorOr<DisplayConnector::Resolution> BochsDisplayConnector::get_resolution()
 {
     MutexLocker locker(m_modeset_lock);
-    return Resolution { m_registers->bochs_regs.xres, m_registers->bochs_regs.yres, {} };
+    return Resolution { m_registers->bochs_regs.xres, m_registers->bochs_regs.yres, 32, {} };
 }
 
 ErrorOr<void> BochsDisplayConnector::set_resolution(Resolution const& resolution)
@@ -115,6 +115,11 @@ ErrorOr<void> BochsDisplayConnector::set_resolution(Resolution const& resolution
     VERIFY(m_framebuffer_console);
     size_t width = resolution.width;
     size_t height = resolution.height;
+    size_t bpp = resolution.bpp;
+    if (bpp != 32) {
+        dbgln_if(BXVGA_DEBUG, "BochsDisplayConnector - no support for non-32bpp resolutions");
+        return Error::from_errno(ENOTSUP);
+    }
 
     if (Checked<size_t>::multiplication_would_overflow(width, height, sizeof(u32)))
         return EOVERFLOW;
