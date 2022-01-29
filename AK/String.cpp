@@ -17,54 +17,27 @@ namespace AK {
 
 bool String::operator==(const FlyString& fly_string) const
 {
-    return *this == String(fly_string.impl());
+    return m_impl == fly_string.impl() || view() == fly_string.view();
 }
 
 bool String::operator==(const String& other) const
 {
-    if (!m_impl)
-        return !other.m_impl;
-
-    if (!other.m_impl)
-        return false;
-
-    return *m_impl == *other.m_impl;
+    return m_impl == other.impl() || view() == other.view();
 }
 
 bool String::operator==(StringView other) const
 {
-    if (!m_impl)
-        return !other.m_characters;
-
-    if (!other.m_characters)
-        return false;
-
-    if (length() != other.length())
-        return false;
-
-    return !memcmp(characters(), other.characters_without_null_termination(), length());
+    return view() == other;
 }
 
 bool String::operator<(const String& other) const
 {
-    if (!m_impl)
-        return other.m_impl;
-
-    if (!other.m_impl)
-        return false;
-
-    return strcmp(characters(), other.characters()) < 0;
+    return view() < other.view();
 }
 
 bool String::operator>(const String& other) const
 {
-    if (!other.m_impl)
-        return m_impl;
-
-    if (!m_impl)
-        return false;
-
-    return strcmp(characters(), other.characters()) > 0;
+    return view() > other.view();
 }
 
 bool String::copy_characters_to_buffer(char* buffer, size_t buffer_size) const
@@ -410,43 +383,27 @@ String String::to_titlecase() const
 
 bool operator<(const char* characters, const String& string)
 {
-    if (!characters)
-        return !string.is_null();
-
-    if (string.is_null())
-        return false;
-
-    return __builtin_strcmp(characters, string.characters()) < 0;
+    return string.view() > characters;
 }
 
 bool operator>=(const char* characters, const String& string)
 {
-    return !(characters < string);
+    return string.view() <= characters;
 }
 
 bool operator>(const char* characters, const String& string)
 {
-    if (!characters)
-        return !string.is_null();
-
-    if (string.is_null())
-        return false;
-
-    return __builtin_strcmp(characters, string.characters()) > 0;
+    return string.view() < characters;
 }
 
 bool operator<=(const char* characters, const String& string)
 {
-    return !(characters > string);
+    return string.view() >= characters;
 }
 
 bool String::operator==(const char* cstring) const
 {
-    if (is_null())
-        return !cstring;
-    if (!cstring)
-        return false;
-    return !__builtin_strcmp(characters(), cstring);
+    return view() == cstring;
 }
 
 InputStream& operator>>(InputStream& stream, String& string)
