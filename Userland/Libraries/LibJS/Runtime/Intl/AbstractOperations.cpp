@@ -363,8 +363,14 @@ static auto& find_key_in_value(T& value, StringView key)
 {
     if (key == "ca"sv)
         return value.ca;
+    if (key == "co"sv)
+        return value.co;
     if (key == "hc"sv)
         return value.hc;
+    if (key == "kf"sv)
+        return value.kf;
+    if (key == "kn"sv)
+        return value.kn;
     if (key == "nu"sv)
         return value.nu;
 
