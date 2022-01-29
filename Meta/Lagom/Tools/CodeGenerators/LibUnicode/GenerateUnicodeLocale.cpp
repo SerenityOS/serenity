@@ -215,7 +215,7 @@ struct UnicodeLocaleData {
         { "week"sv, "weekOfYear"sv },
         { "zone"sv, "timeZoneName"sv },
     };
-    Vector<String> keywords { "ca"sv, "nu"sv }; // FIXME: These should be parsed from BCP47. https://unicode-org.atlassian.net/browse/CLDR-15158
+    Vector<String> keywords { "ca"sv, "kf"sv, "kn"sv, "nu"sv }; // FIXME: These should be parsed from BCP47. https://unicode-org.atlassian.net/browse/CLDR-15158
     Vector<String> list_pattern_types;
     HashMap<String, StringIndexType> language_aliases;
     HashMap<String, StringIndexType> territory_aliases;
@@ -743,6 +743,17 @@ static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLo
     return {};
 }
 
+static void fill_in_bcp47_keywords(UnicodeLocaleData& locale_data, KeywordList& keywords)
+{
+    // FIXME: These should be parsed from BCP47. They are only available in this XML file:
+    //        https://github.com/unicode-org/cldr/blob/main/common/bcp47/collation.xml
+    auto kf_index = locale_data.keywords.find_first_index("kf"sv).value();
+    keywords[kf_index] = locale_data.unique_strings.ensure("upper,lower,false"sv);
+
+    auto kn_index = locale_data.keywords.find_first_index("kn"sv).value();
+    keywords[kn_index] = locale_data.unique_strings.ensure("true,false"sv);
+}
+
 static ErrorOr<void> parse_default_content_locales(String core_path, UnicodeLocaleData& locale_data)
 {
     LexicalPath default_content_path(move(core_path));
@@ -902,6 +913,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
 
         auto& keywords = ensure_keyword_list(language);
         TRY(parse_numeric_keywords(numbers_path, locale_data, keywords));
+        fill_in_bcp47_keywords(locale_data, keywords);
     }
 
     while (dates_iterator.has_next()) {
