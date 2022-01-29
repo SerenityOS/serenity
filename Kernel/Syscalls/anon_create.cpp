@@ -37,7 +37,7 @@ ErrorOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     if (options & O_CLOEXEC)
         fd_flags |= FD_CLOEXEC;
 
-    m_fds.with([&](auto& fds) { fds[new_fd.fd].set(move(description), fd_flags); });
+    m_fds.with_exclusive([&](auto& fds) { fds[new_fd.fd].set(move(description), fd_flags); });
     return new_fd.fd;
 }
 

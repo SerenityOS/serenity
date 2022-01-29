@@ -13,7 +13,7 @@ ErrorOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));
-    auto open_count = fds().with([](auto& fds) { return fds.open_count(); });
+    auto open_count = fds().with_shared([](auto& fds) { return fds.open_count(); });
     if (open_count + 2 > OpenFileDescriptions::max_open())
         return EMFILE;
     // Reject flags other than O_CLOEXEC, O_NONBLOCK
@@ -26,7 +26,7 @@ ErrorOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
     ScopedDescriptionAllocation reader_fd_allocation;
     ScopedDescriptionAllocation writer_fd_allocation;
 
-    TRY(m_fds.with([&](auto& fds) -> ErrorOr<void> {
+    TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         reader_fd_allocation = TRY(fds.allocate());
         writer_fd_allocation = TRY(fds.allocate());
         return {};
@@ -42,7 +42,7 @@ ErrorOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
         writer_description->set_blocking(false);
     }
 
-    TRY(m_fds.with([&](auto& fds) -> ErrorOr<void> {
+    TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         fds[reader_fd_allocation.fd].set(move(reader_description), fd_flags);
         fds[writer_fd_allocation.fd].set(move(writer_description), fd_flags);
         return {};

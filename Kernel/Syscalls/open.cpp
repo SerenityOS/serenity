@@ -59,7 +59,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> use
     if (description->inode() && description->inode()->socket())
         return ENXIO;
 
-    return m_fds.with([&](auto& fds) -> ErrorOr<FlatPtr> {
+    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
         fds[fd_allocation.fd].set(move(description), fd_flags);
         return fd_allocation.fd;
@@ -72,7 +72,7 @@ ErrorOr<FlatPtr> Process::sys$close(int fd)
     TRY(require_promise(Pledge::stdio));
     auto description = TRY(open_file_description(fd));
     auto result = description->close();
-    m_fds.with([fd](auto& fds) { fds[fd] = {}; });
+    m_fds.with_exclusive([fd](auto& fds) { fds[fd] = {}; });
     if (result.is_error())
         return result.release_error();
     return 0;

@@ -39,7 +39,7 @@ ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
     if ((type & SOCK_TYPE_MASK) == SOCK_RAW && !is_superuser())
         return EACCES;
 
-    return m_fds.with([&](auto& fds) -> ErrorOr<FlatPtr> {
+    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         auto fd_allocation = TRY(fds.allocate());
         auto socket = TRY(Socket::create(domain, type, protocol));
         auto description = TRY(OpenFileDescription::try_create(socket));
@@ -51,7 +51,7 @@ ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
 ErrorOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<const sockaddr*> address, socklen_t address_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    return m_fds.with([&](auto& fds) -> ErrorOr<FlatPtr> {
+    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         auto description = TRY(fds.open_file_description(sockfd));
         if (!description->is_socket())
             return ENOTSOCK;
@@ -67,7 +67,7 @@ ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (backlog < 0)
         return EINVAL;
-    return m_fds.with([&](auto& fds) -> ErrorOr<FlatPtr> {
+    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         auto description = TRY(fds.open_file_description(sockfd));
         if (!description->is_socket())
             return ENOTSOCK;
@@ -99,7 +99,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_params
     ScopedDescriptionAllocation fd_allocation;
     RefPtr<OpenFileDescription> accepting_socket_description;
 
-    TRY(m_fds.with([&](auto& fds) -> ErrorOr<void> {
+    TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         fd_allocation = TRY(fds.allocate());
         accepting_socket_description = TRY(fds.open_file_description(accepting_socket_fd));
         return {};
@@ -138,7 +138,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_params
     if (flags & SOCK_CLOEXEC)
         fd_flags |= FD_CLOEXEC;
 
-    TRY(m_fds.with([&](auto& fds) -> ErrorOr<void> {
+    TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         fds[fd_allocation.fd].set(move(accepted_socket_description), fd_flags);
         return {};
     }));
@@ -361,7 +361,7 @@ ErrorOr<FlatPtr> Process::sys$socketpair(Userspace<const Syscall::SC_socketpair_
 
     auto pair = TRY(LocalSocket::try_create_connected_pair(params.type & SOCK_TYPE_MASK));
 
-    return m_fds.with([&](auto& fds) -> ErrorOr<FlatPtr> {
+    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         auto fd_allocation0 = TRY(fds.allocate());
         auto fd_allocation1 = TRY(fds.allocate());
 

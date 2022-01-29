@@ -40,7 +40,7 @@ ErrorOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
     if (!socket.is_local())
         return EAFNOSUPPORT;
 
-    auto fd_allocation = TRY(m_fds.with([](auto& fds) { return fds.allocate(); }));
+    auto fd_allocation = TRY(m_fds.with_exclusive([](auto& fds) { return fds.allocate(); }));
 
     auto& local_socket = static_cast<LocalSocket&>(socket);
     auto received_description = TRY(local_socket.recvfd(*socket_description));
@@ -49,7 +49,7 @@ ErrorOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
     if (options & O_CLOEXEC)
         fd_flags |= FD_CLOEXEC;
 
-    m_fds.with([&](auto& fds) { fds[fd_allocation.fd].set(move(received_description), fd_flags); });
+    m_fds.with_exclusive([&](auto& fds) { fds[fd_allocation.fd].set(move(received_description), fd_flags); });
     return fd_allocation.fd;
 }
 

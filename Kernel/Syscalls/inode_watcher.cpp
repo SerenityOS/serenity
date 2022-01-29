@@ -26,7 +26,7 @@ ErrorOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
     if (flags & static_cast<unsigned>(InodeWatcherFlags::Nonblock))
         description->set_blocking(false);
 
-    return m_fds.with([&](auto& fds) -> ErrorOr<FlatPtr> {
+    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         fds[fd_allocation.fd].set(move(description));
 
         if (flags & static_cast<unsigned>(InodeWatcherFlags::CloseOnExec))

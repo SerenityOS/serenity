@@ -746,22 +746,22 @@ public:
         WeakPtr<Process> m_process;
     };
 
-    SpinlockProtected<OpenFileDescriptions>& fds() { return m_fds; }
-    SpinlockProtected<OpenFileDescriptions> const& fds() const { return m_fds; }
+    MutexProtected<OpenFileDescriptions>& fds() { return m_fds; }
+    MutexProtected<OpenFileDescriptions> const& fds() const { return m_fds; }
 
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd)
     {
-        return m_fds.with([fd](auto& fds) { return fds.open_file_description(fd); });
+        return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
     }
 
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd) const
     {
-        return m_fds.with([fd](auto& fds) { return fds.open_file_description(fd); });
+        return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
     }
 
     ErrorOr<ScopedDescriptionAllocation> allocate_fd()
     {
-        return m_fds.with([](auto& fds) { return fds.allocate(); });
+        return m_fds.with_exclusive([](auto& fds) { return fds.allocate(); });
     }
 
 private:
@@ -770,7 +770,7 @@ private:
 
     SpinlockProtected<Thread::ListInProcess> m_thread_list;
 
-    SpinlockProtected<OpenFileDescriptions> m_fds;
+    MutexProtected<OpenFileDescriptions> m_fds;
 
     const bool m_is_kernel_process;
     Atomic<State> m_state { State::Running };

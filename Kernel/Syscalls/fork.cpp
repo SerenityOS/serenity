@@ -23,8 +23,8 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
 
-    TRY(child->m_fds.with([&](auto& child_fds) {
-        return m_fds.with([&](auto& parent_fds) {
+    TRY(child->m_fds.with_exclusive([&](auto& child_fds) {
+        return m_fds.with_exclusive([&](auto& parent_fds) {
             return child_fds.try_clone(parent_fds);
         });
     }));

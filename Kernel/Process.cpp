@@ -139,7 +139,7 @@ ErrorOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread>&
     auto name = TRY(KString::try_create(parts.last()));
     auto process = TRY(Process::try_create(first_thread, move(name), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
 
-    TRY(process->m_fds.with([&](auto& fds) -> ErrorOr<void> {
+    TRY(process->m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         TRY(fds.try_resize(Process::OpenFileDescriptions::max_open()));
 
         auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : DeviceManagement::the().null_device();
@@ -589,7 +589,7 @@ void Process::finalize()
 
     if (m_alarm_timer)
         TimerQueue::the().cancel_timer(m_alarm_timer.release_nonnull());
-    m_fds.with([](auto& fds) { fds.clear(); });
+    m_fds.with_exclusive([](auto& fds) { fds.clear(); });
     m_tty = nullptr;
     m_executable = nullptr;
     m_cwd = nullptr;

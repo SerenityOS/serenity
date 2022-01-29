@@ -490,7 +490,7 @@ private:
             process_object.add("uid", process.uid().value());
             process_object.add("gid", process.gid().value());
             process_object.add("ppid", process.ppid().value());
-            process_object.add("nfds", process.fds().with([](auto& fds) { return fds.open_count(); }));
+            process_object.add("nfds", process.fds().with_shared([](auto& fds) { return fds.open_count(); }));
             process_object.add("name", process.name());
             process_object.add("executable", process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv);
             process_object.add("tty", process.tty() ? process.tty()->tty_name().view() : "notty"sv);
