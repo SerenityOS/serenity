@@ -67,15 +67,16 @@
     __JS_ENUMERATE(Float32Array, float32_array, Float32ArrayPrototype, Float32ArrayConstructor, float)                          \
     __JS_ENUMERATE(Float64Array, float64_array, Float64ArrayPrototype, Float64ArrayConstructor, double)
 
-#define JS_ENUMERATE_INTL_OBJECTS                                                                        \
-    __JS_ENUMERATE(Collator, collator, CollatorPrototype, CollatorConstructor)                           \
-    __JS_ENUMERATE(DateTimeFormat, date_time_format, DateTimeFormatPrototype, DateTimeFormatConstructor) \
-    __JS_ENUMERATE(DisplayNames, display_names, DisplayNamesPrototype, DisplayNamesConstructor)          \
-    __JS_ENUMERATE(ListFormat, list_format, ListFormatPrototype, ListFormatConstructor)                  \
-    __JS_ENUMERATE(Locale, locale, LocalePrototype, LocaleConstructor)                                   \
-    __JS_ENUMERATE(NumberFormat, number_format, NumberFormatPrototype, NumberFormatConstructor)          \
-    __JS_ENUMERATE(PluralRules, plural_rules, PluralRulesPrototype, PluralRulesConstructor)              \
-    __JS_ENUMERATE(RelativeTimeFormat, relative_time_format, RelativeTimeFormatPrototype, RelativeTimeFormatConstructor)
+#define JS_ENUMERATE_INTL_OBJECTS                                                                                        \
+    __JS_ENUMERATE(Collator, collator, CollatorPrototype, CollatorConstructor)                                           \
+    __JS_ENUMERATE(DateTimeFormat, date_time_format, DateTimeFormatPrototype, DateTimeFormatConstructor)                 \
+    __JS_ENUMERATE(DisplayNames, display_names, DisplayNamesPrototype, DisplayNamesConstructor)                          \
+    __JS_ENUMERATE(ListFormat, list_format, ListFormatPrototype, ListFormatConstructor)                                  \
+    __JS_ENUMERATE(Locale, locale, LocalePrototype, LocaleConstructor)                                                   \
+    __JS_ENUMERATE(NumberFormat, number_format, NumberFormatPrototype, NumberFormatConstructor)                          \
+    __JS_ENUMERATE(PluralRules, plural_rules, PluralRulesPrototype, PluralRulesConstructor)                              \
+    __JS_ENUMERATE(RelativeTimeFormat, relative_time_format, RelativeTimeFormatPrototype, RelativeTimeFormatConstructor) \
+    __JS_ENUMERATE(Segmenter, segmenter, SegmenterPrototype, SegmenterConstructor)
 
 #define JS_ENUMERATE_TEMPORAL_OBJECTS                                                                    \
     __JS_ENUMERATE(Calendar, calendar, CalendarPrototype, CalendarConstructor)                           \
