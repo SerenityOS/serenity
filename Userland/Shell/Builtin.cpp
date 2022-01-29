@@ -124,7 +124,7 @@ int Shell::builtin_bg(int argc, const char** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](const String& value) -> bool {
+        .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_id = number.value();
@@ -497,7 +497,7 @@ int Shell::builtin_fg(int argc, const char** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](const String& value) -> bool {
+        .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_id = number.value();
@@ -568,7 +568,7 @@ int Shell::builtin_disown(int argc, const char** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](const String& value) -> bool {
+        .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_ids.append(number.value());
@@ -977,7 +977,7 @@ int Shell::builtin_wait(int argc, const char** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](const String& value) -> bool {
+        .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_ids.append(number.value());
