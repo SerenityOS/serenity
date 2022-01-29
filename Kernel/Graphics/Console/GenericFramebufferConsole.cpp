@@ -200,31 +200,30 @@ static inline BGRColor convert_standard_color_to_bgr_color(Console::Color color)
     }
 }
 
-size_t GenericFramebufferConsole::bytes_per_base_glyph() const
+size_t GenericFramebufferConsoleImpl::bytes_per_base_glyph() const
 {
     // FIXME: We assume we have 32 bit bpp framebuffer.
     return 8 * 32;
 }
-size_t GenericFramebufferConsole::chars_per_line() const
+size_t GenericFramebufferConsoleImpl::chars_per_line() const
 {
     return width() / bytes_per_base_glyph();
 }
 
-void GenericFramebufferConsole::set_cursor(size_t, size_t)
+void GenericFramebufferConsoleImpl::set_cursor(size_t, size_t)
 {
 }
 
-void GenericFramebufferConsole::hide_cursor()
+void GenericFramebufferConsoleImpl::hide_cursor()
 {
 }
 
-void GenericFramebufferConsole::show_cursor()
+void GenericFramebufferConsoleImpl::show_cursor()
 {
 }
 
-void GenericFramebufferConsole::clear(size_t x, size_t y, size_t length)
+void GenericFramebufferConsoleImpl::clear(size_t x, size_t y, size_t length)
 {
-    SpinlockLocker lock(m_lock);
     if (x == 0 && length == max_column()) {
         // if we need to clear the entire row, just clean it with quick memset :)
         auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
@@ -251,9 +250,8 @@ void GenericFramebufferConsole::clear(size_t x, size_t y, size_t length)
     }
 }
 
-void GenericFramebufferConsole::clear_glyph(size_t x, size_t y)
+void GenericFramebufferConsoleImpl::clear_glyph(size_t x, size_t y)
 {
-    VERIFY(m_lock.is_locked());
     auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
     for (size_t current_x = 0; current_x < 8; current_x++) {
         memset(offset_in_framebuffer, 0, 8 * sizeof(u32));
@@ -262,21 +260,19 @@ void GenericFramebufferConsole::clear_glyph(size_t x, size_t y)
     flush(8 * x, 8 * y, 8, 8);
 }
 
-void GenericFramebufferConsole::enable()
+void GenericFramebufferConsoleImpl::enable()
 {
-    SpinlockLocker lock(m_lock);
     memset(framebuffer_data(), 0, height() * width() * sizeof(u32));
     m_enabled.store(true);
 }
-void GenericFramebufferConsole::disable()
+
+void GenericFramebufferConsoleImpl::disable()
 {
-    SpinlockLocker lock(m_lock);
     m_enabled.store(false);
 }
 
-void GenericFramebufferConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
+void GenericFramebufferConsoleImpl::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
 {
-    SpinlockLocker lock(m_lock);
     if (!m_enabled.load())
         return;
 
@@ -323,14 +319,44 @@ void GenericFramebufferConsole::write(size_t x, size_t y, char ch, Color backgro
     }
 }
 
-void GenericFramebufferConsole::write(size_t x, size_t y, char ch, bool critical)
+void GenericFramebufferConsoleImpl::write(size_t x, size_t y, char ch, bool critical)
 {
     write(x, y, ch, m_default_background_color, m_default_foreground_color, critical);
 }
 
-void GenericFramebufferConsole::write(char ch, bool critical)
+void GenericFramebufferConsoleImpl::write(char ch, bool critical)
 {
     write(m_x, m_y, ch, m_default_background_color, m_default_foreground_color, critical);
+}
+
+void GenericFramebufferConsole::clear(size_t x, size_t y, size_t length)
+{
+    SpinlockLocker lock(m_lock);
+    GenericFramebufferConsoleImpl::clear(x, y, length);
+}
+
+void GenericFramebufferConsole::clear_glyph(size_t x, size_t y)
+{
+    VERIFY(m_lock.is_locked());
+    GenericFramebufferConsoleImpl::clear_glyph(x, y);
+}
+
+void GenericFramebufferConsole::enable()
+{
+    SpinlockLocker lock(m_lock);
+    GenericFramebufferConsoleImpl::enable();
+}
+
+void GenericFramebufferConsole::disable()
+{
+    SpinlockLocker lock(m_lock);
+    GenericFramebufferConsoleImpl::disable();
+}
+
+void GenericFramebufferConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
+{
+    SpinlockLocker lock(m_lock);
+    GenericFramebufferConsoleImpl::write(x, y, ch, background, foreground, critical);
 }
 
 }
