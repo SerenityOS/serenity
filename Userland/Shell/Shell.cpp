@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -63,10 +63,10 @@ void Shell::setup_signals()
     }
 }
 
-void Shell::print_path(const String& path)
+void Shell::print_path(StringView path)
 {
     if (s_disable_hyperlinks || !m_is_interactive) {
-        printf("%s", path.characters());
+        out("{}", path);
         return;
     }
     auto url = URL::create_with_file_scheme(path, {}, hostname);
@@ -133,7 +133,7 @@ String Shell::prompt() const
     return build_prompt();
 }
 
-String Shell::expand_tilde(const String& expression)
+String Shell::expand_tilde(StringView expression)
 {
     VERIFY(expression.starts_with('~'));
 
@@ -337,7 +337,7 @@ String Shell::resolve_path(String path) const
     return Core::File::real_path_for(path);
 }
 
-Shell::LocalFrame* Shell::find_frame_containing_local_variable(const String& name)
+Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
 {
     for (size_t i = m_local_frames.size(); i > 0; --i) {
         auto& frame = m_local_frames[i - 1];
@@ -347,7 +347,7 @@ Shell::LocalFrame* Shell::find_frame_containing_local_variable(const String& nam
     return nullptr;
 }
 
-RefPtr<AST::Value> Shell::lookup_local_variable(const String& name) const
+RefPtr<AST::Value> Shell::lookup_local_variable(StringView name) const
 {
     if (auto* frame = find_frame_containing_local_variable(name))
         return frame->local_variables.get(name).value();
@@ -382,7 +382,7 @@ RefPtr<AST::Value> Shell::get_argument(size_t index) const
     return nullptr;
 }
 
-String Shell::local_variable_or(const String& name, const String& replacement) const
+String Shell::local_variable_or(StringView name, const String& replacement) const
 {
     auto value = lookup_local_variable(name);
     if (value) {
@@ -405,7 +405,7 @@ void Shell::set_local_variable(const String& name, RefPtr<AST::Value> value, boo
     m_local_frames.last().local_variables.set(name, move(value));
 }
 
-void Shell::unset_local_variable(const String& name, bool only_in_current_frame)
+void Shell::unset_local_variable(StringView name, bool only_in_current_frame)
 {
     if (!only_in_current_frame) {
         if (auto* frame = find_frame_containing_local_variable(name))
@@ -422,7 +422,7 @@ void Shell::define_function(String name, Vector<String> argnames, RefPtr<AST::No
     m_functions.set(name, { name, move(argnames), move(body) });
 }
 
-bool Shell::has_function(const String& name)
+bool Shell::has_function(StringView name)
 {
     return m_functions.contains(name);
 }
@@ -509,7 +509,7 @@ Shell::Frame::~Frame()
     (void)frames.take_last();
 }
 
-String Shell::resolve_alias(const String& name) const
+String Shell::resolve_alias(StringView name) const
 {
     return m_aliases.get(name).value_or({});
 }
@@ -521,11 +521,7 @@ bool Shell::is_runnable(StringView name)
     if (parts.size() > 1 && access(path.characters(), X_OK) == 0)
         return true;
 
-    return binary_search(
-        cached_path.span(),
-        path,
-        nullptr,
-        [](auto& name, auto& program) { return strcmp(name.characters(), program.characters()); });
+    return binary_search(cached_path.span(), path, nullptr);
 }
 
 int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_override)
@@ -1094,7 +1090,7 @@ String Shell::get_history_path()
     return String::formatted("{}/.history", home);
 }
 
-String Shell::escape_token_for_single_quotes(const String& token)
+String Shell::escape_token_for_single_quotes(StringView token)
 {
     // `foo bar \n '` -> `'foo bar \n '"'"`
 
@@ -1124,7 +1120,7 @@ String Shell::escape_token_for_single_quotes(const String& token)
     return builder.build();
 }
 
-String Shell::escape_token_for_double_quotes(const String& token)
+String Shell::escape_token_for_double_quotes(StringView token)
 {
     // `foo bar \n $x 'blah "hello` -> `"foo bar \\n $x 'blah \"hello"`
 
@@ -1180,7 +1176,7 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     }
 }
 
-String Shell::escape_token(const String& token)
+String Shell::escape_token(StringView token)
 {
     auto do_escape = [](auto& token) {
         StringBuilder builder;
@@ -1230,7 +1226,7 @@ String Shell::escape_token(const String& token)
     return do_escape(token);
 }
 
-String Shell::unescape_token(const String& token)
+String Shell::unescape_token(StringView token)
 {
     StringBuilder builder;
 
@@ -1332,11 +1328,7 @@ void Shell::cache_path()
 void Shell::add_entry_to_cache(const String& entry)
 {
     size_t index = 0;
-    auto match = binary_search(
-        cached_path.span(),
-        entry,
-        &index,
-        [](auto& name, auto& program) { return strcmp(name.characters(), program.characters()); });
+    auto match = binary_search(cached_path.span(), entry, &index);
 
     if (match)
         return;
@@ -1347,14 +1339,10 @@ void Shell::add_entry_to_cache(const String& entry)
     cached_path.insert(index, entry);
 }
 
-void Shell::remove_entry_from_cache(const String& entry)
+void Shell::remove_entry_from_cache(StringView entry)
 {
     size_t index { 0 };
-    auto match = binary_search(
-        cached_path.span(),
-        entry,
-        &index,
-        [](const auto& a, const auto& b) { return strcmp(a.characters(), b.characters()); });
+    auto match = binary_search(cached_path.span(), entry, &index);
 
     if (match)
         cached_path.remove(index);
@@ -1384,8 +1372,8 @@ Vector<Line::CompletionSuggestion> Shell::complete()
     return ast->complete_for_editor(*this, line.length());
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base,
-    const String& part, size_t offset, ExecutableOnly executable_only)
+Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
+    StringView part, size_t offset, ExecutableOnly executable_only)
 {
     auto token = offset ? part.substring_view(0, offset) : "";
     String path;
@@ -1459,13 +1447,13 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base,
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& name, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name, size_t offset)
 {
     auto match = binary_search(
         cached_path.span(),
         name,
         nullptr,
-        [](auto& name, auto& program) { return strncmp(name.characters(), program.characters(), name.length()); });
+        [](auto& name, auto& program) { return name.compare(program.view()); });
 
     if (!match)
         return complete_path("", name, offset, ExecutableOnly::Yes);
@@ -1496,7 +1484,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, size_t offset)
 {
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
@@ -1530,7 +1518,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, 
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_user(const String& name, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_user(StringView name, size_t offset)
 {
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
@@ -1554,7 +1542,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(const String& name, size
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_name, const String& option, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_option(StringView program_name, StringView option, size_t offset)
 {
     size_t start = 0;
     while (start < option.length() && option[start] == '-' && start < 2)
@@ -1585,10 +1573,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
                 builder.append(view);
                 return builder.to_string();
             };
-#define __ENUMERATE_SHELL_OPTION(name, d_, descr_)          \
-    if (StringView { #name }.starts_with(option_pattern)) { \
-        suggestions.append(maybe_negate(#name));            \
-        suggestions.last().input_offset = offset;           \
+#define __ENUMERATE_SHELL_OPTION(name, d_, descr_) \
+    if (#name##sv.starts_with(option_pattern)) {   \
+        suggestions.append(maybe_negate(#name));   \
+        suggestions.last().input_offset = offset;  \
     }
 
             ENUMERATE_SHELL_OPTIONS();
@@ -1599,14 +1587,14 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_immediate_function_name(const String& name, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_immediate_function_name(StringView name, size_t offset)
 {
     Vector<Line::CompletionSuggestion> suggestions;
 
-#define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(fn_name)                            \
-    if (auto name_view = StringView { #fn_name }; name_view.starts_with(name)) { \
-        suggestions.append({ name_view, " " });                                  \
-        suggestions.last().input_offset = offset;                                \
+#define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(fn_name)                 \
+    if (auto name_view = #fn_name##sv; name_view.starts_with(name)) { \
+        suggestions.append({ name_view, " " });                       \
+        suggestions.last().input_offset = offset;                     \
     }
 
     ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS();
@@ -2080,7 +2068,7 @@ void Shell::possibly_print_error() const
     warnln();
 }
 
-Optional<int> Shell::resolve_job_spec(const String& str)
+Optional<int> Shell::resolve_job_spec(StringView str)
 {
     if (!str.starts_with('%'))
         return {};

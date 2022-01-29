@@ -106,7 +106,7 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
 
 namespace Shell::AST {
 
-static inline void print_indented(const String& str, int indent)
+static inline void print_indented(StringView str, int indent)
 {
     dbgln("{}{}", String::repeated(' ', indent * 2), str);
 }
