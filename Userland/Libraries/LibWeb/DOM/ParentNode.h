@@ -32,6 +32,7 @@ public:
 
     ExceptionOr<void> prepend(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes);
     ExceptionOr<void> append(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes);
+    ExceptionOr<void> replace_children(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes);
 
 protected:
     ParentNode(Document& document, NodeType type)

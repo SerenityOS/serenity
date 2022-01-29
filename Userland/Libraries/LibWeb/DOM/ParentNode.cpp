@@ -191,4 +191,23 @@ ExceptionOr<void> ParentNode::append(Vector<Variant<NonnullRefPtr<Node>, String>
     return {};
 }
 
+ExceptionOr<void> ParentNode::replace_children(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
+{
+    // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
+    auto node_or_exception = convert_nodes_to_single_node(nodes, document());
+    if (node_or_exception.is_exception())
+        return node_or_exception.exception();
+
+    auto node = node_or_exception.release_value();
+
+    // 2. Ensure pre-insertion validity of node into this before null.
+    auto validity_exception = ensure_pre_insertion_validity(node, nullptr);
+    if (validity_exception.is_exception())
+        return validity_exception.exception();
+
+    // 3. Replace all with node within this.
+    replace_all(node);
+    return {};
+}
+
 }
