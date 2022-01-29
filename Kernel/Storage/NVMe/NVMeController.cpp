@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Arch/x86/Processor.h>
+#include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/FileSystem/ProcFS.h>

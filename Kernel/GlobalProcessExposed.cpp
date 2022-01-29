@@ -6,12 +6,10 @@
 
 #include <AK/JsonObjectSerializer.h>
 #include <AK/UBSanitizer.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -22,13 +20,13 @@
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessExposed.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/TTY.h>
 

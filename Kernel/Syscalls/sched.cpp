@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Process.h>
+#include <Kernel/Scheduler.h>
 
 namespace Kernel {
 

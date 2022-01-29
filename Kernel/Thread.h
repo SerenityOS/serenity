@@ -9,19 +9,16 @@
 #include <AK/Concepts.h>
 #include <AK/EnumBits.h>
 #include <AK/Error.h>
-#include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <Kernel/Arch/x86/SafeMem.h>
+#include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
 #include <Kernel/Library/ListedRefCounted.h>
@@ -30,13 +27,13 @@
 #include <Kernel/Locking/LockRank.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/VirtualRange.h>
-#include <Kernel/Scheduler.h>
-#include <Kernel/TimerQueue.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/fd_set.h>
 #include <LibC/signal_numbers.h>
 
 namespace Kernel {
+
+class Timer;
 
 namespace Memory {
 extern RecursiveSpinlock s_mm_lock;

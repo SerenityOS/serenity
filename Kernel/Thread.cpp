@@ -7,6 +7,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>

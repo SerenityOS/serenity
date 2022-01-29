@@ -12,6 +12,7 @@
 
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Process.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>

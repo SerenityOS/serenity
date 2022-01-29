@@ -15,6 +15,7 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/KBufferBuilder.h>
+#include <Kernel/Time/TimeManagement.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {

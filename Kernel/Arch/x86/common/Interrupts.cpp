@@ -15,6 +15,7 @@
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
@@ -25,8 +26,8 @@
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Arch/x86/ISRStubs.h>
 #include <Kernel/Arch/x86/PageFault.h>
+#include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
-#include <Kernel/KSyms.h>
 
 extern FlatPtr start_of_unmap_after_init;
 extern FlatPtr end_of_unmap_after_init;

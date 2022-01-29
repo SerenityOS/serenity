@@ -6,6 +6,7 @@
 
 #include <Kernel/Process.h>
 #include <Kernel/Time/TimeManagement.h>
+#include <Kernel/TimerQueue.h>
 
 namespace Kernel {
 

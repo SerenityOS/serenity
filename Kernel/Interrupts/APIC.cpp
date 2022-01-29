@@ -20,6 +20,7 @@
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
 #include <Kernel/Time/APICTimer.h>

@@ -7,8 +7,8 @@
 #include "NVMeQueue.h"
 #include "Kernel/StdLib.h"
 #include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
-#include <Kernel/Storage/NVMe/NVMeQueue.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {
