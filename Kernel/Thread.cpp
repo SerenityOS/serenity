@@ -147,6 +147,129 @@ Thread::~Thread()
     }
 }
 
+Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blocker)
+{
+    VERIFY(!Processor::current_in_irq());
+    VERIFY(this == Thread::current());
+    ScopedCritical critical;
+    VERIFY(!Memory::s_mm_lock.is_locked_by_current_processor());
+
+    SpinlockLocker block_lock(m_block_lock);
+    // We need to hold m_block_lock so that nobody can unblock a blocker as soon
+    // as it is constructed and registered elsewhere
+    VERIFY(!m_in_block);
+    TemporaryChange in_block_change(m_in_block, true);
+
+    ScopeGuard finalize_guard([&] {
+        blocker.finalize();
+    });
+
+    if (!blocker.setup_blocker()) {
+        blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::UnblockConditionAlreadyMet);
+        return BlockResult::NotBlocked;
+    }
+
+    SpinlockLocker scheduler_lock(g_scheduler_lock);
+    // Relaxed semantics are fine for timeout_unblocked because we
+    // synchronize on the spin locks already.
+    Atomic<bool, AK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
+    bool timer_was_added = false;
+
+    switch (state()) {
+    case Thread::Stopped:
+        // It's possible that we were requested to be stopped!
+        break;
+    case Thread::Running:
+        VERIFY(m_blocker == nullptr);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_blocker = &blocker;
+
+    if (auto& block_timeout = blocker.override_timeout(timeout); !block_timeout.is_infinite()) {
+        // Process::kill_all_threads may be called at any time, which will mark all
+        // threads to die. In that case
+        timer_was_added = TimerQueue::the().add_timer_without_id(*m_block_timer, block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
+            VERIFY(!Processor::current_in_irq());
+            VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
+            VERIFY(!m_block_lock.is_locked_by_current_processor());
+            // NOTE: this may execute on the same or any other processor!
+            SpinlockLocker scheduler_lock(g_scheduler_lock);
+            SpinlockLocker block_lock(m_block_lock);
+            if (m_blocker && !timeout_unblocked.exchange(true))
+                unblock();
+        });
+        if (!timer_was_added) {
+            // Timeout is already in the past
+            blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::TimeoutInThePast);
+            m_blocker = nullptr;
+            return BlockResult::InterruptedByTimeout;
+        }
+    }
+
+    blocker.begin_blocking({});
+
+    set_state(Thread::Blocked);
+
+    scheduler_lock.unlock();
+    block_lock.unlock();
+
+    dbgln_if(THREAD_DEBUG, "Thread {} blocking on {} ({}) -->", *this, &blocker, blocker.state_string());
+    bool did_timeout = false;
+    u32 lock_count_to_restore = 0;
+    auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
+    for (;;) {
+        // Yield to the scheduler, and wait for us to resume unblocked.
+        VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
+        VERIFY(Processor::in_critical());
+        yield_without_releasing_big_lock();
+        VERIFY(Processor::in_critical());
+
+        SpinlockLocker block_lock2(m_block_lock);
+        if (m_blocker && !m_blocker->can_be_interrupted() && !m_should_die) {
+            block_lock2.unlock();
+            dbgln("Thread should not be unblocking, current state: {}", state_string());
+            set_state(Thread::Blocked);
+            continue;
+        }
+        // Prevent the timeout from unblocking this thread if it happens to
+        // be in the process of firing already
+        did_timeout |= timeout_unblocked.exchange(true);
+        if (m_blocker) {
+            // Remove ourselves...
+            VERIFY(m_blocker == &blocker);
+            m_blocker = nullptr;
+        }
+        dbgln_if(THREAD_DEBUG, "<-- Thread {} unblocked from {} ({})", *this, &blocker, blocker.state_string());
+        break;
+    }
+
+    if (blocker.was_interrupted_by_signal()) {
+        SpinlockLocker scheduler_lock(g_scheduler_lock);
+        SpinlockLocker lock(m_lock);
+        dispatch_one_pending_signal();
+    }
+
+    // Notify the blocker that we are no longer blocking. It may need
+    // to clean up now while we're still holding m_lock
+    auto result = blocker.end_blocking({}, did_timeout); // calls was_unblocked internally
+
+    if (timer_was_added && !did_timeout) {
+        // Cancel the timer while not holding any locks. This allows
+        // the timer function to complete before we remove it
+        // (e.g. if it's on another processor)
+        TimerQueue::the().cancel_timer(*m_block_timer);
+    }
+    if (previous_locked != LockMode::Unlocked) {
+        // NOTE: this may trigger another call to Thread::block(), so
+        // we need to do this after we're all done and restored m_in_block!
+        relock_process(previous_locked, lock_count_to_restore);
+    }
+    return result;
+}
+
 void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32 lock_count)
 {
     VERIFY(!Processor::current_in_irq());

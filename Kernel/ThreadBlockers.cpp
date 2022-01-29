@@ -39,7 +39,10 @@ bool Thread::Blocker::add_to_blocker_set(Thread::BlockerSet& blocker_set, void* 
 
 Thread::Blocker::~Blocker()
 {
-    VERIFY(!m_lock.is_locked());
+}
+
+void Thread::Blocker::finalize()
+{
     if (m_blocker_set)
         m_blocker_set->remove_blocker(*this);
 }
@@ -371,6 +374,11 @@ bool Thread::SelectBlocker::setup_blocker()
 
 Thread::SelectBlocker::~SelectBlocker()
 {
+}
+
+void Thread::SelectBlocker::finalize()
+{
+    Thread::FileBlocker::finalize();
     for (auto& fd_entry : m_fds)
         fd_entry.description->blocker_set().remove_blocker(*this);
 }
