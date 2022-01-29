@@ -118,6 +118,8 @@ set(SOURCES
     Runtime/Intl/Segmenter.cpp
     Runtime/Intl/SegmenterConstructor.cpp
     Runtime/Intl/SegmenterPrototype.cpp
+    Runtime/Intl/Segments.cpp
+    Runtime/Intl/SegmentsPrototype.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp

@@ -38,6 +38,9 @@ public:
     GeneratorPrototype* generator_prototype() { return m_generator_prototype; }
     AsyncFromSyncIteratorPrototype* async_from_sync_iterator_prototype() { return m_async_from_sync_iterator_prototype; }
 
+    // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
+    Intl::SegmentsPrototype* intl_segments_prototype() { return m_intl_segments_prototype; }
+
     FunctionObject* array_prototype_values_function() const { return m_array_prototype_values_function; }
     FunctionObject* date_constructor_now_function() const { return m_date_constructor_now_function; }
     FunctionObject* eval_function() const { return m_eval_function; }
@@ -105,6 +108,9 @@ private:
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
     GeneratorPrototype* m_generator_prototype { nullptr };
     AsyncFromSyncIteratorPrototype* m_async_from_sync_iterator_prototype { nullptr };
+
+    // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
+    Intl::SegmentsPrototype* m_intl_segments_prototype { nullptr };
 
     FunctionObject* m_array_prototype_values_function { nullptr };
     FunctionObject* m_date_constructor_now_function { nullptr };
