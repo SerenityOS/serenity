@@ -23,7 +23,7 @@
             @GUI::Label {
                 fixed_width: 32
                 fixed_height: 32
-                name: "homepage_image_label"
+                icon: "/res/icons/32x32/home.png"
             }
 
             @GUI::Label {
@@ -56,7 +56,7 @@
             @GUI::Label {
                 fixed_width: 32
                 fixed_height: 32
-                name: "appearance_image_label"
+                icon: "/res/icons/32x32/color-chooser.png"
             }
 
             @GUI::Label {
@@ -103,7 +103,7 @@
             @GUI::Label {
                 fixed_width: 32
                 fixed_height: 32
-                name: "search_engine_image_label"
+                icon: "/res/icons/32x32/search-engine.png"
             }
 
             @GUI::CheckBox {
@@ -175,7 +175,7 @@
             @GUI::Label {
                 fixed_width: 32
                 fixed_height: 32
-                name: "download_image_label"
+                icon: "/res/icons/32x32/downloads.png"
             }
 
             @GUI::CheckBox {
