@@ -117,33 +117,17 @@ FlyString FlyString::to_lowercase() const
 
 bool FlyString::operator==(const String& other) const
 {
-    if (m_impl == other.impl())
-        return true;
-
-    if (!m_impl)
-        return !other.impl();
-
-    if (!other.impl())
-        return false;
-
-    if (length() != other.length())
-        return false;
-
-    return !__builtin_memcmp(characters(), other.characters(), length());
+    return m_impl == other.impl() || view() == other.view();
 }
 
 bool FlyString::operator==(StringView string) const
 {
-    return *this == String(string);
+    return view() == string;
 }
 
 bool FlyString::operator==(const char* string) const
 {
-    if (is_null())
-        return !string;
-    if (!string)
-        return false;
-    return !__builtin_strcmp(m_impl->characters(), string);
+    return view() == string;
 }
 
 }
