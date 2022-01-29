@@ -174,4 +174,21 @@ ExceptionOr<void> ParentNode::prepend(Vector<Variant<NonnullRefPtr<Node>, String
     return {};
 }
 
+ExceptionOr<void> ParentNode::append(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
+{
+    // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
+    auto node_or_exception = convert_nodes_to_single_node(nodes, document());
+    if (node_or_exception.is_exception())
+        return node_or_exception.exception();
+
+    auto node = node_or_exception.release_value();
+
+    // 2. Append node to this.
+    auto result = append_child(node);
+    if (result.is_exception())
+        return result.exception();
+
+    return {};
+}
+
 }

@@ -10,6 +10,7 @@ interface DocumentFragment : Node {
     readonly attribute unsigned long childElementCount;
 
     [CEReactions, Unscopable] undefined prepend((Node or DOMString)... nodes);
+    [CEReactions, Unscopable] undefined append((Node or DOMString)... nodes);
 
     Element? querySelector(DOMString selectors);
     [NewObject] NodeList querySelectorAll(DOMString selectors);
