@@ -389,6 +389,7 @@ namespace JS {
     P(seal)                                  \
     P(second)                                \
     P(seconds)                               \
+    P(segment)                               \
     P(sensitivity)                           \
     P(set)                                   \
     P(setBigInt64)                           \

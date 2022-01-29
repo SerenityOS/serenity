@@ -7,6 +7,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Segmenter.h>
 #include <LibJS/Runtime/Intl/SegmenterPrototype.h>
+#include <LibJS/Runtime/Intl/Segments.h>
 
 namespace JS::Intl {
 
@@ -27,6 +28,7 @@ void SegmenterPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
+    define_native_function(vm.names.segment, segment, 1, attr);
 }
 
 // 18.3.4 Intl.Segmenter.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.segmenter.prototype.resolvedoptions
@@ -49,6 +51,20 @@ JS_DEFINE_NATIVE_FUNCTION(SegmenterPrototype::resolved_options)
 
     // 5. Return options.
     return options;
+}
+
+// 18.3.3 Intl.Segmenter.prototype.segment ( string ), https://tc39.es/ecma402/#sec-intl.segmenter.prototype.segment
+JS_DEFINE_NATIVE_FUNCTION(SegmenterPrototype::segment)
+{
+    // 1. Let segmenter be the this value.
+    // 2. Perform ? RequireInternalSlot(segmenter, [[InitializedSegmenter]]).
+    auto* segmenter = TRY(typed_this_object(global_object));
+
+    // 3. Let string be ? ToString(string).
+    auto string = TRY(vm.argument(0).to_string(global_object));
+
+    // 4. Return ! CreateSegmentsObject(segmenter, string).
+    return Segments::create(global_object, *segmenter, move(string));
 }
 
 }
