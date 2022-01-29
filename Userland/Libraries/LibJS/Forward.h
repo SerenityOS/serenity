@@ -218,6 +218,10 @@ namespace Intl {
     class PrototypeName;
 JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
+
+// Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
+class Segments;
+class SegmentsPrototype;
 };
 
 namespace Temporal {
