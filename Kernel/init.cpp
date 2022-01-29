@@ -33,6 +33,7 @@
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/SysFSFirmware.h>
+#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/APIC.h>
@@ -135,6 +136,8 @@ READONLY_AFTER_INIT u8 multiboot_framebuffer_bpp;
 READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 }
 
+Atomic<Graphics::BootFramebufferConsole*> boot_framebuffer_console;
+
 extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 {
     g_in_early_boot = true;
@@ -187,6 +190,12 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     CommandLine::initialize();
     Memory::MemoryManager::initialize(0);
 
+    if (!multiboot_framebuffer_addr.is_null()) {
+        // NOTE: If the bootloader provided a framebuffer, then set up an initial console so we can see the output on the screen as soon as possible!
+        boot_framebuffer_console = &try_make_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
+    }
+    dmesgln("Starting SerenityOS...");
+
     DeviceManagement::initialize();
     SysFSComponentRegistry::initialize();
     DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());
@@ -223,8 +232,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
         // page directory.
         APIC::the().setup_ap_boot_environment();
     }
-
-    dmesgln("Starting SerenityOS...");
 
     {
         RefPtr<Thread> init_stage2_thread;
