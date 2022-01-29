@@ -327,22 +327,6 @@ void page_fault_handler(TrapFrame* trap)
         return handle_crash(regs, "Bad stack on page fault", SIGSEGV);
     }
 
-    if (fault_address >= (FlatPtr)&start_of_ro_after_init && fault_address < (FlatPtr)&end_of_ro_after_init) {
-        dump(regs);
-        PANIC("Attempt to write into READONLY_AFTER_INIT section");
-    }
-
-    if (fault_address >= (FlatPtr)&start_of_unmap_after_init && fault_address < (FlatPtr)&end_of_unmap_after_init) {
-        dump(regs);
-        auto sym = symbolicate_kernel_address(fault_address);
-        PANIC("Attempt to access UNMAP_AFTER_INIT section ({:p}: {})", fault_address, sym ? sym->name : "(Unknown)");
-    }
-
-    if (fault_address >= (FlatPtr)&start_of_kernel_ksyms && fault_address < (FlatPtr)&end_of_kernel_ksyms) {
-        dump(regs);
-        PANIC("Attempt to access KSYMS section");
-    }
-
     PageFault fault { regs.exception_code, VirtualAddress { fault_address } };
     auto response = MM.handle_page_fault(fault);
 

@@ -10,7 +10,6 @@
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <LibJS/AST.h>
 #include <LibJS/Forward.h>

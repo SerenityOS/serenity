@@ -18,9 +18,9 @@ void for_each_character_containing(StringView query, Callback callback)
     // FIXME: There's probably a better way to do this than just looping, but it still only takes ~150ms to run for me!
     for (u32 code_point = 1; code_point <= maximum_code_point; ++code_point) {
         if (auto maybe_display_name = Unicode::code_point_display_name(code_point); maybe_display_name.has_value()) {
-            auto& display_name = maybe_display_name.value();
+            auto display_name = maybe_display_name.release_value();
             if (display_name.contains(uppercase_query_view, AK::CaseSensitivity::CaseSensitive))
-                callback(code_point, display_name);
+                callback(code_point, move(display_name));
         }
     }
 }

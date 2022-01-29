@@ -81,9 +81,7 @@ ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_siz
 
 ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
 {
-    auto contiguous_physical_pages = MM.allocate_contiguous_supervisor_physical_pages(size);
-    if (contiguous_physical_pages.is_empty())
-        return ENOMEM;
+    auto contiguous_physical_pages = TRY(MM.allocate_contiguous_supervisor_physical_pages(size));
 
     auto new_physical_pages = TRY(FixedArray<RefPtr<PhysicalPage>>::try_create(contiguous_physical_pages.span()));
 
@@ -324,11 +322,12 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
         page = m_shared_committed_cow_pages->take_one();
     } else {
         dbgln_if(PAGE_FAULT_DEBUG, "    >> It's a COW page and it's time to COW!");
-        page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
-        if (page.is_null()) {
+        auto page_or_error = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
+        if (page_or_error.is_error()) {
             dmesgln("MM: handle_cow_fault was unable to allocate a physical page");
             return PageFaultResponse::OutOfMemory;
         }
+        page = page_or_error.release_value();
     }
 
     dbgln_if(PAGE_FAULT_DEBUG, "      >> COW {} <- {}", page->paddr(), page_slot->paddr());

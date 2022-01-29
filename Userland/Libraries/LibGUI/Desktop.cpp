@@ -16,10 +16,8 @@ namespace GUI {
 
 Desktop& Desktop::the()
 {
-    static Desktop* the;
-    if (!the)
-        the = new Desktop;
-    return *the;
+    static Desktop s_the;
+    return s_the;
 }
 
 Desktop::Desktop()

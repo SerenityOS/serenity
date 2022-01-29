@@ -8,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
+#include <LibCoredump/Backtrace.h>
 #include <LibRegex/Regex.h>
 #include <LibTest/TestRunner.h>
 #include <signal.h>
@@ -27,6 +28,7 @@ struct FileResult {
     double time_taken { 0 };
     Test::Result result { Test::Result::Pass };
     int stdout_err_fd { -1 };
+    pid_t child_pid { 0 };
 };
 
 String g_currently_running_test;
@@ -129,6 +131,32 @@ void TestRunner::do_run_single_test(const String& test_path, size_t current_test
         print_modifiers({ Test::BG_RED, Test::FG_BLACK, Test::FG_BOLD });
         out("{}", test_result.result == Test::Result::Fail ? " FAIL  " : "CRASHED");
         print_modifiers({ Test::CLEAR });
+        if (test_result.result == Test::Result::Crashed) {
+            auto pid_search_string = String::formatted("_{}_", test_result.child_pid);
+            Core::DirIterator iterator("/tmp/coredump"sv);
+            if (!iterator.has_error()) {
+                while (iterator.has_next()) {
+                    auto path = iterator.next_full_path();
+                    if (!path.contains(pid_search_string))
+                        continue;
+
+                    auto reader = Coredump::Reader::create(path);
+                    if (!reader)
+                        break;
+
+                    dbgln("Last crash backtrace for {} (was pid {}):", test_path, test_result.child_pid);
+                    reader->for_each_thread_info([&](auto thread_info) {
+                        Coredump::Backtrace thread_backtrace(*reader, thread_info);
+                        auto tid = thread_info.tid; // Note: Yoinking this out of the struct because we can't pass a reference to it (as it's a misaligned field in a packed struct)
+                        dbgln("Thread {}", tid);
+                        for (auto const& entry : thread_backtrace.entries())
+                            dbgln("- {}", entry.to_string(true));
+                        return IterationDecision::Continue;
+                    });
+                    break;
+                }
+            }
+        }
     } else {
         print_modifiers({ Test::BG_GREEN, Test::FG_BLACK, Test::FG_BOLD });
         out(" PASS  ");
@@ -251,7 +279,7 @@ FileResult TestRunner::run_test_file(const String& test_path)
     ret = unlink(child_out_err_path);
     VERIFY(ret == 0);
 
-    return FileResult { move(path_for_test), get_time_in_ms() - start_time, test_result, child_out_err_file };
+    return FileResult { move(path_for_test), get_time_in_ms() - start_time, test_result, child_out_err_file, child_pid };
 }
 
 int main(int argc, char** argv)

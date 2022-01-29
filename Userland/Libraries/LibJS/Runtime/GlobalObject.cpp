@@ -61,6 +61,8 @@
 #include <LibJS/Runtime/Intl/LocalePrototype.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 #include <LibJS/Runtime/Intl/NumberFormatPrototype.h>
+#include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
+#include <LibJS/Runtime/Intl/PluralRulesPrototype.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatPrototype.h>
 #include <LibJS/Runtime/IteratorPrototype.h>

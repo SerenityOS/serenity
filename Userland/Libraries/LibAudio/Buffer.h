@@ -74,11 +74,8 @@ class Buffer : public RefCounted<Buffer> {
 public:
     static ErrorOr<NonnullRefPtr<Buffer>> from_pcm_data(ReadonlyBytes data, int num_channels, PcmSampleFormat sample_format);
     static ErrorOr<NonnullRefPtr<Buffer>> from_pcm_stream(InputMemoryStream& stream, int num_channels, PcmSampleFormat sample_format, int num_samples);
-    static ErrorOr<NonnullRefPtr<Buffer>> create_with_samples(Vector<Sample>&& samples)
-    {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(move(samples)));
-    }
-    static ErrorOr<NonnullRefPtr<Buffer>> create_with_samples(FixedArray<Sample>&& samples)
+    template<ArrayLike<Sample> ArrayT>
+    static ErrorOr<NonnullRefPtr<Buffer>> create_with_samples(ArrayT&& samples)
     {
         return adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(move(samples)));
     }
@@ -100,16 +97,8 @@ public:
     Core::AnonymousBuffer const& anonymous_buffer() const { return m_buffer; }
 
 private:
-    explicit Buffer(Vector<Sample>&& samples)
-        // FIXME: AnonymousBuffers can't be empty, so even for empty buffers we create a buffer of size 1 here,
-        //        although the sample count is set to 0 to mark this.
-        : m_buffer(Core::AnonymousBuffer::create_with_size(max(samples.size(), 1) * sizeof(Sample)).release_value())
-        , m_id(allocate_id())
-        , m_sample_count(samples.size())
-    {
-        memcpy(m_buffer.data<void>(), samples.data(), samples.size() * sizeof(Sample));
-    }
-    explicit Buffer(FixedArray<Sample>&& samples)
+    template<ArrayLike<Sample> ArrayT>
+    explicit Buffer(ArrayT&& samples)
         // FIXME: AnonymousBuffers can't be empty, so even for empty buffers we create a buffer of size 1 here,
         //        although the sample count is set to 0 to mark this.
         : m_buffer(Core::AnonymousBuffer::create_with_size(max(samples.size(), 1) * sizeof(Sample)).release_value())

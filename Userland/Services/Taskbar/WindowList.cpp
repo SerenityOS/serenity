@@ -8,10 +8,8 @@
 
 WindowList& WindowList::the()
 {
-    static WindowList* s_the;
-    if (!s_the)
-        s_the = new WindowList;
-    return *s_the;
+    static WindowList s_the;
+    return s_the;
 }
 
 Window* WindowList::find_parent(const Window& window)

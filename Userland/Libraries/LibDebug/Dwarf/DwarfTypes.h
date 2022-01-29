@@ -47,7 +47,10 @@ struct [[gnu::packed]] CompilationUnitHeader {
 
     u32 length() const { return common.length; }
     u16 version() const { return common.version; }
-    CompilationUnitType unit_type() const { return (common.version <= 4) ? CompilationUnitType::Full : (CompilationUnitType)v5.unit_type; }
+    CompilationUnitType unit_type() const
+    {
+        return (common.version <= 4) ? CompilationUnitType::Full : static_cast<CompilationUnitType>(v5.unit_type);
+    }
     u32 abbrev_offset() const { return (common.version <= 4) ? v4.abbrev_offset : v5.abbrev_offset; }
     u8 address_size() const { return (common.version <= 4) ? v4.address_size : v5.address_size; }
 };

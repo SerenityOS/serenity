@@ -407,11 +407,12 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
         page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
         dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED COMMITTED {}", page_slot->paddr());
     } else {
-        page_slot = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
-        if (page_slot.is_null()) {
+        auto page_or_error = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+        if (page_or_error.is_error()) {
             dmesgln("MM: handle_zero_fault was unable to allocate a physical page");
             return PageFaultResponse::OutOfMemory;
         }
+        page_slot = page_or_error.release_value();
         dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED {}", page_slot->paddr());
     }
 
@@ -495,12 +496,12 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    vmobject_physical_page_entry = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
-
-    if (vmobject_physical_page_entry.is_null()) {
+    auto vmobject_physical_page_or_error = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
+    if (vmobject_physical_page_or_error.is_error()) {
         dmesgln("MM: handle_inode_fault was unable to allocate a physical page");
         return PageFaultResponse::OutOfMemory;
     }
+    vmobject_physical_page_entry = vmobject_physical_page_or_error.release_value();
 
     {
         SpinlockLocker mm_locker(s_mm_lock);

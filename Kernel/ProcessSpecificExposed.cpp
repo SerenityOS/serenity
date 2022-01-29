@@ -83,7 +83,7 @@ ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& pro
 
 ErrorOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const
 {
-    auto file_description = TRY(m_fds.open_file_description(fd));
+    auto file_description = TRY(open_file_description(fd));
     // Note: These links are not guaranteed to point to actual VFS paths, just like in other kernels.
     auto data = TRY(file_description->pseudo_path());
     TRY(builder.append(data->view()));
@@ -95,16 +95,18 @@ ErrorOr<void> Process::traverse_file_descriptions_directory(FileSystemID fsid, F
     TRY(callback({ ".", { fsid, m_procfs_traits->component_index() }, 0 }));
     TRY(callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 }));
     size_t count = 0;
-    fds().enumerate([&](auto& file_description_metadata) {
-        if (!file_description_metadata.is_valid()) {
+    fds().with_shared([&](auto& fds) {
+        fds.enumerate([&](auto& file_description_metadata) {
+            if (!file_description_metadata.is_valid()) {
+                count++;
+                return;
+            }
+            StringBuilder builder;
+            builder.appendff("{}", count);
+            // FIXME: Propagate errors from callback.
+            (void)callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, DT_LNK });
             count++;
-            return;
-        }
-        StringBuilder builder;
-        builder.appendff("{}", count);
-        // FIXME: Propagate errors from callback.
-        (void)callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, DT_LNK });
-        count++;
+        });
     });
     return {};
 }
@@ -115,7 +117,7 @@ ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(const 
     if (!maybe_index.has_value())
         return ENOENT;
 
-    if (!fds().get_if_valid(*maybe_index))
+    if (!m_fds.with_shared([&](auto& fds) { return fds.get_if_valid(*maybe_index); }))
         return ENOENT;
 
     return TRY(ProcFSProcessPropertyInode::try_create_for_file_description_link(procfs, *maybe_index, pid()));
@@ -178,43 +180,46 @@ ErrorOr<void> Process::procfs_get_perf_events(KBufferBuilder& builder) const
 ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const
 {
     JsonArraySerializer array { builder };
-    if (fds().open_count() == 0) {
+
+    return fds().with_shared([&](auto& fds) -> ErrorOr<void> {
+        if (fds.open_count() == 0) {
+            array.finish();
+            return {};
+        }
+
+        size_t count = 0;
+        fds.enumerate([&](auto& file_description_metadata) {
+            if (!file_description_metadata.is_valid()) {
+                count++;
+                return;
+            }
+            bool cloexec = file_description_metadata.flags() & FD_CLOEXEC;
+            RefPtr<OpenFileDescription> description = file_description_metadata.description();
+            auto description_object = array.add_object();
+            description_object.add("fd", count);
+            // TODO: Better OOM handling.
+            auto pseudo_path_or_error = description->pseudo_path();
+            description_object.add("absolute_path", pseudo_path_or_error.is_error() ? "???"sv : pseudo_path_or_error.value()->view());
+            description_object.add("seekable", description->file().is_seekable());
+            description_object.add("class", description->file().class_name());
+            description_object.add("offset", description->offset());
+            description_object.add("cloexec", cloexec);
+            description_object.add("blocking", description->is_blocking());
+            description_object.add("can_read", description->can_read());
+            description_object.add("can_write", description->can_write());
+            Inode* inode = description->inode();
+            if (inode != nullptr) {
+                auto inode_object = description_object.add_object("inode");
+                inode_object.add("fsid", inode->fsid().value());
+                inode_object.add("index", inode->index().value());
+                inode_object.finish();
+            }
+            count++;
+        });
+
         array.finish();
         return {};
-    }
-
-    size_t count = 0;
-    fds().enumerate([&](auto& file_description_metadata) {
-        if (!file_description_metadata.is_valid()) {
-            count++;
-            return;
-        }
-        bool cloexec = file_description_metadata.flags() & FD_CLOEXEC;
-        RefPtr<OpenFileDescription> description = file_description_metadata.description();
-        auto description_object = array.add_object();
-        description_object.add("fd", count);
-        // TODO: Better OOM handling.
-        auto pseudo_path_or_error = description->pseudo_path();
-        description_object.add("absolute_path", pseudo_path_or_error.is_error() ? "???"sv : pseudo_path_or_error.value()->view());
-        description_object.add("seekable", description->file().is_seekable());
-        description_object.add("class", description->file().class_name());
-        description_object.add("offset", description->offset());
-        description_object.add("cloexec", cloexec);
-        description_object.add("blocking", description->is_blocking());
-        description_object.add("can_read", description->can_read());
-        description_object.add("can_write", description->can_write());
-        Inode* inode = description->inode();
-        if (inode != nullptr) {
-            auto inode_object = description_object.add_object("inode");
-            inode_object.add("fsid", inode->fsid().value());
-            inode_object.add("index", inode->index().value());
-            inode_object.finish();
-        }
-        count++;
     });
-
-    array.finish();
-    return {};
 }
 
 ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) const

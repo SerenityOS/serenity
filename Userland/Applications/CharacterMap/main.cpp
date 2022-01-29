@@ -21,7 +21,7 @@ static void search_and_print_results(String const& query)
 {
     outln("Searching for '{}'", query);
     u32 result_count = 0;
-    for_each_character_containing(query, [&](auto code_point, auto& display_name) {
+    for_each_character_containing(query, [&](auto code_point, auto display_name) {
         StringBuilder builder;
         builder.append_code_point(code_point);
         builder.append(" - ");

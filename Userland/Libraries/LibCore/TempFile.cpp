@@ -6,7 +6,6 @@
 
 #include "TempFile.h"
 #include <AK/Random.h>
-#include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <fcntl.h>
 #include <stdlib.h>

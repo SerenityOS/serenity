@@ -113,7 +113,7 @@ RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::Mode
         }));
     }
 
-    auto variable_address = (FlatPtr*)variable->location_data.address;
+    auto variable_address = variable->location_data.address;
     if (Debugger::the().session()->watchpoint_exists(variable_address)) {
         context_menu->add_action(GUI::Action::create("Remove watchpoint", [variable_address](auto&) {
             Debugger::the().session()->remove_watchpoint(variable_address);

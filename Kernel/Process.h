@@ -552,8 +552,6 @@ private:
 
     void clear_futex_queues_on_exec();
 
-    void setup_socket_fd(int fd, NonnullRefPtr<OpenFileDescription> description, int type);
-
     ErrorOr<void> remap_range_as_stack(FlatPtr address, size_t size);
 
 public:
@@ -633,15 +631,16 @@ public:
     class ScopedDescriptionAllocation;
     class OpenFileDescriptions {
         AK_MAKE_NONCOPYABLE(OpenFileDescriptions);
+        AK_MAKE_NONMOVABLE(OpenFileDescriptions);
         friend class Process;
 
     public:
+        OpenFileDescriptions() { }
         ALWAYS_INLINE const OpenFileDescriptionAndFlags& operator[](size_t i) const { return at(i); }
         ALWAYS_INLINE OpenFileDescriptionAndFlags& operator[](size_t i) { return at(i); }
 
         ErrorOr<void> try_clone(const Kernel::Process::OpenFileDescriptions& other)
         {
-            SpinlockLocker lock_other(other.m_fds_lock);
             TRY(try_resize(other.m_fds_metadatas.size()));
 
             for (size_t i = 0; i < other.m_fds_metadatas.size(); ++i) {
@@ -671,16 +670,13 @@ public:
 
         void clear()
         {
-            SpinlockLocker lock(m_fds_lock);
             m_fds_metadatas.clear();
         }
 
         ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd) const;
 
     private:
-        OpenFileDescriptions() = default;
         static constexpr size_t s_max_open_file_descriptors { FD_SETSIZE };
-        mutable Spinlock m_fds_lock;
         Vector<OpenFileDescriptionAndFlags> m_fds_metadatas;
     };
 
@@ -702,6 +698,15 @@ public:
             swap(m_description, other.m_description);
         }
 
+        ScopedDescriptionAllocation& operator=(ScopedDescriptionAllocation&& other)
+        {
+            if (this != &other) {
+                m_description = exchange(other.m_description, nullptr);
+                fd = exchange(other.fd, -1);
+            }
+            return *this;
+        }
+
         ~ScopedDescriptionAllocation()
         {
             if (m_description && m_description->is_allocated() && !m_description->is_valid()) {
@@ -709,7 +714,7 @@ public:
             }
         }
 
-        const int fd { -1 };
+        int fd { -1 };
 
     private:
         OpenFileDescriptionAndFlags* m_description { nullptr };
@@ -741,8 +746,23 @@ public:
         WeakPtr<Process> m_process;
     };
 
-    OpenFileDescriptions& fds() { return m_fds; }
-    const OpenFileDescriptions& fds() const { return m_fds; }
+    MutexProtected<OpenFileDescriptions>& fds() { return m_fds; }
+    MutexProtected<OpenFileDescriptions> const& fds() const { return m_fds; }
+
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd)
+    {
+        return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
+    }
+
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd) const
+    {
+        return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
+    }
+
+    ErrorOr<ScopedDescriptionAllocation> allocate_fd()
+    {
+        return m_fds.with_exclusive([](auto& fds) { return fds.allocate(); });
+    }
 
 private:
     SpinlockProtected<Thread::ListInProcess>& thread_list() { return m_thread_list; }
@@ -750,7 +770,7 @@ private:
 
     SpinlockProtected<Thread::ListInProcess> m_thread_list;
 
-    OpenFileDescriptions m_fds;
+    MutexProtected<OpenFileDescriptions> m_fds;
 
     const bool m_is_kernel_process;
     Atomic<State> m_state { State::Running };

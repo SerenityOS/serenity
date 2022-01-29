@@ -17,7 +17,7 @@
 
 namespace Coredump {
 
-ELFObjectInfo const* Backtrace::object_info_for_region(ELF::Core::MemoryRegionInfo const& region)
+ELFObjectInfo const* Backtrace::object_info_for_region(MemoryRegionInfo const& region)
 {
     auto path = region.object_name();
     if (!path.starts_with('/') && Core::File::looks_like_shared_library(path))
@@ -46,32 +46,32 @@ Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread
     : m_thread_info(move(thread_info))
 {
 #if ARCH(I386)
-    auto* start_bp = (FlatPtr*)m_thread_info.regs.ebp;
-    auto* start_ip = (FlatPtr*)m_thread_info.regs.eip;
+    auto start_bp = m_thread_info.regs.ebp;
+    auto start_ip = m_thread_info.regs.eip;
 #else
-    auto* start_bp = (FlatPtr*)m_thread_info.regs.rbp;
-    auto* start_ip = (FlatPtr*)m_thread_info.regs.rip;
+    auto start_bp = m_thread_info.regs.rbp;
+    auto start_ip = m_thread_info.regs.rip;
 #endif
 
     // In order to provide progress updates, we first have to walk the
     // call stack to determine how many frames it has.
     size_t frame_count = 0;
     {
-        auto* bp = start_bp;
-        auto* ip = start_ip;
+        auto bp = start_bp;
+        auto ip = start_ip;
         while (bp && ip) {
             ++frame_count;
-            auto next_ip = coredump.peek_memory((FlatPtr)(bp + 1));
-            auto next_bp = coredump.peek_memory((FlatPtr)(bp));
+            auto next_ip = coredump.peek_memory(bp + sizeof(FlatPtr));
+            auto next_bp = coredump.peek_memory(bp);
             if (!next_ip.has_value() || !next_bp.has_value())
                 break;
-            ip = (FlatPtr*)next_ip.value();
-            bp = (FlatPtr*)next_bp.value();
+            ip = next_ip.value();
+            bp = next_bp.value();
         }
     }
 
-    auto* bp = start_bp;
-    auto* ip = start_ip;
+    auto bp = start_bp;
+    auto ip = start_ip;
     size_t frame_index = 0;
     while (bp && ip) {
         // We use eip - 1 because the return address from a function frame
@@ -79,17 +79,17 @@ Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread
         // However, because the first frame represents the faulting
         // instruction rather than the return address we don't subtract
         // 1 there.
-        VERIFY((FlatPtr)ip > 0);
-        add_entry(coredump, (FlatPtr)ip - ((frame_index == 0) ? 0 : 1));
+        VERIFY(ip > 0);
+        add_entry(coredump, ip - ((frame_index == 0) ? 0 : 1));
         if (on_progress)
             on_progress(frame_index, frame_count);
         ++frame_index;
-        auto next_ip = coredump.peek_memory((FlatPtr)(bp + 1));
-        auto next_bp = coredump.peek_memory((FlatPtr)(bp));
+        auto next_ip = coredump.peek_memory(bp + sizeof(FlatPtr));
+        auto next_bp = coredump.peek_memory(bp);
         if (!next_ip.has_value() || !next_bp.has_value())
             break;
-        ip = (FlatPtr*)next_ip.value();
-        bp = (FlatPtr*)next_bp.value();
+        ip = next_ip.value();
+        bp = next_bp.value();
     }
 }
 
@@ -99,8 +99,8 @@ Backtrace::~Backtrace()
 
 void Backtrace::add_entry(const Reader& coredump, FlatPtr ip)
 {
-    auto* ip_region = coredump.region_containing((FlatPtr)ip);
-    if (!ip_region) {
+    auto ip_region = coredump.region_containing(ip);
+    if (!ip_region.has_value()) {
         m_entries.append({ ip, {}, {}, {} });
         return;
     }
@@ -116,7 +116,7 @@ void Backtrace::add_entry(const Reader& coredump, FlatPtr ip)
     // the PT_LOAD header for the .text segment isn't the first one
     // in the object file.
     auto region = coredump.first_region_for_object(object_name);
-    auto* object_info = object_info_for_region(*region);
+    auto object_info = object_info_for_region(*region);
     if (!object_info)
         return;
 

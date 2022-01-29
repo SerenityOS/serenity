@@ -5,9 +5,9 @@
  */
 
 #include "FindDialog.h"
+#include <AK/Array.h>
 #include <AK/Hex.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <Applications/HexEditor/FindDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -23,9 +23,11 @@ struct Option {
     bool default_action;
 };
 
-static const Vector<Option> options = {
-    { "ASCII String", OPTION_ASCII_STRING, true, true },
-    { "Hex value", OPTION_HEX_VALUE, true, false },
+static const Array<Option, 2> options = {
+    {
+        { "ASCII String", OPTION_ASCII_STRING, true, true },
+        { "Hex value", OPTION_HEX_VALUE, true, false },
+    }
 };
 
 int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer, bool& find_all)

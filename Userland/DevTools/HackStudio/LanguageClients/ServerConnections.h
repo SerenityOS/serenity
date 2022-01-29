@@ -15,7 +15,7 @@
 #define LANGUAGE_CLIENT(language_name_, socket_name)                                                  \
     namespace language_name_ {                                                                        \
     class ServerConnection final : public HackStudio::ServerConnection {                              \
-        IPC_CLIENT_CONNECTION(ServerConnection, "/tmp/portal/language" #socket_name)                  \
+        IPC_CLIENT_CONNECTION(ServerConnection, "/tmp/portal/language/" #socket_name)                 \
     public:                                                                                           \
         static const char* language_name() { return #language_name_; }                                \
                                                                                                       \

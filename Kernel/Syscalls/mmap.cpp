@@ -217,7 +217,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
             return EINVAL;
         if (static_cast<size_t>(offset) & ~PAGE_MASK)
             return EINVAL;
-        auto description = TRY(fds().open_file_description(fd));
+        auto description = TRY(open_file_description(fd));
         if (description->is_directory())
             return ENODEV;
         // Require read access even when read protection is not requested.

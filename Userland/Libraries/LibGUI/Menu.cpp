@@ -20,10 +20,8 @@ static IDAllocator s_menu_id_allocator;
 
 static HashMap<int, Menu*>& all_menus()
 {
-    static HashMap<int, Menu*>* map;
-    if (!map)
-        map = new HashMap<int, Menu*>();
-    return *map;
+    static HashMap<int, Menu*> s_map;
+    return s_map;
 }
 
 Menu* Menu::from_menu_id(int menu_id)

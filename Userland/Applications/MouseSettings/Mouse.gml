@@ -179,18 +179,10 @@
                 name: "switch_buttons_image_label"
             }
 
-            @GUI::Label {
-                text: "Switch primary and secondary buttons"
-                fixed_width: 201
-                text_alignment: "CenterLeft"
-                name: "switch_buttons_label"
-            }
-
             @GUI::CheckBox {
                 name: "switch_buttons_input"
-                fixed_width: 14
-
+                text: "Switch primary and secondary buttons"
             }
         }
-    }    
+    }
 }

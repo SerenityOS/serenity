@@ -12,6 +12,7 @@
 #include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/KSyms.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
@@ -572,11 +573,12 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         return &quickmap_pt(PhysicalAddress(pde.page_table_base()))[page_table_index];
 
     bool did_purge = false;
-    auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
-    if (!page_table) {
+    auto page_table_or_error = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
+    if (page_table_or_error.is_error()) {
         dbgln("MM: Unable to allocate page table to map {}", vaddr);
         return nullptr;
     }
+    auto page_table = page_table_or_error.release_value();
     if (did_purge) {
         // If any memory had to be purged, ensure_pte may have been called as part
         // of the purging process. So we need to re-map the pd in this case to ensure
@@ -644,6 +646,9 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 {
+    if (is_user_address(vaddr))
+        return nullptr;
+
     SpinlockLocker lock(s_mm_lock);
     auto* region = MM.m_kernel_regions.find_largest_not_above(vaddr.get());
     if (!region || !region->contains(vaddr))
@@ -716,6 +721,22 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
 PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
 {
     VERIFY_INTERRUPTS_DISABLED();
+
+    auto faulted_in_range = [&fault](auto const* start, auto const* end) {
+        return fault.vaddr() >= VirtualAddress { start } && fault.vaddr() < VirtualAddress { end };
+    };
+
+    if (faulted_in_range(&start_of_ro_after_init, &end_of_ro_after_init))
+        PANIC("Attempt to write into READONLY_AFTER_INIT section");
+
+    if (faulted_in_range(&start_of_unmap_after_init, &end_of_unmap_after_init)) {
+        auto const* kernel_symbol = symbolicate_kernel_address(fault.vaddr().get());
+        PANIC("Attempt to access UNMAP_AFTER_INIT section ({:p}: {})", fault.vaddr(), kernel_symbol ? kernel_symbol->name : "(Unknown)");
+    }
+
+    if (faulted_in_range(&start_of_kernel_ksyms, &end_of_kernel_ksyms))
+        PANIC("Attempt to access KSYMS section");
+
     if (Processor::current_in_irq()) {
         dbgln("CPU[{}] BUG! Page fault while handling IRQ! code={}, vaddr={}, irq level: {}",
             Processor::current_id(), fault.code(), fault.vaddr(), Processor::current_in_irq());
@@ -741,12 +762,9 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page)
 {
-    dma_buffer_page = allocate_supervisor_physical_page();
-    if (dma_buffer_page.is_null())
-        return ENOMEM;
+    dma_buffer_page = TRY(allocate_supervisor_physical_page());
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
-    auto region_or_error = allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access, Region::Cacheable::No);
-    return region_or_error;
+    return allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access, Region::Cacheable::No);
 }
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access)
@@ -759,12 +777,9 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages)
 {
     VERIFY(!(size % PAGE_SIZE));
-    dma_buffer_pages = allocate_contiguous_supervisor_physical_pages(size);
-    if (dma_buffer_pages.is_empty())
-        return ENOMEM;
+    dma_buffer_pages = TRY(allocate_contiguous_supervisor_physical_pages(size));
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
-    auto region_or_error = allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access, Region::Cacheable::No);
-    return region_or_error;
+    return allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access, Region::Cacheable::No);
 }
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access)
@@ -898,7 +913,7 @@ NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_user_physical_page
     return page.release_nonnull();
 }
 
-RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
+ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
 {
     SpinlockLocker lock(s_mm_lock);
     auto page = find_free_user_physical_page(false);
@@ -924,7 +939,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
         });
         if (!page) {
             dmesgln("MM: no user physical pages available");
-            return {};
+            return ENOMEM;
         }
     }
 
@@ -936,10 +951,10 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
 
     if (did_purge)
         *did_purge = purged_pages;
-    return page;
+    return page.release_nonnull();
 }
 
-NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
+ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(s_mm_lock);
@@ -948,35 +963,32 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
 
     if (physical_pages.is_empty()) {
         dmesgln("MM: no super physical pages available");
-        VERIFY_NOT_REACHED();
-        return {};
+        return ENOMEM;
     }
 
     {
-        auto region_or_error = MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write);
-        if (region_or_error.is_error())
-            TODO();
-        auto cleanup_region = region_or_error.release_value();
-        fast_u32_fill((u32*)cleanup_region->vaddr().as_ptr(), 0, (PAGE_SIZE * count) / sizeof(u32));
+        auto cleanup_region = TRY(MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write));
+        memset(cleanup_region->vaddr().as_ptr(), 0, PAGE_SIZE * count);
     }
     m_system_memory_info.super_physical_pages_used += count;
     return physical_pages;
 }
 
-RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
+ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_supervisor_physical_page()
 {
     SpinlockLocker lock(s_mm_lock);
     auto page = m_super_physical_region->take_free_page();
 
     if (!page) {
         dmesgln("MM: no super physical pages available");
-        VERIFY_NOT_REACHED();
-        return {};
+        return ENOMEM;
     }
 
-    fast_u32_fill((u32*)page->paddr().offset(physical_to_virtual_offset).as_ptr(), 0, PAGE_SIZE / sizeof(u32));
+    auto* ptr = quickmap_page(*page);
+    memset(ptr, 0, PAGE_SIZE);
+    unquickmap_page();
     ++m_system_memory_info.super_physical_pages_used;
-    return page;
+    return page.release_nonnull();
 }
 
 void MemoryManager::enter_process_address_space(Process& process)

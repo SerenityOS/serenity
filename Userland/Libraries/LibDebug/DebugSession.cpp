@@ -80,11 +80,11 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command,
 
         auto parts = command.split(' ');
         VERIFY(!parts.is_empty());
-        const char** args = (const char**)calloc(parts.size() + 1, sizeof(const char*));
+        const char** args = bit_cast<const char**>(calloc(parts.size() + 1, sizeof(const char*)));
         for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
         }
-        const char** envp = (const char**)calloc(2, sizeof(const char*));
+        const char** envp = bit_cast<const char**>(calloc(2, sizeof(const char*)));
         // This causes loader to stop on a breakpoint before jumping to the entry point of the program.
         envp[0] = "_LOADER_BREAKPOINT=1";
         int rc = execvpe(args[0], const_cast<char**>(args), const_cast<char**>(envp));
@@ -129,27 +129,27 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command,
     return debug_session;
 }
 
-bool DebugSession::poke(void* address, FlatPtr data)
+bool DebugSession::poke(FlatPtr address, FlatPtr data)
 {
-    if (ptrace(PT_POKE, m_debuggee_pid, (void*)address, (void*)data) < 0) {
+    if (ptrace(PT_POKE, m_debuggee_pid, bit_cast<void*>(address), bit_cast<void*>(data)) < 0) {
         perror("PT_POKE");
         return false;
     }
     return true;
 }
 
-Optional<FlatPtr> DebugSession::peek(void* address) const
+Optional<FlatPtr> DebugSession::peek(FlatPtr address) const
 {
     Optional<FlatPtr> result;
-    auto rc = ptrace(PT_PEEK, m_debuggee_pid, address, nullptr);
+    auto rc = ptrace(PT_PEEK, m_debuggee_pid, bit_cast<void*>(address), nullptr);
     if (errno == 0)
         result = static_cast<FlatPtr>(rc);
     return result;
 }
 
-bool DebugSession::poke_debug(u32 register_index, FlatPtr data)
+bool DebugSession::poke_debug(u32 register_index, FlatPtr data) const
 {
-    if (ptrace(PT_POKEDEBUG, m_debuggee_pid, reinterpret_cast<void*>(register_index), (void*)data) < 0) {
+    if (ptrace(PT_POKEDEBUG, m_debuggee_pid, bit_cast<void*>(static_cast<FlatPtr>(register_index)), bit_cast<void*>(data)) < 0) {
         perror("PT_POKEDEBUG");
         return false;
     }
@@ -158,14 +158,14 @@ bool DebugSession::poke_debug(u32 register_index, FlatPtr data)
 
 Optional<FlatPtr> DebugSession::peek_debug(u32 register_index) const
 {
-    Optional<FlatPtr> result;
-    int rc = ptrace(PT_PEEKDEBUG, m_debuggee_pid, reinterpret_cast<FlatPtr*>(register_index), nullptr);
+    auto rc = ptrace(PT_PEEKDEBUG, m_debuggee_pid, bit_cast<void*>(static_cast<FlatPtr>(register_index)), nullptr);
     if (errno == 0)
-        result = static_cast<FlatPtr>(rc);
-    return result;
+        return static_cast<FlatPtr>(rc);
+
+    return {};
 }
 
-bool DebugSession::insert_breakpoint(void* address)
+bool DebugSession::insert_breakpoint(FlatPtr address)
 {
     // We insert a software breakpoint by
     // patching the first byte of the instruction at 'address'
@@ -174,7 +174,7 @@ bool DebugSession::insert_breakpoint(void* address)
     if (m_breakpoints.contains(address))
         return false;
 
-    auto original_bytes = peek(reinterpret_cast<FlatPtr*>(address));
+    auto original_bytes = peek(address);
 
     if (!original_bytes.has_value())
         return false;
@@ -190,11 +190,11 @@ bool DebugSession::insert_breakpoint(void* address)
     return true;
 }
 
-bool DebugSession::disable_breakpoint(void* address)
+bool DebugSession::disable_breakpoint(FlatPtr address)
 {
     auto breakpoint = m_breakpoints.get(address);
     VERIFY(breakpoint.has_value());
-    if (!poke(reinterpret_cast<FlatPtr*>(reinterpret_cast<char*>(breakpoint.value().address)), breakpoint.value().original_first_word))
+    if (!poke(breakpoint.value().address, breakpoint.value().original_first_word))
         return false;
 
     auto bp = m_breakpoints.get(breakpoint.value().address).value();
@@ -203,14 +203,14 @@ bool DebugSession::disable_breakpoint(void* address)
     return true;
 }
 
-bool DebugSession::enable_breakpoint(void* address)
+bool DebugSession::enable_breakpoint(FlatPtr address)
 {
     auto breakpoint = m_breakpoints.get(address);
     VERIFY(breakpoint.has_value());
 
     VERIFY(breakpoint.value().state == BreakPointState::Disabled);
 
-    if (!poke(reinterpret_cast<FlatPtr*>(breakpoint.value().address), (breakpoint.value().original_first_word & ~(FlatPtr)0xff) | BREAKPOINT_INSTRUCTION))
+    if (!poke(breakpoint.value().address, (breakpoint.value().original_first_word & ~static_cast<FlatPtr>(0xff)) | BREAKPOINT_INSTRUCTION))
         return false;
 
     auto bp = m_breakpoints.get(breakpoint.value().address).value();
@@ -219,7 +219,7 @@ bool DebugSession::enable_breakpoint(void* address)
     return true;
 }
 
-bool DebugSession::remove_breakpoint(void* address)
+bool DebugSession::remove_breakpoint(FlatPtr address)
 {
     if (!disable_breakpoint(address))
         return false;
@@ -228,12 +228,12 @@ bool DebugSession::remove_breakpoint(void* address)
     return true;
 }
 
-bool DebugSession::breakpoint_exists(void* address) const
+bool DebugSession::breakpoint_exists(FlatPtr address) const
 {
     return m_breakpoints.contains(address);
 }
 
-bool DebugSession::insert_watchpoint(void* address, u32 ebp)
+bool DebugSession::insert_watchpoint(FlatPtr address, u32 ebp)
 {
     auto current_register_status = peek_debug(DEBUG_CONTROL_REGISTER);
     if (!current_register_status.has_value())
@@ -250,7 +250,7 @@ bool DebugSession::insert_watchpoint(void* address, u32 ebp)
         return false;
     WatchPoint watchpoint { address, next_available_index, ebp };
 
-    if (!poke_debug(next_available_index, reinterpret_cast<uintptr_t>(address)))
+    if (!poke_debug(next_available_index, bit_cast<FlatPtr>(address)))
         return false;
 
     dr7_value |= (1u << (next_available_index * 2)); // Enable local breakpoint for our index
@@ -268,14 +268,14 @@ bool DebugSession::insert_watchpoint(void* address, u32 ebp)
     return true;
 }
 
-bool DebugSession::remove_watchpoint(void* address)
+bool DebugSession::remove_watchpoint(FlatPtr address)
 {
     if (!disable_watchpoint(address))
         return false;
     return m_watchpoints.remove(address);
 }
 
-bool DebugSession::disable_watchpoint(void* address)
+bool DebugSession::disable_watchpoint(FlatPtr address)
 {
     VERIFY(watchpoint_exists(address));
     auto watchpoint = m_watchpoints.get(address).value();
@@ -291,7 +291,7 @@ bool DebugSession::disable_watchpoint(void* address)
     return true;
 }
 
-bool DebugSession::watchpoint_exists(void* address) const
+bool DebugSession::watchpoint_exists(FlatPtr address) const
 {
     return m_watchpoints.contains(address);
 }
@@ -308,7 +308,7 @@ PtraceRegisters DebugSession::get_registers() const
 
 void DebugSession::set_registers(PtraceRegisters const& regs)
 {
-    if (ptrace(PT_SETREGS, m_debuggee_pid, reinterpret_cast<void*>(&const_cast<PtraceRegisters&>(regs)), 0) < 0) {
+    if (ptrace(PT_SETREGS, m_debuggee_pid, bit_cast<void*>(&regs), 0) < 0) {
         perror("PT_SETREGS");
         VERIFY_NOT_REACHED();
     }
@@ -334,7 +334,7 @@ int DebugSession::continue_debuggee_and_wait(ContinueType type)
     return wstatus;
 }
 
-void* DebugSession::single_step()
+FlatPtr DebugSession::single_step()
 {
     // Single stepping works by setting the x86 TRAP flag bit in the eflags register.
     // This flag causes the cpu to enter single-stepping mode, which causes
@@ -365,7 +365,7 @@ void* DebugSession::single_step()
     regs.rflags &= ~(TRAP_FLAG);
 #endif
     set_registers(regs);
-    return (void*)regs.ip();
+    return regs.ip();
 }
 
 void DebugSession::detach()
@@ -390,8 +390,8 @@ Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_brea
         if (!symbol.has_value())
             return IterationDecision::Continue;
 
-        auto breakpoint_address = symbol.value().value() + lib.base_address;
-        bool rc = this->insert_breakpoint(reinterpret_cast<void*>(breakpoint_address));
+        FlatPtr breakpoint_address = symbol->value() + lib.base_address;
+        bool rc = this->insert_breakpoint(breakpoint_address);
         if (!rc)
             return IterationDecision::Break;
 
@@ -408,7 +408,7 @@ Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::ins
         return {};
 
     auto address = address_and_source_position.value().address;
-    bool rc = this->insert_breakpoint(reinterpret_cast<void*>(address));
+    bool rc = this->insert_breakpoint(address);
     if (!rc)
         return {};
 

@@ -57,7 +57,7 @@ ErrorOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));
 
-    auto description = TRY(fds().open_file_description(fd));
+    auto description = TRY(open_file_description(fd));
     auto const* inode = description->inode();
     if (inode == nullptr)
         return ENOENT;

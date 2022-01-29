@@ -68,6 +68,22 @@ void dump_jobs();
 constexpr static inline size_t MaxConcurrentConnectionsPerURL = 2;
 constexpr static inline size_t ConnectionKeepAliveTimeMilliseconds = 10'000;
 
+template<typename T>
+void recreate_socket_if_needed(T& connection, URL const& url)
+{
+    using SocketType = RemoveCVReference<decltype(*connection.socket)>;
+    bool is_connected;
+    if constexpr (IsSame<SocketType, TLS::TLSv12>)
+        is_connected = connection.socket->is_established();
+    else
+        is_connected = connection.socket->is_connected();
+    if (!is_connected) {
+        // Create another socket for the connection.
+        connection.socket = SocketType::construct(nullptr);
+        dbgln_if(REQUESTSERVER_DEBUG, "Creating a new socket for {} -> {}", url, connection.socket);
+    }
+}
+
 decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
 {
     using CacheEntryType = RemoveCVReference<decltype(*cache.begin()->value)>;
@@ -105,6 +121,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
     }
     auto& connection = sockets_for_url[index];
     if (!connection.has_started) {
+        recreate_socket_if_needed(connection, url);
         dbgln_if(REQUESTSERVER_DEBUG, "Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
         connection.has_started = true;
         connection.removal_timer->stop();

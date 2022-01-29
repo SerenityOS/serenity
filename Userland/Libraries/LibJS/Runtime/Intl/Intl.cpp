@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/Intl/ListFormatConstructor.h>
 #include <LibJS/Runtime/Intl/LocaleConstructor.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
+#include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
 
 namespace JS::Intl {
@@ -38,6 +39,7 @@ void Intl::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.ListFormat, global_object.intl_list_format_constructor(), attr);
     define_direct_property(vm.names.Locale, global_object.intl_locale_constructor(), attr);
     define_direct_property(vm.names.NumberFormat, global_object.intl_number_format_constructor(), attr);
+    define_direct_property(vm.names.PluralRules, global_object.intl_plural_rules_constructor(), attr);
     define_direct_property(vm.names.RelativeTimeFormat, global_object.intl_relative_time_format_constructor(), attr);
 
     define_native_function(vm.names.getCanonicalLocales, get_canonical_locales, 1, attr);

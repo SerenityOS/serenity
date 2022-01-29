@@ -76,7 +76,7 @@ ErrorOr<void> UHCIController::initialize()
     dmesgln("UHCI: I/O base {}", m_io_base);
     dmesgln("UHCI: Interrupt line: {}", interrupt_number());
 
-    spawn_port_proc();
+    TRY(spawn_port_process());
 
     TRY(reset());
     return start();
@@ -464,15 +464,10 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
     return transfer_size;
 }
 
-void UHCIController::spawn_port_proc()
+ErrorOr<void> UHCIController::spawn_port_process()
 {
     RefPtr<Thread> usb_hotplug_thread;
-
-    auto process_name = KString::try_create("UHCI hotplug");
-    if (process_name.is_error())
-        TODO();
-
-    (void)Process::create_kernel_process(usb_hotplug_thread, process_name.release_value(), [&] {
+    (void)Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI hotplug")), [&] {
         for (;;) {
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();
@@ -480,6 +475,7 @@ void UHCIController::spawn_port_proc()
             (void)Thread::current()->sleep(Time::from_seconds(1));
         }
     });
+    return {};
 }
 
 bool UHCIController::handle_irq(const RegisterState&)

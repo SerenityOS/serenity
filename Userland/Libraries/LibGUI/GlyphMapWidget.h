@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Vector.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/TextRange.h>
 #include <LibGfx/BitmapFont.h>

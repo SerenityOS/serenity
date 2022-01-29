@@ -22,7 +22,7 @@ AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::Maske
 {
     // FIXME: Use the number of taken ports to determine how many pages we should allocate.
     for (size_t index = 0; index < (((size_t)AHCI::Limits::MaxPorts * 512) / PAGE_SIZE); index++) {
-        m_identify_metadata_pages.append(MM.allocate_supervisor_physical_page().release_nonnull());
+        m_identify_metadata_pages.append(MM.allocate_supervisor_physical_page().release_value_but_fixme_should_propagate_errors());
     }
 
     dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ {}", irq);

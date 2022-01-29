@@ -101,11 +101,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
         while (it.has_next()) {
             auto child_path = it.next_full_path();
-            if (!Core::File::is_directory(child_path)) {
+            if (Core::File::is_link(child_path))
+                return;
+            if (!Core::File::is_directory(child_path))
                 add_file(child_path);
-            } else {
+            else
                 handle_directory(child_path, handle_directory);
-            }
         }
     };
 

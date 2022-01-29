@@ -10,7 +10,6 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
 #include <AK/URL.h>
-#include <AK/Vector.h>
 
 namespace Gemini {
 

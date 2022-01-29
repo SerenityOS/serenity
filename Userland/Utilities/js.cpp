@@ -37,6 +37,7 @@
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/Intl/Locale.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
+#include <LibJS/Runtime/Intl/PluralRules.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Map.h>
@@ -69,7 +70,6 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
-#include <time.h>
 #include <unistd.h>
 
 RefPtr<JS::VM> vm;
@@ -779,6 +779,36 @@ static void print_intl_relative_time_format(JS::Object& object, HashTable<JS::Ob
     print_value(js_string(object.vm(), date_time_format.numeric_string()), seen_objects);
 }
 
+static void print_intl_plural_rules(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& plural_rules = static_cast<JS::Intl::PluralRules const&>(object);
+    print_type("Intl.PluralRules");
+    js_out("\n  locale: ");
+    print_value(js_string(object.vm(), plural_rules.locale()), seen_objects);
+    js_out("\n  type: ");
+    print_value(js_string(object.vm(), plural_rules.type_string()), seen_objects);
+    js_out("\n  minimumIntegerDigits: ");
+    print_value(JS::Value(plural_rules.min_integer_digits()), seen_objects);
+    if (plural_rules.has_min_fraction_digits()) {
+        js_out("\n  minimumFractionDigits: ");
+        print_value(JS::Value(plural_rules.min_fraction_digits()), seen_objects);
+    }
+    if (plural_rules.has_max_fraction_digits()) {
+        js_out("\n  maximumFractionDigits: ");
+        print_value(JS::Value(plural_rules.max_fraction_digits()), seen_objects);
+    }
+    if (plural_rules.has_min_significant_digits()) {
+        js_out("\n  minimumSignificantDigits: ");
+        print_value(JS::Value(plural_rules.min_significant_digits()), seen_objects);
+    }
+    if (plural_rules.has_max_significant_digits()) {
+        js_out("\n  maximumSignificantDigits: ");
+        print_value(JS::Value(plural_rules.max_significant_digits()), seen_objects);
+    }
+    js_out("\n  roundingType: ");
+    print_value(js_string(object.vm(), plural_rules.rounding_type_string()), seen_objects);
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -876,6 +906,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_intl_date_time_format(object, seen_objects);
         if (is<JS::Intl::RelativeTimeFormat>(object))
             return print_intl_relative_time_format(object, seen_objects);
+        if (is<JS::Intl::PluralRules>(object))
+            return print_intl_plural_rules(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
@@ -941,17 +973,12 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
 
     JS::ThrowCompletionOr<JS::Value> result { JS::js_undefined() };
 
-    auto run_script_or_module = [&](Variant<NonnullRefPtr<JS::Script>, NonnullRefPtr<JS::SourceTextModule>> script_or_module) {
-        auto program = script_or_module.visit(
-            [](auto& visitor) -> NonnullRefPtr<JS::Program> {
-                return visitor->parse_node();
-            });
-
+    auto run_script_or_module = [&](auto& script_or_module) {
         if (s_dump_ast)
-            program->dump(0);
+            script_or_module->parse_node().dump(0);
 
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
-            auto executable = JS::Bytecode::Generator::generate(*program);
+            auto executable = JS::Bytecode::Generator::generate(script_or_module->parse_node());
             executable.name = source_name;
             if (s_opt_bytecode) {
                 auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
@@ -969,10 +996,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
                 return ReturnEarly::Yes;
             }
         } else {
-            result = script_or_module.visit(
-                [&](auto& visitor) {
-                    return interpreter.run(*visitor);
-                });
+            result = interpreter.run(*script_or_module);
         }
 
         return ReturnEarly::No;
@@ -988,7 +1012,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             outln(error.to_string());
             vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
         } else {
-            auto return_early = run_script_or_module(move(script_or_error.value()));
+            auto return_early = run_script_or_module(script_or_error.value());
             if (return_early == ReturnEarly::Yes)
                 return true;
         }
@@ -1002,7 +1026,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             outln(error.to_string());
             vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
         } else {
-            auto return_early = run_script_or_module(move(module_or_error.value()));
+            auto return_early = run_script_or_module(module_or_error.value());
             if (return_early == ReturnEarly::Yes)
                 return true;
         }
@@ -1304,8 +1328,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
-
-    tzset();
 
     bool syntax_highlight = !disable_syntax_highlight;
 

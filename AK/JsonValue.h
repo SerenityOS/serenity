@@ -54,6 +54,7 @@ public:
     JsonValue(bool);
     JsonValue(const char*);
     JsonValue(const String&);
+    JsonValue(StringView);
     JsonValue(const JsonArray&);
     JsonValue(const JsonObject&);
 
