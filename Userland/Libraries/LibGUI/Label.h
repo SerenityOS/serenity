@@ -22,6 +22,7 @@ public:
     void set_text(String);
 
     void set_icon(const Gfx::Bitmap*);
+    void set_icon_from_path(String const&);
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
     Gfx::Bitmap* icon() { return m_icon.ptr(); }
 
