@@ -1169,7 +1169,7 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
 
     TRY(populate_lookup_cache());
 
-    auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key->view() == name; });
+    auto it = m_lookup_cache.find(name);
     if (it == m_lookup_cache.end())
         return ENOENT;
     auto child_inode_index = (*it).value;
@@ -1531,7 +1531,7 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
     InodeIndex inode_index;
     {
         MutexLocker locker(m_inode_lock);
-        auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key->view() == name; });
+        auto it = m_lookup_cache.find(name);
         if (it == m_lookup_cache.end()) {
             dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): '{}' not found", identifier(), name);
             return ENOENT;
