@@ -319,6 +319,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_new_ordinary_function_prototype_object_shape);
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_generator_prototype);
+    visitor.visit(m_async_from_sync_iterator_prototype);
     visitor.visit(m_array_prototype_values_function);
     visitor.visit(m_date_constructor_now_function);
     visitor.visit(m_eval_function);
