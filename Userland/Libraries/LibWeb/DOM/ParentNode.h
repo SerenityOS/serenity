@@ -31,6 +31,7 @@ public:
     NonnullRefPtr<HTMLCollection> get_elements_by_tag_name_ns(FlyString const&, FlyString const&);
 
     ExceptionOr<void> prepend(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes);
+    ExceptionOr<void> append(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes);
 
 protected:
     ParentNode(Document& document, NodeType type)
