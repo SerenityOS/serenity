@@ -29,9 +29,9 @@ StringView StorageDevice::class_name() const
 
 ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
 {
-    u64 index = offset / block_size();
-    size_t whole_blocks = len / block_size();
-    size_t remaining = len % block_size();
+    u64 index = offset >> block_size_log();
+    size_t whole_blocks = len >> block_size_log();
+    size_t remaining = len - (whole_blocks << block_size_log());
 
     // PATAChannel will chuck a wobbly if we try to read more than PAGE_SIZE
     // at a time, because it uses a single page for its DMA buffer.
@@ -91,9 +91,9 @@ bool StorageDevice::can_read(const OpenFileDescription&, u64 offset) const
 
 ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
-    u64 index = offset / block_size();
-    size_t whole_blocks = len / block_size();
-    size_t remaining = len % block_size();
+    u64 index = offset >> block_size_log();
+    size_t whole_blocks = len >> block_size_log();
+    size_t remaining = len - (whole_blocks << block_size_log());
 
     // PATAChannel will chuck a wobbly if we try to write more than PAGE_SIZE
     // at a time, because it uses a single page for its DMA buffer.
