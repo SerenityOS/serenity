@@ -80,6 +80,7 @@ set(SOURCES
     DOM/LiveNodeList.cpp
     DOM/NamedNodeMap.cpp
     DOM/Node.cpp
+    DOM/NodeOperations.cpp
     DOM/ParentNode.cpp
     DOM/Position.cpp
     DOM/ProcessingInstruction.cpp

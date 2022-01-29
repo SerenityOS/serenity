@@ -7,6 +7,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/DOM/NodeOperations.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/Dump.h>
@@ -153,6 +154,24 @@ NonnullRefPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(FlyString 
     return HTMLCollection::create(*this, [this, namespace_, local_name](Element const& element) {
         return element.is_descendant_of(*this) && element.namespace_() == namespace_ && element.local_name() == local_name;
     });
+}
+
+// https://dom.spec.whatwg.org/#dom-parentnode-prepend
+ExceptionOr<void> ParentNode::prepend(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
+{
+    // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
+    auto node_or_exception = convert_nodes_to_single_node(nodes, document());
+    if (node_or_exception.is_exception())
+        return node_or_exception.exception();
+
+    auto node = node_or_exception.release_value();
+
+    // 2. Pre-insert node into this before this’s first child.
+    auto result = pre_insert(node, first_child());
+    if (result.is_exception())
+        return result.exception();
+
+    return {};
 }
 
 }
