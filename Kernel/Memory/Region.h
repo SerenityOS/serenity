@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -234,7 +235,7 @@ public:
 
 AK_ENUM_BITWISE_OPERATORS(Region::Access)
 
-inline constexpr Region::Access prot_to_region_access_flags(int prot)
+constexpr Region::Access prot_to_region_access_flags(int prot)
 {
     Region::Access access = Region::Access::None;
     if ((prot & PROT_READ) == PROT_READ)
@@ -246,7 +247,7 @@ inline constexpr Region::Access prot_to_region_access_flags(int prot)
     return access;
 }
 
-inline constexpr int region_access_flags_to_prot(Region::Access access)
+constexpr int region_access_flags_to_prot(Region::Access access)
 {
     int prot = 0;
     if ((access & Region::Access::Read) == Region::Access::Read)
