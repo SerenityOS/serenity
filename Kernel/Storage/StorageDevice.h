@@ -66,7 +66,8 @@ private:
 
     // FIXME: Remove this method after figuring out another scheme for naming.
     NonnullOwnPtr<KString> m_early_storage_device_name;
-    u64 m_max_addressable_block;
+    u64 m_max_addressable_block { 0 };
+    size_t m_blocks_per_page { 0 };
 };
 
 }
