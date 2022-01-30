@@ -205,7 +205,7 @@ UNMAP_AFTER_INIT void Scheduler::start()
     VERIFY_NOT_REACHED();
 }
 
-bool Scheduler::pick_next()
+void Scheduler::pick_next()
 {
     VERIFY_INTERRUPTS_DISABLED();
 
@@ -241,10 +241,10 @@ bool Scheduler::pick_next()
     critical.leave();
 
     thread_to_schedule.set_ticks_left(time_slice_for(thread_to_schedule));
-    return context_switch(&thread_to_schedule);
+    context_switch(&thread_to_schedule);
 }
 
-bool Scheduler::yield()
+void Scheduler::yield()
 {
     InterruptDisabler disabler;
 
@@ -256,18 +256,13 @@ bool Scheduler::yield()
         // a critical section where we don't want to switch contexts, then
         // delay until exiting the trap or critical section
         Processor::current().invoke_scheduler_async();
-        return false;
+        return;
     }
 
-    if (!Scheduler::pick_next())
-        return false;
-
-    if constexpr (SCHEDULER_DEBUG)
-        dbgln("Scheduler[{}]: yield returns to thread {} in_irq={}", Processor::current_id(), *current_thread, Processor::current_in_irq());
-    return true;
+    Scheduler::pick_next();
 }
 
-bool Scheduler::context_switch(Thread* thread)
+void Scheduler::context_switch(Thread* thread)
 {
     if (Memory::s_mm_lock.is_locked_by_current_processor()) {
         PANIC("In context switch while holding Memory::s_mm_lock");
@@ -279,7 +274,7 @@ bool Scheduler::context_switch(Thread* thread)
     VERIFY(from_thread);
 
     if (from_thread == thread)
-        return false;
+        return;
 
     // If the last process hasn't blocked (still marked as running),
     // mark it as runnable for the next round.
@@ -309,8 +304,6 @@ bool Scheduler::context_switch(Thread* thread)
     // switched from, and thread reflects Thread::current()
     enter_current(*from_thread);
     VERIFY(thread == Thread::current());
-
-    return true;
 }
 
 void Scheduler::enter_current(Thread& prev_thread)
