@@ -6,6 +6,7 @@
 
 #include <AK/BinarySearch.h>
 #include <AK/Utf16View.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Segmenter.h>
 #include <LibUnicode/CharacterTypes.h>
 
@@ -41,6 +42,54 @@ StringView Segmenter::segmenter_granularity_string() const
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+// 18.7.1 CreateSegmentDataObject ( segmenter, string, startIndex, endIndex ), https://tc39.es/ecma402/#sec-createsegmentdataobject
+Object* create_segment_data_object(GlobalObject& global_object, Segmenter const& segmenter, Utf16View const& string, double start_index, double end_index)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let len be the length of string.
+    auto length = string.length_in_code_units();
+
+    // 2. Assert: startIndex ≥ 0.
+    VERIFY(start_index >= 0);
+
+    // 3. Assert: endIndex ≤ len.
+    VERIFY(end_index <= length);
+
+    // 4. Assert: startIndex < endIndex.
+    VERIFY(start_index < end_index);
+
+    // 5. Let result be ! OrdinaryObjectCreate(%Object.prototype%).
+    auto* result = Object::create(global_object, global_object.object_prototype());
+
+    // 6. Let segment be the substring of string from startIndex to endIndex.
+    auto segment = string.substring_view(start_index, end_index - start_index);
+
+    // 7. Perform ! CreateDataPropertyOrThrow(result, "segment", segment).
+    MUST(result->create_data_property_or_throw(vm.names.segment, js_string(vm, segment)));
+
+    // 8. Perform ! CreateDataPropertyOrThrow(result, "index", 𝔽(startIndex)).
+    MUST(result->create_data_property_or_throw(vm.names.index, Value(start_index)));
+
+    // 9. Perform ! CreateDataPropertyOrThrow(result, "input", string).
+    MUST(result->create_data_property_or_throw(vm.names.input, js_string(vm, string)));
+
+    // 10. Let granularity be segmenter.[[SegmenterGranularity]].
+    auto granularity = segmenter.segmenter_granularity();
+
+    // 11. If granularity is "word", then
+    if (granularity == Segmenter::SegmenterGranularity::Word) {
+        // a. Let isWordLike be a Boolean value indicating whether the segment in string is "word-like" according to locale segmenter.[[Locale]].
+        // TODO
+
+        // b. Perform ! CreateDataPropertyOrThrow(result, "isWordLike", isWordLike).
+        MUST(result->create_data_property_or_throw(vm.names.isWordLike, Value(false)));
+    }
+
+    // 12. Return result.
+    return result;
 }
 
 // 18.8.1 FindBoundary ( segmenter, string, startIndex, direction ), https://tc39.es/ecma402/#sec-findboundary

@@ -291,6 +291,7 @@ namespace JS {
     P(isoNanosecond)                         \
     P(isoSecond)                             \
     P(isoYear)                               \
+    P(isWordLike)                            \
     P(italics)                               \
     P(join)                                  \
     P(keyFor)                                \
