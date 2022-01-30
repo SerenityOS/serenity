@@ -110,11 +110,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool arg_all_processes { false };
     int arg_fd { -1 };
-    const char* arg_uid { nullptr };
+    StringView arg_uid;
     int arg_uid_int = -1;
     int arg_pgid { -1 };
     pid_t arg_pid { -1 };
-    const char* arg_filename { nullptr };
+    StringView arg_filename;
 
     if (arguments.strings.size() == 1)
         arg_all_processes = true;
@@ -152,9 +152,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if ((arg_all_processes)
                     || (arg_fd != -1 && file.fd == arg_fd)
                     || (arg_uid_int != -1 && (int)process.uid == arg_uid_int)
-                    || (arg_uid != nullptr && process.username == arg_uid)
+                    || (!arg_uid.is_empty() && process.username == arg_uid)
                     || (arg_pgid != -1 && (int)process.pgid == arg_pgid)
-                    || (arg_filename != nullptr && file.name == arg_filename))
+                    || (!arg_filename.is_empty() && file.name == arg_filename))
                     display_entry(file, process);
             }
         }
