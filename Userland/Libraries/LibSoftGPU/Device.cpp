@@ -83,14 +83,14 @@ ALWAYS_INLINE static u32x4 to_bgra32(Vector4<f32x4> const& v)
     return a << 24 | r << 16 | g << 8 | b;
 }
 
-static Vector4<f32x4> to_vec4(u32x4 rgba)
+static Vector4<f32x4> to_vec4(u32x4 bgra)
 {
     auto constexpr one_over_255 = expand4(1.0f / 255);
     return {
-        to_f32x4((rgba >> 16) & 0xff) * one_over_255,
-        to_f32x4((rgba >> 8) & 0xff) * one_over_255,
-        to_f32x4(rgba & 0xff) * one_over_255,
-        to_f32x4((rgba >> 24) & 0xff) * one_over_255,
+        to_f32x4((bgra >> 16) & 0xff) * one_over_255,
+        to_f32x4((bgra >> 8) & 0xff) * one_over_255,
+        to_f32x4(bgra & 0xff) * one_over_255,
+        to_f32x4((bgra >> 24) & 0xff) * one_over_255,
     };
 }
 
