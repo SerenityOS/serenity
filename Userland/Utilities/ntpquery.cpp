@@ -10,6 +10,8 @@
 #include <AK/Endian.h>
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <arpa/inet.h>
 #include <inttypes.h>
 #include <math.h>
@@ -88,14 +90,14 @@ static String format_ntp_timestamp(NtpTimestamp ntp_timestamp)
     buffer[written] = '\0';
     return buffer;
 }
-
+#ifdef __serenity__
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+#else
 int main(int argc, char** argv)
+#endif
 {
 #ifdef __serenity__
-    if (pledge("stdio inet unix settime", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio inet unix settime"));
 #endif
 
     bool adjust_time = false;
@@ -117,7 +119,11 @@ int main(int argc, char** argv)
     args_parser.add_option(set_time, "Immediately set system time (requires root)", "set", 's');
     args_parser.add_option(verbose, "Verbose output", "verbose", 'v');
     args_parser.add_positional_argument(host, "NTP server", "host", Core::ArgsParser::Required::No);
+#ifdef __serenity__
+    args_parser.parse(arguments);
+#else
     args_parser.parse(argc, argv);
+#endif
 
     if (adjust_time && set_time) {
         warnln("-a and -s are mutually exclusive");
@@ -126,10 +132,7 @@ int main(int argc, char** argv)
 
 #ifdef __serenity__
     if (!adjust_time && !set_time) {
-        if (pledge("stdio inet unix", nullptr) < 0) {
-            perror("pledge");
-            return 1;
-        }
+        TRY(Core::System::pledge("stdio inet unix"));
     }
 #endif
 
@@ -140,11 +143,8 @@ int main(int argc, char** argv)
     }
 
 #ifdef __serenity__
-    if (pledge((adjust_time || set_time) ? "stdio inet settime" : "stdio inet", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-    unveil(nullptr, nullptr);
+    TRY(Core::System::pledge((adjust_time || set_time) ? "stdio inet settime" : "stdio inet"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 #endif
 
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -322,4 +322,6 @@ int main(int argc, char** argv)
             return 1;
         }
     }
+
+    return 0;
 }
