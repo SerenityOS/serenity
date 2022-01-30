@@ -169,7 +169,7 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
     : GUI::Dialog(&parent_window, screen_position)
 {
     set_frameless(true);
-    resize(400, 300);
+    resize(450, 300);
 
     collect_actions(parent_window);
 
