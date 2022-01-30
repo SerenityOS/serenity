@@ -127,6 +127,10 @@ struct UnicodeData {
 
     // FIXME: We are not yet doing anything with this data. It will be needed for String.prototype.normalize.
     NormalizationProps normalization_props;
+
+    PropList grapheme_break_props;
+    PropList word_break_props;
+    PropList sentence_break_props;
 };
 
 static Vector<u32> parse_code_point_list(StringView list)
@@ -591,6 +595,9 @@ namespace Unicode {
     generate_enum("GeneralCategory"sv, {}, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
     generate_enum("Property"sv, {}, unicode_data.prop_list.keys(), unicode_data.prop_aliases);
     generate_enum("Script"sv, {}, unicode_data.script_list.keys(), unicode_data.script_aliases);
+    generate_enum("GraphemeBreakProperty"sv, {}, unicode_data.grapheme_break_props.keys());
+    generate_enum("WordBreakProperty"sv, {}, unicode_data.word_break_props.keys());
+    generate_enum("SentenceBreakProperty"sv, {}, unicode_data.sentence_break_props.keys());
 
     generator.append(R"~~~(
 struct SpecialCasing {
@@ -837,6 +844,9 @@ static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
     append_prop_list("s_properties"sv, "s_property_{}"sv, unicode_data.prop_list);
     append_prop_list("s_scripts"sv, "s_script_{}"sv, unicode_data.script_list);
     append_prop_list("s_script_extensions"sv, "s_script_extension_{}"sv, unicode_data.script_extensions);
+    append_prop_list("s_grapheme_break_properties"sv, "s_grapheme_break_property_{}"sv, unicode_data.grapheme_break_props);
+    append_prop_list("s_word_break_properties"sv, "s_word_break_property_{}"sv, unicode_data.word_break_props);
+    append_prop_list("s_sentence_break_properties"sv, "s_sentence_break_property_{}"sv, unicode_data.sentence_break_props);
 
     generator.append(R"~~~(
 struct CodePointName {
@@ -954,6 +964,10 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
     append_prop_search("Script"sv, "script"sv, "s_scripts"sv);
     append_prop_search("Script"sv, "script_extension"sv, "s_script_extensions"sv);
     append_from_string("Script"sv, "script"sv, unicode_data.script_list, unicode_data.script_aliases);
+
+    append_prop_search("GraphemeBreakProperty"sv, "grapheme_break_property"sv, "s_grapheme_break_properties"sv);
+    append_prop_search("WordBreakProperty"sv, "word_break_property"sv, "s_word_break_properties"sv);
+    append_prop_search("SentenceBreakProperty"sv, "sentence_break_property"sv, "s_sentence_break_properties"sv);
 
     generator.append(R"~~~(
 }
@@ -1104,6 +1118,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView script_extensions_path;
     StringView emoji_data_path;
     StringView normalization_path;
+    StringView grapheme_break_path;
+    StringView word_break_path;
+    StringView sentence_break_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode Data header file to generate", "generated-header-path", 'h', "generated-header-path");
@@ -1121,6 +1138,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(script_extensions_path, "Path to ScriptExtensions.txt file", "script-extensions-path", 'x', "script-extensions-path");
     args_parser.add_option(emoji_data_path, "Path to emoji-data.txt file", "emoji-data-path", 'e', "emoji-data-path");
     args_parser.add_option(normalization_path, "Path to DerivedNormalizationProps.txt file", "normalization-path", 'n', "normalization-path");
+    args_parser.add_option(grapheme_break_path, "Path to GraphemeBreakProperty.txt file", "grapheme-break-path", 'f', "grapheme-break-path");
+    args_parser.add_option(word_break_path, "Path to WordBreakProperty.txt file", "word-break-path", 'w', "word-break-path");
+    args_parser.add_option(sentence_break_path, "Path to SentenceBreakProperty.txt file", "sentence-break-path", 'i', "sentence-break-path");
     args_parser.parse(arguments);
 
     auto open_file = [&](StringView path, Core::OpenMode mode = Core::OpenMode::ReadOnly) -> ErrorOr<NonnullRefPtr<Core::File>> {
@@ -1147,6 +1167,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto script_extensions_file = TRY(open_file(script_extensions_path));
     auto emoji_data_file = TRY(open_file(emoji_data_path));
     auto normalization_file = TRY(open_file(normalization_path));
+    auto grapheme_break_file = TRY(open_file(grapheme_break_path));
+    auto word_break_file = TRY(open_file(word_break_path));
+    auto sentence_break_file = TRY(open_file(sentence_break_path));
 
     UnicodeData unicode_data {};
     parse_special_casing(special_casing_file, unicode_data);
@@ -1160,6 +1183,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parse_prop_list(scripts_file, unicode_data.script_list);
     parse_prop_list(script_extensions_file, unicode_data.script_extensions, true);
     parse_name_aliases(name_alias_file, unicode_data);
+    parse_prop_list(grapheme_break_file, unicode_data.grapheme_break_props);
+    parse_prop_list(word_break_file, unicode_data.word_break_props);
+    parse_prop_list(sentence_break_file, unicode_data.sentence_break_props);
 
     populate_general_category_unions(unicode_data.general_categories);
     parse_unicode_data(unicode_data_file, unicode_data);

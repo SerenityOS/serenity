@@ -40,4 +40,8 @@ Optional<Script> script_from_string(StringView);
 bool code_point_has_script(u32 code_point, Script script);
 bool code_point_has_script_extension(u32 code_point, Script script);
 
+bool code_point_has_grapheme_break_property(u32 code_point, GraphemeBreakProperty property);
+bool code_point_has_word_break_property(u32 code_point, WordBreakProperty property);
+bool code_point_has_sentence_break_property(u32 code_point, SentenceBreakProperty property);
+
 }
