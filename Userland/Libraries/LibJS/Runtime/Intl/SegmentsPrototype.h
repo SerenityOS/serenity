@@ -20,6 +20,7 @@ public:
     virtual ~SegmentsPrototype() override = default;
 
 private:
+    JS_DECLARE_NATIVE_FUNCTION(containing);
     JS_DECLARE_NATIVE_FUNCTION(symbol_iterator);
 };
 
