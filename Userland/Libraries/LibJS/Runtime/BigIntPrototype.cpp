@@ -6,11 +6,14 @@
 
 #include <AK/Function.h>
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BigIntPrototype.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/NumberFormat.h>
+#include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 
 namespace JS {
 
@@ -61,9 +64,21 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 }
 
 // 21.2.3.2 BigInt.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring
+// 19.3.1 BigInt.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-bigint.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
 {
-    return to_string(vm, global_object);
+    auto locales = vm.argument(0);
+    auto options = vm.argument(1);
+
+    // 1. Let x be ? thisBigIntValue(this value).
+    auto* bigint = TRY(this_bigint_value(global_object, vm.this_value(global_object)));
+
+    // 2. Let numberFormat be ? Construct(%NumberFormat%, « locales, options »).
+    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(global_object, *global_object.intl_number_format_constructor(), locales, options)));
+
+    // 3. Return ? FormatNumeric(numberFormat, x).
+    auto formatted = Intl::format_numeric(global_object, *number_format, bigint);
+    return js_string(vm, move(formatted));
 }
 
 // 21.2.3.4 BigInt.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-bigint.prototype.valueof
