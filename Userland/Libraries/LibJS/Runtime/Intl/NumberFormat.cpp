@@ -5,7 +5,9 @@
  */
 
 #include <AK/Utf8View.h>
+#include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatFunction.h>
@@ -251,21 +253,28 @@ static ALWAYS_INLINE int log10floor(Value number)
 {
     if (number.is_number())
         return static_cast<int>(floor(log10(number.as_double())));
-    VERIFY_NOT_REACHED();
+
+    // FIXME: Can we do this without string conversion?
+    auto as_string = number.as_bigint().big_integer().to_base(10);
+    return as_string.length() - 1;
 }
 
-static Value multiply(GlobalObject&, Value lhs, i64 rhs)
+static Value multiply(GlobalObject& global_object, Value lhs, i64 rhs)
 {
     if (lhs.is_number())
         return Value(lhs.as_double() * rhs);
-    VERIFY_NOT_REACHED();
+
+    auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs);
+    return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().multiplied_by(rhs_bigint));
 }
 
-static Value divide(GlobalObject&, Value lhs, i64 rhs)
+static Value divide(GlobalObject& global_object, Value lhs, i64 rhs)
 {
     if (lhs.is_number())
         return Value(lhs.as_double() / rhs);
-    VERIFY_NOT_REACHED();
+
+    auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs);
+    return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().divided_by(rhs_bigint).quotient);
 }
 
 static ALWAYS_INLINE Value multiply_by_power(GlobalObject& global_object, Value number, i64 exponent)
@@ -286,42 +295,42 @@ static ALWAYS_INLINE Value rounded(Value number)
 {
     if (number.is_number())
         return Value(round(number.as_double()));
-    VERIFY_NOT_REACHED();
+    return number;
 }
 
 static ALWAYS_INLINE bool is_zero(Value number)
 {
     if (number.is_number())
         return number.as_double() == 0.0;
-    VERIFY_NOT_REACHED();
+    return number.as_bigint().big_integer() == Crypto::SignedBigInteger::create_from(0);
 }
 
 static ALWAYS_INLINE bool is_greater_than(Value number, i64 rhs)
 {
     if (number.is_number())
         return number.as_double() > rhs;
-    VERIFY_NOT_REACHED();
+    return number.as_bigint().big_integer() > Crypto::SignedBigInteger::create_from(rhs);
 }
 
 static ALWAYS_INLINE bool is_greater_than_or_equal(Value number, i64 rhs)
 {
     if (number.is_number())
         return number.as_double() >= rhs;
-    VERIFY_NOT_REACHED();
+    return number.as_bigint().big_integer() >= Crypto::SignedBigInteger::create_from(rhs);
 }
 
 static ALWAYS_INLINE bool is_less_than(Value number, i64 rhs)
 {
     if (number.is_number())
         return number.as_double() < rhs;
-    VERIFY_NOT_REACHED();
+    return number.as_bigint().big_integer() < Crypto::SignedBigInteger::create_from(rhs);
 }
 
 static ALWAYS_INLINE String number_to_string(Value number)
 {
     if (number.is_number())
         return number.to_string_without_side_effects();
-    VERIFY_NOT_REACHED();
+    return number.as_bigint().big_integer().to_base(10);
 }
 
 // 15.1.1 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/ecma402/#sec-setnfdigitoptions
@@ -833,7 +842,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_obj
         result.append({ "nan"sv, move(formatted_string) });
     }
     // 3. Else if x is a non-finite Number, then
-    else if (!number.is_finite_number()) {
+    else if (number.is_number() && !number.is_finite_number()) {
         // a. Append a new Record { [[Type]]: "infinity", [[Value]]: n } as the last element of result.
         result.append({ "infinity"sv, move(formatted_string) });
     }
@@ -1089,7 +1098,6 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
     RawFormatResult result {};
 
     // 1. Set x to ℝ(x).
-    // FIXME: Support BigInt number formatting.
 
     // 2. Let p be maxPrecision.
     int precision = max_precision;
@@ -1116,7 +1124,23 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
         // a. Let e and n be integers such that 10^(p–1) ≤ n < 10^p and for which n × 10^(e–p+1) – x is as close to zero as possible.
         //    If there are two such sets of e and n, pick the e and n for which n × 10^(e–p+1) is larger.
         exponent = log10floor(number);
-        auto n = rounded(divide_by_power(global_object, number, exponent - precision + 1));
+        Value n;
+
+        if (number.is_number()) {
+            n = rounded(divide_by_power(global_object, number, exponent - precision + 1));
+        } else {
+            // NOTE: In order to round the BigInt to the proper precision, this computation is initially off by a
+            //       factor of 10. This lets us inspect the ones digit and then round up if needed.
+            n = divide_by_power(global_object, number, exponent - precision);
+
+            // FIXME: Can we do this without string conversion?
+            auto digits = n.as_bigint().big_integer().to_base(10);
+            auto digit = digits.substring_view(digits.length() - 1);
+
+            n = divide(global_object, n, 10);
+            if (digit.to_uint().value() >= 5)
+                n = js_bigint(global_object.vm(), n.as_bigint().big_integer().plus(Crypto::SignedBigInteger::create_from(1)));
+        }
 
         // b. Let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
         result.formatted_string = number_to_string(n);
@@ -1180,7 +1204,6 @@ RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_
     RawFormatResult result {};
 
     // 1. Set x to ℝ(x).
-    // FIXME: Support BigInt number formatting.
 
     // 2. Let f be maxFraction.
     int fraction = max_fraction;
@@ -1318,7 +1341,10 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
     auto as_number = [&]() {
         if (number.is_number())
             return number.as_double();
-        VERIFY_NOT_REACHED();
+
+        // FIXME: This should be okay for now as our naive Unicode::select_pattern_with_plurality implementation
+        //        checks against just a few specific small values. But revisit this if precision becomes a concern.
+        return number.as_bigint().big_integer().to_double();
     };
 
     // 1. Let localeData be %NumberFormat%.[[LocaleData]].
@@ -1400,7 +1426,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
 
     StringView pattern;
 
-    bool is_positive_zero = number.is_positive_zero();
+    bool is_positive_zero = number.is_positive_zero() || (number.is_bigint() && is_zero(number));
     bool is_negative_zero = number.is_negative_zero();
     bool is_nan = number.is_nan();
 
