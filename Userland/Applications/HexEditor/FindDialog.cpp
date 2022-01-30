@@ -7,14 +7,15 @@
 #include "FindDialog.h"
 #include <AK/Array.h>
 #include <AK/Hex.h>
-#include <AK/String.h>
 #include <Applications/HexEditor/FindDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/ObservableExtensions.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
+#include <LibRx/Observable.h>
 
 struct Option {
     String title;
@@ -32,26 +33,24 @@ static const Array<Option, 2> options = {
 
 int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer, bool& find_all)
 {
-    auto dialog = FindDialog::construct();
+    auto vm = FindDialogViewModel::construct();
+
+    auto dialog = FindDialog::construct(vm);
 
     if (parent_window)
         dialog->set_icon(parent_window->icon());
 
     if (!out_text.is_empty() && !out_text.is_null())
-        dialog->m_text_editor->set_text(out_text);
-
-    dialog->m_find_button->set_enabled(!dialog->m_text_editor->text().is_empty());
-    dialog->m_find_all_button->set_enabled(!dialog->m_text_editor->text().is_empty());
+        vm->text()->set_value(out_text);
 
     auto result = dialog->exec();
 
     if (result != GUI::Dialog::ExecOK)
         return result;
 
-    auto selected_option = dialog->selected_option();
-    auto processed = dialog->process_input(dialog->text_value(), selected_option);
-
-    out_text = dialog->text_value();
+    auto selected_option = vm->selected_option()->value();
+    out_text = vm->text()->value();
+    auto processed = dialog->process_input(out_text, selected_option);
 
     if (processed.is_error()) {
         GUI::MessageBox::show_error(parent_window, processed.error());
@@ -90,8 +89,9 @@ Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId
     }
 }
 
-FindDialog::FindDialog()
+FindDialog::FindDialog(NonnullRefPtr<FindDialogViewModel> vm)
     : Dialog(nullptr)
+    , m_vm(vm)
 {
     resize(280, 146);
     center_on_screen();
@@ -108,35 +108,42 @@ FindDialog::FindDialog()
     m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
 
     auto& radio_container = *main_widget.find_descendant_of_type_named<GUI::Widget>("radio_container");
+
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
         auto& radio = radio_container.add<GUI::RadioButton>();
         radio.set_enabled(action.enabled);
         radio.set_text(action.title);
 
-        radio.on_checked = [this, i](auto) {
-            m_selected_option = options[i].opt;
-        };
+        auto checked_filtered = radio.checked_observable()
+                ->filter([](bool const& checked) { return checked; });
 
-        if (action.default_action) {
-            radio.set_checked(true);
-            m_selected_option = options[i].opt;
-        }
+        checked_filtered
+        ->transform<OptionId>([=](bool const& checked) { return checked ? options[i].opt : OPTION_INVALID; })
+        ->bind_oneway(m_vm->selected_option());
+
+        auto options_transformed = m_vm->selected_option()
+        ->transform<bool>([=](OptionId const& opt) { return opt == options[i].opt; });
+        
+        options_transformed->subscribe([=](auto&) { dbgln("Option {}", i); });
+        options_transformed->bind_oneway(radio.checked_observable());
     }
 
-    m_text_editor->on_change = [this]() {
-        m_find_button->set_enabled(!m_text_editor->text().is_empty());
-        m_find_all_button->set_enabled(!m_text_editor->text().is_empty());
-    };
+    Rx::bind<String>(m_vm->text(), m_text_editor->text_observable());
+
+    m_vm->can_execute_find()
+    ->bind_oneway(m_find_button->enabled_observable());
+
+    m_vm->can_execute_find()
+    ->bind_oneway(m_find_all_button->enabled_observable());
 
     m_text_editor->on_return_pressed = [this] {
         m_find_button->click();
     };
 
     m_find_button->on_click = [this](auto) {
-        auto text = m_text_editor->text();
+        auto text = m_vm->text()->value();
         if (!text.is_empty()) {
-            m_text_value = text;
             done(ExecResult::ExecOK);
         }
     };
@@ -153,4 +160,18 @@ FindDialog::FindDialog()
 
 FindDialog::~FindDialog()
 {
+}
+
+FindDialogViewModel::FindDialogViewModel()
+    : m_text(Rx::BehaviorSubject<String>::construct(String::empty(), "FindDialogViewModel"))
+    , m_selected_option(Rx::BehaviorSubject<OptionId>::construct(OPTION_INVALID, "FindDialogViewModel"))
+    , m_can_execute_find(Rx::BehaviorSubject<bool>::construct(false, "FindDialogViewModel"))
+{
+    for (auto& option : options) {
+        if (option.default_action)
+            m_selected_option->set_value(option.opt);
+    }
+
+    text()->transform<bool>([](String const& s) { return !(s.is_empty()); })
+        ->bind_oneway(m_can_execute_find);
 }
