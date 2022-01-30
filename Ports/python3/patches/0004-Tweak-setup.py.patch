@@ -1,4 +1,4 @@
-From 2654555e3b0f4ddce9da96eafebd74449892e713 Mon Sep 17 00:00:00 2001
+From bd79f48415f3e3982d8d5b96cb22b2b87de4abc4 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Fri, 14 Jan 2022 23:36:52 +0330
 Subject: [PATCH 4/4] Tweak `setup.py`
