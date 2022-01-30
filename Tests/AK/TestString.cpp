@@ -40,6 +40,11 @@ TEST_CASE(construct_contents)
     EXPECT(test_string != "ABCDEFG");
 }
 
+TEST_CASE(equal)
+{
+    EXPECT_NE(String::empty(), String {});
+}
+
 TEST_CASE(compare)
 {
     EXPECT("a" < String("b"));
