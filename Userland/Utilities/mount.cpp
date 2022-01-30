@@ -41,12 +41,12 @@ static int parse_options(StringView options)
     return flags;
 }
 
-static bool is_source_none(const char* source)
+static bool is_source_none(StringView source)
 {
-    return !strcmp("none", source);
+    return source == "none"sv;
 }
 
-static int get_source_fd(const char* source)
+static int get_source_fd(StringView source)
 {
     if (is_source_none(source))
         return -1;
@@ -84,16 +84,16 @@ static ErrorOr<void> mount_all()
             continue;
         }
 
-        const char* mountpoint = parts[1].characters();
-        const char* fstype = parts[2].characters();
+        auto mountpoint = parts[1];
+        auto fstype = parts[2];
         int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
 
-        if (strcmp(mountpoint, "/") == 0) {
+        if (mountpoint == "/") {
             dbgln("Skipping mounting root");
             continue;
         }
 
-        const char* filename = parts[0].characters();
+        auto filename = parts[0];
 
         int fd = get_source_fd(filename);
 
@@ -153,10 +153,10 @@ static ErrorOr<void> print_mounts()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    const char* source = nullptr;
-    const char* mountpoint = nullptr;
-    const char* fs_type = nullptr;
-    const char* options = nullptr;
+    StringView source;
+    StringView mountpoint;
+    StringView fs_type;
+    StringView options;
     bool should_mount_all = false;
 
     Core::ArgsParser args_parser;
@@ -170,13 +170,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (should_mount_all)
         TRY(mount_all());
 
-    if (!source && !mountpoint)
+    if (source.is_empty() && mountpoint.is_empty())
         TRY(print_mounts());
 
-    if (source && mountpoint) {
-        if (!fs_type)
+    if (!source.is_empty() && !mountpoint.is_empty()) {
+        if (fs_type.is_empty())
             fs_type = "ext2";
-        int flags = options ? parse_options(options) : 0;
+        int flags = !options.is_empty() ? parse_options(options) : 0;
 
         int fd = get_source_fd(source);
 
