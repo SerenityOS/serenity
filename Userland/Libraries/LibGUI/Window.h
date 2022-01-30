@@ -15,7 +15,6 @@
 #include <LibGUI/FocusSource.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/WindowType.h>
-#include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
@@ -75,9 +74,6 @@ public:
 
     String title() const;
     void set_title(String);
-
-    Color background_color() const { return m_background_color; }
-    void set_background_color(Color color) { m_background_color = color; }
 
     enum class CloseRequestDecision {
         StayOpen,
@@ -283,7 +279,6 @@ private:
     Vector<Gfx::IntRect, 32> m_pending_paint_event_rects;
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;
-    Color m_background_color { Color::WarmGray };
     WindowType m_window_type { WindowType::Normal };
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_cursor { Gfx::StandardCursor::None };
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_effective_cursor { Gfx::StandardCursor::None };

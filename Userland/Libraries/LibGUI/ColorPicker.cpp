@@ -137,7 +137,6 @@ public:
         auto window = Window::construct();
         window->set_main_widget(this);
         window->set_has_alpha_channel(true);
-        window->set_background_color(Color::Transparent);
         window->set_fullscreen(true);
         window->set_frameless(true);
         window->show();

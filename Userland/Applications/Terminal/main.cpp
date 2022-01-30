@@ -283,7 +283,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Terminal");
-    window->set_background_color(Color::Black);
     window->set_double_buffering_enabled(false);
 
     auto terminal = TRY(window->try_set_main_widget<VT::TerminalWidget>(ptm_fd, true));
