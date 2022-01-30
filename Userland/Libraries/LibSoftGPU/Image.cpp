@@ -19,14 +19,9 @@ Image::Image(unsigned width, unsigned height, unsigned depth, unsigned max_level
     VERIFY(max_levels > 0);
     VERIFY(layers > 0);
 
-    if ((width & (width - 1)) == 0)
-        m_width_is_power_of_two = true;
-
-    if ((height & (height - 1)) == 0)
-        m_height_is_power_of_two = true;
-
-    if ((depth & (depth - 1)) == 0)
-        m_depth_is_power_of_two = true;
+    m_width_is_power_of_two = is_power_of_two(width);
+    m_height_is_power_of_two = is_power_of_two(height);
+    m_depth_is_power_of_two = is_power_of_two(depth);
 
     unsigned level;
     for (level = 0; level < max_levels; ++level) {

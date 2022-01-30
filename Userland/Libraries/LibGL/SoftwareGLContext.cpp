@@ -971,8 +971,8 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
     // Check if width and height are a power of 2
     if (!m_device_info.supports_npot_textures) {
-        RETURN_WITH_ERROR_IF((width & (width - 1)) != 0, GL_INVALID_VALUE);
-        RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
+        RETURN_WITH_ERROR_IF(!is_power_of_two(width), GL_INVALID_VALUE);
+        RETURN_WITH_ERROR_IF(!is_power_of_two(height), GL_INVALID_VALUE);
     }
     RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
 
