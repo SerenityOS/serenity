@@ -1,43 +1,28 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/DOM/Node.h>
+#include <LibWeb/DOM/AbstractRange.h>
 
 namespace Web::DOM {
 
-class Range final
-    : public RefCounted<Range>
-    , public Bindings::Wrappable {
+class Range final : public AbstractRange {
 public:
     using WrapperType = Bindings::RangeWrapper;
 
+    virtual ~Range() override;
+
     static NonnullRefPtr<Range> create(Document&);
     static NonnullRefPtr<Range> create(Window&);
-    static NonnullRefPtr<Range> create(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset);
+    static NonnullRefPtr<Range> create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
     static NonnullRefPtr<Range> create_with_global_object(Bindings::WindowObject&);
 
     // FIXME: There are a ton of methods missing here.
-
-    Node* start_container() { return m_start_container; }
-    const Node* start_container() const { return m_start_container; }
-    unsigned start_offset() const { return m_start_offset; }
-
-    Node* end_container() { return m_end_container; }
-    const Node* end_container() const { return m_end_container; }
-    unsigned end_offset() const { return m_end_offset; }
-
-    bool collapsed() const
-    {
-        return start_container() == end_container() && start_offset() == end_offset();
-    }
 
     void set_start(Node& container, unsigned offset)
     {
@@ -60,13 +45,7 @@ public:
 private:
     explicit Range(Document&);
 
-    Range(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset);
-
-    NonnullRefPtr<Node> m_start_container;
-    unsigned m_start_offset;
-
-    NonnullRefPtr<Node> m_end_container;
-    unsigned m_end_offset;
+    Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
 };
 
 }
