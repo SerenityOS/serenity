@@ -50,8 +50,7 @@ ThrowCompletionOr<Value> NumberFormatFunction::call()
 
     // 5. Return ? FormatNumeric(nf, x).
     // Note: Our implementation of FormatNumeric does not throw.
-    auto formatted = format_numeric(m_number_format, value.as_double());
-
+    auto formatted = format_numeric(global_object, m_number_format, value);
     return js_string(vm, move(formatted));
 }
 

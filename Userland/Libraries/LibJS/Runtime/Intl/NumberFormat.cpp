@@ -247,9 +247,81 @@ StringView NumberFormat::sign_display_string() const
     }
 }
 
-static ALWAYS_INLINE int log10floor(double value)
+static ALWAYS_INLINE int log10floor(Value number)
 {
-    return static_cast<int>(floor(log10(value)));
+    if (number.is_number())
+        return static_cast<int>(floor(log10(number.as_double())));
+    VERIFY_NOT_REACHED();
+}
+
+static Value multiply(GlobalObject&, Value lhs, i64 rhs)
+{
+    if (lhs.is_number())
+        return Value(lhs.as_double() * rhs);
+    VERIFY_NOT_REACHED();
+}
+
+static Value divide(GlobalObject&, Value lhs, i64 rhs)
+{
+    if (lhs.is_number())
+        return Value(lhs.as_double() / rhs);
+    VERIFY_NOT_REACHED();
+}
+
+static ALWAYS_INLINE Value multiply_by_power(GlobalObject& global_object, Value number, i64 exponent)
+{
+    if (exponent < 0)
+        return divide(global_object, number, pow(10, -exponent));
+    return multiply(global_object, number, pow(10, exponent));
+}
+
+static ALWAYS_INLINE Value divide_by_power(GlobalObject& global_object, Value number, i64 exponent)
+{
+    if (exponent < 0)
+        return multiply(global_object, number, pow(10, -exponent));
+    return divide(global_object, number, pow(10, exponent));
+}
+
+static ALWAYS_INLINE Value rounded(Value number)
+{
+    if (number.is_number())
+        return Value(round(number.as_double()));
+    VERIFY_NOT_REACHED();
+}
+
+static ALWAYS_INLINE bool is_zero(Value number)
+{
+    if (number.is_number())
+        return number.as_double() == 0.0;
+    VERIFY_NOT_REACHED();
+}
+
+static ALWAYS_INLINE bool is_greater_than(Value number, i64 rhs)
+{
+    if (number.is_number())
+        return number.as_double() > rhs;
+    VERIFY_NOT_REACHED();
+}
+
+static ALWAYS_INLINE bool is_greater_than_or_equal(Value number, i64 rhs)
+{
+    if (number.is_number())
+        return number.as_double() >= rhs;
+    VERIFY_NOT_REACHED();
+}
+
+static ALWAYS_INLINE bool is_less_than(Value number, i64 rhs)
+{
+    if (number.is_number())
+        return number.as_double() < rhs;
+    VERIFY_NOT_REACHED();
+}
+
+static ALWAYS_INLINE String number_to_string(Value number)
+{
+    if (number.is_number())
+        return number.to_string_without_side_effects();
+    VERIFY_NOT_REACHED();
 }
 
 // 15.1.1 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/ecma402/#sec-setnfdigitoptions
@@ -496,15 +568,15 @@ int currency_digits(StringView currency)
 }
 
 // 15.1.5 FormatNumericToString ( intlObject, x ), https://tc39.es/ecma402/#sec-formatnumberstring
-FormatResult format_numeric_to_string(NumberFormatBase& intl_object, double number)
+FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase& intl_object, Value number)
 {
     // 1. If x < 0 or x is -0𝔽, let isNegative be true; else let isNegative be false.
-    bool is_negative = (number < 0.0) || Value(number).is_negative_zero();
+    bool is_negative = is_less_than(number, 0) || number.is_negative_zero();
 
     // 2. If isNegative, then
     if (is_negative) {
         // a. Let x be -x.
-        number *= -1;
+        number = multiply(global_object, number, -1);
     }
 
     RawFormatResult result {};
@@ -513,25 +585,25 @@ FormatResult format_numeric_to_string(NumberFormatBase& intl_object, double numb
     // 3. If intlObject.[[RoundingType]] is significantDigits, then
     case NumberFormatBase::RoundingType::SignificantDigits:
         // a. Let result be ToRawPrecision(x, intlObject.[[MinimumSignificantDigits]], intlObject.[[MaximumSignificantDigits]]).
-        result = to_raw_precision(number, intl_object.min_significant_digits(), intl_object.max_significant_digits());
+        result = to_raw_precision(global_object, number, intl_object.min_significant_digits(), intl_object.max_significant_digits());
         break;
 
     // 4. Else if intlObject.[[RoundingType]] is fractionDigits, then
     case NumberFormatBase::RoundingType::FractionDigits:
         // a. Let result be ToRawFixed(x, intlObject.[[MinimumFractionDigits]], intlObject.[[MaximumFractionDigits]]).
-        result = to_raw_fixed(number, intl_object.min_fraction_digits(), intl_object.max_fraction_digits());
+        result = to_raw_fixed(global_object, number, intl_object.min_fraction_digits(), intl_object.max_fraction_digits());
         break;
 
     // 5. Else,
     case NumberFormatBase::RoundingType::CompactRounding:
         // a. Assert: intlObject.[[RoundingType]] is compactRounding.
         // b. Let result be ToRawPrecision(x, 1, 2).
-        result = to_raw_precision(number, 1, 2);
+        result = to_raw_precision(global_object, number, 1, 2);
 
         // c. If result.[[IntegerDigitsCount]] > 1, then
         if (result.digits > 1) {
             // i. Let result be ToRawFixed(x, 0, 0).
-            result = to_raw_fixed(number, 0, 0);
+            result = to_raw_fixed(global_object, number, 0, 0);
         }
 
         break;
@@ -564,7 +636,7 @@ FormatResult format_numeric_to_string(NumberFormatBase& intl_object, double numb
     // 11. If isNegative, then
     if (is_negative) {
         // a. Let x be -x.
-        number *= -1;
+        number = multiply(global_object, number, -1);
     }
 
     // 12. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
@@ -572,7 +644,7 @@ FormatResult format_numeric_to_string(NumberFormatBase& intl_object, double numb
 }
 
 // 15.1.6 PartitionNumberPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-partitionnumberpattern
-Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, double number)
+Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number)
 {
     // 1. Let exponent be 0.
     int exponent = 0;
@@ -580,17 +652,17 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
     String formatted_string;
 
     // 2. If x is NaN, then
-    if (Value(number).is_nan()) {
+    if (number.is_nan()) {
         // a. Let n be an implementation- and locale-dependent (ILD) String value indicating the NaN value.
         formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::NaN).value_or("NaN"sv);
     }
     // 3. Else if x is +∞, then
-    else if (Value(number).is_positive_infinity()) {
+    else if (number.is_positive_infinity()) {
         // a. Let n be an ILD String value indicating positive infinity.
         formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::Infinity).value_or("infinity"sv);
     }
     // 4. Else if x is -∞, then
-    else if (Value(number).is_negative_infinity()) {
+    else if (number.is_negative_infinity()) {
         // a. Let n be an ILD String value indicating negative infinity.
         // NOTE: The CLDR does not contain unique strings for negative infinity. The negative sign will
         //       be inserted by the pattern returned from GetNumberFormatPattern.
@@ -600,16 +672,16 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
     else {
         // a. If numberFormat.[[Style]] is "percent", let x be 100 × x.
         if (number_format.style() == NumberFormat::Style::Percent)
-            number = number * 100;
+            number = multiply(global_object, number, 100);
 
         // b. Let exponent be ComputeExponent(numberFormat, x).
-        exponent = compute_exponent(number_format, number);
+        exponent = compute_exponent(global_object, number_format, number);
 
         // c. Let x be x × 10^(-exponent).
-        number *= pow(10, -exponent);
+        number = multiply_by_power(global_object, number, -exponent);
 
         // d. Let formatNumberResult be FormatNumericToString(numberFormat, x).
-        auto format_number_result = format_numeric_to_string(number_format, number);
+        auto format_number_result = format_numeric_to_string(global_object, number_format, number);
 
         // e. Let n be formatNumberResult.[[FormattedString]].
         formatted_string = move(format_number_result.formatted_string);
@@ -645,7 +717,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         // c. Else if p is equal to "number", then
         else if (part == "number"sv) {
             // i. Let notationSubParts be PartitionNotationSubPattern(numberFormat, x, n, exponent).
-            auto notation_sub_parts = partition_notation_sub_pattern(number_format, number, formatted_string, exponent);
+            auto notation_sub_parts = partition_notation_sub_pattern(global_object, number_format, number, formatted_string, exponent);
             // ii. Append all elements of notationSubParts to result.
             result.extend(move(notation_sub_parts));
         }
@@ -746,7 +818,7 @@ static Vector<StringView> separate_integer_into_groups(Unicode::NumberGroupings 
 }
 
 // 15.1.7 PartitionNotationSubPattern ( numberFormat, x, n, exponent ), https://tc39.es/ecma402/#sec-partitionnotationsubpattern
-Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_format, double number, String formatted_string, int exponent)
+Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number, String formatted_string, int exponent)
 {
     // 1. Let result be a new empty List.
     Vector<PatternPartition> result;
@@ -756,12 +828,12 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
         return {};
 
     // 2. If x is NaN, then
-    if (Value(number).is_nan()) {
+    if (number.is_nan()) {
         // a. Append a new Record { [[Type]]: "nan", [[Value]]: n } as the last element of result.
         result.append({ "nan"sv, move(formatted_string) });
     }
     // 3. Else if x is a non-finite Number, then
-    else if (!Value(number).is_finite_number()) {
+    else if (!number.is_finite_number()) {
         // a. Append a new Record { [[Type]]: "infinity", [[Value]]: n } as the last element of result.
         result.append({ "infinity"sv, move(formatted_string) });
     }
@@ -827,7 +899,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
                 //
                 //        See: https://github.com/tc39/proposal-intl-numberformat-v3/issues/3
                 if (number_format.has_compact_format())
-                    use_grouping = number >= 10'000;
+                    use_grouping = is_greater_than_or_equal(number, 10'000);
 
                 // 6. If the numberFormat.[[UseGrouping]] is true, then
                 if (use_grouping) {
@@ -908,7 +980,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
 
                 // 2. Let exponentResult be ToRawFixed(exponent, 1, 0, 0).
                 // Note: See the implementation of ToRawFixed for why we do not pass the 1.
-                auto exponent_result = to_raw_fixed(exponent, 0, 0);
+                auto exponent_result = to_raw_fixed(global_object, Value(exponent), 0, 0);
 
                 // FIXME: The spec does not say to do this, but all of major engines perform this replacement.
                 //        Without this, formatting with non-Latin numbering systems will produce non-localized results.
@@ -933,11 +1005,11 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
 }
 
 // 15.1.8 FormatNumeric ( numberFormat, x ), https://tc39.es/ecma402/#sec-formatnumber
-String format_numeric(NumberFormat& number_format, double number)
+String format_numeric(GlobalObject& global_object, NumberFormat& number_format, Value number)
 {
     // 1. Let parts be ? PartitionNumberPattern(numberFormat, x).
     // Note: Our implementation of PartitionNumberPattern does not throw.
-    auto parts = partition_number_pattern(number_format, number);
+    auto parts = partition_number_pattern(global_object, number_format, number);
 
     // 2. Let result be the empty String.
     StringBuilder result;
@@ -953,13 +1025,13 @@ String format_numeric(NumberFormat& number_format, double number)
 }
 
 // 15.1.9 FormatNumericToParts ( numberFormat, x ), https://tc39.es/ecma402/#sec-formatnumbertoparts
-Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number_format, double number)
+Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number_format, Value number)
 {
     auto& vm = global_object.vm();
 
     // 1. Let parts be ? PartitionNumberPattern(numberFormat, x).
     // Note: Our implementation of PartitionNumberPattern does not throw.
-    auto parts = partition_number_pattern(number_format, number);
+    auto parts = partition_number_pattern(global_object, number_format, number);
 
     // 2. Let result be ArrayCreate(0).
     auto* result = MUST(Array::create(global_object, 0));
@@ -1012,7 +1084,7 @@ static String cut_trailing_zeroes(StringView string, int cut)
 }
 
 // 15.1.10 ToRawPrecision ( x, minPrecision, maxPrecision ), https://tc39.es/ecma402/#sec-torawprecision
-RawFormatResult to_raw_precision(double number, int min_precision, int max_precision)
+RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int min_precision, int max_precision)
 {
     RawFormatResult result {};
 
@@ -1024,7 +1096,7 @@ RawFormatResult to_raw_precision(double number, int min_precision, int max_preci
     int exponent = 0;
 
     // 3. If x = 0, then
-    if (number == 0.0) {
+    if (is_zero(number)) {
         // a. Let m be the String consisting of p occurrences of the character "0".
         result.formatted_string = String::repeated('0', precision);
 
@@ -1032,7 +1104,7 @@ RawFormatResult to_raw_precision(double number, int min_precision, int max_preci
         exponent = 0;
 
         // c. Let xFinal be 0.
-        result.rounded_number = 0;
+        result.rounded_number = Value(0);
     }
     // 4. Else,
     else {
@@ -1044,15 +1116,13 @@ RawFormatResult to_raw_precision(double number, int min_precision, int max_preci
         // a. Let e and n be integers such that 10^(p–1) ≤ n < 10^p and for which n × 10^(e–p+1) – x is as close to zero as possible.
         //    If there are two such sets of e and n, pick the e and n for which n × 10^(e–p+1) is larger.
         exponent = log10floor(number);
-
-        double power = pow(10, exponent - precision + 1);
-        double n = round(number / power);
+        auto n = rounded(divide_by_power(global_object, number, exponent - precision + 1));
 
         // b. Let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-        result.formatted_string = Value(n).to_string_without_side_effects();
+        result.formatted_string = number_to_string(n);
 
         // c. Let xFinal be n × 10^(e–p+1).
-        result.rounded_number = n * power;
+        result.rounded_number = multiply_by_power(global_object, n, exponent - precision + 1);
     }
 
     // 5. If e ≥ p–1, then
@@ -1105,7 +1175,7 @@ RawFormatResult to_raw_precision(double number, int min_precision, int max_preci
 
 // 15.1.11 ToRawFixed ( x, minInteger, minFraction, maxFraction ), https://tc39.es/ecma402/#sec-torawfixed
 // NOTE: The spec has a mistake here. The minInteger parameter is unused and is not provided by FormatNumericToString.
-RawFormatResult to_raw_fixed(double number, int min_fraction, int max_fraction)
+RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_fraction, int max_fraction)
 {
     RawFormatResult result {};
 
@@ -1115,16 +1185,14 @@ RawFormatResult to_raw_fixed(double number, int min_fraction, int max_fraction)
     // 2. Let f be maxFraction.
     int fraction = max_fraction;
 
-    double power = pow(10, fraction);
-
     // 3. Let n be an integer for which the exact mathematical value of n / 10^f – x is as close to zero as possible. If there are two such n, pick the larger n.
-    double n = round(number * power);
+    auto n = rounded(multiply_by_power(global_object, number, fraction));
 
     // 4. Let xFinal be n / 10^f.
-    result.rounded_number = n / power;
+    result.rounded_number = divide_by_power(global_object, n, fraction);
 
     // 5. If n = 0, let m be the String "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-    result.formatted_string = n == 0.0 ? String("0"sv) : Value(n).to_string_without_side_effects();
+    result.formatted_string = is_zero(n) ? String("0"sv) : number_to_string(n);
 
     // 6. If f ≠ 0, then
     if (fraction != 0) {
@@ -1245,8 +1313,14 @@ ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_obje
 }
 
 // 15.1.14 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-getnumberformatpattern
-Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, double number, Unicode::NumberFormat& found_pattern)
+Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, Value number, Unicode::NumberFormat& found_pattern)
 {
+    auto as_number = [&]() {
+        if (number.is_number())
+            return number.as_double();
+        VERIFY_NOT_REACHED();
+    };
+
     // 1. Let localeData be %NumberFormat%.[[LocaleData]].
     // 2. Let dataLocale be numberFormat.[[DataLocale]].
     // 3. Let dataLocaleData be localeData.[[<dataLocale>]].
@@ -1272,7 +1346,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
         // e. Let patterns be patterns.[[<unit>]].
         // f. Let patterns be patterns.[[<unitDisplay>]].
         auto formats = Unicode::get_unit_formats(number_format.data_locale(), number_format.unit(), number_format.unit_display());
-        patterns = Unicode::select_pattern_with_plurality(formats, number);
+        patterns = Unicode::select_pattern_with_plurality(formats, as_number());
         break;
     }
 
@@ -1292,7 +1366,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
         if (number_format.currency_display() == NumberFormat::CurrencyDisplay::Name) {
             auto formats = Unicode::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), Unicode::CompactNumberFormatType::CurrencyUnit);
 
-            auto maybe_patterns = Unicode::select_pattern_with_plurality(formats, number);
+            auto maybe_patterns = Unicode::select_pattern_with_plurality(formats, as_number());
             if (maybe_patterns.has_value()) {
                 patterns = maybe_patterns.release_value();
                 break;
@@ -1326,10 +1400,9 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
 
     StringView pattern;
 
-    Value number_value(number);
-    bool is_positive_zero = number_value.is_positive_zero();
-    bool is_negative_zero = number_value.is_negative_zero();
-    bool is_nan = number_value.is_nan();
+    bool is_positive_zero = number.is_positive_zero();
+    bool is_negative_zero = number.is_negative_zero();
+    bool is_nan = number.is_nan();
 
     // 11. Let signDisplay be numberFormat.[[SignDisplay]].
     switch (number_format.sign_display()) {
@@ -1342,7 +1415,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
     // 13. Else if signDisplay is "auto", then
     case NumberFormat::SignDisplay::Auto:
         // a. If x is 0 or x > 0 or x is NaN, then
-        if (is_positive_zero || (number > 0) || is_nan) {
+        if (is_positive_zero || is_greater_than(number, 0) || is_nan) {
             // i. Let pattern be patterns.[[zeroPattern]].
             pattern = patterns->zero_format;
         }
@@ -1356,7 +1429,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
     // 14. Else if signDisplay is "always", then
     case NumberFormat::SignDisplay::Always:
         // a. If x is 0 or x > 0 or x is NaN, then
-        if (is_positive_zero || (number > 0) || is_nan) {
+        if (is_positive_zero || is_greater_than(number, 0) || is_nan) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;
         }
@@ -1376,7 +1449,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
             pattern = patterns->zero_format;
         }
         // c. Else if x > 0, then
-        else if (number > 0) {
+        else if (is_greater_than(number, 0)) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;
         }
@@ -1445,18 +1518,18 @@ Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int e
 }
 
 // 15.1.16 ComputeExponent ( numberFormat, x ), https://tc39.es/ecma402/#sec-computeexponent
-int compute_exponent(NumberFormat& number_format, double number)
+int compute_exponent(GlobalObject& global_object, NumberFormat& number_format, Value number)
 {
     // 1. If x = 0, then
-    if (number == 0.0) {
+    if (is_zero(number)) {
         // a. Return 0.
         return 0;
     }
 
     // 2. If x < 0, then
-    if (number < 0) {
+    if (is_less_than(number, 0)) {
         // a. Let x = -x.
-        number *= -1;
+        number = multiply(global_object, number, -1);
     }
 
     // 3. Let magnitude be the base 10 logarithm of x rounded down to the nearest integer.
@@ -1466,13 +1539,13 @@ int compute_exponent(NumberFormat& number_format, double number)
     int exponent = compute_exponent_for_magnitude(number_format, magnitude);
 
     // 5. Let x be x × 10^(-exponent).
-    number *= pow(10, -exponent);
+    number = multiply_by_power(global_object, number, -exponent);
 
     // 6. Let formatNumberResult be FormatNumericToString(numberFormat, x).
-    auto format_number_result = format_numeric_to_string(number_format, number);
+    auto format_number_result = format_numeric_to_string(global_object, number_format, number);
 
     // 7. If formatNumberResult.[[RoundedNumber]] = 0, then
-    if (format_number_result.rounded_number == 0) {
+    if (is_zero(format_number_result.rounded_number)) {
         // a. Return exponent.
         return exponent;
     }

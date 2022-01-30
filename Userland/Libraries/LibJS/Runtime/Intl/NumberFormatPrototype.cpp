@@ -76,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
 
     // 4. Return ? FormatNumericToParts(nf, x).
     // Note: Our implementation of FormatNumericToParts does not throw.
-    return format_numeric_to_parts(global_object, *number_format, value.as_double());
+    return format_numeric_to_parts(global_object, *number_format, value);
 }
 
 // 15.4.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
