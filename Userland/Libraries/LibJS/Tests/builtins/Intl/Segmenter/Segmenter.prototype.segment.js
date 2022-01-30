@@ -9,4 +9,12 @@ describe("correct behavior", () => {
             Object.getPrototypeOf(segmenter.segment("friends"))
         );
     });
+
+    test("returns segments object segment iterator", () => {
+        const segmenter = new Intl.Segmenter();
+        const segments = segmenter.segment("hello friends!");
+        expect(Object.getPrototypeOf(segments[Symbol.iterator]())[Symbol.toStringTag]).toBe(
+            "Segmenter String Iterator"
+        );
+    });
 });

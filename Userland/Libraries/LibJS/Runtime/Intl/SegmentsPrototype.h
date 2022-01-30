@@ -18,6 +18,9 @@ public:
     explicit SegmentsPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~SegmentsPrototype() override = default;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(symbol_iterator);
 };
 
 }
