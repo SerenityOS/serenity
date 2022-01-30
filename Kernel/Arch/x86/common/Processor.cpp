@@ -564,7 +564,7 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
     // reflect the status at the last context switch.
     SpinlockLocker lock(g_scheduler_lock);
     if (&thread == Processor::current_thread()) {
-        VERIFY(thread.state() == Thread::Running);
+        VERIFY(thread.state() == Thread::State::Running);
         // Leave the scheduler lock. If we trigger page faults we may
         // need to be preempted. Since this is our own thread it won't
         // cause any problems as the stack won't change below this frame.
@@ -599,13 +599,13 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
         TRY(result);
     } else {
         switch (thread.state()) {
-        case Thread::Running:
+        case Thread::State::Running:
             VERIFY_NOT_REACHED(); // should have been handled above
-        case Thread::Runnable:
-        case Thread::Stopped:
-        case Thread::Blocked:
-        case Thread::Dying:
-        case Thread::Dead: {
+        case Thread::State::Runnable:
+        case Thread::State::Stopped:
+        case Thread::State::Blocked:
+        case Thread::State::Dying:
+        case Thread::State::Dead: {
             // We need to retrieve ebp from what was last pushed to the kernel
             // stack. Before switching out of that thread, it switch_context
             // pushed the callee-saved registers, and the last of them happens
@@ -1303,8 +1303,8 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 {
-    VERIFY(from_thread == to_thread || from_thread->state() != Thread::Running);
-    VERIFY(to_thread->state() == Thread::Running);
+    VERIFY(from_thread == to_thread || from_thread->state() != Thread::State::Running);
+    VERIFY(to_thread->state() == Thread::State::Running);
 
     bool has_fxsr = Processor::current().has_feature(CPUFeature::FXSR);
     Processor::set_current_thread(*to_thread);

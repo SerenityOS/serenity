@@ -201,14 +201,14 @@ public:
 
     void finalize();
 
-    enum State : u8 {
+    enum class State : u8 {
         Invalid = 0,
         Runnable,
         Running,
         Dying,
         Dead,
         Stopped,
-        Blocked
+        Blocked,
     };
 
     class [[nodiscard]] BlockResult {
@@ -802,7 +802,7 @@ public:
             return EDEADLK;
 
         SpinlockLocker lock(m_lock);
-        if (!m_is_joinable || state() == Dead)
+        if (!m_is_joinable || state() == Thread::State::Dead)
             return EINVAL;
 
         add_blocker();
@@ -820,8 +820,8 @@ public:
     void resume_from_stopped();
 
     [[nodiscard]] bool should_be_stopped() const;
-    [[nodiscard]] bool is_stopped() const { return m_state == Stopped; }
-    [[nodiscard]] bool is_blocked() const { return m_state == Blocked; }
+    [[nodiscard]] bool is_stopped() const { return m_state == Thread::State::Stopped; }
+    [[nodiscard]] bool is_blocked() const { return m_state == Thread::State::Blocked; }
 
     u32 cpu() const { return m_cpu.load(AK::MemoryOrder::memory_order_consume); }
     void set_cpu(u32 cpu) { m_cpu.store(cpu, AK::MemoryOrder::memory_order_release); }
@@ -853,7 +853,7 @@ public:
         // mode then we will intercept prior to returning back to user
         // mode.
         SpinlockLocker lock(m_lock);
-        while (state() == Thread::Stopped) {
+        while (state() == Thread::State::Stopped) {
             lock.unlock();
             // We shouldn't be holding the big lock here
             yield_without_releasing_big_lock();
@@ -1265,11 +1265,11 @@ private:
     unsigned m_ipv4_socket_write_bytes { 0 };
 
     FPUState m_fpu_state {};
-    State m_state { Invalid };
+    State m_state { Thread::State::Invalid };
     NonnullOwnPtr<KString> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
 
-    State m_stop_state { Invalid };
+    State m_stop_state { Thread::State::Invalid };
 
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };

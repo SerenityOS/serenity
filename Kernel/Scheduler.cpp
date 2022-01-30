@@ -199,7 +199,7 @@ UNMAP_AFTER_INIT void Scheduler::start()
     idle_thread.did_schedule();
     idle_thread.set_initialized(true);
     processor.init_context(idle_thread, false);
-    idle_thread.set_state(Thread::Running);
+    idle_thread.set_state(Thread::State::Running);
     VERIFY(idle_thread.affinity() == (1u << processor.id()));
     processor.initialize_context_switching(idle_thread);
     VERIFY_NOT_REACHED();
@@ -282,8 +282,8 @@ bool Scheduler::context_switch(Thread* thread)
     if (from_thread) {
         // If the last process hasn't blocked (still marked as running),
         // mark it as runnable for the next round.
-        if (from_thread->state() == Thread::Running)
-            from_thread->set_state(Thread::Runnable);
+        if (from_thread->state() == Thread::State::Running)
+            from_thread->set_state(Thread::State::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
         const auto msg = "Scheduler[{}]: {} -> {} [prio={}] {:#04x}:{:p}";
@@ -299,7 +299,7 @@ bool Scheduler::context_switch(Thread* thread)
         proc.init_context(*thread, false);
         thread->set_initialized(true);
     }
-    thread->set_state(Thread::Running);
+    thread->set_state(Thread::State::Running);
 
     PerformanceManager::add_context_switch_perf_event(*from_thread, *thread);
 
@@ -332,7 +332,7 @@ void Scheduler::enter_current(Thread& prev_thread)
     current_thread->update_time_scheduled(scheduler_time, true, false);
 
     prev_thread.set_active(false);
-    if (prev_thread.state() == Thread::Dying) {
+    if (prev_thread.state() == Thread::State::Dying) {
         // If the thread we switched from is marked as dying, then notify
         // the finalizer. Note that as soon as we leave the scheduler lock
         // the finalizer may free from_thread!
@@ -472,7 +472,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
     if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
         SpinlockLocker scheduler_lock(g_scheduler_lock);
         dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::current_id(), *current_thread);
-        current_thread->set_state(Thread::Dying);
+        current_thread->set_state(Thread::State::Dying);
         Processor::current().invoke_scheduler_async();
         return;
     }
@@ -568,7 +568,7 @@ void dump_thread_list(bool with_stack_traces)
 
     Thread::for_each([&](Thread& thread) {
         switch (thread.state()) {
-        case Thread::Dying:
+        case Thread::State::Dying:
             dmesgln("  {:14} {:30} @ {:04x}:{:08x} Finalizable: {}, (nsched: {})",
                 thread.state_string(),
                 thread,
