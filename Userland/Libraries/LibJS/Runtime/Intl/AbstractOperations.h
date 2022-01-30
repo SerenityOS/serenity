@@ -22,7 +22,10 @@ using Fallback = Variant<Empty, bool, StringView>;
 struct LocaleOptions {
     Value locale_matcher;
     Optional<String> ca; // [[Calendar]]
+    Optional<String> co; // [[Collation]]
     Optional<String> hc; // [[HourCycle]]
+    Optional<String> kf; // [[CaseFirst]]
+    Optional<String> kn; // [[Numeric]]
     Optional<String> nu; // [[NumberingSystem]]
 };
 
@@ -30,7 +33,10 @@ struct LocaleResult {
     String locale;
     String data_locale;
     Optional<String> ca; // [[Calendar]]
+    Optional<String> co; // [[Collation]]
     Optional<String> hc; // [[HourCycle]]
+    Optional<String> kf; // [[CaseFirst]]
+    Optional<String> kn; // [[Numeric]]
     Optional<String> nu; // [[NumberingSystem]]
 };
 

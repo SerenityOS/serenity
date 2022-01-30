@@ -204,28 +204,37 @@ public:
 
     bool operator==(const String&) const;
 
+    [[nodiscard]] constexpr int compare(StringView other) const
+    {
+        size_t rlen = min(length(), other.length());
+        int c = (rlen != 0) ? __builtin_memcmp(m_characters, other.m_characters, rlen) : 0;
+        if (c == 0) {
+            if (length() < other.length())
+                return -1;
+            if (length() == other.length())
+                return 0;
+            return 1;
+        }
+        return c;
+    }
+
     constexpr bool operator==(StringView other) const
     {
-        if (is_null())
-            return other.is_null();
-        if (other.is_null())
-            return false;
-        if (length() != other.length())
-            return false;
-        return __builtin_memcmp(m_characters, other.m_characters, m_length) == 0;
+        return length() == other.length() && compare(other) == 0;
     }
 
     constexpr bool operator!=(StringView other) const
     {
-        return !(*this == other);
+        return length() != other.length() || compare(other) != 0;
     }
 
-    bool operator<(StringView other) const
-    {
-        if (int c = __builtin_memcmp(m_characters, other.m_characters, min(m_length, other.m_length)))
-            return c < 0;
-        return m_length < other.m_length;
-    }
+    constexpr bool operator<(StringView other) const { return compare(other) < 0; }
+
+    constexpr bool operator<=(StringView other) const { return compare(other) <= 0; }
+
+    constexpr bool operator>(StringView other) const { return compare(other) > 0; }
+
+    constexpr bool operator>=(StringView other) const { return compare(other) >= 0; }
 
     [[nodiscard]] String to_string() const;
 

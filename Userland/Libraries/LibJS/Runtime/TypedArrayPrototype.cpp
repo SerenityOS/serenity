@@ -1290,7 +1290,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
 }
 
 // 23.2.3.29 %TypedArray%.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring
-// 18.5.1 Array.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-array.prototype.tolocalestring
+// 19.5.1 Array.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-array.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
 {
     auto locales = vm.argument(0);

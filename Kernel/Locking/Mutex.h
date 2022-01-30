@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,23 +34,23 @@ public:
     ~Mutex() = default;
 
     void lock(Mode mode = Mode::Exclusive, LockLocation const& location = LockLocation::current());
-    void restore_lock(Mode, u32, LockLocation const& location = LockLocation::current());
+    void restore_exclusive_lock(u32, LockLocation const& location = LockLocation::current());
 
     void unlock();
-    [[nodiscard]] Mode force_unlock_if_locked(u32&);
+    [[nodiscard]] Mode force_unlock_exclusive_if_locked(u32&);
     [[nodiscard]] bool is_locked() const
     {
         SpinlockLocker lock(m_lock);
         return m_mode != Mode::Unlocked;
     }
-    [[nodiscard]] bool is_locked_by_current_thread() const
+
+    [[nodiscard]] bool is_exclusively_locked_by_current_thread() const
     {
         SpinlockLocker lock(m_lock);
-        if (m_mode == Mode::Exclusive)
-            return m_holder == Thread::current();
-        if (m_mode == Mode::Shared)
-            return m_shared_holders.contains(Thread::current());
-        return false;
+        VERIFY(m_mode != Mode::Shared); // This method should only be used on exclusively-held locks
+        if (m_mode == Mode::Unlocked)
+            return false;
+        return m_holder == Thread::current();
     }
 
     [[nodiscard]] StringView name() const { return m_name; }
@@ -93,12 +94,16 @@ private:
     // When locked exclusively, this is always the one thread that holds the
     // lock.
     RefPtr<Thread> m_holder;
-    HashMap<Thread*, u32> m_shared_holders;
+    size_t m_shared_holders { 0 };
 
     BlockedThreadList m_blocked_threads_list_exclusive;
     BlockedThreadList m_blocked_threads_list_shared;
 
     mutable Spinlock m_lock;
+
+#if LOCK_SHARED_UPGRADE_DEBUG
+    HashMap<Thread*, u32> m_shared_holders_map;
+#endif
 };
 
 class MutexLocker {

@@ -16,6 +16,12 @@ constexpr auto round_up_to_power_of_two(T value, U power_of_two) requires(IsInte
     return ((value - 1) & ~(power_of_two - 1)) + power_of_two;
 }
 
+template<typename T>
+constexpr bool is_power_of_two(T value) requires(IsIntegral<T>)
+{
+    return value && !((value) & (value - 1));
+}
+
 // HACK: clang-format does not format this correctly because of the requires clause above.
 // Disabling formatting for that doesn't help either.
 //

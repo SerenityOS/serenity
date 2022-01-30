@@ -31,12 +31,6 @@ MouseWidget::MouseWidget()
     int const slider_value = float { speed_slider_scale } * GUI::WindowServerConnection::the().get_mouse_acceleration();
     m_speed_slider->set_value(slider_value);
 
-    auto& cursor_speed_image_label = *find_descendant_of_type_named<GUI::Label>("cursor_speed_image_label");
-    cursor_speed_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/mouse-cursor-speed.png").release_value_but_fixme_should_propagate_errors());
-
-    auto& scroll_step_size_image_label = *find_descendant_of_type_named<GUI::Label>("scroll_step_size_image_label");
-    scroll_step_size_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/scroll-wheel-step-size.png").release_value_but_fixme_should_propagate_errors());
-
     m_scroll_length_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("scroll_length_spinbox");
     m_scroll_length_spinbox->set_min(WindowServer::scroll_step_size_min);
     m_scroll_length_spinbox->set_value(GUI::WindowServerConnection::the().get_scroll_step_size());
@@ -53,8 +47,6 @@ MouseWidget::MouseWidget()
     m_double_click_speed_slider->set_value(GUI::WindowServerConnection::the().get_double_click_speed());
     m_switch_buttons_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("switch_buttons_input");
     m_switch_buttons_checkbox->set_checked(GUI::WindowServerConnection::the().get_buttons_switched());
-    auto& switch_buttons_image_label = *find_descendant_of_type_named<GUI::Label>("switch_buttons_image_label");
-    switch_buttons_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/switch-mouse-buttons.png").release_value_but_fixme_should_propagate_errors());
 }
 
 void MouseWidget::apply_settings()

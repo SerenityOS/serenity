@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +15,7 @@
 namespace AK {
 
 namespace Detail {
-inline constexpr const void* bitap_bitwise(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+constexpr const void* bitap_bitwise(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
 {
     VERIFY(needle_length < 32);
 

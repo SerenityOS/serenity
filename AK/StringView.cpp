@@ -203,15 +203,7 @@ template Optional<long long> StringView::to_uint() const;
 
 bool StringView::operator==(const String& string) const
 {
-    if (string.is_null())
-        return !m_characters;
-    if (!m_characters)
-        return false;
-    if (m_length != string.length())
-        return false;
-    if (m_characters == string.characters())
-        return true;
-    return !__builtin_memcmp(m_characters, string.characters(), m_length);
+    return *this == string.view();
 }
 
 String StringView::to_string() const { return String { *this }; }

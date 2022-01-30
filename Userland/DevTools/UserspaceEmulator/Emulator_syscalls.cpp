@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Rummskartoffel <Rummskartoffel@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -120,6 +121,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getpgrp();
     case SC_getpid:
         return virt$getpid();
+    case SC_getppid:
+        return virt$getppid();
     case SC_getrandom:
         return virt$getrandom(arg1, arg2, arg3);
     case SC_getsid:
@@ -230,6 +233,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$shutdown(arg1, arg2);
     case SC_sigaction:
         return virt$sigaction(arg1, arg2, arg3);
+    case SC_sigprocmask:
+        return virt$sigprocmask(arg1, arg2, arg3);
     case SC_sigreturn:
         return virt$sigreturn();
     case SC_socket:
@@ -972,6 +977,11 @@ u32 Emulator::virt$getpid()
     return getpid();
 }
 
+pid_t Emulator::virt$getppid()
+{
+    return getppid();
+}
+
 u32 Emulator::virt$pledge(u32)
 {
     return 0;
@@ -1107,7 +1117,8 @@ int Emulator::virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t size)
 
 int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unused]] FlatPtr arg)
 {
-    if (request == TIOCGWINSZ) {
+    switch (request) {
+    case TIOCGWINSZ: {
         struct winsize ws;
         int rc = syscall(SC_ioctl, fd, TIOCGWINSZ, &ws);
         if (rc < 0)
@@ -1115,10 +1126,20 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
         mmu().copy_to_vm(arg, &ws, sizeof(winsize));
         return 0;
     }
-    if (request == TIOCSPGRP) {
-        return syscall(SC_ioctl, fd, request, arg);
+    case TIOCSWINSZ: {
+        struct winsize ws;
+        mmu().copy_from_vm(&ws, arg, sizeof(winsize));
+        return syscall(SC_ioctl, fd, request, &ws);
     }
-    if (request == TCGETS) {
+    case TIOCGPGRP: {
+        pid_t pgid;
+        auto rc = syscall(SC_ioctl, fd, request, &pgid);
+        mmu().copy_to_vm(arg, &pgid, sizeof(pgid));
+        return rc;
+    }
+    case TIOCSPGRP:
+        return syscall(SC_ioctl, fd, request, arg);
+    case TCGETS: {
         struct termios termios;
         int rc = syscall(SC_ioctl, fd, request, &termios);
         if (rc < 0)
@@ -1126,33 +1147,46 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
         mmu().copy_to_vm(arg, &termios, sizeof(termios));
         return rc;
     }
-    if (request == TCSETS || request == TCSETSF || request == TCSETSW) {
+    case TCSETS:
+    case TCSETSF:
+    case TCSETSW: {
         struct termios termios;
         mmu().copy_from_vm(&termios, arg, sizeof(termios));
         return syscall(SC_ioctl, fd, request, &termios);
     }
-    if (request == TIOCNOTTY || request == TIOCSCTTY) {
+    case TCFLSH:
+        return syscall(SC_ioctl, fd, request, arg);
+    case TIOCNOTTY:
+    case TIOCSCTTY:
         return syscall(SC_ioctl, fd, request, 0);
-    }
-    if (request == FB_IOCTL_GET_PROPERTIES) {
+    case TIOCSTI:
+        return -EIO;
+    case FB_IOCTL_GET_PROPERTIES: {
         size_t size = 0;
         auto rc = syscall(SC_ioctl, fd, request, &size);
         mmu().copy_to_vm(arg, &size, sizeof(size));
         return rc;
     }
-    if (request == FB_IOCTL_SET_HEAD_RESOLUTION) {
+    case FB_IOCTL_SET_HEAD_RESOLUTION: {
         FBHeadResolution user_resolution;
         mmu().copy_from_vm(&user_resolution, arg, sizeof(user_resolution));
         auto rc = syscall(SC_ioctl, fd, request, &user_resolution);
         mmu().copy_to_vm(arg, &user_resolution, sizeof(user_resolution));
         return rc;
     }
-    if (request == FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER) {
+    case FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER:
         return syscall(SC_ioctl, fd, request, arg);
+    case FIONBIO: {
+        int enabled;
+        mmu().copy_from_vm(&enabled, arg, sizeof(int));
+        return syscall(SC_ioctl, fd, request, &enabled);
     }
-    reportln("Unsupported ioctl: {}", request);
-    dump_backtrace();
-    TODO();
+    default:
+        reportln("Unsupported ioctl: {}", request);
+        dump_backtrace();
+        TODO();
+    }
+    VERIFY_NOT_REACHED();
 }
 
 int Emulator::virt$emuctl(FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
@@ -1333,6 +1367,31 @@ int Emulator::virt$sigaction(int signum, FlatPtr act, FlatPtr oldact)
         host_oldact.sa_mask = old_handler.mask;
         host_oldact.sa_flags = old_handler.flags;
         mmu().copy_to_vm(oldact, &host_oldact, sizeof(host_oldact));
+    }
+    return 0;
+}
+
+int Emulator::virt$sigprocmask(int how, FlatPtr set, FlatPtr old_set)
+{
+    if (old_set) {
+        mmu().copy_to_vm(old_set, &m_signal_mask, sizeof(sigset_t));
+    }
+    if (set) {
+        sigset_t set_value;
+        mmu().copy_from_vm(&set_value, set, sizeof(sigset_t));
+        switch (how) {
+        case SIG_BLOCK:
+            m_signal_mask |= set_value;
+            break;
+        case SIG_SETMASK:
+            m_signal_mask = set_value;
+            break;
+        case SIG_UNBLOCK:
+            m_signal_mask &= ~set_value;
+            break;
+        default:
+            return -EINVAL;
+        }
     }
     return 0;
 }

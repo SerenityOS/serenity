@@ -392,7 +392,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
     return TRY(call(global_object, join_function.as_function(), this_object));
 }
 
-// 18.5.1 Array.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-array.prototype.tolocalestring
+// 19.5.1 Array.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-array.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
 {
     auto locales = vm.argument(0);

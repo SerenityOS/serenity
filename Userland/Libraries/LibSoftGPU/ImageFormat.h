@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +21,7 @@ enum class ImageFormat {
     L8A8,
 };
 
-inline static constexpr size_t element_size(ImageFormat format)
+static constexpr size_t element_size(ImageFormat format)
 {
     switch (format) {
     case ImageFormat::L8:

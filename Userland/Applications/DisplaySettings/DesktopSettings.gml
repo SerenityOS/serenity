@@ -50,20 +50,24 @@
 
             layout: @GUI::HorizontalBoxLayout {
             }
+
             @GUI::Label {
-                name: "light_bulb_label"
                 fixed_height: 32
                 fixed_width: 32
+                icon: "/res/icons/32x32/app-welcome.png"
             }
+
             @GUI::Widget {
                 layout: @GUI::VerticalBoxLayout {
                     margins: [6]
                 }
+
                 @GUI::Label {
                     text: "Use the Ctrl+Alt+Arrow hotkeys to move between workspaces."
                     text_alignment: "TopLeft"
                     word_wrap: true
                 }
+
                 @GUI::Label {
                     text: "Use the Ctrl+Shift+Alt+Arrow hotkeys to move between\nworkspaces and move the active window."
                     text_alignment: "TopLeft"

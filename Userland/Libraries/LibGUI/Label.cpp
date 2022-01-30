@@ -30,6 +30,7 @@ Label::Label(String text)
 
     REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_BOOL_PROPERTY("autosize", is_autosize, set_autosize);
+    REGISTER_STRING_PROPERTY("icon", icon, set_icon_from_path);
 }
 
 Label::~Label()
@@ -51,6 +52,16 @@ void Label::set_icon(const Gfx::Bitmap* icon)
         return;
     m_icon = icon;
     update();
+}
+
+void Label::set_icon_from_path(String const& path)
+{
+    auto maybe_bitmap = Gfx::Bitmap::try_load_from_file(path);
+    if (maybe_bitmap.is_error()) {
+        dbgln("Unable to load bitmap `{}` for label icon", path);
+        return;
+    }
+    set_icon(maybe_bitmap.release_value());
 }
 
 void Label::set_text(String text)

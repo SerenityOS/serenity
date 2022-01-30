@@ -23,7 +23,7 @@
             @GUI::Label {
                 fixed_width: 32
                 fixed_height: 32
-                name: "server_settings_image_label"
+                icon: "/res/graphics/mail-server-settings.png"
             }
 
             @GUI::Label {
@@ -52,6 +52,7 @@
                 name: "server_input"
             }
         }
+
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
                 spacing: 16
@@ -72,6 +73,7 @@
                 name: "port_input"
             }
         }
+
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
                 spacing: 16
@@ -105,7 +107,7 @@
             @GUI::Label {
                 fixed_width: 32
                 fixed_height: 32
-                name: "user_settings_image_label"
+                icon: "/res/graphics/mail-user-settings.png"
             }
 
             @GUI::Label {
