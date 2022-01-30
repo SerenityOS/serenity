@@ -67,6 +67,7 @@
 #include <LibJS/Runtime/Intl/PluralRulesPrototype.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatPrototype.h>
+#include <LibJS/Runtime/Intl/SegmentIteratorPrototype.h>
 #include <LibJS/Runtime/Intl/SegmenterConstructor.h>
 #include <LibJS/Runtime/Intl/SegmenterPrototype.h>
 #include <LibJS/Runtime/Intl/SegmentsPrototype.h>

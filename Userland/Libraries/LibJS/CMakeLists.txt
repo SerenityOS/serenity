@@ -119,6 +119,8 @@ set(SOURCES
     Runtime/Intl/SegmenterConstructor.cpp
     Runtime/Intl/SegmenterPrototype.cpp
     Runtime/Intl/Segments.cpp
+    Runtime/Intl/SegmentIterator.cpp
+    Runtime/Intl/SegmentIteratorPrototype.cpp
     Runtime/Intl/SegmentsPrototype.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
