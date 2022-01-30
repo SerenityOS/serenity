@@ -276,23 +276,23 @@ bool Scheduler::context_switch(Thread* thread)
     thread->did_schedule();
 
     auto* from_thread = Thread::current();
+    VERIFY(from_thread);
+
     if (from_thread == thread)
         return false;
 
-    if (from_thread) {
-        // If the last process hasn't blocked (still marked as running),
-        // mark it as runnable for the next round.
-        if (from_thread->state() == Thread::State::Running)
-            from_thread->set_state(Thread::State::Runnable);
+    // If the last process hasn't blocked (still marked as running),
+    // mark it as runnable for the next round.
+    if (from_thread->state() == Thread::State::Running)
+        from_thread->set_state(Thread::State::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        const auto msg = "Scheduler[{}]: {} -> {} [prio={}] {:#04x}:{:p}";
+    const auto msg = "Scheduler[{}]: {} -> {} [prio={}] {:#04x}:{:p}";
 
-        dbgln(msg,
-            Processor::current_id(), from_thread->tid().value(),
-            thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().ip());
+    dbgln(msg,
+        Processor::current_id(), from_thread->tid().value(),
+        thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().ip());
 #endif
-    }
 
     auto& proc = Processor::current();
     if (!thread->is_initialized()) {
