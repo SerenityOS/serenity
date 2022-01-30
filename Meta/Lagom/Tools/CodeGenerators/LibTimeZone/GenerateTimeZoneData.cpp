@@ -619,22 +619,11 @@ Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, 
 
     return named_offsets;
 }
+)~~~");
 
-Span<StringView const> all_time_zones()
-{
-    static constexpr auto all_time_zones = Array {
-        )~~~");
-
-    for (auto const& time_zone : time_zone_data.time_zone_names) {
-        generator.set("time_zone", time_zone);
-        generator.append("\"@time_zone@\"sv, ");
-    }
+    generate_available_values(generator, "all_time_zones"sv, time_zone_data.time_zone_names);
 
     generator.append(R"~~~(
-    };
-
-    return all_time_zones;
-}
 
 }
 )~~~");
