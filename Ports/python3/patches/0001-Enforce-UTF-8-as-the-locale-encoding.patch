@@ -1,4 +1,4 @@
-From 88be19427b96ec99d861b7b6eae7bdad0c7f3bd5 Mon Sep 17 00:00:00 2001
+From 9f78eb848cce77cfb7c706ceb548b5802cc2d1fb Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Fri, 14 Jan 2022 23:35:20 +0330
 Subject: [PATCH 1/4] Enforce UTF-8 as the locale encoding
