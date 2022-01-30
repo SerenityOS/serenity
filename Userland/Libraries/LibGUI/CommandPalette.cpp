@@ -14,6 +14,7 @@
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuItem.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TableView.h>
@@ -233,10 +234,27 @@ void CommandPalette::collect_actions(GUI::Window& parent_window)
         });
     };
 
+    Function<void(Menu&)> collect_actions_from_menu = [&](Menu& menu) {
+        for (auto menu_item : menu.items()) {
+            if (menu_item.submenu())
+                collect_actions_from_menu(*menu_item.submenu());
+
+            auto const* action = menu_item.action();
+            if (action && action->is_enabled())
+                actions.set(*action);
+        }
+    };
+
     for (auto* widget = parent_window.focused_widget(); widget; widget = widget->parent_widget())
         collect_action_children(*widget);
 
     collect_action_children(parent_window);
+
+    parent_window.menubar().for_each_menu([&](Menu& menu) {
+        collect_actions_from_menu(menu);
+
+        return IterationDecision::Continue;
+    });
 
     if (!parent_window.is_modal()) {
         for (auto const& it : GUI::Application::the()->global_shortcut_actions({})) {

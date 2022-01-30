@@ -51,6 +51,8 @@ public:
 
     bool is_visible() const { return m_visible; }
 
+    NonnullOwnPtrVector<MenuItem> const& items() const { return m_items; }
+
 private:
     friend class Menubar;
 
