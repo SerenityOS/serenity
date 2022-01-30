@@ -206,8 +206,14 @@ public:
 
     [[nodiscard]] constexpr int compare(StringView other) const
     {
-        size_t rlen = min(length(), other.length());
-        int c = (rlen != 0) ? __builtin_memcmp(m_characters, other.m_characters, rlen) : 0;
+        if (m_characters == nullptr)
+            return other.m_characters ? -1 : 0;
+
+        if (other.m_characters == nullptr)
+            return 1;
+
+        size_t rlen = min(m_length, other.m_length);
+        int c = __builtin_memcmp(m_characters, other.m_characters, rlen);
         if (c == 0) {
             if (length() < other.length())
                 return -1;
