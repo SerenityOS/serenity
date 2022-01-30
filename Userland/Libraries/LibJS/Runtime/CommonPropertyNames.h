@@ -449,6 +449,7 @@ namespace JS {
     P(subtract)                              \
     P(sup)                                   \
     P(supportedLocalesOf)                    \
+    P(supportedValuesOf)                     \
     P(tan)                                   \
     P(tanh)                                  \
     P(test)                                  \
