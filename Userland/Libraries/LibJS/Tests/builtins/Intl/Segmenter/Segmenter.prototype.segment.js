@@ -10,6 +10,48 @@ describe("correct behavior", () => {
         );
     });
 
+    test("returns segments object with valid containing method", () => {
+        const string = "hello friends!";
+        const graphemeSegmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+        const graphemeSegments = graphemeSegmenter.segment(string);
+        const graphemeSegment0 = graphemeSegments.containing(0);
+        expect(graphemeSegment0.segment).toBe("h");
+        expect(graphemeSegment0.index).toBe(0);
+        expect(graphemeSegment0.input).toBe(string);
+        expect(graphemeSegment0.isWordLike).toBeUndefined();
+        const graphemeSegment5 = graphemeSegments.containing(5);
+        expect(graphemeSegment5.segment).toBe(" ");
+        expect(graphemeSegment5.index).toBe(5);
+        expect(graphemeSegment5.input).toBe(string);
+        expect(graphemeSegment5.isWordLike).toBeUndefined();
+
+        const wordSegmenter = new Intl.Segmenter("en", { granularity: "word" });
+        const wordSegments = wordSegmenter.segment(string);
+        const wordSegment0 = wordSegments.containing(0);
+        expect(wordSegment0.segment).toBe("hello");
+        expect(wordSegment0.index).toBe(0);
+        expect(wordSegment0.input).toBe(string);
+        // FIXME: expect(wordSegment0.isWordLike).toBeTrue();
+        const wordSegment5 = wordSegments.containing(5);
+        expect(wordSegment5.segment).toBe(" ");
+        expect(wordSegment5.index).toBe(5);
+        expect(wordSegment5.input).toBe(string);
+        expect(wordSegment5.isWordLike).toBeFalse();
+
+        const sentenceSegmenter = new Intl.Segmenter("en", { granularity: "sentence" });
+        const sentenceSegments = sentenceSegmenter.segment(string);
+        const sentenceSegment0 = sentenceSegments.containing(0);
+        expect(sentenceSegment0.segment).toBe(string);
+        expect(sentenceSegment0.index).toBe(0);
+        expect(sentenceSegment0.input).toBe(string);
+        expect(sentenceSegment0.isWordLike).toBeUndefined();
+        const sentenceSegment5 = sentenceSegments.containing(5);
+        expect(sentenceSegment5.segment).toBe(sentenceSegment0.segment);
+        expect(sentenceSegment5.index).toBe(sentenceSegment0.index);
+        expect(sentenceSegment5.input).toBe(sentenceSegment0.input);
+        expect(sentenceSegment5.isWordLike).toBe(sentenceSegment0.isWordLike);
+    });
+
     test("returns segments object segment iterator", () => {
         const segmenter = new Intl.Segmenter();
         const segments = segmenter.segment("hello friends!");
