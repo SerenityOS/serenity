@@ -56,9 +56,9 @@ public:
     const T* first_child() const { return m_first_child; }
     const T* last_child() const { return m_last_child; }
 
-    int child_count() const
+    size_t child_count() const
     {
-        int count = 0;
+        size_t count = 0;
         for (auto* child = first_child(); child; child = child->next_sibling())
             ++count;
         return count;
