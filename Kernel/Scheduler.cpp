@@ -310,14 +310,6 @@ bool Scheduler::context_switch(Thread* thread)
     enter_current(*from_thread);
     VERIFY(thread == Thread::current());
 
-    if (thread->process().is_user_process() && thread->previous_mode() != Thread::PreviousMode::KernelMode && thread->current_trap()) {
-        auto& regs = thread->get_register_dump_from_stack();
-        auto iopl = get_iopl_from_eflags(regs.flags());
-        if (iopl != 0) {
-            PANIC("Switched to thread {} with non-zero IOPL={}", Thread::current()->tid().value(), iopl);
-        }
-    }
-
     return true;
 }
 

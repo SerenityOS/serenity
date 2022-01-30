@@ -1312,6 +1312,10 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     auto& from_regs = from_thread->regs();
     auto& to_regs = to_thread->regs();
 
+    // NOTE: IOPL should never be non-zero in any situation, so let's panic immediately
+    //       instead of carrying on with elevated I/O privileges.
+    VERIFY(get_iopl_from_eflags(to_regs.flags()) == 0);
+
     if (has_fxsr)
         asm volatile("fxsave %0"
                      : "=m"(from_thread->fpu_state()));
@@ -1358,8 +1362,6 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
         asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
     else
         asm volatile("frstor %0" ::"m"(to_thread->fpu_state()));
-
-    // TODO: ioperm?
 }
 
 extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)
