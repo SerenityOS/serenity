@@ -316,7 +316,11 @@ void Scheduler::enter_current(Thread& prev_thread)
     auto* current_thread = Thread::current();
     current_thread->update_time_scheduled(scheduler_time, true, false);
 
-    prev_thread.set_active(false);
+    // NOTE: When doing an exec(), we will context switch from and to the same thread!
+    //       In that case, we must not mark the previous thread as inactive.
+    if (&prev_thread != current_thread)
+        prev_thread.set_active(false);
+
     if (prev_thread.state() == Thread::State::Dying) {
         // If the thread we switched from is marked as dying, then notify
         // the finalizer. Note that as soon as we leave the scheduler lock
