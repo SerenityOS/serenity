@@ -25,11 +25,15 @@ public:
 
     Utf16View segments_string() const { return m_segments_string.view(); }
 
+    Optional<Vector<size_t>>& boundaries_cache() const { return m_boundaries_cache; }
+
 private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     Segmenter& m_segments_segmenter; // [[SegmentsSegmenter]]
     Utf16String m_segments_string;   // [[SegmentsString]]
+
+    mutable Optional<Vector<size_t>> m_boundaries_cache;
 };
 
 }
