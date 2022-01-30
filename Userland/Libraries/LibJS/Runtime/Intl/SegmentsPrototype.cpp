@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentsPrototype::symbol_iterator)
     auto string = segments->segments_string();
 
     // 5. Return ! CreateSegmentIterator(segmenter, string).
-    return SegmentIterator::create(global_object, segmenter, string);
+    return SegmentIterator::create(global_object, segmenter, string, *segments);
 }
 
 }

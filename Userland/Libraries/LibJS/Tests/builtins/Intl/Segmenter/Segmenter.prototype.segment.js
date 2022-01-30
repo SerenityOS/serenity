@@ -53,10 +53,54 @@ describe("correct behavior", () => {
     });
 
     test("returns segments object segment iterator", () => {
+        const string = "hello friends!";
         const segmenter = new Intl.Segmenter();
-        const segments = segmenter.segment("hello friends!");
+        const segments = segmenter.segment(string);
         expect(Object.getPrototypeOf(segments[Symbol.iterator]())[Symbol.toStringTag]).toBe(
             "Segmenter String Iterator"
         );
+
+        const graphemeSegmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+        const graphemeSegments = graphemeSegmenter.segment(string);
+        let index = 0;
+        for (const segment of graphemeSegments) {
+            expect(segment.segment).toBe(string[index]);
+            expect(segment.index).toBe(index);
+            expect(segment.input).toBe(string);
+            expect(segment.isWordLike).toBeUndefined();
+            index++;
+        }
+        expect(index).toBe(string.length);
+
+        const wordSegmenter = new Intl.Segmenter("en", { granularity: "word" });
+        const wordSegments = wordSegmenter.segment(string);
+        const expectedSegments = [
+            { segment: "hello", index: 0, isWordLike: true },
+            { segment: " ", index: 5, isWordLike: false },
+            { segment: "friends", index: 6, isWordLike: true },
+            { segment: "!", index: 13, isWordLike: false },
+        ];
+        index = 0;
+        for (const segment of wordSegments) {
+            console.log(JSON.stringify(segment));
+            expect(segment.segment).toBe(expectedSegments[index].segment);
+            expect(segment.index).toBe(expectedSegments[index].index);
+            expect(segment.input).toBe(string);
+            // FIXME: expect(segment.isWordLike).toBe(expectedSegments[index].isWordLike);
+            index++;
+        }
+        expect(index).toBe(expectedSegments.length);
+
+        const sentenceSegmenter = new Intl.Segmenter("en", { granularity: "sentence" });
+        const sentenceSegments = sentenceSegmenter.segment(string);
+        index = 0;
+        for (const segment of sentenceSegments) {
+            expect(segment.segment).toBe(string);
+            expect(segment.index).toBe(0);
+            expect(segment.input).toBe(string);
+            expect(segment.isWordLike).toBeUndefined();
+            index++;
+        }
+        expect(index).toBe(1);
     });
 });
