@@ -36,4 +36,10 @@ private:
     SegmenterGranularity m_segmenter_granularity { SegmenterGranularity::Grapheme }; // [[SegmenterGranularity]]
 };
 
+enum class Direction {
+    Before,
+    After,
+};
+double find_boundary(Segmenter const&, Utf16View const&, double start_index, Direction, Optional<Vector<size_t>>& boundaries_cache);
+
 }
