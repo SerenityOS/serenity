@@ -331,36 +331,23 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
 
 u32 Thread::unblock_from_mutex(Kernel::Mutex& mutex)
 {
+    SpinlockLocker scheduler_lock(g_scheduler_lock);
     SpinlockLocker block_lock(m_block_lock);
-    VERIFY(m_blocking_mutex == &mutex);
-    auto requested_count = m_lock_requested_count;
-    block_lock.unlock();
 
-    auto do_unblock = [&]() {
-        SpinlockLocker scheduler_lock(g_scheduler_lock);
-        SpinlockLocker block_lock(m_block_lock);
-        VERIFY(m_blocking_mutex == &mutex);
-        VERIFY(!Processor::current_in_irq());
-        VERIFY(g_scheduler_lock.is_locked_by_current_processor());
-        VERIFY(m_block_lock.is_locked_by_current_processor());
-        VERIFY(m_blocking_mutex == &mutex);
-        dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Mutex {}", *this, &mutex);
-        m_blocking_mutex = nullptr;
-        if (Thread::current() == this) {
-            set_state(Thread::State::Running);
-            return;
-        }
-        VERIFY(m_state != Thread::State::Runnable && m_state != Thread::State::Running);
-        set_state(Thread::State::Runnable);
-    };
-    if (Processor::current_in_irq() != 0) {
-        Processor::deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
-            if (auto this_thread = self.strong_ref())
-                do_unblock();
-        });
-    } else {
-        do_unblock();
+    VERIFY(!Processor::current_in_irq());
+    VERIFY(m_blocking_mutex == &mutex);
+
+    dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Mutex {}", *this, &mutex);
+
+    auto requested_count = m_lock_requested_count;
+
+    m_blocking_mutex = nullptr;
+    if (Thread::current() == this) {
+        set_state(Thread::State::Running);
+        return requested_count;
     }
+    VERIFY(m_state != Thread::State::Runnable && m_state != Thread::State::Running);
+    set_state(Thread::State::Runnable);
     return requested_count;
 }
 
