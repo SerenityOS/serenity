@@ -8,6 +8,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
+#include <AK/Span.h>
 #include <AK/StringView.h>
 
 namespace Unicode {
@@ -17,5 +18,6 @@ struct CurrencyCode {
 };
 
 Optional<CurrencyCode> get_currency_code(StringView currency);
+Span<StringView const> get_available_currencies();
 
 }

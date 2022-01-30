@@ -986,6 +986,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 #include <AK/Span.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibUnicode/CurrencyCode.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/UnicodeLocale.h>
 
@@ -1018,6 +1019,8 @@ struct Patterns {
     @string_index_type@ pair { 0 };
 };
 )~~~");
+
+    generate_available_values(generator, "get_available_currencies"sv, locale_data.currencies);
 
     locale_data.unique_display_patterns.generate(generator, "DisplayPatternImpl"sv, "s_display_patterns"sv, 30);
     locale_data.unique_language_lists.generate(generator, s_string_index_type, "s_language_lists"sv);

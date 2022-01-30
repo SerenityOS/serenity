@@ -203,4 +203,6 @@ Optional<CurrencyCode> get_currency_code(StringView currency)
     return currency_codes.get(currency);
 }
 
+Span<StringView const> __attribute__((weak)) get_available_currencies() { return {}; }
+
 }
