@@ -870,7 +870,7 @@ public:
         return block_impl(timeout, blocker);
     }
 
-    u32 unblock_from_lock(Kernel::Mutex&);
+    u32 unblock_from_mutex(Kernel::Mutex&);
     void unblock_from_blocker(Blocker&);
     void unblock(u8 signal = 0);
 
@@ -1227,7 +1227,7 @@ private:
     Optional<Memory::VirtualRange> m_thread_specific_range;
     Array<SignalActionData, NSIG> m_signal_action_data;
     Blocker* m_blocker { nullptr };
-    Kernel::Mutex* m_blocking_lock { nullptr };
+    Kernel::Mutex* m_blocking_mutex { nullptr };
     u32 m_lock_requested_count { 0 };
     IntrusiveListNode<Thread> m_blocked_threads_list_node;
     LockRank m_lock_rank_mask { LockRank::None };

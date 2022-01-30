@@ -286,13 +286,13 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
     }
 
     // If we're blocking on the big-lock we may actually be in the process
-    // of unblocking from another lock. If that's the case m_blocking_lock
+    // of unblocking from another lock. If that's the case m_blocking_mutex
     // is already set
     auto& big_lock = process().big_lock();
-    VERIFY((&lock == &big_lock && m_blocking_lock != &big_lock) || !m_blocking_lock);
+    VERIFY((&lock == &big_lock && m_blocking_mutex != &big_lock) || !m_blocking_mutex);
 
-    auto* previous_blocking_lock = m_blocking_lock;
-    m_blocking_lock = &lock;
+    auto* previous_blocking_mutex = m_blocking_mutex;
+    m_blocking_mutex = &lock;
     m_lock_requested_count = lock_count;
 
     set_state(Thread::State::Blocked);
@@ -321,31 +321,31 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
         VERIFY(Processor::in_critical());
 
         SpinlockLocker block_lock2(m_block_lock);
-        VERIFY(!m_blocking_lock);
-        m_blocking_lock = previous_blocking_lock;
+        VERIFY(!m_blocking_mutex);
+        m_blocking_mutex = previous_blocking_mutex;
         break;
     }
 
     lock_lock.lock();
 }
 
-u32 Thread::unblock_from_lock(Kernel::Mutex& lock)
+u32 Thread::unblock_from_mutex(Kernel::Mutex& mutex)
 {
     SpinlockLocker block_lock(m_block_lock);
-    VERIFY(m_blocking_lock == &lock);
+    VERIFY(m_blocking_mutex == &mutex);
     auto requested_count = m_lock_requested_count;
     block_lock.unlock();
 
     auto do_unblock = [&]() {
         SpinlockLocker scheduler_lock(g_scheduler_lock);
         SpinlockLocker block_lock(m_block_lock);
-        VERIFY(m_blocking_lock == &lock);
+        VERIFY(m_blocking_mutex == &mutex);
         VERIFY(!Processor::current_in_irq());
         VERIFY(g_scheduler_lock.is_locked_by_current_processor());
         VERIFY(m_block_lock.is_locked_by_current_processor());
-        VERIFY(m_blocking_lock == &lock);
-        dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Mutex {}", *this, &lock);
-        m_blocking_lock = nullptr;
+        VERIFY(m_blocking_mutex == &mutex);
+        dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Mutex {}", *this, &mutex);
+        m_blocking_mutex = nullptr;
         if (Thread::current() == this) {
             set_state(Thread::State::Running);
             return;
@@ -391,7 +391,7 @@ void Thread::unblock(u8 signal)
     VERIFY(m_block_lock.is_locked_by_current_processor());
     if (m_state != Thread::State::Blocked)
         return;
-    if (m_blocking_lock)
+    if (m_blocking_mutex)
         return;
     VERIFY(m_blocker);
     if (signal != 0) {
@@ -583,7 +583,7 @@ StringView Thread::state_string() const
         return "Stopped"sv;
     case Thread::State::Blocked: {
         SpinlockLocker block_lock(m_block_lock);
-        if (m_blocking_lock)
+        if (m_blocking_mutex)
             return "Mutex"sv;
         if (m_blocker)
             return m_blocker->state_string();
@@ -960,7 +960,7 @@ void Thread::resume_from_stopped()
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
     if (m_stop_state == Thread::State::Blocked) {
         SpinlockLocker block_lock(m_block_lock);
-        if (m_blocker || m_blocking_lock) {
+        if (m_blocker || m_blocking_mutex) {
             // Hasn't been unblocked yet
             set_state(Thread::State::Blocked, 0);
         } else {
