@@ -219,6 +219,9 @@ public:
 
     void flush_pending_paints_immediately();
 
+    Menubar& menubar() { return *m_menubar; }
+    Menubar const& menubar() const { return *m_menubar; }
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);
