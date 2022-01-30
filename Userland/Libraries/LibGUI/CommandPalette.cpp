@@ -12,6 +12,8 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CommandPalette.h>
 #include <LibGUI/FilteringProxyModel.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuItem.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TableView.h>
@@ -63,6 +65,7 @@ public:
     enum Column {
         Icon,
         Text,
+        Menu,
         Shortcut,
         __Count,
     };
@@ -117,7 +120,9 @@ public:
             }
             return "";
         case Column::Text:
-            return Gfx::parse_ampersand_string(action.text());
+            return action_text(index);
+        case Column::Menu:
+            return menu_name(index);
         case Column::Shortcut:
             if (!action.shortcut().is_valid())
                 return "";
@@ -129,11 +134,31 @@ public:
 
     virtual TriState data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override
     {
-        auto& action = *static_cast<GUI::Action*>(index.internal_data());
-        auto text = Gfx::parse_ampersand_string(action.text());
-        if (text.contains(term.as_string(), CaseSensitivity::CaseInsensitive))
+        auto search = String::formatted("{} {}", menu_name(index), action_text(index));
+        if (search.contains(term.as_string(), CaseSensitivity::CaseInsensitive))
             return TriState::True;
         return TriState::False;
+    }
+
+    static String action_text(ModelIndex const& index)
+    {
+        auto& action = *static_cast<GUI::Action*>(index.internal_data());
+
+        return Gfx::parse_ampersand_string(action.text());
+    }
+
+    static String menu_name(ModelIndex const& index)
+    {
+        auto& action = *static_cast<GUI::Action*>(index.internal_data());
+        if (action.menu_items().is_empty())
+            return {};
+
+        auto* menu_item = *action.menu_items().begin();
+        auto* menu = Menu::from_menu_id(menu_item->menu_id());
+        if (!menu)
+            return {};
+
+        return Gfx::parse_ampersand_string(menu->name());
     }
 
 private:

@@ -118,6 +118,8 @@ public:
     const ActionGroup* group() const { return m_action_group.ptr(); }
     void set_group(Badge<ActionGroup>, ActionGroup*);
 
+    HashTable<MenuItem*> menu_items() const { return m_menu_items; }
+
 private:
     Action(String, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
     Action(String, const Shortcut&, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
