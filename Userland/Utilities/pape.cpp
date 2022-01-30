@@ -11,6 +11,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
+#include <LibMain/Main.h>
 
 static int handle_show_all()
 {
@@ -70,7 +71,7 @@ static int handle_set_random()
     return 0;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool show_all = false;
     bool show_current = false;
@@ -82,9 +83,9 @@ int main(int argc, char** argv)
     args_parser.add_option(show_current, "Show current wallpaper", "show-current", 'c');
     args_parser.add_option(set_random, "Set random wallpaper", "set-random", 'r');
     args_parser.add_positional_argument(name, "Wallpaper to set", "name", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     if (show_all)
         return handle_show_all();
