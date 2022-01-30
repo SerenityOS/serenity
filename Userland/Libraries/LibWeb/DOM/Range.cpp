@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,10 +22,11 @@ NonnullRefPtr<Range> Range::create(Document& document)
     return adopt_ref(*new Range(document));
 }
 
-NonnullRefPtr<Range> Range::create(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset)
+NonnullRefPtr<Range> Range::create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
 {
     return adopt_ref(*new Range(start_container, start_offset, end_container, end_offset));
 }
+
 NonnullRefPtr<Range> Range::create_with_global_object(Bindings::WindowObject& window)
 {
     return Range::create(window.impl());
@@ -35,11 +37,12 @@ Range::Range(Document& document)
 {
 }
 
-Range::Range(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset)
-    : m_start_container(start_container)
-    , m_start_offset(start_offset)
-    , m_end_container(end_container)
-    , m_end_offset(end_offset)
+Range::Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
+    : AbstractRange(start_container, start_offset, end_container, end_offset)
+{
+}
+
+Range::~Range()
 {
 }
 
