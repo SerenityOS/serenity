@@ -51,7 +51,12 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
         update_modifier(Mod_Ctrl, pressed);
         break;
     case 0x5b:
-        update_modifier(Mod_Super, pressed);
+        m_left_super_pressed = pressed;
+        update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
+        break;
+    case 0x5c:
+        m_right_super_pressed = pressed;
+        update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
         break;
     case 0x2a:
         m_left_shift_pressed = pressed;

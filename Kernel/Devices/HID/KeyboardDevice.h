@@ -58,6 +58,8 @@ protected:
     bool m_has_e0_prefix { false };
     bool m_left_shift_pressed { false };
     bool m_right_shift_pressed { false };
+    bool m_left_super_pressed { false };
+    bool m_right_super_pressed { false };
 
     void key_state_changed(u8 raw, bool pressed);
 };
