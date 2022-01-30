@@ -280,6 +280,8 @@
 #include <LibWeb/Bindings/SelectionPrototype.h>
 #include <LibWeb/Bindings/ShadowRootConstructor.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
+#include <LibWeb/Bindings/StaticRangeConstructor.h>
+#include <LibWeb/Bindings/StaticRangePrototype.h>
 #include <LibWeb/Bindings/StorageConstructor.h>
 #include <LibWeb/Bindings/StoragePrototype.h>
 #include <LibWeb/Bindings/StyleSheetConstructor.h>
@@ -449,6 +451,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Screen)                                                             \
     ADD_WINDOW_OBJECT_INTERFACE(Selection)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)                                                         \
+    ADD_WINDOW_OBJECT_INTERFACE(StaticRange)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(Storage)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheet)                                                         \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheetList)                                                     \
