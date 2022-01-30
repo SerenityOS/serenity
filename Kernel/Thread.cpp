@@ -269,9 +269,8 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
     ScopedCritical critical;
     VERIFY(!Memory::s_mm_lock.is_locked_by_current_processor());
 
-    SpinlockLocker block_lock(m_block_lock);
-
     SpinlockLocker scheduler_lock(g_scheduler_lock);
+    SpinlockLocker block_lock(m_block_lock);
 
     switch (state()) {
     case Thread::State::Stopped:
