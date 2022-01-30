@@ -44,10 +44,6 @@ ThrowCompletionOr<Value> NumberFormatFunction::call()
     // 4. Let x be ? ToNumeric(value).
     value = TRY(value.to_numeric(global_object));
 
-    // FIXME: Support BigInt number formatting.
-    if (value.is_bigint())
-        return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "BigInt number formatting");
-
     // 5. Return ? FormatNumeric(nf, x).
     // Note: Our implementation of FormatNumeric does not throw.
     auto formatted = format_numeric(global_object, m_number_format, value);

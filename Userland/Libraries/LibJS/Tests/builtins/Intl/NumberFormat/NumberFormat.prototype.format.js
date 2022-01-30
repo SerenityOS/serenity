@@ -14,16 +14,6 @@ describe("errors", () => {
             Intl.NumberFormat().format(Symbol.hasInstance);
         }).toThrowWithMessage(TypeError, "Cannot convert symbol to number");
     });
-
-    // FIXME: Remove this and add BigInt tests when BigInt number formatting is supported.
-    test("bigint", () => {
-        expect(() => {
-            Intl.NumberFormat().format(1n);
-        }).toThrowWithMessage(
-            InternalError,
-            "BigInt number formatting is not implemented in LibJS"
-        );
-    });
 });
 
 describe("special values", () => {
@@ -1017,5 +1007,65 @@ describe("style=unit", () => {
         expect(ja.format(1)).toBe("1km/h");
         expect(ja.format(1.2)).toBe("1.2km/h");
         expect(ja.format(123)).toBe("123km/h");
+    });
+});
+
+describe("bigint", () => {
+    test("default", () => {
+        const en = new Intl.NumberFormat("en");
+        expect(en.format(1n)).toBe("1");
+        expect(en.format(12n)).toBe("12");
+        expect(en.format(123n)).toBe("123");
+        expect(en.format(123456789123456789123456789123456789n)).toBe(
+            "123,456,789,123,456,789,123,456,789,123,456,789"
+        );
+
+        const ar = new Intl.NumberFormat("ar");
+        expect(ar.format(1n)).toBe("\u0661");
+        expect(ar.format(12n)).toBe("\u0661\u0662");
+        expect(ar.format(123n)).toBe("\u0661\u0662\u0663");
+        expect(ar.format(123456789123456789123456789123456789n)).toBe(
+            "\u0661\u0662\u0663\u066c\u0664\u0665\u0666\u066c\u0667\u0668\u0669\u066c\u0661\u0662\u0663\u066c\u0664\u0665\u0666\u066c\u0667\u0668\u0669\u066c\u0661\u0662\u0663\u066c\u0664\u0665\u0666\u066c\u0667\u0668\u0669\u066c\u0661\u0662\u0663\u066c\u0664\u0665\u0666\u066c\u0667\u0668\u0669"
+        );
+    });
+
+    test("integer digits", () => {
+        const en = new Intl.NumberFormat("en", { minimumIntegerDigits: 2 });
+        expect(en.format(1n)).toBe("01");
+        expect(en.format(12n)).toBe("12");
+        expect(en.format(123n)).toBe("123");
+
+        const ar = new Intl.NumberFormat("ar", { minimumIntegerDigits: 2 });
+        expect(ar.format(1n)).toBe("\u0660\u0661");
+        expect(ar.format(12n)).toBe("\u0661\u0662");
+        expect(ar.format(123n)).toBe("\u0661\u0662\u0663");
+    });
+
+    test("significant digits", () => {
+        const en = new Intl.NumberFormat("en", {
+            minimumSignificantDigits: 4,
+            maximumSignificantDigits: 6,
+        });
+        expect(en.format(1n)).toBe("1.000");
+        expect(en.format(12n)).toBe("12.00");
+        expect(en.format(123n)).toBe("123.0");
+        expect(en.format(1234n)).toBe("1,234");
+        expect(en.format(12345n)).toBe("12,345");
+        expect(en.format(123456n)).toBe("123,456");
+        expect(en.format(1234567n)).toBe("1,234,570");
+        expect(en.format(1234561n)).toBe("1,234,560");
+
+        const ar = new Intl.NumberFormat("ar", {
+            minimumSignificantDigits: 4,
+            maximumSignificantDigits: 6,
+        });
+        expect(ar.format(1n)).toBe("\u0661\u066b\u0660\u0660\u0660");
+        expect(ar.format(12n)).toBe("\u0661\u0662\u066b\u0660\u0660");
+        expect(ar.format(123n)).toBe("\u0661\u0662\u0663\u066b\u0660");
+        expect(ar.format(1234n)).toBe("\u0661\u066c\u0662\u0663\u0664");
+        expect(ar.format(12345n)).toBe("\u0661\u0662\u066c\u0663\u0664\u0665");
+        expect(ar.format(123456n)).toBe("\u0661\u0662\u0663\u066c\u0664\u0665\u0666");
+        expect(ar.format(1234567n)).toBe("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0667\u0660");
+        expect(ar.format(1234561n)).toBe("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0660");
     });
 });

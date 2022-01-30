@@ -10,16 +10,6 @@ describe("errors", () => {
             Intl.NumberFormat().formatToParts(Symbol.hasInstance);
         }).toThrowWithMessage(TypeError, "Cannot convert symbol to number");
     });
-
-    // FIXME: Remove this and add BigInt tests when BigInt number formatting is supported.
-    test("bigint", () => {
-        expect(() => {
-            Intl.NumberFormat().formatToParts(1n);
-        }).toThrowWithMessage(
-            InternalError,
-            "BigInt number formatting is not implemented in LibJS"
-        );
-    });
 });
 
 describe("special values", () => {
@@ -1307,6 +1297,74 @@ describe("style=unit", () => {
             { type: "decimal", value: "." },
             { type: "fraction", value: "2" },
             { type: "unit", value: "km/h" },
+        ]);
+    });
+});
+
+describe("bigint", () => {
+    test("default", () => {
+        const en = new Intl.NumberFormat("en");
+        expect(en.formatToParts(123456n)).toEqual([
+            { type: "integer", value: "123" },
+            { type: "group", value: "," },
+            { type: "integer", value: "456" },
+        ]);
+
+        const ar = new Intl.NumberFormat("ar");
+        expect(ar.formatToParts(123456n)).toEqual([
+            { type: "integer", value: "\u0661\u0662\u0663" },
+            { type: "group", value: "\u066c" },
+            { type: "integer", value: "\u0664\u0665\u0666" },
+        ]);
+    });
+
+    test("useGrouping=false", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: false });
+        expect(en.formatToParts(123456n)).toEqual([{ type: "integer", value: "123456" }]);
+
+        const ar = new Intl.NumberFormat("ar", { useGrouping: false });
+        expect(ar.formatToParts(123456n)).toEqual([
+            { type: "integer", value: "\u0661\u0662\u0663\u0664\u0665\u0666" },
+        ]);
+    });
+
+    test("significant digits", () => {
+        const en = new Intl.NumberFormat("en", {
+            minimumSignificantDigits: 4,
+            maximumSignificantDigits: 6,
+        });
+        expect(en.formatToParts(1234567n)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "group", value: "," },
+            { type: "integer", value: "234" },
+            { type: "group", value: "," },
+            { type: "integer", value: "570" },
+        ]);
+        expect(en.formatToParts(1234561n)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "group", value: "," },
+            { type: "integer", value: "234" },
+            { type: "group", value: "," },
+            { type: "integer", value: "560" },
+        ]);
+
+        const ar = new Intl.NumberFormat("ar", {
+            minimumSignificantDigits: 4,
+            maximumSignificantDigits: 6,
+        });
+        expect(ar.formatToParts(1234567n)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "group", value: "\u066c" },
+            { type: "integer", value: "\u0662\u0663\u0664" },
+            { type: "group", value: "\u066c" },
+            { type: "integer", value: "\u0665\u0667\u0660" },
+        ]);
+        expect(ar.formatToParts(1234561n)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "group", value: "\u066c" },
+            { type: "integer", value: "\u0662\u0663\u0664" },
+            { type: "group", value: "\u066c" },
+            { type: "integer", value: "\u0665\u0666\u0660" },
         ]);
     });
 });
