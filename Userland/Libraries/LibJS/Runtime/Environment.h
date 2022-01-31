@@ -67,10 +67,10 @@ protected:
 private:
     virtual bool is_environment() const final { return true; }
 
+    bool m_permanently_screwed_by_eval { false };
+
     GlobalObject* m_global_object { nullptr };
     Environment* m_outer_environment { nullptr };
-
-    bool m_permanently_screwed_by_eval { false };
 };
 
 }
