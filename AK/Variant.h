@@ -81,7 +81,7 @@ struct Variant<IndexType, InitialIndex> {
 template<typename IndexType, typename... Ts>
 struct VisitImpl {
     template<typename RT, typename T, size_t I, typename Fn>
-    static consteval bool has_explicitly_named_overload()
+    static constexpr bool has_explicitly_named_overload()
     {
         // If we're not allowed to make a member function pointer and call it directly (without explicitly resolving it),
         // we have a templated function on our hands (or a function overload set).
@@ -90,7 +90,7 @@ struct VisitImpl {
     }
 
     template<typename ReturnType, typename T, typename Visitor, auto... Is>
-    static consteval bool should_invoke_const_overload(IndexSequence<Is...>)
+    static constexpr bool should_invoke_const_overload(IndexSequence<Is...>)
     {
         // Scan over all the different visitor functions, if none of them are suitable for calling with `T const&`, avoid calling that first.
         return ((has_explicitly_named_overload<ReturnType, T, Is, typename Visitor::Types::template Type<Is>>()) || ...);
