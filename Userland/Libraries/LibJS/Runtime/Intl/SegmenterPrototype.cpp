@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmenterPrototype::segment)
     auto* segmenter = TRY(typed_this_object(global_object));
 
     // 3. Let string be ? ToString(string).
-    auto string = TRY(vm.argument(0).to_string(global_object));
+    auto string = TRY(vm.argument(0).to_utf16_string(global_object));
 
     // 4. Return ! CreateSegmentsObject(segmenter, string).
     return Segments::create(global_object, *segmenter, move(string));

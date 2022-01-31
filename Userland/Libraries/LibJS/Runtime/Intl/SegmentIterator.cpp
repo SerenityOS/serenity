@@ -10,7 +10,7 @@
 namespace JS::Intl {
 
 // 18.6.1 CreateSegmentIterator ( segmenter, string ), https://tc39.es/ecma402/#sec-createsegmentsobject
-SegmentIterator* SegmentIterator::create(GlobalObject& global_object, Segmenter& segmenter, String string)
+SegmentIterator* SegmentIterator::create(GlobalObject& global_object, Segmenter& segmenter, Utf16View const& string)
 {
     // 1. Let internalSlotsList be « [[IteratingSegmenter]], [[IteratedString]], [[IteratedStringNextSegmentCodeUnitIndex]] ».
     // 2. Let iterator be ! OrdinaryObjectCreate(%SegmentIteratorPrototype%, internalSlotsList).
@@ -22,10 +22,10 @@ SegmentIterator* SegmentIterator::create(GlobalObject& global_object, Segmenter&
 }
 
 // 18.6 Segment Iterator Objects, https://tc39.es/ecma402/#sec-segment-iterator-objects
-SegmentIterator::SegmentIterator(GlobalObject& global_object, Segmenter& segmenter, String string)
+SegmentIterator::SegmentIterator(GlobalObject& global_object, Segmenter& segmenter, Utf16View const& string)
     : Object(*global_object.intl_segment_iterator_prototype())
     , m_iterating_segmenter(segmenter)
-    , m_iterated_string(move(string))
+    , m_iterated_string(string)
 {
 }
 
