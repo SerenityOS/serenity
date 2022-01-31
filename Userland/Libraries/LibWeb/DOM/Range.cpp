@@ -345,6 +345,20 @@ ExceptionOr<void> Range::select_node(Node& node)
     return select(node);
 }
 
+// https://dom.spec.whatwg.org/#dom-range-collapse
+void Range::collapse(bool to_start)
+{
+    // The collapse(toStart) method steps are to, if toStart is true, set end to start; otherwise set start to end.
+    if (to_start) {
+        m_end_container = m_start_container;
+        m_end_offset = m_start_offset;
+        return;
+    }
+
+    m_start_container = m_end_container;
+    m_start_offset = m_end_offset;
+}
+
 NonnullRefPtr<Range> Range::clone_range() const
 {
     return adopt_ref(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));
