@@ -333,6 +333,7 @@ public:
     ThrowCompletionOr<FunctionObject*> get_method(GlobalObject&, PropertyKey const&) const;
 
     String to_string_without_side_effects() const;
+    Optional<BigInt*> string_to_bigint(GlobalObject& global_object) const;
 
     Value value_or(Value fallback) const
     {
