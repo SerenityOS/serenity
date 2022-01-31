@@ -102,30 +102,31 @@ private:
 
     ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
 
-    // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
-    Environment* m_environment { nullptr };                       // [[Environment]]
-    PrivateEnvironment* m_private_environment { nullptr };        // [[PrivateEnvironment]]
-    Vector<FunctionNode::Parameter> const m_formal_parameters;    // [[FormalParameters]]
-    NonnullRefPtr<Statement> m_ecmascript_code;                   // [[ECMAScriptCode]]
-    ConstructorKind m_constructor_kind { ConstructorKind::Base }; // [[ConstructorKind]]
-    Realm* m_realm { nullptr };                                   // [[Realm]]
-    ScriptOrModule m_script_or_module;                            // [[ScriptOrModule]]
-    ThisMode m_this_mode { ThisMode::Global };                    // [[ThisMode]]
-    bool m_strict { false };                                      // [[Strict]]
-    Object* m_home_object { nullptr };                            // [[HomeObject]]
-    String m_source_text;                                         // [[SourceText]]
-    Vector<InstanceField> m_fields;                               // [[Fields]]
-    Vector<PrivateElement> m_private_methods;                     // [[PrivateMethods]]
-    bool m_is_class_constructor { false };                        // [[IsClassConstructor]]
-
     FlyString m_name;
     Optional<Bytecode::Executable> m_bytecode_executable;
     i32 m_function_length { 0 };
-    FunctionKind m_kind { FunctionKind::Normal };
-    bool m_might_need_arguments_object { true };
-    bool m_contains_direct_call_to_eval { true };
-    bool m_is_arrow_function { false };
-    bool m_has_simple_parameter_list { false };
+
+    // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
+    Environment* m_environment { nullptr };                           // [[Environment]]
+    PrivateEnvironment* m_private_environment { nullptr };            // [[PrivateEnvironment]]
+    Vector<FunctionNode::Parameter> const m_formal_parameters;        // [[FormalParameters]]
+    NonnullRefPtr<Statement> m_ecmascript_code;                       // [[ECMAScriptCode]]
+    Realm* m_realm { nullptr };                                       // [[Realm]]
+    ScriptOrModule m_script_or_module;                                // [[ScriptOrModule]]
+    Object* m_home_object { nullptr };                                // [[HomeObject]]
+    String m_source_text;                                             // [[SourceText]]
+    Vector<InstanceField> m_fields;                                   // [[Fields]]
+    Vector<PrivateElement> m_private_methods;                         // [[PrivateMethods]]
+    ConstructorKind m_constructor_kind : 1 { ConstructorKind::Base }; // [[ConstructorKind]]
+    bool m_strict : 1 { false };                                      // [[Strict]]
+    bool m_is_class_constructor : 1 { false };                        // [[IsClassConstructor]]
+    ThisMode m_this_mode : 2 { ThisMode::Global };                    // [[ThisMode]]
+
+    bool m_might_need_arguments_object : 1 { true };
+    bool m_contains_direct_call_to_eval : 1 { true };
+    bool m_is_arrow_function : 1 { false };
+    bool m_has_simple_parameter_list : 1 { false };
+    FunctionKind m_kind : 3 { FunctionKind::Normal };
 };
 
 }

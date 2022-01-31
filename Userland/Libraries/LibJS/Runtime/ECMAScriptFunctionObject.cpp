@@ -56,19 +56,19 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
 
 ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, PrivateEnvironment* private_scope, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
     : FunctionObject(prototype)
+    , m_name(move(name))
+    , m_function_length(function_length)
     , m_environment(parent_scope)
     , m_private_environment(private_scope)
     , m_formal_parameters(move(formal_parameters))
     , m_ecmascript_code(ecmascript_code)
     , m_realm(global_object().associated_realm())
-    , m_strict(strict)
     , m_source_text(move(source_text))
-    , m_name(move(name))
-    , m_function_length(function_length)
-    , m_kind(kind)
+    , m_strict(strict)
     , m_might_need_arguments_object(might_need_arguments_object)
     , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
     , m_is_arrow_function(is_arrow_function)
+    , m_kind(kind)
 {
     // NOTE: This logic is from OrdinaryFunctionCreate, https://tc39.es/ecma262/#sec-ordinaryfunctioncreate
 
