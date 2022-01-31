@@ -736,8 +736,16 @@ private:
     BufferedHelper<T> m_helper;
 };
 
+class BufferedSocketBase : public Socket {
+public:
+    virtual ErrorOr<size_t> read_line(Bytes buffer) = 0;
+    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView const& candidate) = 0;
+    virtual ErrorOr<bool> can_read_line() = 0;
+    virtual size_t buffer_size() const = 0;
+};
+
 template<SocketLike T>
-class BufferedSocket final : public Socket {
+class BufferedSocket final : public BufferedSocketBase {
     friend BufferedHelper<T>;
 
 public:
@@ -747,7 +755,7 @@ public:
     }
 
     BufferedSocket(BufferedSocket&& other)
-        : Socket(static_cast<Socket&&>(other))
+        : BufferedSocketBase(static_cast<BufferedSocketBase&&>(other))
         , m_helper(move(other.m_helper))
     {
         setup_notifier();
@@ -774,13 +782,13 @@ public:
     virtual ErrorOr<void> set_blocking(bool enabled) override { return m_helper.stream().set_blocking(enabled); }
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.stream().set_close_on_exec(enabled); }
 
-    ErrorOr<size_t> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
-    ErrorOr<size_t> read_until(Bytes buffer, StringView const& candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
+    virtual ErrorOr<size_t> read_line(Bytes buffer) override { return m_helper.read_line(move(buffer)); }
+    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView const& candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
     ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
-    ErrorOr<bool> can_read_line() { return m_helper.can_read_line(); }
+    virtual ErrorOr<bool> can_read_line() override { return m_helper.can_read_line(); }
 
-    size_t buffer_size() const { return m_helper.buffer_size(); }
+    virtual size_t buffer_size() const override { return m_helper.buffer_size(); }
 
     virtual ~BufferedSocket() override { }
 
