@@ -25,12 +25,14 @@ Shape* Shape::create_unique_clone() const
 
 Shape* Shape::get_or_prune_cached_forward_transition(TransitionKey const& key)
 {
-    auto it = m_forward_transitions.find(key);
-    if (it == m_forward_transitions.end())
+    if (!m_forward_transitions)
+        return nullptr;
+    auto it = m_forward_transitions->find(key);
+    if (it == m_forward_transitions->end())
         return nullptr;
     if (!it->value) {
         // The cached forward transition has gone stale (from garbage collection). Prune it.
-        m_forward_transitions.remove(it);
+        m_forward_transitions->remove(it);
         return nullptr;
     }
     return it->value;
@@ -38,12 +40,14 @@ Shape* Shape::get_or_prune_cached_forward_transition(TransitionKey const& key)
 
 Shape* Shape::get_or_prune_cached_prototype_transition(Object* prototype)
 {
-    auto it = m_prototype_transitions.find(prototype);
-    if (it == m_prototype_transitions.end())
+    if (!m_prototype_transitions)
+        return nullptr;
+    auto it = m_prototype_transitions->find(prototype);
+    if (it == m_prototype_transitions->end())
         return nullptr;
     if (!it->value) {
         // The cached prototype transition has gone stale (from garbage collection). Prune it.
-        m_prototype_transitions.remove(it);
+        m_prototype_transitions->remove(it);
         return nullptr;
     }
     return it->value;
@@ -55,7 +59,9 @@ Shape* Shape::create_put_transition(const StringOrSymbol& property_name, Propert
     if (auto* existing_shape = get_or_prune_cached_forward_transition(key))
         return existing_shape;
     auto* new_shape = heap().allocate_without_global_object<Shape>(*this, property_name, attributes, TransitionType::Put);
-    m_forward_transitions.set(key, new_shape);
+    if (!m_forward_transitions)
+        m_forward_transitions = make<HashMap<TransitionKey, WeakPtr<Shape>>>();
+    m_forward_transitions->set(key, new_shape);
     return new_shape;
 }
 
@@ -65,7 +71,9 @@ Shape* Shape::create_configure_transition(const StringOrSymbol& property_name, P
     if (auto* existing_shape = get_or_prune_cached_forward_transition(key))
         return existing_shape;
     auto* new_shape = heap().allocate_without_global_object<Shape>(*this, property_name, attributes, TransitionType::Configure);
-    m_forward_transitions.set(key, new_shape);
+    if (!m_forward_transitions)
+        m_forward_transitions = make<HashMap<TransitionKey, WeakPtr<Shape>>>();
+    m_forward_transitions->set(key, new_shape);
     return new_shape;
 }
 
@@ -74,7 +82,9 @@ Shape* Shape::create_prototype_transition(Object* new_prototype)
     if (auto* existing_shape = get_or_prune_cached_prototype_transition(new_prototype))
         return existing_shape;
     auto* new_shape = heap().allocate_without_global_object<Shape>(*this, new_prototype);
-    m_prototype_transitions.set(new_prototype, new_shape);
+    if (!m_prototype_transitions)
+        m_prototype_transitions = make<HashMap<Object*, WeakPtr<Shape>>>();
+    m_prototype_transitions->set(new_prototype, new_shape);
     return new_shape;
 }
 
