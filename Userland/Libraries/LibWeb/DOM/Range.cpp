@@ -314,6 +314,37 @@ ExceptionOr<i16> Range::compare_boundary_points(u16 how, Range const& source_ran
     }
 }
 
+// https://dom.spec.whatwg.org/#concept-range-select
+ExceptionOr<void> Range::select(Node& node)
+{
+    // 1. Let parent be node’s parent.
+    auto* parent = node.parent();
+
+    // 2. If parent is null, then throw an "InvalidNodeTypeError" DOMException.
+    if (!parent)
+        return InvalidNodeTypeError::create("Given node has no parent.");
+
+    // 3. Let index be node’s index.
+    auto index = node.index();
+
+    // 4. Set range’s start to boundary point (parent, index).
+    m_start_container = *parent;
+    m_start_offset = index;
+
+    // 5. Set range’s end to boundary point (parent, index plus 1).
+    m_end_container = *parent;
+    m_end_offset = index + 1;
+
+    return {};
+}
+
+// https://dom.spec.whatwg.org/#dom-range-selectnode
+ExceptionOr<void> Range::select_node(Node& node)
+{
+    // The selectNode(node) method steps are to select node within this.
+    return select(node);
+}
+
 NonnullRefPtr<Range> Range::clone_range() const
 {
     return adopt_ref(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));

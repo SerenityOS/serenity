@@ -30,6 +30,7 @@ public:
     ExceptionOr<void> set_start_after(Node& node);
     ExceptionOr<void> set_end_before(Node& node);
     ExceptionOr<void> set_end_after(Node& node);
+    ExceptionOr<void> select_node(Node& node);
 
     // https://dom.spec.whatwg.org/#dom-range-start_to_start
     enum HowToCompareBoundaryPoints : u16 {
@@ -61,6 +62,7 @@ private:
     };
 
     ExceptionOr<void> set_start_or_end(Node& node, u32 offset, StartOrEnd start_or_end);
+    ExceptionOr<void> select(Node& node);
 };
 
 }

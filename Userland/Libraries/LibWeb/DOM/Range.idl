@@ -14,6 +14,7 @@ interface Range : AbstractRange {
     undefined setStartAfter(Node node);
     undefined setEndBefore(Node node);
     undefined setEndAfter(Node node);
+    undefined selectNode(Node node);
 
     const unsigned short START_TO_START = 0;
     const unsigned short START_TO_END = 1;
