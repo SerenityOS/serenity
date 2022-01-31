@@ -150,11 +150,6 @@ FLATTEN HashMap<StringOrSymbol, PropertyMetadata> const& Shape::property_table()
     return *m_property_table;
 }
 
-size_t Shape::property_count() const
-{
-    return m_property_count;
-}
-
 Vector<Shape::Property> Shape::property_table_ordered() const
 {
     auto vec = Vector<Shape::Property>();
@@ -207,7 +202,9 @@ void Shape::add_property_to_unique_shape(const StringOrSymbol& property_name, Pr
     VERIFY(is_unique());
     VERIFY(m_property_table);
     VERIFY(!m_property_table->contains(property_name));
-    m_property_table->set(property_name, { m_property_table->size(), attributes });
+    m_property_table->set(property_name, { static_cast<u32>(m_property_table->size()), attributes });
+
+    VERIFY(m_property_count < NumericLimits<u32>::max());
     ++m_property_count;
 }
 
@@ -238,8 +235,10 @@ void Shape::add_property_without_transition(StringOrSymbol const& property_name,
 {
     VERIFY(property_name.is_valid());
     ensure_property_table();
-    if (m_property_table->set(property_name, { m_property_count, attributes }) == AK::HashSetResult::InsertedNewEntry)
+    if (m_property_table->set(property_name, { m_property_count, attributes }) == AK::HashSetResult::InsertedNewEntry) {
+        VERIFY(m_property_count < NumericLimits<u32>::max());
         ++m_property_count;
+    }
 }
 
 FLATTEN void Shape::add_property_without_transition(PropertyKey const& property_name, PropertyAttributes attributes)

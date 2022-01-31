@@ -19,7 +19,7 @@
 namespace JS {
 
 struct PropertyMetadata {
-    size_t offset { 0 };
+    u32 offset { 0 };
     PropertyAttributes attributes { 0 };
 };
 
@@ -70,7 +70,7 @@ public:
 
     Optional<PropertyMetadata> lookup(const StringOrSymbol&) const;
     const HashMap<StringOrSymbol, PropertyMetadata>& property_table() const;
-    size_t property_count() const;
+    u32 property_count() const { return m_property_count; }
 
     struct Property {
         StringOrSymbol key;
@@ -107,7 +107,7 @@ private:
     Shape* m_previous { nullptr };
     StringOrSymbol m_property_name;
     Object* m_prototype { nullptr };
-    size_t m_property_count { 0 };
+    u32 m_property_count { 0 };
 
     PropertyAttributes m_attributes { 0 };
     TransitionType m_transition_type : 6 { TransitionType::Invalid };
