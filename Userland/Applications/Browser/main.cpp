@@ -67,6 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = GUI::Application::construct(arguments);
 
     Config::pledge_domain("Browser");
+    Config::monitor_domain("Browser");
 
     // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening
     // the user's downloads directory.
