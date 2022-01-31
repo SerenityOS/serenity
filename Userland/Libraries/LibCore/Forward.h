@@ -41,4 +41,10 @@ class UDPSocket;
 
 enum class TimerShouldFireWhenNotVisible;
 
+namespace Stream {
+class Socket;
+class Stream;
+class BufferedSocketBase;
+}
+
 }
