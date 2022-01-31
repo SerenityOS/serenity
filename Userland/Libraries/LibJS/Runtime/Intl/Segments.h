@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/Utf16View.h>
 #include <LibJS/Runtime/Intl/Segmenter.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -16,20 +16,20 @@ class Segments final : public Object {
     JS_OBJECT(Segments, Object);
 
 public:
-    static Segments* create(GlobalObject&, Segmenter&, String);
+    static Segments* create(GlobalObject&, Segmenter&, Utf16String);
 
-    Segments(GlobalObject&, Segmenter&, String);
+    Segments(GlobalObject&, Segmenter&, Utf16String);
     virtual ~Segments() override = default;
 
     Segmenter& segments_segmenter() const { return m_segments_segmenter; }
 
-    String const& segments_string() const { return m_segments_string; }
+    Utf16View segments_string() const { return m_segments_string.view(); }
 
 private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     Segmenter& m_segments_segmenter; // [[SegmentsSegmenter]]
-    String m_segments_string;        // [[SegmentsString]]
+    Utf16String m_segments_string;   // [[SegmentsString]]
 };
 
 }
