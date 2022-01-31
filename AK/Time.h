@@ -187,6 +187,7 @@ public:
         i64 seconds = sane_mod(milliseconds, 1'000);
         return Time(seconds, milliseconds * 1'000'000);
     }
+    [[nodiscard]] static Time from_ticks(clock_t, time_t);
     [[nodiscard]] static Time from_timespec(const struct timespec&);
     [[nodiscard]] static Time from_timeval(const struct timeval&);
     // We don't pull in <stdint.h> for the pretty min/max definitions because this file is also included in the Kernel
