@@ -421,4 +421,31 @@ NonnullRefPtr<Node> Range::common_ancestor_container() const
     return container;
 }
 
+// https://dom.spec.whatwg.org/#dom-range-intersectsnode
+bool Range::intersects_node(Node const& node) const
+{
+    // 1. If node’s root is different from this’s root, return false.
+    if (&node.root() != &root())
+        return false;
+
+    // 2. Let parent be node’s parent.
+    auto* parent = node.parent();
+
+    // 3. If parent is null, return true.
+    if (!parent)
+        return true;
+
+    // 4. Let offset be node’s index.
+    auto offset = node.index();
+
+    // 5. If (parent, offset) is before end and (parent, offset plus 1) is after start, return true
+    auto relative_position_to_end = position_of_boundary_point_relative_to_other_boundary_point(*parent, offset, m_end_container, m_end_offset);
+    auto relative_position_to_start = position_of_boundary_point_relative_to_other_boundary_point(*parent, offset + 1, m_start_container, m_start_offset);
+    if (relative_position_to_end == RelativeBoundaryPointPosition::Before && relative_position_to_start == RelativeBoundaryPointPosition::After)
+        return true;
+
+    // 6. Return false.
+    return false;
+}
+
 }

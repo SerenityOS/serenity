@@ -27,4 +27,6 @@ interface Range : AbstractRange {
     Range cloneRange();
     undefined detach();
 
+    boolean intersectsNode(Node node);
+
 };
