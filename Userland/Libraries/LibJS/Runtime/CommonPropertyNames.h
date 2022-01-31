@@ -240,6 +240,7 @@ namespace JS {
     P(getYear)                               \
     P(global)                                \
     P(globalThis)                            \
+    P(granularity)                           \
     P(group)                                 \
     P(groupBy)                               \
     P(groupByToMap)                          \
@@ -388,6 +389,7 @@ namespace JS {
     P(seal)                                  \
     P(second)                                \
     P(seconds)                               \
+    P(segment)                               \
     P(sensitivity)                           \
     P(set)                                   \
     P(setBigInt64)                           \
@@ -447,6 +449,7 @@ namespace JS {
     P(subtract)                              \
     P(sup)                                   \
     P(supportedLocalesOf)                    \
+    P(supportedValuesOf)                     \
     P(tan)                                   \
     P(tanh)                                  \
     P(test)                                  \

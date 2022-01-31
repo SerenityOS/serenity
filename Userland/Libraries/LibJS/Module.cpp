@@ -24,11 +24,7 @@ Module::~Module()
 // 16.2.1.5.1.1 InnerModuleLinking ( module, stack, index ), https://tc39.es/ecma262/#sec-InnerModuleLinking
 ThrowCompletionOr<u32> Module::inner_module_linking(VM& vm, Vector<Module*>&, u32 index)
 {
-    // Note: Until we have something extending module which is not SourceTextModule we crash.
-    VERIFY_NOT_REACHED();
-
     // 1. If module is not a Cyclic Module Record, then
-
     // a. Perform ? module.Link().
     TRY(link(vm));
     // b. Return index.
@@ -38,9 +34,6 @@ ThrowCompletionOr<u32> Module::inner_module_linking(VM& vm, Vector<Module*>&, u3
 // 16.2.1.5.2.1 InnerModuleEvaluation ( module, stack, index ), https://tc39.es/ecma262/#sec-innermoduleevaluation
 ThrowCompletionOr<u32> Module::inner_module_evaluation(VM& vm, Vector<Module*>&, u32 index)
 {
-    // Note: Until we have something extending module which is not SourceTextModule we crash.
-    VERIFY_NOT_REACHED();
-
     // 1. If module is not a Cyclic Module Record, then
     // a. Let promise be ! module.Evaluate().
     auto* promise = TRY(evaluate(vm));

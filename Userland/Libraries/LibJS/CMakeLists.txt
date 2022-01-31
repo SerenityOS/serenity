@@ -115,6 +115,13 @@ set(SOURCES
     Runtime/Intl/RelativeTimeFormat.cpp
     Runtime/Intl/RelativeTimeFormatConstructor.cpp
     Runtime/Intl/RelativeTimeFormatPrototype.cpp
+    Runtime/Intl/Segmenter.cpp
+    Runtime/Intl/SegmenterConstructor.cpp
+    Runtime/Intl/SegmenterPrototype.cpp
+    Runtime/Intl/Segments.cpp
+    Runtime/Intl/SegmentIterator.cpp
+    Runtime/Intl/SegmentIteratorPrototype.cpp
+    Runtime/Intl/SegmentsPrototype.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp
@@ -227,6 +234,7 @@ set(SOURCES
     Script.cpp
     SourceTextModule.cpp
     SyntaxHighlighter.cpp
+    SyntheticModule.cpp
     Token.cpp
 )
 

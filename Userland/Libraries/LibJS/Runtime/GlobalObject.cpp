@@ -67,6 +67,10 @@
 #include <LibJS/Runtime/Intl/PluralRulesPrototype.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatPrototype.h>
+#include <LibJS/Runtime/Intl/SegmentIteratorPrototype.h>
+#include <LibJS/Runtime/Intl/SegmenterConstructor.h>
+#include <LibJS/Runtime/Intl/SegmenterPrototype.h>
+#include <LibJS/Runtime/Intl/SegmentsPrototype.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MapConstructor.h>
@@ -178,6 +182,8 @@ void GlobalObject::initialize_global_object()
     m_generator_prototype = heap().allocate<GeneratorPrototype>(*this, *this);
 
     m_async_from_sync_iterator_prototype = heap().allocate<AsyncFromSyncIteratorPrototype>(*this, *this);
+
+    m_intl_segments_prototype = heap().allocate<Intl::SegmentsPrototype>(*this, *this);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     if (!m_##snake_name##_prototype)                                                     \
@@ -304,6 +310,7 @@ void GlobalObject::initialize_global_object()
     m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
     m_date_constructor_now_function = &m_date_constructor->get_without_side_effects(vm.names.now).as_function();
     m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
+    m_json_parse_function = &get_without_side_effects(vm.names.JSON).as_object().get_without_side_effects(vm.names.parse).as_function();
 }
 
 GlobalObject::~GlobalObject()
@@ -320,10 +327,12 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_generator_prototype);
     visitor.visit(m_async_from_sync_iterator_prototype);
+    visitor.visit(m_intl_segments_prototype);
     visitor.visit(m_array_prototype_values_function);
     visitor.visit(m_date_constructor_now_function);
     visitor.visit(m_eval_function);
     visitor.visit(m_throw_type_error_function);
+    visitor.visit(m_json_parse_function);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);                                         \

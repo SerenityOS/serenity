@@ -8,6 +8,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Function.h>
+#include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -23,12 +24,12 @@ public:
     static Array* create_from(GlobalObject&, Vector<Value> const&);
     // Non-standard but equivalent to CreateArrayFromList.
     template<typename T>
-    static Array* create_from(GlobalObject& global_object, Vector<T>& elements, Function<Value(T&)> map_fn)
+    static Array* create_from(GlobalObject& global_object, Span<T const> elements, Function<Value(T const&)> map_fn)
     {
         auto& vm = global_object.vm();
         auto values = MarkedValueList { global_object.heap() };
         values.ensure_capacity(elements.size());
-        for (auto& element : elements) {
+        for (auto const& element : elements) {
             values.append(map_fn(element));
             VERIFY(!vm.exception());
         }

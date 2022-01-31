@@ -38,10 +38,14 @@ public:
     GeneratorPrototype* generator_prototype() { return m_generator_prototype; }
     AsyncFromSyncIteratorPrototype* async_from_sync_iterator_prototype() { return m_async_from_sync_iterator_prototype; }
 
+    // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
+    Intl::SegmentsPrototype* intl_segments_prototype() { return m_intl_segments_prototype; }
+
     FunctionObject* array_prototype_values_function() const { return m_array_prototype_values_function; }
     FunctionObject* date_constructor_now_function() const { return m_date_constructor_now_function; }
     FunctionObject* eval_function() const { return m_eval_function; }
     FunctionObject* throw_type_error_function() const { return m_throw_type_error_function; }
+    FunctionObject* json_parse_function() const { return m_json_parse_function; }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
@@ -105,10 +109,14 @@ private:
     GeneratorPrototype* m_generator_prototype { nullptr };
     AsyncFromSyncIteratorPrototype* m_async_from_sync_iterator_prototype { nullptr };
 
+    // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
+    Intl::SegmentsPrototype* m_intl_segments_prototype { nullptr };
+
     FunctionObject* m_array_prototype_values_function { nullptr };
     FunctionObject* m_date_constructor_now_function { nullptr };
     FunctionObject* m_eval_function { nullptr };
     FunctionObject* m_throw_type_error_function { nullptr };
+    FunctionObject* m_json_parse_function { nullptr };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* m_##snake_name##_constructor { nullptr };                           \

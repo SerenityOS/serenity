@@ -70,13 +70,9 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
     // 3. Let x be ? ToNumeric(value).
     value = TRY(value.to_numeric(global_object));
 
-    // FIXME: Support BigInt number formatting.
-    if (value.is_bigint())
-        return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "BigInt number formatting");
-
     // 4. Return ? FormatNumericToParts(nf, x).
     // Note: Our implementation of FormatNumericToParts does not throw.
-    return format_numeric_to_parts(global_object, *number_format, value.as_double());
+    return format_numeric_to_parts(global_object, *number_format, value);
 }
 
 // 15.4.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions

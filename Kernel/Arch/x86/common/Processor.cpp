@@ -12,6 +12,7 @@
 
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Process.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
@@ -563,7 +564,7 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
     // reflect the status at the last context switch.
     SpinlockLocker lock(g_scheduler_lock);
     if (&thread == Processor::current_thread()) {
-        VERIFY(thread.state() == Thread::Running);
+        VERIFY(thread.state() == Thread::State::Running);
         // Leave the scheduler lock. If we trigger page faults we may
         // need to be preempted. Since this is our own thread it won't
         // cause any problems as the stack won't change below this frame.
@@ -598,13 +599,13 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
         TRY(result);
     } else {
         switch (thread.state()) {
-        case Thread::Running:
+        case Thread::State::Running:
             VERIFY_NOT_REACHED(); // should have been handled above
-        case Thread::Runnable:
-        case Thread::Stopped:
-        case Thread::Blocked:
-        case Thread::Dying:
-        case Thread::Dead: {
+        case Thread::State::Runnable:
+        case Thread::State::Stopped:
+        case Thread::State::Blocked:
+        case Thread::State::Dying:
+        case Thread::State::Dead: {
             // We need to retrieve ebp from what was last pushed to the kernel
             // stack. Before switching out of that thread, it switch_context
             // pushed the callee-saved registers, and the last of them happens
@@ -1284,7 +1285,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 
     VERIFY(to_thread == Thread::current());
 
-    Scheduler::enter_current(*from_thread, true);
+    Scheduler::enter_current(*from_thread);
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
@@ -1302,14 +1303,18 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 {
-    VERIFY(from_thread == to_thread || from_thread->state() != Thread::Running);
-    VERIFY(to_thread->state() == Thread::Running);
+    VERIFY(from_thread == to_thread || from_thread->state() != Thread::State::Running);
+    VERIFY(to_thread->state() == Thread::State::Running);
 
     bool has_fxsr = Processor::current().has_feature(CPUFeature::FXSR);
     Processor::set_current_thread(*to_thread);
 
     auto& from_regs = from_thread->regs();
     auto& to_regs = to_thread->regs();
+
+    // NOTE: IOPL should never be non-zero in any situation, so let's panic immediately
+    //       instead of carrying on with elevated I/O privileges.
+    VERIFY(get_iopl_from_eflags(to_regs.flags()) == 0);
 
     if (has_fxsr)
         asm volatile("fxsave %0"
@@ -1357,8 +1362,6 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
         asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
     else
         asm volatile("frstor %0" ::"m"(to_thread->fpu_state()));
-
-    // TODO: ioperm?
 }
 
 extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)

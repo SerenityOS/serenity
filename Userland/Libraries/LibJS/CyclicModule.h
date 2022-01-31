@@ -32,7 +32,7 @@ public:
     virtual ThrowCompletionOr<Promise*> evaluate(VM& vm) override;
 
 protected:
-    CyclicModule(Realm& realm, StringView filename, bool has_top_level_await, Vector<FlyString> requested_modules);
+    CyclicModule(Realm& realm, StringView filename, bool has_top_level_await, Vector<ModuleRequest> requested_modules);
 
     virtual ThrowCompletionOr<u32> inner_module_linking(VM& vm, Vector<Module*>& stack, u32 index) override;
     virtual ThrowCompletionOr<u32> inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index) override;
@@ -49,7 +49,7 @@ protected:
     ThrowCompletionOr<void> m_evaluation_error;         // [[EvaluationError]]
     Optional<u32> m_dfs_index;                          // [[DFSIndex]]
     Optional<u32> m_dfs_ancestor_index;                 // [[DFSAncestorIndex]]
-    Vector<FlyString> m_requested_modules;              // [[RequestedModules]]
+    Vector<ModuleRequest> m_requested_modules;          // [[RequestedModules]]
     CyclicModule* m_cycle_root;                         // [[CycleRoot]]
     bool m_has_top_level_await { false };               // [[HasTLA]]
     bool m_async_evaluation { false };                  // [[AsyncEvaluation]]

@@ -7,6 +7,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
@@ -147,7 +148,7 @@ Thread::~Thread()
     }
 }
 
-void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32 lock_count)
+Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blocker)
 {
     VERIFY(!Processor::current_in_irq());
     VERIFY(this == Thread::current());
@@ -155,14 +156,127 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
     VERIFY(!Memory::s_mm_lock.is_locked_by_current_processor());
 
     SpinlockLocker block_lock(m_block_lock);
+    // We need to hold m_block_lock so that nobody can unblock a blocker as soon
+    // as it is constructed and registered elsewhere
+
+    ScopeGuard finalize_guard([&] {
+        blocker.finalize();
+    });
+
+    if (!blocker.setup_blocker()) {
+        blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::UnblockConditionAlreadyMet);
+        return BlockResult::NotBlocked;
+    }
 
     SpinlockLocker scheduler_lock(g_scheduler_lock);
+    // Relaxed semantics are fine for timeout_unblocked because we
+    // synchronize on the spin locks already.
+    Atomic<bool, AK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
+    bool timer_was_added = false;
 
     switch (state()) {
-    case Thread::Stopped:
+    case Thread::State::Stopped:
         // It's possible that we were requested to be stopped!
         break;
-    case Thread::Running:
+    case Thread::State::Running:
+        VERIFY(m_blocker == nullptr);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_blocker = &blocker;
+
+    if (auto& block_timeout = blocker.override_timeout(timeout); !block_timeout.is_infinite()) {
+        // Process::kill_all_threads may be called at any time, which will mark all
+        // threads to die. In that case
+        timer_was_added = TimerQueue::the().add_timer_without_id(*m_block_timer, block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
+            VERIFY(!Processor::current_in_irq());
+            VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
+            VERIFY(!m_block_lock.is_locked_by_current_processor());
+            // NOTE: this may execute on the same or any other processor!
+            SpinlockLocker scheduler_lock(g_scheduler_lock);
+            SpinlockLocker block_lock(m_block_lock);
+            if (m_blocker && !timeout_unblocked.exchange(true))
+                unblock();
+        });
+        if (!timer_was_added) {
+            // Timeout is already in the past
+            blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::TimeoutInThePast);
+            m_blocker = nullptr;
+            return BlockResult::InterruptedByTimeout;
+        }
+    }
+
+    blocker.begin_blocking({});
+
+    set_state(Thread::State::Blocked);
+
+    scheduler_lock.unlock();
+    block_lock.unlock();
+
+    dbgln_if(THREAD_DEBUG, "Thread {} blocking on {} ({}) -->", *this, &blocker, blocker.state_string());
+    bool did_timeout = false;
+    u32 lock_count_to_restore = 0;
+    auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
+    for (;;) {
+        // Yield to the scheduler, and wait for us to resume unblocked.
+        VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
+        VERIFY(Processor::in_critical());
+        yield_without_releasing_big_lock();
+        VERIFY(Processor::in_critical());
+
+        SpinlockLocker block_lock2(m_block_lock);
+        if (m_blocker && !m_blocker->can_be_interrupted() && !m_should_die) {
+            block_lock2.unlock();
+            dbgln("Thread should not be unblocking, current state: {}", state_string());
+            set_state(Thread::State::Blocked);
+            continue;
+        }
+        // Prevent the timeout from unblocking this thread if it happens to
+        // be in the process of firing already
+        did_timeout |= timeout_unblocked.exchange(true);
+        if (m_blocker) {
+            // Remove ourselves...
+            VERIFY(m_blocker == &blocker);
+            m_blocker = nullptr;
+        }
+        dbgln_if(THREAD_DEBUG, "<-- Thread {} unblocked from {} ({})", *this, &blocker, blocker.state_string());
+        break;
+    }
+
+    // Notify the blocker that we are no longer blocking. It may need
+    // to clean up now while we're still holding m_lock
+    auto result = blocker.end_blocking({}, did_timeout); // calls was_unblocked internally
+
+    if (timer_was_added && !did_timeout) {
+        // Cancel the timer while not holding any locks. This allows
+        // the timer function to complete before we remove it
+        // (e.g. if it's on another processor)
+        TimerQueue::the().cancel_timer(*m_block_timer);
+    }
+    if (previous_locked != LockMode::Unlocked) {
+        // NOTE: This may trigger another call to Thread::block().
+        relock_process(previous_locked, lock_count_to_restore);
+    }
+    return result;
+}
+
+void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32 lock_count)
+{
+    VERIFY(!Processor::current_in_irq());
+    VERIFY(this == Thread::current());
+    ScopedCritical critical;
+    VERIFY(!Memory::s_mm_lock.is_locked_by_current_processor());
+
+    SpinlockLocker scheduler_lock(g_scheduler_lock);
+    SpinlockLocker block_lock(m_block_lock);
+
+    switch (state()) {
+    case Thread::State::Stopped:
+        // It's possible that we were requested to be stopped!
+        break;
+    case Thread::State::Running:
         VERIFY(m_blocker == nullptr);
         break;
     default:
@@ -171,16 +285,16 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
     }
 
     // If we're blocking on the big-lock we may actually be in the process
-    // of unblocking from another lock. If that's the case m_blocking_lock
+    // of unblocking from another lock. If that's the case m_blocking_mutex
     // is already set
     auto& big_lock = process().big_lock();
-    VERIFY((&lock == &big_lock && m_blocking_lock != &big_lock) || !m_blocking_lock);
+    VERIFY((&lock == &big_lock && m_blocking_mutex != &big_lock) || !m_blocking_mutex);
 
-    auto* previous_blocking_lock = m_blocking_lock;
-    m_blocking_lock = &lock;
+    auto* previous_blocking_mutex = m_blocking_mutex;
+    m_blocking_mutex = &lock;
     m_lock_requested_count = lock_count;
 
-    set_state(Thread::Blocked);
+    set_state(Thread::State::Blocked);
 
     scheduler_lock.unlock();
     block_lock.unlock();
@@ -206,46 +320,33 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
         VERIFY(Processor::in_critical());
 
         SpinlockLocker block_lock2(m_block_lock);
-        VERIFY(!m_blocking_lock);
-        m_blocking_lock = previous_blocking_lock;
+        VERIFY(!m_blocking_mutex);
+        m_blocking_mutex = previous_blocking_mutex;
         break;
     }
 
     lock_lock.lock();
 }
 
-u32 Thread::unblock_from_lock(Kernel::Mutex& lock)
+u32 Thread::unblock_from_mutex(Kernel::Mutex& mutex)
 {
+    SpinlockLocker scheduler_lock(g_scheduler_lock);
     SpinlockLocker block_lock(m_block_lock);
-    VERIFY(m_blocking_lock == &lock);
-    auto requested_count = m_lock_requested_count;
-    block_lock.unlock();
 
-    auto do_unblock = [&]() {
-        SpinlockLocker scheduler_lock(g_scheduler_lock);
-        SpinlockLocker block_lock(m_block_lock);
-        VERIFY(m_blocking_lock == &lock);
-        VERIFY(!Processor::current_in_irq());
-        VERIFY(g_scheduler_lock.is_locked_by_current_processor());
-        VERIFY(m_block_lock.is_locked_by_current_processor());
-        VERIFY(m_blocking_lock == &lock);
-        dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Mutex {}", *this, &lock);
-        m_blocking_lock = nullptr;
-        if (Thread::current() == this) {
-            set_state(Thread::Running);
-            return;
-        }
-        VERIFY(m_state != Thread::Runnable && m_state != Thread::Running);
-        set_state(Thread::Runnable);
-    };
-    if (Processor::current_in_irq() != 0) {
-        Processor::deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
-            if (auto this_thread = self.strong_ref())
-                do_unblock();
-        });
-    } else {
-        do_unblock();
+    VERIFY(!Processor::current_in_irq());
+    VERIFY(m_blocking_mutex == &mutex);
+
+    dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Mutex {}", *this, &mutex);
+
+    auto requested_count = m_lock_requested_count;
+
+    m_blocking_mutex = nullptr;
+    if (Thread::current() == this) {
+        set_state(Thread::State::Running);
+        return requested_count;
     }
+    VERIFY(m_state != Thread::State::Runnable && m_state != Thread::State::Running);
+    set_state(Thread::State::Runnable);
     return requested_count;
 }
 
@@ -274,9 +375,9 @@ void Thread::unblock(u8 signal)
     VERIFY(!Processor::current_in_irq());
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
     VERIFY(m_block_lock.is_locked_by_current_processor());
-    if (m_state != Thread::Blocked)
+    if (m_state != Thread::State::Blocked)
         return;
-    if (m_blocking_lock)
+    if (m_blocking_mutex)
         return;
     VERIFY(m_blocker);
     if (signal != 0) {
@@ -292,11 +393,11 @@ void Thread::unblock(u8 signal)
     }
     m_blocker = nullptr;
     if (Thread::current() == this) {
-        set_state(Thread::Running);
+        set_state(Thread::State::Running);
         return;
     }
-    VERIFY(m_state != Thread::Runnable && m_state != Thread::Running);
-    set_state(Thread::Runnable);
+    VERIFY(m_state != Thread::State::Runnable && m_state != Thread::State::Running);
+    set_state(Thread::State::Runnable);
 }
 
 void Thread::set_should_die()
@@ -350,7 +451,7 @@ void Thread::die_if_needed()
         // It's possible that we don't reach the code after this block if the
         // scheduler is invoked and FinalizerTask cleans up this thread, however
         // that doesn't matter because we're trying to invoke the scheduler anyway
-        set_state(Thread::Dying);
+        set_state(Thread::State::Dying);
     }
 
     ScopedCritical critical;
@@ -440,35 +541,35 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 // NOLINTNEXTLINE(readability-make-member-function-const) False positive; We call block<SleepBlocker> which is not const
 auto Thread::sleep(clockid_t clock_id, const Time& duration, Time* remaining_time) -> BlockResult
 {
-    VERIFY(state() == Thread::Running);
+    VERIFY(state() == Thread::State::Running);
     return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(false, &duration, nullptr, clock_id), remaining_time);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const) False positive; We call block<SleepBlocker> which is not const
 auto Thread::sleep_until(clockid_t clock_id, const Time& deadline) -> BlockResult
 {
-    VERIFY(state() == Thread::Running);
+    VERIFY(state() == Thread::State::Running);
     return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(true, &deadline, nullptr, clock_id));
 }
 
 StringView Thread::state_string() const
 {
     switch (state()) {
-    case Thread::Invalid:
+    case Thread::State::Invalid:
         return "Invalid"sv;
-    case Thread::Runnable:
+    case Thread::State::Runnable:
         return "Runnable"sv;
-    case Thread::Running:
+    case Thread::State::Running:
         return "Running"sv;
-    case Thread::Dying:
+    case Thread::State::Dying:
         return "Dying"sv;
-    case Thread::Dead:
+    case Thread::State::Dead:
         return "Dead"sv;
-    case Thread::Stopped:
+    case Thread::State::Stopped:
         return "Stopped"sv;
-    case Thread::Blocked: {
+    case Thread::State::Blocked: {
         SpinlockLocker block_lock(m_block_lock);
-        if (m_blocking_lock)
+        if (m_blocking_mutex)
             return "Mutex"sv;
         if (m_blocker)
             return m_blocker->state_string();
@@ -616,7 +717,7 @@ u32 Thread::pending_signals_for_state() const
     constexpr u32 stopped_signal_mask = (1 << (SIGCONT - 1)) | (1 << (SIGKILL - 1)) | (1 << (SIGTRAP - 1));
     if (is_handling_page_fault())
         return 0;
-    return m_state != Stopped ? m_pending_signals : m_pending_signals & stopped_signal_mask;
+    return m_state != State::Stopped ? m_pending_signals : m_pending_signals & stopped_signal_mask;
 }
 
 void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
@@ -644,7 +745,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     if (!has_unmasked_pending_signals())
         return;
 
-    if (m_state == Stopped) {
+    if (m_state == Thread::State::Stopped) {
         SpinlockLocker lock(m_lock);
         if (pending_signals_for_state() != 0) {
             dbgln_if(SIGNAL_DEBUG, "Signal: Resuming stopped {} to deliver signal {}", *this, signal);
@@ -843,14 +944,14 @@ void Thread::resume_from_stopped()
     VERIFY(is_stopped());
     VERIFY(m_stop_state != State::Invalid);
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
-    if (m_stop_state == Blocked) {
+    if (m_stop_state == Thread::State::Blocked) {
         SpinlockLocker block_lock(m_block_lock);
-        if (m_blocker || m_blocking_lock) {
+        if (m_blocker || m_blocking_mutex) {
             // Hasn't been unblocked yet
-            set_state(Blocked, 0);
+            set_state(Thread::State::Blocked, 0);
         } else {
             // Was unblocked while stopped
-            set_state(Runnable);
+            set_state(Thread::State::Runnable);
         }
     } else {
         set_state(m_stop_state, 0);
@@ -867,7 +968,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     dbgln_if(SIGNAL_DEBUG, "Dispatch signal {} to {}, state: {}", signal, *this, state_string());
 
-    if (m_state == Invalid || !is_initialized()) {
+    if (m_state == Thread::State::Invalid || !is_initialized()) {
         // Thread has barely been created, we need to wait until it is
         // at least in Runnable state and is_initialized() returns true,
         // which indicates that it is fully set up an we actually have
@@ -889,7 +990,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto* tracer = process.tracer();
     if (signal == SIGSTOP || (tracer && default_signal_action(signal) == DefaultSignalAction::DumpCore)) {
         dbgln_if(SIGNAL_DEBUG, "Signal {} stopping this thread", signal);
-        set_state(State::Stopped, signal);
+        set_state(Thread::State::Stopped, signal);
         return DispatchSignalResult::Yield;
     }
 
@@ -902,7 +1003,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
             // only "pending signals" from the tracer are sent to the tracee
             if (!tracer->has_pending_signal(signal)) {
                 dbgln("signal: {} stopping {} for tracer", signal, *this);
-                set_state(Stopped, signal);
+                set_state(Thread::State::Stopped, signal);
                 return DispatchSignalResult::Yield;
             }
             tracer->unset_signal(signal);
@@ -913,7 +1014,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     if (handler_vaddr.is_null()) {
         switch (default_signal_action(signal)) {
         case DefaultSignalAction::Stop:
-            set_state(Stopped, signal);
+            set_state(Thread::State::Stopped, signal);
             return DispatchSignalResult::Yield;
         case DefaultSignalAction::DumpCore:
             process.set_should_generate_coredump(true);
@@ -1098,7 +1199,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
     {
         SpinlockLocker thread_lock(m_lock);
         previous_state = m_state;
-        if (previous_state == Invalid) {
+        if (previous_state == Thread::State::Invalid) {
             // If we were *just* created, we may have already pending signals
             if (has_unmasked_pending_signals()) {
                 dbgln_if(THREAD_DEBUG, "Dispatch pending signals to new thread {}", *this);
@@ -1110,9 +1211,9 @@ void Thread::set_state(State new_state, u8 stop_signal)
         dbgln_if(THREAD_DEBUG, "Set thread {} state to {}", *this, state_string());
     }
 
-    if (previous_state == Runnable) {
+    if (previous_state == Thread::State::Runnable) {
         Scheduler::dequeue_runnable_thread(*this);
-    } else if (previous_state == Stopped) {
+    } else if (previous_state == Thread::State::Stopped) {
         m_stop_state = State::Invalid;
         auto& process = this->process();
         if (process.set_stopped(false)) {
@@ -1132,12 +1233,12 @@ void Thread::set_state(State new_state, u8 stop_signal)
         }
     }
 
-    if (m_state == Runnable) {
+    if (m_state == Thread::State::Runnable) {
         Scheduler::enqueue_runnable_thread(*this);
         Processor::smp_wake_n_idle_processors(1);
-    } else if (m_state == Stopped) {
+    } else if (m_state == Thread::State::Stopped) {
         // We don't want to restore to Running state, only Runnable!
-        m_stop_state = previous_state != Running ? previous_state : Runnable;
+        m_stop_state = previous_state != Thread::State::Running ? previous_state : Thread::State::Runnable;
         auto& process = this->process();
         if (!process.set_stopped(true)) {
             process.for_each_thread([&](auto& thread) {
@@ -1146,7 +1247,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
                 if (thread.is_stopped())
                     return;
                 dbgln_if(THREAD_DEBUG, "Stopping peer thread {}", thread);
-                thread.set_state(Stopped, stop_signal);
+                thread.set_state(Thread::State::Stopped, stop_signal);
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);
             // Tell the parent process (if any) about this change.
@@ -1154,8 +1255,8 @@ void Thread::set_state(State new_state, u8 stop_signal)
                 [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
             }
         }
-    } else if (m_state == Dying) {
-        VERIFY(previous_state != Blocked);
+    } else if (m_state == Thread::State::Dying) {
+        VERIFY(previous_state != Thread::State::Blocked);
         if (this != Thread::current() && is_finalizable()) {
             // Some other thread set this thread to Dying, notify the
             // finalizer right away as it can be cleaned up now

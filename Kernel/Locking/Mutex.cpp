@@ -231,7 +231,7 @@ void Mutex::unblock_waiters(Mode previous_mode)
             return false;
         m_mode = Mode::Shared;
         for (auto& thread : m_blocked_threads_list_shared) {
-            auto requested_locks = thread.unblock_from_lock(*this);
+            auto requested_locks = thread.unblock_from_mutex(*this);
             m_shared_holders += requested_locks;
 #if LOCK_SHARED_UPGRADE_DEBUG
             auto set_result = m_shared_holders_map.set(&thread, requested_locks);
@@ -244,7 +244,7 @@ void Mutex::unblock_waiters(Mode previous_mode)
     auto unblock_exclusive = [&]() {
         if (auto* next_exclusive_thread = m_blocked_threads_list_exclusive.first()) {
             m_mode = Mode::Exclusive;
-            m_times_locked = next_exclusive_thread->unblock_from_lock(*this);
+            m_times_locked = next_exclusive_thread->unblock_from_mutex(*this);
             m_holder = next_exclusive_thread;
             return true;
         }

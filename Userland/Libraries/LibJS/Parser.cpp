@@ -544,7 +544,7 @@ void Parser::parse_module(Program& program)
         if (export_statement.has_statement())
             continue;
         for (auto& entry : export_statement.entries()) {
-            if (entry.kind == ExportStatement::ExportEntry::Kind::ModuleRequest)
+            if (entry.is_module_request())
                 return;
 
             auto const& exported_name = entry.local_or_import_name;
@@ -4058,7 +4058,6 @@ ModuleRequest Parser::parse_module_request()
     return request;
 }
 
-static FlyString namespace_string_value = "*";
 static FlyString default_string_value = "default";
 
 NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
@@ -4133,7 +4132,7 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
         if (match_imported_binding()) {
             auto namespace_position = position();
             auto namespace_name = consume().value();
-            entries_with_location.append({ { namespace_string_value, namespace_name }, namespace_position });
+            entries_with_location.append({ ImportStatement::ImportEntry({}, namespace_name, true), namespace_position });
         } else {
             syntax_error(String::formatted("Unexpected token: {}", m_state.current_token.name()));
         }
@@ -4223,6 +4222,8 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
 
 NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 {
+    using ExportEntry = ExportStatement::ExportEntry;
+
     // We use the extended syntax which adds:
     //  ExportDeclaration:
     //      export ExportFromClause FromClause [no LineTerminator here] AssertClause ;
@@ -4247,21 +4248,15 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
     consume(TokenType::Export);
 
     struct EntryAndLocation {
-        ExportStatement::ExportEntry entry;
+        ExportEntry entry;
         Position position;
-
-        void to_module_request(ModuleRequest from_module)
-        {
-            entry.kind = ExportStatement::ExportEntry::Kind::ModuleRequest;
-            entry.module_request = move(from_module);
-        }
     };
 
     Vector<EntryAndLocation> entries_with_location;
 
     RefPtr<ASTNode> expression = {};
-
     bool is_default = false;
+    ModuleRequest from_specifier;
 
     if (match_default()) {
         is_default = true;
@@ -4353,7 +4348,7 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             local_name = ExportStatement::local_name_for_default;
         }
 
-        entries_with_location.append({ { default_string_value, move(local_name) }, default_position });
+        entries_with_location.append({ ExportEntry::named_export(default_string_value, move(local_name)), default_position });
     } else {
         enum FromSpecifier {
             NotAllowed,
@@ -4370,12 +4365,12 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
                 if (match_identifier_name()) {
                     auto namespace_position = position();
                     auto exported_name = consume().value();
-                    entries_with_location.append({ { exported_name, namespace_string_value }, namespace_position });
+                    entries_with_location.append({ ExportEntry::all_module_request(exported_name), namespace_position });
                 } else {
                     expected("identifier");
                 }
             } else {
-                entries_with_location.append({ { {}, namespace_string_value }, asterisk_position });
+                entries_with_location.append({ ExportEntry::all_but_default_entry(), asterisk_position });
             }
             check_for_from = Required;
         } else if (match_declaration()) {
@@ -4384,10 +4379,10 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             m_state.current_scope_pusher->add_declaration(declaration);
             if (is<FunctionDeclaration>(*declaration)) {
                 auto& func = static_cast<FunctionDeclaration&>(*declaration);
-                entries_with_location.append({ { func.name(), func.name() }, func.source_range().start });
+                entries_with_location.append({ ExportEntry::named_export(func.name(), func.name()), func.source_range().start });
             } else if (is<ClassDeclaration>(*declaration)) {
                 auto& class_declaration = static_cast<ClassDeclaration&>(*declaration);
-                entries_with_location.append({ { class_declaration.name(), class_declaration.name() }, class_declaration.source_range().start });
+                entries_with_location.append({ ExportEntry::named_export(class_declaration.name(), class_declaration.name()), class_declaration.source_range().start });
             } else {
                 VERIFY(is<VariableDeclaration>(*declaration));
                 auto& variables = static_cast<VariableDeclaration&>(*declaration);
@@ -4395,11 +4390,11 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
                 for (auto& decl : variables.declarations()) {
                     decl.target().visit(
                         [&](NonnullRefPtr<Identifier> const& identifier) {
-                            entries_with_location.append({ { identifier->string(), identifier->string() }, identifier->source_range().start });
+                            entries_with_location.append({ ExportEntry::named_export(identifier->string(), identifier->string()), identifier->source_range().start });
                         },
                         [&](NonnullRefPtr<BindingPattern> const& binding) {
                             binding->for_each_bound_name([&](auto& name) {
-                                entries_with_location.append({ { name, name }, decl_position });
+                                entries_with_location.append({ ExportEntry::named_export(name, name), decl_position });
                             });
                         });
                 }
@@ -4412,11 +4407,11 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             for (auto& decl : variable_declaration->declarations()) {
                 decl.target().visit(
                     [&](NonnullRefPtr<Identifier> const& identifier) {
-                        entries_with_location.append({ { identifier->string(), identifier->string() }, identifier->source_range().start });
+                        entries_with_location.append({ ExportEntry::named_export(identifier->string(), identifier->string()), identifier->source_range().start });
                     },
                     [&](NonnullRefPtr<BindingPattern> const& binding) {
                         binding->for_each_bound_name([&](auto& name) {
-                            entries_with_location.append({ { name, name }, variable_position });
+                            entries_with_location.append({ ExportEntry::named_export(name, name), variable_position });
                         });
                     });
             }
@@ -4444,18 +4439,13 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
                 auto identifier_position = position();
                 auto identifier = parse_export_specifier(true);
 
-                if (identifier.is_empty())
-                    break;
-
                 if (match_as()) {
                     consume(TokenType::Identifier);
                     auto export_name = parse_export_specifier(false);
-                    if (export_name.is_empty())
-                        break;
 
-                    entries_with_location.append({ { move(export_name), move(identifier) }, identifier_position });
+                    entries_with_location.append({ ExportEntry::named_export(move(export_name), move(identifier)), identifier_position });
                 } else {
-                    entries_with_location.append({ { identifier, identifier }, identifier_position });
+                    entries_with_location.append({ ExportEntry::named_export(identifier, identifier), identifier_position });
                 }
 
                 if (!match(TokenType::Comma))
@@ -4472,12 +4462,7 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 
         if (check_for_from != NotAllowed && match_from()) {
             consume(TokenType::Identifier);
-            auto from_specifier = parse_module_request();
-
-            // FIXME: We can probably store only one module request
-            //        per ExportStatement like we do with ImportStatement.
-            for (auto& entry : entries_with_location)
-                entry.to_module_request(from_specifier);
+            from_specifier = parse_module_request();
         } else if (check_for_from == Required) {
             expected("from");
         }
@@ -4503,6 +4488,6 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
         entries.append(move(entry.entry));
     }
 
-    return create_ast_node<ExportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(entries), is_default);
+    return create_ast_node<ExportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(entries), is_default, move(from_specifier));
 }
 }

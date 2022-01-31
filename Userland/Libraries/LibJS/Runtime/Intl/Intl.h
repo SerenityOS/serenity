@@ -20,6 +20,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(get_canonical_locales);
+    JS_DECLARE_NATIVE_FUNCTION(supported_values_of);
 };
 
 }

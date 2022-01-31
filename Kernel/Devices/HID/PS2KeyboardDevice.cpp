@@ -5,14 +5,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/Singleton.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/HID/PS2KeyboardDevice.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/WorkQueue.h>
@@ -51,7 +50,12 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
         update_modifier(Mod_Ctrl, pressed);
         break;
     case 0x5b:
-        update_modifier(Mod_Super, pressed);
+        m_left_super_pressed = pressed;
+        update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
+        break;
+    case 0x5c:
+        m_right_super_pressed = pressed;
+        update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
         break;
     case 0x2a:
         m_left_shift_pressed = pressed;

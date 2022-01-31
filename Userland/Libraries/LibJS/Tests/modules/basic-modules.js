@@ -1,25 +1,22 @@
 // Because you can't easily load modules directly we load them via here and check
 // if they passed by checking the result
 
-function expectModulePassed(filename) {
+function validTestModule(filename) {
     if (!filename.endsWith(".mjs") || !filename.startsWith("./")) {
         throw new ExpectationError(
-            "Expected module name to start with './' " +
-                "and end with '.mjs' but got '" +
-                filename +
-                "'"
+            `Expected module name to start with './' and end with '.mjs' but got '${filename}'`
         );
     }
+}
 
-    async function getModule() {
-        return import(filename);
-    }
+function expectModulePassed(filename, options = undefined) {
+    validTestModule(filename);
 
     let moduleLoaded = false;
     let moduleResult = null;
     let thrownError = null;
 
-    getModule()
+    import(filename, options)
         .then(result => {
             moduleLoaded = true;
             moduleResult = result;
@@ -36,8 +33,34 @@ function expectModulePassed(filename) {
     }
 
     expect(moduleLoaded).toBeTrue();
-
     return moduleResult;
+}
+
+function expectedModuleToThrowSyntaxError(filename, message) {
+    validTestModule(filename);
+
+    let moduleLoaded = false;
+    let thrownError = null;
+
+    import(filename)
+        .then(() => {
+            moduleLoaded = true;
+        })
+        .catch(error => {
+            thrownError = error;
+        });
+
+    runQueuedPromiseJobs();
+
+    if (thrownError) {
+        expect(() => {
+            throw thrownError;
+        }).toThrowWithMessage(SyntaxError, message);
+    } else {
+        throw new ExpectationError(
+            `Expected module: '${filename}' to fail to load with a syntax error but did not throw.`
+        );
+    }
 }
 
 describe("testing behavior", () => {
@@ -107,6 +130,11 @@ describe("testing behavior", () => {
     test("expectModulePassed works", () => {
         expectModulePassed("./single-const-export.mjs");
     });
+
+    test("can call expectModulePassed with options", () => {
+        expectModulePassed("./single-const-export.mjs", { key: "value" });
+        expectModulePassed("./single-const-export.mjs", { key1: "value1", key2: "value2" });
+    });
 });
 
 describe("in- and exports", () => {
@@ -130,6 +158,29 @@ describe("in- and exports", () => {
 
     test("declaration exports which can be used in the module it self", () => {
         expectModulePassed("./declarations-tests.mjs");
+    });
+
+    test("string '*' is not a full namespace import", () => {
+        expectModulePassed("./string-import-names.mjs");
+    });
+
+    test("can combine string and default exports", () => {
+        expectModulePassed("./string-import-namespace.mjs");
+    });
+
+    test("can re export string names", () => {
+        expectModulePassed("./string-import-namespace-indirect.mjs");
+    });
+
+    test("re exporting all-but-default does not export a default value", () => {
+        expectedModuleToThrowSyntaxError(
+            "./indirect-export-without-default.mjs",
+            "Invalid or ambiguous export entry 'default'"
+        );
+    });
+
+    test("can import with (useless) assertions", () => {
+        expectModulePassed("./import-with-assertions.mjs");
     });
 });
 

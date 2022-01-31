@@ -488,3 +488,31 @@ static constexpr Array<Span<@type@ const>, @size@> @name@ { {
 } };
 )~~~");
 }
+
+template<typename T>
+void generate_available_values(SourceGenerator& generator, StringView name, Vector<T> const& values, Vector<Alias> const& aliases = {})
+{
+    generator.set("name", name);
+    generator.set("size", String::number(values.size()));
+
+    generator.append(R"~~~(
+Span<StringView const> @name@()
+{
+    static constexpr Array<StringView, @size@> values { {)~~~");
+
+    bool first = true;
+    for (auto const& value : values) {
+        generator.append(first ? " " : ", ");
+        first = false;
+
+        if (auto it = aliases.find_if([&](auto const& alias) { return alias.name == value; }); it != aliases.end())
+            generator.append(String::formatted("\"{}\"sv", it->alias));
+        else
+            generator.append(String::formatted("\"{}\"sv", value));
+    }
+
+    generator.append(R"~~~( } };
+    return values.span();
+}
+)~~~");
+}

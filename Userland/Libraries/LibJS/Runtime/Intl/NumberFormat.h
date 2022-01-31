@@ -212,8 +212,8 @@ private:
 };
 
 struct FormatResult {
-    String formatted_string;       // [[FormattedString]]
-    double rounded_number { 0.0 }; // [[RoundedNumber]]
+    String formatted_string;      // [[FormattedString]]
+    Value rounded_number { 0.0 }; // [[RoundedNumber]]
 };
 
 struct RawFormatResult : public FormatResult {
@@ -223,17 +223,17 @@ struct RawFormatResult : public FormatResult {
 ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_object, NumberFormatBase& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation);
 ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_object, NumberFormat& number_format, Value locales_value, Value options_value);
 int currency_digits(StringView currency);
-FormatResult format_numeric_to_string(NumberFormatBase& intl_object, double number);
-Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, double number);
-Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_format, double number, String formatted_string, int exponent);
-String format_numeric(NumberFormat& number_format, double number);
-Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number_format, double number);
-RawFormatResult to_raw_precision(double number, int min_precision, int max_precision);
-RawFormatResult to_raw_fixed(double number, int min_fraction, int max_fraction);
+FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase& intl_object, Value number);
+Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number);
+Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number, String formatted_string, int exponent);
+String format_numeric(GlobalObject& global_object, NumberFormat& number_format, Value number);
+Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number_format, Value number);
+RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int min_precision, int max_precision);
+RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_fraction, int max_fraction);
 ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options);
-Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, double number, Unicode::NumberFormat& found_pattern);
+Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, Value number, Unicode::NumberFormat& found_pattern);
 Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int exponent);
-int compute_exponent(NumberFormat& number_format, double number);
+int compute_exponent(GlobalObject& global_object, NumberFormat& number_format, Value number);
 int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude);
 
 }
