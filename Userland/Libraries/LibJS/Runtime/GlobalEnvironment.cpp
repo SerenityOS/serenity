@@ -19,8 +19,8 @@ GlobalEnvironment::GlobalEnvironment(GlobalObject& global_object, Object& this_v
     : Environment(nullptr)
     , m_global_this_value(&this_value)
 {
-    m_object_record = global_object.heap().allocate<ObjectEnvironment>(global_object, global_object, ObjectEnvironment::IsWithEnvironment::No, nullptr);
-    m_declarative_record = global_object.heap().allocate<DeclarativeEnvironment>(global_object);
+    m_object_record = global_object.heap().allocate_without_global_object<ObjectEnvironment>(global_object, ObjectEnvironment::IsWithEnvironment::No, nullptr);
+    m_declarative_record = global_object.heap().allocate_without_global_object<DeclarativeEnvironment>();
 }
 
 void GlobalEnvironment::visit_edges(Cell::Visitor& visitor)
@@ -245,7 +245,7 @@ ThrowCompletionOr<void> GlobalEnvironment::create_global_var_binding(FlyString c
 {
     // 1. Let ObjRec be envRec.[[ObjectRecord]].
     // 2. Let globalObject be ObjRec.[[BindingObject]].
-    auto& global_object = m_object_record->binding_object();
+    auto& global_object = verify_cast<GlobalObject>(m_object_record->binding_object());
 
     // 3. Let hasProperty be ? HasOwnProperty(globalObject, N).
     auto has_property = TRY(global_object.has_own_property(name));
@@ -256,10 +256,10 @@ ThrowCompletionOr<void> GlobalEnvironment::create_global_var_binding(FlyString c
     // 5. If hasProperty is false and extensible is true, then
     if (!has_property && extensible) {
         // a. Perform ? ObjRec.CreateMutableBinding(N, D).
-        TRY(m_object_record->create_mutable_binding(m_object_record->global_object(), name, can_be_deleted));
+        TRY(m_object_record->create_mutable_binding(global_object, name, can_be_deleted));
 
         // b. Perform ? ObjRec.InitializeBinding(N, undefined).
-        TRY(m_object_record->initialize_binding(m_object_record->global_object(), name, js_undefined()));
+        TRY(m_object_record->initialize_binding(global_object, name, js_undefined()));
     }
 
     // 6. Let varDeclaredNames be envRec.[[VarNames]].

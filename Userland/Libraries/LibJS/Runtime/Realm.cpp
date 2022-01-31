@@ -26,7 +26,7 @@ void Realm::set_global_object(GlobalObject& global_object, Object* this_value)
 
     // 5. Let newGlobalEnv be NewGlobalEnvironment(globalObj, thisValue).
     // 6. Set realmRec.[[GlobalEnv]] to newGlobalEnv.
-    m_global_environment = global_object.heap().allocate<GlobalEnvironment>(global_object, global_object, *this_value);
+    m_global_environment = global_object.heap().allocate_without_global_object<GlobalEnvironment>(global_object, *this_value);
 
     // 7. Return realmRec.
 }
