@@ -227,6 +227,93 @@ ExceptionOr<void> Range::set_end_after(Node& node)
     return set_start_or_end(*parent, node.index() + 1, StartOrEnd::End);
 }
 
+// https://dom.spec.whatwg.org/#dom-range-compareboundarypoints
+ExceptionOr<i16> Range::compare_boundary_points(u16 how, Range const& source_range) const
+{
+    // 1. If how is not one of
+    //      - START_TO_START,
+    //      - START_TO_END,
+    //      - END_TO_END, and
+    //      - END_TO_START,
+    //    then throw a "NotSupportedError" DOMException.
+    if (how != HowToCompareBoundaryPoints::START_TO_START && how != HowToCompareBoundaryPoints::START_TO_END && how != HowToCompareBoundaryPoints::END_TO_END && how != HowToCompareBoundaryPoints::END_TO_START)
+        return NotSupportedError::create(String::formatted("Expected 'how' to be one of START_TO_START (0), START_TO_END (1), END_TO_END (2) or END_TO_START (3), got {}", how));
+
+    // 2. If this’s root is not the same as sourceRange’s root, then throw a "WrongDocumentError" DOMException.
+    if (&root() != &source_range.root())
+        return WrongDocumentError::create("This range is not in the same tree as the source range.");
+
+    RefPtr<Node> this_point_node;
+    u32 this_point_offset = 0;
+
+    RefPtr<Node> other_point_node;
+    u32 other_point_offset = 0;
+
+    // 3. If how is:
+    switch (how) {
+    case HowToCompareBoundaryPoints::START_TO_START:
+        // -> START_TO_START:
+        //    Let this point be this’s start. Let other point be sourceRange’s start.
+        this_point_node = m_start_container;
+        this_point_offset = m_start_offset;
+
+        other_point_node = source_range.m_start_container;
+        other_point_offset = source_range.m_start_offset;
+        break;
+    case HowToCompareBoundaryPoints::START_TO_END:
+        // -> START_TO_END:
+        //    Let this point be this’s end. Let other point be sourceRange’s start.
+        this_point_node = m_end_container;
+        this_point_offset = m_end_offset;
+
+        other_point_node = source_range.m_start_container;
+        other_point_offset = source_range.m_start_offset;
+        break;
+    case HowToCompareBoundaryPoints::END_TO_END:
+        // -> END_TO_END:
+        //    Let this point be this’s end. Let other point be sourceRange’s end.
+        this_point_node = m_end_container;
+        this_point_offset = m_end_offset;
+
+        other_point_node = source_range.m_end_container;
+        other_point_offset = source_range.m_end_offset;
+        break;
+    case HowToCompareBoundaryPoints::END_TO_START:
+        // -> END_TO_START:
+        //    Let this point be this’s start. Let other point be sourceRange’s end.
+        this_point_node = m_start_container;
+        this_point_offset = m_start_offset;
+
+        other_point_node = source_range.m_end_container;
+        other_point_offset = source_range.m_end_offset;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    VERIFY(this_point_node);
+    VERIFY(other_point_node);
+
+    // 4. If the position of this point relative to other point is
+    auto relative_position = position_of_boundary_point_relative_to_other_boundary_point(*this_point_node, this_point_offset, *other_point_node, other_point_offset);
+    switch (relative_position) {
+    case RelativeBoundaryPointPosition::Before:
+        // -> before
+        //    Return −1.
+        return -1;
+    case RelativeBoundaryPointPosition::Equal:
+        // -> equal
+        //    Return 0.
+        return 0;
+    case RelativeBoundaryPointPosition::After:
+        // -> after
+        //    Return 1.
+        return 1;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 NonnullRefPtr<Range> Range::clone_range() const
 {
     return adopt_ref(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));

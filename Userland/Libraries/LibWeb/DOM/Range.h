@@ -31,6 +31,16 @@ public:
     ExceptionOr<void> set_end_before(Node& node);
     ExceptionOr<void> set_end_after(Node& node);
 
+    // https://dom.spec.whatwg.org/#dom-range-start_to_start
+    enum HowToCompareBoundaryPoints : u16 {
+        START_TO_START = 0,
+        START_TO_END = 1,
+        END_TO_END = 2,
+        END_TO_START = 3,
+    };
+
+    ExceptionOr<i16> compare_boundary_points(u16 how, Range const& source_range) const;
+
     NonnullRefPtr<Range> inverted() const;
     NonnullRefPtr<Range> normalized() const;
     NonnullRefPtr<Range> clone_range() const;
