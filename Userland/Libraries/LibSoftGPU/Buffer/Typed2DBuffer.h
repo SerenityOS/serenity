@@ -47,11 +47,13 @@ public:
         }
     }
 
-    void blit_to_bitmap(Gfx::Bitmap& bitmap, Gfx::IntRect const& target) const requires IsSame<T, u32>
+    void blit_flipped_to_bitmap(Gfx::Bitmap& bitmap, Gfx::IntRect const& target) const requires IsSame<T, u32>
     {
         VERIFY(bitmap.format() == Gfx::BitmapFormat::BGRA8888 || bitmap.format() == Gfx::BitmapFormat::BGRx8888);
         int source_y = 0;
-        for (int y = target.top(); y <= target.bottom(); ++y) {
+
+        // NOTE: we are flipping the Y-coordinate here, which is OpenGL-specific: (0, 0) is considered the lower-left corner of the window
+        for (int y = target.bottom(); y >= target.top(); --y) {
             auto const* buffer_scanline = scanline(source_y++);
             auto* bitmap_scanline = bitmap.scanline(y);
 
