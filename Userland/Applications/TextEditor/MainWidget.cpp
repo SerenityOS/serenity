@@ -537,7 +537,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     syntax_actions.set_exclusive(true);
 
-    auto& syntax_menu = view_menu.add_submenu("&Syntax");
+    auto& syntax_menu = view_menu.add_submenu("L&anguage");
     m_plain_text_highlight = GUI::Action::create_checkable("&Plain Text", [&](auto&) {
         m_editor->set_syntax_highlighter({});
         m_editor->update();
