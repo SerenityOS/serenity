@@ -450,4 +450,156 @@ Vector<size_t> find_grapheme_segmentation_boundaries([[maybe_unused]] Utf16View 
 #endif
 }
 
+Vector<size_t> find_word_segmentation_boundaries([[maybe_unused]] Utf16View const& view)
+{
+#if ENABLE_UNICODE_DATA
+    using WBP = WordBreakProperty;
+    Vector<size_t> boundaries;
+
+    // https://www.unicode.org/reports/tr29/#Word_Boundary_Rules
+    if (view.length_in_code_points() == 0)
+        return boundaries;
+
+    auto has_any_wbp = [](u32 code_point, auto&&... properties) {
+        return (code_point_has_word_break_property(code_point, properties) || ...);
+    };
+
+    // WB1
+    boundaries.append(0);
+
+    if (view.length_in_code_points() > 1) {
+        auto it = view.begin();
+        auto code_point = *it;
+        u32 next_code_point;
+        Optional<u32> previous_code_point;
+        auto current_ri_chain = 0;
+
+        for (++it; it != view.end(); ++it, previous_code_point = code_point, code_point = next_code_point) {
+            next_code_point = *it;
+
+            auto code_point_is_cr = has_any_wbp(code_point, WBP::CR);
+            auto next_code_point_is_lf = has_any_wbp(next_code_point, WBP::LF);
+
+            // WB3
+            if (code_point_is_cr && next_code_point_is_lf)
+                continue;
+            // WB3a, WB3b
+            if (code_point_is_cr || next_code_point_is_lf || has_any_wbp(next_code_point, WBP::CR, WBP::Newline) || has_any_wbp(code_point, WBP::LF, WBP::Newline)) {
+                boundaries.append(view.code_unit_offset_of(it));
+                continue;
+            }
+            // WB3c
+            if (has_any_wbp(code_point, WBP::ZWJ) && code_point_has_property(next_code_point, Property::Extended_Pictographic))
+                continue;
+            // WB3d
+            if (has_any_wbp(code_point, WBP::WSegSpace) && has_any_wbp(next_code_point, WBP::WSegSpace))
+                continue;
+
+            // WB4
+            if (has_any_wbp(next_code_point, WBP::Format, WBP::Extend, WBP::ZWJ))
+                continue;
+
+            auto code_point_is_hebrew_letter = has_any_wbp(code_point, WBP::Hebrew_Letter);
+            auto code_point_is_ah_letter = code_point_is_hebrew_letter || has_any_wbp(code_point, WBP::ALetter);
+            auto next_code_point_is_hebrew_letter = has_any_wbp(next_code_point, WBP::Hebrew_Letter);
+            auto next_code_point_is_ah_letter = next_code_point_is_hebrew_letter || has_any_wbp(next_code_point, WBP::ALetter);
+
+            // WB5
+            if (code_point_is_ah_letter && next_code_point_is_ah_letter)
+                continue;
+
+            Optional<u32> next_next_code_point;
+            if (it != view.end()) {
+                auto it_copy = it;
+                ++it_copy;
+                if (it_copy != view.end())
+                    next_next_code_point = *it;
+            }
+            bool next_next_code_point_is_hebrew_letter = next_next_code_point.has_value() && has_any_wbp(*next_next_code_point, WBP::Hebrew_Letter);
+            bool next_next_code_point_is_ah_letter = next_next_code_point_is_hebrew_letter || (next_next_code_point.has_value() && has_any_wbp(*next_next_code_point, WBP::ALetter));
+
+            auto next_code_point_is_mid_num_let_q = has_any_wbp(next_code_point, WBP::MidNumLet, WBP::Single_Quote);
+
+            // WB6
+            if (code_point_is_ah_letter && next_next_code_point_is_ah_letter && (next_code_point_is_mid_num_let_q || has_any_wbp(next_code_point, WBP::MidLetter)))
+                continue;
+
+            auto code_point_is_mid_num_let_q = has_any_wbp(code_point, WBP::MidNumLet, WBP::Single_Quote);
+            auto previous_code_point_is_hebrew_letter = previous_code_point.has_value() && has_any_wbp(*previous_code_point, WBP::Hebrew_Letter);
+            auto previous_code_point_is_ah_letter = previous_code_point_is_hebrew_letter || (previous_code_point.has_value() && has_any_wbp(*previous_code_point, WBP::ALetter));
+
+            // WB7
+            if (previous_code_point_is_ah_letter && next_code_point_is_ah_letter && (code_point_is_mid_num_let_q || has_any_wbp(code_point, WBP::MidLetter)))
+                continue;
+            // WB7a
+            if (code_point_is_hebrew_letter && has_any_wbp(next_code_point, WBP::Single_Quote))
+                continue;
+            // WB7b
+            if (code_point_is_hebrew_letter && next_next_code_point_is_hebrew_letter && has_any_wbp(next_code_point, WBP::Double_Quote))
+                continue;
+            // WB7c
+            if (previous_code_point_is_hebrew_letter && next_code_point_is_hebrew_letter && has_any_wbp(code_point, WBP::Double_Quote))
+                continue;
+
+            auto code_point_is_numeric = has_any_wbp(code_point, WBP::Numeric);
+            auto next_code_point_is_numeric = has_any_wbp(next_code_point, WBP::Numeric);
+
+            // WB8
+            if (code_point_is_numeric && next_code_point_is_numeric)
+                continue;
+            // WB9
+            if (code_point_is_ah_letter && next_code_point_is_numeric)
+                continue;
+            // WB10
+            if (code_point_is_numeric && next_code_point_is_ah_letter)
+                continue;
+
+            auto previous_code_point_is_numeric = previous_code_point.has_value() && has_any_wbp(code_point, WBP::Numeric);
+
+            // WB11
+            if (previous_code_point_is_numeric && next_code_point_is_numeric && (code_point_is_mid_num_let_q || has_any_wbp(code_point, WBP::MidNum)))
+                continue;
+
+            bool next_next_code_point_is_numeric = next_next_code_point.has_value() && has_any_wbp(*next_next_code_point, WBP::Numeric);
+
+            // WB12
+            if (code_point_is_numeric && next_next_code_point_is_numeric && (next_code_point_is_mid_num_let_q || has_any_wbp(next_code_point, WBP::MidNum)))
+                continue;
+
+            auto code_point_is_katakana = has_any_wbp(code_point, WBP::Katakana);
+            auto next_code_point_is_katakana = has_any_wbp(next_code_point, WBP::Katakana);
+
+            // WB13
+            if (code_point_is_katakana && next_code_point_is_katakana)
+                continue;
+
+            auto code_point_is_extend_num_let = has_any_wbp(code_point, WBP::ExtendNumLet);
+
+            // WB13a
+            if ((code_point_is_ah_letter || code_point_is_numeric || code_point_is_katakana || code_point_is_extend_num_let) && has_any_wbp(next_code_point, WBP::ExtendNumLet))
+                continue;
+            // WB13b
+            if (code_point_is_extend_num_let && (next_code_point_is_ah_letter || next_code_point_is_numeric || next_code_point_is_katakana))
+                continue;
+
+            auto code_point_is_ri = has_any_wbp(code_point, WBP::Regional_Indicator);
+            current_ri_chain = code_point_is_ri ? current_ri_chain + 1 : 0;
+
+            // WB15, WB16
+            if (code_point_is_ri && has_any_wbp(next_code_point, WBP::Regional_Indicator) && current_ri_chain % 2 == 1)
+                continue;
+
+            // WB999
+            boundaries.append(view.code_unit_offset_of(it));
+        }
+    }
+
+    // WB2
+    boundaries.append(view.length_in_code_units());
+    return boundaries;
+#else
+    return {};
+#endif
+}
+
 }
