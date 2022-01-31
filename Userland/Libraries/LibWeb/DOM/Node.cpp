@@ -973,4 +973,21 @@ String Node::debug_description() const
     return builder.to_string();
 }
 
+// https://dom.spec.whatwg.org/#concept-node-length
+size_t Node::length() const
+{
+    // 1. If node is a DocumentType or Attr node, then return 0.
+    if (is_document_type() || is_attribute())
+        return 0;
+
+    // 2. If node is a CharacterData node, then return node’s data’s length.
+    if (is_character_data()) {
+        auto* character_data_node = verify_cast<CharacterData>(this);
+        return character_data_node->data().length();
+    }
+
+    // 3. Return the number of node’s children.
+    return child_count();
+}
+
 }

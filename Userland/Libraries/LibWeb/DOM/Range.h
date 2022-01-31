@@ -24,17 +24,8 @@ public:
 
     // FIXME: There are a ton of methods missing here.
 
-    void set_start(Node& container, unsigned offset)
-    {
-        m_start_container = container;
-        m_start_offset = offset;
-    }
-
-    void set_end(Node& container, unsigned offset)
-    {
-        m_end_container = container;
-        m_end_offset = offset;
-    }
+    ExceptionOr<void> set_start(Node& node, u32 offset);
+    ExceptionOr<void> set_end(Node& node, u32 offset);
 
     NonnullRefPtr<Range> inverted() const;
     NonnullRefPtr<Range> normalized() const;
@@ -46,6 +37,16 @@ private:
     explicit Range(Document&);
 
     Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
+
+    Node& root();
+    Node const& root() const;
+
+    enum class StartOrEnd {
+        Start,
+        End,
+    };
+
+    ExceptionOr<void> set_start_or_end(Node& node, u32 offset, StartOrEnd start_or_end);
 };
 
 }

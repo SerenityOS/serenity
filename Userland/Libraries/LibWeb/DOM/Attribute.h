@@ -46,4 +46,7 @@ private:
     WeakPtr<Element> m_owner_element;
 };
 
+template<>
+inline bool Node::fast_is<Attribute>() const { return is_attribute(); }
+
 }
