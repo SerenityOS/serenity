@@ -10,6 +10,10 @@ interface Range : AbstractRange {
 
     undefined setStart(Node node, unsigned long offset);
     undefined setEnd(Node node, unsigned long offset);
+    undefined setStartBefore(Node node);
+    undefined setStartAfter(Node node);
+    undefined setEndBefore(Node node);
+    undefined setEndAfter(Node node);
 
     Range cloneRange();
 

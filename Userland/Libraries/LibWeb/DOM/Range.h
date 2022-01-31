@@ -26,6 +26,10 @@ public:
 
     ExceptionOr<void> set_start(Node& node, u32 offset);
     ExceptionOr<void> set_end(Node& node, u32 offset);
+    ExceptionOr<void> set_start_before(Node& node);
+    ExceptionOr<void> set_start_after(Node& node);
+    ExceptionOr<void> set_end_before(Node& node);
+    ExceptionOr<void> set_end_after(Node& node);
 
     NonnullRefPtr<Range> inverted() const;
     NonnullRefPtr<Range> normalized() const;

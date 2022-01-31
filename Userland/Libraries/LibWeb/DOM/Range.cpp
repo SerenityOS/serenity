@@ -171,6 +171,62 @@ ExceptionOr<void> Range::set_end(Node& node, u32 offset)
     return set_start_or_end(node, offset, StartOrEnd::End);
 }
 
+// https://dom.spec.whatwg.org/#dom-range-setstartbefore
+ExceptionOr<void> Range::set_start_before(Node& node)
+{
+    // 1. Let parent be node’s parent.
+    auto* parent = node.parent();
+
+    // 2. If parent is null, then throw an "InvalidNodeTypeError" DOMException.
+    if (!parent)
+        return InvalidNodeTypeError::create("Given node has no parent.");
+
+    // 3. Set the start of this to boundary point (parent, node’s index).
+    return set_start_or_end(*parent, node.index(), StartOrEnd::Start);
+}
+
+// https://dom.spec.whatwg.org/#dom-range-setstartafter
+ExceptionOr<void> Range::set_start_after(Node& node)
+{
+    // 1. Let parent be node’s parent.
+    auto* parent = node.parent();
+
+    // 2. If parent is null, then throw an "InvalidNodeTypeError" DOMException.
+    if (!parent)
+        return InvalidNodeTypeError::create("Given node has no parent.");
+
+    // 3. Set the start of this to boundary point (parent, node’s index plus 1).
+    return set_start_or_end(*parent, node.index() + 1, StartOrEnd::Start);
+}
+
+// https://dom.spec.whatwg.org/#dom-range-setendbefore
+ExceptionOr<void> Range::set_end_before(Node& node)
+{
+    // 1. Let parent be node’s parent.
+    auto* parent = node.parent();
+
+    // 2. If parent is null, then throw an "InvalidNodeTypeError" DOMException.
+    if (!parent)
+        return InvalidNodeTypeError::create("Given node has no parent.");
+
+    // 3. Set the end of this to boundary point (parent, node’s index).
+    return set_start_or_end(*parent, node.index(), StartOrEnd::End);
+}
+
+// https://dom.spec.whatwg.org/#dom-range-setendafter
+ExceptionOr<void> Range::set_end_after(Node& node)
+{
+    // 1. Let parent be node’s parent.
+    auto* parent = node.parent();
+
+    // 2. If parent is null, then throw an "InvalidNodeTypeError" DOMException.
+    if (!parent)
+        return InvalidNodeTypeError::create("Given node has no parent.");
+
+    // 3. Set the end of this to boundary point (parent, node’s index plus 1).
+    return set_start_or_end(*parent, node.index() + 1, StartOrEnd::End);
+}
+
 NonnullRefPtr<Range> Range::clone_range() const
 {
     return adopt_ref(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));
