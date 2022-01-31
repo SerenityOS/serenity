@@ -44,6 +44,16 @@ constexpr bool is_ascii_alphanumeric(u32 code_point)
     return is_ascii_alpha(code_point) || is_ascii_digit(code_point);
 }
 
+constexpr bool is_ascii_binary_digit(u32 code_point)
+{
+    return code_point == '0' || code_point == '1';
+}
+
+constexpr bool is_ascii_octal_digit(u32 code_point)
+{
+    return code_point >= '0' && code_point <= '7';
+}
+
 constexpr bool is_ascii_hex_digit(u32 code_point)
 {
     return is_ascii_digit(code_point) || (code_point >= 'A' && code_point <= 'F') || (code_point >= 'a' && code_point <= 'f');
@@ -164,6 +174,7 @@ constexpr u32 to_ascii_base36_digit(u32 digit)
 using AK::is_ascii;
 using AK::is_ascii_alpha;
 using AK::is_ascii_alphanumeric;
+using AK::is_ascii_binary_digit;
 using AK::is_ascii_blank;
 using AK::is_ascii_c0_control;
 using AK::is_ascii_control;
@@ -171,6 +182,7 @@ using AK::is_ascii_digit;
 using AK::is_ascii_graphical;
 using AK::is_ascii_hex_digit;
 using AK::is_ascii_lower_alpha;
+using AK::is_ascii_octal_digit;
 using AK::is_ascii_printable;
 using AK::is_ascii_punctuation;
 using AK::is_ascii_space;
