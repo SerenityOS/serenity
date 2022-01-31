@@ -1385,8 +1385,6 @@ bool is_strictly_equal(Value lhs, Value rhs)
 // 7.2.14 IsLooselyEqual ( x, y ), https://tc39.es/ecma262/#sec-islooselyequal
 ThrowCompletionOr<bool> is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-
     // 1. If Type(x) is the same as Type(y), then
     if (same_type_for_equality(lhs, rhs)) {
         // a. Return IsStrictlyEqual(x, y).
@@ -1420,13 +1418,15 @@ ThrowCompletionOr<bool> is_loosely_equal(GlobalObject& global_object, Value lhs,
 
     // 7. If Type(x) is BigInt and Type(y) is String, then
     if (lhs.is_bigint() && rhs.is_string()) {
-        auto& rhs_string = rhs.as_string().string();
         // a. Let n be ! StringToBigInt(y).
-        // b. If n is NaN, return false.
-        if (!is_valid_bigint_value(rhs_string))
+        auto bigint = rhs.string_to_bigint(global_object);
+
+        // b. If n is undefined, return false.
+        if (!bigint.has_value())
             return false;
+
         // c. Return IsLooselyEqual(x, n).
-        return is_loosely_equal(global_object, lhs, js_bigint(vm, Crypto::SignedBigInteger::from_base(10, rhs_string)));
+        return is_loosely_equal(global_object, lhs, *bigint);
     }
 
     // 8. If Type(x) is String and Type(y) is BigInt, return IsLooselyEqual(y, x).

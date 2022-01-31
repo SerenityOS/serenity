@@ -99,6 +99,16 @@ describe("correct behavior", () => {
         expect(Object(2n) == 1n).toBeFalse();
         expect(1n != Object(2n)).toBeTrue();
         expect(Object(2n) != 1n).toBeTrue();
+
+        expect(2n == "2").toBeTrue();
+        expect(2n == "0b10").toBeTrue();
+        expect(2n == "0o2").toBeTrue();
+        expect(2n == "0x2").toBeTrue();
+
+        expect(1n == "2").toBeFalse();
+        expect(1n == "0b10").toBeFalse();
+        expect(1n == "0o2").toBeFalse();
+        expect(1n == "0x2").toBeFalse();
     });
 
     test("strong equality operators", () => {
