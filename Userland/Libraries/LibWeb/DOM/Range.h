@@ -32,6 +32,7 @@ public:
     ExceptionOr<void> set_end_after(Node& node);
     ExceptionOr<void> select_node(Node& node);
     void collapse(bool to_start);
+    ExceptionOr<void> select_node_contents(Node const&);
 
     // https://dom.spec.whatwg.org/#dom-range-start_to_start
     enum HowToCompareBoundaryPoints : u16 {

@@ -359,6 +359,27 @@ void Range::collapse(bool to_start)
     m_start_offset = m_end_offset;
 }
 
+// https://dom.spec.whatwg.org/#dom-range-selectnodecontents
+ExceptionOr<void> Range::select_node_contents(Node const& node)
+{
+    // 1. If node is a doctype, throw an "InvalidNodeTypeError" DOMException.
+    if (is<DocumentType>(node))
+        return InvalidNodeTypeError::create("Node cannot be a DocumentType.");
+
+    // 2. Let length be the length of node.
+    auto length = node.length();
+
+    // 3. Set start to the boundary point (node, 0).
+    m_start_container = node;
+    m_start_offset = 0;
+
+    // 4. Set end to the boundary point (node, length).
+    m_end_container = node;
+    m_end_offset = length;
+
+    return {};
+}
+
 NonnullRefPtr<Range> Range::clone_range() const
 {
     return adopt_ref(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));
