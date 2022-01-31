@@ -98,22 +98,22 @@ Shape::Shape(Object& global_object)
 }
 
 Shape::Shape(Shape& previous_shape, const StringOrSymbol& property_name, PropertyAttributes attributes, TransitionType transition_type)
-    : m_attributes(attributes)
-    , m_transition_type(transition_type)
-    , m_global_object(previous_shape.m_global_object)
+    : m_global_object(previous_shape.m_global_object)
     , m_previous(&previous_shape)
     , m_property_name(property_name)
     , m_prototype(previous_shape.m_prototype)
     , m_property_count(transition_type == TransitionType::Put ? previous_shape.m_property_count + 1 : previous_shape.m_property_count)
+    , m_attributes(attributes)
+    , m_transition_type(transition_type)
 {
 }
 
 Shape::Shape(Shape& previous_shape, Object* new_prototype)
-    : m_transition_type(TransitionType::Prototype)
-    , m_global_object(previous_shape.m_global_object)
+    : m_global_object(previous_shape.m_global_object)
     , m_previous(&previous_shape)
     , m_prototype(new_prototype)
     , m_property_count(previous_shape.m_property_count)
+    , m_transition_type(TransitionType::Prototype)
 {
 }
 

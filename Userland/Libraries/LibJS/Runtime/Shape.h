@@ -98,10 +98,6 @@ private:
 
     void ensure_property_table() const;
 
-    PropertyAttributes m_attributes { 0 };
-    TransitionType m_transition_type : 6 { TransitionType::Invalid };
-    bool m_unique : 1 { false };
-
     Object* m_global_object { nullptr };
 
     mutable OwnPtr<HashMap<StringOrSymbol, PropertyMetadata>> m_property_table;
@@ -112,6 +108,10 @@ private:
     StringOrSymbol m_property_name;
     Object* m_prototype { nullptr };
     size_t m_property_count { 0 };
+
+    PropertyAttributes m_attributes { 0 };
+    TransitionType m_transition_type : 6 { TransitionType::Invalid };
+    bool m_unique : 1 { false };
 };
 
 }
