@@ -580,10 +580,10 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
 
     if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
         auto executable = JS::Bytecode::Generator::generate(program);
-        executable.name = "eval"sv;
+        executable->name = "eval"sv;
         if (JS::Bytecode::g_dump_bytecode)
-            executable.dump();
-        eval_result = TRY(bytecode_interpreter->run(executable));
+            executable->dump();
+        eval_result = TRY(bytecode_interpreter->run(*executable));
         // Turn potentially empty JS::Value from the bytecode interpreter into an empty Optional
         if (eval_result.has_value() && eval_result->is_empty())
             eval_result = {};

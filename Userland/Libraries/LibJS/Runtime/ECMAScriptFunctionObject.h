@@ -103,7 +103,7 @@ private:
     ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
 
     FlyString m_name;
-    Optional<Bytecode::Executable> m_bytecode_executable;
+    OwnPtr<Bytecode::Executable> m_bytecode_executable;
     i32 m_function_length { 0 };
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects

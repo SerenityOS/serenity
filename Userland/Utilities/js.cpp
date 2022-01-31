@@ -1028,19 +1028,19 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
 
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
             auto executable = JS::Bytecode::Generator::generate(script_or_module->parse_node());
-            executable.name = source_name;
+            executable->name = source_name;
             if (s_opt_bytecode) {
                 auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
-                passes.perform(executable);
+                passes.perform(*executable);
                 dbgln("Optimisation passes took {}us", passes.elapsed());
             }
 
             if (JS::Bytecode::g_dump_bytecode)
-                executable.dump();
+                executable->dump();
 
             if (s_run_bytecode) {
                 JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object(), interpreter.realm());
-                result = bytecode_interpreter.run(executable);
+                result = bytecode_interpreter.run(*executable);
             } else {
                 return ReturnEarly::Yes;
             }

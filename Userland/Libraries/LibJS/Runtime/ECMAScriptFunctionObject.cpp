@@ -775,7 +775,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     if (bytecode_interpreter) {
         // FIXME: pass something to evaluate default arguments with
         TRY(function_declaration_instantiation(nullptr));
-        if (!m_bytecode_executable.has_value()) {
+        if (!m_bytecode_executable) {
             m_bytecode_executable = Bytecode::Generator::generate(m_ecmascript_code, m_kind);
             m_bytecode_executable->name = m_name;
             auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();

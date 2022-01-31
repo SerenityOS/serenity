@@ -24,17 +24,17 @@
 
 #define EXPECT_NO_EXCEPTION(executable)                           \
     auto executable = JS::Bytecode::Generator::generate(program); \
-    auto result = bytecode_interpreter.run(executable);           \
+    auto result = bytecode_interpreter.run(*executable);          \
     EXPECT(!result.is_error());                                   \
     EXPECT(!vm->exception());
 
-#define EXPECT_NO_EXCEPTION_WITH_OPTIMIZATIONS(executable)                 \
-    auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();     \
-    passes.perform(executable);                                            \
-                                                                           \
-    auto result_with_optimizations = bytecode_interpreter.run(executable); \
-                                                                           \
-    EXPECT(!result_with_optimizations.is_error());                         \
+#define EXPECT_NO_EXCEPTION_WITH_OPTIMIZATIONS(executable)                  \
+    auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();      \
+    passes.perform(*executable);                                            \
+                                                                            \
+    auto result_with_optimizations = bytecode_interpreter.run(*executable); \
+                                                                            \
+    EXPECT(!result_with_optimizations.is_error());                          \
     EXPECT(!vm->exception())
 
 #define EXPECT_NO_EXCEPTION_ALL(source) \
@@ -57,7 +57,7 @@ TEST_CASE(if_statement_fail)
     SETUP_AND_PARSE("if (true) throw new Exception('failed');");
 
     auto executable = JS::Bytecode::Generator::generate(program);
-    auto result = bytecode_interpreter.run(executable);
+    auto result = bytecode_interpreter.run(*executable);
     EXPECT(result.is_error());
 }
 
@@ -115,7 +115,7 @@ TEST_CASE(loading_multiple_files)
         auto const& test_file_program = test_file_script->parse_node();
 
         auto executable = JS::Bytecode::Generator::generate(test_file_program);
-        auto result = bytecode_interpreter.run(executable);
+        auto result = bytecode_interpreter.run(*executable);
         EXPECT(!result.is_error());
         EXPECT(!vm->exception());
     }
