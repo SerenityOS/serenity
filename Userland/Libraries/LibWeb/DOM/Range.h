@@ -50,6 +50,13 @@ public:
 
     NonnullRefPtr<Node> common_ancestor_container() const;
 
+    // https://dom.spec.whatwg.org/#dom-range-detach
+    void detach() const
+    {
+        // The detach() method steps are to do nothing.
+        // Note: Its functionality (disabling a Range object) was removed, but the method itself is preserved for compatibility.
+    }
+
 private:
     explicit Range(Document&);
 
