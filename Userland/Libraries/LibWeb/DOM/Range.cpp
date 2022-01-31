@@ -6,6 +6,7 @@
  */
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Window.h>
@@ -44,6 +45,130 @@ Range::Range(Node& start_container, u32 start_offset, Node& end_container, u32 e
 
 Range::~Range()
 {
+}
+
+// https://dom.spec.whatwg.org/#concept-range-root
+Node& Range::root()
+{
+    // The root of a live range is the root of its start node.
+    return m_start_container->root();
+}
+
+Node const& Range::root() const
+{
+    return m_start_container->root();
+}
+
+enum class RelativeBoundaryPointPosition {
+    Equal,
+    Before,
+    After,
+};
+
+// https://dom.spec.whatwg.org/#concept-range-bp-position
+static RelativeBoundaryPointPosition position_of_boundary_point_relative_to_other_boundary_point(Node const& node_a, u32 offset_a, Node const& node_b, u32 offset_b)
+{
+    // 1. Assert: nodeA and nodeB have the same root.
+    VERIFY(&node_a.root() == &node_b.root());
+
+    // 2. If nodeA is nodeB, then return equal if offsetA is offsetB, before if offsetA is less than offsetB, and after if offsetA is greater than offsetB.
+    if (&node_a == &node_b) {
+        if (offset_a == offset_b)
+            return RelativeBoundaryPointPosition::Equal;
+
+        if (offset_a < offset_b)
+            return RelativeBoundaryPointPosition::Before;
+
+        return RelativeBoundaryPointPosition::After;
+    }
+
+    // 3. If nodeA is following nodeB, then if the position of (nodeB, offsetB) relative to (nodeA, offsetA) is before, return after, and if it is after, return before.
+    if (node_a.is_following(node_b)) {
+        auto relative_position = position_of_boundary_point_relative_to_other_boundary_point(node_b, offset_b, node_a, offset_a);
+
+        if (relative_position == RelativeBoundaryPointPosition::Before)
+            return RelativeBoundaryPointPosition::After;
+
+        if (relative_position == RelativeBoundaryPointPosition::After)
+            return RelativeBoundaryPointPosition::Before;
+    }
+
+    // 4. If nodeA is an ancestor of nodeB:
+    if (node_a.is_ancestor_of(node_b)) {
+        // 1. Let child be nodeB.
+        NonnullRefPtr<Node> child = node_b;
+
+        // 2. While child is not a child of nodeA, set child to its parent.
+        while (!node_a.is_parent_of(child)) {
+            auto* parent = child->parent();
+            VERIFY(parent);
+            child = *parent;
+        }
+
+        // 3. If child’s index is less than offsetA, then return after.
+        if (child->index() < offset_a)
+            return RelativeBoundaryPointPosition::After;
+    }
+
+    // 5. Return before.
+    return RelativeBoundaryPointPosition::Before;
+}
+
+ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartOrEnd start_or_end)
+{
+    // To set the start or end of a range to a boundary point (node, offset), run these steps:
+
+    // 1. If node is a doctype, then throw an "InvalidNodeTypeError" DOMException.
+    if (is<DocumentType>(node))
+        return InvalidNodeTypeError::create("Node cannot be a DocumentType.");
+
+    // 2. If offset is greater than node’s length, then throw an "IndexSizeError" DOMException.
+    if (offset > node.length())
+        return IndexSizeError::create(String::formatted("Node does not contain a child at offset {}", offset));
+
+    // 3. Let bp be the boundary point (node, offset).
+
+    if (start_or_end == StartOrEnd::Start) {
+        // -> If these steps were invoked as "set the start"
+
+        // 1. If range’s root is not equal to node’s root, or if bp is after the range’s end, set range’s end to bp.
+        if (&root() != &node.root() || position_of_boundary_point_relative_to_other_boundary_point(node, offset, m_end_container, m_end_offset) == RelativeBoundaryPointPosition::After) {
+            m_end_container = node;
+            m_end_offset = offset;
+        }
+
+        // 2. Set range’s start to bp.
+        m_start_container = node;
+        m_start_offset = offset;
+    } else {
+        // -> If these steps were invoked as "set the end"
+        VERIFY(start_or_end == StartOrEnd::End);
+
+        // 1. If range’s root is not equal to node’s root, or if bp is before the range’s start, set range’s start to bp.
+        if (&root() != &node.root() || position_of_boundary_point_relative_to_other_boundary_point(node, offset, m_start_container, m_start_offset) == RelativeBoundaryPointPosition::Before) {
+            m_start_container = node;
+            m_start_offset = offset;
+        }
+
+        // 2. Set range’s end to bp.
+        m_end_container = node;
+        m_end_offset = offset;
+    }
+
+    return {};
+}
+
+// https://dom.spec.whatwg.org/#concept-range-bp-set
+ExceptionOr<void> Range::set_start(Node& node, u32 offset)
+{
+    // The setStart(node, offset) method steps are to set the start of this to boundary point (node, offset).
+    return set_start_or_end(node, offset, StartOrEnd::Start);
+}
+
+ExceptionOr<void> Range::set_end(Node& node, u32 offset)
+{
+    // The setEnd(node, offset) method steps are to set the end of this to boundary point (node, offset).
+    return set_start_or_end(node, offset, StartOrEnd::End);
 }
 
 NonnullRefPtr<Range> Range::clone_range() const

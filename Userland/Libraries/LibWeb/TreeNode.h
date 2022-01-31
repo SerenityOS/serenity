@@ -80,6 +80,16 @@ public:
         return const_cast<TreeNode*>(this)->child_at_index(index);
     }
 
+    // https://dom.spec.whatwg.org/#concept-tree-index
+    size_t index() const
+    {
+        // The index of an object is its number of preceding siblings, or 0 if it has none.
+        size_t index = 0;
+        for (auto* node = previous_sibling(); node; node = node->previous_sibling())
+            ++index;
+        return index;
+    }
+
     Optional<size_t> index_of_child(const T& search_child)
     {
         VERIFY(search_child.parent() == this);
@@ -117,6 +127,8 @@ public:
     bool is_inclusive_ancestor_of(const TreeNode&) const;
     bool is_descendant_of(const TreeNode&) const;
     bool is_inclusive_descendant_of(const TreeNode&) const;
+
+    bool is_following(TreeNode const&) const;
 
     void append_child(NonnullRefPtr<T> node);
     void prepend_child(NonnullRefPtr<T> node);
@@ -569,6 +581,19 @@ template<typename T>
 inline bool TreeNode<T>::is_inclusive_descendant_of(const TreeNode<T>& other) const
 {
     return other.is_inclusive_ancestor_of(*this);
+}
+
+// https://dom.spec.whatwg.org/#concept-tree-following
+template<typename T>
+inline bool TreeNode<T>::is_following(TreeNode<T> const& other) const
+{
+    // An object A is following an object B if A and B are in the same tree and A comes after B in tree order.
+    for (auto* node = previous_in_pre_order(); node; node = node->previous_in_pre_order()) {
+        if (node == &other)
+            return true;
+    }
+
+    return false;
 }
 
 }
