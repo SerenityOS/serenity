@@ -442,6 +442,11 @@ void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
     m_tab_context_menu->popup(screen_position);
 }
 
+void Tab::content_filters_changed()
+{
+    m_web_content_view->set_content_filters(g_content_filters);
+}
+
 GUI::AbstractScrollableWidget& Tab::view()
 {
     return *m_web_content_view;
