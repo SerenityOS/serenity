@@ -602,4 +602,120 @@ Vector<size_t> find_word_segmentation_boundaries([[maybe_unused]] Utf16View cons
 #endif
 }
 
+Vector<size_t> find_sentence_segmentation_boundaries([[maybe_unused]] Utf16View const& view)
+{
+#if ENABLE_UNICODE_DATA
+    using SBP = SentenceBreakProperty;
+    Vector<size_t> boundaries;
+
+    // https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
+    if (view.length_in_code_points() == 0)
+        return boundaries;
+
+    auto has_any_sbp = [](u32 code_point, auto&&... properties) {
+        return (code_point_has_sentence_break_property(code_point, properties) || ...);
+    };
+
+    // SB1
+    boundaries.append(0);
+
+    if (view.length_in_code_points() > 1) {
+        auto it = view.begin();
+        auto code_point = *it;
+        u32 next_code_point;
+        Optional<u32> previous_code_point;
+        enum class TerminatorSequenceState {
+            None,
+            Term,
+            Close,
+            Sp
+        } terminator_sequence_state { TerminatorSequenceState::None };
+        auto term_was_a_term = false;
+
+        for (++it; it != view.end(); ++it, previous_code_point = code_point, code_point = next_code_point) {
+            next_code_point = *it;
+
+            auto code_point_is_cr = has_any_sbp(code_point, SBP::CR);
+            auto next_code_point_is_lf = has_any_sbp(next_code_point, SBP::LF);
+
+            // SB3
+            if (code_point_is_cr && next_code_point_is_lf)
+                continue;
+
+            auto code_point_is_para_sep = code_point_is_cr || has_any_sbp(code_point, SBP::LF, SBP::Sep);
+
+            // SB4
+            if (code_point_is_para_sep) {
+                boundaries.append(view.code_unit_offset_of(it));
+                continue;
+            }
+
+            // SB5
+            if (has_any_sbp(next_code_point, SBP::Format, SBP::Extend))
+                continue;
+
+            auto code_point_is_a_term = has_any_sbp(code_point, SBP::ATerm);
+
+            // SB6
+            if (code_point_is_a_term && has_any_sbp(next_code_point, SBP::Numeric))
+                continue;
+            // SB7
+            if (code_point_is_a_term && previous_code_point.has_value() && has_any_sbp(*previous_code_point, SBP::Upper, SBP::Lower) && has_any_sbp(next_code_point, SBP::Upper))
+                continue;
+
+            if (code_point_is_a_term || has_any_sbp(code_point, SBP::STerm)) {
+                terminator_sequence_state = TerminatorSequenceState::Term;
+                term_was_a_term = code_point_is_a_term;
+            } else if (terminator_sequence_state >= TerminatorSequenceState::Term && terminator_sequence_state <= TerminatorSequenceState::Close && has_any_sbp(code_point, SBP::Close)) {
+                terminator_sequence_state = TerminatorSequenceState::Close;
+            } else if (terminator_sequence_state >= TerminatorSequenceState::Term && has_any_sbp(code_point, SBP::Sp)) {
+                terminator_sequence_state = TerminatorSequenceState::Sp;
+            } else {
+                terminator_sequence_state = TerminatorSequenceState::None;
+            }
+
+            // SB8
+            if (terminator_sequence_state >= TerminatorSequenceState::Term && term_was_a_term) {
+                auto it_copy = it;
+                bool illegal_sequence = false;
+                for (auto sequence_code_point = *it_copy; it_copy != view.end(); ++it_copy) {
+                    if (has_any_sbp(sequence_code_point, SBP::Close, SBP::SContinue, SBP::Numeric, SBP::Sp, SBP::Format, SBP::Extend))
+                        continue;
+                    illegal_sequence = has_any_sbp(sequence_code_point, SBP::Lower);
+                }
+                if (illegal_sequence)
+                    continue;
+            }
+
+            // SB8a
+            if (terminator_sequence_state >= TerminatorSequenceState::Term && (has_any_sbp(next_code_point, SBP::SContinue, SBP::STerm, SBP::ATerm)))
+                continue;
+
+            auto next_code_point_is_sp = has_any_sbp(next_code_point, SBP::Sp);
+            auto next_code_point_is_para_sep = has_any_sbp(next_code_point, SBP::Sep, SBP::CR, SBP::LF);
+
+            // SB9
+            if (terminator_sequence_state >= TerminatorSequenceState::Term && terminator_sequence_state <= TerminatorSequenceState::Close && (next_code_point_is_sp || next_code_point_is_para_sep || has_any_sbp(next_code_point, SBP::Close)))
+                continue;
+
+            // SB10
+            if (terminator_sequence_state >= TerminatorSequenceState::Term && (next_code_point_is_sp || next_code_point_is_para_sep))
+                continue;
+
+            // SB11
+            if (terminator_sequence_state >= TerminatorSequenceState::Term)
+                boundaries.append(view.code_unit_offset_of(it));
+
+            // SB998
+        }
+    }
+
+    // SB2
+    boundaries.append(view.length_in_code_units());
+    return boundaries;
+#else
+    return {};
+#endif
+}
+
 }
