@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# Note: This is done before `set -e` to let `command` fail if needed
+FUSE2FS_PATH=$(command -v fuse2fs)
+
+if [ -z "$FUSE2FS_PATH" ]; then
+    FUSE2FS_PATH=/usr/sbin/fuse2fs
+fi
+
 set -e
 
 die() {
@@ -10,7 +17,7 @@ die() {
 USE_FUSE2FS=0
 
 if [ "$(id -u)" != 0 ]; then
-    if [ -x /usr/sbin/fuse2fs ] && /usr/sbin/fuse2fs --help 2>&1 |grep fakeroot > /dev/null; then
+    if [ -x "$FUSE2FS_PATH" ] && $FUSE2FS_PATH --help 2>&1 |grep fakeroot > /dev/null; then
         USE_FUSE2FS=1
     else
         sudo -E -- "$0" "$@" || die "this script needs to run as root"
@@ -123,7 +130,7 @@ printf "mounting filesystem... "
 mkdir -p mnt
 use_genext2fs=0
 if [ $USE_FUSE2FS -eq 1 ]; then
-    mount_cmd="/usr/sbin/fuse2fs _disk_image mnt/ -o fakeroot,rw"
+    mount_cmd="$FUSE2FS_PATH _disk_image mnt/ -o fakeroot,rw"
 elif [ "$(uname -s)" = "Darwin" ]; then
     mount_cmd="fuse-ext2 _disk_image mnt -o rw+,allow_other,uid=501,gid=20"
 elif [ "$(uname -s)" = "OpenBSD" ]; then
