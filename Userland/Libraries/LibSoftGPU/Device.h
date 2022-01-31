@@ -143,8 +143,7 @@ public:
 
 private:
     void draw_statistics_overlay(Gfx::Bitmap&);
-    Gfx::IntRect raster_rect_in_target_coordinates(Gfx::IntSize size);
-    Gfx::IntRect window_coordinates_to_target_coordinates(Gfx::IntRect const&);
+    Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size);
 
     void rasterize_triangle(const Triangle& triangle);
     void setup_blend_factors();

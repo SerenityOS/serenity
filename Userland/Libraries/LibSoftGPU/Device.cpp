@@ -94,16 +94,6 @@ static Vector4<f32x4> to_vec4(u32x4 bgra)
     };
 }
 
-Gfx::IntRect Device::window_coordinates_to_target_coordinates(Gfx::IntRect const& window_rect)
-{
-    return {
-        window_rect.x(),
-        m_frame_buffer->rect().height() - window_rect.height() - window_rect.y(),
-        window_rect.width(),
-        window_rect.height(),
-    };
-}
-
 void Device::setup_blend_factors()
 {
     m_alpha_blend_factors = {};
@@ -215,7 +205,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
 
     auto render_bounds = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
-        render_bounds.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
+        render_bounds.intersect(m_options.scissor_box);
 
     // Obey top-left rule:
     // This sets up "zero" for later pixel coverage tests.
@@ -759,7 +749,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     }
 
     // Now let's transform each triangle and send that to the GPU
-    auto const viewport = window_coordinates_to_target_coordinates(m_options.viewport);
+    auto const viewport = m_options.viewport;
     auto const viewport_half_width = viewport.width() / 2.0f;
     auto const viewport_half_height = viewport.height() / 2.0f;
     auto const viewport_center_x = viewport.x() + viewport_half_width;
@@ -939,10 +929,10 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                 one_over_w,
             };
 
-            // To window coordinates - note that we flip the Y coordinate into target space
+            // To window coordinates
             vec.window_coordinates = {
                 viewport_center_x + ndc_coordinates.x() * viewport_half_width,
-                viewport_center_y - ndc_coordinates.y() * viewport_half_height,
+                viewport_center_y + ndc_coordinates.y() * viewport_half_height,
                 depth_halfway + ndc_coordinates.z() * depth_half_range,
                 ndc_coordinates.w(),
             };
@@ -979,7 +969,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
             continue;
 
         if (m_options.enable_culling) {
-            bool is_front = (m_options.front_face == WindingOrder::CounterClockwise ? area < 0 : area > 0);
+            bool is_front = (m_options.front_face == WindingOrder::CounterClockwise ? area > 0 : area < 0);
 
             if (!is_front && m_options.cull_back)
                 continue;
@@ -1123,18 +1113,18 @@ void Device::clear_color(FloatVector4 const& color)
 {
     auto const fill_color = to_bgra32(color);
 
-    auto fill_rect = m_frame_buffer->rect();
+    auto clear_rect = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
-        fill_rect.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
+        clear_rect.intersect(m_options.scissor_box);
 
-    m_frame_buffer->color_buffer()->fill(fill_color, fill_rect);
+    m_frame_buffer->color_buffer()->fill(fill_color, clear_rect);
 }
 
 void Device::clear_depth(DepthType depth)
 {
     auto clear_rect = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
-        clear_rect.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
+        clear_rect.intersect(m_options.scissor_box);
 
     m_frame_buffer->depth_buffer()->fill(depth, clear_rect);
 }
@@ -1143,7 +1133,7 @@ void Device::clear_stencil(StencilType value)
 {
     auto clear_rect = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
-        clear_rect.intersect(window_coordinates_to_target_coordinates(m_options.scissor_box));
+        clear_rect.intersect(m_options.scissor_box);
 
     m_frame_buffer->stencil_buffer()->fill(value, clear_rect);
 }
@@ -1156,7 +1146,7 @@ void Device::blit_to_color_buffer_at_raster_position(Gfx::Bitmap const& source)
     INCREASE_STATISTICS_COUNTER(g_num_pixels, source.width() * source.height());
     INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, source.width() * source.height());
 
-    auto const blit_rect = raster_rect_in_target_coordinates(source.size());
+    auto const blit_rect = get_rasterization_rect_of_size({ source.width(), source.height() });
     m_frame_buffer->color_buffer()->blit_from_bitmap(source, blit_rect);
 }
 
@@ -1165,14 +1155,14 @@ void Device::blit_to_depth_buffer_at_raster_position(Vector<DepthType> const& de
     if (!m_raster_position.valid)
         return;
 
-    auto const raster_rect = raster_rect_in_target_coordinates({ width, height });
+    auto const raster_rect = get_rasterization_rect_of_size({ width, height });
     auto const y1 = raster_rect.y();
     auto const y2 = y1 + height;
     auto const x1 = raster_rect.x();
     auto const x2 = x1 + width;
 
     auto index = 0;
-    for (auto y = y2 - 1; y >= y1; --y) {
+    for (auto y = y1; y < y2; ++y) {
         auto depth_line = m_frame_buffer->depth_buffer()->scanline(y);
         for (auto x = x1; x < x2; ++x)
             depth_line[x] = depth_values[index++];
@@ -1181,7 +1171,7 @@ void Device::blit_to_depth_buffer_at_raster_position(Vector<DepthType> const& de
 
 void Device::blit_color_buffer_to(Gfx::Bitmap& target)
 {
-    m_frame_buffer->color_buffer()->blit_to_bitmap(target, m_frame_buffer->rect());
+    m_frame_buffer->color_buffer()->blit_flipped_to_bitmap(target, m_frame_buffer->rect());
 
     if constexpr (ENABLE_STATISTICS_OVERLAY)
         draw_statistics_overlay(target);
@@ -1343,15 +1333,14 @@ void Device::set_raster_position(FloatVector4 const& position, FloatMatrix4x4 co
     m_raster_position.eye_coordinate_distance = eye_coordinates.length();
 }
 
-Gfx::IntRect Device::raster_rect_in_target_coordinates(Gfx::IntSize size)
+Gfx::IntRect Device::get_rasterization_rect_of_size(Gfx::IntSize size)
 {
-    auto const raster_rect = Gfx::IntRect {
+    return {
         static_cast<int>(m_raster_position.window_coordinates.x()),
         static_cast<int>(m_raster_position.window_coordinates.y()),
         size.width(),
         size.height(),
     };
-    return window_coordinates_to_target_coordinates(raster_rect);
 }
 
 }
