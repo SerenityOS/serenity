@@ -16,6 +16,7 @@
 #include "Tab.h"
 #include <Applications/Browser/BrowserWindowGML.h>
 #include <LibConfig/Client.h>
+#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/Stream.h>
 #include <LibGUI/AboutDialog.h>
@@ -273,6 +274,13 @@ void BrowserWindow::build_menus()
         add_color_scheme_action("Light", Web::CSS::PreferredColorScheme::Light);
         add_color_scheme_action("Dark", Web::CSS::PreferredColorScheme::Dark);
     }
+
+    settings_menu.add_separator();
+    auto open_settings_action = GUI::Action::create("&Settings...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
+        [](auto&) {
+            Core::Process::spawn("/bin/BrowserSettings");
+        });
+    settings_menu.add_action(move(open_settings_action));
 
     auto& debug_menu = add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
@@ -544,7 +552,7 @@ void BrowserWindow::config_string_did_change(String const& domain, String const&
     else if (key == "Home")
         Browser::g_home_url = value;
 
-    // TODO: ColorScheme    
+    // TODO: ColorScheme
 }
 
 void BrowserWindow::config_bool_did_change(String const& domain, String const& group, String const& key, bool value)
