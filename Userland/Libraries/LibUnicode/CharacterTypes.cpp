@@ -8,6 +8,7 @@
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
+#include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Locale.h>
@@ -356,5 +357,97 @@ bool __attribute__((weak)) code_point_has_script_extension(u32, Script) { return
 bool __attribute__((weak)) code_point_has_grapheme_break_property(u32, GraphemeBreakProperty) { return {}; }
 bool __attribute__((weak)) code_point_has_word_break_property(u32, WordBreakProperty) { return {}; }
 bool __attribute__((weak)) code_point_has_sentence_break_property(u32, SentenceBreakProperty) { return {}; }
+
+Vector<size_t> find_grapheme_segmentation_boundaries([[maybe_unused]] Utf16View const& view)
+{
+#if ENABLE_UNICODE_DATA
+    using GBP = GraphemeBreakProperty;
+    Vector<size_t> boundaries;
+
+    // https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
+    if (view.length_in_code_points() == 0)
+        return boundaries;
+
+    auto has_any_gbp = [](u32 code_point, auto&&... properties) {
+        return (code_point_has_grapheme_break_property(code_point, properties) || ...);
+    };
+
+    // GB1
+    boundaries.append(0);
+
+    if (view.length_in_code_points() > 1) {
+        auto it = view.begin();
+        auto code_point = *it;
+        u32 next_code_point;
+        auto current_ri_chain = 0;
+        auto in_emoji_sequence = false;
+
+        for (++it; it != view.end(); ++it, code_point = next_code_point) {
+            next_code_point = *it;
+
+            auto code_point_is_cr = has_any_gbp(code_point, GBP::CR);
+            auto next_code_point_is_lf = has_any_gbp(next_code_point, GBP::LF);
+
+            // GB3
+            if (code_point_is_cr && next_code_point_is_lf)
+                continue;
+            // GB4, GB5
+            if (code_point_is_cr || next_code_point_is_lf || has_any_gbp(next_code_point, GBP::CR, GBP::Control) || has_any_gbp(code_point, GBP::LF, GBP::Control)) {
+                boundaries.append(view.code_unit_offset_of(it));
+                continue;
+            }
+
+            auto next_code_point_is_v = has_any_gbp(next_code_point, GBP::V);
+            auto next_code_point_is_t = has_any_gbp(next_code_point, GBP::T);
+
+            // GB6
+            if (has_any_gbp(code_point, GBP::L) && (next_code_point_is_v || has_any_gbp(next_code_point, GBP::L, GBP::LV, GBP::LVT)))
+                continue;
+            // GB7
+            if ((next_code_point_is_v || next_code_point_is_t) && has_any_gbp(code_point, GBP::LV, GBP::V))
+                continue;
+            // GB8
+            if (next_code_point_is_t && has_any_gbp(code_point, GBP::LVT, GBP::T))
+                continue;
+
+            auto code_point_is_zwj = has_any_gbp(code_point, GBP::ZWJ);
+            if (!in_emoji_sequence && code_point_has_property(code_point, Property::Extended_Pictographic))
+                in_emoji_sequence = true;
+            else if (in_emoji_sequence && !has_any_gbp(code_point, GBP::Extend) && !code_point_is_zwj)
+                in_emoji_sequence = false;
+
+            // GB9
+            if (has_any_gbp(next_code_point, GBP::Extend, GBP::ZWJ))
+                continue;
+            // GB9a
+            if (has_any_gbp(next_code_point, GBP::SpacingMark))
+                continue;
+            // GB9b
+            if (has_any_gbp(code_point, GBP::Prepend))
+                continue;
+
+            // GB11
+            if (in_emoji_sequence && code_point_is_zwj && code_point_has_property(next_code_point, Property::Extended_Pictographic))
+                continue;
+
+            auto code_point_is_ri = has_any_gbp(code_point, GBP::Regional_Indicator);
+            current_ri_chain = code_point_is_ri ? current_ri_chain + 1 : 0;
+
+            // GB12, GB13
+            if (code_point_is_ri && has_any_gbp(next_code_point, GBP::Regional_Indicator) && current_ri_chain % 2 == 1)
+                continue;
+
+            // GB999
+            boundaries.append(view.code_unit_offset_of(it));
+        }
+    }
+
+    // GB2
+    boundaries.append(view.length_in_code_units());
+    return boundaries;
+#else
+    return {};
+#endif
+}
 
 }
