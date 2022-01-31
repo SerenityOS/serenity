@@ -29,6 +29,40 @@ describe("correct behavior", () => {
     test("constructor with objects", () => {
         expect(BigInt([])).toBe(0n);
     });
+
+    test("base-2 strings", () => {
+        expect(BigInt("0b0")).toBe(0n);
+        expect(BigInt("0B0")).toBe(0n);
+        expect(BigInt("0b1")).toBe(1n);
+        expect(BigInt("0B1")).toBe(1n);
+        expect(BigInt("0b10")).toBe(2n);
+        expect(BigInt("0B10")).toBe(2n);
+        expect(BigInt(`0b${"1".repeat(100)}`)).toBe(1267650600228229401496703205375n);
+    });
+
+    test("base-8 strings", () => {
+        expect(BigInt("0o0")).toBe(0n);
+        expect(BigInt("0O0")).toBe(0n);
+        expect(BigInt("0o1")).toBe(1n);
+        expect(BigInt("0O1")).toBe(1n);
+        expect(BigInt("0o7")).toBe(7n);
+        expect(BigInt("0O7")).toBe(7n);
+        expect(BigInt("0o10")).toBe(8n);
+        expect(BigInt("0O10")).toBe(8n);
+        expect(BigInt(`0o1${"7".repeat(33)}`)).toBe(1267650600228229401496703205375n);
+    });
+
+    test("base-16 strings", () => {
+        expect(BigInt("0x0")).toBe(0n);
+        expect(BigInt("0X0")).toBe(0n);
+        expect(BigInt("0x1")).toBe(1n);
+        expect(BigInt("0X1")).toBe(1n);
+        expect(BigInt("0xf")).toBe(15n);
+        expect(BigInt("0Xf")).toBe(15n);
+        expect(BigInt("0x10")).toBe(16n);
+        expect(BigInt("0X10")).toBe(16n);
+        expect(BigInt(`0x${"f".repeat(25)}`)).toBe(1267650600228229401496703205375n);
+    });
 });
 
 describe("errors", () => {
@@ -63,6 +97,32 @@ describe("errors", () => {
             expect(() => {
                 BigInt(value);
             }).toThrowWithMessage(RangeError, "Cannot convert non-integral number to BigInt");
+        });
+    });
+
+    test("invalid string for base", () => {
+        ["0b", "0b2", "0B02", "-0b1", "-0B1"].forEach(value => {
+            expect(() => {
+                BigInt(value);
+            }).toThrowWithMessage(SyntaxError, `Invalid value for BigInt: ${value}`);
+        });
+
+        ["0o", "0o8", "0O08", "-0o1", "-0O1"].forEach(value => {
+            expect(() => {
+                BigInt(value);
+            }).toThrowWithMessage(SyntaxError, `Invalid value for BigInt: ${value}`);
+        });
+
+        ["0x", "0xg", "0X0g", "-0x1", "-0X1"].forEach(value => {
+            expect(() => {
+                BigInt(value);
+            }).toThrowWithMessage(SyntaxError, `Invalid value for BigInt: ${value}`);
+        });
+
+        ["a", "-1a"].forEach(value => {
+            expect(() => {
+                BigInt(value);
+            }).toThrowWithMessage(SyntaxError, `Invalid value for BigInt: ${value}`);
         });
     });
 });

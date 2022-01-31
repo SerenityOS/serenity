@@ -6,6 +6,7 @@
  */
 
 #include <AK/AllOf.h>
+#include <AK/CharacterTypes.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -528,16 +529,91 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(GlobalObject& global_object) const
     case Type::Double:
         return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "number", "BigInt");
     case Type::String: {
-        auto& string = primitive.as_string().string();
-        if (!is_valid_bigint_value(string))
-            return vm.throw_completion<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, string);
-        return js_bigint(vm, Crypto::SignedBigInteger::from_base(10, string.trim_whitespace()));
+        // 1. Let n be ! StringToBigInt(prim).
+        auto bigint = primitive.string_to_bigint(global_object);
+
+        // 2. If n is undefined, throw a SyntaxError exception.
+        if (!bigint.has_value())
+            return vm.throw_completion<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, primitive);
+
+        // 3. Return n.
+        return bigint.release_value();
     }
     case Type::Symbol:
         return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+struct BigIntParseResult {
+    StringView literal;
+    u8 base { 10 };
+    bool is_negative { false };
+};
+
+static Optional<BigIntParseResult> parse_bigint_text(StringView text)
+{
+    BigIntParseResult result {};
+
+    auto parse_for_prefixed_base = [&](auto lower_prefix, auto upper_prefix, auto validator) {
+        if (text.length() <= 2)
+            return false;
+        if (!text.starts_with(lower_prefix) && !text.starts_with(upper_prefix))
+            return false;
+        return all_of(text.substring_view(2), validator);
+    };
+
+    if (parse_for_prefixed_base("0b"sv, "0B"sv, is_ascii_binary_digit)) {
+        result.literal = text.substring_view(2);
+        result.base = 2;
+    } else if (parse_for_prefixed_base("0o"sv, "0O"sv, is_ascii_octal_digit)) {
+        result.literal = text.substring_view(2);
+        result.base = 8;
+    } else if (parse_for_prefixed_base("0x"sv, "0X"sv, is_ascii_hex_digit)) {
+        result.literal = text.substring_view(2);
+        result.base = 16;
+    } else {
+        if (text.starts_with('-')) {
+            text = text.substring_view(1);
+            result.is_negative = true;
+        } else if (text.starts_with('+')) {
+            text = text.substring_view(1);
+        }
+
+        if (!all_of(text, is_ascii_digit))
+            return {};
+
+        result.literal = text;
+        result.base = 10;
+    }
+
+    return result;
+}
+
+// 7.1.14 StringToBigInt ( str ), https://tc39.es/ecma262/#sec-stringtobigint
+Optional<BigInt*> Value::string_to_bigint(GlobalObject& global_object) const
+{
+    VERIFY(is_string());
+
+    // 1. Let text be ! StringToCodePoints(str).
+    auto text = as_string().string().view().trim_whitespace();
+
+    // 2. Let literal be ParseText(text, StringIntegerLiteral).
+    auto result = parse_bigint_text(text);
+
+    // 3. If literal is a List of errors, return undefined.
+    if (!result.has_value())
+        return {};
+
+    // 4. Let mv be the MV of literal.
+    // 5. Assert: mv is an integer.
+    auto bigint = Crypto::SignedBigInteger::from_base(result->base, result->literal);
+    if (result->is_negative && (bigint != BIGINT_ZERO))
+        bigint.negate();
+
+    // 6. Return ℤ(mv).
+    return js_bigint(global_object.vm(), move(bigint));
 }
 
 // 7.1.15 ToBigInt64 ( argument ), https://tc39.es/ecma262/#sec-tobigint64
