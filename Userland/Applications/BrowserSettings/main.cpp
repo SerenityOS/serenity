@@ -5,6 +5,7 @@
  */
 
 #include "BrowserSettingsWidget.h"
+#include "ContentFilterSettingsWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
@@ -14,12 +15,13 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
+    TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd unix"));
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("Browser");
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/home", "r"));
+    TRY(Core::System::unveil("/home/anon/.config/BrowserContentFilters.txt", "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
@@ -27,6 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::SettingsWindow::create("Browser Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->set_icon(app_icon.bitmap_for_size(16));
     (void)TRY(window->add_tab<BrowserSettingsWidget>("Browser"));
+    (void)TRY(window->add_tab<ContentFilterSettingsWidget>("Content Filtering"));
 
     window->show();
     return app->exec();
