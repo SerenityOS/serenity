@@ -526,4 +526,30 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         m_tab_widget->set_active_widget(&new_tab);
 }
 
+void BrowserWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+{
+    if (domain != "Browser" || group != "Preferences")
+        return;
+
+    if (key == "SearchEngine")
+        Browser::g_search_engine = value;
+    else if (key == "Home")
+        Browser::g_home_url = value;
+
+    // TODO: ColorScheme    
+}
+
+void BrowserWindow::config_bool_did_change(String const& domain, String const& group, String const& key, bool value)
+{
+    if (domain != "Browser" || group != "Preferences")
+        return;
+
+    if (key == "ShowBookmarksBar") {
+        m_window_actions.show_bookmarks_bar_action().set_checked(value);
+        Browser::BookmarksBarWidget::the().set_visible(value);
+    }
+
+    // NOTE: CloseDownloadWidgetOnFinish is read each time in DownloadWindow
+}
+
 }
