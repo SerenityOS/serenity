@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
  *
  * SPDX-License-Identifier: BSD-2-Clause
