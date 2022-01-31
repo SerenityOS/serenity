@@ -57,6 +57,8 @@ public:
         // Note: Its functionality (disabling a Range object) was removed, but the method itself is preserved for compatibility.
     }
 
+    bool intersects_node(Node const&) const;
+
 private:
     explicit Range(Document&);
 
