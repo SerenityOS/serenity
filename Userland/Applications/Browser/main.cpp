@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(load_content_filters());
 
-    URL first_url = Browser::g_home_url;
+    URL first_url = Browser::url_from_user_input(Browser::g_home_url);
     if (specified_url) {
         if (Core::File::exists(specified_url)) {
             first_url = URL::create_with_file_protocol(Core::File::real_path_for(specified_url));
