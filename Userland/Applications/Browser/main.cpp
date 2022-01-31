@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/IterationDecision.h"
+#include "LibCore/FileWatcher.h"
 #include <AK/StringBuilder.h>
 #include <Applications/Browser/Browser.h>
 #include <Applications/Browser/BrowserWindow.h>
@@ -101,6 +103,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::CookieJar cookie_jar;
     auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
+
+    auto content_filters_watcher = TRY(Core::FileWatcher::create());
+    content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {
+        dbgln("Reloading content filters because config file changed");
+        auto error = load_content_filters();
+        if (error.is_error()) {
+            dbgln("Reloading content filters failed: {}", error.release_error());
+            return;
+        }
+        window->tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
+            tab.content_filters_changed();
+            return IterationDecision::Continue;
+        });
+    };
+    TRY(content_filters_watcher->add_watch(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
 
     app->on_action_enter = [&](GUI::Action& action) {
         if (auto* browser_window = dynamic_cast<Browser::BrowserWindow*>(app->active_window())) {
