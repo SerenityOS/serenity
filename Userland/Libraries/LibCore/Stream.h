@@ -106,6 +106,11 @@ public:
     // an exec call happens.
     virtual ErrorOr<void> set_close_on_exec(bool enabled) = 0;
 
+    /// Disables any listening mechanisms that this socket uses.
+    /// Can be called with 'false' when `on_ready_to_read` notifications are no longer needed.
+    /// Conversely, set_notifications_enabled(true) will re-enable notifications.
+    virtual void set_notifications_enabled(bool) { }
+
     Function<void()> on_ready_to_read;
 
 protected:
@@ -284,6 +289,11 @@ public:
     virtual void close() override { m_helper.close(); };
     virtual ErrorOr<size_t> pending_bytes() const override { return m_helper.pending_bytes(); }
     virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.can_read_without_blocking(timeout); }
+    virtual void set_notifications_enabled(bool enabled) override
+    {
+        if (auto notifier = m_helper.notifier())
+            notifier->set_enabled(enabled);
+    }
     ErrorOr<void> set_blocking(bool enabled) override { return m_helper.set_blocking(enabled); }
     ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.set_close_on_exec(enabled); }
 
@@ -354,6 +364,11 @@ public:
     virtual void close() override { m_helper.close(); }
     virtual ErrorOr<size_t> pending_bytes() const override { return m_helper.pending_bytes(); }
     virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.can_read_without_blocking(timeout); }
+    virtual void set_notifications_enabled(bool enabled) override
+    {
+        if (auto notifier = m_helper.notifier())
+            notifier->set_enabled(enabled);
+    }
     ErrorOr<void> set_blocking(bool enabled) override { return m_helper.set_blocking(enabled); }
     ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.set_close_on_exec(enabled); }
 
@@ -410,6 +425,11 @@ public:
     virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.can_read_without_blocking(timeout); }
     virtual ErrorOr<void> set_blocking(bool enabled) override { return m_helper.set_blocking(enabled); }
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.set_close_on_exec(enabled); }
+    virtual void set_notifications_enabled(bool enabled) override
+    {
+        if (auto notifier = m_helper.notifier())
+            notifier->set_enabled(enabled);
+    }
 
     ErrorOr<int> receive_fd(int flags);
     ErrorOr<void> send_fd(int fd);
@@ -781,6 +801,7 @@ public:
     virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.stream().can_read_without_blocking(timeout); }
     virtual ErrorOr<void> set_blocking(bool enabled) override { return m_helper.stream().set_blocking(enabled); }
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.stream().set_close_on_exec(enabled); }
+    virtual void set_notifications_enabled(bool enabled) override { m_helper.stream().set_notifications_enabled(enabled); }
 
     virtual ErrorOr<size_t> read_line(Bytes buffer) override { return m_helper.read_line(move(buffer)); }
     virtual ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
