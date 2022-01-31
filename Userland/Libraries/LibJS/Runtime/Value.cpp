@@ -48,14 +48,6 @@ static inline bool same_type_for_equality(const Value& lhs, const Value& rhs)
 
 static const Crypto::SignedBigInteger BIGINT_ZERO { 0 };
 
-static bool is_valid_bigint_value(StringView string)
-{
-    string = string.trim_whitespace();
-    if (string.length() > 1 && (string[0] == '-' || string[0] == '+'))
-        string = string.substring_view(1, string.length() - 1);
-    return all_of(string, [](auto ch) { return isdigit(ch); });
-}
-
 ALWAYS_INLINE bool both_number(const Value& lhs, const Value& rhs)
 {
     return lhs.is_number() && rhs.is_number();
@@ -1513,23 +1505,23 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, bool left_
     }
 
     if (x_primitive.is_bigint() && y_primitive.is_string()) {
-        auto& y_string = y_primitive.as_string().string();
-        if (!is_valid_bigint_value(y_string))
+        auto y_bigint = y_primitive.string_to_bigint(global_object);
+        if (!y_bigint.has_value())
             return TriState::Unknown;
-        if (x_primitive.as_bigint().big_integer() < Crypto::SignedBigInteger::from_base(10, y_string))
+
+        if (x_primitive.as_bigint().big_integer() < (*y_bigint)->big_integer())
             return TriState::True;
-        else
-            return TriState::False;
+        return TriState::False;
     }
 
     if (x_primitive.is_string() && y_primitive.is_bigint()) {
-        auto& x_string = x_primitive.as_string().string();
-        if (!is_valid_bigint_value(x_string))
+        auto x_bigint = x_primitive.string_to_bigint(global_object);
+        if (!x_bigint.has_value())
             return TriState::Unknown;
-        if (Crypto::SignedBigInteger::from_base(10, x_string) < y_primitive.as_bigint().big_integer())
+
+        if ((*x_bigint)->big_integer() < y_primitive.as_bigint().big_integer())
             return TriState::True;
-        else
-            return TriState::False;
+        return TriState::False;
     }
 
     auto x_numeric = TRY(x_primitive.to_numeric(global_object));
