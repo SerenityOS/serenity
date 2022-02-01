@@ -30,6 +30,7 @@ namespace Browser {
 String g_search_engine;
 String g_home_url;
 Vector<String> g_content_filters;
+bool g_content_filters_enabled { true };
 IconBag g_icon_bag;
 
 }
@@ -88,6 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::g_home_url = Config::read_string("Browser", "Preferences", "Home", "file:///res/html/misc/welcome.html");
     Browser::g_search_engine = Config::read_string("Browser", "Preferences", "SearchEngine", {});
+    Browser::g_content_filters_enabled = Config::read_bool("Browser", "Preferences", "EnableContentFilters");
 
     Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
 
@@ -113,10 +115,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             dbgln("Reloading content filters failed: {}", error.release_error());
             return;
         }
-        window->tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
-            tab.content_filters_changed();
-            return IterationDecision::Continue;
-        });
+        window->content_filters_changed();
     };
     TRY(content_filters_watcher->add_watch(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
 
