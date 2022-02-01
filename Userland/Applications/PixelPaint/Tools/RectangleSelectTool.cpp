@@ -115,6 +115,13 @@ void RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
         m_moving_mode = MovingMode::MovingOrigin;
     else if (key_event.key() == KeyCode::Key_Control)
         m_moving_mode = MovingMode::AroundCenter;
+
+    if (key_event.key() == KeyCode::Key_Escape) {
+        if (m_selecting)
+            m_selecting = false;
+        else
+            m_editor->selection().clear();
+    }
 }
 
 void RectangleSelectTool::on_keyup(GUI::KeyEvent& key_event)
