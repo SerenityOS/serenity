@@ -1,6 +1,6 @@
 ## Name
 
-wc
+wc - word, line, character, and byte count
 
 ## Synopsis
 

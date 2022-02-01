@@ -1,6 +1,6 @@
 ## Name
 
-WebServer
+WebServer - Serenity web server
 
 ## Synopsis
 

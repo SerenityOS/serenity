@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-eyes.png) Eyes
+![Icon](/res/icons/16x16/app-eyes.png) Eyes - follow the mouse LibGUI demo
 
 [Open](file:///bin/Eyes)
 

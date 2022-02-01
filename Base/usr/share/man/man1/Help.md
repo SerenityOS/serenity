@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-help.png) Help
+![Icon](/res/icons/16x16/app-help.png) Help - digital manual
 
 [Open](file:///bin/Help)
 
