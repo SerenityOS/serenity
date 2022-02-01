@@ -49,7 +49,7 @@ int MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path
         box->set_icon(parent_window->icon());
 
     box->m_yes_button->set_text(path.is_empty() ? "Save As..." : "Save");
-    box->m_no_button->set_text("Close");
+    box->m_no_button->set_text("Discard");
     box->m_cancel_button->set_text("Cancel");
 
     return box->exec();
