@@ -2,6 +2,8 @@
 
 ![Icon](/res/icons/16x16/app-snake.png) Snake
 
+[Open](file:///bin/Snake)
+
 ## Synopsis
 
 ```**sh
