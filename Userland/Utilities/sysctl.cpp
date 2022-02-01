@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Alex Major
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibMain/Main.h>
 
 static bool s_set_variable = false;
 
@@ -92,7 +94,7 @@ static int handle_show_all()
     return success ? 0 : 1;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool show_all = false;
     Vector<StringView> variables;
@@ -102,10 +104,10 @@ int main(int argc, char** argv)
     args_parser.add_option(show_all, "Show all variables", "all", 'a');
     args_parser.add_option(s_set_variable, "Set variables", "write", 'w');
     args_parser.add_positional_argument(variables, "variable[=value]", "variables", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!show_all && variables.is_empty()) {
-        args_parser.print_usage(stdout, argv[0]);
+        args_parser.print_usage(stdout, arguments.argv[0]);
         return 1;
     }
 
