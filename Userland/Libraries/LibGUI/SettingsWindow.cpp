@@ -39,6 +39,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
 
     if (show_defaults_button == ShowDefaultsButton::Yes) {
         window->m_reset_button = TRY(button_container->try_add<GUI::Button>("Defaults"));
+        window->m_reset_button->set_fixed_width(75);
         window->m_reset_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
             for (auto& tab : window->m_tabs) {
                 tab.reset_default_values();
