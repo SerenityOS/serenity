@@ -160,10 +160,6 @@ void CalculatorWidget::update_display()
 
 void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
 {
-    //Clear button selection when we are typing
-    m_equals_button->set_focus(true);
-    m_equals_button->set_focus(false);
-
     if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Equal) {
         m_keypad.set_value(m_calculator.finish_operation(m_keypad.value()));
         mimic_pressed_button(m_equals_button);
