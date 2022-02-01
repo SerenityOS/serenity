@@ -135,6 +135,7 @@ public:
     virtual String variant() const = 0;
 
     virtual String qualified_name() const = 0;
+    virtual String human_readable_name() const = 0;
 
     Font const& bold_variant() const;
 
