@@ -68,7 +68,7 @@ void LayerListWidget::resize_event(GUI::ResizeEvent& event)
     relayout_gadgets();
 }
 
-void LayerListWidget::get_gadget_rects(Gadget const& gadget, Gfx::IntRect& outer_rect, Gfx::IntRect& thumbnail_rect, Gfx::IntRect& text_rect)
+void LayerListWidget::get_gadget_rects(Gadget const& gadget, Gfx::IntRect& outer_rect, Gfx::IntRect& outer_thumbnail_rect, Gfx::IntRect& inner_thumbnail_rect, Gfx::IntRect& text_rect)
 {
     outer_rect = gadget.rect;
     outer_rect.translate_by(0, -vertical_scrollbar().value());
@@ -77,10 +77,26 @@ void LayerListWidget::get_gadget_rects(Gadget const& gadget, Gfx::IntRect& outer
         outer_rect.translate_by(0, gadget.movement_delta.y());
     }
 
-    thumbnail_rect = { outer_rect.x(), outer_rect.y(), outer_rect.height(), outer_rect.height() };
-    thumbnail_rect.shrink(8, 8);
+    auto const& layer = m_image->layer(gadget.layer_index);
 
-    text_rect = { thumbnail_rect.right() + 10, outer_rect.y(), outer_rect.width(), outer_rect.height() };
+    outer_thumbnail_rect = { outer_rect.x(), outer_rect.y(), outer_rect.height(), outer_rect.height() };
+    outer_thumbnail_rect.shrink(8, 8);
+
+    Gfx::IntSize thumbnail_size;
+    if (layer.size().width() > layer.size().height()) {
+        float ratio = static_cast<float>(layer.size().height()) / static_cast<float>(layer.size().width());
+        thumbnail_size.set_width(outer_thumbnail_rect.width());
+        thumbnail_size.set_height(outer_thumbnail_rect.width() * ratio);
+    } else {
+        float ratio = static_cast<float>(layer.size().width()) / static_cast<float>(layer.size().height());
+        thumbnail_size.set_height(outer_thumbnail_rect.height());
+        thumbnail_size.set_width(outer_thumbnail_rect.height() * ratio);
+    }
+
+    inner_thumbnail_rect = { 0, 0, thumbnail_size.width(), thumbnail_size.height() };
+    inner_thumbnail_rect.center_within(outer_thumbnail_rect);
+
+    text_rect = { outer_thumbnail_rect.right() + 10, outer_rect.y(), outer_rect.width(), outer_rect.height() };
     text_rect.intersect(outer_rect);
 }
 
@@ -100,9 +116,10 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         auto& layer = m_image->layer(gadget.layer_index);
 
         Gfx::IntRect adjusted_rect;
-        Gfx::IntRect thumbnail_rect;
+        Gfx::IntRect outer_thumbnail_rect;
+        Gfx::IntRect inner_thumbnail_rect;
         Gfx::IntRect text_rect;
-        get_gadget_rects(gadget, adjusted_rect, thumbnail_rect, text_rect);
+        get_gadget_rects(gadget, adjusted_rect, outer_thumbnail_rect, inner_thumbnail_rect, text_rect);
 
         if (gadget.is_moving) {
             painter.fill_rect(adjusted_rect, palette().selection().lightened(1.5f));
@@ -111,14 +128,14 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         }
 
         painter.draw_rect(adjusted_rect, palette().color(ColorRole::BaseText));
-        painter.draw_scaled_bitmap(thumbnail_rect, layer.bitmap(), layer.bitmap().rect());
+        painter.draw_scaled_bitmap(inner_thumbnail_rect, layer.bitmap(), layer.bitmap().rect());
 
         if (layer.is_visible()) {
             painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());
-            painter.draw_rect(thumbnail_rect, palette().color(ColorRole::BaseText));
+            painter.draw_rect(inner_thumbnail_rect, palette().color(ColorRole::BaseText));
         } else {
             painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, palette().color(ColorRole::DisabledText));
-            painter.draw_rect(thumbnail_rect, palette().color(ColorRole::DisabledText));
+            painter.draw_rect(inner_thumbnail_rect, palette().color(ColorRole::DisabledText));
         }
     };
 
@@ -295,10 +312,11 @@ void LayerListWidget::image_did_modify_layer_properties(size_t layer_index)
 void LayerListWidget::image_did_modify_layer_bitmap(size_t layer_index)
 {
     Gfx::IntRect adjusted_rect;
-    Gfx::IntRect thumbnail_rect;
+    Gfx::IntRect outer_thumbnail_rect;
+    Gfx::IntRect inner_thumbnail_rect;
     Gfx::IntRect text_rect;
-    get_gadget_rects(m_gadgets[to_gadget_index(layer_index)], adjusted_rect, thumbnail_rect, text_rect);
-    update(thumbnail_rect);
+    get_gadget_rects(m_gadgets[to_gadget_index(layer_index)], adjusted_rect, outer_thumbnail_rect, inner_thumbnail_rect, text_rect);
+    update(outer_thumbnail_rect);
 }
 
 void LayerListWidget::image_did_modify_layer_stack()
