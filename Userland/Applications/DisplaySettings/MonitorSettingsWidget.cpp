@@ -21,6 +21,7 @@ namespace DisplaySettings {
 
 MonitorSettingsWidget::MonitorSettingsWidget()
 {
+    m_screen_layout = GUI::WindowServerConnection::the().get_screen_layout();
     create_resolution_list();
     create_frame();
     load_current_settings();
@@ -28,24 +29,38 @@ MonitorSettingsWidget::MonitorSettingsWidget()
 
 void MonitorSettingsWidget::create_resolution_list()
 {
-    // TODO: Find a better way to get the default resolution
-    m_resolutions.append({ 640, 480 });
-    m_resolutions.append({ 800, 600 });
-    m_resolutions.append({ 1024, 768 });
-    m_resolutions.append({ 1280, 720 });
-    m_resolutions.append({ 1280, 768 });
-    m_resolutions.append({ 1280, 960 });
-    m_resolutions.append({ 1280, 1024 });
-    m_resolutions.append({ 1360, 768 });
-    m_resolutions.append({ 1368, 768 });
-    m_resolutions.append({ 1440, 900 });
-    m_resolutions.append({ 1600, 900 });
-    m_resolutions.append({ 1600, 1200 });
-    m_resolutions.append({ 1920, 1080 });
-    m_resolutions.append({ 2048, 1152 });
-    m_resolutions.append({ 2560, 1080 });
-    m_resolutions.append({ 2560, 1440 });
-    m_resolutions.append({ 3440, 1440 });
+    if (auto edid = EDID::Parser::from_framebuffer_device(m_screen_layout.screens[0].device, 0); !edid.is_error()) { // TODO: multihead
+        auto supported_resolutions = edid.value().supported_resolutions();
+        if (!supported_resolutions.is_error()) {
+            for (auto& resolution : supported_resolutions.value()) {
+                m_resolutions.append({ resolution.width, resolution.height });
+            }
+        } else {
+            dbgln("Error getting supported_resolutions from device {}: {}", m_screen_layout.screens[0].device, supported_resolutions.error());
+        }
+    } else {
+        dbgln("Error getting EDID from device {}: {}", m_screen_layout.screens[0].device, edid.error());
+    }
+    if (m_resolutions.size() == 0) {
+        // TODO: Find a better way to get the default resolution
+        m_resolutions.append({ 640, 480 });
+        m_resolutions.append({ 800, 600 });
+        m_resolutions.append({ 1024, 768 });
+        m_resolutions.append({ 1280, 720 });
+        m_resolutions.append({ 1280, 768 });
+        m_resolutions.append({ 1280, 960 });
+        m_resolutions.append({ 1280, 1024 });
+        m_resolutions.append({ 1360, 768 });
+        m_resolutions.append({ 1368, 768 });
+        m_resolutions.append({ 1440, 900 });
+        m_resolutions.append({ 1600, 900 });
+        m_resolutions.append({ 1600, 1200 });
+        m_resolutions.append({ 1920, 1080 });
+        m_resolutions.append({ 2048, 1152 });
+        m_resolutions.append({ 2560, 1080 });
+        m_resolutions.append({ 2560, 1440 });
+        m_resolutions.append({ 3440, 1440 });
+    }
 }
 
 void MonitorSettingsWidget::create_frame()
