@@ -2,6 +2,8 @@
 
 ![Icon](/res/icons/16x16/app-eyes.png) Eyes
 
+[Open](file:///bin/Eyes)
+
 ## Synopsis
 
 ```sh
