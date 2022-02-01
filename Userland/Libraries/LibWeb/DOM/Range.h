@@ -58,6 +58,7 @@ public:
     }
 
     bool intersects_node(Node const&) const;
+    ExceptionOr<bool> is_point_in_range(Node const&, u32 offset) const;
 
 private:
     explicit Range(Document&);
