@@ -526,6 +526,14 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         m_tab_widget->set_active_widget(&new_tab);
 }
 
+void BrowserWindow::content_filters_changed()
+{
+    tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
+        tab.content_filters_changed();
+        return IterationDecision::Continue;
+    });
+}
+
 void BrowserWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
 {
     if (domain != "Browser" || group != "Preferences")
@@ -541,12 +549,16 @@ void BrowserWindow::config_string_did_change(String const& domain, String const&
 
 void BrowserWindow::config_bool_did_change(String const& domain, String const& group, String const& key, bool value)
 {
+    dbgln("{} {} {} {}", domain, group, key, value);
     if (domain != "Browser" || group != "Preferences")
         return;
 
     if (key == "ShowBookmarksBar") {
         m_window_actions.show_bookmarks_bar_action().set_checked(value);
         Browser::BookmarksBarWidget::the().set_visible(value);
+    } else if (key == "EnableContentFilters") {
+        Browser::g_content_filters_enabled = value;
+        content_filters_changed();
     }
 
     // NOTE: CloseDownloadWidgetOnFinish is read each time in DownloadWindow
