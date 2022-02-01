@@ -4,10 +4,9 @@ TelnetServer - Serenity telnet server
 
 ## Synopsis
 
-```**sh
-# TelnetServer [options]
+```sh
+$ TelnetServer [-p port] [-c command]
 ```
-
 ## Description
 
 TelnetServer is a basic telnet server for Serenity. By default, it
@@ -15,11 +14,13 @@ runs on port 23 and provides a shell upon connection.
 
 ## Options
 
-* `-p`: Choose different port for TelnetServer to attach to.
-* `-c`: Choose different program for TelnetServer to run on connection. Arguments can be passed to the program.
+* `--help`: Display help message and exit
+* `--version`: Print version
+* `-p port`: Port to listen on
+* `-c command`: Program to run on connection
 
 ## Examples
 
 ```sh
-# TelnetServer -p 24 -c "/usr/bin/nyancat -f 60"
+$ TelnetServer -p 24 -c "/usr/bin/nyancat -f 60"
 ```
