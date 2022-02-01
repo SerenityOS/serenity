@@ -117,8 +117,8 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, in
         auto fd = TRY(Core::System::open(highdpi_icon_string, O_RDONLY));
 
         auto bitmap = TRY(try_load_from_fd_and_close(fd, highdpi_icon_string));
-        VERIFY(bitmap->width() % scale_factor == 0);
-        VERIFY(bitmap->height() % scale_factor == 0);
+        if (bitmap->width() % scale_factor != 0 || bitmap->height() % scale_factor != 0)
+            return Error::from_string_literal("Bitmap::try_load_from_file: HighDPI image size should be divisible by scale factor");
         bitmap->m_size.set_width(bitmap->width() / scale_factor);
         bitmap->m_size.set_height(bitmap->height() / scale_factor);
         bitmap->m_scale = scale_factor;
