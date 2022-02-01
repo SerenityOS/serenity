@@ -1,6 +1,6 @@
 ## Name
 
-`Shell` - Shell, the command language interpreter
+Shell - command language interpreter
 
 ## Synopsis
 
