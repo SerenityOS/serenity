@@ -2,6 +2,8 @@
 
 ![Icon](/res/icons/16x16/app-help.png) Help
 
+[Open](file:///bin/Help)
+
 ## Synopsis
 
 ```**sh
