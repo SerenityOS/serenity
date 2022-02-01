@@ -793,13 +793,14 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     FontSelector font_selector;
     bool monospace = false;
 
+    // FIXME: Implement font slope style. All found fonts are currently hard-coded as regular.
     auto find_font = [&](String const& family) -> RefPtr<Gfx::Font> {
-        font_selector = { family, size, weight };
+        font_selector = { family, size, weight, 0 };
 
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
-        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight))
+        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight, 0))
             return found_font;
 
         return {};
