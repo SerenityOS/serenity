@@ -146,6 +146,7 @@ public:
     virtual String family() const override { return m_font->family(); }
     virtual String variant() const override { return m_font->variant(); }
     virtual String qualified_name() const override { return String::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope()); }
+    virtual String human_readable_name() const override { return String::formatted("{} {} {}", family(), variant(), presentation_size()); }
 
 private:
     NonnullRefPtr<TTF::Font> m_font;

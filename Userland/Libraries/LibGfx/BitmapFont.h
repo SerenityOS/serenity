@@ -105,6 +105,7 @@ public:
     String variant() const override;
 
     String qualified_name() const override;
+    String human_readable_name() const override { return String::formatted("{} {} {}", family(), variant(), presentation_size()); }
 
 private:
     BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width,

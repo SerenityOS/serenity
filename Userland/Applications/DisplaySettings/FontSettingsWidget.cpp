@@ -51,13 +51,13 @@ FontSettingsWidget::~FontSettingsWidget()
 
 static void update_label_with_font(GUI::Label& label, Gfx::Font const& font)
 {
-    label.set_text(font.qualified_name());
+    label.set_text(font.human_readable_name());
     label.set_font(font);
 }
 
 void FontSettingsWidget::apply_settings()
 {
-    GUI::WindowServerConnection::the().set_system_fonts(m_default_font_label->text(), m_fixed_width_font_label->text());
+    GUI::WindowServerConnection::the().set_system_fonts(m_default_font_label->font().qualified_name(), m_fixed_width_font_label->font().qualified_name());
 }
 
 }
