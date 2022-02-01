@@ -37,7 +37,7 @@ public:
     u16 weight() const override { return m_weight; }
     void set_weight(u16 weight) { m_weight = weight; }
 
-    u8 slope() const { return m_slope; }
+    virtual u8 slope() const override { return m_slope; }
     void set_slope(u8 slope) { m_slope = slope; }
 
     Glyph glyph(u32 code_point) const override;

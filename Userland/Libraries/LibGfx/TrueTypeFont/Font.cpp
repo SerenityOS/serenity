@@ -474,6 +474,24 @@ u16 Font::weight() const
     return 400;
 }
 
+u8 Font::slope() const
+{
+    // https://docs.microsoft.com/en-us/typography/opentype/spec/os2
+    constexpr u16 italic_selection_bit { 1 };
+    constexpr u16 oblique_selection_bit { 512 };
+    // https://docs.microsoft.com/en-us/typography/opentype/spec/head
+    constexpr u16 italic_style_bit { 2 };
+
+    if (m_os2.selection() & oblique_selection_bit)
+        return 2;
+    if (m_os2.selection() & italic_selection_bit)
+        return 1;
+    if (m_head.style() & italic_style_bit)
+        return 1;
+
+    return 0;
+}
+
 bool Font::is_fixed_width() const
 {
     // FIXME: Read this information from the font file itself.
@@ -547,6 +565,11 @@ u8 ScaledFont::glyph_fixed_width() const
 u16 OS2::weight_class() const
 {
     return be_u16(m_slice.offset_pointer((u32)Offsets::WeightClass));
+}
+
+u16 OS2::selection() const
+{
+    return be_u16(m_slice.offset_pointer((u32)Offsets::Selection));
 }
 
 i16 OS2::typographic_ascender() const
