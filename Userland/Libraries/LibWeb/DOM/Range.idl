@@ -28,6 +28,7 @@ interface Range : AbstractRange {
     undefined detach();
 
     boolean isPointInRange(Node node, unsigned long offset);
+    short comparePoint(Node node, unsigned long offset);
 
     boolean intersectsNode(Node node);
 

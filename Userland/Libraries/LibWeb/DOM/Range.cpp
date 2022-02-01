@@ -473,4 +473,33 @@ ExceptionOr<bool> Range::is_point_in_range(Node const& node, u32 offset) const
     return true;
 }
 
+// https://dom.spec.whatwg.org/#dom-range-comparepoint
+ExceptionOr<i16> Range::compare_point(Node const& node, u32 offset) const
+{
+    // 1. If node’s root is different from this’s root, then throw a "WrongDocumentError" DOMException.
+    if (&node.root() != &root())
+        return WrongDocumentError::create("Given node is not in the same document as the range.");
+
+    // 2. If node is a doctype, then throw an "InvalidNodeTypeError" DOMException.
+    if (is<DocumentType>(node))
+        return InvalidNodeTypeError::create("Node cannot be a DocumentType.");
+
+    // 3. If offset is greater than node’s length, then throw an "IndexSizeError" DOMException.
+    if (offset > node.length())
+        return IndexSizeError::create(String::formatted("Node does not contain a child at offset {}", offset));
+
+    // 4. If (node, offset) is before start, return −1.
+    auto relative_position_to_start = position_of_boundary_point_relative_to_other_boundary_point(node, offset, m_start_container, m_start_offset);
+    if (relative_position_to_start == RelativeBoundaryPointPosition::Before)
+        return -1;
+
+    // 5. If (node, offset) is after end, return 1.
+    auto relative_position_to_end = position_of_boundary_point_relative_to_other_boundary_point(node, offset, m_end_container, m_end_offset);
+    if (relative_position_to_end == RelativeBoundaryPointPosition::After)
+        return 1;
+
+    // 6. Return 0.
+    return 0;
+}
+
 }
