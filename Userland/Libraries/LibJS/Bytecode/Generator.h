@@ -23,7 +23,7 @@ namespace JS::Bytecode {
 
 class Generator {
 public:
-    static Executable generate(ASTNode const&, FunctionKind = FunctionKind::Normal);
+    static NonnullOwnPtr<Executable> generate(ASTNode const&, FunctionKind = FunctionKind::Normal);
 
     Register allocate_register();
 

@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <AK/Optional.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,37 +41,33 @@ static int parse_options(StringView options)
     return flags;
 }
 
-static bool is_source_none(const char* source)
+static bool is_source_none(StringView source)
 {
-    return !strcmp("none", source);
+    return source == "none"sv;
 }
 
-static int get_source_fd(const char* source)
+static int get_source_fd(StringView source)
 {
     if (is_source_none(source))
         return -1;
-    int fd = open(source, O_RDWR);
-    if (fd < 0)
-        fd = open(source, O_RDONLY);
-    if (fd < 0) {
+    auto fd_or_error = Core::System::open(source, O_RDWR);
+    if (fd_or_error.is_error())
+        fd_or_error = Core::System::open(source, O_RDONLY);
+    if (fd_or_error.is_error()) {
         int saved_errno = errno;
         auto message = String::formatted("Failed to open: {}\n", source);
         errno = saved_errno;
         perror(message.characters());
     }
-    return fd;
+    return fd_or_error.release_value();
 }
 
-static bool mount_all()
+static ErrorOr<void> mount_all()
 {
     // Mount all filesystems listed in /etc/fstab.
     dbgln("Mounting all filesystems...");
 
-    auto fstab = Core::File::construct("/etc/fstab");
-    if (!fstab->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", fstab->name(), fstab->error_string());
-        return false;
-    }
+    auto fstab = TRY(Core::File::open("/etc/fstab", Core::OpenMode::ReadOnly));
 
     bool all_ok = true;
     while (fstab->can_read_line()) {
@@ -88,48 +84,42 @@ static bool mount_all()
             continue;
         }
 
-        const char* mountpoint = parts[1].characters();
-        const char* fstype = parts[2].characters();
+        auto mountpoint = parts[1];
+        auto fstype = parts[2];
         int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
 
-        if (strcmp(mountpoint, "/") == 0) {
+        if (mountpoint == "/") {
             dbgln("Skipping mounting root");
             continue;
         }
 
-        const char* filename = parts[0].characters();
+        auto filename = parts[0];
 
         int fd = get_source_fd(filename);
 
         dbgln("Mounting {} ({}) on {}", filename, fstype, mountpoint);
 
-        int rc = mount(fd, mountpoint, fstype, flags);
-        if (rc != 0) {
+        auto error_or_void = Core::System::mount(fd, mountpoint, fstype, flags);
+        if (error_or_void.is_error()) {
             warnln("Failed to mount {} (FD: {}) ({}) on {}: {}", filename, fd, fstype, mountpoint, strerror(errno));
             all_ok = false;
             continue;
         }
     }
 
-    return all_ok;
+    if (all_ok)
+        return {};
+    else
+        return Error::from_string_literal("One or more errors occurred. Please verify earlier output.");
 }
 
-static bool print_mounts()
+static ErrorOr<void> print_mounts()
 {
     // Output info about currently mounted filesystems.
-    auto df = Core::File::construct("/proc/df");
-    if (!df->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", df->name(), df->error_string());
-        return false;
-    }
+    auto df = TRY(Core::File::open("/proc/df", Core::OpenMode::ReadOnly));
 
     auto content = df->read_all();
-    auto json_or_error = JsonValue::from_string(content);
-    if (json_or_error.is_error()) {
-        warnln("Failed to decode JSON: {}", json_or_error.error());
-        return false;
-    }
-    auto json = json_or_error.release_value();
+    auto json = TRY(JsonValue::from_string(content));
 
     json.as_array().for_each([](auto& value) {
         auto& fs_object = value.as_object();
@@ -158,15 +148,15 @@ static bool print_mounts()
         outln(")");
     });
 
-    return true;
+    return {};
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    const char* source = nullptr;
-    const char* mountpoint = nullptr;
-    const char* fs_type = nullptr;
-    const char* options = nullptr;
+    StringView source;
+    StringView mountpoint;
+    StringView fs_type;
+    StringView options;
     bool should_mount_all = false;
 
     Core::ArgsParser args_parser;
@@ -175,29 +165,27 @@ int main(int argc, char** argv)
     args_parser.add_option(fs_type, "File system type", nullptr, 't', "fstype");
     args_parser.add_option(options, "Mount options", nullptr, 'o', "options");
     args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab", nullptr, 'a');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    if (should_mount_all) {
-        return mount_all() ? 0 : 1;
-    }
+    if (should_mount_all)
+        TRY(mount_all());
 
-    if (!source && !mountpoint)
-        return print_mounts() ? 0 : 1;
+    if (source.is_empty() && mountpoint.is_empty())
+        TRY(print_mounts());
 
-    if (source && mountpoint) {
-        if (!fs_type)
+    if (!source.is_empty() && !mountpoint.is_empty()) {
+        if (fs_type.is_empty())
             fs_type = "ext2";
-        int flags = options ? parse_options(options) : 0;
+        int flags = !options.is_empty() ? parse_options(options) : 0;
 
         int fd = get_source_fd(source);
 
-        if (mount(fd, mountpoint, fs_type, flags) < 0) {
-            perror("mount");
-            return 1;
-        }
+        TRY(Core::System::mount(fd, mountpoint, fs_type, flags));
+
         return 0;
     }
 
-    args_parser.print_usage(stderr, argv[0]);
+    args_parser.print_usage(stderr, arguments.argv[0]);
+
     return 1;
 }

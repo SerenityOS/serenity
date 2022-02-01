@@ -23,7 +23,7 @@ Generator::~Generator()
 {
 }
 
-Executable Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
+NonnullOwnPtr<Executable> Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
 {
     Generator generator;
     generator.switch_to_basic_block(generator.make_block());
@@ -45,7 +45,12 @@ Executable Generator::generate(ASTNode const& node, FunctionKind enclosing_funct
             generator.emit<Bytecode::Op::Yield>(nullptr);
         }
     }
-    return { {}, move(generator.m_root_basic_blocks), move(generator.m_string_table), move(generator.m_identifier_table), generator.m_next_register };
+    return adopt_own(*new Executable {
+        .name = {},
+        .basic_blocks = move(generator.m_root_basic_blocks),
+        .string_table = move(generator.m_string_table),
+        .identifier_table = move(generator.m_identifier_table),
+        .number_of_registers = generator.m_next_register });
 }
 
 void Generator::grow(size_t additional_size)

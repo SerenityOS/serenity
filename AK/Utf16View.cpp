@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -163,6 +163,14 @@ size_t Utf16View::code_unit_offset_of(size_t code_point_offset) const
     }
 
     return code_unit_offset;
+}
+
+size_t Utf16View::code_unit_offset_of(Utf16CodePointIterator const& it) const
+{
+    VERIFY(it.m_ptr >= begin_ptr());
+    VERIFY(it.m_ptr <= end_ptr());
+
+    return it.m_ptr - begin_ptr();
 }
 
 Utf16View Utf16View::substring_view(size_t code_unit_offset, size_t code_unit_length) const

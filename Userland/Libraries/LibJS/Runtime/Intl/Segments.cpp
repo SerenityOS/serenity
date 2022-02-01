@@ -11,7 +11,7 @@
 namespace JS::Intl {
 
 // 18.5.1 CreateSegmentsObject ( segmenter, string ), https://tc39.es/ecma402/#sec-createsegmentsobject
-Segments* Segments::create(GlobalObject& global_object, Segmenter& segmenter, String string)
+Segments* Segments::create(GlobalObject& global_object, Segmenter& segmenter, Utf16String string)
 {
     // 1. Let internalSlotsList be « [[SegmentsSegmenter]], [[SegmentsString]] ».
     // 2. Let segments be ! OrdinaryObjectCreate(%SegmentsPrototype%, internalSlotsList).
@@ -22,7 +22,7 @@ Segments* Segments::create(GlobalObject& global_object, Segmenter& segmenter, St
 }
 
 // 18.5 Segments Objects, https://tc39.es/ecma402/#sec-segments-objects
-Segments::Segments(GlobalObject& global_object, Segmenter& segmenter, String string)
+Segments::Segments(GlobalObject& global_object, Segmenter& segmenter, Utf16String string)
     : Object(*global_object.intl_segments_prototype())
     , m_segments_segmenter(segmenter)
     , m_segments_string(move(string))

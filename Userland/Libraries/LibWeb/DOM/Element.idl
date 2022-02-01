@@ -33,10 +33,14 @@ interface Element : Node {
 
     [ImplementedAs=style_for_bindings] readonly attribute CSSStyleDeclaration style;
 
-    // FIXME: These should all come from a ParentNode mixin
+    // FIXME: These should all come from a ParentNode mixin (up to and including children)
     readonly attribute Element? firstElementChild;
     readonly attribute Element? lastElementChild;
     readonly attribute unsigned long childElementCount;
+
+    [CEReactions, Unscopable] undefined prepend((Node or DOMString)... nodes);
+    [CEReactions, Unscopable] undefined append((Node or DOMString)... nodes);
+    [CEReactions, Unscopable] undefined replaceChildren((Node or DOMString)... nodes);
 
     Element? querySelector(DOMString selectors);
     [NewObject] NodeList querySelectorAll(DOMString selectors);
@@ -50,7 +54,10 @@ interface Element : Node {
     readonly attribute long clientWidth;
     readonly attribute long clientHeight;
 
-    // FIXME: This should come from a ChildNode mixin
+    // FIXME: These should come from a ChildNode mixin
+    [CEReactions, Unscopable] undefined before((Node or DOMString)... nodes);
+    [CEReactions, Unscopable] undefined after((Node or DOMString)... nodes);
+    [CEReactions, Unscopable] undefined replaceWith((Node or DOMString)... nodes);
     [CEReactions, Unscopable, ImplementedAs=remove_binding] undefined remove();
 
 };

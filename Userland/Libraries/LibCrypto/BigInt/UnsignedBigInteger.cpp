@@ -67,7 +67,7 @@ size_t UnsignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) co
     return out;
 }
 
-UnsignedBigInteger UnsignedBigInteger::from_base(u16 N, const String& str)
+UnsignedBigInteger UnsignedBigInteger::from_base(u16 N, StringView str)
 {
     VERIFY(N <= 36);
     UnsignedBigInteger result;

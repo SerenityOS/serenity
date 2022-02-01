@@ -6,7 +6,10 @@ interface CharacterData : Node {
     readonly attribute Element? nextElementSibling;
     readonly attribute Element? previousElementSibling;
 
-    // FIXME: This should come from a ChildNode mixin
+    // FIXME: These should come from a ChildNode mixin
+    [CEReactions, Unscopable] undefined before((Node or DOMString)... nodes);
+    [CEReactions, Unscopable] undefined after((Node or DOMString)... nodes);
+    [CEReactions, Unscopable] undefined replaceWith((Node or DOMString)... nodes);
     [CEReactions, Unscopable, ImplementedAs=remove_binding] undefined remove();
 
 };

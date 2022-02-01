@@ -4,47 +4,25 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <LibCore/File.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::unveil("/proc/interrupts", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    if (unveil("/proc/interrupts", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    auto proc_interrupts = TRY(Core::File::open("/proc/interrupts", Core::OpenMode::ReadOnly));
 
-    unveil(nullptr, nullptr);
-
-    auto proc_interrupts = Core::File::construct("/proc/interrupts");
-    if (!proc_interrupts->open(Core::OpenMode::ReadOnly)) {
-        warnln("Error: {}", proc_interrupts->error_string());
-        return 1;
-    }
-
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio"));
 
     outln("      CPU0");
     auto file_contents = proc_interrupts->read_all();
-    auto json_or_error = JsonValue::from_string(file_contents);
-    if (json_or_error.is_error()) {
-        warnln("Error: {}", json_or_error.error());
-        return 1;
-    }
-    auto json = json_or_error.release_value();
+    auto json = TRY(JsonValue::from_string(file_contents));
     json.as_array().for_each([](auto& value) {
         auto& handler = value.as_object();
         auto purpose = handler.get("purpose").to_string();

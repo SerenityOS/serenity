@@ -419,24 +419,23 @@ ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject& global_o
 // 9.1.2.2 NewDeclarativeEnvironment ( E ), https://tc39.es/ecma262/#sec-newdeclarativeenvironment
 DeclarativeEnvironment* new_declarative_environment(Environment& environment)
 {
-    auto& global_object = environment.global_object();
-    return global_object.heap().allocate<DeclarativeEnvironment>(global_object, &environment);
+    return environment.heap().allocate_without_global_object<DeclarativeEnvironment>(&environment);
 }
 
 // 9.1.2.3 NewObjectEnvironment ( O, W, E ), https://tc39.es/ecma262/#sec-newobjectenvironment
 ObjectEnvironment* new_object_environment(Object& object, bool is_with_environment, Environment* environment)
 {
-    auto& global_object = object.global_object();
-    return global_object.heap().allocate<ObjectEnvironment>(global_object, object, is_with_environment ? ObjectEnvironment::IsWithEnvironment::Yes : ObjectEnvironment::IsWithEnvironment::No, environment);
+    auto& heap = object.heap();
+    return heap.allocate_without_global_object<ObjectEnvironment>(object, is_with_environment ? ObjectEnvironment::IsWithEnvironment::Yes : ObjectEnvironment::IsWithEnvironment::No, environment);
 }
 
 // 9.1.2.4 NewFunctionEnvironment ( F, newTarget ), https://tc39.es/ecma262/#sec-newfunctionenvironment
 FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject& function, Object* new_target)
 {
-    auto& global_object = function.global_object();
+    auto& heap = function.heap();
 
     // 1. Let env be a new function Environment Record containing no bindings.
-    auto* env = global_object.heap().allocate<FunctionEnvironment>(global_object, function.environment());
+    auto* env = heap.allocate_without_global_object<FunctionEnvironment>(function.environment());
 
     // 2. Set env.[[FunctionObject]] to F.
     env->set_function_object(function);
@@ -463,7 +462,7 @@ PrivateEnvironment* new_private_environment(VM& vm, PrivateEnvironment* outer)
 {
     // 1. Let names be a new empty List.
     // 2. Return the PrivateEnvironment Record { [[OuterPrivateEnvironment]]: outerPrivEnv, [[Names]]: names }.
-    return vm.heap().allocate<PrivateEnvironment>(vm.current_realm()->global_object(), outer);
+    return vm.heap().allocate_without_global_object<PrivateEnvironment>(outer);
 }
 
 // 9.4.3 GetThisEnvironment ( ), https://tc39.es/ecma262/#sec-getthisenvironment
@@ -581,10 +580,10 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
 
     if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
         auto executable = JS::Bytecode::Generator::generate(program);
-        executable.name = "eval"sv;
+        executable->name = "eval"sv;
         if (JS::Bytecode::g_dump_bytecode)
-            executable.dump();
-        eval_result = TRY(bytecode_interpreter->run(executable));
+            executable->dump();
+        eval_result = TRY(bytecode_interpreter->run(*executable));
         // Turn potentially empty JS::Value from the bytecode interpreter into an empty Optional
         if (eval_result.has_value() && eval_result->is_empty())
             eval_result = {};

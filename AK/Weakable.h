@@ -113,7 +113,9 @@ protected:
 
     ~Weakable()
     {
+#ifdef KERNEL
         m_being_destroyed.store(true, AK::MemoryOrder::memory_order_release);
+#endif
         revoke_weak_ptrs();
     }
 
@@ -125,7 +127,9 @@ protected:
 
 private:
     mutable RefPtr<WeakLink> m_link;
+#ifdef KERNEL
     Atomic<bool> m_being_destroyed { false };
+#endif
 };
 
 }

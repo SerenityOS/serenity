@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,11 +23,6 @@ public:                                    \
 
 class Environment : public Cell {
 public:
-    GlobalObject& global_object() { return *m_global_object; }
-    GlobalObject const& global_object() const { return *m_global_object; }
-
-    virtual void initialize(GlobalObject&) override;
-
     virtual bool has_this_binding() const { return false; }
     virtual ThrowCompletionOr<Value> get_this_binding(GlobalObject&) const { return Value {}; }
 
@@ -67,10 +62,9 @@ protected:
 private:
     virtual bool is_environment() const final { return true; }
 
-    GlobalObject* m_global_object { nullptr };
-    Environment* m_outer_environment { nullptr };
-
     bool m_permanently_screwed_by_eval { false };
+
+    Environment* m_outer_environment { nullptr };
 };
 
 }

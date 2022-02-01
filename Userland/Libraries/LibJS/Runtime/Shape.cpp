@@ -25,12 +25,14 @@ Shape* Shape::create_unique_clone() const
 
 Shape* Shape::get_or_prune_cached_forward_transition(TransitionKey const& key)
 {
-    auto it = m_forward_transitions.find(key);
-    if (it == m_forward_transitions.end())
+    if (!m_forward_transitions)
+        return nullptr;
+    auto it = m_forward_transitions->find(key);
+    if (it == m_forward_transitions->end())
         return nullptr;
     if (!it->value) {
         // The cached forward transition has gone stale (from garbage collection). Prune it.
-        m_forward_transitions.remove(it);
+        m_forward_transitions->remove(it);
         return nullptr;
     }
     return it->value;
@@ -38,12 +40,14 @@ Shape* Shape::get_or_prune_cached_forward_transition(TransitionKey const& key)
 
 Shape* Shape::get_or_prune_cached_prototype_transition(Object* prototype)
 {
-    auto it = m_prototype_transitions.find(prototype);
-    if (it == m_prototype_transitions.end())
+    if (!m_prototype_transitions)
+        return nullptr;
+    auto it = m_prototype_transitions->find(prototype);
+    if (it == m_prototype_transitions->end())
         return nullptr;
     if (!it->value) {
         // The cached prototype transition has gone stale (from garbage collection). Prune it.
-        m_prototype_transitions.remove(it);
+        m_prototype_transitions->remove(it);
         return nullptr;
     }
     return it->value;
@@ -55,7 +59,9 @@ Shape* Shape::create_put_transition(const StringOrSymbol& property_name, Propert
     if (auto* existing_shape = get_or_prune_cached_forward_transition(key))
         return existing_shape;
     auto* new_shape = heap().allocate_without_global_object<Shape>(*this, property_name, attributes, TransitionType::Put);
-    m_forward_transitions.set(key, new_shape);
+    if (!m_forward_transitions)
+        m_forward_transitions = make<HashMap<TransitionKey, WeakPtr<Shape>>>();
+    m_forward_transitions->set(key, new_shape);
     return new_shape;
 }
 
@@ -65,7 +71,9 @@ Shape* Shape::create_configure_transition(const StringOrSymbol& property_name, P
     if (auto* existing_shape = get_or_prune_cached_forward_transition(key))
         return existing_shape;
     auto* new_shape = heap().allocate_without_global_object<Shape>(*this, property_name, attributes, TransitionType::Configure);
-    m_forward_transitions.set(key, new_shape);
+    if (!m_forward_transitions)
+        m_forward_transitions = make<HashMap<TransitionKey, WeakPtr<Shape>>>();
+    m_forward_transitions->set(key, new_shape);
     return new_shape;
 }
 
@@ -74,7 +82,9 @@ Shape* Shape::create_prototype_transition(Object* new_prototype)
     if (auto* existing_shape = get_or_prune_cached_prototype_transition(new_prototype))
         return existing_shape;
     auto* new_shape = heap().allocate_without_global_object<Shape>(*this, new_prototype);
-    m_prototype_transitions.set(new_prototype, new_shape);
+    if (!m_prototype_transitions)
+        m_prototype_transitions = make<HashMap<Object*, WeakPtr<Shape>>>();
+    m_prototype_transitions->set(new_prototype, new_shape);
     return new_shape;
 }
 
@@ -88,22 +98,22 @@ Shape::Shape(Object& global_object)
 }
 
 Shape::Shape(Shape& previous_shape, const StringOrSymbol& property_name, PropertyAttributes attributes, TransitionType transition_type)
-    : m_attributes(attributes)
-    , m_transition_type(transition_type)
-    , m_global_object(previous_shape.m_global_object)
+    : m_global_object(previous_shape.m_global_object)
     , m_previous(&previous_shape)
     , m_property_name(property_name)
     , m_prototype(previous_shape.m_prototype)
     , m_property_count(transition_type == TransitionType::Put ? previous_shape.m_property_count + 1 : previous_shape.m_property_count)
+    , m_attributes(attributes)
+    , m_transition_type(transition_type)
 {
 }
 
 Shape::Shape(Shape& previous_shape, Object* new_prototype)
-    : m_transition_type(TransitionType::Prototype)
-    , m_global_object(previous_shape.m_global_object)
+    : m_global_object(previous_shape.m_global_object)
     , m_previous(&previous_shape)
     , m_prototype(new_prototype)
     , m_property_count(previous_shape.m_property_count)
+    , m_transition_type(TransitionType::Prototype)
 {
 }
 
@@ -138,11 +148,6 @@ FLATTEN HashMap<StringOrSymbol, PropertyMetadata> const& Shape::property_table()
 {
     ensure_property_table();
     return *m_property_table;
-}
-
-size_t Shape::property_count() const
-{
-    return m_property_count;
 }
 
 Vector<Shape::Property> Shape::property_table_ordered() const
@@ -197,7 +202,9 @@ void Shape::add_property_to_unique_shape(const StringOrSymbol& property_name, Pr
     VERIFY(is_unique());
     VERIFY(m_property_table);
     VERIFY(!m_property_table->contains(property_name));
-    m_property_table->set(property_name, { m_property_table->size(), attributes });
+    m_property_table->set(property_name, { static_cast<u32>(m_property_table->size()), attributes });
+
+    VERIFY(m_property_count < NumericLimits<u32>::max());
     ++m_property_count;
 }
 
@@ -228,8 +235,10 @@ void Shape::add_property_without_transition(StringOrSymbol const& property_name,
 {
     VERIFY(property_name.is_valid());
     ensure_property_table();
-    if (m_property_table->set(property_name, { m_property_count, attributes }) == AK::HashSetResult::InsertedNewEntry)
+    if (m_property_table->set(property_name, { m_property_count, attributes }) == AK::HashSetResult::InsertedNewEntry) {
+        VERIFY(m_property_count < NumericLimits<u32>::max());
         ++m_property_count;
+    }
 }
 
 FLATTEN void Shape::add_property_without_transition(PropertyKey const& property_name, PropertyAttributes attributes)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -93,6 +93,7 @@ public:
 
     size_t code_point_offset_of(size_t code_unit_offset) const;
     size_t code_unit_offset_of(size_t code_point_offset) const;
+    size_t code_unit_offset_of(Utf16CodePointIterator const&) const;
 
     Utf16View substring_view(size_t code_unit_offset, size_t code_unit_length) const;
     Utf16View substring_view(size_t code_unit_offset) const { return substring_view(code_unit_offset, length_in_code_units() - code_unit_offset); }

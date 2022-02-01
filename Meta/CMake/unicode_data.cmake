@@ -48,6 +48,15 @@ set(EMOJI_DATA_PATH "${UCD_PATH}/emoji-data.txt")
 set(NORM_PROPS_URL "https://www.unicode.org/Public/${UCD_VERSION}/ucd/DerivedNormalizationProps.txt")
 set(NORM_PROPS_PATH "${UCD_PATH}/DerivedNormalizationProps.txt")
 
+set(GRAPHEME_BREAK_PROP_URL "https://www.unicode.org/Public/${UCD_VERSION}/ucd/auxiliary/GraphemeBreakProperty.txt")
+set(GRAPHEME_BREAK_PROP_PATH "${UCD_PATH}/GraphemeBreakProperty.txt")
+
+set(WORD_BREAK_PROP_URL "https://www.unicode.org/Public/${UCD_VERSION}/ucd/auxiliary/WordBreakProperty.txt")
+set(WORD_BREAK_PROP_PATH "${UCD_PATH}/WordBreakProperty.txt")
+
+set(SENTENCE_BREAK_PROP_URL "https://www.unicode.org/Public/${UCD_VERSION}/ucd/auxiliary/SentenceBreakProperty.txt")
+set(SENTENCE_BREAK_PROP_PATH "${UCD_PATH}/SentenceBreakProperty.txt")
+
 set(CLDR_ZIP_URL "https://github.com/unicode-org/cldr-json/releases/download/${CLDR_VERSION}/cldr-${CLDR_VERSION}-json-modern.zip")
 set(CLDR_ZIP_PATH "${CLDR_PATH}/cldr.zip")
 
@@ -96,6 +105,9 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     download_file("${SCRIPT_EXTENSIONS_URL}" "${SCRIPT_EXTENSIONS_PATH}")
     download_file("${EMOJI_DATA_URL}" "${EMOJI_DATA_PATH}")
     download_file("${NORM_PROPS_URL}" "${NORM_PROPS_PATH}")
+    download_file("${GRAPHEME_BREAK_PROP_URL}" "${GRAPHEME_BREAK_PROP_PATH}")
+    download_file("${WORD_BREAK_PROP_URL}" "${WORD_BREAK_PROP_PATH}")
+    download_file("${SENTENCE_BREAK_PROP_URL}" "${SENTENCE_BREAK_PROP_PATH}")
 
     download_file("${CLDR_ZIP_URL}" "${CLDR_ZIP_PATH}")
     extract_cldr_file("${CLDR_CORE_SOURCE}" "${CLDR_CORE_PATH}")
@@ -148,7 +160,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "${UNICODE_META_TARGET_PREFIX}"
         "${UNICODE_DATA_HEADER}"
         "${UNICODE_DATA_IMPLEMENTATION}"
-        arguments -u "${UNICODE_DATA_PATH}" -s "${SPECIAL_CASING_PATH}" -g "${DERIVED_GENERAL_CATEGORY_PATH}" -p "${PROP_LIST_PATH}" -d "${DERIVED_CORE_PROP_PATH}" -b "${DERIVED_BINARY_PROP_PATH}" -a "${PROP_ALIAS_PATH}" -v "${PROP_VALUE_ALIAS_PATH}" -r "${SCRIPTS_PATH}" -x "${SCRIPT_EXTENSIONS_PATH}" -e "${EMOJI_DATA_PATH}" -m "${NAME_ALIAS_PATH}" -n "${NORM_PROPS_PATH}"
+        arguments -u "${UNICODE_DATA_PATH}" -s "${SPECIAL_CASING_PATH}" -g "${DERIVED_GENERAL_CATEGORY_PATH}" -p "${PROP_LIST_PATH}" -d "${DERIVED_CORE_PROP_PATH}" -b "${DERIVED_BINARY_PROP_PATH}" -a "${PROP_ALIAS_PATH}" -v "${PROP_VALUE_ALIAS_PATH}" -r "${SCRIPTS_PATH}" -x "${SCRIPT_EXTENSIONS_PATH}" -e "${EMOJI_DATA_PATH}" -m "${NAME_ALIAS_PATH}" -n "${NORM_PROPS_PATH}" -f "${GRAPHEME_BREAK_PROP_PATH}" -w "${WORD_BREAK_PROP_PATH}" -i "${SENTENCE_BREAK_PROP_PATH}"
     )
     invoke_generator(
         "UnicodeDateTimeFormat"

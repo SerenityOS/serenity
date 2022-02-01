@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,6 +43,7 @@ Heap::Heap(VM& vm)
     static_assert(HeapBlock::min_possible_cell_size <= 24, "Heap Cell tracking uses too much data!");
     m_allocators.append(make<CellAllocator>(32));
     m_allocators.append(make<CellAllocator>(64));
+    m_allocators.append(make<CellAllocator>(96));
     m_allocators.append(make<CellAllocator>(128));
     m_allocators.append(make<CellAllocator>(256));
     m_allocators.append(make<CellAllocator>(512));
