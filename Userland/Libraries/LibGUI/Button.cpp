@@ -57,7 +57,7 @@ void Button::paint_event(PaintEvent& event)
 
     bool paint_pressed = is_being_pressed() || (m_menu && m_menu->is_visible());
 
-    Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, paint_pressed, is_hovered(), is_checked(), is_enabled(), is_focused(), is_default() & !another_button_has_focus());
+    Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, paint_pressed, is_hovered(), is_checked(), is_enabled(), is_focused(), is_default() && !another_button_has_focus());
 
     if (text().is_empty() && !m_icon)
         return;
