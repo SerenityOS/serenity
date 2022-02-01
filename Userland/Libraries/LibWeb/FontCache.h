@@ -16,10 +16,11 @@ struct FontSelector {
     FlyString family;
     int size { 0 };
     int weight { 0 };
+    int slope { 0 };
 
     bool operator==(const FontSelector& other) const
     {
-        return family == other.family && size == other.size && weight == other.weight;
+        return family == other.family && size == other.size && weight == other.weight && slope == other.slope;
     }
 };
 

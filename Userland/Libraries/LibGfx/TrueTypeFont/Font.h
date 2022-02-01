@@ -145,7 +145,7 @@ public:
     virtual size_t glyph_count() const override { return m_font->glyph_count(); }
     virtual String family() const override { return m_font->family(); }
     virtual String variant() const override { return m_font->variant(); }
-    virtual String qualified_name() const override { return String::formatted("{} {} {}", family(), presentation_size(), weight()); }
+    virtual String qualified_name() const override { return String::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope()); }
 
 private:
     NonnullRefPtr<TTF::Font> m_font;

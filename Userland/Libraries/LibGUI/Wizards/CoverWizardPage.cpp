@@ -28,7 +28,7 @@ CoverWizardPage::CoverWizardPage()
     m_content_widget->layout()->set_margins(20);
 
     m_header_label = m_content_widget->add<Label>();
-    m_header_label->set_font(Gfx::FontDatabase::the().get("Pebbleton", 14, 700));
+    m_header_label->set_font(Gfx::FontDatabase::the().get("Pebbleton", 14, 700, 0));
     m_header_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
     m_header_label->set_fixed_height(48);
 

@@ -16,7 +16,7 @@
 static struct FontDatabaseSpoofer {
     FontDatabaseSpoofer()
     {
-        Gfx::FontDatabase::the().set_default_font_query("Katica 10 400"sv);
+        Gfx::FontDatabase::the().set_default_font_query("Katica 10 400 0"sv);
     }
 } g_spoof;
 

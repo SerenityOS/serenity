@@ -14,7 +14,7 @@
 
 TEST_CASE(test_fontdatabase_get_by_name)
 {
-    const char* name = "Liza 10 400";
+    const char* name = "Liza 10 400 0";
     auto& font_database = Gfx::FontDatabase::the();
     EXPECT(!font_database.get_by_name(name)->name().is_null());
 }
@@ -22,7 +22,7 @@ TEST_CASE(test_fontdatabase_get_by_name)
 TEST_CASE(test_fontdatabase_get)
 {
     auto& font_database = Gfx::FontDatabase::the();
-    EXPECT(!font_database.get("Liza", 10, 400)->name().is_null());
+    EXPECT(!font_database.get("Liza", 10, 400, 0)->name().is_null());
 }
 
 TEST_CASE(test_fontdatabase_for_each_font)
