@@ -260,7 +260,7 @@ String BackgroundSizeStyleValue::to_string() const
 
 String BorderStyleValue::to_string() const
 {
-    return String::formatted("Border border_width: {}, border_style: {}, border_color: {}", m_border_width->to_string(), m_border_style->to_string(), m_border_color->to_string());
+    return String::formatted("{} {} {}", m_border_width->to_string(), m_border_style->to_string(), m_border_color->to_string());
 }
 
 String BorderRadiusStyleValue::to_string() const
@@ -270,7 +270,7 @@ String BorderRadiusStyleValue::to_string() const
 
 String BoxShadowStyleValue::to_string() const
 {
-    return String::formatted("BoxShadow offset_x: {}, offset_y: {}, blur_radius: {}, color: {}", m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_color.to_string());
+    return String::formatted("{} {} {} {}", m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_color.to_string());
 }
 
 // https://www.w3.org/TR/css-color-4/#serializing-sRGB-values
@@ -288,17 +288,17 @@ String CombinedBorderRadiusStyleValue::to_string() const
 
 String FlexStyleValue::to_string() const
 {
-    return String::formatted("Flex grow: {}, shrink: {}, basis: {}", m_grow->to_string(), m_shrink->to_string(), m_basis->to_string());
+    return String::formatted("{} {} {}", m_grow->to_string(), m_shrink->to_string(), m_basis->to_string());
 }
 
 String FlexFlowStyleValue::to_string() const
 {
-    return String::formatted("FlexFlow flex_direction: {}, flex_wrap: {}", m_flex_direction->to_string(), m_flex_wrap->to_string());
+    return String::formatted("{} {}", m_flex_direction->to_string(), m_flex_wrap->to_string());
 }
 
 String FontStyleValue::to_string() const
 {
-    return String::formatted("Font style: {}, weight: {}, size: {}, line_height: {}, families: {}", m_font_style->to_string(), m_font_weight->to_string(), m_font_size->to_string(), m_line_height->to_string(), m_font_families->to_string());
+    return String::formatted("{} {} {} / {} {}", m_font_style->to_string(), m_font_weight->to_string(), m_font_size->to_string(), m_line_height->to_string(), m_font_families->to_string());
 }
 
 String IdentifierStyleValue::to_string() const
@@ -527,12 +527,12 @@ void ImageStyleValue::resource_did_load()
 
 String ImageStyleValue::to_string() const
 {
-    return String::formatted("Image({})", m_url.to_string());
+    return serialize_a_url(m_url.to_string());
 }
 
 String ListStyleStyleValue::to_string() const
 {
-    return String::formatted("ListStyle position: {}, image: {}, style_type: {}", m_position->to_string(), m_image->to_string(), m_style_type->to_string());
+    return String::formatted("{} {} {}", m_position->to_string(), m_image->to_string(), m_style_type->to_string());
 }
 
 String NumericStyleValue::to_string() const
@@ -577,7 +577,7 @@ String PositionStyleValue::to_string() const
 
 String TextDecorationStyleValue::to_string() const
 {
-    return String::formatted("TextDecoration line: {}, style: {}, color: {}", m_line->to_string(), m_style->to_string(), m_color->to_string());
+    return String::formatted("{} {} {}", m_line->to_string(), m_style->to_string(), m_color->to_string());
 }
 
 String TransformationStyleValue::to_string() const
