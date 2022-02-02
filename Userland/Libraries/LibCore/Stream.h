@@ -9,6 +9,7 @@
 #include <AK/EnumBits.h>
 #include <AK/Function.h>
 #include <AK/IPv4Address.h>
+#include <AK/MemMem.h>
 #include <AK/Noncopyable.h>
 #include <AK/Result.h>
 #include <AK/Span.h>
@@ -588,37 +589,35 @@ public:
                 // to the caller about why it can't read.
                 return Error::from_errno(EMSGSIZE);
             }
-
-            m_buffer.span().slice(0, m_buffered_size).copy_to(buffer);
-            return exchange(m_buffered_size, 0);
         }
 
-        size_t longest_match = 0;
-        size_t maximum_offset = min(m_buffered_size, buffer.size());
-        for (size_t offset = 0; offset < maximum_offset; offset++) {
-            // The intention here is to try to match all of the possible
-            // delimiter candidates and try to find the longest one we can
-            // remove from the buffer after copying up to the delimiter to the
-            // user buffer.
-            StringView remaining_buffer { m_buffer.span().offset(offset), maximum_offset - offset };
-            for (auto candidate : candidates) {
-                if (candidate.length() > remaining_buffer.length())
-                    continue;
-                if (remaining_buffer.starts_with(candidate))
-                    longest_match = max(longest_match, candidate.length());
+        // The intention here is to try to match all of the possible
+        // delimiter candidates and try to find the longest one we can
+        // remove from the buffer after copying up to the delimiter to the
+        // user buffer.
+        Optional<size_t> longest_match;
+        size_t match_size = 0;
+        for (auto& candidate : candidates) {
+            auto result = AK::memmem_optional(m_buffer.data(), m_buffered_size, candidate.bytes().data(), candidate.bytes().size());
+            if (result.has_value()) {
+                auto previous_match = longest_match.value_or(*result);
+                if ((previous_match < *result) || (previous_match == *result && match_size < candidate.length())) {
+                    longest_match = result;
+                    match_size = candidate.length();
+                }
             }
+        }
+        if (longest_match.has_value()) {
+            auto size_written_to_user_buffer = *longest_match;
+            auto buffer_to_take = m_buffer.span().slice(0, size_written_to_user_buffer);
+            auto buffer_to_shift = m_buffer.span().slice(size_written_to_user_buffer + match_size);
 
-            if (longest_match > 0) {
-                auto buffer_to_take = m_buffer.span().slice(0, offset);
-                auto buffer_to_shift = m_buffer.span().slice(offset + longest_match);
+            buffer_to_take.copy_to(buffer);
+            m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size());
 
-                buffer_to_take.copy_to(buffer);
-                m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size());
+            m_buffered_size -= size_written_to_user_buffer + match_size;
 
-                m_buffered_size -= offset + longest_match;
-
-                return offset;
-            }
+            return size_written_to_user_buffer;
         }
 
         // If we still haven't found anything, then it's most likely the case
