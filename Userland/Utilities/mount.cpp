@@ -172,8 +172,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    if (source.is_empty() && mountpoint.is_empty())
+    if (source.is_empty() && mountpoint.is_empty()) {
         TRY(print_mounts());
+        return 0;
+    }
 
     if (!source.is_empty() && !mountpoint.is_empty()) {
         if (fs_type.is_empty())
