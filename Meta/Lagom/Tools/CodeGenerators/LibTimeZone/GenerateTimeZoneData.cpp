@@ -13,6 +13,7 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibTimeZone/TimeZone.h>
 
 namespace {
 
@@ -63,6 +64,8 @@ struct TimeZoneData {
 
     HashMap<String, Vector<DaylightSavingsOffset>> dst_offsets;
     Vector<String> dst_offset_names;
+
+    HashMap<String, TimeZone::Location> time_zone_coordinates;
 };
 
 }
@@ -112,6 +115,29 @@ struct AK::Formatter<DaylightSavingsOffset> : Formatter<FormatString> {
             dst_offset.year_to,
             dst_offset.in_effect,
             dst_offset.format);
+    }
+};
+
+template<>
+struct AK::Formatter<TimeZone::Coordinate> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, TimeZone::Coordinate const& coordinate)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {}, {} }}",
+            coordinate.degrees,
+            coordinate.minutes,
+            coordinate.seconds);
+    }
+};
+
+template<>
+struct AK::Formatter<TimeZone::Location> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, TimeZone::Location const& location)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {} }}",
+            location.latitude,
+            location.longitude);
     }
 };
 
@@ -312,6 +338,56 @@ static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& t
     return {};
 }
 
+static void parse_time_zone_coordinates(Core::File& file, TimeZoneData& time_zone_data)
+{
+    auto parse_coordinate = [](auto coordinate) {
+        VERIFY(coordinate.substring_view(0, 1).is_one_of("+"sv, "-"sv));
+        TimeZone::Coordinate parsed {};
+
+        if (coordinate.length() == 5) {
+            // ±DDMM
+            parsed.degrees = coordinate.substring_view(0, 3).to_int().value();
+            parsed.minutes = coordinate.substring_view(3).to_int().value();
+        } else if (coordinate.length() == 6) {
+            // ±DDDMM
+            parsed.degrees = coordinate.substring_view(0, 4).to_int().value();
+            parsed.minutes = coordinate.substring_view(4).to_int().value();
+        } else if (coordinate.length() == 7) {
+            // ±DDMMSS
+            parsed.degrees = coordinate.substring_view(0, 3).to_int().value();
+            parsed.minutes = coordinate.substring_view(3, 2).to_int().value();
+            parsed.seconds = coordinate.substring_view(5).to_int().value();
+        } else if (coordinate.length() == 8) {
+            // ±DDDDMMSS
+            parsed.degrees = coordinate.substring_view(0, 4).to_int().value();
+            parsed.minutes = coordinate.substring_view(4, 2).to_int().value();
+            parsed.seconds = coordinate.substring_view(6).to_int().value();
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+
+        return parsed;
+    };
+
+    while (file.can_read_line()) {
+        auto line = file.read_line();
+        if (line.is_empty() || line.trim_whitespace(TrimMode::Left).starts_with('#'))
+            continue;
+
+        auto segments = line.split_view('\t');
+        auto coordinates = segments[1];
+        auto zone = segments[2];
+
+        VERIFY(time_zone_data.time_zones.contains(zone));
+
+        auto index = coordinates.find_any_of("+-"sv, StringView::SearchDirection::Backward).value();
+        auto latitude = parse_coordinate(coordinates.substring_view(0, index));
+        auto longitude = parse_coordinate(coordinates.substring_view(index));
+
+        time_zone_data.time_zone_coordinates.set(zone, { latitude, longitude });
+    }
+}
+
 static void set_dst_rule_indices(TimeZoneData& time_zone_data)
 {
     for (auto& time_zone : time_zone_data.time_zones) {
@@ -473,6 +549,18 @@ static constexpr Array<@type@, @size@> @name@ { {
             append_offsets(name, "DaylightSavingsOffset"sv, dst_offsets);
         });
 
+    generator.set("size", String::number(time_zone_data.time_zone_names.size()));
+    generator.append(R"~~~(
+static constexpr Array<Location, @size@> s_time_zone_locations { {
+)~~~");
+
+    for (auto const& time_zone : time_zone_data.time_zone_names) {
+        auto location = time_zone_data.time_zone_coordinates.get(time_zone).value_or({});
+
+        generator.append(String::formatted("    {},\n", location));
+    }
+    generator.append("} };\n");
+
     auto append_string_conversions = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
         HashValueMap<String> hashes;
         hashes.ensure_capacity(values.size());
@@ -619,6 +707,19 @@ Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, 
 
     return named_offsets;
 }
+
+Optional<Location> get_time_zone_location(TimeZone time_zone)
+{
+    auto is_valid_coordinate = [](auto const& coordinate) {
+        return (coordinate.degrees != 0) || (coordinate.minutes != 0) || (coordinate.seconds != 0);
+    };
+
+    auto const& location = s_time_zone_locations[to_underlying(time_zone)];
+
+    if (is_valid_coordinate(location.latitude) && is_valid_coordinate(location.longitude))
+        return location;
+    return {};
+}
 )~~~");
 
     generate_available_values(generator, "all_time_zones"sv, time_zone_data.time_zone_names);
@@ -635,29 +736,34 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView generated_header_path;
     StringView generated_implementation_path;
+    StringView time_zone_coordinates_path;
     Vector<StringView> time_zone_paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the time zone data header file to generate", "generated-header-path", 'h', "generated-header-path");
     args_parser.add_option(generated_implementation_path, "Path to the time zone data implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
+    args_parser.add_option(time_zone_coordinates_path, "Path to the time zone data coordinates file", "time-zone-coordinates-path", 'z', "time-zone-coordinates-path");
     args_parser.add_positional_argument(time_zone_paths, "Paths to the time zone database files", "time-zone-paths");
     args_parser.parse(arguments);
 
-    auto open_file = [&](StringView path) -> ErrorOr<NonnullRefPtr<Core::File>> {
+    auto open_file = [&](StringView path, Core::OpenMode mode = Core::OpenMode::ReadWrite) -> ErrorOr<NonnullRefPtr<Core::File>> {
         if (path.is_empty()) {
             args_parser.print_usage(stderr, arguments.argv[0]);
             return Error::from_string_literal("Must provide all command line options"sv);
         }
 
-        return Core::File::open(path, Core::OpenMode::ReadWrite);
+        return Core::File::open(path, mode);
     };
 
     auto generated_header_file = TRY(open_file(generated_header_path));
     auto generated_implementation_file = TRY(open_file(generated_implementation_path));
+    auto time_zone_coordinates_file = TRY(open_file(time_zone_coordinates_path, Core::OpenMode::ReadOnly));
 
     TimeZoneData time_zone_data {};
     for (auto time_zone_path : time_zone_paths)
         TRY(parse_time_zones(time_zone_path, time_zone_data));
+
+    parse_time_zone_coordinates(time_zone_coordinates_file, time_zone_data);
 
     generate_time_zone_data_header(generated_header_file, time_zone_data);
     generate_time_zone_data_implementation(generated_implementation_file, time_zone_data);
