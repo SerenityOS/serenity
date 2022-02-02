@@ -18,6 +18,7 @@ public:
 
     void set_bitmap(const Gfx::Bitmap*);
     Gfx::Bitmap* bitmap() { return m_bitmap.ptr(); }
+    Gfx::Bitmap const* bitmap() const { return m_bitmap.ptr(); }
 
     void set_should_stretch(bool value) { m_should_stretch = value; }
     bool should_stretch() const { return m_should_stretch; }
