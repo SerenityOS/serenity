@@ -291,11 +291,19 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
     // Note: This is almost identical to ::add()
 
     m_value.visit(
-        [&](float f) {
-            if (op == SumOperation::Add)
-                m_value = f + other.m_value.get<float>();
-            else
-                m_value = f - other.m_value.get<float>();
+        [&](Number const& number) {
+            auto other_number = other.m_value.get<Number>();
+            if (op == SumOperation::Add) {
+                m_value = Number {
+                    .is_integer = number.is_integer && other_number.is_integer,
+                    .value = number.value + other_number.value
+                };
+            } else {
+                m_value = Number {
+                    .is_integer = number.is_integer && other_number.is_integer,
+                    .value = number.value - other_number.value
+                };
+            }
         },
         [&](Length const& length) {
             auto this_px = length.to_px(*layout_node);
@@ -339,13 +347,17 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
 {
     // We know from validation when resolving the type, that at least one side must be a <number> or <integer>.
     // Both of these are represented as a float.
-    VERIFY(m_value.has<float>() || other.m_value.has<float>());
-    bool other_is_number = other.m_value.has<float>();
+    VERIFY(m_value.has<Number>() || other.m_value.has<Number>());
+    bool other_is_number = other.m_value.has<Number>();
 
     m_value.visit(
-        [&](float f) {
+        [&](Number const& number) {
             if (other_is_number) {
-                m_value = f * other.m_value.get<float>();
+                auto other_number = other.m_value.get<Number>();
+                m_value = Number {
+                    .is_integer = number.is_integer && other_number.is_integer,
+                    .value = number.value * other_number.value
+                };
             } else {
                 // Avoid duplicating all the logic by swapping `this` and `other`.
                 CalculationResult new_value = other;
@@ -355,24 +367,27 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
         },
         [&](Length const& length) {
             VERIFY(layout_node);
-            m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<float>());
+            m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value);
         },
         [&](Percentage const& percentage) {
-            m_value = Percentage { percentage.value() * other.m_value.get<float>() };
+            m_value = Percentage { percentage.value() * other.m_value.get<Number>().value };
         });
 }
 
 void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const& other, Layout::Node const* layout_node)
 {
     // We know from validation when resolving the type, that `other` must be a <number> or <integer>.
-    // Both of these are represented as a float.
-    float denominator = other.m_value.get<float>();
+    // Both of these are represented as a Number.
+    auto denominator = other.m_value.get<Number>().value;
     // FIXME: Dividing by 0 is invalid, and should be caught during parsing.
     VERIFY(denominator != 0.0f);
 
     m_value.visit(
-        [&](float f) {
-            m_value = f / denominator;
+        [&](Number const& number) {
+            m_value = Number {
+                .is_integer = false,
+                .value = number.value / denominator
+            };
         },
         [&](Length const& length) {
             VERIFY(layout_node);
@@ -388,7 +403,7 @@ Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout
     auto result = m_expression->resolve(&layout_node, {});
 
     return result.value().visit(
-        [&](float) -> Optional<Length> {
+        [&](Number) -> Optional<Length> {
             return {};
         },
         [&](Length const& length) -> Optional<Length> {
@@ -405,7 +420,7 @@ Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layou
     auto result = m_expression->resolve(&layout_node, percentage_basis);
 
     return result.value().visit(
-        [&](float) -> Optional<LengthPercentage> {
+        [&](Number) -> Optional<LengthPercentage> {
             return {};
         },
         [&](Length const& length) -> Optional<LengthPercentage> {
@@ -427,16 +442,16 @@ Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
 Optional<float> CalculatedStyleValue::resolve_number()
 {
     auto result = m_expression->resolve(nullptr, {});
-    if (result.value().has<float>())
-        return result.value().get<float>();
+    if (result.value().has<Number>())
+        return result.value().get<Number>().value;
     return {};
 }
 
 Optional<i64> CalculatedStyleValue::resolve_integer()
 {
     auto result = m_expression->resolve(nullptr, {});
-    if (result.value().has<float>())
-        return lroundf(result.value().get<float>());
+    if (result.value().has<Number>())
+        return lroundf(result.value().get<Number>().value);
     return {};
 }
 
@@ -596,7 +611,9 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcProductPa
 Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::resolved_type() const
 {
     return value.visit(
-        [](float) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Number }; },
+        [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
+            return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
+        },
         [](Length const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Length }; },
         [](Percentage const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Percentage }; },
         [](NonnullOwnPtr<CalcSum> const& sum) { return sum->resolved_type(); });
@@ -605,15 +622,17 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::re
 Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberValue::resolved_type() const
 {
     return value.visit(
-        [](float) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Number }; },
+        [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
+            return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
+        },
         [](NonnullOwnPtr<CalcNumberSum> const& sum) { return sum->resolved_type(); });
 }
 
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberValue::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
 {
     return value.visit(
-        [&](float f) -> CalculatedStyleValue::CalculationResult {
-            return CalculatedStyleValue::CalculationResult { f };
+        [&](Number const& number) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { number };
         },
         [&](NonnullOwnPtr<CalcNumberSum> const& sum) -> CalculatedStyleValue::CalculationResult {
             return sum->resolve(layout_node, percentage_basis);
@@ -623,8 +642,8 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberValue::r
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
 {
     return value.visit(
-        [&](float f) -> CalculatedStyleValue::CalculationResult {
-            return CalculatedStyleValue::CalculationResult { f };
+        [&](Number const& number) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { number };
         },
         [&](Length const& length) -> CalculatedStyleValue::CalculationResult {
             return CalculatedStyleValue::CalculationResult { length };
@@ -687,6 +706,8 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resol
             [&](CalculatedStyleValue::CalcNumberValue const& calc_number_value) {
                 VERIFY(additional_value.op == CalculatedStyleValue::ProductOperation::Divide);
                 auto resolved_calc_number_value = calc_number_value.resolve(layout_node, percentage_basis);
+                // FIXME: Checking for division by 0 should happen during parsing.
+                VERIFY(resolved_calc_number_value.value().get<Number>().value != 0.0f);
                 value.divide_by(resolved_calc_number_value, layout_node);
             });
     }

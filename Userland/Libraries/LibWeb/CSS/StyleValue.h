@@ -673,9 +673,14 @@ public:
         Divide,
     };
 
+    struct Number {
+        bool is_integer;
+        float value;
+    };
+
     class CalculationResult {
     public:
-        CalculationResult(Variant<float, Length, Percentage> value)
+        CalculationResult(Variant<Number, Length, Percentage> value)
             : m_value(move(value))
         {
         }
@@ -684,11 +689,11 @@ public:
         void multiply_by(CalculationResult const& other, Layout::Node const*);
         void divide_by(CalculationResult const& other, Layout::Node const*);
 
-        Variant<float, Length, Percentage> const& value() const { return m_value; }
+        Variant<Number, Length, Percentage> const& value() const { return m_value; }
 
     private:
         void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
-        Variant<float, Length, Percentage> m_value;
+        Variant<Number, Length, Percentage> m_value;
     };
 
     struct CalcSum;
@@ -701,13 +706,13 @@ public:
     struct CalcNumberProductPartWithOperator;
 
     struct CalcNumberValue {
-        Variant<float, NonnullOwnPtr<CalcNumberSum>> value;
+        Variant<Number, NonnullOwnPtr<CalcNumberSum>> value;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcValue {
-        Variant<float, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
+        Variant<Number, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
