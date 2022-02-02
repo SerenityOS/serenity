@@ -8,7 +8,7 @@
 
 #include <AK/Forward.h>
 
-namespace GUI {
+namespace GUI::GML {
 
 String format_gml(StringView);
 

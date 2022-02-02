@@ -4,25 +4,25 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "GMLLexer.h"
+#include "Lexer.h"
 #include <AK/CharacterTypes.h>
 #include <AK/Vector.h>
 
-namespace GUI {
+namespace GUI::GML {
 
-GMLLexer::GMLLexer(StringView input)
+Lexer::Lexer(StringView input)
     : m_input(input)
 {
 }
 
-char GMLLexer::peek(size_t offset) const
+char Lexer::peek(size_t offset) const
 {
     if ((m_index + offset) >= m_input.length())
         return 0;
     return m_input[m_index + offset];
 }
 
-char GMLLexer::consume()
+char Lexer::consume()
 {
     VERIFY(m_index < m_input.length());
     char ch = m_input[m_index++];
@@ -50,12 +50,12 @@ constexpr bool is_valid_class_character(char ch)
     return is_ascii_alphanumeric(ch) || ch == '_' || ch == ':';
 }
 
-Vector<GMLToken> GMLLexer::lex()
+Vector<Token> Lexer::lex()
 {
-    Vector<GMLToken> tokens;
+    Vector<Token> tokens;
 
     size_t token_start_index = 0;
-    GMLPosition token_start_position;
+    Position token_start_position;
 
     auto begin_token = [&] {
         token_start_index = m_index;
@@ -63,7 +63,7 @@ Vector<GMLToken> GMLLexer::lex()
     };
 
     auto commit_token = [&](auto type) {
-        GMLToken token;
+        Token token;
         token.m_view = m_input.substring_view(token_start_index, m_index - token_start_index);
         token.m_type = type;
         token.m_start = token_start_position;
@@ -74,11 +74,11 @@ Vector<GMLToken> GMLLexer::lex()
     auto consume_class = [&] {
         begin_token();
         consume();
-        commit_token(GMLToken::Type::ClassMarker);
+        commit_token(Token::Type::ClassMarker);
         begin_token();
         while (is_valid_class_character(peek()))
             consume();
-        commit_token(GMLToken::Type::ClassName);
+        commit_token(Token::Type::ClassName);
     };
 
     while (m_index < m_input.length()) {
@@ -94,21 +94,21 @@ Vector<GMLToken> GMLLexer::lex()
             begin_token();
             while (peek() && peek() != '\n')
                 consume();
-            commit_token(GMLToken::Type::Comment);
+            commit_token(Token::Type::Comment);
             continue;
         }
 
         if (peek(0) == '{') {
             begin_token();
             consume();
-            commit_token(GMLToken::Type::LeftCurly);
+            commit_token(Token::Type::LeftCurly);
             continue;
         }
 
         if (peek(0) == '}') {
             begin_token();
             consume();
-            commit_token(GMLToken::Type::RightCurly);
+            commit_token(Token::Type::RightCurly);
             continue;
         }
 
@@ -122,14 +122,14 @@ Vector<GMLToken> GMLLexer::lex()
             consume();
             while (is_valid_identifier_character(peek(0)))
                 consume();
-            commit_token(GMLToken::Type::Identifier);
+            commit_token(Token::Type::Identifier);
             continue;
         }
 
         if (peek(0) == ':') {
             begin_token();
             consume();
-            commit_token(GMLToken::Type::Colon);
+            commit_token(Token::Type::Colon);
 
             while (is_ascii_space(peek()))
                 consume();
@@ -140,13 +140,13 @@ Vector<GMLToken> GMLLexer::lex()
                 begin_token();
                 while (peek() && peek() != '\n')
                     consume();
-                commit_token(GMLToken::Type::JsonValue);
+                commit_token(Token::Type::JsonValue);
             }
             continue;
         }
 
         consume();
-        commit_token(GMLToken::Type::Unknown);
+        commit_token(Token::Type::Unknown);
     }
     return tokens;
 }

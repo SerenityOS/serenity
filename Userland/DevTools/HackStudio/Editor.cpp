@@ -19,8 +19,8 @@
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/GMLAutocompleteProvider.h>
-#include <LibGUI/GMLSyntaxHighlighter.h>
+#include <LibGUI/GML/AutocompleteProvider.h>
+#include <LibGUI/GML/SyntaxHighlighter.h>
 #include <LibGUI/GitCommitSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/Label.h>
@@ -611,7 +611,7 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
         set_syntax_highlighter(make<GUI::GitCommitSyntaxHighlighter>());
         break;
     case Language::GML:
-        set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
+        set_syntax_highlighter(make<GUI::GML::SyntaxHighlighter>());
         break;
     case Language::HTML:
         set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
@@ -637,7 +637,7 @@ void Editor::set_autocomplete_provider_for(CodeDocument const& document)
 {
     switch (document.language()) {
     case Language::GML:
-        set_autocomplete_provider(make<GUI::GMLAutocompleteProvider>());
+        set_autocomplete_provider(make<GUI::GML::AutocompleteProvider>());
         break;
     default:
         set_autocomplete_provider({});
