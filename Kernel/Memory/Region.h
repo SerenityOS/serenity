@@ -196,8 +196,7 @@ public:
 private:
     Region(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
-    [[nodiscard]] bool remap_vmobject_page(size_t page_index, bool with_flush = true);
-    [[nodiscard]] bool do_remap_vmobject_page(size_t page_index, bool with_flush = true);
+    [[nodiscard]] bool remap_individual_page(size_t page_index, ShouldFlushTLB = ShouldFlushTLB::Yes);
 
     void set_access_bit(Access access, bool b)
     {

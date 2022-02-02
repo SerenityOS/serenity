@@ -345,7 +345,7 @@ ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
 
 String BitmapFont::qualified_name() const
 {
-    return String::formatted("{} {} {}", family(), presentation_size(), weight());
+    return String::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope());
 }
 
 String BitmapFont::variant() const
@@ -366,7 +366,7 @@ Font const& Font::bold_variant() const
 {
     if (m_bold_variant)
         return *m_bold_variant;
-    m_bold_variant = Gfx::FontDatabase::the().get(family(), presentation_size(), 700);
+    m_bold_variant = Gfx::FontDatabase::the().get(family(), presentation_size(), 700, 0);
     if (!m_bold_variant)
         m_bold_variant = this;
     return *m_bold_variant;

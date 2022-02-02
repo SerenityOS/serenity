@@ -609,7 +609,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     }
                     auto font = unspanned_font;
                     if (span.attributes.bold) {
-                        if (auto bold_font = Gfx::FontDatabase::the().get(font->family(), font->presentation_size(), 700))
+                        if (auto bold_font = Gfx::FontDatabase::the().get(font->family(), font->presentation_size(), 700, 0))
                             font = bold_font;
                     }
                     draw_text_helper(span_start, span_end, font, span.attributes);

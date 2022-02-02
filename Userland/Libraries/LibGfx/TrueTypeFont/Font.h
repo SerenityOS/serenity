@@ -57,6 +57,7 @@ public:
     String family() const;
     String variant() const;
     u16 weight() const;
+    u8 slope() const;
     bool is_fixed_width() const;
 
 private:
@@ -122,6 +123,7 @@ public:
     // Gfx::Font implementation
     virtual NonnullRefPtr<Font> clone() const override { return *this; } // FIXME: clone() should not need to be implemented
     virtual u8 presentation_size() const override { return m_point_height; }
+    virtual u8 slope() const override { return m_font->slope(); }
     virtual u16 weight() const override { return m_font->weight(); }
     virtual Gfx::Glyph glyph(u32 code_point) const override;
     virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_code_point(code_point) > 0; }
@@ -143,7 +145,8 @@ public:
     virtual size_t glyph_count() const override { return m_font->glyph_count(); }
     virtual String family() const override { return m_font->family(); }
     virtual String variant() const override { return m_font->variant(); }
-    virtual String qualified_name() const override { return String::formatted("{} {} {}", family(), presentation_size(), weight()); }
+    virtual String qualified_name() const override { return String::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope()); }
+    virtual String human_readable_name() const override { return String::formatted("{} {} {}", family(), variant(), presentation_size()); }
 
 private:
     NonnullRefPtr<TTF::Font> m_font;

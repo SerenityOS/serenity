@@ -2,6 +2,8 @@
 
 ![Icon](/res/icons/16x16/app-chess.png) Chess
 
+[Open](file:///bin/Chess)
+
 ## Synopsis
 
 ```**sh

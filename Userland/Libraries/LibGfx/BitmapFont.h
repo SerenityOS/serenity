@@ -37,7 +37,7 @@ public:
     u16 weight() const override { return m_weight; }
     void set_weight(u16 weight) { m_weight = weight; }
 
-    u8 slope() const { return m_slope; }
+    virtual u8 slope() const override { return m_slope; }
     void set_slope(u8 slope) { m_slope = slope; }
 
     Glyph glyph(u32 code_point) const override;
@@ -105,6 +105,7 @@ public:
     String variant() const override;
 
     String qualified_name() const override;
+    String human_readable_name() const override { return String::formatted("{} {} {}", family(), variant(), presentation_size()); }
 
 private:
     BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width,

@@ -129,13 +129,13 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     else
         m_font = Gfx::FontDatabase::the().get_by_name(font_name);
     m_original_font = m_font;
-    font_text.set_text(m_font->qualified_name());
+    font_text.set_text(m_font->human_readable_name());
     font_text.set_font(m_font);
     font_button.on_click = [&](auto) {
         auto picker = GUI::FontPicker::construct(window(), m_font.ptr(), true);
         if (picker->exec() == GUI::Dialog::ExecOK) {
             m_font = picker->font();
-            font_text.set_text(m_font->qualified_name());
+            font_text.set_text(m_font->human_readable_name());
             font_text.set_font(m_font);
             Config::write_string("Terminal", "Text", "Font", m_font->qualified_name());
         }
@@ -143,14 +143,18 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
 
     auto& font_selection = *find_descendant_of_type_named<GUI::Widget>("terminal_font_selection");
     auto& use_default_font_button = *find_descendant_of_type_named<GUI::CheckBox>("terminal_font_defaulted");
-    use_default_font_button.on_checked = [&](bool use_default_font) {
+    use_default_font_button.on_checked = [&, font_name](bool use_default_font) {
         if (use_default_font) {
             font_selection.set_enabled(false);
             m_font = Gfx::FontDatabase::the().default_fixed_width_font();
+            font_text.set_text(m_font->human_readable_name());
+            font_text.set_font(m_font);
             Config::write_string("Terminal", "Text", "Font", m_font->qualified_name());
         } else {
             font_selection.set_enabled(true);
-            m_font = Gfx::FontDatabase::the().get_by_name(font_text.text());
+            m_font = font_name.is_empty()
+                ? Gfx::FontDatabase::the().default_fixed_width_font()
+                : Gfx::FontDatabase::the().get_by_name(font_name);
             Config::write_string("Terminal", "Text", "Font", m_font->qualified_name());
         }
     };

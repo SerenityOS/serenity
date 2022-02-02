@@ -138,11 +138,12 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
     auto it = m_private->full_name_to_font_map.find(name);
     if (it == m_private->full_name_to_font_map.end()) {
         auto parts = name.split_view(" "sv);
-        if (parts.size() >= 3) {
+        if (parts.size() >= 4) {
+            auto slope = parts.take_last().to_int().value_or(0);
             auto weight = parts.take_last().to_int().value_or(0);
             auto size = parts.take_last().to_int().value_or(0);
             auto family = String::join(' ', parts);
-            return get(family, size, weight);
+            return get(family, size, weight, slope);
         }
         dbgln("Font lookup failed: '{}'", name);
         return nullptr;
@@ -150,10 +151,10 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
     return it->value;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigned weight)
+RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigned weight, unsigned slope)
 {
     for (auto typeface : m_private->typefaces) {
-        if (typeface->family() == family && typeface->weight() == weight)
+        if (typeface->family() == family && typeface->weight() == weight && typeface->slope() == slope)
             return typeface->get_font(size);
     }
     return nullptr;

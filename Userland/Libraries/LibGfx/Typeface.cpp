@@ -18,6 +18,16 @@ unsigned Typeface::weight() const
     return m_ttf_font->weight();
 }
 
+u8 Typeface::slope() const
+{
+    VERIFY(m_ttf_font || m_bitmap_fonts.size() > 0);
+
+    if (is_fixed_size())
+        return m_bitmap_fonts[0]->slope();
+
+    return m_ttf_font->slope();
+}
+
 bool Typeface::is_fixed_width() const
 {
     VERIFY(m_ttf_font || m_bitmap_fonts.size() > 0);

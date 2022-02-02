@@ -196,8 +196,9 @@ void WindowServerConnection::key_down(i32 window_id, u32 code_point, u32 key, u3
     }
 
     // FIXME: This shortcut should be configurable.
-    if (modifiers == (Mod_Ctrl | Mod_Shift) && key == Key_A) {
+    if (!m_in_command_palette && modifiers == (Mod_Ctrl | Mod_Shift) && key == Key_A) {
         auto command_palette = CommandPalette::construct(*window);
+        TemporaryChange change { m_in_command_palette, true };
         if (command_palette->exec() != GUI::Dialog::ExecOK)
             return;
         auto* action = command_palette->selected_action();

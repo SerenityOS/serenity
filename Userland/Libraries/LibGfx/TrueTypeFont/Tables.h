@@ -133,12 +133,14 @@ class OS2 {
 public:
     enum class Offsets {
         WeightClass = 4,
+        Selection = 62,
         TypographicAscender = 68,
         TypographicDescender = 70,
         TypographicLineGap = 72,
     };
 
     u16 weight_class() const;
+    u16 selection() const;
     i16 typographic_ascender() const;
     i16 typographic_descender() const;
     i16 typographic_line_gap() const;

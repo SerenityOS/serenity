@@ -220,30 +220,15 @@ bool Region::map_individual_page_impl(size_t page_index)
     return true;
 }
 
-bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
+bool Region::remap_individual_page(size_t page_index, ShouldFlushTLB should_flush_tlb)
 {
-    if (!m_page_directory)
-        return true; // not an error, region may have not yet mapped it
-    if (!translate_vmobject_page(page_index))
-        return true; // not an error, region doesn't map this page
+    VERIFY(m_page_directory);
     SpinlockLocker page_lock(m_page_directory->get_lock());
     SpinlockLocker lock(s_mm_lock);
     VERIFY(physical_page(page_index));
     bool success = map_individual_page_impl(page_index);
-    if (with_flush)
+    if (should_flush_tlb == ShouldFlushTLB::Yes)
         MemoryManager::flush_tlb(m_page_directory, vaddr_from_page_index(page_index));
-    return success;
-}
-
-bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
-{
-    auto& vmobject = this->vmobject();
-    bool success = true;
-    SpinlockLocker lock(vmobject.m_lock);
-    vmobject.for_each_region([&](auto& region) {
-        if (!region.do_remap_vmobject_page(page_index, with_flush))
-            success = false;
-    });
     return success;
 }
 
@@ -358,10 +343,9 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
 
         auto& page_slot = physical_page_slot(page_index_in_region);
         if (page_slot->is_lazy_committed_page()) {
-            auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
             VERIFY(m_vmobject->is_anonymous());
             page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
-            if (!remap_vmobject_page(page_index_in_vmobject))
+            if (!remap_individual_page(page_index_in_region))
                 return PageFaultResponse::OutOfMemory;
             return PageFaultResponse::Continue;
         }
@@ -388,13 +372,12 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     VERIFY(vmobject().is_anonymous());
 
     auto& page_slot = physical_page_slot(page_index_in_region);
-    auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
 
     SpinlockLocker locker(vmobject().m_lock);
 
     if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
         dbgln_if(PAGE_FAULT_DEBUG, "MM: zero_page() but page already present. Fine with me!");
-        if (!remap_vmobject_page(page_index_in_vmobject))
+        if (!remap_individual_page(page_index_in_region))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
     }
@@ -417,7 +400,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
         dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED {}", page_slot->paddr());
     }
 
-    if (!remap_vmobject_page(page_index_in_vmobject)) {
+    if (!remap_individual_page(page_index_in_region)) {
         dmesgln("MM: handle_zero_fault was unable to allocate a page table to map {}", page_slot);
         return PageFaultResponse::OutOfMemory;
     }
@@ -436,7 +419,7 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
     auto response = reinterpret_cast<AnonymousVMObject&>(vmobject()).handle_cow_fault(page_index_in_vmobject, vaddr().offset(page_index_in_region * PAGE_SIZE));
-    if (!remap_vmobject_page(page_index_in_vmobject))
+    if (!remap_individual_page(page_index_in_region))
         return PageFaultResponse::OutOfMemory;
     return response;
 }
@@ -457,7 +440,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         SpinlockLocker locker(inode_vmobject.m_lock);
         if (!vmobject_physical_page_entry.is_null()) {
             dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else before reading, remapping.");
-            if (!remap_vmobject_page(page_index_in_vmobject))
+            if (!remap_individual_page(page_index_in_region))
                 return PageFaultResponse::OutOfMemory;
             return PageFaultResponse::Continue;
         }
@@ -492,7 +475,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         // Someone else faulted in this page while we were reading from the inode.
         // No harm done (other than some duplicate work), remap the page here and return.
         dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else, remapping.");
-        if (!remap_vmobject_page(page_index_in_vmobject))
+        if (!remap_individual_page(page_index_in_region))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
     }
@@ -511,7 +494,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         MM.unquickmap_page();
     }
 
-    if (!remap_vmobject_page(page_index_in_vmobject))
+    if (!remap_individual_page(page_index_in_region))
         return PageFaultResponse::OutOfMemory;
 
     return PageFaultResponse::Continue;

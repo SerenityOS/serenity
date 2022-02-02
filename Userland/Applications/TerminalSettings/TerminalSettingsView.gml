@@ -54,7 +54,6 @@
 
                 @GUI::Label {
                     name: "terminal_font_label"
-                    text: "Csilla 10 400"
                 }
             }
 

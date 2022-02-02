@@ -28,7 +28,6 @@
 
             @GUI::Label {
                 name: "default_font_label"
-                text: "Katica 10 400"
             }
         }
 
@@ -61,7 +60,6 @@
 
             @GUI::Label {
                 name: "fixed_width_font_label"
-                text: "Csilla 10 400"
             }
         }
 

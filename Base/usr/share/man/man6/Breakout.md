@@ -2,6 +2,8 @@
 
 ![Icon](/res/icons/16x16/app-breakout.png) Breakout
 
+[Open](file:///bin/Breakout)
+
 ## Synopsis
 
 ```**sh

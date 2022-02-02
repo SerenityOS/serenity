@@ -2,6 +2,8 @@
 
 ![Icon](/res/icons/16x16/app-gameoflife.png) GameOfLife
 
+[Open](file:///bin/GameOfLife)
+
 ## Synopsis
 
 ```**sh

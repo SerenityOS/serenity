@@ -2,6 +2,8 @@
 
 ![Icon](/res/icons/16x16/app-pong.png) Pong
 
+[Open](file:///bin/Pong)
+
 ## Synopsis
 
 ```**sh
