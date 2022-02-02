@@ -334,9 +334,9 @@ if (BUILD_LAGOM)
         LIBS m LagomGfx LagomSoftGPU)
 
     # GUI-GML
-    file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML*.cpp")
-    list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GMLAutocompleteProvider.cpp")
-    list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GMLSyntaxHighlighter.cpp")
+    file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML/*.cpp")
+    list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GML/AutocompleteProvider.cpp")
+    list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GML/SyntaxHighlighter.cpp")
     lagom_lib(GML gml
         SOURCES ${LIBGUI_GML_SOURCES}
     )
