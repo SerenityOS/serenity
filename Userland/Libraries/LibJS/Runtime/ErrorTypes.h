@@ -232,6 +232,7 @@
     M(TemporalInvalidDurationString, "Invalid duration string '{}'")                                                                    \
     M(TemporalInvalidDurationStringFractionNotLast, "Invalid duration string '{}': fractional {} must not be proceeded by {}")          \
     M(TemporalInvalidEpochNanoseconds, "Invalid epoch nanoseconds value, must be in range -86400 * 10^17 to 86400 * 10^17")             \
+    M(TemporalInvalidExtendedYearNegativeZero, "Invalid extended year, must not be negative zero")                                      \
     M(TemporalInvalidInstantString, "Invalid instant string '{}'")                                                                      \
     M(TemporalInvalidISODate, "Invalid ISO date")                                                                                       \
     M(TemporalInvalidMonthCode, "Invalid month code")                                                                                   \

@@ -186,4 +186,10 @@ describe("errors", () => {
             "Invalid date time string '2021-07-06T23:42:01Z': must not contain a UTC designator"
         );
     });
+
+    test("extended year must not be negative zero", () => {
+        expect(() => {
+            Temporal.PlainDateTime.from("-000000-01-01");
+        }).toThrowWithMessage(RangeError, "Invalid extended year, must not be negative zero");
+    });
 });

@@ -49,4 +49,10 @@ describe("errors", () => {
             Temporal.PlainDate.from("foo");
         }).toThrowWithMessage(RangeError, "Invalid date string 'foo'");
     });
+
+    test("extended year must not be negative zero", () => {
+        expect(() => {
+            Temporal.PlainDate.from("-000000-01-01");
+        }).toThrowWithMessage(RangeError, "Invalid extended year, must not be negative zero");
+    });
 });
