@@ -678,6 +678,11 @@ public:
         return m_buffer.size();
     }
 
+    size_t buffered_data_size() const
+    {
+        return m_buffered_size;
+    }
+
     void clear_buffer()
     {
         m_buffered_size = 0;
@@ -797,8 +802,11 @@ public:
     virtual bool is_eof() const override { return m_helper.is_eof(); }
     virtual bool is_open() const override { return m_helper.stream().is_open(); }
     virtual void close() override { m_helper.stream().close(); }
-    virtual ErrorOr<size_t> pending_bytes() const override { return m_helper.stream().pending_bytes(); }
-    virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.stream().can_read_without_blocking(timeout); }
+    virtual ErrorOr<size_t> pending_bytes() const override
+    {
+        return TRY(m_helper.stream().pending_bytes()) + m_helper.buffered_data_size();
+    }
+    virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.buffered_data_size() > 0 || TRY(m_helper.stream().can_read_without_blocking(timeout)); }
     virtual ErrorOr<void> set_blocking(bool enabled) override { return m_helper.stream().set_blocking(enabled); }
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.stream().set_close_on_exec(enabled); }
     virtual void set_notifications_enabled(bool enabled) override { m_helper.stream().set_notifications_enabled(enabled); }
