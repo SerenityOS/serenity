@@ -658,6 +658,9 @@ public:
 
             if (populated_slice.contains_slow('\n'))
                 return true;
+
+            if (populated_slice.is_empty())
+                break;
         }
 
         return false;
