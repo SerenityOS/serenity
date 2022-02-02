@@ -167,8 +167,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab", nullptr, 'a');
     args_parser.parse(arguments);
 
-    if (should_mount_all)
+    if (should_mount_all) {
         TRY(mount_all());
+        return 0;
+    }
 
     if (source.is_empty() && mountpoint.is_empty())
         TRY(print_mounts());
