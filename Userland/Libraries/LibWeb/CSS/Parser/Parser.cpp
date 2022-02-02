@@ -2498,7 +2498,7 @@ RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<StyleComponen
         return {};
     }
 
-    return StyleValueList::create(move(values));
+    return StyleValueList::create(move(values), StyleValueList::Separator::Comma);
 }
 
 RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(Vector<StyleComponentValueRule> const& component_values)
@@ -2670,13 +2670,13 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<StyleComponentValueRule
             background_color = property_initial_value(PropertyID::BackgroundColor);
         return BackgroundStyleValue::create(
             background_color.release_nonnull(),
-            StyleValueList::create(move(background_images)),
-            StyleValueList::create(move(background_positions)),
-            StyleValueList::create(move(background_sizes)),
-            StyleValueList::create(move(background_repeats)),
-            StyleValueList::create(move(background_attachments)),
-            StyleValueList::create(move(background_origins)),
-            StyleValueList::create(move(background_clips)));
+            StyleValueList::create(move(background_images), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_positions), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_sizes), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_repeats), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_attachments), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_origins), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_clips), StyleValueList::Separator::Comma));
     }
 
     if (!background_color)
@@ -3127,7 +3127,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
     border_radii.append(BorderRadiusStyleValue::create(bottom_left(horizontal_radii),
         vertical_radii.is_empty() ? bottom_left(horizontal_radii) : bottom_left(vertical_radii)));
 
-    return StyleValueList::create(move(border_radii));
+    return StyleValueList::create(move(border_radii), StyleValueList::Separator::Space);
 }
 
 RefPtr<StyleValue> Parser::parse_box_shadow_value(Vector<StyleComponentValueRule> const& component_values)
@@ -3457,7 +3457,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<StyleComponentValueRul
 
     if (font_families.is_empty())
         return nullptr;
-    return StyleValueList::create(move(font_families));
+    return StyleValueList::create(move(font_families), StyleValueList::Separator::Comma);
 }
 
 RefPtr<StyleValue> Parser::parse_list_style_value(Vector<StyleComponentValueRule> const& component_values)
@@ -3648,7 +3648,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
 
         transformations.append(TransformationStyleValue::create(maybe_function.value(), move(values)));
     }
-    return StyleValueList::create(move(transformations));
+    return StyleValueList::create(move(transformations), StyleValueList::Separator::Space);
 }
 
 RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
@@ -3816,7 +3816,7 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
             parsed_values.append(parsed_value.release_nonnull());
         }
         if (!parsed_values.is_empty() && parsed_values.size() <= property_maximum_value_count(property_id))
-            return { StyleValueList::create(move(parsed_values)) };
+            return { StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space) };
     }
 
     return ParsingResult::SyntaxError;

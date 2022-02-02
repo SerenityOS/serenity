@@ -83,7 +83,7 @@ static RefPtr<StyleValue> style_value_for_display(CSS::Display display)
             break;
         }
 
-        return StyleValueList::create(move(values));
+        return StyleValueList::create(move(values), StyleValueList::Separator::Space);
     }
 
     if (display.is_internal()) {
@@ -550,7 +550,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         values.append(style_value_for_length_percentage(margin.right));
         values.append(style_value_for_length_percentage(margin.bottom));
         values.append(style_value_for_length_percentage(margin.left));
-        return StyleValueList::create(move(values));
+        return StyleValueList::create(move(values), StyleValueList::Separator::Space);
     }
     case CSS::PropertyID::MarginTop:
         return style_value_for_length_percentage(layout_node.computed_values().margin().top);
@@ -567,7 +567,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         values.append(style_value_for_length_percentage(padding.right));
         values.append(style_value_for_length_percentage(padding.bottom));
         values.append(style_value_for_length_percentage(padding.left));
-        return StyleValueList::create(move(values));
+        return StyleValueList::create(move(values), StyleValueList::Separator::Space);
     }
     case CSS::PropertyID::PaddingTop:
         return style_value_for_length_percentage(layout_node.computed_values().padding().top);
