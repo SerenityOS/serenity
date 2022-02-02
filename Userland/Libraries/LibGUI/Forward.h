@@ -34,6 +34,7 @@ class HorizontalBoxLayout;
 class HorizontalSlider;
 class Icon;
 class IconView;
+class ImageWidget;
 class JsonArrayModel;
 class KeyEvent;
 class Label;
