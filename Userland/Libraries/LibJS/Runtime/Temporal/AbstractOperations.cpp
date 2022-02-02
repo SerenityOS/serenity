@@ -1242,7 +1242,8 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
     }
 
     // 3. Let result be ! ParseISODateTime(isoString).
-    auto result = MUST(parse_iso_date_time(global_object, *parse_result));
+    // NOTE: !/? confusion is a spec issue. See: https://github.com/tc39/proposal-temporal/pull/2027
+    auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
     // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
     auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));
@@ -1278,7 +1279,8 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(G
     }
 
     // 3. Let result be ! ParseISODateTime(isoString).
-    auto result = MUST(parse_iso_date_time(global_object, *parse_result));
+    // NOTE: !/? confusion is a spec issue. See: https://github.com/tc39/proposal-temporal/pull/2027
+    auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
     // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
     auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));
@@ -1560,7 +1562,8 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
     }
 
     // 3. Let result be ! ParseISODateTime(isoString).
-    auto result = MUST(parse_iso_date_time(global_object, *parse_result));
+    // NOTE: !/? confusion is a spec issue. See: https://github.com/tc39/proposal-temporal/pull/2027
+    auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
     bool z;
     Optional<String> offset_string;
