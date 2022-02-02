@@ -4,4 +4,4 @@ Executable=/bin/PixelPaint
 Category=Graphics
 
 [Launcher]
-FileTypes=pp
+FileTypes=pp,bmp,png,jpg,jpeg
