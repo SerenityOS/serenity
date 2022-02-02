@@ -5,6 +5,7 @@
  */
 
 #include "ClockSettingsWidget.h"
+#include <AK/Time.h>
 #include <Applications/ClockSettings/ClockSettingsWidgetGML.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Event.h>
@@ -16,6 +17,8 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 #include <LibTimeZone/TimeZone.h>
+#include <LibUnicode/DateTimeFormat.h>
+#include <LibUnicode/Locale.h>
 #include <math.h>
 #include <spawn.h>
 #include <unistd.h>
@@ -30,6 +33,11 @@ static constexpr auto TAU = M_PIf32 * 2.0f;
 // we can remove. This makes the map non-Mercadian, so we need to adjust our math based on what we removed.
 static constexpr auto TIME_ZONE_MAP_NORTHERN_TRIM = 78;
 static constexpr auto TIME_ZONE_MAP_SOUTHERN_TRIM = 50;
+
+static constexpr auto TIME_ZONE_TEXT_WIDTH = 210;
+static constexpr auto TIME_ZONE_TEXT_HEIGHT = 40;
+static constexpr auto TIME_ZONE_TEXT_PADDING = 5;
+static constexpr auto TIME_ZONE_TEXT_COLOR = Gfx::Color::from_rgb(0xeaf688);
 
 ClockSettingsWidget::ClockSettingsWidget()
 {
@@ -73,6 +81,21 @@ void ClockSettingsWidget::second_paint_event(GUI::PaintEvent& event)
     auto point = m_time_zone_location->to_type<int>().translated(x, y);
     point.translate_by(-m_time_zone_marker->width() / 2, -m_time_zone_marker->height() / 2);
     painter.blit(point, *m_time_zone_marker, rect());
+
+    point = m_time_zone_location->to_type<int>().translated(x, y);
+    point.translate_by(0, -TIME_ZONE_TEXT_HEIGHT / 2);
+
+    if (point.x() <= (m_time_zone_map->width() / 2))
+        point.translate_by(m_time_zone_marker->width() / 2 + TIME_ZONE_TEXT_PADDING, 0);
+    else
+        point.translate_by(-m_time_zone_marker->width() / 2 - TIME_ZONE_TEXT_PADDING - TIME_ZONE_TEXT_WIDTH, 0);
+
+    auto text_area = Gfx::IntRect { point.x(), point.y(), TIME_ZONE_TEXT_WIDTH, TIME_ZONE_TEXT_HEIGHT };
+    painter.draw_rect(text_area, palette().active_window_border1());
+
+    text_area.shrink(2, 2);
+    painter.fill_rect(text_area, TIME_ZONE_TEXT_COLOR);
+    painter.draw_text(text_area, m_time_zone_text, Gfx::TextAlignment::Center);
 }
 
 void ClockSettingsWidget::reset_default_values()
@@ -97,6 +120,14 @@ void ClockSettingsWidget::apply_settings()
 void ClockSettingsWidget::set_time_zone_location()
 {
     m_time_zone_location = compute_time_zone_location();
+
+    auto locale = Unicode::default_locale();
+    auto now = AK::Time::now_realtime();
+
+    auto name = Unicode::format_time_zone(locale, m_time_zone, Unicode::CalendarPatternStyle::Long, now);
+    auto offset = Unicode::format_time_zone(locale, m_time_zone, Unicode::CalendarPatternStyle::LongOffset, now);
+
+    m_time_zone_text = String::formatted("{}\n({})", name, offset);
 }
 
 // https://en.wikipedia.org/wiki/Mercator_projection#Derivation
