@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
 #include <LibGfx/Palette.h>
+#include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -247,6 +248,59 @@ String BackgroundStyleValue::to_string() const
     return builder.to_string();
 }
 
+String BackgroundRepeatStyleValue::to_string() const
+{
+    return String::formatted("{} {}", CSS::to_string(m_repeat_x), CSS::to_string(m_repeat_y));
+}
+
+String BackgroundSizeStyleValue::to_string() const
+{
+    return String::formatted("{} {}", m_size_x.to_string(), m_size_y.to_string());
+}
+
+String BorderStyleValue::to_string() const
+{
+    return String::formatted("Border border_width: {}, border_style: {}, border_color: {}", m_border_width->to_string(), m_border_style->to_string(), m_border_color->to_string());
+}
+
+String BorderRadiusStyleValue::to_string() const
+{
+    return String::formatted("{} / {}", m_horizontal_radius.to_string(), m_vertical_radius.to_string());
+}
+
+String BoxShadowStyleValue::to_string() const
+{
+    return String::formatted("BoxShadow offset_x: {}, offset_y: {}, blur_radius: {}, color: {}", m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_color.to_string());
+}
+
+// https://www.w3.org/TR/css-color-4/#serializing-sRGB-values
+String ColorStyleValue::to_string() const
+{
+    if (m_color.alpha() == 1)
+        return String::formatted("rgb({}, {}, {})", m_color.red(), m_color.green(), m_color.blue());
+    return String::formatted("rgba({}, {}, {}, {})", m_color.red(), m_color.green(), m_color.blue(), (float)(m_color.alpha()) / 255.0f);
+}
+
+String CombinedBorderRadiusStyleValue::to_string() const
+{
+    return String::formatted("{} {} {} {} / {} {} {} {}", m_top_left->horizontal_radius().to_string(), m_top_right->horizontal_radius().to_string(), m_bottom_right->horizontal_radius().to_string(), m_bottom_left->horizontal_radius().to_string(), m_top_left->vertical_radius().to_string(), m_top_right->vertical_radius().to_string(), m_bottom_right->vertical_radius().to_string(), m_bottom_left->vertical_radius().to_string());
+}
+
+String FlexStyleValue::to_string() const
+{
+    return String::formatted("Flex grow: {}, shrink: {}, basis: {}", m_grow->to_string(), m_shrink->to_string(), m_basis->to_string());
+}
+
+String FlexFlowStyleValue::to_string() const
+{
+    return String::formatted("FlexFlow flex_direction: {}, flex_wrap: {}", m_flex_direction->to_string(), m_flex_wrap->to_string());
+}
+
+String FontStyleValue::to_string() const
+{
+    return String::formatted("Font style: {}, weight: {}, size: {}, line_height: {}, families: {}", m_font_style->to_string(), m_font_weight->to_string(), m_font_size->to_string(), m_line_height->to_string(), m_font_families->to_string());
+}
+
 String IdentifierStyleValue::to_string() const
 {
     return CSS::string_from_value_id(m_id);
@@ -471,12 +525,35 @@ void ImageStyleValue::resource_did_load()
         m_document->browsing_context()->set_needs_display({});
 }
 
-// https://www.w3.org/TR/css-color-4/#serializing-sRGB-values
-String ColorStyleValue::to_string() const
+String ImageStyleValue::to_string() const
 {
-    if (m_color.alpha() == 1)
-        return String::formatted("rgb({}, {}, {})", m_color.red(), m_color.green(), m_color.blue());
-    return String::formatted("rgba({}, {}, {}, {})", m_color.red(), m_color.green(), m_color.blue(), (float)(m_color.alpha()) / 255.0f);
+    return String::formatted("Image({})", m_url.to_string());
+}
+
+String ListStyleStyleValue::to_string() const
+{
+    return String::formatted("ListStyle position: {}, image: {}, style_type: {}", m_position->to_string(), m_image->to_string(), m_style_type->to_string());
+}
+
+String NumericStyleValue::to_string() const
+{
+    return m_value.visit(
+        [](float value) {
+            return String::formatted("{}", value);
+        },
+        [](i64 value) {
+            return String::formatted("{}", value);
+        });
+}
+
+String OverflowStyleValue::to_string() const
+{
+    return String::formatted("{} {}", m_overflow_x->to_string(), m_overflow_y->to_string());
+}
+
+String PercentageStyleValue::to_string() const
+{
+    return m_percentage.to_string();
 }
 
 String PositionStyleValue::to_string() const
@@ -498,11 +575,34 @@ String PositionStyleValue::to_string() const
     return String::formatted("{} {} {} {}", to_string(m_edge_x), m_offset_x.to_string(), to_string(m_edge_y), m_offset_y.to_string());
 }
 
+String TextDecorationStyleValue::to_string() const
+{
+    return String::formatted("TextDecoration line: {}, style: {}, color: {}", m_line->to_string(), m_style->to_string(), m_color->to_string());
+}
+
+String TransformationStyleValue::to_string() const
+{
+    return "TransformationStyleValue";
+}
+
 String UnresolvedStyleValue::to_string() const
 {
     StringBuilder builder;
     for (auto& value : m_values)
         builder.append(value.to_string());
+    return builder.to_string();
+}
+
+String StyleValueList::to_string() const
+{
+    StringBuilder builder;
+    builder.appendff("List[{}](", m_values.size());
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (i)
+            builder.append(',');
+        builder.append(m_values[i].to_string());
+    }
+    builder.append(')');
     return builder.to_string();
 }
 
