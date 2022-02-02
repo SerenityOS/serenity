@@ -183,4 +183,13 @@ Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(StringView time_zone
     return {};
 }
 
+Optional<Location> __attribute__((weak)) get_time_zone_location(TimeZone) { return {}; }
+
+Optional<Location> get_time_zone_location(StringView time_zone)
+{
+    if (auto maybe_time_zone = time_zone_from_string(time_zone); maybe_time_zone.has_value())
+        return get_time_zone_location(*maybe_time_zone);
+    return {};
+}
+
 }
