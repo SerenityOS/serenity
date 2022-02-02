@@ -34,4 +34,5 @@ private:
     RefPtr<Gfx::Bitmap> m_time_zone_marker;
 
     Optional<Gfx::FloatPoint> m_time_zone_location;
+    String m_time_zone_text;
 };
