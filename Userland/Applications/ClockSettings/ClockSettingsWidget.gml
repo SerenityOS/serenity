@@ -8,7 +8,6 @@
 
     @GUI::GroupBox {
         title: "Time Zone Settings"
-        fixed_height: 120
 
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
@@ -35,6 +34,11 @@
             @GUI::ComboBox {
                 name: "time_zone_input"
             }
+        }
+
+        @GUI::ImageWidget {
+            name: "time_zone_map"
+            auto_resize: true
         }
     }
 }

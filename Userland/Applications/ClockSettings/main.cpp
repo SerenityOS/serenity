@@ -28,6 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::SettingsWindow::create("Clock Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     (void)TRY(window->add_tab<ClockSettingsWidget>("Clock"));
     window->set_icon(app_icon.bitmap_for_size(16));
+    window->resize(540, 570);
 
     window->show();
     return app->exec();
