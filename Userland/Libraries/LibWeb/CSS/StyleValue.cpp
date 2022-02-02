@@ -398,6 +398,86 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
         });
 }
 
+String CalculatedStyleValue::to_string() const
+{
+    return String::formatted("calc({})", m_expression->to_string());
+}
+
+String CalculatedStyleValue::CalcNumberValue::to_string() const
+{
+    return value.visit(
+        [](Number const& number) { return String::number(number.value); },
+        [](NonnullOwnPtr<CalcNumberSum> const& sum) { return String::formatted("({})", sum->to_string()); });
+}
+
+String CalculatedStyleValue::CalcValue::to_string() const
+{
+    return value.visit(
+        [](Number const& number) { return String::number(number.value); },
+        [](Length const& length) { return length.to_string(); },
+        [](Percentage const& percentage) { return percentage.to_string(); },
+        [](NonnullOwnPtr<CalcSum> const& sum) { return String::formatted("({})", sum->to_string()); });
+}
+
+String CalculatedStyleValue::CalcSum::to_string() const
+{
+    StringBuilder builder;
+    builder.append(first_calc_product->to_string());
+    for (auto const& item : zero_or_more_additional_calc_products)
+        builder.append(item.to_string());
+    return builder.to_string();
+}
+
+String CalculatedStyleValue::CalcNumberSum::to_string() const
+{
+    StringBuilder builder;
+    builder.append(first_calc_number_product->to_string());
+    for (auto const& item : zero_or_more_additional_calc_number_products)
+        builder.append(item.to_string());
+    return builder.to_string();
+}
+
+String CalculatedStyleValue::CalcProduct::to_string() const
+{
+    StringBuilder builder;
+    builder.append(first_calc_value.to_string());
+    for (auto const& item : zero_or_more_additional_calc_values)
+        builder.append(item.to_string());
+    return builder.to_string();
+}
+
+String CalculatedStyleValue::CalcSumPartWithOperator::to_string() const
+{
+    return String::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, value->to_string());
+}
+
+String CalculatedStyleValue::CalcProductPartWithOperator::to_string() const
+{
+    auto value_string = value.visit(
+        [](CalcValue const& v) { return v.to_string(); },
+        [](CalcNumberValue const& v) { return v.to_string(); });
+    return String::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, value_string);
+}
+
+String CalculatedStyleValue::CalcNumberProduct::to_string() const
+{
+    StringBuilder builder;
+    builder.append(first_calc_number_value.to_string());
+    for (auto const& item : zero_or_more_additional_calc_number_values)
+        builder.append(item.to_string());
+    return builder.to_string();
+}
+
+String CalculatedStyleValue::CalcNumberProductPartWithOperator::to_string() const
+{
+    return String::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, value.to_string());
+}
+
+String CalculatedStyleValue::CalcNumberSumPartWithOperator::to_string() const
+{
+    return String::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, value->to_string());
+}
+
 Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout_node) const
 {
     auto result = m_expression->resolve(&layout_node, {});

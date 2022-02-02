@@ -2124,8 +2124,7 @@ RefPtr<StyleValue> Parser::parse_calculated_value(Vector<StyleComponentValueRule
     };
     dbgln_if(CSS_PARSER_DEBUG, "Deduced calc() resolved type as: {}", to_string(calc_type.value()));
 
-    // FIXME: Either produce a string value of calc() here, or do so in CalculatedStyleValue::to_string().
-    return CalculatedStyleValue::create("(FIXME:calc to string)", calc_expression.release_nonnull(), calc_type.release_value());
+    return CalculatedStyleValue::create(calc_expression.release_nonnull(), calc_type.release_value());
 }
 
 RefPtr<StyleValue> Parser::parse_dynamic_value(StyleComponentValueRule const& component_value)
