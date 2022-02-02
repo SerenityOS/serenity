@@ -595,15 +595,19 @@ String UnresolvedStyleValue::to_string() const
 
 String StyleValueList::to_string() const
 {
-    StringBuilder builder;
-    builder.appendff("List[{}](", m_values.size());
-    for (size_t i = 0; i < m_values.size(); ++i) {
-        if (i)
-            builder.append(',');
-        builder.append(m_values[i].to_string());
+    String separator = "";
+    switch (m_separator) {
+    case Separator::Space:
+        separator = " ";
+        break;
+    case Separator::Comma:
+        separator = ", ";
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
-    builder.append(')');
-    return builder.to_string();
+
+    return String::join(separator, m_values);
 }
 
 }

@@ -1329,7 +1329,11 @@ private:
 
 class StyleValueList final : public StyleValue {
 public:
-    static NonnullRefPtr<StyleValueList> create(NonnullRefPtrVector<StyleValue>&& values) { return adopt_ref(*new StyleValueList(move(values))); }
+    enum class Separator {
+        Space,
+        Comma,
+    };
+    static NonnullRefPtr<StyleValueList> create(NonnullRefPtrVector<StyleValue>&& values, Separator separator) { return adopt_ref(*new StyleValueList(move(values), separator)); }
 
     size_t size() const { return m_values.size(); }
     NonnullRefPtrVector<StyleValue> const& values() const { return m_values; }
@@ -1343,13 +1347,23 @@ public:
     virtual String to_string() const override;
 
 private:
-    StyleValueList(NonnullRefPtrVector<StyleValue>&& values)
+    StyleValueList(NonnullRefPtrVector<StyleValue>&& values, Separator separator)
         : StyleValue(Type::ValueList)
+        , m_separator(separator)
         , m_values(move(values))
     {
     }
 
+    Separator m_separator;
     NonnullRefPtrVector<StyleValue> m_values;
 };
 
 }
+
+template<>
+struct AK::Formatter<Web::CSS::StyleValue> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::StyleValue const& style_value)
+    {
+        return Formatter<StringView>::format(builder, style_value.to_string());
+    }
+};
