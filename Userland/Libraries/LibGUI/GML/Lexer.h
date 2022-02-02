@@ -67,3 +67,5 @@ private:
 };
 
 }
+
+#undef FOR_EACH_TOKEN_TYPE
