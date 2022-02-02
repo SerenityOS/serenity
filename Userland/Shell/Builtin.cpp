@@ -922,7 +922,7 @@ int Shell::builtin_time(int argc, const char** argv)
         for (size_t i = 1; i < iteration_times.size(); i++)
             iteration_times_excluding_first.add(iteration_times.values()[i]);
 
-        warnln("Timing report:");
+        warnln("Timing report: {} ms", iteration_times.sum());
         warnln("==============");
         warnln("Command:         {}", String::join(' ', args));
         warnln("Average time:    {:.2} ms (median: {}, stddev: {:.2}, min: {}, max:{})",
