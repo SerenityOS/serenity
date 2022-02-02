@@ -694,8 +694,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_action()
     return GUI::CommonActions::make_save_action([&](auto&) {
         if (active_file().is_empty())
             m_save_as_action->activate();
-
-        current_editor_wrapper().save();
+        else
+            current_editor_wrapper().save();
 
         if (m_git_widget->initialized())
             m_git_widget->refresh();
