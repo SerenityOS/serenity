@@ -870,11 +870,9 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
         },
         window);
 
-    auto go_back_action = GUI::CommonActions::make_go_back_action(
-        [&](auto&) {
-            directory_view->open_previous_directory();
-        },
-        window);
+    auto go_back_action = GUI::Action::create("Go &Back", { Mod_Alt, Key_Left }, { Key_Backspace }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+        directory_view->open_previous_directory();
+    });
 
     auto go_forward_action = GUI::CommonActions::make_go_forward_action(
         [&](auto&) {
