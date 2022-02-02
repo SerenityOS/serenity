@@ -10,8 +10,8 @@
 #include <AK/IPv4Address.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Socket.h>
-#include <LibCore/TCPSocket.h>
+#include <LibCore/Stream.h>
+#include <LibCore/Timer.h>
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/Cipher/AES.h>
@@ -215,7 +215,17 @@ struct Options {
 
 #define OPTION_WITH_DEFAULTS(typ, name, ...)                    \
     static typ default_##name() { return typ { __VA_ARGS__ }; } \
-    typ name = default_##name();
+    typ name = default_##name();                                \
+    Options& set_##name(typ new_value)&                         \
+    {                                                           \
+        name = move(new_value);                                 \
+        return *this;                                           \
+    }                                                           \
+    Options&& set_##name(typ new_value)&&                       \
+    {                                                           \
+        name = move(new_value);                                 \
+        return move(*this);                                     \
+    }
 
     OPTION_WITH_DEFAULTS(Version, version, Version::V12)
     OPTION_WITH_DEFAULTS(Vector<SignatureAndHashAlgorithm>, supported_signature_algorithms,
@@ -227,6 +237,10 @@ struct Options {
     OPTION_WITH_DEFAULTS(bool, use_sni, true)
     OPTION_WITH_DEFAULTS(bool, use_compression, false)
     OPTION_WITH_DEFAULTS(bool, validate_certificates, true)
+    OPTION_WITH_DEFAULTS(Optional<Vector<Certificate>>, root_certificates, )
+    OPTION_WITH_DEFAULTS(Function<void(AlertDescription)>, alert_handler, [](auto) {})
+    OPTION_WITH_DEFAULTS(Function<void()>, finish_callback, [] {})
+    OPTION_WITH_DEFAULTS(Function<Vector<Certificate>()>, certificate_provider, [] { return Vector<Certificate> {}; })
 
 #undef OPTION_WITH_DEFAULTS
 };
@@ -290,6 +304,7 @@ struct Context {
     ClientVerificationStaus client_verified { Verified };
 
     bool connection_finished { false };
+    bool close_notify { false };
     bool has_invoked_finish_or_error_callback { false };
 
     // message flags
@@ -311,12 +326,55 @@ struct Context {
     } server_diffie_hellman_params;
 };
 
-class TLSv12 : public Core::Socket {
-    C_OBJECT(TLSv12)
+class TLSv12 final : public Core::Stream::Socket {
+private:
+    Core::Stream::Socket& underlying_stream()
+    {
+        return *m_stream.visit([&](auto& stream) -> Core::Stream::Socket* { return stream; });
+    }
+    Core::Stream::Socket const& underlying_stream() const
+    {
+        return *m_stream.visit([&](auto& stream) -> Core::Stream::Socket const* { return stream; });
+    }
+
 public:
-    ByteBuffer& write_buffer() { return m_context.tls_buffer; }
+    virtual bool is_readable() const override { return true; }
+    virtual bool is_writable() const override { return true; }
+
+    /// Reads into a buffer, with the maximum size being the size of the buffer.
+    /// The amount of bytes read can be smaller than the size of the buffer.
+    /// Returns either the amount of bytes read, or an errno in the case of
+    /// failure.
+    virtual ErrorOr<size_t> read(Bytes) override;
+
+    /// Tries to write the entire contents of the buffer. It is possible for
+    /// less than the full buffer to be written. Returns either the amount of
+    /// bytes written into the stream, or an errno in the case of failure.
+    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+
+    virtual bool is_eof() const override { return m_context.connection_finished && m_context.application_buffer.is_empty(); }
+
+    virtual bool is_open() const override { return is_established(); }
+    virtual void close() override;
+
+    virtual ErrorOr<size_t> pending_bytes() const override { return m_context.application_buffer.size(); }
+    virtual ErrorOr<bool> can_read_without_blocking(int = 0) const override { return !m_context.application_buffer.is_empty(); }
+    virtual ErrorOr<void> set_blocking(bool block) override
+    {
+        VERIFY(!block);
+        return {};
+    }
+    virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return underlying_stream().set_close_on_exec(enabled); }
+
+    virtual void set_notifications_enabled(bool enabled) override { underlying_stream().set_notifications_enabled(enabled); }
+
+    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(String const& host, u16 port, Options = {});
+    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(String const& host, Core::Stream::Socket& underlying_stream, Options = {});
+
+    using StreamVariantType = Variant<OwnPtr<Core::Stream::Socket>, Core::Stream::Socket*>;
+    explicit TLSv12(StreamVariantType, Options);
+
     bool is_established() const { return m_context.connection_status == ConnectionStatus::Established; }
-    virtual bool connect(const String&, int) override;
 
     void set_sni(StringView sni)
     {
@@ -332,12 +390,7 @@ public:
 
     void set_root_certificates(Vector<Certificate>);
 
-    bool add_client_key(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes key_pem_buffer);
-    bool add_client_key(Certificate certificate)
-    {
-        m_context.client_certificates.append(move(certificate));
-        return true;
-    }
+    static Vector<Certificate> parse_pem_certificate(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes key_pem_buffer);
 
     ByteBuffer finish_build();
 
@@ -363,35 +416,19 @@ public:
         return v == Version::V12;
     }
 
-    Optional<ByteBuffer> read();
-    ByteBuffer read(size_t max_size);
-
-    bool write(ReadonlyBytes);
     void alert(AlertLevel, AlertDescription);
 
     bool can_read_line() const { return m_context.application_buffer.size() && memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size()); }
     bool can_read() const { return m_context.application_buffer.size() > 0; }
     String read_line(size_t max_size);
 
-    void set_on_tls_ready_to_write(Function<void(TLSv12&)> function)
-    {
-        on_tls_ready_to_write = move(function);
-        if (on_tls_ready_to_write) {
-            if (is_established())
-                on_tls_ready_to_write(*this);
-        }
-    }
-
-    Function<void(TLSv12&)> on_tls_ready_to_read;
     Function<void(AlertDescription)> on_tls_error;
-    Function<void()> on_tls_connected;
     Function<void()> on_tls_finished;
     Function<void(TLSv12&)> on_tls_certificate_request;
+    Function<void()> on_connected;
 
 private:
-    explicit TLSv12(Core::Object* parent, Options = {});
-
-    virtual bool common_connect(const struct sockaddr*, socklen_t) override;
+    void setup_connection();
 
     void consume(ReadonlyBytes record);
 
@@ -416,9 +453,9 @@ private:
     void build_rsa_pre_master_secret(PacketBuilder&);
     void build_dhe_rsa_pre_master_secret(PacketBuilder&);
 
-    bool flush();
+    ErrorOr<bool> flush();
     void write_into_socket();
-    void read_from_socket();
+    ErrorOr<void> read_from_socket();
 
     bool check_connection_state(bool read);
     void notify_client_for_app_data();
@@ -512,6 +549,8 @@ private:
 
     void try_disambiguate_error() const;
 
+    bool m_eof { false };
+    StreamVariantType m_stream;
     Context m_context;
 
     OwnPtr<Crypto::Authentication::HMAC<Crypto::Hash::Manager>> m_hmac_local;
@@ -529,7 +568,6 @@ private:
     i32 m_max_wait_time_for_handshake_in_seconds { 10 };
 
     RefPtr<Core::Timer> m_handshake_timeout_timer;
-    Function<void(TLSv12&)> on_tls_ready_to_write;
 };
 
 }

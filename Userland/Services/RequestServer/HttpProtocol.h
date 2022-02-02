@@ -11,7 +11,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/URL.h>
-#include <LibHTTP/HttpJob.h>
+#include <LibHTTP/Job.h>
 #include <RequestServer/ClientConnection.h>
 #include <RequestServer/HttpRequest.h>
 #include <RequestServer/Protocol.h>
@@ -21,7 +21,7 @@ namespace RequestServer {
 
 class HttpProtocol final : public Protocol {
 public:
-    using JobType = HTTP::HttpJob;
+    using JobType = HTTP::Job;
     using RequestType = HttpRequest;
 
     HttpProtocol();

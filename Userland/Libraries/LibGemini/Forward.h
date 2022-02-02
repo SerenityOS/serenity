@@ -11,7 +11,6 @@ namespace Gemini {
 class Document;
 class GeminiRequest;
 class GeminiResponse;
-class GeminiJob;
 class Job;
 
 }

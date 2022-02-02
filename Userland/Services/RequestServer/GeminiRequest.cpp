@@ -6,22 +6,22 @@
 
 #include "ConnectionCache.h"
 #include <LibCore/EventLoop.h>
-#include <LibGemini/GeminiJob.h>
 #include <LibGemini/GeminiResponse.h>
+#include <LibGemini/Job.h>
 #include <RequestServer/GeminiRequest.h>
 
 namespace RequestServer {
 
-GeminiRequest::GeminiRequest(ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
+GeminiRequest::GeminiRequest(ClientConnection& client, NonnullRefPtr<Gemini::Job> job, NonnullOwnPtr<Core::Stream::File>&& output_stream)
     : Request(client, move(output_stream))
-    , m_job(job)
+    , m_job(move(job))
 {
     m_job->on_finish = [this](bool success) {
         Core::deferred_invoke([url = m_job->url(), socket = m_job->socket()] {
             ConnectionCache::request_did_finish(url, socket);
         });
         if (auto* response = m_job->response()) {
-            set_downloaded_size(this->output_stream().size());
+            set_downloaded_size(MUST(const_cast<Core::Stream::File&>(this->output_stream()).size()));
             if (!response->meta().is_empty()) {
                 HashMap<String, String, CaseInsensitiveStringTraits> headers;
                 headers.set("meta", response->meta());
@@ -42,16 +42,12 @@ GeminiRequest::GeminiRequest(ClientConnection& client, NonnullRefPtr<Gemini::Gem
         did_finish(success);
     };
     m_job->on_progress = [this](Optional<u32> total, u32 current) {
-        did_progress(total, current);
-    };
-    m_job->on_certificate_requested = [this](auto&) {
-        did_request_certificates();
+        did_progress(move(total), current);
     };
 }
 
-void GeminiRequest::set_certificate(String certificate, String key)
+void GeminiRequest::set_certificate(String, String)
 {
-    m_job->set_certificate(move(certificate), move(key));
 }
 
 GeminiRequest::~GeminiRequest()
@@ -61,7 +57,7 @@ GeminiRequest::~GeminiRequest()
     m_job->cancel();
 }
 
-NonnullOwnPtr<GeminiRequest> GeminiRequest::create_with_job(Badge<GeminiProtocol>, ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
+NonnullOwnPtr<GeminiRequest> GeminiRequest::create_with_job(Badge<GeminiProtocol>, ClientConnection& client, NonnullRefPtr<Gemini::Job> job, NonnullOwnPtr<Core::Stream::File>&& output_stream)
 {
     return adopt_own(*new GeminiRequest(client, move(job), move(output_stream)));
 }

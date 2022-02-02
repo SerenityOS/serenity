@@ -6,8 +6,8 @@
 
 #include <AK/Base64.h>
 #include <AK/StringBuilder.h>
-#include <LibHTTP/HttpJob.h>
 #include <LibHTTP/HttpRequest.h>
+#include <LibHTTP/Job.h>
 
 namespace HTTP {
 

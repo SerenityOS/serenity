@@ -10,20 +10,9 @@
 
 namespace IMAP {
 
-Client::Client(StringView host, u16 port, NonnullRefPtr<TLS::TLSv12> socket)
-    : m_host(host)
-    , m_port(port)
-    , m_tls(true)
-    , m_tls_socket(move(socket))
-    , m_connect_pending(Promise<Empty>::construct())
-{
-    setup_callbacks();
-}
-
 Client::Client(StringView host, u16 port, NonnullOwnPtr<Core::Stream::Socket> socket)
     : m_host(host)
     , m_port(port)
-    , m_tls(false)
     , m_socket(move(socket))
     , m_connect_pending(Promise<Empty>::construct())
 {
@@ -33,9 +22,7 @@ Client::Client(StringView host, u16 port, NonnullOwnPtr<Core::Stream::Socket> so
 Client::Client(Client&& other)
     : m_host(other.m_host)
     , m_port(other.m_port)
-    , m_tls(other.m_tls)
     , m_socket(move(other.m_socket))
-    , m_tls_socket(move(other.m_tls_socket))
     , m_connect_pending(move(other.m_connect_pending))
 {
     setup_callbacks();
@@ -43,42 +30,21 @@ Client::Client(Client&& other)
 
 void Client::setup_callbacks()
 {
-    if (m_tls) {
-        m_tls_socket->on_tls_ready_to_read = [&](TLS::TLSv12&) {
-            auto maybe_error = on_tls_ready_to_receive();
-            if (maybe_error.is_error()) {
-                dbgln("Error receiving from the socket: {}", maybe_error.error());
-                close();
-            }
-        };
-
-    } else {
-        m_socket->on_ready_to_read = [&] {
-            auto maybe_error = on_ready_to_receive();
-            if (maybe_error.is_error()) {
-                dbgln("Error receiving from the socket: {}", maybe_error.error());
-                close();
-            }
-        };
-    }
+    m_socket->on_ready_to_read = [&] {
+        auto maybe_error = on_ready_to_receive();
+        if (maybe_error.is_error()) {
+            dbgln("Error receiving from the socket: {}", maybe_error.error());
+            close();
+        }
+    };
 }
 
 ErrorOr<NonnullOwnPtr<Client>> Client::connect_tls(StringView host, u16 port)
 {
-    auto tls_socket = TLS::TLSv12::construct(nullptr);
-    tls_socket->set_root_certificates(DefaultRootCACertificates::the().certificates());
+    auto tls_socket = TRY(TLS::TLSv12::connect(host, port));
+    dbgln("connecting to {}:{}", host, port);
 
-    tls_socket->on_tls_error = [&](TLS::AlertDescription alert) {
-        dbgln("failed: {}", alert_name(alert));
-    };
-    tls_socket->on_tls_connected = [&] {
-        dbgln("connected");
-    };
-
-    auto success = tls_socket->connect(host, port);
-    dbgln("connecting to {}:{} {}", host, port, success);
-
-    return adopt_nonnull_own_or_enomem(new (nothrow) Client(host, port, tls_socket));
+    return adopt_nonnull_own_or_enomem(new (nothrow) Client(host, port, move(tls_socket)));
 }
 
 ErrorOr<NonnullOwnPtr<Client>> Client::connect_plaintext(StringView host, u16 port)
@@ -86,34 +52,6 @@ ErrorOr<NonnullOwnPtr<Client>> Client::connect_plaintext(StringView host, u16 po
     auto socket = TRY(Core::Stream::TCPSocket::connect(host, port));
     dbgln("Connected to {}:{}", host, port);
     return adopt_nonnull_own_or_enomem(new (nothrow) Client(host, port, move(socket)));
-}
-
-ErrorOr<void> Client::on_tls_ready_to_receive()
-{
-    if (!m_tls_socket->can_read())
-        return {};
-    auto data = m_tls_socket->read();
-    // FIXME: Make TLSv12 return the actual error instead of returning a bogus
-    //        one here.
-    if (!data.has_value())
-        return Error::from_errno(EIO);
-
-    // Once we get server hello we can start sending
-    if (m_connect_pending) {
-        m_connect_pending->resolve({});
-        m_connect_pending.clear();
-        return {};
-    }
-
-    m_buffer += data.value();
-    if (m_buffer[m_buffer.size() - 1] == '\n') {
-        // Don't try parsing until we have a complete line.
-        auto response = m_parser.parse(move(m_buffer), m_expecting_response);
-        MUST(handle_parsed_response(move(response)));
-        m_buffer.clear();
-    }
-
-    return {};
 }
 
 ErrorOr<void> Client::on_ready_to_receive()
@@ -208,13 +146,8 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
 
 ErrorOr<void> Client::send_raw(StringView data)
 {
-    if (m_tls) {
-        m_tls_socket->write(data.bytes());
-        m_tls_socket->write("\r\n"sv.bytes());
-    } else {
-        TRY(m_socket->write(data.bytes()));
-        TRY(m_socket->write("\r\n"sv.bytes()));
-    }
+    TRY(m_socket->write(data.bytes()));
+    TRY(m_socket->write("\r\n"sv.bytes()));
 
     return {};
 }
@@ -496,16 +429,12 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::copy(Sequence sequence_set, Str
 
 void Client::close()
 {
-    if (m_tls) {
-        m_tls_socket->close();
-    } else {
-        m_socket->close();
-    }
+    m_socket->close();
 }
 
 bool Client::is_open()
 {
-    return m_tls ? m_tls_socket->is_open() : m_socket->is_open();
+    return m_socket->is_open();
 }
 
 }

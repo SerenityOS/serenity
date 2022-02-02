@@ -39,7 +39,7 @@ public:
 private:
     explicit TLSv12WebSocketConnectionImpl(Core::Object* parent = nullptr);
 
-    RefPtr<TLS::TLSv12> m_socket;
+    OwnPtr<TLS::TLSv12> m_socket;
 };
 
 }

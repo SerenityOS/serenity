@@ -202,8 +202,8 @@ ssize_t TLSv12::handle_handshake_finished(ReadonlyBytes buffer, WritePacketStage
         m_handshake_timeout_timer = nullptr;
     }
 
-    if (on_tls_ready_to_write)
-        on_tls_ready_to_write(*this);
+    if (on_connected)
+        on_connected();
 
     return index + size;
 }

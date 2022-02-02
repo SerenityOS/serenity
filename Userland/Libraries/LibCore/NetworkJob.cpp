@@ -10,7 +10,7 @@
 
 namespace Core {
 
-NetworkJob::NetworkJob(OutputStream& output_stream)
+NetworkJob::NetworkJob(Core::Stream::Stream& output_stream)
     : m_output_stream(output_stream)
 {
 }
@@ -19,7 +19,7 @@ NetworkJob::~NetworkJob()
 {
 }
 
-void NetworkJob::start(NonnullRefPtr<Core::Socket>)
+void NetworkJob::start(Core::Stream::Socket&)
 {
 }
 
