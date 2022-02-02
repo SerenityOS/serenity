@@ -582,7 +582,21 @@ String TextDecorationStyleValue::to_string() const
 
 String TransformationStyleValue::to_string() const
 {
-    return "TransformationStyleValue";
+    StringBuilder builder;
+
+    switch (m_transform_function) {
+    case TransformFunction::TranslateY:
+        builder.append("translateY");
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    builder.append('(');
+    builder.join(", ", m_values);
+    builder.append(')');
+
+    return builder.to_string();
 }
 
 String UnresolvedStyleValue::to_string() const
