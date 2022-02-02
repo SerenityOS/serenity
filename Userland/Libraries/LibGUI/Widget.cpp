@@ -11,7 +11,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/GMLParser.h>
+#include <LibGUI/GML/Parser.h>
 #include <LibGUI/Layout.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -1066,7 +1066,7 @@ bool Widget::load_from_gml(StringView gml_string)
 
 bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
 {
-    auto value = parse_gml(gml_string);
+    auto value = GML::parse_gml(gml_string);
     if (!value.is_object())
         return false;
     return load_from_json(value.as_object(), unregistered_child_handler);

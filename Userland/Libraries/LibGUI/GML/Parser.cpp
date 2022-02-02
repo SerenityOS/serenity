@@ -1,40 +1,41 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Parser.h"
+#include "Lexer.h"
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Queue.h>
-#include <LibGUI/GMLLexer.h>
-#include <LibGUI/GMLParser.h>
 
-namespace GUI {
+namespace GUI::GML {
 
-static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
+static Optional<JsonValue> parse_core_object(Queue<Token>& tokens)
 {
     JsonObject object;
     JsonArray children;
 
     auto peek = [&] {
         if (tokens.is_empty())
-            return GMLToken::Type::Unknown;
+            return Token::Type::Unknown;
         return tokens.head().m_type;
     };
 
-    while (peek() == GMLToken::Type::Comment)
+    while (peek() == Token::Type::Comment)
         tokens.dequeue();
 
-    if (peek() != GMLToken::Type::ClassMarker) {
+    if (peek() != Token::Type::ClassMarker) {
         dbgln("Expected class marker");
         return {};
     }
 
     tokens.dequeue();
 
-    if (peek() != GMLToken::Type::ClassName) {
+    if (peek() != Token::Type::ClassName) {
         dbgln("Expected class name");
         return {};
     }
@@ -42,19 +43,19 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
     auto class_name = tokens.dequeue();
     object.set("class", JsonValue(class_name.m_view));
 
-    if (peek() != GMLToken::Type::LeftCurly) {
+    if (peek() != Token::Type::LeftCurly) {
         // Empty object
         return object;
     }
     tokens.dequeue();
 
     for (;;) {
-        if (peek() == GMLToken::Type::RightCurly) {
+        if (peek() == Token::Type::RightCurly) {
             // End of object
             break;
         }
 
-        if (peek() == GMLToken::Type::ClassMarker) {
+        if (peek() == Token::Type::ClassMarker) {
             // It's a child object.
             auto value = parse_core_object(tokens);
             if (!value.has_value()) {
@@ -66,7 +67,7 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
                 return {};
             }
             children.append(value.release_value());
-        } else if (peek() == GMLToken::Type::Identifier) {
+        } else if (peek() == Token::Type::Identifier) {
             // It's a property.
             auto property_name = tokens.dequeue();
 
@@ -75,14 +76,14 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
                 return {};
             }
 
-            if (peek() != GMLToken::Type::Colon) {
+            if (peek() != Token::Type::Colon) {
                 dbgln("Expected ':'");
                 return {};
             }
             tokens.dequeue();
 
             JsonValue value;
-            if (peek() == GMLToken::Type::ClassMarker) {
+            if (peek() == Token::Type::ClassMarker) {
                 auto parsed_value = parse_core_object(tokens);
                 if (!parsed_value.has_value())
                     return {};
@@ -91,7 +92,7 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
                     return {};
                 }
                 value = parsed_value.release_value();
-            } else if (peek() == GMLToken::Type::JsonValue) {
+            } else if (peek() == Token::Type::JsonValue) {
                 auto value_string = tokens.dequeue();
                 auto parsed_value = JsonValue::from_string(value_string.m_view);
                 if (parsed_value.is_error()) {
@@ -101,7 +102,7 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
                 value = parsed_value.release_value();
             }
             object.set(property_name.m_view, move(value));
-        } else if (peek() == GMLToken::Type::Comment) {
+        } else if (peek() == Token::Type::Comment) {
             tokens.dequeue();
         } else {
             dbgln("Expected child, property, comment, or }}");
@@ -109,7 +110,7 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
         }
     }
 
-    if (peek() != GMLToken::Type::RightCurly) {
+    if (peek() != Token::Type::RightCurly) {
         dbgln("Expected }}");
         return {};
     }
@@ -123,9 +124,9 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
 
 JsonValue parse_gml(StringView string)
 {
-    auto lexer = GMLLexer(string);
+    auto lexer = Lexer(string);
 
-    Queue<GMLToken> tokens;
+    Queue<Token> tokens;
     for (auto& token : lexer.lex())
         tokens.enqueue(token);
 

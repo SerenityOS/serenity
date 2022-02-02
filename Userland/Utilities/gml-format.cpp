@@ -7,7 +7,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
-#include <LibGUI/GMLFormatter.h>
+#include <LibGUI/GML/Formatter.h>
 #include <LibMain/Main.h>
 
 ErrorOr<bool> format_file(StringView, bool);
@@ -22,7 +22,8 @@ ErrorOr<bool> format_file(StringView path, bool inplace)
         auto open_mode = inplace ? Core::OpenMode::ReadWrite : Core::OpenMode::ReadOnly;
         file = TRY(Core::File::open(path, open_mode));
     }
-    auto formatted_gml = GUI::format_gml(file->read_all());
+    auto contents = file->read_all();
+    auto formatted_gml = GUI::GML::format_gml(contents);
     if (formatted_gml.is_null()) {
         warnln("Failed to parse GML!");
         return false;

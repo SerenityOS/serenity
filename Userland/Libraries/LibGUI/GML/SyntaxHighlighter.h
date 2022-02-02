@@ -8,12 +8,12 @@
 
 #include <LibSyntax/Highlighter.h>
 
-namespace GUI {
+namespace GUI::GML {
 
-class GMLSyntaxHighlighter final : public Syntax::Highlighter {
+class SyntaxHighlighter final : public Syntax::Highlighter {
 public:
-    GMLSyntaxHighlighter() { }
-    virtual ~GMLSyntaxHighlighter() override;
+    SyntaxHighlighter() { }
+    virtual ~SyntaxHighlighter() override;
 
     virtual bool is_identifier(u64) const override;
 

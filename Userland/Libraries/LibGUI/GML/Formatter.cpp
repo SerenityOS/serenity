@@ -1,16 +1,17 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Formatter.h"
+#include "Parser.h"
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
-#include <LibGUI/GMLFormatter.h>
-#include <LibGUI/GMLParser.h>
 
-namespace GUI {
+namespace GUI::GML {
 
 static String format_gml_object(const JsonObject& node, size_t indentation = 0, bool is_inline = false)
 {
