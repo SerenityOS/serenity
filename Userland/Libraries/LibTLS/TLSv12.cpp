@@ -183,6 +183,7 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
         // FIXME: Figure out what we should do when our root certs are invalid.
     }
     m_context.root_certificates = move(certificates);
+    dbgln_if(TLS_DEBUG, "{}: Set {} root certificates", this, m_context.root_certificates.size());
 }
 
 bool Context::verify_chain() const
@@ -223,7 +224,7 @@ bool Context::verify_chain() const
 
         auto ref = chain.get(it.value);
         if (!ref.has_value()) {
-            dbgln("Certificate for {} is not signed by anyone we trust ({})", it.key, it.value);
+            dbgln("{}: Certificate for {} is not signed by anyone we trust ({})", this, it.key, it.value);
             return false;
         }
 
@@ -301,50 +302,43 @@ void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8*
     }
 }
 
-TLSv12::TLSv12(Core::Object* parent, Options options)
-    : Core::Socket(Core::Socket::Type::TCP, parent)
+TLSv12::TLSv12(StreamVariantType stream, Options options)
+    : m_stream(move(stream))
 {
     m_context.options = move(options);
     m_context.is_server = false;
     m_context.tls_buffer = {};
-#ifdef SOCK_NONBLOCK
-    int fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-#else
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    int option = 1;
-    ioctl(fd, FIONBIO, &option);
-#endif
-    if (fd < 0) {
-        set_error(errno);
-    } else {
-        set_fd(fd);
-        set_mode(Core::OpenMode::ReadWrite);
-        set_error(0);
-    }
+
+    set_root_certificates(m_context.options.root_certificates.has_value()
+            ? *m_context.options.root_certificates
+            : DefaultRootCACertificates::the().certificates());
+
+    setup_connection();
 }
 
-bool TLSv12::add_client_key(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes rsa_key) // FIXME: This should not be bound to RSA
+Vector<Certificate> TLSv12::parse_pem_certificate(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes rsa_key) // FIXME: This should not be bound to RSA
 {
     if (certificate_pem_buffer.is_empty() || rsa_key.is_empty()) {
-        return true;
+        return {};
     }
+
     auto decoded_certificate = Crypto::decode_pem(certificate_pem_buffer);
     if (decoded_certificate.is_empty()) {
         dbgln("Certificate not PEM");
-        return false;
+        return {};
     }
 
     auto maybe_certificate = Certificate::parse_asn1(decoded_certificate);
     if (!maybe_certificate.has_value()) {
         dbgln("Invalid certificate");
-        return false;
+        return {};
     }
 
     Crypto::PK::RSA rsa(rsa_key);
     auto certificate = maybe_certificate.release_value();
     certificate.private_key = rsa.private_key();
 
-    return add_client_key(certificate);
+    return { move(certificate) };
 }
 
 Singleton<DefaultRootCACertificates> DefaultRootCACertificates::s_the;
@@ -364,5 +358,6 @@ DefaultRootCACertificates::DefaultRootCACertificates()
         cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
         m_ca_certificates.append(move(cert));
     }
+    dbgln("Loaded {} CA Certificates", m_ca_certificates.size());
 }
 }

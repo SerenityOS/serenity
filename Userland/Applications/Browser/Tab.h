@@ -11,7 +11,7 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
-#include <LibHTTP/HttpJob.h>
+#include <LibHTTP/Job.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {

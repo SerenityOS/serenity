@@ -127,40 +127,15 @@ void ClientConnection::ensure_connection(URL const& url, ::RequestServer::CacheL
 
     struct {
         URL const& m_url;
-        void start(NonnullRefPtr<Core::Socket> socket)
+        void start(Core::Stream::Socket& socket)
         {
-            auto is_tls = is<TLS::TLSv12>(*socket);
-            auto* tls_instance = is_tls ? static_cast<TLS::TLSv12*>(socket.ptr()) : nullptr;
-
-            auto is_connected = false;
-            if (is_tls && tls_instance->is_established())
-                is_connected = true;
-            if (!is_tls && socket->is_connected())
-                is_connected = true;
-
-            VERIFY(!is_connected);
-
-            bool did_connect;
-            if (is_tls) {
-                tls_instance->set_root_certificates(DefaultRootCACertificates::the().certificates());
-                tls_instance->on_tls_connected = [socket = socket.ptr(), url = m_url, tls_instance] {
-                    tls_instance->set_on_tls_ready_to_write([socket, url](auto&) {
-                        ConnectionCache::request_did_finish(url, socket);
-                    });
-                };
-                tls_instance->on_tls_error = [socket = socket.ptr(), url = m_url](auto) {
-                    ConnectionCache::request_did_finish(url, socket);
-                };
-                did_connect = tls_instance->connect(m_url.host(), m_url.port_or_default());
-            } else {
-                socket->on_connected = [socket = socket.ptr(), url = m_url]() mutable {
-                    ConnectionCache::request_did_finish(url, socket);
-                };
-                did_connect = socket->connect(m_url.host(), m_url.port_or_default());
-            }
-
-            if (!did_connect)
-                ConnectionCache::request_did_finish(m_url, socket);
+            auto is_connected = socket.is_open();
+            VERIFY(is_connected);
+            ConnectionCache::request_did_finish(m_url, &socket);
+        }
+        void fail(Core::NetworkJob::Error error)
+        {
+            dbgln("Pre-connect to {} failed: {}", m_url, Core::to_string(error));
         }
     } job { url };
 

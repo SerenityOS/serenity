@@ -17,17 +17,17 @@ namespace RequestServer {
 class HttpRequest final : public Request {
 public:
     virtual ~HttpRequest() override;
-    static NonnullOwnPtr<HttpRequest> create_with_job(Badge<HttpProtocol>&&, ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);
+    static NonnullOwnPtr<HttpRequest> create_with_job(Badge<HttpProtocol>&&, ClientConnection&, NonnullRefPtr<HTTP::Job>, NonnullOwnPtr<Core::Stream::File>&&);
 
-    HTTP::HttpJob& job() { return m_job; }
-    HTTP::HttpJob const& job() const { return m_job; }
+    HTTP::Job& job() { return m_job; }
+    HTTP::Job const& job() const { return m_job; }
 
     virtual URL url() const override { return m_job->url(); }
 
 private:
-    explicit HttpRequest(ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);
+    explicit HttpRequest(ClientConnection&, NonnullRefPtr<HTTP::Job>, NonnullOwnPtr<Core::Stream::File>&&);
 
-    NonnullRefPtr<HTTP::HttpJob> m_job;
+    NonnullRefPtr<HTTP::Job> m_job;
 };
 
 }

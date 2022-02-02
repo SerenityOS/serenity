@@ -1,6 +1,5 @@
 set(SOURCES
     Document.cpp
-    GeminiJob.cpp
     GeminiRequest.cpp
     GeminiResponse.cpp
     Job.cpp

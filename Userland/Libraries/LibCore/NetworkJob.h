@@ -8,7 +8,9 @@
 
 #include <AK/Function.h>
 #include <AK/Stream.h>
+#include <LibCore/Forward.h>
 #include <LibCore/Object.h>
+#include <LibCore/Stream.h>
 
 namespace Core {
 
@@ -39,8 +41,9 @@ public:
         DetachFromSocket,
         CloseSocket,
     };
-    virtual void start(NonnullRefPtr<Core::Socket>) = 0;
+    virtual void start(Core::Stream::Socket&) = 0;
     virtual void shutdown(ShutdownMode) = 0;
+    virtual void fail(Error error) { did_fail(error); }
 
     void cancel()
     {
@@ -49,16 +52,16 @@ public:
     }
 
 protected:
-    NetworkJob(OutputStream&);
+    NetworkJob(Core::Stream::Stream&);
     void did_finish(NonnullRefPtr<NetworkResponse>&&);
     void did_fail(Error);
     void did_progress(Optional<u32> total_size, u32 downloaded);
 
-    size_t do_write(ReadonlyBytes bytes) { return m_output_stream.write(bytes); }
+    ErrorOr<size_t> do_write(ReadonlyBytes bytes) { return m_output_stream.write(bytes); }
 
 private:
     RefPtr<NetworkResponse> m_response;
-    OutputStream& m_output_stream;
+    Core::Stream::Stream& m_output_stream;
     Error m_error { Error::None };
 };
 

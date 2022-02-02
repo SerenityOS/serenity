@@ -60,7 +60,6 @@ public:
     Function<void(ResponseData&&)> unrequested_response_callback;
 
 private:
-    Client(StringView host, u16 port, NonnullRefPtr<TLS::TLSv12>);
     Client(StringView host, u16 port, NonnullOwnPtr<Core::Stream::Socket>);
     void setup_callbacks();
 
@@ -73,11 +72,7 @@ private:
     StringView m_host;
     u16 m_port;
 
-    bool m_tls;
-    // FIXME: Convert this to a single `NonnullOwnPtr<Core::Stream::Socket>`
-    //        once `TLS::TLSv12` is converted to a `Socket` as well.
-    OwnPtr<Core::Stream::Socket> m_socket;
-    RefPtr<TLS::TLSv12> m_tls_socket;
+    NonnullOwnPtr<Core::Stream::Socket> m_socket;
     RefPtr<Promise<Empty>> m_connect_pending {};
 
     int m_current_command = 1;
