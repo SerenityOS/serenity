@@ -159,8 +159,6 @@ inline NonnullOwnPtr<T> adopt_own(T& object)
     return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, object);
 }
 
-#endif
-
 template<class T, class... Args>
 requires(IsConstructible<T, Args...>) inline NonnullOwnPtr<T> make(Args&&... args)
 {
@@ -173,6 +171,8 @@ inline NonnullOwnPtr<T> make(Args&&... args)
 {
     return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, *new T { forward<Args>(args)... });
 }
+
+#endif
 
 template<typename T>
 struct Traits<NonnullOwnPtr<T>> : public GenericTraits<NonnullOwnPtr<T>> {
@@ -200,6 +200,6 @@ struct Formatter<NonnullOwnPtr<T>> : Formatter<const T*> {
 
 #if !defined(KERNEL)
 using AK::adopt_own;
-#endif
 using AK::make;
+#endif
 using AK::NonnullOwnPtr;
