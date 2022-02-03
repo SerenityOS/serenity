@@ -3451,6 +3451,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
+#include <LibWeb/Bindings/CanvasGradientWrapper.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
 #include <LibWeb/Bindings/DOMImplementationWrapper.h>

@@ -36,6 +36,7 @@ WindowManager& WindowManager::the()
 
 WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
     : m_switcher(WindowSwitcher::construct())
+    , m_keymap_switcher(KeymapSwitcher::construct())
     , m_palette(palette)
 {
     s_the = this;
@@ -51,6 +52,18 @@ WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
     }
 
     reload_config();
+
+    m_keymap_switcher->on_keymap_change = [&](String const& keymap) {
+        for_each_window_manager([&keymap](WMClientConnection& conn) {
+            if (!(conn.event_mask() & WMEventMask::KeymapChanged))
+                return IterationDecision::Continue;
+            if (conn.window_id() < 0)
+                return IterationDecision::Continue;
+
+            conn.async_keymap_changed(conn.window_id(), keymap);
+            return IterationDecision::Continue;
+        });
+    };
 
     Compositor::the().did_construct_window_manager({});
 }
@@ -1554,6 +1567,11 @@ void WindowManager::process_key_event(KeyEvent& event)
     }
     if (m_switcher->is_visible()) {
         m_switcher->on_key_event(event);
+        return;
+    }
+
+    if (event.type() == Event::KeyDown && (event.modifiers() == (Mod_Alt | Mod_Shift) && (event.key() == Key_Shift || event.key() == Key_Alt))) {
+        m_keymap_switcher->next_keymap();
         return;
     }
 

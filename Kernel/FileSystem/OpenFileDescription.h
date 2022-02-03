@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
 #include <AK/RefCounted.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/Inode.h>
@@ -31,17 +30,13 @@ public:
 
     Thread::FileBlocker::BlockFlags should_unblock(Thread::FileBlocker::BlockFlags) const;
 
-    bool is_readable() const { return m_readable; }
-    bool is_writable() const { return m_writable; }
+    bool is_readable() const;
+    void set_readable(bool);
 
-    void set_readable(bool b) { m_readable = b; }
-    void set_writable(bool b) { m_writable = b; }
+    bool is_writable() const;
+    void set_writable(bool);
 
-    void set_rw_mode(int options)
-    {
-        set_readable((options & O_RDONLY) == O_RDONLY);
-        set_writable((options & O_WRONLY) == O_WRONLY);
-    }
+    void set_rw_mode(int options);
 
     ErrorOr<void> close();
 
@@ -66,9 +61,9 @@ public:
     ErrorOr<NonnullOwnPtr<KString>> original_absolute_path() const;
     ErrorOr<NonnullOwnPtr<KString>> pseudo_path() const;
 
-    bool is_direct() const { return m_direct; }
+    bool is_direct() const;
 
-    bool is_directory() const { return m_is_directory; }
+    bool is_directory() const;
 
     File& file() { return *m_file; }
     const File& file() const { return *m_file; }
@@ -98,12 +93,12 @@ public:
 
     ErrorOr<Memory::Region*> mmap(Process&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
 
-    bool is_blocking() const { return m_is_blocking; }
-    void set_blocking(bool b) { m_is_blocking = b; }
-    bool should_append() const { return m_should_append; }
-    void set_should_append(bool s) { m_should_append = s; }
+    bool is_blocking() const;
+    void set_blocking(bool b);
 
-    u32 file_flags() const { return m_file_flags; }
+    bool should_append() const;
+
+    u32 file_flags() const;
     void set_file_flags(u32);
 
     bool is_socket() const;
@@ -112,10 +107,10 @@ public:
 
     bool is_fifo() const;
     FIFO* fifo();
-    FIFO::Direction fifo_direction() const { return m_fifo_direction; }
-    void set_fifo_direction(Badge<FIFO>, FIFO::Direction direction) { m_fifo_direction = direction; }
+    FIFO::Direction fifo_direction() const;
+    void set_fifo_direction(Badge<FIFO>, FIFO::Direction direction);
 
-    OwnPtr<OpenFileDescriptionData>& data() { return m_data; }
+    OwnPtr<OpenFileDescriptionData>& data();
 
     void set_original_inode(Badge<VirtualFileSystem>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
     void set_original_custody(Badge<VirtualFileSystem>, Custody& custody);
@@ -123,7 +118,7 @@ public:
     ErrorOr<void> truncate(u64);
     ErrorOr<void> sync();
 
-    off_t offset() const { return m_current_offset; }
+    off_t offset() const;
 
     ErrorOr<void> chown(UserID, GroupID);
 
@@ -147,21 +142,19 @@ private:
     RefPtr<Inode> m_inode;
     NonnullRefPtr<File> m_file;
 
-    off_t m_current_offset { 0 };
+    struct State {
+        OwnPtr<OpenFileDescriptionData> data;
+        off_t current_offset { 0 };
+        u32 file_flags { 0 };
+        bool readable : 1 { false };
+        bool writable : 1 { false };
+        bool is_blocking : 1 { true };
+        bool is_directory : 1 { false };
+        bool should_append : 1 { false };
+        bool direct : 1 { false };
+        FIFO::Direction fifo_direction : 2 { FIFO::Direction::Neither };
+    };
 
-    OwnPtr<OpenFileDescriptionData> m_data;
-
-    u32 m_file_flags { 0 };
-
-    bool m_readable : 1 { false };
-    bool m_writable : 1 { false };
-    bool m_is_blocking : 1 { true };
-    bool m_is_directory : 1 { false };
-    bool m_should_append : 1 { false };
-    bool m_direct : 1 { false };
-    FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
-
-    Mutex m_lock { "OpenFileDescription" };
+    SpinlockProtected<State> m_state;
 };
-
 }

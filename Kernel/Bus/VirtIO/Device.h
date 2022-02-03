@@ -227,7 +227,7 @@ private:
     virtual bool handle_irq(const RegisterState&) override;
 
     NonnullOwnPtrVector<Queue> m_queues;
-    NonnullOwnPtrVector<Configuration> m_configs;
+    Vector<Configuration> m_configs;
     const Configuration* m_common_cfg { nullptr }; // Cached due to high usage
     const Configuration* m_notify_cfg { nullptr }; // Cached due to high usage
     const Configuration* m_isr_cfg { nullptr };    // Cached due to high usage

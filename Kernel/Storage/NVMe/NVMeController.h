@@ -26,8 +26,8 @@ namespace Kernel {
 class NVMeController : public PCI::Device
     , public StorageController {
 public:
-    static ErrorOr<NonnullRefPtr<NVMeController>> try_initialize(PCI::DeviceIdentifier const&);
-    ErrorOr<void> initialize();
+    static ErrorOr<NonnullRefPtr<NVMeController>> try_initialize(PCI::DeviceIdentifier const&, bool is_queue_polled);
+    ErrorOr<void> initialize(bool is_queue_polled);
     explicit NVMeController(PCI::DeviceIdentifier const&);
     RefPtr<StorageDevice> device(u32 index) const override;
     size_t devices_count() const override;
@@ -58,8 +58,8 @@ public:
 private:
     ErrorOr<void> identify_and_init_namespaces();
     Tuple<u64, u8> get_ns_features(IdentifyNamespace& identify_data_struct);
-    ErrorOr<void> create_admin_queue(u8 irq);
-    ErrorOr<void> create_io_queue(u8 irq, u8 qid);
+    ErrorOr<void> create_admin_queue(Optional<u8> irq);
+    ErrorOr<void> create_io_queue(u8 qid, Optional<u8> irq);
     void calculate_doorbell_stride()
     {
         m_dbl_stride = (m_controller_regs->cap >> CAP_DBL_SHIFT) & CAP_DBL_MASK;

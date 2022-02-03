@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -164,6 +164,12 @@ void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, O
     did_draw(transformed_rect.to_type<float>());
 }
 
+void CanvasRenderingContext2D::stroke_text(String const& text, float x, float y, Optional<double> max_width)
+{
+    // FIXME: Stroke the text instead of filling it.
+    fill_text(text, x, y, max_width);
+}
+
 void CanvasRenderingContext2D::begin_path()
 {
     m_path = Gfx::Path();
@@ -187,6 +193,11 @@ void CanvasRenderingContext2D::line_to(float x, float y)
 void CanvasRenderingContext2D::quadratic_curve_to(float cx, float cy, float x, float y)
 {
     m_path.quadratic_bezier_curve_to({ cx, cy }, { x, y });
+}
+
+void CanvasRenderingContext2D::bezier_curve_to(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y)
+{
+    m_path.cubic_bezier_curve_to(Gfx::FloatPoint(cp1x, cp1y), Gfx::FloatPoint(cp2x, cp2y), Gfx::FloatPoint(x, y));
 }
 
 DOM::ExceptionOr<void> CanvasRenderingContext2D::arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise)
@@ -489,6 +500,21 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(St
 
     // 9. Return result, physical alignment, and the inline box.
     return prepared_text;
+}
+
+NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_radial_gradient(double x0, double y0, double r0, double x1, double y1, double r1)
+{
+    return CanvasGradient::create_radial(x0, y0, r0, x1, y1, r1);
+}
+
+NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_linear_gradient(double x0, double y0, double x1, double y1)
+{
+    return CanvasGradient::create_linear(x0, y0, x1, y1);
+}
+
+NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_conic_gradient(double start_angle, double x, double y)
+{
+    return CanvasGradient::create_conic(start_angle, x, y);
 }
 
 }

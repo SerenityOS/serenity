@@ -19,6 +19,7 @@
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/Event.h>
+#include <WindowServer/KeymapSwitcher.h>
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/ScreenLayout.h>
 #include <WindowServer/WMClientConnection.h>
@@ -433,6 +434,7 @@ private:
     u8 m_keyboard_modifiers { 0 };
 
     NonnullRefPtr<WindowSwitcher> m_switcher;
+    NonnullRefPtr<KeymapSwitcher> m_keymap_switcher;
 
     WeakPtr<Button> m_cursor_tracking_button;
     WeakPtr<Button> m_hovered_button;

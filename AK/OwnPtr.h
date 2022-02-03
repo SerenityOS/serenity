@@ -215,17 +215,17 @@ inline ErrorOr<NonnullOwnPtr<T>> adopt_nonnull_own_or_enomem(T* object)
 }
 
 template<typename T, class... Args>
-requires(IsConstructible<T, Args...>) inline OwnPtr<T> try_make(Args&&... args)
+requires(IsConstructible<T, Args...>) inline ErrorOr<NonnullOwnPtr<T>> try_make(Args&&... args)
 {
-    return adopt_own_if_nonnull(new (nothrow) T(forward<Args>(args)...));
+    return adopt_nonnull_own_or_enomem(new (nothrow) T(forward<Args>(args)...));
 }
 
 // FIXME: Remove once P0960R3 is available in Clang.
 template<typename T, class... Args>
-inline OwnPtr<T> try_make(Args&&... args)
+inline ErrorOr<NonnullOwnPtr<T>> try_make(Args&&... args)
 
 {
-    return adopt_own_if_nonnull(new (nothrow) T { forward<Args>(args)... });
+    return adopt_nonnull_own_or_enomem(new (nothrow) T { forward<Args>(args)... });
 }
 
 template<typename T>

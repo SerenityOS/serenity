@@ -841,7 +841,7 @@ Token Tokenizer::consume_a_numeric_token()
 
         // 2. Consume a name. Set the <dimension-token>’s unit to the returned value.
         auto unit = consume_a_name();
-        VERIFY(!unit.is_empty() && !unit.is_whitespace());
+        VERIFY(!unit.is_empty());
         token.m_unit = move(unit);
 
         // 3. Return the <dimension-token>.

@@ -10,7 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
-#include <Kernel/Locking/Mutex.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
@@ -63,9 +63,8 @@ protected:
 
     GenericFramebufferDevice(const GenericGraphicsAdapter&);
     mutable WeakPtr<GenericGraphicsAdapter> m_graphics_adapter;
-    mutable Mutex m_heads_lock;
-    mutable Mutex m_flushing_lock;
-    mutable Mutex m_resolution_lock;
+    mutable Spinlock m_flushing_lock;
+    mutable Spinlock m_resolution_lock;
 };
 
 }

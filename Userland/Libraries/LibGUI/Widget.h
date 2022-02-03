@@ -283,6 +283,9 @@ public:
     void set_accepts_emoji_input(bool b) { m_accepts_emoji_input = b; }
     bool accepts_emoji_input() const { return m_accepts_emoji_input; }
 
+    void set_accepts_command_palette(bool b) { m_accepts_command_palette = b; }
+    bool accepts_command_palette() const { return m_accepts_command_palette; }
+
     virtual Gfx::IntRect children_clip_rect() const;
 
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> override_cursor() const { return m_override_cursor; }
@@ -378,6 +381,7 @@ private:
     bool m_enabled { true };
     bool m_updates_enabled { true };
     bool m_accepts_emoji_input { false };
+    bool m_accepts_command_palette { true };
     bool m_shrink_to_fit { false };
     bool m_default_font { true };
 

@@ -22,6 +22,8 @@
 #include <LibWeb/Bindings/CSSStyleRulePrototype.h>
 #include <LibWeb/Bindings/CSSStyleSheetConstructor.h>
 #include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
+#include <LibWeb/Bindings/CanvasGradientConstructor.h>
+#include <LibWeb/Bindings/CanvasGradientPrototype.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DConstructor.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DPrototype.h>
 #include <LibWeb/Bindings/CharacterDataConstructor.h>
@@ -209,6 +211,8 @@
 #include <LibWeb/Bindings/ImageDataPrototype.h>
 #include <LibWeb/Bindings/IntersectionObserverConstructor.h>
 #include <LibWeb/Bindings/IntersectionObserverPrototype.h>
+#include <LibWeb/Bindings/KeyboardEventConstructor.h>
+#include <LibWeb/Bindings/KeyboardEventPrototype.h>
 #include <LibWeb/Bindings/MediaQueryListConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListEventConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListEventPrototype.h>
@@ -303,6 +307,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleDeclaration)       \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleRule)              \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleSheet)             \
+    ADD_WINDOW_OBJECT_INTERFACE(CanvasGradient)            \
     ADD_WINDOW_OBJECT_INTERFACE(CanvasRenderingContext2D)  \
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)             \
     ADD_WINDOW_OBJECT_INTERFACE(CloseEvent)                \
@@ -395,6 +400,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLVideoElement)          \
     ADD_WINDOW_OBJECT_INTERFACE(ImageData)                 \
     ADD_WINDOW_OBJECT_INTERFACE(IntersectionObserver)      \
+    ADD_WINDOW_OBJECT_INTERFACE(KeyboardEvent)             \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryList)            \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryListEvent)       \
     ADD_WINDOW_OBJECT_INTERFACE(MessageChannel)            \

@@ -12,6 +12,10 @@ Maybe someday. Maybe never. If you want to see something happen, you can do it y
 
 There are no ISO images. This project does not cater to non-technical users.
 
+## Well, how do I run this thing then?
+
+Simple, my friend! Just refer to the [build instructions](BuildInstructions.md).
+
 ## Why is the system 32-bit?
 
 The system was originally 32-bit only, since that's what Andreas was most familiar with when starting out. Nowadays, there is a 64-bit port as well (Intel/AMD x86\_64)

@@ -75,7 +75,7 @@ private:
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        arp_table().for_each_shared([&](const auto& it) {
+        arp_table().for_each([&](const auto& it) {
             auto obj = array.add_object();
             obj.add("mac_address", it.value.to_string());
             obj.add("ip_address", it.key.to_string());
@@ -263,20 +263,12 @@ private:
 class ProcFSUBSanDeadly : public ProcFSSystemBoolean {
 public:
     static NonnullRefPtr<ProcFSUBSanDeadly> must_create(const ProcFSSystemDirectory&);
-    virtual bool value() const override
-    {
-        MutexLocker locker(m_lock);
-        return AK::UBSanitizer::g_ubsan_is_deadly;
-    }
-    virtual void set_value(bool new_value) override
-    {
-        MutexLocker locker(m_lock);
-        AK::UBSanitizer::g_ubsan_is_deadly = new_value;
-    }
+
+    virtual bool value() const override { return AK::UBSanitizer::g_ubsan_is_deadly; }
+    virtual void set_value(bool new_value) override { AK::UBSanitizer::g_ubsan_is_deadly = new_value; }
 
 private:
     ProcFSUBSanDeadly();
-    mutable Mutex m_lock;
 };
 
 class ProcFSCapsLockRemap : public ProcFSSystemBoolean {

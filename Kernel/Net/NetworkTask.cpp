@@ -651,7 +651,9 @@ void retransmit_tcp_packets()
     // in case retransmit_packets() realizes that it wants to close the socket.
     NonnullRefPtrVector<TCPSocket, 16> sockets;
     TCPSocket::sockets_for_retransmit().for_each_shared([&](const auto& socket) {
-        sockets.append(socket);
+        // We ignore allocation failures above the first 16 guaranteed socket slots, as
+        // we will just retransmit their packets the next time around
+        (void)sockets.try_append(socket);
     });
 
     for (auto& socket : sockets) {

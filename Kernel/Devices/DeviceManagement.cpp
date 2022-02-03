@@ -49,7 +49,7 @@ DeviceManagement& DeviceManagement::the()
 
 Device* DeviceManagement::get_device(MajorNumber major, MinorNumber minor)
 {
-    return m_devices.with_exclusive([&](auto& map) -> Device* {
+    return m_devices.with([&](auto& map) -> Device* {
         auto it = map.find(encoded_device(major.value(), minor.value()));
         if (it == map.end())
             return nullptr;
@@ -68,7 +68,7 @@ Optional<DeviceEvent> DeviceManagement::dequeue_top_device_event(Badge<DeviceCon
 void DeviceManagement::before_device_removal(Badge<Device>, Device& device)
 {
     u64 device_id = encoded_device(device.major(), device.minor());
-    m_devices.with_exclusive([&](auto& map) -> void {
+    m_devices.with([&](auto& map) -> void {
         VERIFY(map.contains(device_id));
         map.remove(encoded_device(device.major(), device.minor()));
     });
@@ -85,7 +85,7 @@ void DeviceManagement::before_device_removal(Badge<Device>, Device& device)
 void DeviceManagement::after_inserting_device(Badge<Device>, Device& device)
 {
     u64 device_id = encoded_device(device.major(), device.minor());
-    m_devices.with_exclusive([&](auto& map) -> void {
+    m_devices.with([&](auto& map) -> void {
         if (map.contains(device_id)) {
             dbgln("Already registered {},{}: {}", device.major(), device.minor(), device.class_name());
             VERIFY_NOT_REACHED();
@@ -108,7 +108,7 @@ void DeviceManagement::after_inserting_device(Badge<Device>, Device& device)
 
 void DeviceManagement::for_each(Function<void(Device&)> callback)
 {
-    m_devices.with_exclusive([&](auto& map) -> void {
+    m_devices.with([&](auto& map) -> void {
         for (auto& entry : map)
             callback(*entry.value);
     });

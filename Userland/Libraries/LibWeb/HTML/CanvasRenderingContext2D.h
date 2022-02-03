@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +14,7 @@
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/LineBox.h>
 
@@ -56,6 +57,7 @@ public:
     void move_to(float x, float y);
     void line_to(float x, float y);
     void quadratic_curve_to(float cx, float cy, float x, float y);
+    void bezier_curve_to(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y);
 
     DOM::ExceptionOr<void> arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise);
     DOM::ExceptionOr<void> ellipse(float x, float y, float radius_x, float radius_y, float rotation, float start_angle, float end_angle, bool counter_clockwise);
@@ -63,6 +65,7 @@ public:
     void stroke();
 
     void fill_text(const String&, float x, float y, Optional<double> max_width);
+    void stroke_text(String const&, float x, float y, Optional<double> max_width);
 
     // FIXME: We should only have one fill(), really. Fix the wrapper generator!
     void fill(Gfx::Painter::WindingRule);
@@ -81,6 +84,10 @@ public:
     HTMLCanvasElement* canvas() { return m_element; }
 
     RefPtr<TextMetrics> measure_text(String const& text);
+
+    NonnullRefPtr<CanvasGradient> create_radial_gradient(double x0, double y0, double r0, double x1, double y1, double r1);
+    NonnullRefPtr<CanvasGradient> create_linear_gradient(double x0, double y0, double x1, double y1);
+    NonnullRefPtr<CanvasGradient> create_conic_gradient(double start_angle, double x, double y);
 
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);

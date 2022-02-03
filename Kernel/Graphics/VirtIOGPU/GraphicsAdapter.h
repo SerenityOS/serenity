@@ -141,7 +141,7 @@ private:
 
     // Synchronous commands
     WaitQueue m_outstanding_request;
-    Mutex m_operation_lock;
+    Spinlock m_operation_lock;
     OwnPtr<Memory::Region> m_scratch_space;
 };
 }

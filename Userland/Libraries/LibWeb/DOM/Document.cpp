@@ -1147,4 +1147,10 @@ NonnullRefPtr<DOMImplementation> Document::implementation() const
     return *m_implementation;
 }
 
+bool Document::has_focus() const
+{
+    // FIXME: Return whether we actually have focus.
+    return true;
+}
+
 }

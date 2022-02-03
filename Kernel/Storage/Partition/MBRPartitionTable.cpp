@@ -17,7 +17,7 @@ namespace Kernel {
 
 Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> MBRPartitionTable::try_to_initialize(const StorageDevice& device)
 {
-    auto table = make<MBRPartitionTable>(device);
+    auto table = adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(device)).release_value_but_fixme_should_propagate_errors();
     if (table->contains_ebr())
         return { PartitionTable::Error::ContainsEBR };
     if (table->is_protective_mbr())
@@ -29,7 +29,7 @@ Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> MBRPartitionTabl
 
 OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(const StorageDevice& device, u32 start_lba)
 {
-    auto table = make<MBRPartitionTable>(device, start_lba);
+    auto table = adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(device, start_lba)).release_value_but_fixme_should_propagate_errors();
     if (!table->is_valid())
         return {};
     return table;

@@ -8,11 +8,12 @@
 
 #include "AK/Noncopyable.h"
 #include "AK/StdLibExtras.h"
+#include <AK/Atomic.h>
 #include <AK/Types.h>
 
 namespace AK::UBSanitizer {
 
-extern bool g_ubsan_is_deadly;
+extern Atomic<bool> g_ubsan_is_deadly;
 
 typedef void* ValueHandle;
 

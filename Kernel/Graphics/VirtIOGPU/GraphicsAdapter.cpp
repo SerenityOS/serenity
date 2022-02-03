@@ -90,7 +90,7 @@ void GraphicsAdapter::initialize()
         }
         VERIFY(success);
         finish_init();
-        MutexLocker locker(m_operation_lock);
+        SpinlockLocker locker(m_operation_lock);
         // Get display information using VIRTIO_GPU_CMD_GET_DISPLAY_INFO
         query_display_information();
         query_display_edid({});
@@ -396,7 +396,7 @@ void GraphicsAdapter::populate_virtio_gpu_request_header(Protocol::ControlHeader
 
 void GraphicsAdapter::flush_dirty_rectangle(ScanoutID scanout_id, ResourceID resource_id, Protocol::Rect const& dirty_rect)
 {
-    MutexLocker locker(m_operation_lock);
+    SpinlockLocker locker(m_operation_lock);
     transfer_framebuffer_data_to_host(scanout_id, resource_id, dirty_rect);
     flush_displayed_image(resource_id, dirty_rect);
 }

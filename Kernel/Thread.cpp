@@ -45,12 +45,10 @@ ErrorOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process
     auto kernel_stack_region = TRY(MM.allocate_kernel_region(default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow));
     kernel_stack_region->set_stack(true);
 
-    auto block_timer = try_make_ref_counted<Timer>();
-    if (!block_timer)
-        return ENOMEM;
+    auto block_timer = TRY(try_make_ref_counted<Timer>());
 
     auto name = TRY(KString::try_create(process->name()));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), block_timer.release_nonnull(), move(name)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), move(block_timer), move(name)));
 }
 
 Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)

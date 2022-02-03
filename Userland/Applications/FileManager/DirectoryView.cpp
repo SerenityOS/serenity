@@ -225,6 +225,7 @@ void DirectoryView::setup_icon_view()
         m_icon_view->set_fill_with_background_color(false);
         m_icon_view->set_draw_item_text_with_shadow(true);
         m_icon_view->set_flow_direction(GUI::IconView::FlowDirection::TopToBottom);
+        m_icon_view->set_accepts_command_palette(false);
     }
 
     m_icon_view->set_model(m_sorting_model);
@@ -612,6 +613,12 @@ void DirectoryView::setup_actions()
             Config::write_string("FileManager", "DirectoryView", "ViewMode", "Columns");
         },
         window());
+
+    if (m_mode == Mode::Desktop) {
+        m_view_as_icons_action->set_enabled(false);
+        m_view_as_table_action->set_enabled(false);
+        m_view_as_columns_action->set_enabled(false);
+    }
 }
 
 void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent const& event)

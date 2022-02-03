@@ -129,7 +129,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
     const auto log_failure = [](const auto& request, const auto error_message) {
         auto& url = request.url();
         auto load_time_ms = request.load_time().to_milliseconds();
-        dbgln("ResourceLoader: Failed load of: \"{}\", \033[32;1mError: {}\033[0m, Duration: {}ms", sanitized_url_for_logging(url), error_message, load_time_ms);
+        dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", sanitized_url_for_logging(url), error_message, load_time_ms);
     };
 
     if (is_port_blocked(url.port_or_default())) {

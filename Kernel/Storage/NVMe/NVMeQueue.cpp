@@ -6,36 +6,38 @@
 
 #include "NVMeQueue.h"
 #include "Kernel/StdLib.h"
+#include "NVMeQueue.h"
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
-#include <Kernel/WorkQueue.h>
+#include <Kernel/Storage/NVMe/NVMeInterruptQueue.h>
+#include <Kernel/Storage/NVMe/NVMePollQueue.h>
 
 namespace Kernel {
-
-ErrorOr<NonnullRefPtr<NVMeQueue>> NVMeQueue::try_create(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs)
+ErrorOr<NonnullRefPtr<NVMeQueue>> NVMeQueue::try_create(u16 qid, Optional<u8> irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs)
 {
     // Note: Allocate DMA region for RW operation. For now the requests don't exceed more than 4096 bytes (Storage device takes care of it)
     RefPtr<Memory::PhysicalPage> rw_dma_page;
     auto rw_dma_region = TRY(MM.allocate_dma_buffer_page("NVMe Queue Read/Write DMA"sv, Memory::Region::Access::ReadWrite, rw_dma_page));
-    auto queue = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) NVMeQueue(move(rw_dma_region), *rw_dma_page, qid, irq, q_depth, move(cq_dma_region), cq_dma_page, move(sq_dma_region), sq_dma_page, move(db_regs))));
+    if (!irq.has_value()) {
+        auto queue = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) NVMePollQueue(move(rw_dma_region), *rw_dma_page, qid, q_depth, move(cq_dma_region), cq_dma_page, move(sq_dma_region), sq_dma_page, move(db_regs))));
+        return queue;
+    }
+    auto queue = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) NVMeInterruptQueue(move(rw_dma_region), *rw_dma_page, qid, irq.value(), q_depth, move(cq_dma_region), cq_dma_page, move(sq_dma_region), sq_dma_page, move(db_regs))));
     return queue;
 }
 
-UNMAP_AFTER_INIT NVMeQueue::NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs)
-    : IRQHandler(irq)
+UNMAP_AFTER_INIT NVMeQueue::NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs)
+    : m_current_request(nullptr)
+    , m_rw_dma_region(move(rw_dma_region))
     , m_qid(qid)
     , m_admin_queue(qid == 0)
-    , m_irq(irq)
     , m_qdepth(q_depth)
     , m_cq_dma_region(move(cq_dma_region))
     , m_cq_dma_page(cq_dma_page)
     , m_sq_dma_region(move(sq_dma_region))
     , m_sq_dma_page(sq_dma_page)
-    , m_rw_dma_region(move(rw_dma_region))
     , m_db_regs(move(db_regs))
     , m_rw_dma_page(rw_dma_page)
-    , m_current_request(nullptr)
 
 {
     m_sqe_array = { reinterpret_cast<NVMeSubmission*>(m_sq_dma_region->vaddr().as_ptr()), m_qdepth };
@@ -59,7 +61,7 @@ void NVMeQueue::update_cqe_head()
     }
 }
 
-bool NVMeQueue::handle_irq(const RegisterState&)
+u32 NVMeQueue::process_cq()
 {
     u32 nr_of_processed_cqes = 0;
     while (cqe_available()) {
@@ -76,7 +78,6 @@ bool NVMeQueue::handle_irq(const RegisterState&)
             // everything is operated on a single request similar to BMIDE driver.
             // TODO: Remove this constraint eventually.
             VERIFY(cmdid == m_prev_sq_tail);
-            SpinlockLocker lock(m_request_lock);
             if (m_current_request) {
                 complete_current_request(status);
             }
@@ -86,7 +87,7 @@ bool NVMeQueue::handle_irq(const RegisterState&)
     if (nr_of_processed_cqes) {
         update_cq_doorbell();
     }
-    return nr_of_processed_cqes ? true : false;
+    return nr_of_processed_cqes;
 }
 
 void NVMeQueue::submit_sqe(NVMeSubmission& sub)
@@ -126,7 +127,7 @@ u16 NVMeQueue::submit_sync_sqe(NVMeSubmission& sub)
                 index = m_qdepth - 1;
         }
         cqe_cid = m_cqe_array[index].command_id;
-        Scheduler::yield();
+        IO::delay(1);
     } while (cid != cqe_cid);
 
     auto status = CQ_STATUS_FIELD(m_cqe_array[m_cq_head].status);
@@ -171,29 +172,7 @@ void NVMeQueue::write(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32
     submit_sqe(sub);
 }
 
-void NVMeQueue::complete_current_request(u16 status)
+UNMAP_AFTER_INIT NVMeQueue::~NVMeQueue()
 {
-    VERIFY(m_request_lock.is_locked());
-
-    g_io_work->queue([this, status]() {
-        SpinlockLocker lock(m_request_lock);
-        auto current_request = m_current_request;
-        m_current_request.clear();
-        if (status) {
-            lock.unlock();
-            current_request->complete(AsyncBlockDeviceRequest::Failure);
-            return;
-        }
-        if (current_request->request_type() == AsyncBlockDeviceRequest::RequestType::Read) {
-            if (auto result = current_request->write_to_buffer(current_request->buffer(), m_rw_dma_region->vaddr().as_ptr(), 512 * current_request->block_count()); result.is_error()) {
-                lock.unlock();
-                current_request->complete(AsyncDeviceRequest::MemoryFault);
-                return;
-            }
-        }
-        lock.unlock();
-        current_request->complete(AsyncDeviceRequest::Success);
-        return;
-    });
 }
 }

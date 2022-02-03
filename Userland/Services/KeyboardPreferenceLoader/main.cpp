@@ -24,10 +24,14 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/dev/keyboard0", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
     auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini"));
-    auto keymap = mapper_config->read_entry("Mapping", "Keymap", "");
+    auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
+
+    auto keymaps_vector = keymaps.split(',');
+    if (keymaps_vector.size() == 0)
+        exit(1);
 
     pid_t child_pid;
-    const char* argv[] = { "/bin/keymap", keymap.characters(), nullptr };
+    const char* argv[] = { "/bin/keymap", "-m", keymaps_vector.first().characters(), nullptr };
     if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
         exit(1);

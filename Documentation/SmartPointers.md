@@ -33,13 +33,14 @@ There is a `make<T>()` helper that constructs a new object and returns it wrappe
 }
 ```
 
-The `try_make<T>()` helper attempts to construct a new object wrapped in an `OwnPtr`. All arguments passed to it are forwarded to `T`'s constructor. In case of allocation failure, a null pointer is returned. This allows the calling code to handle allocation failure as it wishes.
+The `try_make<T>()` helper attempts to construct a new object wrapped in an `ErrorOr<NonnullOwnPtr<T>>`. All arguments passed to it are forwarded to `T`'s constructor. In case of allocation failure, an ENOMEM error is returned. This allows the calling code to handle allocation failure as it wishes.
 
 ```cpp
-OwnPtr<Foo> my_object = try_make<Foo>();
-if (!my_object) {
+auto my_object_or_error = try_make<Foo>();
+if (my_object_or_error.is_error()) {
     // handle allocation failure...
 }
+auto my_object = my_object_or_error.release_value();
 my_object->do_stuff();
 ```
 
@@ -98,13 +99,14 @@ NonnullRefPtr<Bar> another_owner = our_object;
 ```
 
 
-The `try_make_ref_counted<T>()` function constructs an object wrapped in `RefPtr<T>` which may be null if the allocation does not succeed. This allows the calling code to handle allocation failure as it wishes. All arguments passed to it are forwarded to `T`'s constructor.
+The `try_make_ref_counted<T>()` function constructs an object wrapped in `ErrorOr<NonnullRefPtr<T>>` which may be an error if the allocation does not succeed. This allows the calling code to handle allocation failure as it wishes. All arguments passed to it are forwarded to `T`'s constructor.
 
 ```cpp
-RefPtr<Bar> our_object = try_make_ref_counted<Bar>();
-if (!our_object) {
+auto our_object_or_error = try_make_ref_counted<Bar>();
+if (our_object_or_error.is_error()) {
     // handle allocation failure...
 }
+NonnullRefPtr<Bar> our_object = our_object_or_error.release_value();
 RefPtr<Bar> another_owner = our_object;
 ```
 

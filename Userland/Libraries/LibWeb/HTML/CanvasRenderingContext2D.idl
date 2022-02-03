@@ -15,12 +15,14 @@ interface CanvasRenderingContext2D {
     undefined moveTo(double x, double y);
     undefined lineTo(double x, double y);
     undefined quadraticCurveTo(double cpx, double cpy, double x, double y);
+    undefined bezierCurveTo(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y);
 
     undefined arc(double x, double y, double radius, double startAngle, double endAngle, optional boolean counterclockwise = false);
     undefined ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, optional boolean counterclockwise = false);
     undefined rect(double x, double y, double width, double height);
 
     undefined fillText(DOMString text, double x, double y, optional double maxWidth);
+    undefined strokeText(DOMString text, double x, double y, optional double maxWidth);
 
     undefined drawImage(HTMLImageElement image, double dx, double dy);
 
@@ -39,4 +41,9 @@ interface CanvasRenderingContext2D {
     readonly attribute HTMLCanvasElement canvas;
 
     TextMetrics measureText(DOMString text);
+
+    CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
+    CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
+    CanvasGradient createConicGradient(double startAngle, double x, double y);
+
 };

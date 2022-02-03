@@ -36,7 +36,7 @@ public:
     DeviceIdentifier get_device_identifier(Address address) const;
 
     Spinlock const& scan_lock() const { return m_scan_lock; }
-    Mutex const& access_lock() const { return m_access_lock; }
+    RecursiveSpinlock const& access_lock() const { return m_access_lock; }
 
     void add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController>, Function<void(DeviceIdentifier const&)> callback);
 
@@ -51,8 +51,7 @@ private:
     Vector<Capability> get_capabilities(Address);
     Optional<u8> get_capabilities_pointer(Address address);
 
-    // General Data-members
-    mutable Mutex m_access_lock;
+    mutable RecursiveSpinlock m_access_lock;
     mutable Spinlock m_scan_lock;
 
     HashMap<u32, NonnullOwnPtr<HostController>> m_host_controllers;

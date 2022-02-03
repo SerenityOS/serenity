@@ -36,6 +36,7 @@ enum WMEventMask {
     WindowIconChanges = 1 << 2,
     WindowRemovals = 1 << 3,
     WorkspaceChanges = 1 << 4,
+    KeymapChanged = 1 << 5,
 };
 
 enum class WindowTileType {

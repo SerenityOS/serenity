@@ -25,7 +25,7 @@ ErrorOr<size_t> FramebufferDevice::buffer_length(size_t head) const
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_resolution_lock);
+    SpinlockLocker locker(m_resolution_lock);
     return display_info().rect.width * display_info().rect.height * 4;
 }
 ErrorOr<size_t> FramebufferDevice::pitch(size_t head) const
@@ -34,7 +34,7 @@ ErrorOr<size_t> FramebufferDevice::pitch(size_t head) const
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_resolution_lock);
+    SpinlockLocker locker(m_resolution_lock);
     return display_info().rect.width * 4;
 }
 ErrorOr<size_t> FramebufferDevice::height(size_t head) const
@@ -43,7 +43,7 @@ ErrorOr<size_t> FramebufferDevice::height(size_t head) const
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_resolution_lock);
+    SpinlockLocker locker(m_resolution_lock);
     return display_info().rect.height;
 }
 ErrorOr<size_t> FramebufferDevice::width(size_t head) const
@@ -52,7 +52,7 @@ ErrorOr<size_t> FramebufferDevice::width(size_t head) const
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_resolution_lock);
+    SpinlockLocker locker(m_resolution_lock);
     return display_info().rect.width;
 }
 ErrorOr<size_t> FramebufferDevice::vertical_offset(size_t head) const
@@ -83,7 +83,7 @@ ErrorOr<void> FramebufferDevice::set_head_resolution(size_t head, size_t width, 
 
     auto& info = display_info();
 
-    MutexLocker locker(adapter()->operation_lock());
+    SpinlockLocker locker(adapter()->operation_lock());
 
     info.rect = {
         .x = 0,
@@ -109,7 +109,7 @@ ErrorOr<void> FramebufferDevice::flush_head_buffer(size_t)
 }
 ErrorOr<void> FramebufferDevice::flush_rectangle(size_t buffer_index, FBRect const& rect)
 {
-    MutexLocker locker(adapter()->operation_lock());
+    SpinlockLocker locker(adapter()->operation_lock());
     Protocol::Rect dirty_rect {
         .x = rect.x,
         .y = rect.y,
@@ -184,7 +184,7 @@ ErrorOr<void> FramebufferDevice::create_framebuffer()
     }
     m_framebuffer_sink_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_physical_pages(pages.span()));
 
-    MutexLocker locker(adapter()->operation_lock());
+    SpinlockLocker locker(adapter()->operation_lock());
     m_current_buffer = &buffer_from_index(m_last_set_buffer_index.load());
     create_buffer(m_main_buffer, 0, m_buffer_size);
     create_buffer(m_back_buffer, m_buffer_size, m_buffer_size);
@@ -256,7 +256,7 @@ void FramebufferDevice::flush_displayed_image(Protocol::Rect const& dirty_rect, 
 void FramebufferDevice::set_buffer(int buffer_index)
 {
     auto& buffer = buffer_index == 0 ? m_main_buffer : m_back_buffer;
-    MutexLocker locker(adapter()->operation_lock());
+    SpinlockLocker locker(adapter()->operation_lock());
     if (&buffer == m_current_buffer)
         return;
     m_current_buffer = &buffer;

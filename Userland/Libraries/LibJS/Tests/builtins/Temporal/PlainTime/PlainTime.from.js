@@ -65,6 +65,12 @@ describe("errors", () => {
         );
     });
 
+    test("extended year must not be negative zero", () => {
+        expect(() => {
+            Temporal.PlainTime.from("-000000-01-01T00:00:00");
+        }).toThrowWithMessage(RangeError, "Invalid extended year, must not be negative zero");
+    });
+
     test("ambiguous string must contain a time designator", () => {
         const values = [
             // YYYY-MM or HHMM-UU

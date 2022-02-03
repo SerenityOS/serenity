@@ -49,7 +49,7 @@ struct [[gnu::packed]] GUIDPartitionHeader {
 
 Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> GUIDPartitionTable::try_to_initialize(const StorageDevice& device)
 {
-    auto table = make<GUIDPartitionTable>(device);
+    auto table = adopt_nonnull_own_or_enomem(new (nothrow) GUIDPartitionTable(device)).release_value_but_fixme_should_propagate_errors();
     if (!table->is_valid())
         return { PartitionTable::Error::Invalid };
     return table;

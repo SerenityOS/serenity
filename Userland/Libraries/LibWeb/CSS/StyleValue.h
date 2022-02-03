@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -487,10 +487,7 @@ public:
     Repeat repeat_x() const { return m_repeat_x; }
     Repeat repeat_y() const { return m_repeat_y; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("{} {}", CSS::to_string(m_repeat_x), CSS::to_string(m_repeat_y));
-    }
+    virtual String to_string() const override;
 
 private:
     BackgroundRepeatStyleValue(Repeat repeat_x, Repeat repeat_y)
@@ -516,10 +513,7 @@ public:
     LengthPercentage size_x() const { return m_size_x; }
     LengthPercentage size_y() const { return m_size_y; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("{} {}", m_size_x.to_string(), m_size_y.to_string());
-    }
+    virtual String to_string() const override;
 
 private:
     BackgroundSizeStyleValue(LengthPercentage size_x, LengthPercentage size_y)
@@ -548,10 +542,7 @@ public:
     NonnullRefPtr<StyleValue> border_style() const { return m_border_style; }
     NonnullRefPtr<StyleValue> border_color() const { return m_border_color; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("Border border_width: {}, border_style: {}, border_color: {}", m_border_width->to_string(), m_border_style->to_string(), m_border_color->to_string());
-    }
+    virtual String to_string() const override;
 
 private:
     BorderStyleValue(
@@ -582,10 +573,7 @@ public:
     LengthPercentage const& vertical_radius() const { return m_vertical_radius; }
     bool is_elliptical() const { return m_is_elliptical; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("{} / {}", m_horizontal_radius.to_string(), m_vertical_radius.to_string());
-    }
+    virtual String to_string() const override;
 
     virtual bool equals(StyleValue const& other) const override
     {
@@ -633,13 +621,13 @@ public:
     }
     virtual ~BoxShadowStyleValue() override { }
 
+    // FIXME: Spread-distance and "inset" flag
     Length const& offset_x() const { return m_offset_x; }
     Length const& offset_y() const { return m_offset_y; }
     Length const& blur_radius() const { return m_blur_radius; }
     Color const& color() const { return m_color; }
 
-    String to_string() const override { return String::formatted("BoxShadow offset_x: {}, offset_y: {}, blur_radius: {}, color: {}",
-        m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_color.to_string()); }
+    virtual String to_string() const override;
 
 private:
     explicit BoxShadowStyleValue(Length const& offset_x, Length const& offset_y, Length const& blur_radius, Color const& color)
@@ -814,10 +802,7 @@ public:
     NonnullRefPtr<BorderRadiusStyleValue> bottom_right() const { return m_bottom_right; }
     NonnullRefPtr<BorderRadiusStyleValue> bottom_left() const { return m_bottom_left; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("{} {} {} {} / {} {} {} {}", m_top_left->horizontal_radius().to_string(), m_top_right->horizontal_radius().to_string(), m_bottom_right->horizontal_radius().to_string(), m_bottom_left->horizontal_radius().to_string(), m_top_left->vertical_radius().to_string(), m_top_right->vertical_radius().to_string(), m_bottom_right->vertical_radius().to_string(), m_bottom_left->vertical_radius().to_string());
-    }
+    virtual String to_string() const override;
 
 private:
     CombinedBorderRadiusStyleValue(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
@@ -850,10 +835,7 @@ public:
     NonnullRefPtr<StyleValue> shrink() const { return m_shrink; }
     NonnullRefPtr<StyleValue> basis() const { return m_basis; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("Flex grow: {}, shrink: {}, basis: {}", m_grow->to_string(), m_shrink->to_string(), m_basis->to_string());
-    }
+    virtual String to_string() const override;
 
 private:
     FlexStyleValue(
@@ -883,10 +865,7 @@ public:
     NonnullRefPtr<StyleValue> flex_direction() const { return m_flex_direction; }
     NonnullRefPtr<StyleValue> flex_wrap() const { return m_flex_wrap; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("FlexFlow flex_direction: {}, flex_wrap: {}", m_flex_direction->to_string(), m_flex_wrap->to_string());
-    }
+    virtual String to_string() const override;
 
 private:
     FlexFlowStyleValue(NonnullRefPtr<StyleValue> flex_direction, NonnullRefPtr<StyleValue> flex_wrap)
@@ -911,11 +890,7 @@ public:
     NonnullRefPtr<StyleValue> line_height() const { return m_line_height; }
     NonnullRefPtr<StyleValue> font_families() const { return m_font_families; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("Font style: {}, weight: {}, size: {}, line_height: {}, families: {}",
-            m_font_style->to_string(), m_font_weight->to_string(), m_font_size->to_string(), m_line_height->to_string(), m_font_families->to_string());
-    }
+    virtual String to_string() const override;
 
 private:
     FontStyleValue(NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families)
@@ -977,7 +952,7 @@ public:
     static NonnullRefPtr<ImageStyleValue> create(AK::URL const& url) { return adopt_ref(*new ImageStyleValue(url)); }
     virtual ~ImageStyleValue() override { }
 
-    String to_string() const override { return String::formatted("Image({})", m_url.to_string()); }
+    virtual String to_string() const override;
 
     void load_bitmap(DOM::Document& document);
     Gfx::Bitmap const* bitmap() const { return m_bitmap; }
@@ -1083,10 +1058,7 @@ public:
     NonnullRefPtr<StyleValue> image() const { return m_image; }
     NonnullRefPtr<StyleValue> style_type() const { return m_style_type; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("ListStyle position: {}, image: {}, style_type: {}", m_position->to_string(), m_image->to_string(), m_style_type->to_string());
-    }
+    virtual String to_string() const override;
 
 private:
     ListStyleStyleValue(
@@ -1131,16 +1103,7 @@ public:
     virtual bool has_integer() const override { return m_value.has<i64>(); }
     virtual float to_integer() const override { return m_value.get<i64>(); }
 
-    String to_string() const override
-    {
-        return m_value.visit(
-            [](float value) {
-                return String::formatted("{}", value);
-            },
-            [](i64 value) {
-                return String::formatted("{}", value);
-            });
-    }
+    virtual String to_string() const override;
 
     virtual bool equals(StyleValue const& other) const override
     {
@@ -1174,10 +1137,7 @@ public:
     NonnullRefPtr<StyleValue> overflow_x() const { return m_overflow_x; }
     NonnullRefPtr<StyleValue> overflow_y() const { return m_overflow_y; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("{} {}", m_overflow_x->to_string(), m_overflow_y->to_string());
-    }
+    virtual String to_string() const override;
 
 private:
     OverflowStyleValue(NonnullRefPtr<StyleValue> overflow_x, NonnullRefPtr<StyleValue> overflow_y)
@@ -1202,10 +1162,7 @@ public:
     Percentage const& percentage() const { return m_percentage; }
     Percentage& percentage() { return m_percentage; }
 
-    virtual String to_string() const override
-    {
-        return m_percentage.to_string();
-    }
+    virtual String to_string() const override;
 
 private:
     PercentageStyleValue(Percentage&& percentage)
@@ -1283,10 +1240,7 @@ public:
     NonnullRefPtr<StyleValue> style() const { return m_style; }
     NonnullRefPtr<StyleValue> color() const { return m_color; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("TextDecoration line: {}, style: {}, color: {}", m_line->to_string(), m_style->to_string(), m_color->to_string());
-    }
+    virtual String to_string() const override;
 
 private:
     TextDecorationStyleValue(
@@ -1316,10 +1270,7 @@ public:
     CSS::TransformFunction transform_function() const { return m_transform_function; }
     NonnullRefPtrVector<StyleValue> values() const { return m_values; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("TransformationStyleValue");
-    }
+    virtual String to_string() const override;
 
 private:
     TransformationStyleValue(CSS::TransformFunction transform_function, NonnullRefPtrVector<StyleValue>&& values)
@@ -1378,7 +1329,11 @@ private:
 
 class StyleValueList final : public StyleValue {
 public:
-    static NonnullRefPtr<StyleValueList> create(NonnullRefPtrVector<StyleValue>&& values) { return adopt_ref(*new StyleValueList(move(values))); }
+    enum class Separator {
+        Space,
+        Comma,
+    };
+    static NonnullRefPtr<StyleValueList> create(NonnullRefPtrVector<StyleValue>&& values, Separator separator) { return adopt_ref(*new StyleValueList(move(values), separator)); }
 
     size_t size() const { return m_values.size(); }
     NonnullRefPtrVector<StyleValue> const& values() const { return m_values; }
@@ -1389,27 +1344,26 @@ public:
         return m_values[i];
     }
 
-    virtual String to_string() const override
-    {
-        StringBuilder builder;
-        builder.appendff("List[{}](", m_values.size());
-        for (size_t i = 0; i < m_values.size(); ++i) {
-            if (i)
-                builder.append(',');
-            builder.append(m_values[i].to_string());
-        }
-        builder.append(')');
-        return builder.to_string();
-    }
+    virtual String to_string() const override;
 
 private:
-    StyleValueList(NonnullRefPtrVector<StyleValue>&& values)
+    StyleValueList(NonnullRefPtrVector<StyleValue>&& values, Separator separator)
         : StyleValue(Type::ValueList)
+        , m_separator(separator)
         , m_values(move(values))
     {
     }
 
+    Separator m_separator;
     NonnullRefPtrVector<StyleValue> m_values;
 };
 
 }
+
+template<>
+struct AK::Formatter<Web::CSS::StyleValue> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::StyleValue const& style_value)
+    {
+        return Formatter<StringView>::format(builder, style_value.to_string());
+    }
+};

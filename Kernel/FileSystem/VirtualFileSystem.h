@@ -19,7 +19,7 @@
 #include <Kernel/FileSystem/Mount.h>
 #include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/Forward.h>
-#include <Kernel/Locking/MutexProtected.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
 
@@ -95,7 +95,7 @@ private:
     RefPtr<Inode> m_root_inode;
     RefPtr<Custody> m_root_custody;
 
-    MutexProtected<Vector<Mount, 16>> m_mounts;
+    SpinlockProtected<Vector<Mount, 16>> m_mounts;
 };
 
 }
