@@ -75,7 +75,7 @@ private:
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        arp_table().for_each_shared([&](const auto& it) {
+        arp_table().for_each([&](const auto& it) {
             auto obj = array.add_object();
             obj.add("mac_address", it.value.to_string());
             obj.add("ip_address", it.key.to_string());

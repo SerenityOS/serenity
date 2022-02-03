@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-static Singleton<MutexProtected<HashMap<IPv4Address, MACAddress>>> s_arp_table;
+static Singleton<SpinlockProtected<HashMap<IPv4Address, MACAddress>>> s_arp_table;
 
 class ARPTableBlocker final : public Thread::Blocker {
 public:
@@ -70,7 +70,7 @@ protected:
     {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
         auto& blocker = static_cast<ARPTableBlocker&>(b);
-        auto maybe_mac_address = arp_table().with_shared([&](auto const& table) -> auto {
+        auto maybe_mac_address = arp_table().with([&](auto const& table) -> auto {
             return table.get(blocker.ip_address());
         });
         if (!maybe_mac_address.has_value())
@@ -94,7 +94,7 @@ bool ARPTableBlocker::setup_blocker()
 
 void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
-    auto addr = arp_table().with_shared([&](auto const& table) -> auto {
+    auto addr = arp_table().with([&](auto const& table) -> auto {
         return table.get(ip_address());
     });
 
@@ -105,14 +105,14 @@ void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediate
     }
 }
 
-MutexProtected<HashMap<IPv4Address, MACAddress>>& arp_table()
+SpinlockProtected<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
     return *s_arp_table;
 }
 
 void update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, UpdateArp update)
 {
-    arp_table().with_exclusive([&](auto& table) {
+    arp_table().with([&](auto& table) {
         if (update == UpdateArp::Set)
             table.set(ip_addr, addr);
         if (update == UpdateArp::Delete)
@@ -121,7 +121,7 @@ void update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, Update
     s_arp_table_blocker_set->unblock_blockers_waiting_for_ipv4_address(ip_addr, addr);
 
     if constexpr (ARP_DEBUG) {
-        arp_table().with_shared([&](auto const& table) {
+        arp_table().with([&](auto const& table) {
             dmesgln("ARP table ({} entries):", table.size());
             for (auto& it : table)
                 dmesgln("{} :: {}", it.value.to_string(), it.key.to_string());
@@ -232,7 +232,7 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
         return { adapter, multicast_ethernet_address(target) };
 
     {
-        auto addr = arp_table().with_shared([&](auto const& table) -> auto {
+        auto addr = arp_table().with([&](auto const& table) -> auto {
             return table.get(next_hop_ip);
         });
         if (addr.has_value()) {

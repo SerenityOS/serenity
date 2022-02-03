@@ -33,6 +33,6 @@ enum class AllowUsingGateway {
 
 RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, RefPtr<NetworkAdapter> const through = nullptr, AllowUsingGateway = AllowUsingGateway::Yes);
 
-MutexProtected<HashMap<IPv4Address, MACAddress>>& arp_table();
+SpinlockProtected<HashMap<IPv4Address, MACAddress>>& arp_table();
 
 }
