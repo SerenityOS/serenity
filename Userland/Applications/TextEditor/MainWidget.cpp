@@ -259,7 +259,7 @@ MainWidget::MainWidget()
                 return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
+        auto const response = FileSystemAccessClient::Client::the().try_open_file(window());
         if (response.is_error())
             return;
 
@@ -270,7 +270,7 @@ MainWidget::MainWidget()
         if (m_path.is_empty())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), m_path);
+        auto const response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), m_path);
         if (response.is_error())
             return;
 
@@ -721,7 +721,7 @@ void MainWidget::update_title()
     window()->set_title(builder.to_string());
 }
 
-bool MainWidget::read_file(Core::File& file)
+bool MainWidget::read_file(Core::File const& file)
 {
     m_editor->set_text(file.read_all());
     set_path(file.filename());
