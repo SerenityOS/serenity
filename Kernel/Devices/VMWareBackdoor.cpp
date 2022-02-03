@@ -63,7 +63,7 @@ public:
     VMWareBackdoorDetector()
     {
         if (detect_presence())
-            m_backdoor = make<VMWareBackdoor>();
+            m_backdoor = adopt_nonnull_own_or_enomem(new (nothrow) VMWareBackdoor()).release_value_but_fixme_should_propagate_errors();
     }
 
     VMWareBackdoor* get_instance()

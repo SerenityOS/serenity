@@ -48,7 +48,7 @@ void PhysicalRegion::initialize_zones()
         size_t zone_count = 0;
         auto first_address = base_address;
         while (remaining_pages >= pages_per_zone) {
-            m_zones.append(make<PhysicalZone>(base_address, pages_per_zone));
+            m_zones.append(adopt_nonnull_own_or_enomem(new (nothrow) PhysicalZone(base_address, pages_per_zone)).release_value_but_fixme_should_propagate_errors());
             base_address = base_address.offset(pages_per_zone * PAGE_SIZE);
             m_usable_zones.append(m_zones.last());
             remaining_pages -= pages_per_zone;
