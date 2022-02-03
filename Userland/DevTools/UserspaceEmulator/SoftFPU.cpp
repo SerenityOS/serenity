@@ -1054,32 +1054,34 @@ void SoftFPU::F2XM1(const X86::Instruction&)
 }
 void SoftFPU::FYL2X(const X86::Instruction&)
 {
-    // FIXME: raise precision and under/overflow
-    // FIXME: detect denormal operands
-    // FIXME: QNaN
-    auto f0 = fpu_get(0);
-    auto f1 = fpu_get(1);
-
-    if (f0 < 0. || isnan(f0) || isnan(f1)
-        || (isinf(f0) && f1 == 0.) || (f0 == 1. && isinf(f1)))
+    // FIXME: Set C1 on when result was rounded up, cleared otherwise
+    // FIXME: Raise #IA #D #U #O #P
+    auto x = fpu_get(0);
+    auto y = fpu_get(1);
+    if (x < 0. && !isinf(x)) {
         fpu_set_exception(FPU_Exception::InvalidOperation);
-    if (f0 == 0.)
+        // FIXME: Spec does not say what to do here....
+        //        So lets just ask libm....
+        fpu_set(1, y * log2l(x));
+    } else if (x == 0.) {
+        if (y == 0)
+            fpu_set_exception(FPU_Exception::InvalidOperation);
         fpu_set_exception(FPU_Exception::ZeroDivide);
-
-    fpu_set(1, f1 * log2l(f0));
+        fpu_set(1, INFINITY * (signbit(y) ? 1 : -1));
+    } else {
+        fpu_set(1, y * log2l(x));
+    }
     fpu_pop();
 }
 void SoftFPU::FYL2XP1(const X86::Instruction&)
 {
-    // FIXME: raise #O #U #P #D
-    // FIXME: QNaN
-    auto f0 = fpu_get(0);
-    auto f1 = fpu_get(1);
-    if (isnan(f0) || isnan(f1)
-        || (isinf(f1) && f0 == 0))
+    // FIXME: Raise #IA #O #U #P #D
+    auto x = fpu_get(0);
+    auto y = fpu_get(1);
+    if (x == 0 && isinf(y))
         fpu_set_exception(FPU_Exception::InvalidOperation);
 
-    fpu_set(1, (f1 * log2l(f0 + 1.0l)));
+    fpu_set(1, (y * log2l(x + 1.0l)));
     fpu_pop();
 }
 
