@@ -612,6 +612,12 @@ void DirectoryView::setup_actions()
             Config::write_string("FileManager", "DirectoryView", "ViewMode", "Columns");
         },
         window());
+
+    if (m_mode == Mode::Desktop) {
+        m_view_as_icons_action->set_enabled(false);
+        m_view_as_table_action->set_enabled(false);
+        m_view_as_columns_action->set_enabled(false);
+    }
 }
 
 void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent const& event)
