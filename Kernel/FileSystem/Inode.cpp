@@ -93,9 +93,9 @@ Inode::Inode(FileSystem& fs, InodeIndex index)
 
 Inode::~Inode()
 {
-    for (auto& watcher : m_watchers) {
+    m_watchers.for_each([&](auto& watcher) {
         watcher->unregister_by_inode({}, identifier());
-    }
+    });
 }
 
 void Inode::will_be_destroyed()
@@ -156,17 +156,19 @@ bool Inode::unbind_socket()
 
 ErrorOr<void> Inode::register_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
 {
-    MutexLocker locker(m_inode_lock);
-    VERIFY(!m_watchers.contains(&watcher));
-    TRY(m_watchers.try_set(&watcher));
-    return {};
+    return m_watchers.with([&](auto& watchers) -> ErrorOr<void> {
+        VERIFY(!watchers.contains(&watcher));
+        TRY(watchers.try_set(&watcher));
+        return {};
+    });
 }
 
 void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
 {
-    MutexLocker locker(m_inode_lock);
-    VERIFY(m_watchers.contains(&watcher));
-    m_watchers.remove(&watcher);
+    m_watchers.with([&](auto& watchers) {
+        VERIFY(watchers.contains(&watcher));
+        watchers.remove(&watcher);
+    });
 }
 
 ErrorOr<NonnullRefPtr<FIFO>> Inode::fifo()
@@ -197,49 +199,43 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
     if (m_metadata_dirty) {
         // FIXME: Maybe we should hook into modification events somewhere else, I'm not sure where.
         //        We don't always end up on this particular code path, for instance when writing to an ext2fs file.
-        for (auto& watcher : m_watchers) {
+        m_watchers.for_each([&](auto& watcher) {
             watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::MetadataModified);
-        }
+        });
     }
 }
 
 void Inode::did_add_child(InodeIdentifier, StringView name)
 {
-    MutexLocker locker(m_inode_lock);
-
-    for (auto& watcher : m_watchers) {
+    m_watchers.for_each([&](auto& watcher) {
         watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ChildCreated, name);
-    }
+    });
 }
 
 void Inode::did_remove_child(InodeIdentifier, StringView name)
 {
-    MutexLocker locker(m_inode_lock);
-
     if (name == "." || name == "..") {
         // These are just aliases and are not interesting to userspace.
         return;
     }
 
-    for (auto& watcher : m_watchers) {
+    m_watchers.for_each([&](auto& watcher) {
         watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ChildDeleted, name);
-    }
+    });
 }
 
 void Inode::did_modify_contents()
 {
-    MutexLocker locker(m_inode_lock);
-    for (auto& watcher : m_watchers) {
+    m_watchers.for_each([&](auto& watcher) {
         watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ContentModified);
-    }
+    });
 }
 
 void Inode::did_delete_self()
 {
-    MutexLocker locker(m_inode_lock);
-    for (auto& watcher : m_watchers) {
+    m_watchers.for_each([&](auto& watcher) {
         watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::Deleted);
-    }
+    });
 }
 
 ErrorOr<void> Inode::prepare_to_write_data()
@@ -370,4 +366,9 @@ void Inode::remove_flocks_for_description(OpenFileDescription const& description
             m_flocks.remove(i--);
     }
 }
+bool Inode::has_watchers() const
+{
+    return !m_watchers.with([&](auto& watchers) { return watchers.is_empty(); });
+}
+
 }

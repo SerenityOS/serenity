@@ -89,7 +89,7 @@ public:
     static void sync_all();
     void sync();
 
-    bool has_watchers() const { return !m_watchers.is_empty(); }
+    bool has_watchers() const;
 
     ErrorOr<void> register_watcher(Badge<InodeWatcher>, InodeWatcher&);
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
@@ -118,7 +118,7 @@ private:
     InodeIndex m_index { 0 };
     WeakPtr<Memory::SharedInodeVMObject> m_shared_vmobject;
     RefPtr<LocalSocket> m_socket;
-    HashTable<InodeWatcher*> m_watchers;
+    SpinlockProtected<HashTable<InodeWatcher*>> m_watchers;
     bool m_metadata_dirty { false };
     RefPtr<FIFO> m_fifo;
     IntrusiveListNode<Inode> m_inode_list_node;
