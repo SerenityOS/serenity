@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -187,6 +187,11 @@ void CanvasRenderingContext2D::line_to(float x, float y)
 void CanvasRenderingContext2D::quadratic_curve_to(float cx, float cy, float x, float y)
 {
     m_path.quadratic_bezier_curve_to({ cx, cy }, { x, y });
+}
+
+void CanvasRenderingContext2D::bezier_curve_to(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y)
+{
+    m_path.cubic_bezier_curve_to(Gfx::FloatPoint(cp1x, cp1y), Gfx::FloatPoint(cp2x, cp2y), Gfx::FloatPoint(x, y));
 }
 
 DOM::ExceptionOr<void> CanvasRenderingContext2D::arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise)

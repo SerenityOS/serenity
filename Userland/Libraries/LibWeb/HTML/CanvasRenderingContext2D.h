@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -56,6 +56,7 @@ public:
     void move_to(float x, float y);
     void line_to(float x, float y);
     void quadratic_curve_to(float cx, float cy, float x, float y);
+    void bezier_curve_to(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y);
 
     DOM::ExceptionOr<void> arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise);
     DOM::ExceptionOr<void> ellipse(float x, float y, float radius_x, float radius_y, float rotation, float start_angle, float end_angle, bool counter_clockwise);
