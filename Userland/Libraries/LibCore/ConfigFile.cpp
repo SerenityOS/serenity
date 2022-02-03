@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,7 +11,6 @@
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <pwd.h>
-#include <stdio.h>
 
 namespace Core {
 
@@ -82,32 +82,41 @@ void ConfigFile::reparse()
             return;
         }
 
-        auto* cp = line.characters();
+        size_t i = 0;
 
-        while (*cp && (*cp == ' ' || *cp == '\t' || *cp == '\n'))
-            ++cp;
+        while (i < line.length() && (line[i] == ' ' || line[i] == '\t' || line[i] == '\n'))
+            ++i;
 
-        switch (*cp) {
-        case '\0': // EOL...
-        case '#':  // Comment, skip entire line.
-        case ';':  // -||-
+        // EOL
+        if (i >= line.length())
+            continue;
+
+        switch (line[i]) {
+        case '#': // Comment, skip entire line.
+        case ';': // -||-
             continue;
         case '[': { // Start of new group.
             StringBuilder builder;
-            ++cp; // Skip the '['
-            while (*cp && (*cp != ']'))
-                builder.append(*(cp++));
+            ++i; // Skip the '['
+            while (i < line.length() && (line[i] != ']')) {
+                builder.append(line[i]);
+                ++i;
+            }
             current_group = &m_groups.ensure(builder.to_string());
             break;
         }
-        default: { // Start of key{
+        default: { // Start of key
             StringBuilder key_builder;
             StringBuilder value_builder;
-            while (*cp && (*cp != '='))
-                key_builder.append(*(cp++));
-            ++cp; // Skip the '='
-            while (*cp && (*cp != '\n'))
-                value_builder.append(*(cp++));
+            while (i < line.length() && (line[i] != '=')) {
+                key_builder.append(line[i]);
+                ++i;
+            }
+            ++i; // Skip the '='
+            while (i < line.length() && (line[i] != '\n')) {
+                value_builder.append(line[i]);
+                ++i;
+            }
             if (!current_group) {
                 // We're not in a group yet, create one with the name ""...
                 current_group = &m_groups.ensure("");
