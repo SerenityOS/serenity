@@ -11,7 +11,7 @@ namespace Kernel {
 
 Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> EBRPartitionTable::try_to_initialize(const StorageDevice& device)
 {
-    auto table = make<EBRPartitionTable>(device);
+    auto table = adopt_nonnull_own_or_enomem(new (nothrow) EBRPartitionTable(device)).release_value_but_fixme_should_propagate_errors();
     if (table->is_protective_mbr())
         return { PartitionTable::Error::MBRProtective };
     if (!table->is_valid())
