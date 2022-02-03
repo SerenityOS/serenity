@@ -36,7 +36,7 @@ ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* messag
     }
 }
 
-namespace UserspaceEmulator {
+namespace UserspaceEmulator { // NOLINT(readability-implicit-bool-conversion) 0/1 to follow spec closer
 
 ALWAYS_INLINE void SoftFPU::warn_if_mmx_absolute(u8 index) const
 {

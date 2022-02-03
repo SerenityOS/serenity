@@ -204,6 +204,20 @@ constexpr T cos(T angle)
 }
 
 template<FloatingPoint T>
+constexpr void sincos(T angle, T& sin_val, T& cos_val)
+{
+    if (is_constant_evaluated()) {
+        sin_val = sin(angle);
+        cos_val = cos(angle);
+        return;
+    }
+    asm(
+        "fsincos"
+        : "=t"(cos_val), "=u"(sin_val)
+        : "0"(angle));
+}
+
+template<FloatingPoint T>
 constexpr T tan(T angle)
 {
     CONSTEXPR_STATE(tan, angle);
@@ -303,6 +317,7 @@ using Trigonometry::atan2;
 using Trigonometry::cos;
 using Trigonometry::hypot;
 using Trigonometry::sin;
+using Trigonometry::sincos;
 using Trigonometry::tan;
 
 namespace Exponentials {

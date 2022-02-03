@@ -97,8 +97,10 @@ struct Sample {
         double const pi_over_2 = AK::Pi<double> * 0.5;
         double const root_over_2 = AK::sqrt(2.0) * 0.5;
         double const angle = position * pi_over_2 * 0.5;
-        left *= root_over_2 * (AK::cos(angle) - AK::sin(angle));
-        right *= root_over_2 * (AK::cos(angle) + AK::sin(angle));
+        double s, c;
+        AK::sincos(angle, s, c);
+        left *= root_over_2 * (c - s);
+        right *= root_over_2 * (c + s);
         return *this;
     }
 
@@ -116,7 +118,7 @@ struct Sample {
         return *this;
     }
 
-    constexpr Sample operator*(double const mult)
+    constexpr Sample operator*(double const mult) const
     {
         return { left * mult, right * mult };
     }
@@ -134,7 +136,7 @@ struct Sample {
         return *this;
     }
 
-    constexpr Sample operator+(Sample const& other)
+    constexpr Sample operator+(Sample const& other) const
     {
         return { left + other.left, right + other.right };
     }
