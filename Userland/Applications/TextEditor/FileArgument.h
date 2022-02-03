@@ -8,12 +8,13 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/StringView.h>
 
 namespace TextEditor {
 
 class FileArgument final {
 public:
-    explicit FileArgument(String);
+    explicit FileArgument(StringView);
     ~FileArgument() = default;
 
     String filename() { return m_filename; }
