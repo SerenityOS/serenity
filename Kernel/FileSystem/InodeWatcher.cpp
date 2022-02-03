@@ -24,13 +24,13 @@ InodeWatcher::~InodeWatcher()
 
 bool InodeWatcher::can_read(const OpenFileDescription&, u64) const
 {
-    SpinlockLocker locker(m_lock);
+    MutexLocker locker(m_lock);
     return !m_queue.is_empty();
 }
 
 ErrorOr<size_t> InodeWatcher::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t buffer_size)
 {
-    SpinlockLocker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (m_queue.is_empty())
         // can_read will catch the blocking case.
         return EAGAIN;
@@ -69,7 +69,7 @@ ErrorOr<size_t> InodeWatcher::read(OpenFileDescription&, u64, UserOrKernelBuffer
 
 ErrorOr<void> InodeWatcher::close()
 {
-    SpinlockLocker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     for (auto& entry : m_wd_to_watches) {
         auto& inode = const_cast<Inode&>(entry.value->inode);
@@ -88,7 +88,7 @@ ErrorOr<NonnullOwnPtr<KString>> InodeWatcher::pseudo_path(const OpenFileDescript
 
 void InodeWatcher::notify_inode_event(Badge<Inode>, InodeIdentifier inode_id, InodeWatcherEvent::Type event_type, StringView name)
 {
-    SpinlockLocker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     auto it = m_inode_to_watches.find(inode_id);
     if (it == m_inode_to_watches.end())
@@ -107,7 +107,7 @@ void InodeWatcher::notify_inode_event(Badge<Inode>, InodeIdentifier inode_id, In
 
 ErrorOr<int> InodeWatcher::register_inode(Inode& inode, unsigned event_mask)
 {
-    SpinlockLocker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     if (m_inode_to_watches.find(inode.identifier()) != m_inode_to_watches.end())
         return EEXIST;
@@ -142,7 +142,7 @@ ErrorOr<int> InodeWatcher::register_inode(Inode& inode, unsigned event_mask)
 
 ErrorOr<void> InodeWatcher::unregister_by_wd(int wd)
 {
-    SpinlockLocker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     auto it = m_wd_to_watches.find(wd);
     if (it == m_wd_to_watches.end())
@@ -159,7 +159,7 @@ ErrorOr<void> InodeWatcher::unregister_by_wd(int wd)
 
 void InodeWatcher::unregister_by_inode(Badge<Inode>, InodeIdentifier identifier)
 {
-    SpinlockLocker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     auto it = m_inode_to_watches.find(identifier);
     if (it == m_inode_to_watches.end())
