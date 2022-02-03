@@ -13,7 +13,7 @@
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
-#include <Kernel/Graphics/VGACompatibleAdapter.h>
+#include <Kernel/Graphics/VGA/GenericAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Memory/Region.h>
 
@@ -52,7 +52,7 @@ private:
     RefPtr<Graphics::Console> m_console;
 
     // Note: there could be multiple VGA adapters, but only one can operate in VGA mode
-    RefPtr<VGACompatibleAdapter> m_vga_adapter;
+    RefPtr<VGAGenericAdapter> m_vga_adapter;
     unsigned m_current_minor_number { 0 };
 
     RecursiveSpinlock m_main_vga_lock;

@@ -9,7 +9,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/Console/Console.h>
-#include <Kernel/Graphics/VGACompatibleAdapter.h>
+#include <Kernel/Graphics/VGA/PCIGenericAdapter.h>
 
 namespace Kernel::Graphics {
 class VGAConsole : public Console {
