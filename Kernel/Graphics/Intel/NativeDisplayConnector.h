@@ -10,6 +10,7 @@
 #include <AK/Try.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/Definitions.h>
+#include <Kernel/Graphics/Intel/GMBusConnector.h>
 #include <Kernel/Graphics/VGA/GenericDisplayConnector.h>
 #include <Kernel/Memory/TypedMapping.h>
 
@@ -55,24 +56,6 @@ struct PLLMaxSettings {
     PLLParameterLimit dot_clock, vco, n, m, m1, m2, p, p1, p2;
 };
 
-enum GMBusPinPair : u8 {
-    None = 0,
-    DedicatedControl = 1,
-    DedicatedAnalog = 0b10,
-    IntegratedDigital = 0b11,
-    sDVO = 0b101,
-    Dconnector = 0b111,
-};
-
-enum class GMBusStatus {
-    TransactionCompletion,
-    HardwareReady,
-};
-
-enum GMBusCycle {
-    Wait = 1,
-    Stop = 4,
-};
 }
 
 class IntelNativeDisplayConnector
@@ -95,11 +78,10 @@ private:
     virtual ErrorOr<void> set_y_offset(size_t y) override;
     virtual ErrorOr<void> unblank() override;
 
-    ErrorOr<void> initialize_gmbus_settings_and_read_edid();
-
-    IntelNativeDisplayConnector(PhysicalAddress framebuffer_address, NonnullOwnPtr<Memory::Region> registers_region);
+    IntelNativeDisplayConnector(PhysicalAddress framebuffer_address, NonnullOwnPtr<GMBusConnector>, NonnullOwnPtr<Memory::Region> registers_region);
 
     ErrorOr<void> create_attached_framebuffer_console(PhysicalAddress framebuffer_address);
+    ErrorOr<void> initialize_gmbus_settings_and_read_edid();
 
     void write_to_register(IntelGraphics::RegisterIndex, u32 value) const;
     u32 read_from_register(IntelGraphics::RegisterIndex) const;
@@ -137,14 +119,7 @@ private:
     bool wait_for_disabled_pipe_a(size_t milliseconds_timeout) const;
     bool wait_for_disabled_pipe_b(size_t milliseconds_timeout) const;
 
-    void set_gmbus_default_rate();
-    void set_gmbus_pin_pair(IntelGraphics::GMBusPinPair pin_pair);
-
-    // FIXME: It would be better if we generalize the I2C access later on
     void gmbus_read_edid();
-    void gmbus_write(unsigned address, u32 byte);
-    void gmbus_read(unsigned address, u8* buf, size_t length);
-    bool gmbus_wait_for(IntelGraphics::GMBusStatus desired_status, Optional<size_t> milliseconds_timeout);
 
     Optional<IntelGraphics::PLLSettings> create_pll_settings(u64 target_frequency, u64 reference_clock, IntelGraphics::PLLMaxSettings const&);
 
@@ -156,5 +131,6 @@ private:
     Optional<EDID::Parser> m_crt_edid;
     const PhysicalAddress m_registers;
     NonnullOwnPtr<Memory::Region> m_registers_region;
+    NonnullOwnPtr<GMBusConnector> m_gmbus_connector;
 };
 }

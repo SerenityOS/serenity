@@ -84,6 +84,7 @@ set(KERNEL_SOURCES
     Graphics/Console/VGAConsole.cpp
     Graphics/FramebufferDevice.cpp
     Graphics/GraphicsManagement.cpp
+    Graphics/Intel/GMBusConnector.cpp
     Graphics/Intel/NativeDisplayConnector.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
     Graphics/VGA/GenericDisplayConnector.cpp

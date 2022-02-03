@@ -178,7 +178,9 @@ Optional<IntelGraphics::PLLSettings> IntelNativeDisplayConnector::create_pll_set
 NonnullOwnPtr<IntelNativeDisplayConnector> IntelNativeDisplayConnector::must_create(PhysicalAddress framebuffer_address, PhysicalAddress registers_region_address, size_t registers_region_length)
 {
     auto registers_region = MUST(MM.allocate_kernel_region(PhysicalAddress(registers_region_address), registers_region_length, "Intel Native Graphics Registers", Memory::Region::Access::ReadWrite));
-    auto connector = adopt_own_if_nonnull(new (nothrow) IntelNativeDisplayConnector(framebuffer_address, move(registers_region))).release_nonnull();
+    // FIXME: Try to put the address as parameter to this function to allow creating this DisplayConnector for many generations...
+    auto gmbus_connector = MUST(GMBusConnector::create_with_physical_address(registers_region_address.offset(to_underlying(IntelGraphics::RegisterIndex::GMBusClock))));
+    auto connector = adopt_own_if_nonnull(new (nothrow) IntelNativeDisplayConnector(framebuffer_address, move(gmbus_connector), move(registers_region))).release_nonnull();
     MUST(connector->initialize_gmbus_settings_and_read_edid());
     // Note: This is very important to set the resolution to something safe so we
     // can create a framebuffer console with valid resolution.
@@ -200,15 +202,11 @@ ErrorOr<void> IntelNativeDisplayConnector::create_attached_framebuffer_console(P
     return {};
 }
 
-IntelNativeDisplayConnector::IntelNativeDisplayConnector(PhysicalAddress framebuffer_address, NonnullOwnPtr<Memory::Region> registers_region)
+IntelNativeDisplayConnector::IntelNativeDisplayConnector(PhysicalAddress framebuffer_address, NonnullOwnPtr<GMBusConnector> gmbus_connector, NonnullOwnPtr<Memory::Region> registers_region)
     : VGAGenericDisplayConnector(framebuffer_address)
     , m_registers_region(move(registers_region))
+    , m_gmbus_connector(move(gmbus_connector))
 {
-    {
-        SpinlockLocker control_lock(m_control_lock);
-        set_gmbus_default_rate();
-        set_gmbus_pin_pair(IntelGraphics::GMBusPinPair::DedicatedAnalog);
-    }
 }
 
 ErrorOr<ByteBuffer> IntelNativeDisplayConnector::get_edid() const
@@ -339,78 +337,12 @@ bool IntelNativeDisplayConnector::pipe_b_enabled() const
     return read_from_register(IntelGraphics::RegisterIndex::PipeBConf) & (1 << 30);
 }
 
-bool IntelNativeDisplayConnector::gmbus_wait_for(IntelGraphics::GMBusStatus desired_status, Optional<size_t> milliseconds_timeout)
-{
-    VERIFY(m_control_lock.is_locked());
-    size_t milliseconds_passed = 0;
-    while (1) {
-        if (milliseconds_timeout.has_value() && milliseconds_timeout.value() < milliseconds_passed)
-            return false;
-        full_memory_barrier();
-        u32 status = read_from_register(IntelGraphics::RegisterIndex::GMBusStatus);
-        full_memory_barrier();
-        VERIFY(!(status & (1 << 10))); // error happened
-        switch (desired_status) {
-        case IntelGraphics::GMBusStatus::HardwareReady:
-            if (status & (1 << 11))
-                return true;
-            break;
-        case IntelGraphics::GMBusStatus::TransactionCompletion:
-            if (status & (1 << 14))
-                return true;
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-        IO::delay(1000);
-        milliseconds_passed++;
-    }
-}
-
-void IntelNativeDisplayConnector::gmbus_write(unsigned address, u32 byte)
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(address < 256);
-    full_memory_barrier();
-    write_to_register(IntelGraphics::RegisterIndex::GMBusData, byte);
-    full_memory_barrier();
-    write_to_register(IntelGraphics::RegisterIndex::GMBusCommand, ((address << 1) | (1 << 16) | (IntelGraphics::GMBusCycle::Wait << 25) | (1 << 30)));
-    full_memory_barrier();
-    gmbus_wait_for(IntelGraphics::GMBusStatus::TransactionCompletion, {});
-}
-void IntelNativeDisplayConnector::gmbus_read(unsigned address, u8* buf, size_t length)
-{
-    VERIFY(address < 256);
-    VERIFY(m_control_lock.is_locked());
-    size_t nread = 0;
-    auto read_set = [&] {
-        full_memory_barrier();
-        u32 data = read_from_register(IntelGraphics::RegisterIndex::GMBusData);
-        full_memory_barrier();
-        for (size_t index = 0; index < 4; index++) {
-            if (nread == length)
-                break;
-            buf[nread] = (data >> (8 * index)) & 0xFF;
-            nread++;
-        }
-    };
-
-    full_memory_barrier();
-    write_to_register(IntelGraphics::RegisterIndex::GMBusCommand, (1 | (address << 1) | (length << 16) | (IntelGraphics::GMBusCycle::Wait << 25) | (1 << 30)));
-    full_memory_barrier();
-    while (nread < length) {
-        gmbus_wait_for(IntelGraphics::GMBusStatus::HardwareReady, {});
-        read_set();
-    }
-    gmbus_wait_for(IntelGraphics::GMBusStatus::TransactionCompletion, {});
-}
-
 void IntelNativeDisplayConnector::gmbus_read_edid()
 {
     {
         SpinlockLocker control_lock(m_control_lock);
-        gmbus_write(DDC2_I2C_ADDRESS, 0);
-        gmbus_read(DDC2_I2C_ADDRESS, (u8*)&m_crt_edid_bytes, sizeof(m_crt_edid_bytes));
+        m_gmbus_connector->write(DDC2_I2C_ADDRESS, 0);
+        MUST(m_gmbus_connector->read(DDC2_I2C_ADDRESS, (u8*)&m_crt_edid_bytes, sizeof(m_crt_edid_bytes)));
         // FIXME: It seems like the returned EDID is almost correct,
         // but the first byte is set to 0xD0 instead of 0x00.
         // For now, this "hack" works well enough.
@@ -601,14 +533,6 @@ void IntelNativeDisplayConnector::disable_pipe_b()
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe B - done.");
 }
 
-void IntelNativeDisplayConnector::set_gmbus_default_rate()
-{
-    // FIXME: Verify GMBUS Rate Select is set only when GMBUS is idle
-    VERIFY(m_control_lock.is_locked());
-    // Set the rate to 100KHz
-    write_to_register(IntelGraphics::RegisterIndex::GMBusClock, read_from_register(IntelGraphics::RegisterIndex::GMBusClock) & ~(0b111 << 8));
-}
-
 void IntelNativeDisplayConnector::enable_pipe_a()
 {
     VERIFY(m_control_lock.is_locked());
@@ -662,13 +586,6 @@ void IntelNativeDisplayConnector::enable_dpll_without_vga(IntelGraphics::PLLSett
     // after enabling the DPLL to allow the clock to stabilize
     IO::delay(200);
     VERIFY(read_from_register(IntelGraphics::RegisterIndex::DPLLControlA) & (1 << 31));
-}
-
-void IntelNativeDisplayConnector::set_gmbus_pin_pair(IntelGraphics::GMBusPinPair pin_pair)
-{
-    // FIXME: Verify GMBUS is idle
-    VERIFY(m_control_lock.is_locked());
-    write_to_register(IntelGraphics::RegisterIndex::GMBusClock, (read_from_register(IntelGraphics::RegisterIndex::GMBusClock) & (~0b111)) | (pin_pair & 0b111));
 }
 
 void IntelNativeDisplayConnector::disable_dac_output()
