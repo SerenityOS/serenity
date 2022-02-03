@@ -131,7 +131,7 @@ private:
         short type;
     };
 
-    Vector<Flock> m_flocks;
+    SpinlockProtected<Vector<Flock>> m_flocks;
 
 public:
     using AllInstancesList = IntrusiveList<&Inode::m_inode_list_node>;

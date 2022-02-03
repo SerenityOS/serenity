@@ -289,27 +289,26 @@ ErrorOr<void> Inode::can_apply_flock(OpenFileDescription const& description, flo
 {
     VERIFY(new_lock.l_whence == SEEK_SET);
 
-    MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
-
-    if (new_lock.l_type == F_UNLCK) {
-        for (auto const& lock : m_flocks) {
-            if (&description == lock.owner && lock.start == new_lock.l_start && lock.len == new_lock.l_len)
-                return {};
+    return m_flocks.with([&](auto& flocks) -> ErrorOr<void> {
+        if (new_lock.l_type == F_UNLCK) {
+            for (auto const& lock : flocks) {
+                if (&description == lock.owner && lock.start == new_lock.l_start && lock.len == new_lock.l_len)
+                    return {};
+            }
+            return EINVAL;
         }
-        return EINVAL;
-    }
+        for (auto const& lock : flocks) {
+            if (!range_overlap(lock.start, lock.len, new_lock.l_start, new_lock.l_len))
+                continue;
 
-    for (auto const& lock : m_flocks) {
-        if (!range_overlap(lock.start, lock.len, new_lock.l_start, new_lock.l_len))
-            continue;
+            if (new_lock.l_type == F_RDLCK && lock.type == F_WRLCK)
+                return EAGAIN;
 
-        if (new_lock.l_type == F_RDLCK && lock.type == F_WRLCK)
-            return EAGAIN;
-
-        if (new_lock.l_type == F_WRLCK)
-            return EAGAIN;
-    }
-    return {};
+            if (new_lock.l_type == F_WRLCK)
+                return EAGAIN;
+        }
+        return {};
+    });
 }
 
 ErrorOr<void> Inode::apply_flock(Process const& process, OpenFileDescription const& description, Userspace<flock const*> input_lock)
@@ -317,22 +316,22 @@ ErrorOr<void> Inode::apply_flock(Process const& process, OpenFileDescription con
     auto new_lock = TRY(copy_typed_from_user(input_lock));
     TRY(normalize_flock(description, new_lock));
 
-    MutexLocker locker(m_inode_lock);
+    return m_flocks.with([&](auto& flocks) -> ErrorOr<void> {
+        TRY(can_apply_flock(description, new_lock));
 
-    TRY(can_apply_flock(description, new_lock));
-
-    if (new_lock.l_type == F_UNLCK) {
-        for (size_t i = 0; i < m_flocks.size(); ++i) {
-            if (&description == m_flocks[i].owner && m_flocks[i].start == new_lock.l_start && m_flocks[i].len == new_lock.l_len) {
-                m_flocks.remove(i);
-                return {};
+        if (new_lock.l_type == F_UNLCK) {
+            for (size_t i = 0; i < flocks.size(); ++i) {
+                if (&description == flocks[i].owner && flocks[i].start == new_lock.l_start && flocks[i].len == new_lock.l_len) {
+                    flocks.remove(i);
+                    return {};
+                }
             }
+            return EINVAL;
         }
-        return EINVAL;
-    }
 
-    TRY(m_flocks.try_append(Flock { new_lock.l_start, new_lock.l_len, &description, process.pid().value(), new_lock.l_type }));
-    return {};
+        TRY(flocks.try_append(Flock { new_lock.l_start, new_lock.l_len, &description, process.pid().value(), new_lock.l_type }));
+        return {};
+    });
 }
 
 ErrorOr<void> Inode::get_flock(OpenFileDescription const& description, Userspace<flock*> reference_lock) const
@@ -341,31 +340,29 @@ ErrorOr<void> Inode::get_flock(OpenFileDescription const& description, Userspace
     TRY(copy_from_user(&lookup, reference_lock));
     TRY(normalize_flock(description, lookup));
 
-    MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
+    return m_flocks.with([&](auto& flocks) {
+        for (auto const& lock : flocks) {
+            if (!range_overlap(lock.start, lock.len, lookup.l_start, lookup.l_len))
+                continue;
 
-    for (auto const& lock : m_flocks) {
-        if (!range_overlap(lock.start, lock.len, lookup.l_start, lookup.l_len))
-            continue;
-
-        if ((lookup.l_type == F_RDLCK && lock.type == F_WRLCK) || lookup.l_type == F_WRLCK) {
-            lookup = { lock.type, SEEK_SET, lock.start, lock.len, lock.pid };
-            return copy_to_user(reference_lock, &lookup);
+            if ((lookup.l_type == F_RDLCK && lock.type == F_WRLCK) || lookup.l_type == F_WRLCK) {
+                lookup = { lock.type, SEEK_SET, lock.start, lock.len, lock.pid };
+                return copy_to_user(reference_lock, &lookup);
+            }
         }
-    }
 
-    lookup.l_type = F_UNLCK;
-    return copy_to_user(reference_lock, &lookup);
+        lookup.l_type = F_UNLCK;
+        return copy_to_user(reference_lock, &lookup);
+    });
 }
 
 void Inode::remove_flocks_for_description(OpenFileDescription const& description)
 {
-    MutexLocker locker(m_inode_lock);
-
-    for (size_t i = 0; i < m_flocks.size(); ++i) {
-        if (&description == m_flocks[i].owner)
-            m_flocks.remove(i--);
-    }
+    m_flocks.with([&](auto& flocks) {
+        flocks.remove_all_matching([&](auto& entry) { return entry.owner == &description; });
+    });
 }
+
 bool Inode::has_watchers() const
 {
     return !m_watchers.with([&](auto& watchers) { return watchers.is_empty(); });
