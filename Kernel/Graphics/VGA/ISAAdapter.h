@@ -10,12 +10,12 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
-#include <Kernel/Graphics/GenericGraphicsAdapter.h>
+#include <Kernel/Graphics/VGA/GenericAdapter.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 
-class ISAVGAAdapter final : public VGACompatibleAdapter {
+class ISAVGAAdapter final : public VGAGenericAdapter {
     friend class GraphicsManagement;
 
 public:
