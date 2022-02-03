@@ -519,12 +519,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_action(*m_visualize_trailing_whitespace_action);
     view_menu.add_action(*m_visualize_leading_whitespace_action);
 
-    m_cursor_line_highlighting_action = GUI::Action::create_checkable("Line High&lighting", [&](auto&) {
+    m_cursor_line_highlighting_action = GUI::Action::create_checkable("L&ine Highlighting", [&](auto&) {
         m_editor->set_cursor_line_highlighting(m_cursor_line_highlighting_action->is_checked());
     });
 
     m_cursor_line_highlighting_action->set_checked(true);
-    m_cursor_line_highlighting_action->set_status_tip("Highlight text on the cursor's line");
+    m_cursor_line_highlighting_action->set_status_tip("Highlight the current line");
 
     view_menu.add_action(*m_cursor_line_highlighting_action);
 
