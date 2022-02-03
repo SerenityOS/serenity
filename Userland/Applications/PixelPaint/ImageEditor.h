@@ -114,6 +114,8 @@ public:
     bool show_active_layer_boundary() const { return m_show_active_layer_boundary; }
     void set_show_active_layer_boundary(bool);
 
+    void set_loaded_from_image(bool);
+
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
 
@@ -170,6 +172,8 @@ private:
     Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_active_cursor { Gfx::StandardCursor::None };
 
     Selection m_selection;
+
+    bool m_loaded_from_image { true };
 };
 
 }

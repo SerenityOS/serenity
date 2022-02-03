@@ -587,7 +587,7 @@ bool ImageEditor::request_close()
 
 void ImageEditor::save_project()
 {
-    if (path().is_empty()) {
+    if (path().is_empty() || m_loaded_from_image) {
         save_project_as();
         return;
     }
@@ -614,6 +614,7 @@ void ImageEditor::save_project_as()
         return;
     }
     set_path(file->filename());
+    set_loaded_from_image(false);
     undo_stack().set_current_unmodified();
 }
 
@@ -647,6 +648,11 @@ void ImageEditor::set_show_active_layer_boundary(bool show)
 
     m_show_active_layer_boundary = show;
     update();
+}
+
+void ImageEditor::set_loaded_from_image(bool loaded_from_image)
+{
+    m_loaded_from_image = loaded_from_image;
 }
 
 }
