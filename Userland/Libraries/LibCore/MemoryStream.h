@@ -26,6 +26,8 @@ public:
     virtual bool is_open() const override { return true; }
     // FIXME: It doesn't make sense to close an memory stream. Therefore, we don't do anything here. Is that fine?
     virtual void close() override { }
+    // FIXME: It doesn't make sense to truncate a memory stream. Therefore, we don't do anything here. Is that fine?
+    virtual ErrorOr<void> truncate(off_t) override { return Error::from_errno(ENOTSUP); }
 
     virtual ErrorOr<size_t> read(Bytes bytes) override
     {

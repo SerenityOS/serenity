@@ -215,6 +215,11 @@ ErrorOr<off_t> File::seek(i64 offset, SeekMode mode)
     return seek_result;
 }
 
+ErrorOr<void> File::truncate(off_t length)
+{
+    return System::ftruncate(m_fd, length);
+}
+
 ErrorOr<int> Socket::create_fd(SocketDomain domain, SocketType type)
 {
     int socket_domain;
