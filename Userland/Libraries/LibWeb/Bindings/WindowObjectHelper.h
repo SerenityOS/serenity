@@ -211,6 +211,8 @@
 #include <LibWeb/Bindings/ImageDataPrototype.h>
 #include <LibWeb/Bindings/IntersectionObserverConstructor.h>
 #include <LibWeb/Bindings/IntersectionObserverPrototype.h>
+#include <LibWeb/Bindings/KeyboardEventConstructor.h>
+#include <LibWeb/Bindings/KeyboardEventPrototype.h>
 #include <LibWeb/Bindings/MediaQueryListConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListEventConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListEventPrototype.h>
@@ -398,6 +400,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLVideoElement)          \
     ADD_WINDOW_OBJECT_INTERFACE(ImageData)                 \
     ADD_WINDOW_OBJECT_INTERFACE(IntersectionObserver)      \
+    ADD_WINDOW_OBJECT_INTERFACE(KeyboardEvent)             \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryList)            \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryListEvent)       \
     ADD_WINDOW_OBJECT_INTERFACE(MessageChannel)            \
