@@ -400,7 +400,6 @@ void SoftFPU::FBSTP_M80(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftFPU::FXCH(const X86::Instruction& insn)
 {
-    // FIXME: implicit argument `D9 C9` -> st[0] <-> st[1]?
     VERIFY(insn.modrm().is_register());
     set_c1(0);
     auto tmp = fpu_get(0);
@@ -520,6 +519,7 @@ void SoftFPU::FSUB_RM32(const X86::Instruction& insn)
 void SoftFPU::FSUB_RM64(const X86::Instruction& insn)
 {
     if (insn.modrm().is_register()) {
+        // Note: This is FSUBR (DC E8+i FSUBR st(i) st(0)) in the spec
         fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) - fpu_get(0));
     } else {
         auto new_f64 = insn.modrm().read64(m_cpu, insn);
@@ -549,6 +549,7 @@ void SoftFPU::FSUBR_RM32(const X86::Instruction& insn)
 void SoftFPU::FSUBR_RM64(const X86::Instruction& insn)
 {
     if (insn.modrm().is_register()) {
+        // Note: This is FSUB (DC E0+i FSUB st(i) st(0)) in the spec
         fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) - fpu_get(0));
     } else {
         auto new_f64 = insn.modrm().read64(m_cpu, insn);
@@ -655,6 +656,7 @@ void SoftFPU::FDIV_RM32(const X86::Instruction& insn)
 void SoftFPU::FDIV_RM64(const X86::Instruction& insn)
 {
     if (insn.modrm().is_register()) {
+        // Note: This is FDIVR (DC F0+i FDIVR st(i) st(0)) in the spec
         fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) / fpu_get(0));
     } else {
         auto new_f64 = insn.modrm().read64(m_cpu, insn);
@@ -687,8 +689,7 @@ void SoftFPU::FDIVR_RM32(const X86::Instruction& insn)
 void SoftFPU::FDIVR_RM64(const X86::Instruction& insn)
 {
     if (insn.modrm().is_register()) {
-        // XXX this is FDIVR, Instruction decodes this weirdly
-        // fpu_set(insn.modrm().register_index(), fpu_get(0) / fpu_get(insn.modrm().register_index()));
+        // Note: This is FDIV (DC F8+i FDIV st(i) st(0)) in the spec
         fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) / fpu_get(0));
     } else {
         auto new_f64 = insn.modrm().read64(m_cpu, insn);
@@ -742,7 +743,8 @@ void SoftFPU::FIDIVR_RM32(const X86::Instruction& insn)
 
 void SoftFPU::FPREM(const X86::Instruction&)
 {
-    // FIXME: There are some exponent shenanigans supposed to be here
+    // FIXME: FPREM should only be able to reduce top's exponent by a maximum
+    //        amount of 32-63 (impl-specific)
     long double top = fpu_get(0);
     long double one = fpu_get(1);
 
@@ -757,7 +759,8 @@ void SoftFPU::FPREM(const X86::Instruction&)
 }
 void SoftFPU::FPREM1(const X86::Instruction&)
 {
-    // FIXME: There are some exponent shenanigans supposed to be here
+    // FIXME: FPREM1 should only be able to reduce top's exponent by a maximum
+    //        amount of 32-63 (impl-specific)
     long double top = fpu_get(0);
     long double one = fpu_get(1);
 
@@ -783,19 +786,22 @@ void SoftFPU::FCHS(const X86::Instruction&)
 
 void SoftFPU::FRNDINT(const X86::Instruction&)
 {
+    // FIXME: Raise #IA #D
     auto res = fpu_round_checked<long double>(fpu_get(0));
     fpu_set(0, res);
 }
 
 void SoftFPU::FSCALE(const X86::Instruction&)
 {
-    // FIXME: set C1 upon stack overflow or if result was rounded
-    fpu_set(0, fpu_get(0) * powl(2, truncl(fpu_get(1))));
+    // FIXME: Raise #IA #D #U #O #P
+    fpu_set(0, fpu_get(0) * exp2l(truncl(fpu_get(1))));
 }
 
 void SoftFPU::FSQRT(const X86::Instruction&)
 {
-    // FIXME: set C1 upon stack overflow or if result was rounded
+    // FIXME: Raise #IA #D #P
+    if (fpu_get(0) < 0)
+        fpu_set_exception(FPU_Exception::InvalidOperation);
     fpu_set(0, sqrtl(fpu_get(0)));
 }
 
@@ -993,20 +999,26 @@ void SoftFPU::FXAM(const X86::Instruction&)
 // TRANSCENDENTAL
 void SoftFPU::FSIN(const X86::Instruction&)
 {
-    // FIXME: set C1 upon stack overflow or if result was rounded
+    // FIXME: Raise #IA #D #P
+    // FIXME: Set C1 on when result was rounded up, cleared otherwise
     // FIXME: Set C2 to 1 if ST(0) is outside range of -2^63 to +2^63; else set to 0
+    //        ST(0) shall remain unchanged in this case
     fpu_set(0, sinl(fpu_get(0)));
 }
 void SoftFPU::FCOS(const X86::Instruction&)
 {
-    // FIXME: set C1 upon stack overflow or if result was rounded
+    // FIXME: Raise #IA #D #P
+    // FIXME: Set C1 on when result was rounded up, cleared otherwise
     // FIXME: Set C2 to 1 if ST(0) is outside range of -2^63 to +2^63; else set to 0
+    //        ST(0) shall remain unchanged in this case
     fpu_set(0, cosl(fpu_get(0)));
 }
 void SoftFPU::FSINCOS(const X86::Instruction&)
 {
-    // FIXME: set C1 upon stack overflow or if result was rounded
-    // FIXME: Set C2 to 1 if ST(0) is outside range of -2^63 to +2^63; else set to 0s
+    // FIXME: Raise #IA #D #P
+    // FIXME: Set C1 on when result was rounded up, cleared otherwise
+    // FIXME: Set C2 to 1 if ST(0) is outside range of -2^63 to +2^63; else set to 0
+    //        ST(0) shall remain unchanged in this case
     long double sin = sinl(fpu_get(0));
     long double cos = cosl(fpu_get(0));
     fpu_set(0, sin);
@@ -1015,25 +1027,30 @@ void SoftFPU::FSINCOS(const X86::Instruction&)
 
 void SoftFPU::FPTAN(const X86::Instruction&)
 {
-    // FIXME: set C1 upon stack overflow or if result was rounded
+    // FIXME: Raise #IA #D #U #P
+    // FIXME: Set C1 on when result was rounded up, cleared otherwise
     // FIXME: Set C2 to 1 if ST(0) is outside range of -2^63 to +2^63; else set to 0
+    //        ST(0) shall remain unchanged in this case
     fpu_set(0, tanl(fpu_get(0)));
     fpu_push(1.0f);
 }
 void SoftFPU::FPATAN(const X86::Instruction&)
 {
-    // FIXME: set C1  on stack underflow, or on rounding
-    // FIXME: Exceptions
+    // FIXME: Raise #IA #D #U #P
+    // FIXME: Set C1 on when result was rounded up, cleared otherwise
+    // Note: Not implemented 80287 quirk:
+    //       Restriction to 0 ≤ |ST(1)| < |ST(0)| < +∞
     fpu_set(1, atan2l(fpu_get(1), fpu_get(0)));
     fpu_pop();
 }
 
 void SoftFPU::F2XM1(const X86::Instruction&)
 {
-    // FIXME: validate ST(0) is in range –1.0 to +1.0
+    // FIXME: Raise #IA #D #U #P
+    // FIXME: Set C1 on when result was rounded up, cleared otherwise
+    // FIXME: Validate ST(0) is in range –1.0 to +1.0
     auto val = fpu_get(0);
-    // FIXME: Set C0, C2, C3 in FPU status word.
-    fpu_set(0, powl(2, val) - 1.0l);
+    fpu_set(0, exp2(val) - 1.0l);
 }
 void SoftFPU::FYL2X(const X86::Instruction&)
 {
