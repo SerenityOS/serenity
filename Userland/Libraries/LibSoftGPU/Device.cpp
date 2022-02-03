@@ -18,6 +18,7 @@
 #include <LibSoftGPU/Device.h>
 #include <LibSoftGPU/PixelQuad.h>
 #include <LibSoftGPU/SIMD.h>
+#include <math.h>
 
 namespace SoftGPU {
 
@@ -1335,9 +1336,12 @@ void Device::set_raster_position(FloatVector4 const& position, FloatMatrix4x4 co
 
 Gfx::IntRect Device::get_rasterization_rect_of_size(Gfx::IntSize size)
 {
+    // Round the X and Y floating point coordinates to the nearest integer; OpenGL 1.5 spec:
+    // "Any fragments whose centers lie inside of this rectangle (or on its bottom or left
+    // boundaries) are produced in correspondence with this particular group of elements."
     return {
-        static_cast<int>(m_raster_position.window_coordinates.x()),
-        static_cast<int>(m_raster_position.window_coordinates.y()),
+        static_cast<int>(roundf(m_raster_position.window_coordinates.x())),
+        static_cast<int>(roundf(m_raster_position.window_coordinates.y())),
         size.width(),
         size.height(),
     };
