@@ -28,11 +28,12 @@ constexpr void fft(Span<Complex<double>> sample_data, bool invert = false)
 
     for (int len = 2; len <= n; len <<= 1) {
         double ang = 2 * AK::Pi<double> / len * (invert ? -1 : 1);
-        Complex<double> wlen(AK::cos(ang), AK::sin(ang));
+        Complex<double> wlen = Complex<double>::from_polar(1., ang);
         for (int i = 0; i < n; i += len) {
             Complex<double> w = { 1., 0. };
             for (int j = 0; j < len / 2; j++) {
-                Complex<double> u = sample_data[i + j], v = sample_data[i + j + len / 2] * w;
+                Complex<double> u = sample_data[i + j];
+                Complex<double> v = sample_data[i + j + len / 2] * w;
                 sample_data[i + j] = u + v;
                 sample_data[i + j + len / 2] = u - v;
                 w *= wlen;
