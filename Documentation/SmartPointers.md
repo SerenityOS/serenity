@@ -98,13 +98,14 @@ NonnullRefPtr<Bar> another_owner = our_object;
 ```
 
 
-The `try_make_ref_counted<T>()` function constructs an object wrapped in `RefPtr<T>` which may be null if the allocation does not succeed. This allows the calling code to handle allocation failure as it wishes. All arguments passed to it are forwarded to `T`'s constructor.
+The `try_make_ref_counted<T>()` function constructs an object wrapped in `ErrorOr<NonnullRefPtr<T>>` which may be an error if the allocation does not succeed. This allows the calling code to handle allocation failure as it wishes. All arguments passed to it are forwarded to `T`'s constructor.
 
 ```cpp
-RefPtr<Bar> our_object = try_make_ref_counted<Bar>();
-if (!our_object) {
+auto our_object_or_error = try_make_ref_counted<Bar>();
+if (our_object_or_error.is_error()) {
     // handle allocation failure...
 }
+NonnullRefPtr<Bar> our_object = our_object_or_error.release_value();
 RefPtr<Bar> another_owner = our_object;
 ```
 
