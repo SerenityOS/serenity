@@ -336,18 +336,6 @@ inline void swap(NonnullRefPtr<T>& a, NonnullRefPtr<U>& b) requires(IsConvertibl
     a.swap(b);
 }
 
-template<typename T, class... Args>
-requires(IsConstructible<T, Args...>) inline NonnullRefPtr<T> make_ref_counted(Args&&... args)
-{
-    return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *new T(forward<Args>(args)...));
-}
-
-// FIXME: Remove once P0960R3 is available in Clang.
-template<typename T, class... Args>
-inline NonnullRefPtr<T> make_ref_counted(Args&&... args)
-{
-    return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *new T { forward<Args>(args)... });
-}
 }
 
 template<typename T>
@@ -359,5 +347,4 @@ struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
 };
 
 using AK::adopt_ref;
-using AK::make_ref_counted;
 using AK::NonnullRefPtr;
