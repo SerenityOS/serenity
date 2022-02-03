@@ -97,32 +97,32 @@ UNMAP_AFTER_INIT void Device::initialize()
     for (auto& capability : capabilities) {
         if (capability.id().value() == PCI::Capabilities::ID::VendorSpecific) {
             // We have a virtio_pci_cap
-            auto cfg = make<Configuration>();
+            Configuration config {};
             auto raw_config_type = capability.read8(0x3);
             if (raw_config_type < static_cast<u8>(ConfigurationType::Common) || raw_config_type > static_cast<u8>(ConfigurationType::PCI)) {
                 dbgln("{}: Unknown capability configuration type: {}", m_class_name, raw_config_type);
                 return;
             }
-            cfg->cfg_type = static_cast<ConfigurationType>(raw_config_type);
+            config.cfg_type = static_cast<ConfigurationType>(raw_config_type);
             auto cap_length = capability.read8(0x2);
             if (cap_length < 0x10) {
                 dbgln("{}: Unexpected capability size: {}", m_class_name, cap_length);
                 break;
             }
-            cfg->bar = capability.read8(0x4);
-            if (cfg->bar > 0x5) {
-                dbgln("{}: Unexpected capability bar value: {}", m_class_name, cfg->bar);
+            config.bar = capability.read8(0x4);
+            if (config.bar > 0x5) {
+                dbgln("{}: Unexpected capability bar value: {}", m_class_name, config.bar);
                 break;
             }
-            cfg->offset = capability.read32(0x8);
-            cfg->length = capability.read32(0xc);
-            dbgln_if(VIRTIO_DEBUG, "{}: Found configuration {}, bar: {}, offset: {}, length: {}", m_class_name, (u32)cfg->cfg_type, cfg->bar, cfg->offset, cfg->length);
-            if (cfg->cfg_type == ConfigurationType::Common)
+            config.offset = capability.read32(0x8);
+            config.length = capability.read32(0xc);
+            dbgln_if(VIRTIO_DEBUG, "{}: Found configuration {}, bar: {}, offset: {}, length: {}", m_class_name, (u32)config.cfg_type, config.bar, config.offset, config.length);
+            if (config.cfg_type == ConfigurationType::Common)
                 m_use_mmio = true;
-            else if (cfg->cfg_type == ConfigurationType::Notify)
+            else if (config.cfg_type == ConfigurationType::Notify)
                 m_notify_multiplier = capability.read32(0x10);
 
-            m_configs.append(move(cfg));
+            m_configs.append(config);
         }
     }
 
