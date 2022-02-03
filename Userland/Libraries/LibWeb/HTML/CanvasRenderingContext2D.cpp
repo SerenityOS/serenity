@@ -164,6 +164,12 @@ void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, O
     did_draw(transformed_rect.to_type<float>());
 }
 
+void CanvasRenderingContext2D::stroke_text(String const& text, float x, float y, Optional<double> max_width)
+{
+    // FIXME: Stroke the text instead of filling it.
+    fill_text(text, x, y, max_width);
+}
+
 void CanvasRenderingContext2D::begin_path()
 {
     m_path = Gfx::Path();

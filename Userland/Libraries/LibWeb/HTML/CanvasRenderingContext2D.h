@@ -65,6 +65,7 @@ public:
     void stroke();
 
     void fill_text(const String&, float x, float y, Optional<double> max_width);
+    void stroke_text(String const&, float x, float y, Optional<double> max_width);
 
     // FIXME: We should only have one fill(), really. Fix the wrapper generator!
     void fill(Gfx::Painter::WindingRule);
