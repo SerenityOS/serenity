@@ -12,6 +12,7 @@
 #include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -69,6 +70,11 @@ MainWidget::MainWidget()
 
     m_editor->on_modified_change = [this](bool modified) {
         window()->set_modified(modified);
+    };
+
+    m_editor->on_paint = [this]() {
+        if (!m_already_reloading)
+            try_reload_from_disk();
     };
 
     m_find_replace_widget = *find_descendant_of_type_named<GUI::GroupBox>("find_replace_widget");
@@ -281,6 +287,7 @@ MainWidget::MainWidget()
                 return;
             }
             if (revert_result == GUI::Dialog::ExecResult::Cancel) {
+                update_modification_timestamp(response.value()->fd());
                 return;
             }
         }
@@ -299,6 +306,7 @@ MainWidget::MainWidget()
             return;
         }
 
+        update_modification_timestamp(file->fd());
         set_path(file->filename());
         dbgln("Wrote document to {}", file->filename());
     });
@@ -315,6 +323,7 @@ MainWidget::MainWidget()
         if (!m_editor->write_to_file(*response.value())) {
             GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
         }
+        update_modification_timestamp(response.value()->fd());
     });
 
     m_toolbar->add_action(*m_new_action);
@@ -721,10 +730,20 @@ void MainWidget::update_title()
     window()->set_title(builder.to_string());
 }
 
+void MainWidget::update_modification_timestamp(int fd)
+{
+    auto const res = Core::System::fstat(fd);
+    if (res.is_error())
+        return;
+
+    m_last_modification_timestamp = Time::from_timespec(res.value().st_mtim);
+}
+
 bool MainWidget::read_file(Core::File const& file)
 {
     m_editor->set_text(file.read_all());
     set_path(file.filename());
+    update_modification_timestamp(file.fd());
     m_editor->set_focus(true);
     return true;
 }
@@ -880,6 +899,26 @@ void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessa
             "Not found",
             GUI::MessageBox::Type::Information);
     }
+}
+
+void MainWidget::try_reload_from_disk()
+{
+    m_already_reloading = true;
+    ScopeGuard guard { [&]() { m_already_reloading = false; } };
+
+    if (m_path.is_empty())
+        return;
+
+    auto const file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), m_path);
+    if (file.is_error())
+        return;
+
+    auto const stat = Core::System::fstat(file.value()->fd());
+    if (stat.is_error())
+        return;
+
+    if (m_last_modification_timestamp.has_value() && Time::from_timespec(stat.value().st_mtim) != m_last_modification_timestamp.value())
+        m_revert_action->activate();
 }
 
 }

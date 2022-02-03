@@ -51,6 +51,9 @@ private:
     void update_markdown_preview();
     void update_html_preview();
 
+    void try_reload_from_disk();
+    void update_modification_timestamp(int fd);
+
     WebView::OutOfProcessWebView& ensure_web_view();
     void set_web_view_visible(bool);
 
@@ -141,6 +144,9 @@ private:
     bool m_use_regex { false };
     bool m_match_case { true };
     bool m_should_wrap { true };
+
+    Optional<Time> m_last_modification_timestamp {};
+    Atomic<bool> m_already_reloading { false };
 
     PreviewMode m_preview_mode { PreviewMode::None };
 };
