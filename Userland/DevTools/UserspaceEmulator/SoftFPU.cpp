@@ -1088,30 +1088,37 @@ void SoftFPU::FYL2XP1(const X86::Instruction&)
 // LOAD CONSTANT
 void SoftFPU::FLD1(const X86::Instruction&)
 {
+    set_c1(0);
     fpu_push(1.0l);
 }
 void SoftFPU::FLDZ(const X86::Instruction&)
 {
+    set_c1(0);
     fpu_push(0.0l);
 }
 void SoftFPU::FLDPI(const X86::Instruction&)
 {
+    set_c1(0);
     fpu_push(M_PIl);
 }
 void SoftFPU::FLDL2E(const X86::Instruction&)
 {
+    set_c1(0);
     fpu_push(M_LOG2El);
 }
 void SoftFPU::FLDLN2(const X86::Instruction&)
 {
+    set_c1(0);
     fpu_push(M_LN2l);
 }
 void SoftFPU::FLDL2T(const X86::Instruction&)
 {
+    set_c1(0);
     fpu_push(log2l(10.0l));
 }
 void SoftFPU::FLDLG2(const X86::Instruction&)
 {
+    set_c1(0);
     fpu_push(log10l(2.0l));
 }
 
