@@ -395,6 +395,9 @@ Gfx::IntRect TextEditor::visible_text_rect_in_inner_coordinates() const
 
 void TextEditor::paint_event(PaintEvent& event)
 {
+    if (on_paint)
+        on_paint();
+
     Color widget_background_color = palette().color(is_enabled() ? background_role() : Gfx::ColorRole::Window);
 
     rehighlight_if_needed();
