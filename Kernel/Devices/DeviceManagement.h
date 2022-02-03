@@ -77,7 +77,7 @@ private:
     RefPtr<DeviceControlDevice> m_device_control_device;
     // FIXME: Once we have a singleton for managing many sound cards, remove this from here
     NonnullRefPtrVector<CharacterDevice, 1> m_audio_devices;
-    MutexProtected<HashMap<u64, Device*>> m_devices;
+    SpinlockProtected<HashMap<u64, Device*>> m_devices;
 
     mutable Spinlock m_event_queue_lock;
     CircularQueue<DeviceEvent, 100> m_event_queue;
