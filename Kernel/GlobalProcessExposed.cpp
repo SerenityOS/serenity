@@ -263,20 +263,12 @@ private:
 class ProcFSUBSanDeadly : public ProcFSSystemBoolean {
 public:
     static NonnullRefPtr<ProcFSUBSanDeadly> must_create(const ProcFSSystemDirectory&);
-    virtual bool value() const override
-    {
-        MutexLocker locker(m_lock);
-        return AK::UBSanitizer::g_ubsan_is_deadly;
-    }
-    virtual void set_value(bool new_value) override
-    {
-        MutexLocker locker(m_lock);
-        AK::UBSanitizer::g_ubsan_is_deadly = new_value;
-    }
+
+    virtual bool value() const override { return AK::UBSanitizer::g_ubsan_is_deadly; }
+    virtual void set_value(bool new_value) override { AK::UBSanitizer::g_ubsan_is_deadly = new_value; }
 
 private:
     ProcFSUBSanDeadly();
-    mutable Mutex m_lock;
 };
 
 class ProcFSCapsLockRemap : public ProcFSSystemBoolean {
