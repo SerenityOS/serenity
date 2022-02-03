@@ -403,8 +403,8 @@ void TextEditor::paint_event(PaintEvent& event)
 
     // NOTE: This lambda and TextEditor::text_width_for_font() are used to substitute all glyphs with m_substitution_code_point if necessary.
     //       Painter::draw_text() and Gfx::Font::width() should not be called directly, but using this lambda and TextEditor::text_width_for_font().
-    auto draw_text = [&](Gfx::IntRect const& rect, auto const& raw_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Gfx::TextAttributes attributes, bool substitue = true) {
-        if (m_substitution_code_point && substitue) {
+    auto draw_text = [&](Gfx::IntRect const& rect, auto const& raw_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Gfx::TextAttributes attributes, bool substitute = true) {
+        if (m_substitution_code_point && substitute) {
             painter.draw_text(rect, substitution_code_point_view(raw_text.length()), font, alignment, attributes.color);
         } else {
             painter.draw_text(rect, raw_text, font, alignment, attributes.color);
