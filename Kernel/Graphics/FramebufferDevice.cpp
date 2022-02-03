@@ -130,7 +130,7 @@ ErrorOr<size_t> FramebufferDevice::buffer_length(size_t head) const
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_resolution_lock);
+    SpinlockLocker locker(m_resolution_lock);
     auto adapter = m_graphics_adapter.strong_ref();
     if (!adapter)
         return Error::from_errno(EIO);
@@ -145,7 +145,7 @@ ErrorOr<size_t> FramebufferDevice::pitch(size_t head) const
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_resolution_lock);
+    SpinlockLocker locker(m_resolution_lock);
     return m_framebuffer_pitch;
 }
 ErrorOr<size_t> FramebufferDevice::height(size_t head) const
@@ -154,7 +154,7 @@ ErrorOr<size_t> FramebufferDevice::height(size_t head) const
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_resolution_lock);
+    SpinlockLocker locker(m_resolution_lock);
     return m_framebuffer_height;
 }
 ErrorOr<size_t> FramebufferDevice::width(size_t head) const
@@ -163,7 +163,7 @@ ErrorOr<size_t> FramebufferDevice::width(size_t head) const
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_resolution_lock);
+    SpinlockLocker locker(m_resolution_lock);
     return m_framebuffer_width;
 }
 ErrorOr<size_t> FramebufferDevice::vertical_offset(size_t head) const
@@ -172,7 +172,7 @@ ErrorOr<size_t> FramebufferDevice::vertical_offset(size_t head) const
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_buffer_offset_lock);
+    SpinlockLocker locker(m_buffer_offset_lock);
     return m_y_offset;
 }
 ErrorOr<bool> FramebufferDevice::vertical_offsetted(size_t head) const
@@ -181,7 +181,7 @@ ErrorOr<bool> FramebufferDevice::vertical_offsetted(size_t head) const
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_buffer_offset_lock);
+    SpinlockLocker locker(m_buffer_offset_lock);
     return m_y_offset == 0 ? 0 : 1;
 }
 
@@ -191,8 +191,8 @@ ErrorOr<void> FramebufferDevice::set_head_resolution(size_t head, size_t width, 
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker buffer_offset_locker(m_buffer_offset_lock);
-    MutexLocker resolution_locker(m_resolution_lock);
+    SpinlockLocker buffer_offset_locker(m_buffer_offset_lock);
+    SpinlockLocker resolution_locker(m_resolution_lock);
     auto adapter = m_graphics_adapter.strong_ref();
     if (!adapter)
         return Error::from_errno(EIO);
@@ -211,7 +211,7 @@ ErrorOr<void> FramebufferDevice::set_head_buffer(size_t head, bool second_buffer
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
-    MutexLocker locker(m_buffer_offset_lock);
+    SpinlockLocker locker(m_buffer_offset_lock);
     auto adapter = m_graphics_adapter.strong_ref();
     if (!adapter)
         return Error::from_errno(EIO);

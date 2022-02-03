@@ -56,7 +56,7 @@ private:
     size_t m_framebuffer_height { 0 };
 
     Spinlock m_activation_lock;
-    mutable Mutex m_buffer_offset_lock;
+    mutable Spinlock m_buffer_offset_lock;
 
     RefPtr<Memory::AnonymousVMObject> m_real_framebuffer_vmobject;
     RefPtr<Memory::AnonymousVMObject> m_swapped_framebuffer_vmobject;

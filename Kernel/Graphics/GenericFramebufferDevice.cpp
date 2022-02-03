@@ -124,7 +124,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         auto flush_rects = TRY(copy_typed_from_user(user_flush_rects));
         if (Checked<unsigned>::multiplication_would_overflow(flush_rects.count, sizeof(FBRect)))
             return Error::from_errno(EFAULT);
-        MutexLocker locker(m_flushing_lock);
+        SpinlockLocker locker(m_flushing_lock);
         if (flush_rects.count > 0) {
             for (unsigned i = 0; i < flush_rects.count; i++) {
                 FBRect user_dirty_rect;
