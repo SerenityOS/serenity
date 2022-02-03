@@ -418,16 +418,13 @@ void TextEditor::paint_event(PaintEvent& event)
     };
 
     if (is_displayonly() && is_focused()) {
-        widget_background_color = palette().selection();
         Gfx::IntRect display_rect {
             widget_inner_rect().x() + 1,
             widget_inner_rect().y() + 1,
             widget_inner_rect().width() - 2,
             widget_inner_rect().height() - 2
         };
-        painter.add_clip_rect(display_rect);
-        painter.add_clip_rect(event.rect());
-        painter.fill_rect(event.rect(), widget_background_color);
+        painter.fill_rect(display_rect, palette().selection());
     }
 
     painter.translate(frame_thickness(), frame_thickness());
