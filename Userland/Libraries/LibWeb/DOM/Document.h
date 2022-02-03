@@ -304,6 +304,8 @@ public:
     void evaluate_media_queries_and_report_changes();
     void add_media_query_list(NonnullRefPtr<CSS::MediaQueryList>&);
 
+    bool has_focus() const;
+
 private:
     explicit Document(const AK::URL&);
 
