@@ -8,7 +8,6 @@
 
 #include <AK/Badge.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Locking/Mutex.h>
 
 namespace Kernel {
 
@@ -36,7 +35,7 @@ private:
     virtual StringView class_name() const override { return "PTYMultiplexer"sv; }
 
     static constexpr size_t max_pty_pairs = 64;
-    MutexProtected<Vector<unsigned, max_pty_pairs>> m_freelist;
+    SpinlockProtected<Vector<unsigned, max_pty_pairs>> m_freelist;
 };
 
 }

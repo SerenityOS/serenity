@@ -24,7 +24,7 @@ PTYMultiplexer& PTYMultiplexer::the()
 UNMAP_AFTER_INIT PTYMultiplexer::PTYMultiplexer()
     : CharacterDevice(5, 2)
 {
-    m_freelist.with_exclusive([&](auto& freelist) {
+    m_freelist.with([&](auto& freelist) {
         freelist.ensure_capacity(max_pty_pairs);
         for (int i = max_pty_pairs; i > 0; --i)
             freelist.unchecked_append(i - 1);
@@ -42,7 +42,7 @@ UNMAP_AFTER_INIT void PTYMultiplexer::initialize()
 
 ErrorOr<NonnullRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
 {
-    return m_freelist.with_exclusive([&](auto& freelist) -> ErrorOr<NonnullRefPtr<OpenFileDescription>> {
+    return m_freelist.with([&](auto& freelist) -> ErrorOr<NonnullRefPtr<OpenFileDescription>> {
         if (freelist.is_empty())
             return EBUSY;
 
@@ -58,7 +58,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
 
 void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)
 {
-    m_freelist.with_exclusive([&](auto& freelist) {
+    m_freelist.with([&](auto& freelist) {
         freelist.append(index);
         dbgln_if(PTMX_DEBUG, "PTYMultiplexer: {} added to freelist", index);
     });
