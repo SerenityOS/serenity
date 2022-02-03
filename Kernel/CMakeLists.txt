@@ -74,6 +74,7 @@ set(KERNEL_SOURCES
     Graphics/DisplayConnector.cpp
     Graphics/Generic/DisplayConnector.cpp
     Graphics/GraphicsManagement.cpp
+    Graphics/Intel/Auxiliary/GMBusConnector.cpp
     Graphics/Intel/NativeDisplayConnector.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
     Graphics/VMWare/Console.cpp
