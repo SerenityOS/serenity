@@ -9,7 +9,7 @@
 
 using namespace AK::UBSanitizer;
 
-bool AK::UBSanitizer::g_ubsan_is_deadly { false };
+Atomic<bool> AK::UBSanitizer::g_ubsan_is_deadly;
 
 #define WARNLN_AND_DBGLN(fmt, ...) \
     warnln(fmt, ##__VA_ARGS__);    \

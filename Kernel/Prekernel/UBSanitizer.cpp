@@ -9,7 +9,7 @@
 
 using namespace AK::UBSanitizer;
 
-bool AK::UBSanitizer::g_ubsan_is_deadly { true };
+Atomic<bool> AK::UBSanitizer::g_ubsan_is_deadly { true };
 
 extern "C" {
 
