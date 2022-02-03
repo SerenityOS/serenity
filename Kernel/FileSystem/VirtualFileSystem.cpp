@@ -52,7 +52,7 @@ InodeIdentifier VirtualFileSystem::root_inode_id() const
 
 ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags)
 {
-    return m_mounts.with_exclusive([&](auto& mounts) -> ErrorOr<void> {
+    return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         auto& inode = mount_point.inode();
         dbgln("VirtualFileSystem: Mounting {} at inode {} with flags {}",
             fs.class_name(),
@@ -67,7 +67,7 @@ ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int
 
 ErrorOr<void> VirtualFileSystem::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
-    return m_mounts.with_exclusive([&](auto& mounts) -> ErrorOr<void> {
+    return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         dbgln("VirtualFileSystem: Bind-mounting inode {} at inode {}", source.inode().identifier(), mount_point.inode().identifier());
         // FIXME: check that this is not already a mount point
         Mount mount { source.inode(), mount_point, flags };
@@ -92,7 +92,7 @@ ErrorOr<void> VirtualFileSystem::unmount(Inode& guest_inode)
 {
     dbgln("VirtualFileSystem: unmount called with inode {}", guest_inode.identifier());
 
-    return m_mounts.with_exclusive([&](auto& mounts) -> ErrorOr<void> {
+    return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         for (size_t i = 0; i < mounts.size(); ++i) {
             auto& mount = mounts[i];
             if (&mount.guest() != &guest_inode)
@@ -126,7 +126,7 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
     auto pseudo_path = TRY(static_cast<FileBackedFileSystem&>(fs).file_description().pseudo_path());
     dmesgln("VirtualFileSystem: mounted root from {} ({})", fs.class_name(), pseudo_path);
 
-    m_mounts.with_exclusive([&](auto& mounts) {
+    m_mounts.with([&](auto& mounts) {
         mounts.append(move(mount));
     });
 
@@ -136,7 +136,7 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
 
 auto VirtualFileSystem::find_mount_for_host(InodeIdentifier id) -> Mount*
 {
-    return m_mounts.with_exclusive([&](auto& mounts) -> Mount* {
+    return m_mounts.with([&](auto& mounts) -> Mount* {
         for (auto& mount : mounts) {
             if (mount.host() && mount.host()->identifier() == id)
                 return &mount;
@@ -147,7 +147,7 @@ auto VirtualFileSystem::find_mount_for_host(InodeIdentifier id) -> Mount*
 
 auto VirtualFileSystem::find_mount_for_guest(InodeIdentifier id) -> Mount*
 {
-    return m_mounts.with_exclusive([&](auto& mounts) -> Mount* {
+    return m_mounts.with([&](auto& mounts) -> Mount* {
         for (auto& mount : mounts) {
             if (mount.guest().identifier() == id)
                 return &mount;
@@ -724,7 +724,7 @@ ErrorOr<void> VirtualFileSystem::rmdir(StringView path, Custody& base)
 
 void VirtualFileSystem::for_each_mount(Function<IterationDecision(Mount const&)> callback) const
 {
-    m_mounts.with_shared([&](auto& mounts) {
+    m_mounts.with([&](auto& mounts) {
         for (auto& mount : mounts) {
             if (callback(mount) == IterationDecision::Break)
                 break;
