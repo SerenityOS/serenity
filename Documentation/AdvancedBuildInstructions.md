@@ -13,7 +13,7 @@ set -e
 
 cat << 'EOF' > mnt/etc/Keyboard.ini
 [Mapping]
-Keymap=de
+Keymaps=de
 EOF
 
 # Add a file in anon's home dir
