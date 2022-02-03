@@ -712,6 +712,7 @@ void MainWidget::open_image(Core::File& file)
 
     auto& image = *m_loader.release_image();
     auto& editor = create_new_editor(image);
+    editor.set_loaded_from_image(m_loader.is_raw_image());
     editor.set_path(file.filename());
     editor.undo_stack().set_current_unmodified();
     m_layer_list_widget->set_image(&image);
