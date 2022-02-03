@@ -34,7 +34,7 @@ int IODevice::read(u8* buffer, int length)
     return read_buffer.size();
 }
 
-ByteBuffer IODevice::read(size_t max_size)
+ByteBuffer IODevice::read(size_t max_size) const
 {
     if (m_fd < 0)
         return {};
@@ -115,7 +115,7 @@ bool IODevice::can_read() const
     return !m_buffered_data.is_empty() || can_read_from_fd();
 }
 
-ByteBuffer IODevice::read_all()
+ByteBuffer IODevice::read_all() const
 {
     off_t file_size = 0;
     struct stat st;
@@ -153,7 +153,7 @@ ByteBuffer IODevice::read_all()
     return {};
 }
 
-String IODevice::read_line(size_t max_size)
+String IODevice::read_line(size_t max_size) const
 {
     if (m_fd < 0)
         return {};
