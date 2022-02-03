@@ -40,6 +40,8 @@ TextEditor::TextEditor(Type type)
 {
     REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_STRING_PROPERTY("placeholder", placeholder, set_placeholder);
+    REGISTER_BOOL_PROPERTY("gutter", is_gutter_visible, set_gutter_visible);
+    REGISTER_BOOL_PROPERTY("ruler", is_ruler_visible, set_ruler_visible);
     REGISTER_ENUM_PROPERTY("mode", mode, set_mode, Mode,
         { Editable, "Editable" },
         { ReadOnly, "ReadOnly" },
