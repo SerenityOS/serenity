@@ -14,6 +14,7 @@
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/LineBox.h>
 
@@ -82,6 +83,10 @@ public:
     HTMLCanvasElement* canvas() { return m_element; }
 
     RefPtr<TextMetrics> measure_text(String const& text);
+
+    NonnullRefPtr<CanvasGradient> create_radial_gradient(double x0, double y0, double r0, double x1, double y1, double r1);
+    NonnullRefPtr<CanvasGradient> create_linear_gradient(double x0, double y0, double x1, double y1);
+    NonnullRefPtr<CanvasGradient> create_conic_gradient(double start_angle, double x, double y);
 
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);

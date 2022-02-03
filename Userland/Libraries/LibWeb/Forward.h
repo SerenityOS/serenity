@@ -307,6 +307,7 @@ namespace Web::Bindings {
 class AbortControllerWrapper;
 class AbortSignalWrapper;
 class AttributeWrapper;
+class CanvasGradientWrapper;
 class CanvasRenderingContext2DWrapper;
 class CharacterDataWrapper;
 class CloseEventWrapper;
