@@ -27,6 +27,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
 
     auto keymaps_vector = keymaps.split(',');
+    if (keymaps_vector.size() == 0)
+        exit(1);
 
     pid_t child_pid;
     const char* argv[] = { "/bin/keymap", "-m", keymaps_vector.first().characters(), nullptr };
