@@ -35,6 +35,7 @@ public:
     static ExecResult show(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
     static ExecResult show_error(Window* parent_window, StringView text);
     static ExecResult ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp = {});
+    static ExecResult ask_about_revert_file(Window* parent_window, StringView path);
 
     void set_text(String text);
 

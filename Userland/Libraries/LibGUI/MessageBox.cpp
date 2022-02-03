@@ -62,6 +62,30 @@ void MessageBox::set_text(String text)
     build();
 }
 
+Dialog::ExecResult MessageBox::ask_about_revert_file(Window* parent_window, StringView path)
+{
+    StringBuilder builder;
+    builder.appendff("\"{}\" has been modified on the disk.", LexicalPath::basename(path));
+
+    auto box = MessageBox::construct(parent_window, builder.string_view(), "Revert File", Type::Warning, InputType::YesNoCancel);
+    if (parent_window)
+        box->set_icon(parent_window->icon());
+
+    box->m_yes_button->set_text("Reload from disk");
+    box->m_yes_button->set_fixed_width(120);
+    box->m_no_button->set_text("Save to the disk");
+    box->m_no_button->set_fixed_width(120);
+    box->m_cancel_button->set_text("Cancel");
+
+    auto adapted_rect = box->rect();
+    adapted_rect.set_width(adapted_rect.width() + 80);
+    adapted_rect.set_x(box->x());
+    adapted_rect.set_y(box->y());
+    box->set_rect(adapted_rect);
+
+    return box->exec();
+}
+
 MessageBox::MessageBox(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
     : Dialog(parent_window)
     , m_text(text)
