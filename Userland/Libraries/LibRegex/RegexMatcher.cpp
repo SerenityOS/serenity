@@ -183,6 +183,8 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
     if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
         continue_search = false;
 
+    auto single_match_only = input.regex_options.has_flag_set(AllFlags::SingleMatch);
+
     for (auto const& view : views) {
         if (lines_to_skip != 0) {
             ++input.line;
@@ -276,6 +278,8 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 
                     bool has_zero_length = state.string_position == view_index;
                     view_index = state.string_position - (has_zero_length ? 0 : 1);
+                    if (single_match_only)
+                        break;
                     continue;
                 }
                 if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
