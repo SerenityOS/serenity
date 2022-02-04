@@ -37,6 +37,8 @@ public:
     void set_active_layer(Layer*);
 
     Tool* active_tool() { return m_active_tool; }
+
+    void set_old_tool(Tool*);
     void set_active_tool(Tool*);
     void update_tool_cursor();
 
@@ -156,6 +158,7 @@ private:
     bool m_show_active_layer_boundary { true };
 
     Tool* m_active_tool { nullptr };
+    Tool* m_old_tool { nullptr };
 
     Color m_primary_color { Color::Black };
     Color m_secondary_color { Color::White };

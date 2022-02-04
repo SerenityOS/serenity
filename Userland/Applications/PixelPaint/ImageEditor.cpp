@@ -11,6 +11,7 @@
 #include "Image.h"
 #include "Layer.h"
 #include "Tools/MoveTool.h"
+#include "Tools/PickerTool.h"
 #include "Tools/Tool.h"
 #include <AK/LexicalPath.h>
 #include <LibConfig/Client.h>
@@ -351,6 +352,11 @@ void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
 
 void ImageEditor::keydown_event(GUI::KeyEvent& event)
 {
+    if (event.key() == Key_Alt) {
+        set_old_tool(m_active_tool);
+        set_active_tool(new PickerTool());
+    }
+
     if (event.key() == Key_Delete && !selection().is_empty() && active_layer()) {
         active_layer()->erase_selection(selection());
         return;
@@ -362,6 +368,15 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
 
 void ImageEditor::keyup_event(GUI::KeyEvent& event)
 {
+    if (event.key() == Key_Alt) {
+        if (!m_old_tool) {
+            set_override_cursor(Gfx::StandardCursor::None);
+            return;
+        }
+
+        set_active_tool(m_old_tool);
+    }
+
     if (m_active_tool)
         m_active_tool->on_keyup(event);
 }
@@ -398,6 +413,11 @@ void ImageEditor::set_active_layer(Layer* layer)
         if (on_active_layer_change)
             on_active_layer_change({});
     }
+}
+
+void ImageEditor::set_old_tool(Tool* tool)
+{
+    m_old_tool = tool;
 }
 
 void ImageEditor::set_active_tool(Tool* tool)
