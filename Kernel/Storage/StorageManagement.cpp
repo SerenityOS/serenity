@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IterationDecision.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/UUID.h>
@@ -53,7 +54,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
     using SubclassID = PCI::MassStorage::SubclassID;
     if (!kernel_command_line().disable_physical_storage()) {
 
-        MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
+        MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) -> void {
             if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::MassStorage)) {
                 return;
             }

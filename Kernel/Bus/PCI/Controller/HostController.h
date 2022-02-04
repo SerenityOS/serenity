@@ -31,7 +31,7 @@ public:
 
     u32 domain_number() const { return m_domain.domain_number(); }
 
-    virtual void enumerate_attached_devices(Function<void(DeviceIdentifier)> callback) = 0;
+    virtual void enumerate_attached_devices(Function<IterationDecision(DeviceIdentifier)> callback) = 0;
 
 protected:
     explicit HostController(PCI::Domain const& domain)

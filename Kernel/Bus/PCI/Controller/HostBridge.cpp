@@ -50,7 +50,7 @@ UNMAP_AFTER_INIT Vector<Capability> HostBridge::get_capabilities_for_function(Bu
     return capabilities;
 }
 
-UNMAP_AFTER_INIT void HostBridge::enumerate_functions(Function<void(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, FunctionNumber function, bool recursive_search_into_bridges)
+UNMAP_AFTER_INIT void HostBridge::enumerate_functions(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, FunctionNumber function, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating function, bus={}, device={}, function={}", bus, device, function);
     Address address(domain_number(), bus.value(), device.value(), function.value());
@@ -79,7 +79,7 @@ UNMAP_AFTER_INIT void HostBridge::enumerate_functions(Function<void(DeviceIdenti
     }
 }
 
-UNMAP_AFTER_INIT void HostBridge::enumerate_device(Function<void(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive_search_into_bridges)
+UNMAP_AFTER_INIT void HostBridge::enumerate_device(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating device in bus={}, device={}", bus, device);
     if (read16_field(bus, device, 0, PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
@@ -93,14 +93,14 @@ UNMAP_AFTER_INIT void HostBridge::enumerate_device(Function<void(DeviceIdentifie
     }
 }
 
-UNMAP_AFTER_INIT void HostBridge::enumerate_bus(Function<void(DeviceIdentifier)> const& callback, BusNumber bus, bool recursive_search_into_bridges)
+UNMAP_AFTER_INIT void HostBridge::enumerate_bus(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating bus {}", bus);
     for (u8 device = 0; device < 32; ++device)
         enumerate_device(callback, bus, device, recursive_search_into_bridges);
 }
 
-UNMAP_AFTER_INIT void HostBridge::enumerate_attached_devices(Function<void(DeviceIdentifier)> callback)
+UNMAP_AFTER_INIT void HostBridge::enumerate_attached_devices(Function<IterationDecision(DeviceIdentifier)> callback)
 {
     VERIFY(Access::the().access_lock().is_locked());
     VERIFY(Access::the().scan_lock().is_locked());
