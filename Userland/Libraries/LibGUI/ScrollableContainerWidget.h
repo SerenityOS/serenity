@@ -27,7 +27,7 @@ protected:
 private:
     void update_widget_size();
     void update_widget_position();
-    virtual bool load_from_json(const JsonObject&, RefPtr<Core::Object> (*unregistered_child_handler)(const String&)) override;
+    virtual bool load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(const String&)) override;
 
     ScrollableContainerWidget();
 

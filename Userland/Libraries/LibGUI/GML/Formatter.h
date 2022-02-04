@@ -7,9 +7,18 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/String.h>
+#include <LibGUI/GML/AST.h>
+#include <LibGUI/GML/Parser.h>
 
 namespace GUI::GML {
 
-String format_gml(StringView);
+inline String format_gml(StringView string)
+{
+    auto ast = parse_gml(string);
+    if (ast.is_error())
+        return {};
+    return ast.value()->to_string();
+}
 
 }

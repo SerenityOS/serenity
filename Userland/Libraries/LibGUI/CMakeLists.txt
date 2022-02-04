@@ -47,7 +47,6 @@ set(SOURCES
     GitCommitSyntaxHighlighter.cpp
     GlyphMapWidget.cpp
     GML/AutocompleteProvider.cpp
-    GML/Formatter.cpp
     GML/Lexer.cpp
     GML/Parser.cpp
     GML/SyntaxHighlighter.cpp
