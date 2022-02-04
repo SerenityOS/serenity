@@ -30,3 +30,9 @@ test("Day as argument", () => {
     expect(date.getSeconds()).toBe(0);
     expect(date.getMilliseconds()).toBe(0);
 });
+
+test("invalid date", () => {
+    let date = new Date(NaN);
+    expect(date.setDate(15)).toBeNaN();
+    expect(date.getDate()).toBeNaN();
+});

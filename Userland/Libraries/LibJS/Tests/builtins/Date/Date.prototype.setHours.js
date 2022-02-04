@@ -25,3 +25,9 @@ test("basic functionality", () => {
     d.setHours("a");
     expect(d.getHours()).toBe(NaN);
 });
+
+test("invalid date", () => {
+    let date = new Date(NaN);
+    expect(date.setHours(2)).toBeNaN();
+    expect(date.getHours()).toBeNaN();
+});
