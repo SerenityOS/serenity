@@ -17,6 +17,7 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/FunctionKind.h>
@@ -1225,7 +1226,7 @@ public:
 
     struct ClassFieldDefinition {
         ClassElementName name;
-        ECMAScriptFunctionObject* initializer { nullptr };
+        Handle<ECMAScriptFunctionObject> initializer;
     };
 
     // We use the Completion also as a ClassStaticBlockDefinition Record.
