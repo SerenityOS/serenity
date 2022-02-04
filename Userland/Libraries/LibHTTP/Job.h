@@ -37,8 +37,8 @@ protected:
     void on_socket_connected();
     void flush_received_buffers();
     void register_on_ready_to_read(Function<void()>);
-    String read_line(size_t);
-    ByteBuffer receive(size_t);
+    ErrorOr<String> read_line(size_t);
+    ErrorOr<ByteBuffer> receive(size_t);
     void timer_event(Core::TimerEvent&) override;
 
     enum class State {
