@@ -208,46 +208,36 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
 
     RegexResult result;
 
+    // NOTE: For optimisation purposes, this whole loop is implemented in LibRegex.
     // 12. Let matchSucceeded be false.
     // 13. Let Input be a List consisting of all of the characters, in order, of S. If fullUnicode is true, each character is a code unit, otherwise each character is a code point.
-    // 14. Repeat, while matchSucceeded is false,
-    while (true) {
-        // a. If lastIndex > length, then
-        if (last_index > string.length_in_code_units()) {
-            // i. If global is true or sticky is true, then
-            if (global || sticky) {
-                // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
-                TRY(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
-            }
+    // 14. Repeat, while matchSucceeded is false
+    //   a. If lastIndex > length, then
+    //       i. If global is true or sticky is true, then
+    //           1. Perform ? Set(R, "lastIndex", 0, true).
+    //       ii. Return null.
+    //   b. Let r be matcher(Input, lastIndex).
+    //   c. If r is failure, then
+    //       i. If sticky is true, then
+    //           1. Perform ? Set(R, "lastIndex", 0, true).
+    //           2. Return null.
+    //       ii. Set lastIndex to AdvanceStringIndex(S, lastIndex, fullUnicode).
+    //   d. Else,
+    //       i. Assert: r is a State.
+    //       ii. Set matchSucceeded to true.
 
-            // ii. Return null.
-            return js_null();
-        }
+    // 14.b
+    regex.start_offset = full_unicode ? string.view().code_point_offset_of(last_index) : last_index;
+    result = regex.match(string.view());
 
-        // b. Let r be matcher(Input, lastIndex).
-        regex.start_offset = full_unicode ? string.view().code_point_offset_of(last_index) : last_index;
-        result = regex.match(string.view());
+    // 14.c and 14.a
+    if (!result.success) {
+        // 14.c.i, 14.a.i
+        if (sticky || global)
+            TRY(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
-        // c. If r is failure, then
-        if (!result.success) {
-            // i. If sticky is true, then
-            if (sticky) {
-                // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
-                TRY(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
-
-                // 2. Return null.
-                return js_null();
-            }
-
-            // ii. Set lastIndex to AdvanceStringIndex(S, lastIndex, fullUnicode).
-            last_index = advance_string_index(string.view(), last_index, full_unicode);
-        }
-        // d. Else,
-        else {
-            // i. Assert: r is a State.
-            // ii. Set matchSucceeded to true.
-            break;
-        }
+        // 14.a.ii, 14.c.i.2
+        return js_null();
     }
 
     auto& match = result.matches[0];

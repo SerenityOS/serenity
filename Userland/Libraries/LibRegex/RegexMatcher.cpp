@@ -180,8 +180,6 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 #endif
 
     bool continue_search = input.regex_options.has_flag_set(AllFlags::Global) || input.regex_options.has_flag_set(AllFlags::Multiline);
-    if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
-        continue_search = false;
 
     auto single_match_only = input.regex_options.has_flag_set(AllFlags::SingleMatch);
 
@@ -282,11 +280,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
                         break;
                     continue;
                 }
-                if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
-                    append_match(input, state, view_index);
-                    break;
-                }
-                if (state.string_position < view_length) {
+                if (state.string_position < view_length && !input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
                     return { false, 0, {}, {}, {}, operations };
                 }
 
@@ -503,8 +497,6 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
             return false;
         case ExecutionResult::Failed_ExecuteLowPrioForks: {
             if (states_to_try_next.is_empty()) {
-                if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
-                    return {};
                 return false;
             }
             state = states_to_try_next.take_last();
