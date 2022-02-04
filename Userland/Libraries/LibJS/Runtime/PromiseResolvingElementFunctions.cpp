@@ -13,6 +13,13 @@
 
 namespace JS {
 
+void PromiseValueList::visit_edges(Visitor& visitor)
+{
+    Cell::visit_edges(visitor);
+    for (auto& val : m_values)
+        visitor.visit(val);
+}
+
 PromiseResolvingElementFunction::PromiseResolvingElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
     : NativeFunction(prototype)
     , m_index(index)
