@@ -424,15 +424,17 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with)
     return TRY(date_from_fields(global_object, calendar, *fields, *options));
 }
 
-// 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendar ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar
+// 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar
 JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with_calendar)
 {
+    auto calendar_like = vm.argument(0);
+
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
     auto* temporal_date = TRY(typed_this_object(global_object));
 
-    // 3. Let calendar be ? ToTemporalCalendar(calendar).
-    auto* calendar = TRY(to_temporal_calendar(global_object, vm.argument(0)));
+    // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
+    auto* calendar = TRY(to_temporal_calendar(global_object, calendar_like));
 
     // 4. Return ? CreateTemporalDate(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], calendar).
     return TRY(create_temporal_date(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), *calendar));
