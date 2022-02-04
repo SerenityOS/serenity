@@ -110,3 +110,9 @@ test("Make Invalid Date valid again", () => {
     expect(date.getSeconds()).toBe(0);
     expect(date.getMilliseconds()).toBe(0);
 });
+
+test("invalid date", () => {
+    let date = new Date(NaN);
+    date.setFullYear(2022);
+    expect(date.getFullYear()).toBe(2022);
+});

@@ -61,3 +61,9 @@ test("NaN or undefined in any arguments", () => {
     date.setMonth(2021, undefined);
     expect(date.getTime()).toBe(NaN);
 });
+
+test("invalid date", () => {
+    let date = new Date(NaN);
+    expect(date.setMonth(2)).toBeNaN();
+    expect(date.getMonth()).toBeNaN();
+});
