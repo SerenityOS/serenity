@@ -11,6 +11,7 @@
 #include "Guide.h"
 #include "Image.h"
 #include "Selection.h"
+#include "Tools/PickerTool.h"
 #include <AK/Variant.h>
 #include <LibGUI/AbstractZoomPanWidget.h>
 #include <LibGUI/Frame.h>
@@ -37,6 +38,7 @@ public:
     void set_active_layer(Layer*);
 
     Tool* active_tool() { return m_active_tool; }
+    PickerTool* hotkey_picker() { return m_hotkey_picker; }
 
     void set_old_tool(Tool*);
     void set_active_tool(Tool*);
@@ -159,6 +161,7 @@ private:
 
     Tool* m_active_tool { nullptr };
     Tool* m_old_tool { nullptr };
+    PickerTool* m_hotkey_picker { new PickerTool() };
 
     Color m_primary_color { Color::Black };
     Color m_secondary_color { Color::White };

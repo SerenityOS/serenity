@@ -354,7 +354,7 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Alt) {
         set_old_tool(m_active_tool);
-        set_active_tool(new PickerTool());
+        set_active_tool(m_hotkey_picker);
     }
 
     if (event.key() == Key_Delete && !selection().is_empty() && active_layer()) {
