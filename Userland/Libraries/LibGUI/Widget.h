@@ -8,12 +8,14 @@
 
 #include <AK/EnumBits.h>
 #include <AK/JsonObject.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/FocusPolicy.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/GML/AST.h>
 #include <LibGUI/Margins.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
@@ -299,6 +301,9 @@ public:
 
     bool has_pending_drop() const;
 
+    // In order for others to be able to call this, it needs to be public.
+    virtual bool load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(const String&));
+
 protected:
     Widget();
 
@@ -353,8 +358,6 @@ private:
     void handle_leave_event(Core::Event&);
     void focus_previous_widget(FocusSource, bool siblings_only);
     void focus_next_widget(FocusSource, bool siblings_only);
-
-    virtual bool load_from_json(const JsonObject&, RefPtr<Core::Object> (*unregistered_child_handler)(const String&)) override;
 
     // HACK: These are used as property getters for the fixed_* size property aliases.
     int dummy_fixed_width() { return 0; }

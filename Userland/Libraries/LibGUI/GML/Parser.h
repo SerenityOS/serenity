@@ -8,9 +8,10 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibGUI/GML/AST.h>
 
 namespace GUI::GML {
 
-JsonValue parse_gml(StringView);
+ErrorOr<NonnullRefPtr<GMLFile>> parse_gml(StringView);
 
 }

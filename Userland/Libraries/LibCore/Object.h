@@ -181,8 +181,6 @@ public:
     void increment_inspector_count(Badge<InspectorServerConnection>);
     void decrement_inspector_count(Badge<InspectorServerConnection>);
 
-    virtual bool load_from_json(const JsonObject&, RefPtr<Core::Object> (*)(const String&)) { return false; }
-
 protected:
     explicit Object(Object* parent = nullptr);
 

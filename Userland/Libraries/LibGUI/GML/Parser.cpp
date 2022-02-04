@@ -6,18 +6,20 @@
  */
 
 #include "Parser.h"
+#include "AST.h"
 #include "Lexer.h"
+#include <AK/Error.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Queue.h>
+#include <AK/RefPtr.h>
 
 namespace GUI::GML {
 
-static Optional<JsonValue> parse_core_object(Queue<Token>& tokens)
+static ErrorOr<NonnullRefPtr<Object>> parse_gml_object(Queue<Token>& tokens)
 {
-    JsonObject object;
-    JsonArray children;
+    auto object = TRY(try_make_ref_counted<Object>());
 
     auto peek = [&] {
         if (tokens.is_empty())
@@ -25,23 +27,21 @@ static Optional<JsonValue> parse_core_object(Queue<Token>& tokens)
         return tokens.head().m_type;
     };
 
-    while (peek() == Token::Type::Comment)
-        tokens.dequeue();
-
-    if (peek() != Token::Type::ClassMarker) {
-        dbgln("Expected class marker");
-        return {};
+    while (peek() == Token::Type::Comment) {
+        dbgln("found comment {}", tokens.head().m_view);
+        TRY(object->add_child(TRY(Node::from_token<Comment>(tokens.dequeue()))));
     }
+
+    if (peek() != Token::Type::ClassMarker)
+        return Error::from_string_literal("Expected class marker"sv);
 
     tokens.dequeue();
 
-    if (peek() != Token::Type::ClassName) {
-        dbgln("Expected class name");
-        return {};
-    }
+    if (peek() != Token::Type::ClassName)
+        return Error::from_string_literal("Expected class name"sv);
 
     auto class_name = tokens.dequeue();
-    object.set("class", JsonValue(class_name.m_view));
+    object->set_name(class_name.m_view);
 
     if (peek() != Token::Type::LeftCurly) {
         // Empty object
@@ -57,72 +57,44 @@ static Optional<JsonValue> parse_core_object(Queue<Token>& tokens)
 
         if (peek() == Token::Type::ClassMarker) {
             // It's a child object.
-            auto value = parse_core_object(tokens);
-            if (!value.has_value()) {
-                dbgln("Parsing child object failed");
-                return {};
-            }
-            if (!value.value().is_object()) {
-                dbgln("Expected child to be Core::Object");
-                return {};
-            }
-            children.append(value.release_value());
+            TRY(object->add_child(TRY(parse_gml_object(tokens))));
         } else if (peek() == Token::Type::Identifier) {
             // It's a property.
             auto property_name = tokens.dequeue();
 
-            if (property_name.m_view.is_empty()) {
-                dbgln("Expected non-empty property name");
-                return {};
-            }
+            if (property_name.m_view.is_empty())
+                return Error::from_string_literal("Expected non-empty property name"sv);
 
-            if (peek() != Token::Type::Colon) {
-                dbgln("Expected ':'");
-                return {};
-            }
+            if (peek() != Token::Type::Colon)
+                return Error::from_string_literal("Expected ':'"sv);
+
             tokens.dequeue();
 
-            JsonValue value;
-            if (peek() == Token::Type::ClassMarker) {
-                auto parsed_value = parse_core_object(tokens);
-                if (!parsed_value.has_value())
-                    return {};
-                if (!parsed_value.value().is_object()) {
-                    dbgln("Expected property to be Core::Object");
-                    return {};
-                }
-                value = parsed_value.release_value();
-            } else if (peek() == Token::Type::JsonValue) {
-                auto value_string = tokens.dequeue();
-                auto parsed_value = JsonValue::from_string(value_string.m_view);
-                if (parsed_value.is_error()) {
-                    dbgln("Expected property to be JSON value");
-                    return {};
-                }
-                value = parsed_value.release_value();
-            }
-            object.set(property_name.m_view, move(value));
+            RefPtr<ValueNode> value;
+            if (peek() == Token::Type::ClassMarker)
+                value = TRY(parse_gml_object(tokens));
+            else if (peek() == Token::Type::JsonValue)
+                value = TRY(try_make_ref_counted<JsonValueNode>(TRY(JsonValueNode::from_string(tokens.dequeue().m_view))));
+
+            auto property = TRY(try_make_ref_counted<KeyValuePair>(property_name.m_view, value.release_nonnull()));
+            TRY(object->add_child(property));
+
         } else if (peek() == Token::Type::Comment) {
-            tokens.dequeue();
+            TRY(object->add_child(TRY(Node::from_token<Comment>(tokens.dequeue()))));
         } else {
-            dbgln("Expected child, property, comment, or }}");
-            return {};
+            return Error::from_string_literal("Expected child, property, comment, or }}"sv);
         }
     }
 
-    if (peek() != Token::Type::RightCurly) {
-        dbgln("Expected }}");
-        return {};
-    }
-    tokens.dequeue();
+    if (peek() != Token::Type::RightCurly)
+        return Error::from_string_literal("Expected }}"sv);
 
-    if (!children.is_empty())
-        object.set("children", move(children));
+    tokens.dequeue();
 
     return object;
 }
 
-JsonValue parse_gml(StringView string)
+ErrorOr<NonnullRefPtr<GMLFile>> parse_gml(StringView string)
 {
     auto lexer = Lexer(string);
 
@@ -130,12 +102,23 @@ JsonValue parse_gml(StringView string)
     for (auto& token : lexer.lex())
         tokens.enqueue(token);
 
-    auto root = parse_core_object(tokens);
+    auto file = TRY(try_make_ref_counted<GMLFile>());
 
-    if (!root.has_value())
-        return JsonValue();
+    auto peek = [&] {
+        if (tokens.is_empty())
+            return Token::Type::Unknown;
+        return tokens.head().m_type;
+    };
 
-    return root.release_value();
+    while (peek() == Token::Type::Comment)
+        TRY(file->add_child(TRY(Node::from_token<Comment>(tokens.dequeue()))));
+
+    TRY(file->add_child(TRY(parse_gml_object(tokens))));
+
+    while (!tokens.is_empty())
+        TRY(file->add_child(TRY(Node::from_token<Comment>(tokens.dequeue()))));
+
+    return file;
 }
 
 }
