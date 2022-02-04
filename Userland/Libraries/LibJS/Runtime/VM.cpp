@@ -766,10 +766,9 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
 
     if (module_or_end.is_end()) {
         dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Warning introducing module via link_and_eval_module {}", module.filename());
-        if (m_loaded_modules.size() > 0) {
-            dbgln("Using link_and_eval module as entry point is not allowed if it is not the first module!");
-            VERIFY_NOT_REACHED();
-        }
+        if (m_loaded_modules.size() > 0)
+            dbgln("Warning: Using multiple modules as entry point can lead to unexpected results");
+
         m_loaded_modules.empend(
             &module,
             module.filename(),
