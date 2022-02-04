@@ -71,10 +71,8 @@ public:
             m_data[index / 8] &= static_cast<u8>(~(1u << (index % 8)));
     }
 
+    // NOTE: There's a const method variant of this method at the parent class BitmapView.
     [[nodiscard]] u8* data() { return m_data; }
-
-    // [[nodiscard]] u8 const* data() const { return m_data; }
-    // ^BitmapView
 
     void grow(size_t size, bool default_value)
     {
