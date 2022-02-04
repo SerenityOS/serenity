@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -214,22 +215,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto edit_menu = TRY(window->try_add_menu("&Edit"));
     TRY(edit_menu->try_add_action(GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
-        auto source = editor->text();
-        GUI::GML::Lexer lexer(source);
-        for (auto& token : lexer.lex()) {
-            if (token.m_type == GUI::GML::Token::Type::Comment) {
-                auto result = GUI::MessageBox::show(
-                    window,
-                    "Your GML contains comments, which currently are not supported by the formatter and will be removed. Proceed?",
-                    "Warning",
-                    GUI::MessageBox::Type::Warning,
-                    GUI::MessageBox::InputType::OKCancel);
-                if (result == GUI::MessageBox::ExecCancel)
-                    return;
-                break;
-            }
-        }
-        auto formatted_gml = GUI::GML::format_gml(source);
+        auto formatted_gml = GUI::GML::format_gml(editor->text());
         if (!formatted_gml.is_null()) {
             editor->set_text(formatted_gml);
         } else {
