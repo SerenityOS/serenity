@@ -39,7 +39,7 @@ UNMAP_AFTER_INIT AudioManagement::AudioManagement()
 UNMAP_AFTER_INIT void AudioManagement::enumerate_hardware_controllers()
 {
     if (!PCI::Access::is_disabled()) {
-        PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
+        MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
             // Note: Only consider PCI audio controllers
             if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::Multimedia)
                 || device_identifier.subclass_code().value() != to_underlying(PCI::Multimedia::SubclassID::AudioController))
@@ -53,7 +53,7 @@ UNMAP_AFTER_INIT void AudioManagement::enumerate_hardware_controllers()
                 return;
             }
             m_controllers_list.append(ac97_device.release_value());
-        });
+        }));
     }
 }
 

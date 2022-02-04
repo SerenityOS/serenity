@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
+#include <AK/Try.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Controller/HostController.h>
 #include <Kernel/Bus/PCI/Definitions.h>
@@ -21,7 +22,7 @@ public:
     static bool initialize_for_multiple_pci_domains(PhysicalAddress mcfg_table);
     static bool initialize_for_one_pci_domain();
 
-    void fast_enumerate(Function<void(DeviceIdentifier const&)>&) const;
+    ErrorOr<void> fast_enumerate(Function<void(DeviceIdentifier const&)>&) const;
     void rescan_hardware();
 
     static Access& the();
@@ -39,7 +40,7 @@ public:
     Spinlock const& scan_lock() const { return m_scan_lock; }
     RecursiveSpinlock const& access_lock() const { return m_access_lock; }
 
-    void add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController>, Function<void(DeviceIdentifier const&)> callback);
+    ErrorOr<void> add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController>, Function<void(DeviceIdentifier const&)> callback);
 
 private:
     u8 read8_field(Address address, RegisterOffset field);

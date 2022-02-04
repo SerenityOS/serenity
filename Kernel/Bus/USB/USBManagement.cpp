@@ -27,7 +27,7 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
     if (kernel_command_line().disable_usb())
         return;
 
-    PCI::enumerate([this](PCI::DeviceIdentifier const& device_identifier) {
+    MUST(PCI::enumerate([this](PCI::DeviceIdentifier const& device_identifier) {
         if (!(device_identifier.class_code().value() == 0xc && device_identifier.subclass_code().value() == 0x3))
             return;
         if (device_identifier.prog_if().value() == 0x0) {
@@ -56,7 +56,7 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
         }
 
         dmesgln("USBManagement: Unknown/unsupported controller at {} with programming interface 0x{:02x}", device_identifier.address(), device_identifier.prog_if().value());
-    });
+    }));
 }
 
 bool USBManagement::initialized()

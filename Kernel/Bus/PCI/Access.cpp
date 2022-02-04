@@ -117,20 +117,36 @@ UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
     return true;
 }
 
-void Access::add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController> controller, Function<void(DeviceIdentifier const&)> callback)
+ErrorOr<void> Access::add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController> controller, Function<void(DeviceIdentifier const&)> callback)
 {
-    SpinlockLocker locker(m_access_lock);
-    SpinlockLocker scan_locker(m_scan_lock);
-    auto domain_number = controller->domain_number();
+    // Note: We hold the spinlocks for a moment just to ensure we append the
+    // device identifiers safely. Afterwards, enumeration goes lockless to allow
+    // IRQs to be fired if necessary.
+    Vector<DeviceIdentifier> device_identifiers_behind_host_controller;
+    {
+        SpinlockLocker locker(m_access_lock);
+        SpinlockLocker scan_locker(m_scan_lock);
+        auto domain_number = controller->domain_number();
 
-    VERIFY(!m_host_controllers.contains(domain_number));
-    // Note: We need to register the new controller as soon as possible, and
-    // definitely before enumerating devices behing that.
-    m_host_controllers.set(domain_number, move(controller));
-    m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](DeviceIdentifier const& device_identifier) -> void {
-        m_device_identifiers.append(device_identifier);
+        VERIFY(!m_host_controllers.contains(domain_number));
+        // Note: We need to register the new controller as soon as possible, and
+        // definitely before enumerating devices behing that.
+        m_host_controllers.set(domain_number, move(controller));
+        ErrorOr<void> expansion_result;
+        m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](DeviceIdentifier const& device_identifier) -> void {
+            m_device_identifiers.append(device_identifier);
+            auto result = device_identifiers_behind_host_controller.try_append(device_identifier);
+            if (result.is_error())
+                expansion_result = result;
+        });
+        if (expansion_result.is_error())
+            return expansion_result;
+    }
+
+    for (auto const& device_identifier : device_identifiers_behind_host_controller) {
         callback(device_identifier);
-    });
+    }
+    return {};
 }
 
 UNMAP_AFTER_INIT void Access::add_host_controller(NonnullOwnPtr<HostController> controller)
@@ -156,13 +172,20 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
     }
 }
 
-void Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& callback) const
+ErrorOr<void> Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& callback) const
 {
-    SpinlockLocker locker(m_access_lock);
-    VERIFY(!m_device_identifiers.is_empty());
-    for (auto const& device_identifier : m_device_identifiers) {
+    // Note: We hold the m_access_lock for a brief moment just to ensure we get
+    // a complete Vector in case someone wants to mutate it.
+    Vector<DeviceIdentifier> device_identifiers;
+    {
+        SpinlockLocker locker(m_access_lock);
+        VERIFY(!m_device_identifiers.is_empty());
+        TRY(device_identifiers.try_extend(m_device_identifiers));
+    }
+    for (auto const& device_identifier : device_identifiers) {
         callback(device_identifier);
     }
+    return {};
 }
 
 DeviceIdentifier Access::get_device_identifier(Address address) const
