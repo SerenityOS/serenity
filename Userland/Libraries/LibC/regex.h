@@ -81,10 +81,11 @@ enum __RegexAllFlags {
     __Regex_Sticky = __Regex_Global << 11,                   // Force the pattern to only match consecutive matches from where the previous match ended.
     __Regex_Multiline = __Regex_Global << 12,                // Handle newline characters. Match each line, one by one.
     __Regex_SkipTrimEmptyMatches = __Regex_Global << 13,     // Do not remove empty capture group results.
-    __Regex_Internal_Stateful = __Regex_Global << 14,        // Internal flag; enables stateful matches.
-    __Regex_Internal_BrowserExtended = __Regex_Global << 15, // Internal flag; enable browser-specific ECMA262 extensions.
-    __Regex_Internal_ConsiderNewline = __Regex_Global << 16, // Internal flag; allow matchers to consider newlines as line separators.
-    __Regex_Last = __Regex_SkipTrimEmptyMatches
+    __Regex_SingleMatch = __Regex_Global << 14,              // Stop after acquiring a single match.
+    __Regex_Internal_Stateful = __Regex_Global << 15,        // Internal flag; enables stateful matches.
+    __Regex_Internal_BrowserExtended = __Regex_Global << 16, // Internal flag; enable browser-specific ECMA262 extensions.
+    __Regex_Internal_ConsiderNewline = __Regex_Global << 17, // Internal flag; allow matchers to consider newlines as line separators.
+    __Regex_Last = __Regex_SingleMatch
 };
 
 // Values for the cflags parameter to the regcomp() function:

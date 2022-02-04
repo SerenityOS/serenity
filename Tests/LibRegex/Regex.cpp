@@ -990,3 +990,15 @@ TEST_CASE(negative_lookahead)
         EXPECT_EQ(re.match(":foobar").success, true);
     }
 }
+
+TEST_CASE(single_match_flag)
+{
+    {
+        // Ensure that only a single match is produced and nothing past that.
+        Regex<ECMA262> re("[\\u0008-\\uffff]"sv, ECMAScriptFlags::Global | (ECMAScriptFlags)regex::AllFlags::SingleMatch);
+        auto result = re.match("ABC");
+        EXPECT_EQ(result.success, true);
+        EXPECT_EQ(result.matches.size(), 1u);
+        EXPECT_EQ(result.matches.first().view.to_string(), "A"sv);
+    }
+}
