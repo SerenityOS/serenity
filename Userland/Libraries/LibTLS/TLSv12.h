@@ -246,11 +246,7 @@ struct Options {
 };
 
 struct Context {
-    String to_string() const;
-    bool verify() const;
     bool verify_chain() const;
-
-    static void print_file(StringView fname);
 
     Options options;
 
@@ -470,8 +466,6 @@ private:
     ssize_t handle_handshake_payload(ReadonlyBytes);
     ssize_t handle_message(ReadonlyBytes);
     ssize_t handle_random(ReadonlyBytes);
-
-    size_t asn1_length(ReadonlyBytes, size_t* octets);
 
     void pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
 
