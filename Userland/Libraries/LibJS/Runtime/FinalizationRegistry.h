@@ -35,13 +35,6 @@ public:
 private:
     virtual void visit_edges(Visitor& visitor) override;
 
-#ifdef JS_TRACK_ZOMBIE_CELLS
-    virtual void did_become_zombie() override
-    {
-        deregister();
-    }
-#endif
-
     FunctionObject* m_cleanup_callback { nullptr };
 
     struct FinalizationRecord {

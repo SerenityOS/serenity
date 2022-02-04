@@ -24,18 +24,9 @@ public:
     bool is_marked() const { return m_mark; }
     void set_marked(bool b) { m_mark = b; }
 
-#ifdef JS_TRACK_ZOMBIE_CELLS
-    virtual void did_become_zombie()
-    {
-    }
-#endif
-
     enum class State {
         Live,
         Dead,
-#ifdef JS_TRACK_ZOMBIE_CELLS
-        Zombie,
-#endif
     };
 
     State state() const { return m_state; }

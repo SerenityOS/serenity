@@ -19,9 +19,6 @@ namespace JS {
 
 RefPtr<::JS::VM> g_vm;
 bool g_collect_on_every_allocation = false;
-#ifdef JS_TRACK_ZOMBIE_CELLS
-bool g_zombify_dead_cells = false;
-#endif
 bool g_run_bytecode = false;
 String g_currently_running_test;
 HashMap<String, FunctionWithLength> s_exposed_global_functions;
@@ -112,9 +109,6 @@ int main(int argc, char** argv)
     });
     args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
     args_parser.add_option(g_collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
-#ifdef JS_TRACK_ZOMBIE_CELLS
-    args_parser.add_option(g_zombify_dead_cells, "Zombify dead cells (to catch missing GC marks)", "zombify-dead-cells", 'z');
-#endif
     args_parser.add_option(g_run_bytecode, "Use the bytecode interpreter", "run-bytecode", 'b');
     args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
     args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
