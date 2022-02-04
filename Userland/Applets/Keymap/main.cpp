@@ -13,7 +13,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix getkeymap"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix getkeymap proc exec"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
     window->make_window_manager(WindowServer::WMEventMask::KeymapChanged);
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath getkeymap"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath getkeymap proc exec"));
 
     return app->exec();
 }
