@@ -449,11 +449,11 @@ ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(GlobalObject& 
     if (is<ZonedDateTime>(item))
         return &static_cast<ZonedDateTime&>(item).calendar();
 
-    // 2. Let calendar be ? Get(item, "calendar").
-    auto calendar = TRY(item.get(vm.names.calendar));
+    // 2. Let calendarLike be ? Get(item, "calendar").
+    auto calendar_like = TRY(item.get(vm.names.calendar));
 
-    // 3. Return ? ToTemporalCalendarWithISODefault(calendar).
-    return to_temporal_calendar_with_iso_default(global_object, calendar);
+    // 3. Return ? ToTemporalCalendarWithISODefault(calendarLike).
+    return to_temporal_calendar_with_iso_default(global_object, calendar_like);
 }
 
 // 12.1.24 DateFromFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-datefromfields

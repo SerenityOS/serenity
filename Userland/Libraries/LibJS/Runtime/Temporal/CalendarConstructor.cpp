@@ -60,13 +60,13 @@ ThrowCompletionOr<Object*> CalendarConstructor::construct(FunctionObject& new_ta
     return TRY(create_temporal_calendar(global_object, identifier, &new_target));
 }
 
-// 12.3.2 Temporal.Calendar.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.from
+// 12.3.2 Temporal.Calendar.from ( calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.from
 JS_DEFINE_NATIVE_FUNCTION(CalendarConstructor::from)
 {
-    auto item = vm.argument(0);
+    auto calendar_like = vm.argument(0);
 
-    // 1. Return ? ToTemporalCalendar(item).
-    return TRY(to_temporal_calendar(global_object, item));
+    // 1. Return ? ToTemporalCalendar(calendarLike).
+    return TRY(to_temporal_calendar(global_object, calendar_like));
 }
 
 }
