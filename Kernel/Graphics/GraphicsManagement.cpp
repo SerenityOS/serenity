@@ -231,14 +231,14 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     else if (framebuffer_devices_use_bootloader_framebuffer())
         dbgln("Forcing use of framebuffer set up by the bootloader");
 
-    PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
+    MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
         // Note: Each graphics controller will try to set its native screen resolution
         // upon creation. Later on, if we don't want to have framebuffer devices, a
         // framebuffer console will take the control instead.
         if (!is_vga_compatible_pci_device(device_identifier) && !is_display_controller_pci_device(device_identifier))
             return;
         determine_and_initialize_graphics_device(device_identifier);
-    });
+    }));
 
     if (!m_console) {
         // If no graphics driver was instantiated and we had a bootloader provided

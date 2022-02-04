@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Error.h>
+#include <AK/Try.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 
 namespace Kernel::PCI {
@@ -19,7 +21,7 @@ u32 read32(Address address, PCI::RegisterOffset field);
 
 HardwareID get_hardware_id(PCI::Address);
 bool is_io_space_enabled(Address);
-void enumerate(Function<void(DeviceIdentifier const&)> callback);
+ErrorOr<void> enumerate(Function<void(DeviceIdentifier const&)> callback);
 void enable_interrupt_line(Address);
 void disable_interrupt_line(Address);
 void raw_access(Address, u32, size_t, u32);

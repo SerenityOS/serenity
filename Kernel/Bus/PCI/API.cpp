@@ -17,9 +17,9 @@ u8 read8(Address address, PCI::RegisterOffset field) { return Access::the().read
 u16 read16(Address address, PCI::RegisterOffset field) { return Access::the().read16_field(address, to_underlying(field)); }
 u32 read32(Address address, PCI::RegisterOffset field) { return Access::the().read32_field(address, to_underlying(field)); }
 
-void enumerate(Function<void(DeviceIdentifier const&)> callback)
+ErrorOr<void> enumerate(Function<void(DeviceIdentifier const&)> callback)
 {
-    Access::the().fast_enumerate(callback);
+    return Access::the().fast_enumerate(callback);
 }
 
 DeviceIdentifier get_device_identifier(Address address)

@@ -50,10 +50,10 @@ UNMAP_AFTER_INIT void PCIBusSysFSDirectory::initialize()
 UNMAP_AFTER_INIT PCIBusSysFSDirectory::PCIBusSysFSDirectory()
     : SysFSDirectory(SysFSComponentRegistry::the().buses_directory())
 {
-    PCI::enumerate([&](DeviceIdentifier const& device_identifier) {
+    MUST(PCI::enumerate([&](DeviceIdentifier const& device_identifier) {
         auto pci_device = PCI::PCIDeviceSysFSDirectory::create(*this, device_identifier.address());
         m_components.append(pci_device);
-    });
+    }));
 }
 
 StringView PCIDeviceAttributeSysFSComponent::name() const

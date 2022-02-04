@@ -5,6 +5,7 @@
  */
 
 #include <AK/JsonObjectSerializer.h>
+#include <AK/Try.h>
 #include <AK/UBSanitizer.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
@@ -680,7 +681,7 @@ private:
     {
         auto array = TRY(JsonArraySerializer<>::try_create(builder));
         ErrorOr<void> result; // FIXME: Make this nicer
-        PCI::enumerate([&array, &result](PCI::DeviceIdentifier const& device_identifier) {
+        TRY(PCI::enumerate([&array, &result](PCI::DeviceIdentifier const& device_identifier) {
             if (result.is_error())
                 return;
             result = ([&]() -> ErrorOr<void> {
@@ -699,7 +700,7 @@ private:
                 TRY(obj.finish());
                 return {};
             })();
-        });
+        }));
         TRY(result);
         TRY(array.finish());
         return {};
