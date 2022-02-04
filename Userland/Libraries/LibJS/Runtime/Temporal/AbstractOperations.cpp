@@ -1682,24 +1682,16 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObje
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidYearMonthString, iso_string);
     }
 
-    // FIXME: I don't think this check makes sense - the TemporalYearMonthString syntax check above
-    //        should rule out a string that's '-000000'; it requires a month with a non-zero digit
-    //        in it, and the normalized year is checked separately in ParseISODateTime below.
-    //        :yakshrug:
-    // 3. If ! SameValue(isoString, "-000000") is true, throw a RangeError exception.
-    if (iso_string == "-000000"sv)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidExtendedYearNegativeZero);
-
-    // 4. If isoString contains a UTCDesignator, then
+    // 3. If isoString contains a UTCDesignator, then
     if (parse_result->utc_designator.has_value()) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidYearMonthStringUTCDesignator, iso_string);
     }
 
-    // 5. Let result be ? ParseISODateTime(isoString).
+    // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 6. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
+    // 5. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalYearMonth { .year = result.year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 
