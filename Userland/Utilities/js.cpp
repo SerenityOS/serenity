@@ -1370,10 +1370,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(s_strip_ansi, "Disable ANSI colors", "disable-ansi-colors", 'c');
     args_parser.add_option(s_disable_source_location_hints, "Disable source location hints", "disable-source-location-hints", 'h');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
-#ifdef JS_TRACK_ZOMBIE_CELLS
-    bool zombify_dead_cells = false;
-    args_parser.add_option(zombify_dead_cells, "Zombify dead cells (to catch missing GC marks)", "zombify-dead-cells", 'z');
-#endif
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -1416,9 +1412,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         ReplConsoleClient console_client(interpreter->global_object().console());
         interpreter->global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
-#ifdef JS_TRACK_ZOMBIE_CELLS
-        interpreter->heap().set_zombify_dead_cells(zombify_dead_cells);
-#endif
 
         auto& global_environment = interpreter->realm().global_environment();
 
@@ -1630,9 +1623,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         ReplConsoleClient console_client(interpreter->global_object().console());
         interpreter->global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
-#ifdef JS_TRACK_ZOMBIE_CELLS
-        interpreter->heap().set_zombify_dead_cells(zombify_dead_cells);
-#endif
 
         signal(SIGINT, [](int) {
             sigint_handler();

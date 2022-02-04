@@ -30,13 +30,6 @@ public:
     virtual void remove_dead_cells(Badge<Heap>) override;
 
 private:
-#ifdef JS_TRACK_ZOMBIE_CELLS
-    virtual void did_become_zombie() override
-    {
-        deregister();
-    }
-#endif
-
     void visit_edges(Visitor&) override;
 
     HashMap<Cell*, Value> m_values; // This stores Cell pointers instead of Object pointers to aide with sweeping
