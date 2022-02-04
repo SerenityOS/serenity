@@ -989,7 +989,7 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] finish_dynamic_import on {}", module_request.module_specifier);
 
     // 1. Let fulfilledClosure be a new Abstract Closure with parameters (result) that captures referencingScriptOrModule, specifier, and promiseCapability and performs the following steps when called:
-    auto fulfilled_closure = [referencing_script_or_module, module_request = move(module_request), promise_capability](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
+    auto fulfilled_closure = [referencing_script_or_module, module_request = move(module_request), resolve_function = make_handle(promise_capability.resolve), reject_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
         auto result = vm.argument(0);
         // a. Assert: result is undefined.
         VERIFY(result.is_undefined());
@@ -1006,12 +1006,12 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
         // e. If namespace is an abrupt completion, then
         if (namespace_.is_throw_completion()) {
             // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « namespace.[[Value]] »).
-            MUST(call(global_object, promise_capability.reject, js_undefined(), *namespace_.throw_completion().value()));
+            MUST(call(global_object, reject_function.cell(), js_undefined(), *namespace_.throw_completion().value()));
         }
         // f. Else,
         else {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace.[[Value]] »).
-            MUST(call(global_object, promise_capability.resolve, js_undefined(), namespace_.release_value()));
+            MUST(call(global_object, resolve_function.cell(), js_undefined(), namespace_.release_value()));
         }
         // g. Return undefined.
         return js_undefined();
@@ -1021,10 +1021,10 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     auto* on_fulfilled = NativeFunction::create(current_realm()->global_object(), "", move(fulfilled_closure));
 
     // 3. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures promiseCapability and performs the following steps when called:
-    auto rejected_closure = [promise_capability](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
+    auto rejected_closure = [rejected_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
         auto error = vm.argument(0);
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
-        MUST(call(global_object, promise_capability.reject, js_undefined(), error));
+        MUST(call(global_object, rejected_function.cell(), js_undefined(), error));
         // b. Return undefined.
         return js_undefined();
     };
