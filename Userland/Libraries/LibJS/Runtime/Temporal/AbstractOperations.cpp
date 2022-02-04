@@ -1241,8 +1241,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidInstantString, iso_string);
     }
 
-    // 3. Let result be ! ParseISODateTime(isoString).
-    // NOTE: !/? confusion is a spec issue. See: https://github.com/tc39/proposal-temporal/pull/2027
+    // 3. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
     // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
@@ -1278,8 +1277,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(G
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidZonedDateTimeString, iso_string);
     }
 
-    // 3. Let result be ! ParseISODateTime(isoString).
-    // NOTE: !/? confusion is a spec issue. See: https://github.com/tc39/proposal-temporal/pull/2027
+    // 3. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
     // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
@@ -1561,8 +1559,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidRelativeToString, iso_string);
     }
 
-    // 3. Let result be ! ParseISODateTime(isoString).
-    // NOTE: !/? confusion is a spec issue. See: https://github.com/tc39/proposal-temporal/pull/2027
+    // 3. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
     bool z;
