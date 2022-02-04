@@ -19,7 +19,7 @@ namespace Coredump {
 
 ELFObjectInfo const* Backtrace::object_info_for_region(MemoryRegionInfo const& region)
 {
-    auto path = region.object_name();
+    String path = region.object_name();
     if (!path.starts_with('/') && Core::File::looks_like_shared_library(path))
         path = LexicalPath::join("/usr/lib", path).string();
 
