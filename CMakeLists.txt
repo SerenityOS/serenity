@@ -98,6 +98,10 @@ add_custom_target(extlinux-image
     BYPRODUCTS "${CMAKE_BINARY_DIR}/extlinux_disk_image"
     USES_TERMINAL
 )
+add_custom_target(install-native-partition
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-native-partition.sh"
+    USES_TERMINAL
+)
 
 add_custom_target(lint-shell-scripts
     COMMAND "${SerenityOS_SOURCE_DIR}/Meta/lint-shell-scripts.sh"
