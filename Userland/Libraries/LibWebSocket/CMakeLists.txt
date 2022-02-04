@@ -1,8 +1,6 @@
 set(SOURCES
     ConnectionInfo.cpp
-    Impl/AbstractWebSocketImpl.cpp
-    Impl/TCPWebSocketConnectionImpl.cpp
-    Impl/TLSv12WebSocketConnectionImpl.cpp
+    Impl/WebSocketImpl.cpp
     WebSocket.cpp
 )
 

@@ -9,7 +9,7 @@
 #include <AK/Span.h>
 #include <LibCore/Object.h>
 #include <LibWebSocket/ConnectionInfo.h>
-#include <LibWebSocket/Impl/AbstractWebSocketImpl.h>
+#include <LibWebSocket/Impl/WebSocketImpl.h>
 #include <LibWebSocket/Message.h>
 
 namespace WebSocket {
@@ -104,7 +104,7 @@ private:
     String m_last_close_message;
 
     ConnectionInfo m_connection;
-    RefPtr<AbstractWebSocketImpl> m_impl;
+    RefPtr<WebSocketImpl> m_impl;
 };
 
 }
