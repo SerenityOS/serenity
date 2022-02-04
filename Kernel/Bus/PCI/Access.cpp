@@ -133,11 +133,14 @@ ErrorOr<void> Access::add_host_controller_and_enumerate_attached_devices(Nonnull
         // definitely before enumerating devices behing that.
         m_host_controllers.set(domain_number, move(controller));
         ErrorOr<void> expansion_result;
-        m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](DeviceIdentifier const& device_identifier) -> void {
+        m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](DeviceIdentifier const& device_identifier) -> IterationDecision {
             m_device_identifiers.append(device_identifier);
             auto result = device_identifiers_behind_host_controller.try_append(device_identifier);
-            if (result.is_error())
+            if (result.is_error()) {
                 expansion_result = result;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
         });
         if (expansion_result.is_error())
             return expansion_result;
@@ -166,8 +169,9 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
     SpinlockLocker scan_locker(m_scan_lock);
     VERIFY(m_device_identifiers.is_empty());
     for (auto it = m_host_controllers.begin(); it != m_host_controllers.end(); ++it) {
-        (*it).value->enumerate_attached_devices([this](DeviceIdentifier device_identifier) -> void {
+        (*it).value->enumerate_attached_devices([this](DeviceIdentifier device_identifier) -> IterationDecision {
             m_device_identifiers.append(device_identifier);
+            return IterationDecision::Continue;
         });
     }
 }
