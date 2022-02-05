@@ -46,6 +46,7 @@ Vector<Token> Preprocessor::process_and_lex()
                 m_processed_tokens.append(tokens[token_index]);
                 m_processed_tokens.append(tokens[token_index + 1]);
             }
+            ++token_index; // Also skip IncludePath token
             continue;
         }
 
