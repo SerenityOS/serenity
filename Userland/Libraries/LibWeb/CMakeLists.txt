@@ -46,7 +46,6 @@ set(SOURCES
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
     CSS/StyleComputer.cpp
-    CSS/StyleInvalidator.cpp
     CSS/StyleProperties.cpp
     CSS/StyleSheet.cpp
     CSS/StyleSheetList.cpp

@@ -10,7 +10,6 @@
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/SelectorEngine.h>
-#include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
@@ -70,8 +69,6 @@ ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& va
     if (name.is_empty())
         return InvalidCharacterError::create("Attribute name must not be empty");
 
-    CSS::StyleInvalidator style_invalidator(document());
-
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
     bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
@@ -93,14 +90,20 @@ ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& va
     }
 
     parse_attribute(attribute->local_name(), value);
+
+    // FIXME: Invalidate less.
+    document().invalidate_style();
+
     return {};
 }
 
 // https://dom.spec.whatwg.org/#dom-element-removeattribute
 void Element::remove_attribute(const FlyString& name)
 {
-    CSS::StyleInvalidator style_invalidator(document());
     m_attributes->remove_attribute(name);
+
+    // FIXME: Invalidate less.
+    document().invalidate_style();
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
