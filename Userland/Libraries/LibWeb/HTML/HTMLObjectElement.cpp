@@ -41,14 +41,10 @@ void HTMLObjectElement::parse_attribute(const FlyString& name, const String& val
         m_image_loader.load(document().parse_url(value));
 }
 
-RefPtr<Layout::Node> HTMLObjectElement::create_layout_node()
+RefPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
     if (m_should_show_fallback_content)
-        return HTMLElement::create_layout_node();
-
-    auto style = document().style_computer().compute_style(*this);
-    if (style->display().is_none())
-        return nullptr;
+        return HTMLElement::create_layout_node(move(style));
     if (m_image_loader.has_image())
         return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
     return nullptr;

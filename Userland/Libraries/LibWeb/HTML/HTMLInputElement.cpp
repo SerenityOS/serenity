@@ -41,13 +41,9 @@ void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
     }
 }
 
-RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
+RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
     if (type() == "hidden")
-        return nullptr;
-
-    auto style = document().style_computer().compute_style(*this);
-    if (style->display().is_none())
         return nullptr;
 
     if (type().equals_ignoring_case("submit") || type().equals_ignoring_case("button"))

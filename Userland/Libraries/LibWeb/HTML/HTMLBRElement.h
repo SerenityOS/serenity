@@ -17,7 +17,7 @@ public:
     HTMLBRElement(DOM::Document&, QualifiedName);
     virtual ~HTMLBRElement() override;
 
-    virtual RefPtr<Layout::Node> create_layout_node() override;
+    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 };
 
 }

@@ -19,12 +19,8 @@ HTMLLabelElement::~HTMLLabelElement()
 {
 }
 
-RefPtr<Layout::Node> HTMLLabelElement::create_layout_node()
+RefPtr<Layout::Node> HTMLLabelElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    auto style = document().style_computer().compute_style(*this);
-    if (style->display().is_none())
-        return nullptr;
-
     auto layout_node = adopt_ref(*new Layout::Label(document(), this, move(style)));
     layout_node->set_inline(true);
     return layout_node;

@@ -17,7 +17,7 @@ public:
     HTMLIFrameElement(DOM::Document&, QualifiedName);
     virtual ~HTMLIFrameElement() override;
 
-    virtual RefPtr<Layout::Node> create_layout_node() override;
+    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
 private:
     virtual void inserted() override;

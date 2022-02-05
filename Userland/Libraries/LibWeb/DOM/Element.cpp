@@ -130,14 +130,9 @@ bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensit
     });
 }
 
-RefPtr<Layout::Node> Element::create_layout_node()
+RefPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    auto style = document().style_computer().compute_style(*this);
-    const_cast<Element&>(*this).m_specified_css_values = style;
     auto display = style->display();
-
-    if (display.is_none())
-        return nullptr;
 
     if (local_name() == "noscript" && document().is_scripting_enabled())
         return nullptr;

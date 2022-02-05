@@ -34,7 +34,7 @@ public:
     String to_data_url(const String& type, Optional<double> quality) const;
 
 private:
-    virtual RefPtr<Layout::Node> create_layout_node() override;
+    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     RefPtr<Gfx::Bitmap> m_bitmap;
     RefPtr<CanvasRenderingContext2D> m_context;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
@@ -143,11 +143,6 @@ void Node::set_text_content(String const& content)
     }
 
     set_needs_style_update(true);
-}
-
-RefPtr<Layout::Node> Node::create_layout_node()
-{
-    return nullptr;
 }
 
 void Node::invalidate_style()

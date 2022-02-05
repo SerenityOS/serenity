@@ -47,11 +47,8 @@ void HTMLCanvasElement::set_height(unsigned value)
     set_attribute(HTML::AttributeNames::height, String::number(value));
 }
 
-RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node()
+RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    auto style = document().style_computer().compute_style(*this);
-    if (style->display().is_none())
-        return nullptr;
     return adopt_ref(*new Layout::CanvasBox(document(), *this, move(style)));
 }
 

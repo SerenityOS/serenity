@@ -451,11 +451,6 @@ void Document::update_style()
     set_needs_layout();
 }
 
-RefPtr<Layout::Node> Document::create_layout_node()
-{
-    return adopt_ref(*new Layout::InitialContainingBlock(*this, style_computer().create_document_style()));
-}
-
 void Document::set_link_color(Color color)
 {
     m_link_color = color;
