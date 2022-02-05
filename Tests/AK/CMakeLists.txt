@@ -26,6 +26,7 @@ set(AK_TEST_SOURCES
     TestEnumBits.cpp
     TestFind.cpp
     TestFixedArray.cpp
+    TestFloatingPoint.cpp
     TestFormat.cpp
     TestGenericLexer.cpp
     TestHashFunctions.cpp
