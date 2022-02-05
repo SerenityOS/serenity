@@ -22,9 +22,12 @@ StackingContext::StackingContext(Box& box, StackingContext* parent)
         m_parent->m_children.append(this);
 
         // FIXME: Don't sort on every append..
-        // FIXME: Apparently this also breaks tree order inside layers
         quick_sort(m_parent->m_children, [](auto& a, auto& b) {
-            return a->m_box.computed_values().z_index().value_or(0) < b->m_box.computed_values().z_index().value_or(0);
+            auto a_z_index = a->m_box.computed_values().z_index().value_or(0);
+            auto b_z_index = b->m_box.computed_values().z_index().value_or(0);
+            if (a_z_index == b_z_index)
+                return a->m_box.is_before(b->m_box);
+            return a_z_index < b_z_index;
         });
     }
 }
