@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -38,7 +39,7 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
     // 10. Let result be ParseScript(source, settings's Realm, script).
     auto parse_timer = Core::ElapsedTimer::start_new();
     auto result = JS::Script::parse(source, realm, script->filename());
-    dbgln("ClassicScript: Parsed {} in {}ms", script->filename(), parse_timer.elapsed());
+    dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Parsed {} in {}ms", script->filename(), parse_timer.elapsed());
 
     // 11. If result is a list of errors, then:
 
@@ -65,7 +66,7 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
         return {};
     }
 
-    dbgln("ClassicScript: Running script {}", filename());
+    dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Running script {}", filename());
     (void)rethrow_errors;
 
     auto timer = Core::ElapsedTimer::start_new();
@@ -78,7 +79,7 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
 
     // FIXME: If ScriptEvaluation does not complete because the user agent has aborted the running script, leave evaluationStatus as null.
 
-    dbgln("ClassicScript: Finished running script {}, Duration: {}ms", filename(), timer.elapsed());
+    dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Finished running script {}, Duration: {}ms", filename(), timer.elapsed());
     if (result.is_error()) {
         // FIXME: Propagate error according to the spec.
         interpreter->vm().clear_exception();
