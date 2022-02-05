@@ -99,10 +99,9 @@
 
     @GUI::Widget {
         fixed_height: 24
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
-        @GUI::CheckBox{
+        @GUI::CheckBox {
             name: "startup_checkbox"
             text: "Show Welcome the next time SerenityOS starts"
             autosize: true

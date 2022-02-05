@@ -1,6 +1,5 @@
 @GUI::Frame {
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         margins: [10]
         spacing: 5
@@ -8,7 +7,6 @@
 
     @GUI::GroupBox {
         title: "Time Zone Settings"
-
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16

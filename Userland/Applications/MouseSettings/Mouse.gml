@@ -1,6 +1,5 @@
 @GUI::Frame {
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         margins: [10]
         spacing: 5
@@ -9,7 +8,6 @@
     @GUI::GroupBox {
         title: "Cursor speed"
         fixed_height: 106
-
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
             spacing: 2
@@ -58,7 +56,6 @@
     @GUI::GroupBox {
         title: "Scroll wheel step size"
         fixed_height: 106
-
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
             spacing: 2
@@ -104,15 +101,13 @@
                 fixed_width: 100
             }
 
-            @GUI::Widget {
-            }
+            @GUI::Widget
         }
     }
 
     @GUI::GroupBox {
         title: "Double-click speed"
         fixed_height: 106
-
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
             spacing: 2
@@ -162,7 +157,6 @@
     @GUI::GroupBox {
         title: "Button configuration"
         fixed_height: 68
-
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 2
