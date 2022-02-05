@@ -124,7 +124,7 @@ public:
     virtual bool is_class() const { return false; }
     virtual bool is_function() const { return false; }
     virtual bool is_namespace() const { return false; }
-    virtual bool is_member() const { return false; }
+    bool is_member() const { return parent() != nullptr && parent()->is_declaration() && verify_cast<Declaration>(parent())->is_struct_or_class(); }
     StringView name() const { return m_name; }
     void set_name(StringView name) { m_name = move(name); }
 
