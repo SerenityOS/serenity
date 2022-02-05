@@ -59,5 +59,19 @@
                 "path": "./syntaxes/serenity-ipc.tmLanguage.json"
             }
         ]
+    },
+    "activationEvents": [
+        "onLanguage:serenity-gml"
+    ],
+    "main": "./out/extension.js",
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/node": "14.x",
+        "@types/vscode": "^1.58.0",
+        "typescript": "^4.5.4"
     }
 }
