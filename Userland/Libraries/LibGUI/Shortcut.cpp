@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Geordie Hall <me@geordiehall.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,10 +25,17 @@ String Shortcut::to_string() const
     if (m_modifiers & Mod_Super)
         parts.append("Super");
 
-    if (auto* key_name = key_code_to_string(m_key))
-        parts.append(key_name);
-    else
-        parts.append("(Invalid)");
+    if (m_type == Type::Keyboard) {
+        if (auto* key_name = key_code_to_string(m_keyboard_key))
+            parts.append(key_name);
+        else
+            parts.append("(Invalid)");
+    } else {
+        if (m_mouse_button != MouseButton::None)
+            parts.append(String::formatted("Mouse {}", mouse_button_to_string(m_mouse_button)));
+        else
+            parts.append("(Invalid)");
+    }
 
     StringBuilder builder;
     builder.join('+', parts);
