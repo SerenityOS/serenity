@@ -28,23 +28,23 @@ public:
     void set_offset(const Gfx::FloatPoint& offset);
     void set_offset(float x, float y) { set_offset({ x, y }); }
 
-    const Gfx::FloatSize& size() const { return m_size; }
-    void set_size(const Gfx::FloatSize&);
-    void set_size(float width, float height) { set_size({ width, height }); }
+    Gfx::FloatSize const& content_size() const { return m_content_size; }
+    void set_content_size(Gfx::FloatSize const&);
+    void set_content_size(float width, float height) { set_content_size({ width, height }); }
 
-    void set_width(float width) { set_size(width, height()); }
-    void set_height(float height) { set_size(width(), height); }
-    float width() const { return m_size.width(); }
-    float height() const { return m_size.height(); }
+    void set_content_width(float width) { set_content_size(width, content_height()); }
+    void set_content_height(float height) { set_content_size(content_width(), height); }
+    float content_width() const { return m_content_size.width(); }
+    float content_height() const { return m_content_size.height(); }
 
     Gfx::FloatRect padded_rect() const
     {
         auto absolute_rect = this->absolute_rect();
         Gfx::FloatRect rect;
         rect.set_x(absolute_rect.x() - box_model().padding.left);
-        rect.set_width(width() + box_model().padding.left + box_model().padding.right);
+        rect.set_width(content_width() + box_model().padding.left + box_model().padding.right);
         rect.set_y(absolute_rect.y() - box_model().padding.top);
-        rect.set_height(height() + box_model().padding.top + box_model().padding.bottom);
+        rect.set_height(content_height() + box_model().padding.top + box_model().padding.bottom);
         return rect;
     }
 
@@ -62,30 +62,30 @@ public:
     float margin_box_width() const
     {
         auto margin_box = box_model().margin_box();
-        return width() + margin_box.left + margin_box.right;
+        return content_width() + margin_box.left + margin_box.right;
     }
 
     float margin_box_height() const
     {
         auto margin_box = box_model().margin_box();
-        return height() + margin_box.top + margin_box.bottom;
+        return content_height() + margin_box.top + margin_box.bottom;
     }
 
     float border_box_width() const
     {
         auto border_box = box_model().border_box();
-        return width() + border_box.left + border_box.right;
+        return content_width() + border_box.left + border_box.right;
     }
 
     float border_box_height() const
     {
         auto border_box = box_model().border_box();
-        return height() + border_box.top + border_box.bottom;
+        return content_height() + border_box.top + border_box.bottom;
     }
 
     Gfx::FloatRect content_box_as_relative_rect() const
     {
-        return { m_offset, m_size };
+        return { m_offset, m_content_size };
     }
 
     Gfx::FloatRect border_box_as_relative_rect() const
@@ -195,7 +195,7 @@ private:
     virtual bool is_box() const final { return true; }
 
     Gfx::FloatPoint m_offset;
-    Gfx::FloatSize m_size;
+    Gfx::FloatSize m_content_size;
 
     // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
     WeakPtr<LineBoxFragment> m_containing_line_box_fragment;

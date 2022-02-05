@@ -260,14 +260,14 @@ int Window::inner_width() const
 {
     if (!associated_document().layout_node())
         return 0;
-    return associated_document().layout_node()->width();
+    return associated_document().layout_node()->content_width();
 }
 
 int Window::inner_height() const
 {
     if (!associated_document().layout_node())
         return 0;
-    return associated_document().layout_node()->height();
+    return associated_document().layout_node()->content_height();
 }
 
 Page* Window::page()

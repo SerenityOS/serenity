@@ -102,7 +102,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
         .node = &box,
         .offset_in_node = 0,
         .length_in_node = 0,
-        .width = box.width(),
+        .width = box.content_width(),
     };
 }
 

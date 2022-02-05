@@ -48,24 +48,24 @@ void TableFormattingContext::run(Box& box, LayoutMode)
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             row.set_offset(0, content_height);
             layout_row(row, column_widths);
-            content_width = max(content_width, row.width());
-            content_height += row.height();
+            content_width = max(content_width, row.content_width());
+            content_height += row.content_height();
         });
 
         if (row_group_box.computed_values().width().is_length() && row_group_box.computed_values().width().length().is_auto())
-            row_group_box.set_width(content_width);
-        row_group_box.set_height(content_height);
+            row_group_box.set_content_width(content_width);
+        row_group_box.set_content_height(content_height);
 
         row_group_box.set_offset(0, total_content_height);
         total_content_height += content_height;
-        total_content_width = max(total_content_width, row_group_box.width());
+        total_content_width = max(total_content_width, row_group_box.content_width());
     });
 
     if (box.computed_values().width().is_length() && box.computed_values().width().length().is_auto())
-        box.set_width(total_content_width);
+        box.set_content_width(total_content_width);
 
     // FIXME: This is a total hack, we should respect the 'height' property.
-    box.set_height(total_content_height);
+    box.set_content_height(total_content_height);
 }
 
 void TableFormattingContext::calculate_column_widths(Box& row, Vector<float>& column_widths)
@@ -80,7 +80,7 @@ void TableFormattingContext::calculate_column_widths(Box& row, Vector<float>& co
         } else {
             (void)layout_inside(cell, LayoutMode::Default);
         }
-        column_widths[column_index] = max(column_widths[column_index], cell.width());
+        column_widths[column_index] = max(column_widths[column_index], cell.content_width());
         column_index += cell.colspan();
     });
 }
@@ -106,16 +106,16 @@ void TableFormattingContext::layout_row(Box& row, Vector<float>& column_widths)
         size_t cell_colspan = cell.colspan();
         for (size_t i = 0; i < cell_colspan; ++i)
             content_width += column_widths[column_index++];
-        tallest_cell_height = max(tallest_cell_height, cell.height());
+        tallest_cell_height = max(tallest_cell_height, cell.content_height());
     });
 
     if (use_auto_layout) {
-        row.set_width(content_width);
+        row.set_content_width(content_width);
     } else {
-        row.set_width(table->width());
+        row.set_content_width(table->content_width());
     }
 
-    row.set_height(tallest_cell_height);
+    row.set_content_height(tallest_cell_height);
 }
 
 }

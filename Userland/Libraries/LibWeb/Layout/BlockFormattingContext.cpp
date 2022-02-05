@@ -121,7 +121,7 @@ void BlockFormattingContext::compute_width(Box& box)
     }
 
     auto& computed_values = box.computed_values();
-    float width_of_containing_block = box.containing_block()->width();
+    float width_of_containing_block = box.containing_block()->content_width();
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
     auto zero_value = CSS::Length::make_px(0);
@@ -231,7 +231,7 @@ void BlockFormattingContext::compute_width(Box& box)
         }
     }
 
-    box.set_width(used_width.to_px(box));
+    box.set_content_width(used_width.to_px(box));
     box.box_model().margin.left = margin_left.to_px(box);
     box.box_model().margin.right = margin_right.to_px(box);
     box.box_model().border.left = computed_values.border_left().width;
@@ -244,7 +244,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box& box)
 {
     // 10.3.5 Floating, non-replaced elements
     auto& computed_values = box.computed_values();
-    float width_of_containing_block = box.containing_block()->width();
+    float width_of_containing_block = box.containing_block()->content_width();
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto zero_value = CSS::Length::make_px(0);
 
@@ -278,7 +278,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box& box)
     }
 
     float final_width = width.resolved_or_zero(box).to_px(box);
-    box.set_width(final_width);
+    box.set_content_width(final_width);
     box.box_model().margin.left = margin_left.to_px(box);
     box.box_model().margin.right = margin_right.to_px(box);
     box.box_model().border.left = computed_values.border_left().width;
@@ -289,14 +289,14 @@ void BlockFormattingContext::compute_width_for_floating_box(Box& box)
 
 void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox& box)
 {
-    box.set_width(compute_width_for_replaced_element(box));
+    box.set_content_width(compute_width_for_replaced_element(box));
 }
 
 float BlockFormattingContext::compute_theoretical_height(Box const& box)
 {
     auto& computed_values = box.computed_values();
     auto& containing_block = *box.containing_block();
-    auto containing_block_height = CSS::Length::make_px(containing_block.height());
+    auto containing_block_height = CSS::Length::make_px(containing_block.content_height());
 
     auto is_absolute = [](CSS::LengthPercentage const& length_percentage) {
         return length_percentage.is_length() && length_percentage.length().is_absolute();
@@ -330,7 +330,7 @@ void BlockFormattingContext::compute_height(Box& box)
 {
     auto& computed_values = box.computed_values();
     auto& containing_block = *box.containing_block();
-    auto width_of_containing_block_as_length = CSS::Length::make_px(containing_block.width());
+    auto width_of_containing_block_as_length = CSS::Length::make_px(containing_block.content_width());
 
     // First, resolve the top/bottom parts of the surrounding box model.
 
@@ -344,7 +344,7 @@ void BlockFormattingContext::compute_height(Box& box)
     box.box_model().padding.bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block_as_length).resolved_or_zero(box).to_px(box);
 
     auto height = compute_theoretical_height(box);
-    box.set_height(height);
+    box.set_content_height(height);
 }
 
 void BlockFormattingContext::compute_position(Box& box)
@@ -354,7 +354,7 @@ void BlockFormattingContext::compute_position(Box& box)
 
     auto& box_model = box.box_model();
     auto& computed_values = box.computed_values();
-    float width_of_containing_block = box.containing_block()->width();
+    float width_of_containing_block = box.containing_block()->content_width();
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
     auto specified_left = computed_values.offset().left.resolved(box, width_of_containing_block_as_length).resolved_or_zero(box);
@@ -424,14 +424,14 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
         if (is<ListItemBox>(child_box))
             verify_cast<ListItemBox>(child_box).layout_marker();
 
-        content_height = max(content_height, child_box.effective_offset().y() + child_box.height() + child_box.box_model().margin_box().bottom);
-        content_width = max(content_width, verify_cast<Box>(child_box).width());
+        content_height = max(content_height, child_box.effective_offset().y() + child_box.content_height() + child_box.box_model().margin_box().bottom);
+        content_width = max(content_width, child_box.content_width());
         return IterationDecision::Continue;
     });
 
     if (layout_mode != LayoutMode::Default) {
         if (block_container.computed_values().width().is_length() && block_container.computed_values().width().length().is_undefined_or_auto())
-            block_container.set_width(content_width);
+            block_container.set_content_width(content_width);
     }
 }
 
@@ -439,7 +439,7 @@ void BlockFormattingContext::compute_vertical_box_model_metrics(Box& child_box, 
 {
     auto& box_model = child_box.box_model();
     auto const& computed_values = child_box.computed_values();
-    auto width_of_containing_block = CSS::Length::make_px(containing_block.width());
+    auto width_of_containing_block = CSS::Length::make_px(containing_block.content_width());
 
     box_model.margin.top = computed_values.margin().top.resolved(child_box, width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
     box_model.margin.bottom = computed_values.margin().bottom.resolved(child_box, width_of_containing_block).resolved_or_zero(containing_block).to_px(child_box);
@@ -474,7 +474,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
 
     if (relevant_sibling) {
         y += relevant_sibling->effective_offset().y()
-            + relevant_sibling->height()
+            + relevant_sibling->content_height()
             + relevant_sibling->box_model().border_box().bottom;
 
         // Collapse top margin with bottom margin of preceding siblings if needed
@@ -519,7 +519,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
 
     float x = 0;
     if (containing_block.computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
-        x = (containing_block.width() / 2) - child_box.width() / 2;
+        x = (containing_block.content_width() / 2) - child_box.content_width() / 2;
     } else {
         x = box_model.margin_box().left + box_model.offset.left;
     }
@@ -534,8 +534,8 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     auto& icb = verify_cast<Layout::InitialContainingBlock>(root());
     icb.build_stacking_context_tree();
 
-    icb.set_width(viewport_rect.width());
-    icb.set_height(viewport_rect.height());
+    icb.set_content_width(viewport_rect.width());
+    icb.set_content_height(viewport_rect.height());
 
     VERIFY(!icb.children_are_inline());
     layout_block_level_children(root(), layout_mode);
@@ -589,7 +589,7 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
             if (side == FloatSide::Left)
                 x = box.box_model().margin_box().left;
             else
-                x = containing_block.width() - box.box_model().margin_box().right - box.width();
+                x = containing_block.content_width() - box.box_model().margin_box().right - box.content_width();
             side_data.y_offset = 0;
         } else {
             auto& previous_box = side_data.boxes.last();
@@ -604,21 +604,21 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
 
             if (side == FloatSide::Left) {
                 auto previous_right_border_edge = previous_box.effective_offset().x()
-                    + previous_box.width()
+                    + previous_box.content_width()
                     + previous_box.box_model().padding.right
                     + previous_box.box_model().border.right
                     + margin_collapsed_with_previous;
 
                 wanted_x = previous_right_border_edge + box.box_model().border.left + box.box_model().padding.left;
-                fits_on_line = (wanted_x + box.width() + box.box_model().padding.right + box.box_model().border.right + box.box_model().margin.right) <= containing_block.width();
+                fits_on_line = (wanted_x + box.content_width() + box.box_model().padding.right + box.box_model().border.right + box.box_model().margin.right) <= containing_block.content_width();
             } else {
                 auto previous_left_border_edge = previous_box.effective_offset().x()
-                    - previous_box.width()
+                    - previous_box.content_width()
                     - previous_box.box_model().padding.left
                     - previous_box.box_model().border.left
                     - margin_collapsed_with_previous;
 
-                wanted_x = previous_left_border_edge - box.box_model().border.right - box.box_model().padding.right - box.width();
+                wanted_x = previous_left_border_edge - box.box_model().border.right - box.box_model().padding.right - box.content_width();
                 fits_on_line = (wanted_x - box.box_model().padding.left - box.box_model().border.left - box.box_model().margin.left) >= 0;
             }
 

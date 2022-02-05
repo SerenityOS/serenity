@@ -57,13 +57,13 @@ ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType
     }
 
     if (m_text.is_null()) {
-        set_width(image_width + 4);
+        set_content_width(image_width + 4);
     } else {
         auto text_width = font().width(m_text);
-        set_width(image_width + text_width);
+        set_content_width(image_width + text_width);
     }
 
-    set_height(max(image_height, line_height()));
+    set_content_height(max(image_height, line_height()));
 }
 
 ListItemMarkerBox::~ListItemMarkerBox()

@@ -168,8 +168,8 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         builder.appendff("at ({},{}) size {}x{}",
             box.absolute_x(),
             box.absolute_y(),
-            box.width(),
-            box.height());
+            box.content_width(),
+            box.content_height());
 
         if (box.is_positioned())
             builder.appendff(" {}positioned{}", positioned_color_on, color_off);
@@ -204,7 +204,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.left,
                 box.box_model().border.left,
                 box.box_model().padding.left,
-                box.width(),
+                box.content_width(),
                 box.box_model().padding.right,
                 box.box_model().border.right,
                 box.box_model().margin.right);
@@ -214,7 +214,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.top,
                 box.box_model().border.top,
                 box.box_model().padding.top,
-                box.height(),
+                box.content_height(),
                 box.box_model().padding.bottom,
                 box.box_model().border.bottom,
                 box.box_model().margin.bottom);
