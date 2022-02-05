@@ -133,6 +133,7 @@ private:
     Token peek(size_t offset = 0) const;
     Optional<Token> peek(Token::Type) const;
     Position position() const;
+    Position previous_token_end() const;
     String text_in_range(Position start, Position end) const;
 
     void save_state();
