@@ -138,6 +138,7 @@ private:
     explicit Selector(Vector<CompoundSelector>&&);
 
     Vector<CompoundSelector> m_compound_selectors;
+    mutable Optional<u32> m_specificity;
 };
 
 constexpr StringView pseudo_element_name(Selector::SimpleSelector::PseudoElement);
