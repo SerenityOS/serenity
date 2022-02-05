@@ -509,7 +509,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             } else if (pseudo_name.equals_ignoring_case("first-line")) {
                 simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
             } else {
-                dbgln("Unrecognized pseudo-element: '::{}'", pseudo_name);
+                dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
             }
 
@@ -577,7 +577,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
                 simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
             } else {
-                dbgln("Unrecognized pseudo-class: ':{}'", pseudo_name);
+                dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class: ':{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
             }
 
@@ -616,7 +616,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                     return ParsingResult::SyntaxError;
                 }
             } else {
-                dbgln("Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
+                dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
                 return ParsingResult::SyntaxError;
             }
 
@@ -1681,7 +1681,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
             auto& peek = tokens.peek_token();
             if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))
                 break;
-            dbgln("Discarding token: '{}'", peek.to_debug_string());
+            dbgln_if(CSS_PARSER_DEBUG, "Discarding token: '{}'", peek.to_debug_string());
             (void)consume_a_component_value(tokens);
         }
     }
@@ -1970,7 +1970,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             if (url.has_value())
                 return CSSImportRule::create(url.value(), const_cast<DOM::Document&>(*m_context.document()));
             else
-                dbgln("Unable to parse url from @import rule");
+                dbgln_if(CSS_PARSER_DEBUG, "Unable to parse url from @import rule");
 
         } else if (rule->m_name.equals_ignoring_case("supports"sv)) {
 
@@ -1978,7 +1978,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             auto supports = parse_a_supports(supports_tokens);
             if (!supports) {
                 if constexpr (CSS_PARSER_DEBUG) {
-                    dbgln("CSSParser: @supports rule invalid; discarding.");
+                    dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @supports rule invalid; discarding.");
                     supports_tokens.dump_all_tokens();
                 }
                 return {};
@@ -1995,7 +1995,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             return CSSSupportsRule::create(supports.release_nonnull(), move(child_rules));
 
         } else {
-            dbgln("Unrecognized CSS at-rule: @{}", rule->m_name);
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized CSS at-rule: @{}", rule->m_name);
         }
 
         // FIXME: More at rules!
@@ -2006,7 +2006,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 
         if (selectors.is_error()) {
             if (selectors.error() != ParsingResult::IncludesIgnoredVendorPrefix) {
-                dbgln("CSSParser: style rule selectors invalid; discarding.");
+                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: style rule selectors invalid; discarding.");
                 if constexpr (CSS_PARSER_DEBUG) {
                     prelude_stream.dump_all_tokens();
                 }
@@ -2015,13 +2015,13 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
         }
 
         if (selectors.value().is_empty()) {
-            dbgln("CSSParser: empty selector; discarding.");
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: empty selector; discarding.");
             return {};
         }
 
         auto declaration = convert_to_declaration(*rule->m_block);
         if (!declaration) {
-            dbgln("CSSParser: style rule declaration invalid; discarding.");
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: style rule declaration invalid; discarding.");
             return {};
         }
 
@@ -2051,7 +2051,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule c
         } else if (has_ignored_vendor_prefix(property_name)) {
             return {};
         } else if (!property_name.starts_with("-")) {
-            dbgln("Unrecognized CSS property '{}'", property_name);
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized CSS property '{}'", property_name);
             return {};
         }
     }
@@ -2060,7 +2060,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule c
     auto value = parse_css_value(property_id, value_token_stream);
     if (value.is_error()) {
         if (value.error() != ParsingResult::IncludesIgnoredVendorPrefix) {
-            dbgln("Unable to parse value for CSS property '{}'.", property_name);
+            dbgln_if(CSS_PARSER_DEBUG, "Unable to parse value for CSS property '{}'.", property_name);
             if constexpr (CSS_PARSER_DEBUG) {
                 value_token_stream.dump_all_tokens();
             }
@@ -2099,7 +2099,7 @@ RefPtr<StyleValue> Parser::parse_calculated_value(Vector<StyleComponentValueRule
 
     auto calc_type = calc_expression->resolved_type();
     if (!calc_type.has_value()) {
-        dbgln("calc() resolved as invalid!!!");
+        dbgln_if(CSS_PARSER_DEBUG, "calc() resolved as invalid!!!");
         return nullptr;
     }
 
@@ -3675,7 +3675,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
                 auto number = parse_numeric_value(value);
                 values.append(number.release_nonnull());
             } else {
-                dbgln("FIXME: Unsupported value type for transformation!");
+                dbgln_if(CSS_PARSER_DEBUG, "FIXME: Unsupported value type for transformation!");
                 return nullptr;
             }
         }
@@ -3893,7 +3893,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
 
     auto syntax_error = [&]() -> Optional<Selector::SimpleSelector::ANPlusBPattern> {
         if constexpr (CSS_PARSER_DEBUG) {
-            dbgln("Invalid An+B value:");
+            dbgln_if(CSS_PARSER_DEBUG, "Invalid An+B value:");
             values.dump_all_tokens();
         }
         return {};
@@ -3904,7 +3904,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         values.skip_whitespace();
         if (values.has_next_token()) {
             if constexpr (CSS_PARSER_DEBUG) {
-                dbgln("Extra tokens at end of An+B value:");
+                dbgln_if(CSS_PARSER_DEBUG, "Extra tokens at end of An+B value:");
                 values.dump_all_tokens();
             }
             return syntax_error();
