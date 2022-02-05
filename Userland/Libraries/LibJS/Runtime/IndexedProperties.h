@@ -106,6 +106,7 @@ private:
     void skip_empty_indices();
 
     const IndexedProperties& m_indexed_properties;
+    Vector<u32> m_cached_indices;
     u32 m_index;
     bool m_skip_empty;
 };

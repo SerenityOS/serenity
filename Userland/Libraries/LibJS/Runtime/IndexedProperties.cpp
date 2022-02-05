@@ -177,8 +177,10 @@ IndexedPropertyIterator::IndexedPropertyIterator(const IndexedProperties& indexe
     , m_index(staring_index)
     , m_skip_empty(skip_empty)
 {
-    if (m_skip_empty)
+    if (m_skip_empty) {
+        m_cached_indices = m_indexed_properties.indices();
         skip_empty_indices();
+    }
 }
 
 IndexedPropertyIterator& IndexedPropertyIterator::operator++()
@@ -203,8 +205,7 @@ bool IndexedPropertyIterator::operator!=(const IndexedPropertyIterator& other) c
 
 void IndexedPropertyIterator::skip_empty_indices()
 {
-    auto indices = m_indexed_properties.indices();
-    for (auto i : indices) {
+    for (auto i : m_cached_indices) {
         if (i < m_index)
             continue;
         m_index = i;
