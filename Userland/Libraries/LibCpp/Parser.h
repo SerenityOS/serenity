@@ -32,6 +32,7 @@ public:
     String text_of_node(const ASTNode&) const;
     StringView text_of_token(const Cpp::Token& token) const;
     void print_tokens() const;
+    Vector<Token> const& tokens() const { return m_tokens; }
     const Vector<String>& errors() const { return m_errors; }
 
     struct TodoEntry {
