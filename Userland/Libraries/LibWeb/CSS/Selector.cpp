@@ -20,6 +20,9 @@ Selector::~Selector()
 
 u32 Selector::specificity() const
 {
+    if (m_specificity.has_value())
+        return *m_specificity;
+
     unsigned ids = 0;
     unsigned tag_names = 0;
     unsigned classes = 0;
@@ -42,7 +45,9 @@ u32 Selector::specificity() const
         }
     }
 
-    return ids * 0x10000 + classes * 0x100 + tag_names;
+    m_specificity = ids * 0x10000 + classes * 0x100 + tag_names;
+
+    return *m_specificity;
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-simple-selector
