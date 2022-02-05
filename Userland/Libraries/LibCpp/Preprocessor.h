@@ -49,6 +49,8 @@ public:
 
     Function<Definitions(StringView)> definitions_in_header_callback { nullptr };
 
+    Vector<Token> const& unprocessed_tokens() const { return m_unprocessed_tokens; }
+
 private:
     void handle_preprocessor_statement(StringView);
     void handle_include_statement(StringView);
@@ -72,6 +74,7 @@ private:
     String m_filename;
     String m_program;
 
+    Vector<Token> m_unprocessed_tokens;
     Vector<Token> m_processed_tokens;
     Definitions m_definitions;
     Vector<Substitution> m_substitutions;
