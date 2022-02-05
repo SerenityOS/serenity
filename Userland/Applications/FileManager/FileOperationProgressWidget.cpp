@@ -26,7 +26,6 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("button");
 
-    // FIXME: Show a different animation for deletions
     auto& file_copy_animation = *find_descendant_of_type_named<GUI::ImageWidget>("file_copy_animation");
     file_copy_animation.load_from_file("/res/graphics/file-flying-animation.gif");
     file_copy_animation.animate();
@@ -35,7 +34,15 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
     source_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png");
 
     auto& destination_folder_icon = *find_descendant_of_type_named<GUI::ImageWidget>("destination_folder_icon");
-    destination_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png");
+
+    switch (m_operation) {
+    case FileOperation::Delete:
+        destination_folder_icon.load_from_file("/res/icons/32x32/recycle-bin.png");
+        break;
+    default:
+        destination_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png");
+        break;
+    }
 
     button.on_click = [this](auto) {
         close_pipe();
