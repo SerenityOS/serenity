@@ -40,7 +40,6 @@ static ErrorOr<void> load_content_filters()
     while (TRY(ad_filter_list->can_read_line())) {
         auto length = TRY(ad_filter_list->read_line(buffer));
         StringView line { buffer.data(), length };
-        dbgln("Content filter for {}", line);
         if (!line.is_empty())
             Browser::g_content_filters.append(line);
     }
