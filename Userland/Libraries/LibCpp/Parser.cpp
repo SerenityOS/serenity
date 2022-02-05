@@ -769,6 +769,7 @@ Optional<NonnullRefPtrVector<Parameter>> Parser::parse_parameter_list(ASTNode& p
                 name = text_of_token(name_identifier.value());
 
             auto param = create_ast_node<Parameter>(parent, type->start(), name_identifier.has_value() ? name_identifier.value().end() : type->end(), name);
+            type->set_parent(*param.ptr());
 
             param->set_type(move(type));
             parameters.append(move(param));
