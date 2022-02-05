@@ -120,14 +120,14 @@ NonnullRefPtr<Action> make_help_action(Function<void(Action&)> callback, Core::O
 
 NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    auto action = Action::create("Go &Back", { Mod_Alt, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    auto action = Action::create("Go &Back", { Mod_Alt, Key_Left }, { MouseButton::Backward }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
     action->set_status_tip("Move one step backward in history");
     return action;
 }
 
 NonnullRefPtr<Action> make_go_forward_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    auto action = Action::create("Go &Forward", { Mod_Alt, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    auto action = Action::create("Go &Forward", { Mod_Alt, Key_Right }, { MouseButton::Forward }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
     action->set_status_tip("Move one step forward in history");
     return action;
 }
