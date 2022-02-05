@@ -3,7 +3,6 @@
     fixed_width: 300
     fixed_height: 80
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         spacing: 2
         margins: [0]

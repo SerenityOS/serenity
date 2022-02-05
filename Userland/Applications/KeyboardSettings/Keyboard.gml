@@ -1,6 +1,5 @@
 @GUI::Frame {
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         margins: [10]
         spacing: 5
@@ -9,7 +8,6 @@
     @GUI::GroupBox {
         title: "Mapping"
         fixed_height: 150
-
         layout: @GUI::HorizontalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16
@@ -17,8 +15,7 @@
 
         @GUI::Widget {
             fixed_width: 32
-            layout: @GUI::VerticalBoxLayout {
-            }
+            layout: @GUI::VerticalBoxLayout
 
             @GUI::Label {
                 fixed_width: 32
@@ -38,7 +35,6 @@
 
             @GUI::Widget {
                 fixed_height: 24
-
                 layout: @GUI::HorizontalBoxLayout {
                     spacing: 4
                 }
@@ -59,7 +55,6 @@
 
     @GUI::GroupBox {
         title: "Test input"
-
         layout: @GUI::HorizontalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16
@@ -67,8 +62,7 @@
 
         @GUI::Widget {
             fixed_width: 32
-            layout: @GUI::VerticalBoxLayout {
-            }
+            layout: @GUI::VerticalBoxLayout
 
             @GUI::Label {
                 fixed_width: 32
@@ -84,7 +78,6 @@
 
             @GUI::Widget {
                 fixed_height: 24
-
                 layout: @GUI::HorizontalBoxLayout {
                     spacing: 16
                 }
@@ -110,7 +103,6 @@
     @GUI::GroupBox {
         title: "Num Lock"
         fixed_height: 60
-
         layout: @GUI::HorizontalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16

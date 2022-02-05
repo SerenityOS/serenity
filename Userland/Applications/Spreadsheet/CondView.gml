@@ -3,7 +3,6 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-
         layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
@@ -21,7 +20,6 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-
         layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
@@ -36,7 +34,6 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-
         layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {

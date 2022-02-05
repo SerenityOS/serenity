@@ -1,8 +1,6 @@
 @GUI::Frame {
     fill_with_background_color: true
-
-    layout: @GUI::VerticalBoxLayout {
-    }
+    layout: @GUI::VerticalBoxLayout
 
     @GUI::Widget {
         layout: @GUI::VerticalBoxLayout {
@@ -12,7 +10,6 @@
         @GUI::GroupBox {
             title: "Orientation"
             shrink_to_fit: true
-            
             layout: @GUI::HorizontalBoxLayout {
                 margins: [10, 8, 8]
             }
@@ -33,8 +30,8 @@
         layout: @GUI::HorizontalBoxLayout {
             margins: [4]
         }
-        shrink_to_fit: true
 
+        shrink_to_fit: true
         @GUI::Label {
             text: "Offset"
             text_alignment: "CenterLeft"
@@ -45,16 +42,13 @@
         }
     }
 
-
     @GUI::Widget {
         max_height: 24
-
         layout: @GUI::HorizontalBoxLayout {
             margins: [4]
         }
 
-        @GUI::Widget {
-        }
+        @GUI::Widget
 
         @GUI::Button {
             name: "ok_button"

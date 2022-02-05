@@ -2,17 +2,13 @@
     fixed_width: 260
     fixed_height: 85
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         margins: [4]
     }
 
-
     @GUI::Widget {
         fixed_height: 24
-
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "Title:"
@@ -27,9 +23,7 @@
 
     @GUI::Widget {
         fixed_height: 24
-
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "URL:"
@@ -42,15 +36,11 @@
         }
     }
 
-
     @GUI::Widget {
         fixed_height: 24
+        layout: @GUI::HorizontalBoxLayout
 
-        layout: @GUI::HorizontalBoxLayout {
-        }
-
-        @GUI::Widget {
-        }
+        @GUI::Widget
 
         @GUI::Button {
             name: "ok_button"
