@@ -54,6 +54,7 @@ public:
     String attribute(const FlyString& name) const { return get_attribute(name); }
     String get_attribute(const FlyString& name) const;
     ExceptionOr<void> set_attribute(const FlyString& name, const String& value);
+    ExceptionOr<void> set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value);
     void remove_attribute(const FlyString& name);
     size_t attribute_list_size() const { return m_attributes->length(); }
     NonnullRefPtr<NamedNodeMap> const& attributes() const { return m_attributes; }
