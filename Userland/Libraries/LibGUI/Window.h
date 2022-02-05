@@ -196,7 +196,7 @@ public:
 
     virtual bool is_visible_for_timer_purposes() const override { return m_visible_for_timer_purposes; }
 
-    Action* action_for_key_event(KeyEvent const&);
+    Action* action_for_shortcut(Shortcut const&);
 
     void did_add_widget(Badge<Widget>, Widget&);
     void did_remove_widget(Badge<Widget>, Widget&);

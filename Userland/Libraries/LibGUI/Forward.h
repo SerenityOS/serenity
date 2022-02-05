@@ -60,6 +60,7 @@ class ResizeEvent;
 class ScreenRectsChangeEvent;
 class Scrollbar;
 class AbstractScrollableWidget;
+class Shortcut;
 class Slider;
 class SortingProxyModel;
 class SpinBox;

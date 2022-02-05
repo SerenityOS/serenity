@@ -19,6 +19,7 @@
 #include <LibGUI/Event.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MouseTracker.h>
+#include <LibGUI/Shortcut.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -133,28 +134,28 @@ void ConnectionToWindowServer::window_left(i32 window_id)
         Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowLeft));
 }
 
-static Action* action_for_key_event(Window& window, KeyEvent const& event)
+static Action* action_for_shortcut(Window& window, Shortcut const& shortcut)
 {
-    if (event.key() == KeyCode::Key_Invalid)
+    if (!shortcut.is_valid())
         return nullptr;
 
-    dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", event.to_string());
+    dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", shortcut.to_string());
 
     for (auto* widget = window.focused_widget(); widget; widget = widget->parent_widget()) {
-        if (auto* action = widget->action_for_key_event(event)) {
+        if (auto* action = widget->action_for_shortcut(shortcut)) {
             dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Focused widget {} gave action: {}", *widget, action);
             return action;
         }
     }
 
-    if (auto* action = window.action_for_key_event(event)) {
+    if (auto* action = window.action_for_shortcut(shortcut)) {
         dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked window {}, got action: {}", window, action);
         return action;
     }
 
     // NOTE: Application-global shortcuts are ignored while a modal window is up.
     if (!window.is_modal()) {
-        if (auto* action = Application::the()->action_for_key_event(event)) {
+        if (auto* action = Application::the()->action_for_shortcut(shortcut)) {
             dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {}", action);
             return action;
         }
@@ -171,7 +172,7 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
 
     auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode)key, modifiers, code_point, scancode);
 
-    if (auto* action = action_for_key_event(*window, *key_event)) {
+    if (auto* action = action_for_shortcut(*window, Shortcut(key_event->modifiers(), key_event->key()))) {
         if (action->is_enabled()) {
             action->flash_menubar_menu(*window);
             action->activate();
