@@ -107,8 +107,8 @@ private:
 
     const IndexedProperties& m_indexed_properties;
     Vector<u32> m_cached_indices;
-    u32 m_index;
-    bool m_skip_empty;
+    u32 m_index { 0 };
+    bool m_skip_empty { false };
 };
 
 class IndexedProperties {
