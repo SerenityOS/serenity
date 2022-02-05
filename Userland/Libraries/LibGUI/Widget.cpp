@@ -904,14 +904,8 @@ bool Widget::is_backmost() const
     return &parent->children().first() == this;
 }
 
-Action* Widget::action_for_key_event(KeyEvent const& event)
+Action* Widget::action_for_shortcut(Shortcut const& shortcut)
 {
-    Shortcut shortcut(event.modifiers(), (KeyCode)event.key());
-
-    if (!shortcut.is_valid()) {
-        return nullptr;
-    }
-
     Action* found_action = nullptr;
     for_each_child_of_type<Action>([&](auto& action) {
         if (action.shortcut() == shortcut || action.alternate_shortcut() == shortcut) {
