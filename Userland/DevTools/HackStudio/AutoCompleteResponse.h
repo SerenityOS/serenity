@@ -96,4 +96,31 @@ inline ErrorOr<void> decode(Decoder& decoder, Cpp::Parser::TodoEntry& entry)
     return {};
 }
 
+template<>
+inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::TokenInfo& location)
+{
+    encoder << (u32)location.type;
+    static_assert(sizeof(location.type) == sizeof(u32));
+    encoder << location.start_line;
+    encoder << location.start_column;
+    encoder << location.end_line;
+    encoder << location.end_column;
+    return true;
+}
+
+template<>
+inline ErrorOr<void> decode(Decoder& decoder, GUI::AutocompleteProvider::TokenInfo& entry)
+{
+    u32 semantic_type { 0 };
+    static_assert(sizeof(semantic_type) == sizeof(entry.type));
+
+    TRY(decoder.decode(semantic_type));
+    entry.type = static_cast<GUI::AutocompleteProvider::TokenInfo::SemanticType>(semantic_type);
+    TRY(decoder.decode(entry.start_line));
+    TRY(decoder.decode(entry.start_column));
+    TRY(decoder.decode(entry.end_line));
+    TRY(decoder.decode(entry.end_column));
+    return {};
+}
+
 }

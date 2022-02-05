@@ -69,6 +69,32 @@ public:
 
     virtual void provide_completions(Function<void(Vector<Entry>)>) = 0;
 
+    struct TokenInfo {
+        enum class SemanticType : u32 {
+            Unknown,
+            Regular,
+            Keyword,
+            Type,
+            Identifier,
+            String,
+            Number,
+            IncludePath,
+            PreprocessorStatement,
+            Comment,
+            Whitespace,
+            Function,
+            Variable,
+            CustomType,
+            Namespace,
+            Member,
+            Parameter,
+        } type { SemanticType::Unknown };
+        size_t start_line { 0 };
+        size_t start_column { 0 };
+        size_t end_line { 0 };
+        size_t end_column { 0 };
+    };
+
     void attach(TextEditor& editor)
     {
         VERIFY(!m_editor);
