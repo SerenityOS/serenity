@@ -950,6 +950,13 @@ Position Parser::position() const
     return peek().start();
 }
 
+Position Parser::previous_token_end() const
+{
+    if (m_state.token_index < 1)
+        return {};
+    return m_tokens[m_state.token_index - 1].end();
+}
+
 RefPtr<ASTNode> Parser::node_at(Position pos) const
 {
     VERIFY(m_saved_states.is_empty());
@@ -1266,7 +1273,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
         type = fn_type;
     }
 
-    type->set_end(position());
+    type->set_end(previous_token_end());
 
     return type;
 }
@@ -1451,7 +1458,7 @@ NonnullRefPtr<Name> Parser::parse_name(ASTNode& parent)
         consume(Token::Type::Greater);
     }
 
-    name_node->set_end(position());
+    name_node->set_end(previous_token_end());
     return name_node;
 }
 
