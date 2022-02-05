@@ -6,17 +6,13 @@
     @GUI::HorizontalSplitter {
         @GUI::Widget {
             name: "csv_options"
-
-            layout: @GUI::VerticalBoxLayout {
-            }
+            layout: @GUI::VerticalBoxLayout
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout {
-                }
+                layout: @GUI::HorizontalBoxLayout
 
                 @GUI::GroupBox {
                     title: "Delimiter"
-
                     layout: @GUI::VerticalBoxLayout {
                         margins: [10, 8, 8]
                     }
@@ -47,9 +43,7 @@
 
                     @GUI::Widget {
                         fixed_height: 25
-
-                        layout: @GUI::HorizontalBoxLayout {
-                        }
+                        layout: @GUI::HorizontalBoxLayout
 
                         @GUI::RadioButton {
                             name: "delimiter_other_radio"
@@ -66,7 +60,6 @@
 
                 @GUI::GroupBox {
                     title: "Quote"
-
                     layout: @GUI::VerticalBoxLayout {
                         margins: [10, 8, 8]
                     }
@@ -85,9 +78,7 @@
 
                     @GUI::Widget {
                         fixed_height: 25
-
-                        layout: @GUI::HorizontalBoxLayout {
-                        }
+                        layout: @GUI::HorizontalBoxLayout
 
                         @GUI::RadioButton {
                             name: "quote_other_radio"
@@ -101,14 +92,11 @@
                         }
                     }
 
-                    @GUI::Widget {
-                    }
+                    @GUI::Widget
 
                     @GUI::Widget {
                         fixed_height: 25
-
-                        layout: @GUI::HorizontalBoxLayout {
-                        }
+                        layout: @GUI::HorizontalBoxLayout
 
                         @GUI::Label {
                             text: "Escape by "
@@ -121,22 +109,19 @@
                         }
                     }
 
-                    @GUI::Widget {
-                    }
+                    @GUI::Widget
                 }
             }
 
             @GUI::GroupBox {
                 title: "Trim Field Spaces"
                 fixed_height: 40
-
                 layout: @GUI::VerticalBoxLayout {
                     margins: [4, 4, 0]
                 }
 
                 @GUI::Widget {
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
+                    layout: @GUI::HorizontalBoxLayout
 
                     @GUI::CheckBox {
                         name: "trim_leading_field_spaces_check_box"
@@ -160,17 +145,16 @@
         @GUI::GroupBox {
             title: "Data Preview"
             fixed_width: 150
-
             layout: @GUI::VerticalBoxLayout {
                 margins: [10, 8, 8]
             }
 
             @GUI::StackWidget {
                 name: "data_preview_widget"
-
                 @GUI::TableView {
                     name: "data_preview_table_view"
                 }
+
                 @GUI::Label {
                     name: "data_preview_error_label"
                     word_wrap: true

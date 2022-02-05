@@ -1,6 +1,5 @@
 @GUI::Widget {
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         margins: [10]
         spacing: 5
@@ -9,7 +8,6 @@
     @GUI::GroupBox {
         title: "Background Opacity"
         fixed_height: 70
-
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16
@@ -26,7 +24,6 @@
     @GUI::GroupBox {
         title: "Terminal Font"
         fixed_height: 100
-
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16
@@ -40,7 +37,6 @@
         @GUI::Widget {
             shrink_to_fit: true
             name: "terminal_font_selection"
-
             layout: @GUI::HorizontalBoxLayout {
                 spacing: 6
             }
@@ -48,9 +44,7 @@
             @GUI::Frame {
                 background_role: "Base"
                 fill_with_background_color: true
-
-                layout: @GUI::VerticalBoxLayout {
-                }
+                layout: @GUI::VerticalBoxLayout
 
                 @GUI::Label {
                     name: "terminal_font_label"
@@ -68,7 +62,6 @@
     @GUI::GroupBox {
         title: "Color Scheme"
         fixed_height: 70
-
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16

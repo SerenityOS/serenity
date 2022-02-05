@@ -28,6 +28,7 @@ for cmd in \
         Meta/lint-executable-resources.sh \
         Meta/lint-keymaps.py \
         Meta/lint-shell-scripts.sh \
+        Meta/lint-gml-format.sh \
         Meta/lint-prettier.sh \
         Meta/lint-python.sh; do
     echo "Running ${cmd}... "

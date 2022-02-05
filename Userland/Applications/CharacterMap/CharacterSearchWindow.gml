@@ -1,13 +1,12 @@
 @GUI::Frame {
-    layout: @GUI::VerticalBoxLayout {
-    }
+    layout: @GUI::VerticalBoxLayout
 
     fill_with_background_color: true
-
     @GUI::Toolbar {
         @GUI::TextBox {
             name: "search_input"
         }
+
         @GUI::Button {
             name: "search_button"
             icon: "/res/icons/16x16/find.png"

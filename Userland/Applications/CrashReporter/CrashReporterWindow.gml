@@ -1,13 +1,11 @@
 @GUI::Widget {
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         margins: [5]
     }
 
     @GUI::Widget {
         fixed_height: 44
-
         layout: @GUI::HorizontalBoxLayout {
             spacing: 10
         }
@@ -24,7 +22,6 @@
 
     @GUI::Widget {
         fixed_height: 18
-
         layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
@@ -41,7 +38,6 @@
 
     @GUI::Widget {
         fixed_height: 18
-
         layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
@@ -58,7 +54,6 @@
 
     @GUI::Widget {
         fixed_height: 18
-
         layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
@@ -85,7 +80,6 @@
 
     @GUI::Widget {
         fixed_height: 32
-
         layout: @GUI::HorizontalBoxLayout
 
         @GUI::Button {
