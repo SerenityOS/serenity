@@ -289,6 +289,11 @@ void BrowserWindow::build_menus()
         },
         this));
     debug_menu.add_action(GUI::Action::create(
+        "Dump &Stacking Context Tree", [this](auto&) {
+            active_tab().m_web_content_view->debug_request("dump-stacking-context-tree");
+        },
+        this));
+    debug_menu.add_action(GUI::Action::create(
         "Dump &Style Sheets", [this](auto&) {
             active_tab().m_web_content_view->debug_request("dump-style-sheets");
         },
