@@ -546,4 +546,24 @@ private:
     NonnullRefPtr<Action> m_action;
 };
 
+inline StringView mouse_button_to_string(MouseButton key)
+{
+    switch (key) {
+    case MouseButton::None:
+        return "None";
+    case MouseButton::Primary:
+        return "Primary";
+    case MouseButton::Secondary:
+        return "Secondary";
+    case MouseButton::Middle:
+        return "Middle";
+    case MouseButton::Backward:
+        return "Backward";
+    case MouseButton::Forward:
+        return "Forward";
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 }
