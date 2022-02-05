@@ -15,7 +15,7 @@
 
 namespace Web::SelectorEngine {
 
-static bool matches_hover_pseudo_class(DOM::Element const& element)
+static inline bool matches_hover_pseudo_class(DOM::Element const& element)
 {
     auto* hovered_node = element.document().hovered_node();
     if (!hovered_node)
@@ -25,7 +25,7 @@ static bool matches_hover_pseudo_class(DOM::Element const& element)
     return element.is_ancestor_of(*hovered_node);
 }
 
-static bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& attribute, DOM::Element const& element)
+static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& attribute, DOM::Element const& element)
 {
     switch (attribute.match_type) {
     case CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute:
@@ -52,7 +52,7 @@ static bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& at
     return false;
 }
 
-static bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass const& pseudo_class, DOM::Element const& element)
+static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass const& pseudo_class, DOM::Element const& element)
 {
     switch (pseudo_class.type) {
     case CSS::Selector::SimpleSelector::PseudoClass::Type::None:
@@ -165,7 +165,7 @@ static bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass cons
     return false;
 }
 
-static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element const& element)
+static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element const& element)
 {
     switch (component.type) {
     case CSS::Selector::SimpleSelector::Type::Universal:
@@ -188,7 +188,7 @@ static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element
     }
 }
 
-static bool matches(CSS::Selector const& selector, int component_list_index, DOM::Element const& element)
+static inline bool matches(CSS::Selector const& selector, int component_list_index, DOM::Element const& element)
 {
     auto& relative_selector = selector.compound_selectors()[component_list_index];
     for (auto& simple_selector : relative_selector.simple_selectors) {
