@@ -70,3 +70,11 @@ test("escaped code points", () => {
     expect(string.match(re).groups.𝓑𝓻𝓸𝔀𝓷).toBe("brown");
     expect(string.match(re).groups.𝓑𝓻𝓸𝔀𝓷).toBe("brown");
 });
+
+test("sticky and global flag set", () => {
+    const string = "aaba";
+    expect(string.match(/a/)).toEqual(["a"]);
+    expect(string.match(/a/y)).toEqual(["a"]);
+    expect(string.match(/a/g)).toEqual(["a", "a", "a"]);
+    expect(string.match(/a/gy)).toEqual(["a", "a"]);
+});

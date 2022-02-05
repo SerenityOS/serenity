@@ -180,6 +180,8 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 #endif
 
     bool continue_search = input.regex_options.has_flag_set(AllFlags::Global) || input.regex_options.has_flag_set(AllFlags::Multiline);
+    if (input.regex_options.has_flag_set(AllFlags::Sticky))
+        continue_search = false;
 
     auto single_match_only = input.regex_options.has_flag_set(AllFlags::SingleMatch);
 
@@ -280,7 +282,11 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
                         break;
                     continue;
                 }
-                if (state.string_position < view_length && !input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
+                if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
+                    append_match(input, state, view_index);
+                    break;
+                }
+                if (state.string_position < view_length) {
                     return { false, 0, {}, {}, {}, operations };
                 }
 
