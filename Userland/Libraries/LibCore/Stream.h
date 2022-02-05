@@ -166,7 +166,7 @@ class File final : public SeekableStream {
     AK_MAKE_NONCOPYABLE(File);
 
 public:
-    static ErrorOr<NonnullOwnPtr<File>> open(StringView const& filename, OpenMode, mode_t = 0644);
+    static ErrorOr<NonnullOwnPtr<File>> open(StringView filename, OpenMode, mode_t = 0644);
     static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode);
 
     File(File&& other) { operator=(move(other)); }
@@ -199,7 +199,7 @@ private:
     {
     }
 
-    ErrorOr<void> open_path(StringView const& filename, mode_t);
+    ErrorOr<void> open_path(StringView filename, mode_t);
 
     OpenMode m_mode { OpenMode::NotOpen };
     int m_fd { -1 };
@@ -536,7 +536,7 @@ public:
         return read_until(buffer, "\n"sv);
     }
 
-    ErrorOr<size_t> read_until(Bytes buffer, StringView const& candidate)
+    ErrorOr<size_t> read_until(Bytes buffer, StringView candidate)
     {
         return read_until_any_of(buffer, Array { candidate });
     }
@@ -718,7 +718,7 @@ public:
     }
 
     ErrorOr<size_t> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
-    ErrorOr<size_t> read_until(Bytes buffer, StringView const& candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
+    ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
     ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
     ErrorOr<bool> can_read_line() { return m_helper.can_read_line(); }
@@ -739,7 +739,7 @@ private:
 class BufferedSocketBase : public Socket {
 public:
     virtual ErrorOr<size_t> read_line(Bytes buffer) = 0;
-    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView const& candidate) = 0;
+    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) = 0;
     virtual ErrorOr<bool> can_read_line() = 0;
     virtual size_t buffer_size() const = 0;
 };
@@ -783,7 +783,7 @@ public:
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.stream().set_close_on_exec(enabled); }
 
     virtual ErrorOr<size_t> read_line(Bytes buffer) override { return m_helper.read_line(move(buffer)); }
-    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView const& candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
+    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
     ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
     virtual ErrorOr<bool> can_read_line() override { return m_helper.can_read_line(); }

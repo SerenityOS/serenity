@@ -91,7 +91,7 @@ ErrorOr<off_t> SeekableStream::size()
     return seek_result.value();
 }
 
-ErrorOr<NonnullOwnPtr<File>> File::open(StringView const& filename, OpenMode mode, mode_t permissions)
+ErrorOr<NonnullOwnPtr<File>> File::open(StringView filename, OpenMode mode, mode_t permissions)
 {
     auto file = TRY(adopt_nonnull_own_or_enomem(new (nothrow) File(mode)));
     TRY(file->open_path(filename, permissions));
@@ -114,7 +114,7 @@ ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode)
     return file;
 }
 
-ErrorOr<void> File::open_path(StringView const& filename, mode_t permissions)
+ErrorOr<void> File::open_path(StringView filename, mode_t permissions)
 {
     VERIFY(m_fd == -1);
 
