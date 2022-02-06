@@ -101,10 +101,6 @@ void InlineNode::for_each_fragment(Callback callback)
     containing_block()->for_each_fragment([&](auto& fragment) {
         if (!is_inclusive_ancestor_of(fragment.layout_node()))
             return IterationDecision::Continue;
-        // FIXME: This skips the 0-width fragments at the start and end of the InlineNode.
-        //        A better solution would be to not generate them in the first place.
-        if (fragment.width() == 0 || fragment.height() == 0)
-            return IterationDecision::Continue;
         return callback(fragment);
     });
 }
