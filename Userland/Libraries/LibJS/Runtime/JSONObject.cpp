@@ -9,6 +9,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -354,7 +355,6 @@ ThrowCompletionOr<String> JSONObject::serialize_json_array(GlobalObject& global_
 // 25.5.2.2 QuoteJSONString ( value ), https://tc39.es/ecma262/#sec-quotejsonstring
 String JSONObject::quote_json_string(String string)
 {
-    // FIXME: Handle UTF16
     StringBuilder builder;
     builder.append('"');
     auto utf_view = Utf8View(string);
@@ -382,7 +382,7 @@ String JSONObject::quote_json_string(String string)
             builder.append("\\\\");
             break;
         default:
-            if (code_point < 0x20) {
+            if (code_point < 0x20 || Utf16View::is_high_surrogate(code_point) || Utf16View::is_low_surrogate(code_point)) {
                 builder.appendff("\\u{:04x}", code_point);
             } else {
                 builder.append_code_point(code_point);
