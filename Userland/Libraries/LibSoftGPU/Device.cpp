@@ -511,11 +511,10 @@ void Device::rasterize_triangle(const Triangle& triangle)
             quad.barycentrics = quad.barycentrics * w_coordinates * interpolated_w;
 
             // FIXME: make this more generic. We want to interpolate more than just color and uv
-            if (m_options.shade_smooth) {
+            if (m_options.shade_smooth)
                 quad.vertex_color = interpolate(expand4(vertex0.color), expand4(vertex1.color), expand4(vertex2.color), quad.barycentrics);
-            } else {
+            else
                 quad.vertex_color = expand4(vertex0.color);
-            }
 
             for (size_t i = 0; i < NUM_SAMPLERS; ++i)
                 quad.texture_coordinates[i] = interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics);
@@ -531,16 +530,15 @@ void Device::rasterize_triangle(const Triangle& triangle)
 
             shade_fragments(quad);
 
-            if (m_options.enable_alpha_test && m_options.alpha_test_func != AlphaTestFunction::Always && !test_alpha(quad)) {
+            if (m_options.enable_alpha_test && m_options.alpha_test_func != AlphaTestFunction::Always && !test_alpha(quad))
                 continue;
-            }
 
             // Write to depth buffer
             if (m_options.enable_depth_test && m_options.enable_depth_write)
                 store4_masked(quad.depth, depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
 
             // We will not update the color buffer at all
-            if (!m_options.color_mask || !m_options.enable_color_write)
+            if ((m_options.color_mask == 0) || !m_options.enable_color_write)
                 continue;
 
             ColorType* color_ptrs[4] = {
@@ -1251,18 +1249,16 @@ void Device::set_light_model_params(const LightModelParameters& lighting_model)
 ColorType Device::get_color_buffer_pixel(int x, int y)
 {
     // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
-    if (x < 0 || y < 0 || x >= m_frame_buffer->rect().width() || y >= m_frame_buffer->rect().height())
+    if (!m_frame_buffer->rect().contains(x, y))
         return 0;
-
     return m_frame_buffer->color_buffer()->scanline(y)[x];
 }
 
 DepthType Device::get_depthbuffer_value(int x, int y)
 {
     // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
-    if (x < 0 || y < 0 || x >= m_frame_buffer->rect().width() || y >= m_frame_buffer->rect().height())
+    if (!m_frame_buffer->rect().contains(x, y))
         return 1.0f;
-
     return m_frame_buffer->depth_buffer()->scanline(y)[x];
 }
 
