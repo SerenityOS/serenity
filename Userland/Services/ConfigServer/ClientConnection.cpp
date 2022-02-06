@@ -131,7 +131,11 @@ void ClientConnection::sync_dirty_domains_to_disk()
     dbgln("Syncing {} dirty domains to disk", dirty_domains.size());
     for (auto domain : dirty_domains) {
         auto& config = ensure_domain_config(domain);
-        config.sync();
+        if (auto result = config.sync(); result.is_error()) {
+            dbgln("Failed to write config '{}' to disk: {}", domain, result.error());
+            // Put it back in the list since it's still dirty.
+            m_dirty_domains.set(domain);
+        }
     }
 }
 

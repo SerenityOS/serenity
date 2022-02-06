@@ -191,7 +191,8 @@ void Mixer::request_setting_sync()
         m_config_write_timer = Core::Timer::create_single_shot(
             AUDIO_CONFIG_WRITE_INTERVAL,
             [this] {
-                m_config->sync();
+                if (auto result = m_config->sync(); result.is_error())
+                    dbgln("Failed to write audio mixer config: {}", result.error());
             },
             this);
         m_config_write_timer->start();

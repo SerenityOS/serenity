@@ -61,7 +61,7 @@ ConfigFile::ConfigFile(String const&, NonnullRefPtr<File> open_file)
 
 ConfigFile::~ConfigFile()
 {
-    sync();
+    MUST(sync());
 }
 
 void ConfigFile::reparse()
@@ -168,10 +168,10 @@ void ConfigFile::write_color_entry(String const& group, String const& key, Color
     write_entry(group, key, String::formatted("{},{},{},{}", value.red(), value.green(), value.blue(), value.alpha()));
 }
 
-bool ConfigFile::sync()
+ErrorOr<void> ConfigFile::sync()
 {
     if (!m_dirty)
-        return true;
+        return {};
 
     m_file->truncate(0);
     m_file->seek(0);
@@ -184,7 +184,7 @@ bool ConfigFile::sync()
     }
 
     m_dirty = false;
-    return true;
+    return {};
 }
 
 void ConfigFile::dump() const

@@ -52,7 +52,7 @@ public:
 
     bool is_dirty() const { return m_dirty; }
 
-    bool sync();
+    ErrorOr<void> sync();
 
     void remove_group(String const& group);
     void remove_entry(String const& group, String const& key);
