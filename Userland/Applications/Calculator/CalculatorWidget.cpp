@@ -106,13 +106,18 @@ CalculatorWidget::CalculatorWidget()
     };
 }
 
+void CalculatorWidget::perform_operation(Calculator::Operation operation)
+{
+    KeypadValue argument = m_keypad.value();
+    KeypadValue res = m_calculator.begin_operation(operation, argument);
+    m_keypad.set_value(res);
+    update_display();
+}
+
 void CalculatorWidget::add_operation_button(GUI::Button& button, Calculator::Operation operation)
 {
     button.on_click = [this, operation](auto) {
-        KeypadValue argument = m_keypad.value();
-        KeypadValue res = m_calculator.begin_operation(operation, argument);
-        m_keypad.set_value(res);
-        update_display();
+        perform_operation(operation);
     };
 }
 
@@ -170,13 +175,25 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
     } else if (event.code_point() == '.') {
         m_keypad.type_decimal_point();
         mimic_pressed_button(m_decimal_point_button);
-    } else if (event.key() == KeyCode::Key_Escape) {
+    } else if (event.key() == KeyCode::Key_Escape || event.key() == KeyCode::Key_Delete) {
         m_keypad.set_value(0.0);
         m_calculator.clear_operation();
         mimic_pressed_button(m_clear_button);
     } else if (event.key() == KeyCode::Key_Backspace) {
         m_keypad.type_backspace();
         mimic_pressed_button(m_backspace_button);
+    } else if (event.key() == KeyCode::Key_Backslash) {
+        perform_operation(Calculator::Operation::ToggleSign);
+        mimic_pressed_button(m_sign_button);
+    } else if (event.key() == KeyCode::Key_S) {
+        perform_operation(Calculator::Operation::Sqrt);
+        mimic_pressed_button(m_sqrt_button);
+    } else if (event.key() == KeyCode::Key_Percent) {
+        perform_operation(Calculator::Operation::Percent);
+        mimic_pressed_button(m_percent_button);
+    } else if (event.key() == KeyCode::Key_I) {
+        perform_operation(Calculator::Operation::Inverse);
+        mimic_pressed_button(m_inverse_button);
     } else {
         Calculator::Operation operation;
 

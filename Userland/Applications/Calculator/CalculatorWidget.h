@@ -27,6 +27,7 @@ private:
     void add_digit_button(GUI::Button&, int digit);
 
     void mimic_pressed_button(RefPtr<GUI::Button>);
+    void perform_operation(Calculator::Operation operation);
     void update_display();
 
     virtual void keydown_event(GUI::KeyEvent&) override;
