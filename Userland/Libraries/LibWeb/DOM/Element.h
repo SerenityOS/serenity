@@ -132,6 +132,9 @@ public:
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>);
 
+    virtual void did_receive_focus() { }
+    virtual void did_lose_focus() { }
+
 protected:
     virtual void children_changed() override;
 

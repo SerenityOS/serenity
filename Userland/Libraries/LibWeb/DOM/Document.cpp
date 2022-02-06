@@ -894,7 +894,13 @@ void Document::set_focused_element(Element* element)
     if (m_focused_element == element)
         return;
 
+    if (m_focused_element)
+        m_focused_element->did_lose_focus();
+
     m_focused_element = element;
+
+    if (m_focused_element)
+        m_focused_element->did_receive_focus();
 
     if (m_layout_root)
         m_layout_root->set_needs_display();

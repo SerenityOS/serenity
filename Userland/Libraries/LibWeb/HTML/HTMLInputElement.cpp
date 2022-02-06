@@ -112,6 +112,21 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     set_shadow_root(move(shadow_root));
 }
 
+void HTMLInputElement::did_receive_focus()
+{
+    auto* browsing_context = document().browsing_context();
+    if (!browsing_context)
+        return;
+    if (!m_text_node)
+        return;
+    browsing_context->set_cursor_position(DOM::Position { *m_text_node, 0 });
+}
+
+bool HTMLInputElement::is_focusable() const
+{
+    return m_text_node;
+}
+
 void HTMLInputElement::inserted()
 {
     HTMLElement::inserted();
