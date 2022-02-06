@@ -104,6 +104,8 @@ public:
 
     bool has_a_rendering_opportunity() const;
 
+    RefPtr<DOM::Node> currently_focused_area();
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
