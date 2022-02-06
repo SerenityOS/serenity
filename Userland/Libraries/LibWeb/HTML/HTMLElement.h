@@ -40,6 +40,8 @@ public:
 
     NonnullRefPtr<DOMStringMap> dataset() const { return m_dataset; }
 
+    void focus();
+
 protected:
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
@@ -55,6 +57,9 @@ private:
     ContentEditableState content_editable_state() const;
 
     NonnullRefPtr<DOMStringMap> m_dataset;
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#locked-for-focus
+    bool m_locked_for_focus { false };
 };
 
 }

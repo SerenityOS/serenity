@@ -7,6 +7,9 @@ interface HTMLElement : Element {
 
     attribute DOMString contentEditable;
 
+    // FIXME: Support the optional FocusOptions parameter.
+    undefined focus();
+
     [LegacyNullToEmptyString] attribute DOMString innerText;
 
     readonly attribute long offsetTop;
