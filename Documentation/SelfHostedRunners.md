@@ -18,10 +18,12 @@ These instructions assume the OS installed is Ubuntu 20.04 (Focal), so they migh
 
 ### Install base dependencies
 ```shell
-add-apt-repository ppa:canonical-server/server-backports
-add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo add-apt-repository ppa:canonical-server/server-backports
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
 apt update
-apt install git build-essential make cmake clang-format-11 gcc-11 g++-11 libstdc++-11-dev libgmp-dev ccache libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 wabt
+apt install git build-essential make cmake clang-format-14 gcc-11 g++-11 libstdc++-11-dev libgmp-dev ccache libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 wabt
 ```
 ### Force usage of GCC 11
 ```shell
