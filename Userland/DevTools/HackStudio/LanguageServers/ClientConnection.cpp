@@ -120,7 +120,7 @@ void ClientConnection::find_declaration(GUI::AutocompleteProvider::ProjectLocati
 
 void ClientConnection::get_parameters_hint(GUI::AutocompleteProvider::ProjectLocation const& location)
 {
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "GetFunctionParams: {} {}:{}", location.file, location.line, location.column);
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "GetParametersHint: {} {}:{}", location.file, location.line, location.column);
     auto document = m_filedb.get(location.file);
     if (!document) {
         dbgln("file {} has not been opened", location.file);
@@ -141,6 +141,19 @@ void ClientConnection::get_parameters_hint(GUI::AutocompleteProvider::ProjectLoc
     dbgln_if(LANGUAGE_SERVER_DEBUG, "Parameter index: {}", params->current_index);
 
     async_parameters_hint_result(params->params, params->current_index);
+}
+
+void ClientConnection::get_tokens_info(String const& filename)
+{
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "GetTokenInfo: {}", filename);
+    auto document = m_filedb.get(filename);
+    if (!document) {
+        dbgln("file {} has not been opened", filename);
+        return;
+    }
+
+    auto token_info = m_autocomplete_engine->get_tokens_info(filename);
+    async_tokens_info_result(move(token_info));
 }
 
 }

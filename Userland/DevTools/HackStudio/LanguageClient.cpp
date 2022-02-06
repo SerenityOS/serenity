@@ -43,6 +43,16 @@ void ServerConnection::parameters_hint_result(Vector<String> const& params, int 
     m_current_language_client->parameters_hint_result(params, static_cast<size_t>(argument_index));
 }
 
+void ServerConnection::tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info)
+{
+    if (!m_current_language_client) {
+        dbgln("Language Server connection has no attached language client");
+        return;
+    }
+    VERIFY(m_current_language_client->on_tokens_info_result);
+    m_current_language_client->on_tokens_info_result(tokens_info);
+}
+
 void ServerConnection::die()
 {
     VERIFY(m_wrapper);
@@ -68,7 +78,6 @@ void LanguageClient::insert_text(const String& path, const String& text, size_t 
 {
     if (!m_connection_wrapper.connection())
         return;
-    //    set_active_client();
     m_connection_wrapper.connection()->async_file_edit_insert_text(path, text, line, column);
 }
 
@@ -102,6 +111,13 @@ void LanguageClient::set_active_client()
     m_connection_wrapper.set_active_client(*this);
 }
 
+bool LanguageClient::is_active_client() const
+{
+    if (!m_connection_wrapper.connection())
+        return false;
+    return m_connection_wrapper.connection()->active_client() == this;
+}
+
 HashMap<String, NonnullOwnPtr<ServerConnectionWrapper>> ServerConnectionInstances::s_instance_for_language;
 
 void ServerConnection::declarations_in_document(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>& declarations)
@@ -128,6 +144,14 @@ void LanguageClient::get_parameters_hint(const String& path, size_t line, size_t
         return;
     set_active_client();
     m_connection_wrapper.connection()->async_get_parameters_hint(GUI::AutocompleteProvider::ProjectLocation { path, line, column });
+}
+
+void LanguageClient::get_tokens_info(const String& filename)
+{
+    if (!m_connection_wrapper.connection())
+        return;
+    VERIFY(is_active_client());
+    m_connection_wrapper.connection()->async_get_tokens_info(filename);
 }
 
 void LanguageClient::declaration_found(const String& file, size_t line, size_t column) const
