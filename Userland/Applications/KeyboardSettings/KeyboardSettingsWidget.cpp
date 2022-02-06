@@ -144,7 +144,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     m_current_applied_keymap = keymap_object.get("keymap").to_string();
     dbgln("KeyboardSettings thinks the current keymap is: {}", m_current_applied_keymap);
 
-    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini"));
+    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini").release_value_but_fixme_should_propagate_errors());
     auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
 
     auto keymaps_vector = keymaps.split(',');

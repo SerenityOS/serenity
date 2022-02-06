@@ -40,7 +40,7 @@ namespace Line {
 Configuration Configuration::from_config(StringView libname)
 {
     Configuration configuration;
-    auto config_file = Core::ConfigFile::open_for_lib(libname);
+    auto config_file = Core::ConfigFile::open_for_lib(libname).release_value_but_fixme_should_propagate_errors();
 
     // Read behavior options.
     auto refresh = config_file->read_entry("behavior", "refresh", "lazy");

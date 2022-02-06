@@ -141,7 +141,7 @@ void PreviewWidget::set_preview_palette(const Gfx::Palette& palette)
 
 void PreviewWidget::set_theme_from_file(Core::File& file)
 {
-    auto config_file = Core::ConfigFile::open(file.filename(), file.leak_fd());
+    auto config_file = Core::ConfigFile::open(file.filename(), file.leak_fd()).release_value_but_fixme_should_propagate_errors();
     auto theme = Gfx::load_system_theme(config_file);
     VERIFY(theme.is_valid());
 

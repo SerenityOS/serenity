@@ -11,7 +11,7 @@ namespace Core::Version {
 
 String read_long_version_string()
 {
-    auto version_config = Core::ConfigFile::open("/res/version.ini");
+    auto version_config = Core::ConfigFile::open("/res/version.ini").release_value_but_fixme_should_propagate_errors();
     auto major_version = version_config->read_entry("Version", "Major", "0");
     auto minor_version = version_config->read_entry("Version", "Minor", "0");
 

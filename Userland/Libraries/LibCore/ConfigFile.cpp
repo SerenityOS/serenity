@@ -14,35 +14,35 @@
 
 namespace Core {
 
-NonnullRefPtr<ConfigFile> ConfigFile::open_for_lib(String const& lib_name, AllowWriting allow_altering)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_lib(String const& lib_name, AllowWriting allow_altering)
 {
     String directory = StandardPaths::config_directory();
     auto path = String::formatted("{}/lib/{}.ini", directory, lib_name);
 
-    return adopt_ref(*new ConfigFile(path, allow_altering));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(path, allow_altering));
 }
 
-NonnullRefPtr<ConfigFile> ConfigFile::open_for_app(String const& app_name, AllowWriting allow_altering)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_app(String const& app_name, AllowWriting allow_altering)
 {
     String directory = StandardPaths::config_directory();
     auto path = String::formatted("{}/{}.ini", directory, app_name);
-    return adopt_ref(*new ConfigFile(path, allow_altering));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(path, allow_altering));
 }
 
-NonnullRefPtr<ConfigFile> ConfigFile::open_for_system(String const& app_name, AllowWriting allow_altering)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_system(String const& app_name, AllowWriting allow_altering)
 {
     auto path = String::formatted("/etc/{}.ini", app_name);
-    return adopt_ref(*new ConfigFile(path, allow_altering));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(path, allow_altering));
 }
 
-NonnullRefPtr<ConfigFile> ConfigFile::open(String const& filename, AllowWriting allow_altering)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, AllowWriting allow_altering)
 {
-    return adopt_ref(*new ConfigFile(filename, allow_altering));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, allow_altering));
 }
 
-NonnullRefPtr<ConfigFile> ConfigFile::open(String const& filename, int fd)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, int fd)
 {
-    return adopt_ref(*new ConfigFile(filename, fd));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, fd));
 }
 
 ConfigFile::ConfigFile(String const& filename, AllowWriting allow_altering)

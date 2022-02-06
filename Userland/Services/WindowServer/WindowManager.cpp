@@ -74,7 +74,7 @@ WindowManager::~WindowManager()
 
 void WindowManager::reload_config()
 {
-    m_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes);
+    m_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
 
     unsigned workspace_rows = (unsigned)m_config->read_num_entry("Workspace", "Rows", default_window_stack_rows);
     unsigned workspace_columns = (unsigned)m_config->read_num_entry("Workspace", "Columns", default_window_stack_columns);
@@ -2193,9 +2193,15 @@ WindowStack& WindowManager::get_rendering_window_stacks(WindowStack*& transition
     return Compositor::the().get_rendering_window_stacks(transitioning_window_stack);
 }
 
-void WindowManager::apply_cursor_theme(const String& theme_name)
+void WindowManager::apply_cursor_theme(String const& theme_name)
 {
-    auto cursor_theme_config = Core::ConfigFile::open(String::formatted("/res/cursor-themes/{}/{}", theme_name, "Config.ini"));
+    auto theme_path = String::formatted("/res/cursor-themes/{}/{}", theme_name, "Config.ini");
+    auto cursor_theme_config_or_error = Core::ConfigFile::open(theme_path);
+    if (cursor_theme_config_or_error.is_error()) {
+        dbgln("Unable to open cursor theme '{}': {}", theme_path, cursor_theme_config_or_error.error());
+        return;
+    }
+    auto cursor_theme_config = cursor_theme_config_or_error.release_value();
 
     auto* current_cursor = Compositor::the().current_cursor();
     auto reload_cursor = [&](RefPtr<Cursor>& cursor, const String& name) {

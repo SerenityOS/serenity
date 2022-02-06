@@ -147,7 +147,7 @@ Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
 
 Core::AnonymousBuffer load_system_theme(String const& path)
 {
-    return load_system_theme(Core::ConfigFile::open(path));
+    return load_system_theme(Core::ConfigFile::open(path).release_value_but_fixme_should_propagate_errors());
 }
 
 }
