@@ -14,6 +14,7 @@
 #include <AK/Result.h>
 #include <AK/Span.h>
 #include <AK/String.h>
+#include <AK/Time.h>
 #include <AK/Variant.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/SocketAddress.h>
@@ -247,6 +248,7 @@ public:
 
     ErrorOr<void> set_blocking(bool enabled);
     ErrorOr<void> set_close_on_exec(bool enabled);
+    ErrorOr<void> set_receive_timeout(Time timeout);
 
     void setup_notifier();
     RefPtr<Core::Notifier> notifier() { return m_notifier; }
@@ -321,8 +323,8 @@ private:
 
 class UDPSocket final : public Socket {
 public:
-    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(String const& host, u16 port);
-    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(SocketAddress const& address);
+    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(String const& host, u16 port, Optional<Time> timeout = {});
+    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(SocketAddress const& address, Optional<Time> timeout = {});
 
     UDPSocket(UDPSocket&& other)
         : Socket(static_cast<Socket&&>(other))
