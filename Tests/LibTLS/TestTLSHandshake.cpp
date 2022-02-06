@@ -66,52 +66,41 @@ static Vector<Certificate> s_root_ca_certificates = load_certificates();
 TEST_CASE(test_TLS_hello_handshake)
 {
     Core::EventLoop loop;
-    RefPtr<TLS::TLSv12> tls = TLS::TLSv12::construct(nullptr);
-    tls->set_root_certificates(s_root_ca_certificates);
-    bool sent_request = false;
-    ByteBuffer contents;
-    tls->set_on_tls_ready_to_write([&](TLS::TLSv12& tls) {
-        if (sent_request)
-            return;
-        sent_request = true;
-        Core::deferred_invoke([&tls] { tls.set_on_tls_ready_to_write(nullptr); });
-        if (!tls.write("GET / HTTP/1.1\r\nHost: "_b)) {
-            FAIL("write(0) failed");
-            loop.quit(0);
-        }
-        auto* the_server = DEFAULT_SERVER;
-        if (!tls.write(StringView(the_server).bytes())) {
-            FAIL("write(1) failed");
-            loop.quit(0);
-        }
-        if (!tls.write("\r\nConnection : close\r\n\r\n"_b)) {
-            FAIL("write(2) failed");
-            loop.quit(0);
-        }
-    });
-    tls->on_tls_ready_to_read = [&](TLS::TLSv12& tls) {
-        auto data = tls.read();
-        if (!data.has_value()) {
-            FAIL("No data received");
-            loop.quit(1);
-        } else {
-            //            print_buffer(data.value(), 16);
-            if (contents.try_append(data.value().data(), data.value().size()).is_error()) {
-                FAIL("Allocation failure");
-                loop.quit(1);
-            }
-        }
-    };
-    tls->on_tls_finished = [&] {
-        loop.quit(0);
-    };
-    tls->on_tls_error = [&](TLS::AlertDescription) {
+    TLS::Options options;
+    options.set_root_certificates(s_root_ca_certificates);
+    options.set_alert_handler([&](TLS::AlertDescription) {
         FAIL("Connection failure");
         loop.quit(1);
+    });
+    options.set_finish_callback([&] {
+        loop.quit(0);
+    });
+
+    auto tls = MUST(TLS::TLSv12::connect(DEFAULT_SERVER, port, move(options)));
+    ByteBuffer contents;
+    tls->on_ready_to_read = [&] {
+        auto nread = MUST(tls->read(contents.must_get_bytes_for_writing(4 * KiB)));
+        if (nread == 0) {
+            FAIL("No data received");
+            loop.quit(1);
+        }
+        loop.quit(0);
     };
-    if (!tls->connect(DEFAULT_SERVER, port)) {
-        FAIL("connect() failed");
+
+    if (!tls->write_or_error("GET / HTTP/1.1\r\nHost: "_b)) {
+        FAIL("write(0) failed");
         return;
     }
+
+    auto* the_server = DEFAULT_SERVER;
+    if (!tls->write_or_error(StringView(the_server).bytes())) {
+        FAIL("write(1) failed");
+        return;
+    }
+    if (!tls->write_or_error("\r\nConnection : close\r\n\r\n"_b)) {
+        FAIL("write(2) failed");
+        return;
+    }
+
     loop.exec();
 }

@@ -7,10 +7,12 @@
 #include "SystemServerTakeover.h"
 #include <LibCore/System.h>
 
+namespace Core {
+
 HashMap<String, int> s_overtaken_sockets {};
 bool s_overtaken_sockets_parsed { false };
 
-void parse_sockets_from_system_server()
+static void parse_sockets_from_system_server()
 {
     VERIFY(!s_overtaken_sockets_parsed);
 
@@ -32,7 +34,7 @@ void parse_sockets_from_system_server()
     unsetenv(socket_takeover);
 }
 
-ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_accepted_socket_from_system_server(String const& socket_path)
+ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_socket_from_system_server(String const& socket_path)
 {
     if (!s_overtaken_sockets_parsed)
         parse_sockets_from_system_server();
@@ -62,4 +64,6 @@ ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_accepted_socket_from
     TRY(socket->set_close_on_exec(true));
 
     return socket;
+}
+
 }

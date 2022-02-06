@@ -20,72 +20,61 @@ bool Request::stop()
     return m_client->stop_request({}, *this);
 }
 
-void Request::stream_into(OutputStream& stream)
+template<typename T>
+void Request::stream_into_impl(T& stream)
 {
     VERIFY(!m_internal_stream_data);
 
-    auto notifier = Core::Notifier::construct(fd(), Core::Notifier::Read);
-
-    m_internal_stream_data = make<InternalStreamData>(fd());
-    m_internal_stream_data->read_notifier = notifier;
+    m_internal_stream_data = make<InternalStreamData>(MUST(Core::Stream::File::adopt_fd(fd(), Core::Stream::OpenMode::Read)));
+    m_internal_stream_data->read_notifier = Core::Notifier::construct(fd(), Core::Notifier::Read);
 
     auto user_on_finish = move(on_finish);
     on_finish = [this](auto success, auto total_size) {
         m_internal_stream_data->success = success;
         m_internal_stream_data->total_size = total_size;
         m_internal_stream_data->request_done = true;
+        m_internal_stream_data->on_finish();
     };
 
-    notifier->on_ready_to_read = [this, &stream, user_on_finish = move(user_on_finish)] {
-        constexpr size_t buffer_size = 4096;
-        static char buf[buffer_size];
-        auto nread = m_internal_stream_data->read_stream.read({ buf, buffer_size });
-        if (!stream.write_or_error({ buf, nread })) {
-            // FIXME: What do we do here?
-            TODO();
-        }
-
-        if (m_internal_stream_data->read_stream.eof() && m_internal_stream_data->request_done) {
-            m_internal_stream_data->read_notifier->close();
+    m_internal_stream_data->on_finish = [this, user_on_finish = move(user_on_finish)] {
+        if (!m_internal_stream_data->user_finish_called && m_internal_stream_data->read_stream->is_eof()) {
+            m_internal_stream_data->user_finish_called = true;
             user_on_finish(m_internal_stream_data->success, m_internal_stream_data->total_size);
-        } else {
-            m_internal_stream_data->read_stream.handle_any_error();
+        }
+    };
+    m_internal_stream_data->read_notifier->on_ready_to_read = [this, &stream] {
+        constexpr size_t buffer_size = 16 * KiB;
+        static char buf[buffer_size];
+        do {
+            auto result = m_internal_stream_data->read_stream->read({ buf, buffer_size });
+            if (result.is_error() && (!result.error().is_errno() || (result.error().is_errno() && result.error().code() != EINTR)))
+                break;
+            if (result.is_error())
+                continue;
+            auto nread = result.value();
+            if (!stream.write_or_error({ buf, nread })) {
+                // FIXME: What do we do here?
+                TODO();
+            }
+            if (nread == 0)
+                break;
+        } while (true);
+
+        if (m_internal_stream_data->read_stream->is_eof() && m_internal_stream_data->request_done) {
+            m_internal_stream_data->read_notifier->close();
+            m_internal_stream_data->on_finish();
         }
     };
 }
 
 void Request::stream_into(Core::Stream::Stream& stream)
 {
-    VERIFY(!m_internal_stream_data);
+    stream_into_impl(stream);
+}
 
-    auto notifier = Core::Notifier::construct(fd(), Core::Notifier::Read);
-
-    m_internal_stream_data = make<InternalStreamData>(fd());
-    m_internal_stream_data->read_notifier = notifier;
-
-    auto user_on_finish = move(on_finish);
-    on_finish = [this](auto success, auto total_size) {
-        m_internal_stream_data->success = success;
-        m_internal_stream_data->total_size = total_size;
-        m_internal_stream_data->request_done = true;
-    };
-
-    notifier->on_ready_to_read = [this, &stream, user_on_finish = move(user_on_finish)] {
-        constexpr size_t buffer_size = 4096;
-        static char buf[buffer_size];
-        auto nread = m_internal_stream_data->read_stream.read({ buf, buffer_size });
-        if (!stream.write_or_error({ buf, nread })) {
-            // FIXME: What do we do here?
-            TODO();
-        }
-
-        if (m_internal_stream_data->read_stream.eof() && m_internal_stream_data->request_done) {
-            m_internal_stream_data->read_notifier->close();
-            user_on_finish(m_internal_stream_data->success, m_internal_stream_data->total_size);
-        } else {
-            m_internal_stream_data->read_stream.handle_any_error();
-        }
-    };
+void Request::stream_into(OutputStream& stream)
+{
+    stream_into_impl(stream);
 }
 
 void Request::set_should_buffer_all_input(bool value)
@@ -102,7 +91,7 @@ void Request::set_should_buffer_all_input(bool value)
     VERIFY(!m_internal_stream_data);
     VERIFY(!m_internal_buffered_data);
     VERIFY(on_buffered_request_finish); // Not having this set makes no sense.
-    m_internal_buffered_data = make<InternalBufferedData>(fd());
+    m_internal_buffered_data = make<InternalBufferedData>();
     m_should_buffer_all_input = true;
 
     on_headers_received = [this](auto& headers, auto response_code) {

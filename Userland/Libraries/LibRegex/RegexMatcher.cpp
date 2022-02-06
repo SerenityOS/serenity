@@ -180,8 +180,10 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 #endif
 
     bool continue_search = input.regex_options.has_flag_set(AllFlags::Global) || input.regex_options.has_flag_set(AllFlags::Multiline);
-    if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
+    if (input.regex_options.has_flag_set(AllFlags::Sticky))
         continue_search = false;
+
+    auto single_match_only = input.regex_options.has_flag_set(AllFlags::SingleMatch);
 
     for (auto const& view : views) {
         if (lines_to_skip != 0) {
@@ -214,14 +216,12 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 
             auto success = execute(input, state, temp_operations);
             // This success is acceptable only if it doesn't read anything from the input (input length is 0).
-            if (state.string_position <= view_index) {
-                if (success.has_value() && success.value()) {
-                    operations = temp_operations;
-                    if (!match_count) {
-                        // Nothing was *actually* matched, so append an empty match.
-                        append_match(input, state, view_index);
-                        ++match_count;
-                    }
+            if (success && (state.string_position <= view_index)) {
+                operations = temp_operations;
+                if (!match_count) {
+                    // Nothing was *actually* matched, so append an empty match.
+                    append_match(input, state, view_index);
+                    ++match_count;
                 }
             }
         }
@@ -249,10 +249,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
             state.repetition_marks.clear();
 
             auto success = execute(input, state, operations);
-            if (!success.has_value())
-                return { false, 0, {}, {}, {}, operations };
-
-            if (success.value()) {
+            if (success) {
                 succeeded = true;
 
                 if (input.regex_options.has_flag_set(AllFlags::MatchNotEndOfLine) && state.string_position == input.view.length()) {
@@ -276,6 +273,8 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 
                     bool has_zero_length = state.string_position == view_index;
                     view_index = state.string_position - (has_zero_length ? 0 : 1);
+                    if (single_match_only)
+                        break;
                     continue;
                 }
                 if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
@@ -413,7 +412,7 @@ private:
 };
 
 template<class Parser>
-Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& state, size_t& operations) const
+bool Matcher<Parser>::execute(MatchInput const& input, MatchState& state, size_t& operations) const
 {
     BumpAllocatedLinkedList<MatchState> states_to_try_next;
     size_t recursion_level = 0;
@@ -499,8 +498,6 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
             return false;
         case ExecutionResult::Failed_ExecuteLowPrioForks: {
             if (states_to_try_next.is_empty()) {
-                if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
-                    return {};
                 return false;
             }
             state = states_to_try_next.take_last();

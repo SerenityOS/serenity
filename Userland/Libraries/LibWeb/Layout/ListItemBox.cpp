@@ -39,10 +39,10 @@ void ListItemBox::layout_marker()
         append_child(*m_marker);
     }
 
-    m_marker->set_offset(-(m_marker->width() + 4), 0);
+    m_marker->set_offset(-(m_marker->content_width() + 4), 0);
 
-    if (m_marker->height() > height())
-        set_height(m_marker->height());
+    if (m_marker->content_height() > content_height())
+        set_content_height(m_marker->content_height());
 }
 
 }

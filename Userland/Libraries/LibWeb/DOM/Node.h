@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -104,8 +104,6 @@ public:
     bool has_child_nodes() const { return has_children(); }
     NonnullRefPtr<NodeList> child_nodes();
     NonnullRefPtrVector<Node> children_as_vector() const;
-
-    virtual RefPtr<Layout::Node> create_layout_node();
 
     virtual FlyString node_name() const = 0;
 

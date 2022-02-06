@@ -30,11 +30,6 @@ EventTarget* ShadowRoot::get_parent(const Event& event)
     return host();
 }
 
-RefPtr<Layout::Node> ShadowRoot::create_layout_node()
-{
-    return adopt_ref(*new Layout::BlockContainer(document(), this, CSS::ComputedValues {}));
-}
-
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
 String ShadowRoot::inner_html() const
 {

@@ -39,9 +39,9 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         auto margin_box = box_model().margin_box();
         Gfx::FloatRect margin_rect;
         margin_rect.set_x(absolute_x() - margin_box.left);
-        margin_rect.set_width(width() + margin_box.left + margin_box.right);
+        margin_rect.set_width(content_width() + margin_box.left + margin_box.right);
         margin_rect.set_y(absolute_y() - margin_box.top);
-        margin_rect.set_height(height() + margin_box.top + margin_box.bottom);
+        margin_rect.set_height(content_height() + margin_box.top + margin_box.bottom);
 
         context.painter().draw_rect(enclosing_int_rect(margin_rect), Color::Yellow);
         context.painter().draw_rect(enclosing_int_rect(padded_rect()), Color::Cyan);
@@ -180,11 +180,11 @@ void Box::set_offset(const Gfx::FloatPoint& offset)
     did_set_rect();
 }
 
-void Box::set_size(const Gfx::FloatSize& size)
+void Box::set_content_size(Gfx::FloatSize const& size)
 {
-    if (m_size == size)
+    if (m_content_size == size)
         return;
-    m_size = size;
+    m_content_size = size;
     did_set_rect();
 }
 
@@ -197,7 +197,7 @@ Gfx::FloatPoint Box::effective_offset() const
 
 const Gfx::FloatRect Box::absolute_rect() const
 {
-    Gfx::FloatRect rect { effective_offset(), size() };
+    Gfx::FloatRect rect { effective_offset(), content_size() };
     for (auto* block = containing_block(); block; block = block->containing_block()) {
         rect.translate_by(block->effective_offset());
     }

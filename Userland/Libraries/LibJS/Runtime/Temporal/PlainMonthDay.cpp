@@ -80,17 +80,17 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
             calendar = &static_cast<ZonedDateTime&>(item_object).calendar();
             calendar_absent = false;
         } else {
-            // i. Let calendar be ? Get(item, "calendar").
-            auto calendar_value = TRY(item_object.get(vm.names.calendar));
+            // i. Let calendarLike be ? Get(item, "calendar").
+            auto calendar_like = TRY(item_object.get(vm.names.calendar));
 
-            // ii. If calendar is undefined, then
+            // ii. If calendarLike is undefined, then
             //      1. Let calendarAbsent be true.
             // iii. Else,
             //      1. Let calendarAbsent be false.
-            calendar_absent = calendar_value.is_undefined();
+            calendar_absent = calendar_like.is_undefined();
 
-            // iv. Set calendar to ? ToTemporalCalendarWithISODefault(calendar).
-            calendar = TRY(to_temporal_calendar_with_iso_default(global_object, calendar_value));
+            // iv. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
+            calendar = TRY(to_temporal_calendar_with_iso_default(global_object, calendar_like));
         }
 
         // d. Let fieldNames be ? CalendarFields(calendar, « "day", "month", "monthCode", "year" »).

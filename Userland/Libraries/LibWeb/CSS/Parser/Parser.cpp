@@ -509,7 +509,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             } else if (pseudo_name.equals_ignoring_case("first-line")) {
                 simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
             } else {
-                dbgln("Unrecognized pseudo-element: '::{}'", pseudo_name);
+                dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
             }
 
@@ -577,7 +577,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
                 simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
             } else {
-                dbgln("Unrecognized pseudo-class: ':{}'", pseudo_name);
+                dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class: ':{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
             }
 
@@ -616,7 +616,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                     return ParsingResult::SyntaxError;
                 }
             } else {
-                dbgln("Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
+                dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
                 return ParsingResult::SyntaxError;
             }
 
@@ -1681,7 +1681,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
             auto& peek = tokens.peek_token();
             if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))
                 break;
-            dbgln("Discarding token: '{}'", peek.to_debug_string());
+            dbgln_if(CSS_PARSER_DEBUG, "Discarding token: '{}'", peek.to_debug_string());
             (void)consume_a_component_value(tokens);
         }
     }
@@ -1970,7 +1970,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             if (url.has_value())
                 return CSSImportRule::create(url.value(), const_cast<DOM::Document&>(*m_context.document()));
             else
-                dbgln("Unable to parse url from @import rule");
+                dbgln_if(CSS_PARSER_DEBUG, "Unable to parse url from @import rule");
 
         } else if (rule->m_name.equals_ignoring_case("supports"sv)) {
 
@@ -1978,7 +1978,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             auto supports = parse_a_supports(supports_tokens);
             if (!supports) {
                 if constexpr (CSS_PARSER_DEBUG) {
-                    dbgln("CSSParser: @supports rule invalid; discarding.");
+                    dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @supports rule invalid; discarding.");
                     supports_tokens.dump_all_tokens();
                 }
                 return {};
@@ -1995,7 +1995,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             return CSSSupportsRule::create(supports.release_nonnull(), move(child_rules));
 
         } else {
-            dbgln("Unrecognized CSS at-rule: @{}", rule->m_name);
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized CSS at-rule: @{}", rule->m_name);
         }
 
         // FIXME: More at rules!
@@ -2006,7 +2006,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 
         if (selectors.is_error()) {
             if (selectors.error() != ParsingResult::IncludesIgnoredVendorPrefix) {
-                dbgln("CSSParser: style rule selectors invalid; discarding.");
+                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: style rule selectors invalid; discarding.");
                 if constexpr (CSS_PARSER_DEBUG) {
                     prelude_stream.dump_all_tokens();
                 }
@@ -2015,13 +2015,13 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
         }
 
         if (selectors.value().is_empty()) {
-            dbgln("CSSParser: empty selector; discarding.");
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: empty selector; discarding.");
             return {};
         }
 
         auto declaration = convert_to_declaration(*rule->m_block);
         if (!declaration) {
-            dbgln("CSSParser: style rule declaration invalid; discarding.");
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: style rule declaration invalid; discarding.");
             return {};
         }
 
@@ -2051,7 +2051,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule c
         } else if (has_ignored_vendor_prefix(property_name)) {
             return {};
         } else if (!property_name.starts_with("-")) {
-            dbgln("Unrecognized CSS property '{}'", property_name);
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized CSS property '{}'", property_name);
             return {};
         }
     }
@@ -2060,7 +2060,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule c
     auto value = parse_css_value(property_id, value_token_stream);
     if (value.is_error()) {
         if (value.error() != ParsingResult::IncludesIgnoredVendorPrefix) {
-            dbgln("Unable to parse value for CSS property '{}'.", property_name);
+            dbgln_if(CSS_PARSER_DEBUG, "Unable to parse value for CSS property '{}'.", property_name);
             if constexpr (CSS_PARSER_DEBUG) {
                 value_token_stream.dump_all_tokens();
             }
@@ -2091,17 +2091,51 @@ RefPtr<StyleValue> Parser::parse_builtin_value(StyleComponentValueRule const& co
     return {};
 }
 
+RefPtr<StyleValue> Parser::parse_calculated_value(Vector<StyleComponentValueRule> const& component_values)
+{
+    auto calc_expression = parse_calc_expression(component_values);
+    if (calc_expression == nullptr)
+        return nullptr;
+
+    auto calc_type = calc_expression->resolved_type();
+    if (!calc_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "calc() resolved as invalid!!!");
+        return nullptr;
+    }
+
+    [[maybe_unused]] auto to_string = [](CalculatedStyleValue::ResolvedType type) {
+        switch (type) {
+        case CalculatedStyleValue::ResolvedType::Angle:
+            return "Angle"sv;
+        case CalculatedStyleValue::ResolvedType::Frequency:
+            return "Frequency"sv;
+        case CalculatedStyleValue::ResolvedType::Integer:
+            return "Integer"sv;
+        case CalculatedStyleValue::ResolvedType::Length:
+            return "Length"sv;
+        case CalculatedStyleValue::ResolvedType::Number:
+            return "Number"sv;
+        case CalculatedStyleValue::ResolvedType::Percentage:
+            return "Percentage"sv;
+        case CalculatedStyleValue::ResolvedType::Time:
+            return "Time"sv;
+        }
+        VERIFY_NOT_REACHED();
+    };
+    dbgln_if(CSS_PARSER_DEBUG, "Deduced calc() resolved type as: {}", to_string(calc_type.value()));
+
+    return CalculatedStyleValue::create(calc_expression.release_nonnull(), calc_type.release_value());
+}
+
 RefPtr<StyleValue> Parser::parse_dynamic_value(StyleComponentValueRule const& component_value)
 {
     if (component_value.is_function()) {
         auto& function = component_value.function();
 
-        if (function.name().equals_ignoring_case("calc")) {
-            auto calc_expression = parse_calc_expression(function.values());
-            // FIXME: Either produce a string value of calc() here, or do so in CalculatedStyleValue::to_string().
-            if (calc_expression)
-                return CalculatedStyleValue::create("(FIXME:calc to string)", calc_expression.release_nonnull());
-        } else if (function.name().equals_ignoring_case("var")) {
+        if (function.name().equals_ignoring_case("calc"))
+            return parse_calculated_value(function.values());
+
+        if (function.name().equals_ignoring_case("var")) {
             // Declarations using `var()` should already be parsed as an UnresolvedStyleValue before this point.
             VERIFY_NOT_REACHED();
         }
@@ -3641,7 +3675,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
                 auto number = parse_numeric_value(value);
                 values.append(number.release_nonnull());
             } else {
-                dbgln("FIXME: Unsupported value type for transformation!");
+                dbgln_if(CSS_PARSER_DEBUG, "FIXME: Unsupported value type for transformation!");
                 return nullptr;
             }
         }
@@ -3859,7 +3893,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
 
     auto syntax_error = [&]() -> Optional<Selector::SimpleSelector::ANPlusBPattern> {
         if constexpr (CSS_PARSER_DEBUG) {
-            dbgln("Invalid An+B value:");
+            dbgln_if(CSS_PARSER_DEBUG, "Invalid An+B value:");
             values.dump_all_tokens();
         }
         return {};
@@ -3870,7 +3904,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         values.skip_whitespace();
         if (values.has_next_token()) {
             if constexpr (CSS_PARSER_DEBUG) {
-                dbgln("Extra tokens at end of An+B value:");
+                dbgln_if(CSS_PARSER_DEBUG, "Extra tokens at end of An+B value:");
                 values.dump_all_tokens();
             }
             return syntax_error();
@@ -4172,13 +4206,23 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<S
     }
 
     if (current_token.is(Token::Type::Number))
-        return CalculatedStyleValue::CalcValue { static_cast<float>(current_token.token().number_value()) };
+        return CalculatedStyleValue::CalcValue {
+            CalculatedStyleValue::Number {
+                .is_integer = current_token.token().number_type() == Token::NumberType::Integer,
+                .value = static_cast<float>(current_token.token().number_value()) }
+        };
 
     if (current_token.is(Token::Type::Dimension) || current_token.is(Token::Type::Percentage)) {
-        auto maybe_length = parse_length(current_token);
-        if (maybe_length.has_value() && !maybe_length.value().is_undefined())
-            return CalculatedStyleValue::CalcValue { maybe_length.value() };
-        return {};
+        auto maybe_dimension = parse_dimension(current_token);
+        if (!maybe_dimension.has_value())
+            return {};
+        auto& dimension = maybe_dimension.value();
+
+        if (dimension.is_length())
+            return CalculatedStyleValue::CalcValue { dimension.length() };
+        if (dimension.is_percentage())
+            return CalculatedStyleValue::CalcValue { dimension.percentage() };
+        VERIFY_NOT_REACHED();
     }
 
     return {};
@@ -4188,8 +4232,8 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
 {
     // Note: The default value is not used or passed around.
     auto product_with_operator = make<CalculatedStyleValue::CalcProductPartWithOperator>(
-        CalculatedStyleValue::CalcProductPartWithOperator::Multiply,
-        CalculatedStyleValue::CalcNumberValue(0));
+        CalculatedStyleValue::ProductOperation::Multiply,
+        CalculatedStyleValue::CalcNumberValue { CalculatedStyleValue::Number { false, 0 } });
 
     tokens.skip_whitespace();
 
@@ -4201,16 +4245,17 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
     if (op == "*"sv) {
         tokens.next_token();
         tokens.skip_whitespace();
-        product_with_operator->op = CalculatedStyleValue::CalcProductPartWithOperator::Multiply;
+        product_with_operator->op = CalculatedStyleValue::ProductOperation::Multiply;
         auto parsed_calc_value = parse_calc_value(tokens);
         if (!parsed_calc_value.has_value())
             return nullptr;
         product_with_operator->value = { parsed_calc_value.release_value() };
 
     } else if (op == "/"sv) {
+        // FIXME: Detect divide-by-zero if possible
         tokens.next_token();
         tokens.skip_whitespace();
-        product_with_operator->op = CalculatedStyleValue::CalcProductPartWithOperator::Divide;
+        product_with_operator->op = CalculatedStyleValue::ProductOperation::Divide;
         auto parsed_calc_number_value = parse_calc_number_value(tokens);
         if (!parsed_calc_number_value.has_value())
             return nullptr;
@@ -4226,8 +4271,8 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
 {
     // Note: The default value is not used or passed around.
     auto number_product_with_operator = make<CalculatedStyleValue::CalcNumberProductPartWithOperator>(
-        CalculatedStyleValue::CalcNumberProductPartWithOperator::Multiply,
-        CalculatedStyleValue::CalcNumberValue(0));
+        CalculatedStyleValue::ProductOperation::Multiply,
+        CalculatedStyleValue::CalcNumberValue { CalculatedStyleValue::Number { false, 0 } });
 
     tokens.skip_whitespace();
 
@@ -4239,11 +4284,12 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
     if (op == "*"sv) {
         tokens.next_token();
         tokens.skip_whitespace();
-        number_product_with_operator->op = CalculatedStyleValue::CalcNumberProductPartWithOperator::Multiply;
+        number_product_with_operator->op = CalculatedStyleValue::ProductOperation::Multiply;
     } else if (op == "/"sv) {
+        // FIXME: Detect divide-by-zero if possible
         tokens.next_token();
         tokens.skip_whitespace();
-        number_product_with_operator->op = CalculatedStyleValue::CalcNumberProductPartWithOperator::Divide;
+        number_product_with_operator->op = CalculatedStyleValue::ProductOperation::Divide;
     } else {
         return nullptr;
     }
@@ -4259,7 +4305,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
 OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_product(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto calc_number_product = make<CalculatedStyleValue::CalcNumberProduct>(
-        CalculatedStyleValue::CalcNumberValue(0),
+        CalculatedStyleValue::CalcNumberValue { CalculatedStyleValue::Number { false, 0 } },
         NonnullOwnPtrVector<CalculatedStyleValue::CalcNumberProductPartWithOperator> {});
 
     auto first_calc_number_value_or_error = parse_calc_number_value(tokens);
@@ -4287,12 +4333,12 @@ OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_n
     auto& token = tokens.next_token();
     tokens.skip_whitespace();
 
-    CalculatedStyleValue::CalcNumberSumPartWithOperator::Operation op;
+    CalculatedStyleValue::SumOperation op;
     auto delim = token.token().delim();
     if (delim == "+"sv)
-        op = CalculatedStyleValue::CalcNumberSumPartWithOperator::Operation::Add;
+        op = CalculatedStyleValue::SumOperation::Add;
     else if (delim == "-"sv)
-        op = CalculatedStyleValue::CalcNumberSumPartWithOperator::Operation::Subtract;
+        op = CalculatedStyleValue::SumOperation::Subtract;
     else
         return nullptr;
 
@@ -4330,20 +4376,24 @@ Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(
         auto block_values = TokenStream(first.block().values());
         auto calc_number_sum = parse_calc_number_sum(block_values);
         if (calc_number_sum)
-            return { calc_number_sum.release_nonnull() };
+            return CalculatedStyleValue::CalcNumberValue { calc_number_sum.release_nonnull() };
     }
 
     if (!first.is(Token::Type::Number))
         return {};
     tokens.next_token();
 
-    return first.token().number_value();
+    return CalculatedStyleValue::CalcNumberValue {
+        CalculatedStyleValue::Number {
+            .is_integer = first.token().number_type() == Token::NumberType::Integer,
+            .value = static_cast<float>(first.token().number_value()) }
+    };
 }
 
 OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto calc_product = make<CalculatedStyleValue::CalcProduct>(
-        CalculatedStyleValue::CalcValue(0),
+        CalculatedStyleValue::CalcValue { CalculatedStyleValue::Number { false, 0 } },
         NonnullOwnPtrVector<CalculatedStyleValue::CalcProductPartWithOperator> {});
 
     auto first_calc_value_or_error = parse_calc_value(tokens);
@@ -4373,12 +4423,12 @@ OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_par
     auto& token = tokens.next_token();
     tokens.skip_whitespace();
 
-    CalculatedStyleValue::CalcSumPartWithOperator::Operation op;
+    CalculatedStyleValue::SumOperation op;
     auto delim = token.token().delim();
     if (delim == "+"sv)
-        op = CalculatedStyleValue::CalcSumPartWithOperator::Operation::Add;
+        op = CalculatedStyleValue::SumOperation::Add;
     else if (delim == "-"sv)
-        op = CalculatedStyleValue::CalcSumPartWithOperator::Operation::Subtract;
+        op = CalculatedStyleValue::SumOperation::Subtract;
     else
         return nullptr;
 

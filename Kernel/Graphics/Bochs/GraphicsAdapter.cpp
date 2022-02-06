@@ -107,8 +107,7 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::DeviceIdentifie
 {
     // We assume safe resolution is 1024x768x32
     m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
-    // FIXME: This is a very wrong way to do this...
-    GraphicsManagement::the().m_console = m_framebuffer_console;
+    GraphicsManagement::the().set_console(*m_framebuffer_console);
 
     // Note: If we use VirtualBox graphics adapter (which is based on Bochs one), we need to use IO ports
     if (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef)

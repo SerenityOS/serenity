@@ -309,9 +309,6 @@ public:
 private:
     explicit Document(const AK::URL&);
 
-    // ^DOM::Node
-    virtual RefPtr<Layout::Node> create_layout_node() override;
-
     // ^HTML::GlobalEventHandlers
     virtual EventTarget& global_event_handlers_to_event_target() final { return *this; }
 

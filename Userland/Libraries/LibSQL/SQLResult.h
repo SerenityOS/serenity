@@ -19,6 +19,7 @@ namespace SQL {
 #define ENUMERATE_SQL_COMMANDS(S) \
     S(Create)                     \
     S(Delete)                     \
+    S(Describe)                   \
     S(Insert)                     \
     S(Select)                     \
     S(Update)

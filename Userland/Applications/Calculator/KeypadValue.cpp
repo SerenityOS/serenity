@@ -5,6 +5,7 @@
  */
 
 #include "KeypadValue.h"
+#include <AK/IntegralMath.h>
 #include <AK/Math.h>
 #include <AK/String.h>
 
@@ -119,7 +120,7 @@ ALWAYS_INLINE T KeypadValue::operator_helper(KeypadValue const& lhs, KeypadValue
     KeypadValue const& more_decimal_places = (lhs.m_decimal_places < rhs.m_decimal_places) ? rhs : lhs;
 
     i64 more_decimal_places_equalized = more_decimal_places.m_value;
-    i64 less_decimal_places_equalized = (i64)AK::pow(10.0, (double)(more_decimal_places.m_decimal_places - less_decimal_places.m_decimal_places)) * less_decimal_places.m_value;
+    i64 less_decimal_places_equalized = AK::pow<i64>(10, more_decimal_places.m_decimal_places - less_decimal_places.m_decimal_places) * less_decimal_places.m_value;
 
     bool lhs_is_less = (lhs.m_decimal_places < rhs.m_decimal_places);
 

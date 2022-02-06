@@ -45,3 +45,9 @@ test("Make Invalid Date valid again", () => {
     expect(date.getUTCSeconds()).toBe(46);
     expect(date.getUTCMilliseconds()).toBe(0);
 });
+
+test("invalid date", () => {
+    let date = new Date(NaN);
+    expect(date.setTime(1622993746000)).toBe(1622993746000);
+    expect(date.getTime()).toBe(1622993746000);
+});

@@ -10,6 +10,7 @@
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
+#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
@@ -21,6 +22,8 @@
 namespace Kernel {
 
 static Singleton<GraphicsManagement> s_the;
+
+extern Atomic<Graphics::BootFramebufferConsole*> boot_framebuffer_console;
 
 GraphicsManagement& GraphicsManagement::the()
 {
@@ -215,6 +218,15 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         determine_and_initialize_graphics_device(device_identifier);
     });
 
+    if (!m_console) {
+        // If no graphics driver was instantiated and we had a bootloader provided
+        // framebuffer console we can simply re-use it.
+        if (auto* boot_console = boot_framebuffer_console.load()) {
+            m_console = *boot_console;
+            boot_console->unref(); // Drop the leaked reference from Kernel::init()
+        }
+    }
+
     if (m_graphics_devices.is_empty()) {
         dbgln("No graphics adapter was initialized.");
         return false;
@@ -230,4 +242,19 @@ bool GraphicsManagement::framebuffer_devices_exist() const
     }
     return false;
 }
+
+void GraphicsManagement::set_console(Graphics::Console& console)
+{
+    m_console = console;
+
+    if (auto* boot_console = boot_framebuffer_console.exchange(nullptr)) {
+        // Disable the initial boot framebuffer console permanently
+        boot_console->disable();
+        // TODO: Even though we swapped the pointer and disabled the console
+        // we technically can't safely destroy it as other CPUs might still
+        // try to use it. Once we solve this problem we can drop the reference
+        // that we intentionally leaked in Kernel::init().
+    }
+}
+
 }

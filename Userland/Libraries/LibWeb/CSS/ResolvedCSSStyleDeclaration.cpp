@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
@@ -698,10 +699,10 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::Invalid:
         return IdentifierStyleValue::create(CSS::ValueID::Invalid);
     case CSS::PropertyID::Custom:
-        dbgln("Computed style for custom properties was requested (?)");
+        dbgln_if(LIBWEB_CSS_DEBUG, "Computed style for custom properties was requested (?)");
         return {};
     default:
-        dbgln("FIXME: Computed style for the '{}' property was requested", string_from_property_id(property_id));
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Computed style for the '{}' property was requested", string_from_property_id(property_id));
         return {};
     }
     }

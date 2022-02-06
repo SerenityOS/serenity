@@ -654,6 +654,48 @@ private:
 
 class CalculatedStyleValue : public StyleValue {
 public:
+    enum class ResolvedType {
+        Angle,
+        Frequency,
+        Integer,
+        Length,
+        Number,
+        Percentage,
+        Time,
+    };
+
+    enum class SumOperation {
+        Add,
+        Subtract,
+    };
+    enum class ProductOperation {
+        Multiply,
+        Divide,
+    };
+
+    struct Number {
+        bool is_integer;
+        float value;
+    };
+
+    class CalculationResult {
+    public:
+        CalculationResult(Variant<Number, Length, Percentage> value)
+            : m_value(move(value))
+        {
+        }
+        void add(CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
+        void subtract(CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
+        void multiply_by(CalculationResult const& other, Layout::Node const*);
+        void divide_by(CalculationResult const& other, Layout::Node const*);
+
+        Variant<Number, Length, Percentage> const& value() const { return m_value; }
+
+    private:
+        void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
+        Variant<Number, Length, Percentage> m_value;
+    };
+
     struct CalcSum;
     struct CalcSumPartWithOperator;
     struct CalcProduct;
@@ -663,8 +705,19 @@ public:
     struct CalcNumberProduct;
     struct CalcNumberProductPartWithOperator;
 
-    using CalcNumberValue = Variant<float, NonnullOwnPtr<CalcNumberSum>>;
-    using CalcValue = Variant<float, CSS::Length, NonnullOwnPtr<CalcSum>>;
+    struct CalcNumberValue {
+        Variant<Number, NonnullOwnPtr<CalcNumberSum>> value;
+        String to_string() const;
+        Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+    };
+
+    struct CalcValue {
+        Variant<Number, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
+        String to_string() const;
+        Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+    };
 
     // This represents that: https://www.w3.org/TR/css-values-3/#calc-syntax
     struct CalcSum {
@@ -674,6 +727,10 @@ public:
 
         NonnullOwnPtr<CalcProduct> first_calc_product;
         NonnullOwnPtrVector<CalcSumPartWithOperator> zero_or_more_additional_calc_products;
+
+        String to_string() const;
+        Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcNumberSum {
@@ -683,79 +740,97 @@ public:
 
         NonnullOwnPtr<CalcNumberProduct> first_calc_number_product;
         NonnullOwnPtrVector<CalcNumberSumPartWithOperator> zero_or_more_additional_calc_number_products;
+
+        String to_string() const;
+        Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcProduct {
         CalcValue first_calc_value;
         NonnullOwnPtrVector<CalcProductPartWithOperator> zero_or_more_additional_calc_values;
+
+        String to_string() const;
+        Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcSumPartWithOperator {
-        enum Operation {
-            Add,
-            Subtract,
-        };
-
-        CalcSumPartWithOperator(Operation op, NonnullOwnPtr<CalcProduct> calc_product)
+        CalcSumPartWithOperator(SumOperation op, NonnullOwnPtr<CalcProduct> calc_product)
             : op(op)
-            , calc_product(move(calc_product)) {};
+            , value(move(calc_product)) {};
 
-        Operation op;
-        NonnullOwnPtr<CalcProduct> calc_product;
+        SumOperation op;
+        NonnullOwnPtr<CalcProduct> value;
+
+        String to_string() const;
+        Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcProductPartWithOperator {
-        enum {
-            Multiply,
-            Divide,
-        } op;
+        ProductOperation op;
         Variant<CalcValue, CalcNumberValue> value;
+
+        String to_string() const;
+        Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcNumberProduct {
         CalcNumberValue first_calc_number_value;
         NonnullOwnPtrVector<CalcNumberProductPartWithOperator> zero_or_more_additional_calc_number_values;
+
+        String to_string() const;
+        Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcNumberProductPartWithOperator {
-        enum {
-            Multiply,
-            Divide,
-        } op;
+        ProductOperation op;
         CalcNumberValue value;
+
+        String to_string() const;
+        Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
     struct CalcNumberSumPartWithOperator {
-        enum Operation {
-            Add,
-            Subtract,
-        };
-
-        CalcNumberSumPartWithOperator(Operation op, NonnullOwnPtr<CalcNumberProduct> calc_number_product)
+        CalcNumberSumPartWithOperator(SumOperation op, NonnullOwnPtr<CalcNumberProduct> calc_number_product)
             : op(op)
-            , calc_number_product(move(calc_number_product)) {};
+            , value(move(calc_number_product)) {};
 
-        Operation op;
-        NonnullOwnPtr<CalcNumberProduct> calc_number_product;
+        SumOperation op;
+        NonnullOwnPtr<CalcNumberProduct> value;
+
+        String to_string() const;
+        Optional<ResolvedType> resolved_type() const;
+        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
     };
 
-    static NonnullRefPtr<CalculatedStyleValue> create(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum)
+    static NonnullRefPtr<CalculatedStyleValue> create(NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
     {
-        return adopt_ref(*new CalculatedStyleValue(expression_string, move(calc_sum)));
+        return adopt_ref(*new CalculatedStyleValue(move(calc_sum), resolved_type));
     }
 
-    String to_string() const override { return m_expression_string; }
+    String to_string() const override;
+    ResolvedType resolved_type() const { return m_resolved_type; }
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
+    Optional<Length> resolve_length(Layout::Node const& layout_node) const;
+    Optional<LengthPercentage> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
+    Optional<Percentage> resolve_percentage() const;
+    Optional<float> resolve_number();
+    Optional<i64> resolve_integer();
 
 private:
-    explicit CalculatedStyleValue(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum)
+    explicit CalculatedStyleValue(NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
         : StyleValue(Type::Calculated)
-        , m_expression_string(expression_string)
+        , m_resolved_type(resolved_type)
         , m_expression(move(calc_sum))
     {
     }
 
-    String m_expression_string;
+    ResolvedType m_resolved_type;
     NonnullOwnPtr<CalcSum> m_expression;
 };
 

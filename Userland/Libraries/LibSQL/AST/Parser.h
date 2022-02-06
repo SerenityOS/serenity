@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -59,6 +60,7 @@ private:
     NonnullRefPtr<CreateTable> parse_create_table_statement();
     NonnullRefPtr<AlterTable> parse_alter_table_statement();
     NonnullRefPtr<DropTable> parse_drop_table_statement();
+    NonnullRefPtr<DescribeTable> parse_describe_table_statement();
     NonnullRefPtr<Insert> parse_insert_statement(RefPtr<CommonTableExpressionList>);
     NonnullRefPtr<Update> parse_update_statement(RefPtr<CommonTableExpressionList>);
     NonnullRefPtr<Delete> parse_delete_statement(RefPtr<CommonTableExpressionList>);

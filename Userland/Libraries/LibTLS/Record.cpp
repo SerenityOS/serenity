@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/MemoryStream.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
@@ -32,7 +33,7 @@ void TLSv12::alert(AlertLevel level, AlertDescription code)
 {
     auto the_alert = build_alert(level == AlertLevel::Critical, (u8)code);
     write_packet(the_alert);
-    flush();
+    MUST(flush());
 }
 
 void TLSv12::write_packet(ByteBuffer& packet)
@@ -41,7 +42,7 @@ void TLSv12::write_packet(ByteBuffer& packet)
         if (m_context.connection_status > ConnectionStatus::Disconnected) {
             if (!m_has_scheduled_write_flush && !immediate) {
                 dbgln_if(TLS_DEBUG, "Scheduling write of {}", m_context.tls_buffer.size());
-                deferred_invoke([this] { write_into_socket(); });
+                Core::deferred_invoke([this] { write_into_socket(); });
                 m_has_scheduled_write_flush = true;
             } else {
                 // multiple packet are available, let's flush some out
@@ -540,15 +541,17 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             if (code == (u8)AlertDescription::CloseNotify) {
                 res += 2;
                 alert(AlertLevel::Critical, AlertDescription::CloseNotify);
-                m_context.connection_finished = true;
                 if (!m_context.cipher_spec_set) {
                     // AWS CloudFront hits this.
                     dbgln("Server sent a close notify and we haven't agreed on a cipher suite. Treating it as a handshake failure.");
                     m_context.critical_error = (u8)AlertDescription::HandshakeFailure;
                     try_disambiguate_error();
                 }
+                m_context.close_notify = true;
             }
             m_context.error_code = (Error)code;
+            check_connection_state(false);
+            notify_client_for_app_data(); // Give the user one more chance to observe the EOF
         }
         break;
     default:

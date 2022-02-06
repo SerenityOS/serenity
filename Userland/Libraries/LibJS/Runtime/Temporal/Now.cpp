@@ -60,14 +60,14 @@ JS_DEFINE_NATIVE_FUNCTION(Now::instant)
     return system_instant(global_object);
 }
 
-// 2.2.3 Temporal.Now.plainDateTime ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetime
+// 2.2.3 Temporal.Now.plainDateTime ( calendarLike [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetime
 JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time)
 {
-    auto calendar = vm.argument(0);
+    auto calendar_like = vm.argument(0);
     auto temporal_time_zone_like = vm.argument(1);
 
-    // 1. Return ? SystemDateTime(temporalTimeZoneLike, calendar).
-    return TRY(system_date_time(global_object, temporal_time_zone_like, calendar));
+    // 1. Return ? SystemDateTime(temporalTimeZoneLike, calendarLike).
+    return TRY(system_date_time(global_object, temporal_time_zone_like, calendar_like));
 }
 
 // 2.2.4 Temporal.Now.plainDateTimeISO ( [ temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetimeiso
@@ -82,14 +82,14 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time_iso)
     return TRY(system_date_time(global_object, temporal_time_zone_like, calendar));
 }
 
-// 2.2.5 Temporal.Now.zonedDateTime ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetime
+// 2.2.5 Temporal.Now.zonedDateTime ( calendarLike [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetime
 JS_DEFINE_NATIVE_FUNCTION(Now::zoned_date_time)
 {
-    auto calendar = vm.argument(0);
+    auto calendar_like = vm.argument(0);
     auto temporal_time_zone_like = vm.argument(1);
 
-    // 1. Return ? SystemZonedDateTime(temporalTimeZoneLike, calendar).
-    return TRY(system_zoned_date_time(global_object, temporal_time_zone_like, calendar));
+    // 1. Return ? SystemZonedDateTime(temporalTimeZoneLike, calendarLike).
+    return TRY(system_zoned_date_time(global_object, temporal_time_zone_like, calendar_like));
 }
 
 // 2.2.6 Temporal.Now.zonedDateTimeISO ( [ temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetimeiso
@@ -104,14 +104,14 @@ JS_DEFINE_NATIVE_FUNCTION(Now::zoned_date_time_iso)
     return TRY(system_zoned_date_time(global_object, temporal_time_zone_like, calendar));
 }
 
-// 2.2.7 Temporal.Now.plainDate ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindate
+// 2.2.7 Temporal.Now.plainDate ( calendarLike [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindate
 JS_DEFINE_NATIVE_FUNCTION(Now::plain_date)
 {
-    auto calendar = vm.argument(0);
+    auto calendar_like = vm.argument(0);
     auto temporal_time_zone_like = vm.argument(1);
 
-    // 1. Let dateTime be ? SystemDateTime(temporalTimeZoneLike, calendar).
-    auto* date_time = TRY(system_date_time(global_object, temporal_time_zone_like, calendar));
+    // 1. Let dateTime be ? SystemDateTime(temporalTimeZoneLike, calendarLike).
+    auto* date_time = TRY(system_date_time(global_object, temporal_time_zone_like, calendar_like));
 
     // 2. Return ! CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
     return TRY(create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar()));

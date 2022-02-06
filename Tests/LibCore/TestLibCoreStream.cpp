@@ -7,10 +7,8 @@
 #include <AK/Format.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
-#include <LibCore/LocalSocket.h>
 #include <LibCore/Stream.h>
 #include <LibCore/TCPServer.h>
-#include <LibCore/TCPSocket.h>
 #include <LibCore/Timer.h>
 #include <LibCore/UDPServer.h>
 #include <LibCore/UDPSocket.h>
@@ -142,7 +140,7 @@ TEST_CASE(file_adopt_invalid_fd)
 
 TEST_CASE(should_error_when_connection_fails)
 {
-    // NOTE: This is required here because Core::TCPSocket requires
+    // NOTE: This is required here because Core::Stream::TCPSocket requires
     //       Core::EventLoop through Core::Notifier.
     Core::EventLoop event_loop;
 

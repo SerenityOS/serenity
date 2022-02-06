@@ -20,7 +20,7 @@ public:
     HTMLInputElement(DOM::Document&, QualifiedName);
     virtual ~HTMLInputElement() override;
 
-    virtual RefPtr<Layout::Node> create_layout_node() override;
+    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     String type() const { return attribute(HTML::AttributeNames::type); }
     String default_value() const { return attribute(HTML::AttributeNames::value); }

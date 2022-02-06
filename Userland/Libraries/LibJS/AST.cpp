@@ -1508,6 +1508,8 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
 
     auto method_value = TRY(m_function->execute(interpreter, global_object)).release_value();
 
+    auto function_handle = make_handle(&method_value.as_function());
+
     auto& method_function = static_cast<ECMAScriptFunctionObject&>(method_value.as_function());
     method_function.make_method(target);
 
@@ -1613,7 +1615,7 @@ private:
 ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation(Interpreter& interpreter, GlobalObject& global_object, Object& target) const
 {
     auto property_key = TRY(class_key_to_property_name(interpreter, global_object, *m_key));
-    ECMAScriptFunctionObject* initializer = nullptr;
+    Handle<ECMAScriptFunctionObject> initializer {};
     if (m_initializer) {
         auto copy_initializer = m_initializer;
         auto name = property_key.visit(
@@ -1626,14 +1628,14 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
 
         // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
         auto function_code = create_ast_node<ClassFieldInitializerStatement>(m_initializer->source_range(), copy_initializer.release_nonnull(), name);
-        initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), String::empty(), String::empty(), *function_code, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
+        initializer = make_handle(ECMAScriptFunctionObject::create(interpreter.global_object(), String::empty(), String::empty(), *function_code, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false));
         initializer->make_method(target);
     }
 
     return ClassValue {
         ClassFieldDefinition {
-            property_key,
-            initializer,
+            move(property_key),
+            move(initializer),
         }
     };
 }
@@ -1832,7 +1834,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
 
     prototype->define_direct_property(vm.names.constructor, class_constructor, Attribute::Writable | Attribute::Configurable);
 
-    using StaticElement = Variant<ClassElement::ClassFieldDefinition, ECMAScriptFunctionObject*>;
+    using StaticElement = Variant<ClassElement::ClassFieldDefinition, Handle<ECMAScriptFunctionObject>>;
 
     Vector<PrivateElement> static_private_methods;
     Vector<PrivateElement> instance_private_methods;
@@ -1875,7 +1877,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
             VERIFY(element_value.has<Completion>() && element_value.get<Completion>().value().has_value());
             auto& element_object = element_value.get<Completion>().value()->as_object();
             VERIFY(is<ECMAScriptFunctionObject>(element_object));
-            static_elements.append(static_cast<ECMAScriptFunctionObject*>(&element_object));
+            static_elements.append(make_handle(static_cast<ECMAScriptFunctionObject*>(&element_object)));
         }
     }
 
@@ -1886,7 +1888,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
         MUST(class_scope->initialize_binding(global_object, binding_name, class_constructor));
 
     for (auto& field : instance_fields)
-        class_constructor->add_field(field.name, field.initializer);
+        class_constructor->add_field(field.name, field.initializer.is_null() ? nullptr : field.initializer.cell());
 
     for (auto& private_method : instance_private_methods)
         class_constructor->add_private_method(private_method);
@@ -1896,12 +1898,13 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
 
     for (auto& element : static_elements) {
         TRY(element.visit(
-            [&](ClassElement::ClassFieldDefinition const& field) -> ThrowCompletionOr<void> {
-                return TRY(class_constructor->define_field(field.name, field.initializer));
+            [&](ClassElement::ClassFieldDefinition& field) -> ThrowCompletionOr<void> {
+                return TRY(class_constructor->define_field(field.name, field.initializer.is_null() ? nullptr : field.initializer.cell()));
             },
-            [&](ECMAScriptFunctionObject* static_block_function) -> ThrowCompletionOr<void> {
+            [&](Handle<ECMAScriptFunctionObject> static_block_function) -> ThrowCompletionOr<void> {
+                VERIFY(!static_block_function.is_null());
                 // We discard any value returned here.
-                TRY(call(global_object, static_block_function, class_constructor_value));
+                TRY(call(global_object, *static_block_function.cell(), class_constructor_value));
                 return {};
             }));
     }

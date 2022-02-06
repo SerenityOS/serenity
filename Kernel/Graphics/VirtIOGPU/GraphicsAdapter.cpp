@@ -43,8 +43,7 @@ void GraphicsAdapter::initialize_framebuffer_devices()
     create_framebuffer_devices();
     m_created_framebuffer_devices = true;
 
-    // FIXME: This is a very wrong way to do this...
-    GraphicsManagement::the().m_console = default_console();
+    GraphicsManagement::the().set_console(*default_console());
 }
 
 void GraphicsAdapter::enable_consoles()

@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    Optional<bool> execute(MatchInput const& input, MatchState& state, size_t& operations) const;
+    bool execute(MatchInput const& input, MatchState& state, size_t& operations) const;
 
     Regex<Parser> const* m_pattern;
     typename ParserTraits<Parser>::OptionsType const m_regex_options;

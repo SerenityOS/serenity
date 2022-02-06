@@ -35,15 +35,18 @@ String g_currently_running_test;
 
 class TestRunner : public ::Test::TestRunner {
 public:
-    TestRunner(String test_root, Regex<PosixExtended> exclude_regex, NonnullRefPtr<Core::ConfigFile> config, Regex<PosixExtended> skip_regex, bool print_progress, bool print_json, bool print_all_output, bool print_times = true)
+    TestRunner(String test_root, Regex<PosixExtended> exclude_regex, NonnullRefPtr<Core::ConfigFile> config, Regex<PosixExtended> skip_regex, bool run_skipped_tests, bool print_progress, bool print_json, bool print_all_output, bool print_times = true)
         : ::Test::TestRunner(move(test_root), print_times, print_progress, print_json)
         , m_exclude_regex(move(exclude_regex))
         , m_config(move(config))
         , m_skip_regex(move(skip_regex))
+        , m_run_skipped_tests(run_skipped_tests)
         , m_print_all_output(print_all_output)
     {
-        m_skip_directories = m_config->read_entry("Global", "SkipDirectories", "").split(' ');
-        m_skip_files = m_config->read_entry("Global", "SkipTests", "").split(' ');
+        if (!run_skipped_tests) {
+            m_skip_directories = m_config->read_entry("Global", "SkipDirectories", "").split(' ');
+            m_skip_files = m_config->read_entry("Global", "SkipTests", "").split(' ');
+        }
     }
 
     virtual ~TestRunner() = default;
@@ -63,6 +66,7 @@ protected:
     Vector<String> m_skip_files;
     Vector<String> m_failed_test_names;
     Regex<PosixExtended> m_skip_regex;
+    bool m_run_skipped_tests { false };
     bool m_print_all_output { false };
 };
 
@@ -82,6 +86,9 @@ Vector<String> TestRunner::get_test_paths() const
 
 bool TestRunner::should_skip_test(const LexicalPath& test_path)
 {
+    if (m_run_skipped_tests)
+        return false;
+
     for (const String& dir : m_skip_directories) {
         if (test_path.dirname().contains(dir))
             return true;
@@ -305,6 +312,7 @@ int main(int argc, char** argv)
     bool print_json = false;
     bool print_all_output = false;
     bool run_benchmarks = false;
+    bool run_skipped_tests = false;
     const char* specified_test_root = nullptr;
     String test_glob;
     String exclude_pattern;
@@ -329,6 +337,7 @@ int main(int argc, char** argv)
     args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
     args_parser.add_option(print_all_output, "Show all test output", "verbose", 'v');
     args_parser.add_option(run_benchmarks, "Run benchmarks as well", "benchmarks", 'b');
+    args_parser.add_option(run_skipped_tests, "Run all matching tests, even those marked as 'skip'", "all", 'a');
     args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
     args_parser.add_option(exclude_pattern, "Regular expression to use to exclude paths from being considered tests", "exclude-pattern", 'e', "pattern");
     args_parser.add_option(config_file, "Configuration file to use", "config-file", 'c', "filename");
@@ -389,7 +398,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    TestRunner test_runner(test_root, move(exclude_regex), move(config), move(skip_regex), print_progress, print_json, print_all_output);
+    TestRunner test_runner(test_root, move(exclude_regex), move(config), move(skip_regex), run_skipped_tests, print_progress, print_json, print_all_output);
     test_runner.run(test_glob);
 
     return test_runner.counts().tests_failed;

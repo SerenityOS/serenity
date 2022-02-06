@@ -113,14 +113,14 @@ public:
     ALWAYS_INLINE size_t size() const { return m_size; }
     size_t capacity() const { return m_capacity; }
 
-    StorageType* data()
+    ALWAYS_INLINE StorageType* data()
     {
         if constexpr (inline_capacity > 0)
             return m_outline_buffer ? m_outline_buffer : inline_buffer();
         return m_outline_buffer;
     }
 
-    StorageType const* data() const
+    ALWAYS_INLINE StorageType const* data() const
     {
         if constexpr (inline_capacity > 0)
             return m_outline_buffer ? m_outline_buffer : inline_buffer();

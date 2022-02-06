@@ -5,10 +5,10 @@
  */
 
 #include <LibCore/LocalServer.h>
-#include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
+#include <LibCore/SystemServerTakeover.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -37,39 +37,8 @@ ErrorOr<void> LocalServer::take_over_from_system_server(String const& socket_pat
     if (m_listening)
         return Error::from_string_literal("Core::LocalServer: Can't perform socket takeover when already listening"sv);
 
-    if (!LocalSocket::s_overtaken_sockets_parsed)
-        LocalSocket::parse_sockets_from_system_server();
-
-    int fd = -1;
-    if (socket_path.is_null()) {
-        // We want the first (and only) socket.
-        if (LocalSocket::s_overtaken_sockets.size() == 1) {
-            fd = LocalSocket::s_overtaken_sockets.begin()->value;
-        }
-    } else {
-        auto it = LocalSocket::s_overtaken_sockets.find(socket_path);
-        if (it != LocalSocket::s_overtaken_sockets.end()) {
-            fd = it->value;
-        }
-    }
-
-    if (fd < 0)
-        return Error::from_string_literal("Core::LocalServer: No file descriptor for socket takeover"sv);
-
-    // Sanity check: it has to be a socket.
-    auto stat = TRY(Core::System::fstat(fd));
-
-    if (!S_ISSOCK(stat.st_mode))
-        return Error::from_string_literal("Core::LocalServer: Attempted socket takeover with non-socket file descriptor"sv);
-
-    // It had to be !CLOEXEC for obvious reasons, but we
-    // don't need it to be !CLOEXEC anymore, so set the
-    // CLOEXEC flag now.
-    TRY(Core::System::fcntl(fd, F_SETFD, FD_CLOEXEC));
-
-    // The SystemServer has passed us the socket, so use that instead of
-    // creating our own.
-    m_fd = fd;
+    auto socket = TRY(take_over_socket_from_system_server(socket_path));
+    m_fd = TRY(socket->release_fd());
 
     m_listening = true;
     setup_notifier();

@@ -8,9 +8,10 @@
 
 namespace HTTP {
 
-HttpResponse::HttpResponse(int code, HashMap<String, String, CaseInsensitiveStringTraits>&& headers)
+HttpResponse::HttpResponse(int code, HashMap<String, String, CaseInsensitiveStringTraits>&& headers, size_t size)
     : m_code(code)
     , m_headers(move(headers))
+    , m_downloaded_size(size)
 {
 }
 

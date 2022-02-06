@@ -36,3 +36,9 @@ describe("correct behavior", () => {
         expect(d.getUTCMilliseconds()).toBeNaN();
     });
 });
+
+test("invalid date", () => {
+    let date = new Date(NaN);
+    expect(date.setUTCMilliseconds(2)).toBeNaN();
+    expect(date.getUTCMilliseconds()).toBeNaN();
+});

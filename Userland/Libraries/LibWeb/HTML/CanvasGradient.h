@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
+#include <LibGfx/Color.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
 namespace Web::HTML {
@@ -27,7 +28,7 @@ public:
     static NonnullRefPtr<CanvasGradient> create_linear(double x0, double y0, double x1, double y1);
     static NonnullRefPtr<CanvasGradient> create_conic(double start_angle, double x, double y);
 
-    void add_color_stop(double offset, String const& color);
+    DOM::ExceptionOr<void> add_color_stop(double offset, String const& color);
 
     ~CanvasGradient();
 
@@ -35,6 +36,13 @@ private:
     explicit CanvasGradient(Type);
 
     Type m_type {};
+
+    struct ColorStop {
+        double offset { 0 };
+        Gfx::Color color;
+    };
+
+    Vector<ColorStop> m_color_stops;
 };
 
 }

@@ -54,6 +54,7 @@ public:
     String attribute(const FlyString& name) const { return get_attribute(name); }
     String get_attribute(const FlyString& name) const;
     ExceptionOr<void> set_attribute(const FlyString& name, const String& value);
+    ExceptionOr<void> set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value);
     void remove_attribute(const FlyString& name);
     size_t attribute_list_size() const { return m_attributes->length(); }
     NonnullRefPtr<NamedNodeMap> const& attributes() const { return m_attributes; }
@@ -90,7 +91,8 @@ public:
 
     String name() const { return attribute(HTML::AttributeNames::name); }
 
-    const CSS::StyleProperties* specified_css_values() const { return m_specified_css_values.ptr(); }
+    CSS::StyleProperties const* specified_css_values() const { return m_specified_css_values.ptr(); }
+    void set_specified_css_values(RefPtr<CSS::StyleProperties> style) { m_specified_css_values = move(style); }
     NonnullRefPtr<CSS::StyleProperties> computed_style();
 
     const CSS::CSSStyleDeclaration* inline_style() const { return m_inline_style; }
@@ -128,8 +130,9 @@ public:
 
     NonnullRefPtr<Geometry::DOMRect> get_bounding_client_rect() const;
 
+    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>);
+
 protected:
-    RefPtr<Layout::Node> create_layout_node() override;
     virtual void children_changed() override;
 
 private:

@@ -40,6 +40,13 @@ Length Length::make_px(float value)
     return Length(value, Type::Px);
 }
 
+Length Length::make_calculated(NonnullRefPtr<CalculatedStyleValue> calculated_style_value)
+{
+    Length length { 0, Type::Calculated };
+    length.m_calculated_style = move(calculated_style_value);
+    return length;
+}
+
 Length Length::percentage_of(Percentage const& percentage) const
 {
     if (is_undefined_or_auto()) {
@@ -55,7 +62,7 @@ Length Length::resolved(Length const& fallback_for_undefined, Layout::Node const
     if (is_undefined())
         return fallback_for_undefined;
     if (is_calculated())
-        return Length(resolve_calculated_value(layout_node), Type::Px);
+        return m_calculated_style->resolve_length(layout_node).release_value();
     if (is_relative())
         return make_px(to_px(layout_node));
     return *this;
@@ -69,11 +76,6 @@ Length Length::resolved_or_auto(Layout::Node const& layout_node) const
 Length Length::resolved_or_zero(Layout::Node const& layout_node) const
 {
     return resolved(make_px(0), layout_node);
-}
-
-void Length::set_calculated_style(CalculatedStyleValue* value)
-{
-    m_calculated_style = value;
 }
 
 float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const
@@ -110,123 +112,6 @@ float Length::to_px(Layout::Node const& layout_node) const
     if (!root_element || !root_element->layout_node())
         return 0;
     return to_px(viewport_rect, layout_node.font().metrics('M'), root_element->layout_node()->font().presentation_size());
-}
-
-static float resolve_calc_value(CalculatedStyleValue::CalcValue const& calc_value, Layout::Node const& layout_node);
-static float resolve_calc_number_value(CalculatedStyleValue::CalcNumberValue const&);
-static float resolve_calc_product(NonnullOwnPtr<CalculatedStyleValue::CalcProduct> const& calc_product, Layout::Node const& layout_node);
-static float resolve_calc_sum(NonnullOwnPtr<CalculatedStyleValue::CalcSum> const& calc_sum, Layout::Node const& layout_node);
-static float resolve_calc_number_sum(NonnullOwnPtr<CalculatedStyleValue::CalcNumberSum> const&);
-static float resolve_calc_number_product(NonnullOwnPtr<CalculatedStyleValue::CalcNumberProduct> const&);
-
-float Length::resolve_calculated_value(Layout::Node const& layout_node) const
-{
-    if (!m_calculated_style)
-        return 0.0f;
-
-    auto& expression = m_calculated_style->expression();
-
-    auto length = resolve_calc_sum(expression, layout_node);
-    return length;
-};
-
-static float resolve_calc_value(CalculatedStyleValue::CalcValue const& calc_value, Layout::Node const& layout_node)
-{
-    return calc_value.visit(
-        [](float value) { return value; },
-        [&](Length const& length) {
-            return length.resolved_or_zero(layout_node).to_px(layout_node);
-        },
-        [&](NonnullOwnPtr<CalculatedStyleValue::CalcSum> const& calc_sum) {
-            return resolve_calc_sum(calc_sum, layout_node);
-        },
-        [](auto&) {
-            VERIFY_NOT_REACHED();
-            return 0.0f;
-        });
-}
-
-static float resolve_calc_number_product(NonnullOwnPtr<CalculatedStyleValue::CalcNumberProduct> const& calc_number_product)
-{
-    auto value = resolve_calc_number_value(calc_number_product->first_calc_number_value);
-
-    for (auto& additional_number_value : calc_number_product->zero_or_more_additional_calc_number_values) {
-        auto additional_value = resolve_calc_number_value(additional_number_value.value);
-        if (additional_number_value.op == CalculatedStyleValue::CalcNumberProductPartWithOperator::Multiply)
-            value *= additional_value;
-        else if (additional_number_value.op == CalculatedStyleValue::CalcNumberProductPartWithOperator::Divide)
-            value /= additional_value;
-        else
-            VERIFY_NOT_REACHED();
-    }
-
-    return value;
-}
-
-static float resolve_calc_number_sum(NonnullOwnPtr<CalculatedStyleValue::CalcNumberSum> const& calc_number_sum)
-{
-    auto value = resolve_calc_number_product(calc_number_sum->first_calc_number_product);
-
-    for (auto& additional_product : calc_number_sum->zero_or_more_additional_calc_number_products) {
-        auto additional_value = resolve_calc_number_product(additional_product.calc_number_product);
-        if (additional_product.op == CSS::CalculatedStyleValue::CalcNumberSumPartWithOperator::Add)
-            value += additional_value;
-        else if (additional_product.op == CSS::CalculatedStyleValue::CalcNumberSumPartWithOperator::Subtract)
-            value -= additional_value;
-        else
-            VERIFY_NOT_REACHED();
-    }
-
-    return value;
-}
-
-static float resolve_calc_number_value(CalculatedStyleValue::CalcNumberValue const& number_value)
-{
-    return number_value.visit(
-        [](float number) { return number; },
-        [](NonnullOwnPtr<CalculatedStyleValue::CalcNumberSum> const& calc_number_sum) {
-            return resolve_calc_number_sum(calc_number_sum);
-        });
-}
-
-static float resolve_calc_product(NonnullOwnPtr<CalculatedStyleValue::CalcProduct> const& calc_product, Layout::Node const& layout_node)
-{
-    auto value = resolve_calc_value(calc_product->first_calc_value, layout_node);
-
-    for (auto& additional_value : calc_product->zero_or_more_additional_calc_values) {
-        additional_value.value.visit(
-            [&](CalculatedStyleValue::CalcValue const& calc_value) {
-                if (additional_value.op != CalculatedStyleValue::CalcProductPartWithOperator::Multiply)
-                    VERIFY_NOT_REACHED();
-                auto resolved_value = resolve_calc_value(calc_value, layout_node);
-                value *= resolved_value;
-            },
-            [&](CalculatedStyleValue::CalcNumberValue const& calc_number_value) {
-                if (additional_value.op != CalculatedStyleValue::CalcProductPartWithOperator::Divide)
-                    VERIFY_NOT_REACHED();
-                auto resolved_calc_number_value = resolve_calc_number_value(calc_number_value);
-                value /= resolved_calc_number_value;
-            });
-    }
-
-    return value;
-}
-
-static float resolve_calc_sum(NonnullOwnPtr<CalculatedStyleValue::CalcSum> const& calc_sum, Layout::Node const& layout_node)
-{
-    auto value = resolve_calc_product(calc_sum->first_calc_product, layout_node);
-
-    for (auto& additional_product : calc_sum->zero_or_more_additional_calc_products) {
-        auto additional_value = resolve_calc_product(additional_product.calc_product, layout_node);
-        if (additional_product.op == CalculatedStyleValue::CalcSumPartWithOperator::Operation::Add)
-            value += additional_value;
-        else if (additional_product.op == CalculatedStyleValue::CalcSumPartWithOperator::Operation::Subtract)
-            value -= additional_value;
-        else
-            VERIFY_NOT_REACHED();
-    }
-
-    return value;
 }
 
 const char* Length::unit_name() const

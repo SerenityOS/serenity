@@ -33,6 +33,7 @@ set(AK_TEST_SOURCES
     TestHex.cpp
     TestIPv4Address.cpp
     TestIndexSequence.cpp
+    TestIntegerMath.cpp
     TestIntrusiveList.cpp
     TestIntrusiveRedBlackTree.cpp
     TestJSON.cpp

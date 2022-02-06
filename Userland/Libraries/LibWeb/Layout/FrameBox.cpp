@@ -68,7 +68,7 @@ void FrameBox::did_set_rect()
     ReplacedBox::did_set_rect();
 
     VERIFY(dom_node().nested_browsing_context());
-    dom_node().nested_browsing_context()->set_size(size().to_type<int>());
+    dom_node().nested_browsing_context()->set_size(content_size().to_type<int>());
 }
 
 }

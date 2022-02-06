@@ -10,7 +10,6 @@
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/SelectorEngine.h>
-#include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
@@ -70,8 +69,6 @@ ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& va
     if (name.is_empty())
         return InvalidCharacterError::create("Attribute name must not be empty");
 
-    CSS::StyleInvalidator style_invalidator(document());
-
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
     bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
@@ -93,14 +90,77 @@ ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& va
     }
 
     parse_attribute(attribute->local_name(), value);
+
+    // FIXME: Invalidate less.
+    document().invalidate_style();
+
     return {};
+}
+
+// https://dom.spec.whatwg.org/#validate-and-extract
+static ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString qualified_name)
+{
+    // 1. If namespace is the empty string, then set it to null.
+    if (namespace_.is_empty())
+        namespace_ = {};
+
+    // FIXME: 2. Validate qualifiedName.
+
+    // 3. Let prefix be null.
+    FlyString prefix = {};
+
+    // 4. Let localName be qualifiedName.
+    auto local_name = qualified_name;
+
+    // 5. If qualifiedName contains a U+003A (:), then strictly split the string on it and set prefix to the part before and localName to the part after.
+    if (qualified_name.view().contains(':')) {
+        auto parts = qualified_name.view().split_view(':');
+        // FIXME: Handle parts > 2
+        prefix = parts[0];
+        local_name = parts[1];
+    }
+
+    // 6. If prefix is non-null and namespace is null, then throw a "NamespaceError" DOMException.
+    if (!prefix.is_null() && namespace_.is_null())
+        return NamespaceError::create("Prefix is non-null and namespace is null.");
+
+    // 7. If prefix is "xml" and namespace is not the XML namespace, then throw a "NamespaceError" DOMException.
+    if (prefix == "xml"sv && namespace_ != Namespace::XML)
+        return NamespaceError::create("Prefix is 'xml' and namespace is not the XML namespace.");
+
+    // 8. If either qualifiedName or prefix is "xmlns" and namespace is not the XMLNS namespace, then throw a "NamespaceError" DOMException.
+    if ((qualified_name == "xmlns"sv || prefix == "xmlns"sv) && namespace_ != Namespace::XMLNS)
+        return NamespaceError::create("Either qualifiedName or prefix is 'xmlns' and namespace is not the XMLNS namespace.");
+
+    // 9. If namespace is the XMLNS namespace and neither qualifiedName nor prefix is "xmlns", then throw a "NamespaceError" DOMException.
+    if (namespace_ == Namespace::XMLNS && !(qualified_name == "xmlns"sv || prefix == "xmlns"sv))
+        return NamespaceError::create("Namespace is the XMLNS namespace and neither qualifiedName nor prefix is 'xmlns'.");
+
+    // 10. Return namespace, prefix, and localName.
+    return QualifiedName { namespace_, prefix, local_name };
+}
+
+// https://dom.spec.whatwg.org/#dom-element-setattributens
+ExceptionOr<void> Element::set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value)
+{
+    // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
+    auto result = validate_and_extract(namespace_, qualified_name);
+    if (result.is_exception())
+        return result.exception();
+
+    // FIXME: 2. Set an attribute value for this using localName, value, and also prefix and namespace.
+
+    // FIXME: Don't just call through to setAttribute() here.
+    return set_attribute(result.value().local_name(), value);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-removeattribute
 void Element::remove_attribute(const FlyString& name)
 {
-    CSS::StyleInvalidator style_invalidator(document());
     m_attributes->remove_attribute(name);
+
+    // FIXME: Invalidate less.
+    document().invalidate_style();
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
@@ -130,14 +190,9 @@ bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensit
     });
 }
 
-RefPtr<Layout::Node> Element::create_layout_node()
+RefPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    auto style = document().style_computer().compute_style(*this);
-    const_cast<Element&>(*this).m_specified_css_values = style;
     auto display = style->display();
-
-    if (display.is_none())
-        return nullptr;
 
     if (local_name() == "noscript" && document().is_scripting_enabled())
         return nullptr;

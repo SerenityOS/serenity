@@ -89,7 +89,7 @@ public:
     SVGPathElement(DOM::Document&, QualifiedName);
     virtual ~SVGPathElement() override = default;
 
-    virtual RefPtr<Layout::Node> create_layout_node() override;
+    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 

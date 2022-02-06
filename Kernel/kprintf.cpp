@@ -11,12 +11,17 @@
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/PCISerialDevice.h>
+#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/kstdio.h>
 
 #include <LibC/stdarg.h>
+
+namespace Kernel {
+extern Atomic<Graphics::BootFramebufferConsole*> boot_framebuffer_console;
+}
 
 static bool serial_debug;
 // A recursive spinlock allows us to keep writing in the case where a
@@ -75,6 +80,8 @@ static void critical_console_out(char ch)
     // especially when we want to avoid any memory allocations...
     if (GraphicsManagement::is_initialized() && GraphicsManagement::the().console()) {
         GraphicsManagement::the().console()->write(ch, true);
+    } else if (auto* boot_console = boot_framebuffer_console.load()) {
+        boot_console->write(ch, true);
     }
 }
 
@@ -92,6 +99,8 @@ static void console_out(char ch)
     }
     if (ConsoleManagement::is_initialized()) {
         ConsoleManagement::the().debug_tty()->emit_char(ch);
+    } else if (auto* boot_console = boot_framebuffer_console.load()) {
+        boot_console->write(ch, true);
     }
 }
 

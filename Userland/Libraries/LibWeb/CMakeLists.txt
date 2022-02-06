@@ -37,6 +37,7 @@ set(SOURCES
     CSS/Parser/StyleRules.cpp
     CSS/Parser/Token.cpp
     CSS/Parser/Tokenizer.cpp
+    CSS/Percentage.cpp
     CSS/PreferredColorScheme.cpp
     CSS/PropertyID.cpp
     CSS/PropertyID.h
@@ -45,7 +46,6 @@ set(SOURCES
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
     CSS/StyleComputer.cpp
-    CSS/StyleInvalidator.cpp
     CSS/StyleProperties.cpp
     CSS/StyleSheet.cpp
     CSS/StyleSheetList.cpp

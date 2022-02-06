@@ -36,7 +36,7 @@ void init(TSelf* self, TJob job)
         if (auto* response = self->job().response()) {
             self->set_status_code(response->code());
             self->set_response_headers(response->headers());
-            self->set_downloaded_size(self->output_stream().size());
+            self->set_downloaded_size(response->downloaded_size());
         }
 
         // if we didn't know the total size, pretend that the request finished successfully
@@ -50,8 +50,12 @@ void init(TSelf* self, TJob job)
         self->did_progress(total, current);
     };
     if constexpr (requires { job->on_certificate_requested; }) {
-        job->on_certificate_requested = [self](auto&) {
+        job->on_certificate_requested = [job, self] {
             self->did_request_certificates();
+            Core::EventLoop::current().spin_until([&] {
+                return job->received_client_certificates();
+            });
+            return job->take_client_certificates();
         };
     }
 }
@@ -79,8 +83,7 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& clie
         return {};
     request.set_body(allocated_body_result.release_value());
 
-    auto output_stream = make<OutputFileStream>(pipe_result.value().write_fd);
-    output_stream->make_unbuffered();
+    auto output_stream = MUST(Core::Stream::File::adopt_fd(pipe_result.value().write_fd, Core::Stream::OpenMode::Write));
     auto job = TJob::construct(move(request), *output_stream);
     auto protocol_request = TRequest::create_with_job(forward<TBadgedProtocol>(protocol), client, (TJob&)*job, move(output_stream));
     protocol_request->set_request_fd(pipe_result.value().read_fd);

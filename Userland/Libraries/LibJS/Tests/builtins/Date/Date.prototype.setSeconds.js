@@ -14,3 +14,9 @@ test("basic functionality", () => {
     d.setSeconds("a");
     expect(d.getSeconds()).toBe(NaN);
 });
+
+test("invalid date", () => {
+    let date = new Date(NaN);
+    expect(date.setSeconds(2)).toBeNaN();
+    expect(date.getSeconds()).toBeNaN();
+});

@@ -6,7 +6,7 @@
 
 #include <AK/Array.h>
 #include <AK/Debug.h>
-#include <AK/Math.h>
+#include <AK/IntegralMath.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>

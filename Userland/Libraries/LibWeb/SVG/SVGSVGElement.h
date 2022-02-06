@@ -18,7 +18,7 @@ public:
 
     SVGSVGElement(DOM::Document&, QualifiedName);
 
-    virtual RefPtr<Layout::Node> create_layout_node() override;
+    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     unsigned width() const;
     unsigned height() const;

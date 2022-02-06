@@ -35,6 +35,7 @@ public:
 
 private:
     virtual const char* class_name() const override { return "PromiseValueList"; }
+    virtual void visit_edges(Visitor&) override;
 
     Vector<Value> m_values;
 };

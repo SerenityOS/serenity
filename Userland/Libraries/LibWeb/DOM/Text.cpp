@@ -19,11 +19,6 @@ Text::~Text()
 {
 }
 
-RefPtr<Layout::Node> Text::create_layout_node()
-{
-    return adopt_ref(*new Layout::TextNode(document(), *this));
-}
-
 // https://dom.spec.whatwg.org/#dom-text-text
 NonnullRefPtr<Text> Text::create_with_global_object(Bindings::WindowObject& window, String const& data)
 {

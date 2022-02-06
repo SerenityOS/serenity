@@ -19,7 +19,7 @@ namespace Coredump {
 
 ELFObjectInfo const* Backtrace::object_info_for_region(MemoryRegionInfo const& region)
 {
-    auto path = region.object_name();
+    String path = region.object_name();
     if (!path.starts_with('/') && Core::File::looks_like_shared_library(path))
         path = LexicalPath::join("/usr/lib", path).string();
 
@@ -117,8 +117,10 @@ void Backtrace::add_entry(const Reader& coredump, FlatPtr ip)
     // in the object file.
     auto region = coredump.first_region_for_object(object_name);
     auto object_info = object_info_for_region(*region);
-    if (!object_info)
+    if (!object_info) {
+        m_entries.append({ ip, object_name, {}, {} });
         return;
+    }
 
     auto function_name = object_info->debug_info->elf().symbolicate(ip - region->region_start);
     auto source_position = object_info->debug_info->get_source_position_with_inlines(ip - region->region_start);

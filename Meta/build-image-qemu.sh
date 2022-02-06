@@ -74,6 +74,12 @@ DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Roo
 DISK_SIZE_BYTES=$(((DISK_SIZE_BYTES + (INODE_COUNT * INODE_SIZE * 2)) * 3))
 INODE_COUNT=$((INODE_COUNT * 7))
 
+E2FSCK="/usr/sbin/e2fsck"
+
+if [ ! -f "$E2FSCK" ]; then
+    E2FSCK=/sbin/e2fsck
+fi
+
 USE_EXISTING=0
 
 if [ -f _disk_image ]; then
@@ -81,7 +87,7 @@ if [ -f _disk_image ]; then
 
     echo "checking existing image"
     result=0
-    /usr/sbin/e2fsck -f -y _disk_image || result=$?
+    "$E2FSCK" -f -y _disk_image || result=$?
     if [ $result -ge 4 ]; then
         rm -f _disk_image
         USE_EXISTING=0

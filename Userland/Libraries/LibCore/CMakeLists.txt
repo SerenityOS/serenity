@@ -16,7 +16,6 @@ set(SOURCES
     Group.cpp
     IODevice.cpp
     LocalServer.cpp
-    LocalSocket.cpp
     LockFile.cpp
     MappedFile.cpp
     MimeData.cpp
@@ -32,8 +31,8 @@ set(SOURCES
     Stream.cpp
     StandardPaths.cpp
     System.cpp
+    SystemServerTakeover.cpp
     TCPServer.cpp
-    TCPSocket.cpp
     TempFile.cpp
     Timer.cpp
     UDPServer.cpp

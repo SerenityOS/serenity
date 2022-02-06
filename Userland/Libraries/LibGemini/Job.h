@@ -8,38 +8,37 @@
 
 #include <AK/Optional.h>
 #include <LibCore/NetworkJob.h>
-#include <LibCore/TCPSocket.h>
 #include <LibGemini/GeminiRequest.h>
 #include <LibGemini/GeminiResponse.h>
 
 namespace Gemini {
 
 class Job : public Core::NetworkJob {
+    C_OBJECT(Job);
+
 public:
-    explicit Job(const GeminiRequest&, OutputStream&);
+    explicit Job(const GeminiRequest&, Core::Stream::Stream&);
     virtual ~Job() override;
 
-    virtual void start(NonnullRefPtr<Core::Socket>) override = 0;
-    virtual void shutdown(ShutdownMode) override = 0;
+    virtual void start(Core::Stream::Socket&) override;
+    virtual void shutdown(ShutdownMode) override;
 
     GeminiResponse* response() { return static_cast<GeminiResponse*>(Core::NetworkJob::response()); }
     const GeminiResponse* response() const { return static_cast<const GeminiResponse*>(Core::NetworkJob::response()); }
+
+    const URL& url() const { return m_request.url(); }
+    Core::Stream::Socket const* socket() const { return m_socket; }
 
 protected:
     void finish_up();
     void on_socket_connected();
     void flush_received_buffers();
-    virtual void register_on_ready_to_read(Function<void()>) = 0;
-    virtual void register_on_ready_to_write(Function<void()>) = 0;
-    virtual bool can_read_line() const = 0;
-    virtual String read_line(size_t) = 0;
-    virtual bool can_read() const = 0;
-    virtual ByteBuffer receive(size_t) = 0;
-    virtual bool eof() const = 0;
-    virtual bool write(ReadonlyBytes) = 0;
-    virtual bool is_established() const = 0;
-    virtual bool should_fail_on_empty_payload() const { return false; }
-    virtual void read_while_data_available(Function<IterationDecision()> read) { read(); };
+    void register_on_ready_to_read(Function<void()>);
+    bool can_read_line() const;
+    String read_line(size_t);
+    bool can_read() const;
+    ByteBuffer receive(size_t);
+    bool write(ReadonlyBytes);
 
     enum class State {
         InStatus,
@@ -53,8 +52,8 @@ protected:
     String m_meta;
     Vector<ByteBuffer, 2> m_received_buffers;
     size_t m_received_size { 0 };
-    bool m_sent_data { false };
-    bool m_should_have_payload { false };
+    size_t m_buffered_size { 0 };
+    Core::Stream::BufferedSocketBase* m_socket { nullptr };
 };
 
 }

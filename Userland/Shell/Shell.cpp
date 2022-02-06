@@ -1453,7 +1453,12 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
         cached_path.span(),
         name,
         nullptr,
-        [](auto& name, auto& program) { return name.compare(program.view()); });
+        [](auto& name, auto& program) {
+            return strncmp(
+                name.characters_without_null_termination(),
+                program.characters(),
+                name.length());
+        });
 
     if (!match)
         return complete_path("", name, offset, ExecutableOnly::Yes);

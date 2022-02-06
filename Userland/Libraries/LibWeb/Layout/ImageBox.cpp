@@ -65,8 +65,8 @@ void ImageBox::prepare_for_replaced_layout()
     }
 
     if (!has_intrinsic_width() && !has_intrinsic_height()) {
-        set_width(16);
-        set_height(16);
+        set_content_width(16);
+        set_content_height(16);
     }
 }
 

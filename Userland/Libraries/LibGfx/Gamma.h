@@ -8,7 +8,10 @@
 
 #include "Color.h"
 #include <AK/Math.h>
-#include <xmmintrin.h>
+
+#ifdef __SSE__
+#    include <xmmintrin.h>
+#endif
 
 #include <AK/SIMD.h>
 

@@ -25,7 +25,12 @@ class RegExpObject : public Object {
 public:
     // JS regexps are all 'global' by default as per our definition, but the "global" flag enables "stateful".
     // FIXME: Enable 'BrowserExtended' only if in a browser context.
-    static constexpr regex::RegexOptions<ECMAScriptFlags> default_flags { (regex::ECMAScriptFlags)regex::AllFlags::Global | (regex::ECMAScriptFlags)regex::AllFlags::SkipTrimEmptyMatches | regex::ECMAScriptFlags::BrowserExtended };
+    static constexpr regex::RegexOptions<ECMAScriptFlags> default_flags {
+        (regex::ECMAScriptFlags)regex::AllFlags::SingleMatch
+        | (regex::ECMAScriptFlags)regex::AllFlags::Global
+        | (regex::ECMAScriptFlags)regex::AllFlags::SkipTrimEmptyMatches
+        | regex::ECMAScriptFlags::BrowserExtended
+    };
 
     static RegExpObject* create(GlobalObject&);
     static RegExpObject* create(GlobalObject&, Regex<ECMA262> regex, String pattern, String flags);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -36,12 +36,12 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
         auto top_right_border_radius = computed_values().border_top_right_radius();
         auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
         auto bottom_left_border_radius = computed_values().border_bottom_left_radius();
+        auto containing_block_position_in_absolute_coordinates = containing_block()->absolute_position();
 
-        for_each_fragment([&](auto& fragment) {
-            // FIXME: This recalculates our (InlineNode's) absolute_rect() for every single fragment!
-            auto rect = fragment.absolute_rect();
-            auto border_radius_data = Painting::normalized_border_radius_data(*this, rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
-            Painting::paint_background(context, *this, enclosing_int_rect(rect), computed_values().background_color(), &computed_values().background_layers(), border_radius_data);
+        for_each_fragment([&](auto const& fragment) {
+            Gfx::FloatRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
+            auto border_radius_data = Painting::normalized_border_radius_data(*this, absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            Painting::paint_background(context, *this, enclosing_int_rect(absolute_fragment_rect), computed_values().background_color(), &computed_values().background_layers(), border_radius_data);
 
             if (auto computed_box_shadow = computed_values().box_shadow(); computed_box_shadow.has_value()) {
                 auto box_shadow_data = Painting::BoxShadowData {
@@ -50,7 +50,7 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
                     .blur_radius = (int)computed_box_shadow->blur_radius.resolved_or_zero(*this).to_px(*this),
                     .color = computed_box_shadow->color
                 };
-                Painting::paint_box_shadow(context, enclosing_int_rect(rect), box_shadow_data);
+                Painting::paint_box_shadow(context, enclosing_int_rect(absolute_fragment_rect), box_shadow_data);
             }
 
             return IterationDecision::Continue;
@@ -70,10 +70,11 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
             .left = computed_values().border_left(),
         };
 
+        auto containing_block_position_in_absolute_coordinates = containing_block()->absolute_position();
+
         for_each_fragment([&](auto& fragment) {
-            // FIXME: This recalculates our (InlineNode's) absolute_rect() for every single fragment!
-            auto bordered_rect = fragment.absolute_rect();
-            bordered_rect.inflate(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
+            Gfx::FloatRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
+            auto bordered_rect = absolute_fragment_rect.inflated(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
             auto border_radius_data = Painting::normalized_border_radius_data(*this, bordered_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
 
             Painting::paint_all_borders(context, bordered_rect, border_radius_data, borders_data);
@@ -99,10 +100,6 @@ void InlineNode::for_each_fragment(Callback callback)
     // FIXME: This will be slow if the containing block has a lot of fragments!
     containing_block()->for_each_fragment([&](auto& fragment) {
         if (!is_inclusive_ancestor_of(fragment.layout_node()))
-            return IterationDecision::Continue;
-        // FIXME: This skips the 0-width fragments at the start and end of the InlineNode.
-        //        A better solution would be to not generate them in the first place.
-        if (fragment.width() == 0 || fragment.height() == 0)
             return IterationDecision::Continue;
         return callback(fragment);
     });

@@ -7,8 +7,6 @@
 #include <AK/Base64.h>
 #include <AK/Random.h>
 #include <LibCrypto/Hash/HashManager.h>
-#include <LibWebSocket/Impl/TCPWebSocketConnectionImpl.h>
-#include <LibWebSocket/Impl/TLSv12WebSocketConnectionImpl.h>
 #include <LibWebSocket/WebSocket.h>
 #include <unistd.h>
 
@@ -35,10 +33,7 @@ void WebSocket::start()
 {
     VERIFY(m_state == WebSocket::InternalState::NotStarted);
     VERIFY(!m_impl);
-    if (m_connection.is_secure())
-        m_impl = TLSv12WebSocketConnectionImpl::construct();
-    else
-        m_impl = TCPWebSocketConnectionImpl::construct();
+    m_impl = WebSocketImpl::construct();
 
     m_impl->on_connection_error = [this] {
         dbgln("WebSocket: Connection error (underlying socket)");
@@ -117,7 +112,8 @@ void WebSocket::drain_read()
     case InternalState::EstablishingProtocolConnection:
     case InternalState::SendingClientHandshake: {
         auto initializing_bytes = m_impl->read(1024);
-        dbgln("drain_read() was called on a websocket that isn't opened yet. Read {} bytes from the socket.", initializing_bytes.size());
+        if (!initializing_bytes.is_error())
+            dbgln("drain_read() was called on a websocket that isn't opened yet. Read {} bytes from the socket.", initializing_bytes.value().size());
     } break;
     case InternalState::WaitingForServerHandshake: {
         read_server_handshake();
@@ -129,7 +125,8 @@ void WebSocket::drain_read()
     case InternalState::Closed:
     case InternalState::Errored: {
         auto closed_bytes = m_impl->read(1024);
-        dbgln("drain_read() was called on a closed websocket. Read {} bytes from the socket.", closed_bytes.size());
+        if (!closed_bytes.is_error())
+            dbgln("drain_read() was called on a closed websocket. Read {} bytes from the socket.", closed_bytes.value().size());
     } break;
     default:
         VERIFY_NOT_REACHED();
@@ -209,7 +206,7 @@ void WebSocket::read_server_handshake()
         return;
 
     if (!m_has_read_server_handshake_first_line) {
-        auto header = m_impl->read_line(PAGE_SIZE);
+        auto header = m_impl->read_line(PAGE_SIZE).release_value_but_fixme_should_propagate_errors();
         auto parts = header.split(' ');
         if (parts.size() < 2) {
             dbgln("WebSocket: Server HTTP Handshake contained HTTP header was malformed");
@@ -235,7 +232,7 @@ void WebSocket::read_server_handshake()
 
     // Read the rest of the reply until we find an empty line
     while (m_impl->can_read_line()) {
-        auto line = m_impl->read_line(PAGE_SIZE);
+        auto line = m_impl->read_line(PAGE_SIZE).release_value_but_fixme_should_propagate_errors();
         if (line.is_whitespace()) {
             // We're done with the HTTP headers.
             // Fail the connection if we're missing any of the following:
@@ -364,14 +361,15 @@ void WebSocket::read_frame()
     VERIFY(m_impl);
     VERIFY(m_state == WebSocket::InternalState::Open || m_state == WebSocket::InternalState::Closing);
 
-    auto head_bytes = m_impl->read(2);
-    if (head_bytes.size() == 0) {
+    auto head_bytes_result = m_impl->read(2);
+    if (head_bytes_result.is_error() || head_bytes_result.value().is_empty()) {
         // The connection got closed.
         m_state = WebSocket::InternalState::Closed;
         notify_close(m_last_close_code, m_last_close_message, true);
         discard_connection();
         return;
     }
+    auto head_bytes = head_bytes_result.release_value();
     VERIFY(head_bytes.size() == 2);
 
     bool is_final_frame = head_bytes[0] & 0x80;
@@ -388,7 +386,7 @@ void WebSocket::read_frame()
     auto payload_length_bits = head_bytes[1] & 0x7f;
     if (payload_length_bits == 127) {
         // A code of 127 means that the next 8 bytes contains the payload length
-        auto actual_bytes = m_impl->read(8);
+        auto actual_bytes = MUST(m_impl->read(8));
         VERIFY(actual_bytes.size() == 8);
         u64 full_payload_length = (u64)((u64)(actual_bytes[0] & 0xff) << 56)
             | (u64)((u64)(actual_bytes[1] & 0xff) << 48)
@@ -402,7 +400,7 @@ void WebSocket::read_frame()
         payload_length = (size_t)full_payload_length;
     } else if (payload_length_bits == 126) {
         // A code of 126 means that the next 2 bytes contains the payload length
-        auto actual_bytes = m_impl->read(2);
+        auto actual_bytes = MUST(m_impl->read(2));
         VERIFY(actual_bytes.size() == 2);
         payload_length = (size_t)((size_t)(actual_bytes[0] & 0xff) << 8)
             | (size_t)((size_t)(actual_bytes[1] & 0xff) << 0);
@@ -418,7 +416,7 @@ void WebSocket::read_frame()
     // But because it doesn't cost much, we can support receiving masked frames anyways.
     u8 masking_key[4];
     if (is_masked) {
-        auto masking_key_data = m_impl->read(4);
+        auto masking_key_data = MUST(m_impl->read(4));
         VERIFY(masking_key_data.size() == 4);
         masking_key[0] = masking_key_data[0];
         masking_key[1] = masking_key_data[1];
@@ -429,13 +427,14 @@ void WebSocket::read_frame()
     auto payload = ByteBuffer::create_uninitialized(payload_length).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
     u64 read_length = 0;
     while (read_length < payload_length) {
-        auto payload_part = m_impl->read(payload_length - read_length);
-        if (payload_part.size() == 0) {
+        auto payload_part_result = m_impl->read(payload_length - read_length);
+        if (payload_part_result.is_error() || payload_part_result.value().is_empty()) {
             // We got disconnected, somehow.
             dbgln("Websocket: Server disconnected while sending payload ({} bytes read out of {})", read_length, payload_length);
             fatal_error(WebSocket::Error::ServerClosedSocket);
             return;
         }
+        auto payload_part = payload_part_result.release_value();
         // We read at most "actual_length - read" bytes, so this is safe to do.
         payload.overwrite(read_length, payload_part.data(), payload_part.size());
         read_length -= payload_part.size();

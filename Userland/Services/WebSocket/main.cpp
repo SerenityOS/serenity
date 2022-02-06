@@ -21,8 +21,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
-    TRY(Core::System::pledge("stdio inet unix sendfd recvfd"));
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+    TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<WebSocket::ClientConnection>());

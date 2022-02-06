@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Math.h>
+#include <AK/IntegralMath.h>
 #include <AK/Weakable.h>
 #include <Kernel/Devices/Device.h>
 

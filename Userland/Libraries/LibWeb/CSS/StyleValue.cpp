@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -271,6 +272,571 @@ String BorderRadiusStyleValue::to_string() const
 String BoxShadowStyleValue::to_string() const
 {
     return String::formatted("{} {} {} {}", m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_color.to_string());
+}
+
+void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)
+{
+    add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
+}
+
+void CalculatedStyleValue::CalculationResult::subtract(CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)
+{
+    add_or_subtract_internal(SumOperation::Subtract, other, layout_node, percentage_basis);
+}
+
+void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)
+{
+    // We know from validation when resolving the type, that "both sides have the same type, or that one side is a <number> and the other is an <integer>".
+    // Though, having the same type may mean that one side is a <dimension> and the other a <percentage>.
+    // Note: This is almost identical to ::add()
+
+    m_value.visit(
+        [&](Number const& number) {
+            auto other_number = other.m_value.get<Number>();
+            if (op == SumOperation::Add) {
+                m_value = Number {
+                    .is_integer = number.is_integer && other_number.is_integer,
+                    .value = number.value + other_number.value
+                };
+            } else {
+                m_value = Number {
+                    .is_integer = number.is_integer && other_number.is_integer,
+                    .value = number.value - other_number.value
+                };
+            }
+        },
+        [&](Length const& length) {
+            auto this_px = length.to_px(*layout_node);
+            if (other.m_value.has<Length>()) {
+                auto other_px = other.m_value.get<Length>().to_px(*layout_node);
+                if (op == SumOperation::Add)
+                    m_value = Length::make_px(this_px + other_px);
+                else
+                    m_value = Length::make_px(this_px - other_px);
+            } else {
+                VERIFY(!percentage_basis.is_undefined());
+
+                auto other_px = percentage_basis.percentage_of(other.m_value.get<Percentage>()).to_px(*layout_node);
+                if (op == SumOperation::Add)
+                    m_value = Length::make_px(this_px + other_px);
+                else
+                    m_value = Length::make_px(this_px - other_px);
+            }
+        },
+        [&](Percentage const& percentage) {
+            if (other.m_value.has<Percentage>()) {
+                if (op == SumOperation::Add)
+                    m_value = Percentage { percentage.value() + other.m_value.get<Percentage>().value() };
+                else
+                    m_value = Percentage { percentage.value() - other.m_value.get<Percentage>().value() };
+                return;
+            }
+
+            // Other side isn't a percentage, so the easiest way to handle it without duplicating all the logic, is just to swap `this` and `other`.
+            CalculationResult new_value = other;
+            if (op == SumOperation::Add)
+                new_value.add(*this, layout_node, percentage_basis);
+            else
+                new_value.subtract(*this, layout_node, percentage_basis);
+
+            *this = new_value;
+        });
+}
+
+void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult const& other, Layout::Node const* layout_node)
+{
+    // We know from validation when resolving the type, that at least one side must be a <number> or <integer>.
+    // Both of these are represented as a float.
+    VERIFY(m_value.has<Number>() || other.m_value.has<Number>());
+    bool other_is_number = other.m_value.has<Number>();
+
+    m_value.visit(
+        [&](Number const& number) {
+            if (other_is_number) {
+                auto other_number = other.m_value.get<Number>();
+                m_value = Number {
+                    .is_integer = number.is_integer && other_number.is_integer,
+                    .value = number.value * other_number.value
+                };
+            } else {
+                // Avoid duplicating all the logic by swapping `this` and `other`.
+                CalculationResult new_value = other;
+                new_value.multiply_by(*this, layout_node);
+                *this = new_value;
+            }
+        },
+        [&](Length const& length) {
+            VERIFY(layout_node);
+            m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value);
+        },
+        [&](Percentage const& percentage) {
+            m_value = Percentage { percentage.value() * other.m_value.get<Number>().value };
+        });
+}
+
+void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const& other, Layout::Node const* layout_node)
+{
+    // We know from validation when resolving the type, that `other` must be a <number> or <integer>.
+    // Both of these are represented as a Number.
+    auto denominator = other.m_value.get<Number>().value;
+    // FIXME: Dividing by 0 is invalid, and should be caught during parsing.
+    VERIFY(denominator != 0.0f);
+
+    m_value.visit(
+        [&](Number const& number) {
+            m_value = Number {
+                .is_integer = false,
+                .value = number.value / denominator
+            };
+        },
+        [&](Length const& length) {
+            VERIFY(layout_node);
+            m_value = Length::make_px(length.to_px(*layout_node) / denominator);
+        },
+        [&](Percentage const& percentage) {
+            m_value = Percentage { percentage.value() / denominator };
+        });
+}
+
+String CalculatedStyleValue::to_string() const
+{
+    return String::formatted("calc({})", m_expression->to_string());
+}
+
+String CalculatedStyleValue::CalcNumberValue::to_string() const
+{
+    return value.visit(
+        [](Number const& number) { return String::number(number.value); },
+        [](NonnullOwnPtr<CalcNumberSum> const& sum) { return String::formatted("({})", sum->to_string()); });
+}
+
+String CalculatedStyleValue::CalcValue::to_string() const
+{
+    return value.visit(
+        [](Number const& number) { return String::number(number.value); },
+        [](Length const& length) { return length.to_string(); },
+        [](Percentage const& percentage) { return percentage.to_string(); },
+        [](NonnullOwnPtr<CalcSum> const& sum) { return String::formatted("({})", sum->to_string()); });
+}
+
+String CalculatedStyleValue::CalcSum::to_string() const
+{
+    StringBuilder builder;
+    builder.append(first_calc_product->to_string());
+    for (auto const& item : zero_or_more_additional_calc_products)
+        builder.append(item.to_string());
+    return builder.to_string();
+}
+
+String CalculatedStyleValue::CalcNumberSum::to_string() const
+{
+    StringBuilder builder;
+    builder.append(first_calc_number_product->to_string());
+    for (auto const& item : zero_or_more_additional_calc_number_products)
+        builder.append(item.to_string());
+    return builder.to_string();
+}
+
+String CalculatedStyleValue::CalcProduct::to_string() const
+{
+    StringBuilder builder;
+    builder.append(first_calc_value.to_string());
+    for (auto const& item : zero_or_more_additional_calc_values)
+        builder.append(item.to_string());
+    return builder.to_string();
+}
+
+String CalculatedStyleValue::CalcSumPartWithOperator::to_string() const
+{
+    return String::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, value->to_string());
+}
+
+String CalculatedStyleValue::CalcProductPartWithOperator::to_string() const
+{
+    auto value_string = value.visit(
+        [](CalcValue const& v) { return v.to_string(); },
+        [](CalcNumberValue const& v) { return v.to_string(); });
+    return String::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, value_string);
+}
+
+String CalculatedStyleValue::CalcNumberProduct::to_string() const
+{
+    StringBuilder builder;
+    builder.append(first_calc_number_value.to_string());
+    for (auto const& item : zero_or_more_additional_calc_number_values)
+        builder.append(item.to_string());
+    return builder.to_string();
+}
+
+String CalculatedStyleValue::CalcNumberProductPartWithOperator::to_string() const
+{
+    return String::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, value.to_string());
+}
+
+String CalculatedStyleValue::CalcNumberSumPartWithOperator::to_string() const
+{
+    return String::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, value->to_string());
+}
+
+Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout_node) const
+{
+    auto result = m_expression->resolve(&layout_node, {});
+
+    return result.value().visit(
+        [&](Number) -> Optional<Length> {
+            return {};
+        },
+        [&](Length const& length) -> Optional<Length> {
+            return length;
+        },
+        [&](Percentage const&) -> Optional<Length> {
+            return {};
+        });
+}
+
+Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
+{
+    VERIFY(!percentage_basis.is_undefined());
+    auto result = m_expression->resolve(&layout_node, percentage_basis);
+
+    return result.value().visit(
+        [&](Number) -> Optional<LengthPercentage> {
+            return {};
+        },
+        [&](Length const& length) -> Optional<LengthPercentage> {
+            return length;
+        },
+        [&](Percentage const& percentage) -> Optional<LengthPercentage> {
+            return percentage;
+        });
+}
+
+Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
+{
+    auto result = m_expression->resolve(nullptr, {});
+    if (result.value().has<Percentage>())
+        return result.value().get<Percentage>();
+    return {};
+}
+
+Optional<float> CalculatedStyleValue::resolve_number()
+{
+    auto result = m_expression->resolve(nullptr, {});
+    if (result.value().has<Number>())
+        return result.value().get<Number>().value;
+    return {};
+}
+
+Optional<i64> CalculatedStyleValue::resolve_integer()
+{
+    auto result = m_expression->resolve(nullptr, {});
+    if (result.value().has<Number>())
+        return lroundf(result.value().get<Number>().value);
+    return {};
+}
+
+static bool is_number(CalculatedStyleValue::ResolvedType type)
+{
+    return type == CalculatedStyleValue::ResolvedType::Number || type == CalculatedStyleValue::ResolvedType::Integer;
+}
+
+static bool is_dimension(CalculatedStyleValue::ResolvedType type)
+{
+    return type != CalculatedStyleValue::ResolvedType::Number
+        && type != CalculatedStyleValue::ResolvedType::Integer
+        && type != CalculatedStyleValue::ResolvedType::Percentage;
+}
+
+template<typename SumWithOperator>
+static Optional<CalculatedStyleValue::ResolvedType> resolve_sum_type(CalculatedStyleValue::ResolvedType first_type, NonnullOwnPtrVector<SumWithOperator> const& zero_or_more_additional_products)
+{
+    auto type = first_type;
+
+    for (auto const& product : zero_or_more_additional_products) {
+        auto maybe_product_type = product.resolved_type();
+        if (!maybe_product_type.has_value())
+            return {};
+        auto product_type = maybe_product_type.value();
+
+        // At + or -, check that both sides have the same type, or that one side is a <number> and the other is an <integer>.
+        // If both sides are the same type, resolve to that type.
+        if (product_type == type)
+            continue;
+
+        // If one side is a <number> and the other is an <integer>, resolve to <number>.
+        if (is_number(type) && is_number(product_type)) {
+            type = CalculatedStyleValue::ResolvedType::Number;
+            continue;
+        }
+
+        // FIXME: calc() handles <percentage> by allowing them to pretend to be whatever <dimension> type is allowed at this location.
+        //        Since we can't easily check what that type is, we just allow <percentage> to combine with any other <dimension> type.
+        if (type == CalculatedStyleValue::ResolvedType::Percentage && is_dimension(product_type)) {
+            type = product_type;
+            continue;
+        }
+        if (is_dimension(type) && product_type == CalculatedStyleValue::ResolvedType::Percentage)
+            continue;
+
+        return {};
+    }
+    return type;
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcSum::resolved_type() const
+{
+    auto maybe_type = first_calc_product->resolved_type();
+    if (!maybe_type.has_value())
+        return {};
+    auto type = maybe_type.value();
+    return resolve_sum_type(type, zero_or_more_additional_calc_products);
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberSum::resolved_type() const
+{
+    auto maybe_type = first_calc_number_product->resolved_type();
+    if (!maybe_type.has_value())
+        return {};
+    auto type = maybe_type.value();
+    return resolve_sum_type(type, zero_or_more_additional_calc_number_products);
+}
+
+template<typename ProductWithOperator>
+static Optional<CalculatedStyleValue::ResolvedType> resolve_product_type(CalculatedStyleValue::ResolvedType first_type, NonnullOwnPtrVector<ProductWithOperator> const& zero_or_more_additional_values)
+{
+    auto type = first_type;
+
+    for (auto const& value : zero_or_more_additional_values) {
+        auto maybe_value_type = value.resolved_type();
+        if (!maybe_value_type.has_value())
+            return {};
+        auto value_type = maybe_value_type.value();
+
+        if (value.op == CalculatedStyleValue::ProductOperation::Multiply) {
+            // At *, check that at least one side is <number>.
+            if (!(is_number(type) || is_number(value_type)))
+                return {};
+            // If both sides are <integer>, resolve to <integer>.
+            if (type == CalculatedStyleValue::ResolvedType::Integer && value_type == CalculatedStyleValue::ResolvedType::Integer) {
+                type = CalculatedStyleValue::ResolvedType::Integer;
+            } else {
+                // Otherwise, resolve to the type of the other side.
+                if (is_number(type))
+                    type = value_type;
+            }
+
+            continue;
+        } else {
+            VERIFY(value.op == CalculatedStyleValue::ProductOperation::Divide);
+            // At /, check that the right side is <number>.
+            if (!is_number(value_type))
+                return {};
+            // If the left side is <integer>, resolve to <number>.
+            if (type == CalculatedStyleValue::ResolvedType::Integer) {
+                type = CalculatedStyleValue::ResolvedType::Number;
+            } else {
+                // Otherwise, resolve to the type of the left side.
+            }
+
+            // FIXME: Division by zero makes the whole calc() expression invalid.
+        }
+    }
+    return type;
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcProduct::resolved_type() const
+{
+    auto maybe_type = first_calc_value.resolved_type();
+    if (!maybe_type.has_value())
+        return {};
+    auto type = maybe_type.value();
+    return resolve_product_type(type, zero_or_more_additional_calc_values);
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcSumPartWithOperator::resolved_type() const
+{
+    return value->resolved_type();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberProduct::resolved_type() const
+{
+    auto maybe_type = first_calc_number_value.resolved_type();
+    if (!maybe_type.has_value())
+        return {};
+    auto type = maybe_type.value();
+    return resolve_product_type(type, zero_or_more_additional_calc_number_values);
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberProductPartWithOperator::resolved_type() const
+{
+    return value.resolved_type();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberSumPartWithOperator::resolved_type() const
+{
+    return value->resolved_type();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcProductPartWithOperator::resolved_type() const
+{
+    return value.visit(
+        [](CalcValue const& calc_value) {
+            return calc_value.resolved_type();
+        },
+        [](CalcNumberValue const& calc_number_value) {
+            return calc_number_value.resolved_type();
+        });
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::resolved_type() const
+{
+    return value.visit(
+        [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
+            return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
+        },
+        [](Length const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Length }; },
+        [](Percentage const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Percentage }; },
+        [](NonnullOwnPtr<CalcSum> const& sum) { return sum->resolved_type(); });
+}
+
+Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberValue::resolved_type() const
+{
+    return value.visit(
+        [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
+            return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
+        },
+        [](NonnullOwnPtr<CalcNumberSum> const& sum) { return sum->resolved_type(); });
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberValue::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value.visit(
+        [&](Number const& number) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { number };
+        },
+        [&](NonnullOwnPtr<CalcNumberSum> const& sum) -> CalculatedStyleValue::CalculationResult {
+            return sum->resolve(layout_node, percentage_basis);
+        });
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value.visit(
+        [&](Number const& number) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { number };
+        },
+        [&](Length const& length) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { length };
+        },
+        [&](Percentage const& percentage) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { percentage };
+        },
+        [&](NonnullOwnPtr<CalcSum> const& sum) -> CalculatedStyleValue::CalculationResult {
+            return sum->resolve(layout_node, percentage_basis);
+        });
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSum::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    auto value = first_calc_product->resolve(layout_node, percentage_basis);
+
+    for (auto& additional_product : zero_or_more_additional_calc_products) {
+        auto additional_value = additional_product.resolve(layout_node, percentage_basis);
+
+        if (additional_product.op == CalculatedStyleValue::SumOperation::Add)
+            value.add(additional_value, layout_node, percentage_basis);
+        else if (additional_product.op == CalculatedStyleValue::SumOperation::Subtract)
+            value.subtract(additional_value, layout_node, percentage_basis);
+        else
+            VERIFY_NOT_REACHED();
+    }
+
+    return value;
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSum::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    auto value = first_calc_number_product->resolve(layout_node, percentage_basis);
+
+    for (auto& additional_product : zero_or_more_additional_calc_number_products) {
+        auto additional_value = additional_product.resolve(layout_node, percentage_basis);
+
+        if (additional_product.op == CSS::CalculatedStyleValue::SumOperation::Add)
+            value.add(additional_value, layout_node, percentage_basis);
+        else if (additional_product.op == CalculatedStyleValue::SumOperation::Subtract)
+            value.subtract(additional_value, layout_node, percentage_basis);
+        else
+            VERIFY_NOT_REACHED();
+    }
+
+    return value;
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    auto value = first_calc_value.resolve(layout_node, percentage_basis);
+
+    for (auto& additional_value : zero_or_more_additional_calc_values) {
+        additional_value.value.visit(
+            [&](CalculatedStyleValue::CalcValue const& calc_value) {
+                VERIFY(additional_value.op == CalculatedStyleValue::ProductOperation::Multiply);
+                auto resolved_value = calc_value.resolve(layout_node, percentage_basis);
+                value.multiply_by(resolved_value, layout_node);
+            },
+            [&](CalculatedStyleValue::CalcNumberValue const& calc_number_value) {
+                VERIFY(additional_value.op == CalculatedStyleValue::ProductOperation::Divide);
+                auto resolved_calc_number_value = calc_number_value.resolve(layout_node, percentage_basis);
+                // FIXME: Checking for division by 0 should happen during parsing.
+                VERIFY(resolved_calc_number_value.value().get<Number>().value != 0.0f);
+                value.divide_by(resolved_calc_number_value, layout_node);
+            });
+    }
+
+    return value;
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProduct::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    auto value = first_calc_number_value.resolve(layout_node, percentage_basis);
+
+    for (auto& additional_number_value : zero_or_more_additional_calc_number_values) {
+        auto additional_value = additional_number_value.resolve(layout_node, percentage_basis);
+
+        if (additional_number_value.op == CalculatedStyleValue::ProductOperation::Multiply)
+            value.multiply_by(additional_value, layout_node);
+        else if (additional_number_value.op == CalculatedStyleValue::ProductOperation::Divide)
+            value.divide_by(additional_value, layout_node);
+        else
+            VERIFY_NOT_REACHED();
+    }
+
+    return value;
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProductPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value.visit(
+        [&](CalcValue const& calc_value) {
+            return calc_value.resolve(layout_node, percentage_basis);
+        },
+        [&](CalcNumberValue const& calc_number_value) {
+            return calc_number_value.resolve(layout_node, percentage_basis);
+        });
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSumPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value->resolve(layout_node, percentage_basis);
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value.resolve(layout_node, percentage_basis);
+}
+
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+{
+    return value->resolve(layout_node, percentage_basis);
 }
 
 // https://www.w3.org/TR/css-color-4/#serializing-sRGB-values

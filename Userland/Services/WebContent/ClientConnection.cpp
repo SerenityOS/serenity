@@ -183,6 +183,15 @@ void ClientConnection::debug_request(const String& request, const String& argume
         }
     }
 
+    if (request == "dump-stacking-context-tree") {
+        if (auto* doc = page().top_level_browsing_context().active_document()) {
+            if (auto* icb = doc->layout_node()) {
+                if (auto* stacking_context = icb->stacking_context())
+                    stacking_context->dump();
+            }
+        }
+    }
+
     if (request == "dump-style-sheets") {
         if (auto* doc = page().top_level_browsing_context().active_document()) {
             for (auto& sheet : doc->style_sheets().sheets()) {

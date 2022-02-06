@@ -41,10 +41,10 @@ public:
     void did_request_certificates();
     void set_response_headers(const HashMap<String, String, CaseInsensitiveStringTraits>&);
     void set_downloaded_size(size_t size) { m_downloaded_size = size; }
-    const OutputFileStream& output_stream() const { return *m_output_stream; }
+    const Core::Stream::File& output_stream() const { return *m_output_stream; }
 
 protected:
-    explicit Request(ClientConnection&, NonnullOwnPtr<OutputFileStream>&&);
+    explicit Request(ClientConnection&, NonnullOwnPtr<Core::Stream::File>&&);
 
 private:
     ClientConnection& m_client;
@@ -53,7 +53,7 @@ private:
     Optional<u32> m_status_code;
     Optional<u32> m_total_size {};
     size_t m_downloaded_size { 0 };
-    NonnullOwnPtr<OutputFileStream> m_output_stream;
+    NonnullOwnPtr<Core::Stream::File> m_output_stream;
     HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
 };
 

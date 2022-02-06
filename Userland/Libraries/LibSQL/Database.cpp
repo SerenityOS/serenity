@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -47,6 +48,21 @@ ErrorOr<void> Database::open()
         default_schema = SchemaDef::construct("default");
         TRY(add_schema(*default_schema));
     }
+
+    auto master_schema = TRY(get_schema("master"));
+    if (!master_schema) {
+        master_schema = SchemaDef::construct("master");
+        TRY(add_schema(*master_schema));
+    }
+
+    auto table_def = TRY(get_table("master", "internal_describe_table"));
+    if (!table_def) {
+        auto describe_internal_table = TableDef::construct(master_schema, "internal_describe_table");
+        describe_internal_table->append_column("Name", SQLType::Text);
+        describe_internal_table->append_column("Type", SQLType::Text);
+        TRY(add_table(*describe_internal_table));
+    }
+
     return {};
 }
 

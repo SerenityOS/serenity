@@ -9,6 +9,7 @@
 #include <AK/EnumBits.h>
 #include <AK/Function.h>
 #include <AK/IPv4Address.h>
+#include <AK/MemMem.h>
 #include <AK/Noncopyable.h>
 #include <AK/Result.h>
 #include <AK/Span.h>
@@ -106,6 +107,11 @@ public:
     // an exec call happens.
     virtual ErrorOr<void> set_close_on_exec(bool enabled) = 0;
 
+    /// Disables any listening mechanisms that this socket uses.
+    /// Can be called with 'false' when `on_ready_to_read` notifications are no longer needed.
+    /// Conversely, set_notifications_enabled(true) will re-enable notifications.
+    virtual void set_notifications_enabled(bool) { }
+
     Function<void()> on_ready_to_read;
 
 protected:
@@ -166,7 +172,7 @@ class File final : public SeekableStream {
     AK_MAKE_NONCOPYABLE(File);
 
 public:
-    static ErrorOr<NonnullOwnPtr<File>> open(StringView const& filename, OpenMode, mode_t = 0644);
+    static ErrorOr<NonnullOwnPtr<File>> open(StringView filename, OpenMode, mode_t = 0644);
     static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode);
 
     File(File&& other) { operator=(move(other)); }
@@ -199,7 +205,7 @@ private:
     {
     }
 
-    ErrorOr<void> open_path(StringView const& filename, mode_t);
+    ErrorOr<void> open_path(StringView filename, mode_t);
 
     OpenMode m_mode { OpenMode::NotOpen };
     int m_fd { -1 };
@@ -284,6 +290,11 @@ public:
     virtual void close() override { m_helper.close(); };
     virtual ErrorOr<size_t> pending_bytes() const override { return m_helper.pending_bytes(); }
     virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.can_read_without_blocking(timeout); }
+    virtual void set_notifications_enabled(bool enabled) override
+    {
+        if (auto notifier = m_helper.notifier())
+            notifier->set_enabled(enabled);
+    }
     ErrorOr<void> set_blocking(bool enabled) override { return m_helper.set_blocking(enabled); }
     ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.set_close_on_exec(enabled); }
 
@@ -354,6 +365,11 @@ public:
     virtual void close() override { m_helper.close(); }
     virtual ErrorOr<size_t> pending_bytes() const override { return m_helper.pending_bytes(); }
     virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.can_read_without_blocking(timeout); }
+    virtual void set_notifications_enabled(bool enabled) override
+    {
+        if (auto notifier = m_helper.notifier())
+            notifier->set_enabled(enabled);
+    }
     ErrorOr<void> set_blocking(bool enabled) override { return m_helper.set_blocking(enabled); }
     ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.set_close_on_exec(enabled); }
 
@@ -410,11 +426,22 @@ public:
     virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.can_read_without_blocking(timeout); }
     virtual ErrorOr<void> set_blocking(bool enabled) override { return m_helper.set_blocking(enabled); }
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.set_close_on_exec(enabled); }
+    virtual void set_notifications_enabled(bool enabled) override
+    {
+        if (auto notifier = m_helper.notifier())
+            notifier->set_enabled(enabled);
+    }
 
     ErrorOr<int> receive_fd(int flags);
     ErrorOr<void> send_fd(int fd);
     ErrorOr<pid_t> peer_pid() const;
     ErrorOr<size_t> read_without_waiting(Bytes buffer);
+
+    /// Release the fd associated with this LocalSocket. After the fd is
+    /// released, the socket will be considered "closed" and all operations done
+    /// on it will fail with ENOTCONN. Fails with ENOTCONN if the socket is
+    /// already closed.
+    ErrorOr<int> release_fd();
 
     virtual ~LocalSocket() { close(); }
 
@@ -536,7 +563,7 @@ public:
         return read_until(buffer, "\n"sv);
     }
 
-    ErrorOr<size_t> read_until(Bytes buffer, StringView const& candidate)
+    ErrorOr<size_t> read_until(Bytes buffer, StringView candidate)
     {
         return read_until_any_of(buffer, Array { candidate });
     }
@@ -568,37 +595,35 @@ public:
                 // to the caller about why it can't read.
                 return Error::from_errno(EMSGSIZE);
             }
-
-            m_buffer.span().slice(0, m_buffered_size).copy_to(buffer);
-            return exchange(m_buffered_size, 0);
         }
 
-        size_t longest_match = 0;
-        size_t maximum_offset = min(m_buffered_size, buffer.size());
-        for (size_t offset = 0; offset < maximum_offset; offset++) {
-            // The intention here is to try to match all of the possible
-            // delimiter candidates and try to find the longest one we can
-            // remove from the buffer after copying up to the delimiter to the
-            // user buffer.
-            StringView remaining_buffer { m_buffer.span().offset(offset), maximum_offset - offset };
-            for (auto candidate : candidates) {
-                if (candidate.length() > remaining_buffer.length())
-                    continue;
-                if (remaining_buffer.starts_with(candidate))
-                    longest_match = max(longest_match, candidate.length());
+        // The intention here is to try to match all of the possible
+        // delimiter candidates and try to find the longest one we can
+        // remove from the buffer after copying up to the delimiter to the
+        // user buffer.
+        Optional<size_t> longest_match;
+        size_t match_size = 0;
+        for (auto& candidate : candidates) {
+            auto result = AK::memmem_optional(m_buffer.data(), m_buffered_size, candidate.bytes().data(), candidate.bytes().size());
+            if (result.has_value()) {
+                auto previous_match = longest_match.value_or(*result);
+                if ((previous_match < *result) || (previous_match == *result && match_size < candidate.length())) {
+                    longest_match = result;
+                    match_size = candidate.length();
+                }
             }
+        }
+        if (longest_match.has_value()) {
+            auto size_written_to_user_buffer = *longest_match;
+            auto buffer_to_take = m_buffer.span().slice(0, size_written_to_user_buffer);
+            auto buffer_to_shift = m_buffer.span().slice(size_written_to_user_buffer + match_size);
 
-            if (longest_match > 0) {
-                auto buffer_to_take = m_buffer.span().slice(0, offset);
-                auto buffer_to_shift = m_buffer.span().slice(offset + longest_match);
+            buffer_to_take.copy_to(buffer);
+            m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size());
 
-                buffer_to_take.copy_to(buffer);
-                m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size());
+            m_buffered_size -= size_written_to_user_buffer + match_size;
 
-                m_buffered_size -= offset + longest_match;
-
-                return offset;
-            }
+            return size_written_to_user_buffer;
         }
 
         // If we still haven't found anything, then it's most likely the case
@@ -639,6 +664,9 @@ public:
 
             if (populated_slice.contains_slow('\n'))
                 return true;
+
+            if (populated_slice.is_empty())
+                break;
         }
 
         return false;
@@ -656,6 +684,11 @@ public:
     size_t buffer_size() const
     {
         return m_buffer.size();
+    }
+
+    size_t buffered_data_size() const
+    {
+        return m_buffered_size;
     }
 
     void clear_buffer()
@@ -718,7 +751,7 @@ public:
     }
 
     ErrorOr<size_t> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
-    ErrorOr<size_t> read_until(Bytes buffer, StringView const& candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
+    ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
     ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
     ErrorOr<bool> can_read_line() { return m_helper.can_read_line(); }
@@ -736,8 +769,16 @@ private:
     BufferedHelper<T> m_helper;
 };
 
+class BufferedSocketBase : public Socket {
+public:
+    virtual ErrorOr<size_t> read_line(Bytes buffer) = 0;
+    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) = 0;
+    virtual ErrorOr<bool> can_read_line() = 0;
+    virtual size_t buffer_size() const = 0;
+};
+
 template<SocketLike T>
-class BufferedSocket final : public Socket {
+class BufferedSocket final : public BufferedSocketBase {
     friend BufferedHelper<T>;
 
 public:
@@ -747,7 +788,7 @@ public:
     }
 
     BufferedSocket(BufferedSocket&& other)
-        : Socket(static_cast<Socket&&>(other))
+        : BufferedSocketBase(static_cast<BufferedSocketBase&&>(other))
         , m_helper(move(other.m_helper))
     {
         setup_notifier();
@@ -769,18 +810,22 @@ public:
     virtual bool is_eof() const override { return m_helper.is_eof(); }
     virtual bool is_open() const override { return m_helper.stream().is_open(); }
     virtual void close() override { m_helper.stream().close(); }
-    virtual ErrorOr<size_t> pending_bytes() const override { return m_helper.stream().pending_bytes(); }
-    virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.stream().can_read_without_blocking(timeout); }
+    virtual ErrorOr<size_t> pending_bytes() const override
+    {
+        return TRY(m_helper.stream().pending_bytes()) + m_helper.buffered_data_size();
+    }
+    virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.buffered_data_size() > 0 || TRY(m_helper.stream().can_read_without_blocking(timeout)); }
     virtual ErrorOr<void> set_blocking(bool enabled) override { return m_helper.stream().set_blocking(enabled); }
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.stream().set_close_on_exec(enabled); }
+    virtual void set_notifications_enabled(bool enabled) override { m_helper.stream().set_notifications_enabled(enabled); }
 
-    ErrorOr<size_t> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
-    ErrorOr<size_t> read_until(Bytes buffer, StringView const& candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
+    virtual ErrorOr<size_t> read_line(Bytes buffer) override { return m_helper.read_line(move(buffer)); }
+    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
     ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
-    ErrorOr<bool> can_read_line() { return m_helper.can_read_line(); }
+    virtual ErrorOr<bool> can_read_line() override { return m_helper.can_read_line(); }
 
-    size_t buffer_size() const { return m_helper.buffer_size(); }
+    virtual size_t buffer_size() const override { return m_helper.buffer_size(); }
 
     virtual ~BufferedSocket() override { }
 

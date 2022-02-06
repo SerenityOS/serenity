@@ -28,8 +28,6 @@ public:
     void set_always_editable(bool b) { m_always_editable = b; }
 
 private:
-    virtual RefPtr<Layout::Node> create_layout_node() override;
-
     bool m_always_editable { false };
 };
 

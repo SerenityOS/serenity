@@ -12,6 +12,7 @@
 #include "Layer.h"
 #include "Tools/MoveTool.h"
 #include "Tools/Tool.h"
+#include <AK/IntegralMath.h>
 #include <AK/LexicalPath.h>
 #include <LibConfig/Client.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -218,14 +219,15 @@ int ImageEditor::calculate_ruler_step_size() const
     const auto step_target = 80 / scale();
     const auto max_factor = 5;
     for (int factor = 0; factor < max_factor; ++factor) {
-        if (step_target <= 1 * (float)pow(10, factor))
-            return 1 * pow(10, factor);
-        if (step_target <= 2 * (float)pow(10, factor))
-            return 2 * pow(10, factor);
-        if (step_target <= 5 * (float)pow(10, factor))
-            return 5 * pow(10, factor);
+        int ten_to_factor = AK::pow<int>(10, factor);
+        if (step_target <= 1 * ten_to_factor)
+            return 1 * ten_to_factor;
+        if (step_target <= 2 * ten_to_factor)
+            return 2 * ten_to_factor;
+        if (step_target <= 5 * ten_to_factor)
+            return 5 * ten_to_factor;
     }
-    return 1 * pow(10, max_factor);
+    return AK::pow<int>(10, max_factor);
 }
 
 Gfx::IntRect ImageEditor::mouse_indicator_rect_x() const
@@ -587,7 +589,7 @@ bool ImageEditor::request_close()
 
 void ImageEditor::save_project()
 {
-    if (path().is_empty()) {
+    if (path().is_empty() || m_loaded_from_image) {
         save_project_as();
         return;
     }
@@ -614,6 +616,7 @@ void ImageEditor::save_project_as()
         return;
     }
     set_path(file->filename());
+    set_loaded_from_image(false);
     undo_stack().set_current_unmodified();
 }
 
@@ -647,6 +650,11 @@ void ImageEditor::set_show_active_layer_boundary(bool show)
 
     m_show_active_layer_boundary = show;
     update();
+}
+
+void ImageEditor::set_loaded_from_image(bool loaded_from_image)
+{
+    m_loaded_from_image = loaded_from_image;
 }
 
 }

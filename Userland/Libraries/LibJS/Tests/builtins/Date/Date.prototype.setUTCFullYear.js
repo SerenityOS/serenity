@@ -53,3 +53,9 @@ describe("correct behavior", () => {
         expect(d.getUTCFullYear()).toBeNaN();
     });
 });
+
+test("invalid date", () => {
+    let date = new Date(NaN);
+    date.setUTCFullYear(2022);
+    expect(date.getUTCFullYear()).toBe(2022);
+});

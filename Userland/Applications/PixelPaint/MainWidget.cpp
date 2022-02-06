@@ -282,7 +282,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         editor->selection().merge(editor->active_layer()->relative_rect(), PixelPaint::Selection::MergeMode::Set);
     }));
     m_edit_menu->add_action(GUI::Action::create(
-        "Clear &Selection", { Mod_Ctrl | Mod_Shift, Key_A }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/clear-selection.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        "Clear &Selection", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/clear-selection.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->selection().clear();
@@ -712,6 +712,7 @@ void MainWidget::open_image(Core::File& file)
 
     auto& image = *m_loader.release_image();
     auto& editor = create_new_editor(image);
+    editor.set_loaded_from_image(m_loader.is_raw_image());
     editor.set_path(file.filename());
     editor.undo_stack().set_current_unmodified();
     m_layer_list_widget->set_image(&image);

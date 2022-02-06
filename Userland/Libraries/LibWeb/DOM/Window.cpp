@@ -223,27 +223,27 @@ void Window::cancel_animation_frame(i32 id)
 
 void Window::did_set_location_href(Badge<Bindings::LocationObject>, AK::URL const& new_href)
 {
-    auto* frame = associated_document().browsing_context();
-    if (!frame)
+    auto* browsing_context = associated_document().browsing_context();
+    if (!browsing_context)
         return;
-    frame->loader().load(new_href, FrameLoader::Type::Navigation);
+    browsing_context->loader().load(new_href, FrameLoader::Type::Navigation);
 }
 
 void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
 {
-    auto* frame = associated_document().browsing_context();
-    if (!frame)
+    auto* browsing_context = associated_document().browsing_context();
+    if (!browsing_context)
         return;
-    frame->loader().load(associated_document().url(), FrameLoader::Type::Reload);
+    browsing_context->loader().load(associated_document().url(), FrameLoader::Type::Reload);
 }
 
 void Window::did_call_location_replace(Badge<Bindings::LocationObject>, String url)
 {
-    auto* frame = associated_document().browsing_context();
-    if (!frame)
+    auto* browsing_context = associated_document().browsing_context();
+    if (!browsing_context)
         return;
     auto new_url = associated_document().parse_url(url);
-    frame->loader().load(move(new_url), FrameLoader::Type::Navigation);
+    browsing_context->loader().load(move(new_url), FrameLoader::Type::Navigation);
 }
 
 bool Window::dispatch_event(NonnullRefPtr<Event> event)
@@ -256,18 +256,24 @@ JS::Object* Window::create_wrapper(JS::GlobalObject& global_object)
     return &global_object;
 }
 
+// https://www.w3.org/TR/cssom-view-1/#dom-window-innerwidth
 int Window::inner_width() const
 {
-    if (!associated_document().layout_node())
-        return 0;
-    return associated_document().layout_node()->width();
+    // The innerWidth attribute must return the viewport width including the size of a rendered scroll bar (if any),
+    // or zero if there is no viewport.
+    if (auto const* browsing_context = associated_document().browsing_context())
+        return browsing_context->viewport_rect().width();
+    return 0;
 }
 
+// https://www.w3.org/TR/cssom-view-1/#dom-window-innerheight
 int Window::inner_height() const
 {
-    if (!associated_document().layout_node())
-        return 0;
-    return associated_document().layout_node()->height();
+    // The innerHeight attribute must return the viewport height including the size of a rendered scroll bar (if any),
+    // or zero if there is no viewport.
+    if (auto const* browsing_context = associated_document().browsing_context())
+        return browsing_context->viewport_rect().height();
+    return 0;
 }
 
 Page* Window::page()

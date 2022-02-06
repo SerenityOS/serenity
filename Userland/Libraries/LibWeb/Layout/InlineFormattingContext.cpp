@@ -55,7 +55,7 @@ InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::avai
         }
     }
 
-    info.right = containing_block().width();
+    info.right = containing_block().content_width();
 
     for (ssize_t i = bfc.right_side_floats().boxes.size() - 1; i >= 0; --i) {
         auto const& floating_box = bfc.right_side_floats().boxes.at(i);
@@ -97,18 +97,18 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
     }
 
     if (layout_mode != LayoutMode::Default) {
-        containing_block().set_width(max_line_width);
+        containing_block().set_content_width(max_line_width);
     }
 
-    containing_block().set_height(content_height);
+    containing_block().set_content_height(content_height);
 }
 
 void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_mode)
 {
     if (is<ReplacedBox>(box)) {
         auto& replaced = verify_cast<ReplacedBox>(box);
-        replaced.set_width(compute_width_for_replaced_element(replaced));
-        replaced.set_height(compute_height_for_replaced_element(replaced));
+        replaced.set_content_width(compute_width_for_replaced_element(replaced));
+        replaced.set_content_height(compute_height_for_replaced_element(replaced));
         return;
     }
 
@@ -117,17 +117,17 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
 
         if (inline_block.computed_values().width().is_length() && inline_block.computed_values().width().length().is_undefined_or_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);
-            auto width_of_containing_block = CSS::Length::make_px(containing_block().width());
+            auto width_of_containing_block = CSS::Length::make_px(containing_block().content_width());
 
-            auto margin_left = inline_block.computed_values().margin().left.resolved(width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
+            auto margin_left = inline_block.computed_values().margin().left.resolved(box, width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
             auto border_left_width = inline_block.computed_values().border_left().width;
-            auto padding_left = inline_block.computed_values().padding().left.resolved(width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
+            auto padding_left = inline_block.computed_values().padding().left.resolved(box, width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
 
-            auto margin_right = inline_block.computed_values().margin().right.resolved(width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
+            auto margin_right = inline_block.computed_values().margin().right.resolved(box, width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
             auto border_right_width = inline_block.computed_values().border_right().width;
-            auto padding_right = inline_block.computed_values().padding().right.resolved(width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
+            auto padding_right = inline_block.computed_values().padding().right.resolved(box, width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
 
-            auto available_width = containing_block().width()
+            auto available_width = containing_block().content_width()
                 - margin_left
                 - border_left_width
                 - padding_left
@@ -136,18 +136,18 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
                 - margin_right;
 
             auto width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
-            inline_block.set_width(width);
+            inline_block.set_content_width(width);
         } else {
-            auto container_width = CSS::Length::make_px(containing_block().width());
-            inline_block.set_width(inline_block.computed_values().width().resolved(container_width).resolved_or_zero(inline_block).to_px(inline_block));
+            auto container_width = CSS::Length::make_px(containing_block().content_width());
+            inline_block.set_content_width(inline_block.computed_values().width().resolved(box, container_width).resolved_or_zero(inline_block).to_px(inline_block));
         }
         (void)layout_inside(inline_block, layout_mode);
 
         if (inline_block.computed_values().height().is_length() && inline_block.computed_values().height().length().is_undefined_or_auto()) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
         } else {
-            auto container_height = CSS::Length::make_px(containing_block().height());
-            inline_block.set_height(inline_block.computed_values().height().resolved(container_height).resolved_or_zero(inline_block).to_px(inline_block));
+            auto container_height = CSS::Length::make_px(containing_block().content_height());
+            inline_block.set_content_height(inline_block.computed_values().height().resolved(box, container_height).resolved_or_zero(inline_block).to_px(inline_block));
         }
         return;
     }
@@ -182,7 +182,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
             dimension_box_on_line(box, layout_mode);
-            line_builder.break_if_needed(layout_mode, box.width(), item.should_force_break);
+            line_builder.break_if_needed(layout_mode, box.content_width(), item.should_force_break);
             line_builder.append_box(box);
             break;
         }

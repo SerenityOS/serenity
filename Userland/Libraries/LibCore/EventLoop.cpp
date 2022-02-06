@@ -19,7 +19,6 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
-#include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibThreading/Mutex.h>
@@ -153,26 +152,42 @@ pid_t EventLoop::s_pid;
 class InspectorServerConnection : public Object {
     C_OBJECT(InspectorServerConnection)
 private:
-    explicit InspectorServerConnection(RefPtr<LocalSocket> socket)
+    explicit InspectorServerConnection(NonnullOwnPtr<Stream::LocalSocket> socket)
         : m_socket(move(socket))
         , m_client_id(s_id_allocator.with_locked([](auto& allocator) {
             return allocator->allocate();
         }))
     {
 #ifdef __serenity__
-        add_child(*m_socket);
         m_socket->on_ready_to_read = [this] {
             u32 length;
-            int nread = m_socket->read((u8*)&length, sizeof(length));
+            auto maybe_nread = m_socket->read({ (u8*)&length, sizeof(length) });
+            if (maybe_nread.is_error()) {
+                dbgln("InspectorServerConnection: Failed to read message length from inspector server connection: {}", maybe_nread.error());
+                shutdown();
+                return;
+            }
+
+            auto nread = maybe_nread.release_value();
             if (nread == 0) {
                 dbgln_if(EVENTLOOP_DEBUG, "RPC client disconnected");
                 shutdown();
                 return;
             }
-            VERIFY(nread == sizeof(length));
-            auto request = m_socket->read(length);
 
-            auto request_json = JsonValue::from_string(request);
+            VERIFY(nread == sizeof(length));
+
+            auto request_buffer = ByteBuffer::create_uninitialized(length).release_value();
+            maybe_nread = m_socket->read(request_buffer.bytes());
+            if (maybe_nread.is_error()) {
+                dbgln("InspectorServerConnection: Failed to read message content from inspector server connection: {}", maybe_nread.error());
+                shutdown();
+                return;
+            }
+
+            nread = maybe_nread.release_value();
+
+            auto request_json = JsonValue::from_string(request_buffer);
             if (request_json.is_error() || !request_json.value().is_object()) {
                 dbgln("RPC client sent invalid request");
                 shutdown();
@@ -196,8 +211,9 @@ public:
     {
         auto serialized = response.to_string();
         u32 length = serialized.length();
-        m_socket->write((const u8*)&length, sizeof(length));
-        m_socket->write(serialized);
+        // FIXME: Propagate errors
+        MUST(m_socket->write({ (const u8*)&length, sizeof(length) }));
+        MUST(m_socket->write(serialized.bytes()));
     }
 
     void handle_request(const JsonObject& request)
@@ -280,7 +296,7 @@ public:
     }
 
 private:
-    RefPtr<LocalSocket> m_socket;
+    NonnullOwnPtr<Stream::LocalSocket> m_socket;
     WeakPtr<Object> m_inspected_object;
     int m_client_id { -1 };
 };
@@ -342,11 +358,13 @@ EventLoop::~EventLoop()
 bool connect_to_inspector_server()
 {
 #ifdef __serenity__
-    auto socket = Core::LocalSocket::construct();
-    if (!socket->connect(SocketAddress::local("/tmp/portal/inspectables")))
+    auto maybe_socket = Core::Stream::LocalSocket::connect("/tmp/portal/inspectables");
+    if (maybe_socket.is_error()) {
+        dbgln("connect_to_inspector_server: Failed to connect: {}", maybe_socket.error());
         return false;
+    }
     s_inspector_server_connection.with_locked([&](auto& inspector_server_connection) {
-        inspector_server_connection = InspectorServerConnection::construct(move(socket));
+        inspector_server_connection = InspectorServerConnection::construct(maybe_socket.release_value());
     });
     return true;
 #else

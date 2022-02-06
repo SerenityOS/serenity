@@ -19,11 +19,8 @@ HTMLBRElement::~HTMLBRElement()
 {
 }
 
-RefPtr<Layout::Node> HTMLBRElement::create_layout_node()
+RefPtr<Layout::Node> HTMLBRElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    auto style = document().style_computer().compute_style(*this);
-    if (style->display().is_none())
-        return nullptr;
     return adopt_ref(*new Layout::BreakNode(document(), *this, move(style)));
 }
 

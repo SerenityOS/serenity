@@ -90,7 +90,26 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         return;
     }
 
-    auto layout_node = dom_node.create_layout_node();
+    auto& document = dom_node.document();
+    auto& style_computer = document.style_computer();
+    RefPtr<Layout::Node> layout_node;
+
+    if (is<DOM::Element>(dom_node)) {
+        auto& element = static_cast<DOM::Element&>(dom_node);
+        auto style = style_computer.compute_style(element);
+        if (style->display().is_none())
+            return;
+        element.set_specified_css_values(style);
+        layout_node = element.create_layout_node(move(style));
+    } else if (is<DOM::Document>(dom_node)) {
+        auto style = style_computer.create_document_style();
+        layout_node = adopt_ref(*new Layout::InitialContainingBlock(static_cast<DOM::Document&>(dom_node), move(style)));
+    } else if (is<DOM::Text>(dom_node)) {
+        layout_node = adopt_ref(*new Layout::TextNode(document, static_cast<DOM::Text&>(dom_node)));
+    } else if (is<DOM::ShadowRoot>(dom_node)) {
+        layout_node = adopt_ref(*new Layout::BlockContainer(document, &static_cast<DOM::ShadowRoot&>(dom_node), CSS::ComputedValues {}));
+    }
+
     if (!layout_node)
         return;
 

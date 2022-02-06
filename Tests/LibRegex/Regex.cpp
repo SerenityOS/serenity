@@ -706,6 +706,13 @@ TEST_CASE(ECMA262_match)
 
 TEST_CASE(ECMA262_unicode_match)
 {
+    constexpr auto space_and_line_terminator_code_points = Array { 0x0009, 0x000A, 0x000B, 0x000C, 0x000D, 0x0020, 0x00A0, 0x1680, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x2028, 0x2029, 0x202F, 0x205F, 0x3000, 0xFEFF };
+
+    StringBuilder builder;
+    for (u32 code_point : space_and_line_terminator_code_points)
+        builder.append_code_point(code_point);
+    auto space_and_line_terminators = builder.build();
+
     struct _test {
         StringView pattern;
         StringView subject;
@@ -729,6 +736,8 @@ TEST_CASE(ECMA262_unicode_match)
         { "(?<𝓑𝓻𝓸𝔀𝓷>brown)"sv, "brown"sv, true, ECMAScriptFlags::Unicode },
         { "(?<\\u{1d4d1}\\u{1d4fb}\\u{1d4f8}\\u{1d500}\\u{1d4f7}>brown)"sv, "brown"sv, true, ECMAScriptFlags::Unicode },
         { "(?<\\ud835\\udcd1\\ud835\\udcfb\\ud835\\udcf8\\ud835\\udd00\\ud835\\udcf7>brown)"sv, "brown"sv, true, ECMAScriptFlags::Unicode },
+        { "^\\s+$"sv, space_and_line_terminators },
+        { "^\\s+$"sv, space_and_line_terminators, true, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
@@ -984,9 +993,23 @@ TEST_CASE(negative_lookahead)
 {
     {
         // Negative lookahead with more than 2 forks difference between lookahead init and finish.
-        Regex<ECMA262> re(":(?!\\^\\)|1)", ECMAScriptFlags::Global);
+        auto options = ECMAScriptOptions { ECMAScriptFlags::Global };
+        options.reset_flag((ECMAScriptFlags)regex::AllFlags::Internal_Stateful);
+        Regex<ECMA262> re(":(?!\\^\\)|1)", options);
         EXPECT_EQ(re.match(":^)").success, false);
         EXPECT_EQ(re.match(":1").success, false);
         EXPECT_EQ(re.match(":foobar").success, true);
+    }
+}
+
+TEST_CASE(single_match_flag)
+{
+    {
+        // Ensure that only a single match is produced and nothing past that.
+        Regex<ECMA262> re("[\\u0008-\\uffff]"sv, ECMAScriptFlags::Global | (ECMAScriptFlags)regex::AllFlags::SingleMatch);
+        auto result = re.match("ABC");
+        EXPECT_EQ(result.success, true);
+        EXPECT_EQ(result.matches.size(), 1u);
+        EXPECT_EQ(result.matches.first().view.to_string(), "A"sv);
     }
 }

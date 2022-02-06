@@ -32,7 +32,7 @@ void SVGFormattingContext::run(Box& box, LayoutMode)
         if (is<SVGPathBox>(descendant)) {
             auto& path_box = static_cast<SVGPathBox&>(descendant);
             auto& path = path_box.dom_node().get_path();
-            path_box.set_size(path.bounding_box().size());
+            path_box.set_content_size(path.bounding_box().size());
 
             total_bounding_box = total_bounding_box.united(path.bounding_box());
         }
@@ -40,7 +40,7 @@ void SVGFormattingContext::run(Box& box, LayoutMode)
         return IterationDecision::Continue;
     });
 
-    box.set_size(total_bounding_box.size());
+    box.set_content_size(total_bounding_box.size());
 }
 
 }

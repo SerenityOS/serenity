@@ -54,11 +54,8 @@ Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fal
         return fallback;
     auto& value = maybe_value.value();
 
-    if (value->is_calculated()) {
-        Length length = Length(0, Length::Type::Calculated);
-        length.set_calculated_style(&value->as_calculated());
-        return length;
-    }
+    if (value->is_calculated())
+        return Length::make_calculated(value->as_calculated());
 
     if (value->has_length())
         return value->to_length();
@@ -73,12 +70,8 @@ LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID 
         return fallback;
     auto& value = maybe_value.value();
 
-    if (value->is_calculated()) {
-        // FIXME: Handle percentages here
-        Length length = Length(0, Length::Type::Calculated);
-        length.set_calculated_style(&value->as_calculated());
-        return length;
-    }
+    if (value->is_calculated())
+        return LengthPercentage { value->as_calculated() };
 
     if (value->is_percentage())
         return value->as_percentage().percentage();
@@ -171,13 +164,30 @@ float StyleProperties::opacity() const
         return 1.0f;
     auto& value = maybe_value.value();
 
-    if (value->has_number())
-        return clamp(value->to_number(), 0.0f, 1.0f);
+    float unclamped_opacity = 1.0f;
 
-    if (value->is_percentage())
-        return clamp(value->as_percentage().percentage().as_fraction(), 0.0f, 1.0f);
+    if (value->has_number()) {
+        unclamped_opacity = value->to_number();
+    } else if (value->is_calculated()) {
+        auto& calculated = value->as_calculated();
+        if (calculated.resolved_type() == CalculatedStyleValue::ResolvedType::Percentage) {
+            auto maybe_percentage = value->as_calculated().resolve_percentage();
+            if (maybe_percentage.has_value())
+                unclamped_opacity = maybe_percentage->as_fraction();
+            else
+                dbgln("Unable to resolve calc() as opacity (percentage): {}", value->to_string());
+        } else {
+            auto maybe_number = value->as_calculated().resolve_number();
+            if (maybe_number.has_value())
+                unclamped_opacity = maybe_number.value();
+            else
+                dbgln("Unable to resolve calc() as opacity (number): {}", value->to_string());
+        }
+    } else if (value->is_percentage()) {
+        unclamped_opacity = value->as_percentage().percentage().as_fraction();
+    }
 
-    return 1.0f;
+    return clamp(unclamped_opacity, 0.0f, 1.0f);
 }
 
 Optional<CSS::FlexDirection> StyleProperties::flex_direction() const

@@ -70,7 +70,7 @@ void ButtonBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& positio
 
     // NOTE: Handling the click may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protected_this = *this;
-    NonnullRefPtr protected_frame = browsing_context();
+    NonnullRefPtr protected_browsing_context = browsing_context();
 
     bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
     if (!is_inside_node_or_label)
@@ -82,7 +82,7 @@ void ButtonBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& positio
     m_being_pressed = false;
     m_tracking_mouse = false;
 
-    protected_frame->event_handler().set_mouse_event_tracking_layout_node(nullptr);
+    protected_browsing_context->event_handler().set_mouse_event_tracking_layout_node(nullptr);
 }
 
 void ButtonBox::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned, unsigned)
@@ -111,7 +111,7 @@ void ButtonBox::handle_associated_label_mouseup(Badge<Label>)
 {
     // NOTE: Handling the click may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protected_this = *this;
-    NonnullRefPtr protected_frame = browsing_context();
+    NonnullRefPtr protected_browsing_context = browsing_context();
 
     dom_node().did_click_button({});
     m_being_pressed = false;

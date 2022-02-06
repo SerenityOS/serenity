@@ -68,11 +68,8 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
         m_image_loader.load(document().parse_url(value));
 }
 
-RefPtr<Layout::Node> HTMLImageElement::create_layout_node()
+RefPtr<Layout::Node> HTMLImageElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    auto style = document().style_computer().compute_style(*this);
-    if (style->display().is_none())
-        return nullptr;
     return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
 }
 

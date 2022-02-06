@@ -183,14 +183,16 @@ else
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-gtk,gl=off}"
 fi
 
-if [ "$SERENITY_SCREENS" -gt 1 ]; then
-    SERENITY_QEMU_DISPLAY_DEVICE="virtio-vga,max_outputs=$SERENITY_SCREENS "
-    # QEMU appears to always relay absolute mouse coordinates relative to the screen that the mouse is
-    # pointed to, without any way for us to know what screen it was. So, when dealing with multiple
-    # displays force using relative coordinates only
-    SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE vmmouse=off"
-else
-    SERENITY_QEMU_DISPLAY_DEVICE="VGA,vgamem_mb=64 "
+if [ -z "$SERENITY_QEMU_DISPLAY_DEVICE" ]; then
+    if [ "$SERENITY_SCREENS" -gt 1 ]; then
+        SERENITY_QEMU_DISPLAY_DEVICE="virtio-vga,max_outputs=$SERENITY_SCREENS "
+        # QEMU appears to always relay absolute mouse coordinates relative to the screen that the mouse is
+        # pointed to, without any way for us to know what screen it was. So, when dealing with multiple
+        # displays force using relative coordinates only
+        SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE vmmouse=off"
+    else
+        SERENITY_QEMU_DISPLAY_DEVICE="VGA,vgamem_mb=64 "
+    fi
 fi
 
 # Check if SERENITY_NVME_ENABLE is unset
