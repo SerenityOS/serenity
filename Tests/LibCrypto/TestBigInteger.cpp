@@ -642,3 +642,19 @@ TEST_CASE(test_signed_multiplication_with_two_big_numbers)
     EXPECT_EQ(result.unsigned_value().words(), expected_results);
     EXPECT(result.is_negative());
 }
+
+TEST_CASE(test_negative_zero_is_not_allowed)
+{
+    Crypto::SignedBigInteger zero(Crypto::UnsignedBigInteger(0), true);
+    EXPECT(!zero.is_negative());
+
+    zero.negate();
+    EXPECT(!zero.is_negative());
+
+    Crypto::SignedBigInteger positive_five(Crypto::UnsignedBigInteger(5), false);
+    Crypto::SignedBigInteger negative_five(Crypto::UnsignedBigInteger(5), true);
+    zero = positive_five.plus(negative_five);
+
+    EXPECT(zero.unsigned_value().is_zero());
+    EXPECT(!zero.is_negative());
+}

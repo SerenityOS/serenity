@@ -25,6 +25,7 @@ public:
         : m_sign(sign)
         , m_unsigned_data(move(unsigned_data))
     {
+        ensure_sign_is_valid();
     }
 
     explicit SignedBigInteger(UnsignedBigInteger unsigned_data)
@@ -72,9 +73,18 @@ public:
     const Vector<u32, STARTING_WORD_SIZE> words() const { return m_unsigned_data.words(); }
     bool is_negative() const { return m_sign; }
 
-    void negate() { m_sign = !m_sign; }
+    void negate()
+    {
+        if (!m_unsigned_data.is_zero())
+            m_sign = !m_sign;
+    }
 
-    void set_to_0() { m_unsigned_data.set_to_0(); }
+    void set_to_0()
+    {
+        m_unsigned_data.set_to_0();
+        m_sign = false;
+    }
+
     void set_to(i32 other)
     {
         m_unsigned_data.set_to((u32)other);
@@ -129,6 +139,12 @@ public:
     bool operator>(const UnsignedBigInteger& other) const;
 
 private:
+    void ensure_sign_is_valid()
+    {
+        if (m_sign && m_unsigned_data.is_zero())
+            m_sign = false;
+    }
+
     bool m_sign { false };
     UnsignedBigInteger m_unsigned_data;
 };

@@ -72,6 +72,7 @@ public:
         m_cached_hash = 0;
     }
 
+    bool is_zero() const;
     bool is_odd() const { return m_words.size() && (m_words[0] & 1); }
     bool is_invalid() const { return m_is_invalid; }
 

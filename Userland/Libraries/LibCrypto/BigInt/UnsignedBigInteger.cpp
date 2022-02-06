@@ -145,6 +145,16 @@ void UnsignedBigInteger::set_to(const UnsignedBigInteger& other)
     m_cached_hash = 0;
 }
 
+bool UnsignedBigInteger::is_zero() const
+{
+    for (size_t i = 0; i < length(); ++i) {
+        if (m_words[i] != 0)
+            return false;
+    }
+
+    return true;
+}
+
 size_t UnsignedBigInteger::trimmed_length() const
 {
     if (!m_cached_trimmed_length.has_value()) {
