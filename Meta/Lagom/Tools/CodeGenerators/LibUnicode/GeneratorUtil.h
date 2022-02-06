@@ -9,11 +9,13 @@
 #include <AK/Format.h>
 #include <AK/HashFunctions.h>
 #include <AK/HashMap.h>
+#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <AK/Vector.h>
@@ -246,6 +248,22 @@ inline ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file(StringView p
 
     auto file = TRY(Core::Stream::File::open(path, mode));
     return Core::Stream::BufferedFile::create(move(file));
+}
+
+inline ErrorOr<JsonValue> read_json_file(StringView path)
+{
+    auto file = TRY(open_file(path, Core::Stream::OpenMode::Read));
+
+    StringBuilder builder;
+    Array<u8, 4096> buffer;
+
+    // FIXME: When Core::Stream supports reading an entire file, use that.
+    while (TRY(file->can_read_line())) {
+        auto nread = TRY(file->read(buffer));
+        TRY(builder.try_append(reinterpret_cast<char const*>(buffer.data()), nread));
+    }
+
+    return JsonValue::from_string(builder.build());
 }
 
 inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path, StringView subpath = "main"sv)
