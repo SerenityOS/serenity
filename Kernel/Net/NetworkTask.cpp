@@ -571,6 +571,12 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
         case TCPFlags::FIN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->set_state(TCPSocket::State::Closing);
+            (void)socket->send_ack(true);
+            return;
+        case TCPFlags::FIN | TCPFlags::ACK:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_state(TCPSocket::State::TimeWait);
+            (void)socket->send_ack(true);
             return;
         default:
             dbgln("handle_tcp: unexpected flags in FinWait1 state ({:x})", tcp_packet.flags());
@@ -583,8 +589,10 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
         case TCPFlags::FIN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->set_state(TCPSocket::State::TimeWait);
+            (void)socket->send_ack(true);
             return;
         case TCPFlags::ACK | TCPFlags::RST:
+            // FIXME: Verify that this transition is legitimate.
             socket->set_state(TCPSocket::State::Closed);
             return;
         default:
