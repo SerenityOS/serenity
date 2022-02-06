@@ -13,11 +13,11 @@ Then we just open `localhost:8000` on our host machine :^)
 
 ![](WebServer_localhost.png)
 
-**NOTE:** Due to the fact that same browsers download unrecognized files as plain text, you may want to use something like `wget` to download the file **as is** instead. Otherwise the file may appear corrupted when the system tries to load it.
+**NOTE:** Due to the fact that some browsers download unrecognized files as plain text, you may want to use something like `wget` to download the file **as is** instead. Otherwise the file may appear corrupted when the system tries to load it.
 
-## Method 2: Mount disk_image
+## Method 2: Mount the disk image
 
-Another way is to mount Serenity's disk_image to your host machine by using the following command on *nix systems (or inside WSL):
+Another way is to mount Serenity's `_disk_image` to your host machine by using the following command on *nix systems (or inside WSL):
 
 ```console
 cd "Build/${SERENITY_ARCH}"
