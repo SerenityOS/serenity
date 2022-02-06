@@ -26,10 +26,15 @@ ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
             return EPERM;
         ScopedCritical critical;
         g_profiling_event_mask = PERF_EVENT_PROCESS_CREATE | PERF_EVENT_THREAD_CREATE | PERF_EVENT_MMAP;
-        if (g_global_perf_events)
+        if (g_global_perf_events) {
             g_global_perf_events->clear();
-        else
+        } else {
             g_global_perf_events = PerformanceEventBuffer::try_create_with_size(32 * MiB).leak_ptr();
+            if (!g_global_perf_events) {
+                g_profiling_event_mask = 0;
+                return ENOMEM;
+            }
+        }
 
         SpinlockLocker lock(g_profiling_lock);
         if (!TimeManagement::the().enable_profile_timer())
