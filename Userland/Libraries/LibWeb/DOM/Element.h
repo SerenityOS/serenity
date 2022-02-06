@@ -103,8 +103,6 @@ public:
     ExceptionOr<void> set_inner_html(String const&);
 
     bool is_focused() const;
-    virtual bool is_focusable() const { return false; }
-
     bool is_active() const;
 
     NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
