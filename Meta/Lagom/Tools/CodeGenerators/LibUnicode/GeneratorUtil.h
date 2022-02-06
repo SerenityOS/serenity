@@ -19,6 +19,7 @@
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibUnicode/Locale.h>
 
 template<class T>
@@ -237,6 +238,15 @@ struct CanonicalLanguageID {
     StringIndexType region { 0 };
     Vector<StringIndexType> variants {};
 };
+
+inline ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file(StringView path, Core::Stream::OpenMode mode)
+{
+    if (path.is_empty())
+        return Error::from_string_literal("Provided path is empty, please provide all command line options"sv);
+
+    auto file = TRY(Core::Stream::File::open(path, mode));
+    return Core::Stream::BufferedFile::create(move(file));
+}
 
 inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path, StringView subpath = "main"sv)
 {
