@@ -674,22 +674,6 @@ JS::Interpreter& Document::interpreter()
         // FIXME: 9. Set up a window environment settings object with creationURL, realm execution context, navigationParams's reserved environment, topLevelCreationURL, and topLevelOrigin.
         //        (This is missing reserved environment, topLevelCreationURL and topLevelOrigin. It also assumes creationURL is the document's URL, when it's really "navigationParams's response's URL.")
         HTML::WindowEnvironmentSettingsObject::setup(m_url, realm_execution_context);
-
-        // NOTE: We must hook `on_call_stack_emptied` after the interpreter was created, as the initialization of the
-        // WindowsObject can invoke some internal calls, which will eventually lead to this hook being called without
-        // `m_interpreter` being fully initialized yet.
-        // TODO: Hook up vm.on_promise_unhandled_rejection and vm.on_promise_rejection_handled
-        // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises#promise_rejection_events
-        vm.on_call_stack_emptied = [this] {
-            auto& vm = m_interpreter->vm();
-            vm.run_queued_promise_jobs();
-            vm.run_queued_finalization_registry_cleanup_jobs();
-
-            // FIXME: This isn't exactly the right place for this.
-            HTML::main_thread_event_loop().perform_a_microtask_checkpoint();
-
-            vm.finish_execution_generation();
-        };
     }
     return *m_interpreter;
 }
