@@ -23,7 +23,13 @@ public:
     explicit Error(Object& prototype);
     virtual ~Error() override = default;
 
+    String const& stack_string() const { return m_stack_string; }
+
     ThrowCompletionOr<void> install_error_cause(Value options);
+
+private:
+    void populate_stack();
+    String m_stack_string {};
 };
 
 // NOTE: Making these inherit from Error is not required by the spec but
