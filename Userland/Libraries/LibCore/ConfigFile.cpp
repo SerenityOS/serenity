@@ -8,7 +8,6 @@
 
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <pwd.h>
 
@@ -36,27 +35,37 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_system(String const& app
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, AllowWriting allow_altering)
 {
-    auto file = File::construct(filename);
-    if (!file->open(allow_altering == AllowWriting::Yes ? OpenMode::ReadWrite : OpenMode::ReadOnly)) {
-        // Failure to open a read-only file is OK, and behaves as if the file was empty.
-        if (allow_altering == AllowWriting::Yes)
-            return Error::from_string_literal("Unable to open config file");
+    auto maybe_file = Stream::File::open(filename, allow_altering == AllowWriting::Yes ? Stream::OpenMode::ReadWrite : Stream::OpenMode::Read);
+    OwnPtr<Stream::BufferedFile> buffered_file;
+    if (maybe_file.is_error()) {
+        // If we attempted to open a read-only file that does not exist, we ignore the error, making it appear
+        // the same as if we had opened an empty file. This behavior is a little weird, but is required by
+        // user code, which does not check the config file exists before opening.
+        if (!(allow_altering == AllowWriting::No && maybe_file.error().code() == ENOENT))
+            return maybe_file.error();
+    } else {
+        buffered_file = TRY(Stream::BufferedFile::create(maybe_file.release_value()));
     }
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, move(file)));
+
+    auto config_file = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, move(buffered_file))));
+    TRY(config_file->reparse());
+    return config_file;
 }
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, int fd)
 {
-    auto file = File::construct(filename);
-    if (!file->open(fd, OpenMode::ReadWrite, File::ShouldCloseFileDescriptor::Yes))
-        return Error::from_string_literal("Unable to open config file");
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, move(file)));
+    auto file = TRY(Stream::File::adopt_fd(fd, Stream::OpenMode::ReadWrite));
+    auto buffered_file = TRY(Stream::BufferedFile::create(move(file)));
+
+    auto config_file = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, move(buffered_file))));
+    TRY(config_file->reparse());
+    return config_file;
 }
 
-ConfigFile::ConfigFile(String const&, NonnullRefPtr<File> open_file)
-    : m_file(move(open_file))
+ConfigFile::ConfigFile(String const& filename, OwnPtr<Stream::BufferedFile> open_file)
+    : m_filename(filename)
+    , m_file(move(open_file))
 {
-    reparse();
 }
 
 ConfigFile::~ConfigFile()
@@ -64,26 +73,24 @@ ConfigFile::~ConfigFile()
     MUST(sync());
 }
 
-void ConfigFile::reparse()
+ErrorOr<void> ConfigFile::reparse()
 {
     m_groups.clear();
+    if (!m_file)
+        return {};
 
     HashMap<String, String>* current_group = nullptr;
 
-    while (m_file->can_read_line()) {
-        auto line = m_file->read_line();
+    auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+    while (TRY(m_file->can_read_line())) {
+        auto length = TRY(m_file->read_line(buffer));
 
-        if (line.is_null()) {
-            m_groups.clear();
-            return;
-        }
-
+        StringView line { buffer.data(), length };
         size_t i = 0;
 
         while (i < line.length() && (line[i] == ' ' || line[i] == '\t' || line[i] == '\n'))
             ++i;
 
-        // EOL
         if (i >= line.length())
             continue;
 
@@ -122,6 +129,7 @@ void ConfigFile::reparse()
         }
         }
     }
+    return {};
 }
 
 String ConfigFile::read_entry(String const& group, String const& key, String const& default_value) const
@@ -159,10 +167,12 @@ void ConfigFile::write_num_entry(String const& group, String const& key, int val
 {
     write_entry(group, key, String::number(value));
 }
+
 void ConfigFile::write_bool_entry(String const& group, String const& key, bool value)
 {
     write_entry(group, key, value ? "true" : "false");
 }
+
 void ConfigFile::write_color_entry(String const& group, String const& key, Color value)
 {
     write_entry(group, key, String::formatted("{},{},{},{}", value.red(), value.green(), value.blue(), value.alpha()));
@@ -173,14 +183,17 @@ ErrorOr<void> ConfigFile::sync()
     if (!m_dirty)
         return {};
 
-    m_file->truncate(0);
-    m_file->seek(0);
+    if (!m_file)
+        return Error::from_errno(ENOENT);
+
+    TRY(m_file->truncate(0));
+    TRY(m_file->seek(0, Stream::SeekMode::SetPosition));
 
     for (auto& it : m_groups) {
-        m_file->write(String::formatted("[{}]\n", it.key));
+        TRY(m_file->write(String::formatted("[{}]\n", it.key).bytes()));
         for (auto& jt : it.value)
-            m_file->write(String::formatted("{}={}\n", jt.key, jt.value));
-        m_file->write("\n");
+            TRY(m_file->write(String::formatted("{}={}\n", jt.key, jt.value).bytes()));
+        TRY(m_file->write("\n"sv.bytes()));
     }
 
     m_dirty = false;
