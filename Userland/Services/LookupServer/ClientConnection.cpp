@@ -30,9 +30,12 @@ void ClientConnection::die()
 
 Messages::LookupServer::LookupNameResponse ClientConnection::lookup_name(String const& name)
 {
-    auto answers = LookupServer::the().lookup(name, DNSRecordType::A);
-    if (answers.is_empty())
-        return { 1, Vector<String>() };
+    auto maybe_answers = LookupServer::the().lookup(name, DNSRecordType::A);
+    if (maybe_answers.is_error()) {
+        dbgln("LookupServer: Failed to lookup PTR record: {}", maybe_answers.error());
+    }
+
+    auto answers = maybe_answers.release_value();
     Vector<String> addresses;
     for (auto& answer : answers) {
         addresses.append(answer.record_data());
@@ -50,7 +53,13 @@ Messages::LookupServer::LookupAddressResponse ClientConnection::lookup_address(S
         ip_address[2],
         ip_address[1],
         ip_address[0]);
-    auto answers = LookupServer::the().lookup(name, DNSRecordType::PTR);
+
+    auto maybe_answers = LookupServer::the().lookup(name, DNSRecordType::PTR);
+    if (maybe_answers.is_error()) {
+        dbgln("LookupServer: Failed to lookup PTR record: {}", maybe_answers.error());
+    }
+
+    auto answers = maybe_answers.release_value();
     if (answers.is_empty())
         return { 1, String() };
     return { 0, answers[0].record_data() };
