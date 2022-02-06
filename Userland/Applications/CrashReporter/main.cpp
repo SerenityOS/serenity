@@ -277,7 +277,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             coredump->for_each_thread_info([&](auto& thread_info) {
                 results.thread_backtraces.append(build_backtrace(*coredump, thread_info, thread_index, [&](size_t frame_index, size_t frame_count) {
                     Core::EventLoop::with_main_locked([&](auto& main) {
-                        main->deferred_invoke([&] {
+                        main->deferred_invoke([&, frame_index, frame_count] {
                             window->set_progress(100.0f * (float)(frame_index + 1) / (float)frame_count);
                             progressbar.set_value(frame_index + 1);
                             progressbar.set_max(frame_count);
