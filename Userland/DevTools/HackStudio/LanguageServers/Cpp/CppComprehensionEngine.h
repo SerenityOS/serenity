@@ -102,6 +102,7 @@ private:
     bool is_property(const ASTNode&) const;
     RefPtr<Declaration> find_declaration_of(const DocumentData&, const ASTNode&) const;
     RefPtr<Declaration> find_declaration_of(const DocumentData&, const SymbolName&) const;
+    RefPtr<Declaration> find_declaration_of(const DocumentData&, const GUI::TextPosition& identifier_position);
 
     enum class RecurseIntoScopes {
         No,
