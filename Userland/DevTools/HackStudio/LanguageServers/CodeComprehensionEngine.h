@@ -34,6 +34,8 @@ public:
     };
     virtual Optional<FunctionParamsHint> get_function_params_hint(const String&, const GUI::TextPosition&) { return {}; }
 
+    virtual Vector<GUI::AutocompleteProvider::TokenInfo> get_tokens_info(const String&) { return {}; }
+
 public:
     Function<void(const String&, Vector<GUI::AutocompleteProvider::Declaration>&&)> set_declarations_of_document_callback;
     Function<void(String const&, Vector<Cpp::Parser::TodoEntry>&&)> set_todo_entries_of_document_callback;
