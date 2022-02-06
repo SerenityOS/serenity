@@ -5,9 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/AST.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/SourceRange.h>
 
 namespace JS {
 
@@ -28,6 +31,7 @@ Error* Error::create(GlobalObject& global_object, String const& message)
 Error::Error(Object& prototype)
     : Object(prototype)
 {
+    populate_stack();
 }
 
 // 20.5.8.1 InstallErrorCause ( O, options ), https://tc39.es/ecma262/#sec-installerrorcause
@@ -46,6 +50,33 @@ ThrowCompletionOr<void> Error::install_error_cause(Value options)
 
     // 2. Return NormalCompletion(undefined).
     return {};
+}
+
+void Error::populate_stack()
+{
+    AK::StringBuilder stack_string_builder {};
+
+    // Note: We roughly follow V8's formatting
+    // Note: The error's name and message get prepended by ErrorPrototype::stack
+    // Note: We don't want to capture the global exectution context, so we omit the last frame
+    // FIXME: We generate a stack-frame for the Errors constructor, other engines do not
+    for (size_t i = vm().execution_context_stack().size() - 1; i > 0; --i) {
+        auto const* frame = vm().execution_context_stack()[i];
+
+        auto function_name = frame->function_name;
+        if (auto const* current_node = frame->current_node) {
+            auto const& source_range = current_node->source_range();
+
+            if (function_name.is_empty())
+                stack_string_builder.appendff("    at {}:{}:{}\n", source_range.filename, source_range.start.line, source_range.start.column);
+            else
+                stack_string_builder.appendff("    at {} ({}:{}:{})\n", function_name, source_range.filename, source_range.start.line, source_range.start.column);
+        } else {
+            stack_string_builder.appendff("    at {}\n", function_name.is_empty() ? "<unknown>"sv : function_name.view());
+        }
+    }
+
+    m_stack_string = stack_string_builder.build();
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                         \
