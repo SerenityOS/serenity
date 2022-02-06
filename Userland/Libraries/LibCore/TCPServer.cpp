@@ -10,7 +10,6 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
-#include <LibCore/TCPSocket.h>
 
 namespace Core {
 

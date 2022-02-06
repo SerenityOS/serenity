@@ -10,7 +10,6 @@
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <LibCore/NetworkJob.h>
-#include <LibCore/TCPSocket.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
 
