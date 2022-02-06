@@ -266,9 +266,24 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         if (button == GUI::MouseButton::Primary) {
             auto result = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
             if (result.layout_node && result.layout_node->dom_node()) {
-                m_browsing_context.set_cursor_position(DOM::Position(*result.layout_node->dom_node(), result.index_in_node));
-                layout_root()->set_selection({ { result.layout_node, result.index_in_node }, {} });
-                m_in_mouse_selection = true;
+
+                // See if we want to focus something.
+                bool did_focus_something = false;
+                for (auto candidate = node; candidate; candidate = candidate->parent()) {
+                    if (candidate->is_focusable()) {
+                        document->set_focused_element(verify_cast<DOM::Element>(candidate.ptr()));
+                        did_focus_something = true;
+                        break;
+                    }
+                }
+
+                // If we didn't focus anything, place the document text cursor at the mouse position.
+                // FIXME: This is all rather strange. Find a better solution.
+                if (!did_focus_something) {
+                    m_browsing_context.set_cursor_position(DOM::Position(*result.layout_node->dom_node(), result.index_in_node));
+                    layout_root()->set_selection({ { result.layout_node, result.index_in_node }, {} });
+                    m_in_mouse_selection = true;
+                }
             }
         } else if (button == GUI::MouseButton::Secondary) {
             if (auto* page = m_browsing_context.page())
