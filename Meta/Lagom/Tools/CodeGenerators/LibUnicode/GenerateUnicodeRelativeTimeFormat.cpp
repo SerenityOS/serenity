@@ -16,7 +16,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/RelativeTimeFormat.h>
 
@@ -88,9 +88,7 @@ static ErrorOr<void> parse_date_fields(String locale_dates_path, UnicodeLocaleDa
     LexicalPath date_fields_path(move(locale_dates_path));
     date_fields_path = date_fields_path.append("dateFields.json"sv);
 
-    auto date_fields_file = TRY(Core::File::open(date_fields_path.string(), Core::OpenMode::ReadOnly));
-    auto date_fields = TRY(JsonValue::from_string(date_fields_file->read_all()));
-
+    auto date_fields = TRY(read_json_file(date_fields_path.string()));
     auto const& main_object = date_fields.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(date_fields_path.parent().basename());
     auto const& dates_object = locale_object.as_object().get("dates"sv);
@@ -172,7 +170,7 @@ static ErrorOr<void> parse_all_locales(String dates_path, UnicodeLocaleData& loc
     return {};
 }
 
-static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData&)
+static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, UnicodeLocaleData&)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -189,10 +187,11 @@ namespace Unicode {
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
 
-static void generate_unicode_locale_implementation(Core::File& file, UnicodeLocaleData& locale_data)
+static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, UnicodeLocaleData& locale_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -283,7 +282,8 @@ Vector<RelativeTimeFormat> get_relative_time_format_patterns(StringView locale, 
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -298,23 +298,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(dates_path, "Path to cldr-dates directory", "dates-path", 'd', "dates-path");
     args_parser.parse(arguments);
 
-    auto open_file = [&](StringView path) -> ErrorOr<NonnullRefPtr<Core::File>> {
-        if (path.is_empty()) {
-            args_parser.print_usage(stderr, arguments.argv[0]);
-            return Error::from_string_literal("Must provide all command line options"sv);
-        }
-
-        return Core::File::open(path, Core::OpenMode::ReadWrite);
-    };
-
-    auto generated_header_file = TRY(open_file(generated_header_path));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path));
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
 
     UnicodeLocaleData locale_data;
     TRY(parse_all_locales(dates_path, locale_data));
 
-    generate_unicode_locale_header(generated_header_file, locale_data);
-    generate_unicode_locale_implementation(generated_implementation_file, locale_data);
+    TRY(generate_unicode_locale_header(*generated_header_file, locale_data));
+    TRY(generate_unicode_locale_implementation(*generated_implementation_file, locale_data));
 
     return 0;
 }
