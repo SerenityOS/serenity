@@ -145,7 +145,7 @@ public:
 
     Value get_without_side_effects(const PropertyKey&) const;
 
-    void define_direct_property(PropertyKey const& property_name, Value value, PropertyAttributes attributes) { storage_set(property_name, { value, attributes }); };
+    void define_direct_property(PropertyKey const& property_key, Value value, PropertyAttributes attributes) { storage_set(property_key, { value, attributes }); };
     void define_direct_accessor(PropertyKey const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
 
     void define_native_function(PropertyKey const&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, i32 length, PropertyAttributes attributes);

@@ -183,10 +183,10 @@ class TypedArray : public TypedArrayBase {
 
 public:
     // 10.4.5.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-getownproperty-p
-    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const& property_name) const override
+    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const& property_key) const override
     {
         // 1. Assert: IsPropertyKey(P) is true.
-        VERIFY(property_name.is_valid());
+        VERIFY(property_key.is_valid());
 
         // 2. Assert: O is an Integer-Indexed exotic object.
 
@@ -196,9 +196,9 @@ public:
 
         // 3. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
-        if (property_name.is_string() || property_name.is_number()) {
+        if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Let value be ! IntegerIndexedElementGet(O, numericIndex).
@@ -219,14 +219,14 @@ public:
         }
 
         // 4. Return OrdinaryGetOwnProperty(O, P).
-        return Object::internal_get_own_property(property_name);
+        return Object::internal_get_own_property(property_key);
     }
 
     // 10.4.5.2 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p
-    virtual ThrowCompletionOr<bool> internal_has_property(PropertyKey const& property_name) const override
+    virtual ThrowCompletionOr<bool> internal_has_property(PropertyKey const& property_key) const override
     {
         // 1. Assert: IsPropertyKey(P) is true.
-        VERIFY(property_name.is_valid());
+        VERIFY(property_key.is_valid());
 
         // 2. Assert: O is an Integer-Indexed exotic object.
 
@@ -236,23 +236,23 @@ public:
 
         // 3. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
-        if (property_name.is_string() || property_name.is_number()) {
+        if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
             // b. If numericIndex is not undefined, return ! IsValidIntegerIndex(O, numericIndex).
             if (!numeric_index.is_undefined())
                 return is_valid_integer_index(*this, numeric_index);
         }
 
         // 4. Return ? OrdinaryHasProperty(O, P).
-        return Object::internal_has_property(property_name);
+        return Object::internal_has_property(property_key);
     }
 
     // 10.4.5.3 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-defineownproperty-p-desc
-    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const& property_name, PropertyDescriptor const& property_descriptor) override
+    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const& property_key, PropertyDescriptor const& property_descriptor) override
     {
         // 1. Assert: IsPropertyKey(P) is true.
-        VERIFY(property_name.is_valid());
+        VERIFY(property_key.is_valid());
 
         // 2. Assert: O is an Integer-Indexed exotic object.
 
@@ -262,9 +262,9 @@ public:
 
         // 3. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
-        if (property_name.is_string() || property_name.is_number()) {
+        if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
@@ -297,25 +297,25 @@ public:
         }
 
         // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
-        return Object::internal_define_own_property(property_name, property_descriptor);
+        return Object::internal_define_own_property(property_key, property_descriptor);
     }
 
     // 10.4.5.4 [[Get]] ( P, Receiver ), 10.4.5.4 [[Get]] ( P, Receiver )
-    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const& property_name, Value receiver) const override
+    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const& property_key, Value receiver) const override
     {
         VERIFY(!receiver.is_empty());
 
         // 1. Assert: IsPropertyKey(P) is true.
-        VERIFY(property_name.is_valid());
+        VERIFY(property_key.is_valid());
         // NOTE: If the property name is a number type (An implementation-defined optimized
         // property key type), it can be treated as a string property that will transparently be
         // converted into a canonical numeric index.
 
         // 2. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
-        if (property_name.is_string() || property_name.is_number()) {
+        if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Return ! IntegerIndexedElementGet(O, numericIndex).
@@ -324,26 +324,26 @@ public:
         }
 
         // 3. Return ? OrdinaryGet(O, P, Receiver).
-        return Object::internal_get(property_name, receiver);
+        return Object::internal_get(property_key, receiver);
     }
 
     // 10.4.5.5 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-set-p-v-receiver
-    virtual ThrowCompletionOr<bool> internal_set(PropertyKey const& property_name, Value value, Value receiver) override
+    virtual ThrowCompletionOr<bool> internal_set(PropertyKey const& property_key, Value value, Value receiver) override
     {
         VERIFY(!value.is_empty());
         VERIFY(!receiver.is_empty());
 
         // 1. Assert: IsPropertyKey(P) is true.
-        VERIFY(property_name.is_valid());
+        VERIFY(property_key.is_valid());
         // NOTE: If the property name is a number type (An implementation-defined optimized
         // property key type), it can be treated as a string property that will transparently be
         // converted into a canonical numeric index.
 
         // 2. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
-        if (property_name.is_string() || property_name.is_number()) {
+        if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
@@ -355,14 +355,14 @@ public:
         }
 
         // 3. Return ? OrdinarySet(O, P, V, Receiver).
-        return Object::internal_set(property_name, value, receiver);
+        return Object::internal_set(property_key, value, receiver);
     }
 
     // 10.4.5.6 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-delete-p
-    virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const& property_name) override
+    virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const& property_key) override
     {
         // 1. Assert: IsPropertyKey(P) is true.
-        VERIFY(property_name.is_valid());
+        VERIFY(property_key.is_valid());
 
         // 2. Assert: O is an Integer-Indexed exotic object.
         // NOTE: If the property name is a number type (An implementation-defined optimized
@@ -371,9 +371,9 @@ public:
 
         // 3. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
-        if (property_name.is_string() || property_name.is_number()) {
+        if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return true; else return false.
@@ -384,7 +384,7 @@ public:
         }
 
         // 4. Return ? OrdinaryDelete(O, P).
-        return Object::internal_delete(property_name);
+        return Object::internal_delete(property_key);
     }
 
     // 10.4.5.7 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-ownpropertykeys

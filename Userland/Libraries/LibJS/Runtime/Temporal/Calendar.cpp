@@ -993,15 +993,15 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
     for (auto& next_key : original_keys) {
         // a. If nextKey is not "month" or "monthCode", then
         if (next_key.as_string().string() != vm.names.month.as_string() && next_key.as_string().string() != vm.names.monthCode.as_string()) {
-            auto property_name = MUST(PropertyKey::from_value(global_object, next_key));
+            auto property_key = MUST(PropertyKey::from_value(global_object, next_key));
 
             // i. Let propValue be ? Get(fields, nextKey).
-            auto prop_value = TRY(fields.get(property_name));
+            auto prop_value = TRY(fields.get(property_key));
 
             // ii. If propValue is not undefined, then
             if (!prop_value.is_undefined()) {
                 // 1. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
-                MUST(merged->create_data_property_or_throw(property_name, prop_value));
+                MUST(merged->create_data_property_or_throw(property_key, prop_value));
             }
         }
     }
@@ -1014,15 +1014,15 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
 
     // 5. For each element nextKey of newKeys, do
     for (auto& next_key : new_keys) {
-        auto property_name = MUST(PropertyKey::from_value(global_object, next_key));
+        auto property_key = MUST(PropertyKey::from_value(global_object, next_key));
 
         // a. Let propValue be ? Get(additionalFields, nextKey).
-        auto prop_value = TRY(additional_fields.get(property_name));
+        auto prop_value = TRY(additional_fields.get(property_key));
 
         // b. If propValue is not undefined, then
         if (!prop_value.is_undefined()) {
             // i. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
-            MUST(merged->create_data_property_or_throw(property_name, prop_value));
+            MUST(merged->create_data_property_or_throw(property_key, prop_value));
         }
 
         // See comment above.
