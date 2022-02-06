@@ -21,13 +21,15 @@ jobs:
 
       - name: "Install Ubuntu dependencies"
         # These packages are already part of the ubuntu-20.04 image:
-        # cmake clang-format-11 libgmp-dev npm shellcheck
+        # cmake libgmp-dev npm shellcheck
         # Packages below aren't.
         #
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
           sudo apt-get update
-          sudo apt-get install -y gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build unzip pvs-studio
+          sudo apt-get install -y clang-format-14 gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build unzip pvs-studio
 
       - name: Check versions
         run: set +e; g++ --version; g++-11 --version; ninja --version;

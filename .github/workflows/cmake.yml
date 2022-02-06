@@ -40,7 +40,7 @@ jobs:
       # sudo apt-get update -qq
       - name: "Install Ubuntu dependencies"
         # These packages are already part of the ubuntu-20.04 image:
-        # cmake clang-format-11 libgmp-dev npm shellcheck
+        # cmake libgmp-dev npm shellcheck
         # Packages below aren't.
         #
         # We add the canonical-server/server-backports PPA to get updated QEMU releases without having to manage
@@ -49,8 +49,10 @@ jobs:
         run: |
           sudo add-apt-repository ppa:canonical-server/server-backports
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
           sudo apt-get update
-          sudo apt-get install -y ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build qemu-utils qemu-system-i386 unzip
+          sudo apt-get install -y clang-format-14 ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build qemu-utils qemu-system-i386 unzip
       - name: Install JS dependencies
         run: sudo npm install -g prettier@2.5.1
       - name: Install Python dependencies
@@ -59,7 +61,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 requests
       - name: Check versions
-        run: set +e; g++ --version; g++-11 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version
+        run: set +e; g++ --version; g++-11 --version; clang-format --version; clang-format-14 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version
 
       # === PREPARE FOR BUILDING ===
 
