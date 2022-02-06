@@ -87,7 +87,13 @@ struct ip_mreq_source {
 #define IPV6_LEAVE_GROUP 6
 
 struct in6_addr {
-    uint8_t s6_addr[16];
+    union{
+        uint8_t s6_addr[16];
+        uint32_t s6_addr32[4];
+    } in6_union;
+
+#define s6_addr in6_union.s6_addr
+#define s6_addr32 in6_union.s6_addr32    
 };
 
 #define IN6ADDR_ANY_INIT                               \
