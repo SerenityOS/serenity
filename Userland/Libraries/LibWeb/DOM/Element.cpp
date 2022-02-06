@@ -114,8 +114,9 @@ static ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, Fly
 
     // 5. If qualifiedName contains a U+003A (:), then strictly split the string on it and set prefix to the part before and localName to the part after.
     if (qualified_name.view().contains(':')) {
-        auto parts = qualified_name.view().split_view(':');
-        // FIXME: Handle parts > 2
+        auto parts = qualified_name.view().split_view(':', true);
+        if (parts.size() > 2)
+            return InvalidCharacterError::create("Qualified name provided contains multiple colons.");
         prefix = parts[0];
         local_name = parts[1];
     }
