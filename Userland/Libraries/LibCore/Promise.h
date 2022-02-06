@@ -24,7 +24,7 @@ public:
             on_resolved(m_pending.value());
     }
 
-    bool is_resolved()
+    bool is_resolved() const
     {
         return m_pending.has_value();
     };
