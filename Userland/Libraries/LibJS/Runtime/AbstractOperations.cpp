@@ -246,11 +246,11 @@ bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const
 }
 
 // 10.1.6.3 ValidateAndApplyPropertyDescriptor ( O, P, extensible, Desc, current ), https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor
-bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& property_name, bool extensible, PropertyDescriptor const& descriptor, Optional<PropertyDescriptor> const& current)
+bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& property_key, bool extensible, PropertyDescriptor const& descriptor, Optional<PropertyDescriptor> const& current)
 {
     // 1. Assert: If O is not undefined, then IsPropertyKey(P) is true.
     if (object)
-        VERIFY(property_name.is_valid());
+        VERIFY(property_key.is_valid());
 
     // 2. If current is undefined, then
     if (!current.has_value()) {
@@ -267,7 +267,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
             // to its default value.
             if (object) {
                 auto value = descriptor.value.value_or(js_undefined());
-                object->storage_set(property_name, { value, descriptor.attributes() });
+                object->storage_set(property_key, { value, descriptor.attributes() });
             }
         }
         // d. Else,
@@ -281,7 +281,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
             // to its default value.
             if (object) {
                 auto accessor = Accessor::create(object->vm(), descriptor.get.value_or(nullptr), descriptor.set.value_or(nullptr));
-                object->storage_set(property_name, { accessor, descriptor.attributes() });
+                object->storage_set(property_key, { accessor, descriptor.attributes() });
             }
         }
         // e. Return true.
@@ -320,7 +320,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
             // set the rest of the property's attributes to their default values.
             if (object) {
                 auto accessor = Accessor::create(object->vm(), nullptr, nullptr);
-                object->storage_set(property_name, { accessor, current->attributes() });
+                object->storage_set(property_key, { accessor, current->attributes() });
             }
         }
         // c. Else,
@@ -330,7 +330,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
             // set the rest of the property's attributes to their default values.
             if (object) {
                 auto value = js_undefined();
-                object->storage_set(property_name, { value, current->attributes() });
+                object->storage_set(property_key, { value, current->attributes() });
             }
         }
     }
@@ -386,7 +386,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
         attributes.set_writable(descriptor.writable.value_or(current->writable.value_or(false)));
         attributes.set_enumerable(descriptor.enumerable.value_or(current->enumerable.value_or(false)));
         attributes.set_configurable(descriptor.configurable.value_or(current->configurable.value_or(false)));
-        object->storage_set(property_name, { value, attributes });
+        object->storage_set(property_key, { value, attributes });
     }
 
     // 10. Return true.
@@ -913,19 +913,19 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
 }
 
 // 7.1.21 CanonicalNumericIndexString ( argument ), https://tc39.es/ecma262/#sec-canonicalnumericindexstring
-Value canonical_numeric_index_string(GlobalObject& global_object, PropertyKey const& property_name)
+Value canonical_numeric_index_string(GlobalObject& global_object, PropertyKey const& property_key)
 {
     // NOTE: If the property name is a number type (An implementation-defined optimized
     // property key type), it can be treated as a string property that has already been
     // converted successfully into a canonical numeric index.
 
-    VERIFY(property_name.is_string() || property_name.is_number());
+    VERIFY(property_key.is_string() || property_key.is_number());
 
-    if (property_name.is_number())
-        return Value(property_name.as_number());
+    if (property_key.is_number())
+        return Value(property_key.as_number());
 
     // 1. Assert: Type(argument) is String.
-    auto argument = Value(js_string(global_object.vm(), property_name.as_string()));
+    auto argument = Value(js_string(global_object.vm(), property_key.as_string()));
 
     // 2. If argument is "-0", return -0𝔽.
     if (argument.as_string().string() == "-0")

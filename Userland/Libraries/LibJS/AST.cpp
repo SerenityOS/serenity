@@ -1397,7 +1397,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
 
     // From here on equivalent to
     // 13.3.4 EvaluatePropertyAccessWithIdentifierKey ( baseValue, identifierName, strict ), https://tc39.es/ecma262/#sec-evaluate-property-access-with-identifier-key
-    PropertyKey property_name;
+    PropertyKey property_key;
     if (is_computed()) {
         // Weird order which I can't quite find from the specs.
         auto value = TRY(m_property->execute(interpreter, global_object)).release_value();
@@ -1405,19 +1405,19 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
 
         TRY(require_object_coercible(global_object, base_value));
 
-        property_name = TRY(PropertyKey::from_value(global_object, value));
+        property_key = TRY(PropertyKey::from_value(global_object, value));
     } else if (is<PrivateIdentifier>(*m_property)) {
         auto& private_identifier = static_cast<PrivateIdentifier const&>(*m_property);
         return make_private_reference(interpreter.vm(), base_value, private_identifier.string());
     } else {
-        property_name = verify_cast<Identifier>(*m_property).string();
+        property_key = verify_cast<Identifier>(*m_property).string();
         TRY(require_object_coercible(global_object, base_value));
     }
-    if (!property_name.is_valid())
+    if (!property_key.is_valid())
         return Reference {};
 
     auto strict = interpreter.vm().in_strict_mode();
-    return Reference { base_value, move(property_name), {}, strict };
+    return Reference { base_value, move(property_key), {}, strict };
 }
 
 // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
@@ -1504,7 +1504,7 @@ static ThrowCompletionOr<ClassElement::ClassElementName> class_key_to_property_n
 // 15.4.5 Runtime Semantics: MethodDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-methoddefinitionevaluation
 ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluation(Interpreter& interpreter, GlobalObject& global_object, Object& target) const
 {
-    auto property_key = TRY(class_key_to_property_name(interpreter, global_object, *m_key));
+    auto property_key_or_private_name = TRY(class_key_to_property_name(interpreter, global_object, *m_key));
 
     auto method_value = TRY(m_function->execute(interpreter, global_object)).release_value();
 
@@ -1514,38 +1514,38 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
     method_function.make_method(target);
 
     auto set_function_name = [&](String prefix = "") {
-        auto property_name = property_key.visit(
-            [&](PropertyKey const& property_name) -> String {
-                if (property_name.is_symbol()) {
-                    auto description = property_name.as_symbol()->description();
+        auto name = property_key_or_private_name.visit(
+            [&](PropertyKey const& property_key) -> String {
+                if (property_key.is_symbol()) {
+                    auto description = property_key.as_symbol()->description();
                     if (description.is_empty())
                         return "";
                     return String::formatted("[{}]", description);
                 } else {
-                    return property_name.to_string();
+                    return property_key.to_string();
                 }
             },
             [&](PrivateName const& private_name) -> String {
                 return private_name.description;
             });
 
-        update_function_name(method_value, String::formatted("{}{}{}", prefix, prefix.is_empty() ? "" : " ", property_name));
+        update_function_name(method_value, String::formatted("{}{}{}", prefix, prefix.is_empty() ? "" : " ", name));
     };
 
-    if (property_key.has<PropertyKey>()) {
-        auto& property_name = property_key.get<PropertyKey>();
+    if (property_key_or_private_name.has<PropertyKey>()) {
+        auto& property_key = property_key_or_private_name.get<PropertyKey>();
         switch (kind()) {
         case ClassMethod::Kind::Method:
             set_function_name();
-            TRY(target.define_property_or_throw(property_name, { .value = method_value, .writable = true, .enumerable = false, .configurable = true }));
+            TRY(target.define_property_or_throw(property_key, { .value = method_value, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case ClassMethod::Kind::Getter:
             set_function_name("get");
-            TRY(target.define_property_or_throw(property_name, { .get = &method_function, .enumerable = true, .configurable = true }));
+            TRY(target.define_property_or_throw(property_key, { .get = &method_function, .enumerable = true, .configurable = true }));
             break;
         case ClassMethod::Kind::Setter:
             set_function_name("set");
-            TRY(target.define_property_or_throw(property_name, { .set = &method_function, .enumerable = true, .configurable = true }));
+            TRY(target.define_property_or_throw(property_key, { .set = &method_function, .enumerable = true, .configurable = true }));
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -1553,7 +1553,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
 
         return ClassValue { normal_completion({}) };
     } else {
-        auto& private_name = property_key.get<PrivateName>();
+        auto& private_name = property_key_or_private_name.get<PrivateName>();
         switch (kind()) {
         case Kind::Method:
             set_function_name();
@@ -1614,13 +1614,13 @@ private:
 // 15.7.10 Runtime Semantics: ClassFieldDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation
 ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation(Interpreter& interpreter, GlobalObject& global_object, Object& target) const
 {
-    auto property_key = TRY(class_key_to_property_name(interpreter, global_object, *m_key));
+    auto property_key_or_private_name = TRY(class_key_to_property_name(interpreter, global_object, *m_key));
     Handle<ECMAScriptFunctionObject> initializer {};
     if (m_initializer) {
         auto copy_initializer = m_initializer;
-        auto name = property_key.visit(
-            [&](PropertyKey const& property_name) -> String {
-                return property_name.is_number() ? property_name.to_string() : property_name.to_string_or_symbol().to_display_string();
+        auto name = property_key_or_private_name.visit(
+            [&](PropertyKey const& property_key) -> String {
+                return property_key.is_number() ? property_key.to_string() : property_key.to_string_or_symbol().to_display_string();
             },
             [&](PrivateName const& private_name) -> String {
                 return private_name.description;
@@ -1634,7 +1634,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
 
     return ClassValue {
         ClassFieldDefinition {
-            move(property_key),
+            move(property_key_or_private_name),
             move(initializer),
         }
     };

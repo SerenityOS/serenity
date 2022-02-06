@@ -151,31 +151,31 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
 }
 
 // NON-STANDARD: Used to return the value of the ephemeral length property
-ThrowCompletionOr<Optional<PropertyDescriptor>> Array::internal_get_own_property(PropertyKey const& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> Array::internal_get_own_property(PropertyKey const& property_key) const
 {
     auto& vm = this->vm();
-    if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string())
+    if (property_key.is_string() && property_key.as_string() == vm.names.length.as_string())
         return PropertyDescriptor { .value = Value(indexed_properties().array_like_size()), .writable = m_length_writable, .enumerable = false, .configurable = false };
 
-    return Object::internal_get_own_property(property_name);
+    return Object::internal_get_own_property(property_key);
 }
 
 // 10.4.2.1 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc
-ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyKey const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyKey const& property_key, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
 
     // 1. Assert: IsPropertyKey(P) is true.
-    VERIFY(property_name.is_valid());
+    VERIFY(property_key.is_valid());
 
     // 2. If P is "length", then
-    if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string()) {
+    if (property_key.is_string() && property_key.as_string() == vm.names.length.as_string()) {
         // a. Return ? ArraySetLength(A, Desc).
         return set_length(property_descriptor);
     }
 
     // 3. Else if P is an array index, then
-    if (property_name.is_number()) {
+    if (property_key.is_number()) {
         // a. Let oldLenDesc be OrdinaryGetOwnProperty(A, "length").
         // b. Assert: ! IsDataDescriptor(oldLenDesc) is true.
         // c. Assert: oldLenDesc.[[Configurable]] is false.
@@ -184,11 +184,11 @@ ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyKey const& p
         // f. Let index be ! ToUint32(P).
 
         // g. If index ≥ oldLen and oldLenDesc.[[Writable]] is false, return false.
-        if (property_name.as_number() >= indexed_properties().array_like_size() && !m_length_writable)
+        if (property_key.as_number() >= indexed_properties().array_like_size() && !m_length_writable)
             return false;
 
         // h. Let succeeded be ! OrdinaryDefineOwnProperty(A, P, Desc).
-        auto succeeded = MUST(Object::internal_define_own_property(property_name, property_descriptor));
+        auto succeeded = MUST(Object::internal_define_own_property(property_key, property_descriptor));
 
         // i. If succeeded is false, return false.
         if (!succeeded)
@@ -204,16 +204,16 @@ ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyKey const& p
     }
 
     // 4. Return OrdinaryDefineOwnProperty(A, P, Desc).
-    return Object::internal_define_own_property(property_name, property_descriptor);
+    return Object::internal_define_own_property(property_key, property_descriptor);
 }
 
 // NON-STANDARD: Used to reject deletes to ephemeral (non-configurable) length property
-ThrowCompletionOr<bool> Array::internal_delete(PropertyKey const& property_name)
+ThrowCompletionOr<bool> Array::internal_delete(PropertyKey const& property_key)
 {
     auto& vm = this->vm();
-    if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string())
+    if (property_key.is_string() && property_key.as_string() == vm.names.length.as_string())
         return false;
-    return Object::internal_delete(property_name);
+    return Object::internal_delete(property_key);
 }
 
 // NON-STANDARD: Used to inject the ephemeral length property's key

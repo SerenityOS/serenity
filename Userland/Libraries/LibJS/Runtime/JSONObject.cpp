@@ -427,8 +427,8 @@ ThrowCompletionOr<Value> JSONObject::internalize_json_property(GlobalObject& glo
                 TRY(process_property(i));
         } else {
             auto property_list = TRY(value_object.enumerable_own_property_names(Object::PropertyKind::Key));
-            for (auto& property_name : property_list)
-                TRY(process_property(property_name.as_string().string()));
+            for (auto& property_key : property_list)
+                TRY(process_property(property_key.as_string().string()));
         }
     }
 

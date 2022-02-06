@@ -1654,14 +1654,14 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
     while (!done() && !match(TokenType::CurlyClose)) {
         property_type = ObjectProperty::Type::KeyValue;
-        RefPtr<Expression> property_name;
+        RefPtr<Expression> property_key;
         RefPtr<Expression> property_value;
         FunctionKind function_kind { FunctionKind::Normal };
 
         if (match(TokenType::TripleDot)) {
             consume();
-            property_name = parse_expression(4);
-            properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, nullptr, ObjectProperty::Type::Spread, false));
+            property_key = parse_expression(4);
+            properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_key, nullptr, ObjectProperty::Type::Spread, false));
             if (!match(TokenType::Comma))
                 break;
             consume(TokenType::Comma);
@@ -1685,26 +1685,26 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         if (match(TokenType::Asterisk)) {
             consume();
             property_type = ObjectProperty::Type::KeyValue;
-            property_name = parse_property_key();
+            property_key = parse_property_key();
             VERIFY(function_kind == FunctionKind::Normal || function_kind == FunctionKind::Async);
             function_kind = function_kind == FunctionKind::Normal ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
         } else if (match_identifier()) {
             auto identifier = consume();
             if (identifier.original_value() == "get"sv && match_property_key()) {
                 property_type = ObjectProperty::Type::Getter;
-                property_name = parse_property_key();
+                property_key = parse_property_key();
             } else if (identifier.original_value() == "set"sv && match_property_key()) {
                 property_type = ObjectProperty::Type::Setter;
-                property_name = parse_property_key();
+                property_key = parse_property_key();
             } else {
-                property_name = create_ast_node<StringLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, identifier.value());
+                property_key = create_ast_node<StringLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, identifier.value());
                 property_value = create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, identifier.value());
             }
         } else {
-            property_name = parse_property_key();
+            property_key = parse_property_key();
         }
 
-        bool is_proto = (type == TokenType::StringLiteral || type == TokenType::Identifier) && is<StringLiteral>(*property_name) && static_cast<StringLiteral const&>(*property_name).value() == "__proto__";
+        bool is_proto = (type == TokenType::StringLiteral || type == TokenType::Identifier) && is<StringLiteral>(*property_key) && static_cast<StringLiteral const&>(*property_key).value() == "__proto__";
 
         if (property_type == ObjectProperty::Type::Getter || property_type == ObjectProperty::Type::Setter) {
             if (!match(TokenType::ParenOpen)) {
@@ -1721,7 +1721,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             if (!invalid_object_literal_property_range.has_value())
                 invalid_object_literal_property_range = expression->source_range();
         } else if (match(TokenType::ParenOpen)) {
-            VERIFY(property_name);
+            VERIFY(property_key);
             u8 parse_options = FunctionNodeParseOptions::AllowSuperPropertyLookup;
             if (property_type == ObjectProperty::Type::Getter)
                 parse_options |= FunctionNodeParseOptions::IsGetterFunction;
@@ -1732,9 +1732,9 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             if (function_kind == FunctionKind::Async || function_kind == FunctionKind::AsyncGenerator)
                 parse_options |= FunctionNodeParseOptions::IsAsyncFunction;
             auto function = parse_function_node<FunctionExpression>(parse_options, function_start);
-            properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, function, property_type, true));
+            properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_key, function, property_type, true));
         } else if (match(TokenType::Colon)) {
-            if (!property_name) {
+            if (!property_key) {
                 expected("a property name");
                 skip_to_next_property();
                 continue;
@@ -1745,15 +1745,15 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                     syntax_error("Property name '__proto__' must not appear more than once in object literal");
                 has_direct_proto_property = true;
             }
-            properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, parse_expression(2), property_type, false));
-        } else if (property_name && property_value) {
-            if (m_state.strict_mode && is<StringLiteral>(*property_name)) {
-                auto& string_literal = static_cast<StringLiteral const&>(*property_name);
+            properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_key, parse_expression(2), property_type, false));
+        } else if (property_key && property_value) {
+            if (m_state.strict_mode && is<StringLiteral>(*property_key)) {
+                auto& string_literal = static_cast<StringLiteral const&>(*property_key);
                 if (is_strict_reserved_word(string_literal.value()))
                     syntax_error(String::formatted("'{}' is a reserved keyword", string_literal.value()));
             }
 
-            properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, *property_value, property_type, false));
+            properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_key, *property_value, property_type, false));
         } else {
             expected("a property");
             skip_to_next_property();

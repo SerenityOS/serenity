@@ -2411,27 +2411,27 @@ static JS::Value wrap_for_legacy_platform_object_get_own_property(JS::GlobalObje
             // https://webidl.spec.whatwg.org/#dfn-named-property-visibility
 
             scoped_generator.append(R"~~~(
-JS::ThrowCompletionOr<bool> @class_name@::is_named_property_exposed_on_object(JS::PropertyKey const& property_name) const
+JS::ThrowCompletionOr<bool> @class_name@::is_named_property_exposed_on_object(JS::PropertyKey const& property_key) const
 {
     [[maybe_unused]] auto& vm = this->vm();
 
     // The spec doesn't say anything about the type of the property name here.
     // Numbers can be converted to a string, which is fine and what other engines do.
     // However, since a symbol cannot be converted to a string, it cannot be a supported property name. Return early if it's a symbol.
-    if (property_name.is_symbol())
+    if (property_key.is_symbol())
         return false;
 
     // 1. If P is not a supported property name of O, then return false.
     // NOTE: This is in it's own variable to enforce the type.
     // FIXME: Can this throw?
     Vector<String> supported_property_names = impl().supported_property_names();
-    auto property_name_string = property_name.to_string();
-    if (!supported_property_names.contains_slow(property_name_string))
+    auto property_key_string = property_key.to_string();
+    if (!supported_property_names.contains_slow(property_key_string))
         return false;
 
     // 2. If O has an own property named P, then return false.
     // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overridden internal_get_own_property.
-    auto own_property_named_p = MUST(Object::internal_get_own_property(property_name));
+    auto own_property_named_p = MUST(Object::internal_get_own_property(property_key));
 
     if (own_property_named_p.has_value())
         return false;
@@ -2453,7 +2453,7 @@ JS::ThrowCompletionOr<bool> @class_name@::is_named_property_exposed_on_object(JS
     while (prototype) {
         // FIXME: 1. If prototype is not a named properties object, and prototype has an own property named P, then return false.
         //           (It currently does not check for named property objects)
-        bool prototype_has_own_property_named_p = TRY(prototype->has_own_property(property_name));
+        bool prototype_has_own_property_named_p = TRY(prototype->has_own_property(property_key));
         if (prototype_has_own_property_named_p)
             return false;
 

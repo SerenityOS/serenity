@@ -143,22 +143,22 @@ private:
 };
 
 template<typename ConstructorType>
-inline void GlobalObject::initialize_constructor(PropertyKey const& property_name, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::initialize_constructor(PropertyKey const& property_key, ConstructorType*& constructor, Object* prototype)
 {
     auto& vm = this->vm();
     constructor = heap().allocate<ConstructorType>(*this, *this);
-    constructor->define_direct_property(vm.names.name, js_string(heap(), property_name.as_string()), Attribute::Configurable);
+    constructor->define_direct_property(vm.names.name, js_string(heap(), property_key.as_string()), Attribute::Configurable);
     if (prototype)
         prototype->define_direct_property(vm.names.constructor, constructor, Attribute::Writable | Attribute::Configurable);
 }
 
 template<typename ConstructorType>
-inline void GlobalObject::add_constructor(PropertyKey const& property_name, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::add_constructor(PropertyKey const& property_key, ConstructorType*& constructor, Object* prototype)
 {
     // Some constructors are pre-initialized separately.
     if (!constructor)
-        initialize_constructor(property_name, constructor, prototype);
-    define_direct_property(property_name, constructor, Attribute::Writable | Attribute::Configurable);
+        initialize_constructor(property_key, constructor, prototype);
+    define_direct_property(property_key, constructor, Attribute::Writable | Attribute::Configurable);
 }
 
 inline GlobalObject* Shape::global_object() const
@@ -170,15 +170,15 @@ template<>
 inline bool Object::fast_is<GlobalObject>() const { return is_global_object(); }
 
 template<typename... Args>
-[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> Value::invoke(GlobalObject& global_object, PropertyKey const& property_name, Args... args)
+[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> Value::invoke(GlobalObject& global_object, PropertyKey const& property_key, Args... args)
 {
     if constexpr (sizeof...(Args) > 0) {
         MarkedValueList arglist { global_object.vm().heap() };
         (..., arglist.append(move(args)));
-        return invoke_internal(global_object, property_name, move(arglist));
+        return invoke_internal(global_object, property_key, move(arglist));
     }
 
-    return invoke_internal(global_object, property_name, Optional<MarkedValueList> {});
+    return invoke_internal(global_object, property_key, Optional<MarkedValueList> {});
 }
 
 }
