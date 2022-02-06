@@ -60,8 +60,7 @@ public:
     String filename() const { return m_file->filename(); }
 
 private:
-    explicit ConfigFile(String const& filename, AllowWriting);
-    explicit ConfigFile(String const& filename, int fd);
+    ConfigFile(String const& filename, NonnullRefPtr<File> open_file);
 
     void reparse();
 

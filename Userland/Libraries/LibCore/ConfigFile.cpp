@@ -18,48 +18,44 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_lib(String const& lib_na
 {
     String directory = StandardPaths::config_directory();
     auto path = String::formatted("{}/lib/{}.ini", directory, lib_name);
-
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(path, allow_altering));
+    return ConfigFile::open(path, allow_altering);
 }
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_app(String const& app_name, AllowWriting allow_altering)
 {
     String directory = StandardPaths::config_directory();
     auto path = String::formatted("{}/{}.ini", directory, app_name);
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(path, allow_altering));
+    return ConfigFile::open(path, allow_altering);
 }
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_system(String const& app_name, AllowWriting allow_altering)
 {
     auto path = String::formatted("/etc/{}.ini", app_name);
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(path, allow_altering));
+    return ConfigFile::open(path, allow_altering);
 }
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, AllowWriting allow_altering)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, allow_altering));
+    auto file = File::construct(filename);
+    if (!file->open(allow_altering == AllowWriting::Yes ? OpenMode::ReadWrite : OpenMode::ReadOnly)) {
+        // Failure to open a read-only file is OK, and behaves as if the file was empty.
+        if (allow_altering == AllowWriting::Yes)
+            return Error::from_string_literal("Unable to open config file");
+    }
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, move(file)));
 }
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, int fd)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, fd));
+    auto file = File::construct(filename);
+    if (!file->open(fd, OpenMode::ReadWrite, File::ShouldCloseFileDescriptor::Yes))
+        return Error::from_string_literal("Unable to open config file");
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, move(file)));
 }
 
-ConfigFile::ConfigFile(String const& filename, AllowWriting allow_altering)
-    : m_file(File::construct(filename))
+ConfigFile::ConfigFile(String const&, NonnullRefPtr<File> open_file)
+    : m_file(move(open_file))
 {
-    if (!m_file->open(allow_altering == AllowWriting::Yes ? OpenMode::ReadWrite : OpenMode::ReadOnly))
-        return;
-
-    reparse();
-}
-
-ConfigFile::ConfigFile(String const& filename, int fd)
-    : m_file(File::construct(filename))
-{
-    if (!m_file->open(fd, OpenMode::ReadWrite, File::ShouldCloseFileDescriptor::Yes))
-        return;
-
     reparse();
 }
 
