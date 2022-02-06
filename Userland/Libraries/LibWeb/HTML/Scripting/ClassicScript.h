@@ -13,9 +13,11 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#classic-script
-class ClassicScript final : public Script {
+class ClassicScript final
+    : public Script
+    , public JS::Script::HostDefined {
 public:
-    ~ClassicScript();
+    virtual ~ClassicScript() override;
 
     enum class MutedErrors {
         No,
@@ -33,6 +35,8 @@ public:
         Yes,
     };
     JS::Completion run(RethrowErrors = RethrowErrors::No);
+
+    MutedErrors muted_errors() const { return m_muted_errors; }
 
 private:
     ClassicScript(AK::URL base_url, String filename, EnvironmentSettingsObject& environment_settings_object);
