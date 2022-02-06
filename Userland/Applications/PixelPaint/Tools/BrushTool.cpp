@@ -63,7 +63,7 @@ void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
     if (!(layer_event.buttons() & GUI::MouseButton::Primary || layer_event.buttons() & GUI::MouseButton::Secondary))
         return;
 
-    draw_line(layer->bitmap(), color_for(layer_event), m_last_position, layer_event.position());
+    draw_line(layer->bitmap(), m_editor->current_color(), m_last_position, layer_event.position());
 
     auto modified_rect = Gfx::IntRect::from_two_points(m_last_position, layer_event.position()).inflated(m_size * 2, m_size * 2);
 

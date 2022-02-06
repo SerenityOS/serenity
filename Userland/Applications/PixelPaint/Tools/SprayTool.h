@@ -30,7 +30,6 @@ private:
     RefPtr<GUI::Widget> m_properties_widget;
     RefPtr<Core::Timer> m_timer;
     Gfx::IntPoint m_last_pos;
-    Color m_color;
     int m_thickness { 10 };
     int m_density { 40 };
 };

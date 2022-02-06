@@ -400,6 +400,8 @@ public:
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
+    bool primary_currently_held() const { return m_buttons & GUI::MouseButton::Primary; }
+    bool secondary_currently_held() const { return m_buttons & GUI::MouseButton::Secondary; }
     unsigned buttons() const { return m_buttons; }
     bool ctrl() const { return m_modifiers & Mod_Ctrl; }
     bool alt() const { return m_modifiers & Mod_Alt; }

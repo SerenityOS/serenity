@@ -48,6 +48,7 @@ void SprayTool::paint_it()
     VERIFY(bitmap.bpp() == 32);
     const double minimal_radius = 2;
     const double base_radius = minimal_radius * m_thickness;
+    const Color color = m_editor->current_color();
     for (int i = 0; i < M_PI * base_radius * base_radius * (m_density / 100.0); i++) {
         double radius = base_radius * nrand();
         double angle = 2 * M_PI * nrand();
@@ -57,7 +58,7 @@ void SprayTool::paint_it()
             continue;
         if (ypos < 0 || ypos >= bitmap.height())
             continue;
-        bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(xpos, ypos, m_color);
+        bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(xpos, ypos, color);
     }
 
     layer->did_modify_bitmap(Gfx::IntRect::centered_on(m_last_pos, Gfx::IntSize(base_radius * 2, base_radius * 2)));
@@ -69,7 +70,6 @@ void SprayTool::on_mousedown(Layer* layer, MouseEvent& event)
         return;
 
     auto& layer_event = event.layer_event();
-    m_color = m_editor->color_for(layer_event);
     m_last_pos = layer_event.position();
     m_timer->start();
     paint_it();
@@ -87,10 +87,11 @@ void SprayTool::on_mousemove(Layer* layer, MouseEvent& event)
     }
 }
 
-void SprayTool::on_mouseup(Layer*, MouseEvent&)
+void SprayTool::on_mouseup(Layer*, MouseEvent& event)
 {
     if (m_timer->is_active()) {
-        m_timer->stop();
+        if (!event.layer_event().primary_currently_held() && !event.layer_event().secondary_currently_held())
+            m_timer->stop();
         m_editor->did_complete_action();
     }
 }

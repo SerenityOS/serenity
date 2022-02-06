@@ -28,15 +28,14 @@ EraseTool::~EraseTool()
 {
 }
 
-Color EraseTool::color_for(GUI::MouseEvent const&)
+void EraseTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const&, Gfx::IntPoint const& point)
 {
+    Color color;
     if (m_use_secondary_color)
-        return m_editor->secondary_color();
-    return Color(255, 255, 255, 0);
-}
+        color = m_editor->secondary_color();
+    else
+        color = Color(255, 255, 255, 0);
 
-void EraseTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point)
-{
     if (m_draw_mode == DrawMode::Pencil) {
         int radius = size() / 2;
         Gfx::IntRect rect { point.x() - radius, point.y() - radius, size(), size() };

@@ -35,7 +35,7 @@ public:
     }
 
 protected:
-    virtual Color color_for(GUI::MouseEvent const& event);
+    Color color_for(GUI::MouseEvent const& event);
     virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point);
     virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& start, Gfx::IntPoint const& end);
 

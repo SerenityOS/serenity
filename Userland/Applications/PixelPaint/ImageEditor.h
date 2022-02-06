@@ -77,6 +77,8 @@ public:
     Color secondary_color() const { return m_secondary_color; }
     void set_secondary_color(Color);
 
+    Color current_color() const;
+
     Selection& selection() { return m_selection; }
     Selection const& selection() const { return m_selection; }
 
@@ -174,6 +176,8 @@ private:
     Selection m_selection;
 
     bool m_loaded_from_image { true };
+
+    GUI::MouseButton m_last_pressed_colour_indicating_button { GUI::MouseButton::None };
 };
 
 }

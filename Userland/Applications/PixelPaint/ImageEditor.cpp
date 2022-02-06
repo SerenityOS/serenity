@@ -285,6 +285,9 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
         return;
     }
 
+    if (event.button() == GUI::MouseButton::Primary || event.button() == GUI::MouseButton::Secondary)
+        m_last_pressed_colour_indicating_button = event.button();
+
     if (!m_active_tool)
         return;
 
@@ -334,8 +337,18 @@ void ImageEditor::mouseup_event(GUI::MouseEvent& event)
         return;
     }
 
+    if (m_last_pressed_colour_indicating_button == event.button()) {
+        if (event.primary_currently_held())
+            m_last_pressed_colour_indicating_button = GUI::MouseButton::Primary;
+        else if (event.secondary_currently_held())
+            m_last_pressed_colour_indicating_button = GUI::MouseButton::Secondary;
+        else
+            m_last_pressed_colour_indicating_button = GUI::MouseButton::None;
+    }
+
     if (!m_active_tool)
         return;
+
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
     auto image_event = event_with_pan_and_scale_applied(event);
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
@@ -653,6 +666,11 @@ void ImageEditor::set_show_active_layer_boundary(bool show)
 void ImageEditor::set_loaded_from_image(bool loaded_from_image)
 {
     m_loaded_from_image = loaded_from_image;
+}
+
+Color ImageEditor::current_color() const
+{
+    return color_for(m_last_pressed_colour_indicating_button);
 }
 
 }
