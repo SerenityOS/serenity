@@ -58,7 +58,7 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     case TokenType::Select:
         return parse_select_statement({});
     default:
-        expected("CREATE, ALTER, DROP, INSERT, UPDATE, DELETE, or SELECT");
+        expected("CREATE, ALTER, DROP, DESCRIBE, INSERT, UPDATE, DELETE, or SELECT");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -75,7 +75,7 @@ NonnullRefPtr<Statement> Parser::parse_statement_with_expression_list(RefPtr<Com
     case TokenType::Select:
         return parse_select_statement(move(common_table_expression_list));
     default:
-        expected("INSERT, UPDATE, DELETE or SELECT");
+        expected("INSERT, UPDATE, DELETE, or SELECT");
         return create_ast_node<ErrorStatement>();
     }
 }
