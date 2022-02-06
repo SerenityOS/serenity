@@ -10,7 +10,11 @@
 
 namespace Cpp {
 
+class SemanticSyntaxHighlighter;
+
 class SyntaxHighlighter final : public Syntax::Highlighter {
+    friend SemanticSyntaxHighlighter;
+
 public:
     SyntaxHighlighter() { }
     virtual ~SyntaxHighlighter() override;
