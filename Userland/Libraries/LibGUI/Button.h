@@ -53,6 +53,9 @@ public:
 
     bool another_button_has_focus() const { return m_another_button_has_focus; }
 
+    void set_mimic_pressed(bool mimic_pressed);
+    bool is_mimic_pressed() const { return m_mimic_pressed; };
+
 protected:
     explicit Button(String text = {});
     virtual void mousedown_event(MouseEvent&) override;
@@ -67,6 +70,7 @@ private:
     WeakPtr<Action> m_action;
     int m_icon_spacing { 4 };
     bool m_another_button_has_focus { false };
+    bool m_mimic_pressed { false };
 };
 
 }

@@ -55,7 +55,7 @@ void Button::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    bool paint_pressed = is_being_pressed() || (m_menu && m_menu->is_visible());
+    bool paint_pressed = is_being_pressed() || is_mimic_pressed() || (m_menu && m_menu->is_visible());
 
     Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, paint_pressed, is_hovered(), is_checked(), is_enabled(), is_focused(), is_default() && !another_button_has_focus());
 
@@ -220,6 +220,12 @@ void Button::set_default(bool default_button)
         VERIFY(window());
         window()->set_default_return_key_widget(default_button ? this : nullptr);
     });
+}
+
+void Button::set_mimic_pressed(bool mimic_pressed)
+{
+    m_mimic_pressed = mimic_pressed;
+    update();
 }
 
 }
