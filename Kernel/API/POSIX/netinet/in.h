@@ -91,18 +91,16 @@ struct ip_mreq_source {
 #define IPV6_LEAVE_GROUP 6
 
 struct in6_addr {
-    uint8_t s6_addr[16];
+    union {
+        uint8_t s6_addr[16];
+        uint32_t s6_addr32[4];
+    };
 };
 
-#define IN6ADDR_ANY_INIT                               \
-    {                                                  \
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \
-    }
-
-#define IN6ADDR_LOOPBACK_INIT                          \
-    {                                                  \
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 \
-    }
+/* clang-format off */
+#define IN6ADDR_ANY_INIT      { { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } } }
+#define IN6ADDR_LOOPBACK_INIT { { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 } } }
+/* clang-format on */
 
 extern const struct in6_addr in6addr_any;
 extern const struct in6_addr in6addr_loopback;
