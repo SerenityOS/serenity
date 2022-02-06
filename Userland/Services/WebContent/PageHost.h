@@ -32,6 +32,7 @@ public:
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
+    void set_has_focus(bool);
 
 private:
     // ^PageClient
@@ -74,6 +75,7 @@ private:
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Gfx::IntRect m_screen_rect;
     bool m_should_show_line_box_borders { false };
+    bool m_has_focus { false };
 
     RefPtr<Core::Timer> m_invalidation_coalescing_timer;
     Gfx::IntRect m_invalidation_rect;

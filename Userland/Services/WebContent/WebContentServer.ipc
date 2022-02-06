@@ -44,4 +44,6 @@ endpoint WebContentServer
     set_content_filters(Vector<String> filters) =|
     set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme) =|
 
+    set_has_focus(bool has_focus) =|
+
 }

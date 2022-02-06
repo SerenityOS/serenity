@@ -31,6 +31,11 @@ PageHost::~PageHost()
 {
 }
 
+void PageHost::set_has_focus(bool has_focus)
+{
+    m_has_focus = has_focus;
+}
+
 void PageHost::setup_palette()
 {
     // FIXME: Get the proper palette from our peer somehow
@@ -85,6 +90,7 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
     Web::PaintContext context(painter, palette(), content_rect.top_left());
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_viewport_rect(content_rect);
+    context.set_has_focus(m_has_focus);
     layout_root->paint_all_phases(context);
 }
 
