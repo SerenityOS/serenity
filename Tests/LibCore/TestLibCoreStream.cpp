@@ -11,7 +11,6 @@
 #include <LibCore/TCPServer.h>
 #include <LibCore/Timer.h>
 #include <LibCore/UDPServer.h>
-#include <LibCore/UDPSocket.h>
 #include <LibTest/TestCase.h>
 #include <LibThreading/BackgroundAction.h>
 #include <fcntl.h>
