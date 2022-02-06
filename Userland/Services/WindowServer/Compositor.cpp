@@ -783,26 +783,26 @@ bool Compositor::set_background_color(const String& background_color)
 
     auto& wm = WindowManager::the();
     wm.config()->write_entry("Background", "Color", background_color);
-    bool ret_val = wm.config()->sync();
+    bool succeeded = !wm.config()->sync().is_error();
 
-    if (ret_val)
+    if (succeeded)
         Compositor::invalidate_screen();
 
-    return ret_val;
+    return succeeded;
 }
 
 bool Compositor::set_wallpaper_mode(const String& mode)
 {
     auto& wm = WindowManager::the();
     wm.config()->write_entry("Background", "Mode", mode);
-    bool ret_val = wm.config()->sync();
+    bool succeeded = !wm.config()->sync().is_error();
 
-    if (ret_val) {
+    if (succeeded) {
         m_wallpaper_mode = mode_to_enum(mode);
         Compositor::invalidate_screen();
     }
 
-    return ret_val;
+    return succeeded;
 }
 
 bool Compositor::set_wallpaper(RefPtr<Gfx::Bitmap> bitmap)

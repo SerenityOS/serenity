@@ -35,7 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (value_to_write) {
         config->write_entry(group, key, value_to_write);
-        config->sync();
+        TRY(config->sync());
         return 0;
     }
 
