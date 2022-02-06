@@ -38,20 +38,20 @@
 
 namespace Browser {
 
-URL url_from_user_input(const String& input)
+URL url_from_user_input(String const& input)
 {
-    String url_string = input;
     if (input.starts_with("?") && !g_search_engine.is_empty())
-        url_string = g_search_engine.replace("{}", URL::percent_encode(input.substring_view(1)));
+        return URL(g_search_engine.replace("{}", URL::percent_encode(input.substring_view(1))));
 
-    URL url = URL(url_string);
+    URL url_with_http_schema = URL(String::formatted("http://{}", input));
+    if (url_with_http_schema.is_valid() && url_with_http_schema.port().has_value())
+        return url_with_http_schema;
+
+    URL url = URL(input);
     if (url.is_valid())
         return url;
 
-    StringBuilder builder;
-    builder.append("http://");
-    builder.append(url_string);
-    return URL(builder.build());
+    return url_with_http_schema;
 }
 
 void Tab::start_download(const URL& url)
