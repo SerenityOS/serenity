@@ -93,10 +93,6 @@ void PromiseReaction::visit_edges(Cell::Visitor& visitor)
         visitor.visit(capability.resolve);
         visitor.visit(capability.reject);
     }
-    if (m_handler.has_value()) {
-        auto& handler = m_handler.value();
-        visitor.visit(handler.callback);
-    }
 }
 
 }
