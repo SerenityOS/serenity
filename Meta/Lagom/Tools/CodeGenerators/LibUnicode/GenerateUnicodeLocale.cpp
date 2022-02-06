@@ -20,6 +20,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 
 using StringIndexType = u32;
 constexpr auto s_string_index_type = "u32"sv;
@@ -249,9 +250,7 @@ static ErrorOr<void> parse_core_aliases(String core_supplemental_path, UnicodeLo
     LexicalPath core_aliases_path(move(core_supplemental_path));
     core_aliases_path = core_aliases_path.append("aliases.json"sv);
 
-    auto core_aliases_file = TRY(Core::File::open(core_aliases_path.string(), Core::OpenMode::ReadOnly));
-    auto core_aliases = TRY(JsonValue::from_string(core_aliases_file->read_all()));
-
+    auto core_aliases = TRY(read_json_file(core_aliases_path.string()));
     auto const& supplemental_object = core_aliases.as_object().get("supplemental"sv);
     auto const& metadata_object = supplemental_object.as_object().get("metadata"sv);
     auto const& alias_object = metadata_object.as_object().get("alias"sv);
@@ -285,9 +284,7 @@ static ErrorOr<void> parse_likely_subtags(String core_supplemental_path, Unicode
     LexicalPath likely_subtags_path(move(core_supplemental_path));
     likely_subtags_path = likely_subtags_path.append("likelySubtags.json"sv);
 
-    auto likely_subtags_file = TRY(Core::File::open(likely_subtags_path.string(), Core::OpenMode::ReadOnly));
-    auto likely_subtags = TRY(JsonValue::from_string(likely_subtags_file->read_all()));
-
+    auto likely_subtags = TRY(read_json_file(likely_subtags_path.string()));
     auto const& supplemental_object = likely_subtags.as_object().get("supplemental"sv);
     auto const& likely_subtags_object = supplemental_object.as_object().get("likelySubtags"sv);
 
@@ -306,9 +303,7 @@ static ErrorOr<void> parse_identity(String locale_path, UnicodeLocaleData& local
     LexicalPath languages_path(move(locale_path)); // Note: Every JSON file defines identity data, so we can use any of them.
     languages_path = languages_path.append("languages.json"sv);
 
-    auto languages_file = TRY(Core::File::open(languages_path.string(), Core::OpenMode::ReadOnly));
-    auto languages = TRY(JsonValue::from_string(languages_file->read_all()));
-
+    auto languages = TRY(read_json_file(languages_path.string()));
     auto const& main_object = languages.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
     auto const& identity_object = locale_object.as_object().get("identity"sv);
@@ -345,9 +340,7 @@ static ErrorOr<void> parse_locale_display_patterns(String locale_path, UnicodeLo
     LexicalPath locale_display_names_path(move(locale_path));
     locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
 
-    auto locale_display_names_file = TRY(Core::File::open(locale_display_names_path.string(), Core::OpenMode::ReadOnly));
-    auto locale_display_names = TRY(JsonValue::from_string(locale_display_names_file->read_all()));
-
+    auto locale_display_names = TRY(read_json_file(locale_display_names_path.string()));
     auto const& main_object = locale_display_names.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(locale_display_names_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
@@ -368,9 +361,7 @@ static ErrorOr<void> preprocess_languages(String locale_path, UnicodeLocaleData&
     LexicalPath languages_path(move(locale_path));
     languages_path = languages_path.append("languages.json"sv);
 
-    auto languages_file = TRY(Core::File::open(languages_path.string(), Core::OpenMode::ReadOnly));
-    auto locale_languages = TRY(JsonValue::from_string(languages_file->read_all()));
-
+    auto locale_languages = TRY(read_json_file(languages_path.string()));
     auto const& main_object = locale_languages.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
@@ -389,9 +380,7 @@ static ErrorOr<void> parse_locale_languages(String locale_path, UnicodeLocaleDat
     LexicalPath languages_path(move(locale_path));
     languages_path = languages_path.append("languages.json"sv);
 
-    auto languages_file = TRY(Core::File::open(languages_path.string(), Core::OpenMode::ReadOnly));
-    auto locale_languages = TRY(JsonValue::from_string(languages_file->read_all()));
-
+    auto locale_languages = TRY(read_json_file(languages_path.string()));
     auto const& main_object = locale_languages.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
@@ -417,9 +406,7 @@ static ErrorOr<void> parse_locale_territories(String locale_path, UnicodeLocaleD
     LexicalPath territories_path(move(locale_path));
     territories_path = territories_path.append("territories.json"sv);
 
-    auto territories_file = TRY(Core::File::open(territories_path.string(), Core::OpenMode::ReadOnly));
-    auto locale_territories = TRY(JsonValue::from_string(territories_file->read_all()));
-
+    auto locale_territories = TRY(read_json_file(territories_path.string()));
     auto const& main_object = locale_territories.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(territories_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
@@ -442,9 +429,7 @@ static ErrorOr<void> parse_locale_scripts(String locale_path, UnicodeLocaleData&
     LexicalPath scripts_path(move(locale_path));
     scripts_path = scripts_path.append("scripts.json"sv);
 
-    auto scripts_file = TRY(Core::File::open(scripts_path.string(), Core::OpenMode::ReadOnly));
-    auto locale_scripts = TRY(JsonValue::from_string(scripts_file->read_all()));
-
+    auto locale_scripts = TRY(read_json_file(scripts_path.string()));
     auto const& main_object = locale_scripts.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(scripts_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
@@ -467,9 +452,7 @@ static ErrorOr<void> parse_locale_list_patterns(String misc_path, UnicodeLocaleD
     LexicalPath list_patterns_path(move(misc_path));
     list_patterns_path = list_patterns_path.append("listPatterns.json"sv);
 
-    auto list_patterns_file = TRY(Core::File::open(list_patterns_path.string(), Core::OpenMode::ReadOnly));
-    auto locale_list_patterns = TRY(JsonValue::from_string(list_patterns_file->read_all()));
-
+    auto locale_list_patterns = TRY(read_json_file(list_patterns_path.string()));
     auto const& main_object = locale_list_patterns.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(list_patterns_path.parent().basename());
     auto const& list_patterns_object = locale_object.as_object().get("listPatterns"sv);
@@ -520,9 +503,7 @@ static ErrorOr<void> parse_locale_currencies(String numbers_path, UnicodeLocaleD
     LexicalPath currencies_path(move(numbers_path));
     currencies_path = currencies_path.append("currencies.json"sv);
 
-    auto currencies_file = TRY(Core::File::open(currencies_path.string(), Core::OpenMode::ReadOnly));
-    auto locale_currencies = TRY(JsonValue::from_string(currencies_file->read_all()));
-
+    auto locale_currencies = TRY(read_json_file(currencies_path.string()));
     auto const& main_object = locale_currencies.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(currencies_path.parent().basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
@@ -570,9 +551,7 @@ static ErrorOr<void> parse_locale_calendars(String locale_path, UnicodeLocaleDat
     LexicalPath locale_display_names_path(move(locale_path));
     locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
 
-    auto locale_display_names_file = TRY(Core::File::open(locale_display_names_path.string(), Core::OpenMode::ReadOnly));
-    auto locale_display_names = TRY(JsonValue::from_string(locale_display_names_file->read_all()));
-
+    auto locale_display_names = TRY(read_json_file(locale_display_names_path.string()));
     auto const& main_object = locale_display_names.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(locale_display_names_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
@@ -601,9 +580,7 @@ static ErrorOr<void> parse_locale_date_fields(String dates_path, UnicodeLocaleDa
     LexicalPath date_fields_path(move(dates_path));
     date_fields_path = date_fields_path.append("dateFields.json"sv);
 
-    auto date_fields_file = TRY(Core::File::open(date_fields_path.string(), Core::OpenMode::ReadOnly));
-    auto locale_date_fields = TRY(JsonValue::from_string(date_fields_file->read_all()));
-
+    auto locale_date_fields = TRY(read_json_file(date_fields_path.string()));
     auto const& main_object = locale_date_fields.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(date_fields_path.parent().basename());
     auto const& dates_object = locale_object.as_object().get("dates"sv);
@@ -661,9 +638,7 @@ static ErrorOr<void> parse_numeric_keywords(String locale_numbers_path, UnicodeL
     LexicalPath numbers_path(move(locale_numbers_path));
     numbers_path = numbers_path.append("numbers.json"sv);
 
-    auto numbers_file = TRY(Core::File::open(numbers_path.string(), Core::OpenMode::ReadOnly));
-    auto numbers = TRY(JsonValue::from_string(numbers_file->read_all()));
-
+    auto numbers = TRY(read_json_file(numbers_path.string()));
     auto const& main_object = numbers.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
@@ -711,9 +686,7 @@ static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLo
         if (!calendars_path.basename().starts_with("ca-"sv))
             continue;
 
-        auto calendars_file = TRY(Core::File::open(calendars_path.string(), Core::OpenMode::ReadOnly));
-        auto calendars = TRY(JsonValue::from_string(calendars_file->read_all()));
-
+        auto calendars = TRY(read_json_file(calendars_path.string()));
         auto const& main_object = calendars.as_object().get("main"sv);
         auto const& locale_object = main_object.as_object().get(calendars_path.parent().basename());
         auto const& dates_object = locale_object.as_object().get("dates"sv);
@@ -759,8 +732,7 @@ static ErrorOr<void> parse_default_content_locales(String core_path, UnicodeLoca
     LexicalPath default_content_path(move(core_path));
     default_content_path = default_content_path.append("defaultContent.json"sv);
 
-    auto default_content_file = TRY(Core::File::open(default_content_path.string(), Core::OpenMode::ReadOnly));
-    auto default_content = TRY(JsonValue::from_string(default_content_file->read_all()));
+    auto default_content = TRY(read_json_file(default_content_path.string()));
     auto const& default_content_array = default_content.as_object().get("defaultContent"sv);
 
     default_content_array.as_array().for_each([&](JsonValue const& value) {
@@ -938,7 +910,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
     return {};
 }
 
-static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& locale_data)
+static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, UnicodeLocaleData& locale_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -967,10 +939,11 @@ namespace Unicode {
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
 
-static void generate_unicode_locale_implementation(Core::File& file, UnicodeLocaleData& locale_data)
+static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, UnicodeLocaleData& locale_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -1481,7 +1454,8 @@ Optional<String> resolve_most_likely_territory(LanguageID const& language_id)
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -1504,23 +1478,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(dates_path, "Path to cldr-dates directory", "dates-path", 'd', "dates-path");
     args_parser.parse(arguments);
 
-    auto open_file = [&](StringView path) -> ErrorOr<NonnullRefPtr<Core::File>> {
-        if (path.is_empty()) {
-            args_parser.print_usage(stderr, arguments.argv[0]);
-            return Error::from_string_literal("Must provide all command line options"sv);
-        }
-
-        return Core::File::open(path, Core::OpenMode::ReadWrite);
-    };
-
-    auto generated_header_file = TRY(open_file(generated_header_path));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path));
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
 
     UnicodeLocaleData locale_data;
     TRY(parse_all_locales(core_path, locale_names_path, misc_path, numbers_path, dates_path, locale_data));
 
-    generate_unicode_locale_header(generated_header_file, locale_data);
-    generate_unicode_locale_implementation(generated_implementation_file, locale_data);
+    TRY(generate_unicode_locale_header(*generated_header_file, locale_data));
+    TRY(generate_unicode_locale_implementation(*generated_implementation_file, locale_data));
 
     return 0;
 }
