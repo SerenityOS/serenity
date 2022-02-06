@@ -11,3 +11,4 @@ BreakBeforeBraces: Custom
 BraceWrapping:
     AfterFunction: true
 NamespaceIndentation: None
+QualifierAlignment: Right
