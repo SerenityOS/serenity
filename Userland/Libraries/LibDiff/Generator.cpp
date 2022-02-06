@@ -106,6 +106,16 @@ Vector<Hunk> from_text(StringView old_text, StringView new_text)
             flush_hunk();
         }
     }
+
+    while (i < old_lines.size() && new_lines.size() > 0) {
+        update_hunk(i, new_lines.size() - 1, Direction::Right); // Remove a line
+        ++i;
+    }
+    while (j < new_lines.size() && old_lines.size() > 0) {
+        update_hunk(old_lines.size() - 1, j, Direction::Down); // Add a line
+        ++j;
+    }
+
     flush_hunk();
 
     return hunks;
