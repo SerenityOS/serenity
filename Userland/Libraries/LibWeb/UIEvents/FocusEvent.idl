@@ -1,0 +1,15 @@
+#import <UIEvents/UIEvent.idl>
+
+[Exposed=Window]
+interface FocusEvent : UIEvent {
+
+    constructor(DOMString type, optional FocusEventInit eventInitDict = {});
+    readonly attribute EventTarget? relatedTarget;
+
+};
+
+dictionary FocusEventInit : UIEventInit {
+
+    EventTarget? relatedTarget = null;
+
+};

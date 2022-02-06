@@ -918,6 +918,8 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
 
 static bool is_wrappable_type(Type const& type)
 {
+    if (type.name == "EventTarget")
+        return true;
     if (type.name == "Node")
         return true;
     if (type.name == "Document")

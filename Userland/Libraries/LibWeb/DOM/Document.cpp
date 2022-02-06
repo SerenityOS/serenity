@@ -61,6 +61,7 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/UIEvents/EventNames.h>
+#include <LibWeb/UIEvents/FocusEvent.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
@@ -748,7 +749,7 @@ NonnullRefPtr<Event> Document::create_event(const String& interface)
     } else if (interface_lowercase.is_one_of("event", "events")) {
         event = Event::create("");
     } else if (interface_lowercase == "focusevent") {
-        event = Event::create(""); // FIXME: Create FocusEvent
+        event = UIEvents::FocusEvent::create("");
     } else if (interface_lowercase == "hashchangeevent") {
         event = Event::create(""); // FIXME: Create HashChangeEvent
     } else if (interface_lowercase == "htmlevents") {

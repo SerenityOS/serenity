@@ -60,6 +60,8 @@
 #include <LibWeb/Bindings/EventPrototype.h>
 #include <LibWeb/Bindings/EventTargetConstructor.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
+#include <LibWeb/Bindings/FocusEventConstructor.h>
+#include <LibWeb/Bindings/FocusEventPrototype.h>
 #include <LibWeb/Bindings/HTMLAnchorElementConstructor.h>
 #include <LibWeb/Bindings/HTMLAnchorElementPrototype.h>
 #include <LibWeb/Bindings/HTMLAreaElementConstructor.h>

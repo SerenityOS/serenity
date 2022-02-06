@@ -22,6 +22,7 @@
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/UIEvents/EventNames.h>
+#include <LibWeb/UIEvents/FocusEvent.h>
 
 namespace Web::HTML {
 
@@ -226,7 +227,7 @@ static void run_focus_update_steps(Vector<DOM::Node&> old_chain, Vector<DOM::Nod
         //    with related blur target as the related target.
         if (blur_event_target) {
             // FIXME: Implement the "fire a focus event" spec operation.
-            auto blur_event = DOM::Event::create(HTML::EventNames::blur);
+            auto blur_event = UIEvents::FocusEvent::create(HTML::EventNames::blur);
             blur_event->set_related_target(related_blur_target);
             blur_event_target->dispatch_event(move(blur_event));
         }
@@ -269,7 +270,7 @@ static void run_focus_update_steps(Vector<DOM::Node&> old_chain, Vector<DOM::Nod
         //    with related focus target as the related target.
         if (focus_event_target) {
             // FIXME: Implement the "fire a focus event" spec operation.
-            auto focus_event = DOM::Event::create(HTML::EventNames::focus);
+            auto focus_event = UIEvents::FocusEvent::create(HTML::EventNames::focus);
             focus_event->set_related_target(related_focus_target);
             focus_event_target->dispatch_event(move(focus_event));
         }

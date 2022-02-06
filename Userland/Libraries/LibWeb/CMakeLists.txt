@@ -272,6 +272,7 @@ set(SOURCES
     Selection/Selection.cpp
     StylePropertiesModel.cpp
     UIEvents/EventNames.cpp
+    UIEvents/FocusEvent.cpp
     UIEvents/KeyboardEvent.cpp
     UIEvents/MouseEvent.cpp
     URL/URL.cpp
@@ -504,6 +505,7 @@ libweb_js_wrapper(SVG/SVGGraphicsElement)
 libweb_js_wrapper(SVG/SVGPathElement)
 libweb_js_wrapper(SVG/SVGSVGElement)
 libweb_js_wrapper(Selection/Selection)
+libweb_js_wrapper(UIEvents/FocusEvent)
 libweb_js_wrapper(UIEvents/KeyboardEvent)
 libweb_js_wrapper(UIEvents/MouseEvent)
 libweb_js_wrapper(UIEvents/UIEvent)
