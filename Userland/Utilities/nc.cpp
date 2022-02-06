@@ -7,8 +7,8 @@
 #include <AK/ByteBuffer.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
-#include <LibCore/UDPSocket.h>
 #include <LibMain/Main.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -54,14 +54,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         Core::EventLoop loop;
-        auto socket = TRY(Core::UDPSocket::try_create());
+        auto socket = TRY(Core::Stream::UDPSocket::connect(target, port));
 
-        socket->on_connected = [&]() {
-            if (verbose)
-                warnln("connected to {}:{}", target, port);
-        };
-
-        socket->connect(target, port);
+        if (verbose)
+            warnln("connected to {}:{}", target, port);
 
         Array<u8, 1024> buffer;
         for (;;) {
@@ -69,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto nread = TRY(Core::System::read(STDIN_FILENO, buffer_span));
             buffer_span = buffer_span.trim(nread);
 
-            socket->send({ buffer_span.data(), static_cast<size_t>(nread) });
+            TRY(socket->write({ buffer_span.data(), static_cast<size_t>(nread) }));
         }
     }
 
