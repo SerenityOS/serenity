@@ -32,7 +32,7 @@ void BigIntConstructor::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.asIntN, as_int_n, 2, attr);
-    // define_native_function(vm.names.asUintN, as_uint_n, 2, attr);
+    define_native_function(vm.names.asUintN, as_uint_n, 2, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -95,7 +95,16 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_int_n)
 // 21.2.2.2 BigInt.asUintN ( bits, bigint ), https://tc39.es/ecma262/#sec-bigint.asuintn
 JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_uint_n)
 {
-    TODO();
+    // 1. Set bits to ? ToIndex(bits).
+    auto bits = TRY(vm.argument(0).to_index(global_object));
+
+    // 2. Set bigint to ? ToBigInt(bigint).
+    auto* bigint = TRY(vm.argument(1).to_bigint(global_object));
+
+    // 3. Return the BigInt value that represents ℝ(bigint) modulo 2bits.
+    // FIXME: For large values of `bits`, this can likely be improved with a SignedBigInteger API to
+    //        drop the most significant bits.
+    return js_bigint(vm, modulo(bigint->big_integer(), BIGINT_ONE.shift_left(bits)));
 }
 
 }
