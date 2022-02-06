@@ -223,27 +223,27 @@ void Window::cancel_animation_frame(i32 id)
 
 void Window::did_set_location_href(Badge<Bindings::LocationObject>, AK::URL const& new_href)
 {
-    auto* frame = associated_document().browsing_context();
-    if (!frame)
+    auto* browsing_context = associated_document().browsing_context();
+    if (!browsing_context)
         return;
-    frame->loader().load(new_href, FrameLoader::Type::Navigation);
+    browsing_context->loader().load(new_href, FrameLoader::Type::Navigation);
 }
 
 void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
 {
-    auto* frame = associated_document().browsing_context();
-    if (!frame)
+    auto* browsing_context = associated_document().browsing_context();
+    if (!browsing_context)
         return;
-    frame->loader().load(associated_document().url(), FrameLoader::Type::Reload);
+    browsing_context->loader().load(associated_document().url(), FrameLoader::Type::Reload);
 }
 
 void Window::did_call_location_replace(Badge<Bindings::LocationObject>, String url)
 {
-    auto* frame = associated_document().browsing_context();
-    if (!frame)
+    auto* browsing_context = associated_document().browsing_context();
+    if (!browsing_context)
         return;
     auto new_url = associated_document().parse_url(url);
-    frame->loader().load(move(new_url), FrameLoader::Type::Navigation);
+    browsing_context->loader().load(move(new_url), FrameLoader::Type::Navigation);
 }
 
 bool Window::dispatch_event(NonnullRefPtr<Event> event)

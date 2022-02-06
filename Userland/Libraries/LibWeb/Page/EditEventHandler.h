@@ -13,8 +13,8 @@ namespace Web {
 
 class EditEventHandler {
 public:
-    explicit EditEventHandler(HTML::BrowsingContext& frame)
-        : m_frame(frame)
+    explicit EditEventHandler(HTML::BrowsingContext& browsing_context)
+        : m_browsing_context(browsing_context)
     {
     }
 
@@ -25,7 +25,7 @@ public:
     virtual void handle_insert(DOM::Position, u32 code_point);
 
 private:
-    HTML::BrowsingContext& m_frame;
+    HTML::BrowsingContext& m_browsing_context;
 };
 
 }

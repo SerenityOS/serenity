@@ -27,10 +27,10 @@ void BrowsingContextContainer::inserted()
     HTMLElement::inserted();
     if (!is_connected())
         return;
-    if (auto* frame = document().browsing_context()) {
-        VERIFY(frame->page());
-        m_nested_browsing_context = BrowsingContext::create_nested(*frame->page(), *this);
-        m_nested_browsing_context->set_frame_nesting_levels(frame->frame_nesting_levels());
+    if (auto* browsing_context = document().browsing_context()) {
+        VERIFY(browsing_context->page());
+        m_nested_browsing_context = BrowsingContext::create_nested(*browsing_context->page(), *this);
+        m_nested_browsing_context->set_frame_nesting_levels(browsing_context->frame_nesting_levels());
         m_nested_browsing_context->register_frame_nesting(document().url());
     }
 }

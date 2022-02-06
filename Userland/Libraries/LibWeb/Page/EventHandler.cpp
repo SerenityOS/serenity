@@ -88,9 +88,9 @@ static Gfx::IntPoint compute_mouse_event_offset(const Gfx::IntPoint& position, c
     };
 }
 
-EventHandler::EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& frame)
-    : m_frame(frame)
-    , m_edit_event_handler(make<EditEventHandler>(frame))
+EventHandler::EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& browsing_context)
+    : m_browsing_context(browsing_context)
+    , m_edit_event_handler(make<EditEventHandler>(browsing_context))
 {
 }
 
@@ -100,16 +100,16 @@ EventHandler::~EventHandler()
 
 const Layout::InitialContainingBlock* EventHandler::layout_root() const
 {
-    if (!m_frame.active_document())
+    if (!m_browsing_context.active_document())
         return nullptr;
-    return m_frame.active_document()->layout_node();
+    return m_browsing_context.active_document()->layout_node();
 }
 
 Layout::InitialContainingBlock* EventHandler::layout_root()
 {
-    if (!m_frame.active_document())
+    if (!m_browsing_context.active_document())
         return nullptr;
-    return m_frame.active_document()->layout_node();
+    return m_browsing_context.active_document()->layout_node();
 }
 
 bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
@@ -120,7 +120,7 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
     if (modifiers & KeyModifier::Mod_Shift)
         swap(wheel_delta_x, wheel_delta_y);
 
-    // FIXME: Support wheel events in subframes.
+    // FIXME: Support wheel events in nested browsing contexts.
 
     auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
     if (result.layout_node) {
@@ -128,7 +128,7 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
             return true;
     }
 
-    if (auto* page = m_frame.page()) {
+    if (auto* page = m_browsing_context.page()) {
         page->client().page_did_request_scroll(wheel_delta_x * 20, wheel_delta_y * 20);
         return true;
     }
@@ -162,8 +162,8 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
     if (result.layout_node && result.layout_node->dom_node()) {
         RefPtr<DOM::Node> node = result.layout_node->dom_node();
         if (is<HTML::HTMLIFrameElement>(*node)) {
-            if (auto* subframe = verify_cast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
-                return subframe->event_handler().handle_mouseup(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
+            if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
+                return nested_browsing_context->event_handler().handle_mouseup(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
             return false;
         }
         auto offset = compute_mouse_event_offset(position, *result.layout_node);
@@ -186,7 +186,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         return true;
     }
 
-    NonnullRefPtr document = *m_frame.active_document();
+    NonnullRefPtr document = *m_browsing_context.active_document();
     RefPtr<DOM::Node> node;
 
     {
@@ -211,13 +211,13 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             return false;
 
         if (is<HTML::HTMLIFrameElement>(*node)) {
-            if (auto* subframe = verify_cast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
-                return subframe->event_handler().handle_mousedown(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
+            if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
+                return nested_browsing_context->event_handler().handle_mousedown(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
             return false;
         }
 
-        if (auto* page = m_frame.page())
-            page->set_focused_browsing_context({}, m_frame);
+        if (auto* page = m_browsing_context.page())
+            page->set_focused_browsing_context({}, m_browsing_context);
 
         auto offset = compute_mouse_event_offset(position, *result.layout_node);
         node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousedown, offset.x(), offset.y(), position.x(), position.y()));
@@ -230,8 +230,8 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     if (button == GUI::MouseButton::Secondary && is<HTML::HTMLImageElement>(*node)) {
         auto& image_element = verify_cast<HTML::HTMLImageElement>(*node);
         auto image_url = image_element.document().parse_url(image_element.src());
-        if (auto* page = m_frame.page())
-            page->client().page_did_request_image_context_menu(m_frame.to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
+        if (auto* page = m_browsing_context.page())
+            page->client().page_did_request_image_context_menu(m_browsing_context.to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
         return true;
     }
 
@@ -244,35 +244,35 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 document->run_javascript(href.substring_view(11, href.length() - 11));
             } else if (href.starts_with('#')) {
                 auto anchor = href.substring_view(1, href.length() - 1);
-                m_frame.scroll_to_anchor(anchor);
+                m_browsing_context.scroll_to_anchor(anchor);
             } else {
                 document->set_active_element(link);
-                if (m_frame.is_top_level()) {
-                    if (auto* page = m_frame.page())
+                if (m_browsing_context.is_top_level()) {
+                    if (auto* page = m_browsing_context.page())
                         page->client().page_did_click_link(url, link->target(), modifiers);
                 } else {
                     // FIXME: Handle different targets!
-                    m_frame.loader().load(url, FrameLoader::Type::Navigation);
+                    m_browsing_context.loader().load(url, FrameLoader::Type::Navigation);
                 }
             }
         } else if (button == GUI::MouseButton::Secondary) {
-            if (auto* page = m_frame.page())
-                page->client().page_did_request_link_context_menu(m_frame.to_top_level_position(position), url, link->target(), modifiers);
+            if (auto* page = m_browsing_context.page())
+                page->client().page_did_request_link_context_menu(m_browsing_context.to_top_level_position(position), url, link->target(), modifiers);
         } else if (button == GUI::MouseButton::Middle) {
-            if (auto* page = m_frame.page())
+            if (auto* page = m_browsing_context.page())
                 page->client().page_did_middle_click_link(url, link->target(), modifiers);
         }
     } else {
         if (button == GUI::MouseButton::Primary) {
             auto result = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
             if (result.layout_node && result.layout_node->dom_node()) {
-                m_frame.set_cursor_position(DOM::Position(*result.layout_node->dom_node(), result.index_in_node));
+                m_browsing_context.set_cursor_position(DOM::Position(*result.layout_node->dom_node(), result.index_in_node));
                 layout_root()->set_selection({ { result.layout_node, result.index_in_node }, {} });
                 m_in_mouse_selection = true;
             }
         } else if (button == GUI::MouseButton::Secondary) {
-            if (auto* page = m_frame.page())
-                page->client().page_did_request_context_menu(m_frame.to_top_level_position(position));
+            if (auto* page = m_browsing_context.page())
+                page->client().page_did_request_context_menu(m_browsing_context.to_top_level_position(position));
         }
     }
     return true;
@@ -288,7 +288,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         return true;
     }
 
-    auto& document = *m_frame.active_document();
+    auto& document = *m_browsing_context.active_document();
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
@@ -301,7 +301,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             document.set_hovered_node(result.layout_node->dom_node());
             result.layout_node->handle_mousemove({}, position, buttons, modifiers);
             // FIXME: It feels a bit aggressive to always update the cursor like this.
-            if (auto* page = m_frame.page())
+            if (auto* page = m_browsing_context.page())
                 page->client().page_did_request_cursor_change(Gfx::StandardCursor::None);
             return true;
         }
@@ -309,8 +309,8 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         RefPtr<DOM::Node> node = result.layout_node->dom_node();
 
         if (node && is<HTML::HTMLIFrameElement>(*node)) {
-            if (auto* subframe = verify_cast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
-                return subframe->event_handler().handle_mousemove(position.translated(compute_mouse_event_offset({}, *result.layout_node)), buttons, modifiers);
+            if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
+                return nested_browsing_context->event_handler().handle_mousemove(position.translated(compute_mouse_event_offset({}, *result.layout_node)), buttons, modifiers);
             return false;
         }
 
@@ -342,21 +342,21 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         if (m_in_mouse_selection) {
             auto hit = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
             if (hit.layout_node && hit.layout_node->dom_node()) {
-                m_frame.set_cursor_position(DOM::Position(*hit.layout_node->dom_node(), result.index_in_node));
+                m_browsing_context.set_cursor_position(DOM::Position(*hit.layout_node->dom_node(), result.index_in_node));
                 layout_root()->set_selection_end({ hit.layout_node, hit.index_in_node });
             }
-            if (auto* page = m_frame.page())
+            if (auto* page = m_browsing_context.page())
                 page->client().page_did_change_selection();
         }
     }
 
-    if (auto* page = m_frame.page()) {
+    if (auto* page = m_browsing_context.page()) {
         page->client().page_did_request_cursor_change(hovered_node_cursor);
 
         if (hovered_node_changed) {
             RefPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element_with_attribute(HTML::AttributeNames::title) : nullptr;
             if (hovered_html_element && !hovered_html_element->title().is_null()) {
-                page->client().page_did_enter_tooltip_area(m_frame.to_top_level_position(position), hovered_html_element->title());
+                page->client().page_did_enter_tooltip_area(m_browsing_context.to_top_level_position(position), hovered_html_element->title());
             } else {
                 page->client().page_did_leave_tooltip_area();
             }
@@ -371,13 +371,13 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
 
 bool EventHandler::focus_next_element()
 {
-    if (!m_frame.active_document())
+    if (!m_browsing_context.active_document())
         return false;
-    auto* element = m_frame.active_document()->focused_element();
+    auto* element = m_browsing_context.active_document()->focused_element();
     if (!element) {
-        element = m_frame.active_document()->first_child_of_type<DOM::Element>();
+        element = m_browsing_context.active_document()->first_child_of_type<DOM::Element>();
         if (element && element->is_focusable()) {
-            m_frame.active_document()->set_focused_element(element);
+            m_browsing_context.active_document()->set_focused_element(element);
             return true;
         }
     }
@@ -385,7 +385,7 @@ bool EventHandler::focus_next_element()
     for (element = element->next_element_in_pre_order(); element && !element->is_focusable(); element = element->next_element_in_pre_order())
         ;
 
-    m_frame.active_document()->set_focused_element(element);
+    m_browsing_context.active_document()->set_focused_element(element);
     return element;
 }
 
@@ -403,10 +403,10 @@ constexpr bool should_ignore_keydown_event(u32 code_point)
 
 bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
 {
-    if (!m_frame.active_document())
+    if (!m_browsing_context.active_document())
         return false;
 
-    NonnullRefPtr<DOM::Document> document = *m_frame.active_document();
+    NonnullRefPtr<DOM::Document> document = *m_browsing_context.active_document();
     if (!document->layout_node())
         return false;
 
@@ -424,7 +424,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             layout_root->set_selection({});
 
             // FIXME: This doesn't work for some reason?
-            m_frame.set_cursor_position({ *range->start_container(), range->start_offset() });
+            m_browsing_context.set_cursor_position({ *range->start_container(), range->start_offset() });
 
             if (key == KeyCode::Key_Backspace || key == KeyCode::Key_Delete) {
                 m_edit_event_handler->handle_delete(range);
@@ -432,46 +432,46 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             }
             if (!should_ignore_keydown_event(code_point)) {
                 m_edit_event_handler->handle_delete(range);
-                m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
-                m_frame.increment_cursor_position_offset();
+                m_edit_event_handler->handle_insert(m_browsing_context.cursor_position(), code_point);
+                m_browsing_context.increment_cursor_position_offset();
                 return true;
             }
         }
     }
 
-    if (m_frame.cursor_position().is_valid() && m_frame.cursor_position().node()->is_editable()) {
+    if (m_browsing_context.cursor_position().is_valid() && m_browsing_context.cursor_position().node()->is_editable()) {
         if (key == KeyCode::Key_Backspace) {
-            if (!m_frame.decrement_cursor_position_offset()) {
+            if (!m_browsing_context.decrement_cursor_position_offset()) {
                 // FIXME: Move to the previous node and delete the last character there.
                 return true;
             }
 
-            m_edit_event_handler->handle_delete_character_after(m_frame.cursor_position());
+            m_edit_event_handler->handle_delete_character_after(m_browsing_context.cursor_position());
             return true;
         }
         if (key == KeyCode::Key_Delete) {
-            if (m_frame.cursor_position().offset_is_at_end_of_node()) {
+            if (m_browsing_context.cursor_position().offset_is_at_end_of_node()) {
                 // FIXME: Move to the next node and delete the first character there.
                 return true;
             }
-            m_edit_event_handler->handle_delete_character_after(m_frame.cursor_position());
+            m_edit_event_handler->handle_delete_character_after(m_browsing_context.cursor_position());
             return true;
         }
         if (key == KeyCode::Key_Right) {
-            if (!m_frame.increment_cursor_position_offset()) {
+            if (!m_browsing_context.increment_cursor_position_offset()) {
                 // FIXME: Move to the next node.
             }
             return true;
         }
         if (key == KeyCode::Key_Left) {
-            if (!m_frame.decrement_cursor_position_offset()) {
+            if (!m_browsing_context.decrement_cursor_position_offset()) {
                 // FIXME: Move to the previous node.
             }
             return true;
         }
         if (!should_ignore_keydown_event(code_point)) {
-            m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
-            m_frame.increment_cursor_position_offset();
+            m_edit_event_handler->handle_insert(m_browsing_context.cursor_position(), code_point);
+            m_browsing_context.increment_cursor_position_offset();
             return true;
         }
 
@@ -484,7 +484,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     if (RefPtr<DOM::Element> focused_element = document->focused_element())
         return focused_element->dispatch_event(move(event));
 
-    if (RefPtr<HTML::HTMLElement> body = m_frame.active_document()->body())
+    if (RefPtr<HTML::HTMLElement> body = m_browsing_context.active_document()->body())
         return body->dispatch_event(move(event));
 
     return document->root().dispatch_event(move(event));
@@ -492,7 +492,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
 
 bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
 {
-    RefPtr<DOM::Document> document = m_frame.active_document();
+    RefPtr<DOM::Document> document = m_browsing_context.active_document();
     if (!document)
         return false;
 
