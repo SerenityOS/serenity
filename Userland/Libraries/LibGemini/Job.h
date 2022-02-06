@@ -8,7 +8,6 @@
 
 #include <AK/Optional.h>
 #include <LibCore/NetworkJob.h>
-#include <LibCore/TCPSocket.h>
 #include <LibGemini/GeminiRequest.h>
 #include <LibGemini/GeminiResponse.h>
 

@@ -15,7 +15,6 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/NetworkJob.h>
-#include <LibCore/TCPSocket.h>
 #include <LibCore/Timer.h>
 #include <LibTLS/TLSv12.h>
 

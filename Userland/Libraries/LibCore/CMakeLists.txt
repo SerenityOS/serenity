@@ -33,7 +33,6 @@ set(SOURCES
     System.cpp
     SystemServerTakeover.cpp
     TCPServer.cpp
-    TCPSocket.cpp
     TempFile.cpp
     Timer.cpp
     UDPServer.cpp
