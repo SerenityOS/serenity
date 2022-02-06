@@ -50,6 +50,14 @@ describe("correct behavior", () => {
         o[sym] = "qux";
         expect(JSON.stringify(o)).toBe('{"foo":"bar"}');
     });
+
+    test("escape surrogate codepoints in strings", () => {
+        expect(JSON.stringify("\ud83d\ude04")).toBe('"😄"');
+        expect(JSON.stringify("\ud83d")).toBe('"\\ud83d"');
+        expect(JSON.stringify("\ude04")).toBe('"\\ude04"');
+        expect(JSON.stringify("\ud83d\ud83d\ude04\ud83d\ude04\ude04")).toBe('"\\ud83d😄😄\\ude04"');
+        expect(JSON.stringify("\ude04\ud83d\ude04\ud83d\ude04\ud83d")).toBe('"\\ude04😄😄\\ud83d"');
+    });
 });
 
 describe("errors", () => {
