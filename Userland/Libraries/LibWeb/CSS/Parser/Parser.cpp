@@ -176,11 +176,7 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_a_stylesheet(TokenStream<T>& tokens)
             rules.append(*rule);
     }
 
-    auto stylesheet = CSSStyleSheet::create(rules);
-    if constexpr (CSS_PARSER_DEBUG) {
-        dump_sheet(stylesheet);
-    }
-    return stylesheet;
+    return CSSStyleSheet::create(rules);
 }
 
 Optional<SelectorList> Parser::parse_as_selector()
