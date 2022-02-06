@@ -256,18 +256,24 @@ JS::Object* Window::create_wrapper(JS::GlobalObject& global_object)
     return &global_object;
 }
 
+// https://www.w3.org/TR/cssom-view-1/#dom-window-innerwidth
 int Window::inner_width() const
 {
-    if (!associated_document().layout_node())
-        return 0;
-    return associated_document().layout_node()->content_width();
+    // The innerWidth attribute must return the viewport width including the size of a rendered scroll bar (if any),
+    // or zero if there is no viewport.
+    if (auto const* browsing_context = associated_document().browsing_context())
+        return browsing_context->viewport_rect().width();
+    return 0;
 }
 
+// https://www.w3.org/TR/cssom-view-1/#dom-window-innerheight
 int Window::inner_height() const
 {
-    if (!associated_document().layout_node())
-        return 0;
-    return associated_document().layout_node()->content_height();
+    // The innerHeight attribute must return the viewport height including the size of a rendered scroll bar (if any),
+    // or zero if there is no viewport.
+    if (auto const* browsing_context = associated_document().browsing_context())
+        return browsing_context->viewport_rect().height();
+    return 0;
 }
 
 Page* Window::page()
