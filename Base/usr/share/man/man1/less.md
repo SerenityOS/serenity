@@ -35,7 +35,8 @@ does not exist, and no command use `N`.
 | `q` | Exit less. |
 | `j` or `DOWNARROW` or `ENTER` | Go to the next line. |
 | `k` or `UPARROW` | Go to the previous line. |
-| `SPACE` | Go to the next page. |
+| `f` or `SPACE` | Go to the next page. |
+| `b` | Go to the previous page. |
 
 ## Prompts
 
