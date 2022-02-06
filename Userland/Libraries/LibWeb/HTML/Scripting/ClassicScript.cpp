@@ -43,7 +43,7 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
 
     // 10. Let result be ParseScript(source, settings's Realm, script).
     auto parse_timer = Core::ElapsedTimer::start_new();
-    auto result = JS::Script::parse(source, environment_settings_object.realm(), script->filename());
+    auto result = JS::Script::parse(source, environment_settings_object.realm(), script->filename(), script.ptr());
     dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Parsed {} in {}ms", script->filename(), parse_timer.elapsed());
 
     // 11. If result is a list of errors, then:
