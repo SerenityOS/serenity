@@ -11,10 +11,9 @@ describe("correct behavior", () => {
             8_640_000_000_000_000_000n
         );
 
-        // FIXME: These seemingly produce correct results in js(1s), but for some reason don't pass. Investigate.
-        // expect(new Temporal.Instant(-0n).epochMicroseconds).toBe(-0n);
-        // expect(new Temporal.Instant(-1n).epochMicroseconds).toBe(-0n);
-        // expect(new Temporal.Instant(-999n).epochMicroseconds).toBe(-0n);
+        expect(new Temporal.Instant(-0n).epochMicroseconds).toBe(-0n);
+        expect(new Temporal.Instant(-1n).epochMicroseconds).toBe(-0n);
+        expect(new Temporal.Instant(-999n).epochMicroseconds).toBe(-0n);
         expect(new Temporal.Instant(-1_000n).epochMicroseconds).toBe(-1n);
         expect(new Temporal.Instant(-1_500n).epochMicroseconds).toBe(-1n);
         expect(new Temporal.Instant(-1_999n).epochMicroseconds).toBe(-1n);
