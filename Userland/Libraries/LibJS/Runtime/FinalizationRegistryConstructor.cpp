@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/FinalizationRegistryConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/JobCallback.h>
 
 namespace JS {
 
@@ -45,11 +46,20 @@ ThrowCompletionOr<Object*> FinalizationRegistryConstructor::construct(FunctionOb
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
+    // NOTE: Step 1 is implemented in FinalizationRegistryConstructor::call()
+
+    // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
     auto cleanup_callback = vm.argument(0);
     if (!cleanup_callback.is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, cleanup_callback.to_string_without_side_effects());
 
-    return TRY(ordinary_create_from_constructor<FinalizationRegistry>(global_object, new_target, &GlobalObject::finalization_registry_prototype, cleanup_callback.as_function()));
+    // 3. Let finalizationRegistry be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistry.prototype%", « [[Realm]], [[CleanupCallback]], [[Cells]] »).
+    // 4. Let fn be the active function object. (NOTE: Not necessary. The active function object is `this`)
+    // 5. Set finalizationRegistry.[[Realm]] to fn.[[Realm]].
+    // 6. Set finalizationRegistry.[[CleanupCallback]] to HostMakeJobCallback(cleanupCallback).
+    // 7. Set finalizationRegistry.[[Cells]] to a new empty List. (NOTE: This is done inside FinalizationRegistry instead of here)
+    // 8. Return finalizationRegistry.
+    return TRY(ordinary_create_from_constructor<FinalizationRegistry>(global_object, new_target, &GlobalObject::finalization_registry_prototype, *realm(), vm.host_make_job_callback(cleanup_callback.as_function())));
 }
 
 }
