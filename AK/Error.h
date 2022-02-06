@@ -87,7 +87,11 @@ public:
     T release_value() { return move(value()); }
     ErrorType release_error() { return move(error()); }
 
-    T release_value_but_fixme_should_propagate_errors() { return release_value(); }
+    T release_value_but_fixme_should_propagate_errors()
+    {
+        VERIFY(!is_error());
+        return release_value();
+    }
 
 private:
     // 'downcast' is fishy in this context. Let's hide it by making it private.
