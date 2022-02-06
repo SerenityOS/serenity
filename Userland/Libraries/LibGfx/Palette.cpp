@@ -27,10 +27,6 @@ Palette::Palette(const PaletteImpl& impl)
 {
 }
 
-Palette::~Palette()
-{
-}
-
 int PaletteImpl::metric(MetricRole role) const
 {
     VERIFY((int)role < (int)MetricRole::__Count);
@@ -89,10 +85,6 @@ void Palette::set_path(PathRole role, String path)
     auto& theme = const_cast<SystemTheme&>(impl().theme());
     memcpy(theme.path[(int)role], path.characters(), min(path.length() + 1, sizeof(theme.path[(int)role])));
     theme.path[(int)role][sizeof(theme.path[(int)role]) - 1] = '\0';
-}
-
-PaletteImpl::~PaletteImpl()
-{
 }
 
 void PaletteImpl::replace_internal_buffer(Badge<GUI::Application>, Core::AnonymousBuffer buffer)
