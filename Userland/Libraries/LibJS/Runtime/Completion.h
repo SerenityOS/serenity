@@ -26,7 +26,7 @@ public:
         Throw,
     };
 
-    Completion(Type type, Optional<Value> value, Optional<FlyString> target)
+    ALWAYS_INLINE Completion(Type type, Optional<Value> value, Optional<FlyString> target)
         : m_type(type)
         , m_value(move(value))
         , m_target(move(target))
@@ -39,11 +39,12 @@ public:
 
     // 5.2.3.1 Implicit Completion Values, https://tc39.es/ecma262/#sec-implicit-completion-values
     // Not `explicit` on purpose.
-    Completion(Value value)
+    ALWAYS_INLINE Completion(Value value)
         : Completion(Type::Normal, value, {})
     {
     }
-    Completion()
+
+    ALWAYS_INLINE Completion()
         : Completion(js_undefined())
     {
     }
