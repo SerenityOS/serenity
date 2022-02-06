@@ -36,7 +36,6 @@ set(SOURCES
     TempFile.cpp
     Timer.cpp
     UDPServer.cpp
-    UDPSocket.cpp
     Version.cpp
 )
 
