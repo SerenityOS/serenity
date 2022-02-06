@@ -894,4 +894,79 @@ Optional<CppComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::get
     return hint;
 }
 
+Vector<GUI::AutocompleteProvider::TokenInfo> CppComprehensionEngine::get_tokens_info(const String& filename)
+{
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "CppComprehensionEngine::get_tokens_info: {}", filename);
+
+    const auto* document_ptr = get_or_create_document_data(filename);
+    if (!document_ptr)
+        return {};
+
+    const auto& document = *document_ptr;
+
+    Vector<GUI::AutocompleteProvider::TokenInfo> tokens_info;
+    size_t i = 0;
+    for (auto const& token : document.preprocessor().unprocessed_tokens()) {
+
+        tokens_info.append({ get_token_semantic_type(document, token),
+            token.start().line, token.start().column, token.end().line, token.end().column });
+        ++i;
+    }
+    return tokens_info;
+}
+
+GUI::AutocompleteProvider::TokenInfo::SemanticType CppComprehensionEngine::get_token_semantic_type(DocumentData const& document, Token const& token)
+{
+    using GUI::AutocompleteProvider;
+    switch (token.type()) {
+    case Cpp::Token::Type::Identifier:
+        return get_semantic_type_for_identifier(document, token.start());
+    case Cpp::Token::Type::Keyword:
+        return AutocompleteProvider::TokenInfo::SemanticType::Keyword;
+    case Cpp::Token::Type::KnownType:
+        return AutocompleteProvider::TokenInfo::SemanticType::Type;
+    case Cpp::Token::Type::DoubleQuotedString:
+    case Cpp::Token::Type::SingleQuotedString:
+    case Cpp::Token::Type::RawString:
+        return AutocompleteProvider::TokenInfo::SemanticType::String;
+    case Cpp::Token::Type::Integer:
+    case Cpp::Token::Type::Float:
+        return AutocompleteProvider::TokenInfo::SemanticType::Number;
+    case Cpp::Token::Type::IncludePath:
+        return AutocompleteProvider::TokenInfo::SemanticType::IncludePath;
+    case Cpp::Token::Type::EscapeSequence:
+        return AutocompleteProvider::TokenInfo::SemanticType::Keyword;
+    case Cpp::Token::Type::PreprocessorStatement:
+    case Cpp::Token::Type::IncludeStatement:
+        return AutocompleteProvider::TokenInfo::SemanticType::PreprocessorStatement;
+    case Cpp::Token::Type::Comment:
+        return AutocompleteProvider::TokenInfo::SemanticType::Comment;
+    default:
+        return AutocompleteProvider::TokenInfo::SemanticType::Unknown;
+    }
+}
+
+GUI::AutocompleteProvider::TokenInfo::SemanticType CppComprehensionEngine::get_semantic_type_for_identifier(DocumentData const& document, Position position)
+{
+    auto decl = find_declaration_of(document, GUI::TextPosition { position.line, position.column });
+    if (!decl)
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Identifier;
+
+    if (decl->is_function())
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Function;
+    if (decl->is_parameter())
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Parameter;
+    if (decl->is_variable_declaration()) {
+        if (decl->is_member())
+            return GUI::AutocompleteProvider::TokenInfo::SemanticType::Member;
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Variable;
+    }
+    if (decl->is_struct_or_class())
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::CustomType;
+    if (decl->is_namespace())
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Namespace;
+
+    return GUI::AutocompleteProvider::TokenInfo::SemanticType::Identifier;
+}
+
 }

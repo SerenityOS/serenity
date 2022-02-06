@@ -10,4 +10,6 @@ endpoint LanguageServer
     auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation location) =|
     find_declaration(GUI::AutocompleteProvider::ProjectLocation location) =|
     get_parameters_hint(GUI::AutocompleteProvider::ProjectLocation location) =|
+    get_tokens_info(String filename) =|
+
 }

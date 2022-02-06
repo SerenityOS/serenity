@@ -34,6 +34,7 @@ protected:
     virtual void auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation const&) override;
     virtual void find_declaration(GUI::AutocompleteProvider::ProjectLocation const&) override;
     virtual void get_parameters_hint(GUI::AutocompleteProvider::ProjectLocation const&) override;
+    virtual void get_tokens_info(String const&) override;
 
     FileDB m_filedb;
     OwnPtr<CodeComprehensionEngine> m_autocomplete_engine;
