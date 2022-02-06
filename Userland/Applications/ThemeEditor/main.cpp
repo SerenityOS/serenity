@@ -357,7 +357,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         update_window_title();
         auto file = response.value();
-        auto theme = Core::ConfigFile::open(file->filename(), file->leak_fd());
+        auto theme = Core::ConfigFile::open(file->filename(), file->leak_fd()).release_value_but_fixme_should_propagate_errors();
         for (auto role : color_roles) {
             theme->write_entry("Colors", to_string(role), preview_widget.preview_palette().color(role).to_string());
         }

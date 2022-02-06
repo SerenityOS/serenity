@@ -241,7 +241,7 @@ int main()
     }
 
     // Step 2: Open and parse the 'components.ini' file.
-    auto components_file = Core::ConfigFile::open("components.ini");
+    auto components_file = Core::ConfigFile::open("components.ini").release_value_but_fixme_should_propagate_errors();
     if (components_file->groups().is_empty()) {
         warnln("\e[31mError:\e[0m The 'components.ini' file is either not a valid ini file or contains no entries.");
         return 1;

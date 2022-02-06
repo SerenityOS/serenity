@@ -30,7 +30,10 @@ ProjectTemplate::ProjectTemplate(const String& id, const String& name, const Str
 
 RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(const String& manifest_path)
 {
-    auto config = Core::ConfigFile::open(manifest_path);
+    auto maybe_config = Core::ConfigFile::open(manifest_path);
+    if (maybe_config.is_error())
+        return {};
+    auto config = maybe_config.release_value();
 
     if (!config->has_group("HackStudioTemplate")
         || !config->has_key("HackStudioTemplate", "Name")

@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::sigaction(SIGCHLD, &act, nullptr));
     TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc exec"));
 
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
+    auto wm_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini"));
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
     auto theme = Gfx::load_system_theme(String::formatted("/res/themes/{}.ini", theme_name));

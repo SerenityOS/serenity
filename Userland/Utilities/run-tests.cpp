@@ -376,7 +376,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto config = config_file.is_empty() ? Core::ConfigFile::open_for_app("Tests") : Core::ConfigFile::open(config_file);
+    auto config_or_error = config_file.is_empty() ? Core::ConfigFile::open_for_app("Tests") : Core::ConfigFile::open(config_file);
+    if (config_or_error.is_error()) {
+        warnln("Failed to open configuration file ({}): {}", config_file.is_empty() ? "User config for Tests" : config_file.characters(), config_or_error.error());
+        return 1;
+    }
+    auto config = config_or_error.release_value();
+
     if (config->num_groups() == 0)
         warnln("Empty configuration file ({}) loaded!", config_file.is_empty() ? "User config for Tests" : config_file.characters());
 

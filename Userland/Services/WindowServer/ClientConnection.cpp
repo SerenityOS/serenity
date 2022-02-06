@@ -786,7 +786,7 @@ Messages::WindowServer::SetSystemThemeResponse ClientConnection::set_system_them
 
 Messages::WindowServer::GetSystemThemeResponse ClientConnection::get_system_theme()
 {
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini").release_value_but_fixme_should_propagate_errors();
     auto name = wm_config->read_entry("Theme", "Name");
     return name;
 }
@@ -798,7 +798,7 @@ void ClientConnection::apply_cursor_theme(String const& name)
 
 Messages::WindowServer::GetCursorThemeResponse ClientConnection::get_cursor_theme()
 {
-    auto config = Core::ConfigFile::open("/etc/WindowServer.ini");
+    auto config = Core::ConfigFile::open("/etc/WindowServer.ini").release_value_but_fixme_should_propagate_errors();
     auto name = config->read_entry("Mouse", "CursorTheme");
     return name;
 }
@@ -822,7 +822,12 @@ Messages::WindowServer::SetSystemFontsResponse ClientConnection::set_system_font
 
     WindowManager::the().invalidate_after_theme_or_font_change();
 
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes);
+    auto wm_config_or_error = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes);
+    if (wm_config_or_error.is_error()) {
+        dbgln("Unable to open WindowServer.ini to set system fonts: {}", wm_config_or_error.error());
+        return false;
+    }
+    auto wm_config = wm_config_or_error.release_value();
     wm_config->write_entry("Fonts", "Default", default_font_query);
     wm_config->write_entry("Fonts", "FixedWidth", fixed_width_font_query);
     return true;

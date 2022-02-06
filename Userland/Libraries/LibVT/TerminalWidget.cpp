@@ -1196,7 +1196,13 @@ void TerminalWidget::set_color_scheme(StringView name)
         "White"
     };
 
-    auto color_config = Core::ConfigFile::open(String::formatted("/res/terminal-colors/{}.ini", name));
+    auto path = String::formatted("/res/terminal-colors/{}.ini", name);
+    auto color_config_or_error = Core::ConfigFile::open(path);
+    if (color_config_or_error.is_error()) {
+        dbgln("Unable to read color scheme file '{}': {}", path, color_config_or_error.error());
+        return;
+    }
+    auto color_config = color_config_or_error.release_value();
 
     m_show_bold_text_as_bright = color_config->read_bool_entry("Options", "ShowBoldTextAsBright", true);
 

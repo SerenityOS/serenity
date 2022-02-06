@@ -105,7 +105,7 @@ void BackgroundSettingsWidget::create_frame()
 
 void BackgroundSettingsWidget::load_current_settings()
 {
-    auto ws_config = Core::ConfigFile::open("/etc/WindowServer.ini");
+    auto ws_config = Core::ConfigFile::open("/etc/WindowServer.ini").release_value_but_fixme_should_propagate_errors();
 
     auto selected_wallpaper = Config::read_string("WindowManager", "Background", "Wallpaper", "");
     if (!selected_wallpaper.is_empty()) {
