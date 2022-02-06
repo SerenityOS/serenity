@@ -447,6 +447,13 @@ ErrorOr<void> fchmod(int fd, mode_t mode)
     return {};
 }
 
+ErrorOr<void> fchown(int fd, uid_t uid, gid_t gid)
+{
+    if (::fchown(fd, uid, gid) < 0)
+        return Error::from_syscall("fchown"sv, -errno);
+    return {};
+}
+
 ErrorOr<void> lchown(StringView pathname, uid_t uid, gid_t gid)
 {
     if (!pathname.characters_without_null_termination())
