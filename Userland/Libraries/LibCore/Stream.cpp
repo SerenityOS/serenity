@@ -390,6 +390,12 @@ ErrorOr<void> PosixSocketHelper::set_close_on_exec(bool enabled)
     return {};
 }
 
+ErrorOr<void> PosixSocketHelper::set_receive_timeout(Time timeout)
+{
+    auto timeout_spec = timeout.to_timespec();
+    return System::setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout_spec, sizeof(timeout_spec));
+}
+
 void PosixSocketHelper::setup_notifier()
 {
     if (!m_notifier)
@@ -438,18 +444,21 @@ ErrorOr<size_t> PosixSocketHelper::pending_bytes() const
     return static_cast<size_t>(value);
 }
 
-ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(String const& host, u16 port)
+ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(String const& host, u16 port, Optional<Time> timeout)
 {
     auto ip_address = TRY(resolve_host(host, SocketType::Datagram));
-    return connect(SocketAddress { ip_address, port });
+    return connect(SocketAddress { ip_address, port }, timeout);
 }
 
-ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(SocketAddress const& address)
+ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(SocketAddress const& address, Optional<Time> timeout)
 {
     auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) UDPSocket()));
 
     auto fd = TRY(create_fd(SocketDomain::Inet, SocketType::Datagram));
     socket->m_helper.set_fd(fd);
+    if (timeout.has_value()) {
+        TRY(socket->m_helper.set_receive_timeout(timeout.value()));
+    }
 
     TRY(connect_inet(fd, address));
 
