@@ -27,7 +27,6 @@ set(SOURCES
     ProcessStatisticsReader.cpp
     Property.cpp
     SecretString.cpp
-    Socket.cpp
     Stream.cpp
     StandardPaths.cpp
     System.cpp
