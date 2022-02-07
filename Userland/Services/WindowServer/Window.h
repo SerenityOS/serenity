@@ -48,7 +48,9 @@ enum class WindowTileType {
     TopLeft,
     TopRight,
     BottomLeft,
-    BottomRight
+    BottomRight,
+    VerticallyMaximized,
+    HorizontallyMaximized,
 };
 
 enum class WindowMenuAction {
@@ -110,8 +112,6 @@ public:
 
     bool is_always_on_top() const { return m_always_on_top; }
     void set_always_on_top(bool);
-
-    void set_vertically_maximized();
 
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
