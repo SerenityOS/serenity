@@ -28,7 +28,7 @@ public:
 
     void add_finalization_record(Cell& target, Value held_value, Object* unregister_token);
     bool remove_by_token(Object& unregister_token);
-    void cleanup(FunctionObject* callback = nullptr);
+    ThrowCompletionOr<void> cleanup(FunctionObject* callback = nullptr);
 
     virtual void remove_dead_cells(Badge<Heap>) override;
 
