@@ -393,3 +393,4 @@ private:
 }
 
 using AK::DisjointChunks;
+using AK::DisjointSpans;
