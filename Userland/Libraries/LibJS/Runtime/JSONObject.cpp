@@ -128,48 +128,95 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, const PropertyKey& key, Object* holder)
 {
     auto& vm = global_object.vm();
+
+    // 1. Let value be ? Get(holder, key).
     auto value = TRY(holder->get(key));
+
+    // 2. If Type(value) is Object or BigInt, then
     if (value.is_object() || value.is_bigint()) {
-        auto* value_object = TRY(value.to_object(global_object));
-        auto to_json = TRY(value_object->get(vm.names.toJSON));
-        if (to_json.is_function())
+        // a. Let toJSON be ? GetV(value, "toJSON").
+        auto to_json = TRY(value.get(global_object, vm.names.toJSON));
+
+        // b. If IsCallable(toJSON) is true, then
+        if (to_json.is_function()) {
+            // i. Set value to ? Call(toJSON, value, « key »).
             value = TRY(call(global_object, to_json.as_function(), value, js_string(vm, key.to_string())));
+        }
     }
 
-    if (state.replacer_function)
+    // 3. If state.[[ReplacerFunction]] is not undefined, then
+    if (state.replacer_function) {
+        // a. Set value to ? Call(state.[[ReplacerFunction]], holder, « key, value »).
         value = TRY(call(global_object, *state.replacer_function, holder, js_string(vm, key.to_string()), value));
+    }
 
+    // 4. If Type(value) is Object, then
     if (value.is_object()) {
         auto& value_object = value.as_object();
-        if (is<NumberObject>(value_object))
+
+        // a. If value has a [[NumberData]] internal slot, then
+        if (is<NumberObject>(value_object)) {
+            // i. Set value to ? ToNumber(value).
             value = TRY(value.to_number(global_object));
-        else if (is<StringObject>(value_object))
+        }
+        // b. Else if value has a [[StringData]] internal slot, then
+        else if (is<StringObject>(value_object)) {
+            // i. Set value to ? ToString(value).
             value = TRY(value.to_primitive_string(global_object));
-        else if (is<BooleanObject>(value_object))
+        }
+        // c. Else if value has a [[BooleanData]] internal slot, then
+        else if (is<BooleanObject>(value_object)) {
+            // i. Set value to value.[[BooleanData]].
             value = Value(static_cast<BooleanObject&>(value_object).boolean());
-        else if (is<BigIntObject>(value_object))
+        }
+        // d. Else if value has a [[BigIntData]] internal slot, then
+        else if (is<BigIntObject>(value_object)) {
+            // i. Set value to value.[[BigIntData]].
             value = Value(&static_cast<BigIntObject&>(value_object).bigint());
+        }
     }
 
+    // 5. If value is null, return "null".
     if (value.is_null())
-        return "null";
+        return "null"sv;
+
+    // 6. If value is true, return "true".
+    // 7. If value is false, return "false".
     if (value.is_boolean())
-        return value.as_bool() ? "true" : "false";
+        return value.as_bool() ? "true"sv : "false"sv;
+
+    // 8. If Type(value) is String, return QuoteJSONString(value).
     if (value.is_string())
         return quote_json_string(value.as_string().string());
+
+    // 9. If Type(value) is Number, then
     if (value.is_number()) {
+        // a. If value is finite, return ! ToString(value).
         if (value.is_finite_number())
             return MUST(value.to_string(global_object));
-        return "null";
+
+        // b. Return "null".
+        return "null"sv;
     }
+
+    // 10. If Type(value) is BigInt, throw a TypeError exception.
     if (value.is_bigint())
         return vm.throw_completion<TypeError>(global_object, ErrorType::JsonBigInt);
+
+    // 11. If Type(value) is Object and IsCallable(value) is false, then
     if (value.is_object() && !value.is_function()) {
+        // a. Let isArray be ? IsArray(value).
         auto is_array = TRY(value.is_array(global_object));
+
+        // b. If isArray is true, return ? SerializeJSONArray(state, value).
         if (is_array)
             return serialize_json_array(global_object, state, static_cast<Array&>(value.as_object()));
+
+        // c. Return ? SerializeJSONObject(state, value).
         return serialize_json_object(global_object, state, value.as_object());
     }
+
+    // 12. Return undefined.
     return String {};
 }
 
