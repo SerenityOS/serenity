@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -551,10 +551,13 @@ void outln(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, const Parame
 inline void outln(FILE* file) { fputc('\n', file); }
 
 template<typename... Parameters>
-void out(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { out(stdout, move(fmtstr), parameters...); }
+void out(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+{
+    out(stdout, forward<CheckedFormatString<Parameters...>>(fmtstr), parameters...);
+}
 
 template<typename... Parameters>
-void outln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { outln(stdout, move(fmtstr), parameters...); }
+void outln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { outln(stdout, forward<CheckedFormatString<Parameters...>>(fmtstr), parameters...); }
 
 inline void outln() { outln(stdout); }
 
@@ -567,11 +570,11 @@ inline void outln() { outln(stdout); }
 template<typename... Parameters>
 void warn(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
 {
-    out(stderr, move(fmtstr), parameters...);
+    out(stderr, forward<CheckedFormatString<Parameters...>>(fmtstr), parameters...);
 }
 
 template<typename... Parameters>
-void warnln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { outln(stderr, move(fmtstr), parameters...); }
+void warnln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { outln(stderr, forward<CheckedFormatString<Parameters...>>(fmtstr), parameters...); }
 
 inline void warnln() { outln(stderr); }
 
