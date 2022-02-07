@@ -15,7 +15,7 @@
 
 namespace JS {
 
-using ScriptOrModule = Variant<Empty, Script*, Module*>;
+using ScriptOrModule = Variant<Empty, WeakPtr<Script>, WeakPtr<Module>>;
 
 // 9.4 Execution Contexts, https://tc39.es/ecma262/#sec-execution-contexts
 struct ExecutionContext {

@@ -107,7 +107,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_linking(VM& vm, Vector<Module*
         ModuleRequest required { required_string };
 
         // a. Let requiredModule be ? HostResolveImportedModule(module, required).
-        auto required_module = TRY(vm.host_resolve_imported_module(this, required));
+        auto required_module = TRY(vm.host_resolve_imported_module(this->make_weak_ptr(), required));
 
         // b. Set index to ? InnerModuleLinking(requiredModule, stack, index).
         index = TRY(required_module->inner_module_linking(vm, stack, index));
@@ -310,7 +310,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Modu
     for (auto& required : m_requested_modules) {
 
         // a. Let requiredModule be ! HostResolveImportedModule(module, required).
-        auto* required_module = MUST(vm.host_resolve_imported_module(this, required)).ptr();
+        auto* required_module = MUST(vm.host_resolve_imported_module(this->make_weak_ptr(), required)).ptr();
         // b. NOTE: Link must be completed successfully prior to invoking this method, so every requested module is guaranteed to resolve successfully.
 
         // c. Set index to ? InnerModuleEvaluation(requiredModule, stack, index).

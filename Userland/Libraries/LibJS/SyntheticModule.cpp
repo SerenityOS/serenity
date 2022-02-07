@@ -89,7 +89,7 @@ ThrowCompletionOr<Promise*> JS::SyntheticModule::evaluate(VM& vm)
     module_context.realm = &realm();
 
     // 5. Set the ScriptOrModule of moduleContext to module.
-    module_context.script_or_module = this;
+    module_context.script_or_module = this->make_weak_ptr();
 
     // 6. Set the VariableEnvironment of moduleContext to module.[[Environment]].
     module_context.variable_environment = environment();

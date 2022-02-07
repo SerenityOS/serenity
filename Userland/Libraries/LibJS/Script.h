@@ -16,7 +16,9 @@
 namespace JS {
 
 // 16.1.4 Script Records, https://tc39.es/ecma262/#sec-script-records
-class Script : public RefCounted<Script> {
+class Script
+    : public RefCounted<Script>
+    , public Weakable<Script> {
 public:
     ~Script();
     static Result<NonnullRefPtr<Script>, Vector<Parser::Error>> parse(StringView source_text, Realm&, StringView filename = {});

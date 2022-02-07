@@ -770,7 +770,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
             dbgln("Warning: Using multiple modules as entry point can lead to unexpected results");
 
         m_loaded_modules.empend(
-            &module,
+            module.make_weak_ptr(),
             module.filename(),
             String {}, // Null type
             module,
@@ -836,7 +836,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         [&](Empty) {
             return "."sv;
         },
-        [&](auto* script_or_module) {
+        [&](auto& script_or_module) {
             return script_or_module->filename();
         });
 
