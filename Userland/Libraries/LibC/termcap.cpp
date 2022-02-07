@@ -20,7 +20,7 @@ char* BC;
 
 int __attribute__((weak)) tgetent([[maybe_unused]] char* bp, [[maybe_unused]] const char* name)
 {
-    warnln_if(TERMCAP_DEBUG, "tgetent: bp={:p}, name='{}'", bp, name);
+    warnln_if<TERMCAP_DEBUG>("tgetent: bp={:p}, name='{}'", bp, name);
     PC = '\0';
     BC = const_cast<char*>("\033[D");
     UP = const_cast<char*>("\033[A");
@@ -78,7 +78,7 @@ static void ensure_caps()
 char* __attribute__((weak)) tgetstr(const char* id, char** area)
 {
     ensure_caps();
-    warnln_if(TERMCAP_DEBUG, "tgetstr: id='{}'", id);
+    warnln_if<TERMCAP_DEBUG>("tgetstr: id='{}'", id);
     auto it = caps->find(id);
     if (it != caps->end()) {
         char* ret = *area;
@@ -87,7 +87,7 @@ char* __attribute__((weak)) tgetstr(const char* id, char** area)
         *area += strlen(val) + 1;
         return ret;
     }
-    warnln_if(TERMCAP_DEBUG, "tgetstr: missing cap id='{}'", id);
+    warnln_if<TERMCAP_DEBUG>("tgetstr: missing cap id='{}'", id);
     return nullptr;
 }
 
@@ -95,7 +95,7 @@ char* __attribute__((weak)) tgetstr(const char* id, char** area)
 
 int __attribute__((weak)) tgetflag([[maybe_unused]] const char* id)
 {
-    warnln_if(TERMCAP_DEBUG, "tgetflag: '{}'", id);
+    warnln_if<TERMCAP_DEBUG>("tgetflag: '{}'", id);
     auto it = caps->find(id);
     if (it != caps->end())
         return 1;
@@ -104,7 +104,7 @@ int __attribute__((weak)) tgetflag([[maybe_unused]] const char* id)
 
 int __attribute__((weak)) tgetnum(const char* id)
 {
-    warnln_if(TERMCAP_DEBUG, "tgetnum: '{}'", id);
+    warnln_if<TERMCAP_DEBUG>("tgetnum: '{}'", id);
     auto it = caps->find(id);
     if (it != caps->end())
         return atoi((*it).value);

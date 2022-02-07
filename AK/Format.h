@@ -577,11 +577,13 @@ void warnln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... pa
 
 inline void warnln() { outln(stderr); }
 
-#    define warnln_if(flag, fmt, ...)      \
-        do {                               \
-            if constexpr (flag)            \
-                outln(fmt, ##__VA_ARGS__); \
-        } while (0)
+template<bool flag, typename... Parameters>
+inline void warnln_if(Parameters&&... parameters)
+{
+    if constexpr (flag) {
+        warnln(forward<Parameters...>(parameters...));
+    }
+}
 
 #endif
 
@@ -715,6 +717,7 @@ using AK::outln_if;
 
 using AK::warn;
 using AK::warnln;
+using AK::warnln_if;
 #endif
 
 using AK::dbgln;
