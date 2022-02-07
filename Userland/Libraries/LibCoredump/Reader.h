@@ -70,6 +70,8 @@ public:
     };
     const LibraryData* library_containing(FlatPtr address) const;
 
+    String resolve_object_path(StringView object_name) const;
+
     int process_pid() const;
     u8 process_termination_signal() const;
     String process_executable_path() const;

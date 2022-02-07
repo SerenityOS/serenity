@@ -8,11 +8,13 @@
 #include <AK/HashTable.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/LexicalPath.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/File.h>
 #include <LibCoredump/Reader.h>
 #include <signal_numbers.h>
 #include <string.h>
+#include <unistd.h>
 
 namespace Coredump {
 
@@ -277,13 +279,7 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
         return {};
 
     auto name = region->object_name();
-
-    String path;
-    if (Core::File::looks_like_shared_library(name))
-        path = String::formatted("/usr/lib/{}", name);
-    else {
-        path = name;
-    }
+    String path = resolve_object_path(name);
 
     if (!cached_libs.contains(path)) {
         auto file_or_error = Core::MappedFile::map(path);
@@ -297,6 +293,48 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
     return lib_data;
 }
 
+String Reader::resolve_object_path(StringView name) const
+{
+    // TODO: There are other places where similar method is implemented or would be useful.
+    //       (e.g. UserspaceEmulator, LibSymbolication, Profiler, and DynamicLinker itself)
+    //       We should consider creating unified implementation in the future.
+
+    if (name.starts_with('/') || !Core::File::looks_like_shared_library(name)) {
+        return name;
+    }
+
+    Vector<String> library_search_directories;
+
+    // If LD_LIBRARY_PATH is present, check its folders first
+    for (auto& environment_variable : process_environment()) {
+        auto prefix = "LD_LIBRARY_PATH="sv;
+        if (environment_variable.starts_with(prefix)) {
+            auto ld_library_path = environment_variable.substring_view(prefix.length());
+
+            // FIXME: This code won't handle folders with ":" in the name correctly.
+            for (auto directory : ld_library_path.split_view(':')) {
+                library_search_directories.append(directory);
+            }
+        }
+    }
+
+    // Add default paths that DynamicLinker uses
+    library_search_directories.append("/usr/lib/"sv);
+    library_search_directories.append("/usr/local/lib/"sv);
+
+    // Search for the first readable library file
+    for (auto& directory : library_search_directories) {
+        auto full_path = LexicalPath::join(directory, name).string();
+
+        if (access(full_path.characters(), R_OK) != 0)
+            continue;
+
+        return full_path;
+    }
+
+    return name;
+}
+
 void Reader::for_each_library(Function<void(LibraryInfo)> func) const
 {
     HashTable<String> libraries;
@@ -307,12 +345,7 @@ void Reader::for_each_library(Function<void(LibraryInfo)> func) const
 
         libraries.set(name);
 
-        String path;
-        if (Core::File::looks_like_shared_library(name))
-            path = String::formatted("/usr/lib/{}", name);
-        else {
-            path = name;
-        }
+        String path = resolve_object_path(name);
 
         func(LibraryInfo { name, path, static_cast<FlatPtr>(region.region_start) });
         return IterationDecision::Continue;
