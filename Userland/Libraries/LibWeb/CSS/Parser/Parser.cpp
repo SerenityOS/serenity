@@ -3080,8 +3080,8 @@ RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<StyleComponentValueR
 
 RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const& component_values)
 {
-    auto top_left = [&](Vector<Length>& radii) { return radii[0]; };
-    auto top_right = [&](Vector<Length>& radii) {
+    auto top_left = [&](Vector<LengthPercentage>& radii) { return radii[0]; };
+    auto top_right = [&](Vector<LengthPercentage>& radii) {
         switch (radii.size()) {
         case 4:
         case 3:
@@ -3093,7 +3093,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
             VERIFY_NOT_REACHED();
         }
     };
-    auto bottom_right = [&](Vector<Length>& radii) {
+    auto bottom_right = [&](Vector<LengthPercentage>& radii) {
         switch (radii.size()) {
         case 4:
         case 3:
@@ -3105,7 +3105,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
             VERIFY_NOT_REACHED();
         }
     };
-    auto bottom_left = [&](Vector<Length>& radii) {
+    auto bottom_left = [&](Vector<LengthPercentage>& radii) {
         switch (radii.size()) {
         case 4:
             return radii[3];
@@ -3119,8 +3119,8 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
         }
     };
 
-    Vector<Length> horizontal_radii;
-    Vector<Length> vertical_radii;
+    Vector<LengthPercentage> horizontal_radii;
+    Vector<LengthPercentage> vertical_radii;
     bool reading_vertical = false;
 
     for (auto& value : component_values) {
@@ -3132,13 +3132,13 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
             continue;
         }
 
-        auto maybe_length = parse_length(value);
-        if (!maybe_length.has_value())
+        auto maybe_dimension = parse_dimension(value);
+        if (!maybe_dimension.has_value() || !maybe_dimension->is_length_percentage())
             return nullptr;
         if (reading_vertical) {
-            vertical_radii.append(maybe_length.value());
+            vertical_radii.append(maybe_dimension->length_percentage());
         } else {
-            horizontal_radii.append(maybe_length.value());
+            horizontal_radii.append(maybe_dimension->length_percentage());
         }
     }
 
