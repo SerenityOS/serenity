@@ -674,6 +674,7 @@ void WindowManager::start_window_move(Window& window, Gfx::IntPoint const& origi
     m_move_window->set_default_positioned(false);
     m_move_origin = origin;
     m_move_window_origin = window.position();
+    m_move_window_cursor_position = window.is_tiled() || window.is_maximized() ? to_floating_cursor_position(m_mouse_down_origin) : m_mouse_down_origin;
     m_geometry_overlay = Compositor::the().create_overlay<WindowGeometryOverlay>(window);
     m_geometry_overlay->set_enabled(true);
     window.invalidate(true, true);
@@ -774,7 +775,9 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                 m_move_origin = event.position();
                 if (m_move_origin.y() <= secondary_deadzone + desktop.top())
                     return true;
-                m_move_window->set_maximized(false, event.position());
+                Gfx::IntPoint adjusted_position = event.position().translated(-m_move_window_cursor_position);
+                m_move_window->set_maximized(false);
+                m_move_window->move_to(adjusted_position);
                 m_move_window_origin = m_move_window->position();
             }
         } else {
@@ -809,7 +812,9 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                 bool force_titlebar_visible = !(m_keyboard_modifiers & Mod_Super);
                 m_move_window->nudge_into_desktop(&cursor_screen, force_titlebar_visible);
             } else if (pixels_moved_from_start > 5) {
-                m_move_window->set_untiled(event.position());
+                Gfx::IntPoint adjusted_position = event.position().translated(-m_move_window_cursor_position);
+                m_move_window->set_untiled();
+                m_move_window->move_to(adjusted_position);
                 m_move_origin = event.position();
                 m_move_window_origin = m_move_window->position();
             }
@@ -818,6 +823,33 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
         m_geometry_overlay->window_rect_changed();
     }
     return true;
+}
+
+Gfx::IntPoint WindowManager::to_floating_cursor_position(Gfx::IntPoint const& origin) const
+{
+    VERIFY(m_move_window);
+
+    Gfx::IntPoint new_position;
+    auto dist_from_right = m_move_window->rect().width() - origin.x();
+    auto dist_from_bottom = m_move_window->rect().height() - origin.y();
+    auto floating_width = m_move_window->floating_rect().width();
+    auto floating_height = m_move_window->floating_rect().height();
+
+    if (origin.x() < dist_from_right && origin.x() < floating_width / 2)
+        new_position.set_x(origin.x());
+    else if (dist_from_right < origin.x() && dist_from_right < floating_width / 2)
+        new_position.set_x(floating_width - dist_from_right);
+    else
+        new_position.set_x(floating_width / 2);
+
+    if (origin.y() < dist_from_bottom && origin.y() < floating_height / 2)
+        new_position.set_y(origin.y());
+    else if (dist_from_bottom < origin.y() && dist_from_bottom < floating_height / 2)
+        new_position.set_y(floating_height - dist_from_bottom);
+    else
+        new_position.set_y(floating_height / 2);
+
+    return new_position;
 }
 
 bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
@@ -1180,6 +1212,12 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
 {
     auto& window = *result.window;
     auto* blocking_modal_window = window.blocking_modal_window();
+
+    if (event.type() == Event::MouseDown) {
+        m_mouse_down_origin = result.is_frame_hit
+            ? event.position().translated(-window.position())
+            : result.window_relative_position;
+    }
 
     // First check if we should initiate a move or resize (Super+LMB or Super+RMB).
     // In those cases, the event is swallowed by the window manager.
