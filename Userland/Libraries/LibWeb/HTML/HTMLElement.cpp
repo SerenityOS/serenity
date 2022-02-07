@@ -302,12 +302,12 @@ static Vector<DOM::Node&> focus_chain(DOM::Node* subject)
         if (!is<DOM::Document>(*current_object)) {
             // 3. If currentObject is a focusable area, then set currentObject to currentObject's DOM anchor's node document.
             current_object = &current_object->document();
-        } else if (is<DOM::Document>(*current_object)) {
+        } else if (is<DOM::Document>(*current_object)
+            && static_cast<DOM::Document&>(*current_object).browsing_context()
+            && !static_cast<DOM::Document&>(*current_object).browsing_context()->is_top_level()) {
             // Otherwise, if currentObject is a Document whose browsing context is a child browsing context,
             // then set currentObject to currentObject's browsing context's container.
-            auto& document = static_cast<DOM::Document&>(*current_object);
-            if (document.browsing_context() && !document.browsing_context()->is_top_level())
-                current_object = document.browsing_context()->container();
+            current_object = static_cast<DOM::Document&>(*current_object).browsing_context()->container();
         } else {
             break;
         }
