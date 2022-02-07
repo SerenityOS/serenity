@@ -264,6 +264,7 @@ enum class WhiteSpace {
 
 enum class PointerEvents {
     Auto,
+    All,
     None
 };
 
