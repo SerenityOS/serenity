@@ -848,7 +848,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         [&](Empty) -> String {
             return ".";
         },
-        [&](auto* script_or_module) {
+        [&](auto& script_or_module) {
             if constexpr (IsSame<Script*, decltype(script_or_module)>) {
                 return String::formatted("Script @ {}", script_or_module);
             }
