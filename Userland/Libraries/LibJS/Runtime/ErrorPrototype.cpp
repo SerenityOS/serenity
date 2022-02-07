@@ -37,22 +37,35 @@ void ErrorPrototype::initialize(GlobalObject& global_object)
 // 20.5.3.4 Error.prototype.toString ( ), https://tc39.es/ecma262/#sec-error.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 {
+    // 1. Let O be the this value.
+    // 2. If Type(O) is not Object, throw a TypeError exception.
     auto* this_object = TRY(PrototypeObject::this_object(global_object));
 
-    String name = "Error";
+    // 3. Let name be ? Get(O, "name").
     auto name_property = TRY(this_object->get(vm.names.name));
-    if (!name_property.is_undefined())
-        name = TRY(name_property.to_string(global_object));
 
-    String message = "";
+    // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
+    auto name = name_property.is_undefined()
+        ? String { "Error"sv }
+        : TRY(name_property.to_string(global_object));
+
+    // 5. Let msg be ? Get(O, "message").
     auto message_property = TRY(this_object->get(vm.names.message));
-    if (!message_property.is_undefined())
-        message = TRY(message_property.to_string(global_object));
 
+    // 6. If msg is undefined, set msg to the empty String; otherwise set msg to ? ToString(msg).
+    auto message = message_property.is_undefined()
+        ? String::empty()
+        : TRY(message_property.to_string(global_object));
+
+    // 7. If name is the empty String, return msg.
     if (name.is_empty())
         return js_string(vm, message);
+
+    // 8. If msg is the empty String, return name.
     if (message.is_empty())
         return js_string(vm, name);
+
+    // 9. Return the string-concatenation of name, the code unit 0x003A (COLON), the code unit 0x0020 (SPACE), and msg.
     return js_string(vm, String::formatted("{}: {}", name, message));
 }
 
