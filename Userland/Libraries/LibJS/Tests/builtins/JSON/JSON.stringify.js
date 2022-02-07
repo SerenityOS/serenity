@@ -38,6 +38,19 @@ describe("correct behavior", () => {
         });
     });
 
+    test("serialize BigInt with a toJSON property", () => {
+        Object.defineProperty(BigInt.prototype, "toJSON", {
+            configurable: true, // Allows deleting this property at the end of this test case.
+            get() {
+                "use strict";
+                return () => typeof this;
+            },
+        });
+
+        expect(JSON.stringify(1n)).toBe('"bigint"');
+        delete BigInt.prototype.toJSON;
+    });
+
     test("ignores non-enumerable properties", () => {
         let o = { foo: "bar" };
         Object.defineProperty(o, "baz", { value: "qux", enumerable: false });
