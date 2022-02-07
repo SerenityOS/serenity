@@ -57,6 +57,7 @@ public:
         return *m_language_client;
     }
     virtual void set_cursor(const GUI::TextPosition& a_position) override;
+    void set_semantic_syntax_highlighting(bool value);
 
 private:
     virtual void focusin_event(GUI::FocusEvent&) override;
@@ -105,6 +106,8 @@ private:
     void on_token_info_timer_tick();
     void on_tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info);
     void create_tokens_info_timer();
+    ErrorOr<void> initialize_documentation_tooltip();
+    ErrorOr<void> initialize_parameters_hint_tooltip();
 
     explicit Editor();
 
@@ -120,10 +123,8 @@ private:
     RefPtr<GUI::Action> m_evaluate_expression_action;
     RefPtr<GUI::Action> m_move_execution_to_line_action;
     RefPtr<Core::Timer> m_tokens_info_timer; // Used for querying language server for syntax highlighting info
-
     OwnPtr<LanguageClient> m_language_client;
-    ErrorOr<void> initialize_documentation_tooltip();
-    ErrorOr<void> initialize_parameters_hint_tooltip();
+    bool m_use_semantic_syntax_highlighting { false };
 };
 
 }

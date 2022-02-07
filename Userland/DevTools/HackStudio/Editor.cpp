@@ -480,8 +480,8 @@ void Editor::set_document(GUI::TextDocument& doc)
 
     auto& code_document = static_cast<CodeDocument&>(doc);
 
-    set_syntax_highlighter_for(code_document);
     set_language_client_for(code_document);
+    set_syntax_highlighter_for(code_document);
 
     if (m_language_client) {
         set_autocomplete_provider(make<LanguageServerAidedAutocompleteProvider>(*m_language_client));
@@ -500,9 +500,6 @@ void Editor::set_document(GUI::TextDocument& doc)
     } else {
         set_autocomplete_provider_for(code_document);
     }
-
-    on_token_info_timer_tick();
-    m_tokens_info_timer->restart();
 }
 
 Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data()
@@ -609,7 +606,13 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
 {
     switch (document.language()) {
     case Language::Cpp:
-        set_syntax_highlighter(make<Cpp::SemanticSyntaxHighlighter>());
+        if (m_use_semantic_syntax_highlighting) {
+            set_syntax_highlighter(make<Cpp::SemanticSyntaxHighlighter>());
+            on_token_info_timer_tick();
+            m_tokens_info_timer->restart();
+        } else
+            set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
+
         break;
     case Language::CSS:
         set_syntax_highlighter(make<Web::CSS::SyntaxHighlighter>());
@@ -638,6 +641,8 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
     default:
         set_syntax_highlighter({});
     }
+
+    force_rehighlight();
 }
 
 void Editor::set_autocomplete_provider_for(CodeDocument const& document)
@@ -752,6 +757,12 @@ void Editor::create_tokens_info_timer()
         m_tokens_info_timer->stop();
     });
     m_tokens_info_timer->start();
+}
+
+void Editor::set_semantic_syntax_highlighting(bool value)
+{
+    m_use_semantic_syntax_highlighting = value;
+    set_syntax_highlighter_for(code_document());
 }
 
 }
