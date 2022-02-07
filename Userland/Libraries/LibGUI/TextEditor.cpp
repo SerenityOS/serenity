@@ -562,7 +562,7 @@ void TextEditor::paint_event(PaintEvent& event)
                         continue;
                     }
                     if (span.range.end().line() < line_index) {
-                        dbgln_if(TEXTEDITOR_DEBUG, "spans not sorted (span end {}:{} is before current line {}) => ignoring", span.range.end().line(), span.range.end().column(), line_index);
+                        dbgln_if<TEXTEDITOR_DEBUG>("spans not sorted (span end {}:{} is before current line {}) => ignoring", span.range.end().line(), span.range.end().column(), line_index);
                         ++span_index;
                         continue;
                     }
@@ -572,12 +572,12 @@ void TextEditor::paint_event(PaintEvent& event)
                         break;
                     }
                     if (span.range.start().line() == span.range.end().line() && span.range.end().column() < span.range.start().column()) {
-                        dbgln_if(TEXTEDITOR_DEBUG, "span from {}:{} to {}:{} has negative length => ignoring", span.range.start().line(), span.range.start().column(), span.range.end().line(), span.range.end().column());
+                        dbgln_if<TEXTEDITOR_DEBUG>("span from {}:{} to {}:{} has negative length => ignoring", span.range.start().line(), span.range.start().column(), span.range.end().line(), span.range.end().column());
                         ++span_index;
                         continue;
                     }
                     if (span.range.end().line() == line_index && span.range.end().column() < start_of_visual_line + next_column) {
-                        dbgln_if(TEXTEDITOR_DEBUG, "spans not sorted (span end {}:{} is before current position {}:{}) => ignoring",
+                        dbgln_if<TEXTEDITOR_DEBUG>("spans not sorted (span end {}:{} is before current position {}:{}) => ignoring",
                             span.range.end().line(), span.range.end().column(), line_index, start_of_visual_line + next_column);
                         ++span_index;
                         continue;
@@ -589,7 +589,7 @@ void TextEditor::paint_event(PaintEvent& event)
                         span_start = span.range.start().column() - start_of_visual_line;
                     }
                     if (span_start < next_column) {
-                        dbgln_if(TEXTEDITOR_DEBUG, "span started before the current position, maybe two spans overlap? (span start {} is before current position {}) => ignoring", span_start, next_column);
+                        dbgln_if<TEXTEDITOR_DEBUG>("span started before the current position, maybe two spans overlap? (span start {} is before current position {}) => ignoring", span_start, next_column);
                         ++span_index;
                         continue;
                     }
@@ -1430,7 +1430,7 @@ void TextEditor::cut()
     if (!is_editable())
         return;
     auto selected_text = this->selected_text();
-    dbgln_if(TEXTEDITOR_DEBUG, "Cut: \"{}\"", selected_text);
+    dbgln_if<TEXTEDITOR_DEBUG>("Cut: \"{}\"", selected_text);
     Clipboard::the().set_plain_text(selected_text);
     delete_selection();
 }
@@ -1438,7 +1438,7 @@ void TextEditor::cut()
 void TextEditor::copy()
 {
     auto selected_text = this->selected_text();
-    dbgln_if(TEXTEDITOR_DEBUG, "Copy: \"{}\"\n", selected_text);
+    dbgln_if<TEXTEDITOR_DEBUG>("Copy: \"{}\"\n", selected_text);
     Clipboard::the().set_plain_text(selected_text);
 }
 
@@ -1454,7 +1454,7 @@ void TextEditor::paste()
     if (data.is_empty())
         return;
 
-    dbgln_if(TEXTEDITOR_DEBUG, "Paste: \"{}\"", String::copy(data));
+    dbgln_if<TEXTEDITOR_DEBUG>("Paste: \"{}\"", String::copy(data));
 
     TemporaryChange change(m_automatic_indentation_enabled, false);
     insert_at_cursor_or_replace_selection(data);

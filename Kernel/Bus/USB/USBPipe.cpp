@@ -60,14 +60,14 @@ ErrorOr<size_t> Pipe::control_transfer(u8 request_type, u8 request, u16 value, u
     auto transfer = TRY(Transfer::try_create(*this, length));
     transfer->set_setup_packet(usb_request);
 
-    dbgln_if(USB_DEBUG, "Pipe: Transfer allocated @ {}", transfer->buffer_physical());
+    dbgln_if<USB_DEBUG>("Pipe: Transfer allocated @ {}", transfer->buffer_physical());
     auto transfer_length = TRY(m_controller->submit_control_transfer(*transfer));
 
     // TODO: Check transfer for completion and copy data from transfer buffer into data
     if (length > 0)
         memcpy(reinterpret_cast<u8*>(data), transfer->buffer().as_ptr() + sizeof(USBRequestData), length);
 
-    dbgln_if(USB_DEBUG, "Pipe: Control Transfer complete!");
+    dbgln_if<USB_DEBUG>("Pipe: Control Transfer complete!");
     return transfer_length;
 }
 

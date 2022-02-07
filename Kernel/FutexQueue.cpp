@@ -27,10 +27,10 @@ bool FutexQueue::should_add_blocker(Thread::Blocker& b, void*)
     m_imminent_waits--;
 
     if (m_was_removed) {
-        dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: should not block thread {}: was removed", this, b.thread());
+        dbgln_if<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: should not block thread {}: was removed", this, b.thread());
         return false;
     }
-    dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: should block thread {}", this, b.thread());
+    dbgln_if<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: should block thread {}", this, b.thread());
 
     return true;
 }
@@ -40,14 +40,14 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
     is_empty_target = false;
     SpinlockLocker lock(m_lock);
 
-    dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue({}, {})", this, wake_count, requeue_count);
+    dbgln_if<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: wake_n_requeue({}, {})", this, wake_count, requeue_count);
 
     u32 did_wake = 0, did_requeue = 0;
     unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool& stop_iterating) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
         auto& blocker = static_cast<Thread::FutexBlocker&>(b);
 
-        dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue unblocking {}", this, blocker.thread());
+        dbgln_if<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: wake_n_requeue unblocking {}", this, blocker.thread());
         VERIFY(did_wake < wake_count);
         if (blocker.unblock()) {
             if (++did_wake >= wake_count)
@@ -61,7 +61,7 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
         auto blockers_to_requeue = do_take_blockers(requeue_count);
         if (!blockers_to_requeue.is_empty()) {
             if (auto* target_futex_queue = get_target_queue()) {
-                dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue requeueing {} blockers to {}", this, blockers_to_requeue.size(), target_futex_queue);
+                dbgln_if<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: wake_n_requeue requeueing {} blockers to {}", this, blockers_to_requeue.size(), target_futex_queue);
 
                 // While still holding m_lock, notify each blocker
                 for (auto& info : blockers_to_requeue) {
@@ -84,7 +84,7 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
                 target_futex_queue->do_append_blockers(move(blockers_to_requeue));
                 is_empty_target = target_futex_queue->is_empty_and_no_imminent_waits_locked();
             } else {
-                dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue could not get target queue to requeue {} blockers", this, blockers_to_requeue.size());
+                dbgln_if<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: wake_n_requeue could not get target queue to requeue {} blockers", this, blockers_to_requeue.size());
                 do_append_blockers(move(blockers_to_requeue));
             }
         }
@@ -99,13 +99,13 @@ u32 FutexQueue::wake_n(u32 wake_count, const Optional<u32>& bitset, bool& is_emp
         return 0; // should we assert instead?
     }
     SpinlockLocker lock(m_lock);
-    dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n({})", this, wake_count);
+    dbgln_if<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: wake_n({})", this, wake_count);
     u32 did_wake = 0;
     unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool& stop_iterating) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
         auto& blocker = static_cast<Thread::FutexBlocker&>(b);
 
-        dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n unblocking {}", this, blocker.thread());
+        dbgln_if<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: wake_n unblocking {}", this, blocker.thread());
         VERIFY(did_wake < wake_count);
         if (bitset.has_value() ? blocker.unblock_bitset(bitset.value()) : blocker.unblock()) {
             if (++did_wake >= wake_count)
@@ -121,12 +121,12 @@ u32 FutexQueue::wake_n(u32 wake_count, const Optional<u32>& bitset, bool& is_emp
 u32 FutexQueue::wake_all(bool& is_empty)
 {
     SpinlockLocker lock(m_lock);
-    dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_all", this);
+    dbgln_if<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: wake_all", this);
     u32 did_wake = 0;
     unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool&) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
         auto& blocker = static_cast<Thread::FutexBlocker&>(b);
-        dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_all unblocking {}", this, blocker.thread());
+        dbgln_if<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: wake_all unblocking {}", this, blocker.thread());
         if (blocker.unblock(true)) {
             did_wake++;
             return true;

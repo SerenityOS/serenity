@@ -100,7 +100,7 @@ UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
 
     UnsignedBigIntegerAlgorithms::destructive_GCD_without_allocation(temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, gcd_output);
     if (gcd_output == 0) {
-        dbgln_if(NT_DEBUG, "GCD is zero");
+        dbgln_if<NT_DEBUG>("GCD is zero");
         return output;
     }
 
@@ -108,7 +108,7 @@ UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
     UnsignedBigIntegerAlgorithms::divide_without_allocation(a, gcd_output, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
     UnsignedBigIntegerAlgorithms::multiply_without_allocation(temp_quotient, b, temp_1, temp_2, temp_3, output);
 
-    dbgln_if(NT_DEBUG, "quot: {} rem: {} out: {}", temp_quotient, temp_remainder, output);
+    dbgln_if<NT_DEBUG>("quot: {} rem: {} out: {}", temp_quotient, temp_remainder, output);
 
     return output;
 }

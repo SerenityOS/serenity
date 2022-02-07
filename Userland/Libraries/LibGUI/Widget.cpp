@@ -558,17 +558,17 @@ void Widget::drag_enter_event(DragEvent& event)
 {
     StringBuilder builder;
     builder.join(',', event.mime_types());
-    dbgln_if(DRAG_DEBUG, "{} {:p} DRAG ENTER @ {}, {}", class_name(), this, event.position(), builder.string_view());
+    dbgln_if<DRAG_DEBUG>("{} {:p} DRAG ENTER @ {}, {}", class_name(), this, event.position(), builder.string_view());
 }
 
 void Widget::drag_leave_event(Event&)
 {
-    dbgln_if(DRAG_DEBUG, "{} {:p} DRAG LEAVE", class_name(), this);
+    dbgln_if<DRAG_DEBUG>("{} {:p} DRAG LEAVE", class_name(), this);
 }
 
 void Widget::drop_event(DropEvent& event)
 {
-    dbgln_if(DRAG_DEBUG, "{} {:p} DROP @ {}, '{}'", class_name(), this, event.position(), event.text());
+    dbgln_if<DRAG_DEBUG>("{} {:p} DROP @ {}, '{}'", class_name(), this, event.position(), event.text());
     event.ignore();
 }
 

@@ -25,7 +25,7 @@ bool AHCIController::reset()
 {
     hba().control_regs.ghc = 1;
 
-    dbgln_if(AHCI_DEBUG, "{}: AHCI Controller reset", pci_address());
+    dbgln_if<AHCI_DEBUG>("{}: AHCI Controller reset", pci_address());
 
     full_memory_barrier();
     size_t retry = 0;
@@ -98,7 +98,7 @@ AHCI::HBADefinedCapabilities AHCIController::capabilities() const
     u32 capabilities = hba().control_regs.cap;
     u32 extended_capabilities = hba().control_regs.cap2;
 
-    dbgln_if(AHCI_DEBUG, "{}: AHCI Controller Capabilities = {:#08x}, Extended Capabilities = {:#08x}", pci_address(), capabilities, extended_capabilities);
+    dbgln_if<AHCI_DEBUG>("{}: AHCI Controller Capabilities = {:#08x}, Extended Capabilities = {:#08x}", pci_address(), capabilities, extended_capabilities);
 
     return (AHCI::HBADefinedCapabilities) {
         (capabilities & 0b11111) + 1,
@@ -149,7 +149,7 @@ void AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_iden
     dbgln("{}: AHCI command list entries count - {}", pci_address(), hba_capabilities().max_command_list_entries_count);
 
     u32 version = hba().control_regs.version;
-    dbgln_if(AHCI_DEBUG, "{}: AHCI Controller Version = {:#08x}", pci_address(), version);
+    dbgln_if<AHCI_DEBUG>("{}: AHCI Controller Version = {:#08x}", pci_address(), version);
 
     hba().control_regs.ghc = 0x80000000; // Ensure that HBA knows we are AHCI aware.
     PCI::enable_interrupt_line(pci_address());
@@ -188,7 +188,7 @@ RefPtr<StorageDevice> AHCIController::device(u32 index) const
     u32 pi = hba().control_regs.pi;
     u32 bit = bit_scan_forward(pi);
     while (bit) {
-        dbgln_if(AHCI_DEBUG, "Checking implemented port {}, pi {:b}", bit - 1, pi);
+        dbgln_if<AHCI_DEBUG>("Checking implemented port {}, pi {:b}", bit - 1, pi);
         pi &= ~(1u << (bit - 1));
         auto checked_device = device_by_port(bit - 1);
         bit = bit_scan_forward(pi);
@@ -196,7 +196,7 @@ RefPtr<StorageDevice> AHCIController::device(u32 index) const
             continue;
         connected_devices.append(checked_device.release_nonnull());
     }
-    dbgln_if(AHCI_DEBUG, "Connected device count: {}, Index: {}", connected_devices.size(), index);
+    dbgln_if<AHCI_DEBUG>("Connected device count: {}, Index: {}", connected_devices.size(), index);
     if (index >= connected_devices.size())
         return nullptr;
     return connected_devices[index];

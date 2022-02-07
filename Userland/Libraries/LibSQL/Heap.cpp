@@ -60,7 +60,7 @@ ErrorOr<void> Heap::open()
     } else {
         initialize_zero_block();
     }
-    dbgln_if(SQL_DEBUG, "Heap file {} opened. Size = {}", name(), size());
+    dbgln_if<SQL_DEBUG>("Heap file {} opened. Size = {}", name(), size());
     return {};
 }
 
@@ -78,14 +78,14 @@ ErrorOr<ByteBuffer> Heap::read_block(u32 block)
         warnln("Heap({})::read_block({}): block # out of range (>= {})"sv, name(), block, m_next_block);
         return Error::from_string_literal("Heap()::read_block(): block # out of range"sv);
     }
-    dbgln_if(SQL_DEBUG, "Read heap block {}", block);
+    dbgln_if<SQL_DEBUG>("Read heap block {}", block);
     TRY(seek_block(block));
     auto ret = m_file->read(BLOCKSIZE);
     if (ret.is_empty()) {
         warnln("Heap({})::read_block({}): Could not read block"sv, name(), block);
         return Error::from_string_literal("Heap()::read_block(): Could not read block"sv);
     }
-    dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
+    dbgln_if<SQL_DEBUG>("{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
         *ret.offset_pointer(0), *ret.offset_pointer(1),
         *ret.offset_pointer(2), *ret.offset_pointer(3),
         *ret.offset_pointer(4), *ret.offset_pointer(5),
@@ -104,7 +104,7 @@ ErrorOr<void> Heap::write_block(u32 block, ByteBuffer& buffer)
         return Error::from_string_literal("Heap()::write_block(): block # out of range"sv);
     }
     TRY(seek_block(block));
-    dbgln_if(SQL_DEBUG, "Write heap block {} size {}", block, buffer.size());
+    dbgln_if<SQL_DEBUG>("Write heap block {} size {}", block, buffer.size());
     if (buffer.size() > BLOCKSIZE) {
         warnln("Heap({})::write_block({}): Oversized block ({} > {})"sv, name(), block, buffer.size(), BLOCKSIZE);
         return Error::from_string_literal("Heap()::write_block(): Oversized block"sv);
@@ -117,7 +117,7 @@ ErrorOr<void> Heap::write_block(u32 block, ByteBuffer& buffer)
         }
         memset(buffer.offset_pointer((int)sz), 0, BLOCKSIZE - sz);
     }
-    dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
+    dbgln_if<SQL_DEBUG>("{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
         *buffer.offset_pointer(0), *buffer.offset_pointer(1),
         *buffer.offset_pointer(2), *buffer.offset_pointer(3),
         *buffer.offset_pointer(4), *buffer.offset_pointer(5),
@@ -183,11 +183,11 @@ ErrorOr<void> Heap::flush()
     for (auto& block : blocks) {
         auto buffer_it = m_write_ahead_log.find(block);
         VERIFY(buffer_it != m_write_ahead_log.end());
-        dbgln_if(SQL_DEBUG, "Flushing block {} to {}", block, name());
+        dbgln_if<SQL_DEBUG>("Flushing block {} to {}", block, name());
         TRY(write_block(block, buffer_it->value));
     }
     m_write_ahead_log.clear();
-    dbgln_if(SQL_DEBUG, "WAL flushed. Heap size = {}", size());
+    dbgln_if<SQL_DEBUG>("WAL flushed. Heap size = {}", size());
     return {};
 }
 
@@ -208,21 +208,21 @@ ErrorOr<void> Heap::read_zero_block()
         warnln("{}: Zero page corrupt. This is probably not a {} heap file"sv, name(), FILE_ID);
         return Error::from_string_literal("Heap()::read_zero_block(): Zero page corrupt. This is probably not a SerenitySQL heap file"sv);
     }
-    dbgln_if(SQL_DEBUG, "Read zero block from {}", name());
+    dbgln_if<SQL_DEBUG>("Read zero block from {}", name());
     memcpy(&m_version, buffer.offset_pointer(VERSION_OFFSET), sizeof(u32));
-    dbgln_if(SQL_DEBUG, "Version: {}.{}", (m_version & 0xFFFF0000) >> 16, (m_version & 0x0000FFFF));
+    dbgln_if<SQL_DEBUG>("Version: {}.{}", (m_version & 0xFFFF0000) >> 16, (m_version & 0x0000FFFF));
     memcpy(&m_schemas_root, buffer.offset_pointer(SCHEMAS_ROOT_OFFSET), sizeof(u32));
-    dbgln_if(SQL_DEBUG, "Schemas root node: {}", m_tables_root);
+    dbgln_if<SQL_DEBUG>("Schemas root node: {}", m_tables_root);
     memcpy(&m_tables_root, buffer.offset_pointer(TABLES_ROOT_OFFSET), sizeof(u32));
-    dbgln_if(SQL_DEBUG, "Tables root node: {}", m_tables_root);
+    dbgln_if<SQL_DEBUG>("Tables root node: {}", m_tables_root);
     memcpy(&m_table_columns_root, buffer.offset_pointer(TABLE_COLUMNS_ROOT_OFFSET), sizeof(u32));
-    dbgln_if(SQL_DEBUG, "Table columns root node: {}", m_table_columns_root);
+    dbgln_if<SQL_DEBUG>("Table columns root node: {}", m_table_columns_root);
     memcpy(&m_free_list, buffer.offset_pointer(FREE_LIST_OFFSET), sizeof(u32));
-    dbgln_if(SQL_DEBUG, "Free list: {}", m_free_list);
+    dbgln_if<SQL_DEBUG>("Free list: {}", m_free_list);
     memcpy(m_user_values.data(), buffer.offset_pointer(USER_VALUES_OFFSET), m_user_values.size() * sizeof(u32));
     for (auto ix = 0u; ix < m_user_values.size(); ix++) {
         if (m_user_values[ix]) {
-            dbgln_if(SQL_DEBUG, "User value {}: {}", ix, m_user_values[ix]);
+            dbgln_if<SQL_DEBUG>("User value {}: {}", ix, m_user_values[ix]);
         }
     }
     return {};
@@ -230,15 +230,15 @@ ErrorOr<void> Heap::read_zero_block()
 
 void Heap::update_zero_block()
 {
-    dbgln_if(SQL_DEBUG, "Write zero block to {}", name());
-    dbgln_if(SQL_DEBUG, "Version: {}.{}", (m_version & 0xFFFF0000) >> 16, (m_version & 0x0000FFFF));
-    dbgln_if(SQL_DEBUG, "Schemas root node: {}", m_schemas_root);
-    dbgln_if(SQL_DEBUG, "Tables root node: {}", m_tables_root);
-    dbgln_if(SQL_DEBUG, "Table Columns root node: {}", m_table_columns_root);
-    dbgln_if(SQL_DEBUG, "Free list: {}", m_free_list);
+    dbgln_if<SQL_DEBUG>("Write zero block to {}", name());
+    dbgln_if<SQL_DEBUG>("Version: {}.{}", (m_version & 0xFFFF0000) >> 16, (m_version & 0x0000FFFF));
+    dbgln_if<SQL_DEBUG>("Schemas root node: {}", m_schemas_root);
+    dbgln_if<SQL_DEBUG>("Tables root node: {}", m_tables_root);
+    dbgln_if<SQL_DEBUG>("Table Columns root node: {}", m_table_columns_root);
+    dbgln_if<SQL_DEBUG>("Free list: {}", m_free_list);
     for (auto ix = 0u; ix < m_user_values.size(); ix++) {
         if (m_user_values[ix]) {
-            dbgln_if(SQL_DEBUG, "User value {}: {}", ix, m_user_values[ix]);
+            dbgln_if<SQL_DEBUG>("User value {}: {}", ix, m_user_values[ix]);
         }
     }
 

@@ -29,19 +29,19 @@ void ClientConnection::die()
 Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::decode_image(Core::AnonymousBuffer const& encoded_buffer)
 {
     if (!encoded_buffer.is_valid()) {
-        dbgln_if(IMAGE_DECODER_DEBUG, "Encoded data is invalid");
+        dbgln_if<IMAGE_DECODER_DEBUG>("Encoded data is invalid");
         return nullptr;
     }
 
     auto decoder = Gfx::ImageDecoder::try_create(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() });
 
     if (!decoder) {
-        dbgln_if(IMAGE_DECODER_DEBUG, "Could not find suitable image decoder plugin for data");
+        dbgln_if<IMAGE_DECODER_DEBUG>("Could not find suitable image decoder plugin for data");
         return { false, 0, Vector<Gfx::ShareableBitmap> {}, Vector<u32> {} };
     }
 
     if (!decoder->frame_count()) {
-        dbgln_if(IMAGE_DECODER_DEBUG, "Could not decode image from encoded data");
+        dbgln_if<IMAGE_DECODER_DEBUG>("Could not decode image from encoded data");
         return { false, 0, Vector<Gfx::ShareableBitmap> {}, Vector<u32> {} };
     }
 

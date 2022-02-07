@@ -144,17 +144,17 @@ static bool load_ico_directory(ICOLoadingContext& context)
     for (size_t i = 0; i < image_count.value(); ++i) {
         auto maybe_desc = decode_ico_direntry(stream);
         if (!maybe_desc.has_value()) {
-            dbgln_if(ICO_DEBUG, "load_ico_directory: error loading entry: {}", i);
+            dbgln_if<ICO_DEBUG>("load_ico_directory: error loading entry: {}", i);
             return false;
         }
 
         auto& desc = maybe_desc.value();
         if (desc.offset + desc.size < desc.offset // detect integer overflow
             || (desc.offset + desc.size) > context.data_size) {
-            dbgln_if(ICO_DEBUG, "load_ico_directory: offset: {} size: {} doesn't fit in ICO size: {}", desc.offset, desc.size, context.data_size);
+            dbgln_if<ICO_DEBUG>("load_ico_directory: offset: {} size: {} doesn't fit in ICO size: {}", desc.offset, desc.size, context.data_size);
             return false;
         }
-        dbgln_if(ICO_DEBUG, "load_ico_directory: index {} width: {} height: {} offset: {} size: {}", i, desc.width, desc.height, desc.offset, desc.size);
+        dbgln_if<ICO_DEBUG>("load_ico_directory: index {} width: {} height: {} offset: {} size: {}", i, desc.width, desc.height, desc.offset, desc.size);
         context.images.append(desc);
     }
     context.largest_index = find_largest_image(context);
@@ -170,17 +170,17 @@ static bool load_ico_bmp(ICOLoadingContext& context, ICOImageDescriptor& desc)
 
     memcpy(&info, context.data + desc.offset, sizeof(info));
     if (info.size != sizeof(info)) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: info size: {}, expected: {}", info.size, sizeof(info));
+        dbgln_if<ICO_DEBUG>("load_ico_bmp: info size: {}, expected: {}", info.size, sizeof(info));
         return false;
     }
 
     if (info.width < 0) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: width {} < 0", info.width);
+        dbgln_if<ICO_DEBUG>("load_ico_bmp: width {} < 0", info.width);
         return false;
     }
 
     if (info.height == NumericLimits<i32>::min()) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: height == NumericLimits<i32>::min()");
+        dbgln_if<ICO_DEBUG>("load_ico_bmp: height == NumericLimits<i32>::min()");
         return false;
     }
 
@@ -191,25 +191,25 @@ static bool load_ico_bmp(ICOLoadingContext& context, ICOImageDescriptor& desc)
     }
 
     if (info.planes != 1) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: planes: {} != 1", info.planes);
+        dbgln_if<ICO_DEBUG>("load_ico_bmp: planes: {} != 1", info.planes);
         return false;
     }
 
     if (info.bpp != 32) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: unsupported bpp: {}", info.bpp);
+        dbgln_if<ICO_DEBUG>("load_ico_bmp: unsupported bpp: {}", info.bpp);
         return false;
     }
 
-    dbgln_if(ICO_DEBUG, "load_ico_bmp: width: {} height: {} direction: {} bpp: {} size_image: {}",
+    dbgln_if<ICO_DEBUG>("load_ico_bmp: width: {} height: {} direction: {} bpp: {} size_image: {}",
         info.width, info.height, topdown ? "TopDown" : "BottomUp", info.bpp, info.size_image);
 
     if (info.compression != 0 || info.palette_size != 0 || info.important_colors != 0) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: following fields must be 0: compression: {} palette_size: {} important_colors: {}", info.compression, info.palette_size, info.important_colors);
+        dbgln_if<ICO_DEBUG>("load_ico_bmp: following fields must be 0: compression: {} palette_size: {} important_colors: {}", info.compression, info.palette_size, info.important_colors);
         return false;
     }
 
     if (info.width != desc.width || info.height != 2 * desc.height) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: size mismatch: ico {}x{}, bmp {}x{}", desc.width, desc.height, info.width, info.height);
+        dbgln_if<ICO_DEBUG>("load_ico_bmp: size mismatch: ico {}x{}, bmp {}x{}", desc.width, desc.height, info.width, info.height);
         return false;
     }
 
@@ -218,7 +218,7 @@ static bool load_ico_bmp(ICOLoadingContext& context, ICOImageDescriptor& desc)
     size_t required_len = desc.height * (desc.width * sizeof(BMP_ARGB) + mask_row_len);
     size_t available_len = desc.size - sizeof(info);
     if (required_len > available_len) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: required_len: {} > available_len: {}", required_len, available_len);
+        dbgln_if<ICO_DEBUG>("load_ico_bmp: required_len: {} > available_len: {}", required_len, available_len);
         return false;
     }
 
@@ -265,14 +265,14 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
     if (png_decoder.sniff()) {
         auto decoded_png_frame = png_decoder.frame(0);
         if (decoded_png_frame.is_error() || !decoded_png_frame.value().image) {
-            dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
+            dbgln_if<ICO_DEBUG>("load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
             return false;
         }
         desc.bitmap = decoded_png_frame.value().image;
         return true;
     } else {
         if (!load_ico_bmp(context, desc)) {
-            dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load BMP encoded image index: {}", real_index);
+            dbgln_if<ICO_DEBUG>("load_ico_bitmap: failed to load BMP encoded image index: {}", real_index);
             return false;
         }
         return true;

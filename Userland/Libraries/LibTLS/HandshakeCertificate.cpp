@@ -20,13 +20,13 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
     ssize_t res = 0;
 
     if (buffer.size() < 3) {
-        dbgln_if(TLS_DEBUG, "not enough certificate header data");
+        dbgln_if<TLS_DEBUG>("not enough certificate header data");
         return (i8)Error::NeedMoreData;
     }
 
     u32 certificate_total_length = buffer[0] * 0x10000 + buffer[1] * 0x100 + buffer[2];
 
-    dbgln_if(TLS_DEBUG, "total length: {}", certificate_total_length);
+    dbgln_if<TLS_DEBUG>("total length: {}", certificate_total_length);
 
     if (certificate_total_length <= 4)
         return 3 * certificate_total_length;
@@ -34,7 +34,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
     res += 3;
 
     if (certificate_total_length > buffer.size() - res) {
-        dbgln_if(TLS_DEBUG, "not enough data for claimed total cert length");
+        dbgln_if<TLS_DEBUG>("not enough data for claimed total cert length");
         return (i8)Error::NeedMoreData;
     }
     size_t size = certificate_total_length;
@@ -45,14 +45,14 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
     while (size > 0) {
         ++index;
         if (buffer.size() - res < 3) {
-            dbgln_if(TLS_DEBUG, "not enough data for certificate length");
+            dbgln_if<TLS_DEBUG>("not enough data for certificate length");
             return (i8)Error::NeedMoreData;
         }
         size_t certificate_size = buffer[res] * 0x10000 + buffer[res + 1] * 0x100 + buffer[res + 2];
         res += 3;
 
         if (buffer.size() - res < certificate_size) {
-            dbgln_if(TLS_DEBUG, "not enough data for certificate body");
+            dbgln_if<TLS_DEBUG>("not enough data for certificate body");
             return (i8)Error::NeedMoreData;
         }
 

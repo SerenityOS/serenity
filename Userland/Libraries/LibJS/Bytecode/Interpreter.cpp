@@ -41,7 +41,7 @@ Interpreter::~Interpreter()
 
 Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& executable, BasicBlock const* entry_point)
 {
-    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
+    dbgln_if<JS_BYTECODE_DEBUG>("Bytecode::Interpreter will run unit {:p}", &executable);
 
     TemporaryChange restore_executable { m_current_executable, &executable };
 
@@ -123,7 +123,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
             break;
     }
 
-    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run unit {:p}", &executable);
+    dbgln_if<JS_BYTECODE_DEBUG>("Bytecode::Interpreter did run unit {:p}", &executable);
 
     if constexpr (JS_BYTECODE_DEBUG) {
         for (size_t i = 0; i < registers().size(); ++i) {

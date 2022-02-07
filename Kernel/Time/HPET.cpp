@@ -211,7 +211,7 @@ void HPET::update_periodic_comparator_value()
             // and we can only write the period into the comparator value...
             timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::ValueSet;
             u64 value = ns_to_raw_counter_ticks(1000000000ull / comparator.ticks_per_second());
-            dbgln_if(HPET_DEBUG, "HPET: Update periodic comparator {} comparator value to {} main value was: {}",
+            dbgln_if<HPET_DEBUG>("HPET: Update periodic comparator {} comparator value to {} main value was: {}",
                 comparator.comparator_number(),
                 value,
                 previous_main_value);
@@ -224,7 +224,7 @@ void HPET::update_periodic_comparator_value()
             // Set the new target comparator value to the delta to the remaining ticks
             u64 current_value = (u64)timer.comparator_value.low | ((u64)timer.comparator_value.high << 32);
             u64 value = current_value - previous_main_value;
-            dbgln_if(HPET_DEBUG, "HPET: Update non-periodic comparator {} comparator value from {} to {} main value was: {}",
+            dbgln_if<HPET_DEBUG>("HPET: Update non-periodic comparator {} comparator value from {} to {} main value was: {}",
                 comparator.comparator_number(),
                 current_value,
                 value,
@@ -308,7 +308,7 @@ u64 HPET::read_main_counter() const
 
 void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 {
-    dbgln_if(HPET_DEBUG, "HPET: Set comparator {} to be periodic.", comparator.comparator_number());
+    dbgln_if<HPET_DEBUG>("HPET: Set comparator {} to be periodic.", comparator.comparator_number());
     disable(comparator);
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
@@ -320,7 +320,7 @@ void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 }
 void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
 {
-    dbgln_if(HPET_DEBUG, "HPET: Disable periodic interrupt in comparator {}", comparator.comparator_number());
+    dbgln_if<HPET_DEBUG>("HPET: Disable periodic interrupt in comparator {}", comparator.comparator_number());
     disable(comparator);
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
@@ -333,14 +333,14 @@ void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
 
 void HPET::disable(const HPETComparator& comparator)
 {
-    dbgln_if(HPET_DEBUG, "HPET: Disable comparator {}", comparator.comparator_number());
+    dbgln_if<HPET_DEBUG>("HPET: Disable comparator {}", comparator.comparator_number());
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
     timer.capabilities = timer.capabilities & ~(u32)HPETFlags::TimerConfiguration::InterruptEnable;
 }
 void HPET::enable(const HPETComparator& comparator)
 {
-    dbgln_if(HPET_DEBUG, "HPET: Enable comparator {}", comparator.comparator_number());
+    dbgln_if<HPET_DEBUG>("HPET: Enable comparator {}", comparator.comparator_number());
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
     timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::InterruptEnable;

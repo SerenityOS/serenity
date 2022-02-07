@@ -909,7 +909,7 @@ bool Processor::smp_process_pending_messages()
             next_msg = cur_msg->next;
             auto msg = cur_msg->msg;
 
-            dbgln_if(SMP_DEBUG, "SMP[{}]: Processing message {}", current_id(), VirtualAddress(msg));
+            dbgln_if<SMP_DEBUG>("SMP[{}]: Processing message {}", current_id(), VirtualAddress(msg));
 
             switch (msg->type) {
             case ProcessorMessage::Callback:
@@ -921,7 +921,7 @@ bool Processor::smp_process_pending_messages()
                     VERIFY(Memory::is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
                     if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
                         // This processor isn't using this page directory right now, we can ignore this request
-                        dbgln_if(SMP_DEBUG, "SMP[{}]: No need to flush {} pages at {}", current_id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
+                        dbgln_if<SMP_DEBUG>("SMP[{}]: No need to flush {} pages at {}", current_id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
                         break;
                     }
                 }
@@ -977,7 +977,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
 {
     auto& current_processor = Processor::current();
 
-    dbgln_if(SMP_DEBUG, "SMP[{}]: Broadcast message {} to cpus: {} processor: {}", current_processor.id(), VirtualAddress(&msg), count(), VirtualAddress(&current_processor));
+    dbgln_if<SMP_DEBUG>("SMP[{}]: Broadcast message {} to cpus: {} processor: {}", current_processor.id(), VirtualAddress(&msg), count(), VirtualAddress(&current_processor));
 
     msg.refs.store(count() - 1, AK::MemoryOrder::memory_order_release);
     VERIFY(msg.refs > 0);
@@ -1021,7 +1021,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
     auto& target_processor = processors()[cpu];
     msg.async = async;
 
-    dbgln_if(SMP_DEBUG, "SMP[{}]: Send message {} to cpu #{} processor: {}", current_processor.id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_processor));
+    dbgln_if<SMP_DEBUG>("SMP[{}]: Send message {} to cpu #{} processor: {}", current_processor.id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_processor));
 
     msg.refs.store(1u, AK::MemoryOrder::memory_order_release);
     if (target_processor->smp_enqueue_message(msg)) {
@@ -1281,7 +1281,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     VERIFY(!are_interrupts_enabled());
     VERIFY(is_kernel_mode());
 
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
+    dbgln_if<CONTEXT_SWITCH_DEBUG>("switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
     VERIFY(to_thread == Thread::current());
 
@@ -1373,7 +1373,7 @@ extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)
 
 void Processor::assume_context(Thread& thread, FlatPtr flags)
 {
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
+    dbgln_if<CONTEXT_SWITCH_DEBUG>("Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
     VERIFY_INTERRUPTS_DISABLED();
     Scheduler::prepare_after_exec();

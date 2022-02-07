@@ -31,7 +31,7 @@ Terminal::Terminal(Kernel::VirtualConsole& client)
 #ifndef KERNEL
 void Terminal::clear()
 {
-    dbgln_if(TERMINAL_DEBUG, "Clear the entire screen");
+    dbgln_if<TERMINAL_DEBUG>("Clear the entire screen");
     for (size_t i = 0; i < rows(); ++i)
         active_buffer()[i].clear();
     set_cursor(0, 0);
@@ -39,7 +39,7 @@ void Terminal::clear()
 
 void Terminal::clear_history()
 {
-    dbgln_if(TERMINAL_DEBUG, "Clear history");
+    dbgln_if<TERMINAL_DEBUG>("Clear history");
     auto previous_history_size = m_history.size();
     m_history.clear();
     m_history_start = 0;
@@ -91,13 +91,13 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
         switch (mode) {
         case 1:
             // Cursor Keys Mode (DECCKM)
-            dbgln_if(TERMINAL_DEBUG, "Setting cursor keys mode (should_set={})", should_set);
+            dbgln_if<TERMINAL_DEBUG>("Setting cursor keys mode (should_set={})", should_set);
             m_cursor_keys_mode = should_set ? CursorKeysMode::Application : CursorKeysMode::Cursor;
             break;
         case 3: {
             // 80/132-column mode (DECCOLM)
             unsigned new_columns = should_set ? 132 : 80;
-            dbgln_if(TERMINAL_DEBUG, "Setting {}-column mode", new_columns);
+            dbgln_if<TERMINAL_DEBUG>("Setting {}-column mode", new_columns);
             set_size(new_columns, rows());
             clear();
             break;
@@ -127,12 +127,12 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
         case 1047:
 #ifndef KERNEL
             if (should_set) {
-                dbgln_if(TERMINAL_DEBUG, "Switching to Alternate Screen Buffer");
+                dbgln_if<TERMINAL_DEBUG>("Switching to Alternate Screen Buffer");
                 m_use_alternate_screen_buffer = true;
                 clear();
                 m_client.terminal_history_changed(-m_history.size());
             } else {
-                dbgln_if(TERMINAL_DEBUG, "Switching to Normal Screen Buffer");
+                dbgln_if<TERMINAL_DEBUG>("Switching to Normal Screen Buffer");
                 m_use_alternate_screen_buffer = false;
                 m_client.terminal_history_changed(m_history.size());
             }
@@ -150,13 +150,13 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
         case 1049:
 #ifndef KERNEL
             if (should_set) {
-                dbgln_if(TERMINAL_DEBUG, "Switching to Alternate Screen Buffer and saving state");
+                dbgln_if<TERMINAL_DEBUG>("Switching to Alternate Screen Buffer and saving state");
                 m_normal_saved_state = m_current_state;
                 m_use_alternate_screen_buffer = true;
                 clear();
                 m_client.terminal_history_changed(-m_history.size());
             } else {
-                dbgln_if(TERMINAL_DEBUG, "Switching to Normal Screen Buffer and restoring state");
+                dbgln_if<TERMINAL_DEBUG>("Switching to Normal Screen Buffer and restoring state");
                 m_current_state = m_normal_saved_state;
                 m_use_alternate_screen_buffer = false;
                 set_cursor(cursor_row(), cursor_column());
@@ -168,7 +168,7 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
 #endif
             break;
         case 2004:
-            dbgln_if(TERMINAL_DEBUG, "Setting bracketed mode enabled={}", should_set);
+            dbgln_if<TERMINAL_DEBUG>("Setting bracketed mode enabled={}", should_set);
             m_needs_bracketed_paste = should_set;
             break;
         default:
@@ -340,20 +340,20 @@ void Terminal::SGR(Parameters params)
 
 void Terminal::SCOSC()
 {
-    dbgln_if(TERMINAL_DEBUG, "Save cursor position");
+    dbgln_if<TERMINAL_DEBUG>("Save cursor position");
     m_saved_cursor_position = m_current_state.cursor;
 }
 
 void Terminal::SCORC()
 {
-    dbgln_if(TERMINAL_DEBUG, "Restore cursor position");
+    dbgln_if<TERMINAL_DEBUG>("Restore cursor position");
     m_current_state.cursor = m_saved_cursor_position;
     set_cursor(cursor_row(), cursor_column());
 }
 
 void Terminal::DECSC()
 {
-    dbgln_if(TERMINAL_DEBUG, "Save cursor (and other state)");
+    dbgln_if<TERMINAL_DEBUG>("Save cursor (and other state)");
     if (m_use_alternate_screen_buffer) {
         m_alternate_saved_state = m_current_state;
     } else {
@@ -363,7 +363,7 @@ void Terminal::DECSC()
 
 void Terminal::DECRC()
 {
-    dbgln_if(TERMINAL_DEBUG, "Restore cursor (and other state)");
+    dbgln_if<TERMINAL_DEBUG>("Restore cursor (and other state)");
     if (m_use_alternate_screen_buffer) {
         m_current_state = m_alternate_saved_state;
     } else {
@@ -382,7 +382,7 @@ void Terminal::XTERM_WM(Parameters params)
             dbgln("FIXME: we don't support icon titles");
             return;
         }
-        dbgln_if(TERMINAL_DEBUG, "Title stack push: {}", m_current_window_title);
+        dbgln_if<TERMINAL_DEBUG>("Title stack push: {}", m_current_window_title);
         [[maybe_unused]] auto rc = m_title_stack.try_append(move(m_current_window_title));
         break;
     }
@@ -394,7 +394,7 @@ void Terminal::XTERM_WM(Parameters params)
             return;
         }
         m_current_window_title = m_title_stack.take_last();
-        dbgln_if(TERMINAL_DEBUG, "Title stack pop: {}", m_current_window_title);
+        dbgln_if<TERMINAL_DEBUG>("Title stack pop: {}", m_current_window_title);
         m_client.set_window_title(m_current_window_title);
         break;
     }
@@ -421,7 +421,7 @@ void Terminal::DECSTBM(Parameters params)
     m_scroll_region_top = top - 1;
     m_scroll_region_bottom = bottom - 1;
     set_cursor(0, 0);
-    dbgln_if(TERMINAL_DEBUG, "Set scrolling region: {}-{}", m_scroll_region_top, m_scroll_region_bottom);
+    dbgln_if<TERMINAL_DEBUG>("Set scrolling region: {}-{}", m_scroll_region_top, m_scroll_region_bottom);
 }
 
 void Terminal::CUP(Parameters params)
@@ -583,7 +583,7 @@ void Terminal::ECH(Parameters params)
         num = params[0];
     // Clear num characters from the right of the cursor.
     auto clear_end = min<unsigned>(m_columns, cursor_column() + num - 1);
-    dbgln_if(TERMINAL_DEBUG, "Erase characters {}-{} on line {}", cursor_column(), clear_end, cursor_row());
+    dbgln_if<TERMINAL_DEBUG>("Erase characters {}-{} on line {}", cursor_column(), clear_end, cursor_row());
     clear_in_line(cursor_row(), cursor_column(), clear_end);
 }
 
@@ -594,15 +594,15 @@ void Terminal::EL(Parameters params)
         mode = params[0];
     switch (mode) {
     case 0:
-        dbgln_if(TERMINAL_DEBUG, "Clear line {} from cursor column ({}) to the end", cursor_row(), cursor_column());
+        dbgln_if<TERMINAL_DEBUG>("Clear line {} from cursor column ({}) to the end", cursor_row(), cursor_column());
         clear_in_line(cursor_row(), cursor_column(), m_columns - 1);
         break;
     case 1:
-        dbgln_if(TERMINAL_DEBUG, "Clear line {} from the start to cursor column ({})", cursor_row(), cursor_column());
+        dbgln_if<TERMINAL_DEBUG>("Clear line {} from the start to cursor column ({})", cursor_row(), cursor_column());
         clear_in_line(cursor_row(), 0, cursor_column());
         break;
     case 2:
-        dbgln_if(TERMINAL_DEBUG, "Clear line {} completely", cursor_row());
+        dbgln_if<TERMINAL_DEBUG>("Clear line {} completely", cursor_row());
         clear_in_line(cursor_row(), 0, m_columns - 1);
         break;
     default:
@@ -618,13 +618,13 @@ void Terminal::ED(Parameters params)
         mode = params[0];
     switch (mode) {
     case 0:
-        dbgln_if(TERMINAL_DEBUG, "Clear from cursor ({},{}) to end of screen", cursor_row(), cursor_column());
+        dbgln_if<TERMINAL_DEBUG>("Clear from cursor ({},{}) to end of screen", cursor_row(), cursor_column());
         clear_in_line(cursor_row(), cursor_column(), m_columns - 1);
         for (int row = cursor_row() + 1; row < m_rows; ++row)
             clear_in_line(row, 0, m_columns - 1);
         break;
     case 1:
-        dbgln_if(TERMINAL_DEBUG, "Clear from beginning of screen to cursor ({},{})", cursor_row(), cursor_column());
+        dbgln_if<TERMINAL_DEBUG>("Clear from beginning of screen to cursor ({},{})", cursor_row(), cursor_column());
         clear_in_line(cursor_row(), 0, cursor_column());
         for (int row = cursor_row() - 1; row >= 0; --row)
             clear_in_line(row, 0, m_columns - 1);
@@ -746,7 +746,7 @@ void Terminal::linefeed()
 
 void Terminal::carriage_return()
 {
-    dbgln_if(TERMINAL_DEBUG, "Carriage return");
+    dbgln_if<TERMINAL_DEBUG>("Carriage return");
     m_column_before_carriage_return = cursor_column();
     set_cursor(cursor_row(), 0);
 }
@@ -770,7 +770,7 @@ void Terminal::scroll_up(u16 region_top, u16 region_bottom, size_t count)
     // Only the specified region should be affected.
     size_t region_size = region_bottom - region_top + 1;
     count = min(count, region_size);
-    dbgln_if(TERMINAL_DEBUG, "Scroll up {} lines in region {}-{}", count, region_top, region_bottom);
+    dbgln_if<TERMINAL_DEBUG>("Scroll up {} lines in region {}-{}", count, region_top, region_bottom);
     // NOTE: We have to invalidate the cursor first.
     invalidate_cursor();
 
@@ -811,7 +811,7 @@ void Terminal::scroll_down(u16 region_top, u16 region_bottom, size_t count)
     // Only the specified region should be affected.
     size_t region_size = region_bottom - region_top + 1;
     count = min(count, region_size);
-    dbgln_if(TERMINAL_DEBUG, "Scroll down {} lines in region {}-{}", count, region_top, region_bottom);
+    dbgln_if<TERMINAL_DEBUG>("Scroll down {} lines in region {}-{}", count, region_top, region_bottom);
     // NOTE: We have to invalidate the cursor first.
     invalidate_cursor();
 
@@ -833,7 +833,7 @@ void Terminal::scroll_left(u16 row, u16 column, size_t count)
     VERIFY(row < rows());
     VERIFY(column < columns());
     count = min<size_t>(count, columns() - column);
-    dbgln_if(TERMINAL_DEBUG, "Scroll left {} columns from line {} column {}", count, row, column);
+    dbgln_if<TERMINAL_DEBUG>("Scroll left {} columns from line {} column {}", count, row, column);
 
     auto& line = active_buffer()[row];
     for (size_t i = column; i < columns() - count; ++i)
@@ -848,7 +848,7 @@ void Terminal::scroll_right(u16 row, u16 column, size_t count)
     VERIFY(row < rows());
     VERIFY(column < columns());
     count = min<size_t>(count, columns() - column);
-    dbgln_if(TERMINAL_DEBUG, "Scroll right {} columns from line {} column {}", count, row, column);
+    dbgln_if<TERMINAL_DEBUG>("Scroll right {} columns from line {} column {}", count, row, column);
 
     auto& line = active_buffer()[row];
     for (int i = columns() - 1; i >= static_cast<int>(column + count); --i)
@@ -891,7 +891,7 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column, bool skip_debug)
     m_current_state.cursor.column = column;
     invalidate_cursor();
     if (!skip_debug)
-        dbgln_if(TERMINAL_DEBUG, "Set cursor position: {},{}", cursor_row(), cursor_column());
+        dbgln_if<TERMINAL_DEBUG>("Set cursor position: {},{}", cursor_row(), cursor_column());
 }
 
 void Terminal::NEL()
@@ -1146,7 +1146,7 @@ void Terminal::execute_escape_sequence(Intermediates intermediates, bool ignore,
             return;
         }
 
-        dbgln_if(TERMINAL_DEBUG, "Setting G{} working set to character set {}", working_set_index, to_underlying(new_set));
+        dbgln_if<TERMINAL_DEBUG>("Setting G{} working set to character set {}", working_set_index, to_underlying(new_set));
         VERIFY(working_set_index <= 3);
         m_working_sets[working_set_index] = new_set;
         return;
@@ -1317,7 +1317,7 @@ void Terminal::dcs_hook(Parameters, Intermediates, bool, u8)
 
 void Terminal::receive_dcs_char(u8 byte)
 {
-    dbgln_if(TERMINAL_DEBUG, "DCS string character {:c}", byte);
+    dbgln_if<TERMINAL_DEBUG>("DCS string character {:c}", byte);
 }
 
 void Terminal::execute_dcs_sequence()
@@ -1428,7 +1428,7 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 
 void Terminal::unimplemented_control_code(u8 code)
 {
-    dbgln_if(TERMINAL_DEBUG, "Unimplemented control code {:02x}", code);
+    dbgln_if<TERMINAL_DEBUG>("Unimplemented control code {:02x}", code);
 }
 
 void Terminal::unimplemented_escape_sequence(Intermediates intermediates, u8 last_byte)
@@ -1628,7 +1628,7 @@ void Terminal::set_size(u16 columns, u16 rows)
 
     m_client.terminal_did_resize(m_columns, m_rows);
 
-    dbgln_if(TERMINAL_DEBUG, "Set terminal size: {}x{}", m_rows, m_columns);
+    dbgln_if<TERMINAL_DEBUG>("Set terminal size: {}x{}", m_rows, m_columns);
 }
 #endif
 

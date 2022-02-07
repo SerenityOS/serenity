@@ -59,7 +59,7 @@ bool Socket::connect(const String& hostname, int port)
     // On macOS, the pointer in the hostent structure is misaligned. Load it using ByteReader to avoid UB
     auto* host_addr = AK::ByteReader::load_pointer<u8 const>(reinterpret_cast<u8 const*>(&hostent->h_addr_list[0]));
     IPv4Address host_address(host_addr);
-    dbgln_if(CSOCKET_DEBUG, "Socket::connect: Resolved '{}' to {}", hostname, host_address);
+    dbgln_if<CSOCKET_DEBUG>("Socket::connect: Resolved '{}' to {}", hostname, host_address);
     return connect(host_address, port);
 }
 
@@ -78,7 +78,7 @@ bool Socket::connect(const SocketAddress& address, int port)
 {
     VERIFY(!is_connected());
     VERIFY(address.type() == SocketAddress::Type::IPv4);
-    dbgln_if(CSOCKET_DEBUG, "{} connecting to {}...", *this, address);
+    dbgln_if<CSOCKET_DEBUG>("{} connecting to {}...", *this, address);
 
     VERIFY(port > 0 && port <= 65535);
 
@@ -99,7 +99,7 @@ bool Socket::connect(const SocketAddress& address)
 {
     VERIFY(!is_connected());
     VERIFY(address.type() == SocketAddress::Type::Local);
-    dbgln_if(CSOCKET_DEBUG, "{} connecting to {}...", *this, address);
+    dbgln_if<CSOCKET_DEBUG>("{} connecting to {}...", *this, address);
 
     sockaddr_un saddr;
     saddr.sun_family = AF_LOCAL;
@@ -123,20 +123,20 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
 
         int rc = getsockopt(fd(), SOL_SOCKET, SO_ERROR, &so_error, &so_error_len);
         if (rc < 0) {
-            dbgln_if(CSOCKET_DEBUG, "Failed to check the status of SO_ERROR");
+            dbgln_if<CSOCKET_DEBUG>("Failed to check the status of SO_ERROR");
             m_connected = false;
             if (on_error)
                 on_error();
         }
 
         if (so_error == 0) {
-            dbgln_if(CSOCKET_DEBUG, "{} connected!", *this);
+            dbgln_if<CSOCKET_DEBUG>("{} connected!", *this);
             m_connected = true;
             ensure_read_notifier();
             if (on_connected)
                 on_connected();
         } else {
-            dbgln_if(CSOCKET_DEBUG, "Failed to connect to {}", *this);
+            dbgln_if<CSOCKET_DEBUG>("Failed to connect to {}", *this);
             m_connected = false;
             if (on_error)
                 on_error();
@@ -150,7 +150,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
     int rc = ::connect(fd(), addr, addrlen);
     if (rc < 0) {
         if (errno == EINPROGRESS) {
-            dbgln_if(CSOCKET_DEBUG, "{} connection in progress (EINPROGRESS)", *this);
+            dbgln_if<CSOCKET_DEBUG>("{} connection in progress (EINPROGRESS)", *this);
             m_notifier = Notifier::construct(fd(), Notifier::Event::Write, this);
             m_notifier->on_ready_to_write = move(connected);
             return true;
@@ -160,7 +160,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
         errno = saved_errno;
         return false;
     }
-    dbgln_if(CSOCKET_DEBUG, "{} connected ok!", *this);
+    dbgln_if<CSOCKET_DEBUG>("{} connected ok!", *this);
     connected();
     return true;
 }

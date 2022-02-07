@@ -84,7 +84,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest&
             if (it->value->type() != type) {
                 dbgln("FIXME: Not using cached resource for {} since there's a type mismatch.", request.url());
             } else {
-                dbgln_if(CACHE_DEBUG, "Reusing cached resource for: {}", request.url());
+                dbgln_if<CACHE_DEBUG>("Reusing cached resource for: {}", request.url());
                 return it->value;
             }
         }
@@ -145,7 +145,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
     }
 
     if (url.protocol() == "about") {
-        dbgln_if(SPAM_DEBUG, "Loading about: URL {}", url);
+        dbgln_if<SPAM_DEBUG>("Loading about: URL {}", url);
         log_success(request);
         deferred_invoke([success_callback = move(success_callback)] {
             success_callback(String::empty().to_byte_buffer(), {}, {});
@@ -154,7 +154,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
     }
 
     if (url.protocol() == "data") {
-        dbgln_if(SPAM_DEBUG, "ResourceLoader loading a data URL with mime-type: '{}', base64={}, payload='{}'",
+        dbgln_if<SPAM_DEBUG>("ResourceLoader loading a data URL with mime-type: '{}', base64={}, payload='{}'",
             url.data_mime_type(),
             url.data_payload_is_base64(),
             url.data_payload());
@@ -272,7 +272,7 @@ bool ResourceLoader::is_port_blocked(int port)
 
 void ResourceLoader::clear_cache()
 {
-    dbgln_if(CACHE_DEBUG, "Clearing {} items from ResourceLoader cache", s_resource_cache.size());
+    dbgln_if<CACHE_DEBUG>("Clearing {} items from ResourceLoader cache", s_resource_cache.size());
     s_resource_cache.clear();
 }
 

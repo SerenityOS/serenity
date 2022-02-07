@@ -34,7 +34,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 #define ENTER_SCOPE_WITHOUT_TYPECHECK(scope)                                               \
     do {                                                                                   \
         if (auto result = decoder.enter(); result.has_value()) {                           \
-            dbgln_if(TLS_DEBUG, "Failed to enter object (" scope "): {}", result.value()); \
+            dbgln_if<TLS_DEBUG>("Failed to enter object (" scope "): {}", result.value()); \
             return {};                                                                     \
         }                                                                                  \
     } while (0)
@@ -56,7 +56,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 #define EXIT_SCOPE(scope)                                                                  \
     do {                                                                                   \
         if (auto error = decoder.leave(); error.has_value()) {                             \
-            dbgln_if(TLS_DEBUG, "Error while exiting scope " scope ": {}", error.value()); \
+            dbgln_if<TLS_DEBUG>("Error while exiting scope " scope ": {}", error.value()); \
             return {};                                                                     \
         }                                                                                  \
     } while (0)
@@ -77,7 +77,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 #define READ_OBJECT_OR_FAIL(kind_name, type_name, value_name, scope)                                                   \
     auto value_name##_result = decoder.read<type_name>(Crypto::ASN1::Class::Universal, Crypto::ASN1::Kind::kind_name); \
     if (value_name##_result.is_error()) {                                                                              \
-        dbgln_if(TLS_DEBUG, scope " read of kind " #kind_name " failed: {}", value_name##_result.error());             \
+        dbgln_if<TLS_DEBUG>(scope " read of kind " #kind_name " failed: {}", value_name##_result.error());             \
         return {};                                                                                                     \
     }                                                                                                                  \
     auto value_name = value_name##_result.release_value();
@@ -85,7 +85,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 #define DROP_OBJECT_OR_FAIL(scope)                                        \
     do {                                                                  \
         if (auto error = decoder.drop(); error.has_value()) {             \
-            dbgln_if(TLS_DEBUG, scope " read failed: {}", error.value()); \
+            dbgln_if<TLS_DEBUG>(scope " read failed: {}", error.value()); \
         }                                                                 \
     } while (0)
 
@@ -119,7 +119,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
             ENTER_SCOPE_WITHOUT_TYPECHECK("Certificate::version");
             READ_OBJECT_OR_FAIL(Integer, Crypto::UnsignedBigInteger, value, "Certificate::version");
             if (!(value < 3)) {
-                dbgln_if(TLS_DEBUG, "Certificate::version Invalid value for version: {}", value.to_base(10));
+                dbgln_if<TLS_DEBUG>("Certificate::version Invalid value for version: {}", value.to_base(10));
                 return {};
             }
             certificate.version = value.words()[0];
@@ -212,7 +212,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                         name_struct.unit = name;
                     }
                 } else {
-                    dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue::type data was invalid: {}", type_identifier_or_error.error());
+                    dbgln_if<TLS_DEBUG>("Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue::type data was invalid: {}", type_identifier_or_error.error());
                     return {};
                 }
 
@@ -242,7 +242,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
             // }
             auto tag = decoder.peek();
             if (tag.is_error()) {
-                dbgln_if(1, "Certificate::TBSCertificate::Validity::$::Time failed to read tag: {}", tag.error());
+                dbgln("Certificate::TBSCertificate::Validity::$::Time failed to read tag: {}", tag.error());
                 return {};
             };
 
@@ -250,7 +250,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                 READ_OBJECT_OR_FAIL(UTCTime, StringView, time, "Certificate::TBSCertificate::Validity::$");
                 auto result = Crypto::ASN1::parse_utc_time(time);
                 if (!result.has_value()) {
-                    dbgln_if(1, "Certificate::TBSCertificate::Validity::$::Time Invalid UTC Time: {}", time);
+                    dbgln("Certificate::TBSCertificate::Validity::$::Time Invalid UTC Time: {}", time);
                     return {};
                 }
                 datetime = result.release_value();
@@ -261,14 +261,14 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                 READ_OBJECT_OR_FAIL(UTCTime, StringView, time, "Certificate::TBSCertificate::Validity::$");
                 auto result = Crypto::ASN1::parse_generalized_time(time);
                 if (!result.has_value()) {
-                    dbgln_if(1, "Certificate::TBSCertificate::Validity::$::Time Invalid Generalized Time: {}", time);
+                    dbgln("Certificate::TBSCertificate::Validity::$::Time Invalid Generalized Time: {}", time);
                     return {};
                 }
                 datetime = result.release_value();
                 return true;
             }
 
-            dbgln_if(1, "Unrecognised Time format {}", Crypto::ASN1::kind_name(tag.value().kind));
+            dbgln("Unrecognised Time format {}", Crypto::ASN1::kind_name(tag.value().kind));
             return {};
         };
 
@@ -302,7 +302,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
         // Note: Once we support other kinds of keys, make sure to check the kind here!
         auto key = Crypto::PK::RSA::parse_rsa_key({ value.data(), value.size_in_bytes() });
         if (!key.public_key.length()) {
-            dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info: Invalid key");
+            dbgln_if<TLS_DEBUG>("Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info: Invalid key");
             return {};
         }
         certificate.public_key = move(key.public_key);
@@ -315,7 +315,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 
         auto tag = decoder.peek();
         if (tag.is_error()) {
-            dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::*::UniqueIdentifier could not read tag: {}", tag.error());
+            dbgln_if<TLS_DEBUG>("Certificate::TBSCertificate::*::UniqueIdentifier could not read tag: {}", tag.error());
             return {};
         }
 
@@ -343,7 +343,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
         if (certificate.version == 2) {
             auto tag = decoder.peek();
             if (tag.is_error()) {
-                dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::*::UniqueIdentifier could not read tag: {}", tag.error());
+                dbgln_if<TLS_DEBUG>("Certificate::TBSCertificate::*::UniqueIdentifier could not read tag: {}", tag.error());
                 return {};
             }
             if (static_cast<u8>(tag.value().kind) == 3) {
@@ -388,7 +388,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                         while (!decoder.eof()) {
                             auto tag = decoder.peek();
                             if (tag.is_error()) {
-                                dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$ could not read tag: {}", tag.error());
+                                dbgln_if<TLS_DEBUG>("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$ could not read tag: {}", tag.error());
                                 return {};
                             }
 
@@ -442,7 +442,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                                 DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::RegisteredID");
                                 break;
                             default:
-                                dbgln_if(TLS_DEBUG, "Unknown tag in SAN choice {}", tag_value);
+                                dbgln_if<TLS_DEBUG>("Unknown tag in SAN choice {}", tag_value);
                                 if (is_critical)
                                     return {};
                                 else
@@ -464,7 +464,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
     EXIT_SCOPE("Certificate::TBSCertificate");
     EXIT_SCOPE("Certificate");
 
-    dbgln_if(TLS_DEBUG, "Certificate issued for {} by {}", certificate.subject.subject, certificate.issuer.subject);
+    dbgln_if<TLS_DEBUG>("Certificate issued for {} by {}", certificate.subject.subject, certificate.issuer.subject);
 
     return certificate;
 

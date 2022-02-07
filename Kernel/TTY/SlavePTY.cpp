@@ -52,7 +52,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index, NonnullOwnPtr<KString> tty
 
 SlavePTY::~SlavePTY()
 {
-    dbgln_if(SLAVEPTY_DEBUG, "~SlavePTY({})", m_index);
+    dbgln_if<SLAVEPTY_DEBUG>("~SlavePTY({})", m_index);
 }
 
 KString const& SlavePTY::tty_name() const

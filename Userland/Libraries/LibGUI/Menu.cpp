@@ -128,7 +128,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
 
     WindowServerConnection::the().async_create_menu(m_menu_id, m_name);
 
-    dbgln_if(MENU_DEBUG, "GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
+    dbgln_if<MENU_DEBUG>("GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
     VERIFY(m_menu_id > 0);
     m_current_default_action = default_action;
 

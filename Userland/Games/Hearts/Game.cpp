@@ -25,7 +25,7 @@ namespace Hearts {
 Game::Game()
 {
     m_delay_timer = Core::Timer::create_single_shot(0, [this] {
-        dbgln_if(HEARTS_DEBUG, "Continuing game after delay...");
+        dbgln_if<HEARTS_DEBUG>("Continuing game after delay...");
         advance_game();
     });
 
@@ -98,8 +98,8 @@ Game::~Game()
 
 void Game::reset()
 {
-    dbgln_if(HEARTS_DEBUG, "=====");
-    dbgln_if(HEARTS_DEBUG, "Resetting game");
+    dbgln_if<HEARTS_DEBUG>("=====");
+    dbgln_if<HEARTS_DEBUG>("Resetting game");
 
     stop_animation();
 
@@ -446,7 +446,7 @@ Player& Game::current_player()
     VERIFY(m_trick.size() < 4);
     auto player_index = m_leading_player - m_players;
     auto current_player_index = (player_index + m_trick.size()) % 4;
-    dbgln_if(HEARTS_DEBUG, "Leading player: {}, current player: {}", *m_leading_player, m_players[current_player_index]);
+    dbgln_if<HEARTS_DEBUG>("Leading player: {}, current player: {}", *m_leading_player, m_players[current_player_index]);
     return m_players[current_player_index];
 }
 
@@ -550,11 +550,11 @@ void Game::advance_game()
     auto leading_player_index = player_index(*m_leading_player);
     auto taking_player_index = (leading_player_index + taker_index) % 4;
     auto& taking_player = m_players[taking_player_index];
-    dbgln_if(HEARTS_DEBUG, "{} takes the trick", taking_player);
+    dbgln_if<HEARTS_DEBUG>("{} takes the trick", taking_player);
     for (auto& card : m_trick) {
         if (hearts_card_points(card) == 0)
             continue;
-        dbgln_if(HEARTS_DEBUG, "{} takes card {}", taking_player, card);
+        dbgln_if<HEARTS_DEBUG>("{} takes card {}", taking_player, card);
         taking_player.cards_taken.append(card);
     }
 
@@ -570,7 +570,7 @@ void Game::advance_game()
 
             m_trick.clear_with_capacity();
             m_leading_player = &taking_player;
-            dbgln_if(HEARTS_DEBUG, "-----");
+            dbgln_if<HEARTS_DEBUG>("-----");
             advance_game();
         },
         750);
@@ -603,7 +603,7 @@ void Game::play_card(Player& player, size_t card_index)
     VERIFY(m_trick.size() < 4);
     RefPtr<Card> card;
     swap(player.hand[card_index], card);
-    dbgln_if(HEARTS_DEBUG, "{} plays {}", player, *card);
+    dbgln_if<HEARTS_DEBUG>("{} plays {}", player, *card);
     VERIFY(is_valid_play(player, *card));
     card->set_upside_down(false);
     m_trick.append(*card);

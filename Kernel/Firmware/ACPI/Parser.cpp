@@ -127,16 +127,16 @@ UNMAP_AFTER_INIT void Parser::locate_static_data()
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(StringView signature)
 {
-    dbgln_if(ACPI_DEBUG, "ACPI: Calling Find Table method!");
+    dbgln_if<ACPI_DEBUG>("ACPI: Calling Find Table method!");
     for (auto p_sdt : m_sdt_pointers) {
         auto sdt_or_error = Memory::map_typed<Structures::SDTHeader>(p_sdt);
         if (sdt_or_error.is_error()) {
-            dbgln_if(ACPI_DEBUG, "ACPI: Failed mapping Table @ {}", p_sdt);
+            dbgln_if<ACPI_DEBUG>("ACPI: Failed mapping Table @ {}", p_sdt);
             continue;
         }
-        dbgln_if(ACPI_DEBUG, "ACPI: Examining Table @ {}", p_sdt);
+        dbgln_if<ACPI_DEBUG>("ACPI: Examining Table @ {}", p_sdt);
         if (!strncmp(sdt_or_error.value()->sig, signature.characters_without_null_termination(), 4)) {
-            dbgln_if(ACPI_DEBUG, "ACPI: Found Table @ {}", p_sdt);
+            dbgln_if<ACPI_DEBUG>("ACPI: Found Table @ {}", p_sdt);
             return p_sdt;
         }
     }
@@ -159,7 +159,7 @@ UNMAP_AFTER_INIT void Parser::process_fadt_data()
     dmesgln("ACPI: Initializing Fixed ACPI data");
 
     VERIFY(!m_fadt.is_null());
-    dbgln_if(ACPI_DEBUG, "ACPI: FADT @ {}", m_fadt);
+    dbgln_if<ACPI_DEBUG>("ACPI: FADT @ {}", m_fadt);
 
     auto sdt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
     dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", (size_t)sdt->h.revision, (size_t)sdt->h.length);
@@ -289,7 +289,7 @@ void Parser::try_acpi_reboot()
         dmesgln("ACPI: Reboot not supported!");
         return;
     }
-    dbgln_if(ACPI_DEBUG, "ACPI: Rebooting, probing FADT ({})", m_fadt);
+    dbgln_if<ACPI_DEBUG>("ACPI: Rebooting, probing FADT ({})", m_fadt);
 
     auto fadt_or_error = Memory::map_typed<Structures::FADT>(m_fadt);
     if (fadt_or_error.is_error()) {
@@ -310,20 +310,20 @@ void Parser::try_acpi_shutdown()
 size_t Parser::get_table_size(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
-    dbgln_if(ACPI_DEBUG, "ACPI: Checking SDT Length");
+    dbgln_if<ACPI_DEBUG>("ACPI: Checking SDT Length");
     return Memory::map_typed<Structures::SDTHeader>(table_header).release_value_but_fixme_should_propagate_errors()->length;
 }
 
 u8 Parser::get_table_revision(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
-    dbgln_if(ACPI_DEBUG, "ACPI: Checking SDT Revision");
+    dbgln_if<ACPI_DEBUG>("ACPI: Checking SDT Revision");
     return Memory::map_typed<Structures::SDTHeader>(table_header).release_value_but_fixme_should_propagate_errors()->revision;
 }
 
 UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
 {
-    dbgln_if(ACPI_DEBUG, "ACPI: Checking Main SDT Length to choose the correct mapping size");
+    dbgln_if<ACPI_DEBUG>("ACPI: Checking Main SDT Length to choose the correct mapping size");
     VERIFY(!m_main_system_description_table.is_null());
     auto length = get_table_size(m_main_system_description_table);
     auto revision = get_table_revision(m_main_system_description_table);
@@ -336,18 +336,18 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
         auto& xsdt = (const Structures::XSDT&)*sdt;
         dmesgln("ACPI: Using XSDT, enumerating tables @ {}", m_main_system_description_table);
         dmesgln("ACPI: XSDT revision {}, total length: {}", revision, length);
-        dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ {}", VirtualAddress { &xsdt });
+        dbgln_if<ACPI_DEBUG>("ACPI: XSDT pointer @ {}", VirtualAddress { &xsdt });
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u64)); i++) {
-            dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt.table_ptrs[i]);
+            dbgln_if<ACPI_DEBUG>("ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt.table_ptrs[i]);
             m_sdt_pointers.append(PhysicalAddress(xsdt.table_ptrs[i]));
         }
     } else {
         auto& rsdt = (const Structures::RSDT&)*sdt;
         dmesgln("ACPI: Using RSDT, enumerating tables @ {}", m_main_system_description_table);
         dmesgln("ACPI: RSDT revision {}, total length: {}", revision, length);
-        dbgln_if(ACPI_DEBUG, "ACPI: RSDT pointer @ V{}", &rsdt);
+        dbgln_if<ACPI_DEBUG>("ACPI: RSDT pointer @ V{}", &rsdt);
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
-            dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt.table_ptrs[i]);
+            dbgln_if<ACPI_DEBUG>("ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt.table_ptrs[i]);
             m_sdt_pointers.append(PhysicalAddress(rsdt.table_ptrs[i]));
         }
     }

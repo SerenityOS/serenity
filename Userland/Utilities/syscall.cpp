@@ -94,7 +94,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    dbgln_if(SYSCALL_1_DEBUG, "Calling {} {:p} {:p} {:p}\n", arg[0], arg[1], arg[2], arg[3]);
+    dbgln_if<SYSCALL_1_DEBUG>("Calling {} {:p} {:p} {:p}\n", arg[0], arg[1], arg[2], arg[3]);
     int rc = syscall(arg[0], arg[1], arg[2], arg[3]);
     if (output_buffer)
         fwrite(outbuf, 1, sizeof(outbuf), stdout);
@@ -160,7 +160,7 @@ static FlatPtr parse_from(ArgIter& iter)
     // Is it a forced literal?
     if (this_arg[0] == ',') {
         this_arg += 1;
-        dbgln_if(SYSCALL_1_DEBUG, "Using (forced) string >>{}<< at {:p}", this_arg, (FlatPtr)this_arg);
+        dbgln_if<SYSCALL_1_DEBUG>("Using (forced) string >>{}<< at {:p}", this_arg, (FlatPtr)this_arg);
         return (FlatPtr)this_arg;
     }
 
@@ -183,7 +183,7 @@ static FlatPtr parse_from(ArgIter& iter)
     if (strcmp(this_arg, "]") == 0)
         fprintf(stderr, "Warning: Treating unmatched ']' as literal string\n");
 
-    dbgln_if(SYSCALL_1_DEBUG, "Using (detected) string >>{}<< at {:p}", this_arg, (FlatPtr)this_arg);
+    dbgln_if<SYSCALL_1_DEBUG>("Using (detected) string >>{}<< at {:p}", this_arg, (FlatPtr)this_arg);
 
     return (FlatPtr)this_arg;
 }

@@ -31,7 +31,7 @@ void HTMLLinkElement::inserted()
 
     if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
         auto url = document().parse_url(href());
-        dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Loading import URL: {}", url);
+        dbgln_if<CSS_LOADER_DEBUG>("HTMLLinkElement: Loading import URL: {}", url);
         auto request = LoadRequest::create_for_url_on_page(url, document().page());
         set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
         m_document_load_event_delayer.emplace(document());
@@ -71,7 +71,7 @@ void HTMLLinkElement::parse_attribute(const FlyString& name, const String& value
 
 void HTMLLinkElement::resource_did_fail()
 {
-    dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Resource did fail. URL: {}", resource()->url());
+    dbgln_if<CSS_LOADER_DEBUG>("HTMLLinkElement: Resource did fail. URL: {}", resource()->url());
 
     m_document_load_event_delayer.clear();
 }
@@ -83,14 +83,14 @@ void HTMLLinkElement::resource_did_load()
     m_document_load_event_delayer.clear();
 
     if (!resource()->has_encoded_data()) {
-        dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Resource did load, no encoded data. URL: {}", resource()->url());
+        dbgln_if<CSS_LOADER_DEBUG>("HTMLLinkElement: Resource did load, no encoded data. URL: {}", resource()->url());
     } else {
-        dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Resource did load, has encoded data. URL: {}", resource()->url());
+        dbgln_if<CSS_LOADER_DEBUG>("HTMLLinkElement: Resource did load, has encoded data. URL: {}", resource()->url());
     }
 
     auto sheet = parse_css(CSS::ParsingContext(document()), resource()->encoded_data());
     if (!sheet) {
-        dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
+        dbgln_if<CSS_LOADER_DEBUG>("HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
         return;
     }
 

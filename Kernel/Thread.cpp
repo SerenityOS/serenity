@@ -213,7 +213,7 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
     scheduler_lock.unlock();
     block_lock.unlock();
 
-    dbgln_if(THREAD_DEBUG, "Thread {} blocking on {} ({}) -->", *this, &blocker, blocker.state_string());
+    dbgln_if<THREAD_DEBUG>("Thread {} blocking on {} ({}) -->", *this, &blocker, blocker.state_string());
     bool did_timeout = false;
     u32 lock_count_to_restore = 0;
     auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
@@ -239,7 +239,7 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
             VERIFY(m_blocker == &blocker);
             m_blocker = nullptr;
         }
-        dbgln_if(THREAD_DEBUG, "<-- Thread {} unblocked from {} ({})", *this, &blocker, blocker.state_string());
+        dbgln_if<THREAD_DEBUG>("<-- Thread {} unblocked from {} ({})", *this, &blocker, blocker.state_string());
         break;
     }
 
@@ -299,7 +299,7 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
 
     lock_lock.unlock();
 
-    dbgln_if(THREAD_DEBUG, "Thread {} blocking on Mutex {}", *this, &lock);
+    dbgln_if<THREAD_DEBUG>("Thread {} blocking on Mutex {}", *this, &lock);
 
     for (;;) {
         // Yield to the scheduler, and wait for us to resume unblocked.
@@ -334,7 +334,7 @@ u32 Thread::unblock_from_mutex(Kernel::Mutex& mutex)
     VERIFY(!Processor::current_in_irq());
     VERIFY(m_blocking_mutex == &mutex);
 
-    dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Mutex {}", *this, &mutex);
+    dbgln_if<THREAD_DEBUG>("Thread {} unblocked from Mutex {}", *this, &mutex);
 
     auto requested_count = m_lock_requested_count;
 
@@ -442,7 +442,7 @@ void Thread::die_if_needed()
     u32 unlock_count;
     [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
 
-    dbgln_if(THREAD_DEBUG, "Thread {} is dying", *this);
+    dbgln_if<THREAD_DEBUG>("Thread {} is dying", *this);
 
     {
         SpinlockLocker lock(g_scheduler_lock);
@@ -597,7 +597,7 @@ void Thread::finalize()
 
     {
         SpinlockLocker lock(g_scheduler_lock);
-        dbgln_if(THREAD_DEBUG, "Finalizing thread {}", *this);
+        dbgln_if<THREAD_DEBUG>("Finalizing thread {}", *this);
         set_state(Thread::State::Dead);
         m_join_blocker_set.thread_finalizing();
     }
@@ -639,10 +639,10 @@ void Thread::finalize_dying_threads()
     }
     for (auto* thread : dying_threads) {
         RefPtr<Process> process = thread->process();
-        dbgln_if(PROCESS_DEBUG, "Before finalization, {} has {} refs and its process has {}",
+        dbgln_if<PROCESS_DEBUG>("Before finalization, {} has {} refs and its process has {}",
             *thread, thread->ref_count(), thread->process().ref_count());
         thread->finalize();
-        dbgln_if(PROCESS_DEBUG, "After finalization, {} has {} refs and its process has {}",
+        dbgln_if<PROCESS_DEBUG>("After finalization, {} has {} refs and its process has {}",
             *thread, thread->ref_count(), thread->process().ref_count());
         // This thread will never execute again, drop the running reference
         // NOTE: This may not necessarily drop the last reference if anything
@@ -725,7 +725,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
     if (should_ignore_signal(signal)) {
-        dbgln_if(SIGNAL_DEBUG, "Signal {} was ignored by {}", signal, process());
+        dbgln_if<SIGNAL_DEBUG>("Signal {} was ignored by {}", signal, process());
         return;
     }
 
@@ -746,12 +746,12 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     if (m_state == Thread::State::Stopped) {
         SpinlockLocker lock(m_lock);
         if (pending_signals_for_state() != 0) {
-            dbgln_if(SIGNAL_DEBUG, "Signal: Resuming stopped {} to deliver signal {}", *this, signal);
+            dbgln_if<SIGNAL_DEBUG>("Signal: Resuming stopped {} to deliver signal {}", *this, signal);
             resume_from_stopped();
         }
     } else {
         SpinlockLocker block_lock(m_block_lock);
-        dbgln_if(SIGNAL_DEBUG, "Signal: Unblocking {} to deliver signal {}", *this, signal);
+        dbgln_if<SIGNAL_DEBUG>("Signal: Unblocking {} to deliver signal {}", *this, signal);
         unblock(signal);
     }
 }
@@ -964,7 +964,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     VERIFY(process().is_user_process());
     VERIFY(this == Thread::current());
 
-    dbgln_if(SIGNAL_DEBUG, "Dispatch signal {} to {}, state: {}", signal, *this, state_string());
+    dbgln_if<SIGNAL_DEBUG>("Dispatch signal {} to {}, state: {}", signal, *this, state_string());
 
     if (m_state == Thread::State::Invalid || !is_initialized()) {
         // Thread has barely been created, we need to wait until it is
@@ -987,7 +987,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto& process = this->process();
     auto* tracer = process.tracer();
     if (signal == SIGSTOP || (tracer && default_signal_action(signal) == DefaultSignalAction::DumpCore)) {
-        dbgln_if(SIGNAL_DEBUG, "Signal {} stopping this thread", signal);
+        dbgln_if<SIGNAL_DEBUG>("Signal {} stopping this thread", signal);
         set_state(Thread::State::Stopped, signal);
         return DispatchSignalResult::Yield;
     }
@@ -1032,7 +1032,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     }
 
     if ((sighandler_t)handler_vaddr.as_ptr() == SIG_IGN) {
-        dbgln_if(SIGNAL_DEBUG, "Ignored signal {}", signal);
+        dbgln_if<SIGNAL_DEBUG>("Ignored signal {}", signal);
         return DispatchSignalResult::Continue;
     }
 
@@ -1064,7 +1064,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         FlatPtr ret_ip = state.ip();
         FlatPtr ret_flags = state.flags();
 
-        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to IP {:p}, SP {:p}", ret_ip, old_sp);
+        dbgln_if<SIGNAL_DEBUG>("Setting up user stack to return to IP {:p}, SP {:p}", ret_ip, old_sp);
 
 #if ARCH(I386)
         // Align the stack to 16 bytes.
@@ -1154,7 +1154,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto signal_trampoline_addr = process.signal_trampoline().get();
     regs.set_ip(signal_trampoline_addr);
 
-    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:#04x}:{:p} to deliver {}", state_string(), m_regs.cs, m_regs.ip(), signal);
+    dbgln_if<SIGNAL_DEBUG>("Thread in state '{}' has been primed with signal handler {:#04x}:{:p} to deliver {}", state_string(), m_regs.cs, m_regs.ip(), signal);
 
     return DispatchSignalResult::Continue;
 }
@@ -1200,13 +1200,13 @@ void Thread::set_state(State new_state, u8 stop_signal)
         if (previous_state == Thread::State::Invalid) {
             // If we were *just* created, we may have already pending signals
             if (has_unmasked_pending_signals()) {
-                dbgln_if(THREAD_DEBUG, "Dispatch pending signals to new thread {}", *this);
+                dbgln_if<THREAD_DEBUG>("Dispatch pending signals to new thread {}", *this);
                 dispatch_one_pending_signal();
             }
         }
 
         m_state = new_state;
-        dbgln_if(THREAD_DEBUG, "Set thread {} state to {}", *this, state_string());
+        dbgln_if<THREAD_DEBUG>("Set thread {} state to {}", *this, state_string());
     }
 
     if (previous_state == Thread::State::Runnable) {
@@ -1220,7 +1220,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
                     return;
                 if (!thread.is_stopped())
                     return;
-                dbgln_if(THREAD_DEBUG, "Resuming peer thread {}", thread);
+                dbgln_if<THREAD_DEBUG>("Resuming peer thread {}", thread);
                 thread.resume_from_stopped();
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Continued);
@@ -1244,7 +1244,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
                     return;
                 if (thread.is_stopped())
                     return;
-                dbgln_if(THREAD_DEBUG, "Stopping peer thread {}", thread);
+                dbgln_if<THREAD_DEBUG>("Stopping peer thread {}", thread);
                 thread.set_state(Thread::State::Stopped, stop_signal);
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);

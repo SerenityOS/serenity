@@ -394,7 +394,7 @@ void FramebufferDevice::draw_ntsc_test_pattern(Buffer& buffer)
             }
         }
     }
-    dbgln_if(VIRTIO_DEBUG, "Finish drawing the pattern");
+    dbgln_if<VIRTIO_DEBUG>("Finish drawing the pattern");
 }
 
 u8* FramebufferDevice::framebuffer_data()

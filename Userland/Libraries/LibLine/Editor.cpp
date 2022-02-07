@@ -2049,7 +2049,7 @@ bool Editor::Spans::contains_up_to_offset(Spans const& other, size_t offset) con
                     }
                     return false;
                 } else if (value_it->value != left_entry.value) {
-                    dbgln_if(LINE_EDITOR_DEBUG, "Compare for {}-{} failed, different values: {} != {}", entry.key, left_entry.key, value_it->value.to_string(), left_entry.value.to_string());
+                    dbgln_if<LINE_EDITOR_DEBUG>("Compare for {}-{} failed, different values: {} != {}", entry.key, left_entry.key, value_it->value.to_string(), left_entry.value.to_string());
                     return false;
                 }
             }

@@ -49,7 +49,7 @@ UNMAP_AFTER_INIT void MultiProcessorParser::parse_configuration_table()
     size_t entry_count = config_table->entry_count;
     auto* entry = config_table->entries;
     while (entry_count > 0) {
-        dbgln_if(MULTIPROCESSOR_DEBUG, "MultiProcessor: Entry Type {} detected.", entry->entry_type);
+        dbgln_if<MULTIPROCESSOR_DEBUG>("MultiProcessor: Entry Type {} detected.", entry->entry_type);
         switch (entry->entry_type) {
         case ((u8)MultiProcessor::ConfigurationTableEntryType::Processor):
             entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::ProcessorEntry);

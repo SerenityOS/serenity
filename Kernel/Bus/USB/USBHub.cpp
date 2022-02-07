@@ -50,7 +50,7 @@ ErrorOr<void> Hub::enumerate_and_power_on_hub()
         return EINVAL;
     }
 
-    dbgln_if(USB_DEBUG, "USB Hub: Enumerating and powering on for address {}", m_address);
+    dbgln_if<USB_DEBUG>("USB Hub: Enumerating and powering on for address {}", m_address);
 
     USBHubDescriptor descriptor {};
 
@@ -137,7 +137,7 @@ void Hub::remove_children_from_sysfs()
 void Hub::check_for_port_updates()
 {
     for (u8 port_number = 1; port_number < m_hub_descriptor.number_of_downstream_ports + 1; ++port_number) {
-        dbgln_if(USB_DEBUG, "USB Hub: Checking for port updates on port {}...", port_number);
+        dbgln_if<USB_DEBUG>("USB Hub: Checking for port updates on port {}...", port_number);
 
         HubStatus port_status {};
         if (auto result = get_port_status(port_number, port_status); result.is_error()) {
@@ -165,7 +165,7 @@ void Hub::check_for_port_updates()
 
                 u32 debounce_timer = 0;
 
-                dbgln_if(USB_DEBUG, "USB Hub: Debouncing...");
+                dbgln_if<USB_DEBUG>("USB Hub: Debouncing...");
 
                 // FIXME: Timeout
                 while (debounce_timer < debounce_interval) {
@@ -180,7 +180,7 @@ void Hub::check_for_port_updates()
                     if (!(port_status.change & PORT_STATUS_CONNECT_STATUS_CHANGED))
                         continue;
 
-                    dbgln_if(USB_DEBUG, "USB Hub: Connection status changed while debouncing, resetting debounce timer.");
+                    dbgln_if<USB_DEBUG>("USB Hub: Connection status changed while debouncing, resetting debounce timer.");
                     debounce_timer = 0;
 
                     if (auto result = clear_port_feature(port_number, HubFeatureSelector::C_PORT_CONNECTION); result.is_error()) {
@@ -190,7 +190,7 @@ void Hub::check_for_port_updates()
                 }
 
                 // Reset the port
-                dbgln_if(USB_DEBUG, "USB Hub: Debounce finished. Driving reset...");
+                dbgln_if<USB_DEBUG>("USB Hub: Debounce finished. Driving reset...");
                 if (auto result = set_port_feature(port_number, HubFeatureSelector::PORT_RESET); result.is_error()) {
                     dbgln("USB Hub: Error occurred when resetting port {}: {}.", port_number, result.error());
                     return;
@@ -224,7 +224,7 @@ void Hub::check_for_port_updates()
                 constexpr u16 reset_recovery_delay = 10 * 1000;
                 IO::delay(reset_recovery_delay);
 
-                dbgln_if(USB_DEBUG, "USB Hub: Reset complete!");
+                dbgln_if<USB_DEBUG>("USB Hub: Reset complete!");
 
                 // The port is ready to go. This is where we start communicating with the device to set up a driver for it.
 
@@ -244,7 +244,7 @@ void Hub::check_for_port_updates()
 
                 auto device = device_or_error.release_value();
 
-                dbgln_if(USB_DEBUG, "USB Hub: Created device with address {}!", device->address());
+                dbgln_if<USB_DEBUG>("USB Hub: Created device with address {}!", device->address());
 
                 if (device->device_descriptor().device_class == USB_CLASS_HUB) {
                     auto hub_or_error = Hub::try_create_from_device(*device);
@@ -253,7 +253,7 @@ void Hub::check_for_port_updates()
                         return;
                     }
 
-                    dbgln_if(USB_DEBUG, "USB Hub: Upgraded device at address {} to hub!", device->address());
+                    dbgln_if<USB_DEBUG>("USB Hub: Upgraded device at address {} to hub!", device->address());
 
                     auto hub = hub_or_error.release_value();
                     m_children.append(hub);
@@ -283,7 +283,7 @@ void Hub::check_for_port_updates()
                         hub_child->remove_children_from_sysfs();
                     }
                 } else {
-                    dbgln_if(USB_DEBUG, "USB Hub: No child set up on port {}, ignoring detachment.", port_number);
+                    dbgln_if<USB_DEBUG>("USB Hub: No child set up on port {}, ignoring detachment.", port_number);
                 }
             }
         }
@@ -292,7 +292,7 @@ void Hub::check_for_port_updates()
     for (auto& child : m_children) {
         if (child.device_descriptor().device_class == USB_CLASS_HUB) {
             auto& hub_child = static_cast<Hub&>(child);
-            dbgln_if(USB_DEBUG, "USB Hub: Checking for port updates on child hub at address {}...", child.address());
+            dbgln_if<USB_DEBUG>("USB Hub: Checking for port updates on child hub at address {}...", child.address());
             hub_child.check_for_port_updates();
         }
     }

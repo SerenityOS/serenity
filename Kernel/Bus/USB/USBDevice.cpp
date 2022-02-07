@@ -114,7 +114,7 @@ ErrorOr<void> Device::enumerate_device()
     m_address = new_address;
     m_default_pipe->set_device_address(new_address);
 
-    dbgln_if(USB_DEBUG, "USB Device: Set address to {}", m_address);
+    dbgln_if<USB_DEBUG>("USB Device: Set address to {}", m_address);
 
     memcpy(&m_device_descriptor, &dev_descriptor, sizeof(USBDeviceDescriptor));
     return {};

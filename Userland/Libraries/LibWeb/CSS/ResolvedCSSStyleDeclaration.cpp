@@ -699,10 +699,10 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::Invalid:
         return IdentifierStyleValue::create(CSS::ValueID::Invalid);
     case CSS::PropertyID::Custom:
-        dbgln_if(LIBWEB_CSS_DEBUG, "Computed style for custom properties was requested (?)");
+        dbgln_if<LIBWEB_CSS_DEBUG>("Computed style for custom properties was requested (?)");
         return {};
     default:
-        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Computed style for the '{}' property was requested", string_from_property_id(property_id));
+        dbgln_if<LIBWEB_CSS_DEBUG>("FIXME: Computed style for the '{}' property was requested", string_from_property_id(property_id));
         return {};
     }
     }

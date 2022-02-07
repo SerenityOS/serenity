@@ -77,7 +77,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
     auto content_type = headers.get("Content-Type");
 
     if (content_type.has_value()) {
-        dbgln_if(RESOURCE_DEBUG, "Content-Type header: '{}'", content_type.value());
+        dbgln_if<RESOURCE_DEBUG>("Content-Type header: '{}'", content_type.value());
         m_mime_type = mime_type_from_content_type(content_type.value());
         // FIXME: "The Quite OK Image Format" doesn't have an official mime type yet,
         //        and servers like nginx will send a generic octet-stream mime type instead.
@@ -85,7 +85,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
         if (m_mime_type == "application/octet-stream" && url().path().ends_with(".qoi"))
             m_mime_type = "image/x-qoi";
     } else if (url().protocol() == "data" && !url().data_mime_type().is_empty()) {
-        dbgln_if(RESOURCE_DEBUG, "This is a data URL with mime-type _{}_", url().data_mime_type());
+        dbgln_if<RESOURCE_DEBUG>("This is a data URL with mime-type _{}_", url().data_mime_type());
         m_mime_type = url().data_mime_type();
     } else {
         auto content_type_options = headers.get("X-Content-Type-Options");
@@ -100,7 +100,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
     if (content_type.has_value()) {
         auto encoding = encoding_from_content_type(content_type.value());
         if (encoding.has_value()) {
-            dbgln_if(RESOURCE_DEBUG, "Set encoding '{}' from Content-Type", encoding.has_value());
+            dbgln_if<RESOURCE_DEBUG>("Set encoding '{}' from Content-Type", encoding.has_value());
             m_encoding = encoding.value();
         }
     }

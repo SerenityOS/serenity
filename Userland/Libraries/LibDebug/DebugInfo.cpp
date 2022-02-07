@@ -42,11 +42,11 @@ void DebugInfo::parse_scopes_impl(Dwarf::DIE const& die)
             return;
 
         if (child.get_attribute(Dwarf::Attribute::Inline).has_value()) {
-            dbgln_if(SPAM_DEBUG, "DWARF inlined functions are not supported");
+            dbgln_if<SPAM_DEBUG>("DWARF inlined functions are not supported");
             return;
         }
         if (child.get_attribute(Dwarf::Attribute::Ranges).has_value()) {
-            dbgln_if(SPAM_DEBUG, "DWARF ranges are not supported");
+            dbgln_if<SPAM_DEBUG>("DWARF ranges are not supported");
             return;
         }
         auto name = child.get_attribute(Dwarf::Attribute::Name);
@@ -57,7 +57,7 @@ void DebugInfo::parse_scopes_impl(Dwarf::DIE const& die)
             scope.name = name.value().as_string();
 
         if (!child.get_attribute(Dwarf::Attribute::LowPc).has_value()) {
-            dbgln_if(SPAM_DEBUG, "DWARF: Couldn't find attribute LowPc for scope");
+            dbgln_if<SPAM_DEBUG>("DWARF: Couldn't find attribute LowPc for scope");
             return;
         }
         scope.address_low = child.get_attribute(Dwarf::Attribute::LowPc).value().as_addr();

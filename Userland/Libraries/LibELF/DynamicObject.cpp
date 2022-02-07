@@ -56,8 +56,8 @@ void DynamicObject::dump() const
     if (m_has_runpath)
         builder.appendff("DT_RUNPATH: {}\n", runpath());
 
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "Dynamic section at address {} contains {} entries:", m_dynamic_address.as_ptr(), num_dynamic_sections);
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "{}", builder.string_view());
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("Dynamic section at address {} contains {} entries:", m_dynamic_address.as_ptr(), num_dynamic_sections);
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("{}", builder.string_view());
 }
 
 void DynamicObject::parse()
@@ -265,7 +265,7 @@ auto DynamicObject::HashSection::lookup_sysv_symbol(StringView name, u32 hash_va
     for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
         auto symbol = m_dynamic.symbol(i);
         if (name == symbol.raw_name()) {
-            dbgln_if(DYNAMIC_LOAD_DEBUG, "Returning SYSV dynamic symbol with index {} for {}: {}", i, symbol.name(), symbol.address().as_ptr());
+            dbgln_if<DYNAMIC_LOAD_DEBUG>("Returning SYSV dynamic symbol with index {} for {}: {}", i, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
     }
@@ -478,7 +478,7 @@ VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
         VERIFY_NOT_REACHED();
     }
 
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "DynamicLoader: Jump slot relocation: putting {} ({}) into PLT at {}", symbol.name(), symbol_location, (void*)relocation_address);
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("DynamicLoader: Jump slot relocation: putting {} ({}) into PLT at {}", symbol.name(), symbol_location, (void*)relocation_address);
 
     *relocation_address = symbol_location.get();
 

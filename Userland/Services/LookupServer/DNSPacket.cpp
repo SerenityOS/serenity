@@ -104,11 +104,11 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
     }
 
     auto& header = *(const DNSPacketHeader*)(raw_data);
-    dbgln_if(LOOKUPSERVER_DEBUG, "Got packet (ID: {})", header.id());
-    dbgln_if(LOOKUPSERVER_DEBUG, "  Question count: {}", header.question_count());
-    dbgln_if(LOOKUPSERVER_DEBUG, "    Answer count: {}", header.answer_count());
-    dbgln_if(LOOKUPSERVER_DEBUG, " Authority count: {}", header.authority_count());
-    dbgln_if(LOOKUPSERVER_DEBUG, "Additional count: {}", header.additional_count());
+    dbgln_if<LOOKUPSERVER_DEBUG>("Got packet (ID: {})", header.id());
+    dbgln_if<LOOKUPSERVER_DEBUG>("  Question count: {}", header.question_count());
+    dbgln_if<LOOKUPSERVER_DEBUG>("    Answer count: {}", header.answer_count());
+    dbgln_if<LOOKUPSERVER_DEBUG>(" Authority count: {}", header.authority_count());
+    dbgln_if<LOOKUPSERVER_DEBUG>("Additional count: {}", header.additional_count());
 
     DNSPacket packet;
     packet.m_id = header.id();
@@ -133,7 +133,7 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
         packet.m_questions.empend(name, (DNSRecordType)(u16)record_and_class.record_type, (DNSRecordClass)class_code, mdns_wants_unicast_response);
         offset += 4;
         auto& question = packet.m_questions.last();
-        dbgln_if(LOOKUPSERVER_DEBUG, "Question #{}: name=_{}_, type={}, class={}", i, question.name(), question.record_type(), question.class_code());
+        dbgln_if<LOOKUPSERVER_DEBUG>("Question #{}: name=_{}_, type={}, class={}", i, question.name(), question.record_type(), question.class_code());
     }
 
     for (u16 i = 0; i < header.answer_count(); ++i) {
@@ -167,7 +167,7 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
             dbgln("data=(unimplemented record type {})", (u16)record.type());
         }
 
-        dbgln_if(LOOKUPSERVER_DEBUG, "Answer   #{}: name=_{}_, type={}, ttl={}, length={}, data=_{}_", i, name, record.type(), record.ttl(), record.data_length(), data);
+        dbgln_if<LOOKUPSERVER_DEBUG>("Answer   #{}: name=_{}_, type={}, ttl={}, length={}, data=_{}_", i, name, record.type(), record.ttl(), record.data_length(), data);
         u16 class_code = record.record_class() & ~MDNS_CACHE_FLUSH;
         bool mdns_cache_flush = record.record_class() & MDNS_CACHE_FLUSH;
         packet.m_answers.empend(name, (DNSRecordType)record.type(), (DNSRecordClass)class_code, record.ttl(), data, mdns_cache_flush);

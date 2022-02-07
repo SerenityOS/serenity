@@ -240,7 +240,7 @@ Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule:
 // 16.2.1.6.2 GetExportedNames ( [ exportStarSet ] ), https://tc39.es/ecma262/#sec-getexportednames
 ThrowCompletionOr<Vector<FlyString>> SourceTextModule::get_exported_names(VM& vm, Vector<Module*> export_star_set)
 {
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] get_export_names of {}", filename());
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] get_export_names of {}", filename());
     // 1. If exportStarSet is not present, set exportStarSet to a new empty List.
     // Note: This is done by default argument
 
@@ -476,7 +476,7 @@ Completion SourceTextModule::initialize_environment(VM& vm)
         auto const& statement = m_default_export->statement();
         if (!is<Declaration>(statement)) {
             auto const& name = m_default_export->entries()[0].local_or_import_name;
-            dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Adding default export to lexical declarations: local name: {}, Expression: {}", name, statement.class_name());
+            dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] Adding default export to lexical declarations: local name: {}, Expression: {}", name, statement.class_name());
 
             // 1. Perform ! env.CreateMutableBinding(dn, false).
             MUST(environment->create_mutable_binding(global_object, name, false));
@@ -624,7 +624,7 @@ ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyS
 // 16.2.1.6.5 ExecuteModule ( [ capability ] ), https://tc39.es/ecma262/#sec-source-text-module-record-execute-module
 Completion SourceTextModule::execute_module(VM& vm, Optional<PromiseCapability> capability)
 {
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] SourceTextModule::execute_module({}, capability has value: {})", filename(), capability.has_value());
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] SourceTextModule::execute_module({}, capability has value: {})", filename(), capability.has_value());
 
     // 1. Let moduleContext be a new ECMAScript code execution context.
     ExecutionContext module_context { vm.heap() };

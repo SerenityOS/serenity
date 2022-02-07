@@ -27,46 +27,46 @@ HashDirectoryNode::HashDirectoryNode(HashIndex& index, u32 pointer)
 
 void HashDirectoryNode::deserialize(Serializer& serializer)
 {
-    dbgln_if(SQL_DEBUG, "Deserializing Hash Directory Node");
+    dbgln_if<SQL_DEBUG>("Deserializing Hash Directory Node");
     m_hash_index.m_global_depth = serializer.deserialize<u32>();
     auto size = serializer.deserialize<u32>();
-    dbgln_if(SQL_DEBUG, "Global Depth {}, #Bucket pointers {}", m_hash_index.global_depth(), size);
+    dbgln_if<SQL_DEBUG>("Global Depth {}, #Bucket pointers {}", m_hash_index.global_depth(), size);
     auto next_node = serializer.deserialize<u32>();
     if (next_node) {
-        dbgln_if(SQL_DEBUG, "Next node {}", next_node);
+        dbgln_if<SQL_DEBUG>("Next node {}", next_node);
         m_hash_index.m_nodes.append(next_node);
     } else {
-        dbgln_if(SQL_DEBUG, "This is the last directory node");
+        dbgln_if<SQL_DEBUG>("This is the last directory node");
         m_is_last = true;
     }
     for (auto ix = 0u; ix < size; ix++) {
         auto bucket_pointer = serializer.deserialize<u32>();
         auto local_depth = serializer.deserialize<u32>();
-        dbgln_if(SQL_DEBUG, "--Index {} bucket pointer {} local depth {}", ix, bucket_pointer, local_depth);
+        dbgln_if<SQL_DEBUG>("--Index {} bucket pointer {} local depth {}", ix, bucket_pointer, local_depth);
         m_hash_index.append_bucket(ix, local_depth, bucket_pointer);
     }
 }
 
 void HashDirectoryNode::serialize(Serializer& serializer) const
 {
-    dbgln_if(SQL_DEBUG, "Serializing directory node #{}. Offset {}", m_node_number, m_offset);
+    dbgln_if<SQL_DEBUG>("Serializing directory node #{}. Offset {}", m_node_number, m_offset);
     serializer.serialize<u32>((u32)m_hash_index.global_depth());
     serializer.serialize<u32>(number_of_pointers());
-    dbgln_if(SQL_DEBUG, "Global depth {}, #bucket pointers {}", m_hash_index.global_depth(), number_of_pointers());
+    dbgln_if<SQL_DEBUG>("Global depth {}, #bucket pointers {}", m_hash_index.global_depth(), number_of_pointers());
 
     u32 next_node;
     if (m_node_number < (m_hash_index.m_nodes.size() - 1)) {
         next_node = m_hash_index.m_nodes[m_node_number + 1];
-        dbgln_if(SQL_DEBUG, "Next directory node pointer {}", next_node);
+        dbgln_if<SQL_DEBUG>("Next directory node pointer {}", next_node);
     } else {
         next_node = 0u;
-        dbgln_if(SQL_DEBUG, "This is the last directory node");
+        dbgln_if<SQL_DEBUG>("This is the last directory node");
     }
 
     serializer.serialize<u32>(next_node);
     for (auto ix = 0u; ix < number_of_pointers(); ix++) {
         auto& bucket = m_hash_index.m_buckets[m_offset + ix];
-        dbgln_if(SQL_DEBUG, "Bucket index #{} pointer {} local depth {} size {}", ix, bucket->pointer(), bucket->local_depth(), bucket->size());
+        dbgln_if<SQL_DEBUG>("Bucket index #{} pointer {} local depth {} size {}", ix, bucket->pointer(), bucket->local_depth(), bucket->size());
         serializer.serialize<u32>(bucket->pointer());
         serializer.serialize<u32>(bucket->local_depth());
     }
@@ -82,7 +82,7 @@ HashBucket::HashBucket(HashIndex& hash_index, u32 index, u32 local_depth, u32 po
 
 void HashBucket::serialize(Serializer& serializer) const
 {
-    dbgln_if(SQL_DEBUG, "Serializing bucket: pointer {}, index #{}, local depth {} size {}",
+    dbgln_if<SQL_DEBUG>("Serializing bucket: pointer {}, index #{}, local depth {} size {}",
         pointer(), index(), local_depth(), size());
     serializer.serialize<u32>(local_depth());
     serializer.serialize<u32>(size());
@@ -95,14 +95,14 @@ void HashBucket::deserialize(Serializer& serializer)
 {
     if (m_inflated || !pointer())
         return;
-    dbgln_if(SQL_DEBUG, "Inflating Hash Bucket {}", pointer());
+    dbgln_if<SQL_DEBUG>("Inflating Hash Bucket {}", pointer());
     m_local_depth = serializer.deserialize<u32>();
-    dbgln_if(SQL_DEBUG, "Bucket Local Depth {}", m_local_depth);
+    dbgln_if<SQL_DEBUG>("Bucket Local Depth {}", m_local_depth);
     auto size = serializer.deserialize<u32>();
-    dbgln_if(SQL_DEBUG, "Bucket has {} keys", size);
+    dbgln_if<SQL_DEBUG>("Bucket has {} keys", size);
     for (auto ix = 0u; ix < size; ix++) {
         auto key = serializer.deserialize<Key>(m_hash_index.descriptor());
-        dbgln_if(SQL_DEBUG, "Key {}: {}", ix, key.to_string());
+        dbgln_if<SQL_DEBUG>("Key {}: {}", ix, key.to_string());
         m_entries.append(key);
     }
     m_inflated = true;
@@ -136,7 +136,7 @@ bool HashBucket::insert(Key const& key)
         return false;
     }
     if ((length() + key.length()) > BLOCKSIZE) {
-        dbgln_if(SQL_DEBUG, "Adding key {} would make length exceed block size", key.to_string());
+        dbgln_if<SQL_DEBUG>("Adding key {} would make length exceed block size", key.to_string());
         return false;
     }
     m_entries.append(key);
@@ -253,12 +253,12 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
     auto key_hash = key.hash();
 
     do {
-        dbgln_if(SQL_DEBUG, "HashIndex::get_bucket_for_insert({}) bucket {} of {}", key.to_string(), key_hash % size(), size());
+        dbgln_if<SQL_DEBUG>("HashIndex::get_bucket_for_insert({}) bucket {} of {}", key.to_string(), key_hash % size(), size());
         auto bucket = get_bucket(key_hash % size());
         if (bucket->length() + key.length() < BLOCKSIZE) {
             return bucket;
         }
-        dbgln_if(SQL_DEBUG, "Bucket is full (bucket size {}/length {} key length {}). Expanding directory", bucket->size(), bucket->length(), key.length());
+        dbgln_if<SQL_DEBUG>("Bucket is full (bucket size {}/length {} key length {}). Expanding directory", bucket->size(), bucket->length(), key.length());
 
         // We previously doubled the directory but the target bucket is
         // still at an older depth. Create new buckets at the current global
@@ -282,15 +282,15 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
                     }
                 }
                 if (moved > 0) {
-                    dbgln_if(SQL_DEBUG, "Moved {} entries from bucket #{} to #{}", moved, base_index, ix);
+                    dbgln_if<SQL_DEBUG>("Moved {} entries from bucket #{} to #{}", moved, base_index, ix);
                     serializer().serialize_and_write(*sub_bucket, sub_bucket->pointer());
                 }
                 total_moved += moved;
             }
             if (total_moved)
-                dbgln_if(SQL_DEBUG, "Redistributed {} entries from bucket #{}", total_moved, base_index);
+                dbgln_if<SQL_DEBUG>("Redistributed {} entries from bucket #{}", total_moved, base_index);
             else
-                dbgln_if(SQL_DEBUG, "Nothing redistributed from bucket #{}", base_index);
+                dbgln_if<SQL_DEBUG>("Nothing redistributed from bucket #{}", base_index);
             bucket->set_local_depth(bucket->local_depth() + 1);
             serializer().serialize_and_write(*bucket, bucket->pointer());
             write_directory_to_write_ahead_log();
@@ -307,7 +307,7 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
 void HashIndex::expand()
 {
     auto sz = size();
-    dbgln_if(SQL_DEBUG, "Expanding directory from {} to {} buckets", sz, 2 * sz);
+    dbgln_if<SQL_DEBUG>("Expanding directory from {} to {} buckets", sz, 2 * sz);
     for (auto i = 0u; i < sz; i++) {
         auto bucket = get_bucket(i);
         bucket = append_bucket(sz + i, bucket->local_depth(), 0u);
@@ -349,7 +349,7 @@ Optional<u32> HashIndex::get(Key& key)
 {
     auto hash = key.hash();
     auto bucket_index = hash % size();
-    dbgln_if(SQL_DEBUG, "HashIndex::get({}) bucket_index {}", key.to_string(), bucket_index);
+    dbgln_if<SQL_DEBUG>("HashIndex::get({}) bucket_index {}", key.to_string(), bucket_index);
     auto bucket = get_bucket(bucket_index);
     if constexpr (SQL_DEBUG)
         bucket->list_bucket();
@@ -358,7 +358,7 @@ Optional<u32> HashIndex::get(Key& key)
 
 bool HashIndex::insert(Key const& key)
 {
-    dbgln_if(SQL_DEBUG, "HashIndex::insert({})", key.to_string());
+    dbgln_if<SQL_DEBUG>("HashIndex::insert({})", key.to_string());
     auto bucket = get_bucket_for_insert(key);
     bucket->insert(key);
     if constexpr (SQL_DEBUG)

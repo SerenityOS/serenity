@@ -259,7 +259,7 @@ bool E1000NetworkAdapter::handle_irq(const RegisterState&)
         // Threshold OK?
     }
     if (status & INTERRUPT_RXO) {
-        dbgln_if(E1000_DEBUG, "E1000: RX buffer overrun");
+        dbgln_if<E1000_DEBUG>("E1000: RX buffer overrun");
     }
     if (status & INTERRUPT_RXT0) {
         receive();
@@ -370,7 +370,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
 
 void E1000NetworkAdapter::out8(u16 address, u8 data)
 {
-    dbgln_if(E1000_DEBUG, "E1000: OUT8 {:#02x} @ {:#04x}", data, address);
+    dbgln_if<E1000_DEBUG>("E1000: OUT8 {:#02x} @ {:#04x}", data, address);
     if (m_use_mmio) {
         auto* ptr = (volatile u8*)(m_mmio_base.get() + address);
         *ptr = data;
@@ -381,7 +381,7 @@ void E1000NetworkAdapter::out8(u16 address, u8 data)
 
 void E1000NetworkAdapter::out16(u16 address, u16 data)
 {
-    dbgln_if(E1000_DEBUG, "E1000: OUT16 {:#04x} @ {:#04x}", data, address);
+    dbgln_if<E1000_DEBUG>("E1000: OUT16 {:#04x} @ {:#04x}", data, address);
     if (m_use_mmio) {
         auto* ptr = (volatile u16*)(m_mmio_base.get() + address);
         *ptr = data;
@@ -392,7 +392,7 @@ void E1000NetworkAdapter::out16(u16 address, u16 data)
 
 void E1000NetworkAdapter::out32(u16 address, u32 data)
 {
-    dbgln_if(E1000_DEBUG, "E1000: OUT32 {:#08x} @ {:#04x}", data, address);
+    dbgln_if<E1000_DEBUG>("E1000: OUT32 {:#08x} @ {:#04x}", data, address);
     if (m_use_mmio) {
         auto* ptr = (volatile u32*)(m_mmio_base.get() + address);
         *ptr = data;
@@ -403,7 +403,7 @@ void E1000NetworkAdapter::out32(u16 address, u32 data)
 
 u8 E1000NetworkAdapter::in8(u16 address)
 {
-    dbgln_if(E1000_DEBUG, "E1000: IN8 @ {:#04x}", address);
+    dbgln_if<E1000_DEBUG>("E1000: IN8 @ {:#04x}", address);
     if (m_use_mmio)
         return *(volatile u8*)(m_mmio_base.get() + address);
     return m_io_base.offset(address).in<u8>();
@@ -411,7 +411,7 @@ u8 E1000NetworkAdapter::in8(u16 address)
 
 u16 E1000NetworkAdapter::in16(u16 address)
 {
-    dbgln_if(E1000_DEBUG, "E1000: IN16 @ {:#04x}", address);
+    dbgln_if<E1000_DEBUG>("E1000: IN16 @ {:#04x}", address);
     if (m_use_mmio)
         return *(volatile u16*)(m_mmio_base.get() + address);
     return m_io_base.offset(address).in<u16>();
@@ -419,7 +419,7 @@ u16 E1000NetworkAdapter::in16(u16 address)
 
 u32 E1000NetworkAdapter::in32(u16 address)
 {
-    dbgln_if(E1000_DEBUG, "E1000: IN32 @ {:#04x}", address);
+    dbgln_if<E1000_DEBUG>("E1000: IN32 @ {:#04x}", address);
     if (m_use_mmio)
         return *(volatile u32*)(m_mmio_base.get() + address);
     return m_io_base.offset(address).in<u32>();
@@ -429,7 +429,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
     disable_irq();
     size_t tx_current = in32(REG_TXDESCTAIL) % number_of_tx_descriptors;
-    dbgln_if(E1000_DEBUG, "E1000: Sending packet ({} bytes)", payload.size());
+    dbgln_if<E1000_DEBUG>("E1000: Sending packet ({} bytes)", payload.size());
     auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
     auto& descriptor = tx_descriptors[tx_current];
     VERIFY(payload.size() <= 8192);
@@ -438,7 +438,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
     descriptor.length = payload.size();
     descriptor.status = 0;
     descriptor.cmd = CMD_EOP | CMD_IFCS | CMD_RS;
-    dbgln_if(E1000_DEBUG, "E1000: Using tx descriptor {} (head is at {})", tx_current, in32(REG_TXDESCHEAD));
+    dbgln_if<E1000_DEBUG>("E1000: Using tx descriptor {} (head is at {})", tx_current, in32(REG_TXDESCHEAD));
     tx_current = (tx_current + 1) % number_of_tx_descriptors;
     cli();
     enable_irq();
@@ -450,7 +450,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
         }
         m_wait_queue.wait_forever("E1000NetworkAdapter");
     }
-    dbgln_if(E1000_DEBUG, "E1000: Sent packet, status is now {:#02x}!", (u8)descriptor.status);
+    dbgln_if<E1000_DEBUG>("E1000: Sent packet, status is now {:#02x}!", (u8)descriptor.status);
 }
 
 void E1000NetworkAdapter::receive()
@@ -465,7 +465,7 @@ void E1000NetworkAdapter::receive()
         auto* buffer = m_rx_buffers[rx_current];
         u16 length = rx_descriptors[rx_current].length;
         VERIFY(length <= 8192);
-        dbgln_if(E1000_DEBUG, "E1000: Received 1 packet @ {:p} ({} bytes)", buffer, length);
+        dbgln_if<E1000_DEBUG>("E1000: Received 1 packet @ {:p} ({} bytes)", buffer, length);
         did_receive({ buffer, length });
         rx_descriptors[rx_current].status = 0;
         out32(REG_RXDESCTAIL, rx_current);

@@ -39,9 +39,9 @@ Tuple::Tuple(NonnullRefPtr<TupleDescriptor> const& descriptor, Serializer& seria
 
 void Tuple::deserialize(Serializer& serializer)
 {
-    dbgln_if(SQL_DEBUG, "deserialize tuple at offset {}", serializer.offset());
+    dbgln_if<SQL_DEBUG>("deserialize tuple at offset {}", serializer.offset());
     serializer.deserialize_to<u32>(m_pointer);
-    dbgln_if(SQL_DEBUG, "pointer: {}", m_pointer);
+    dbgln_if<SQL_DEBUG>("pointer: {}", m_pointer);
     auto sz = serializer.deserialize<u32>();
     m_data.clear();
     m_descriptor->clear();
@@ -54,7 +54,7 @@ void Tuple::deserialize(Serializer& serializer)
 void Tuple::serialize(Serializer& serializer) const
 {
     VERIFY(m_descriptor->size() == m_data.size());
-    dbgln_if(SQL_DEBUG, "Serializing tuple pointer {}", pointer());
+    dbgln_if<SQL_DEBUG>("Serializing tuple pointer {}", pointer());
     serializer.serialize<u32>(pointer());
     serializer.serialize<u32>((u32)m_descriptor->size());
     for (auto ix = 0u; ix < m_descriptor->size(); ix++) {

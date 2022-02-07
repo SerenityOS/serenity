@@ -107,7 +107,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> u
             if (!user_value.has_value())
                 return EFAULT;
             if (user_value.value() != params.val) {
-                dbgln_if(FUTEX_DEBUG, "futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address, params.val);
+                dbgln_if<FUTEX_DEBUG>("futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address, params.val);
                 return EAGAIN;
             }
             atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);

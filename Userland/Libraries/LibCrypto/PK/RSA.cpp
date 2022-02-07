@@ -34,12 +34,12 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
         auto result = decoder.peek();
         if (result.is_error()) {
             // Bad data.
-            dbgln_if(RSA_PARSE_DEBUG, "RSA key parse failed: {}", result.error());
+            dbgln_if<RSA_PARSE_DEBUG>("RSA key parse failed: {}", result.error());
             return keypair;
         }
         auto tag = result.value();
         if (tag.kind != ASN1::Kind::Sequence) {
-            dbgln_if(RSA_PARSE_DEBUG, "RSA key parse failed: Expected a Sequence but got {}", ASN1::kind_name(tag.kind));
+            dbgln_if<RSA_PARSE_DEBUG>("RSA key parse failed: Expected a Sequence but got {}", ASN1::kind_name(tag.kind));
             return keypair;
         }
     }
@@ -49,7 +49,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
         auto error = decoder.enter();
         if (error.has_value()) {
             // Something was weird with the input.
-            dbgln_if(RSA_PARSE_DEBUG, "RSA key parse failed: {}", error.value());
+            dbgln_if<RSA_PARSE_DEBUG>("RSA key parse failed: {}", error.value());
             return keypair;
         }
     }
@@ -61,14 +61,14 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
         auto tag_result = decoder.peek();
         if (tag_result.is_error()) {
             // Decode error :shrug:
-            dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#8 public key parse failed: {}", tag_result.error());
+            dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#8 public key parse failed: {}", tag_result.error());
             return false;
         }
 
         auto tag = tag_result.value();
         if (tag.kind != ASN1::Kind::Sequence) {
             // We don't know what this is, but it sure isn't a PKCS#8 key.
-            dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#8 public key parse failed: Expected a Sequence but got {}", ASN1::kind_name(tag.kind));
+            dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#8 public key parse failed: Expected a Sequence but got {}", ASN1::kind_name(tag.kind));
             return false;
         }
 
@@ -76,14 +76,14 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
         auto error = decoder.enter();
         if (error.has_value()) {
             // Shenanigans!
-            dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#8 public key parse failed: {}", error.value());
+            dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#8 public key parse failed: {}", error.value());
             return false;
         }
 
         ScopeGuard leave { [&] {
             auto error = decoder.leave();
             if (error.has_value()) {
-                dbgln_if(RSA_PARSE_DEBUG, "RSA key parse failed: {}", error.value());
+                dbgln_if<RSA_PARSE_DEBUG>("RSA key parse failed: {}", error.value());
                 has_read_error = true;
             }
         } };
@@ -91,7 +91,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
         // Now let's read the OID.
         auto oid_result = decoder.read<Vector<int>>();
         if (oid_result.is_error()) {
-            dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#8 public key parse failed: {}", oid_result.error());
+            dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#8 public key parse failed: {}", oid_result.error());
             return false;
         }
 
@@ -99,7 +99,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
         // Now let's check that the OID matches "RSA key"
         if (oid != pkcs8_rsa_key_oid) {
             // Oh well. not an RSA key at all.
-            dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#8 public key parse failed: Not an RSA key");
+            dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#8 public key parse failed: Not an RSA key");
             return false;
         }
 
@@ -119,7 +119,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
             // Now read the private key, which is actually an octet string containing the PKCS#1 encoded private key.
             auto data_result = decoder.read<StringView>();
             if (data_result.is_error()) {
-                dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#8 private key parse failed: {}", data_result.error());
+                dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#8 private key parse failed: {}", data_result.error());
                 return keypair;
             }
             return parse_rsa_key(data_result.value().bytes());
@@ -134,21 +134,21 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
             // This is a private key, parse the rest.
             auto modulus_result = decoder.read<UnsignedBigInteger>();
             if (modulus_result.is_error()) {
-                dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#1 private key parse failed: {}", modulus_result.error());
+                dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#1 private key parse failed: {}", modulus_result.error());
                 return keypair;
             }
             auto modulus = modulus_result.release_value();
 
             auto public_exponent_result = decoder.read<UnsignedBigInteger>();
             if (public_exponent_result.is_error()) {
-                dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#1 private key parse failed: {}", public_exponent_result.error());
+                dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#1 private key parse failed: {}", public_exponent_result.error());
                 return keypair;
             }
             auto public_exponent = public_exponent_result.release_value();
 
             auto private_exponent_result = decoder.read<UnsignedBigInteger>();
             if (private_exponent_result.is_error()) {
-                dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#1 private key parse failed: {}", private_exponent_result.error());
+                dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#1 private key parse failed: {}", private_exponent_result.error());
                 return keypair;
             }
             auto private_exponent = private_exponent_result.release_value();
@@ -161,7 +161,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
             return keypair;
         } else if (first_integer == 1) {
             // This is a multi-prime key, we don't support that.
-            dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#1 private key parse failed: Multi-prime key not supported");
+            dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#1 private key parse failed: Multi-prime key not supported");
             return keypair;
         } else {
             auto&& modulus = move(first_integer);
@@ -170,7 +170,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
             auto public_exponent_result = decoder.read<UnsignedBigInteger>();
             if (public_exponent_result.is_error()) {
                 // Bad public key.
-                dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#1 public key parse failed: {}", public_exponent_result.error());
+                dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#1 public key parse failed: {}", public_exponent_result.error());
                 return keypair;
             }
 
@@ -191,7 +191,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
         // Now we have a bit string, which contains the PKCS#1 encoded public key.
         auto data_result = decoder.read<BitmapView>();
         if (data_result.is_error()) {
-            dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#8 public key parse failed: {}", data_result.error());
+            dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#8 public key parse failed: {}", data_result.error());
             return keypair;
         }
 
@@ -200,7 +200,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
         // FIXME: This is pretty awkward, maybe just generate a zero'd out ByteBuffer from the parser instead?
         auto padded_data_result = ByteBuffer::create_zeroed(data.size_in_bytes());
         if (padded_data_result.is_error()) {
-            dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#1 key parse failed: Not enough memory");
+            dbgln_if<RSA_PARSE_DEBUG>("RSA PKCS#1 key parse failed: Not enough memory");
             return keypair;
         }
         auto padded_data = padded_data_result.release_value();
@@ -212,7 +212,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
 
 void RSA::encrypt(ReadonlyBytes in, Bytes& out)
 {
-    dbgln_if(CRYPTO_DEBUG, "in size: {}", in.size());
+    dbgln_if<CRYPTO_DEBUG>("in size: {}", in.size());
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     if (!(in_integer < m_public_key.modulus())) {
         dbgln("value too large for key");
@@ -328,7 +328,7 @@ VerificationConsistency RSA_EMSA_PSS<HashFunction>::verify(ReadonlyBytes in)
 void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
 {
     auto mod_len = (m_public_key.modulus().trimmed_length() * sizeof(u32) * 8 + 7) / 8;
-    dbgln_if(CRYPTO_DEBUG, "key size: {}", mod_len);
+    dbgln_if<CRYPTO_DEBUG>("key size: {}", mod_len);
     if (in.size() > mod_len - 11) {
         dbgln("message too long :(");
         out = out.trim(0);
@@ -358,7 +358,7 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
     out.overwrite(3 + ps_length, in.data(), in.size());
     out = out.trim(3 + ps_length + in.size()); // should be a single block
 
-    dbgln_if(CRYPTO_DEBUG, "padded output size: {} buffer size: {}", 3 + ps_length + in.size(), out.size());
+    dbgln_if<CRYPTO_DEBUG>("padded output size: {} buffer size: {}", 3 + ps_length + in.size(), out.size());
 
     RSA::encrypt(out, out);
 }

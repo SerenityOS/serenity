@@ -190,7 +190,7 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
         return { local_adapter, local_adapter->mac_address() };
 
     if (!local_adapter && !gateway_adapter) {
-        dbgln_if(ROUTING_DEBUG, "Routing: Couldn't find a suitable adapter for route to {}", target);
+        dbgln_if<ROUTING_DEBUG>("Routing: Couldn't find a suitable adapter for route to {}", target);
         return { nullptr, {} };
     }
 
@@ -198,7 +198,7 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
     IPv4Address next_hop_ip;
 
     if (local_adapter) {
-        dbgln_if(ROUTING_DEBUG, "Routing: Got adapter for route (direct): {} ({}/{}) for {}",
+        dbgln_if<ROUTING_DEBUG>("Routing: Got adapter for route (direct): {} ({}/{}) for {}",
             local_adapter->name(),
             local_adapter->ipv4_address(),
             local_adapter->ipv4_netmask(),
@@ -207,7 +207,7 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
         adapter = local_adapter;
         next_hop_ip = target;
     } else if (gateway_adapter && allow_using_gateway == AllowUsingGateway::Yes) {
-        dbgln_if(ROUTING_DEBUG, "Routing: Got adapter for route (using gateway {}): {} ({}/{}) for {}",
+        dbgln_if<ROUTING_DEBUG>("Routing: Got adapter for route (using gateway {}): {} ({}/{}) for {}",
             gateway_adapter->ipv4_gateway(),
             gateway_adapter->name(),
             gateway_adapter->ipv4_address(),
@@ -236,12 +236,12 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
             return table.get(next_hop_ip);
         });
         if (addr.has_value()) {
-            dbgln_if(ARP_DEBUG, "Routing: Using cached ARP entry for {} ({})", next_hop_ip, addr.value().to_string());
+            dbgln_if<ARP_DEBUG>("Routing: Using cached ARP entry for {} ({})", next_hop_ip, addr.value().to_string());
             return { adapter, addr.value() };
         }
     }
 
-    dbgln_if(ARP_DEBUG, "Routing: Sending ARP request via adapter {} for IPv4 address {}", adapter->name(), next_hop_ip);
+    dbgln_if<ARP_DEBUG>("Routing: Sending ARP request via adapter {} for IPv4 address {}", adapter->name(), next_hop_ip);
 
     ARPPacket request;
     request.set_operation(ARPOperation::Request);
@@ -254,14 +254,14 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
     if (NetworkTask::is_current()) {
         // FIXME: Waiting for the ARP response from inside the NetworkTask would
         // deadlock, so let's hope that whoever called route_to() tries again in a bit.
-        dbgln_if(ARP_DEBUG, "Routing: Not waiting for ARP response from inside NetworkTask, sent ARP request using adapter {} for {}", adapter->name(), target);
+        dbgln_if<ARP_DEBUG>("Routing: Not waiting for ARP response from inside NetworkTask, sent ARP request using adapter {} for {}", adapter->name(), target);
         return { nullptr, {} };
     }
 
     Optional<MACAddress> addr;
     if (!Thread::current()->block<ARPTableBlocker>({}, next_hop_ip, addr).was_interrupted()) {
         if (addr.has_value()) {
-            dbgln_if(ARP_DEBUG, "Routing: Got ARP response using adapter {} for {} ({})",
+            dbgln_if<ARP_DEBUG>("Routing: Got ARP response using adapter {} for {} ({})",
                 adapter->name(),
                 next_hop_ip,
                 addr.value().to_string());
@@ -269,7 +269,7 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
         }
     }
 
-    dbgln_if(ROUTING_DEBUG, "Routing: Couldn't find route using adapter {} for {}", adapter->name(), target);
+    dbgln_if<ROUTING_DEBUG>("Routing: Couldn't find route using adapter {} for {}", adapter->name(), target);
     return { nullptr, {} };
 }
 

@@ -37,7 +37,7 @@ void NetworkJob::did_finish(NonnullRefPtr<NetworkResponse>&& response)
     NonnullRefPtr<NetworkJob> protector(*this);
 
     m_response = move(response);
-    dbgln_if(NETWORKJOB_DEBUG, "{} job did_finish", *this);
+    dbgln_if<NETWORKJOB_DEBUG>("{} job did_finish", *this);
     VERIFY(on_finish);
     on_finish(true);
     shutdown(ShutdownMode::DetachFromSocket);
@@ -53,7 +53,7 @@ void NetworkJob::did_fail(Error error)
     NonnullRefPtr<NetworkJob> protector(*this);
 
     m_error = error;
-    dbgln_if(NETWORKJOB_DEBUG, "{}{{{:p}}} job did_fail! error: {} ({})", class_name(), this, (unsigned)error, to_string(error));
+    dbgln_if<NETWORKJOB_DEBUG>("{}{{{:p}}} job did_fail! error: {} ({})", class_name(), this, (unsigned)error, to_string(error));
     VERIFY(on_finish);
     on_finish(false);
     shutdown(ShutdownMode::DetachFromSocket);

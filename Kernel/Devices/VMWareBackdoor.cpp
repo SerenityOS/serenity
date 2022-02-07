@@ -154,7 +154,7 @@ void VMWareBackdoor::send_high_bandwidth(VMWareCommand& command)
 {
     vmware_high_bandwidth_send(command);
 
-    dbgln_if(VMWARE_BACKDOOR_DEBUG, "VMWareBackdoor Command High bandwidth Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+    dbgln_if<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command High bandwidth Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
         command.ax,
         command.bx,
         command.cx,
@@ -165,7 +165,7 @@ void VMWareBackdoor::get_high_bandwidth(VMWareCommand& command)
 {
     vmware_high_bandwidth_get(command);
 
-    dbgln_if(VMWARE_BACKDOOR_DEBUG, "VMWareBackdoor Command High bandwidth Get Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+    dbgln_if<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command High bandwidth Get Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
         command.ax,
         command.bx,
         command.cx,
@@ -176,7 +176,7 @@ void VMWareBackdoor::send(VMWareCommand& command)
 {
     vmware_out(command);
 
-    dbgln_if(VMWARE_BACKDOOR_DEBUG, "VMWareBackdoor Command Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+    dbgln_if<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
         command.ax,
         command.bx,
         command.cx,
@@ -191,7 +191,7 @@ u16 VMWareBackdoor::read_mouse_status_queue_size()
     send(command);
 
     if (command.ax == 0xFFFF0000) {
-        dbgln_if(PS2MOUSE_DEBUG, "PS2MouseDevice: Resetting VMWare mouse");
+        dbgln_if<PS2MOUSE_DEBUG>("PS2MouseDevice: Resetting VMWare mouse");
         disable_absolute_vmmouse();
         enable_absolute_vmmouse();
         return 0;

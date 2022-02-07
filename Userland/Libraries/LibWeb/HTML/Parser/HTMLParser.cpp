@@ -152,7 +152,7 @@ void HTMLParser::run(const AK::URL& url)
             break;
         auto& token = optional_token.value();
 
-        dbgln_if(PARSER_DEBUG, "[{}] {}", insertion_mode_name(), token.to_string());
+        dbgln_if<PARSER_DEBUG>("[{}] {}", insertion_mode_name(), token.to_string());
 
         // https://html.spec.whatwg.org/multipage/parsing.html#tree-construction-dispatcher
         // As each token is emitted from the tokenizer, the user agent must follow the appropriate steps from the following list, known as the tree construction dispatcher:
@@ -179,7 +179,7 @@ void HTMLParser::run(const AK::URL& url)
         }
 
         if (m_stop_parsing) {
-            dbgln_if(PARSER_DEBUG, "Stop parsing{}! :^)", m_parsing_fragment ? " fragment" : "");
+            dbgln_if<PARSER_DEBUG>("Stop parsing{}! :^)", m_parsing_fragment ? " fragment" : "");
             break;
         }
     }

@@ -70,7 +70,7 @@ u32 NVMeQueue::process_cq()
         ++nr_of_processed_cqes;
         status = CQ_STATUS_FIELD(m_cqe_array[m_cq_head].status);
         cmdid = m_cqe_array[m_cq_head].command_id;
-        dbgln_if(NVME_DEBUG, "NVMe: Completion with status {:x} and command identifier {}. CQ_HEAD: {}", status, cmdid, m_cq_head);
+        dbgln_if<NVME_DEBUG>("NVMe: Completion with status {:x} and command identifier {}. CQ_HEAD: {}", status, cmdid, m_cq_head);
         // TODO: We don't use AsyncBlockDevice requests for admin queue as it is only applicable for a block device (NVMe namespace)
         //  But admin commands precedes namespace creation. Unify requests to avoid special conditions
         if (m_admin_queue == false) {
@@ -106,7 +106,7 @@ void NVMeQueue::submit_sqe(NVMeSubmission& sub)
             m_sq_tail = temp_sq_tail;
     }
 
-    dbgln_if(NVME_DEBUG, "NVMe: Submission with command identifier {}. SQ_TAIL: {}", sub.cmdid, m_sq_tail);
+    dbgln_if<NVME_DEBUG>("NVMe: Submission with command identifier {}. SQ_TAIL: {}", sub.cmdid, m_sq_tail);
     full_memory_barrier();
     update_sq_doorbell();
 }

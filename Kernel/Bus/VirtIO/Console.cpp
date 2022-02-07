@@ -76,7 +76,7 @@ bool Console::handle_device_config_change()
 
 void Console::handle_queue_update(u16 queue_index)
 {
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::Console: Handle queue update {}", queue_index);
+    dbgln_if<VIRTIO_DEBUG>("VirtIO::Console: Handle queue update {}", queue_index);
 
     if (queue_index == CONTROL_RECEIVEQ) {
         SpinlockLocker ringbuffer_lock(m_control_receive_buffer->lock());

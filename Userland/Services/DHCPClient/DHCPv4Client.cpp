@@ -52,9 +52,9 @@ static bool send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, C
     dst.sin_addr.s_addr = IPv4Address { 255, 255, 255, 255 }.to_u32();
     memset(&dst.sin_zero, 0, sizeof(dst.sin_zero));
 
-    dbgln_if(DHCPV4CLIENT_DEBUG, "sendto({} bound to {}, ..., {} at {}) = ...?", fd, iface.ifname, dst.sin_addr.s_addr, dst.sin_port);
+    dbgln_if<DHCPV4CLIENT_DEBUG>("sendto({} bound to {}, ..., {} at {}) = ...?", fd, iface.ifname, dst.sin_addr.s_addr, dst.sin_port);
     auto rc = sendto(fd, &packet, sizeof(packet), 0, (sockaddr*)&dst, sizeof(dst));
-    dbgln_if(DHCPV4CLIENT_DEBUG, "sendto({}) = {}", fd, rc);
+    dbgln_if<DHCPV4CLIENT_DEBUG>("sendto({}) = {}", fd, rc);
     if (rc < 0) {
         dbgln("sendto failed with {}", strerror(errno));
         return false;
@@ -114,7 +114,7 @@ DHCPv4Client::DHCPv4Client()
     m_server = Core::UDPServer::construct(this);
     m_server->on_ready_to_receive = [this] {
         auto buffer = m_server->receive(sizeof(DHCPv4Packet));
-        dbgln_if(DHCPV4CLIENT_DEBUG, "Received {} bytes", buffer.size());
+        dbgln_if<DHCPV4CLIENT_DEBUG>("Received {} bytes", buffer.size());
         if (buffer.size() < sizeof(DHCPv4Packet) - DHCPV4_OPTION_FIELD_MAX_LENGTH + 1 || buffer.size() > sizeof(DHCPv4Packet)) {
             dbgln("we expected {}-{} bytes, this is a bad packet", sizeof(DHCPv4Packet) - DHCPV4_OPTION_FIELD_MAX_LENGTH + 1, sizeof(DHCPv4Packet));
             return;
@@ -187,10 +187,10 @@ ErrorOr<DHCPv4Client::Interfaces> DHCPv4Client::get_discoverable_interfaces()
         auto ipv4_addr_maybe = IPv4Address::from_string(if_object.get("ipv4_address").to_string());
         auto ipv4_addr = ipv4_addr_maybe.has_value() ? ipv4_addr_maybe.value() : IPv4Address { 0, 0, 0, 0 };
         if (is_up) {
-            dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}, and it was up!", name, mac);
+            dbgln_if<DHCPV4_DEBUG>("Found adapter '{}' with mac {}, and it was up!", name, mac);
             ifnames_to_immediately_discover.empend(name, mac_from_string(mac), ipv4_addr);
         } else {
-            dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}, but it was down", name, mac);
+            dbgln_if<DHCPV4_DEBUG>("Found adapter '{}' with mac {}, but it was down", name, mac);
             ifnames_to_attempt_later.empend(name, mac_from_string(mac), ipv4_addr);
         }
     });
@@ -279,7 +279,7 @@ void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
 {
     auto options = packet.parse_options();
 
-    dbgln_if(DHCPV4CLIENT_DEBUG, "Here are the options: {}", options.to_string());
+    dbgln_if<DHCPV4CLIENT_DEBUG>("Here are the options: {}", options.to_string());
 
     auto value_or_error = options.get<DHCPMessageType>(DHCPOption::DHCPMessageType);
     if (!value_or_error.has_value())

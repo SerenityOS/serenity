@@ -128,7 +128,7 @@ void FileDB::on_file_edit_insert_text(const String& filename, const String& inse
     GUI::TextPosition start_position { start_line, start_column };
     document->insert_at(start_position, inserted_text, &s_default_document_client);
 
-    dbgln_if(FILE_CONTENT_DEBUG, "{}", document->text());
+    dbgln_if<FILE_CONTENT_DEBUG>("{}", document->text());
 }
 
 void FileDB::on_file_edit_remove_text(const String& filename, size_t start_line, size_t start_column, size_t end_line, size_t end_column)
@@ -145,7 +145,7 @@ void FileDB::on_file_edit_remove_text(const String& filename, size_t start_line,
     };
 
     document->remove(range);
-    dbgln_if(FILE_CONTENT_DEBUG, "{}", document->text());
+    dbgln_if<FILE_CONTENT_DEBUG>("{}", document->text());
 }
 
 RefPtr<GUI::TextDocument> FileDB::create_with_content(const String& content)

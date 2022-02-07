@@ -135,7 +135,7 @@ void fill_path(Painter& painter, Path const& path, Color color, Gfx::Painter::Wi
                         // The points between this segment and the previous are
                         // inside the shape
 
-                        dbgln_if(FILL_PATH_DEBUG, "y={}: {} at {}: {} -- {}", scanline, winding_number, i, from, to);
+                        dbgln_if<FILL_PATH_DEBUG>("y={}: {} at {}: {} -- {}", scanline, winding_number, i, from, to);
                         draw_line(from, to, color, 1);
                     }
 

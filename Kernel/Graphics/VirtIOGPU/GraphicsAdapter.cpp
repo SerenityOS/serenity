@@ -38,7 +38,7 @@ GraphicsAdapter::GraphicsAdapter(PCI::DeviceIdentifier const& device_identifier)
 
 void GraphicsAdapter::initialize_framebuffer_devices()
 {
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Initializing framebuffer devices");
+    dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: Initializing framebuffer devices");
     VERIFY(!m_created_framebuffer_devices);
     create_framebuffer_devices();
     m_created_framebuffer_devices = true;
@@ -48,7 +48,7 @@ void GraphicsAdapter::initialize_framebuffer_devices()
 
 void GraphicsAdapter::enable_consoles()
 {
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Enabling consoles");
+    dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: Enabling consoles");
     for_each_framebuffer([&](auto& framebuffer, auto& console) {
         framebuffer.deactivate_writes();
         console.enable();
@@ -58,7 +58,7 @@ void GraphicsAdapter::enable_consoles()
 
 void GraphicsAdapter::disable_consoles()
 {
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Disabling consoles");
+    dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: Disabling consoles");
     for_each_framebuffer([&](auto& framebuffer, auto& console) {
         console.disable();
         framebuffer.activate_writes();
@@ -75,7 +75,7 @@ void GraphicsAdapter::initialize()
         bool success = negotiate_features([&](u64 supported_features) {
             u64 negotiated = 0;
             if (is_feature_set(supported_features, VIRTIO_GPU_F_VIRGL))
-                dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: VIRGL is not yet supported!");
+                dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: VIRGL is not yet supported!");
             if (is_feature_set(supported_features, VIRTIO_GPU_F_EDID))
                 negotiated |= VIRTIO_GPU_F_EDID;
             return negotiated;
@@ -84,7 +84,7 @@ void GraphicsAdapter::initialize()
             read_config_atomic([&]() {
                 m_num_scanouts = config_read32(*config, DEVICE_NUM_SCANOUTS);
             });
-            dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: num_scanouts: {}", m_num_scanouts);
+            dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: num_scanouts: {}", m_num_scanouts);
             success = setup_queues(2); // CONTROLQ + CURSORQ
         }
         VERIFY(success);
@@ -113,7 +113,7 @@ bool GraphicsAdapter::handle_device_config_change()
     auto events = get_pending_events();
     if (events & VIRTIO_GPU_EVENT_DISPLAY) {
         // The host window was resized, in SerenityOS we completely ignore this event
-        dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Ignoring virtio gpu display resize event");
+        dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: Ignoring virtio gpu display resize event");
         clear_pending_events(VIRTIO_GPU_EVENT_DISPLAY);
     }
     if (events & ~VIRTIO_GPU_EVENT_DISPLAY) {
@@ -125,7 +125,7 @@ bool GraphicsAdapter::handle_device_config_change()
 
 void GraphicsAdapter::handle_queue_update(u16 queue_index)
 {
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Handle queue update");
+    dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: Handle queue update");
     VERIFY(queue_index == CONTROLQ);
 
     auto& queue = get_queue(CONTROLQ);
@@ -157,7 +157,7 @@ void GraphicsAdapter::query_display_information()
     for (size_t i = 0; i < VIRTIO_GPU_MAX_SCANOUTS; ++i) {
         auto& scanout = m_scanouts[i].display_info;
         scanout = response.scanout_modes[i];
-        dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Scanout {}: enabled: {} x: {}, y: {}, width: {}, height: {}", i, !!scanout.enabled, scanout.rect.x, scanout.rect.y, scanout.rect.width, scanout.rect.height);
+        dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: Scanout {}: enabled: {} x: {}, y: {}, width: {}, height: {}", i, !!scanout.enabled, scanout.rect.x, scanout.rect.y, scanout.rect.width, scanout.rect.height);
         if (scanout.enabled && !m_default_scanout.has_value())
             m_default_scanout = i;
 
@@ -261,7 +261,7 @@ ResourceID GraphicsAdapter::create_2d_resource(Protocol::Rect rect)
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
     VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Allocated 2d resource with id {}", resource_id.value());
+    dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: Allocated 2d resource with id {}", resource_id.value());
     return resource_id;
 }
 
@@ -292,7 +292,7 @@ void GraphicsAdapter::ensure_backing_storage(ResourceID resource_id, Memory::Reg
     synchronous_virtio_gpu_command(start_of_scratch_space(), header_block_size, sizeof(response));
 
     VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Allocated backing storage");
+    dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: Allocated backing storage");
 }
 
 void GraphicsAdapter::detach_backing_storage(ResourceID resource_id)
@@ -308,7 +308,7 @@ void GraphicsAdapter::detach_backing_storage(ResourceID resource_id)
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
     VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Detached backing storage");
+    dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: Detached backing storage");
 }
 
 void GraphicsAdapter::set_scanout_resource(ScanoutID scanout, ResourceID resource_id, Protocol::Rect rect)
@@ -328,7 +328,7 @@ void GraphicsAdapter::set_scanout_resource(ScanoutID scanout, ResourceID resourc
         synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
         VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
-        dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Set backing scanout");
+        dbgln_if<VIRTIO_DEBUG>("VirtIO::GraphicsAdapter: Set backing scanout");
     }
 
     // Now that the Scanout should be enabled, update the EDID

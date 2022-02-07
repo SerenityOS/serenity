@@ -42,7 +42,7 @@ public:
         if (m_free_descriptor_stack.is_empty())
             return nullptr;
 
-        dbgln_if(UHCI_VERBOSE_DEBUG, "Got a free UHCI Descriptor @ {} from pool {}", m_free_descriptor_stack.top(), m_pool_name);
+        dbgln_if<UHCI_VERBOSE_DEBUG>("Got a free UHCI Descriptor @ {} from pool {}", m_free_descriptor_stack.top(), m_pool_name);
         T* descriptor = m_free_descriptor_stack.top();
         m_free_descriptor_stack.pop();
 
@@ -51,7 +51,7 @@ public:
 
     void release_to_pool(T* ptr)
     {
-        dbgln_if(UHCI_VERBOSE_DEBUG, "Returning descriptor @ {} to pool {}", ptr, m_pool_name);
+        dbgln_if<UHCI_VERBOSE_DEBUG>("Returning descriptor @ {} to pool {}", ptr, m_pool_name);
         if (!m_free_descriptor_stack.push(ptr))
             dbgln("Failed to return descriptor to pool {}. Stack overflow!", m_pool_name);
     }

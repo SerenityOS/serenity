@@ -177,7 +177,7 @@ namespace Web::HTML {
 
 static inline void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
-    dbgln_if(TOKENIZER_TRACE_DEBUG, "Parse error (tokenization) {}", location);
+    dbgln_if<TOKENIZER_TRACE_DEBUG>("Parse error (tokenization) {}", location);
 }
 
 Optional<u32> HTMLTokenizer::next_code_point()
@@ -185,7 +185,7 @@ Optional<u32> HTMLTokenizer::next_code_point()
     if (m_utf8_iterator == m_utf8_view.end())
         return {};
     skip(1);
-    dbgln_if(TOKENIZER_TRACE_DEBUG, "(Tokenizer) Next code_point: {}", (char)*m_prev_utf8_iterator);
+    dbgln_if<TOKENIZER_TRACE_DEBUG>("(Tokenizer) Next code_point: {}", (char)*m_prev_utf8_iterator);
     return *m_prev_utf8_iterator;
 }
 
@@ -218,7 +218,7 @@ Optional<u32> HTMLTokenizer::peek_code_point(size_t offset) const
 HTMLToken::Position HTMLTokenizer::nth_last_position(size_t n)
 {
     if (n + 1 > m_source_positions.size()) {
-        dbgln_if(TOKENIZER_TRACE_DEBUG, "(Tokenizer::nth_last_position) Invalid position requested: {}th-last of {}. Returning (0-0).", n, m_source_positions.size());
+        dbgln_if<TOKENIZER_TRACE_DEBUG>("(Tokenizer::nth_last_position) Invalid position requested: {}th-last of {}. Returning (0-0).", n, m_source_positions.size());
         return HTMLToken::Position { 0, 0 };
     };
     return m_source_positions.at(m_source_positions.size() - 1 - n);
@@ -2690,17 +2690,17 @@ HTMLTokenizer::HTMLTokenizer(StringView input, String const& encoding)
 
 void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)
 {
-    dbgln_if(TOKENIZER_TRACE_DEBUG, "[{}] Switch to {}", state_name(m_state), state_name(new_state));
+    dbgln_if<TOKENIZER_TRACE_DEBUG>("[{}] Switch to {}", state_name(m_state), state_name(new_state));
 }
 
 void HTMLTokenizer::will_reconsume_in([[maybe_unused]] State new_state)
 {
-    dbgln_if(TOKENIZER_TRACE_DEBUG, "[{}] Reconsume in {}", state_name(m_state), state_name(new_state));
+    dbgln_if<TOKENIZER_TRACE_DEBUG>("[{}] Reconsume in {}", state_name(m_state), state_name(new_state));
 }
 
 void HTMLTokenizer::switch_to(Badge<HTMLParser>, State new_state)
 {
-    dbgln_if(TOKENIZER_TRACE_DEBUG, "[{}] Parser switches tokenizer state to {}", state_name(m_state), state_name(new_state));
+    dbgln_if<TOKENIZER_TRACE_DEBUG>("[{}] Parser switches tokenizer state to {}", state_name(m_state), state_name(new_state));
     m_state = new_state;
 }
 

@@ -60,7 +60,7 @@ OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_data(u8 const* data
 OwnPtr<MatroskaDocument> MatroskaReader::parse()
 {
     auto first_element_id = m_streamer.read_variable_size_integer(false);
-    dbgln_if(MATROSKA_TRACE_DEBUG, "First element ID is {:#010x}\n", first_element_id.value());
+    dbgln_if<MATROSKA_TRACE_DEBUG>("First element ID is {:#010x}\n", first_element_id.value());
     if (!first_element_id.has_value() || first_element_id.value() != EBML_MASTER_ELEMENT_ID)
         return {};
 
@@ -68,7 +68,7 @@ OwnPtr<MatroskaDocument> MatroskaReader::parse()
     if (!header.has_value())
         return {};
 
-    dbgln_if(MATROSKA_DEBUG, "Parsed EBML header");
+    dbgln_if<MATROSKA_DEBUG>("Parsed EBML header");
 
     auto root_element_id = m_streamer.read_variable_size_integer(false);
     if (!root_element_id.has_value() || root_element_id.value() != SEGMENT_ELEMENT_ID)
@@ -87,23 +87,23 @@ bool MatroskaReader::parse_master_element([[maybe_unused]] StringView element_na
 {
     auto element_data_size = m_streamer.read_variable_size_integer();
     CHECK_HAS_VALUE(element_data_size);
-    dbgln_if(MATROSKA_DEBUG, "{} has {} octets of data.", element_name, element_data_size.value());
+    dbgln_if<MATROSKA_DEBUG>("{} has {} octets of data.", element_name, element_data_size.value());
 
     m_streamer.push_octets_read();
     while (m_streamer.octets_read() < element_data_size.value()) {
-        dbgln_if(MATROSKA_TRACE_DEBUG, "====== Reading  element ======");
+        dbgln_if<MATROSKA_TRACE_DEBUG>("====== Reading  element ======");
         auto optional_element_id = m_streamer.read_variable_size_integer(false);
         CHECK_HAS_VALUE(optional_element_id);
 
         auto element_id = optional_element_id.value();
-        dbgln_if(MATROSKA_TRACE_DEBUG, "{:s} element ID is {:#010x}\n", element_name, element_id);
+        dbgln_if<MATROSKA_TRACE_DEBUG>("{:s} element ID is {:#010x}\n", element_name, element_id);
 
         if (!element_consumer(element_id)) {
-            dbgln_if(MATROSKA_DEBUG, "{:s} consumer failed on ID {:#010x}\n", element_name.to_string().characters(), element_id);
+            dbgln_if<MATROSKA_DEBUG>("{:s} consumer failed on ID {:#010x}\n", element_name.to_string().characters(), element_id);
             return false;
         }
 
-        dbgln_if(MATROSKA_TRACE_DEBUG, "Read {} octets of the {} so far.", m_streamer.octets_read(), element_name);
+        dbgln_if<MATROSKA_TRACE_DEBUG>("Read {} octets of the {} so far.", m_streamer.octets_read(), element_name);
     }
     m_streamer.pop_octets_read();
 
@@ -118,12 +118,12 @@ Optional<EBMLHeader> MatroskaReader::parse_ebml_header()
             auto doc_type = read_string_element();
             CHECK_HAS_VALUE(doc_type);
             header.doc_type = doc_type.value();
-            dbgln_if(MATROSKA_DEBUG, "Read DocType attribute: {}", doc_type.value());
+            dbgln_if<MATROSKA_DEBUG>("Read DocType attribute: {}", doc_type.value());
         } else if (element_id == DOCTYPE_VERSION_ELEMENT_ID) {
             auto doc_type_version = read_u64_element();
             CHECK_HAS_VALUE(doc_type_version);
             header.doc_type_version = doc_type_version.value();
-            dbgln_if(MATROSKA_DEBUG, "Read DocTypeVersion attribute: {}", doc_type_version.value());
+            dbgln_if<MATROSKA_DEBUG>("Read DocTypeVersion attribute: {}", doc_type_version.value());
         } else {
             return read_unknown_element();
         }
@@ -138,7 +138,7 @@ Optional<EBMLHeader> MatroskaReader::parse_ebml_header()
 
 bool MatroskaReader::parse_segment_elements(MatroskaDocument& matroska_document)
 {
-    dbgln_if(MATROSKA_DEBUG, "Parsing segment elements");
+    dbgln_if<MATROSKA_DEBUG>("Parsing segment elements");
     auto success = parse_master_element("Segment", [&](u64 element_id) {
         if (element_id == SEGMENT_INFORMATION_ELEMENT_ID) {
             auto segment_information = parse_information();
@@ -171,17 +171,17 @@ OwnPtr<SegmentInformation> MatroskaReader::parse_information()
             auto timestamp_scale = read_u64_element();
             CHECK_HAS_VALUE(timestamp_scale);
             segment_information->set_timestamp_scale(timestamp_scale.value());
-            dbgln_if(MATROSKA_DEBUG, "Read TimestampScale attribute: {}", timestamp_scale.value());
+            dbgln_if<MATROSKA_DEBUG>("Read TimestampScale attribute: {}", timestamp_scale.value());
         } else if (element_id == MUXING_APP_ID) {
             auto muxing_app = read_string_element();
             CHECK_HAS_VALUE(muxing_app);
             segment_information->set_muxing_app(muxing_app.value());
-            dbgln_if(MATROSKA_DEBUG, "Read MuxingApp attribute: {}", muxing_app.value());
+            dbgln_if<MATROSKA_DEBUG>("Read MuxingApp attribute: {}", muxing_app.value());
         } else if (element_id == WRITING_APP_ID) {
             auto writing_app = read_string_element();
             CHECK_HAS_VALUE(writing_app);
             segment_information->set_writing_app(writing_app.value());
-            dbgln_if(MATROSKA_DEBUG, "Read WritingApp attribute: {}", writing_app.value());
+            dbgln_if<MATROSKA_DEBUG>("Read WritingApp attribute: {}", writing_app.value());
         } else {
             return read_unknown_element();
         }
@@ -198,13 +198,13 @@ bool MatroskaReader::parse_tracks(MatroskaDocument& matroska_document)
 {
     auto success = parse_master_element("Tracks", [&](u64 element_id) {
         if (element_id == TRACK_ENTRY_ID) {
-            dbgln_if(MATROSKA_DEBUG, "Parsing track");
+            dbgln_if<MATROSKA_DEBUG>("Parsing track");
             auto track_entry = parse_track_entry();
             if (!track_entry)
                 return false;
             auto track_number = track_entry->track_number();
             matroska_document.add_track(track_number, track_entry.release_nonnull());
-            dbgln_if(MATROSKA_DEBUG, "Track {} added to document", track_number);
+            dbgln_if<MATROSKA_DEBUG>("Track {} added to document", track_number);
         } else {
             return read_unknown_element();
         }
@@ -223,27 +223,27 @@ OwnPtr<TrackEntry> MatroskaReader::parse_track_entry()
             auto track_number = read_u64_element();
             CHECK_HAS_VALUE(track_number);
             track_entry->set_track_number(track_number.value());
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read TrackNumber attribute: {}", track_number.value());
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Read TrackNumber attribute: {}", track_number.value());
         } else if (element_id == TRACK_UID_ID) {
             auto track_uid = read_u64_element();
             CHECK_HAS_VALUE(track_uid);
             track_entry->set_track_uid(track_uid.value());
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read TrackUID attribute: {}", track_uid.value());
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Read TrackUID attribute: {}", track_uid.value());
         } else if (element_id == TRACK_TYPE_ID) {
             auto track_type = read_u64_element();
             CHECK_HAS_VALUE(track_type);
             track_entry->set_track_type(static_cast<TrackEntry::TrackType>(track_type.value()));
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read TrackType attribute: {}", track_type.value());
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Read TrackType attribute: {}", track_type.value());
         } else if (element_id == TRACK_LANGUAGE_ID) {
             auto language = read_string_element();
             CHECK_HAS_VALUE(language);
             track_entry->set_language(language.value());
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's Language attribute: {}", language.value());
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Read Track's Language attribute: {}", language.value());
         } else if (element_id == TRACK_CODEC_ID) {
             auto codec_id = read_string_element();
             CHECK_HAS_VALUE(codec_id);
             track_entry->set_codec_id(codec_id.value());
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's CodecID attribute: {}", codec_id.value());
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Read Track's CodecID attribute: {}", codec_id.value());
         } else if (element_id == TRACK_VIDEO_ID) {
             auto video_track = parse_video_track_information();
             CHECK_HAS_VALUE(video_track);
@@ -273,12 +273,12 @@ Optional<TrackEntry::VideoTrack> MatroskaReader::parse_video_track_information()
             auto pixel_width = read_u64_element();
             CHECK_HAS_VALUE(pixel_width);
             video_track.pixel_width = pixel_width.value();
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read VideoTrack's PixelWidth attribute: {}", pixel_width.value());
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Read VideoTrack's PixelWidth attribute: {}", pixel_width.value());
         } else if (element_id == PIXEL_HEIGHT_ID) {
             auto pixel_height = read_u64_element();
             CHECK_HAS_VALUE(pixel_height);
             video_track.pixel_height = pixel_height.value();
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read VideoTrack's PixelHeight attribute: {}", pixel_height.value());
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Read VideoTrack's PixelHeight attribute: {}", pixel_height.value());
         } else {
             return read_unknown_element();
         }
@@ -300,12 +300,12 @@ Optional<TrackEntry::AudioTrack> MatroskaReader::parse_audio_track_information()
             auto channels = read_u64_element();
             CHECK_HAS_VALUE(channels);
             audio_track.channels = channels.value();
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read AudioTrack's Channels attribute: {}", channels.value());
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Read AudioTrack's Channels attribute: {}", channels.value());
         } else if (element_id == BIT_DEPTH_ID) {
             auto bit_depth = read_u64_element();
             CHECK_HAS_VALUE(bit_depth);
             audio_track.bit_depth = bit_depth.value();
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read AudioTrack's BitDepth attribute: {}", bit_depth.value());
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Read AudioTrack's BitDepth attribute: {}", bit_depth.value());
         } else {
             return read_unknown_element();
         }

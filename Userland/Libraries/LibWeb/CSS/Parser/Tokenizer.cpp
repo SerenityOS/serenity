@@ -19,7 +19,7 @@ static const u32 TOKENIZER_EOF = 0xFFFFFFFF;
 
 static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
 {
-    dbgln_if(CSS_TOKENIZER_DEBUG, "Parse error (css tokenization) {} ", location);
+    dbgln_if<CSS_TOKENIZER_DEBUG>("Parse error (css tokenization) {} ", location);
 }
 
 static inline bool is_eof(u32 code_point)
@@ -270,7 +270,7 @@ u32 Tokenizer::next_code_point()
         m_position.column++;
     }
 
-    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Next code_point: {:d}", code_point);
+    dbgln_if<CSS_TOKENIZER_DEBUG>("(Tokenizer) Next code_point: {:d}", code_point);
     return code_point;
 }
 
@@ -281,7 +281,7 @@ u32 Tokenizer::peek_code_point(size_t offset) const
         ++it;
     if (it == m_utf8_view.end())
         return TOKENIZER_EOF;
-    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Peek code_point: {:d}", *m_prev_utf8_iterator);
+    dbgln_if<CSS_TOKENIZER_DEBUG>("(Tokenizer) Peek code_point: {:d}", *m_prev_utf8_iterator);
     return *it;
 }
 
@@ -293,7 +293,7 @@ U32Twin Tokenizer::peek_twin() const
         values.set(i, *it);
         ++it;
     }
-    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Peek twin: {:d},{:d}", values.first, values.second);
+    dbgln_if<CSS_TOKENIZER_DEBUG>("(Tokenizer) Peek twin: {:d},{:d}", values.first, values.second);
     return values;
 }
 
@@ -305,7 +305,7 @@ U32Triplet Tokenizer::peek_triplet() const
         values.set(i, *it);
         ++it;
     }
-    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Peek triplet: {:d},{:d},{:d}", values.first, values.second, values.third);
+    dbgln_if<CSS_TOKENIZER_DEBUG>("(Tokenizer) Peek triplet: {:d},{:d},{:d}", values.first, values.second, values.third);
     return values;
 }
 
@@ -1097,7 +1097,7 @@ Token Tokenizer::consume_a_token()
 
     // whitespace
     if (is_whitespace(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is whitespace");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is whitespace");
         // Consume as much whitespace as possible. Return a <whitespace-token>.
         consume_as_much_whitespace_as_possible();
         return create_new_token(Token::Type::Whitespace);
@@ -1105,14 +1105,14 @@ Token Tokenizer::consume_a_token()
 
     // U+0022 QUOTATION MARK (")
     if (is_quotation_mark(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is quotation mark");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is quotation mark");
         // Consume a string token and return it.
         return consume_string_token(input);
     }
 
     // U+0023 NUMBER SIGN (#)
     if (is_number_sign(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is number sign");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is number sign");
 
         // If the next input code point is a name code point or the next two input code points
         // are a valid escape, then:
@@ -1142,28 +1142,28 @@ Token Tokenizer::consume_a_token()
 
     // U+0027 APOSTROPHE (')
     if (is_apostrophe(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is apostrophe");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is apostrophe");
         // Consume a string token and return it.
         return consume_string_token(input);
     }
 
     // U+0028 LEFT PARENTHESIS (()
     if (is_left_paren(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is left paren");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is left paren");
         // Return a <(-token>.
         return create_new_token(Token::Type::OpenParen);
     }
 
     // U+0029 RIGHT PARENTHESIS ())
     if (is_right_paren(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is right paren");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is right paren");
         // Return a <)-token>.
         return create_new_token(Token::Type::CloseParen);
     }
 
     // U+002B PLUS SIGN (+)
     if (is_plus_sign(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is plus sign");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is plus sign");
         // If the input stream starts with a number, reconsume the current input code point,
         // consume a numeric token and return it.
         if (would_start_a_number(start_of_input_stream_triplet())) {
@@ -1177,14 +1177,14 @@ Token Tokenizer::consume_a_token()
 
     // U+002C COMMA (,)
     if (is_comma(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is comma");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is comma");
         // Return a <comma-token>.
         return create_new_token(Token::Type::Comma);
     }
 
     // U+002D HYPHEN-MINUS (-)
     if (is_hyphen_minus(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is hyphen minus");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is hyphen minus");
         // If the input stream starts with a number, reconsume the current input code point,
         // consume a numeric token, and return it.
         if (would_start_a_number(start_of_input_stream_triplet())) {
@@ -1215,7 +1215,7 @@ Token Tokenizer::consume_a_token()
 
     // U+002E FULL STOP (.)
     if (is_full_stop(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is full stop");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is full stop");
         // If the input stream starts with a number, reconsume the current input code point,
         // consume a numeric token, and return it.
         if (would_start_a_number(start_of_input_stream_triplet())) {
@@ -1229,21 +1229,21 @@ Token Tokenizer::consume_a_token()
 
     // U+003A COLON (:)
     if (is_colon(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is colon");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is colon");
         // Return a <colon-token>.
         return create_new_token(Token::Type::Colon);
     }
 
     // U+003B SEMICOLON (;)
     if (is_semicolon(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is semicolon");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is semicolon");
         // Return a <semicolon-token>.
         return create_new_token(Token::Type::Semicolon);
     }
 
     // U+003C LESS-THAN SIGN (<)
     if (is_less_than_sign(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is less than");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is less than");
         // If the next 3 input code points are U+0021 EXCLAMATION MARK U+002D HYPHEN-MINUS
         // U+002D HYPHEN-MINUS (!--), consume them and return a <CDO-token>.
         auto maybe_cdo = peek_triplet();
@@ -1261,7 +1261,7 @@ Token Tokenizer::consume_a_token()
 
     // U+0040 COMMERCIAL AT (@)
     if (is_at(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is at");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is at");
         // If the next 3 input code points would start an identifier, consume a name, create
         // an <at-keyword-token> with its value set to the returned value, and return it.
         if (would_start_an_identifier(peek_triplet())) {
@@ -1275,14 +1275,14 @@ Token Tokenizer::consume_a_token()
 
     // U+005B LEFT SQUARE BRACKET ([)
     if (is_open_square_bracket(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is open square");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is open square");
         // Return a <[-token>.
         return create_new_token(Token::Type::OpenSquare);
     }
 
     // U+005C REVERSE SOLIDUS (\)
     if (is_reverse_solidus(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is reverse solidus");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is reverse solidus");
         // If the input stream starts with a valid escape, reconsume the current input code point,
         // consume an ident-like token, and return it.
         if (is_valid_escape_sequence(start_of_input_stream_twin())) {
@@ -1298,28 +1298,28 @@ Token Tokenizer::consume_a_token()
 
     // U+005D RIGHT SQUARE BRACKET (])
     if (is_closed_square_bracket(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is closed square");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is closed square");
         // Return a <]-token>.
         return create_new_token(Token::Type::CloseSquare);
     }
 
     // U+007B LEFT CURLY BRACKET ({)
     if (is_open_curly_bracket(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is open curly");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is open curly");
         // Return a <{-token>.
         return create_new_token(Token::Type::OpenCurly);
     }
 
     // U+007D RIGHT CURLY BRACKET (})
     if (is_closed_curly_bracket(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is closed curly");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is closed curly");
         // Return a <}-token>.
         return create_new_token(Token::Type::CloseCurly);
     }
 
     // digit
     if (is_ascii_digit(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is digit");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is digit");
         // Reconsume the current input code point, consume a numeric token, and return it.
         reconsume_current_input_code_point();
         return consume_a_numeric_token();
@@ -1327,7 +1327,7 @@ Token Tokenizer::consume_a_token()
 
     // name-start code point
     if (is_name_start_code_point(input)) {
-        dbgln_if(CSS_TOKENIZER_DEBUG, "is name start");
+        dbgln_if<CSS_TOKENIZER_DEBUG>("is name start");
         // Reconsume the current input code point, consume an ident-like token, and return it.
         reconsume_current_input_code_point();
         return consume_an_ident_like_token();
@@ -1340,7 +1340,7 @@ Token Tokenizer::consume_a_token()
     }
 
     // anything else
-    dbgln_if(CSS_TOKENIZER_DEBUG, "is delimiter");
+    dbgln_if<CSS_TOKENIZER_DEBUG>("is delimiter");
     // Return a <delim-token> with its value set to the current input code point.
     return create_value_token(Token::Type::Delim, input);
 }

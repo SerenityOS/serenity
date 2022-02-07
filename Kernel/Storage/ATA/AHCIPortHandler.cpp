@@ -25,7 +25,7 @@ AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::Maske
         m_identify_metadata_pages.append(MM.allocate_supervisor_physical_page().release_value_but_fixme_should_propagate_errors());
     }
 
-    dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ {}", irq);
+    dbgln_if<AHCI_DEBUG>("AHCI Port Handler: IRQ {}", irq);
 
     // Clear pending interrupts, if there are any!
     m_pending_ports_interrupts.set_all();
@@ -64,7 +64,7 @@ RefPtr<AHCIPort> AHCIPortHandler::port_at_index(u32 port_index) const
 
 PhysicalAddress AHCIPortHandler::get_identify_metadata_physical_region(u32 port_index) const
 {
-    dbgln_if(AHCI_DEBUG, "AHCI Port Handler: Get identify metadata physical address of port {} - {}", port_index, (port_index * 512) / PAGE_SIZE);
+    dbgln_if<AHCI_DEBUG>("AHCI Port Handler: Get identify metadata physical address of port {} - {}", port_index, (port_index * 512) / PAGE_SIZE);
     return m_identify_metadata_pages[(port_index * 512) / PAGE_SIZE].paddr().offset((port_index * 512) % PAGE_SIZE);
 }
 
@@ -84,13 +84,13 @@ AHCIPortHandler::~AHCIPortHandler()
 
 bool AHCIPortHandler::handle_irq(const RegisterState&)
 {
-    dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ received");
+    dbgln_if<AHCI_DEBUG>("AHCI Port Handler: IRQ received");
     if (m_pending_ports_interrupts.is_zeroed())
         return false;
     for (auto port_index : m_pending_ports_interrupts.to_vector()) {
         auto port = m_handled_ports.get(port_index);
         VERIFY(port.has_value());
-        dbgln_if(AHCI_DEBUG, "AHCI Port Handler: Handling IRQ for port {}", port_index);
+        dbgln_if<AHCI_DEBUG>("AHCI Port Handler: Handling IRQ for port {}", port_index);
         port.value()->handle_interrupt();
         // We do this to clear the pending interrupt after we handled it.
         m_pending_ports_interrupts.set_at(port_index);

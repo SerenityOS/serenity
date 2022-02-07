@@ -1138,25 +1138,25 @@ bool RTL8168NetworkAdapter::handle_irq(const RegisterState&)
 
         m_entropy_source.add_random_event(status);
 
-        dbgln_if(RTL8168_DEBUG, "RTL8168: handle_irq status={:#04x}", status);
+        dbgln_if<RTL8168_DEBUG>("RTL8168: handle_irq status={:#04x}", status);
 
         if ((status & (INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_OVERFLOW | INT_LINK_CHANGE | INT_RX_FIFO_OVERFLOW | INT_SYS_ERR)) == 0)
             break;
 
         was_handled = true;
         if (status & INT_RXOK) {
-            dbgln_if(RTL8168_DEBUG, "RTL8168: RX ready");
+            dbgln_if<RTL8168_DEBUG>("RTL8168: RX ready");
             receive();
         }
         if (status & INT_RXERR) {
-            dbgln_if(RTL8168_DEBUG, "RTL8168: RX error - invalid packet");
+            dbgln_if<RTL8168_DEBUG>("RTL8168: RX error - invalid packet");
         }
         if (status & INT_TXOK) {
-            dbgln_if(RTL8168_DEBUG, "RTL8168: TX complete");
+            dbgln_if<RTL8168_DEBUG>("RTL8168: TX complete");
             m_wait_queue.wake_one();
         }
         if (status & INT_TXERR) {
-            dbgln_if(RTL8168_DEBUG, "RTL8168: TX error - invalid packet");
+            dbgln_if<RTL8168_DEBUG>("RTL8168: TX error - invalid packet");
         }
         if (status & INT_RX_OVERFLOW) {
             dmesgln("RTL8168: RX descriptor unavailable (packet lost)");
@@ -1194,7 +1194,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::read_mac_address()
 
 void RTL8168NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
-    dbgln_if(RTL8168_DEBUG, "RTL8168: send_raw length={}", payload.size());
+    dbgln_if<RTL8168_DEBUG>("RTL8168: send_raw length={}", payload.size());
 
     if (payload.size() > TX_BUFFER_SIZE) {
         dmesgln("RTL8168: Packet was too big; discarding");
@@ -1205,14 +1205,14 @@ void RTL8168NetworkAdapter::send_raw(ReadonlyBytes payload)
     auto& free_descriptor = tx_descriptors[m_tx_free_index];
 
     if ((free_descriptor.flags & TXDescriptor::Ownership) != 0) {
-        dbgln_if(RTL8168_DEBUG, "RTL8168: No free TX buffers, sleeping until one is available");
+        dbgln_if<RTL8168_DEBUG>("RTL8168: No free TX buffers, sleeping until one is available");
         m_wait_queue.wait_forever("RTL8168NetworkAdapter");
         return send_raw(payload);
         // if we woke up a TX descriptor is guaranteed to be available, so this should never recurse more than once
         // but this can probably be done more cleanly
     }
 
-    dbgln_if(RTL8168_DEBUG, "RTL8168: Chose descriptor {}", m_tx_free_index);
+    dbgln_if<RTL8168_DEBUG>("RTL8168: Chose descriptor {}", m_tx_free_index);
     memcpy(m_tx_buffers_regions[m_tx_free_index].vaddr().as_ptr(), payload.data(), payload.size());
 
     m_tx_free_index = (m_tx_free_index + 1) % number_of_tx_descriptors;
@@ -1238,7 +1238,7 @@ void RTL8168NetworkAdapter::receive()
         u16 flags = descriptor.flags;
         u16 length = descriptor.buffer_size & 0x3FFF;
 
-        dbgln_if(RTL8168_DEBUG, "RTL8168: receive, flags={:#04x}, length={}, descriptor={}", flags, length, descriptor_index);
+        dbgln_if<RTL8168_DEBUG>("RTL8168: receive, flags={:#04x}, length={}, descriptor={}", flags, length, descriptor_index);
 
         if (length > RX_BUFFER_SIZE || (flags & RXDescriptor::ErrorSummary) != 0) {
             dmesgln("RTL8168: receive got bad packet, flags={:#04x}, length={}", flags, length);
@@ -1628,7 +1628,7 @@ void RTL8168NetworkAdapter::identify_chip_version()
         }
         break;
     default:
-        dbgln_if(RTL8168_DEBUG, "Unable to determine device version: {:#04x}", registers);
+        dbgln_if<RTL8168_DEBUG>("Unable to determine device version: {:#04x}", registers);
         m_version = ChipVersion::Unknown;
         m_version_uncertain = true;
         break;

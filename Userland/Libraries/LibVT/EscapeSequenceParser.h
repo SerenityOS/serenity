@@ -41,7 +41,7 @@ public:
 
     ALWAYS_INLINE void on_input(u8 byte)
     {
-        dbgln_if(ESCAPE_SEQUENCE_DEBUG, "on_input {:02x}", byte);
+        dbgln_if<ESCAPE_SEQUENCE_DEBUG>("on_input {:02x}", byte);
         m_state_machine.advance(byte);
     }
 

@@ -147,8 +147,8 @@ static AtomicRewritePreconditionResult block_satisfies_atomic_rewrite_preconditi
 
         state.instruction_position += opcode.size();
     }
-    dbgln_if(REGEX_DEBUG, "Found {} entries in reference", repeated_values.size());
-    dbgln_if(REGEX_DEBUG, "Found {} active capture groups", active_capture_groups.size());
+    dbgln_if<REGEX_DEBUG>("Found {} entries in reference", repeated_values.size());
+    dbgln_if<REGEX_DEBUG>("Found {} active capture groups", active_capture_groups.size());
 
     bool following_block_has_at_least_one_compare = false;
     // Find the first compare in the following block, it must NOT match any of the values in `repeated_values'.
@@ -341,9 +341,9 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
         }
     }
 
-    dbgln_if(REGEX_DEBUG, "Found {} candidate blocks", candidate_blocks.size());
+    dbgln_if<REGEX_DEBUG>("Found {} candidate blocks", candidate_blocks.size());
     if (candidate_blocks.is_empty()) {
-        dbgln_if(REGEX_DEBUG, "Failed to find anything for {}", pattern_value);
+        dbgln_if<REGEX_DEBUG>("Failed to find anything for {}", pattern_value);
         return;
     }
 
@@ -487,7 +487,7 @@ void Optimizer::append_alternation(ByteCode& target, ByteCode&& left, ByteCode&&
         left_skip = left_end;
     }
 
-    dbgln_if(REGEX_DEBUG, "Skipping {}/{} bytecode entries from {}/{}", left_skip, 0, left.size(), right.size());
+    dbgln_if<REGEX_DEBUG>("Skipping {}/{} bytecode entries from {}/{}", left_skip, 0, left.size(), right.size());
 
     if (left_skip > 0) {
         target.extend(left.release_slice(left_blocks.first().start, left_skip));

@@ -18,7 +18,7 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
     : m_url(move(url))
     , m_document(document)
 {
-    dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Loading import URL: {}", m_url);
+    dbgln_if<CSS_LOADER_DEBUG>("CSSImportRule: Loading import URL: {}", m_url);
     auto request = LoadRequest::create_for_url_on_page(m_url, document.page());
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
     m_document_load_event_delayer.emplace(document);
@@ -53,7 +53,7 @@ String CSSImportRule::serialized() const
 
 void CSSImportRule::resource_did_fail()
 {
-    dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Resource did fail. URL: {}", resource()->url());
+    dbgln_if<CSS_LOADER_DEBUG>("CSSImportRule: Resource did fail. URL: {}", resource()->url());
 
     m_document_load_event_delayer.clear();
 }
@@ -68,14 +68,14 @@ void CSSImportRule::resource_did_load()
     m_document_load_event_delayer.clear();
 
     if (!resource()->has_encoded_data()) {
-        dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Resource did load, no encoded data. URL: {}", resource()->url());
+        dbgln_if<CSS_LOADER_DEBUG>("CSSImportRule: Resource did load, no encoded data. URL: {}", resource()->url());
     } else {
-        dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Resource did load, has encoded data. URL: {}", resource()->url());
+        dbgln_if<CSS_LOADER_DEBUG>("CSSImportRule: Resource did load, has encoded data. URL: {}", resource()->url());
     }
 
     auto sheet = parse_css(CSS::ParsingContext(*m_document), resource()->encoded_data());
     if (!sheet) {
-        dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Failed to parse stylesheet: {}", resource()->url());
+        dbgln_if<CSS_LOADER_DEBUG>("CSSImportRule: Failed to parse stylesheet: {}", resource()->url());
         return;
     }
 

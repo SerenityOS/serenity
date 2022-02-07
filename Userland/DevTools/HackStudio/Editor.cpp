@@ -204,7 +204,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {
-        dbgln_if(EDITOR_DEBUG, "no man path for {}", hovered_token);
+        dbgln_if<EDITOR_DEBUG>("no man path for {}", hovered_token);
         m_documentation_tooltip_window->hide();
         return;
     }
@@ -213,7 +213,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
-    dbgln_if(EDITOR_DEBUG, "opening {}", it->value);
+    dbgln_if<EDITOR_DEBUG>("opening {}", it->value);
     auto file = Core::File::construct(it->value);
     if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("failed to open {}, {}", it->value, file->error_string());
@@ -283,7 +283,7 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
             auto end_line_length = document().line(span.range.end().line()).length();
             adjusted_range.end().set_column(min(end_line_length, adjusted_range.end().column() + 1));
             auto hovered_span_text = document().text_in_range(adjusted_range);
-            dbgln_if(EDITOR_DEBUG, "Hovering: {} \"{}\"", adjusted_range, hovered_span_text);
+            dbgln_if<EDITOR_DEBUG>("Hovering: {} \"{}\"", adjusted_range, hovered_span_text);
 
             if (is_clickable) {
                 is_over_clickable = true;
@@ -394,7 +394,7 @@ static HashMap<String, String>& include_paths()
             auto path = it.next_full_path();
             if (!Core::File::is_directory(path)) {
                 auto key = path.substring(base.length() + 1, path.length() - base.length() - 1);
-                dbgln_if(EDITOR_DEBUG, "Adding header \"{}\" in path \"{}\"", key, path);
+                dbgln_if<EDITOR_DEBUG>("Adding header \"{}\" in path \"{}\"", key, path);
                 paths.set(key, path);
             } else {
                 handle_directory(base, path, handle_directory);
@@ -416,7 +416,7 @@ void Editor::navigate_to_include_if_available(String path)
 {
     auto it = include_paths().find(path);
     if (it == include_paths().end()) {
-        dbgln_if(EDITOR_DEBUG, "no header {} found.", path);
+        dbgln_if<EDITOR_DEBUG>("no header {} found.", path);
         return;
     }
 
@@ -578,7 +578,7 @@ void Editor::on_navigatable_link_click(const GUI::TextDocumentSpan& span)
 {
     auto span_text = document().text_in_range(span.range);
     auto header_path = span_text.substring(1, span_text.length() - 2);
-    dbgln_if(EDITOR_DEBUG, "Ctrl+click: {} \"{}\"", span.range, header_path);
+    dbgln_if<EDITOR_DEBUG>("Ctrl+click: {} \"{}\"", span.range, header_path);
     navigate_to_include_if_available(header_path);
 }
 

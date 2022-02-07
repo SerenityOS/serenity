@@ -48,7 +48,7 @@ void Shell::setup_signals()
 {
     if (m_should_reinstall_signal_handlers) {
         Core::EventLoop::register_signal(SIGCHLD, [this](int) {
-            dbgln_if(SH_DEBUG, "SIGCHLD!");
+            dbgln_if<SH_DEBUG>("SIGCHLD!");
             notify_child_event();
         });
 
@@ -485,7 +485,7 @@ String Shell::format(StringView source, ssize_t& cursor) const
 Shell::Frame Shell::push_frame(String name)
 {
     m_local_frames.append(make<LocalFrame>(name, decltype(LocalFrame::local_variables) {}));
-    dbgln_if(SH_DEBUG, "New frame '{}' at {:p}", name, &m_local_frames.last());
+    dbgln_if<SH_DEBUG>("New frame '{}' at {:p}", name, &m_local_frames.last());
     return { m_local_frames, m_local_frames.last() };
 }
 
@@ -637,7 +637,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     auto apply_rewirings = [&]() -> ErrorOr<void> {
         for (auto& rewiring : rewirings) {
 
-            dbgln_if(SH_DEBUG, "in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.old_fd, rewiring.new_fd);
+            dbgln_if<SH_DEBUG>("in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.old_fd, rewiring.new_fd);
             int rc = dup2(rewiring.old_fd, rewiring.new_fd);
             if (rc < 0)
                 return Error::from_syscall("dup2"sv, rc);
@@ -732,7 +732,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
             }
         }
 
-        dbgln_if(SH_DEBUG, "Synced up with parent, we're good to exec()");
+        dbgln_if<SH_DEBUG>("Synced up with parent, we're good to exec()");
 
         close(sync_pipe[0]);
 
@@ -1734,9 +1734,9 @@ void Shell::notify_child_event()
             auto& job = *it.value;
 
             int wstatus = 0;
-            dbgln_if(SH_DEBUG, "waitpid({} = {}) = ...", job.pid(), job.cmd());
+            dbgln_if<SH_DEBUG>("waitpid({} = {}) = ...", job.pid(), job.cmd());
             auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
-            dbgln_if(SH_DEBUG, "... = {} - exited: {}, suspended: {}", child_pid, WIFEXITED(wstatus), WIFSTOPPED(wstatus));
+            dbgln_if<SH_DEBUG>("... = {} - exited: {}, suspended: {}", child_pid, WIFEXITED(wstatus), WIFSTOPPED(wstatus));
 
             if (child_pid < 0) {
                 if (errno == ECHILD) {
@@ -1897,7 +1897,7 @@ void Shell::stop_all_jobs()
             printf("Killing active jobs\n");
         for (auto& entry : jobs) {
             if (entry.value->is_suspended()) {
-                dbgln_if(SH_DEBUG, "Job {} is suspended", entry.value->pid());
+                dbgln_if<SH_DEBUG>("Job {} is suspended", entry.value->pid());
                 kill_job(entry.value, SIGCONT);
             }
 
@@ -1907,7 +1907,7 @@ void Shell::stop_all_jobs()
         usleep(10000); // Wait for a bit before killing the job
 
         for (auto& entry : jobs) {
-            dbgln_if(SH_DEBUG, "Actively killing {} ({})", entry.value->pid(), entry.value->cmd());
+            dbgln_if<SH_DEBUG>("Actively killing {} ({})", entry.value->pid(), entry.value->cmd());
             kill_job(entry.value, SIGKILL);
         }
 

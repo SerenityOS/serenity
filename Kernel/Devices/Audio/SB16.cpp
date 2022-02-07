@@ -255,7 +255,7 @@ ErrorOr<size_t> SB16::write(OpenFileDescription&, u64, UserOrKernelBuffer const&
         m_dma_region = TRY(MM.allocate_dma_buffer_page("SB16 DMA buffer", Memory::Region::Access::Write));
     }
 
-    dbgln_if(SB16_DEBUG, "SB16: Writing buffer of {} bytes", length);
+    dbgln_if<SB16_DEBUG>("SB16: Writing buffer of {} bytes", length);
 
     VERIFY(length <= PAGE_SIZE);
     int const BLOCK_SIZE = 32 * 1024;

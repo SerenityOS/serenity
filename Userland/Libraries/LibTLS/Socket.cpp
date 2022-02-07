@@ -55,7 +55,7 @@ String TLSv12::read_line(size_t max_size)
 ErrorOr<size_t> TLSv12::write(ReadonlyBytes bytes)
 {
     if (m_context.connection_status != ConnectionStatus::Established) {
-        dbgln_if(TLS_DEBUG, "write request while not connected");
+        dbgln_if<TLS_DEBUG>("write request while not connected");
         return AK::Error::from_string_literal("TLS write request while not connected");
     }
 
@@ -207,7 +207,7 @@ ErrorOr<void> TLSv12::read_from_socket()
 
 void TLSv12::write_into_socket()
 {
-    dbgln_if(TLS_DEBUG, "Flushing cached records: {} established? {}", m_context.tls_buffer.size(), is_established());
+    dbgln_if<TLS_DEBUG>("Flushing cached records: {} established? {}", m_context.tls_buffer.size(), is_established());
 
     m_has_scheduled_write_flush = false;
     if (!check_connection_state(false))
@@ -228,7 +228,7 @@ bool TLSv12::check_connection_state(bool read)
 
     if (!stream.is_open()) {
         // an abrupt closure (the server is a jerk)
-        dbgln_if(TLS_DEBUG, "Socket not open, assuming abrupt closure");
+        dbgln_if<TLS_DEBUG>("Socket not open, assuming abrupt closure");
         m_context.connection_finished = true;
         m_context.connection_status = ConnectionStatus::Disconnected;
         close();
@@ -245,7 +245,7 @@ bool TLSv12::check_connection_state(bool read)
     }
 
     if (m_context.critical_error) {
-        dbgln_if(TLS_DEBUG, "CRITICAL ERROR {} :(", m_context.critical_error);
+        dbgln_if<TLS_DEBUG>("CRITICAL ERROR {} :(", m_context.critical_error);
 
         m_context.has_invoked_finish_or_error_callback = true;
         if (on_tls_error)
@@ -263,7 +263,7 @@ bool TLSv12::check_connection_state(bool read)
                 on_tls_finished();
         }
         if (m_context.tls_buffer.size()) {
-            dbgln_if(TLS_DEBUG, "connection closed without finishing data transfer, {} bytes still in buffer and {} bytes in application buffer",
+            dbgln_if<TLS_DEBUG>("connection closed without finishing data transfer, {} bytes still in buffer and {} bytes in application buffer",
                 m_context.tls_buffer.size(),
                 m_context.application_buffer.size());
         }
@@ -307,7 +307,7 @@ ErrorOr<bool> TLSv12::flush()
 
     if (m_context.send_retries++ == 10) {
         // drop the records, we can't send
-        dbgln_if(TLS_DEBUG, "Dropping {} bytes worth of TLS records as max retries has been reached", m_context.tls_buffer.size());
+        dbgln_if<TLS_DEBUG>("Dropping {} bytes worth of TLS records as max retries has been reached", m_context.tls_buffer.size());
         m_context.tls_buffer.clear();
         m_context.send_retries = 0;
     }

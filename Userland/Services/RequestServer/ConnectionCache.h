@@ -136,7 +136,7 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
         } else {
             TRY(set_socket(TRY(SocketType::connect(url.host(), url.port_or_default()))));
         }
-        dbgln_if(REQUESTSERVER_DEBUG, "Creating a new socket for {} -> {}", url, connection.socket);
+        dbgln_if<REQUESTSERVER_DEBUG>("Creating a new socket for {} -> {}", url, connection.socket);
     }
     return {};
 }
@@ -207,7 +207,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
             });
             return ReturnType { nullptr };
         }
-        dbgln_if(REQUESTSERVER_DEBUG, "Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
+        dbgln_if<REQUESTSERVER_DEBUG>("Immediately start request for url {} in {} - {}", url, &connection, connection.socket);
         connection.has_started = true;
         connection.removal_timer->stop();
         connection.timer.start();
@@ -216,7 +216,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
         connection.socket->set_notifications_enabled(true);
         connection.job_data.start(*connection.socket);
     } else {
-        dbgln_if(REQUESTSERVER_DEBUG, "Enqueue request for URL {} in {} - {}", url, &connection, connection.socket);
+        dbgln_if<REQUESTSERVER_DEBUG>("Enqueue request for URL {} in {} - {}", url, &connection, connection.socket);
         connection.request_queue.append(decltype(connection.job_data)::create(job));
     }
     return &connection;

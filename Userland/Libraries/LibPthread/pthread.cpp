@@ -125,7 +125,7 @@ int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_
             return -1;
     }
 
-    dbgln_if(PTHREAD_DEBUG, "pthread_create: Creating thread with attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
+    dbgln_if<PTHREAD_DEBUG>("pthread_create: Creating thread with attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
         used_attributes,
         (PTHREAD_CREATE_JOINABLE == used_attributes->detach_state) ? "joinable" : "detached",
         used_attributes->schedule_priority,
@@ -249,7 +249,7 @@ int pthread_attr_init(pthread_attr_t* attributes)
     auto* impl = new PthreadAttrImpl {};
     *attributes = impl;
 
-    dbgln_if(PTHREAD_DEBUG, "pthread_attr_init: New thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
+    dbgln_if<PTHREAD_DEBUG>("pthread_attr_init: New thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
         impl,
         (PTHREAD_CREATE_JOINABLE == impl->detach_state) ? "joinable" : "detached",
         impl->schedule_priority,
@@ -293,7 +293,7 @@ int pthread_attr_setdetachstate(pthread_attr_t* attributes, int detach_state)
 
     attributes_impl->detach_state = detach_state;
 
-    dbgln_if(PTHREAD_DEBUG, "pthread_attr_setdetachstate: Thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
+    dbgln_if<PTHREAD_DEBUG>("pthread_attr_setdetachstate: Thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
         attributes_impl,
         (PTHREAD_CREATE_JOINABLE == attributes_impl->detach_state) ? "joinable" : "detached",
         attributes_impl->schedule_priority,
@@ -337,7 +337,7 @@ int pthread_attr_setguardsize(pthread_attr_t* attributes, size_t guard_size)
     attributes_impl->guard_page_size = actual_guard_size;
     attributes_impl->reported_guard_page_size = guard_size; // POSIX, why?
 
-    dbgln_if(PTHREAD_DEBUG, "pthread_attr_setguardsize: Thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
+    dbgln_if<PTHREAD_DEBUG>("pthread_attr_setguardsize: Thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
         attributes_impl,
         (PTHREAD_CREATE_JOINABLE == attributes_impl->detach_state) ? "joinable" : "detached",
         attributes_impl->schedule_priority,
@@ -372,7 +372,7 @@ int pthread_attr_setschedparam(pthread_attr_t* attributes, const struct sched_pa
 
     attributes_impl->schedule_priority = p_sched_param->sched_priority;
 
-    dbgln_if(PTHREAD_DEBUG, "pthread_attr_setschedparam: Thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
+    dbgln_if<PTHREAD_DEBUG>("pthread_attr_setschedparam: Thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
         attributes_impl,
         (PTHREAD_CREATE_JOINABLE == attributes_impl->detach_state) ? "joinable" : "detached",
         attributes_impl->schedule_priority,
@@ -417,7 +417,7 @@ int pthread_attr_setstack(pthread_attr_t* attributes, void* p_stack, size_t stac
     attributes_impl->stack_size = stack_size;
     attributes_impl->stack_location = p_stack;
 
-    dbgln_if(PTHREAD_DEBUG, "pthread_attr_setstack: Thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
+    dbgln_if<PTHREAD_DEBUG>("pthread_attr_setstack: Thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
         attributes_impl,
         (PTHREAD_CREATE_JOINABLE == attributes_impl->detach_state) ? "joinable" : "detached",
         attributes_impl->schedule_priority,
@@ -453,7 +453,7 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
 
     attributes_impl->stack_size = stack_size;
 
-    dbgln_if(PTHREAD_DEBUG, "pthread_attr_setstacksize: Thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
+    dbgln_if<PTHREAD_DEBUG>("pthread_attr_setstacksize: Thread attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
         attributes_impl,
         (PTHREAD_CREATE_JOINABLE == attributes_impl->detach_state) ? "joinable" : "detached",
         attributes_impl->schedule_priority,

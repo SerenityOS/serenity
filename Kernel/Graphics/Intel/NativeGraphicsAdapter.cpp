@@ -51,7 +51,7 @@ RefPtr<IntelNativeGraphicsAdapter> IntelNativeGraphicsAdapter::initialize(PCI::D
 
 static size_t compute_dac_multiplier(size_t pixel_clock_in_khz)
 {
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel native graphics: Pixel clock is {} KHz", pixel_clock_in_khz);
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("Intel native graphics: Pixel clock is {} KHz", pixel_clock_in_khz);
     VERIFY(pixel_clock_in_khz >= 25000);
     if (pixel_clock_in_khz >= 100000) {
         return 1;
@@ -91,24 +91,24 @@ static Graphics::Modesetting calculate_modesetting_from_edid(EDID::Parser& edid,
 static bool check_pll_settings(const IntelNativeGraphicsAdapter::PLLSettings& settings, size_t reference_clock, const IntelNativeGraphicsAdapter::PLLMaxSettings& limits)
 {
     if (settings.n < limits.n.min || settings.n > limits.n.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "N is invalid {}", settings.n);
+        dbgln_if<INTEL_GRAPHICS_DEBUG>("N is invalid {}", settings.n);
         return false;
     }
     if (settings.m1 < limits.m1.min || settings.m1 > limits.m1.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "m1 is invalid {}", settings.m1);
+        dbgln_if<INTEL_GRAPHICS_DEBUG>("m1 is invalid {}", settings.m1);
         return false;
     }
     if (settings.m2 < limits.m2.min || settings.m2 > limits.m2.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "m2 is invalid {}", settings.m2);
+        dbgln_if<INTEL_GRAPHICS_DEBUG>("m2 is invalid {}", settings.m2);
         return false;
     }
     if (settings.p1 < limits.p1.min || settings.p1 > limits.p1.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "p1 is invalid {}", settings.p1);
+        dbgln_if<INTEL_GRAPHICS_DEBUG>("p1 is invalid {}", settings.p1);
         return false;
     }
 
     if (settings.m1 <= settings.m2) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "m2 is invalid {} as it is bigger than m1 {}", settings.m2, settings.m1);
+        dbgln_if<INTEL_GRAPHICS_DEBUG>("m2 is invalid {} as it is bigger than m1 {}", settings.m2, settings.m1);
         return false;
     }
 
@@ -116,11 +116,11 @@ static bool check_pll_settings(const IntelNativeGraphicsAdapter::PLLSettings& se
     auto p = settings.compute_p();
 
     if (m < limits.m.min || m > limits.m.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "m invalid {}", m);
+        dbgln_if<INTEL_GRAPHICS_DEBUG>("m invalid {}", m);
         return false;
     }
     if (p < limits.p.min || p > limits.p.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "p invalid {}", p);
+        dbgln_if<INTEL_GRAPHICS_DEBUG>("p invalid {}", p);
         return false;
     }
 
@@ -128,11 +128,11 @@ static bool check_pll_settings(const IntelNativeGraphicsAdapter::PLLSettings& se
     auto vco = settings.compute_vco(reference_clock);
 
     if (dot < limits.dot_clock.min || dot > limits.dot_clock.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "Dot clock invalid {}", dot);
+        dbgln_if<INTEL_GRAPHICS_DEBUG>("Dot clock invalid {}", dot);
         return false;
     }
     if (vco < limits.vco.min || vco > limits.vco.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "VCO clock invalid {}", vco);
+        dbgln_if<INTEL_GRAPHICS_DEBUG>("VCO clock invalid {}", vco);
         return false;
     }
     return true;
@@ -151,13 +151,13 @@ Optional<IntelNativeGraphicsAdapter::PLLSettings> IntelNativeGraphicsAdapter::cr
     IntelNativeGraphicsAdapter::PLLSettings best_settings;
     // FIXME: Is this correct for all Intel Native graphics cards?
     settings.p2 = 10;
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Check PLL settings for ref clock of {} Hz, for target of {} Hz", reference_clock, target_frequency);
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("Check PLL settings for ref clock of {} Hz, for target of {} Hz", reference_clock, target_frequency);
     u64 best_difference = 0xffffffff;
     for (settings.n = limits.n.min; settings.n <= limits.n.max; ++settings.n) {
         for (settings.m1 = limits.m1.max; settings.m1 >= limits.m1.min; --settings.m1) {
             for (settings.m2 = limits.m2.max; settings.m2 >= limits.m2.min; --settings.m2) {
                 for (settings.p1 = limits.p1.max; settings.p1 >= limits.p1.min; --settings.p1) {
-                    dbgln_if(INTEL_GRAPHICS_DEBUG, "Check PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
+                    dbgln_if<INTEL_GRAPHICS_DEBUG>("Check PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
                     if (!check_pll_settings(settings, reference_clock, limits))
                         continue;
                     auto current_dot_clock = settings.compute_dot_clock(reference_clock);
@@ -182,7 +182,7 @@ IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
     , m_registers(PCI::get_BAR0(address) & 0xfffffffc)
     , m_framebuffer_addr(PCI::get_BAR2(address) & 0xfffffffc)
 {
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Native Graphics Adapter @ {}", address);
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("Intel Native Graphics Adapter @ {}", address);
     auto bar0_space_size = PCI::get_BAR_space_size(address, 0);
     VERIFY(bar0_space_size == 0x80000);
     dmesgln("Intel Native Graphics Adapter @ {}, MMIO @ {}, space size is {:x} bytes", address, PhysicalAddress(PCI::get_BAR0(address)), bar0_space_size);
@@ -279,7 +279,7 @@ void IntelNativeGraphicsAdapter::write_to_register(IntelGraphics::RegisterIndex 
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_registers_region);
     SpinlockLocker lock(m_registers_lock);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics {}: Write to {} value of {:x}", pci_address(), convert_register_index_to_string(index), value);
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("Intel Graphics {}: Write to {} value of {:x}", pci_address(), convert_register_index_to_string(index), value);
     auto* reg = (volatile u32*)m_registers_region->vaddr().offset(index).as_ptr();
     *reg = value;
 }
@@ -290,7 +290,7 @@ u32 IntelNativeGraphicsAdapter::read_from_register(IntelGraphics::RegisterIndex 
     SpinlockLocker lock(m_registers_lock);
     auto* reg = (volatile u32*)m_registers_region->vaddr().offset(index).as_ptr();
     u32 value = *reg;
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics {}: Read from {} value of {:x}", pci_address(), convert_register_index_to_string(index), value);
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("Intel Graphics {}: Read from {} value of {:x}", pci_address(), convert_register_index_to_string(index), value);
     return value;
 }
 
@@ -434,7 +434,7 @@ bool IntelNativeGraphicsAdapter::set_crt_resolution(size_t width, size_t height)
     if (!pll_settings.has_value())
         VERIFY_NOT_REACHED();
     auto settings = pll_settings.value();
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
     enable_dpll_without_vga(pll_settings.value(), dac_multiplier);
     set_display_timings(modesetting);
     auto address = PhysicalAddress(PCI::get_BAR2(pci_address()) & 0xfffffff0);
@@ -455,25 +455,25 @@ void IntelNativeGraphicsAdapter::set_display_timings(const Graphics::Modesetting
     VERIFY(!(read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & (1 << 31)));
     VERIFY(!(read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & (1 << 30)));
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "htotal - {}, {}", (modesetting.horizontal.active - 1), (modesetting.horizontal.total - 1));
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("htotal - {}, {}", (modesetting.horizontal.active - 1), (modesetting.horizontal.total - 1));
     write_to_register(IntelGraphics::RegisterIndex::HTotalA, (modesetting.horizontal.active - 1) | (modesetting.horizontal.total - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "hblank - {}, {}", (modesetting.horizontal.blanking_start() - 1), (modesetting.horizontal.blanking_end() - 1));
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("hblank - {}, {}", (modesetting.horizontal.blanking_start() - 1), (modesetting.horizontal.blanking_end() - 1));
     write_to_register(IntelGraphics::RegisterIndex::HBlankA, (modesetting.horizontal.blanking_start() - 1) | (modesetting.horizontal.blanking_end() - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "hsync - {}, {}", (modesetting.horizontal.sync_start - 1), (modesetting.horizontal.sync_end - 1));
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("hsync - {}, {}", (modesetting.horizontal.sync_start - 1), (modesetting.horizontal.sync_end - 1));
     write_to_register(IntelGraphics::RegisterIndex::HSyncA, (modesetting.horizontal.sync_start - 1) | (modesetting.horizontal.sync_end - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "vtotal - {}, {}", (modesetting.vertical.active - 1), (modesetting.vertical.total - 1));
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("vtotal - {}, {}", (modesetting.vertical.active - 1), (modesetting.vertical.total - 1));
     write_to_register(IntelGraphics::RegisterIndex::VTotalA, (modesetting.vertical.active - 1) | (modesetting.vertical.total - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "vblank - {}, {}", (modesetting.vertical.blanking_start() - 1), (modesetting.vertical.blanking_end() - 1));
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("vblank - {}, {}", (modesetting.vertical.blanking_start() - 1), (modesetting.vertical.blanking_end() - 1));
     write_to_register(IntelGraphics::RegisterIndex::VBlankA, (modesetting.vertical.blanking_start() - 1) | (modesetting.vertical.blanking_end() - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "vsync - {}, {}", (modesetting.vertical.sync_start - 1), (modesetting.vertical.sync_end - 1));
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("vsync - {}, {}", (modesetting.vertical.sync_start - 1), (modesetting.vertical.sync_end - 1));
     write_to_register(IntelGraphics::RegisterIndex::VSyncA, (modesetting.vertical.sync_start - 1) | (modesetting.vertical.sync_end - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "sourceSize - {}, {}", (modesetting.vertical.active - 1), (modesetting.horizontal.active - 1));
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("sourceSize - {}, {}", (modesetting.vertical.active - 1), (modesetting.horizontal.active - 1));
     write_to_register(IntelGraphics::RegisterIndex::PipeASource, (modesetting.vertical.active - 1) | (modesetting.horizontal.active - 1) << 16);
 
     IO::delay(200);
@@ -527,9 +527,9 @@ void IntelNativeGraphicsAdapter::disable_pipe_a()
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
     write_to_register(IntelGraphics::RegisterIndex::PipeAConf, read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & ~0x80000000);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe A");
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("Disabling Pipe A");
     wait_for_disabled_pipe_a(100);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe A - done.");
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("Disabling Pipe A - done.");
 }
 
 void IntelNativeGraphicsAdapter::disable_pipe_b()
@@ -537,9 +537,9 @@ void IntelNativeGraphicsAdapter::disable_pipe_b()
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
     write_to_register(IntelGraphics::RegisterIndex::PipeAConf, read_from_register(IntelGraphics::RegisterIndex::PipeBConf) & ~0x80000000);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe B");
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("Disabling Pipe B");
     wait_for_disabled_pipe_b(100);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe B - done.");
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("Disabling Pipe B - done.");
 }
 
 void IntelNativeGraphicsAdapter::set_gmbus_default_rate()
@@ -557,10 +557,10 @@ void IntelNativeGraphicsAdapter::enable_pipe_a()
     VERIFY(!(read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & (1 << 31)));
     VERIFY(!(read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & (1 << 30)));
     write_to_register(IntelGraphics::RegisterIndex::PipeAConf, read_from_register(IntelGraphics::RegisterIndex::PipeAConf) | 0x80000000);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "enabling Pipe A");
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("enabling Pipe A");
     // FIXME: Seems like my video card is buggy and doesn't set the enabled bit (bit 30)!!
     wait_for_enabled_pipe_a(100);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "enabling Pipe A - done.");
+    dbgln_if<INTEL_GRAPHICS_DEBUG>("enabling Pipe A - done.");
 }
 
 void IntelNativeGraphicsAdapter::enable_primary_plane(PhysicalAddress fb_address, size_t width)

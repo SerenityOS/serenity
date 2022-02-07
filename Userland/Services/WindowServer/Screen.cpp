@@ -327,7 +327,7 @@ bool Screen::set_resolution(bool initial)
         rc = fb_set_resolution(m_framebuffer_fd, &physical_resolution);
     }
 
-    dbgln_if(WSSCREEN_DEBUG, "Screen #{}: fb_set_resolution() - return code {}", index(), rc);
+    dbgln_if<WSSCREEN_DEBUG>("Screen #{}: fb_set_resolution() - return code {}", index(), rc);
 
     auto on_change_resolution = [&]() {
         if (initial) {
@@ -427,10 +427,10 @@ void ScreenInput::on_receive_mouse_data(const MousePacket& packet)
     auto prev_location = m_cursor_location;
     if (packet.is_relative) {
         m_cursor_location.translate_by(packet.x * m_acceleration_factor, packet.y * m_acceleration_factor);
-        dbgln_if(WSSCREEN_DEBUG, "Screen: New Relative mouse point @ {}", m_cursor_location);
+        dbgln_if<WSSCREEN_DEBUG>("Screen: New Relative mouse point @ {}", m_cursor_location);
     } else {
         m_cursor_location = { packet.x * current_screen.width() / 0xffff, packet.y * current_screen.height() / 0xffff };
-        dbgln_if(WSSCREEN_DEBUG, "Screen: New Absolute mouse point @ {}", m_cursor_location);
+        dbgln_if<WSSCREEN_DEBUG>("Screen: New Absolute mouse point @ {}", m_cursor_location);
     }
 
     auto* moved_to_screen = Screen::find_by_location(m_cursor_location);

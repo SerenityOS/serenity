@@ -50,19 +50,19 @@ public:
     {
         if (done())
             return false;
-        dbgln_if(ISO9660_VERY_DEBUG, "next(): Called");
+        dbgln_if<ISO9660_VERY_DEBUG>("next(): Called");
 
         if (has_flag(m_current_header->file_flags, ISO::FileFlags::Directory)) {
-            dbgln_if(ISO9660_VERY_DEBUG, "next(): Recursing");
+            dbgln_if<ISO9660_VERY_DEBUG>("next(): Recursing");
             {
                 TRY(m_directory_stack.try_append(move(m_current_directory)));
             }
 
-            dbgln_if(ISO9660_VERY_DEBUG, "next(): Pushed into directory stack");
+            dbgln_if<ISO9660_VERY_DEBUG>("next(): Pushed into directory stack");
 
             TRY(read_directory_contents());
 
-            dbgln_if(ISO9660_VERY_DEBUG, "next(): Read directory contents");
+            dbgln_if<ISO9660_VERY_DEBUG>("next(): Read directory contents");
 
             m_current_directory.offset = 0;
             get_header();
@@ -88,7 +88,7 @@ public:
         VERIFY(m_current_directory.entry);
 
         if (m_current_directory.offset >= m_current_directory.entry->length) {
-            dbgln_if(ISO9660_VERY_DEBUG, "skip(): Was at last item already");
+            dbgln_if<ISO9660_VERY_DEBUG>("skip(): Was at last item already");
             return false;
         }
 
@@ -110,29 +110,29 @@ public:
                 m_current_directory.offset += remaining_bytes % m_fs.logical_block_size();
                 get_header();
 
-                dbgln_if(ISO9660_VERY_DEBUG, "skip(): Snapped to next logical block (succeeded)");
+                dbgln_if<ISO9660_VERY_DEBUG>("skip(): Snapped to next logical block (succeeded)");
                 return true;
             }
 
-            dbgln_if(ISO9660_VERY_DEBUG, "skip(): Was at the last logical block, at padding now (offset {}, data length {})", m_current_directory.entry->length, m_current_directory.offset);
+            dbgln_if<ISO9660_VERY_DEBUG>("skip(): Was at the last logical block, at padding now (offset {}, data length {})", m_current_directory.entry->length, m_current_directory.offset);
             return false;
         }
 
-        dbgln_if(ISO9660_VERY_DEBUG, "skip(): Skipped to next item");
+        dbgln_if<ISO9660_VERY_DEBUG>("skip(): Skipped to next item");
         return true;
     }
 
     bool go_up()
     {
         if (m_directory_stack.is_empty()) {
-            dbgln_if(ISO9660_VERY_DEBUG, "go_up(): Empty directory stack");
+            dbgln_if<ISO9660_VERY_DEBUG>("go_up(): Empty directory stack");
             return false;
         }
 
         m_current_directory = m_directory_stack.take_last();
         get_header();
 
-        dbgln_if(ISO9660_VERY_DEBUG, "go_up(): Went up a directory");
+        dbgln_if<ISO9660_VERY_DEBUG>("go_up(): Went up a directory");
         return true;
     }
 
@@ -140,7 +140,7 @@ public:
     {
         VERIFY(m_current_directory.entry);
         auto result = m_directory_stack.is_empty() && m_current_directory.offset >= m_current_directory.entry->length;
-        dbgln_if(ISO9660_VERY_DEBUG, "done(): {}", result);
+        dbgln_if<ISO9660_VERY_DEBUG>("done(): {}", result);
         return result;
     }
 
@@ -236,13 +236,13 @@ ErrorOr<void> ISO9660FS::parse_volume_set()
     while (true) {
         auto result = raw_read(BlockIndex { current_block_index }, block_buffer);
         if (result.is_error()) {
-            dbgln_if(ISO9660_DEBUG, "Failed to read volume descriptor from ISO file: {}", result.error());
+            dbgln_if<ISO9660_DEBUG>("Failed to read volume descriptor from ISO file: {}", result.error());
             return result;
         }
 
         auto const* header = reinterpret_cast<ISO::VolumeDescriptorHeader const*>(block->data());
         if (StringView { header->identifier, 5 } != "CD001") {
-            dbgln_if(ISO9660_DEBUG, "Header magic at volume descriptor {} is not valid", current_block_index - first_data_area_block);
+            dbgln_if<ISO9660_DEBUG>("Header magic at volume descriptor {} is not valid", current_block_index - first_data_area_block);
             return EIO;
         }
 
@@ -261,7 +261,7 @@ ErrorOr<void> ISO9660FS::parse_volume_set()
             goto all_headers_read;
         }
         default:
-            dbgln_if(ISO9660_DEBUG, "Unexpected volume descriptor type {} in volume set", static_cast<u8>(header->type));
+            dbgln_if<ISO9660_DEBUG>("Unexpected volume descriptor type {} in volume set", static_cast<u8>(header->type));
             return EIO;
         }
 
@@ -270,7 +270,7 @@ ErrorOr<void> ISO9660FS::parse_volume_set()
 
 all_headers_read:
     if (!m_primary_volume) {
-        dbgln_if(ISO9660_DEBUG, "Could not find primary volume");
+        dbgln_if<ISO9660_DEBUG>("Could not find primary volume");
         return EIO;
     }
 
@@ -281,7 +281,7 @@ all_headers_read:
 ErrorOr<void> ISO9660FS::create_root_inode()
 {
     if (!m_primary_volume) {
-        dbgln_if(ISO9660_DEBUG, "Primary volume doesn't exist, can't create root inode");
+        dbgln_if<ISO9660_DEBUG>("Primary volume doesn't exist, can't create root inode");
         return EIO;
     }
 
@@ -292,7 +292,7 @@ ErrorOr<void> ISO9660FS::create_root_inode()
 ErrorOr<void> ISO9660FS::calculate_inode_count() const
 {
     if (!m_primary_volume) {
-        dbgln_if(ISO9660_DEBUG, "Primary volume doesn't exist, can't calculate inode count");
+        dbgln_if<ISO9660_DEBUG>("Primary volume doesn't exist, can't calculate inode count");
         return EIO;
     }
 
@@ -370,10 +370,10 @@ ErrorOr<NonnullRefPtr<ISO9660FS::DirectoryEntry>> ISO9660FS::directory_entry_for
     auto key = calculate_directory_entry_cache_key(*record);
     auto it = m_directory_entry_cache.find(key);
     if (it != m_directory_entry_cache.end()) {
-        dbgln_if(ISO9660_DEBUG, "Cache hit for dirent @ {}", extent_location);
+        dbgln_if<ISO9660_DEBUG>("Cache hit for dirent @ {}", extent_location);
         return it->value;
     }
-    dbgln_if(ISO9660_DEBUG, "Cache miss for dirent @ {} :^(", extent_location);
+    dbgln_if<ISO9660_DEBUG>("Cache miss for dirent @ {} :^(", extent_location);
 
     if (m_directory_entry_cache.size() == max_cached_directory_entries) {
         // FIXME: A smarter algorithm would probably be nicer.
@@ -381,7 +381,7 @@ ErrorOr<NonnullRefPtr<ISO9660FS::DirectoryEntry>> ISO9660FS::directory_entry_for
     }
 
     if (!(data_length % logical_block_size() == 0)) {
-        dbgln_if(ISO9660_DEBUG, "Found a directory with non-logical block size aligned data length!");
+        dbgln_if<ISO9660_DEBUG>("Found a directory with non-logical block size aligned data length!");
         return EIO;
     }
 
@@ -391,7 +391,7 @@ ErrorOr<NonnullRefPtr<ISO9660FS::DirectoryEntry>> ISO9660FS::directory_entry_for
     auto entry = TRY(DirectoryEntry::try_create(extent_location, data_length, move(blocks)));
     m_directory_entry_cache.set(key, entry);
 
-    dbgln_if(ISO9660_DEBUG, "Cached dirent @ {}", extent_location);
+    dbgln_if<ISO9660_DEBUG>("Cached dirent @ {}", extent_location);
     return entry;
 }
 
@@ -422,7 +422,7 @@ ErrorOr<size_t> ISO9660Inode::read_bytes(off_t offset, size_t size, UserOrKernel
     while (nread != total_bytes) {
         size_t bytes_to_read = min(total_bytes - nread, fs().logical_block_size() - initial_offset);
         auto buffer_offset = buffer.offset(nread);
-        dbgln_if(ISO9660_VERY_DEBUG, "ISO9660Inode::read_bytes: Reading {} bytes into buffer offset {}/{}, logical block index: {}", bytes_to_read, nread, total_bytes, current_block_index.value());
+        dbgln_if<ISO9660_VERY_DEBUG>("ISO9660Inode::read_bytes: Reading {} bytes into buffer offset {}/{}, logical block index: {}", bytes_to_read, nread, total_bytes, current_block_index.value());
 
         TRY(const_cast<ISO9660FS&>(fs()).raw_read(current_block_index, block_buffer));
         TRY(buffer_offset.write(block->data() + initial_offset, bytes_to_read));
@@ -447,7 +447,7 @@ ErrorOr<void> ISO9660Inode::traverse_as_directory(Function<ErrorOr<void>(FileSys
 
     return fs().visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
         StringView filename = get_normalized_filename(*record, file_identifier_buffer);
-        dbgln_if(ISO9660_VERY_DEBUG, "traverse_as_directory(): Found {}", filename);
+        dbgln_if<ISO9660_VERY_DEBUG>("traverse_as_directory(): Found {}", filename);
 
         InodeIdentifier id { fsid(), get_inode_index(*record, filename) };
         auto entry = FileSystem::DirectoryEntryView(filename, id, static_cast<u8>(record->file_flags));
@@ -549,7 +549,7 @@ ISO9660Inode::ISO9660Inode(ISO9660FS& fs, ISO::DirectoryRecordHeader const& reco
     : Inode(fs, get_inode_index(record, name))
     , m_record(record)
 {
-    dbgln_if(ISO9660_VERY_DEBUG, "Creating inode #{}", index());
+    dbgln_if<ISO9660_VERY_DEBUG>("Creating inode #{}", index());
     create_metadata();
 }
 

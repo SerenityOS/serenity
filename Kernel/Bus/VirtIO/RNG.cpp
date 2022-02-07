@@ -59,7 +59,7 @@ void RNG::handle_queue_update(u16 queue_index)
         });
         chain.release_buffer_slots_to_queue();
     }
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::RNG: received {} bytes of entropy!", available_entropy);
+    dbgln_if<VIRTIO_DEBUG>("VirtIO::RNG: received {} bytes of entropy!", available_entropy);
     for (auto i = 0u; i < available_entropy; i++) {
         m_entropy_source.add_random_event(m_entropy_buffer->vaddr().as_ptr()[i]);
     }

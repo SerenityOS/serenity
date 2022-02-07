@@ -14,7 +14,7 @@ ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
-    dbgln_if(IO_DEBUG, "sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);
+    dbgln_if<IO_DEBUG>("sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);
     auto description = TRY(open_file_description(fd));
     // NOTE: The FD flags are not shared between OpenFileDescription objects.
     //       This means that dup() doesn't copy the FD_CLOEXEC flag!

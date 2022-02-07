@@ -22,17 +22,17 @@ bool SyntaxHighlighter::is_navigatable(u64) const
 
 void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
-    dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(CSS::SyntaxHighlighter) starting rehighlight");
+    dbgln_if<SYNTAX_HIGHLIGHTING_DEBUG>("(CSS::SyntaxHighlighter) starting rehighlight");
     auto text = m_client->get_text();
 
     Vector<GUI::TextDocumentSpan> spans;
 
     auto highlight = [&](auto start_line, auto start_column, auto end_line, auto end_column, Gfx::TextAttributes attributes, CSS::Token::Type type) {
         if (start_line > end_line || (start_line == end_line && start_column >= end_column)) {
-            dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(CSS::SyntaxHighlighter) discarding ({}-{}) to ({}-{}) because it has zero or negative length", start_line, start_column, end_line, end_column);
+            dbgln_if<SYNTAX_HIGHLIGHTING_DEBUG>("(CSS::SyntaxHighlighter) discarding ({}-{}) to ({}-{}) because it has zero or negative length", start_line, start_column, end_line, end_column);
             return;
         }
-        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(CSS::SyntaxHighlighter) highlighting ({}-{}) to ({}-{}) with color {}", start_line, start_column, end_line, end_column, attributes.color);
+        dbgln_if<SYNTAX_HIGHLIGHTING_DEBUG>("(CSS::SyntaxHighlighter) highlighting ({}-{}) to ({}-{}) with color {}", start_line, start_column, end_line, end_column, attributes.color);
         spans.empend(
             GUI::TextRange {
                 { start_line, start_column },

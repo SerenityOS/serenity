@@ -150,10 +150,10 @@ static Vector<String> get_dependencies(const String& name)
 
 static Result<void, DlErrorMessage> map_dependencies(const String& name)
 {
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "mapping dependencies for: {}", name);
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("mapping dependencies for: {}", name);
 
     for (const auto& needed_name : get_dependencies(name)) {
-        dbgln_if(DYNAMIC_LOAD_DEBUG, "needed library: {}", needed_name.characters());
+        dbgln_if<DYNAMIC_LOAD_DEBUG>("needed library: {}", needed_name.characters());
         String library_name = get_library_name(needed_name);
 
         if (!s_loaders.contains(library_name) && !s_global_objects.contains(library_name)) {
@@ -167,7 +167,7 @@ static Result<void, DlErrorMessage> map_dependencies(const String& name)
             }
         }
     }
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "mapped dependencies for {}", name);
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("mapped dependencies for {}", name);
     return {};
 }
 
@@ -175,7 +175,7 @@ static void allocate_tls()
 {
     s_total_tls_size = 0;
     for (const auto& data : s_loaders) {
-        dbgln_if(DYNAMIC_LOAD_DEBUG, "{}: TLS Size: {}", data.key, data.value->tls_size_of_current_object());
+        dbgln_if<DYNAMIC_LOAD_DEBUG>("{}: TLS Size: {}", data.key, data.value->tls_size_of_current_object());
         s_total_tls_size += data.value->tls_size_of_current_object();
     }
 
@@ -198,7 +198,7 @@ static void allocate_tls()
 
     void* master_tls = ::allocate_tls((char*)initial_tls_data.data(), initial_tls_data.size());
     VERIFY(master_tls != (void*)-1);
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "from userspace, master_tls: {:p}", master_tls);
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("from userspace, master_tls: {:p}", master_tls);
 
     s_allocated_tls_block_size = initial_tls_data.size();
 }
@@ -348,7 +348,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(co
 
 static Result<void, DlErrorMessage> __dlclose(void* handle)
 {
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "__dlclose: {}", handle);
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("__dlclose: {}", handle);
 
     __pthread_mutex_lock(&s_loader_lock);
     ScopeGuard unlock_guard = [] { __pthread_mutex_unlock(&s_loader_lock); };
@@ -398,7 +398,7 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
     flags &= ~RTLD_LOCAL;
     flags |= RTLD_GLOBAL;
 
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "__dlopen invoked, filename={}, flags={}", filename, flags);
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("__dlopen invoked, filename={}, flags={}", filename, flags);
 
     auto library_name = get_library_name(filename ? filename : s_main_program_name);
 
@@ -445,7 +445,7 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
 
 static Result<void*, DlErrorMessage> __dlsym(void* handle, const char* symbol_name)
 {
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "__dlsym: {}, {}", handle, symbol_name);
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("__dlsym: {}, {}", handle, symbol_name);
 
     __pthread_mutex_lock(&s_loader_lock);
     ScopeGuard unlock_guard = [] { __pthread_mutex_unlock(&s_loader_lock); };
@@ -549,9 +549,9 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
         _exit(1);
     }
 
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "loaded all dependencies");
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("loaded all dependencies");
     for ([[maybe_unused]] auto& lib : s_loaders) {
-        dbgln_if(DYNAMIC_LOAD_DEBUG, "{} - tls size: {}, tls offset: {}", lib.key, lib.value->tls_size_of_current_object(), lib.value->tls_offset());
+        dbgln_if<DYNAMIC_LOAD_DEBUG>("{} - tls size: {}, tls offset: {}", lib.key, lib.value->tls_size_of_current_object(), lib.value->tls_offset());
     }
 
     allocate_tls();
@@ -577,7 +577,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
         VERIFY_NOT_REACHED();
     }
 
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "Jumping to entry point: {:p}", entry_point_function);
+    dbgln_if<DYNAMIC_LOAD_DEBUG>("Jumping to entry point: {:p}", entry_point_function);
     if (s_do_breakpoint_trap_before_entry) {
         asm("int3");
     }

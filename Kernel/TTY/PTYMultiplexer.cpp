@@ -48,7 +48,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
 
         auto master_index = freelist.take_last();
         auto master = TRY(MasterPTY::try_create(master_index));
-        dbgln_if(PTMX_DEBUG, "PTYMultiplexer::open: Vending master {}", master->index());
+        dbgln_if<PTMX_DEBUG>("PTYMultiplexer::open: Vending master {}", master->index());
         auto description = TRY(OpenFileDescription::try_create(*master));
         description->set_rw_mode(options);
         description->set_file_flags(options);
@@ -60,7 +60,7 @@ void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)
 {
     m_freelist.with([&](auto& freelist) {
         freelist.append(index);
-        dbgln_if(PTMX_DEBUG, "PTYMultiplexer: {} added to freelist", index);
+        dbgln_if<PTMX_DEBUG>("PTYMultiplexer: {} added to freelist", index);
     });
 }
 

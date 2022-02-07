@@ -20,7 +20,7 @@ CyclicModule::CyclicModule(Realm& realm, StringView filename, bool has_top_level
 // 16.2.1.5.1 Link ( ), https://tc39.es/ecma262/#sec-moduledeclarationlinking
 ThrowCompletionOr<void> CyclicModule::link(VM& vm)
 {
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] link[{}]()", this);
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] link[{}]()", this);
     // 1. Assert: module.[[Status]] is not linking or evaluating.
     VERIFY(m_status != ModuleStatus::Linking && m_status != ModuleStatus::Evaluating);
     // 2. Let stack be a new empty List.
@@ -67,7 +67,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_linking(VM& vm, Vector<Module*
     //    b. Return index.
     // Note: Step 1, 1.a and 1.b are handled in Module.cpp
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] inner_module_linking[{}](vm, {}, {})", this, String::join(",", stack), index);
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] inner_module_linking[{}](vm, {}, {})", this, String::join(",", stack), index);
 
     // 2. If module.[[Status]] is linking, linked, evaluating-async, or evaluated, then
     if (m_status == ModuleStatus::Linking || m_status == ModuleStatus::Linked || m_status == ModuleStatus::EvaluatingAsync || m_status == ModuleStatus::Evaluated) {
@@ -99,7 +99,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_linking(VM& vm, Vector<Module*
         request_module_names.append(module_request.module_specifier);
         request_module_names.append(", ");
     }
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module: {} has requested modules: [{}]", filename(), request_module_names.string_view());
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] module: {} has requested modules: [{}]", filename(), request_module_names.string_view());
 #endif
 
     // 9. For each String required of module.[[RequestedModules]], do
@@ -143,7 +143,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_linking(VM& vm, Vector<Module*
     // 12. Assert: module.[[DFSAncestorIndex]] ≤ module.[[DFSIndex]].
     VERIFY(m_dfs_ancestor_index.value() <= m_dfs_index.value());
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module {} after inner_linking has dfs {} and ancestor dfs {}", filename(), m_dfs_index.value(), m_dfs_ancestor_index.value());
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] module {} after inner_linking has dfs {} and ancestor dfs {}", filename(), m_dfs_index.value(), m_dfs_ancestor_index.value());
 
     // 13. If module.[[DFSAncestorIndex]] = module.[[DFSIndex]], then
     if (m_dfs_ancestor_index == m_dfs_index) {
@@ -173,7 +173,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_linking(VM& vm, Vector<Module*
 // 16.2.1.5.2 Evaluate ( ), https://tc39.es/ecma262/#sec-moduleevaluation
 ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
 {
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] evaluate[{}](vm)", this);
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] evaluate[{}](vm)", this);
     // 1. Assert: This call to Evaluate is not happening at the same time as another call to Evaluate within the surrounding agent.
     // FIXME: Verify this somehow
 
@@ -184,7 +184,7 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
     if (m_status == ModuleStatus::EvaluatingAsync || m_status == ModuleStatus::Evaluated) {
         // Note: This will continue this function with module.[[CycleRoot]]
         VERIFY(m_cycle_root && m_cycle_root->m_status == ModuleStatus::Linked && this != m_cycle_root);
-        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] evaluate[{}](vm) deferring to cycle root at {}", this, m_cycle_root);
+        dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] evaluate[{}](vm) deferring to cycle root at {}", this, m_cycle_root);
         return m_cycle_root->evaluate(vm);
     }
 
@@ -268,7 +268,7 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
 // 16.2.1.5.2.1 InnerModuleEvaluation ( module, stack, index ), https://tc39.es/ecma262/#sec-innermoduleevaluation
 ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index)
 {
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] inner_module_evaluation[{}](vm, {}, {})", this, String::join(", ", stack), index);
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] inner_module_evaluation[{}](vm, {}, {})", this, String::join(", ", stack), index);
     // Note: Step 1 is performed in Module.cpp
 
     // 2. If module.[[Status]] is evaluating-async or evaluated, then
@@ -355,7 +355,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Modu
         }
     }
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] inner_module_evaluation on {} has tla: {} and pending async dep: {} dfs: {} ancestor dfs: {}", filename(), m_has_top_level_await, m_pending_async_dependencies.value(), m_dfs_index.value(), m_dfs_ancestor_index.value());
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] inner_module_evaluation on {} has tla: {} and pending async dep: {} dfs: {} ancestor dfs: {}", filename(), m_has_top_level_await, m_pending_async_dependencies.value(), m_dfs_index.value(), m_dfs_ancestor_index.value());
     // 12. If module.[[PendingAsyncDependencies]] > 0 or module.[[HasTLA]] is true, then
     if (m_pending_async_dependencies.value() > 0 || m_has_top_level_await) {
         // a. Assert: module.[[AsyncEvaluation]] is false and was never previously set to true.
@@ -440,7 +440,7 @@ Completion CyclicModule::execute_module(VM&, Optional<PromiseCapability>)
 // 16.2.1.5.2.2 ExecuteAsyncModule ( module ), https://tc39.es/ecma262/#sec-execute-async-module
 ThrowCompletionOr<void> CyclicModule::execute_async_module(VM& vm)
 {
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] executing async module {}", filename());
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] executing async module {}", filename());
     // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
     VERIFY(m_status == ModuleStatus::Evaluating || m_status == ModuleStatus::EvaluatingAsync);
     // 2. Assert: module.[[HasTLA]] is true.

@@ -75,7 +75,7 @@ void MemoryBackedHostBridge::map_bus_region(BusNumber bus)
         VERIFY_NOT_REACHED();
     m_mapped_bus_region = region_or_error.release_value();
     m_mapped_bus = bus;
-    dbgln_if(PCI_DEBUG, "PCI: New PCI ECAM Mapped region for bus {} @ {} {}", bus, m_mapped_bus_region->vaddr(), m_mapped_bus_region->physical_page(0)->paddr());
+    dbgln_if<PCI_DEBUG>("PCI: New PCI ECAM Mapped region for bus {} @ {} {}", bus, m_mapped_bus_region->vaddr(), m_mapped_bus_region->physical_page(0)->paddr());
 }
 
 VirtualAddress MemoryBackedHostBridge::get_device_configuration_memory_mapped_space(BusNumber bus, DeviceNumber device, FunctionNumber function)

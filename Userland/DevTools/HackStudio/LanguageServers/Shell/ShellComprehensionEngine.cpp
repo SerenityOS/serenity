@@ -135,14 +135,14 @@ size_t ShellComprehensionEngine::resolve(const ShellComprehensionEngine::Documen
 
 Vector<GUI::AutocompleteProvider::Entry> ShellComprehensionEngine::get_suggestions(const String& file, const GUI::TextPosition& position)
 {
-    dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "ShellComprehensionEngine position {}:{}", position.line(), position.column());
+    dbgln_if<SH_LANGUAGE_SERVER_DEBUG>("ShellComprehensionEngine position {}:{}", position.line(), position.column());
 
     const auto& document = get_or_create_document_data(file);
     size_t offset_in_file = resolve(document, position);
 
     ::Shell::AST::HitTestResult hit_test = document.node->hit_test_position(offset_in_file);
     if (!hit_test.matching_node) {
-        dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", position.line(), position.column());
+        dbgln_if<SH_LANGUAGE_SERVER_DEBUG>("no node at position {}:{}", position.line(), position.column());
         return {};
     }
 
@@ -166,17 +166,17 @@ void ShellComprehensionEngine::file_opened([[maybe_unused]] const String& file)
 
 Optional<GUI::AutocompleteProvider::ProjectLocation> ShellComprehensionEngine::find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position)
 {
-    dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "find_declaration_of({}, {}:{})", filename, identifier_position.line(), identifier_position.column());
+    dbgln_if<SH_LANGUAGE_SERVER_DEBUG>("find_declaration_of({}, {}:{})", filename, identifier_position.line(), identifier_position.column());
     const auto& document = get_or_create_document_data(filename);
     auto position = resolve(document, identifier_position);
     auto result = document.node->hit_test_position(position);
     if (!result.matching_node) {
-        dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", identifier_position.line(), identifier_position.column());
+        dbgln_if<SH_LANGUAGE_SERVER_DEBUG>("no node at position {}:{}", identifier_position.line(), identifier_position.column());
         return {};
     }
 
     if (!result.matching_node->is_bareword()) {
-        dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "no bareword at position {}:{}", identifier_position.line(), identifier_position.column());
+        dbgln_if<SH_LANGUAGE_SERVER_DEBUG>("no bareword at position {}:{}", identifier_position.line(), identifier_position.column());
         return {};
     }
 

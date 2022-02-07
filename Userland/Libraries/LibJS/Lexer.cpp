@@ -187,9 +187,9 @@ void Lexer::consume()
         if (!second_char_of_crlf) {
             m_line_number++;
             m_line_column = 1;
-            dbgln_if(LEXER_DEBUG, "Incremented line number, now at: line {}, column 1", m_line_number);
+            dbgln_if<LEXER_DEBUG>("Incremented line number, now at: line {}, column 1", m_line_number);
         } else {
-            dbgln_if(LEXER_DEBUG, "Previous was CR, this is LF - not incrementing line number again.");
+            dbgln_if<LEXER_DEBUG>("Previous was CR, this is LF - not incrementing line number again.");
         }
     } else if (is_unicode_character()) {
         size_t char_size = 1;

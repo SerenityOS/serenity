@@ -100,7 +100,7 @@ void Service::setup_notifier()
 void Service::handle_socket_connection()
 {
     VERIFY(m_sockets.size() == 1);
-    dbgln_if(SERVICE_DEBUG, "Ready to read on behalf of {}", name());
+    dbgln_if<SERVICE_DEBUG>("Ready to read on behalf of {}", name());
 
     int socket_fd = m_sockets[0].fd;
 
@@ -136,7 +136,7 @@ void Service::spawn(int socket_fd)
         return;
     }
 
-    dbgln_if(SERVICE_DEBUG, "Spawning {}", name());
+    dbgln_if<SERVICE_DEBUG>("Spawning {}", name());
 
     m_run_timer.start();
     pid_t pid = fork();

@@ -17,7 +17,7 @@ namespace Wasm {
 #define TRAP_IF_NOT(x)                                                                         \
     do {                                                                                       \
         if (trap_if_not(x, #x##sv)) {                                                          \
-            dbgln_if(WASM_TRACE_DEBUG, "Trapped because {} failed, at line {}", #x, __LINE__); \
+            dbgln_if<WASM_TRACE_DEBUG>("Trapped because {} failed, at line {}", #x, __LINE__); \
             return;                                                                            \
         }                                                                                      \
     } while (false)
@@ -25,7 +25,7 @@ namespace Wasm {
 #define TRAP_IF_NOT_NORETURN(x)                                                                \
     do {                                                                                       \
         if (trap_if_not(x, #x##sv)) {                                                          \
-            dbgln_if(WASM_TRACE_DEBUG, "Trapped because {} failed, at line {}", #x, __LINE__); \
+            dbgln_if<WASM_TRACE_DEBUG>("Trapped because {} failed, at line {}", #x, __LINE__); \
         }                                                                                      \
     } while (false)
 
@@ -57,9 +57,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration)
 
 void BytecodeInterpreter::branch_to_label(Configuration& configuration, LabelIndex index)
 {
-    dbgln_if(WASM_TRACE_DEBUG, "Branch to label with index {}...", index.value());
+    dbgln_if<WASM_TRACE_DEBUG>("Branch to label with index {}...", index.value());
     auto label = configuration.nth_label(index.value());
-    dbgln_if(WASM_TRACE_DEBUG, "...which is actually IP {}, and has {} result(s)", label->continuation().value(), label->arity());
+    dbgln_if<WASM_TRACE_DEBUG>("...which is actually IP {}, and has {} result(s)", label->continuation().value(), label->arity());
     auto results = pop_values(configuration, label->arity());
 
     size_t drop_count = index.value() + 1;
@@ -102,7 +102,7 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, Instructio
         dbgln("LibWasm: Memory access out of bounds (expected {} to be less than or equal to {})", instance_address + sizeof(ReadType), memory->size());
         return;
     }
-    dbgln_if(WASM_TRACE_DEBUG, "load({} : {}) -> stack", instance_address, sizeof(ReadType));
+    dbgln_if<WASM_TRACE_DEBUG>("load({} : {}) -> stack", instance_address, sizeof(ReadType));
     auto slice = memory->data().bytes().slice(instance_address, sizeof(ReadType));
     configuration.stack().peek() = Value(static_cast<PushType>(read_value<ReadType>(slice)));
 }
@@ -162,7 +162,7 @@ void BytecodeInterpreter::binary_numeric_operation(Configuration& configuration)
     } else {
         result = call_result;
     }
-    dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = {}", lhs.value(), Operator::name(), rhs.value(), result);
+    dbgln_if<WASM_TRACE_DEBUG>("{} {} {} = {}", lhs.value(), Operator::name(), rhs.value(), result);
     lhs_entry = Value(result);
 }
 
@@ -183,7 +183,7 @@ void BytecodeInterpreter::unary_operation(Configuration& configuration)
     } else {
         result = call_result;
     }
-    dbgln_if(WASM_TRACE_DEBUG, "map({}) {} = {}", Operator::name(), *value, result);
+    dbgln_if<WASM_TRACE_DEBUG>("map({}) {} = {}", Operator::name(), *value, result);
     entry = Value(result);
 }
 
@@ -226,7 +226,7 @@ void BytecodeInterpreter::pop_and_store(Configuration& configuration, Instructio
 {
     auto entry = configuration.stack().pop();
     auto value = ConvertToRaw<StoreT> {}(*entry.get<Value>().to<PopT>());
-    dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(StoreT));
+    dbgln_if<WASM_TRACE_DEBUG>("stack({}) -> temporary({}b)", value, sizeof(StoreT));
     auto base_entry = configuration.stack().pop();
     auto base = base_entry.get<Value>().to<i32>();
     store_to_memory(configuration, instruction, { &value, sizeof(StoreT) }, *base);
@@ -245,7 +245,7 @@ void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruct
         dbgln("LibWasm: Memory access out of bounds (expected 0 <= {} and {} <= {})", instance_address, instance_address + data.size(), memory->size());
         return;
     }
-    dbgln_if(WASM_TRACE_DEBUG, "temporary({}b) -> store({})", data.size(), instance_address);
+    dbgln_if<WASM_TRACE_DEBUG>("temporary({}b) -> store({})", data.size(), instance_address);
     data.copy_to(memory->data().bytes().slice(instance_address, data.size()));
 }
 
@@ -302,7 +302,7 @@ MakeSigned<T> BytecodeInterpreter::checked_signed_truncate(V value)
     if (NumericLimits<SignedT>::min() <= truncated && static_cast<double>(NumericLimits<SignedT>::max()) >= truncated)
         return static_cast<SignedT>(truncated);
 
-    dbgln_if(WASM_TRACE_DEBUG, "Truncate out of range error");
+    dbgln_if<WASM_TRACE_DEBUG>("Truncate out of range error");
     m_trap = Trap { "Signed truncation out of range" };
     return true;
 }
@@ -324,7 +324,7 @@ MakeUnsigned<T> BytecodeInterpreter::checked_unsigned_truncate(V value)
     if (NumericLimits<UnsignedT>::min() <= truncated && static_cast<double>(NumericLimits<UnsignedT>::max()) >= truncated)
         return static_cast<UnsignedT>(truncated);
 
-    dbgln_if(WASM_TRACE_DEBUG, "Truncate out of range error");
+    dbgln_if<WASM_TRACE_DEBUG>("Truncate out of range error");
     m_trap = Trap { "Unsigned truncation out of range" };
     return true;
 }
@@ -346,7 +346,7 @@ Vector<Value> BytecodeInterpreter::pop_values(Configuration& configuration, size
 
 void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, Instruction const& instruction)
 {
-    dbgln_if(WASM_TRACE_DEBUG, "Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
+    dbgln_if<WASM_TRACE_DEBUG>("Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
 
     switch (instruction.opcode().value()) {
     case Instructions::unreachable.value():
@@ -500,7 +500,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::call.value(): {
         auto index = instruction.arguments().get<FunctionIndex>();
         auto address = configuration.frame().module().functions()[index.value()];
-        dbgln_if(WASM_TRACE_DEBUG, "call({})", address.value());
+        dbgln_if<WASM_TRACE_DEBUG>("call({})", address.value());
         call_address(configuration, address);
         return;
     }
@@ -516,7 +516,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         TRAP_IF_NOT(element.has_value());
         TRAP_IF_NOT(element->ref().has<Reference::Func>());
         auto address = element->ref().get<Reference::Func>().address;
-        dbgln_if(WASM_TRACE_DEBUG, "call_indirect({} -> {})", index.value(), address.value());
+        dbgln_if<WASM_TRACE_DEBUG>("call_indirect({} -> {})", index.value(), address.value());
         call_address(configuration, address);
         return;
     }
@@ -570,14 +570,14 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto& entry = configuration.stack().peek();
         auto value = entry.get<Value>();
         auto local_index = instruction.arguments().get<LocalIndex>();
-        dbgln_if(WASM_TRACE_DEBUG, "stack:peek -> locals({})", local_index.value());
+        dbgln_if<WASM_TRACE_DEBUG>("stack:peek -> locals({})", local_index.value());
         configuration.frame().locals()[local_index.value()] = move(value);
         return;
     }
     case Instructions::global_get.value(): {
         auto global_index = instruction.arguments().get<GlobalIndex>();
         auto address = configuration.frame().module().globals()[global_index.value()];
-        dbgln_if(WASM_TRACE_DEBUG, "global({}) -> stack", address.value());
+        dbgln_if<WASM_TRACE_DEBUG>("global({}) -> stack", address.value());
         auto global = configuration.store().get(address);
         configuration.stack().push(Value(global->value()));
         return;
@@ -587,7 +587,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto address = configuration.frame().module().globals()[global_index.value()];
         auto entry = configuration.stack().pop();
         auto value = entry.get<Value>();
-        dbgln_if(WASM_TRACE_DEBUG, "stack -> global({})", address.value());
+        dbgln_if<WASM_TRACE_DEBUG>("stack -> global({})", address.value());
         auto global = configuration.store().get(address);
         global->set_value(move(value));
         return;
@@ -596,7 +596,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto address = configuration.frame().module().memories()[0];
         auto instance = configuration.store().get(address);
         auto pages = instance->size() / Constants::page_size;
-        dbgln_if(WASM_TRACE_DEBUG, "memory.size -> stack({})", pages);
+        dbgln_if<WASM_TRACE_DEBUG>("memory.size -> stack({})", pages);
         configuration.stack().push(Value((i32)pages));
         return;
     }
@@ -606,7 +606,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         i32 old_pages = instance->size() / Constants::page_size;
         auto& entry = configuration.stack().peek();
         auto new_pages = entry.get<Value>().to<i32>();
-        dbgln_if(WASM_TRACE_DEBUG, "memory.grow({}), previously {} pages...", *new_pages, old_pages);
+        dbgln_if<WASM_TRACE_DEBUG>("memory.grow({}), previously {} pages...", *new_pages, old_pages);
         if (instance->grow(new_pages.value() * Constants::page_size))
             configuration.stack().peek() = Value((i32)old_pages);
         else
@@ -643,7 +643,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         // Note: The type seems to only be used for validation.
         auto entry = configuration.stack().pop();
         auto value = entry.get<Value>().to<i32>();
-        dbgln_if(WASM_TRACE_DEBUG, "select({})", value.value());
+        dbgln_if<WASM_TRACE_DEBUG>("select({})", value.value());
         auto rhs_entry = configuration.stack().pop();
         auto& lhs_entry = configuration.stack().peek();
         auto rhs = move(rhs_entry.get<Value>());

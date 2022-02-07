@@ -315,7 +315,7 @@ ByteBuffer TLSv12::build_certificate()
     builder.append((u8)HandshakeType::CertificateMessage);
 
     if (!total_certificate_size) {
-        dbgln_if(TLS_DEBUG, "No certificates, sending empty certificate message");
+        dbgln_if<TLS_DEBUG>("No certificates, sending empty certificate message");
         builder.append_u24(certificate_vector_header_size);
         builder.append_u24(total_certificate_size);
     } else {

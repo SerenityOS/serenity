@@ -28,7 +28,7 @@ void glLineWidth(GLfloat width)
 void glPointSize(GLfloat size)
 {
     // FIXME: implement
-    dbgln_if(GL_DEBUG, "glPointSize({}): unimplemented", size);
+    dbgln_if<GL_DEBUG>("glPointSize({}): unimplemented", size);
 }
 
 void glRasterPos2i(GLint x, GLint y)

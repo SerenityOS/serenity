@@ -78,7 +78,7 @@ void ConsoleManagement::switch_to(unsigned index)
     bool was_graphical = m_active_console->is_graphical();
     m_active_console->set_active(false);
     m_active_console = &m_consoles[index];
-    dbgln_if(VIRTUAL_CONSOLE_DEBUG, "Console: Switch to {}", index);
+    dbgln_if<VIRTUAL_CONSOLE_DEBUG>("Console: Switch to {}", index);
 
     // Before setting current console to be "active", switch between graphical mode to "textual" mode
     // if needed. This will ensure we clear the screen and also that WindowServer won't print anything

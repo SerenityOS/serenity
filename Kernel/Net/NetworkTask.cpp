@@ -85,7 +85,7 @@ void NetworkTask_main(void*)
                 return;
             packet_size = adapter.dequeue_packet(buffer, buffer_size, packet_timestamp);
             pending_packets--;
-            dbgln_if(NETWORK_TASK_DEBUG, "NetworkTask: Dequeued packet from {} ({} bytes)", adapter.name(), packet_size);
+            dbgln_if<NETWORK_TASK_DEBUG>("NetworkTask: Dequeued packet from {} ({} bytes)", adapter.name(), packet_size);
         });
         return packet_size;
     };
@@ -113,7 +113,7 @@ void NetworkTask_main(void*)
             continue;
         }
         auto& eth = *(EthernetFrameHeader const*)buffer;
-        dbgln_if(ETHERNET_DEBUG, "NetworkTask: From {} to {}, ether_type={:#04x}, packet_size={}", eth.source().to_string(), eth.destination().to_string(), eth.ether_type(), packet_size);
+        dbgln_if<ETHERNET_DEBUG>("NetworkTask: From {} to {}, ether_type={:#04x}, packet_size={}", eth.source().to_string(), eth.destination().to_string(), eth.ether_type(), packet_size);
 
         switch (eth.ether_type()) {
         case EtherType::ARP:
@@ -126,7 +126,7 @@ void NetworkTask_main(void*)
             // ignore
             break;
         default:
-            dbgln_if(ETHERNET_DEBUG, "NetworkTask: Unknown ethernet type {:#04x}", eth.ether_type());
+            dbgln_if<ETHERNET_DEBUG>("NetworkTask: Unknown ethernet type {:#04x}", eth.ether_type());
         }
     }
 }
@@ -148,7 +148,7 @@ void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
         return;
     }
 
-    dbgln_if(ARP_DEBUG, "handle_arp: operation={:#04x}, sender={}/{}, target={}/{}",
+    dbgln_if<ARP_DEBUG>("handle_arp: operation={:#04x}, sender={}/{}, target={}/{}",
         packet.operation(),
         packet.sender_hardware_address().to_string(),
         packet.sender_protocol_address().to_string(),
@@ -199,7 +199,7 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, Time const& 
         return;
     }
 
-    dbgln_if(IPV4_DEBUG, "handle_ipv4: source={}, destination={}", packet.source(), packet.destination());
+    dbgln_if<IPV4_DEBUG>("handle_ipv4: source={}, destination={}", packet.source(), packet.destination());
 
     NetworkingManagement::the().for_each([&](auto& adapter) {
         if (adapter.link_up()) {
@@ -218,7 +218,7 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, Time const& 
     case IPv4Protocol::TCP:
         return handle_tcp(packet, packet_timestamp);
     default:
-        dbgln_if(IPV4_DEBUG, "handle_ipv4: Unhandled protocol {:#02x}", packet.protocol());
+        dbgln_if<IPV4_DEBUG>("handle_ipv4: Unhandled protocol {:#02x}", packet.protocol());
         break;
     }
 }
@@ -226,7 +226,7 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, Time const& 
 void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
 {
     auto& icmp_header = *static_cast<ICMPHeader const*>(ipv4_packet.payload());
-    dbgln_if(ICMP_DEBUG, "handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), icmp_header.type(), icmp_header.code());
+    dbgln_if<ICMP_DEBUG>("handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), icmp_header.type(), icmp_header.code());
 
     {
         NonnullRefPtrVector<IPv4Socket> icmp_sockets;
@@ -282,14 +282,14 @@ void handle_udp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
     }
 
     auto& udp_packet = *static_cast<UDPPacket const*>(ipv4_packet.payload());
-    dbgln_if(UDP_DEBUG, "handle_udp: source={}:{}, destination={}:{}, length={}",
+    dbgln_if<UDP_DEBUG>("handle_udp: source={}:{}, destination={}:{}, length={}",
         ipv4_packet.source(), udp_packet.source_port(),
         ipv4_packet.destination(), udp_packet.destination_port(),
         udp_packet.length());
 
     auto socket = UDPSocket::from_port(udp_packet.destination_port());
     if (!socket) {
-        dbgln_if(UDP_DEBUG, "handle_udp: No local UDP socket for {}:{}", ipv4_packet.destination(), udp_packet.destination_port());
+        dbgln_if<UDP_DEBUG>("handle_udp: No local UDP socket for {}:{}", ipv4_packet.destination(), udp_packet.destination_port());
         return;
     }
 
@@ -390,7 +390,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
 
     size_t payload_size = ipv4_packet.payload_size() - tcp_packet.header_size();
 
-    dbgln_if(TCP_DEBUG, "handle_tcp: source={}:{}, destination={}:{}, seq_no={}, ack_no={}, flags={:#04x} ({}{}{}{}), window_size={}, payload_size={}",
+    dbgln_if<TCP_DEBUG>("handle_tcp: source={}:{}, destination={}:{}, seq_no={}, ack_no={}, flags={:#04x} ({}{}{}{}), window_size={}, payload_size={}",
         ipv4_packet.source().to_string(),
         tcp_packet.source_port(),
         ipv4_packet.destination().to_string(),
@@ -413,7 +413,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
 
     IPv4SocketTuple tuple(ipv4_packet.destination(), tcp_packet.destination_port(), ipv4_packet.source(), tcp_packet.source_port());
 
-    dbgln_if(TCP_DEBUG, "handle_tcp: looking for socket; tuple={}", tuple.to_string());
+    dbgln_if<TCP_DEBUG>("handle_tcp: looking for socket; tuple={}", tuple.to_string());
 
     auto socket = TCPSocket::from_tuple(tuple);
     if (!socket) {
@@ -429,7 +429,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
     VERIFY(socket->type() == SOCK_STREAM);
     VERIFY(socket->local_port() == tcp_packet.destination_port());
 
-    dbgln_if(TCP_DEBUG, "handle_tcp: got socket {}; state={}", socket->tuple().to_string(), TCPSocket::to_string(socket->state()));
+    dbgln_if<TCP_DEBUG>("handle_tcp: got socket {}; state={}", socket->tuple().to_string(), TCPSocket::to_string(socket->state()));
 
     socket->receive_tcp_packet(tcp_packet, ipv4_packet.payload_size());
 
@@ -446,7 +446,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
     case TCPSocket::State::Listen:
         switch (tcp_packet.flags()) {
         case TCPFlags::SYN: {
-            dbgln_if(TCP_DEBUG, "handle_tcp: incoming connection");
+            dbgln_if<TCP_DEBUG>("handle_tcp: incoming connection");
             auto& local_address = ipv4_packet.destination();
             auto& peer_address = ipv4_packet.source();
             auto client_or_error = socket->try_create_client(local_address, tcp_packet.destination_port(), peer_address, tcp_packet.source_port());
@@ -456,7 +456,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             }
             auto client = client_or_error.release_value();
             MutexLocker locker(client->mutex());
-            dbgln_if(TCP_DEBUG, "handle_tcp: created new client socket with tuple {}", client->tuple().to_string());
+            dbgln_if<TCP_DEBUG>("handle_tcp: created new client socket with tuple {}", client->tuple().to_string());
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             [[maybe_unused]] auto rc2 = client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
@@ -620,9 +620,9 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
         }
 
         if (tcp_packet.sequence_number() != socket->ack_number()) {
-            dbgln_if(TCP_DEBUG, "Discarding out of order packet: seq {} vs. ack {}", tcp_packet.sequence_number(), socket->ack_number());
+            dbgln_if<TCP_DEBUG>("Discarding out of order packet: seq {} vs. ack {}", tcp_packet.sequence_number(), socket->ack_number());
             if (socket->duplicate_acks() < TCPSocket::maximum_duplicate_acks) {
-                dbgln_if(TCP_DEBUG, "Sending ACK with same ack number to trigger fast retransmission");
+                dbgln_if<TCP_DEBUG>("Sending ACK with same ack number to trigger fast retransmission");
                 socket->set_duplicate_acks(socket->duplicate_acks() + 1);
                 [[maybe_unused]] auto result = socket->send_ack(true);
             }
@@ -645,7 +645,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
         if (payload_size) {
             if (socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp)) {
                 socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
-                dbgln_if(TCP_DEBUG, "Got packet with ack_no={}, seq_no={}, payload_size={}, acking it with new ack_no={}, seq_no={}",
+                dbgln_if<TCP_DEBUG>("Got packet with ack_no={}, seq_no={}, payload_size={}, acking it with new ack_no={}, seq_no={}",
                     tcp_packet.ack_number(), tcp_packet.sequence_number(), payload_size, socket->ack_number(), socket->sequence_number());
                 send_delayed_tcp_ack(socket);
             }

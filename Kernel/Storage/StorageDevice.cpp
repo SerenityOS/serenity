@@ -40,7 +40,7 @@ ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKern
         remaining = 0;
     }
 
-    dbgln_if(STORAGE_DEVICE_DEBUG, "StorageDevice::read() index={}, whole_blocks={}, remaining={}", index, whole_blocks, remaining);
+    dbgln_if<STORAGE_DEVICE_DEBUG>("StorageDevice::read() index={}, whole_blocks={}, remaining={}", index, whole_blocks, remaining);
 
     if (whole_blocks > 0) {
         auto read_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index, whole_blocks, outbuf, whole_blocks * block_size()));
@@ -108,7 +108,7 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
     if (remaining > 0)
         partial_write_block = TRY(ByteBuffer::create_zeroed(block_size()));
 
-    dbgln_if(STORAGE_DEVICE_DEBUG, "StorageDevice::write() index={}, whole_blocks={}, remaining={}", index, whole_blocks, remaining);
+    dbgln_if<STORAGE_DEVICE_DEBUG>("StorageDevice::write() index={}, whole_blocks={}, remaining={}", index, whole_blocks, remaining);
 
     if (whole_blocks > 0) {
         auto write_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index, whole_blocks, inbuf, whole_blocks * block_size()));

@@ -307,7 +307,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
     // Prevent this by just ignoring later drag initiations (until the current drag operation ends).
     TemporaryChange dragging { m_is_dragging, true };
 
-    dbgln_if(DRAG_DEBUG, "Initiate drag!");
+    dbgln_if<DRAG_DEBUG>("Initiate drag!");
     auto drag_operation = DragOperation::construct();
 
     drag_operation->set_mime_data(m_model->mime_data(m_selection));
@@ -316,10 +316,10 @@ void AbstractView::mousemove_event(MouseEvent& event)
 
     switch (outcome) {
     case DragOperation::Outcome::Accepted:
-        dbgln_if(DRAG_DEBUG, "Drag was accepted!");
+        dbgln_if<DRAG_DEBUG>("Drag was accepted!");
         break;
     case DragOperation::Outcome::Cancelled:
-        dbgln_if(DRAG_DEBUG, "Drag was cancelled!");
+        dbgln_if<DRAG_DEBUG>("Drag was cancelled!");
         m_might_drag = false;
         break;
     default:
@@ -754,7 +754,7 @@ void AbstractView::drag_enter_event(DragEvent& event)
     //       We might be able to reduce event traffic by communicating the set of drag-accepting
     //       rects in this widget to the windowing system somehow.
     event.accept();
-    dbgln_if(DRAG_DEBUG, "accepting drag of {}", event.mime_types().first());
+    dbgln_if<DRAG_DEBUG>("accepting drag of {}", event.mime_types().first());
 }
 
 void AbstractView::drag_move_event(DragEvent& event)

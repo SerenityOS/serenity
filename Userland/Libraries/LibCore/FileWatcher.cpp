@@ -30,7 +30,7 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, St
     if (rc == 0) {
         return {};
     } else if (rc < 0) {
-        dbgln_if(FILE_WATCHER_DEBUG, "get_event_from_fd: Reading from wd {} failed: {}", fd, strerror(errno));
+        dbgln_if<FILE_WATCHER_DEBUG>("get_event_from_fd: Reading from wd {} failed: {}", fd, strerror(errno));
         return {};
     }
 
@@ -39,7 +39,7 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, St
 
     auto it = wd_to_path.find(event->watch_descriptor);
     if (it == wd_to_path.end()) {
-        dbgln_if(FILE_WATCHER_DEBUG, "get_event_from_fd: Got an event for a non-existent wd {}?!", event->watch_descriptor);
+        dbgln_if<FILE_WATCHER_DEBUG>("get_event_from_fd: Got an event for a non-existent wd {}?!", static_cast<int>(event->watch_descriptor));
         return {};
     }
     String const& path = it->value;
@@ -73,7 +73,7 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, St
         result.event_path = path;
     }
 
-    dbgln_if(FILE_WATCHER_DEBUG, "get_event_from_fd: got event from wd {} on '{}' type {}", fd, result.event_path, result.type);
+    dbgln_if<FILE_WATCHER_DEBUG>("get_event_from_fd: got event from wd {} on '{}' type {}", fd, result.event_path, result.type);
     return result;
 }
 
@@ -91,7 +91,7 @@ ErrorOr<bool> FileWatcherBase::add_watch(String path, FileWatcherEvent::Type eve
     String canonical_path = canonicalize_path(move(path));
 
     if (m_path_to_wd.find(canonical_path) != m_path_to_wd.end()) {
-        dbgln_if(FILE_WATCHER_DEBUG, "add_watch: path '{}' is already being watched", canonical_path);
+        dbgln_if<FILE_WATCHER_DEBUG>("add_watch: path '{}' is already being watched", canonical_path);
         return false;
     }
 
@@ -114,7 +114,7 @@ ErrorOr<bool> FileWatcherBase::add_watch(String path, FileWatcherEvent::Type eve
     m_path_to_wd.set(canonical_path, wd);
     m_wd_to_path.set(wd, canonical_path);
 
-    dbgln_if(FILE_WATCHER_DEBUG, "add_watch: watching path '{}' on InodeWatcher {} wd {}", canonical_path, m_watcher_fd, wd);
+    dbgln_if<FILE_WATCHER_DEBUG>("add_watch: watching path '{}' on InodeWatcher {} wd {}", canonical_path, m_watcher_fd, wd);
     return true;
 }
 
@@ -124,7 +124,7 @@ ErrorOr<bool> FileWatcherBase::remove_watch(String path)
 
     auto it = m_path_to_wd.find(canonical_path);
     if (it == m_path_to_wd.end()) {
-        dbgln_if(FILE_WATCHER_DEBUG, "remove_watch: path '{}' is not being watched", canonical_path);
+        dbgln_if<FILE_WATCHER_DEBUG>("remove_watch: path '{}' is not being watched", canonical_path);
         return false;
     }
 
@@ -134,7 +134,7 @@ ErrorOr<bool> FileWatcherBase::remove_watch(String path)
     m_path_to_wd.remove(it);
     m_wd_to_path.remove(it->value);
 
-    dbgln_if(FILE_WATCHER_DEBUG, "remove_watch: stopped watching path '{}' on InodeWatcher {}", canonical_path, m_watcher_fd);
+    dbgln_if<FILE_WATCHER_DEBUG>("remove_watch: stopped watching path '{}' on InodeWatcher {}", canonical_path, m_watcher_fd);
     return true;
 }
 
@@ -142,7 +142,7 @@ BlockingFileWatcher::BlockingFileWatcher(InodeWatcherFlags flags)
     : FileWatcherBase(create_inode_watcher(static_cast<unsigned>(flags)))
 {
     VERIFY(m_watcher_fd != -1);
-    dbgln_if(FILE_WATCHER_DEBUG, "BlockingFileWatcher created with InodeWatcher {}", m_watcher_fd);
+    dbgln_if<FILE_WATCHER_DEBUG>("BlockingFileWatcher created with InodeWatcher {}", m_watcher_fd);
 }
 
 BlockingFileWatcher::~BlockingFileWatcher()
@@ -152,7 +152,7 @@ BlockingFileWatcher::~BlockingFileWatcher()
 
 Optional<FileWatcherEvent> BlockingFileWatcher::wait_for_event()
 {
-    dbgln_if(FILE_WATCHER_DEBUG, "BlockingFileWatcher::wait_for_event()");
+    dbgln_if<FILE_WATCHER_DEBUG>("BlockingFileWatcher::wait_for_event()");
 
     auto maybe_event = get_event_from_fd(m_watcher_fd, m_wd_to_path);
     if (!maybe_event.has_value())
@@ -162,7 +162,7 @@ Optional<FileWatcherEvent> BlockingFileWatcher::wait_for_event()
     if (event.type == FileWatcherEvent::Type::Deleted) {
         auto result = remove_watch(event.event_path);
         if (result.is_error()) {
-            dbgln_if(FILE_WATCHER_DEBUG, "wait_for_event: {}", result.error());
+            dbgln_if<FILE_WATCHER_DEBUG>("wait_for_event: {}", result.error());
         }
     }
 
@@ -192,7 +192,7 @@ FileWatcher::FileWatcher(int watcher_fd, NonnullRefPtr<Notifier> notifier)
             if (event.type == FileWatcherEvent::Type::Deleted) {
                 auto result = remove_watch(event.event_path);
                 if (result.is_error()) {
-                    dbgln_if(FILE_WATCHER_DEBUG, "on_ready_to_read: {}", result.error());
+                    dbgln_if<FILE_WATCHER_DEBUG>("on_ready_to_read: {}", result.error());
                 }
             }
         }
@@ -203,7 +203,7 @@ FileWatcher::~FileWatcher()
 {
     m_notifier->on_ready_to_read = nullptr;
     close(m_notifier->fd());
-    dbgln_if(FILE_WATCHER_DEBUG, "Stopped watcher at fd {}", m_notifier->fd());
+    dbgln_if<FILE_WATCHER_DEBUG>("Stopped watcher at fd {}", m_notifier->fd());
 }
 
 #endif

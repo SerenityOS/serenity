@@ -609,13 +609,13 @@ bool VM::in_strict_mode() const
 
 void VM::run_queued_promise_jobs()
 {
-    dbgln_if(PROMISE_DEBUG, "Running queued promise jobs");
+    dbgln_if<PROMISE_DEBUG>("Running queued promise jobs");
     // Temporarily get rid of the exception, if any - job functions must be called
     // either way, and that can't happen if we already have an exception stored.
     TemporaryClearException temporary_clear_exception(*this);
     while (!m_promise_jobs.is_empty()) {
         auto* job = m_promise_jobs.take_first();
-        dbgln_if(PROMISE_DEBUG, "Calling promise job function @ {}", job);
+        dbgln_if<PROMISE_DEBUG>("Calling promise job function @ {}", job);
 
         // NOTE: If the execution context stack is empty, we make and push a temporary context.
         ExecutionContext execution_context(heap());
@@ -765,7 +765,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
     StoredModule* stored_module;
 
     if (module_or_end.is_end()) {
-        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Warning introducing module via link_and_eval_module {}", module.filename());
+        dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] Warning introducing module via link_and_eval_module {}", module.filename());
         if (m_loaded_modules.size() > 0)
             dbgln("Warning: Using multiple modules as entry point can lead to unexpected results");
 
@@ -779,18 +779,18 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
     } else {
         stored_module = module_or_end.operator->();
         if (stored_module->has_once_started_linking) {
-            dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Module already has started linking once {}", module.filename());
+            dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] Module already has started linking once {}", module.filename());
             return {};
         }
         stored_module->has_once_started_linking = true;
     }
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Linking module {}", filepath);
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] Linking module {}", filepath);
     auto linked_or_error = module.link(*this);
     if (linked_or_error.is_error())
         return linked_or_error.throw_completion();
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Linking passed, now evaluating module {}", filepath);
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] Linking passed, now evaluating module {}", filepath);
     auto evaluated_or_error = module.evaluate(*this);
 
     VERIFY(!exception());
@@ -811,7 +811,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
         return JS::throw_completion(evaluated_value->result());
     }
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Evaluating passed for module {}", module.filename());
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] Evaluating passed for module {}", module.filename());
     return {};
 }
 
@@ -855,23 +855,23 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
             return String::formatted("Module @ {}", script_or_module);
         });
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}, {})", referencing_module_string, filepath);
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE]     resolved {} + {} -> {}", base_path, module_request.module_specifier, filepath);
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] resolve_imported_module({}, {})", referencing_module_string, filepath);
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE]     resolved {} + {} -> {}", base_path, module_request.module_specifier, filepath);
 #endif
 
     // We only allow "type" as a supported assertion so it is the only valid key that should ever arrive here.
     VERIFY(module_request.assertions.is_empty() || (module_request.assertions.size() == 1 && module_request.assertions.first().key == "type"));
     auto module_type = module_request.assertions.is_empty() ? String {} : module_request.assertions.first().value;
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module at {} has type {} [is_null={}]", module_request.module_specifier, module_type, module_type.is_null());
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] module at {} has type {} [is_null={}]", module_request.module_specifier, module_type, module_type.is_null());
 
     auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filepath, module_type);
     if (loaded_module_or_end != nullptr) {
-        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}) already loaded at {}", filepath, loaded_module_or_end->module.ptr());
+        dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] resolve_imported_module({}) already loaded at {}", filepath, loaded_module_or_end->module.ptr());
         return loaded_module_or_end->module;
     }
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filepath);
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] reading and parsing module {}", filepath);
 
     auto& global_object = current_realm()->global_object();
 
@@ -889,11 +889,11 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         // If assertions has an entry entry such that entry.[[Key]] is "type", let type be entry.[[Value]]. The following requirements apply:
         // If type is "json", then this algorithm must either invoke ParseJSONModule and return the resulting Completion Record, or throw an exception.
         if (module_type == "json"sv) {
-            dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing JSON module {}", filepath);
+            dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] reading and parsing JSON module {}", filepath);
             return parse_json_module(content_view, *current_realm(), filepath);
         }
 
-        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing as SourceTextModule module {}", filepath);
+        dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] reading and parsing as SourceTextModule module {}", filepath);
         // Note: We treat all files as module, so if a script does not have exports it just runs it.
         auto module_or_errors = SourceTextModule::parse(content_view, *current_realm(), filepath);
 
@@ -904,7 +904,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         return module_or_errors.release_value();
     }());
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module(...) parsed {} to {}", filepath, module.ptr());
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] resolve_imported_module(...) parsed {} to {}", filepath, module.ptr());
 
     // We have to set it here already in case it references itself.
     m_loaded_modules.empend(
@@ -957,7 +957,7 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
     VERIFY(!exception());
     // Note: If host_resolve_imported_module returns a module it has been loaded successfully and the next call in finish_dynamic_import will retrieve it again.
     auto module_or_error = host_resolve_imported_module(referencing_script_or_module, module_request);
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] HostImportModuleDynamically(..., {}) -> {}", module_request.module_specifier, module_or_error.is_error() ? "failed" : "passed");
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] HostImportModuleDynamically(..., {}) -> {}", module_request.module_specifier, module_or_error.is_error() ? "failed" : "passed");
     if (module_or_error.is_throw_completion()) {
         // Note: We should not leak the exception thrown in host_resolve_imported_module.
         clear_exception();
@@ -985,7 +985,7 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
 // 16.2.1.9 FinishDynamicImport ( referencingScriptOrModule, specifier, promiseCapability, innerPromise ), https://tc39.es/ecma262/#sec-finishdynamicimport
 void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability, Promise* inner_promise)
 {
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] finish_dynamic_import on {}", module_request.module_specifier);
+    dbgln_if<JS_MODULE_DEBUG>("[JS MODULE] finish_dynamic_import on {}", module_request.module_specifier);
 
     // 1. Let fulfilledClosure be a new Abstract Closure with parameters (result) that captures referencingScriptOrModule, specifier, and promiseCapability and performs the following steps when called:
     auto fulfilled_closure = [referencing_script_or_module, module_request = move(module_request), resolve_function = make_handle(promise_capability.resolve), reject_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {

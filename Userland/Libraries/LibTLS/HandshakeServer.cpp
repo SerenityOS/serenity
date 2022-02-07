@@ -79,7 +79,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
         return (i8)Error::NoCommonCipher;
     }
     m_context.cipher = cipher;
-    dbgln_if(TLS_DEBUG, "Cipher: {}", (u16)cipher);
+    dbgln_if<TLS_DEBUG>("Cipher: {}", (u16)cipher);
 
     // Simplification: We only support handshake hash functions via HMAC
     m_context.handshake_hash.initialize(hmac_hash());
@@ -101,7 +101,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
     // Presence of extensions is determined by availability of bytes after compression_method
     if (buffer.size() - res >= 2) {
         auto extensions_bytes_total = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res += 2)));
-        dbgln_if(TLS_DEBUG, "Extensions bytes total: {}", extensions_bytes_total);
+        dbgln_if<TLS_DEBUG>("Extensions bytes total: {}", extensions_bytes_total);
     }
 
     while (buffer.size() - res >= 4) {
@@ -110,7 +110,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
         u16 extension_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
         res += 2;
 
-        dbgln_if(TLS_DEBUG, "Extension {} with length {}", (u16)extension_type, extension_length);
+        dbgln_if<TLS_DEBUG>("Extension {} with length {}", (u16)extension_type, extension_length);
 
         if (buffer.size() - res < extension_length)
             return (i8)Error::NeedMoreData;
@@ -122,7 +122,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                 if (buffer.size() - res < 2)
                     return (i8)Error::NeedMoreData;
                 auto sni_name_list_bytes = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res += 2)));
-                dbgln_if(TLS_DEBUG, "SNI: expecting ServerNameList of {} bytes", sni_name_list_bytes);
+                dbgln_if<TLS_DEBUG>("SNI: expecting ServerNameList of {} bytes", sni_name_list_bytes);
 
                 // Exactly one ServerName should be present
                 if (buffer.size() - res < 3)

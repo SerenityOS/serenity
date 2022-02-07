@@ -199,7 +199,7 @@ void Job::on_socket_connected()
         }
 
         if (!m_socket->is_open() || m_socket->is_eof()) {
-            dbgln_if(JOB_DEBUG, "Connection appears to have closed, finishing up");
+            dbgln_if<JOB_DEBUG>("Connection appears to have closed, finishing up");
             finish_up();
         }
     });

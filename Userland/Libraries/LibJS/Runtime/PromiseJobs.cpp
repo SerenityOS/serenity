@@ -44,11 +44,11 @@ ThrowCompletionOr<Value> PromiseReactionJob::call()
 
     // d. If handler is empty, then
     if (!handler.has_value()) {
-        dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Handler is empty", this);
+        dbgln_if<PROMISE_DEBUG>("[PromiseReactionJob @ {}]: Handler is empty", this);
 
         // i. If type is Fulfill, let handlerResult be NormalCompletion(argument).
         if (type == PromiseReaction::Type::Fulfill) {
-            dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Reaction type is Type::Fulfill, setting handler result to {}", this, m_argument);
+            dbgln_if<PROMISE_DEBUG>("[PromiseReactionJob @ {}]: Reaction type is Type::Fulfill, setting handler result to {}", this, m_argument);
             handler_result = normal_completion(m_argument);
         }
         // ii. Else,
@@ -57,13 +57,13 @@ ThrowCompletionOr<Value> PromiseReactionJob::call()
             VERIFY(type == PromiseReaction::Type::Reject);
 
             // 2. Let handlerResult be ThrowCompletion(argument).
-            dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Reaction type is Type::Reject, throwing exception with argument {}", this, m_argument);
+            dbgln_if<PROMISE_DEBUG>("[PromiseReactionJob @ {}]: Reaction type is Type::Reject, throwing exception with argument {}", this, m_argument);
             handler_result = throw_completion(m_argument);
         }
     }
     // e. Else, let handlerResult be HostCallJobCallback(handler, undefined, « argument »).
     else {
-        dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Calling handler callback {} @ {} with argument {}", this, handler.value().callback->class_name(), handler.value().callback, m_argument);
+        dbgln_if<PROMISE_DEBUG>("[PromiseReactionJob @ {}]: Calling handler callback {} @ {} with argument {}", this, handler.value().callback->class_name(), handler.value().callback, m_argument);
         handler_result = call_job_callback(global_object, handler.value(), js_undefined(), m_argument);
     }
 
@@ -73,7 +73,7 @@ ThrowCompletionOr<Value> PromiseReactionJob::call()
         VERIFY(!vm.exception());
 
         // ii. Return NormalCompletion(empty).
-        dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Reaction has no PromiseCapability, returning empty value", this);
+        dbgln_if<PROMISE_DEBUG>("[PromiseReactionJob @ {}]: Reaction has no PromiseCapability, returning empty value", this);
         // TODO: This can't return an empty value at the moment, because the implicit conversion to Completion would fail.
         //       Change it back when this is using completions (`return normal_completion({})`)
         return js_undefined();
@@ -87,14 +87,14 @@ ThrowCompletionOr<Value> PromiseReactionJob::call()
 
         // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
         auto* reject_function = promise_capability.value().reject;
-        dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Calling PromiseCapability's reject function @ {}", this, reject_function);
+        dbgln_if<PROMISE_DEBUG>("[PromiseReactionJob @ {}]: Calling PromiseCapability's reject function @ {}", this, reject_function);
         return JS::call(global_object, *reject_function, js_undefined(), *handler_result.value());
     }
     // i. Else,
     else {
         // i. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
         auto* resolve_function = promise_capability.value().resolve;
-        dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Calling PromiseCapability's resolve function @ {}", this, resolve_function);
+        dbgln_if<PROMISE_DEBUG>("[PromiseReactionJob @ {}]: Calling PromiseCapability's resolve function @ {}", this, resolve_function);
         return JS::call(global_object, *resolve_function, js_undefined(), *handler_result.value());
     }
 
@@ -132,7 +132,7 @@ ThrowCompletionOr<Value> PromiseResolveThenableJob::call()
     auto [resolve_function, reject_function] = m_promise_to_resolve.create_resolving_functions();
 
     // b. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
-    dbgln_if(PROMISE_DEBUG, "[PromiseResolveThenableJob @ {}]: Calling then job callback for thenable {}", this, &m_thenable);
+    dbgln_if<PROMISE_DEBUG>("[PromiseResolveThenableJob @ {}]: Calling then job callback for thenable {}", this, &m_thenable);
     auto then_call_result = call_job_callback(global_object, m_then, m_thenable, &resolve_function, &reject_function);
 
     // c. If thenCallResult is an abrupt completion, then
@@ -140,7 +140,7 @@ ThrowCompletionOr<Value> PromiseResolveThenableJob::call()
         vm.clear_exception();
 
         // i. Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
-        dbgln_if(PROMISE_DEBUG, "[PromiseResolveThenableJob @ {}]: then_call_result is an abrupt completion, calling reject function with value {}", this, *then_call_result.throw_completion().value());
+        dbgln_if<PROMISE_DEBUG>("[PromiseResolveThenableJob @ {}]: then_call_result is an abrupt completion, calling reject function with value {}", this, *then_call_result.throw_completion().value());
         auto status = JS::call(global_object, &reject_function, js_undefined(), *then_call_result.throw_completion().value());
 
         // ii. Return Completion(status).
@@ -148,7 +148,7 @@ ThrowCompletionOr<Value> PromiseResolveThenableJob::call()
     }
 
     // d. Return Completion(thenCallResult).
-    dbgln_if(PROMISE_DEBUG, "[PromiseResolveThenableJob @ {}]: Returning then call result {}", this, then_call_result.value());
+    dbgln_if<PROMISE_DEBUG>("[PromiseResolveThenableJob @ {}]: Returning then call result {}", this, then_call_result.value());
     return then_call_result;
 }
 

@@ -65,7 +65,7 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
     int samples_to_read = min(max_samples_to_read, remaining_samples);
     size_t bytes_to_read = samples_to_read * bytes_per_sample;
 
-    dbgln_if(AWAVLOADER_DEBUG, "Read {} bytes WAV with num_channels {} sample rate {}, "
+    dbgln_if<AWAVLOADER_DEBUG>("Read {} bytes WAV with num_channels {} sample rate {}, "
                                "bits per sample {}, sample format {}",
         bytes_to_read, m_num_channels, m_sample_rate,
         pcm_bits_per_sample(m_sample_format), sample_format_name(m_sample_format));
@@ -93,7 +93,7 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
 
 MaybeLoaderError WavLoaderPlugin::seek(const int sample_index)
 {
-    dbgln_if(AWAVLOADER_DEBUG, "seek sample_index {}", sample_index);
+    dbgln_if<AWAVLOADER_DEBUG>("seek sample_index {}", sample_index);
     if (sample_index < 0 || sample_index >= m_total_samples)
         return LoaderError { LoaderError::Category::Internal, static_cast<size_t>(m_loaded_samples), "Seek outside the sample range" };
 
@@ -238,7 +238,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
     ok = ok && (block_size_bytes == (m_num_channels * (bits_per_sample / 8)));
     CHECK_OK(LoaderError::Category::Format, "Block size sanity check");
 
-    dbgln_if(AWAVLOADER_DEBUG, "WAV format {} at {} bit, {} channels, rate {}Hz ",
+    dbgln_if<AWAVLOADER_DEBUG>("WAV format {} at {} bit, {} channels, rate {}Hz ",
         sample_format_name(m_sample_format), pcm_bits_per_sample(m_sample_format), m_num_channels, m_sample_rate);
 
     // Read chunks until we find DATA
@@ -274,7 +274,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
 
     m_total_samples = data_sz / block_size_bytes;
 
-    dbgln_if(AWAVLOADER_DEBUG, "WAV data size {}, bytes per sample {}, total samples {}",
+    dbgln_if<AWAVLOADER_DEBUG>("WAV data size {}, bytes per sample {}, total samples {}",
         data_sz,
         block_size_bytes,
         m_total_samples);

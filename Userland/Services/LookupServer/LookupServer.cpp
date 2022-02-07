@@ -133,7 +133,7 @@ static String get_hostname()
 
 Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record_type)
 {
-    dbgln_if(LOOKUPSERVER_DEBUG, "Got request for '{}'", name.as_string());
+    dbgln_if<LOOKUPSERVER_DEBUG>("Got request for '{}'", name.as_string());
 
     Vector<DNSAnswer> answers;
     auto add_answer = [&](const DNSAnswer& answer) {
@@ -173,7 +173,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
         for (auto& answer : cached_answers->value) {
             // TODO: Actually remove expired answers from the cache.
             if (answer.type() == record_type && !answer.has_expired()) {
-                dbgln_if(LOOKUPSERVER_DEBUG, "Cache hit: {} -> {}", name.as_string(), answer.record_data());
+                dbgln_if<LOOKUPSERVER_DEBUG>("Cache hit: {} -> {}", name.as_string(), answer.record_data());
                 add_answer(answer);
             }
         }
@@ -191,7 +191,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
 
     // Fifth, ask the upstream nameservers.
     for (auto& nameserver : m_nameservers) {
-        dbgln_if(LOOKUPSERVER_DEBUG, "Doing lookup using nameserver '{}'", nameserver);
+        dbgln_if<LOOKUPSERVER_DEBUG>("Doing lookup using nameserver '{}'", nameserver);
         bool did_get_response = false;
         int retries = 3;
         Vector<DNSAnswer> upstream_answers;
@@ -338,7 +338,7 @@ void LookupServer::put_in_cache(const DNSAnswer& answer)
                 if (other_answer.received_time() >= now - 1)
                     return false;
 
-                dbgln_if(LOOKUPSERVER_DEBUG, "Removing cache entry: {}", other_answer.name());
+                dbgln_if<LOOKUPSERVER_DEBUG>("Removing cache entry: {}", other_answer.name());
                 return true;
             });
         }

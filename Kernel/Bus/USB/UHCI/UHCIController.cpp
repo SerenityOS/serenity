@@ -362,7 +362,7 @@ ErrorOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
     Pipe& pipe = transfer.pipe(); // Short circuit the pipe related to this transfer
     bool direction_in = (transfer.request().request_type & USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST) == USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST;
 
-    dbgln_if(UHCI_DEBUG, "UHCI: Received control transfer for address {}. Root Hub is at address {}.", pipe.device_address(), m_root_hub->device_address());
+    dbgln_if<UHCI_DEBUG>("UHCI: Received control transfer for address {}. Root Hub is at address {}.", pipe.device_address(), m_root_hub->device_address());
 
     // Short-circuit the root hub.
     if (pipe.device_address() == m_root_hub->device_address())
@@ -450,7 +450,7 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
         if (status & TransferDescriptor::StatusBits::ErrorMask) {
             transfer->set_complete();
             transfer->set_error_occurred();
-            dbgln_if(UHCI_DEBUG, "UHCIController: Transfer failed! Reason: {:08x}", status);
+            dbgln_if<UHCI_DEBUG>("UHCIController: Transfer failed! Reason: {:08x}", status);
             return 0;
         }
 
@@ -533,7 +533,7 @@ void UHCIController::get_port_status(Badge<UHCIRootHub>, u8 port, HubStatus& hub
     // UHCI ports are always powered.
     hub_port_status.status |= PORT_STATUS_PORT_POWER;
 
-    dbgln_if(UHCI_DEBUG, "UHCI: get_port_status status=0x{:04x} change=0x{:04x}", hub_port_status.status, hub_port_status.change);
+    dbgln_if<UHCI_DEBUG>("UHCI: get_port_status status=0x{:04x} change=0x{:04x}", static_cast<u16>(hub_port_status.status), static_cast<u16>(hub_port_status.change));
 }
 
 void UHCIController::reset_port(u8 port)
@@ -577,7 +577,7 @@ void UHCIController::reset_port(u8 port)
     else
         write_portsc2(port_data);
 
-    dbgln_if(UHCI_DEBUG, "UHCI: Port should be enabled now: {:#04x}", port == 0 ? read_portsc1() : read_portsc2());
+    dbgln_if<UHCI_DEBUG>("UHCI: Port should be enabled now: {:#04x}", port == 0 ? read_portsc1() : read_portsc2());
     m_port_reset_change_statuses |= (1 << port);
 }
 
@@ -586,7 +586,7 @@ ErrorOr<void> UHCIController::set_port_feature(Badge<UHCIRootHub>, u8 port, HubF
     // The check is done by UHCIRootHub.
     VERIFY(port < NUMBER_OF_ROOT_PORTS);
 
-    dbgln_if(UHCI_DEBUG, "UHCI: set_port_feature: port={} feature_selector={}", port, (u8)feature_selector);
+    dbgln_if<UHCI_DEBUG>("UHCI: set_port_feature: port={} feature_selector={}", port, (u8)feature_selector);
 
     switch (feature_selector) {
     case HubFeatureSelector::PORT_POWER:
@@ -621,7 +621,7 @@ ErrorOr<void> UHCIController::clear_port_feature(Badge<UHCIRootHub>, u8 port, Hu
     // The check is done by UHCIRootHub.
     VERIFY(port < NUMBER_OF_ROOT_PORTS);
 
-    dbgln_if(UHCI_DEBUG, "UHCI: clear_port_feature: port={} feature_selector={}", port, (u8)feature_selector);
+    dbgln_if<UHCI_DEBUG>("UHCI: clear_port_feature: port={} feature_selector={}", port, (u8)feature_selector);
 
     u16 port_data = port == 0 ? read_portsc1() : read_portsc2();
     port_data &= UHCI_PORTSC_NON_WRITE_CLEAR_BIT_MASK;
@@ -655,7 +655,7 @@ ErrorOr<void> UHCIController::clear_port_feature(Badge<UHCIRootHub>, u8 port, Hu
         return EINVAL;
     }
 
-    dbgln_if(UHCI_DEBUG, "UHCI: clear_port_feature: writing 0x{:04x} to portsc{}.", port_data, port + 1);
+    dbgln_if<UHCI_DEBUG>("UHCI: clear_port_feature: writing 0x{:04x} to portsc{}.", port_data, port + 1);
 
     if (port == 0)
         write_portsc1(port_data);

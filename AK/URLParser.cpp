@@ -27,7 +27,7 @@ constexpr bool is_url_code_point(u32 code_point)
 
 static void report_validation_error(SourceLocation const& location = SourceLocation::current())
 {
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Validation error! {}", location);
+    dbgln_if<URL_PARSER_DEBUG>("URLParser::parse: Validation error! {}", location);
 }
 
 static Optional<String> parse_opaque_host(StringView input)
@@ -119,7 +119,7 @@ constexpr bool is_double_dot_path_segment(StringView input)
 // FIXME: This only loosely follows the spec, as we use the same class for "regular" and data URLs, unlike the spec.
 Optional<URL> URLParser::parse_data_url(StringView raw_input)
 {
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::parse_data_url: Parsing '{}'.", raw_input);
+    dbgln_if<URL_PARSER_DEBUG>("URLParser::parse_data_url: Parsing '{}'.", raw_input);
     VERIFY(raw_input.starts_with("data:"));
     auto input = raw_input.substring_view(5);
     auto comma_offset = input.find(',');
@@ -147,7 +147,7 @@ Optional<URL> URLParser::parse_data_url(StringView raw_input)
 
     // FIXME: Parse the MIME type's components according to https://mimesniff.spec.whatwg.org/#parse-a-mime-type
     URL url { StringUtils::trim(mime_type, "\n\r\t ", TrimMode::Both), move(body), is_base64_encoded };
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::parse_data_url: Parsed data URL to be '{}'.", url.serialize());
+    dbgln_if<URL_PARSER_DEBUG>("URLParser::parse_data_url: Parsed data URL to be '{}'.", url.serialize());
     return url;
 }
 
@@ -163,7 +163,7 @@ Optional<URL> URLParser::parse_data_url(StringView raw_input)
 //       everything before setting the member variables.
 URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> url, Optional<State> state_override)
 {
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Parsing '{}'", raw_input);
+    dbgln_if<URL_PARSER_DEBUG>("URLParser::parse: Parsing '{}'", raw_input);
     if (raw_input.is_empty())
         return {};
 
@@ -675,7 +675,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
     }
 
     url->m_valid = true;
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Parsed URL to be '{}'.", url->serialize());
+    dbgln_if<URL_PARSER_DEBUG>("URLParser::parse: Parsed URL to be '{}'.", url->serialize());
     return url.release_value();
 }
 

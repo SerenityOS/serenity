@@ -82,14 +82,14 @@ bool BMIDEChannel::handle_irq(const RegisterState&)
     u8 bstatus = m_io_group.bus_master_base().value().offset(2).in<u8>();
     if (!(bstatus & 0x4)) {
         // interrupt not from this device, ignore
-        dbgln_if(PATA_DEBUG, "BMIDEChannel: ignore interrupt");
+        dbgln_if<PATA_DEBUG>("BMIDEChannel: ignore interrupt");
         return false;
     }
     // clear bus master interrupt status
     m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 4);
 
     SpinlockLocker lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "BMIDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",
+    dbgln_if<PATA_DEBUG>("BMIDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",
         (status & ATA_SR_DRQ) != 0,
         (status & ATA_SR_BSY) != 0,
         (status & ATA_SR_DRDY) != 0);
@@ -123,7 +123,7 @@ void BMIDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult re
     // which could cause page faults. Note that this may be called immediately
     // before Processor::deferred_call_queue returns!
     g_io_work->queue([this, result]() {
-        dbgln_if(PATA_DEBUG, "BMIDEChannel::complete_current_request result: {}", (int)result);
+        dbgln_if<PATA_DEBUG>("BMIDEChannel::complete_current_request result: {}", (int)result);
         SpinlockLocker lock(m_request_lock);
         VERIFY(m_current_request);
         auto current_request = m_current_request;
@@ -155,7 +155,7 @@ void BMIDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     VERIFY(m_current_request->block_count() <= 256);
 
     SpinlockLocker m_lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_write_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
+    dbgln_if<PATA_DEBUG>("BMIDEChannel::ata_write_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
 
     prdt().offset = m_dma_buffer_page->paddr().get();
     prdt().size = 512 * m_current_request->block_count();
@@ -203,7 +203,7 @@ void BMIDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     VERIFY(m_current_request->block_count() <= 256);
 
     SpinlockLocker m_lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_read_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
+    dbgln_if<PATA_DEBUG>("BMIDEChannel::ata_read_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
 
     // Note: This is a fix for a quirk for an IDE controller on ICH7 machine.
     // We need to select the drive and then we wait 10 microseconds... and it doesn't hurt anything

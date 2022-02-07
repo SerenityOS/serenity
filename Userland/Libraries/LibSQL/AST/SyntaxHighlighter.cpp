@@ -59,7 +59,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         span.data = static_cast<u64>(token.type());
         spans.append(span);
 
-        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{} @ '{}' {}:{} - {}:{}",
+        dbgln_if<SYNTAX_HIGHLIGHTING_DEBUG>("{} @ '{}' {}:{} - {}:{}",
             token.name(),
             token.value(),
             span.range.start().line(), span.range.start().column(),

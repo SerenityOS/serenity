@@ -81,7 +81,7 @@ bool GUIDPartitionTable::initialize()
         return false;
     }
 
-    dbgln_if(GPT_DEBUG, "GUIDPartitionTable: signature - {:#08x} {:#08x}", header().sig[1], header().sig[0]);
+    dbgln_if<GPT_DEBUG>("GUIDPartitionTable: signature - {:#08x} {:#08x}", header().sig[1], header().sig[0]);
 
     if (header().sig[0] != GPT_SIGNATURE && header().sig[1] != GPT_SIGNATURE2) {
         dbgln("GUIDPartitionTable: bad signature {:#08x} {:#08x}", header().sig[1], header().sig[0]);

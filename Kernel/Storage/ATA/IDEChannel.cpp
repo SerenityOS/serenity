@@ -45,12 +45,12 @@ RefPtr<StorageDevice> IDEChannel::slave_device() const
 UNMAP_AFTER_INIT void IDEChannel::initialize()
 {
     disable_irq();
-    dbgln_if(PATA_DEBUG, "IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
-    dbgln_if(PATA_DEBUG, "IDEChannel: {} control base: {}", channel_type_string(), m_io_group.control_base());
+    dbgln_if<PATA_DEBUG>("IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
+    dbgln_if<PATA_DEBUG>("IDEChannel: {} control base: {}", channel_type_string(), m_io_group.control_base());
     if (m_io_group.bus_master_base().has_value())
-        dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base: {}", channel_type_string(), m_io_group.bus_master_base().value());
+        dbgln_if<PATA_DEBUG>("IDEChannel: {} bus master base: {}", channel_type_string(), m_io_group.bus_master_base().value());
     else
-        dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base disabled", channel_type_string());
+        dbgln_if<PATA_DEBUG>("IDEChannel: {} bus master base disabled", channel_type_string());
     m_parent_controller->enable_pin_based_interrupts();
 
     // reset the channel
@@ -110,7 +110,7 @@ void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool is_slave, 
     MutexLocker locker(m_lock);
     VERIFY(m_current_request.is_null());
 
-    dbgln_if(PATA_DEBUG, "IDEChannel::start_request");
+    dbgln_if<PATA_DEBUG>("IDEChannel::start_request");
 
     m_current_request = request;
     m_current_request_block_index = 0;
@@ -133,7 +133,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // which could cause page faults. Note that this may be called immediately
     // before Processor::deferred_call_queue returns!
     g_io_work->queue([this, result]() {
-        dbgln_if(PATA_DEBUG, "IDEChannel::complete_current_request result: {}", (int)result);
+        dbgln_if<PATA_DEBUG>("IDEChannel::complete_current_request result: {}", (int)result);
         MutexLocker locker(m_lock);
         VERIFY(m_current_request);
         auto current_request = m_current_request;
@@ -198,7 +198,7 @@ bool IDEChannel::handle_irq(const RegisterState&)
     m_entropy_source.add_random_event(status);
 
     SpinlockLocker lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "IDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",
+    dbgln_if<PATA_DEBUG>("IDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",
         (status & ATA_SR_DRQ) != 0,
         (status & ATA_SR_BSY) != 0,
         (status & ATA_SR_DRDY) != 0);
@@ -225,7 +225,7 @@ bool IDEChannel::handle_irq(const RegisterState&)
         MutexLocker locker(m_lock);
         SpinlockLocker lock(m_request_lock);
         if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: Read block {}/{}", m_current_request_block_index, m_current_request->block_count());
+            dbgln_if<PATA_DEBUG>("IDEChannel: Read block {}/{}", m_current_request_block_index, m_current_request->block_count());
 
             if (ata_do_read_sector()) {
                 if (++m_current_request_block_index >= m_current_request->block_count()) {
@@ -237,7 +237,7 @@ bool IDEChannel::handle_irq(const RegisterState&)
             }
         } else {
             if (!m_current_request_flushing_cache) {
-                dbgln_if(PATA_DEBUG, "IDEChannel: Wrote block {}/{}", m_current_request_block_index, m_current_request->block_count());
+                dbgln_if<PATA_DEBUG>("IDEChannel: Wrote block {}/{}", m_current_request_block_index, m_current_request->block_count());
                 if (++m_current_request_block_index >= m_current_request->block_count()) {
                     // We read the last block, flush cache
                     VERIFY(!m_current_request_flushing_cache);
@@ -312,7 +312,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
         auto status = m_io_group.control_base().in<u8>();
         if (status == 0x0) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected!", channel_type_string(), channel_string(i));
+            dbgln_if<PATA_DEBUG>("IDEChannel: No {} {} disk detected!", channel_type_string(), channel_string(i));
             continue;
         }
 
@@ -324,7 +324,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
         // Wait 10 second for the BSY flag to clear
         if (!wait_until_not_busy(2000)) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected, BSY flag was not reset!", channel_type_string(), channel_string(i));
+            dbgln_if<PATA_DEBUG>("IDEChannel: No {} {} disk detected, BSY flag was not reset!", channel_type_string(), channel_string(i));
             continue;
         }
 
@@ -339,18 +339,18 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
                 break;
             u8 status = m_io_group.control_base().in<u8>();
             if (status & ATA_SR_ERR) {
-                dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device is not ATA. Will check for ATAPI.", channel_type_string(), channel_string(i));
+                dbgln_if<PATA_DEBUG>("IDEChannel: {} {} device is not ATA. Will check for ATAPI.", channel_type_string(), channel_string(i));
                 check_for_atapi = true;
                 break;
             }
 
             if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRQ)) {
-                dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device appears to be ATA.", channel_type_string(), channel_string(i));
+                dbgln_if<PATA_DEBUG>("IDEChannel: {} {} device appears to be ATA.", channel_type_string(), channel_string(i));
                 break;
             }
 
             if (status == 0 || status == 0xFF) {
-                dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device presence - none.", channel_type_string(), channel_string(i));
+                dbgln_if<PATA_DEBUG>("IDEChannel: {} {} device presence - none.", channel_type_string(), channel_string(i));
                 device_presence = false;
                 break;
             }
@@ -362,7 +362,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
             continue;
         }
         if (milliseconds_elapsed > 10000) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device state unknown. Timeout exceeded.", channel_type_string(), channel_string(i));
+            dbgln_if<PATA_DEBUG>("IDEChannel: {} {} device state unknown. Timeout exceeded.", channel_type_string(), channel_string(i));
             continue;
         }
 
@@ -479,7 +479,7 @@ bool IDEChannel::ata_do_read_sector()
     VERIFY(m_lock.is_locked());
     VERIFY(m_request_lock.is_locked());
     VERIFY(!m_current_request.is_null());
-    dbgln_if(PATA_DEBUG, "IDEChannel::ata_do_read_sector");
+    dbgln_if<PATA_DEBUG>("IDEChannel::ata_do_read_sector");
     auto& request = *m_current_request;
     auto out_buffer = request.buffer().offset(m_current_request_block_index * 512);
     auto result = request.write_to_buffer_buffered<512>(out_buffer, 512, [&](Bytes bytes) {
@@ -503,8 +503,8 @@ void IDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     VERIFY(m_current_request->block_count() <= 256);
 
     SpinlockLocker m_lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "IDEChannel::ata_read_sectors");
-    dbgln_if(PATA_DEBUG, "IDEChannel: Reading {} sector(s) @ LBA {}", m_current_request->block_count(), m_current_request->block_index());
+    dbgln_if<PATA_DEBUG>("IDEChannel::ata_read_sectors");
+    dbgln_if<PATA_DEBUG>("IDEChannel: Reading {} sector(s) @ LBA {}", m_current_request->block_count(), m_current_request->block_index());
     ata_access(Direction::Read, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
 }
 
@@ -523,7 +523,7 @@ void IDEChannel::ata_do_write_sector()
     VERIFY(status & ATA_SR_DRQ);
 
     auto in_buffer = request.buffer().offset(m_current_request_block_index * 512);
-    dbgln_if(PATA_DEBUG, "IDEChannel: Writing 512 bytes (part {}) (status={:#02x})...", m_current_request_block_index, status);
+    dbgln_if<PATA_DEBUG>("IDEChannel: Writing 512 bytes (part {}) (status={:#02x})...", m_current_request_block_index, status);
     auto result = request.read_from_buffer_buffered<512>(in_buffer, 512, [&](ReadonlyBytes readonly_bytes) {
         for (size_t i = 0; i < readonly_bytes.size(); i += sizeof(u16))
             IO::out16(m_io_group.io_base().offset(ATA_REG_DATA).get(), *(const u16*)readonly_bytes.offset(i));
@@ -541,7 +541,7 @@ void IDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     VERIFY(m_current_request->block_count() <= 256);
 
     SpinlockLocker m_lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "IDEChannel: Writing {} sector(s) @ LBA {}", m_current_request->block_count(), m_current_request->block_index());
+    dbgln_if<PATA_DEBUG>("IDEChannel: Writing {} sector(s) @ LBA {}", m_current_request->block_count(), m_current_request->block_index());
     ata_access(Direction::Write, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
     ata_do_write_sector();
 }

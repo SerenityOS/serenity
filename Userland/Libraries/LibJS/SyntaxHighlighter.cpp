@@ -84,7 +84,7 @@ void SyntaxHighlighter::rehighlight(const Palette& palette)
         span.data = static_cast<u64>(type);
         spans.append(span);
 
-        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{}{} @ '{}' {}:{} - {}:{}",
+        dbgln_if<SYNTAX_HIGHLIGHTING_DEBUG>("{}{} @ '{}' {}:{} - {}:{}",
             token.name(),
             is_trivia ? " (trivia)" : "",
             token.value(),

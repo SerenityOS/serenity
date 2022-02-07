@@ -568,7 +568,7 @@ void WindowManager::notify_title_changed(Window& window)
     if (!window_type_has_title(window.type()))
         return;
 
-    dbgln_if(WINDOWMANAGER_DEBUG, "[WM] Window({}) title set to '{}'", &window, window.title());
+    dbgln_if<WINDOWMANAGER_DEBUG>("[WM] Window({}) title set to '{}'", &window, window.title());
 
     if (m_switcher->is_visible())
         m_switcher->refresh();
@@ -581,7 +581,7 @@ void WindowManager::notify_modal_unparented(Window& window)
     if (window.type() != WindowType::Normal)
         return;
 
-    dbgln_if(WINDOWMANAGER_DEBUG, "[WM] Window({}) was unparented", &window);
+    dbgln_if<WINDOWMANAGER_DEBUG>("[WM] Window({}) was unparented", &window);
 
     if (m_switcher->is_visible())
         m_switcher->refresh();
@@ -591,7 +591,7 @@ void WindowManager::notify_modal_unparented(Window& window)
 
 void WindowManager::notify_rect_changed(Window& window, Gfx::IntRect const& old_rect, Gfx::IntRect const& new_rect)
 {
-    dbgln_if(RESIZE_DEBUG, "[WM] Window({}) rect changed {} -> {}", &window, old_rect, new_rect);
+    dbgln_if<RESIZE_DEBUG>("[WM] Window({}) rect changed {} -> {}", &window, old_rect, new_rect);
 
     if (m_switcher->is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher->refresh();
@@ -667,7 +667,7 @@ void WindowManager::start_window_move(Window& window, Gfx::IntPoint const& origi
 {
     MenuManager::the().close_everyone();
 
-    dbgln_if(MOVE_DEBUG, "[WM] Begin moving Window({})", &window);
+    dbgln_if<MOVE_DEBUG>("[WM] Begin moving Window({})", &window);
 
     move_to_front_and_make_active(window);
     m_move_window = window;
@@ -709,7 +709,7 @@ void WindowManager::start_window_resize(Window& window, Gfx::IntPoint const& pos
         return;
     }
 
-    dbgln_if(RESIZE_DEBUG, "[WM] Begin resizing Window({})", &window);
+    dbgln_if<RESIZE_DEBUG>("[WM] Begin resizing Window({})", &window);
 
     m_resizing_mouse_button = button;
     m_resize_window = window;
@@ -738,13 +738,13 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
         return false;
     if (event.type() == Event::MouseUp && event.button() == MouseButton::Primary) {
 
-        dbgln_if(MOVE_DEBUG, "[WM] Finish moving Window({})", m_move_window);
+        dbgln_if<MOVE_DEBUG>("[WM] Finish moving Window({})", m_move_window);
 
         m_move_window->invalidate(true, true);
         if (m_move_window->is_resizable()) {
             process_event_for_doubleclick(*m_move_window, event);
             if (event.type() == Event::MouseDoubleClick) {
-                dbgln_if(DOUBLECLICK_DEBUG, "[WM] Click up became doubleclick!");
+                dbgln_if<DOUBLECLICK_DEBUG>("[WM] Click up became doubleclick!");
                 m_move_window->set_maximized(!m_move_window->is_maximized());
             }
         }
@@ -822,14 +822,14 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
         return false;
 
     if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
-        dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
+        dbgln_if<RESIZE_DEBUG>("[WM] Finish resizing Window({})", m_resize_window);
 
         const int vertical_maximize_deadzone = 5;
         auto& cursor_screen = ScreenInput::the().cursor_location_screen();
         if (&cursor_screen == &Screen::closest_to_rect(m_resize_window->rect())) {
             auto desktop_rect = this->desktop_rect(cursor_screen);
             if (event.y() >= desktop_rect.bottom() - vertical_maximize_deadzone + 1 || event.y() <= desktop_rect.top() + vertical_maximize_deadzone - 1) {
-                dbgln_if(RESIZE_DEBUG, "Should Maximize vertically");
+                dbgln_if<RESIZE_DEBUG>("Should Maximize vertically");
                 m_resize_window->set_vertically_maximized();
                 m_resize_window = nullptr;
                 m_geometry_overlay = nullptr;
@@ -949,7 +949,7 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
         // border however is fine as long as the screen contains the entire window.
         m_resize_window->check_untile_due_to_resize(new_rect);
     }
-    dbgln_if(RESIZE_DEBUG, "[WM] Resizing, original: {}, now: {}", m_resize_window_original_rect, new_rect);
+    dbgln_if<RESIZE_DEBUG>("[WM] Resizing, original: {}, now: {}", m_resize_window_original_rect, new_rect);
 
     m_resize_window->set_rect(new_rect);
     m_geometry_overlay->window_rect_changed();
@@ -1063,7 +1063,7 @@ void WindowManager::start_menu_doubleclick(Window& window, MouseEvent const& eve
         // we either haven't clicked anywhere, or we haven't clicked on this
         // window. set the current click window, and reset the timers.
 
-        dbgln_if(DOUBLECLICK_DEBUG, "Initial mousedown on Window({}) for menus (previous was {})", &window, m_double_click_info.m_clicked_window);
+        dbgln_if<DOUBLECLICK_DEBUG>("Initial mousedown on Window({}) for menus (previous was {})", &window, m_double_click_info.m_clicked_window);
 
         m_double_click_info.m_clicked_window = window;
         m_double_click_info.reset();
@@ -1095,7 +1095,7 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
     if (&window != m_double_click_info.m_clicked_window) {
         // we either haven't clicked anywhere, or we haven't clicked on this
         // window. set the current click window, and reset the timers.
-        dbgln_if(DOUBLECLICK_DEBUG, "Initial mouseup on Window({}) for menus (previous was {})", &window, m_double_click_info.m_clicked_window);
+        dbgln_if<DOUBLECLICK_DEBUG>("Initial mouseup on Window({}) for menus (previous was {})", &window, m_double_click_info.m_clicked_window);
 
         m_double_click_info.m_clicked_window = window;
         m_double_click_info.reset();
@@ -1110,7 +1110,7 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
         // clock
         metadata.clock.start();
     } else {
-        dbgln_if(DOUBLECLICK_DEBUG, "Transforming MouseUp to MouseDoubleClick ({} < {})!", metadata.clock.elapsed(), m_double_click_speed);
+        dbgln_if<DOUBLECLICK_DEBUG>("Transforming MouseUp to MouseDoubleClick ({} < {})!", metadata.clock.elapsed(), m_double_click_speed);
 
         event = MouseEvent(Event::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
         // invalidate this now we've delivered a doubleclick, otherwise

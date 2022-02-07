@@ -44,7 +44,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         child->m_protected_values.dumpable = m_protected_values.dumpable;
     }
 
-    dbgln_if(FORK_DEBUG, "fork: child={}", child);
+    dbgln_if<FORK_DEBUG>("fork: child={}", child);
     child->address_space().set_enforces_syscall_regions(address_space().enforces_syscall_regions());
 
     // A child created via fork(2) inherits a copy of its parent's signal mask
@@ -73,7 +73,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_regs.gs = regs.gs;
     child_regs.ss = regs.userspace_ss;
 
-    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:#04x}:{:p}, kstack {:#04x}:{:p}",
+    dbgln_if<FORK_DEBUG>("fork: child will begin executing at {:#04x}:{:p} with stack {:#04x}:{:p}, kstack {:#04x}:{:p}",
         child_regs.cs, child_regs.eip, child_regs.ss, child_regs.esp, child_regs.ss0, child_regs.esp0);
 #else
     auto& child_regs = child_first_thread->m_regs;
@@ -97,14 +97,14 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_regs.rip = regs.rip;
     child_regs.cs = regs.cs;
 
-    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:p}, kstack {:p}",
+    dbgln_if<FORK_DEBUG>("fork: child will begin executing at {:#04x}:{:p} with stack {:p}, kstack {:p}",
         child_regs.cs, child_regs.rip, child_regs.rsp, child_regs.rsp0);
 #endif
 
     {
         SpinlockLocker lock(address_space().get_lock());
         for (auto& region : address_space().regions()) {
-            dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
+            dbgln_if<FORK_DEBUG>("fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
             auto region_clone = TRY(region->try_clone());
             auto* child_region = TRY(child->address_space().add_region(move(region_clone)));
             TRY(child_region->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No));

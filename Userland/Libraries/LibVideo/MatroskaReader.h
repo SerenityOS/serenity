@@ -66,9 +66,9 @@ private:
 
         Optional<u64> read_variable_size_integer(bool mask_length = true)
         {
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Reading from offset {:p}", m_data_ptr);
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Reading from offset {:p}", m_data_ptr);
             auto length_descriptor = read_octet();
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Reading VINT, first byte is {:#02x}", length_descriptor);
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Reading VINT, first byte is {:#02x}", length_descriptor);
             if (length_descriptor == 0)
                 return {};
             size_t length = 0;
@@ -77,7 +77,7 @@ private:
                     break;
                 length++;
             }
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Reading VINT of total length {}", length);
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Reading VINT of total length {}", length);
             if (length > 8)
                 return {};
 
@@ -86,16 +86,16 @@ private:
                 result = length_descriptor & ~(1u << (8 - length));
             else
                 result = length_descriptor;
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Beginning of VINT is {:#02x}", result);
+            dbgln_if<MATROSKA_TRACE_DEBUG>("Beginning of VINT is {:#02x}", result);
             for (size_t i = 1; i < length; i++) {
                 if (!has_octet()) {
-                    dbgln_if(MATROSKA_TRACE_DEBUG, "Ran out of stream data");
+                    dbgln_if<MATROSKA_TRACE_DEBUG>("Ran out of stream data");
                     return {};
                 }
                 u8 next_octet = read_octet();
-                dbgln_if(MATROSKA_TRACE_DEBUG, "Read octet of {:#02x}", next_octet);
+                dbgln_if<MATROSKA_TRACE_DEBUG>("Read octet of {:#02x}", next_octet);
                 result = (result << 8u) | next_octet;
-                dbgln_if(MATROSKA_TRACE_DEBUG, "New result is {:#010x}", result);
+                dbgln_if<MATROSKA_TRACE_DEBUG>("New result is {:#010x}", result);
             }
             return result;
         }

@@ -41,12 +41,12 @@ void TLSv12::write_packet(ByteBuffer& packet)
     auto schedule_or_perform_flush = [&](bool immediate) {
         if (m_context.connection_status > ConnectionStatus::Disconnected) {
             if (!m_has_scheduled_write_flush && !immediate) {
-                dbgln_if(TLS_DEBUG, "Scheduling write of {}", m_context.tls_buffer.size());
+                dbgln_if<TLS_DEBUG>("Scheduling write of {}", m_context.tls_buffer.size());
                 Core::deferred_invoke([this] { write_into_socket(); });
                 m_has_scheduled_write_flush = true;
             } else {
                 // multiple packet are available, let's flush some out
-                dbgln_if(TLS_DEBUG, "Flushing scheduled write of {}", m_context.tls_buffer.size());
+                dbgln_if<TLS_DEBUG>("Flushing scheduled write of {}", m_context.tls_buffer.size());
                 write_into_socket();
                 // the deferred invoke is still in place
                 m_has_scheduled_write_flush = true;
@@ -235,7 +235,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
 
 void TLSv12::update_hash(ReadonlyBytes message, size_t header_size)
 {
-    dbgln_if(TLS_DEBUG, "Update hash with message of size {}", message.size());
+    dbgln_if<TLS_DEBUG>("Update hash with message of size {}", message.size());
     m_context.handshake_hash.update(message.slice(header_size));
 }
 
@@ -313,7 +313,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     size_t header_size = res;
     ssize_t payload_res = 0;
 
-    dbgln_if(TLS_DEBUG, "buffer size: {}", buffer.size());
+    dbgln_if<TLS_DEBUG>("buffer size: {}", buffer.size());
 
     if (buffer.size() < 5) {
         return (i8)Error::NeedMoreData;
@@ -333,15 +333,15 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
     auto length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(buffer_position)));
 
-    dbgln_if(TLS_DEBUG, "record length: {} at offset: {}", length, buffer_position);
+    dbgln_if<TLS_DEBUG>("record length: {} at offset: {}", length, buffer_position);
     buffer_position += 2;
 
     if (buffer_position + length > buffer.size()) {
-        dbgln_if(TLS_DEBUG, "record length more than what we have: {}", buffer.size());
+        dbgln_if<TLS_DEBUG>("record length more than what we have: {}", buffer.size());
         return (i8)Error::NeedMoreData;
     }
 
-    dbgln_if(TLS_DEBUG, "message type: {}, length: {}", (u8)type, length);
+    dbgln_if<TLS_DEBUG>("message type: {}, length: {}", (u8)type, length);
     auto plain = buffer.slice(buffer_position, buffer.size() - buffer_position);
 
     ByteBuffer decrypted;
@@ -496,7 +496,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
             write_packet(packet);
         } else {
-            dbgln_if(TLS_DEBUG, "application data message of size {}", plain.size());
+            dbgln_if<TLS_DEBUG>("application data message of size {}", plain.size());
 
             if (m_context.application_buffer.try_append(plain.data(), plain.size()).is_error()) {
                 payload_res = (i8)Error::DecryptionFailed;
@@ -506,7 +506,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         }
         break;
     case MessageType::Handshake:
-        dbgln_if(TLS_DEBUG, "tls handshake message");
+        dbgln_if<TLS_DEBUG>("tls handshake message");
         payload_res = handle_handshake_payload(plain);
         break;
     case MessageType::ChangeCipher:
@@ -516,20 +516,20 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             write_packet(packet);
             payload_res = (i8)Error::UnexpectedMessage;
         } else {
-            dbgln_if(TLS_DEBUG, "change cipher spec message");
+            dbgln_if<TLS_DEBUG>("change cipher spec message");
             m_context.cipher_spec_set = true;
             m_context.remote_sequence_number = 0;
         }
         break;
     case MessageType::Alert:
-        dbgln_if(TLS_DEBUG, "alert message of length {}", length);
+        dbgln_if<TLS_DEBUG>("alert message of length {}", length);
         if (length >= 2) {
             if constexpr (TLS_DEBUG)
                 print_buffer(plain);
 
             auto level = plain[0];
             auto code = plain[1];
-            dbgln_if(TLS_DEBUG, "Alert received with level {}, code {}", level, code);
+            dbgln_if<TLS_DEBUG>("Alert received with level {}, code {}", level, code);
 
             if (level == (u8)AlertLevel::Critical) {
                 dbgln("We were alerted of a critical error: {} ({})", code, alert_name((AlertDescription)code));

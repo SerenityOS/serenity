@@ -58,7 +58,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
     VERIFY(m_admin_queue_ready == true);
 
     VERIFY(IO_QUEUE_SIZE < MQES(caps));
-    dbgln_if(NVME_DEBUG, "NVMe: IO queue depth is: {}", IO_QUEUE_SIZE);
+    dbgln_if<NVME_DEBUG>("NVMe: IO queue depth is: {}", IO_QUEUE_SIZE);
 
     // Create an IO queue per core
     for (u32 cpuid = 0; cpuid < nr_of_queues; ++cpuid) {
@@ -80,7 +80,7 @@ bool NVMeController::wait_for_ready(bool expected_ready_bit_value)
 
         if (--wait_iterations == 0) {
             if (((m_controller_regs->csts >> CSTS_RDY_BIT) & 0x1) != expected_rdy) {
-                dbgln_if(NVME_DEBUG, "NVMEController: CSTS.RDY still not set to {} after {} ms", expected_rdy, m_ready_timeout.to_milliseconds());
+                dbgln_if<NVME_DEBUG>("NVMEController: CSTS.RDY still not set to {} after {} ms", expected_rdy, m_ready_timeout.to_milliseconds());
                 return false;
             }
             break;
@@ -144,7 +144,7 @@ UNMAP_AFTER_INIT u32 NVMeController::get_admin_q_dept()
     u32 aqa = m_controller_regs->aqa;
     // Queue depth is 0 based
     u32 q_depth = min(ACQ_SIZE(aqa), ASQ_SIZE(aqa)) + 1;
-    dbgln_if(NVME_DEBUG, "NVMe: Admin queue depth is {}", q_depth);
+    dbgln_if<NVME_DEBUG>("NVMe: Admin queue depth is {}", q_depth);
     return q_depth;
 }
 
@@ -204,11 +204,11 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
             auto block_counts = val.get<0>();
             auto block_size = 1 << val.get<1>();
 
-            dbgln_if(NVME_DEBUG, "NVMe: Block count is {} and Block size is {}", block_counts, block_size);
+            dbgln_if<NVME_DEBUG>("NVMe: Block count is {} and Block size is {}", block_counts, block_size);
 
             m_namespaces.append(TRY(NVMeNameSpace::try_create(m_queues, controller_id.load(), nsid, block_counts, block_size)));
             m_device_count++;
-            dbgln_if(NVME_DEBUG, "NVMe: Initialized namespace with NSID: {}", nsid);
+            dbgln_if<NVME_DEBUG>("NVMe: Initialized namespace with NSID: {}", nsid);
         }
     }
     return {};
@@ -292,7 +292,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
     set_admin_queue_ready_flag();
     m_admin_queue = TRY(NVMeQueue::try_create(0, irq, qdepth, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs)));
 
-    dbgln_if(NVME_DEBUG, "NVMe: Admin queue created");
+    dbgln_if<NVME_DEBUG>("NVMe: Admin queue created");
     return {};
 }
 
@@ -351,7 +351,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, Optional<
     auto doorbell_regs = TRY(Memory::map_typed_writable<volatile DoorbellRegister>(PhysicalAddress(m_bar + queue_doorbell_offset)));
 
     m_queues.append(TRY(NVMeQueue::try_create(qid, irq, IO_QUEUE_SIZE, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs))));
-    dbgln_if(NVME_DEBUG, "NVMe: Created IO Queue with QID{}", m_queues.size());
+    dbgln_if<NVME_DEBUG>("NVMe: Created IO Queue with QID{}", m_queues.size());
     return {};
 }
 }

@@ -352,7 +352,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
             return PageFaultResponse::ShouldCrash;
         }
         if (vmobject().is_inode()) {
-            dbgln_if(PAGE_FAULT_DEBUG, "NP(inode) fault in Region({})[{}]", this, page_index_in_region);
+            dbgln_if<PAGE_FAULT_DEBUG>("NP(inode) fault in Region({})[{}]", this, page_index_in_region);
             return handle_inode_fault(page_index_in_region);
         }
 
@@ -370,10 +370,10 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
     }
     VERIFY(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
-        dbgln_if(PAGE_FAULT_DEBUG, "PV(cow) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+        dbgln_if<PAGE_FAULT_DEBUG>("PV(cow) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
         auto* phys_page = physical_page(page_index_in_region);
         if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
-            dbgln_if(PAGE_FAULT_DEBUG, "NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+            dbgln_if<PAGE_FAULT_DEBUG>("NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             return handle_zero_fault(page_index_in_region);
         }
         return handle_cow_fault(page_index_in_region);
@@ -393,7 +393,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     SpinlockLocker locker(vmobject().m_lock);
 
     if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
-        dbgln_if(PAGE_FAULT_DEBUG, "MM: zero_page() but page already present. Fine with me!");
+        dbgln_if<PAGE_FAULT_DEBUG>("MM: zero_page() but page already present. Fine with me!");
         if (!remap_vmobject_page(page_index_in_vmobject))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
@@ -406,7 +406,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     if (page_slot->is_lazy_committed_page()) {
         VERIFY(m_vmobject->is_anonymous());
         page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
-        dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED COMMITTED {}", page_slot->paddr());
+        dbgln_if<PAGE_FAULT_DEBUG>("      >> ALLOCATED COMMITTED {}", page_slot->paddr());
     } else {
         auto page_or_error = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (page_or_error.is_error()) {
@@ -414,7 +414,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
             return PageFaultResponse::OutOfMemory;
         }
         page_slot = page_or_error.release_value();
-        dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED {}", page_slot->paddr());
+        dbgln_if<PAGE_FAULT_DEBUG>("      >> ALLOCATED {}", page_slot->paddr());
     }
 
     if (!remap_vmobject_page(page_index_in_vmobject)) {
@@ -456,14 +456,14 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     {
         SpinlockLocker locker(inode_vmobject.m_lock);
         if (!vmobject_physical_page_entry.is_null()) {
-            dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else before reading, remapping.");
+            dbgln_if<PAGE_FAULT_DEBUG>("handle_inode_fault: Page faulted in by someone else before reading, remapping.");
             if (!remap_vmobject_page(page_index_in_vmobject))
                 return PageFaultResponse::OutOfMemory;
             return PageFaultResponse::Continue;
         }
     }
 
-    dbgln_if(PAGE_FAULT_DEBUG, "Inode fault in {} page index: {}", name(), page_index_in_region);
+    dbgln_if<PAGE_FAULT_DEBUG>("Inode fault in {} page index: {}", name(), page_index_in_region);
 
     auto current_thread = Thread::current();
     if (current_thread)
@@ -491,7 +491,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     if (!vmobject_physical_page_entry.is_null()) {
         // Someone else faulted in this page while we were reading from the inode.
         // No harm done (other than some duplicate work), remap the page here and return.
-        dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else, remapping.");
+        dbgln_if<PAGE_FAULT_DEBUG>("handle_inode_fault: Page faulted in by someone else, remapping.");
         if (!remap_vmobject_page(page_index_in_vmobject))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;

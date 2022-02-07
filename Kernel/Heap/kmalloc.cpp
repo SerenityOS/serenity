@@ -184,7 +184,7 @@ struct KmallocGlobalData {
 
     void add_subheap(u8* storage, size_t storage_size)
     {
-        dbgln_if(KMALLOC_DEBUG, "Adding kmalloc subheap @ {} with size {}", storage, storage_size);
+        dbgln_if<KMALLOC_DEBUG>("Adding kmalloc subheap @ {} with size {}", storage, storage_size);
         static_assert(sizeof(KmallocSubheap) <= PAGE_SIZE);
         auto* subheap = new (storage) KmallocSubheap(storage + PAGE_SIZE, storage_size - PAGE_SIZE);
         subheaps.append(*subheap);
@@ -269,7 +269,7 @@ struct KmallocGlobalData {
         }
         size_t new_subheap_size = max(minimum_subheap_size, rounded_allocation_request.value());
 
-        dbgln_if(KMALLOC_DEBUG, "Unable to allocate {}, expanding kmalloc heap", allocation_request);
+        dbgln_if<KMALLOC_DEBUG>("Unable to allocate {}, expanding kmalloc heap", allocation_request);
 
         if (!expansion_data->virtual_range.contains(new_subheap_base, new_subheap_size)) {
             // FIXME: Dare to return false and allow kmalloc() to fail!

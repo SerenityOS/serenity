@@ -52,7 +52,7 @@ ErrorOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*>
         return EINVAL;
     }
 
-    dbgln_if(PROCESS_DEBUG, "sys$waitid({}, {}, {}, {})", params.idtype, params.id, params.infop, params.options);
+    dbgln_if<PROCESS_DEBUG>("sys$waitid({}, {}, {}, {})", params.idtype, params.id, params.infop, params.options);
 
     auto siginfo = TRY(do_waitid(move(waitee), params.options));
     TRY(copy_to_user(params.infop, &siginfo));

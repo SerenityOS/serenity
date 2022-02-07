@@ -249,7 +249,7 @@ void Scheduler::yield()
     InterruptDisabler disabler;
 
     auto const* current_thread = Thread::current();
-    dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", Processor::current_id(), *current_thread, Processor::current_in_irq());
+    dbgln_if<SCHEDULER_DEBUG>("Scheduler[{}]: yielding thread {} in_irq={}", Processor::current_id(), *current_thread, Processor::current_in_irq());
     VERIFY(current_thread != nullptr);
     if (Processor::current_in_irq() || Processor::in_critical()) {
         // If we're handling an IRQ we can't switch context, or we're in
@@ -460,7 +460,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
 
     if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
         SpinlockLocker scheduler_lock(g_scheduler_lock);
-        dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::current_id(), *current_thread);
+        dbgln_if<SCHEDULER_DEBUG>("Scheduler[{}]: Terminating user mode thread {}", Processor::current_id(), *current_thread);
         current_thread->set_state(Thread::State::Dying);
         Processor::current().invoke_scheduler_async();
         return;
@@ -475,7 +475,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
         // time slice and let it run!
         current_thread->set_ticks_left(time_slice_for(*current_thread));
         current_thread->did_schedule();
-        dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: No other threads ready, give {} another timeslice", Processor::current_id(), *current_thread);
+        dbgln_if<SCHEDULER_DEBUG>("Scheduler[{}]: No other threads ready, give {} another timeslice", Processor::current_id(), *current_thread);
         return;
     }
 

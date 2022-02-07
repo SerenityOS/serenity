@@ -104,7 +104,7 @@ Token Lexer::next()
         case '\\':
             return 2;
         default:
-            dbgln_if(REGEX_DEBUG, "[LEXER] Found invalid escape sequence: \\{:c} (the parser will have to deal with this!)", peek(1));
+            dbgln_if<REGEX_DEBUG>("[LEXER] Found invalid escape sequence: \\{:c} (the parser will have to deal with this!)", peek(1));
             return 0;
         }
     };

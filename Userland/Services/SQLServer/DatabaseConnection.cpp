@@ -17,7 +17,7 @@ RefPtr<DatabaseConnection> DatabaseConnection::connection_for(int connection_id)
 {
     if (s_connections.contains(connection_id))
         return *s_connections.get(connection_id).value();
-    dbgln_if(SQLSERVER_DEBUG, "Invalid connection_id {}", connection_id);
+    dbgln_if<SQLSERVER_DEBUG>("Invalid connection_id {}", connection_id);
     return nullptr;
 }
 
@@ -35,7 +35,7 @@ DatabaseConnection::DatabaseConnection(String database_name, int client_id)
         return;
     }
 
-    dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection {} initiating connection with database '{}'", connection_id(), m_database_name);
+    dbgln_if<SQLSERVER_DEBUG>("DatabaseConnection {} initiating connection with database '{}'", connection_id(), m_database_name);
     s_connections.set(m_connection_id, *this);
     deferred_invoke([this]() {
         m_database = SQL::Database::construct(String::formatted("/home/anon/sql/{}.db", m_database_name));
@@ -54,7 +54,7 @@ DatabaseConnection::DatabaseConnection(String database_name, int client_id)
 
 void DatabaseConnection::disconnect()
 {
-    dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection::disconnect(connection_id {}, database '{}'", connection_id(), m_database_name);
+    dbgln_if<SQLSERVER_DEBUG>("DatabaseConnection::disconnect(connection_id {}, database '{}'", connection_id(), m_database_name);
     m_accept_statements = false;
     deferred_invoke([this]() {
         m_database = nullptr;
@@ -69,7 +69,7 @@ void DatabaseConnection::disconnect()
 
 int DatabaseConnection::sql_statement(String const& sql)
 {
-    dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection::sql_statement(connection_id {}, database '{}', sql '{}'", connection_id(), m_database_name, sql);
+    dbgln_if<SQLSERVER_DEBUG>("DatabaseConnection::sql_statement(connection_id {}, database '{}', sql '{}'", connection_id(), m_database_name, sql);
     auto client_connection = ClientConnection::client_connection_for(client_id());
     if (!client_connection) {
         warnln("Cannot notify client of database disconnection. Client disconnected");

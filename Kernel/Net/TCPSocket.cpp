@@ -47,7 +47,7 @@ bool TCPSocket::unref() const
 
 void TCPSocket::set_state(State new_state)
 {
-    dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket({}) state moving from {} to {}", this, to_string(m_state), to_string(new_state));
+    dbgln_if<TCP_SOCKET_DEBUG>("TCPSocket({}) state moving from {} to {}", this, to_string(m_state), to_string(new_state));
 
     auto was_disconnected = protocol_is_disconnected();
     auto previous_role = m_role;
@@ -163,7 +163,7 @@ TCPSocket::~TCPSocket()
 {
     dequeue_for_retransmit();
 
-    dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));
+    dbgln_if<TCP_SOCKET_DEBUG>("~TCPSocket in state {}", to_string(state()));
 }
 
 ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
@@ -185,7 +185,7 @@ ErrorOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserO
     auto& ipv4_packet = *reinterpret_cast<const IPv4Packet*>(raw_ipv4_packet.data());
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
     size_t payload_size = raw_ipv4_packet.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
-    dbgln_if(TCP_SOCKET_DEBUG, "payload_size {}, will it fit in {}?", payload_size, buffer_size);
+    dbgln_if<TCP_SOCKET_DEBUG>("payload_size {}, will it fit in {}?", payload_size, buffer_size);
     VERIFY(buffer_size >= payload_size);
     SOCKET_TRY(buffer.write(tcp_packet.payload(), payload_size));
     return payload_size;
@@ -287,14 +287,14 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
     if (packet.has_ack()) {
         u32 ack_number = packet.ack_number();
 
-        dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket: receive_tcp_packet: {}", ack_number);
+        dbgln_if<TCP_SOCKET_DEBUG>("TCPSocket: receive_tcp_packet: {}", ack_number);
 
         int removed = 0;
         m_unacked_packets.with_exclusive([&](auto& unacked_packets) {
             while (!unacked_packets.packets.is_empty()) {
                 auto& packet = unacked_packets.packets.first();
 
-                dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket: iterate: {}", packet.ack_number);
+                dbgln_if<TCP_SOCKET_DEBUG>("TCPSocket: iterate: {}", packet.ack_number);
 
                 if (packet.ack_number <= ack_number) {
                     auto old_adapter = packet.adapter.strong_ref();
@@ -316,7 +316,7 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
                 dequeue_for_retransmit();
             }
 
-            dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket: receive_tcp_packet acknowledged {} packets", removed);
+            dbgln_if<TCP_SOCKET_DEBUG>("TCPSocket: receive_tcp_packet acknowledged {} packets", removed);
         });
     }
 
@@ -501,7 +501,7 @@ bool TCPSocket::protocol_is_disconnected() const
 void TCPSocket::shut_down_for_writing()
 {
     if (state() == State::Established) {
-        dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN from Established and moving into FinWait1");
+        dbgln_if<TCP_SOCKET_DEBUG>(" Sending FIN from Established and moving into FinWait1");
         (void)send_tcp_packet(TCPFlags::FIN);
         set_state(State::FinWait1);
     } else {
@@ -514,7 +514,7 @@ ErrorOr<void> TCPSocket::close()
     MutexLocker locker(mutex());
     auto result = IPv4Socket::close();
     if (state() == State::CloseWait) {
-        dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN from CloseWait and moving into LastAck");
+        dbgln_if<TCP_SOCKET_DEBUG>(" Sending FIN from CloseWait and moving into LastAck");
         [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::LastAck);
     }
@@ -560,7 +560,7 @@ void TCPSocket::retransmit_packets()
     if (m_last_retransmit_time > now - Time::from_seconds(retransmit_interval))
         return;
 
-    dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket({}) handling retransmit", this);
+    dbgln_if<TCP_SOCKET_DEBUG>("TCPSocket({}) handling retransmit", this);
 
     m_last_retransmit_time = now;
     ++m_retransmit_attempts;

@@ -29,7 +29,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
     Mode current_mode = m_mode;
     switch (current_mode) {
     case Mode::Unlocked: {
-        dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ ({}) {}: acquire {}, currently unlocked", this, m_name, mode_to_string(mode));
+        dbgln_if<LOCK_TRACE_DEBUG>("Mutex::lock @ ({}) {}: acquire {}, currently unlocked", this, m_name, mode_to_string(mode));
         m_mode = mode;
         VERIFY(!m_holder);
         VERIFY(m_shared_holders == 0);
@@ -92,7 +92,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
     case Mode::Shared: {
         VERIFY(!m_holder);
         if (mode == Mode::Exclusive) {
-            dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}): blocking for exclusive access, currently shared, locks held {}", this, m_name, m_times_locked);
+            dbgln_if<LOCK_TRACE_DEBUG>("Mutex::lock @ {} ({}): blocking for exclusive access, currently shared, locks held {}", this, m_name, m_times_locked);
 #if LOCK_SHARED_UPGRADE_DEBUG
             VERIFY(m_shared_holders_map.size() != 1 || m_shared_holders_map.begin()->key != current_thread);
 #endif
@@ -105,7 +105,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
             VERIFY(m_mode == mode);
         }
 
-        dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}): acquire {}, currently shared, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
+        dbgln_if<LOCK_TRACE_DEBUG>("Mutex::lock @ {} ({}): acquire {}, currently shared, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
 
         VERIFY(m_times_locked > 0);
         if (m_mode == Mode::Shared) {
@@ -210,9 +210,9 @@ void Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock>& l
     VERIFY(!blocked_thread_list.contains(current_thread));
     blocked_thread_list.append(current_thread);
 
-    dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}) waiting...", this, m_name);
+    dbgln_if<LOCK_TRACE_DEBUG>("Mutex::lock @ {} ({}) waiting...", this, m_name);
     current_thread.block(*this, lock, requested_locks);
-    dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}) waited", this, m_name);
+    dbgln_if<LOCK_TRACE_DEBUG>("Mutex::lock @ {} ({}) waited", this, m_name);
 
     VERIFY(blocked_thread_list.contains(current_thread));
     blocked_thread_list.remove(current_thread);
@@ -275,7 +275,7 @@ auto Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore) -> Mode
             return Mode::Unlocked;
         }
 
-        dbgln_if(LOCK_RESTORE_DEBUG, "Mutex::force_unlock_exclusive_if_locked @ {}: unlocking exclusive with lock count: {}", this, m_times_locked);
+        dbgln_if<LOCK_RESTORE_DEBUG>("Mutex::force_unlock_exclusive_if_locked @ {}: unlocking exclusive with lock count: {}", this, m_times_locked);
 #if LOCK_DEBUG
         m_holder->holding_lock(*this, -(int)m_times_locked, {});
 #endif
@@ -312,7 +312,7 @@ void Mutex::restore_exclusive_lock(u32 lock_count, [[maybe_unused]] LockLocation
         VERIFY(m_mode == Mode::Exclusive);
     }
 
-    dbgln_if(LOCK_RESTORE_DEBUG, "Mutex::restore_exclusive_lock @ {}: restoring exclusive with lock count {}, was {}", this, lock_count, mode_to_string(previous_mode));
+    dbgln_if<LOCK_RESTORE_DEBUG>("Mutex::restore_exclusive_lock @ {}: restoring exclusive with lock count {}, was {}", this, lock_count, mode_to_string(previous_mode));
 
     VERIFY(m_mode != Mode::Shared);
     VERIFY(m_shared_holders == 0);

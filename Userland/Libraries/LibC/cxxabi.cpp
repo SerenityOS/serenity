@@ -96,7 +96,7 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
     if (atexit_entry_count >= atexit_entry_region_capacity) {
         size_t new_capacity = atexit_next_capacity();
         size_t new_atexit_region_size = atexit_region_bytes(new_capacity);
-        dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_atexit: Growing exit handler region from {} entries to {} entries", atexit_entry_region_capacity, new_capacity);
+        dbgln_if<GLOBAL_DTORS_DEBUG>("__cxa_atexit: Growing exit handler region from {} entries to {} entries", atexit_entry_region_capacity, new_capacity);
 
         auto* new_atexit_entries = (AtExitEntry*)mmap(nullptr, new_atexit_region_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
         if (new_atexit_entries == MAP_FAILED) {
@@ -139,13 +139,13 @@ void __cxa_finalize(void* dso_handle)
 
     ssize_t entry_index = atexit_entry_count;
 
-    dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_finalize: {} entries in the finalizer list", entry_index);
+    dbgln_if<GLOBAL_DTORS_DEBUG>("__cxa_finalize: {} entries in the finalizer list", entry_index);
 
     while (--entry_index >= 0) {
         auto& exit_entry = atexit_entries[entry_index];
         bool needs_calling = !atexit_called_entries->get(entry_index) && (!dso_handle || dso_handle == exit_entry.dso_handle);
         if (needs_calling) {
-            dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_finalize: calling entry[{}] {:p}({:p}) dso: {:p}", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
+            dbgln_if<GLOBAL_DTORS_DEBUG>("__cxa_finalize: calling entry[{}] {:p}({:p}) dso: {:p}", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
             atexit_called_entries->set(entry_index, true);
             __pthread_mutex_unlock(&atexit_mutex);
             exit_entry.method(exit_entry.parameter);

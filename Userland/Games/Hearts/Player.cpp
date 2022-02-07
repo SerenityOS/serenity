@@ -63,7 +63,7 @@ size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Ca
         if (!valid_play(*cwi.card))
             continue;
         if (prefer_card(*cwi.card)) {
-            dbgln_if(HEARTS_DEBUG, "Preferring card {}", *cwi.card);
+            dbgln_if<HEARTS_DEBUG>("Preferring card {}", *cwi.card);
             return cwi.index;
         }
         last_index = cwi.index;

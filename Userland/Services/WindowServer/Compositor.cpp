@@ -276,7 +276,7 @@ void Compositor::compose()
 
     auto prepare_rect = [&](Screen& screen, const Gfx::IntRect& rect) {
         auto& screen_data = screen.compositor_screen_data();
-        dbgln_if(COMPOSE_DEBUG, "    -> flush opaque: {}", rect);
+        dbgln_if<COMPOSE_DEBUG>("    -> flush opaque: {}", rect);
         VERIFY(!screen_data.m_flush_rects.intersects(rect));
         VERIFY(!screen_data.m_flush_transparent_rects.intersects(rect));
         screen_data.m_have_flush_rects = true;
@@ -286,7 +286,7 @@ void Compositor::compose()
 
     auto prepare_transparency_rect = [&](Screen& screen, const Gfx::IntRect& rect) {
         auto& screen_data = screen.compositor_screen_data();
-        dbgln_if(COMPOSE_DEBUG, "   -> flush transparent: {}", rect);
+        dbgln_if<COMPOSE_DEBUG>("   -> flush transparent: {}", rect);
         VERIFY(!screen_data.m_flush_rects.intersects(rect));
         for (auto& r : screen_data.m_flush_transparent_rects.rects()) {
             if (r == rect)
@@ -332,7 +332,7 @@ void Compositor::compose()
                 auto screen_rect = screen.rect();
                 auto screen_render_rect = screen_rect.intersected(render_rect);
                 if (!screen_render_rect.is_empty()) {
-                    dbgln_if(COMPOSE_DEBUG, "  render wallpaper opaque: {} on screen #{}", screen_render_rect, screen.index());
+                    dbgln_if<COMPOSE_DEBUG>("  render wallpaper opaque: {} on screen #{}", screen_render_rect, screen.index());
                     prepare_rect(screen, render_rect);
                     auto& back_painter = *screen.compositor_screen_data().m_back_painter;
                     paint_wallpaper(screen, back_painter, render_rect, screen_rect);
@@ -346,7 +346,7 @@ void Compositor::compose()
                 auto screen_rect = screen.rect();
                 auto screen_render_rect = screen_rect.intersected(render_rect);
                 if (!screen_render_rect.is_empty()) {
-                    dbgln_if(COMPOSE_DEBUG, "  render wallpaper transparent: {} on screen #{}", screen_render_rect, screen.index());
+                    dbgln_if<COMPOSE_DEBUG>("  render wallpaper transparent: {} on screen #{}", screen_render_rect, screen.index());
                     prepare_transparency_rect(screen, render_rect);
                     auto& temp_painter = *screen.compositor_screen_data().m_temp_painter;
                     paint_wallpaper(screen, temp_painter, render_rect, screen_rect);
@@ -367,7 +367,7 @@ void Compositor::compose()
         auto window_rect = window.rect().translated(transition_offset);
         auto frame_rects = frame_rect.shatter(window_rect);
 
-        dbgln_if(COMPOSE_DEBUG, "  window {} frame rect: {}", window.title(), frame_rect);
+        dbgln_if<COMPOSE_DEBUG>("  window {} frame rect: {}", window.title(), frame_rect);
 
         RefPtr<Gfx::Bitmap> backing_store = window.backing_store();
         auto compose_window_rect = [&](Screen& screen, Gfx::Painter& painter, const Gfx::IntRect& rect) {
@@ -376,7 +376,7 @@ void Compositor::compose()
                     Gfx::PainterStateSaver saver(painter);
                     painter.add_clip_rect(intersected_rect);
                     painter.translate(transition_offset);
-                    dbgln_if(COMPOSE_DEBUG, "    render frame: {}", intersected_rect);
+                    dbgln_if<COMPOSE_DEBUG>("    render frame: {}", intersected_rect);
                     window.frame().paint(screen, painter, intersected_rect.translated(-transition_offset));
                     return IterationDecision::Continue;
                 });
@@ -475,7 +475,7 @@ void Compositor::compose()
                     auto screen_render_rect = render_rect.intersected(screen->rect());
                     if (screen_render_rect.is_empty())
                         continue;
-                    dbgln_if(COMPOSE_DEBUG, "    render opaque: {} on screen #{}", screen_render_rect, screen->index());
+                    dbgln_if<COMPOSE_DEBUG>("    render opaque: {} on screen #{}", screen_render_rect, screen->index());
 
                     prepare_rect(*screen, screen_render_rect);
                     auto& back_painter = *screen->compositor_screen_data().m_back_painter;
@@ -497,7 +497,7 @@ void Compositor::compose()
                     auto screen_render_rect = render_rect.intersected(screen_rect);
                     if (screen_render_rect.is_empty())
                         continue;
-                    dbgln_if(COMPOSE_DEBUG, "    render wallpaper: {} on screen #{}", screen_render_rect, screen->index());
+                    dbgln_if<COMPOSE_DEBUG>("    render wallpaper: {} on screen #{}", screen_render_rect, screen->index());
 
                     auto& temp_painter = *screen->compositor_screen_data().m_temp_painter;
                     prepare_transparency_rect(*screen, screen_render_rect);
@@ -514,7 +514,7 @@ void Compositor::compose()
                     auto screen_render_rect = render_rect.intersected(screen_rect);
                     if (screen_render_rect.is_empty())
                         continue;
-                    dbgln_if(COMPOSE_DEBUG, "    render transparent: {} on screen #{}", screen_render_rect, screen->index());
+                    dbgln_if<COMPOSE_DEBUG>("    render transparent: {} on screen #{}", screen_render_rect, screen->index());
 
                     prepare_transparency_rect(*screen, screen_render_rect);
                     auto& temp_painter = *screen->compositor_screen_data().m_temp_painter;
@@ -612,7 +612,7 @@ void Compositor::flush(Screen& screen)
 
     bool device_can_flush_buffers = screen.can_device_flush_buffers();
     if (!screen_data.m_have_flush_rects && (!screen_data.m_screen_can_set_buffer || screen_data.m_has_flipped)) {
-        dbgln_if(COMPOSE_DEBUG, "Nothing to flush on screen #{} {}", screen.index(), screen_data.m_have_flush_rects);
+        dbgln_if<COMPOSE_DEBUG>("Nothing to flush on screen #{} {}", screen.index(), screen_data.m_have_flush_rects);
         return;
     }
     screen_data.m_have_flush_rects = false;

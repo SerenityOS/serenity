@@ -41,7 +41,7 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
 {
     auto commit_packet = [&] {
         m_data_state = 0;
-        dbgln_if(PS2MOUSE_DEBUG, "PS2Mouse: {}, {} {} {}",
+        dbgln_if<PS2MOUSE_DEBUG>("PS2Mouse: {}, {} {} {}",
             m_data.bytes[1],
             m_data.bytes[2],
             (m_data.bytes[0] & 1) ? "Left" : "",
@@ -134,8 +134,8 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
     }
 
     packet.is_relative = true;
-    dbgln_if(PS2MOUSE_DEBUG, "PS2 Relative Mouse: Buttons {:x}", packet.buttons);
-    dbgln_if(PS2MOUSE_DEBUG, "Mouse: X {}, Y {}, Z {}, W {}", packet.x, packet.y, packet.z, packet.w);
+    dbgln_if<PS2MOUSE_DEBUG>("PS2 Relative Mouse: Buttons {:x}", packet.buttons);
+    dbgln_if<PS2MOUSE_DEBUG>("Mouse: X {}, Y {}, Z {}, W {}", packet.x, packet.y, packet.z, packet.w);
     return packet;
 }
 

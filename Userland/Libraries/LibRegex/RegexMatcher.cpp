@@ -137,7 +137,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 
     if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
         if (views.size() > 1 && input.start_offset > views.first().length()) {
-            dbgln_if(REGEX_DEBUG, "Started with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
+            dbgln_if<REGEX_DEBUG>("Started with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
             for (auto const& view : views) {
                 if (input.start_offset < view.length() + 1)
                     break;
@@ -145,7 +145,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
                 input.start_offset -= view.length() + 1;
                 input.global_offset += view.length() + 1;
             }
-            dbgln_if(REGEX_DEBUG, "Ended with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
+            dbgln_if<REGEX_DEBUG>("Ended with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
         }
     }
 
@@ -192,7 +192,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
             continue;
         }
         input.view = view;
-        dbgln_if(REGEX_DEBUG, "[match] Starting match with view ({}): _{}_", view.length(), view);
+        dbgln_if<REGEX_DEBUG>("[match] Starting match with view ({}): _{}_", view.length(), view);
 
         auto view_length = view.length();
         size_t view_index = m_pattern->start_offset;
@@ -263,8 +263,8 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
                     continue;
                 }
 
-                dbgln_if(REGEX_DEBUG, "state.string_position={}, view_index={}", state.string_position, view_index);
-                dbgln_if(REGEX_DEBUG, "[match] Found a match (length={}): '{}'", state.string_position - view_index, input.view.substring_view(view_index, state.string_position - view_index));
+                dbgln_if<REGEX_DEBUG>("state.string_position={}, view_index={}", state.string_position, view_index);
+                dbgln_if<REGEX_DEBUG>("[match] Found a match (length={}): '{}'", state.string_position - view_index, input.view.substring_view(view_index, state.string_position - view_index));
 
                 ++match_count;
 

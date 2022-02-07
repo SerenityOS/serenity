@@ -168,13 +168,13 @@ public:
         }
 
         if (m_current_code > m_code_table.size()) {
-            dbgln_if(GIF_DEBUG, "Corrupted LZW stream, invalid code: {} at bit index {}, code table size: {}",
+            dbgln_if<GIF_DEBUG>("Corrupted LZW stream, invalid code: {} at bit index {}, code table size: {}",
                 m_current_code,
                 m_current_bit_index,
                 m_code_table.size());
             return {};
         } else if (m_current_code == m_code_table.size() && m_output.is_empty()) {
-            dbgln_if(GIF_DEBUG, "Corrupted LZW stream, valid new code but output buffer is empty: {} at bit index {}, code table size: {}",
+            dbgln_if<GIF_DEBUG>("Corrupted LZW stream, valid new code but output buffer is empty: {} at bit index {}, code table size: {}",
                 m_current_code,
                 m_current_bit_index,
                 m_code_table.size());
@@ -334,7 +334,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
         while (true) {
             Optional<u16> code = decoder.next_code();
             if (!code.has_value()) {
-                dbgln_if(GIF_DEBUG, "Unexpectedly reached end of gif frame data");
+                dbgln_if<GIF_DEBUG>("Unexpectedly reached end of gif frame data");
                 return false;
             }
 
@@ -481,7 +481,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
 
             if (extension_type == 0xF9) {
                 if (sub_block.size() != 4) {
-                    dbgln_if(GIF_DEBUG, "Unexpected graphic control size");
+                    dbgln_if<GIF_DEBUG>("Unexpected graphic control size");
                     continue;
                 }
 
@@ -502,12 +502,12 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
 
             if (extension_type == 0xFF) {
                 if (sub_block.size() != 14) {
-                    dbgln_if(GIF_DEBUG, "Unexpected application extension size: {}", sub_block.size());
+                    dbgln_if<GIF_DEBUG>("Unexpected application extension size: {}", sub_block.size());
                     continue;
                 }
 
                 if (sub_block[11] != 1) {
-                    dbgln_if(GIF_DEBUG, "Unexpected application extension format");
+                    dbgln_if<GIF_DEBUG>("Unexpected application extension format");
                     continue;
                 }
 

@@ -37,17 +37,17 @@ bool SyntaxHighlighter::is_navigatable(u64) const
 
 void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
-    dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(HTML::SyntaxHighlighter) starting rehighlight");
+    dbgln_if<SYNTAX_HIGHLIGHTING_DEBUG>("(HTML::SyntaxHighlighter) starting rehighlight");
     auto text = m_client->get_text();
     clear_nested_token_pairs();
 
     Vector<GUI::TextDocumentSpan> spans;
     auto highlight = [&](auto start_line, auto start_column, auto end_line, auto end_column, Gfx::TextAttributes attributes, AugmentedTokenKind kind) {
         if (start_line > end_line || (start_line == end_line && start_column >= end_column)) {
-            dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(HTML::SyntaxHighlighter) discarding ({}-{}) to ({}-{}) because it has zero or negative length", start_line, start_column, end_line, end_column);
+            dbgln_if<SYNTAX_HIGHLIGHTING_DEBUG>("(HTML::SyntaxHighlighter) discarding ({}-{}) to ({}-{}) because it has zero or negative length", start_line, start_column, end_line, end_column);
             return;
         }
-        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(HTML::SyntaxHighlighter) highlighting ({}-{}) to ({}-{}) with color {}", start_line, start_column, end_line, end_column, attributes.color);
+        dbgln_if<SYNTAX_HIGHLIGHTING_DEBUG>("(HTML::SyntaxHighlighter) highlighting ({}-{}) to ({}-{}) with color {}", start_line, start_column, end_line, end_column, attributes.color);
         spans.empend(
             GUI::TextRange {
                 { start_line, start_column },
@@ -71,7 +71,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         auto token = tokenizer.next_token();
         if (!token.has_value() || token.value().is_end_of_file())
             break;
-        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(HTML::SyntaxHighlighter) got token of type {}", token->to_string());
+        dbgln_if<SYNTAX_HIGHLIGHTING_DEBUG>("(HTML::SyntaxHighlighter) got token of type {}", token->to_string());
 
         if (token->is_start_tag()) {
             if (token->tag_name() == "script"sv) {

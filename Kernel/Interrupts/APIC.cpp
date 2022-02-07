@@ -248,7 +248,7 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
         m_is_x2 = true;
 
     PhysicalAddress apic_base = get_base();
-    dbgln_if(APIC_DEBUG, "Initializing {}APIC, base: {}", m_is_x2 ? "x2" : "x", apic_base);
+    dbgln_if<APIC_DEBUG>("Initializing {}APIC, base: {}", m_is_x2 ? "x2" : "x", apic_base);
     set_base(apic_base);
 
     if (!m_is_x2) {
@@ -285,14 +285,14 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
             size_t entry_length = madt_entry->length;
             if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::LocalAPIC) {
                 auto* plapic_entry = (const ACPI::Structures::MADTEntries::ProcessorLocalAPIC*)madt_entry;
-                dbgln_if(APIC_DEBUG, "APIC: AP found @ MADT entry {}, processor ID: {}, xAPIC ID: {}, flags: {:#08x}", entry_index, plapic_entry->acpi_processor_id, plapic_entry->apic_id, plapic_entry->flags);
+                dbgln_if<APIC_DEBUG>("APIC: AP found @ MADT entry {}, processor ID: {}, xAPIC ID: {}, flags: {:#08x}", entry_index, plapic_entry->acpi_processor_id, plapic_entry->apic_id, plapic_entry->flags);
                 m_processor_cnt++;
                 if ((plapic_entry->flags & 0x1) != 0)
                     m_processor_enabled_cnt++;
             } else if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::Local_x2APIC) {
                 // Only used for APID IDs >= 255
                 auto* plx2apic_entry = (const ACPI::Structures::MADTEntries::ProcessorLocalX2APIC*)madt_entry;
-                dbgln_if(APIC_DEBUG, "APIC: AP found @ MADT entry {}, processor ID: {}, x2APIC ID: {}, flags: {:#08x}", entry_index, plx2apic_entry->acpi_processor_id, plx2apic_entry->apic_id, plx2apic_entry->flags);
+                dbgln_if<APIC_DEBUG>("APIC: AP found @ MADT entry {}, processor ID: {}, x2APIC ID: {}, flags: {:#08x}", entry_index, plx2apic_entry->acpi_processor_id, plx2apic_entry->apic_id, plx2apic_entry->flags);
                 m_processor_cnt++;
                 if ((plx2apic_entry->flags & 0x1) != 0)
                     m_processor_enabled_cnt++;
@@ -361,7 +361,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     VERIFY(aps_to_enable == m_ap_temporary_boot_stacks.size());
     for (size_t i = 0; i < aps_to_enable; i++) {
         ap_stack_array[i] = m_ap_temporary_boot_stacks[i]->vaddr().get() + Thread::default_kernel_stack_size;
-        dbgln_if(APIC_DEBUG, "APIC: CPU[{}] stack at {}", i + 1, VirtualAddress { ap_stack_array[i] });
+        dbgln_if<APIC_DEBUG>("APIC: CPU[{}] stack at {}", i + 1, VirtualAddress { ap_stack_array[i] });
     }
 
     // Allocate Processor structures for all APs and store the pointer to the data
@@ -371,7 +371,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     auto* ap_processor_info_array = &ap_stack_array[aps_to_enable];
     for (size_t i = 0; i < aps_to_enable; i++) {
         ap_processor_info_array[i] = FlatPtr(m_ap_processor_info[i].ptr());
-        dbgln_if(APIC_DEBUG, "APIC: CPU[{}] processor at {}", i + 1, VirtualAddress { ap_processor_info_array[i] });
+        dbgln_if<APIC_DEBUG>("APIC: CPU[{}] processor at {}", i + 1, VirtualAddress { ap_processor_info_array[i] });
     }
     *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_processor_info_array) = FlatPtr(&ap_processor_info_array[0]);
 
@@ -405,7 +405,7 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     for (u32 i = 0; i < aps_to_enable; i++)
         m_ap_idle_threads[i] = Scheduler::create_ap_idle_thread(i + 1);
 
-    dbgln_if(APIC_DEBUG, "APIC: Starting {} AP(s)", aps_to_enable);
+    dbgln_if<APIC_DEBUG>("APIC: Starting {} AP(s)", aps_to_enable);
 
     // INIT
     write_icr({ 0, 0, ICRReg::INIT, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf });
@@ -421,14 +421,14 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
 
     // Now wait until the ap_cpu_init_pending variable dropped to 0, which means all APs are initialized and no longer need these special mappings
     if (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable) {
-        dbgln_if(APIC_DEBUG, "APIC: Waiting for {} AP(s) to finish initialization...", aps_to_enable);
+        dbgln_if<APIC_DEBUG>("APIC: Waiting for {} AP(s) to finish initialization...", aps_to_enable);
         do {
             // Wait a little bit
             IO::delay(200);
         } while (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable);
     }
 
-    dbgln_if(APIC_DEBUG, "APIC: {} processors are initialized and running", m_processor_enabled_cnt);
+    dbgln_if<APIC_DEBUG>("APIC: {} processors are initialized and running", m_processor_enabled_cnt);
 
     // NOTE: Since this region is identity-mapped, we have to unmap it manually to prevent the virtual
     //       address range from leaking into the general virtual range allocator.
@@ -451,7 +451,7 @@ UNMAP_AFTER_INIT void APIC::boot_aps()
     // Enable SMP, which means IPIs may now be sent
     Processor::smp_enable();
 
-    dbgln_if(APIC_DEBUG, "All processors initialized and waiting, trigger all to continue");
+    dbgln_if<APIC_DEBUG>("All processors initialized and waiting, trigger all to continue");
 
     // Now trigger all APs to continue execution (need to do this after
     // the regions have been freed so that we don't trigger IPIs
@@ -464,14 +464,14 @@ UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
 
     u32 apic_id;
     if (m_is_x2) {
-        dbgln_if(APIC_DEBUG, "Enable x2APIC on CPU #{}", cpu);
+        dbgln_if<APIC_DEBUG>("Enable x2APIC on CPU #{}", cpu);
 
         // We need to enable x2 mode on each core independently
         set_base(get_base());
 
         apic_id = read_register(APIC_REG_ID);
     } else {
-        dbgln_if(APIC_DEBUG, "Setting logical xAPIC ID for CPU #{}", cpu);
+        dbgln_if<APIC_DEBUG>("Setting logical xAPIC ID for CPU #{}", cpu);
 
         // Use the CPU# as logical apic id
         VERIFY(cpu <= 8);
@@ -481,10 +481,10 @@ UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
         apic_id = read_register(APIC_REG_LD) >> 24;
     }
 
-    dbgln_if(APIC_DEBUG, "CPU #{} apic id: {}", cpu, apic_id);
+    dbgln_if<APIC_DEBUG>("CPU #{} apic id: {}", cpu, apic_id);
     Processor::current().info().set_apic_id(apic_id);
 
-    dbgln_if(APIC_DEBUG, "Enabling local APIC for CPU #{}, logical APIC ID: {}", cpu, apic_id);
+    dbgln_if<APIC_DEBUG>("Enabling local APIC for CPU #{}, logical APIC ID: {}", cpu, apic_id);
 
     if (cpu == 0) {
         SpuriousInterruptHandler::initialize(IRQ_APIC_SPURIOUS);
@@ -532,7 +532,7 @@ UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
 
     // Notify the BSP that we are done initializing. It will unmap the startup data at P8000
     m_apic_ap_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
-    dbgln_if(APIC_DEBUG, "APIC: CPU #{} initialized, waiting for all others", cpu);
+    dbgln_if<APIC_DEBUG>("APIC: CPU #{} initialized, waiting for all others", cpu);
 
     // The reason we're making all APs wait until the BSP signals them is that
     // we don't want APs to trigger IPIs (e.g. through MM) while the BSP
@@ -541,7 +541,7 @@ UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
         IO::delay(200);
     }
 
-    dbgln_if(APIC_DEBUG, "APIC: CPU #{} continues, all others are initialized", cpu);
+    dbgln_if<APIC_DEBUG>("APIC: CPU #{} continues, all others are initialized", cpu);
 
     // do_boot_aps() freed memory, so we need to update our tlb
     Processor::flush_entire_tlb_local();
@@ -552,14 +552,14 @@ UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
 
 void APIC::broadcast_ipi()
 {
-    dbgln_if(APIC_SMP_DEBUG, "SMP: Broadcast IPI from CPU #{}", Processor::current_id());
+    dbgln_if<APIC_SMP_DEBUG>("SMP: Broadcast IPI from CPU #{}", Processor::current_id());
     wait_for_pending_icr();
     write_icr({ IRQ_APIC_IPI + IRQ_VECTOR_BASE, 0xffffffff, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf });
 }
 
 void APIC::send_ipi(u32 cpu)
 {
-    dbgln_if(APIC_SMP_DEBUG, "SMP: Send IPI from CPU #{} to CPU #{}", Processor::current_id(), cpu);
+    dbgln_if<APIC_SMP_DEBUG>("SMP: Send IPI from CPU #{} to CPU #{}", Processor::current_id(), cpu);
     VERIFY(cpu != Processor::current_id());
     VERIFY(cpu < Processor::count());
     wait_for_pending_icr();
@@ -644,13 +644,13 @@ u32 APIC::get_timer_divisor()
 
 bool APICIPIInterruptHandler::handle_interrupt(const RegisterState&)
 {
-    dbgln_if(APIC_SMP_DEBUG, "APIC IPI on CPU #{}", Processor::current_id());
+    dbgln_if<APIC_SMP_DEBUG>("APIC IPI on CPU #{}", Processor::current_id());
     return true;
 }
 
 bool APICIPIInterruptHandler::eoi()
 {
-    dbgln_if(APIC_SMP_DEBUG, "SMP: IPI EOI");
+    dbgln_if<APIC_SMP_DEBUG>("SMP: IPI EOI");
     APIC::the().eoi();
     return true;
 }

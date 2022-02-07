@@ -65,7 +65,7 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::get_suggestions
 {
     Cpp::Position position { autocomplete_position.line(), autocomplete_position.column() > 0 ? autocomplete_position.column() - 1 : 0 };
 
-    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "CppComprehensionEngine position {}:{}", position.line, position.column);
+    dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("CppComprehensionEngine position {}:{}", position.line, position.column);
 
     const auto* document_ptr = get_or_create_document_data(file);
     if (!document_ptr)
@@ -82,12 +82,12 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::get_suggestions
 
     auto node = document.parser().node_at(position);
     if (!node) {
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", position.line, position.column);
+        dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("no node at position {}:{}", position.line, position.column);
         return {};
     }
 
     if (node->parent() && node->parent()->parent())
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "node: {}, parent: {}, grandparent: {}", node->class_name(), node->parent()->class_name(), node->parent()->parent()->class_name());
+        dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("node: {}, parent: {}, grandparent: {}", node->class_name(), node->parent()->class_name(), node->parent()->parent()->class_name());
 
     if (!node->parent())
         return {};
@@ -208,7 +208,7 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_pr
     VERIFY(parent.object());
     auto type = type_of(document, *parent.object());
     if (type.is_null()) {
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "Could not infer type of object");
+        dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("Could not infer type of object");
         return {};
     }
 
@@ -403,7 +403,7 @@ Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::fin
     const auto& document = *document_ptr;
     auto node = document.parser().node_at(Cpp::Position { identifier_position.line(), identifier_position.column() });
     if (!node) {
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", identifier_position.line(), identifier_position.column());
+        dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("no node at position {}:{}", identifier_position.line(), identifier_position.column());
         return {};
     }
     auto decl = find_declaration_of(document, *node);
@@ -442,7 +442,7 @@ struct TargetDeclaration {
 static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node)
 {
     if (!node.is_identifier()) {
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "node is not an identifier");
+        dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("node is not an identifier");
         return {};
     }
 
@@ -463,7 +463,7 @@ static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node)
 
 RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentData& document_data, const ASTNode& node) const
 {
-    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "find_declaration_of: {} ({})", document_data.parser().text_of_node(node), node.class_name());
+    dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("find_declaration_of: {} ({})", document_data.parser().text_of_node(node), node.class_name());
     if (!node.is_identifier()) {
         dbgln("node is not an identifier, can't find declaration");
         return {};
@@ -678,7 +678,7 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
     }
 
     auto full_dir = LexicalPath::join(include_root, include_dir).string();
-    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "searching path: {}, partial_basename: {}", full_dir, partial_basename);
+    dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("searching path: {}, partial_basename: {}", full_dir, partial_basename);
 
     Core::DirIterator it(full_dir, Core::DirIterator::Flags::SkipDots);
     Vector<GUI::AutocompleteProvider::Entry> options;
@@ -780,11 +780,11 @@ Optional<CodeComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::ge
     Cpp::Position cpp_position { identifier_position.line(), identifier_position.column() };
     auto node = document.parser().node_at(cpp_position);
     if (!node) {
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", identifier_position.line(), identifier_position.column());
+        dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("no node at position {}:{}", identifier_position.line(), identifier_position.column());
         return {};
     }
 
-    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "node type: {}", node->class_name());
+    dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("node type: {}", node->class_name());
 
     FunctionCall* call_node { nullptr };
 
@@ -822,11 +822,11 @@ Optional<CodeComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::ge
         }
     }
     if (!invoked_arg_index.has_value()) {
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "could not find argument index, defaulting to the last argument");
+        dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("could not find argument index, defaulting to the last argument");
         invoked_arg_index = call_node->arguments().is_empty() ? 0 : call_node->arguments().size() - 1;
     }
 
-    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "arg index: {}", invoked_arg_index.value());
+    dbgln_if<CPP_LANGUAGE_SERVER_DEBUG>("arg index: {}", invoked_arg_index.value());
     return get_function_params_hint(document, *call_node, invoked_arg_index.value());
 }
 

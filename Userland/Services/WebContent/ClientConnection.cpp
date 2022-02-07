@@ -75,7 +75,7 @@ void ClientConnection::update_screen_rects(const Vector<Gfx::IntRect>& rects, u3
 
 void ClientConnection::load_url(const URL& url)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
+    dbgln_if<SPAM_DEBUG>("handle: WebContentServer::LoadURL: url={}", url);
 
     String process_name;
     if (url.host().is_empty())
@@ -90,13 +90,13 @@ void ClientConnection::load_url(const URL& url)
 
 void ClientConnection::load_html(const String& html, const URL& url)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}, url={}", html, url);
+    dbgln_if<SPAM_DEBUG>("handle: WebContentServer::LoadHTML: html={}, url={}", html, url);
     page().load_html(html, url);
 }
 
 void ClientConnection::set_viewport_rect(const Gfx::IntRect& rect)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::SetViewportRect: rect={}", rect);
+    dbgln_if<SPAM_DEBUG>("handle: WebContentServer::SetViewportRect: rect={}", rect);
     m_page_host->set_viewport_rect(rect);
 }
 

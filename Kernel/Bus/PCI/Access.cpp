@@ -71,7 +71,7 @@ UNMAP_AFTER_INIT bool Access::find_and_register_pci_host_bridges_from_acpi_mcfg_
     if (mcfg_region_or_error.is_error())
         return false;
     auto& mcfg = *(ACPI::Structures::MCFG*)mcfg_region_or_error.value()->vaddr().offset(mcfg_table.offset_in_page()).as_ptr();
-    dbgln_if(PCI_DEBUG, "PCI: Checking MCFG @ {}, {}", VirtualAddress(&mcfg), mcfg_table);
+    dbgln_if<PCI_DEBUG>("PCI: Checking MCFG @ {}, {}", VirtualAddress(&mcfg), mcfg_table);
     for (u32 index = 0; index < ((mcfg.header.length - sizeof(ACPI::Structures::MCFG)) / sizeof(ACPI::Structures::PCI_MMIO_Descriptor)); index++) {
         u8 start_bus = mcfg.descriptors[index].start_pci_bus;
         u8 end_bus = mcfg.descriptors[index].end_pci_bus;
@@ -93,7 +93,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddres
     if (!access->find_and_register_pci_host_bridges_from_acpi_mcfg_table(mcfg_table))
         return false;
     access->rescan_hardware();
-    dbgln_if(PCI_DEBUG, "PCI: access for multiple PCI domain initialised.");
+    dbgln_if<PCI_DEBUG>("PCI: access for multiple PCI domain initialised.");
     return true;
 }
 
@@ -104,7 +104,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
     auto host_bridge = HostBridge::must_create_with_io_access();
     access->add_host_controller(move(host_bridge));
     access->rescan_hardware();
-    dbgln_if(PCI_DEBUG, "PCI: access for one PCI domain initialised.");
+    dbgln_if<PCI_DEBUG>("PCI: access for one PCI domain initialised.");
     return true;
 }
 

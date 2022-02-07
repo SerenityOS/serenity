@@ -18,7 +18,7 @@ RefPtr<SQLStatement> SQLStatement::statement_for(int statement_id)
 {
     if (s_statements.contains(statement_id))
         return *s_statements.get(statement_id).value();
-    dbgln_if(SQLSERVER_DEBUG, "Invalid statement_id {}", statement_id);
+    dbgln_if<SQLSERVER_DEBUG>("Invalid statement_id {}", statement_id);
     return nullptr;
 }
 
@@ -29,13 +29,13 @@ SQLStatement::SQLStatement(DatabaseConnection& connection, String sql)
     , m_statement_id(s_next_statement_id++)
     , m_sql(move(sql))
 {
-    dbgln_if(SQLSERVER_DEBUG, "SQLStatement({}, {})", connection.connection_id(), sql);
+    dbgln_if<SQLSERVER_DEBUG>("SQLStatement({}, {})", connection.connection_id(), sql);
     s_statements.set(m_statement_id, *this);
 }
 
 void SQLStatement::report_error(SQL::SQLError error)
 {
-    dbgln_if(SQLSERVER_DEBUG, "SQLStatement::report_error(statement_id {}, error {}", statement_id(), error.to_string());
+    dbgln_if<SQLSERVER_DEBUG>("SQLStatement::report_error(statement_id {}, error {}", statement_id(), error.to_string());
     auto client_connection = ClientConnection::client_connection_for(connection()->client_id());
     m_statement = nullptr;
     m_result = nullptr;
@@ -53,7 +53,7 @@ void SQLStatement::report_error(SQL::SQLError error)
 
 void SQLStatement::execute()
 {
-    dbgln_if(SQLSERVER_DEBUG, "SQLStatement::execute(statement_id {}", statement_id());
+    dbgln_if<SQLSERVER_DEBUG>("SQLStatement::execute(statement_id {}", statement_id());
     auto client_connection = ClientConnection::client_connection_for(connection()->client_id());
     if (!client_connection) {
         warnln("Cannot yield next result. Client disconnected");

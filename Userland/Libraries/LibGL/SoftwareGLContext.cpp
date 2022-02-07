@@ -45,7 +45,7 @@ static constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
 
 #define RETURN_WITH_ERROR_IF(condition, error)                    \
     if (condition) {                                              \
-        dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error); \
+        dbgln_if<GL_DEBUG>("{}(): error {:#x}", __func__, error); \
         if (m_error == GL_NO_ERROR)                               \
             m_error = error;                                      \
         return;                                                   \
@@ -53,7 +53,7 @@ static constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
 
 #define RETURN_VALUE_WITH_ERROR_IF(condition, error, return_value) \
     if (condition) {                                               \
-        dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error);  \
+        dbgln_if<GL_DEBUG>("{}(): error {:#x}", __func__, error);  \
         if (m_error == GL_NO_ERROR)                                \
             m_error = error;                                       \
         return return_value;                                       \
@@ -240,7 +240,7 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
                 } }
         };
     default:
-        dbgln_if(GL_DEBUG, "get_context_parameter({:#x}): unknown context parameter", name);
+        dbgln_if<GL_DEBUG>("get_context_parameter({:#x}): unknown context parameter", name);
         return {};
     }
 }
@@ -330,7 +330,7 @@ void SoftwareGLContext::gl_end()
         && m_current_draw_mode != GL_POLYGON) {
 
         m_vertex_list.clear_with_capacity();
-        dbgln_if(GL_DEBUG, "gl_end: draw mode {:#x} unsupported", m_current_draw_mode);
+        dbgln_if<GL_DEBUG>("gl_end: draw mode {:#x} unsupported", m_current_draw_mode);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
@@ -463,7 +463,7 @@ GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
     case GL_SHADING_LANGUAGE_VERSION:
         return reinterpret_cast<GLubyte*>(const_cast<char*>("0.0"));
     default:
-        dbgln_if(GL_DEBUG, "gl_get_string({:#x}): unknown name", name);
+        dbgln_if<GL_DEBUG>("gl_get_string({:#x}): unknown name", name);
         break;
     }
 
@@ -776,7 +776,7 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         m_texcoord_generation_dirty = true;
         break;
     default:
-        dbgln_if(GL_DEBUG, "gl_enable({:#x}): unknown parameter", capability);
+        dbgln_if<GL_DEBUG>("gl_enable({:#x}): unknown parameter", capability);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
@@ -883,7 +883,7 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         m_texcoord_generation_dirty = true;
         break;
     default:
-        dbgln_if(GL_DEBUG, "gl_disable({:#x}): unknown parameter", capability);
+        dbgln_if<GL_DEBUG>("gl_disable({:#x}): unknown parameter", capability);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
@@ -2160,7 +2160,7 @@ void SoftwareGLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
         break;
     default:
         // FIXME: We currently only support a subset of possible param values. Implement the rest!
-        dbgln_if(GL_DEBUG, "gl_tex_env({:#x}, {:#x}, {}): param unimplemented", target, pname, param);
+        dbgln_if<GL_DEBUG>("gl_tex_env({:#x}, {:#x}, {}): param unimplemented", target, pname, param);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 }
@@ -2320,7 +2320,7 @@ void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum for
 
     // FIXME: we only support RGBA + UNSIGNED_BYTE and DEPTH_COMPONENT + UNSIGNED_SHORT, implement all combinations!
     if (!((format == GL_RGBA && type == GL_UNSIGNED_BYTE) || (format == GL_DEPTH_COMPONENT && type == GL_UNSIGNED_SHORT))) {
-        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for format {:#x} and/or type {:#x} not implemented", format, type);
+        dbgln_if<GL_DEBUG>("gl_draw_pixels(): support for format {:#x} and/or type {:#x} not implemented", format, type);
         return;
     }
 
@@ -2551,7 +2551,7 @@ void SoftwareGLContext::gl_polygon_mode(GLenum face, GLenum mode)
 
     // FIXME: This must support different polygon modes for front- and backside
     if (face == GL_BACK) {
-        dbgln_if(GL_DEBUG, "gl_polygon_mode(GL_BACK, {:#x}): unimplemented", mode);
+        dbgln_if<GL_DEBUG>("gl_polygon_mode(GL_BACK, {:#x}): unimplemented", mode);
         return;
     }
 
@@ -2775,7 +2775,7 @@ void SoftwareGLContext::gl_normal_pointer(GLenum type, GLsizei stride, void cons
         GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
-    dbgln_if(GL_DEBUG, "gl_normal_pointer({:#x}, {}, {:p}): unimplemented", type, stride, pointer);
+    dbgln_if<GL_DEBUG>("gl_normal_pointer({:#x}, {}, {:p}): unimplemented", type, stride, pointer);
 }
 
 void SoftwareGLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
@@ -2801,7 +2801,7 @@ void SoftwareGLContext::gl_push_attrib(GLbitfield mask)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     // FIXME: implement
-    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: implement gl_push_attrib({})", mask);
+    dbgln_if<GL_DEBUG>("SoftwareGLContext FIXME: implement gl_push_attrib({})", mask);
 }
 
 void SoftwareGLContext::gl_pop_attrib()
@@ -2810,7 +2810,7 @@ void SoftwareGLContext::gl_pop_attrib()
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     // FIXME: implement
-    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: implement gl_pop_attrib()");
+    dbgln_if<GL_DEBUG>("SoftwareGLContext FIXME: implement gl_pop_attrib()");
 }
 
 void SoftwareGLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
@@ -2855,7 +2855,7 @@ void SoftwareGLContext::gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, 
 
     if (bitmap != nullptr) {
         // FIXME: implement
-        dbgln_if(GL_DEBUG, "gl_bitmap({}, {}, {}, {}, {}, {}, {}): unimplemented", width, height, xorig, yorig, xmove, ymove, bitmap);
+        dbgln_if<GL_DEBUG>("gl_bitmap({}, {}, {}, {}, {}, {}, {}): unimplemented", width, height, xorig, yorig, xmove, ymove, bitmap);
     }
 
     auto raster_position = m_rasterizer.raster_position();
@@ -2869,7 +2869,7 @@ void SoftwareGLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     // FIXME: implement
-    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: implement gl_copy_tex_image_2d({:#x}, {}, {:#x}, {}, {}, {}, {}, {})",
+    dbgln_if<GL_DEBUG>("SoftwareGLContext FIXME: implement gl_copy_tex_image_2d({:#x}, {}, {:#x}, {}, {}, {}, {}, {})",
         target, level, internalformat, x, y, width, height, border);
 }
 

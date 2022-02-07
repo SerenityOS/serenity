@@ -128,7 +128,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
         ++total_meta_blocks;
     }
 
-    dbgln_if(AFLACLOADER_DEBUG, "Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, static_cast<double>(m_total_samples) / static_cast<double>(m_sample_rate), md5_checksum, m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
+    dbgln_if<AFLACLOADER_DEBUG>("Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, static_cast<double>(m_total_samples) / static_cast<double>(m_sample_rate), md5_checksum, m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
 
     return {};
 }
@@ -185,7 +185,7 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
 
     if (m_unread_data.size() > 0) {
         size_t to_transfer = min(m_unread_data.size(), samples_to_read);
-        dbgln_if(AFLACLOADER_DEBUG, "Reading {} samples from unread sample buffer (size {})", to_transfer, m_unread_data.size());
+        dbgln_if<AFLACLOADER_DEBUG>("Reading {} samples from unread sample buffer (size {})", to_transfer, m_unread_data.size());
         AK::TypedTransfer<Sample>::move(samples.data(), m_unread_data.data(), to_transfer);
         if (to_transfer < m_unread_data.size())
             m_unread_data.remove(0, to_transfer);
@@ -261,7 +261,7 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
     // TODO: check header checksum, see above
     [[maybe_unused]] u8 checksum = LOADER_TRY(bit_stream->read_bits<u8>(8));
 
-    dbgln_if(AFLACLOADER_DEBUG, "Frame: {} samples, {}bit {}Hz, channeltype {:x}, {} number {}, header checksum {}", sample_count, pcm_bits_per_sample(bit_depth), frame_sample_rate, channel_type_num, blocking_strategy ? "sample" : "frame", m_current_sample_or_frame, checksum);
+    dbgln_if<AFLACLOADER_DEBUG>("Frame: {} samples, {}bit {}Hz, channeltype {:x}, {} number {}, header checksum {}", sample_count, pcm_bits_per_sample(bit_depth), frame_sample_rate, channel_type_num, blocking_strategy ? "sample" : "frame", m_current_sample_or_frame, checksum);
 
     m_current_frame = FlacFrameHeader {
         sample_count,
@@ -284,7 +284,7 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
 
     // TODO: check checksum, see above
     [[maybe_unused]] u16 footer_checksum = LOADER_TRY(bit_stream->read_bits<u16>(16));
-    dbgln_if(AFLACLOADER_DEBUG, "Subframe footer checksum: {}", footer_checksum);
+    dbgln_if<AFLACLOADER_DEBUG>("Subframe footer checksum: {}", footer_checksum);
 
     Vector<i32> left;
     Vector<i32> right;
@@ -340,7 +340,7 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
     VERIFY(left.size() == right.size() && left.size() == m_current_frame->sample_count);
 
     double sample_rescale = static_cast<double>(1 << (pcm_bits_per_sample(m_current_frame->bit_depth) - 1));
-    dbgln_if(AFLACLOADER_DEBUG, "Sample rescaled from {} bits: factor {:.1f}", pcm_bits_per_sample(m_current_frame->bit_depth), sample_rescale);
+    dbgln_if<AFLACLOADER_DEBUG>("Sample rescaled from {} bits: factor {:.1f}", pcm_bits_per_sample(m_current_frame->bit_depth), sample_rescale);
 
     // zip together channels
     auto samples_to_directly_copy = min(target_vector.size(), m_current_frame->sample_count);
@@ -516,7 +516,7 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeH
     switch (subframe_header.type) {
     case FlacSubframeType::Constant: {
         u64 constant_value = LOADER_TRY(bit_input.read_bits<u64>(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample));
-        dbgln_if(AFLACLOADER_DEBUG, "Constant subframe: {}", constant_value);
+        dbgln_if<AFLACLOADER_DEBUG>("Constant subframe: {}", constant_value);
 
         samples.ensure_capacity(m_current_frame->sample_count);
         VERIFY(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample != 0);
@@ -527,17 +527,17 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeH
         break;
     }
     case FlacSubframeType::Fixed: {
-        dbgln_if(AFLACLOADER_DEBUG, "Fixed LPC subframe order {}", subframe_header.order);
+        dbgln_if<AFLACLOADER_DEBUG>("Fixed LPC subframe order {}", subframe_header.order);
         samples = TRY(decode_fixed_lpc(subframe_header, bit_input));
         break;
     }
     case FlacSubframeType::Verbatim: {
-        dbgln_if(AFLACLOADER_DEBUG, "Verbatim subframe");
+        dbgln_if<AFLACLOADER_DEBUG>("Verbatim subframe");
         samples = TRY(decode_verbatim(subframe_header, bit_input));
         break;
     }
     case FlacSubframeType::LPC: {
-        dbgln_if(AFLACLOADER_DEBUG, "Custom LPC subframe order {}", subframe_header.order);
+        dbgln_if<AFLACLOADER_DEBUG>("Custom LPC subframe order {}", subframe_header.order);
         samples = TRY(decode_custom_lpc(subframe_header, bit_input));
         break;
     }
@@ -601,7 +601,7 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
         coefficients.unchecked_append(coefficient);
     }
 
-    dbgln_if(AFLACLOADER_DEBUG, "{}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients);
+    dbgln_if<AFLACLOADER_DEBUG>("{}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients);
 
     TRY(decode_residual(decoded, subframe, bit_input));
 
@@ -638,7 +638,7 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
 
     TRY(decode_residual(decoded, subframe, bit_input));
 
-    dbgln_if(AFLACLOADER_DEBUG, "decoded length {}, {} order predictor", decoded.size(), subframe.order);
+    dbgln_if<AFLACLOADER_DEBUG>("decoded length {}, {} order predictor", decoded.size(), subframe.order);
 
     switch (subframe.order) {
     case 0:

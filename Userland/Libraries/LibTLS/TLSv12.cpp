@@ -33,7 +33,7 @@ void TLSv12::consume(ReadonlyBytes record)
         return;
     }
 
-    dbgln_if(TLS_DEBUG, "Consuming {} bytes", record.size());
+    dbgln_if<TLS_DEBUG>("Consuming {} bytes", record.size());
 
     if (m_context.message_buffer.try_append(record).is_error()) {
         dbgln("Not enough space in message buffer, dropping the record");
@@ -46,12 +46,12 @@ void TLSv12::consume(ReadonlyBytes record)
     size_t size_offset { 3 }; // read the common record header
     size_t header_size { 5 };
 
-    dbgln_if(TLS_DEBUG, "message buffer length {}", buffer_length);
+    dbgln_if<TLS_DEBUG>("message buffer length {}", buffer_length);
 
     while (buffer_length >= 5) {
         auto length = AK::convert_between_host_and_network_endian(ByteReader::load16(m_context.message_buffer.offset_pointer(index + size_offset))) + header_size;
         if (length > buffer_length) {
-            dbgln_if(TLS_DEBUG, "Need more data: {} > {}", length, buffer_length);
+            dbgln_if<TLS_DEBUG>("Need more data: {} > {}", length, buffer_length);
             break;
         }
         auto consumed = handle_message(m_context.message_buffer.bytes().slice(index, length));
@@ -183,7 +183,7 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
         // FIXME: Figure out what we should do when our root certs are invalid.
     }
     m_context.root_certificates = move(certificates);
-    dbgln_if(TLS_DEBUG, "{}: Set {} root certificates", this, m_context.root_certificates.size());
+    dbgln_if<TLS_DEBUG>("{}: Set {} root certificates", this, m_context.root_certificates.size());
 }
 
 bool Context::verify_chain() const

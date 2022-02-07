@@ -79,7 +79,7 @@ ErrorOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
         return 0;
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
-    dbgln_if(IO_DEBUG, "sys$read({}, {}, {})", fd, buffer.ptr(), size);
+    dbgln_if<IO_DEBUG>("sys$read({}, {}, {})", fd, buffer.ptr(), size);
     auto description = TRY(open_readable_file_description(fds(), fd));
     TRY(check_blocked_read(description));
     auto user_buffer = TRY(UserOrKernelBuffer::for_user_buffer(buffer, size));
@@ -99,7 +99,7 @@ ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, 
     auto offset = TRY(copy_typed_from_user(userspace_offset));
     if (offset < 0)
         return EINVAL;
-    dbgln_if(IO_DEBUG, "sys$pread({}, {}, {}, {})", fd, buffer.ptr(), size, offset);
+    dbgln_if<IO_DEBUG>("sys$pread({}, {}, {}, {})", fd, buffer.ptr(), size, offset);
     auto description = TRY(open_readable_file_description(fds(), fd));
     if (!description->file().is_seekable())
         return EINVAL;

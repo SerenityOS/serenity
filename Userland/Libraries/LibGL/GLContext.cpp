@@ -16,7 +16,7 @@ namespace GL {
 
 GLContext::~GLContext()
 {
-    dbgln_if(GL_DEBUG, "GLContext::~GLContext() {:p}", this);
+    dbgln_if<GL_DEBUG>("GLContext::~GLContext() {:p}", this);
     if (g_gl_context == this)
         make_context_current(nullptr);
 }
@@ -24,7 +24,7 @@ GLContext::~GLContext()
 NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)
 {
     auto context = make<SoftwareGLContext>(bitmap);
-    dbgln_if(GL_DEBUG, "GL::create_context({}) -> {:p}", bitmap.size(), context.ptr());
+    dbgln_if<GL_DEBUG>("GL::create_context({}) -> {:p}", bitmap.size(), context.ptr());
 
     if (!g_gl_context)
         make_context_current(context);
@@ -37,7 +37,7 @@ void make_context_current(GLContext* context)
     if (g_gl_context == context)
         return;
 
-    dbgln_if(GL_DEBUG, "GL::make_context_current({:p})", context);
+    dbgln_if<GL_DEBUG>("GL::make_context_current({:p})", context);
     g_gl_context = context;
 }
 

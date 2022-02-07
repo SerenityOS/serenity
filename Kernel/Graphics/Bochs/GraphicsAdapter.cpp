@@ -80,7 +80,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initi
 
 void BochsGraphicsAdapter::set_framebuffer_to_big_endian_format()
 {
-    dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter set_framebuffer_to_big_endian_format");
+    dbgln_if<BXVGA_DEBUG>("BochsGraphicsAdapter set_framebuffer_to_big_endian_format");
     full_memory_barrier();
     if (m_registers->extension_regs.region_size == 0xFFFFFFFF || m_registers->extension_regs.region_size == 0)
         return;
@@ -91,7 +91,7 @@ void BochsGraphicsAdapter::set_framebuffer_to_big_endian_format()
 
 void BochsGraphicsAdapter::set_framebuffer_to_little_endian_format()
 {
-    dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter set_framebuffer_to_little_endian_format");
+    dbgln_if<BXVGA_DEBUG>("BochsGraphicsAdapter set_framebuffer_to_little_endian_format");
     full_memory_barrier();
     if (m_registers->extension_regs.region_size == 0xFFFFFFFF || m_registers->extension_regs.region_size == 0)
         return;
@@ -172,7 +172,7 @@ BochsGraphicsAdapter::IndexID BochsGraphicsAdapter::index_id() const
 
 void BochsGraphicsAdapter::set_resolution_registers_via_io(size_t width, size_t height)
 {
-    dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution registers set to - {}x{}", width, height);
+    dbgln_if<BXVGA_DEBUG>("BochsGraphicsAdapter resolution registers set to - {}x{}", width, height);
 
     set_register_with_io(to_underlying(BochsDISPIRegisters::ENABLE), 0);
     set_register_with_io(to_underlying(BochsDISPIRegisters::XRES), (u16)width);
@@ -186,7 +186,7 @@ void BochsGraphicsAdapter::set_resolution_registers_via_io(size_t width, size_t 
 
 void BochsGraphicsAdapter::set_resolution_registers(size_t width, size_t height)
 {
-    dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution registers set to - {}x{}", width, height);
+    dbgln_if<BXVGA_DEBUG>("BochsGraphicsAdapter resolution registers set to - {}x{}", width, height);
     m_registers->bochs_regs.enable = 0;
     full_memory_barrier();
     m_registers->bochs_regs.xres = width;
@@ -215,7 +215,7 @@ bool BochsGraphicsAdapter::try_to_set_resolution(size_t output_port_index, size_
         set_resolution_registers_via_io(width, height);
     else
         set_resolution_registers(width, height);
-    dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution test - {}x{}", width, height);
+    dbgln_if<BXVGA_DEBUG>("BochsGraphicsAdapter resolution test - {}x{}", width, height);
     if (m_io_required) {
         if (!validate_setup_resolution_with_io(width, height))
             return false;

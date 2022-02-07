@@ -96,7 +96,7 @@ ErrorOr<FlatPtr> Process::sys$write(int fd, Userspace<const u8*> data, size_t si
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
 
-    dbgln_if(IO_DEBUG, "sys$write({}, {}, {})", fd, data.ptr(), size);
+    dbgln_if<IO_DEBUG>("sys$write({}, {}, {})", fd, data.ptr(), size);
     auto description = TRY(open_file_description(fd));
     if (!description->is_writable())
         return EBADF;

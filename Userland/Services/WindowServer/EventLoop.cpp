@@ -64,7 +64,7 @@ void EventLoop::drain_mouse()
     bool state_is_sent = false;
     for (size_t i = 0; i < npackets; ++i) {
         auto& packet = packets[i];
-        dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse X {}, Y {}, Z {}, W {}, relative={}", packet.x, packet.y, packet.z, packet.w, packet.is_relative);
+        dbgln_if<WSMESSAGELOOP_DEBUG>("EventLoop: Mouse X {}, Y {}, Z {}, W {}, relative={}", packet.x, packet.y, packet.z, packet.w, packet.is_relative);
 
         state.is_relative = packet.is_relative;
         if (packet.is_relative) {
@@ -80,7 +80,7 @@ void EventLoop::drain_mouse()
 
         if (packet.buttons != state.buttons) {
             state.buttons = packet.buttons;
-            dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse Button Event");
+            dbgln_if<WSMESSAGELOOP_DEBUG>("EventLoop: Mouse Button Event");
 
             // Swap primary (1) and secondary (2) buttons if checked in Settings.
             // Doing the swap here avoids all emulator and hardware issues.

@@ -704,7 +704,7 @@ static bool decode_dds(DDSLoadingContext& context)
 
     // All valid DDS files are at least 128 bytes long.
     if (stream.remaining() < 128) {
-        dbgln_if(DDS_DEBUG, "File is too short for DDS");
+        dbgln_if<DDS_DEBUG>("File is too short for DDS");
         context.state = DDSLoadingContext::State::Error;
         return false;
     }
@@ -713,7 +713,7 @@ static bool decode_dds(DDSLoadingContext& context)
     stream >> magic;
 
     if (magic != create_four_cc('D', 'D', 'S', ' ')) {
-        dbgln_if(DDS_DEBUG, "Missing magic number");
+        dbgln_if<DDS_DEBUG>("Missing magic number");
         context.state = DDSLoadingContext::State::Error;
         return false;
     }
@@ -742,12 +742,12 @@ static bool decode_dds(DDSLoadingContext& context)
     stream >> context.header.reserved2;
 
     if (context.header.size != 124) {
-        dbgln_if(DDS_DEBUG, "Header size is malformed");
+        dbgln_if<DDS_DEBUG>("Header size is malformed");
         context.state = DDSLoadingContext::State::Error;
         return false;
     }
     if (context.header.pixel_format.size != 32) {
-        dbgln_if(DDS_DEBUG, "Pixel format size is malformed");
+        dbgln_if<DDS_DEBUG>("Pixel format size is malformed");
         context.state = DDSLoadingContext::State::Error;
         return false;
     }
@@ -755,7 +755,7 @@ static bool decode_dds(DDSLoadingContext& context)
     if ((context.header.pixel_format.flags & PixelFormatFlags::DDPF_FOURCC) == PixelFormatFlags::DDPF_FOURCC) {
         if (context.header.pixel_format.four_cc == create_four_cc('D', 'X', '1', '0')) {
             if (stream.bytes().size() < 148) {
-                dbgln_if(DDS_DEBUG, "DX10 header is too short");
+                dbgln_if<DDS_DEBUG>("DX10 header is too short");
                 context.state = DDSLoadingContext::State::Error;
                 return false;
             }
@@ -778,7 +778,7 @@ static bool decode_dds(DDSLoadingContext& context)
 
     Vector<u32> supported_formats = { DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC3_UNORM };
     if (!supported_formats.contains_slow(format)) {
-        dbgln_if(DDS_DEBUG, "Format of type {} is not supported at the moment", static_cast<u32>(format));
+        dbgln_if<DDS_DEBUG>("Format of type {} is not supported at the moment", static_cast<u32>(format));
         context.state = DDSLoadingContext::State::Error;
         return false;
     }
@@ -789,7 +789,7 @@ static bool decode_dds(DDSLoadingContext& context)
         u64 height = get_height(context.header, mipmap_level);
 
         u64 needed_bytes = get_minimum_bytes_for_mipmap(format, width, height);
-        dbgln_if(DDS_DEBUG, "There are {} bytes remaining, we need {} for mipmap level {} of the image", stream.remaining(), needed_bytes, mipmap_level);
+        dbgln_if<DDS_DEBUG>("There are {} bytes remaining, we need {} for mipmap level {} of the image", stream.remaining(), needed_bytes, mipmap_level);
         VERIFY(stream.remaining() >= needed_bytes);
 
         context.bitmap = Bitmap::try_create(BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors();

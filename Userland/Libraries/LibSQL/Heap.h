@@ -82,8 +82,8 @@ public:
 
     void add_to_wal(u32 block, ByteBuffer& buffer)
     {
-        dbgln_if(SQL_DEBUG, "Adding to WAL: block #{}, size {}", block, buffer.size());
-        dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
+        dbgln_if<SQL_DEBUG>("Adding to WAL: block #{}, size {}", block, buffer.size());
+        dbgln_if<SQL_DEBUG>("{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
             *buffer.offset_pointer(0), *buffer.offset_pointer(1),
             *buffer.offset_pointer(2), *buffer.offset_pointer(3),
             *buffer.offset_pointer(4), *buffer.offset_pointer(5),

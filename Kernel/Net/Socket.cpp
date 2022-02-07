@@ -43,7 +43,7 @@ Socket::~Socket()
 
 void Socket::set_setup_state(SetupState new_setup_state)
 {
-    dbgln_if(SOCKET_DEBUG, "Socket({}) setup state moving from {} to {}", this, to_string(m_setup_state), to_string(new_setup_state));
+    dbgln_if<SOCKET_DEBUG>("Socket({}) setup state moving from {} to {}", this, to_string(m_setup_state), to_string(new_setup_state));
     m_setup_state = new_setup_state;
     evaluate_block_conditions();
 }
@@ -53,7 +53,7 @@ RefPtr<Socket> Socket::accept()
     MutexLocker locker(mutex());
     if (m_pending.is_empty())
         return nullptr;
-    dbgln_if(SOCKET_DEBUG, "Socket({}) de-queueing connection", this);
+    dbgln_if<SOCKET_DEBUG>("Socket({}) de-queueing connection", this);
     auto client = m_pending.take_first();
     VERIFY(!client->is_connected());
     auto& process = Process::current();
@@ -67,7 +67,7 @@ RefPtr<Socket> Socket::accept()
 
 ErrorOr<void> Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
 {
-    dbgln_if(SOCKET_DEBUG, "Socket({}) queueing connection", this);
+    dbgln_if<SOCKET_DEBUG>("Socket({}) queueing connection", this);
     MutexLocker locker(mutex());
     if (m_pending.size() >= m_backlog)
         return set_so_error(ECONNREFUSED);

@@ -112,8 +112,8 @@ static bool build_gemini_document(DOM::Document& document, const ByteBuffer& dat
     auto gemini_document = Gemini::Document::parse(gemini_data, document.url());
     String html_data = gemini_document->render_to_html();
 
-    dbgln_if(GEMINI_DEBUG, "Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
-    dbgln_if(GEMINI_DEBUG, "Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
+    dbgln_if<GEMINI_DEBUG>("Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
+    dbgln_if<GEMINI_DEBUG>("Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
 
     HTML::HTMLParser parser(document, html_data, "utf-8");
     parser.run(document.url());
@@ -174,7 +174,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
         ResourceLoader::the().load(
             favicon_url,
             [this, favicon_url](auto data, auto&, auto) {
-                dbgln_if(SPAM_DEBUG, "Favicon downloaded, {} bytes from {}", data.size(), favicon_url);
+                dbgln_if<SPAM_DEBUG>("Favicon downloaded, {} bytes from {}", data.size(), favicon_url);
                 if (data.is_empty())
                     return;
                 RefPtr<Gfx::Bitmap> favicon_bitmap;
@@ -183,7 +183,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
                     dbgln("Could not decode favicon {}", favicon_url);
                 } else {
                     favicon_bitmap = decoded_image->frames[0].bitmap;
-                    dbgln_if(IMAGE_DECODER_DEBUG, "Decoded favicon, {}", favicon_bitmap->size());
+                    dbgln_if<IMAGE_DECODER_DEBUG>("Decoded favicon, {}", favicon_bitmap->size());
                 }
                 load_favicon(favicon_bitmap);
             },
@@ -199,7 +199,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
 
 bool FrameLoader::load(const AK::URL& url, Type type)
 {
-    dbgln_if(SPAM_DEBUG, "FrameLoader::load: {}", url);
+    dbgln_if<SPAM_DEBUG>("FrameLoader::load: {}", url);
 
     if (!url.is_valid()) {
         load_error_page(url, "Invalid URL");
@@ -277,9 +277,9 @@ void FrameLoader::resource_did_load()
     }
 
     if (resource()->has_encoding()) {
-        dbgln_if(RESOURCE_DEBUG, "This content has MIME type '{}', encoding '{}'", resource()->mime_type(), resource()->encoding().value());
+        dbgln_if<RESOURCE_DEBUG>("This content has MIME type '{}', encoding '{}'", resource()->mime_type(), resource()->encoding().value());
     } else {
-        dbgln_if(RESOURCE_DEBUG, "This content has MIME type '{}', encoding unknown", resource()->mime_type());
+        dbgln_if<RESOURCE_DEBUG>("This content has MIME type '{}', encoding unknown", resource()->mime_type());
     }
 
     auto document = DOM::Document::create();

@@ -175,14 +175,14 @@ bool RTL8139NetworkAdapter::handle_irq(const RegisterState&)
 
         m_entropy_source.add_random_event(status);
 
-        dbgln_if(RTL8139_DEBUG, "RTL8139: handle_irq status={:#04x}", status);
+        dbgln_if<RTL8139_DEBUG>("RTL8139: handle_irq status={:#04x}", status);
 
         if ((status & (INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_BUFFER_OVERFLOW | INT_LINK_CHANGE | INT_RX_FIFO_OVERFLOW | INT_LENGTH_CHANGE | INT_SYSTEM_ERROR)) == 0)
             break;
 
         was_handled = true;
         if (status & INT_RXOK) {
-            dbgln_if(RTL8139_DEBUG, "RTL8139: RX ready");
+            dbgln_if<RTL8139_DEBUG>("RTL8139: RX ready");
             receive();
         }
         if (status & INT_RXERR) {
@@ -190,7 +190,7 @@ bool RTL8139NetworkAdapter::handle_irq(const RegisterState&)
             reset();
         }
         if (status & INT_TXOK) {
-            dbgln_if(RTL8139_DEBUG, "RTL8139: TX complete");
+            dbgln_if<RTL8139_DEBUG>("RTL8139: TX complete");
         }
         if (status & INT_TXERR) {
             dmesgln("RTL8139: TX error - resetting device");
@@ -280,7 +280,7 @@ UNMAP_AFTER_INIT void RTL8139NetworkAdapter::read_mac_address()
 
 void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
-    dbgln_if(RTL8139_DEBUG, "RTL8139: send_raw length={}", payload.size());
+    dbgln_if<RTL8139_DEBUG>("RTL8139: send_raw length={}", payload.size());
 
     if (payload.size() > PACKET_SIZE_MAX) {
         dmesgln("RTL8139: Packet was too big; discarding");
@@ -303,7 +303,7 @@ void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
         return;
     }
 
-    dbgln_if(RTL8139_DEBUG, "RTL8139: Chose buffer {}", hw_buffer);
+    dbgln_if<RTL8139_DEBUG>("RTL8139: Chose buffer {}", hw_buffer);
     m_tx_next_buffer = (hw_buffer + 1) % 4;
 
     memcpy(m_tx_buffers[hw_buffer]->vaddr().as_ptr(), payload.data(), payload.size());
@@ -315,7 +315,7 @@ void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
     // 60 bytes if necessary to make sure the whole thing is large enough.
     auto length = payload.size();
     if (length < 60) {
-        dbgln_if(RTL8139_DEBUG, "RTL8139: adjusting payload size from {} to 60", length);
+        dbgln_if<RTL8139_DEBUG>("RTL8139: adjusting payload size from {} to 60", length);
         length = 60;
     }
 
@@ -329,7 +329,7 @@ void RTL8139NetworkAdapter::receive()
     u16 status = *(const u16*)(start_of_packet + 0);
     u16 length = *(const u16*)(start_of_packet + 2);
 
-    dbgln_if(RTL8139_DEBUG, "RTL8139: receive, status={:#04x}, length={}, offset={}", status, length, m_rx_buffer_offset);
+    dbgln_if<RTL8139_DEBUG>("RTL8139: receive, status={:#04x}, length={}, offset={}", status, length, m_rx_buffer_offset);
 
     if (!(status & RX_OK) || (status & (RX_INVALID_SYMBOL_ERROR | RX_CRC_ERROR | RX_FRAME_ALIGNMENT_ERROR)) || (length >= PACKET_SIZE_MAX) || (length < PACKET_SIZE_MIN)) {
         dmesgln("RTL8139: receive got bad packet, status={:#04x}, length={}", status, length);

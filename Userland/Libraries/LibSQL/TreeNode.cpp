@@ -114,11 +114,11 @@ TreeNode::TreeNode(BTree& tree, TreeNode* up, TreeNode* left, u32 pointer)
 void TreeNode::deserialize(Serializer& serializer)
 {
     auto nodes = serializer.deserialize<u32>();
-    dbgln_if(SQL_DEBUG, "Deserializing node. Size {}", nodes);
+    dbgln_if<SQL_DEBUG>("Deserializing node. Size {}", nodes);
     if (nodes > 0) {
         for (u32 i = 0; i < nodes; i++) {
             auto left = serializer.deserialize<u32>();
-            dbgln_if(SQL_DEBUG, "Down[{}] {}", i, left);
+            dbgln_if<SQL_DEBUG>("Down[{}] {}", i, left);
             if (!m_down.is_empty())
                 VERIFY((left == 0) == m_is_leaf);
             else
@@ -127,7 +127,7 @@ void TreeNode::deserialize(Serializer& serializer)
             m_down.empend(this, left);
         }
         auto right = serializer.deserialize<u32>();
-        dbgln_if(SQL_DEBUG, "Right {}", right);
+        dbgln_if<SQL_DEBUG>("Right {}", right);
         VERIFY((right == 0) == m_is_leaf);
         m_down.empend(this, right);
     }
@@ -140,11 +140,11 @@ void TreeNode::serialize(Serializer& serializer) const
     if (sz > 0) {
         for (auto ix = 0u; ix < size(); ix++) {
             auto& entry = m_entries[ix];
-            dbgln_if(SQL_DEBUG, "Serializing Left[{}] = {}", ix, m_down[ix].pointer());
+            dbgln_if<SQL_DEBUG>("Serializing Left[{}] = {}", ix, m_down[ix].pointer());
             serializer.serialize<u32>(is_leaf() ? 0u : m_down[ix].pointer());
             serializer.serialize<Key>(entry);
         }
-        dbgln_if(SQL_DEBUG, "Serializing Right = {}", m_down[size()].pointer());
+        dbgln_if<SQL_DEBUG>("Serializing Right = {}", m_down[size()].pointer());
         serializer.serialize<u32>(is_leaf() ? 0u : m_down[size()].pointer());
     }
 }
@@ -162,7 +162,7 @@ size_t TreeNode::length() const
 
 bool TreeNode::insert(Key const& key)
 {
-    dbgln_if(SQL_DEBUG, "[#{}] INSERT({})", pointer(), key.to_string());
+    dbgln_if<SQL_DEBUG>("[#{}] INSERT({})", pointer(), key.to_string());
     if (!is_leaf())
         return node_for(key)->insert_in_leaf(key);
     return insert_in_leaf(key);
@@ -170,13 +170,13 @@ bool TreeNode::insert(Key const& key)
 
 bool TreeNode::update_key_pointer(Key const& key)
 {
-    dbgln_if(SQL_DEBUG, "[#{}] UPDATE({}, {})", pointer(), key.to_string(), key.pointer());
+    dbgln_if<SQL_DEBUG>("[#{}] UPDATE({}, {})", pointer(), key.to_string(), key.pointer());
     if (!is_leaf())
         return node_for(key)->update_key_pointer(key);
 
     for (auto ix = 0u; ix < size(); ix++) {
         if (key == m_entries[ix]) {
-            dbgln_if(SQL_DEBUG, "[#{}] {} == {}",
+            dbgln_if<SQL_DEBUG>("[#{}] {} == {}",
                 pointer(), key.to_string(), m_entries[ix].to_string());
             if (m_entries[ix].pointer() != key.pointer()) {
                 m_entries[ix].set_pointer(key.pointer());
@@ -195,13 +195,13 @@ bool TreeNode::insert_in_leaf(Key const& key)
     if (!m_tree.duplicates_allowed()) {
         for (auto& entry : m_entries) {
             if (key == entry) {
-                dbgln_if(SQL_DEBUG, "[#{}] duplicate key {}", pointer(), key.to_string());
+                dbgln_if<SQL_DEBUG>("[#{}] duplicate key {}", pointer(), key.to_string());
                 return false;
             }
         }
     }
 
-    dbgln_if(SQL_DEBUG, "[#{}] insert_in_leaf({})", pointer(), key.to_string());
+    dbgln_if<SQL_DEBUG>("[#{}] insert_in_leaf({})", pointer(), key.to_string());
     just_insert(key, nullptr);
     return true;
 }
@@ -231,12 +231,12 @@ TreeNode* TreeNode::node_for(Key const& key)
         return this;
     for (size_t ix = 0; ix < size(); ix++) {
         if (key < m_entries[ix]) {
-            dbgln_if(SQL_DEBUG, "[{}] {} < {} v{}",
+            dbgln_if<SQL_DEBUG>("[{}] {} < {} v{}",
                 pointer(), (String)key, (String)m_entries[ix], m_down[ix].pointer());
             return down_node(ix)->node_for(key);
         }
     }
-    dbgln_if(SQL_DEBUG, "[#{}] {} >= {} v{}",
+    dbgln_if<SQL_DEBUG>("[#{}] {} >= {} v{}",
         pointer(), key.to_string(), (String)m_entries[size() - 1], m_down[size()].pointer());
     return down_node(size())->node_for(key);
 }
@@ -247,18 +247,18 @@ Optional<u32> TreeNode::get(Key& key)
     for (auto ix = 0u; ix < size(); ix++) {
         if (key < m_entries[ix]) {
             if (is_leaf()) {
-                dbgln_if(SQL_DEBUG, "[#{}] {} < {} -> 0",
+                dbgln_if<SQL_DEBUG>("[#{}] {} < {} -> 0",
                     pointer(), key.to_string(), (String)m_entries[ix]);
                 return {};
             } else {
-                dbgln_if(SQL_DEBUG, "[{}] {} < {} ({} -> {})",
+                dbgln_if<SQL_DEBUG>("[{}] {} < {} ({} -> {})",
                     pointer(), key.to_string(), (String)m_entries[ix],
                     ix, m_down[ix].pointer());
                 return down_node(ix)->get(key);
             }
         }
         if (key == m_entries[ix]) {
-            dbgln_if(SQL_DEBUG, "[#{}] {} == {} -> {}",
+            dbgln_if<SQL_DEBUG>("[#{}] {} == {} -> {}",
                 pointer(), key.to_string(), (String)m_entries[ix],
                 m_entries[ix].pointer());
             key.set_pointer(m_entries[ix].pointer());
@@ -266,15 +266,15 @@ Optional<u32> TreeNode::get(Key& key)
         }
     }
     if (m_entries.is_empty()) {
-        dbgln_if(SQL_DEBUG, "[#{}] {} Empty node??", pointer(), key.to_string());
+        dbgln_if<SQL_DEBUG>("[#{}] {} Empty node??", pointer(), key.to_string());
         VERIFY_NOT_REACHED();
     }
     if (is_leaf()) {
-        dbgln_if(SQL_DEBUG, "[#{}] {} > {} -> 0",
+        dbgln_if<SQL_DEBUG>("[#{}] {} > {} -> 0",
             pointer(), key.to_string(), (String)m_entries[size() - 1]);
         return {};
     }
-    dbgln_if(SQL_DEBUG, "[#{}] {} > {} ({} -> {})",
+    dbgln_if<SQL_DEBUG>("[#{}] {} > {} ({} -> {})",
         pointer(), key.to_string(), (String)m_entries[size() - 1],
         size(), m_down[size()].pointer());
     return down_node(size())->get(key);
@@ -282,7 +282,7 @@ Optional<u32> TreeNode::get(Key& key)
 
 void TreeNode::just_insert(Key const& key, TreeNode* right)
 {
-    dbgln_if(SQL_DEBUG, "[#{}] just_insert({}, right = {})",
+    dbgln_if<SQL_DEBUG>("[#{}] just_insert({}, right = {})",
         pointer(), (String)key, (right) ? right->pointer() : 0);
     dump_if(SQL_DEBUG, "Before");
     for (auto ix = 0u; ix < size(); ix++) {

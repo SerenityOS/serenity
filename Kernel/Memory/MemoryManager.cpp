@@ -743,7 +743,7 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }
-    dbgln_if(PAGE_FAULT_DEBUG, "MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::current_id(), fault.code(), fault.vaddr());
+    dbgln_if<PAGE_FAULT_DEBUG>("MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::current_id(), fault.code(), fault.vaddr());
     auto* region = find_region_from_vaddr(fault.vaddr());
     if (!region) {
         return PageFaultResponse::ShouldCrash;

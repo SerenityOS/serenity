@@ -20,7 +20,7 @@ void request_did_finish(URL const& url, Core::Stream::Socket const* socket)
         return;
     }
 
-    dbgln_if(REQUESTSERVER_DEBUG, "Request for {} finished", url);
+    dbgln_if<REQUESTSERVER_DEBUG>("Request for {} finished", url);
 
     ConnectionKey key { url.host(), url.port_or_default() };
     auto fire_off_next_job = [&](auto& cache) {
@@ -44,7 +44,7 @@ void request_did_finish(URL const& url, Core::Stream::Socket const* socket)
                 connection->job_data = {};
                 connection->removal_timer->on_timeout = [ptr = connection.ptr(), &cache_entry, key = move(key), &cache]() mutable {
                     Core::deferred_invoke([&, key = move(key), ptr] {
-                        dbgln_if(REQUESTSERVER_DEBUG, "Removing no-longer-used connection {} (socket {})", ptr, ptr->socket);
+                        dbgln_if<REQUESTSERVER_DEBUG>("Removing no-longer-used connection {} (socket {})", ptr, ptr->socket);
                         auto did_remove = cache_entry.remove_first_matching([&](auto& entry) { return entry == ptr; });
                         VERIFY(did_remove);
                         if (cache_entry.is_empty())
@@ -60,7 +60,7 @@ void request_did_finish(URL const& url, Core::Stream::Socket const* socket)
                 return;
             }
             Core::deferred_invoke([&, url] {
-                dbgln_if(REQUESTSERVER_DEBUG, "Running next job in queue for connection {} @{}", &connection, connection->socket);
+                dbgln_if<REQUESTSERVER_DEBUG>("Running next job in queue for connection {} @{}", &connection, connection->socket);
                 connection->timer.start();
                 connection->current_url = url;
                 connection->job_data = connection->request_queue.take_first();

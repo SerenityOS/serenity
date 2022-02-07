@@ -313,7 +313,7 @@ ErrorOr<void> VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, 
         return EROFS;
 
     auto basename = KLexicalPath::basename(path);
-    dbgln_if(VFS_DEBUG, "VirtualFileSystem::mknod: '{}' mode={} dev={} in {}", basename, mode, dev, parent_inode.identifier());
+    dbgln_if<VFS_DEBUG>("VirtualFileSystem::mknod: '{}' mode={} dev={} in {}", basename, mode, dev, parent_inode.identifier());
     (void)TRY(parent_inode.create_child(basename, mode, dev, current_process.euid(), current_process.egid()));
     return {};
 }
@@ -337,7 +337,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::create(StringView
     if (parent_custody.is_readonly())
         return EROFS;
 
-    dbgln_if(VFS_DEBUG, "VirtualFileSystem::create: '{}' in {}", basename, parent_inode.identifier());
+    dbgln_if<VFS_DEBUG>("VirtualFileSystem::create: '{}' in {}", basename, parent_inode.identifier());
     auto uid = owner.has_value() ? owner.value().uid : current_process.euid();
     auto gid = owner.has_value() ? owner.value().gid : current_process.egid();
 
@@ -379,7 +379,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
         return EROFS;
 
     auto basename = KLexicalPath::basename(path);
-    dbgln_if(VFS_DEBUG, "VirtualFileSystem::mkdir: '{}' in {}", basename, parent_inode.identifier());
+    dbgln_if<VFS_DEBUG>("VirtualFileSystem::mkdir: '{}' in {}", basename, parent_inode.identifier());
     (void)TRY(parent_inode.create_child(basename, S_IFDIR | mode, 0, current_process.euid(), current_process.egid()));
     return {};
 }
@@ -554,10 +554,10 @@ ErrorOr<void> VirtualFileSystem::chown(Custody& custody, UserID a_uid, GroupID a
     if (custody.is_readonly())
         return EROFS;
 
-    dbgln_if(VFS_DEBUG, "VirtualFileSystem::chown(): inode {} <- uid={} gid={}", inode.identifier(), new_uid, new_gid);
+    dbgln_if<VFS_DEBUG>("VirtualFileSystem::chown(): inode {} <- uid={} gid={}", inode.identifier(), new_uid, new_gid);
 
     if (metadata.is_setuid() || metadata.is_setgid()) {
-        dbgln_if(VFS_DEBUG, "VirtualFileSystem::chown(): Stripping SUID/SGID bits from {}", inode.identifier());
+        dbgln_if<VFS_DEBUG>("VirtualFileSystem::chown(): Stripping SUID/SGID bits from {}", inode.identifier());
         TRY(inode.chmod(metadata.mode & ~(04000 | 02000)));
     }
 
@@ -668,7 +668,7 @@ ErrorOr<void> VirtualFileSystem::symlink(StringView target, StringView linkpath,
         return EROFS;
 
     auto basename = KLexicalPath::basename(linkpath);
-    dbgln_if(VFS_DEBUG, "VirtualFileSystem::symlink: '{}' (-> '{}') in {}", basename, target, parent_inode.identifier());
+    dbgln_if<VFS_DEBUG>("VirtualFileSystem::symlink: '{}' (-> '{}') in {}", basename, target, parent_inode.identifier());
 
     auto inode = TRY(parent_inode.create_child(basename, S_IFLNK | 0644, 0, current_process.euid(), current_process.egid()));
 

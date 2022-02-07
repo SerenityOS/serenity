@@ -40,7 +40,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> use
 
     auto path = TRY(get_syscall_path_argument(params.path));
 
-    dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path->view(), options, mode);
+    dbgln_if<IO_DEBUG>("sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path->view(), options, mode);
 
     auto fd_allocation = TRY(allocate_fd());
     RefPtr<Custody> base;

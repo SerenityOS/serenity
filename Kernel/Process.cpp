@@ -243,7 +243,7 @@ Process::Process(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID
     m_protected_values.suid = uid;
     m_protected_values.sgid = gid;
 
-    dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, this->pid().value());
+    dbgln_if<PROCESS_DEBUG>("Created new process {}({})", m_name, this->pid().value());
 }
 
 ErrorOr<void> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& preallocated_space, RefPtr<Thread>& first_thread, Process* fork_parent)
@@ -567,7 +567,7 @@ void Process::finalize()
 {
     VERIFY(Thread::current() == g_finalizer);
 
-    dbgln_if(PROCESS_DEBUG, "Finalizing process {}", *this);
+    dbgln_if<PROCESS_DEBUG>("Finalizing process {}", *this);
 
     if (veil_state() == VeilState::Dropped)
         dbgln("\x1b[01;31mProcess '{}' exited with the veil left open\x1b[0m", name());
@@ -673,7 +673,7 @@ void Process::die()
             auto& process = *it;
             ++it;
             if (process.has_tracee_thread(pid())) {
-                dbgln_if(PROCESS_DEBUG, "Process {} ({}) is attached by {} ({}) which will exit", process.name(), process.pid(), name(), pid());
+                dbgln_if<PROCESS_DEBUG>("Process {} ({}) is attached by {} ({}) which will exit", process.name(), process.pid(), name(), pid());
                 process.stop_tracing();
                 auto err = process.send_signal(SIGSTOP, this);
                 if (err.is_error())

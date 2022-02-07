@@ -20,7 +20,7 @@ void KeyCallbackMachine::register_key_input_callback(Vector<Key> keys, Function<
 
 void KeyCallbackMachine::key_pressed(Editor& editor, Key key)
 {
-    dbgln_if(CALLBACK_MACHINE_DEBUG, "Key<{}, {}> pressed, seq_length={}, {} things in the matching vector", key.key, key.modifiers, m_sequence_length, m_current_matching_keys.size());
+    dbgln_if<CALLBACK_MACHINE_DEBUG>("Key<{}, {}> pressed, seq_length={}, {} things in the matching vector", key.key, key.modifiers, m_sequence_length, m_current_matching_keys.size());
     if (m_sequence_length == 0) {
         VERIFY(m_current_matching_keys.is_empty());
 

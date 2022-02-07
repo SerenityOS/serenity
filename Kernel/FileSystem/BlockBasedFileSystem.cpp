@@ -135,7 +135,7 @@ ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKe
 {
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
-    dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_block {}, size={}", index, count);
+    dbgln_if<BBFS_DEBUG>("BlockBasedFileSystem::write_block {}, size={}", index, count);
 
     // NOTE: We copy the `data` to write into a local buffer before taking the cache lock.
     //       This makes sure any page faults caused by accessing the data will occur before
@@ -205,7 +205,7 @@ ErrorOr<void> BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t co
 ErrorOr<void> BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
 {
     VERIFY(m_logical_block_size);
-    dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);
+    dbgln_if<BBFS_DEBUG>("BlockBasedFileSystem::write_blocks {}, count={}", index, count);
     for (unsigned i = 0; i < count; ++i) {
         TRY(write_block(BlockIndex { index.value() + i }, data.offset(i * block_size()), block_size(), 0, allow_cache));
     }
@@ -216,7 +216,7 @@ ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuf
 {
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
-    dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::read_block {}", index);
+    dbgln_if<BBFS_DEBUG>("BlockBasedFileSystem::read_block {}", index);
 
     return m_cache.with_exclusive([&](auto& cache) -> ErrorOr<void> {
         if (!allow_cache) {

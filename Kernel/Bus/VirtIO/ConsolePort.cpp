@@ -44,7 +44,7 @@ void ConsolePort::init_receive_buffer(Badge<VirtIO::Console>)
 
 void ConsolePort::handle_queue_update(Badge<VirtIO::Console>, u16 queue_index)
 {
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::ConsolePort: Handle queue update for port {}", m_port);
+    dbgln_if<VIRTIO_DEBUG>("VirtIO::ConsolePort: Handle queue update for port {}", m_port);
     VERIFY(queue_index == m_transmit_queue || queue_index == m_receive_queue);
     if (queue_index == m_receive_queue) {
         auto& queue = m_console.get_queue(m_receive_queue);

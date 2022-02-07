@@ -81,7 +81,7 @@ void Client::start()
         }
 
         auto request = builder.to_byte_buffer();
-        dbgln_if(WEBSERVER_DEBUG, "Got raw request: '{}'", String::copy(request));
+        dbgln_if<WEBSERVER_DEBUG>("Got raw request: '{}'", String::copy(request));
 
         auto maybe_did_handle = handle_request(request);
         if (maybe_did_handle.is_error()) {
@@ -121,7 +121,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     }
 
     auto requested_path = LexicalPath::join("/", request.resource()).string();
-    dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
+    dbgln_if<WEBSERVER_DEBUG>("Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
     path_builder.append(Configuration::the().root_path());

@@ -452,7 +452,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     // a custody (e.g. BlockDevice or RandomDevice) is pretty suspicious anyway.
     auto path = TRY(main_program_description->original_absolute_path());
 
-    dbgln_if(EXEC_DEBUG, "do_exec: {}", path);
+    dbgln_if<EXEC_DEBUG>("do_exec: {}", path);
 
     // FIXME: How much stack space does process startup need?
     if (!validate_stack_size(arguments, environment))
@@ -720,7 +720,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
     auto interpreter_path = interpreter_path_builder.string_view();
 
     if (!interpreter_path.is_empty()) {
-        dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
+        dbgln_if<EXEC_DEBUG>("exec({}): Using program interpreter {}", path, interpreter_path);
         auto interpreter_description = TRY(VirtualFileSystem::the().open(interpreter_path, O_EXEC, 0, current_directory()));
         auto interp_metadata = interpreter_description->metadata();
 

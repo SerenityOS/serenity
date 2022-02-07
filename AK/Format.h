@@ -594,6 +594,14 @@ void dbgln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... par
 
 inline void dbgln() { dbgln(""); }
 
+template<bool flag, typename... Parameters>
+inline void dbgln_if(Parameters&&... parameters)
+{
+    if constexpr (flag) {
+        dbgln(forward<Parameters...>(parameters...));
+    }
+}
+
 void set_debug_enabled(bool);
 
 #ifdef KERNEL
@@ -707,13 +715,8 @@ using AK::warnln;
 #endif
 
 using AK::dbgln;
+using AK::dbgln_if;
 
 using AK::CheckedFormatString;
 using AK::FormatIfSupported;
 using AK::FormatString;
-
-#define dbgln_if(flag, fmt, ...)       \
-    do {                               \
-        if constexpr (flag)            \
-            dbgln(fmt, ##__VA_ARGS__); \
-    } while (0)

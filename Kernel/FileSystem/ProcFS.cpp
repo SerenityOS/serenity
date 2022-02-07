@@ -484,7 +484,7 @@ ErrorOr<void> ProcFSProcessPropertyInode::traverse_as_directory(Function<ErrorOr
 }
 ErrorOr<size_t> ProcFSProcessPropertyInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
-    dbgln_if(PROCFS_DEBUG, "ProcFS ProcessInformation: read_bytes offset: {} count: {}", offset, count);
+    dbgln_if<PROCFS_DEBUG>("ProcFS ProcessInformation: read_bytes offset: {} count: {}", offset, count);
 
     VERIFY(offset >= 0);
     VERIFY(buffer.user_or_kernel_ptr());

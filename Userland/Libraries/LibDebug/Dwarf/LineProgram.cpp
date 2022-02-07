@@ -30,7 +30,7 @@ void LineProgram::parse_unit_header()
     VERIFY(m_unit_header.version() >= MIN_DWARF_VERSION && m_unit_header.version() <= MAX_DWARF_VERSION);
     VERIFY(m_unit_header.opcode_base() <= sizeof(m_unit_header.std_opcode_lengths) / sizeof(m_unit_header.std_opcode_lengths[0]) + 1);
 
-    dbgln_if(DWARF_DEBUG, "unit length: {}", m_unit_header.length());
+    dbgln_if<DWARF_DEBUG>("unit length: {}", m_unit_header.length());
 }
 
 void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, PathListType list_type)
@@ -66,7 +66,7 @@ void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, 
                     entry.directory_index = value.as_unsigned();
                     break;
                 default:
-                    dbgln_if(DWARF_DEBUG, "Unhandled path list attribute: {}", to_underlying(format_description.type));
+                    dbgln_if<DWARF_DEBUG>("Unhandled path list attribute: {}", to_underlying(format_description.type));
                 }
             }
             callback(entry);
@@ -75,7 +75,7 @@ void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, 
         while (m_stream.peek_or_error()) {
             String path;
             m_stream >> path;
-            dbgln_if(DWARF_DEBUG, "path: {}", path);
+            dbgln_if<DWARF_DEBUG>("path: {}", path);
             PathEntry entry;
             entry.path = path;
             if (list_type == PathListType::Filenames) {
@@ -85,7 +85,7 @@ void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, 
                 m_stream.read_LEB128_unsigned(_unused); // skip modification time
                 m_stream.read_LEB128_unsigned(_unused); // skip file size
                 entry.directory_index = directory_index;
-                dbgln_if(DWARF_DEBUG, "file: {}, directory index: {}", path, directory_index);
+                dbgln_if<DWARF_DEBUG>("file: {}, directory index: {}", path, directory_index);
             }
             callback(entry);
         }
@@ -123,7 +123,7 @@ void LineProgram::parse_source_files()
 
 void LineProgram::append_to_line_info()
 {
-    dbgln_if(DWARF_DEBUG, "appending line info: {:p}, {}:{}", m_address, m_source_files[m_file_index].name, m_line);
+    dbgln_if<DWARF_DEBUG>("appending line info: {:p}, {}:{}", m_address, m_source_files[m_file_index].name, m_line);
     if (!m_is_statement)
         return;
 
@@ -165,11 +165,11 @@ void LineProgram::handle_extended_opcode()
     case ExtendedOpcodes::SetAddress: {
         VERIFY(length == sizeof(size_t) + 1);
         m_stream >> m_address;
-        dbgln_if(DWARF_DEBUG, "SetAddress: {:p}", m_address);
+        dbgln_if<DWARF_DEBUG>("SetAddress: {:p}", m_address);
         break;
     }
     case ExtendedOpcodes::SetDiscriminator: {
-        dbgln_if(DWARF_DEBUG, "SetDiscriminator");
+        dbgln_if<DWARF_DEBUG>("SetDiscriminator");
         size_t discriminator;
         m_stream.read_LEB128_unsigned(discriminator);
         break;
@@ -190,20 +190,20 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         size_t operand = 0;
         m_stream.read_LEB128_unsigned(operand);
         size_t delta = operand * m_unit_header.min_instruction_length();
-        dbgln_if(DWARF_DEBUG, "AdvancePC by: {} to: {:p}", delta, m_address + delta);
+        dbgln_if<DWARF_DEBUG>("AdvancePC by: {} to: {:p}", delta, m_address + delta);
         m_address += delta;
         break;
     }
     case StandardOpcodes::SetFile: {
         size_t new_file_index = 0;
         m_stream.read_LEB128_unsigned(new_file_index);
-        dbgln_if(DWARF_DEBUG, "SetFile: new file index: {}", new_file_index);
+        dbgln_if<DWARF_DEBUG>("SetFile: new file index: {}", new_file_index);
         m_file_index = new_file_index;
         break;
     }
     case StandardOpcodes::SetColumn: {
         // not implemented
-        dbgln_if(DWARF_DEBUG, "SetColumn");
+        dbgln_if<DWARF_DEBUG>("SetColumn");
         size_t new_column;
         m_stream.read_LEB128_unsigned(new_column);
 
@@ -214,11 +214,11 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         m_stream.read_LEB128_signed(line_delta);
         VERIFY(line_delta >= 0 || m_line >= (size_t)(-line_delta));
         m_line += line_delta;
-        dbgln_if(DWARF_DEBUG, "AdvanceLine: {}", m_line);
+        dbgln_if<DWARF_DEBUG>("AdvanceLine: {}", m_line);
         break;
     }
     case StandardOpcodes::NegateStatement: {
-        dbgln_if(DWARF_DEBUG, "NegateStatement");
+        dbgln_if<DWARF_DEBUG>("NegateStatement");
         m_is_statement = !m_is_statement;
         break;
     }
@@ -226,20 +226,20 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         u8 adjusted_opcode = 255 - m_unit_header.opcode_base();
         ssize_t address_increment = (adjusted_opcode / m_unit_header.line_range()) * m_unit_header.min_instruction_length();
         address_increment *= m_unit_header.min_instruction_length();
-        dbgln_if(DWARF_DEBUG, "ConstAddPc: advance pc by: {} to: {}", address_increment, (m_address + address_increment));
+        dbgln_if<DWARF_DEBUG>("ConstAddPc: advance pc by: {} to: {}", address_increment, (m_address + address_increment));
         m_address += address_increment;
         break;
     }
     case StandardOpcodes::SetIsa: {
         size_t isa;
         m_stream.read_LEB128_unsigned(isa);
-        dbgln_if(DWARF_DEBUG, "SetIsa: {}", isa);
+        dbgln_if<DWARF_DEBUG>("SetIsa: {}", isa);
         break;
     }
     case StandardOpcodes::FixAdvancePc: {
         u16 delta = 0;
         m_stream >> delta;
-        dbgln_if(DWARF_DEBUG, "FixAdvancePC by: {} to: {:p}", delta, m_address + delta);
+        dbgln_if<DWARF_DEBUG>("FixAdvancePC by: {} to: {:p}", delta, m_address + delta);
         m_address += delta;
         break;
     }
@@ -284,7 +284,7 @@ void LineProgram::run_program()
         u8 opcode = 0;
         m_stream >> opcode;
 
-        dbgln_if(DWARF_DEBUG, "{:p}: opcode: {}", m_stream.offset() - 1, opcode);
+        dbgln_if<DWARF_DEBUG>("{:p}: opcode: {}", m_stream.offset() - 1, opcode);
 
         if (opcode == 0) {
             handle_extended_opcode();

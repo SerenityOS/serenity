@@ -35,7 +35,7 @@ void WebContentClient::did_finish_loading(AK::URL const& url)
 
 void WebContentClient::did_invalidate_content_rect(Gfx::IntRect const& content_rect)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidInvalidateContentRect! content_rect={}", content_rect);
+    dbgln_if<SPAM_DEBUG>("handle: WebContentClient::DidInvalidateContentRect! content_rect={}", content_rect);
 
     // FIXME: Figure out a way to coalesce these messages to reduce unnecessary painting
     m_view.notify_server_did_invalidate_content_rect({}, content_rect);
@@ -43,7 +43,7 @@ void WebContentClient::did_invalidate_content_rect(Gfx::IntRect const& content_r
 
 void WebContentClient::did_change_selection()
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidChangeSelection!");
+    dbgln_if<SPAM_DEBUG>("handle: WebContentClient::DidChangeSelection!");
     m_view.notify_server_did_change_selection({});
 }
 
@@ -58,13 +58,13 @@ void WebContentClient::did_request_cursor_change(i32 cursor_type)
 
 void WebContentClient::did_layout(Gfx::IntSize const& content_size)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidLayout! content_size={}", content_size);
+    dbgln_if<SPAM_DEBUG>("handle: WebContentClient::DidLayout! content_size={}", content_size);
     m_view.notify_server_did_layout({}, content_size);
 }
 
 void WebContentClient::did_change_title(String const& title)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidChangeTitle! title={}", title);
+    dbgln_if<SPAM_DEBUG>("handle: WebContentClient::DidChangeTitle! title={}", title);
     m_view.notify_server_did_change_title({}, title);
 }
 
@@ -80,7 +80,7 @@ void WebContentClient::did_request_scroll_to(Gfx::IntPoint const& scroll_positio
 
 void WebContentClient::did_request_scroll_into_view(Gfx::IntRect const& rect)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidRequestScrollIntoView! rect={}", rect);
+    dbgln_if<SPAM_DEBUG>("handle: WebContentClient::DidRequestScrollIntoView! rect={}", rect);
     m_view.notify_server_did_request_scroll_into_view({}, rect);
 }
 
@@ -96,13 +96,13 @@ void WebContentClient::did_leave_tooltip_area()
 
 void WebContentClient::did_hover_link(AK::URL const& url)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidHoverLink! url={}", url);
+    dbgln_if<SPAM_DEBUG>("handle: WebContentClient::DidHoverLink! url={}", url);
     m_view.notify_server_did_hover_link({}, url);
 }
 
 void WebContentClient::did_unhover_link()
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidUnhoverLink!");
+    dbgln_if<SPAM_DEBUG>("handle: WebContentClient::DidUnhoverLink!");
     m_view.notify_server_did_unhover_link({});
 }
 

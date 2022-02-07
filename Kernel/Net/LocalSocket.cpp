@@ -79,7 +79,7 @@ LocalSocket::LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, No
         list.append(*this);
     });
 
-    dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) created with type={}", this, type);
+    dbgln_if<LOCAL_SOCKET_DEBUG>("LocalSocket({}) created with type={}", this, type);
 }
 
 LocalSocket::~LocalSocket()
@@ -119,7 +119,7 @@ ErrorOr<void> LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen
         return set_so_error(EINVAL);
 
     auto path = SOCKET_TRY(KString::try_create(StringView { address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)) }));
-    dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) bind({})", this, path);
+    dbgln_if<LOCAL_SOCKET_DEBUG>("LocalSocket({}) bind({})", this, path);
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 0777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
@@ -167,7 +167,7 @@ ErrorOr<void> LocalSocket::connect(OpenFileDescription& description, Userspace<c
     }
 
     auto path = maybe_path.release_nonnull();
-    dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({})", this, *path);
+    dbgln_if<LOCAL_SOCKET_DEBUG>("LocalSocket({}) connect({})", this, *path);
 
     auto file = SOCKET_TRY(VirtualFileSystem::the().open(path->view(), O_RDWR, 0, Process::current().current_directory()));
     auto inode = file->inode();
@@ -201,7 +201,7 @@ ErrorOr<void> LocalSocket::connect(OpenFileDescription& description, Userspace<c
         return set_so_error(EINTR);
     }
 
-    dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({}) status is {}", this, *m_path, to_string(setup_state()));
+    dbgln_if<LOCAL_SOCKET_DEBUG>("LocalSocket({}) connect({}) status is {}", this, *m_path, to_string(setup_state()));
 
     if (!has_flag(unblock_flags, Thread::OpenFileDescriptionBlocker::BlockFlags::Connect)) {
         set_connect_side_role(Role::None);
@@ -221,7 +221,7 @@ ErrorOr<void> LocalSocket::listen(size_t backlog)
     set_role(Role::Listener);
     set_connect_side_role(Role::Listener, previous_role != m_role);
 
-    dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) listening with backlog={}", this, backlog);
+    dbgln_if<LOCAL_SOCKET_DEBUG>("LocalSocket({}) listening with backlog={}", this, backlog);
 
     return {};
 }

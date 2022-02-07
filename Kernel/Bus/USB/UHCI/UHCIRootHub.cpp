@@ -179,7 +179,7 @@ ErrorOr<size_t> UHCIRootHub::handle_control_transfer(Transfer& transfer)
         break;
     }
     case USB_REQUEST_SET_ADDRESS:
-        dbgln_if(UHCI_DEBUG, "UHCIRootHub: Attempt to set address to {}, ignoring.", request.value);
+        dbgln_if<UHCI_DEBUG>("UHCIRootHub: Attempt to set address to {}, ignoring.", request.value);
         if (request.value > USB_MAX_ADDRESS)
             return EINVAL;
         // Ignore SET_ADDRESS requests. USBDevice sets its internal address to the new allocated address that it just sent to us.

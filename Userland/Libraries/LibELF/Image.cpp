@@ -255,7 +255,7 @@ Optional<Image::RelocationSection> Image::Section::relocations() const
     if (!relocation_section.has_value())
         return {};
 
-    dbgln_if(ELF_IMAGE_DEBUG, "Found relocations for {} in {}", name(), relocation_section.value().name());
+    dbgln_if<ELF_IMAGE_DEBUG>("Found relocations for {} in {}", name(), relocation_section.value().name());
     return static_cast<RelocationSection>(relocation_section.value());
 }
 

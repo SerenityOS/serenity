@@ -38,7 +38,7 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
         Scheduler::dump_scheduler_state(m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift));
     }
 
-    dbgln_if(KEYBOARD_DEBUG, "Keyboard::irq_handle_byte_read: {:#02x} {}", ch, (pressed ? "down" : "up"));
+    dbgln_if<KEYBOARD_DEBUG>("Keyboard::irq_handle_byte_read: {:#02x} {}", ch, (pressed ? "down" : "up"));
     switch (ch) {
     case 0x38:
         if (m_has_e0_prefix)
