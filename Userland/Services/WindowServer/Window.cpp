@@ -159,6 +159,9 @@ void Window::set_rect(const Gfx::IntRect& rect)
         m_backing_store = Gfx::Bitmap::try_create(format, m_rect.size()).release_value_but_fixme_should_propagate_errors();
     }
 
+    if (m_floating_rect.is_empty())
+        m_floating_rect = rect;
+
     invalidate(true, old_rect.size() != rect.size());
     m_frame.window_rect_changed(old_rect, rect);
     invalidate_last_rendered_screen_rects();
@@ -481,7 +484,7 @@ void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
     m_maximized = maximized;
     update_window_menu_items();
     if (maximized) {
-        m_unmaximized_rect = m_rect;
+        m_unmaximized_rect = m_floating_rect;
         set_rect(WindowManager::the().maximized_window_rect(*this));
     } else {
         if (fixed_point.has_value()) {
@@ -1090,10 +1093,10 @@ bool Window::set_untiled(Optional<Gfx::IntPoint> fixed_point)
 
     if (fixed_point.has_value()) {
         auto new_rect = Gfx::IntRect(m_rect);
-        new_rect.set_size_around(m_untiled_rect.size(), fixed_point.value());
+        new_rect.set_size_around(m_floating_rect.size(), fixed_point.value());
         set_rect(new_rect);
     } else {
-        set_rect(m_untiled_rect);
+        set_rect(m_floating_rect);
     }
 
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
@@ -1111,8 +1114,9 @@ void Window::set_tiled(Screen* screen, WindowTileType tile_type)
     if (resize_aspect_ratio().has_value())
         return;
 
-    if (m_tile_type == WindowTileType::None)
-        m_untiled_rect = m_rect;
+    if (is_maximized())
+        set_maximized(false);
+
     m_tile_type = tile_type;
 
     set_rect(tiled_rect(screen, tile_type));
