@@ -409,6 +409,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     for (auto& new_file_action : m_new_file_actions) {
         new_file_submenu.add_action(new_file_action);
     }
+    new_file_submenu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors());
     new_file_submenu.add_action(*m_new_plain_file_action);
     new_file_submenu.add_separator();
     new_file_submenu.add_action(*m_new_directory_action);
@@ -501,6 +502,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_action()
         for (auto& file : files)
             open_file(file);
     });
+    open_selected_action->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors());
     open_selected_action->set_enabled(true);
     return open_selected_action;
 }
@@ -654,7 +656,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_previous_editor_ac
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_editor_action()
 {
-    return GUI::Action::create("&Remove Current Editor", { Mod_Alt | Mod_Shift, Key_E }, [this](auto&) {
+    return GUI::Action::create("&Remove Current Editor", { Mod_Alt | Mod_Shift, Key_E }, Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/remove-editor.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         if (m_all_editor_wrappers.size() <= 1)
             return;
         auto wrapper = m_current_editor_wrapper;
@@ -742,7 +744,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_terminal_action()
 {
-    return GUI::Action::create("Remove &Current Terminal", { Mod_Alt | Mod_Shift, Key_T }, [this](auto&) {
+    return GUI::Action::create("Remove &Current Terminal", { Mod_Alt | Mod_Shift, Key_T }, Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/remove-terminal.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         auto widget = m_action_tab_widget->active_widget();
         if (!widget)
             return;
@@ -758,8 +760,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_terminal_acti
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_editor_action()
 {
-    return GUI::Action::create("Add New &Editor", { Mod_Ctrl | Mod_Alt, Key_E },
-        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-text-editor.png").release_value_but_fixme_should_propagate_errors(),
+    return GUI::Action::create("Add New &Editor", { Mod_Ctrl | Mod_Alt, Key_E }, Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/add-editor.png").release_value_but_fixme_should_propagate_errors(),
         [this](auto&) {
             add_new_editor(*m_editors_splitter);
             update_actions();
@@ -768,8 +769,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_editor_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_terminal_action()
 {
-    return GUI::Action::create("Add New &Terminal", { Mod_Ctrl | Mod_Alt, Key_T },
-        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png").release_value_but_fixme_should_propagate_errors(),
+    return GUI::Action::create("Add New &Terminal", { Mod_Ctrl | Mod_Alt, Key_T }, Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/add-terminal.png").release_value_but_fixme_should_propagate_errors(),
         [this](auto&) {
             auto& terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal");
             reveal_action_tab(terminal_wrapper);
@@ -1159,6 +1159,7 @@ void HackStudioWidget::create_project_menu(GUI::Window& window)
     for (auto& new_file_action : m_new_file_actions) {
         new_submenu.add_action(new_file_action);
     }
+    new_submenu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors());
     new_submenu.add_action(*m_new_plain_file_action);
     new_submenu.add_separator();
     new_submenu.add_action(*m_new_directory_action);
