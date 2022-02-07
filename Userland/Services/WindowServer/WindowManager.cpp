@@ -825,25 +825,27 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
     if (!m_resize_window)
         return false;
 
-    if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
-        dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
-
-        if (!m_resize_window->is_tiled() && !m_resize_window->is_maximized())
-            m_resize_window->set_floating_rect(m_resize_window->rect());
-
+    if (event.type() == Event::MouseMove) {
         const int vertical_maximize_deadzone = 5;
         auto& cursor_screen = ScreenInput::the().cursor_location_screen();
         if (&cursor_screen == &Screen::closest_to_rect(m_resize_window->rect())) {
             auto desktop_rect = this->desktop_rect(cursor_screen);
             if (event.y() >= desktop_rect.bottom() - vertical_maximize_deadzone + 1 || event.y() <= desktop_rect.top() + vertical_maximize_deadzone - 1) {
-                dbgln_if(RESIZE_DEBUG, "Should Maximize vertically");
-                m_resize_window->set_vertically_maximized();
+                dbgln_if(RESIZE_DEBUG, "Should tile as VerticallyMaximized");
+                m_resize_window->set_tiled(&cursor_screen, WindowTileType::VerticallyMaximized);
                 m_resize_window = nullptr;
                 m_geometry_overlay = nullptr;
                 m_resizing_mouse_button = MouseButton::None;
                 return true;
             }
         }
+    }
+
+    if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
+        dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
+
+        if (!m_resize_window->is_tiled() && !m_resize_window->is_maximized())
+            m_resize_window->set_floating_rect(m_resize_window->rect());
 
         Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect()));
         m_resize_window->invalidate(true, true);
@@ -1646,9 +1648,7 @@ void WindowManager::process_key_event(KeyEvent& event)
                 return;
             }
             if (event.key() == Key_Left) {
-                if (active_input_window->tile_type() == WindowTileType::Left)
-                    return;
-                if (active_input_window->is_tiled()) {
+                if (active_input_window->tile_type() == WindowTileType::Left) {
                     active_input_window->set_untiled();
                     return;
                 }
@@ -1658,9 +1658,7 @@ void WindowManager::process_key_event(KeyEvent& event)
                 return;
             }
             if (event.key() == Key_Right) {
-                if (active_input_window->tile_type() == WindowTileType::Right)
-                    return;
-                if (active_input_window->is_tiled()) {
+                if (active_input_window->tile_type() == WindowTileType::Right) {
                     active_input_window->set_untiled();
                     return;
                 }
@@ -1671,6 +1669,32 @@ void WindowManager::process_key_event(KeyEvent& event)
             }
         }
     }
+
+    if (event.type() == Event::KeyDown && event.modifiers() == (Mod_Super | Mod_Alt) && active_input_window->type() != WindowType::Desktop) {
+        if (active_input_window->is_resizable()) {
+            if (event.key() == Key_Right || event.key() == Key_Left) {
+                if (active_input_window->tile_type() == WindowTileType::HorizontallyMaximized) {
+                    active_input_window->set_untiled();
+                    return;
+                }
+                if (active_input_window->is_maximized())
+                    maximize_windows(*active_input_window, false);
+                active_input_window->set_tiled(nullptr, WindowTileType::HorizontallyMaximized);
+                return;
+            }
+            if (event.key() == Key_Up || event.key() == Key_Down) {
+                if (active_input_window->tile_type() == WindowTileType::VerticallyMaximized) {
+                    active_input_window->set_untiled();
+                    return;
+                }
+                if (active_input_window->is_maximized())
+                    maximize_windows(*active_input_window, false);
+                active_input_window->set_tiled(nullptr, WindowTileType::VerticallyMaximized);
+                return;
+            }
+        }
+    }
+
     active_input_window->dispatch_event(event);
 }
 
