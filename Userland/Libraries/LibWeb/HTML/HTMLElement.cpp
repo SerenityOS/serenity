@@ -346,7 +346,7 @@ static void run_focusing_steps(DOM::Node* new_focus_target, DOM::Node* fallback_
     // FIXME: 4. If new focus target is a focusable area and its DOM anchor is inert, then return.
 
     // 5. If new focus target is the currently focused area of a top-level browsing context, then return.
-    if (new_focus_target->document().browsing_context())
+    if (!new_focus_target->document().browsing_context())
         return;
     auto& top_level_browsing_context = new_focus_target->document().browsing_context()->top_level_browsing_context();
     if (new_focus_target == top_level_browsing_context.currently_focused_area())
