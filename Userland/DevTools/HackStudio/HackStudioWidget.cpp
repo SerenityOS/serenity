@@ -390,8 +390,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     m_new_file_actions.append(create_new_file_action("GML File", "/res/icons/16x16/filetype-gml.png", "gml"));
     m_new_file_actions.append(create_new_file_action("JavaScript Source File", "/res/icons/16x16/filetype-javascript.png", "js"));
     m_new_file_actions.append(create_new_file_action("HTML File", "/res/icons/16x16/filetype-html.png", "html"));
-    // FIXME: Create a file icon for CSS files
-    m_new_file_actions.append(create_new_file_action("CSS File", "/res/icons/16x16/new.png", "css"));
+    m_new_file_actions.append(create_new_file_action("CSS File", "/res/icons/16x16/filetype-css.png", "css"));
 
     m_new_plain_file_action = create_new_file_action("Plain File", "/res/icons/16x16/new.png", "");
 
