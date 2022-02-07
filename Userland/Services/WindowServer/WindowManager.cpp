@@ -1090,7 +1090,7 @@ bool WindowManager::is_menu_doubleclick(Window& window, MouseEvent const& event)
 void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& event)
 {
     // We only care about button presses (because otherwise it's not a doubleclick, duh!)
-    VERIFY(event.type() == Event::MouseUp);
+    VERIFY(event.type() == Event::MouseDown);
 
     if (&window != m_double_click_info.m_clicked_window) {
         // we either haven't clicked anywhere, or we haven't clicked on this
@@ -1125,7 +1125,7 @@ void WindowManager::deliver_mouse_event(Window& window, MouseEvent const& event,
 {
     auto translated_event = event.translated(-window.position());
     window.dispatch_event(translated_event);
-    if (process_double_click && translated_event.type() == Event::MouseUp) {
+    if (process_double_click && translated_event.type() == Event::MouseDown) {
         process_event_for_doubleclick(window, translated_event);
         if (translated_event.type() == Event::MouseDoubleClick)
             window.dispatch_event(translated_event);
