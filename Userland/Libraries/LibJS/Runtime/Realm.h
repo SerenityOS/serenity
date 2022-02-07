@@ -18,6 +18,10 @@ class Realm final
     : public Cell
     , public Weakable<Realm> {
 public:
+    struct HostDefined {
+        virtual ~HostDefined() = default;
+    };
+
     Realm() = default;
 
     // 9.3.1 CreateRealm ( ), https://tc39.es/ecma262/#sec-createrealm
@@ -31,12 +35,16 @@ public:
     [[nodiscard]] GlobalObject& global_object() const { return *m_global_object; }
     [[nodiscard]] GlobalEnvironment& global_environment() const { return *m_global_environment; }
 
+    HostDefined* host_defined() { return m_host_defined; }
+    void set_host_defined(OwnPtr<HostDefined> host_defined) { m_host_defined = move(host_defined); }
+
 private:
     virtual char const* class_name() const override { return "Realm"; }
     virtual void visit_edges(Visitor&) override;
 
     GlobalObject* m_global_object { nullptr };           // [[GlobalObject]]
     GlobalEnvironment* m_global_environment { nullptr }; // [[GlobalEnv]]
+    OwnPtr<HostDefined> m_host_defined;                  // [[HostDefined]]
 };
 
 }
