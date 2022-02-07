@@ -46,6 +46,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     TemporaryChange restore_executable { m_current_executable, &executable };
     VERIFY(m_saved_exception.is_null());
 
+    bool pushed_execution_context = false;
     ExecutionContext execution_context(vm().heap());
     if (vm().execution_context_stack().is_empty() || !vm().running_execution_context().lexical_environment) {
         // The "normal" interpreter pushes an execution context without environment so in that case we also want to push one.
@@ -58,6 +59,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         // FIXME: How do we know if we're in strict mode? Maybe the Bytecode::Block should know this?
         // execution_context.is_strict_mode = ???;
         MUST(vm().push_execution_context(execution_context, global_object()));
+        pushed_execution_context = true;
     }
 
     auto block = entry_point ?: &executable.basic_blocks.first();
@@ -160,8 +162,10 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     // in which case this is a no-op.
     vm().run_queued_promise_jobs();
 
-    if (vm().execution_context_stack().size() == 1)
+    if (pushed_execution_context) {
+        VERIFY(&vm().running_execution_context() == &execution_context);
         vm().pop_execution_context();
+    }
 
     vm().finish_execution_generation();
 
