@@ -1907,12 +1907,22 @@ void TextEditor::rehighlight_if_needed()
 {
     if (!m_needs_rehighlight)
         return;
+    force_rehighlight();
+}
+
+void TextEditor::force_rehighlight()
+{
     if (m_highlighter)
         m_highlighter->rehighlight(palette());
     m_needs_rehighlight = false;
 }
 
 Syntax::Highlighter const* TextEditor::syntax_highlighter() const
+{
+    return m_highlighter.ptr();
+}
+
+Syntax::Highlighter* TextEditor::syntax_highlighter()
 {
     return m_highlighter.ptr();
 }
