@@ -770,7 +770,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
         if (m_move_window->is_maximized()) {
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
             if (pixels_moved_from_start > 5) {
-                // dbgln("[WM] de-maximizing window");
+                dbgln_if(MOVE_DEBUG, "[WM] de-maximizing window");
                 m_move_origin = event.position();
                 if (m_move_origin.y() <= secondary_deadzone + desktop.top())
                     return true;
@@ -804,7 +804,8 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                 Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
                 // "Bounce back" the window if it would end up too far outside the screen.
-                // If the user has let go of Mod_Super, maybe they didn't intentionally press it to begin with. Therefore, refuse to go into a state where knowledge about super-drags is necessary.
+                // If the user has let go of Mod_Super, maybe they didn't intentionally press it to begin with.
+                // Therefore, refuse to go into a state where knowledge about super-drags is necessary.
                 bool force_titlebar_visible = !(m_keyboard_modifiers & Mod_Super);
                 m_move_window->nudge_into_desktop(&cursor_screen, force_titlebar_visible);
             } else if (pixels_moved_from_start > 5) {
