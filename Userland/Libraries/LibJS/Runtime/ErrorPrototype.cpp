@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +16,7 @@
 namespace JS {
 
 ErrorPrototype::ErrorPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : PrototypeObject(*global_object.object_prototype())
 {
 }
 
@@ -37,18 +37,15 @@ void ErrorPrototype::initialize(GlobalObject& global_object)
 // 20.5.3.4 Error.prototype.toString ( ), https://tc39.es/ecma262/#sec-error.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 {
-    auto this_value = vm.this_value(global_object);
-    if (!this_value.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, this_value.to_string_without_side_effects());
-    auto& this_object = this_value.as_object();
+    auto* this_object = TRY(PrototypeObject::this_object(global_object));
 
     String name = "Error";
-    auto name_property = TRY(this_object.get(vm.names.name));
+    auto name_property = TRY(this_object->get(vm.names.name));
     if (!name_property.is_undefined())
         name = TRY(name_property.to_string(global_object));
 
     String message = "";
-    auto message_property = TRY(this_object.get(vm.names.message));
+    auto message_property = TRY(this_object->get(vm.names.message));
     if (!message_property.is_undefined())
         message = TRY(message_property.to_string(global_object));
 
@@ -61,21 +58,15 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 
 JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack)
 {
-    auto this_value = vm.this_value(global_object);
-    if (!this_value.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, this_value.to_string_without_side_effects());
-    auto& this_object = this_value.as_object();
-
-    if (!is<Error>(this_object))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Error");
+    auto* error = TRY(typed_this_value(global_object));
 
     String name = "Error";
-    auto name_property = TRY(this_object.get(vm.names.name));
+    auto name_property = TRY(error->get(vm.names.name));
     if (!name_property.is_undefined())
         name = TRY(name_property.to_string(global_object));
 
     String message = "";
-    auto message_property = TRY(this_object.get(vm.names.message));
+    auto message_property = TRY(error->get(vm.names.message));
     if (!message_property.is_undefined())
         message = TRY(message_property.to_string(global_object));
 
@@ -84,12 +75,12 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack)
         header = String::formatted("{}: {}", name, message);
 
     return js_string(vm,
-        String::formatted("{}\n{}", header, static_cast<Error&>(this_object).stack_string()));
+        String::formatted("{}\n{}", header, error->stack_string()));
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     PrototypeName::PrototypeName(GlobalObject& global_object)                            \
-        : Object(*global_object.error_prototype())                                       \
+        : PrototypeObject(*global_object.error_prototype())                              \
     {                                                                                    \
     }                                                                                    \
                                                                                          \
