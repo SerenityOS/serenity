@@ -196,12 +196,29 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
+
     auto& socket = *description->socket();
     if (socket.is_shut_down_for_writing())
         return EPIPE;
     auto data_buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len));
-    auto bytes_sent = TRY(socket.sendto(*description, data_buffer, iovs[0].iov_len, flags, user_addr, addr_length));
-    return bytes_sent;
+
+    while (true) {
+        while (!description->can_write()) {
+            if (!description->is_blocking()) {
+                return EAGAIN;
+            }
+
+            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+            if (Thread::current()->block<Thread::WriteBlocker>({}, *description, unblock_flags).was_interrupted()) {
+                return EINTR;
+            }
+            // TODO: handle exceptions in unblock_flags
+        }
+
+        auto bytes_sent = TRY(socket.sendto(*description, data_buffer, iovs[0].iov_len, flags, user_addr, addr_length));
+        if (bytes_sent > 0)
+            return bytes_sent;
+    }
 }
 
 ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user_msg, int flags)
