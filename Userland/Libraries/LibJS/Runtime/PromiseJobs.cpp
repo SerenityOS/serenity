@@ -28,7 +28,6 @@ PromiseReactionJob::PromiseReactionJob(PromiseReaction& reaction, Value argument
 // 27.2.2.1 NewPromiseReactionJob ( reaction, argument ), https://tc39.es/ecma262/#sec-newpromisereactionjob
 ThrowCompletionOr<Value> PromiseReactionJob::call()
 {
-    auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // a. Let promiseCapability be reaction.[[Capability]].
@@ -83,8 +82,6 @@ ThrowCompletionOr<Value> PromiseReactionJob::call()
 
     // h. If handlerResult is an abrupt completion, then
     if (handler_result.is_abrupt()) {
-        vm.clear_exception();
-
         // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
         auto* reject_function = promise_capability.value().reject;
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Calling PromiseCapability's reject function @ {}", this, reject_function);
@@ -125,7 +122,6 @@ PromiseResolveThenableJob::PromiseResolveThenableJob(Promise& promise_to_resolve
 // 27.2.2.2 NewPromiseResolveThenableJob ( promiseToResolve, thenable, then ), https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob
 ThrowCompletionOr<Value> PromiseResolveThenableJob::call()
 {
-    auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // a. Let resolvingFunctions be CreateResolvingFunctions(promiseToResolve).
@@ -137,8 +133,6 @@ ThrowCompletionOr<Value> PromiseResolveThenableJob::call()
 
     // c. If thenCallResult is an abrupt completion, then
     if (then_call_result.is_error()) {
-        vm.clear_exception();
-
         // i. Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
         dbgln_if(PROMISE_DEBUG, "[PromiseResolveThenableJob @ {}]: then_call_result is an abrupt completion, calling reject function with value {}", this, *then_call_result.throw_completion().value());
         auto status = JS::call(global_object, &reject_function, js_undefined(), *then_call_result.throw_completion().value());

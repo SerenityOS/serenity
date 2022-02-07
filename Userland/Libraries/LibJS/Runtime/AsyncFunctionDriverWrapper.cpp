@@ -38,7 +38,6 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_complet
 
     if (generator_result.is_throw_completion()) {
         VERIFY(generator_result.throw_completion().type() == Completion::Type::Throw);
-        vm.clear_exception();
         auto promise = Promise::create(global_object);
         promise->reject(*generator_result.throw_completion().value());
         return promise;

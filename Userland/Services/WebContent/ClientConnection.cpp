@@ -346,7 +346,6 @@ void ClientConnection::run_javascript(String const& js_source)
 
     if (result.is_error()) {
         dbgln("Exception :(");
-        interpreter.vm().clear_exception();
     }
 }
 
