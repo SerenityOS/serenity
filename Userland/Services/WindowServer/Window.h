@@ -116,7 +116,8 @@ public:
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
 
-    WindowTileType tiled() const { return m_tiled; }
+    WindowTileType tile_type() const { return m_tile_type; }
+    bool is_tiled() const { return m_tile_type != WindowTileType::None; }
     void set_tiled(Screen*, WindowTileType);
     WindowTileType tile_type_based_on_rect(Gfx::IntRect const&) const;
     void check_untile_due_to_resize(Gfx::IntRect const&);
@@ -434,7 +435,7 @@ private:
     bool m_moving_to_another_stack { false };
     bool m_invalidate_last_render_rects { false };
     Vector<i32> m_stealable_by_client_ids;
-    WindowTileType m_tiled { WindowTileType::None };
+    WindowTileType m_tile_type { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };
     RefPtr<Gfx::Bitmap> m_backing_store;

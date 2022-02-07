@@ -797,7 +797,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                 m_move_window->set_tiled(&cursor_screen, WindowTileType::Top);
             } else if (is_resizable && event_location_relative_to_screen.y() >= desktop_relative_to_screen.bottom() - secondary_deadzone) {
                 m_move_window->set_tiled(&cursor_screen, WindowTileType::Bottom);
-            } else if (m_move_window->tiled() == WindowTileType::None) {
+            } else if (!m_move_window->is_tiled()) {
                 Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
                 // "Bounce back" the window if it would end up too far outside the screen.
@@ -941,7 +941,7 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
     if (m_resize_window->rect() == new_rect)
         return true;
 
-    if (m_resize_window->tiled() != WindowTileType::None) {
+    if (m_resize_window->is_tiled()) {
         // Check if we should be un-tiling the window. This should happen when one side touching
         // the screen border changes. We need to un-tile because while it is tiled, rendering is
         // constrained to the screen where it's tiled on, and if one of these sides move we should
@@ -1639,9 +1639,9 @@ void WindowManager::process_key_event(KeyEvent& event)
                 return;
             }
             if (event.key() == Key_Left) {
-                if (active_input_window->tiled() == WindowTileType::Left)
+                if (active_input_window->tile_type() == WindowTileType::Left)
                     return;
-                if (active_input_window->tiled() != WindowTileType::None) {
+                if (active_input_window->is_tiled()) {
                     active_input_window->set_untiled();
                     return;
                 }
@@ -1651,9 +1651,9 @@ void WindowManager::process_key_event(KeyEvent& event)
                 return;
             }
             if (event.key() == Key_Right) {
-                if (active_input_window->tiled() == WindowTileType::Right)
+                if (active_input_window->tile_type() == WindowTileType::Right)
                     return;
-                if (active_input_window->tiled() != WindowTileType::None) {
+                if (active_input_window->is_tiled()) {
                     active_input_window->set_untiled();
                     return;
                 }
