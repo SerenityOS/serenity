@@ -25,8 +25,12 @@ public:
 
     double offset_x() const { return m_offset_x; }
     double offset_y() const { return m_offset_y; }
+
     double client_x() const { return m_client_x; }
     double client_y() const { return m_client_y; }
+
+    double x() const { return client_x(); }
+    double y() const { return client_y(); }
 
 protected:
     MouseEvent(const FlyString& event_name, double offset_x, double offset_y, double client_x, double client_y);

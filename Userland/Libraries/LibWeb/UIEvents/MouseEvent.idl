@@ -4,5 +4,7 @@ interface MouseEvent : UIEvent {
     readonly attribute double offsetY;
     readonly attribute double clientX;
     readonly attribute double clientY;
+    readonly attribute double x;
+    readonly attribute double y;
 
 };
