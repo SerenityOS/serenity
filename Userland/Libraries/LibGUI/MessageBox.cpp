@@ -175,11 +175,11 @@ void MessageBox::build()
     constexpr int button_width = 80;
     int button_count = 0;
 
-    auto add_button = [&](String label, ExecResult result) -> GUI::Button& {
+    auto add_button = [&](StringView label, ExecResult result) -> GUI::Button& {
         auto& button = button_container.add<Button>();
         button.set_fixed_width(button_width);
         button.set_text(label);
-        button.on_click = [this, label, result](auto) {
+        button.on_click = [this, result](auto) {
             done(result);
         };
         ++button_count;
@@ -188,13 +188,13 @@ void MessageBox::build()
 
     button_container.layout()->add_spacer();
     if (should_include_ok_button())
-        m_ok_button = add_button("OK", ExecResult::OK);
+        m_ok_button = add_button("OK"sv, ExecResult::OK);
     if (should_include_yes_button())
-        m_yes_button = add_button("Yes", ExecResult::Yes);
+        m_yes_button = add_button("Yes"sv, ExecResult::Yes);
     if (should_include_no_button())
-        m_no_button = add_button("No", ExecResult::No);
+        m_no_button = add_button("No"sv, ExecResult::No);
     if (should_include_cancel_button())
-        m_cancel_button = add_button("Cancel", ExecResult::Cancel);
+        m_cancel_button = add_button("Cancel"sv, ExecResult::Cancel);
     button_container.layout()->add_spacer();
 
     int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;
