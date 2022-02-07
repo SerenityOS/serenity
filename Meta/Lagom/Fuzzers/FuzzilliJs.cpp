@@ -214,7 +214,6 @@ int main(int, char**)
             auto completion = interpreter->run(parse_result.value());
             if (completion.is_error()) {
                 result = 1;
-                vm->clear_exception();
             }
         }
 

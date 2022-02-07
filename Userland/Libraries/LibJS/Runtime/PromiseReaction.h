@@ -25,8 +25,6 @@ struct PromiseCapability {
         auto _temporary_try_or_reject_result = (expression);                                                                            \
         /* 1. If value is an abrupt completion, then */                                                                                 \
         if (_temporary_try_or_reject_result.is_error()) {                                                                               \
-            global_object.vm().clear_exception();                                                                                       \
-                                                                                                                                        \
             /* a. Perform ? Call(capability.[[Reject]], undefined, « value.[[Value]] »). */                                           \
             TRY(JS::call(global_object, *capability.reject, js_undefined(), *_temporary_try_or_reject_result.release_error().value())); \
                                                                                                                                         \
@@ -44,8 +42,6 @@ struct PromiseCapability {
         auto _temporary_try_or_reject_result = (expression);                                                                            \
         /* 1. If value is an abrupt completion, then */                                                                                 \
         if (_temporary_try_or_reject_result.is_error()) {                                                                               \
-            global_object.vm().clear_exception();                                                                                       \
-                                                                                                                                        \
             /* a. Perform ? Call(capability.[[Reject]], undefined, « value.[[Value]] »). */                                           \
             TRY(JS::call(global_object, *capability.reject, js_undefined(), *_temporary_try_or_reject_result.release_error().value())); \
                                                                                                                                         \
