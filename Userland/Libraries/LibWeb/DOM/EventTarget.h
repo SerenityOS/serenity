@@ -26,6 +26,8 @@ public:
     void ref() { ref_event_target(); }
     void unref() { unref_event_target(); }
 
+    virtual bool is_focusable() const { return false; }
+
     void add_event_listener(const FlyString& event_name, RefPtr<EventListener>);
     void remove_event_listener(const FlyString& event_name, RefPtr<EventListener>);
 

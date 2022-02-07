@@ -391,4 +391,9 @@ void ClientConnection::set_preferred_color_scheme(Web::CSS::PreferredColorScheme
     m_page_host->set_preferred_color_scheme(color_scheme);
 }
 
+void ClientConnection::set_has_focus(bool has_focus)
+{
+    m_page_host->set_has_focus(has_focus);
+}
+
 }

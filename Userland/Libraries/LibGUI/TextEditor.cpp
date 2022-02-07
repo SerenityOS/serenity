@@ -430,6 +430,11 @@ void TextEditor::paint_event(PaintEvent& event)
 
     painter.translate(frame_thickness(), frame_thickness());
 
+    if (!is_multi_line() && m_icon) {
+        Gfx::IntRect icon_rect { icon_padding(), 1, icon_size(), icon_size() };
+        painter.draw_scaled_bitmap(icon_rect, *m_icon, m_icon->rect());
+    }
+
     if (m_gutter_visible) {
         auto gutter_rect = gutter_rect_in_inner_coordinates();
         painter.fill_rect(gutter_rect, palette().gutter());
@@ -715,11 +720,6 @@ void TextEditor::paint_event(PaintEvent& event)
             ++visual_line_index;
             return IterationDecision::Continue;
         });
-    }
-
-    if (!is_multi_line() && m_icon) {
-        Gfx::IntRect icon_rect { icon_padding(), 1, icon_size(), icon_size() };
-        painter.draw_scaled_bitmap(icon_rect, *m_icon, m_icon->rect());
     }
 
     if (is_enabled() && is_focused() && m_cursor_state && !is_displayonly())

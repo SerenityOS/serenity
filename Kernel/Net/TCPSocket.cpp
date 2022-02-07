@@ -501,8 +501,8 @@ bool TCPSocket::protocol_is_disconnected() const
 void TCPSocket::shut_down_for_writing()
 {
     if (state() == State::Established) {
-        dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN/ACK from Established and moving into FinWait1");
-        [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
+        dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN from Established and moving into FinWait1");
+        (void)send_tcp_packet(TCPFlags::FIN);
         set_state(State::FinWait1);
     } else {
         dbgln(" Shutting down TCPSocket for writing but not moving to FinWait1 since state is {}", to_string(state()));

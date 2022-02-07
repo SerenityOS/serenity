@@ -35,28 +35,28 @@ void ArgumentsObject::visit_edges(Cell::Visitor& visitor)
 }
 
 // 10.4.4.3 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-get-p-receiver
-ThrowCompletionOr<Value> ArgumentsObject::internal_get(PropertyKey const& property_name, Value receiver) const
+ThrowCompletionOr<Value> ArgumentsObject::internal_get(PropertyKey const& property_key, Value receiver) const
 {
     // 1. Let map be args.[[ParameterMap]].
     auto& map = *m_parameter_map;
 
     // 2. Let isMapped be ! HasOwnProperty(map, P).
-    bool is_mapped = MUST(m_parameter_map->has_own_property(property_name));
+    bool is_mapped = MUST(m_parameter_map->has_own_property(property_key));
 
     // 3. If isMapped is false, then
     if (!is_mapped) {
         // a. Return ? OrdinaryGet(args, P, Receiver).
-        return Object::internal_get(property_name, receiver);
+        return Object::internal_get(property_key, receiver);
     }
 
     // FIXME: a. Assert: map contains a formal parameter mapping for P.
 
     // b. Return Get(map, P).
-    return map.get(property_name);
+    return map.get(property_key);
 }
 
 // 10.4.4.4 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-set-p-v-receiver
-ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyKey const& property_name, Value value, Value receiver)
+ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyKey const& property_key, Value value, Value receiver)
 {
     bool is_mapped = false;
 
@@ -67,38 +67,38 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyKey const& propert
     } else {
         // a. Let map be args.[[ParameterMap]].
         // b. Let isMapped be ! HasOwnProperty(map, P).
-        is_mapped = MUST(parameter_map().has_own_property(property_name));
+        is_mapped = MUST(parameter_map().has_own_property(property_key));
     }
 
     // 3. If isMapped is true, then
     if (is_mapped) {
         // a. Let setStatus be Set(map, P, V, false).
-        auto set_status = MUST(m_parameter_map->set(property_name, value, Object::ShouldThrowExceptions::No));
+        auto set_status = MUST(m_parameter_map->set(property_key, value, Object::ShouldThrowExceptions::No));
 
         // b. Assert: setStatus is true because formal parameters mapped by argument objects are always writable.
         VERIFY(set_status);
     }
 
     // 4. Return ? OrdinarySet(args, P, V, Receiver).
-    return Object::internal_set(property_name, value, receiver);
+    return Object::internal_set(property_key, value, receiver);
 }
 
 // 10.4.4.5 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-delete-p
-ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyKey const& property_name)
+ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyKey const& property_key)
 {
     // 1. Let map be args.[[ParameterMap]].
     auto& map = parameter_map();
 
     // 2. Let isMapped be ! HasOwnProperty(map, P).
-    bool is_mapped = MUST(map.has_own_property(property_name));
+    bool is_mapped = MUST(map.has_own_property(property_key));
 
     // 3. Let result be ? OrdinaryDelete(args, P).
-    bool result = TRY(Object::internal_delete(property_name));
+    bool result = TRY(Object::internal_delete(property_key));
 
     // 4. If result is true and isMapped is true, then
     if (result && is_mapped) {
         // a. Call map.[[Delete]](P).
-        MUST(map.internal_delete(property_name));
+        MUST(map.internal_delete(property_key));
     }
 
     // 5. Return result.
@@ -106,10 +106,10 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyKey const& prop
 }
 
 // 10.4.4.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-getownproperty-p
-ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_own_property(PropertyKey const& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_own_property(PropertyKey const& property_key) const
 {
     // 1. Let desc be OrdinaryGetOwnProperty(args, P).
-    auto desc = MUST(Object::internal_get_own_property(property_name));
+    auto desc = MUST(Object::internal_get_own_property(property_key));
 
     // 2. If desc is undefined, return desc.
     if (!desc.has_value())
@@ -117,12 +117,12 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_ow
 
     // 3. Let map be args.[[ParameterMap]].
     // 4. Let isMapped be ! HasOwnProperty(map, P).
-    bool is_mapped = MUST(m_parameter_map->has_own_property(property_name));
+    bool is_mapped = MUST(m_parameter_map->has_own_property(property_key));
 
     // 5. If isMapped is true, then
     if (is_mapped) {
         // a. Set desc.[[Value]] to Get(map, P).
-        desc->value = TRY(m_parameter_map->get(property_name));
+        desc->value = TRY(m_parameter_map->get(property_key));
     }
 
     // 6. Return desc.
@@ -130,13 +130,13 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_ow
 }
 
 // 10.4.4.2 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-defineownproperty-p-desc
-ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKey const& property_name, PropertyDescriptor const& descriptor)
+ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKey const& property_key, PropertyDescriptor const& descriptor)
 {
     // 1. Let map be args.[[ParameterMap]].
     auto& map = parameter_map();
 
     // 2. Let isMapped be HasOwnProperty(map, P).
-    bool is_mapped = MUST(map.has_own_property(property_name));
+    bool is_mapped = MUST(map.has_own_property(property_key));
 
     // 3. Let newArgDesc be Desc.
     auto new_arg_desc = descriptor;
@@ -148,12 +148,12 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKe
             // i. Set newArgDesc to a copy of Desc.
             new_arg_desc = descriptor;
             // ii. Set newArgDesc.[[Value]] to Get(map, P).
-            new_arg_desc.value = TRY(map.get(property_name));
+            new_arg_desc.value = TRY(map.get(property_key));
         }
     }
 
     // 5. Let allowed be ? OrdinaryDefineOwnProperty(args, P, newArgDesc).
-    bool allowed = TRY(Object::internal_define_own_property(property_name, new_arg_desc));
+    bool allowed = TRY(Object::internal_define_own_property(property_key, new_arg_desc));
 
     // 6. If allowed is false, return false.
     if (!allowed)
@@ -164,12 +164,12 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKe
         // a. If IsAccessorDescriptor(Desc) is true, then
         if (descriptor.is_accessor_descriptor()) {
             // i. Call map.[[Delete]](P).
-            MUST(map.internal_delete(property_name));
+            MUST(map.internal_delete(property_key));
         } else {
             // i. If Desc.[[Value]] is present, then
             if (descriptor.value.has_value()) {
                 // 1. Let setStatus be Set(map, P, Desc.[[Value]], false).
-                bool set_status = MUST(map.set(property_name, descriptor.value.value(), Object::ShouldThrowExceptions::No));
+                bool set_status = MUST(map.set(property_key, descriptor.value.value(), Object::ShouldThrowExceptions::No));
 
                 // 2. Assert: setStatus is true because formal parameters mapped by argument objects are always writable.
                 VERIFY(set_status);
@@ -177,7 +177,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKe
             // ii. If Desc.[[Writable]] is present and its value is false, then
             if (descriptor.writable == false) {
                 // 1. Call map.[[Delete]](P).
-                MUST(map.internal_delete(property_name));
+                MUST(map.internal_delete(property_key));
             }
         }
     }

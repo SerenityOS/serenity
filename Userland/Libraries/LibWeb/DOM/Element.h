@@ -103,8 +103,6 @@ public:
     ExceptionOr<void> set_inner_html(String const&);
 
     bool is_focused() const;
-    virtual bool is_focusable() const { return false; }
-
     bool is_active() const;
 
     NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
@@ -131,6 +129,9 @@ public:
     NonnullRefPtr<Geometry::DOMRect> get_bounding_client_rect() const;
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>);
+
+    virtual void did_receive_focus() { }
+    virtual void did_lose_focus() { }
 
 protected:
     virtual void children_changed() override;

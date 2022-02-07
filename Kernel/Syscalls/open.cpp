@@ -7,6 +7,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -56,7 +57,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> use
 
     auto description = TRY(VirtualFileSystem::the().open(path->view(), options, mode & ~umask(), *base));
 
-    if (description->inode() && description->inode()->socket())
+    if (description->inode() && description->inode()->bound_socket())
         return ENXIO;
 
     return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {

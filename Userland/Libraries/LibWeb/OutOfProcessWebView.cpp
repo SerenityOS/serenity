@@ -495,4 +495,14 @@ void OutOfProcessWebView::set_preferred_color_scheme(Web::CSS::PreferredColorSch
     client().async_set_preferred_color_scheme(color_scheme);
 }
 
+void OutOfProcessWebView::focusin_event(GUI::FocusEvent&)
+{
+    client().async_set_has_focus(true);
+}
+
+void OutOfProcessWebView::focusout_event(GUI::FocusEvent&)
+{
+    client().async_set_has_focus(false);
+}
+
 }

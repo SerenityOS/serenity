@@ -277,17 +277,17 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 
     // 4. For each element key of ownKeys, do
     for (auto& key : own_keys) {
-        auto property_name = MUST(PropertyKey::from_value(global_object, key));
+        auto property_key = MUST(PropertyKey::from_value(global_object, key));
 
         // a. Let desc be ? obj.[[GetOwnProperty]](key).
-        auto desc = TRY(object->internal_get_own_property(property_name));
+        auto desc = TRY(object->internal_get_own_property(property_key));
 
         // b. Let descriptor be ! FromPropertyDescriptor(desc).
         auto descriptor = from_property_descriptor(global_object, desc);
 
         // c. If descriptor is not undefined, perform ! CreateDataPropertyOrThrow(descriptors, key, descriptor).
         if (!descriptor.is_undefined())
-            MUST(descriptors->create_data_property_or_throw(property_name, descriptor));
+            MUST(descriptors->create_data_property_or_throw(property_key, descriptor));
     }
 
     // 5. Return descriptors.
@@ -411,20 +411,20 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
 
         // iii. For each element nextKey of keys, do
         for (auto& next_key : keys) {
-            auto property_name = MUST(PropertyKey::from_value(global_object, next_key));
+            auto property_key = MUST(PropertyKey::from_value(global_object, next_key));
 
             // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
-            auto desc = TRY(from->internal_get_own_property(property_name));
+            auto desc = TRY(from->internal_get_own_property(property_key));
 
             // 2. If desc is not undefined and desc.[[Enumerable]] is true, then
             if (!desc.has_value() || !*desc->enumerable)
                 continue;
 
             // a. Let propValue be ? Get(from, nextKey).
-            auto prop_value = TRY(from->get(property_name));
+            auto prop_value = TRY(from->get(property_key));
 
             // b. Perform ? Set(to, nextKey, propValue, true).
-            TRY(to->set(property_name, prop_value, Object::ShouldThrowExceptions::Yes));
+            TRY(to->set(property_key, prop_value, Object::ShouldThrowExceptions::Yes));
         }
     }
 

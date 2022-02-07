@@ -31,17 +31,17 @@ ProxyObject::~ProxyObject()
 {
 }
 
-static Value property_name_to_value(VM& vm, PropertyKey const& name)
+static Value property_key_to_value(VM& vm, PropertyKey const& property_key)
 {
-    VERIFY(name.is_valid());
-    if (name.is_symbol())
-        return name.as_symbol();
+    VERIFY(property_key.is_valid());
+    if (property_key.is_symbol())
+        return property_key.as_symbol();
 
-    if (name.is_string())
-        return js_string(vm, name.as_string());
+    if (property_key.is_string())
+        return js_string(vm, property_key.as_string());
 
-    VERIFY(name.is_number());
-    return js_string(vm, String::number(name.as_number()));
+    VERIFY(property_key.is_number());
+    return js_string(vm, String::number(property_key.as_number()));
 }
 
 // 10.5.1 [[GetPrototypeOf]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof
@@ -223,13 +223,13 @@ ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
 }
 
 // 10.5.5 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p
-ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_property(const PropertyKey& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_property(const PropertyKey& property_key) const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 1. Assert: IsPropertyKey(P) is true.
-    VERIFY(property_name.is_valid());
+    VERIFY(property_key.is_valid());
 
     // 2. Let handler be O.[[ProxyHandler]].
 
@@ -246,18 +246,18 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? target.[[GetOwnProperty]](P).
-        return m_target.internal_get_own_property(property_name);
+        return m_target.internal_get_own_property(property_key);
     }
 
     // 8. Let trapResultObj be ? Call(trap, handler, « target, P »).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_name_to_value(vm, property_name)));
+    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key)));
 
     // 9. If Type(trapResultObj) is neither Object nor Undefined, throw a TypeError exception.
     if (!trap_result.is_object() && !trap_result.is_undefined())
         return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorReturn);
 
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
+    auto target_descriptor = TRY(m_target.internal_get_own_property(property_key));
 
     // 11. If trapResultObj is undefined, then
     if (trap_result.is_undefined()) {
@@ -316,13 +316,13 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
 }
 
 // 10.5.6 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc
-ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey const& property_key, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 1. Assert: IsPropertyKey(P) is true.
-    VERIFY(property_name.is_valid());
+    VERIFY(property_key.is_valid());
 
     // 2. Let handler be O.[[ProxyHandler]].
 
@@ -339,21 +339,21 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey co
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? target.[[DefineOwnProperty]](P, Desc).
-        return m_target.internal_define_own_property(property_name, property_descriptor);
+        return m_target.internal_define_own_property(property_key, property_descriptor);
     }
 
     // 8. Let descObj be FromPropertyDescriptor(Desc).
     auto descriptor_object = from_property_descriptor(global_object, property_descriptor);
 
     // 9. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, descObj »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_name_to_value(vm, property_name), descriptor_object)).to_boolean();
+    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key), descriptor_object)).to_boolean();
 
     // 10. If booleanTrapResult is false, return false.
     if (!trap_result)
         return false;
 
     // 11. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
+    auto target_descriptor = TRY(m_target.internal_get_own_property(property_key));
 
     // 12. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = TRY(m_target.is_extensible());
@@ -400,13 +400,13 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey co
 }
 
 // 10.5.7 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p
-ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& property_name) const
+ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& property_key) const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 1. Assert: IsPropertyKey(P) is true.
-    VERIFY(property_name.is_valid());
+    VERIFY(property_key.is_valid());
 
     // 2. Let handler be O.[[ProxyHandler]].
 
@@ -423,16 +423,16 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& pr
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? target.[[HasProperty]](P).
-        return m_target.internal_has_property(property_name);
+        return m_target.internal_has_property(property_key);
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_name_to_value(vm, property_name))).to_boolean();
+    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key))).to_boolean();
 
     // 9. If booleanTrapResult is false, then
     if (!trap_result) {
         // a. Let targetDesc be ? target.[[GetOwnProperty]](P).
-        auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
+        auto target_descriptor = TRY(m_target.internal_get_own_property(property_key));
 
         // b. If targetDesc is not undefined, then
         if (target_descriptor.has_value()) {
@@ -454,7 +454,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& pr
 }
 
 // 10.5.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver
-ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_name, Value receiver) const
+ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_key, Value receiver) const
 {
     VERIFY(!receiver.is_empty());
 
@@ -462,7 +462,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_n
     auto& global_object = this->global_object();
 
     // 1. Assert: IsPropertyKey(P) is true.
-    VERIFY(property_name.is_valid());
+    VERIFY(property_key.is_valid());
 
     // 2. Let handler be O.[[ProxyHandler]].
 
@@ -495,14 +495,14 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_n
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? target.[[Get]](P, Receiver).
-        return m_target.internal_get(property_name, receiver);
+        return m_target.internal_get(property_key, receiver);
     }
 
     // 8. Let trapResult be ? Call(trap, handler, « target, P, Receiver »).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_name_to_value(vm, property_name), receiver));
+    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key), receiver));
 
     // 9. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
+    auto target_descriptor = TRY(m_target.internal_get_own_property(property_key));
 
     // 10. If targetDesc is not undefined and targetDesc.[[Configurable]] is false, then
     if (target_descriptor.has_value() && !*target_descriptor->configurable) {
@@ -525,7 +525,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_n
 }
 
 // 10.5.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver
-ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_name, Value value, Value receiver)
+ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_key, Value value, Value receiver)
 {
     VERIFY(!value.is_empty());
     VERIFY(!receiver.is_empty());
@@ -534,7 +534,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_na
     auto& global_object = this->global_object();
 
     // 1. Assert: IsPropertyKey(P) is true.
-    VERIFY(property_name.is_valid());
+    VERIFY(property_key.is_valid());
 
     // 2. Let handler be O.[[ProxyHandler]].
 
@@ -551,18 +551,18 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_na
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? target.[[Set]](P, V, Receiver).
-        return m_target.internal_set(property_name, value, receiver);
+        return m_target.internal_set(property_key, value, receiver);
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, V, Receiver »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_name_to_value(vm, property_name), value, receiver)).to_boolean();
+    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key), value, receiver)).to_boolean();
 
     // 9. If booleanTrapResult is false, return false.
     if (!trap_result)
         return false;
 
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
+    auto target_descriptor = TRY(m_target.internal_get_own_property(property_key));
 
     // 11. If targetDesc is not undefined and targetDesc.[[Configurable]] is false, then
     if (target_descriptor.has_value() && !*target_descriptor->configurable) {
@@ -585,13 +585,13 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_na
 }
 
 // 10.5.10 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p
-ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property_name)
+ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property_key)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 1. Assert: IsPropertyKey(P) is true.
-    VERIFY(property_name.is_valid());
+    VERIFY(property_key.is_valid());
 
     // 2. Let handler be O.[[ProxyHandler]].
 
@@ -608,18 +608,18 @@ ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? target.[[Delete]](P).
-        return m_target.internal_delete(property_name);
+        return m_target.internal_delete(property_key);
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_name_to_value(vm, property_name))).to_boolean();
+    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key))).to_boolean();
 
     // 9. If booleanTrapResult is false, return false.
     if (!trap_result)
         return false;
 
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    auto target_descriptor = TRY(m_target.internal_get_own_property(property_name));
+    auto target_descriptor = TRY(m_target.internal_get_own_property(property_key));
 
     // 11. If targetDesc is undefined, return true.
     if (!target_descriptor.has_value())

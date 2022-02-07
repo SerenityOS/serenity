@@ -236,15 +236,15 @@ void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpre
 
     for (auto& key : own_keys) {
         if (!excluded_names.contains(key)) {
-            auto property_name_or_error = key.to_property_key(interpreter.global_object());
-            if (property_name_or_error.is_error())
+            auto property_key_or_error = key.to_property_key(interpreter.global_object());
+            if (property_key_or_error.is_error())
                 return;
-            PropertyKey property_name = property_name_or_error.release_value();
-            auto property_value_or_error = from_object->get(property_name);
+            PropertyKey property_key = property_key_or_error.release_value();
+            auto property_value_or_error = from_object->get(property_key);
             if (property_value_or_error.is_error())
                 return;
             auto property_value = property_value_or_error.release_value();
-            to_object->define_direct_property(property_name, property_value, JS::default_attributes);
+            to_object->define_direct_property(property_key, property_value, JS::default_attributes);
         }
     }
 

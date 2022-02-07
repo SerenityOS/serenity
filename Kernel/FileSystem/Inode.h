@@ -66,8 +66,7 @@ public:
 
     virtual ErrorOr<int> get_block_address(int) { return ENOTSUP; }
 
-    LocalSocket* socket() { return m_socket.ptr(); }
-    const LocalSocket* socket() const { return m_socket.ptr(); }
+    RefPtr<LocalSocket> bound_socket() const;
     bool bind_socket(LocalSocket&);
     bool unbind_socket();
 
@@ -117,7 +116,7 @@ private:
     FileSystem& m_file_system;
     InodeIndex m_index { 0 };
     WeakPtr<Memory::SharedInodeVMObject> m_shared_vmobject;
-    RefPtr<LocalSocket> m_socket;
+    RefPtr<LocalSocket> m_bound_socket;
     SpinlockProtected<HashTable<InodeWatcher*>> m_watchers;
     bool m_metadata_dirty { false };
     RefPtr<FIFO> m_fifo;

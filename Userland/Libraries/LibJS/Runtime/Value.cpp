@@ -804,28 +804,28 @@ ThrowCompletionOr<double> Value::to_integer_or_infinity(GlobalObject& global_obj
 }
 
 // 7.3.3 GetV ( V, P ), https://tc39.es/ecma262/#sec-getv
-ThrowCompletionOr<Value> Value::get(GlobalObject& global_object, PropertyKey const& property_name) const
+ThrowCompletionOr<Value> Value::get(GlobalObject& global_object, PropertyKey const& property_key) const
 {
     // 1. Assert: IsPropertyKey(P) is true.
-    VERIFY(property_name.is_valid());
+    VERIFY(property_key.is_valid());
 
     // 2. Let O be ? ToObject(V).
     auto* object = TRY(to_object(global_object));
 
     // 3. Return ? O.[[Get]](P, V).
-    return TRY(object->internal_get(property_name, *this));
+    return TRY(object->internal_get(property_key, *this));
 }
 
 // 7.3.11 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
-ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object, PropertyKey const& property_name) const
+ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object, PropertyKey const& property_key) const
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: IsPropertyKey(P) is true.
-    VERIFY(property_name.is_valid());
+    VERIFY(property_key.is_valid());
 
     // 2. Let func be ? GetV(V, P).
-    auto function = TRY(get(global_object, property_name));
+    auto function = TRY(get(global_object, property_key));
 
     // 3. If func is either undefined or null, return undefined.
     if (function.is_nullish())
@@ -1569,10 +1569,10 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, bool left_
 }
 
 // 7.3.21 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
-ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, JS::PropertyKey const& property_name, Optional<MarkedValueList> arguments)
+ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, JS::PropertyKey const& property_key, Optional<MarkedValueList> arguments)
 {
     auto& vm = global_object.vm();
-    auto property = TRY(get(global_object, property_name));
+    auto property = TRY(get(global_object, property_key));
     if (!property.is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, property.to_string_without_side_effects());
 

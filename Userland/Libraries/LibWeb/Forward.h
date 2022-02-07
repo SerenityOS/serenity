@@ -333,6 +333,7 @@ class ElementWrapper;
 class EventListenerWrapper;
 class EventTargetWrapper;
 class EventWrapper;
+class FocusEventWrapper;
 class HistoryWrapper;
 class HTMLAnchorElementWrapper;
 class HTMLAreaElementWrapper;

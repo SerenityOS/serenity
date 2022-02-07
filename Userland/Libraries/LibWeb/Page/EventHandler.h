@@ -48,6 +48,8 @@ private:
     WeakPtr<Layout::Node> m_mouse_event_tracking_layout_node;
 
     NonnullOwnPtr<EditEventHandler> m_edit_event_handler;
+
+    WeakPtr<DOM::EventTarget> m_mousedown_target;
 };
 
 }
