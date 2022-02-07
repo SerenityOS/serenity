@@ -10,13 +10,12 @@
 
 namespace JS {
 
-ArrayBuffer* ArrayBuffer::create(GlobalObject& global_object, size_t byte_length)
+ThrowCompletionOr<ArrayBuffer*> ArrayBuffer::create(GlobalObject& global_object, size_t byte_length)
 {
     auto buffer = ByteBuffer::create_zeroed(byte_length);
-    if (buffer.is_error()) {
-        global_object.vm().throw_exception<RangeError>(global_object, ErrorType::NotEnoughMemoryToAllocate, byte_length);
-        return nullptr;
-    }
+    if (buffer.is_error())
+        return global_object.vm().throw_completion<RangeError>(global_object, ErrorType::NotEnoughMemoryToAllocate, byte_length);
+
     return global_object.heap().allocate<ArrayBuffer>(global_object, buffer.release_value(), *global_object.array_buffer_prototype());
 }
 

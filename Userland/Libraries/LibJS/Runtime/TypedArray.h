@@ -454,11 +454,11 @@ public:
     Value get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) override { return viewed_array_buffer()->template get_modify_set_value<T>(byte_index, value, move(operation), is_little_endian); }
 
 protected:
-    TypedArray(u32 array_length, Object& prototype)
+    TypedArray(Object& prototype, u32 array_length, ArrayBuffer& array_buffer)
         : TypedArrayBase(prototype)
     {
         VERIFY(!Checked<u32>::multiplication_would_overflow(array_length, sizeof(UnderlyingBufferDataType)));
-        m_viewed_array_buffer = ArrayBuffer::create(global_object(), array_length * sizeof(UnderlyingBufferDataType));
+        m_viewed_array_buffer = &array_buffer;
         if (array_length)
             VERIFY(!data().is_null());
         m_array_length = array_length;
@@ -479,8 +479,9 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
         virtual ~ClassName();                                                               \
         static ThrowCompletionOr<ClassName*> create(                                        \
             GlobalObject&, u32 length, FunctionObject& new_target);                         \
-        static ClassName* create(GlobalObject&, u32 length);                                \
-        ClassName(u32 length, Object& prototype);                                           \
+        static ThrowCompletionOr<ClassName*> create(GlobalObject&, u32 length);             \
+        static ClassName* create(GlobalObject&, u32 length, ArrayBuffer& buffer);           \
+        ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer);                \
         virtual String element_name() const override;                                       \
     };                                                                                      \
     class PrototypeName final : public Object {                                             \

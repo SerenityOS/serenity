@@ -27,11 +27,9 @@ JS::Uint8Array* TextEncoder::encode(String const& input) const
     //     4. If result is finished, then convert output into a byte sequence and return a Uint8Array object wrapping an ArrayBuffer containing output.
 
     auto byte_buffer = input.to_byte_buffer();
-
-    // FIXME: Support `TypedArray::create()` with existing `ArrayBuffer`, so that we don't have to allocate two `ByteBuffer`s.
-    auto* typed_array = JS::Uint8Array::create(global_object, byte_buffer.size());
-    typed_array->viewed_array_buffer()->buffer() = move(byte_buffer);
-    return typed_array;
+    auto array_length = byte_buffer.size();
+    auto* array_buffer = JS::ArrayBuffer::create(global_object, move(byte_buffer));
+    return JS::Uint8Array::create(global_object, array_length, *array_buffer);
 }
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encoding

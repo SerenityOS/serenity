@@ -25,7 +25,7 @@ class ArrayBuffer : public Object {
     JS_OBJECT(ArrayBuffer, Object);
 
 public:
-    static ArrayBuffer* create(GlobalObject&, size_t);
+    static ThrowCompletionOr<ArrayBuffer*> create(GlobalObject&, size_t);
     static ArrayBuffer* create(GlobalObject&, ByteBuffer);
     static ArrayBuffer* create(GlobalObject&, ByteBuffer*);
 
