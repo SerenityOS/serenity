@@ -72,7 +72,6 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
     auto timer = Core::ElapsedTimer::start_new();
 
     // 6. Otherwise, set evaluationStatus to ScriptEvaluation(script's record).
-    // FIXME: Interpreter::run doesn't currently return a JS::Completion.
     auto interpreter = JS::Interpreter::create_with_existing_realm(m_script_record->realm());
 
     auto result = interpreter->run(*m_script_record);
