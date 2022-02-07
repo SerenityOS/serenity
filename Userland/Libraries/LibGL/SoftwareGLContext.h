@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2021-2022, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -212,7 +213,7 @@ private:
     u8 m_clear_stencil { 0 };
 
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    Vector<FloatVector4> m_current_vertex_tex_coord;
+    Array<FloatVector4, SoftGPU::Device::info.num_texture_units> m_current_vertex_tex_coord {};
     FloatVector3 m_current_vertex_normal = { 0.0f, 0.0f, 1.0f };
 
     Vector<SoftGPU::Vertex> m_vertex_list;
@@ -263,7 +264,7 @@ private:
     // Client side arrays
     bool m_client_side_vertex_array_enabled = false;
     bool m_client_side_color_array_enabled = false;
-    Vector<bool> m_client_side_texture_coord_array_enabled;
+    Array<bool, SoftGPU::Device::info.num_texture_units> m_client_side_texture_coord_array_enabled {};
     size_t m_client_active_texture = 0;
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
@@ -271,7 +272,7 @@ private:
     // Texture objects
     TextureNameAllocator m_name_allocator;
     HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
-    Vector<TextureUnit> m_texture_units;
+    Array<TextureUnit, SoftGPU::Device::info.num_texture_units> m_texture_units {};
     TextureUnit* m_active_texture_unit;
     size_t m_active_texture_unit_index { 0 };
 
@@ -282,7 +283,7 @@ private:
         FloatVector4 object_plane_coefficients { 0.0f, 0.0f, 0.0f, 0.0f };
         FloatVector4 eye_plane_coefficients { 0.0f, 0.0f, 0.0f, 0.0f };
     };
-    Vector<Array<TextureCoordinateGeneration, 4>> m_texture_coordinate_generation;
+    Array<Array<TextureCoordinateGeneration, 4>, SoftGPU::Device::info.num_texture_units> m_texture_coordinate_generation {};
     bool m_texcoord_generation_dirty { true };
 
     ALWAYS_INLINE TextureCoordinateGeneration& texture_coordinate_generation(size_t texture_unit, GLenum capability)
@@ -291,7 +292,6 @@ private:
     }
 
     SoftGPU::Device m_rasterizer;
-    SoftGPU::DeviceInfo const m_device_info;
     bool m_sampler_config_is_dirty { true };
     bool m_light_state_is_dirty { true };
 
@@ -412,7 +412,7 @@ private:
 
     VertexAttribPointer m_client_vertex_pointer;
     VertexAttribPointer m_client_color_pointer;
-    Vector<VertexAttribPointer> m_client_tex_coord_pointer;
+    Array<VertexAttribPointer, SoftGPU::Device::info.num_texture_units> m_client_tex_coord_pointer {};
 
     u8 m_pack_alignment { 4 };
     GLsizei m_unpack_row_length { 0 };
@@ -422,7 +422,7 @@ private:
 
     // Lighting configuration
     bool m_lighting_enabled { false };
-    Vector<SoftGPU::Light> m_light_states;
+    Array<SoftGPU::Light, SoftGPU::Device::info.num_lights> m_light_states {};
     Array<SoftGPU::Material, 2u> m_material_states;
 
     // Color material

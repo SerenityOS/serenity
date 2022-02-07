@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -111,9 +112,16 @@ struct StencilConfiguration {
 
 class Device final {
 public:
-    Device(const Gfx::IntSize& min_size);
+    static constexpr DeviceInfo info {
+        .vendor_name = "SerenityOS",
+        .device_name = "SoftGPU",
+        .num_texture_units = NUM_SAMPLERS,
+        .num_lights = NUM_LIGHTS,
+        .stencil_bits = sizeof(u8) * 8,
+        .supports_npot_textures = true,
+    };
 
-    DeviceInfo info() const;
+    Device(const Gfx::IntSize& min_size);
 
     void draw_primitives(PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix3x3 const& normal_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(const Gfx::IntSize& min_size);
@@ -169,5 +177,4 @@ private:
     RasterPosition m_raster_position;
     Array<StencilConfiguration, 2u> m_stencil_configuration;
 };
-
 }

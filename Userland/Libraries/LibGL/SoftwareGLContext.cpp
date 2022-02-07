@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -63,14 +64,8 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
     : m_viewport(frontbuffer.rect())
     , m_frontbuffer(frontbuffer)
     , m_rasterizer(frontbuffer.size())
-    , m_device_info(m_rasterizer.info())
 {
-    m_texture_units.resize(m_device_info.num_texture_units);
     m_active_texture_unit = &m_texture_units[0];
-
-    // Query the number lights from the device and set set up their state
-    // locally in the GL
-    m_light_states.resize(m_device_info.num_lights);
 
     // Set-up light0's state, as it has a different default state
     // to the other lights, as per the OpenGL 1.5 spec
@@ -79,16 +74,12 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
     light0.specular_intensity = { 1.0f, 1.0f, 1.0f, 1.0f };
     m_light_state_is_dirty = true;
 
-    m_client_side_texture_coord_array_enabled.resize(m_device_info.num_texture_units);
-    m_client_tex_coord_pointer.resize(m_device_info.num_texture_units);
-    m_current_vertex_tex_coord.resize(m_device_info.num_texture_units);
     for (auto& tex_coord : m_current_vertex_tex_coord)
         tex_coord = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     // Initialize the texture coordinate generation coefficients
     // Indices 0,1,2,3 refer to the S,T,R and Q coordinate of the respective texture
     // coordinate generation config.
-    m_texture_coordinate_generation.resize(m_device_info.num_texture_units);
     for (auto& texture_coordinate_generation : m_texture_coordinate_generation) {
         texture_coordinate_generation[0].object_plane_coefficients = { 1.0f, 0.0f, 0.0f, 0.0f };
         texture_coordinate_generation[0].eye_plane_coefficients = { 1.0f, 0.0f, 0.0f, 0.0f };
@@ -143,7 +134,7 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
     case GL_LIGHTING:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_lighting_enabled } };
     case GL_MAX_LIGHTS:
-        return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_device_info.num_lights) } };
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(SoftGPU::Device::info.num_lights) } };
     case GL_MAX_MODELVIEW_STACK_DEPTH:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = MODELVIEW_MATRIX_STACK_LIMIT } };
     case GL_MAX_PROJECTION_STACK_DEPTH:
@@ -193,7 +184,7 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = scissor_enabled } };
     }
     case GL_STENCIL_BITS:
-        return ContextParameter { .type = GL_INT, .value = { .integer_value = m_device_info.stencil_bits } };
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = SoftGPU::Device::info.stencil_bits } };
     case GL_STENCIL_CLEAR_VALUE:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = m_clear_stencil } };
     case GL_STENCIL_TEST:
@@ -297,7 +288,7 @@ void SoftwareGLContext::gl_clear_stencil(GLint s)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_clear_stencil = static_cast<u8>(s & ((1 << m_device_info.stencil_bits) - 1));
+    m_clear_stencil = static_cast<u8>(s & ((1 << SoftGPU::Device::info.stencil_bits) - 1));
 }
 
 void SoftwareGLContext::gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a)
@@ -453,9 +444,9 @@ GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
 
     switch (name) {
     case GL_VENDOR:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_device_info.vendor_name.characters()));
+        return reinterpret_cast<GLubyte*>(const_cast<char*>(SoftGPU::Device::info.vendor_name));
     case GL_RENDERER:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_device_info.device_name.characters()));
+        return reinterpret_cast<GLubyte*>(const_cast<char*>(SoftGPU::Device::info.device_name));
     case GL_VERSION:
         return reinterpret_cast<GLubyte*>(const_cast<char*>("1.5"));
     case GL_EXTENSIONS:
@@ -640,7 +631,7 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
 
     vertex.position = { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(w) };
     vertex.color = m_current_vertex_color;
-    for (size_t i = 0; i < m_device_info.num_texture_units; ++i)
+    for (size_t i = 0; i < SoftGPU::Device::info.num_texture_units; ++i)
         vertex.tex_coords[i] = m_current_vertex_tex_coord[i];
     vertex.normal = m_current_vertex_normal;
 
@@ -658,7 +649,7 @@ void SoftwareGLContext::gl_multi_tex_coord(GLenum target, GLfloat s, GLfloat t, 
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_multi_tex_coord, target, s, t, r, q);
 
-    RETURN_WITH_ERROR_IF(target < GL_TEXTURE0 || target >= GL_TEXTURE0 + m_device_info.num_texture_units, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(target < GL_TEXTURE0 || target >= GL_TEXTURE0 + SoftGPU::Device::info.num_texture_units, GL_INVALID_ENUM);
 
     m_current_vertex_tex_coord[target - GL_TEXTURE0] = { s, t, r, q };
 }
@@ -971,7 +962,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
     // Check if width and height are a power of 2
-    if (!m_device_info.supports_npot_textures) {
+    if constexpr (!SoftGPU::Device::info.supports_npot_textures) {
         RETURN_WITH_ERROR_IF((width & (width - 1)) != 0, GL_INVALID_VALUE);
         RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
     }
@@ -1897,7 +1888,7 @@ GLboolean SoftwareGLContext::gl_is_texture(GLuint texture)
 
 void SoftwareGLContext::gl_active_texture(GLenum texture)
 {
-    RETURN_WITH_ERROR_IF(texture < GL_TEXTURE0 || texture >= GL_TEXTURE0 + m_device_info.num_texture_units, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(texture < GL_TEXTURE0 || texture >= GL_TEXTURE0 + SoftGPU::Device::info.num_texture_units, GL_INVALID_ENUM);
 
     m_active_texture_unit_index = texture - GL_TEXTURE0;
     m_active_texture_unit = &m_texture_units.at(m_active_texture_unit_index);
@@ -2078,7 +2069,7 @@ void SoftwareGLContext::gl_disable_client_state(GLenum cap)
 
 void SoftwareGLContext::gl_client_active_texture(GLenum target)
 {
-    RETURN_WITH_ERROR_IF(target < GL_TEXTURE0 || target >= GL_TEXTURE0 + m_device_info.num_texture_units, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(target < GL_TEXTURE0 || target >= GL_TEXTURE0 + SoftGPU::Device::info.num_texture_units, GL_INVALID_ENUM);
 
     m_client_active_texture = target - GL_TEXTURE0;
 }
@@ -2704,7 +2695,7 @@ void SoftwareGLContext::gl_stencil_func_separate(GLenum face, GLenum func, GLint
                              || func == GL_ALWAYS),
         GL_INVALID_ENUM);
 
-    ref = clamp(ref, 0, (1 << m_device_info.stencil_bits) - 1);
+    ref = clamp(ref, 0, (1 << SoftGPU::Device::info.stencil_bits) - 1);
 
     StencilFunctionOptions new_options = { func, ref, mask };
     if (face == GL_FRONT || face == GL_FRONT_AND_BACK)
@@ -3153,7 +3144,7 @@ void SoftwareGLContext::sync_light_state()
     }
     m_rasterizer.set_options(options);
 
-    for (auto light_id = 0u; light_id < SoftGPU::NUM_LIGHTS; light_id++) {
+    for (auto light_id = 0u; light_id < SoftGPU::Device::info.num_lights; light_id++) {
         auto const& current_light_state = m_light_states.at(light_id);
         m_rasterizer.set_light_state(light_id, current_light_state);
     }
@@ -3170,7 +3161,7 @@ void SoftwareGLContext::sync_device_texcoord_config()
 
     auto options = m_rasterizer.options();
 
-    for (size_t i = 0; i < m_device_info.num_texture_units; ++i) {
+    for (size_t i = 0; i < SoftGPU::Device::info.num_texture_units; ++i) {
 
         u8 enabled_coordinates = SoftGPU::TexCoordGenerationCoordinate::None;
         for (GLenum capability = GL_TEXTURE_GEN_S; capability <= GL_TEXTURE_GEN_Q; ++capability) {
@@ -3301,10 +3292,10 @@ void SoftwareGLContext::build_extension_string()
     // FIXME: npot texture support became a required core feature starting with OpenGL 2.0 (https://www.khronos.org/opengl/wiki/NPOT_Texture)
     // Ideally we would verify if the selected device adheres to the requested OpenGL context version before context creation
     // and refuse to create a context if it doesn't.
-    if (m_device_info.supports_npot_textures)
+    if constexpr (SoftGPU::Device::info.supports_npot_textures)
         extensions.append("GL_ARB_texture_non_power_of_two");
 
-    if (m_device_info.num_texture_units > 1)
+    if constexpr (SoftGPU::Device::info.num_texture_units > 1)
         extensions.append("GL_ARB_multitexture");
 
     m_extensions = String::join(" ", extensions);
@@ -3315,7 +3306,7 @@ void SoftwareGLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_lightf, light, pname, param);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_device_info.num_lights), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + SoftGPU::Device::info.num_lights), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(!(pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION || pname != GL_SPOT_EXPONENT || pname != GL_SPOT_CUTOFF), GL_INVALID_ENUM);
 
     auto& light_state = m_light_states.at(light - GL_LIGHT0);
@@ -3347,7 +3338,7 @@ void SoftwareGLContext::gl_lightfv(GLenum light, GLenum pname, GLfloat const* pa
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_lightfv, light, pname, params);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_device_info.num_lights), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + SoftGPU::Device::info.num_lights), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_POSITION || pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION || pname == GL_SPOT_CUTOFF || pname == GL_SPOT_EXPONENT || pname == GL_SPOT_DIRECTION), GL_INVALID_ENUM);
 
     auto& light_state = m_light_states.at(light - GL_LIGHT0);
@@ -3398,7 +3389,7 @@ void SoftwareGLContext::gl_lightiv(GLenum light, GLenum pname, GLint const* para
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_lightiv, light, pname, params);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_device_info.num_lights), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + SoftGPU::Device::info.num_lights), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_POSITION || pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION || pname == GL_SPOT_CUTOFF || pname == GL_SPOT_EXPONENT || pname == GL_SPOT_DIRECTION), GL_INVALID_ENUM);
 
     auto& light_state = m_light_states[light - GL_LIGHT0];
@@ -3594,7 +3585,7 @@ void SoftwareGLContext::gl_get_light(GLenum light, GLenum pname, void* params, G
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_get_light, light, pname, params, type);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light > GL_LIGHT0 + m_device_info.num_lights, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light > GL_LIGHT0 + SoftGPU::Device::info.num_lights, GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_SPOT_DIRECTION || pname == GL_SPOT_EXPONENT || pname == GL_SPOT_CUTOFF || pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION), GL_INVALID_ENUM);
 
     if (type == GL_FLOAT)

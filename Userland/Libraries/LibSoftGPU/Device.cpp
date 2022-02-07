@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -587,18 +588,6 @@ Device::Device(const Gfx::IntSize& size)
 {
     m_options.scissor_box = m_render_target->rect();
     m_options.viewport = m_render_target->rect();
-}
-
-DeviceInfo Device::info() const
-{
-    return {
-        .vendor_name = "SerenityOS",
-        .device_name = "SoftGPU",
-        .num_texture_units = NUM_SAMPLERS,
-        .num_lights = NUM_LIGHTS,
-        .stencil_bits = sizeof(u8) * 8,
-        .supports_npot_textures = true,
-    };
 }
 
 static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const& options)
