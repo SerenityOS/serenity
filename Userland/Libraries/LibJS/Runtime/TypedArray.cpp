@@ -369,16 +369,23 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     ThrowCompletionOr<ClassName*> ClassName::create(GlobalObject& global_object, u32 length, FunctionObject& new_target)               \
     {                                                                                                                                  \
         auto* prototype = TRY(get_prototype_from_constructor(global_object, new_target, &GlobalObject::snake_name##_prototype));       \
-        return global_object.heap().allocate<ClassName>(global_object, length, *prototype);                                            \
+        auto* array_buffer = TRY(ArrayBuffer::create(global_object, length * sizeof(UnderlyingBufferDataType)));                       \
+        return global_object.heap().allocate<ClassName>(global_object, *prototype, length, *array_buffer);                             \
     }                                                                                                                                  \
                                                                                                                                        \
-    ClassName* ClassName::create(GlobalObject& global_object, u32 length)                                                              \
+    ThrowCompletionOr<ClassName*> ClassName::create(GlobalObject& global_object, u32 length)                                           \
     {                                                                                                                                  \
-        return global_object.heap().allocate<ClassName>(global_object, length, *global_object.snake_name##_prototype());               \
+        auto* array_buffer = TRY(ArrayBuffer::create(global_object, length * sizeof(UnderlyingBufferDataType)));                       \
+        return create(global_object, length, *array_buffer);                                                                           \
     }                                                                                                                                  \
                                                                                                                                        \
-    ClassName::ClassName(u32 length, Object& prototype)                                                                                \
-        : TypedArray(length, prototype)                                                                                                \
+    ClassName* ClassName::create(GlobalObject& global_object, u32 length, ArrayBuffer& array_buffer)                                   \
+    {                                                                                                                                  \
+        return global_object.heap().allocate<ClassName>(global_object, *global_object.snake_name##_prototype(), length, array_buffer); \
+    }                                                                                                                                  \
+                                                                                                                                       \
+    ClassName::ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer)                                                     \
+        : TypedArray(prototype, length, array_buffer)                                                                                  \
     {                                                                                                                                  \
         if constexpr (StringView { #ClassName }.is_one_of("BigInt64Array", "BigUint64Array"))                                          \
             m_content_type = ContentType::BigInt;                                                                                      \
@@ -450,9 +457,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                 TRY(initialize_typed_array_from_typed_array(global_object(), *typed_array, arg_typed_array));                          \
             } else if (is<ArrayBuffer>(first_argument.as_object())) {                                                                  \
                 auto& array_buffer = static_cast<ArrayBuffer&>(first_argument.as_object());                                            \
-                /* NOTE: I added the padding below to not reindent 150+ lines for a single line change. If you edit this, and the   */ \
-                /*       width happens to change anyway, feel free to remove it.                                                    */ \
-                TRY(initialize_typed_array_from_array_buffer(global_object(), *typed_array, array_buffer, /*                        */ \
+                TRY(initialize_typed_array_from_array_buffer(global_object(), *typed_array, array_buffer,                              \
                     vm.argument(1), vm.argument(2)));                                                                                  \
             } else {                                                                                                                   \
                 auto iterator = TRY(first_argument.get_method(global_object(), *vm.well_known_symbol_iterator()));                     \

@@ -19,7 +19,7 @@ TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
     if (file.is_error())
         return vm.throw_completion<JS::TypeError>(global_object, strerror(file.error().code()));
     auto contents = file.value()->read_all();
-    auto array = JS::Uint8Array::create(global_object, contents.size());
+    auto* array = TRY(JS::Uint8Array::create(global_object, contents.size()));
     contents.span().copy_to(array->data());
     return JS::Value(array);
 }
