@@ -58,18 +58,30 @@ void FinalizationRegistry::remove_dead_cells(Badge<Heap>)
 }
 
 // 9.13 CleanupFinalizationRegistry ( finalizationRegistry ), https://tc39.es/ecma262/#sec-cleanup-finalization-registry
-void FinalizationRegistry::cleanup(FunctionObject* callback)
+ThrowCompletionOr<void> FinalizationRegistry::cleanup(FunctionObject* callback)
 {
-    auto& vm = this->vm();
+    // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
+    // Note: Ensured by type.
+
+    // 2. Let callback be finalizationRegistry.[[CleanupCallback]].
     auto cleanup_callback = callback ?: m_cleanup_callback;
+
+    // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
     for (auto it = m_records.begin(); it != m_records.end(); ++it) {
+        // a. Choose any such cell.
         if (it->target != nullptr)
             continue;
-        (void)call(global_object(), *cleanup_callback, js_undefined(), it->held_value);
+        auto cell = *it;
+
+        // b. Remove cell from finalizationRegistry.[[Cells]].
         it.remove(m_records);
-        if (vm.exception())
-            return;
+
+        // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
+        (void)TRY(call(global_object(), *cleanup_callback, js_undefined(), cell.held_value));
     }
+
+    // 4. Return NormalCompletion(empty).
+    return {};
 }
 
 void FinalizationRegistry::visit_edges(Cell::Visitor& visitor)
