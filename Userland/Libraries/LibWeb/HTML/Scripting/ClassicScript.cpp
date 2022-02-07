@@ -74,17 +74,17 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
     // 6. Otherwise, set evaluationStatus to ScriptEvaluation(script's record).
     auto interpreter = JS::Interpreter::create_with_existing_realm(m_script_record->realm());
 
-    auto result = interpreter->run(*m_script_record);
+    auto evaluation_status = interpreter->run(*m_script_record);
 
     // FIXME: If ScriptEvaluation does not complete because the user agent has aborted the running script, leave evaluationStatus as null.
 
     dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Finished running script {}, Duration: {}ms", filename(), timer.elapsed());
-    if (result.is_error()) {
+    if (evaluation_status.is_error()) {
         // FIXME: Propagate error according to the spec.
         interpreter->vm().clear_exception();
         return {};
     }
-    return result.value();
+    return evaluation_status.value();
 }
 
 ClassicScript::ClassicScript(AK::URL base_url, String filename)
