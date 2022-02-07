@@ -80,13 +80,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         while (!pc.at_end()) {
             auto& instruction = *pc;
             auto ran_or_error = instruction.execute(*this);
-            if (vm().exception()) {
-                if (!ran_or_error.is_error()) {
-                    // FIXME: Until exception is removed use this to make sure we always get the error if there is one.
-                    ran_or_error = throw_completion(vm().exception()->value());
-                }
-                vm().clear_exception();
-            }
             if (ran_or_error.is_error()) {
                 auto exception_value = *ran_or_error.throw_completion().value();
                 m_saved_exception = make_handle(exception_value);

@@ -70,7 +70,7 @@ ThrowCompletionOr<Value> PromiseReactionJob::call()
     // f. If promiseCapability is undefined, then
     if (!promise_capability.has_value()) {
         // i. Assert: handlerResult is not an abrupt completion.
-        VERIFY(!vm.exception());
+        VERIFY(!handler_result.is_abrupt());
 
         // ii. Return NormalCompletion(empty).
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Reaction has no PromiseCapability, returning empty value", this);

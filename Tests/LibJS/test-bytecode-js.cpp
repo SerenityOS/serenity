@@ -25,8 +25,7 @@
 #define EXPECT_NO_EXCEPTION(executable)                           \
     auto executable = JS::Bytecode::Generator::generate(program); \
     auto result = bytecode_interpreter.run(*executable);          \
-    EXPECT(!result.is_error());                                   \
-    EXPECT(!vm->exception());
+    EXPECT(!result.is_error());
 
 #define EXPECT_NO_EXCEPTION_WITH_OPTIMIZATIONS(executable)                  \
     auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();      \
@@ -34,8 +33,7 @@
                                                                             \
     auto result_with_optimizations = bytecode_interpreter.run(*executable); \
                                                                             \
-    EXPECT(!result_with_optimizations.is_error());                          \
-    EXPECT(!vm->exception())
+    EXPECT(!result_with_optimizations.is_error());
 
 #define EXPECT_NO_EXCEPTION_ALL(source) \
     SETUP_AND_PARSE(source)             \
@@ -117,7 +115,6 @@ TEST_CASE(loading_multiple_files)
         auto executable = JS::Bytecode::Generator::generate(test_file_program);
         auto result = bytecode_interpreter.run(*executable);
         EXPECT(!result.is_error());
-        EXPECT(!vm->exception());
     }
 }
 

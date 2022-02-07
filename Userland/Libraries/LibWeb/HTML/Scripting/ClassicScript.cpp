@@ -8,6 +8,7 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
+#include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 
 namespace Web::HTML {
 
@@ -81,7 +82,7 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
     dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Finished running script {}, Duration: {}ms", filename(), timer.elapsed());
     if (evaluation_status.is_error()) {
         // FIXME: Propagate error according to the spec.
-        interpreter->vm().clear_exception();
+        report_exception(evaluation_status);
         return {};
     }
     return evaluation_status.value();

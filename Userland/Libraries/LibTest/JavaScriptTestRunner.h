@@ -363,9 +363,6 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         g_vm->pop_execution_context();
     }
 
-    if (g_vm->exception())
-        g_vm->clear_exception();
-
     auto test_json = get_test_results(*interpreter);
     if (test_json.is_error()) {
         warnln("Received malformed JSON from test \"{}\"", test_path);

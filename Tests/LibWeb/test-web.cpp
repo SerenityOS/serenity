@@ -22,8 +22,8 @@ TEST_ROOT("Userland/Libraries/LibWeb/Tests");
 RefPtr<Web::InProcessWebView> g_page_view;
 RefPtr<GUI::Application> g_app;
 Optional<URL> next_page_to_load;
-Vector<Function<void(JS::Object&)>> after_initial_load_hooks;
-Vector<Function<void(JS::Object&)>> before_initial_load_hooks;
+Vector<Function<JS::ThrowCompletionOr<void>(JS::Object&)>> after_initial_load_hooks;
+Vector<Function<JS::ThrowCompletionOr<void>(JS::Object&)>> before_initial_load_hooks;
 
 TESTJS_MAIN_HOOK()
 {
@@ -62,8 +62,9 @@ TESTJS_GLOBAL_FUNCTION(after_initial_page_load, afterInitialPageLoad)
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
     }
 
-    after_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &global_object](auto& page_object) {
-        [[maybe_unused]] auto unused = JS::call(global_object, const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object);
+    after_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &global_object](auto& page_object) -> JS::ThrowCompletionOr<void> {
+        TRY(JS::call(global_object, const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object));
+        return {};
     });
     return JS::js_undefined();
 }
@@ -76,8 +77,9 @@ TESTJS_GLOBAL_FUNCTION(before_initial_page_load, beforeInitialPageLoad)
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
     }
 
-    before_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &global_object](auto& page_object) {
-        [[maybe_unused]] auto unused = JS::call(global_object, const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object);
+    before_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &global_object](auto& page_object) -> JS::ThrowCompletionOr<void> {
+        TRY(JS::call(global_object, const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object));
+        return {};
     });
     return JS::js_undefined();
 }
@@ -89,11 +91,13 @@ TESTJS_GLOBAL_FUNCTION(wait_for_page_to_load, waitForPageToLoad)
 
     // Run the "before" hooks
     for (auto& entry : before_initial_load_hooks)
-        entry(document->interpreter().global_object());
+        TRY(entry(document->interpreter().global_object()));
 
     // Set the load hook
     Web::LoadRequest request;
     request.set_url(next_page_to_load.value());
+
+    JS::ThrowCompletionOr<void> result = {};
 
     auto& loader = Web::ResourceLoader::the();
     loader.load_sync(
@@ -103,22 +107,23 @@ TESTJS_GLOBAL_FUNCTION(wait_for_page_to_load, waitForPageToLoad)
             // Now parse the HTML page.
             parser.run(next_page_to_load.value());
             g_page_view->set_document(&parser.document());
-            if (vm.exception()) {
-                // FIXME: Should we do something about this? the document itself threw unhandled exceptions...
-                vm.clear_exception();
-            }
+            // Note: Unhandled exceptions are just dropped here.
 
             // Run the "after" hooks
             for (auto& entry : after_initial_load_hooks) {
-                entry(document->interpreter().global_object());
-                if (vm.exception())
+                auto ran_or_error = entry(document->interpreter().global_object());
+                if (ran_or_error.is_error()) {
+                    result = ran_or_error.release_error();
                     break;
+                }
             }
         },
         [&](auto&, auto) {
             dbgln("Load of resource {} failed", next_page_to_load.value());
-            vm.throw_exception<JS::TypeError>(global_object, "Resource load failed");
+            result = vm.template throw_completion<JS::TypeError>(global_object, "Resource load failed");
         });
 
+    if (result.is_error())
+        return result.release_error();
     return JS::js_undefined();
 }
