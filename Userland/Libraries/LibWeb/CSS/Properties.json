@@ -571,6 +571,7 @@
       "flex",
       "inline",
       "inline-block",
+      "inline-flex",
       "inline-table",
       "list-item",
       "none",
