@@ -353,6 +353,8 @@ private:
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 3 };
     TextRange m_selection;
+    bool m_select_by_word;
+    TextPosition m_select_by_word_origin;
 
     // NOTE: If non-zero, all glyphs will be substituted with this one.
     u32 m_substitution_code_point { 0 };

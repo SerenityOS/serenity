@@ -216,7 +216,9 @@ void TextEditor::doubleclick_event(MouseEvent& event)
     rehighlight_if_needed();
 
     m_triple_click_timer.start();
-    m_in_drag_select = false;
+    m_in_drag_select = true;
+    m_select_by_word = true;
+    m_select_by_word_origin = text_position_at(event.position());
 
     auto position = text_position_at(event.position());
 
@@ -267,7 +269,8 @@ void TextEditor::mousedown_event(MouseEvent& event)
     }
 
     m_in_drag_select = true;
-    m_automatic_selection_scroll_timer->start();
+    if (!m_in_drag_select)
+        m_automatic_selection_scroll_timer->start();
 
     set_cursor(text_position_at(event.position()));
 
@@ -290,6 +293,9 @@ void TextEditor::mouseup_event(MouseEvent& event)
         if (m_in_drag_select) {
             m_in_drag_select = false;
         }
+        if (m_select_by_word) {
+            m_select_by_word = false;
+        }
         return;
     }
 }
@@ -298,11 +304,23 @@ void TextEditor::mousemove_event(MouseEvent& event)
 {
     m_last_mousemove_position = event.position();
     if (m_in_drag_select && (rect().contains(event.position()) || !m_automatic_selection_scroll_timer->is_active())) {
-        set_cursor(text_position_at(event.position()));
-        m_selection.set_end(m_cursor);
-        did_update_selection();
-        update();
-        return;
+        if (m_select_by_word) {
+            set_cursor(text_position_at(m_last_mousemove_position));
+            if (text_position_at(m_last_mousemove_position) < m_select_by_word_origin) {
+                m_selection.set_start(document().first_word_break_before(text_position_at(m_last_mousemove_position), false));
+                m_selection.set_end(document().first_word_break_after(m_select_by_word_origin));
+            } else {
+                m_selection.set_start(document().first_word_break_before(m_select_by_word_origin, false));
+                m_selection.set_end(document().first_word_break_after(text_position_at(m_last_mousemove_position)));
+            }
+            did_update_selection();
+            update();
+        } else {
+            set_cursor(text_position_at(m_last_mousemove_position));
+            m_selection.set_end(m_cursor);
+            did_update_selection();
+            update();
+        }
     }
 }
 
