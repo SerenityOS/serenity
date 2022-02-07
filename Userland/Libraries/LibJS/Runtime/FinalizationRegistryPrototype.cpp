@@ -41,7 +41,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
     if (vm.argument_count() > 0 && !callback.is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
 
-    finalization_registry->cleanup(callback.is_undefined() ? nullptr : &callback.as_function());
+    TRY(finalization_registry->cleanup(callback.is_undefined() ? nullptr : &callback.as_function()));
 
     return js_undefined();
 }
