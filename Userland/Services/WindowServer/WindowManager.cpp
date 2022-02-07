@@ -740,6 +740,9 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
 
         dbgln_if(MOVE_DEBUG, "[WM] Finish moving Window({})", m_move_window);
 
+        if (!m_move_window->is_tiled() && !m_move_window->is_maximized())
+            m_move_window->set_floating_rect(m_move_window->rect());
+
         m_move_window->invalidate(true, true);
         if (m_move_window->is_resizable()) {
             process_event_for_doubleclick(*m_move_window, event);
@@ -823,6 +826,9 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
 
     if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
         dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
+
+        if (!m_resize_window->is_tiled() && !m_resize_window->is_maximized())
+            m_resize_window->set_floating_rect(m_resize_window->rect());
 
         const int vertical_maximize_deadzone = 5;
         auto& cursor_screen = ScreenInput::the().cursor_location_screen();
