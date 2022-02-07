@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,27 +27,38 @@ void ErrorConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-// 20.5.1.1 Error ( message ), https://tc39.es/ecma262/#sec-error-message
+// 20.5.1.1 Error ( message [ , options ] ), https://tc39.es/ecma262/#sec-error-message
 ThrowCompletionOr<Value> ErrorConstructor::call()
 {
+    // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
     return TRY(construct(*this));
 }
 
-// 20.5.1.1 Error ( message ), https://tc39.es/ecma262/#sec-error-message
+// 20.5.1.1 Error ( message [ , options ] ), https://tc39.es/ecma262/#sec-error-message
 ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
+    auto message = vm.argument(0);
+    auto options = vm.argument(1);
+
+    // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%", « [[ErrorData]] »).
     auto* error = TRY(ordinary_create_from_constructor<Error>(global_object, new_target, &GlobalObject::error_prototype));
 
-    if (!vm.argument(0).is_undefined()) {
-        auto message = TRY(vm.argument(0).to_string(global_object));
-        MUST(error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message)));
+    // 3. If message is not undefined, then
+    if (!message.is_undefined()) {
+        // a. Let msg be ? ToString(message).
+        auto msg = TRY(message.to_string(global_object));
+
+        // b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "message", msg).
+        MUST(error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, move(msg))));
     }
 
-    TRY(error->install_error_cause(vm.argument(1)));
+    // 4. Perform ? InstallErrorCause(O, options).
+    TRY(error->install_error_cause(options));
 
+    // 5. Return O.
     return error;
 }
 
