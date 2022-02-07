@@ -133,3 +133,16 @@ jobs:
         continue-on-error: true
         working-directory: libjs-test262
         run: ./per_file_result_diff.py -o per-file-bytecode-master.json -n ../libjs-website/test262/data/per-file-bytecode-master.json
+
+      - name: Build and package js
+        working-directory: libjs-test262/Build
+        run: |
+          ninja js
+          cpack -D CPACK_INSTALL_CMAKE_PROJECTS="$(pwd)/_deps/lagom-build;js;js;/"
+
+      - name: Upload js package
+        uses: actions/upload-artifact@v2
+        with:
+          name: serenity-js
+          path: libjs-test262/Build/serenity-js.tar.gz
+          retention-days: 7
