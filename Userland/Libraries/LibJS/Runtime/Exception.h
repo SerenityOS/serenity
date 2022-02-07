@@ -10,15 +10,11 @@
 #include <AK/FlyString.h>
 #include <AK/Vector.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/SourceRange.h>
 
 namespace JS {
-
-struct TracebackFrame {
-    FlyString function_name;
-    SourceRange source_range;
-};
 
 class Exception : public Cell {
 public:
