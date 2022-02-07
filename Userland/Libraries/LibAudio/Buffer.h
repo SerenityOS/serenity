@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "AK/TypedTransfer.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
 #include <AK/FixedArray.h>
@@ -47,6 +48,14 @@ public:
     }
 
     Sample const* samples() const { return (const Sample*)data(); }
+
+    ErrorOr<FixedArray<Sample>> to_sample_array() const
+    {
+        FixedArray<Sample> samples = TRY(FixedArray<Sample>::try_create(m_sample_count));
+        AK::TypedTransfer<Sample>::copy(samples.data(), this->samples(), m_sample_count);
+        return samples;
+    }
+
     int sample_count() const { return m_sample_count; }
     void const* data() const { return m_buffer.data<void>(); }
     int size_in_bytes() const { return m_sample_count * (int)sizeof(Sample); }
