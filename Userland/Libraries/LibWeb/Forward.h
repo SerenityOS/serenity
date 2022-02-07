@@ -218,6 +218,9 @@ class SubmitEvent;
 class TextMetrics;
 class WebSocket;
 class WindowEnvironmentSettingsObject;
+class WorkerGlobalScope;
+class WorkerLocation;
+class WorkerNavigator;
 }
 
 namespace Web::HighResolutionTime {
@@ -465,6 +468,9 @@ class URLSearchParamsWrapper;
 class URLWrapper;
 class WebSocketWrapper;
 class WindowObject;
+class WorkerGlobalScopeWrapper;
+class WorkerLocationWrapper;
+class WorkerNavigatorWrapper;
 class Wrappable;
 class Wrapper;
 class XMLHttpRequestConstructor;
