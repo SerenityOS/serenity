@@ -217,9 +217,11 @@ static void run_focus_update_steps(NonnullRefPtrVector<DOM::Node> old_chain, Non
         //    then let related blur target be the last entry in new chain.
         //    Otherwise, let related blur target be null.
         RefPtr<DOM::EventTarget> related_blur_target;
-        if (&entry == &old_chain.last()
+        if (!old_chain.is_empty()
+            && &entry == &old_chain.last()
             && is<DOM::Element>(entry)
-            && (!new_chain.is_empty() && is<DOM::Element>(new_chain.last()))) {
+            && !new_chain.is_empty()
+            && is<DOM::Element>(new_chain.last())) {
             related_blur_target = new_chain.last();
         }
 
@@ -255,15 +257,17 @@ static void run_focus_update_steps(NonnullRefPtrVector<DOM::Node> old_chain, Non
             focus_event_target = static_cast<DOM::Document&>(entry).window();
         }
 
-        // 3. If entry is the last entry in old chain, and entry is an Element,
-        //    and the last entry in new chain is also an Element,
-        //    then let related focus target be the last entry in new chain.
+        // 3. If entry is the last entry in new chain, and entry is an Element,
+        //    and the last entry in old chain is also an Element,
+        //    then let related focus target be the last entry in old chain.
         //    Otherwise, let related focus target be null.
         RefPtr<DOM::EventTarget> related_focus_target;
-        if (&entry == &old_chain.last()
+        if (!new_chain.is_empty()
+            && &entry == &new_chain.last()
             && is<DOM::Element>(entry)
-            && (!new_chain.is_empty() && is<DOM::Element>(new_chain.last()))) {
-            related_focus_target = new_chain.last();
+            && !old_chain.is_empty()
+            && is<DOM::Element>(old_chain.last())) {
+            related_focus_target = old_chain.last();
         }
 
         // 4. If focus event target is not null, fire a focus event named focus at focus event target,
