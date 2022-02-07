@@ -558,11 +558,13 @@ void outln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... par
 
 inline void outln() { outln(stdout); }
 
-#    define outln_if(flag, fmt, ...)       \
-        do {                               \
-            if constexpr (flag)            \
-                outln(fmt, ##__VA_ARGS__); \
-        } while (0)
+template<bool flag, typename... Parameters>
+inline void outln_if(Parameters&&... parameters)
+{
+    if constexpr (flag) {
+        outln(forward<Parameters...>(parameters...));
+    }
+}
 
 template<typename... Parameters>
 void warn(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
@@ -709,6 +711,7 @@ using AK::dmesgln;
 #else
 using AK::out;
 using AK::outln;
+using AK::outln_if;
 
 using AK::warn;
 using AK::warnln;
