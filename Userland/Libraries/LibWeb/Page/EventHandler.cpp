@@ -169,6 +169,10 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
         auto offset = compute_mouse_event_offset(position, *result.layout_node);
         node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y()));
         handled_event = true;
+
+        if (node.ptr() == m_mousedown_target) {
+            node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::click, offset.x(), offset.y(), position.x(), position.y()));
+        }
     }
 
     if (button == GUI::MouseButton::Primary)
@@ -220,6 +224,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             page->set_focused_browsing_context({}, m_browsing_context);
 
         auto offset = compute_mouse_event_offset(position, *result.layout_node);
+        m_mousedown_target = node;
         node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousedown, offset.x(), offset.y(), position.x(), position.y()));
     }
 
