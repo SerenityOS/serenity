@@ -1,6 +1,12 @@
 name: Run test262 with LibJS and push results to the website repo
 
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - "Documentation/**"
+  pull_request:
+    paths-ignore:
+      - "Documentation/**"
 
 env:
   SERENITY_SOURCE_DIR: ${{ github.workspace }}
