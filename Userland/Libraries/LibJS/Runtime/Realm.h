@@ -1,15 +1,15 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <AK/Weakable.h>
 #include <LibJS/Heap/Cell.h>
-#include <LibJS/Runtime/GlobalEnvironment.h>
-#include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
@@ -24,11 +24,7 @@ public:
 
     Realm() = default;
 
-    // 9.3.1 CreateRealm ( ), https://tc39.es/ecma262/#sec-createrealm
-    static Realm* create(VM& vm)
-    {
-        return vm.heap().allocate_without_global_object<Realm>();
-    }
+    static Realm* create(VM&);
 
     void set_global_object(GlobalObject&, Object* this_value = nullptr);
 

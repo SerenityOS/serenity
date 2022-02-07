@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Module.h>
+#include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 
