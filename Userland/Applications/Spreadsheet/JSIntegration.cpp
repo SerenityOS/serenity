@@ -164,8 +164,9 @@ void SheetGlobalObject::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     for (auto& it : m_sheet.cells()) {
-        if (it.value->exception())
-            visitor.visit(it.value->exception());
+        if (auto opt_thrown_value = it.value->thrown_value(); opt_thrown_value.has_value())
+            visitor.visit(*opt_thrown_value);
+
         visitor.visit(it.value->evaluated_data());
     }
 }

@@ -28,12 +28,6 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
             return String::empty();
 
         Function<String(JS::Value)> to_string_as_exception = [&](JS::Value value) {
-            ScopeGuard clear_exception {
-                [&] {
-                    cell->sheet().interpreter().vm().clear_exception();
-                }
-            };
-
             StringBuilder builder;
             builder.append("Error: "sv);
             if (value.is_object()) {
@@ -58,8 +52,8 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         };
 
         if (cell->kind() == Spreadsheet::Cell::Formula) {
-            if (auto exception = cell->exception())
-                return to_string_as_exception(exception->value());
+            if (auto opt_throw_value = cell->thrown_value(); opt_throw_value.has_value())
+                return to_string_as_exception(*opt_throw_value);
         }
 
         auto display = cell->typed_display();
@@ -86,7 +80,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
             return {};
 
         if (cell->kind() == Spreadsheet::Cell::Formula) {
-            if (cell->exception())
+            if (cell->thrown_value().has_value())
                 return Color(Color::Red);
         }
 
