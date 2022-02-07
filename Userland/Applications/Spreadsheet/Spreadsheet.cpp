@@ -60,15 +60,22 @@ Sheet::Sheet(Workbook& workbook)
                 warnln("SyntaxError: {}", error.to_string());
             }
         } else {
-            (void)interpreter().run(script_or_error.value());
-            if (auto* exception = interpreter().exception()) {
+            auto result = interpreter().run(script_or_error.value());
+            if (result.is_error()) {
                 warnln("Spreadsheet: Failed to run runtime code:");
-                for (auto& traceback_frame : exception->traceback()) {
-                    auto& function_name = traceback_frame.function_name;
-                    auto& source_range = traceback_frame.source_range;
-                    dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
+                auto thrown_value = *result.throw_completion().value();
+                warn("Threw: {}", thrown_value.to_string_without_side_effects());
+                if (thrown_value.is_object() && is<JS::Error>(thrown_value.as_object())) {
+                    auto& error = static_cast<JS::Error const&>(thrown_value.as_object());
+                    warnln(" with message '{}'", error.get_without_side_effects(interpreter().vm().names.message));
+                    for (auto& traceback_frame : error.traceback()) {
+                        auto& function_name = traceback_frame.function_name;
+                        auto& source_range = traceback_frame.source_range;
+                        dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
+                    }
+                } else {
+                    warnln();
                 }
-                interpreter().vm().clear_exception();
             }
         }
     }
@@ -159,22 +166,15 @@ void Sheet::update(Cell& cell)
     }
 }
 
-Sheet::ValueAndException Sheet::evaluate(StringView source, Cell* on_behalf_of)
+JS::ThrowCompletionOr<JS::Value> Sheet::evaluate(StringView source, Cell* on_behalf_of)
 {
     TemporaryChange cell_change { m_current_cell_being_evaluated, on_behalf_of };
-    ScopeGuard clear_exception { [&] { interpreter().vm().clear_exception(); } };
 
     auto script_or_error = JS::Script::parse(source, interpreter().realm());
-    // FIXME: Convert parser errors to exceptions to show them to the user.
-    if (script_or_error.is_error() || interpreter().exception())
-        return { JS::js_undefined(), interpreter().exception() };
+    if (script_or_error.is_error())
+        return interpreter().vm().throw_completion<JS::SyntaxError>(interpreter().global_object(), script_or_error.error().first().to_string());
 
-    auto result = interpreter().run(script_or_error.value());
-    if (result.is_error()) {
-        auto* exc = interpreter().exception();
-        return { JS::js_undefined(), exc };
-    }
-    return { result.value(), {} };
+    return interpreter().run(script_or_error.value());
 }
 
 Cell* Sheet::at(StringView name)
