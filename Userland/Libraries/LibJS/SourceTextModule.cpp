@@ -664,7 +664,6 @@ Completion SourceTextModule::execute_module(VM& vm, Optional<PromiseCapability> 
 
         // d. Suspend moduleContext and remove it from the execution context stack.
         vm.pop_execution_context();
-        vm.clear_exception();
 
         // e. Resume the context that is now on the top of the execution context stack as the running execution context.
         // FIXME: We don't have resume yet.

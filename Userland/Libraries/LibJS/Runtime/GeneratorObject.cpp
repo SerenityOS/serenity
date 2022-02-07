@@ -104,8 +104,8 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
 
     // Pretend that 'yield' returned the passed value, or threw
     if (value_to_throw.has_value()) {
-        vm.throw_exception(global_object, value_to_throw.release_value());
         bytecode_interpreter->accumulator() = js_undefined();
+        return throw_completion(value_to_throw.release_value());
     } else {
         bytecode_interpreter->accumulator() = next_argument.value_or(js_undefined());
     }

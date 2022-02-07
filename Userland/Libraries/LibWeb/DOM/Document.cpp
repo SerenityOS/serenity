@@ -53,6 +53,7 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -641,32 +642,6 @@ JS::Interpreter& Document::interpreter()
             // FIXME: This isn't exactly the right place for this.
             HTML::main_thread_event_loop().perform_a_microtask_checkpoint();
 
-            // Note: This is not an exception check for the promise jobs, they will just leave any
-            // exception that already exists intact and never throw a new one (without cleaning it
-            // up, that is). Taking care of any previous unhandled exception just happens to be the
-            // very last thing we want to do, even after running promise jobs.
-            if (auto* exception = vm.exception()) {
-                auto value = exception->value();
-                if (value.is_object()) {
-                    auto& object = value.as_object();
-                    auto name = object.get_without_side_effects(vm.names.name).value_or(JS::js_undefined());
-                    auto message = object.get_without_side_effects(vm.names.message).value_or(JS::js_undefined());
-                    if (name.is_accessor() || message.is_accessor()) {
-                        // The result is not going to be useful, let's just print the value. This affects DOMExceptions, for example.
-                        dbgln("\033[31;1mUnhandled JavaScript exception:\033[0m {}", value);
-                    } else {
-                        dbgln("\033[31;1mUnhandled JavaScript exception:\033[0m [{}] {}", name, message);
-                    }
-                } else {
-                    dbgln("\033[31;1mUnhandled JavaScript exception:\033[0m {}", value);
-                }
-                for (auto& traceback_frame : exception->traceback()) {
-                    auto& function_name = traceback_frame.function_name;
-                    auto& source_range = traceback_frame.source_range;
-                    dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
-                }
-            }
-
             vm.finish_execution_generation();
         };
     }
@@ -685,10 +660,10 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 
     auto result = interpreter.run(script_or_error.value());
 
-    auto& vm = interpreter.vm();
     if (result.is_error()) {
         // FIXME: I'm sure the spec could tell us something about error propagation here!
-        vm.clear_exception();
+        HTML::report_exception(result);
+
         return {};
     }
     return result.value();

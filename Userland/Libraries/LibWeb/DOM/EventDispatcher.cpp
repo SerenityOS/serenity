@@ -23,6 +23,7 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web::DOM {
@@ -89,11 +90,17 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<EventTarget::EventListen
 
         auto* this_value = Bindings::wrap(global, *event.current_target());
         auto* wrapped_event = Bindings::wrap(global, event);
-        auto& vm = global.vm();
-        [[maybe_unused]] auto rc = JS::call(global, function, this_value, wrapped_event);
-        if (vm.exception()) {
-            vm.clear_exception();
-            // FIXME: Set legacyOutputDidListenersThrowFlag if given. (Only used by IndexedDB currently)
+
+        // 10. Call a user object’s operation with listener’s callback, "handleEvent", « event », and event’s currentTarget attribute value.
+        auto result = JS::call(global, function, this_value, wrapped_event);
+
+        // If this throws an exception, then:
+        if (result.is_error()) {
+            // 1. Report the exception.
+            VERIFY(result.throw_completion().value().has_value());
+            HTML::report_exception(*result.throw_completion().value());
+
+            // FIXME: 2. Set legacyOutputDidListenersThrowFlag if given. (Only used by IndexedDB currently)
         }
 
         event.set_in_passive_listener(false);

@@ -891,7 +891,6 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         auto prototype_or_error = object.internal_get_prototype_of();
         if (prototype_or_error.has_value() && prototype_or_error.value() == object.global_object().error_prototype())
             return print_error(object, seen_objects);
-        vm->clear_exception();
 
         if (is<JS::RegExpObject>(object))
             return print_regexp_object(object, seen_objects);
@@ -1059,7 +1058,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             if (!hint.is_empty())
                 outln("{}", hint);
             outln(error.to_string());
-            vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
+            result = JS::SyntaxError::create(interpreter.global_object(), error.to_string());
         } else {
             auto return_early = run_script_or_module(script_or_error.value());
             if (return_early == ReturnEarly::Yes)
@@ -1073,7 +1072,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             if (!hint.is_empty())
                 outln("{}", hint);
             outln(error.to_string());
-            vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
+            result = JS::SyntaxError::create(interpreter.global_object(), error.to_string());
         } else {
             auto return_early = run_script_or_module(module_or_error.value());
             if (return_early == ReturnEarly::Yes)
@@ -1081,12 +1080,13 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
         }
     }
 
-    auto handle_exception = [&] {
-        auto* exception = vm->exception();
-        vm->clear_exception();
+    auto handle_exception = [&](JS::Value thrown_value) {
         js_out("Uncaught exception: ");
-        print(exception->value());
-        auto& traceback = exception->traceback();
+        print(thrown_value);
+
+        if (!thrown_value.is_object() || !is<JS::Error>(thrown_value.as_object()))
+            return;
+        auto& traceback = static_cast<JS::Error const&>(thrown_value.as_object()).traceback();
         if (traceback.size() > 1) {
             unsigned repetitions = 0;
             for (size_t i = 0; i < traceback.size(); ++i) {
@@ -1117,21 +1117,11 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
         last_value = JS::make_handle(result.value());
 
     if (result.is_error()) {
-        if (!vm->exception()) {
-            // Until js no longer relies on vm->exception() we have to set it in case the exception was cleared
-            VERIFY(result.throw_completion().value().has_value());
-            auto throw_value = result.release_error().release_value().release_value();
-            auto* exception = interpreter.heap().allocate<JS::Exception>(interpreter.global_object(), throw_value);
-            vm->set_exception(*exception);
-        }
-        handle_exception();
+        VERIFY(result.throw_completion().value().has_value());
+        handle_exception(*result.release_error().value());
         return false;
     } else if (s_print_last_result) {
         print(result.value());
-        if (vm->exception()) {
-            handle_exception();
-            return false;
-        }
     }
     return true;
 }
@@ -1401,10 +1391,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     OwnPtr<JS::Interpreter> interpreter;
 
-    interrupt_interpreter = [&] {
-        auto error = JS::Error::create(interpreter->global_object(), "Received SIGINT");
-        vm->throw_exception(interpreter->global_object(), error);
-    };
+    // FIXME: Figure out some way to interrupt the interpreter now that vm.exception() is gone.
 
     if (script_paths.is_empty()) {
         s_print_last_result = true;

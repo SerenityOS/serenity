@@ -26,7 +26,6 @@
 #include <LibJS/Runtime/PromiseReaction.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Symbol.h>
-#include <LibJS/Runtime/TemporaryClearException.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/SourceTextModule.h>
 #include <LibJS/SyntheticModule.h>
@@ -151,8 +150,6 @@ void VM::gather_roots(HashTable<Cell*>& roots)
     roots.set(m_empty_string);
     for (auto* string : m_single_ascii_character_strings)
         roots.set(string);
-
-    roots.set(m_exception);
 
     auto gather_roots_from_execution_context_stack = [&roots](Vector<ExecutionContext*> const& stack) {
         for (auto& execution_context : stack) {
@@ -564,11 +561,6 @@ ThrowCompletionOr<void> VM::initialize_instance_elements(Object& object, ECMAScr
     return {};
 }
 
-void VM::throw_exception(Exception& exception)
-{
-    set_exception(exception);
-}
-
 // 9.4.4 ResolveThisBinding ( ), https://tc39.es/ecma262/#sec-resolvethisbinding
 ThrowCompletionOr<Value> VM::resolve_this_binding(GlobalObject& global_object)
 {
@@ -610,9 +602,7 @@ bool VM::in_strict_mode() const
 void VM::run_queued_promise_jobs()
 {
     dbgln_if(PROMISE_DEBUG, "Running queued promise jobs");
-    // Temporarily get rid of the exception, if any - job functions must be called
-    // either way, and that can't happen if we already have an exception stored.
-    TemporaryClearException temporary_clear_exception(*this);
+
     while (!m_promise_jobs.is_empty()) {
         auto* job = m_promise_jobs.take_first();
         dbgln_if(PROMISE_DEBUG, "Calling promise job function @ {}", job);
@@ -633,15 +623,11 @@ void VM::run_queued_promise_jobs()
         // This doesn't match the spec, it actually defines that Job Abstract Closures must return
         // a normal completion. In reality that's not the case however, and all major engines clear
         // exceptions when running Promise jobs. See the commit where these two lines were initially
-        // added for a much more detailed explanation.
-        clear_exception();
+        // added for a much more detailed explanation. (Hash: a53542e0a3fbd7bf22b685d87f0473e489e1cf42)
 
         if (pushed_execution_context)
             pop_execution_context();
     }
-    // Ensure no job has created a new exception, they must clean up after themselves.
-    // If they don't, we help a little (see above) so that this assumption remains valid.
-    VERIFY(!m_exception);
 }
 
 // 9.5.4 HostEnqueuePromiseJob ( job, realm ), https://tc39.es/ecma262/#sec-hostenqueuepromisejob
@@ -654,7 +640,8 @@ void VM::run_queued_finalization_registry_cleanup_jobs()
 {
     while (!m_finalization_registry_cleanup_jobs.is_empty()) {
         auto* registry = m_finalization_registry_cleanup_jobs.take_first();
-        registry->cleanup();
+        // FIXME: Handle any uncatched exceptions here.
+        (void)registry->cleanup();
     }
 }
 
@@ -793,8 +780,6 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Linking passed, now evaluating module {}", filepath);
     auto evaluated_or_error = module.evaluate(*this);
 
-    VERIFY(!exception());
-
     if (evaluated_or_error.is_error())
         return evaluated_or_error.throw_completion();
 
@@ -806,10 +791,8 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
     // FIXME: This will break if we start doing promises actually asynchronously.
     VERIFY(evaluated_value->state() != Promise::State::Pending);
 
-    if (evaluated_value->state() == Promise::State::Rejected) {
-        VERIFY(!exception());
+    if (evaluated_value->state() == Promise::State::Rejected)
         return JS::throw_completion(evaluated_value->result());
-    }
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Evaluating passed for module {}", module.filename());
     return {};
@@ -954,13 +937,10 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
         }
     }
 
-    VERIFY(!exception());
     // Note: If host_resolve_imported_module returns a module it has been loaded successfully and the next call in finish_dynamic_import will retrieve it again.
     auto module_or_error = host_resolve_imported_module(referencing_script_or_module, module_request);
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] HostImportModuleDynamically(..., {}) -> {}", module_request.module_specifier, module_or_error.is_error() ? "failed" : "passed");
     if (module_or_error.is_throw_completion()) {
-        // Note: We should not leak the exception thrown in host_resolve_imported_module.
-        clear_exception();
         promise->reject(*module_or_error.throw_completion().value());
     } else {
         auto module = module_or_error.release_value();
@@ -969,11 +949,8 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
         auto evaluated_or_error = link_and_eval_module(source_text_module);
 
         if (evaluated_or_error.is_throw_completion()) {
-            // Note: Again we don't want to leak the exception from link_and_eval_module.
-            clear_exception();
             promise->reject(*evaluated_or_error.throw_completion().value());
         } else {
-            VERIFY(!exception());
             promise->fulfill(js_undefined());
         }
     }
@@ -1001,7 +978,6 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
         // d. Let namespace be GetModuleNamespace(moduleRecord).
         auto namespace_ = module_record->get_module_namespace(vm);
 
-        VERIFY(!vm.exception());
         // e. If namespace is an abrupt completion, then
         if (namespace_.is_throw_completion()) {
             // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « namespace.[[Value]] »).
@@ -1033,8 +1009,6 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
 
     // 5. Perform ! PerformPromiseThen(innerPromise, onFulfilled, onRejected).
     inner_promise->perform_then(on_fulfilled, on_rejected, {});
-
-    VERIFY(!exception());
 }
 
 }

@@ -964,7 +964,6 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
     // 8. Set obj.[[Delete]] as specified in 10.4.4.5.
     // 9. Set obj.[[Prototype]] to %Object.prototype%.
     auto* object = vm.heap().allocate<ArgumentsObject>(global_object, global_object, environment);
-    VERIFY(!vm.exception());
 
     // 14. Let index be 0.
     // 15. Repeat, while index < len,

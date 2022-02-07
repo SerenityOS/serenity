@@ -207,8 +207,6 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
     // 8. Let result be InnerModuleEvaluation(module, stack, 0).
     auto result = inner_module_evaluation(vm, stack, 0);
 
-    VERIFY(!vm.exception());
-
     // 9. If result is an abrupt completion, then
     if (result.is_throw_completion()) {
         VERIFY(!m_evaluation_error.is_error());
@@ -238,8 +236,6 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
 
         // d. Perform ! Call(capability.[[Reject]], undefined, « result.[[Value]] »).
         MUST(call(global_object, m_top_level_capability->reject, js_undefined(), *result.throw_completion().value()));
-
-        VERIFY(!vm.exception());
     }
     // 10. Else,
     else {

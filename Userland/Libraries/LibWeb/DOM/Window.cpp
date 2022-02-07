@@ -19,6 +19,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
+#include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/Page.h>
@@ -170,11 +171,9 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
     HTML::queue_global_task(HTML::Task::Source::TimerTask, associated_document(), [this, strong_this = NonnullRefPtr(*this), strong_timer = NonnullRefPtr(timer)]() mutable {
         // We should not be here if there's no JS wrapper for the Window object.
         VERIFY(wrapper());
-        auto& vm = wrapper()->vm();
-
-        [[maybe_unused]] auto rc = JS::call(wrapper()->global_object(), strong_timer->callback(), wrapper());
-        if (vm.exception())
-            vm.clear_exception();
+        auto result = JS::call(wrapper()->global_object(), strong_timer->callback(), wrapper());
+        if (result.is_error())
+            HTML::report_exception(result);
     });
 }
 
@@ -198,14 +197,18 @@ void Window::clear_interval(i32 timer_id)
     m_timers.remove(timer_id);
 }
 
+// https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks
 i32 Window::request_animation_frame(JS::FunctionObject& js_callback)
 {
     auto callback = request_animation_frame_driver().add([this, handle = JS::make_handle(&js_callback)](i32 id) mutable {
         auto& function = *handle.cell();
-        auto& vm = function.vm();
-        (void)JS::call(function.global_object(), function, JS::js_undefined(), JS::Value(performance().now()));
-        if (vm.exception())
-            vm.clear_exception();
+        // 3. Invoke callback, passing now as the only argument,
+        auto result = JS::call(function.global_object(), function, JS::js_undefined(), JS::Value(performance().now()));
+
+        // and if an exception is thrown, report the exception.
+        if (result.is_error())
+            HTML::report_exception(result);
+
         m_request_animation_frame_callbacks.remove(id);
     });
     m_request_animation_frame_callbacks.set(callback->id(), callback);
@@ -399,11 +402,10 @@ void Window::queue_microtask(JS::FunctionObject& callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
     HTML::queue_a_microtask(associated_document(), [&callback, handle = JS::make_handle(&callback)]() {
-        auto& vm = callback.vm();
-        [[maybe_unused]] auto rc = JS::call(callback.global_object(), callback, JS::js_null());
-        // FIXME: ...and if callback throws an exception, report the exception.
-        if (vm.exception())
-            vm.clear_exception();
+        auto result = JS::call(callback.global_object(), callback, JS::js_null());
+        // and if callback throws an exception, report the exception.
+        if (result.is_error())
+            HTML::report_exception(result);
     });
 }
 
