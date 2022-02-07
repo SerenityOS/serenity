@@ -19,6 +19,7 @@ struct IconBag final {
     RefPtr<Gfx::Bitmap> bookmark_contour { nullptr };
     RefPtr<Gfx::Bitmap> bookmark_filled { nullptr };
     RefPtr<Gfx::Bitmap> inspector_object { nullptr };
+    RefPtr<Gfx::Bitmap> go_home { nullptr };
     RefPtr<Gfx::Bitmap> find { nullptr };
     RefPtr<Gfx::Bitmap> color_chooser { nullptr };
     RefPtr<Gfx::Bitmap> delete_icon { nullptr };
@@ -26,7 +27,13 @@ struct IconBag final {
     RefPtr<Gfx::Bitmap> duplicate_tab { nullptr };
     RefPtr<Gfx::Bitmap> code { nullptr };
     RefPtr<Gfx::Bitmap> tree { nullptr };
+    RefPtr<Gfx::Bitmap> layout { nullptr };
+    RefPtr<Gfx::Bitmap> layers { nullptr };
     RefPtr<Gfx::Bitmap> inspect { nullptr };
+    RefPtr<Gfx::Bitmap> history { nullptr };
     RefPtr<Gfx::Bitmap> cookie { nullptr };
+    RefPtr<Gfx::Bitmap> trash_can { nullptr };
+    RefPtr<Gfx::Bitmap> clear_cache { nullptr };
+    RefPtr<Gfx::Bitmap> spoof { nullptr };
 };
 }
