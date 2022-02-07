@@ -456,7 +456,6 @@ Completion SuperCall::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     // 3. Let func be ! GetSuperConstructor().
     auto* func = get_super_constructor(interpreter.vm());
-    VERIFY(!vm.exception());
 
     // 4. Let argList be ? ArgumentListEvaluation of Arguments.
     MarkedValueList arg_list(vm.heap());
@@ -3686,7 +3685,6 @@ Completion TryStatement::execute(Interpreter& interpreter, GlobalObject& global_
     // TryStatement : try Block Catch
     // TryStatement : try Block Catch Finally
     if (m_handler) {
-        vm.clear_exception();
         // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
         if (block_result.type() == Completion::Type::Throw)
             result = catch_clause_evaluation(*block_result.value());
@@ -3702,24 +3700,12 @@ Completion TryStatement::execute(Interpreter& interpreter, GlobalObject& global_
     // TryStatement : try Block Finally
     // TryStatement : try Block Catch Finally
     if (m_finalizer) {
-        // NOTE: Temporary until VM::exception() is removed
-        // Keep, if any, and then clear the current exception so we can
-        // execute() the finalizer without an exception in our way.
-        auto* previous_exception = vm.exception();
-        vm.clear_exception();
-
         // 4. Let F be the result of evaluating Finally.
         auto finalizer_result = m_finalizer->execute(interpreter, global_object);
 
         // 5. If F.[[Type]] is normal, set F to C.
         if (finalizer_result.type() == Completion::Type::Normal)
             finalizer_result = move(result);
-
-        // NOTE: Temporary until VM::exception() is removed
-        // If we previously had an exception and we're carrying over
-        // the catch block completion, restore it.
-        if (finalizer_result.type() == Completion::Type::Normal && previous_exception)
-            vm.set_exception(*previous_exception);
 
         // 6. Return Completion(UpdateEmpty(F, undefined)).
         return finalizer_result.update_empty(js_undefined());
@@ -3748,8 +3734,6 @@ Completion ThrowStatement::execute(Interpreter& interpreter, GlobalObject& globa
     auto value = TRY(m_argument->execute(interpreter, global_object)).release_value();
 
     // 3. Return ThrowCompletion(exprValue).
-    // TODO: Remove this once we get rid of VM::exception()
-    interpreter.vm().throw_exception(global_object, value);
     return throw_completion(value);
 }
 

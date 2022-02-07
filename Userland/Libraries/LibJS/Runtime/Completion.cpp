@@ -115,10 +115,6 @@ ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
 
     if (success.value())
         return result;
-    // NOTE: This is temporary until we remove VM::exception(). It's required as callers of
-    //       AwaitExpression still need to check for an exception rather than a completion
-    //       type as long as ASTNode::execute() returns a plain Value.
-    vm.throw_exception(global_object, result);
     return throw_completion(result);
 }
 

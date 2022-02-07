@@ -76,15 +76,9 @@ HTML::EventHandler AbortSignal::onabort()
 // https://dom.spec.whatwg.org/#dom-abortsignal-throwifaborted
 JS::ThrowCompletionOr<void> AbortSignal::throw_if_aborted() const
 {
-    auto& global_object = wrapper()->global_object();
-    auto& vm = global_object.vm();
-
     // The throwIfAborted() method steps are to throw this’s abort reason, if this is aborted.
     if (!aborted())
         return {};
-
-    // FIXME: Remove this once VM::exception() has been removed.
-    vm.throw_exception(global_object, m_abort_reason);
 
     return JS::throw_completion(m_abort_reason);
 }

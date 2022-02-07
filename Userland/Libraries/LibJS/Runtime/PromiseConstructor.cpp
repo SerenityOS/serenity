@@ -17,7 +17,6 @@
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/PromiseReaction.h>
 #include <LibJS/Runtime/PromiseResolvingElementFunctions.h>
-#include <LibJS/Runtime/TemporaryClearException.h>
 
 namespace JS {
 
@@ -209,7 +208,6 @@ static ThrowCompletionOr<Value> perform_promise_any(GlobalObject& global_object,
             MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
             // 3. Return ThrowCompletion(error).
-            vm.throw_exception(global_object, error);
             return throw_completion(error);
         },
         [&](PromiseValueList& errors, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
@@ -304,14 +302,12 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
     auto [resolve_function, reject_function] = promise->create_resolving_functions();
 
     // 9. Let completion be Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
-    (void)JS::call(global_object, executor.as_function(), js_undefined(), &resolve_function, &reject_function);
+    auto completion = JS::call(global_object, executor.as_function(), js_undefined(), &resolve_function, &reject_function);
 
     // 10. If completion is an abrupt completion, then
-    if (auto* exception = vm.exception()) {
-        vm.clear_exception();
-
+    if (completion.is_error()) {
         // a. Perform ? Call(resolvingFunctions.[[Reject]], undefined, « completion.[[Value]] »).
-        TRY(JS::call(global_object, reject_function, js_undefined(), exception->value()));
+        TRY(JS::call(global_object, reject_function, js_undefined(), *completion.release_error().value()));
     }
 
     // 11. Return promise.

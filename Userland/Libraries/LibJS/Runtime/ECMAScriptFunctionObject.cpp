@@ -551,7 +551,6 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         });
     });
 
-    VERIFY(!vm.exception());
     auto* private_environment = callee_context.private_environment;
     for (auto& declaration : functions_to_initialize) {
         auto* function = ECMAScriptFunctionObject::create(global_object(), declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), lex_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
@@ -731,7 +730,6 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
             VERIFY(result.type() == Completion::Type::Throw);
 
             // ii. Perform ! Call(promiseCapability.[[Reject]], undefined, « result.[[Value]] »).
-            vm.clear_exception();
             MUST(call(global_object, promise_capability.reject, js_undefined(), *result.value()));
         }
         // g. Return.
@@ -781,14 +779,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
                 m_bytecode_executable->dump();
         }
         auto result_and_frame = bytecode_interpreter->run_and_return_frame(*m_bytecode_executable, nullptr);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
 
         VERIFY(result_and_frame.frame != nullptr);
-        if (result_and_frame.value.is_error()) {
-            vm.throw_exception(bytecode_interpreter->global_object(), *result_and_frame.value.release_error().value());
-            return throw_completion(vm.exception()->value());
-        }
+        if (result_and_frame.value.is_error())
+            return result_and_frame.value.release_error();
+
         auto result = result_and_frame.value.release_value();
 
         // NOTE: Running the bytecode should eventually return a completion.
