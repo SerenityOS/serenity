@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
@@ -48,6 +49,21 @@ public:
         }
 
         return false;
+    }
+
+    template<ArrayLike<SampleType> Samples>
+    Vector<SampleType> resample(Samples&& to_resample)
+    {
+        Vector<SampleType> resampled;
+        resampled.ensure_capacity(to_resample.size() * ceil_div(m_source, m_target));
+        for (auto sample : to_resample) {
+            process_sample(sample, sample);
+
+            while (read_sample(sample, sample))
+                resampled.unchecked_append(sample);
+        }
+
+        return resampled;
     }
 
     void reset()
