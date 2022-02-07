@@ -182,15 +182,15 @@ void HTMLElement::parse_attribute(const FlyString& name, const String& value)
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#focus-update-steps
-static void run_focus_update_steps(Vector<DOM::Node&> old_chain, Vector<DOM::Node&> new_chain, DOM::Node& new_focus_target)
+static void run_focus_update_steps(NonnullRefPtrVector<DOM::Node> old_chain, NonnullRefPtrVector<DOM::Node> new_chain, DOM::Node& new_focus_target)
 {
     // 1. If the last entry in old chain and the last entry in new chain are the same,
     //    pop the last entry from old chain and the last entry from new chain and redo this step.
     while (!old_chain.is_empty()
         && !new_chain.is_empty()
         && &old_chain.last() == &new_chain.last()) {
-        old_chain.take_last();
-        new_chain.take_last();
+        (void)old_chain.take_last();
+        (void)new_chain.take_last();
     }
 
     // 2. For each entry entry in old chain, in order, run these substeps:
@@ -277,14 +277,14 @@ static void run_focus_update_steps(Vector<DOM::Node&> old_chain, Vector<DOM::Nod
     }
 }
 // https://html.spec.whatwg.org/multipage/interaction.html#focus-chain
-static Vector<DOM::Node&> focus_chain(DOM::Node* subject)
+static NonnullRefPtrVector<DOM::Node> focus_chain(DOM::Node* subject)
 {
     // FIXME: Move this somewhere more spec-friendly.
     if (!subject)
         return {};
 
     // 1. Let output be an empty list.
-    Vector<DOM::Node&> output;
+    NonnullRefPtrVector<DOM::Node> output;
 
     // 2. Let currentObject be subject.
     auto* current_object = subject;
