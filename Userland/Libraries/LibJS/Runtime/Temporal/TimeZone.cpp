@@ -77,8 +77,6 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(GlobalObject& global_obje
 
     // 4. If offsetNanosecondsResult is an abrupt completion, then
     if (offset_nanoseconds_result.is_throw_completion()) {
-        global_object.vm().clear_exception();
-
         // a. Assert: ! CanonicalizeTimeZoneName(identifier) is identifier.
         VERIFY(canonicalize_time_zone_name(identifier) == identifier);
 

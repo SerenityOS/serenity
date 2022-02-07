@@ -48,7 +48,6 @@ public:
     void push_interpreter(Interpreter&);
     void pop_interpreter(Interpreter&);
 
-    void clear_exception() { }
     void dump_backtrace() const;
 
     class InterpreterExecutionScope {
