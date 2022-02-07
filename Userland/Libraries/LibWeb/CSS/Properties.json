@@ -1141,6 +1141,7 @@
     "initial": "auto",
     "valid-identifiers": [
       "auto",
+      "all",
       "none"
     ]
   },
