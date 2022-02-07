@@ -1,6 +1,12 @@
 name: Build, lint, and test
 
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - "Documentation/**"
+  pull_request:
+    paths-ignore:
+      - "Documentation/**"
 
 env:
   # Don't mix these up!
@@ -18,15 +24,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        debug-options: ['ALL_DEBUG', 'NORMAL_DEBUG']
+        debug-options: ["ALL_DEBUG", "NORMAL_DEBUG"]
         os: [ubuntu-20.04]
-        arch: ['i686', 'x86_64']
+        arch: ["i686", "x86_64"]
         # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
         ccache-mark: [0]
         exclude:
           # We currently manually disable the ALL_DEBUG build on x86_64 for sake of saving CI time, as it is not our main target right now
-          - debug-options: 'ALL_DEBUG'
-            arch: 'x86_64'
+          - debug-options: "ALL_DEBUG"
+            arch: "x86_64"
 
     steps:
       - uses: actions/checkout@v2
@@ -159,7 +165,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         # Note that we do not set BUILD_LAGOM for the normal debug build
         # We build and run the Lagom tests in a separate job, and sanitizer builds take a good while longer than non-sanitized.
-        run:  |
+        run: |
           cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
             -DENABLE_COMPILETIME_HEADER_CHECK=ON \
             -DSERENITY_ARCH=${{ matrix.arch }} \
@@ -217,7 +223,7 @@ jobs:
         # Extremely useful if Serenity hangs trying to run one of the tests
         if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
-        run: '[ ! -e debug.log ] || cat debug.log'
+        run: "[ ! -e debug.log ] || cat debug.log"
 
       - name: Check manpages for completeness
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG' && matrix.arch == 'i686'}}
