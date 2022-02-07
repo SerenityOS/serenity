@@ -120,3 +120,20 @@ TEST_CASE(loading_multiple_files)
         EXPECT(!vm->exception());
     }
 }
+
+TEST_CASE(catch_exception)
+{
+    // FIXME: Currently it seems that try/catch with finally is broken so we test both at once.
+    EXPECT_NO_EXCEPTION_ALL("var hitCatch = false;\n"
+                            "var hitFinally = false;\n"
+                            "try {\n"
+                            "   a();\n"
+                            "} catch (e) {\n"
+                            "    hitCatch = e instanceof ReferenceError;\n"
+                            "    !1\n" // This is here to fix the alignment issue until that is actually resolved.
+                            "} finally {\n"
+                            "    hitFinally = true;\n"
+                            "}\n"
+                            "if (hitCatch !== true) throw new Exception('failed');\n"
+                            "if (hitFinally !== true) throw new Exception('failed');");
+}
