@@ -136,21 +136,26 @@ void Inode::set_shared_vmobject(Memory::SharedInodeVMObject& vmobject)
     m_shared_vmobject = vmobject;
 }
 
+RefPtr<LocalSocket> Inode::bound_socket() const
+{
+    return m_bound_socket;
+}
+
 bool Inode::bind_socket(LocalSocket& socket)
 {
     MutexLocker locker(m_inode_lock);
-    if (m_socket)
+    if (m_bound_socket)
         return false;
-    m_socket = socket;
+    m_bound_socket = socket;
     return true;
 }
 
 bool Inode::unbind_socket()
 {
     MutexLocker locker(m_inode_lock);
-    if (!m_socket)
+    if (!m_bound_socket)
         return false;
-    m_socket = nullptr;
+    m_bound_socket = nullptr;
     return true;
 }
 

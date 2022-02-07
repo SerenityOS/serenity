@@ -174,7 +174,9 @@ ErrorOr<void> LocalSocket::connect(OpenFileDescription& description, Userspace<c
     m_inode = inode;
 
     VERIFY(inode);
-    if (!inode->socket())
+
+    auto peer = inode->bound_socket();
+    if (!peer)
         return set_so_error(ECONNREFUSED);
 
     m_path = move(path);
@@ -182,7 +184,6 @@ ErrorOr<void> LocalSocket::connect(OpenFileDescription& description, Userspace<c
     VERIFY(m_connect_side_fd == &description);
     set_connect_side_role(Role::Connecting);
 
-    auto peer = file->inode()->socket();
     auto result = peer->queue_connection_from(*this);
     if (result.is_error()) {
         set_connect_side_role(Role::None);
