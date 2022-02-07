@@ -499,6 +499,7 @@ void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
     set_default_positioned(false);
 }
+
 void Window::set_always_on_top(bool always_on_top)
 {
     if (m_always_on_top == always_on_top)
@@ -510,21 +511,7 @@ void Window::set_always_on_top(bool always_on_top)
     window_stack().move_always_on_top_windows_to_front();
     Compositor::the().invalidate_occlusions();
 }
-void Window::set_vertically_maximized()
-{
-    if (m_maximized)
-        return;
-    if (!is_resizable() || resize_aspect_ratio().has_value())
-        return;
 
-    auto max_rect = WindowManager::the().maximized_window_rect(*this);
-
-    auto new_rect = Gfx::IntRect(
-        Gfx::IntPoint(rect().x(), max_rect.y()),
-        Gfx::IntSize(rect().width(), max_rect.height()));
-    set_rect(new_rect);
-    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(new_rect));
-}
 void Window::set_resizable(bool resizable)
 {
     if (m_resizable == resizable)
@@ -1019,6 +1006,26 @@ Gfx::IntRect Window::tiled_rect(Screen* target_screen, WindowTileType tile_type)
         return Gfx::IntRect(
             location,
             { screen.width() - location.x(), screen.height() - location.y() })
+            .translated(screen_location);
+    }
+    case WindowTileType::VerticallyMaximized: {
+        Gfx::IntPoint location {
+            floating_rect().location().x(),
+            menu_height
+        };
+        return Gfx::IntRect(
+            location,
+            { floating_rect().width(), max_height })
+            .translated(screen_location);
+    }
+    case WindowTileType::HorizontallyMaximized: {
+        Gfx::IntPoint location {
+            0,
+            floating_rect().location().y()
+        };
+        return Gfx::IntRect(
+            location,
+            { screen.width(), floating_rect().height() })
             .translated(screen_location);
     }
     default:
