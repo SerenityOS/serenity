@@ -29,7 +29,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -45,7 +45,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -61,7 +61,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -102,7 +102,7 @@ private:
         {                                                                      \
         }                                                                      \
                                                                                \
-        void execute_impl(Bytecode::Interpreter&) const;                       \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;    \
         String to_string_impl(Bytecode::Executable const&) const;              \
         void replace_references_impl(BasicBlock const&, BasicBlock const&) { } \
                                                                                \
@@ -128,7 +128,7 @@ JS_ENUMERATE_COMMON_BINARY_OPS(JS_DECLARE_COMMON_BINARY_OP)
         {                                                                      \
         }                                                                      \
                                                                                \
-        void execute_impl(Bytecode::Interpreter&) const;                       \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;    \
         String to_string_impl(Bytecode::Executable const&) const;              \
         void replace_references_impl(BasicBlock const&, BasicBlock const&) { } \
     };
@@ -144,7 +144,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -159,7 +159,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -173,7 +173,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -194,7 +194,7 @@ public:
             m_excluded_names[i] = excluded_names[i];
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -214,7 +214,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -239,7 +239,7 @@ public:
             m_elements[i] = elements[i];
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -260,7 +260,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -273,7 +273,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -289,7 +289,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -305,7 +305,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -323,7 +323,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -340,7 +340,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -357,7 +357,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -374,7 +374,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -407,7 +407,7 @@ public:
         m_false_target = move(false_target);
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
 
@@ -426,7 +426,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
 };
 
@@ -437,7 +437,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
 };
 
@@ -448,7 +448,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
 };
 
@@ -471,7 +471,7 @@ public:
             m_arguments[i] = arguments[i];
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -496,7 +496,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -512,7 +512,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -529,7 +529,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -541,7 +541,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -553,7 +553,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -567,7 +567,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -584,7 +584,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
 
@@ -605,7 +605,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -618,7 +618,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
 
@@ -636,7 +636,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
 
@@ -661,7 +661,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
 
@@ -679,7 +679,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
@@ -694,7 +694,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -706,7 +706,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -718,7 +718,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -730,7 +730,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -742,7 +742,7 @@ public:
     {
     }
 
-    void execute_impl(Bytecode::Interpreter&) const;
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
@@ -751,7 +751,7 @@ public:
 
 namespace JS::Bytecode {
 
-ALWAYS_INLINE void Instruction::execute(Bytecode::Interpreter& interpreter) const
+ALWAYS_INLINE ThrowCompletionOr<void> Instruction::execute(Bytecode::Interpreter& interpreter) const
 {
 #define __BYTECODE_OP(op)       \
     case Instruction::Type::op: \
