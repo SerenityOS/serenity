@@ -415,6 +415,8 @@ Optional<CSS::PointerEvents> StyleProperties::pointer_events() const
     switch (value.value()->to_identifier()) {
     case CSS::ValueID::Auto:
         return CSS::PointerEvents::Auto;
+    case CSS::ValueID::All:
+        return CSS::PointerEvents::All;
     case CSS::ValueID::None:
         return CSS::PointerEvents::None;
     default:

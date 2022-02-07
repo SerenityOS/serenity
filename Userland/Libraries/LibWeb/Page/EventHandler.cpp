@@ -200,6 +200,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             return false;
 
         auto pointer_events = result.layout_node->computed_values().pointer_events();
+        // FIXME: Handle other values for pointer-events.
         if (pointer_events == CSS::PointerEvents::None)
             return false;
 
@@ -335,6 +336,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         }
 
         auto pointer_events = result.layout_node->computed_values().pointer_events();
+        // FIXME: Handle other values for pointer-events.
         if (pointer_events == CSS::PointerEvents::None)
             return false;
 
