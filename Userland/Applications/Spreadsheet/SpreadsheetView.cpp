@@ -201,6 +201,38 @@ void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
     }
 }
 
+void InfinitelyScrollableTableView::drop_event(GUI::DropEvent& event)
+{
+    TableView::drop_event(event);
+    m_is_dragging_for_copy = false;
+    set_override_cursor(Gfx::StandardCursor::Arrow);
+    auto drop_index = index_at_event_position(event.position());
+    if (selection().size() > 0) {
+        // Get top left index position of previous selection
+        auto top_left_most_index = selection().first();
+        selection().for_each_index([&](auto& index) {
+            if (index.row() < top_left_most_index.row())
+                top_left_most_index = index;
+            else if (index.column() < top_left_most_index.column())
+                top_left_most_index = index;
+        });
+
+        // Compare with drag location
+        auto x_diff = drop_index.column() - top_left_most_index.column();
+        auto y_diff = drop_index.row() - top_left_most_index.row();
+
+        // Set new selection
+        Vector<GUI::ModelIndex> new_selection;
+        for (auto& index : selection().indices()) {
+            auto new_index = model()->index(index.row() + y_diff, index.column() + x_diff);
+            new_selection.append(move(new_index));
+        }
+        selection().clear();
+        AbstractTableView::set_cursor(drop_index, SelectionUpdate::Set);
+        selection().add_all(new_selection);
+    }
+}
+
 void SpreadsheetView::update_with_model()
 {
     m_sheet_model->update();
