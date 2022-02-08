@@ -149,7 +149,8 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
     using ReturnType = decltype(&sockets_for_url[0]);
     auto it = sockets_for_url.find_if([](auto& connection) { return connection->request_queue.is_empty(); });
     auto did_add_new_connection = false;
-    if (it.is_end() && sockets_for_url.size() < ConnectionCache::MaxConcurrentConnectionsPerURL) {
+    auto failed_to_find_a_socket = it.is_end();
+    if (failed_to_find_a_socket && sockets_for_url.size() < ConnectionCache::MaxConcurrentConnectionsPerURL) {
         using ConnectionType = RemoveCVReference<decltype(cache.begin()->value->at(0))>;
         auto connection_result = ConnectionType::SocketType::connect(url.host(), url.port_or_default());
         if (connection_result.is_error()) {
@@ -174,7 +175,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job)
         did_add_new_connection = true;
     }
     size_t index;
-    if (it.is_end()) {
+    if (failed_to_find_a_socket) {
         if (did_add_new_connection) {
             index = sockets_for_url.size() - 1;
         } else {
