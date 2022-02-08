@@ -523,8 +523,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
             return {};
 
         auto make_box_shadow_style_value = [](BoxShadowData const& data) {
-            // FIXME: Add extra properties to BoxShadowData so we can include them here!
-            return BoxShadowStyleValue::create(data.color, data.offset_x, data.offset_y, data.blur_radius, Length::make_px(0), BoxShadowPlacement::Outer);
+            return BoxShadowStyleValue::create(data.color, data.offset_x, data.offset_y, data.blur_radius, data.spread_distance, data.placement);
         };
 
         if (box_shadow_layers.size() == 1)
