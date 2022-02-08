@@ -76,6 +76,7 @@ private:
 };
 
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject&, FunctionObject& constructor, size_t byte_length);
+ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(GlobalObject&, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length, FunctionObject& clone_constructor);
 
 // 25.1.2.9 RawBytesToNumeric ( type, rawBytes, isLittleEndian ), https://tc39.es/ecma262/#sec-rawbytestonumeric
 template<typename T>
