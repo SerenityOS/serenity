@@ -119,8 +119,10 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
 
             if (is_over_bottom_line && is_over_right_line)
                 m_is_hovering_extend_zone = true;
-            else if (is_over_top_line || is_over_bottom_line || is_over_left_line || is_over_right_line)
+            else if (is_over_top_line || is_over_bottom_line || is_over_left_line || is_over_right_line) {
+                m_target_cell = top_left_most_index;
                 m_is_hovering_cut_zone = true;
+            }
         }
 
         if (m_is_hovering_cut_zone || m_is_dragging_for_copy)
@@ -135,9 +137,6 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
             m_should_intercept_drag = false;
             if (holding_left_button) {
                 m_has_committed_to_dragging = true;
-                // Force a drag to happen by moving the mousedown position to the center of the cell.
-                auto rect = content_rect(index);
-                m_left_mousedown_position = rect.center();
             }
         } else if (!m_should_intercept_drag) {
             if (!holding_left_button) {
@@ -172,16 +171,32 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
 
 void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
 {
-    if (m_is_hovering_cut_zone)
+    // Override the mouse event so that the the cell that is 'clicked' is not
+    // the one right beneath the cursor but instead the one that is referred to
+    // when m_is_hovering_cut_zone as it can be the case that the user is targetting
+    // a cell yet be outside of its bounding box due to the select_padding.
+    if (m_is_hovering_cut_zone) {
         m_is_dragging_for_copy = true;
-    AbstractTableView::mousedown_event(event);
+        auto rect = content_rect(m_target_cell);
+        GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y() };
+        AbstractTableView::mousedown_event(adjusted_event);
+    } else {
+        AbstractTableView::mousedown_event(event);
+    }
 }
 
 void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
 {
     m_should_intercept_drag = false;
     m_has_committed_to_dragging = false;
-    TableView::mouseup_event(event);
+    m_is_dragging_for_copy = false;
+    if (m_is_hovering_cut_zone) {
+        auto rect = content_rect(m_target_cell);
+        GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y() };
+        TableView::mouseup_event(adjusted_event);
+    } else {
+        TableView::mouseup_event(event);
+    }
 }
 
 void SpreadsheetView::update_with_model()

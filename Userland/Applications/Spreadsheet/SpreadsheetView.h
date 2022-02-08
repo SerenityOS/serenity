@@ -83,6 +83,7 @@ private:
     bool m_is_hovering_extend_zone { false };
     bool m_is_hovering_cut_zone { false };
     GUI::ModelIndex m_starting_selection_index;
+    GUI::ModelIndex m_target_cell;
     RefPtr<Core::Timer> m_horizontal_scroll_end_timer;
     RefPtr<Core::Timer> m_vertical_scroll_end_timer;
 };
