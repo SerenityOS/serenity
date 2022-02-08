@@ -21,17 +21,20 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, V
     // Note: Box-shadow layers are ordered front-to-back, so we paint them in reverse
     for (int layer_index = box_shadow_layers.size() - 1; layer_index >= 0; layer_index--) {
         auto& box_shadow_data = box_shadow_layers[layer_index];
+        // FIXME: Paint inset shadows.
+        if (box_shadow_data.placement != BoxShadowPlacement::Outer)
+            continue;
 
         Gfx::IntRect bitmap_rect = {
             0,
             0,
-            content_rect.width() + 4 * box_shadow_data.blur_radius,
-            content_rect.height() + 4 * box_shadow_data.blur_radius
+            content_rect.width() + (2 * box_shadow_data.spread_distance) + (4 * box_shadow_data.blur_radius),
+            content_rect.height() + (2 * box_shadow_data.spread_distance) + (4 * box_shadow_data.blur_radius)
         };
 
         Gfx::IntPoint blur_rect_position = {
-            content_rect.x() - 2 * box_shadow_data.blur_radius + box_shadow_data.offset_x,
-            content_rect.y() - 2 * box_shadow_data.blur_radius + box_shadow_data.offset_y
+            content_rect.x() - box_shadow_data.spread_distance - (2 * box_shadow_data.blur_radius) + box_shadow_data.offset_x,
+            content_rect.y() - box_shadow_data.spread_distance - (2 * box_shadow_data.blur_radius) + box_shadow_data.offset_y
         };
 
         if (bitmap_rect.is_empty())
@@ -45,7 +48,7 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, V
         auto new_bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 
         Gfx::Painter painter(*new_bitmap);
-        painter.fill_rect({ { 2 * box_shadow_data.blur_radius, 2 * box_shadow_data.blur_radius }, content_rect.size() }, box_shadow_data.color);
+        painter.fill_rect({ { 2 * box_shadow_data.blur_radius, 2 * box_shadow_data.blur_radius }, { content_rect.width() + (2 * box_shadow_data.spread_distance), content_rect.height() + (2 * box_shadow_data.spread_distance) } }, box_shadow_data.color);
 
         Gfx::FastBoxBlurFilter filter(*new_bitmap);
         filter.apply_three_passes(box_shadow_data.blur_radius);

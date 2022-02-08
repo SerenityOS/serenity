@@ -11,11 +11,18 @@
 
 namespace Web::Painting {
 
+enum class BoxShadowPlacement {
+    Outer,
+    Inner,
+};
+
 struct BoxShadowData {
+    Gfx::Color color;
     int offset_x;
     int offset_y;
     int blur_radius;
-    Gfx::Color color;
+    int spread_distance;
+    BoxShadowPlacement placement;
 };
 
 void paint_box_shadow(PaintContext&, Gfx::IntRect const&, Vector<BoxShadowData> const&);
