@@ -15,7 +15,7 @@ and devices connected to them. It shows a brief list of devices.
 
 ## Files
 
-* `/proc/pci` - source of the PCI devices list.
+* `/sys/bus/pci` - source of the PCI devices list.
 * `/res/pci.ids` - a database of PCI identifiers used to match available devices to their vendor, device and class names.
 
 ## Examples

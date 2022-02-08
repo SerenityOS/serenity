@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Hex.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/String.h>
+#include <AK/StringUtils.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -18,11 +21,25 @@ static bool flag_show_numerical = false;
 static const char* format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
 static const char* format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
 
+static u32 read_hex_string_from_bytebuffer(ByteBuffer const& buf)
+{
+    return AK::StringUtils::convert_to_uint_from_hex(String(buf.slice(2, buf.size() - 2).bytes())).release_value();
+}
+
+static u32 convert_sysfs_value_to_uint(String const& value)
+{
+    if (auto result = AK::StringUtils::convert_to_uint_from_hex(value); result.has_value())
+        return result.release_value();
+    if (auto result = AK::StringUtils::convert_to_uint(value); result.has_value())
+        return result.release_value();
+    VERIFY_NOT_REACHED();
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
     TRY(Core::System::unveil("/res/pci.ids", "r"));
-    TRY(Core::System::unveil("/proc/pci", "r"));
+    TRY(Core::System::unveil("/sys/bus/pci", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::ArgsParser args_parser;
@@ -41,23 +58,57 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    auto proc_pci = TRY(Core::File::open("/proc/pci", Core::OpenMode::ReadOnly));
+    Core::DirIterator di("/sys/bus/pci/", Core::DirIterator::SkipParentAndBaseDir);
+    if (di.has_error()) {
+        warnln("Failed to open /sys/bus/pci - {}", di.error());
+        return 1;
+    }
 
-    TRY(Core::System::pledge("stdio"));
+    TRY(Core::System::pledge("stdio rpath"));
 
-    auto file_contents = proc_pci->read_all();
-    auto json = TRY(JsonValue::from_string(file_contents));
-    json.as_array().for_each([db, format](auto& value) {
-        auto& dev = value.as_object();
-        auto domain = dev.get("domain").to_u32();
-        auto bus = dev.get("bus").to_u32();
-        auto device = dev.get("device").to_u32();
-        auto function = dev.get("function").to_u32();
-        auto vendor_id = dev.get("vendor_id").to_u32();
-        auto device_id = dev.get("device_id").to_u32();
-        auto revision_id = dev.get("revision_id").to_u32();
-        auto class_id = dev.get("class").to_u32();
-        auto subclass_id = dev.get("subclass").to_u32();
+    while (di.has_next()) {
+        auto dir = di.next_path();
+        auto domain_bus_device_parts = dir.split(':');
+        VERIFY(domain_bus_device_parts.size() == 3);
+        auto domain = convert_sysfs_value_to_uint(domain_bus_device_parts[0]);
+        auto bus = convert_sysfs_value_to_uint(domain_bus_device_parts[1]);
+        auto device = convert_sysfs_value_to_uint(domain_bus_device_parts[2].split('.')[0]);
+
+        auto function_parts = dir.split('.');
+        VERIFY(function_parts.size() == 2);
+        auto function = convert_sysfs_value_to_uint(function_parts[1]);
+
+        auto vendor_id_file = Core::File::construct(String::formatted("/sys/bus/pci/{}/vendor", dir));
+        if (!vendor_id_file->open(Core::OpenMode::ReadOnly)) {
+            dbgln("Error: Could not open {}: {}", vendor_id_file->name(), vendor_id_file->error_string());
+            continue;
+        }
+        auto device_id_file = Core::File::construct(String::formatted("/sys/bus/pci/{}/device_id", dir));
+        if (!device_id_file->open(Core::OpenMode::ReadOnly)) {
+            dbgln("Error: Could not open {}: {}", device_id_file->name(), device_id_file->error_string());
+            continue;
+        }
+        auto class_id_file = Core::File::construct(String::formatted("/sys/bus/pci/{}/class", dir));
+        if (!class_id_file->open(Core::OpenMode::ReadOnly)) {
+            dbgln("Error: Could not open {}: {}", class_id_file->name(), class_id_file->error_string());
+            continue;
+        }
+        auto subclass_id_file = Core::File::construct(String::formatted("/sys/bus/pci/{}/subclass", dir));
+        if (!subclass_id_file->open(Core::OpenMode::ReadOnly)) {
+            dbgln("Error: Could not open {}: {}", subclass_id_file->name(), subclass_id_file->error_string());
+            continue;
+        }
+        auto revision_id_file = Core::File::construct(String::formatted("/sys/bus/pci/{}/revision", dir));
+        if (!revision_id_file->open(Core::OpenMode::ReadOnly)) {
+            dbgln("Error: Could not open {}: {}", revision_id_file->name(), revision_id_file->error_string());
+            continue;
+        }
+
+        u32 vendor_id = read_hex_string_from_bytebuffer(vendor_id_file->read_all());
+        u32 device_id = read_hex_string_from_bytebuffer(device_id_file->read_all());
+        u32 revision_id = read_hex_string_from_bytebuffer(revision_id_file->read_all());
+        u32 class_id = read_hex_string_from_bytebuffer(class_id_file->read_all());
+        u32 subclass_id = read_hex_string_from_bytebuffer(subclass_id_file->read_all());
 
         String vendor_name;
         String device_name;
@@ -77,7 +128,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             class_name = String::formatted("{:02x}{:02x}", class_id, subclass_id);
 
         outln(format, domain, bus, device, function, class_name, vendor_name, device_name, revision_id);
-    });
+    }
 
     return 0;
 }
