@@ -28,14 +28,14 @@ static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(GlobalObject
     auto* buffer = typed_array.viewed_array_buffer();
 
     // 4. Let typeName be typedArray.[[TypedArrayName]].
-    auto type_name = typed_array.element_name();
+    auto const& type_name = typed_array.element_name();
 
     // 5. Let type be the Element Type value in Table 72 for typeName.
 
     // 6. If waitable is true, then
     if (waitable) {
         // a. If typeName is not "Int32Array" or "BigInt64Array", throw a TypeError exception.
-        if ((type_name != "Int32Array"sv) && (type_name != "BigInt64Array"sv))
+        if ((type_name != vm.names.Int32Array.as_string()) && (type_name != vm.names.BigInt64Array.as_string()))
             return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayTypeIsNot, type_name, "Int32 or BigInt64"sv);
     }
     // 7. Else,
