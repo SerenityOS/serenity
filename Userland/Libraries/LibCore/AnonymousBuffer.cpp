@@ -6,44 +6,16 @@
 
 #include <AK/Try.h>
 #include <LibCore/AnonymousBuffer.h>
+#include <LibCore/System.h>
 #include <LibIPC/File.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-
-#if defined(__serenity__)
-#    include <serenity.h>
-#endif
-
-#if defined(__linux__) && !defined(MFD_CLOEXEC)
-#    include <linux/memfd.h>
-#    include <sys/syscall.h>
-
-static int memfd_create(const char* name, unsigned int flags)
-{
-    return syscall(SYS_memfd_create, name, flags);
-}
-#endif
 
 namespace Core {
 
 ErrorOr<AnonymousBuffer> AnonymousBuffer::create_with_size(size_t size)
 {
-    int fd = -1;
-#if defined(__serenity__)
-    fd = anon_create(round_up_to_power_of_two(size, PAGE_SIZE), O_CLOEXEC);
-    if (fd < 0)
-        return Error::from_errno(errno);
-#elif defined(__linux__)
-    fd = memfd_create("", MFD_CLOEXEC);
-    if (fd < 0)
-        return Error::from_errno(errno);
-    if (ftruncate(fd, size) < 0) {
-        close(fd);
-        return Error::from_errno(errno);
-    }
-#endif
-    if (fd < 0)
-        return Error::from_errno(errno);
+    auto fd = TRY(Core::System::anon_create(size, O_CLOEXEC));
     return create_from_anon_fd(fd, size);
 }
 
