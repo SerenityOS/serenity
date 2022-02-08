@@ -521,6 +521,10 @@ public:
         if (!buffer.size())
             return Error::from_errno(ENOBUFS);
 
+        // Fill the internal buffer if it has run dry.
+        if (m_buffered_size == 0)
+            TRY(populate_read_buffer());
+
         // Let's try to take all we can from the buffer first.
         size_t buffer_nread = 0;
         if (m_buffered_size > 0) {
@@ -539,20 +543,7 @@ public:
             m_buffered_size -= amount_to_take;
         }
 
-        // If the buffer satisfied the request, then we need not continue.
-        if (buffer_nread == buffer.size()) {
-            return buffer_nread;
-        }
-
-        // Otherwise, let's try an extra read just in case there's something
-        // in our receive buffer.
-        auto stream_nread = TRY(stream().read(buffer.slice(buffer_nread)));
-
-        // Fill the internal buffer if it has run dry.
-        if (m_buffered_size == 0)
-            TRY(populate_read_buffer());
-
-        return buffer_nread + stream_nread;
+        return buffer_nread;
     }
 
     // Reads into the buffer until \n is encountered.
@@ -703,8 +694,23 @@ private:
             return ReadonlyBytes {};
 
         auto fillable_slice = m_buffer.span().slice(m_buffered_size);
-        auto nread = TRY(stream().read(fillable_slice));
-        m_buffered_size += nread;
+        size_t nread = 0;
+        do {
+            auto result = stream().read(fillable_slice);
+            if (result.is_error()) {
+                if (!result.error().is_errno())
+                    return result.error();
+                if (result.error().code() == EINTR)
+                    continue;
+                if (result.error().code() == EAGAIN)
+                    break;
+                return result.error();
+            }
+            auto read_size = result.value();
+            m_buffered_size += read_size;
+            nread += read_size;
+            break;
+        } while (true);
         return fillable_slice.slice(0, nread);
     }
 
