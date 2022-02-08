@@ -725,7 +725,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         auto limit = checked_limit.value();
 
         // 24. If srcType is the same as targetType, then
-        if (source_typed_array.element_size() == typed_array->element_size()) {
+        if (source_typed_array.element_name() == typed_array->element_name()) {
             // a. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
             // b. Repeat, while targetByteIndex < limit,
             //     i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
