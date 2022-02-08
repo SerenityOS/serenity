@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,6 +18,6 @@ struct BoxShadowData {
     Gfx::Color color;
 };
 
-void paint_box_shadow(PaintContext&, Gfx::IntRect const&, BoxShadowData const&);
+void paint_box_shadow(PaintContext&, Gfx::IntRect const&, Vector<BoxShadowData> const&);
 
 }
