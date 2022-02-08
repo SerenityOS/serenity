@@ -9,7 +9,7 @@
 namespace Web::HTML {
 
 HTMLFieldSetElement::HTMLFieldSetElement(DOM::Document& document, QualifiedName qualified_name)
-    : HTMLElement(document, move(qualified_name))
+    : FormAssociatedElement(document, move(qualified_name))
 {
 }
 

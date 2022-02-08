@@ -518,11 +518,22 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::JustifyContent:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().justify_content()));
     case CSS::PropertyID::BoxShadow: {
-        auto maybe_box_shadow = layout_node.computed_values().box_shadow();
-        if (!maybe_box_shadow.has_value())
+        auto box_shadow_layers = layout_node.computed_values().box_shadow();
+        if (box_shadow_layers.is_empty())
             return {};
-        auto box_shadow_data = maybe_box_shadow.release_value();
-        return BoxShadowStyleValue::create(box_shadow_data.offset_x, box_shadow_data.offset_y, box_shadow_data.blur_radius, box_shadow_data.color);
+
+        auto make_box_shadow_style_value = [](BoxShadowData const& data) {
+            return BoxShadowStyleValue::create(data.color, data.offset_x, data.offset_y, data.blur_radius, data.spread_distance, data.placement);
+        };
+
+        if (box_shadow_layers.size() == 1)
+            return make_box_shadow_style_value(box_shadow_layers.first());
+
+        NonnullRefPtrVector<StyleValue> box_shadow;
+        box_shadow.ensure_capacity(box_shadow_layers.size());
+        for (auto const& layer : box_shadow_layers)
+            box_shadow.append(make_box_shadow_style_value(layer));
+        return StyleValueList::create(move(box_shadow), StyleValueList::Separator::Comma);
     }
     case CSS::PropertyID::Width:
         return style_value_for_length_percentage(layout_node.computed_values().width());

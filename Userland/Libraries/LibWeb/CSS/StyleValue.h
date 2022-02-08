@@ -64,6 +64,11 @@ enum class BoxSizing {
     ContentBox,
 };
 
+enum class BoxShadowPlacement {
+    Outer,
+    Inner,
+};
+
 enum class Clear {
     None,
     Left,
@@ -264,6 +269,7 @@ enum class WhiteSpace {
 
 enum class PointerEvents {
     Auto,
+    All,
     None
 };
 
@@ -615,27 +621,31 @@ private:
 
 class BoxShadowStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<BoxShadowStyleValue> create(Length const& offset_x, Length const& offset_y, Length const& blur_radius, Color const& color)
+    static NonnullRefPtr<BoxShadowStyleValue>
+    create(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, BoxShadowPlacement placement)
     {
-        return adopt_ref(*new BoxShadowStyleValue(offset_x, offset_y, blur_radius, color));
+        return adopt_ref(*new BoxShadowStyleValue(color, offset_x, offset_y, blur_radius, spread_distance, placement));
     }
     virtual ~BoxShadowStyleValue() override { }
 
-    // FIXME: Spread-distance and "inset" flag
+    Color const& color() const { return m_color; }
     Length const& offset_x() const { return m_offset_x; }
     Length const& offset_y() const { return m_offset_y; }
     Length const& blur_radius() const { return m_blur_radius; }
-    Color const& color() const { return m_color; }
+    Length const& spread_distance() const { return m_spread_distance; }
+    BoxShadowPlacement placement() const { return m_placement; }
 
     virtual String to_string() const override;
 
 private:
-    explicit BoxShadowStyleValue(Length const& offset_x, Length const& offset_y, Length const& blur_radius, Color const& color)
+    explicit BoxShadowStyleValue(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, BoxShadowPlacement placement)
         : StyleValue(Type::BoxShadow)
+        , m_color(color)
         , m_offset_x(offset_x)
         , m_offset_y(offset_y)
         , m_blur_radius(blur_radius)
-        , m_color(color)
+        , m_spread_distance(spread_distance)
+        , m_placement(placement)
     {
     }
 
@@ -644,12 +654,15 @@ private:
         visitor(m_offset_x);
         visitor(m_offset_y);
         visitor(m_blur_radius);
+        visitor(m_spread_distance);
     }
 
+    Color m_color;
     Length m_offset_x;
     Length m_offset_y;
     Length m_blur_radius;
-    Color m_color;
+    Length m_spread_distance;
+    BoxShadowPlacement m_placement;
 };
 
 class CalculatedStyleValue : public StyleValue {

@@ -8,7 +8,7 @@
 
 #include <AK/StringView.h>
 
-namespace GUI {
+namespace GUI::GML {
 
 #define FOR_EACH_TOKEN_TYPE \
     __TOKEN(Unknown)        \
@@ -21,12 +21,12 @@ namespace GUI {
     __TOKEN(Colon)          \
     __TOKEN(JsonValue)
 
-struct GMLPosition {
+struct Position {
     size_t line;
     size_t column;
 };
 
-struct GMLToken {
+struct Token {
     enum class Type {
 #define __TOKEN(x) x,
         FOR_EACH_TOKEN_TYPE
@@ -47,15 +47,15 @@ struct GMLToken {
 
     Type m_type { Type::Unknown };
     StringView m_view;
-    GMLPosition m_start;
-    GMLPosition m_end;
+    Position m_start;
+    Position m_end;
 };
 
-class GMLLexer {
+class Lexer {
 public:
-    GMLLexer(StringView);
+    Lexer(StringView);
 
-    Vector<GMLToken> lex();
+    Vector<Token> lex();
 
 private:
     char peek(size_t offset = 0) const;
@@ -63,7 +63,9 @@ private:
 
     StringView m_input;
     size_t m_index { 0 };
-    GMLPosition m_position { 0, 0 };
+    Position m_position { 0, 0 };
 };
 
 }
+
+#undef FOR_EACH_TOKEN_TYPE

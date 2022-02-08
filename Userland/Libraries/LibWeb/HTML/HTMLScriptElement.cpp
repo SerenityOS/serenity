@@ -85,7 +85,7 @@ void HTMLScriptElement::execute_script()
             dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running inline script");
 
         // 3. Run the classic script given by the script's script for scriptElement.
-        verify_cast<ClassicScript>(*m_script).run();
+        (void)verify_cast<ClassicScript>(*m_script).run();
 
         // 4. Set document's currentScript attribute to oldCurrentScript.
         node_document->set_current_script({}, old_current_script);
@@ -259,7 +259,8 @@ void HTMLScriptElement::prepare_script()
     // FIXME: 24. Let options be a script fetch options whose cryptographic nonce is cryptographic nonce, integrity metadata is integrity metadata, parser metadata is parser metadata,
     //            credentials mode is module script credentials mode, and referrer policy is referrer policy.
 
-    // FIXME: 25. Let settings object be the element's node document's relevant settings object.
+    // 25. Let settings object be the element's node document's relevant settings object.
+    // NOTE: This will be done manually when this is required, as two of the use cases are inside lambdas that get executed later and thus a reference cannot be taken.
 
     // 26. If the element has a src content attribute, then:
     if (has_attribute(HTML::AttributeNames::src)) {
@@ -302,7 +303,7 @@ void HTMLScriptElement::prepare_script()
                     }
 
                     // FIXME: This is all ad-hoc and needs work.
-                    auto script = ClassicScript::create(url.to_string(), data, document().realm(), AK::URL());
+                    auto script = ClassicScript::create(url.to_string(), data, document().relevant_settings_object(), AK::URL());
 
                     // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
                     m_script = script;
@@ -328,7 +329,7 @@ void HTMLScriptElement::prepare_script()
             // 1. Let script be the result of creating a classic script using source text, settings object, base URL, and options.
 
             // FIXME: Pass settings, base URL and options.
-            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().realm(), AK::URL());
+            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().relevant_settings_object(), AK::URL());
 
             // 2. Set the script's script to script.
             m_script = script;

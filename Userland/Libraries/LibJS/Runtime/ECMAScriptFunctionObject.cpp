@@ -375,11 +375,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
         if (!has_parameter_expressions && arguments_object_needed) {
             scope_body->for_each_lexically_declared_name([&](auto const& name) {
-                if (name == arguments_name) {
+                if (name == arguments_name)
                     arguments_object_needed = false;
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
             });
         }
     } else {
@@ -485,7 +482,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         if (scope_body) {
             scope_body->for_each_var_declared_name([&](auto const& name) {
                 if (instantiated_var_names.set(name) != AK::HashSetResult::InsertedNewEntry)
-                    return IterationDecision::Continue;
+                    return;
                 MUST(var_environment->create_mutable_binding(global_object(), name, false));
 
                 Value initial_value;
@@ -495,8 +492,6 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                     initial_value = MUST(environment->get_binding_value(global_object(), name, false));
 
                 MUST(var_environment->initialize_binding(global_object(), name, initial_value));
-
-                return IterationDecision::Continue;
             });
         }
     }
@@ -506,7 +501,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         scope_body->for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
             auto& function_name = function_declaration.name();
             if (parameter_names.contains(function_name))
-                return IterationDecision::Continue;
+                return;
             // The spec says 'initializedBindings' here but that does not exist and it then adds it to 'instantiatedVarNames' so it probably means 'instantiatedVarNames'.
             if (!instantiated_var_names.contains(function_name) && function_name != vm.names.arguments.as_string()) {
                 MUST(var_environment->create_mutable_binding(global_object(), function_name, false));
@@ -515,7 +510,6 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             }
 
             function_declaration.set_should_do_additional_annexB_steps();
-            return IterationDecision::Continue;
         });
     }
 
@@ -554,11 +548,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 MUST(lex_environment->create_immutable_binding(global_object(), name, true));
             else
                 MUST(lex_environment->create_mutable_binding(global_object(), name, false));
-            return IterationDecision::Continue;
         });
     });
 
-    VERIFY(!vm.exception());
     auto* private_environment = callee_context.private_environment;
     for (auto& declaration : functions_to_initialize) {
         auto* function = ECMAScriptFunctionObject::create(global_object(), declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), lex_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
@@ -738,7 +730,6 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
             VERIFY(result.type() == Completion::Type::Throw);
 
             // ii. Perform ! Call(promiseCapability.[[Reject]], undefined, « result.[[Value]] »).
-            vm.clear_exception();
             MUST(call(global_object, promise_capability.reject, js_undefined(), *result.value()));
         }
         // g. Return.
@@ -788,14 +779,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
                 m_bytecode_executable->dump();
         }
         auto result_and_frame = bytecode_interpreter->run_and_return_frame(*m_bytecode_executable, nullptr);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
 
         VERIFY(result_and_frame.frame != nullptr);
-        if (result_and_frame.value.is_error()) {
-            vm.throw_exception(bytecode_interpreter->global_object(), *result_and_frame.value.release_error().value());
-            return throw_completion(vm.exception()->value());
-        }
+        if (result_and_frame.value.is_error())
+            return result_and_frame.value.release_error();
+
         auto result = result_and_frame.value.release_value();
 
         // NOTE: Running the bytecode should eventually return a completion.

@@ -9,8 +9,11 @@
 #include "WebContentConsoleClient.h"
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Script.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Scripting/ClassicScript.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <WebContent/ConsoleGlobalObject.h>
 
 namespace WebContent {
@@ -28,32 +31,18 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<J
 
 void WebContentConsoleClient::handle_input(String const& js_source)
 {
-    auto script_or_error = JS::Script::parse(js_source, m_interpreter->realm(), "");
+    auto& settings = verify_cast<Web::HTML::EnvironmentSettingsObject>(*m_interpreter->realm().host_defined());
+    auto script = Web::HTML::ClassicScript::create("(console)", js_source, settings, settings.api_base_url());
+
+    // FIXME: Add parse error printouts back once ClassicScript can report parse errors.
+
+    auto result = script->run();
+
     StringBuilder output_html;
-    auto result = JS::ThrowCompletionOr<JS::Value> { JS::js_undefined() };
-    if (script_or_error.is_error()) {
-        auto error = script_or_error.error()[0];
-        auto hint = error.source_location_hint(js_source);
-        if (!hint.is_empty())
-            output_html.append(String::formatted("<pre>{}</pre>", escape_html_entities(hint)));
-        result = m_interpreter->vm().throw_completion<JS::SyntaxError>(*m_console_global_object.cell(), error.to_string());
-    } else {
-        // FIXME: This is not the correct way to do this, we probably want to have
-        //        multiple execution contexts we switch between.
-        auto& global_object_before = m_interpreter->realm().global_object();
-        VERIFY(is<Web::Bindings::WindowObject>(global_object_before));
-        auto& this_value_before = m_interpreter->realm().global_environment().global_this_value();
-        m_interpreter->realm().set_global_object(*m_console_global_object.cell(), &global_object_before);
 
-        result = m_interpreter->run(script_or_error.value());
-
-        m_interpreter->realm().set_global_object(global_object_before, &this_value_before);
-    }
-
-    if (result.is_error()) {
-        m_interpreter->vm().clear_exception();
+    if (result.is_abrupt()) {
         output_html.append("Uncaught exception: ");
-        auto error = *result.throw_completion().value();
+        auto error = *result.release_error().value();
         if (error.is_object())
             output_html.append(JS::MarkupGenerator::html_from_error(error.as_object()));
         else
@@ -62,7 +51,8 @@ void WebContentConsoleClient::handle_input(String const& js_source)
         return;
     }
 
-    print_html(JS::MarkupGenerator::html_from_value(result.value()));
+    if (result.value().has_value())
+        print_html(JS::MarkupGenerator::html_from_value(*result.value()));
 }
 
 void WebContentConsoleClient::print_html(String const& line)

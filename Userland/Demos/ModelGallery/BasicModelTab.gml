@@ -7,7 +7,6 @@
     @GUI::Label {
         text: "Here is a basic model, displayed on a table widget. Its clients are updated via granular updates. You can add or remove items with the widgets below."
         text_alignment: "CenterLeft"
-
         thickness: 2
         fixed_height: 34
     }
@@ -17,11 +16,9 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         fixed_height: 30
-
         @GUI::TextBox {
             name: "new_item_name"
             placeholder: "Enter some text to be added..."

@@ -49,8 +49,13 @@ struct Cell : public Weakable<Cell> {
     bool dirty() const { return m_dirty; }
     void clear_dirty() { m_dirty = false; }
 
-    void set_exception(JS::Exception* exc) { m_js_exception = exc; }
-    JS::Exception* exception() const { return m_js_exception; }
+    void set_thrown_value(JS::Value value) { m_thrown_value = value; }
+    Optional<JS::Value> thrown_value() const
+    {
+        if (m_thrown_value.is_empty())
+            return {};
+        return m_thrown_value;
+    }
 
     const String& data() const { return m_data; }
     const JS::Value& evaluated_data() const { return m_evaluated_data; }
@@ -103,7 +108,7 @@ private:
     bool m_evaluated_externally { false };
     String m_data;
     JS::Value m_evaluated_data;
-    JS::Exception* m_js_exception { nullptr };
+    JS::Value m_thrown_value;
     Kind m_kind { LiteralString };
     WeakPtr<Sheet> m_sheet;
     Vector<WeakPtr<Cell>> m_referencing_cells;

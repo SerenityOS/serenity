@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -47,15 +47,15 @@ public:
     void alert(String const&);
     bool confirm(String const&);
     String prompt(String const&, String const&);
-    i32 request_animation_frame(JS::FunctionObject&);
+    i32 request_animation_frame(NonnullOwnPtr<Bindings::CallbackType> js_callback);
     void cancel_animation_frame(i32);
 
-    i32 set_timeout(JS::FunctionObject&, i32);
-    i32 set_interval(JS::FunctionObject&, i32);
+    i32 set_timeout(NonnullOwnPtr<Bindings::CallbackType> callback, i32);
+    i32 set_interval(NonnullOwnPtr<Bindings::CallbackType> callback, i32);
     void clear_timeout(i32);
     void clear_interval(i32);
 
-    void queue_microtask(JS::FunctionObject&);
+    void queue_microtask(NonnullOwnPtr<Bindings::CallbackType> callback);
 
     int inner_width() const;
     int inner_height() const;
@@ -97,6 +97,8 @@ public:
     int screen_y() const;
 
     Selection::Selection* get_selection();
+
+    RefPtr<HTML::Storage> local_storage();
 
 private:
     explicit Window(Document&);

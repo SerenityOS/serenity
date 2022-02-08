@@ -20,9 +20,10 @@ RefPtr<ImageData> ImageData::create_with_size(JS::GlobalObject& global_object, i
 
     dbgln("Creating ImageData with {}x{}", width, height);
 
-    auto* data = JS::Uint8ClampedArray::create(global_object, width * height * 4);
-    if (!data)
+    auto data_or_error = JS::Uint8ClampedArray::create(global_object, width * height * 4);
+    if (data_or_error.is_error())
         return nullptr;
+    auto* data = data_or_error.release_value();
 
     auto data_handle = JS::make_handle(data);
 

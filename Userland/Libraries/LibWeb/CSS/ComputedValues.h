@@ -76,10 +76,12 @@ struct FlexBasisData {
 };
 
 struct BoxShadowData {
+    Color color {};
     CSS::Length offset_x {};
     CSS::Length offset_y {};
     CSS::Length blur_radius {};
-    Color color {};
+    CSS::Length spread_distance {};
+    CSS::BoxShadowPlacement placement { CSS::BoxShadowPlacement::Outer };
 };
 
 class ComputedValues {
@@ -104,7 +106,7 @@ public:
     CSS::AlignItems align_items() const { return m_noninherited.align_items; }
     float opacity() const { return m_noninherited.opacity; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
-    Optional<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
+    Vector<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
     CSS::LengthPercentage const& width() const { return m_noninherited.width; }
     CSS::LengthPercentage const& min_width() const { return m_noninherited.min_width; }
@@ -201,7 +203,7 @@ protected:
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
         float opacity { InitialValues::opacity() };
-        Optional<BoxShadowData> box_shadow {};
+        Vector<BoxShadowData> box_shadow {};
         Vector<CSS::Transformation> transformations {};
         CSS::BoxSizing box_sizing { InitialValues::box_sizing() };
     } m_noninherited;
@@ -255,7 +257,7 @@ public:
     void set_align_items(CSS::AlignItems value) { m_noninherited.align_items = value; }
     void set_opacity(float value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
-    void set_box_shadow(Optional<BoxShadowData> value) { m_noninherited.box_shadow = move(value); }
+    void set_box_shadow(Vector<BoxShadowData>&& value) { m_noninherited.box_shadow = move(value); }
     void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }
     void set_box_sizing(CSS::BoxSizing value) { m_noninherited.box_sizing = value; }
 

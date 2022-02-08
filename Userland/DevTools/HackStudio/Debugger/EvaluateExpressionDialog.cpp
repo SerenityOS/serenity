@@ -123,7 +123,6 @@ void EvaluateExpressionDialog::handle_evaluation(const String& expression)
     }
 
     if (result.is_error()) {
-        m_interpreter->vm().clear_exception();
         output_html.append("Uncaught exception: ");
         auto error = *result.throw_completion().value();
         if (error.is_object())

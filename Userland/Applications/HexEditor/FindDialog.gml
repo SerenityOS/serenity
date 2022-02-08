@@ -3,7 +3,6 @@
     fixed_width: 280
     fixed_height: 146
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         spacing: 2
         margins: [4]
@@ -11,8 +10,8 @@
 
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout
-        fixed_height: 22
 
+        fixed_height: 22
         @GUI::Label {
             text: "Value to find"
             fixed_width: 80
@@ -32,8 +31,8 @@
 
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout
-        fixed_height: 22
 
+        fixed_height: 22
         @GUI::Button {
             name: "find_button"
             text: "Find"

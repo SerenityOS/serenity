@@ -116,6 +116,7 @@
   "hidden",
   "inline",
   "inline-block",
+  "inline-flex",
   "inline-table",
   "inset",
   "inside",

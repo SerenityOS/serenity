@@ -7,7 +7,9 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Realm.h>
 
 namespace JS {
@@ -53,7 +55,9 @@ struct ResolvedBinding {
 };
 
 // 16.2.1.4 Abstract Module Records, https://tc39.es/ecma262/#sec-abstract-module-records
-class Module : public RefCounted<Module> {
+class Module
+    : public RefCounted<Module>
+    , public Weakable<Module> {
 public:
     virtual ~Module();
 

@@ -1243,22 +1243,26 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             }
         }
     } else if (parameter.type->name == "EventListener") {
+        // FIXME: Replace this with support for callback interfaces. https://heycam.github.io/webidl/#idl-callback-interface
+
         if (parameter.type->nullable) {
             scoped_generator.append(R"~~~(
     RefPtr<EventListener> @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish()) {
-        if (!@js_name@@js_suffix@.is_function())
-            return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
+        if (!@js_name@@js_suffix@.is_object())
+            return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
-        @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
+        CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
+        @cpp_name@ = adopt_ref(*new EventListener(move(callback_type)));
     }
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_function())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
+    if (!@js_name@@js_suffix@.is_object())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
-    auto @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
+    CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
+    auto @cpp_name@ = adopt_ref(*new EventListener(move(callback_type)));
 )~~~");
         }
     } else if (IDL::is_wrappable_type(*parameter.type)) {
@@ -1354,15 +1358,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @cpp_name@ = TRY(@js_name@@js_suffix@.to_i32(global_object));
 )~~~");
     } else if (parameter.type->name == "EventHandler") {
-        // x.onfoo = function() { ... }
+        // x.onfoo = function() { ... }, x.onfoo = () => { ... }, x.onfoo = {}
+        // NOTE: Anything else than an object will be treated as null. This is because EventHandler has the [LegacyTreatNonObjectAsNull] extended attribute.
+        //       Yes, you can store objects in event handler attributes. They just get ignored when there's any attempt to invoke them.
+        // FIXME: Replace this with proper support for callback function types.
+
         scoped_generator.append(R"~~~(
-    HTML::EventHandler @cpp_name@;
-    if (@js_name@@js_suffix@.is_function()) {
-        @cpp_name@.callback = JS::make_handle(&@js_name@@js_suffix@.as_function());
-    } else if (@js_name@@js_suffix@.is_string()) {
-        @cpp_name@.string = @js_name@@js_suffix@.as_string().string();
-    } else {
-        return JS::js_undefined();
+    Optional<Bindings::CallbackType> @cpp_name@;
+    if (@js_name@@js_suffix@.is_object()) {
+        @cpp_name@ = Bindings::CallbackType { JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object() };
     }
 )~~~");
     } else if (parameter.type->name == "Promise") {
@@ -2013,11 +2017,15 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
     @result_expression@ @value@;
 )~~~");
     } else if (type.name == "EventHandler") {
+        // FIXME: Replace this with proper support for callback function types.
+
         scoped_generator.append(R"~~~(
-    if (@value@.callback.is_null())
+    if (!@value@) {
         @result_expression@ JS::js_null();
-    else
-        @result_expression@ @value@.callback.cell();
+    } else {
+        VERIFY(!@value@->callback.is_null());
+        @result_expression@ @value@->callback.cell();
+    }
 )~~~");
     } else if (is<IDL::UnionType>(type)) {
         TODO();

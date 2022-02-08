@@ -409,6 +409,8 @@ private:
 
     bool is_considered_doubleclick(MouseEvent const&, DoubleClickInfo::ClickMetadata const&) const;
 
+    Gfx::IntPoint to_floating_cursor_position(Gfx::IntPoint const&) const;
+
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
     int m_max_distance_for_double_click { 4 };
@@ -423,6 +425,8 @@ private:
     WeakPtr<Window> m_move_window;
     Gfx::IntPoint m_move_origin;
     Gfx::IntPoint m_move_window_origin;
+    Gfx::IntPoint m_move_window_cursor_position;
+    Gfx::IntPoint m_mouse_down_origin;
 
     WeakPtr<Window> m_resize_window;
     WeakPtr<Window> m_resize_candidate;

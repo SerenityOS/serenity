@@ -4,43 +4,43 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGUI/GMLLexer.h>
-#include <LibGUI/GMLSyntaxHighlighter.h>
+#include "SyntaxHighlighter.h"
+#include "Lexer.h"
 #include <LibGfx/Palette.h>
 
-namespace GUI {
+namespace GUI::GML {
 
-static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, GMLToken::Type type)
+static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, Token::Type type)
 {
     switch (type) {
-    case GMLToken::Type::LeftCurly:
-    case GMLToken::Type::RightCurly:
+    case Token::Type::LeftCurly:
+    case Token::Type::RightCurly:
         return { palette.syntax_punctuation() };
-    case GMLToken::Type::ClassMarker:
+    case Token::Type::ClassMarker:
         return { palette.syntax_keyword() };
-    case GMLToken::Type::ClassName:
+    case Token::Type::ClassName:
         return { palette.syntax_identifier(), true };
-    case GMLToken::Type::Identifier:
+    case Token::Type::Identifier:
         return { palette.syntax_identifier() };
-    case GMLToken::Type::JsonValue:
+    case Token::Type::JsonValue:
         return { palette.syntax_string() };
-    case GMLToken::Type::Comment:
+    case Token::Type::Comment:
         return { palette.syntax_comment() };
     default:
         return { palette.base_text() };
     }
 }
 
-bool GMLSyntaxHighlighter::is_identifier(u64 token) const
+bool SyntaxHighlighter::is_identifier(u64 token) const
 {
-    auto ini_token = static_cast<GUI::GMLToken::Type>(token);
-    return ini_token == GUI::GMLToken::Type::Identifier;
+    auto ini_token = static_cast<Token::Type>(token);
+    return ini_token == Token::Type::Identifier;
 }
 
-void GMLSyntaxHighlighter::rehighlight(const Palette& palette)
+void SyntaxHighlighter::rehighlight(const Palette& palette)
 {
     auto text = m_client->get_text();
-    GMLLexer lexer(text);
+    Lexer lexer(text);
     auto tokens = lexer.lex();
 
     Vector<GUI::TextDocumentSpan> spans;
@@ -63,21 +63,21 @@ void GMLSyntaxHighlighter::rehighlight(const Palette& palette)
     m_client->do_update();
 }
 
-Vector<GMLSyntaxHighlighter::MatchingTokenPair> GMLSyntaxHighlighter::matching_token_pairs_impl() const
+Vector<SyntaxHighlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs_impl() const
 {
     static Vector<MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
-        pairs.append({ static_cast<u64>(GMLToken::Type::LeftCurly), static_cast<u64>(GMLToken::Type::RightCurly) });
+        pairs.append({ static_cast<u64>(Token::Type::LeftCurly), static_cast<u64>(Token::Type::RightCurly) });
     }
     return pairs;
 }
 
-bool GMLSyntaxHighlighter::token_types_equal(u64 token1, u64 token2) const
+bool SyntaxHighlighter::token_types_equal(u64 token1, u64 token2) const
 {
-    return static_cast<GUI::GMLToken::Type>(token1) == static_cast<GUI::GMLToken::Type>(token2);
+    return static_cast<Token::Type>(token1) == static_cast<Token::Type>(token2);
 }
 
-GMLSyntaxHighlighter::~GMLSyntaxHighlighter()
+SyntaxHighlighter::~SyntaxHighlighter()
 {
 }
 

@@ -12,6 +12,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {

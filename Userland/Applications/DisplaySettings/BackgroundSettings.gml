@@ -1,6 +1,5 @@
 @GUI::Widget {
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         margins: [8]
     }
@@ -33,9 +32,7 @@
 
         @GUI::Widget {
             shrink_to_fit: true
-
-            layout: @GUI::VerticalBoxLayout {
-            }
+            layout: @GUI::VerticalBoxLayout
 
             @GUI::Button {
                 name: "wallpaper_open_button"

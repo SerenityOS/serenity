@@ -598,195 +598,310 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
 // 19.2.1.3 EvalDeclarationInstantiation ( body, varEnv, lexEnv, privateEnv, strict ), https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
 ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict)
 {
-    // FIXME: I'm not sure if the global object is correct here. And this is quite a crucial spot!
     GlobalEnvironment* global_var_environment = variable_environment->is_global_environment() ? static_cast<GlobalEnvironment*>(variable_environment) : nullptr;
 
+    // 1. Let varNames be the VarDeclaredNames of body.
+    // 2. Let varDeclarations be the VarScopedDeclarations of body.
+    // 3. If strict is false, then
     if (!strict) {
+        // a. If varEnv is a global Environment Record, then
         if (global_var_environment) {
-            program.for_each_var_declared_name([&](auto const& name) {
-                if (global_var_environment->has_lexical_declaration(name)) {
-                    vm.throw_exception<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
-            });
+            // i. For each element name of varNames, do
+            TRY(program.for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
+                // 1. If varEnv.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
+                if (global_var_environment->has_lexical_declaration(name))
+                    return vm.throw_completion<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
+
+                // 2. NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
+                return {};
+            }));
         }
 
+        // b. Let thisEnv be lexEnv.
         auto* this_environment = lexical_environment;
+        // c. Assert: The following loop will terminate.
+
+        // d. Repeat, while thisEnv is not the same as varEnv,
         while (this_environment != variable_environment) {
+            // i. If thisEnv is not an object Environment Record, then
             if (!is<ObjectEnvironment>(*this_environment)) {
-                program.for_each_var_declared_name([&](auto const& name) {
+                // 1. NOTE: The environment of with statements cannot contain any lexical declaration so it doesn't need to be checked for var/let hoisting conflicts.
+                // 2. For each element name of varNames, do
+                TRY(program.for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
+                    // a. If thisEnv.HasBinding(name) is true, then
                     if (MUST(this_environment->has_binding(name))) {
-                        vm.throw_exception<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
-                        return IterationDecision::Break;
+                        // i. Throw a SyntaxError exception.
+                        return vm.throw_completion<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
+
+                        // FIXME: ii. NOTE: Annex B.3.4 defines alternate semantics for the above step.
+                        // In particular it only throw the syntax error if it is not an environment from a catchclause.
                     }
-                    // FIXME: NOTE: Annex B.3.4 defines alternate semantics for the above step.
-                    // In particular it only throw the syntax error if it is not an environment from a catchclause.
-                    return IterationDecision::Continue;
-                });
-                if (auto* exception = vm.exception())
-                    return throw_completion(exception->value());
+                    // b. NOTE: A direct eval will not hoist var declaration over a like-named lexical declaration.
+                    return {};
+                }));
             }
 
+            // ii. Set thisEnv to thisEnv.[[OuterEnv]].
             this_environment = this_environment->outer_environment();
             VERIFY(this_environment);
         }
     }
 
+    // 4. Let privateIdentifiers be a new empty List.
+    // 5. Let pointer be privateEnv.
+    // 6. Repeat, while pointer is not null,
+    //     a. For each Private Name binding of pointer.[[Names]], do
+    //         i. If privateIdentifiers does not contain binding.[[Description]], append binding.[[Description]] to privateIdentifiers.
+    //     b. Set pointer to pointer.[[OuterPrivateEnvironment]].
+    // 7. If AllPrivateIdentifiersValid of body with argument privateIdentifiers is false, throw a SyntaxError exception.
     // FIXME: Add Private identifiers check here.
 
-    HashTable<FlyString> declared_function_names;
+    // 8. Let functionsToInitialize be a new empty List.
     Vector<FunctionDeclaration const&> functions_to_initialize;
-    program.for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) {
+
+    // 9. Let declaredFunctionNames be a new empty List.
+    HashTable<FlyString> declared_function_names;
+
+    // 10. For each element d of varDeclarations, in reverse List order, do
+    TRY(program.for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) -> ThrowCompletionOr<void> {
+        // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
+        // i. Assert: d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
+        // Note: This is done by for_each_var_function_declaration_in_reverse_order.
+
+        // ii. NOTE: If there are multiple function declarations for the same name, the last declaration is used.
+        // iii. Let fn be the sole element of the BoundNames of d.
+        // iv. If fn is not an element of declaredFunctionNames, then
         if (declared_function_names.set(function.name()) != AK::HashSetResult::InsertedNewEntry)
-            return IterationDecision::Continue;
+            return {};
 
+        // 1. If varEnv is a global Environment Record, then
         if (global_var_environment) {
-            auto function_definable_or_error = global_var_environment->can_declare_global_function(function.name());
-            if (function_definable_or_error.is_error())
-                return IterationDecision::Break;
-            auto function_definable = function_definable_or_error.release_value();
+            // a. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
 
-            if (!function_definable) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalFunction, function.name());
-                return IterationDecision::Break;
-            }
+            auto function_definable = TRY(global_var_environment->can_declare_global_function(function.name()));
+
+            // b. If fnDefinable is false, throw a TypeError exception.
+            if (!function_definable)
+                return vm.throw_completion<TypeError>(global_object, ErrorType::CannotDeclareGlobalFunction, function.name());
         }
+
+        // 2. Append fn to declaredFunctionNames.
+        // Note: Already done in step iv.
+
+        // 3. Insert d as the first element of functionsToInitialize.
         functions_to_initialize.append(function);
-        return IterationDecision::Continue;
-    });
+        return {};
+    }));
 
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-
+    // 11. NOTE: Annex B.3.2.3 adds additional steps at this point.
+    // B.3.2.3 Changes to EvalDeclarationInstantiation, https://tc39.es/ecma262/#sec-web-compat-evaldeclarationinstantiation
+    // 11. If strict is false, then
     if (!strict) {
+        // a. Let declaredFunctionOrVarNames be the list-concatenation of declaredFunctionNames and declaredVarNames.
         // The spec here uses 'declaredVarNames' but that has not been declared yet.
         HashTable<FlyString> hoisted_functions;
-        program.for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
+
+        // b. For each FunctionDeclaration f that is directly contained in the StatementList of a Block, CaseClause, or DefaultClause Contained within body, do
+        TRY(program.for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) -> ThrowCompletionOr<void> {
+            // i. Let F be StringValue of the BindingIdentifier of f.
             auto& function_name = function_declaration.name();
+
+            // ii. If replacing the FunctionDeclaration f with a VariableStatement that has F as a BindingIdentifier would not produce any Early Errors for body, then
+            // Note: This is checked during parsing and for_each_function_hoistable_with_annexB_extension so it always passes here.
+
+            // 1. Let bindingExists be false.
+            // 2. Let thisEnv be lexEnv.
             auto* this_environment = lexical_environment;
 
-            while (this_environment != variable_environment) {
-                if (!is<ObjectEnvironment>(*this_environment) && MUST(this_environment->has_binding(function_name)))
-                    return IterationDecision::Continue;
+            // 3. Assert: The following loop will terminate.
 
+            // 4. Repeat, while thisEnv is not the same as varEnv,
+            while (this_environment != variable_environment) {
+                // a. If thisEnv is not an object Environment Record, then
+                if (!is<ObjectEnvironment>(*this_environment)) {
+                    // i. If thisEnv.HasBinding(F) is true, then
+
+                    if (MUST(this_environment->has_binding(function_name))) {
+                        // i. Let bindingExists be true.
+                        // Note: When bindingExists is true we skip all the other steps.
+                        return {};
+                    }
+                }
+
+                // b. Set thisEnv to thisEnv.[[OuterEnv]].
                 this_environment = this_environment->outer_environment();
                 VERIFY(this_environment);
             }
 
+            // Note: At this point bindingExists is false.
+            // 5. If bindingExists is false and varEnv is a global Environment Record, then
             if (global_var_environment) {
-                if (global_var_environment->has_lexical_declaration(function_name))
-                    return IterationDecision::Continue;
-
-                auto var_definable_or_error = global_var_environment->can_declare_global_var(function_name);
-                if (var_definable_or_error.is_error())
-                    return IterationDecision::Break;
-                auto var_definable = var_definable_or_error.release_value();
-
-                if (!var_definable)
-                    return IterationDecision::Continue;
+                // a. If varEnv.HasLexicalDeclaration(F) is false, then
+                if (!global_var_environment->has_lexical_declaration(function_name)) {
+                    // i. Let fnDefinable be ? varEnv.CanDeclareGlobalVar(F).
+                    if (!TRY(global_var_environment->can_declare_global_var(function_name)))
+                        return {};
+                }
+                // b. Else,
+                else {
+                    // i. Let fnDefinable be false.
+                    return {};
+                }
             }
+            // 6. Else,
+            //     a. Let fnDefinable be true.
 
+            // Note: At this point fnDefinable is true.
+            // 7. If bindingExists is false and fnDefinable is true, then
+
+            // a. If declaredFunctionOrVarNames does not contain F, then
             if (!declared_function_names.contains(function_name) && !hoisted_functions.contains(function_name)) {
+                // i. If varEnv is a global Environment Record, then
                 if (global_var_environment) {
-                    auto result = global_var_environment->create_global_var_binding(function_name, true);
-                    if (result.is_error())
-                        return IterationDecision::Break;
-                } else {
+                    // i. Perform ? varEnv.CreateGlobalVarBinding(F, true).
+                    TRY(global_var_environment->create_global_var_binding(function_name, true));
+                }
+                // ii. Else,
+                else {
+
+                    // i. Let bindingExists be varEnv.HasBinding(F).
+                    // ii. If bindingExists is false, then
                     if (!MUST(variable_environment->has_binding(function_name))) {
+                        // i. Perform ! varEnv.CreateMutableBinding(F, true).
+                        // ii. Perform ! varEnv.InitializeBinding(F, undefined).
                         MUST(variable_environment->create_mutable_binding(global_object, function_name, true));
                         MUST(variable_environment->initialize_binding(global_object, function_name, js_undefined()));
                     }
                 }
-
-                hoisted_functions.set(function_name);
             }
 
+            // iii. Append F to declaredFunctionOrVarNames.
+            hoisted_functions.set(function_name);
+
+            // b. When the FunctionDeclaration f is evaluated, perform the following steps in place of the FunctionDeclaration Evaluation algorithm provided in 15.2.6:
+            //     i. Let genv be the running execution context's VariableEnvironment.
+            //     ii. Let benv be the running execution context's LexicalEnvironment.
+            //     iii. Let fobj be ! benv.GetBindingValue(F, false).
+            //     iv. Perform ? genv.SetMutableBinding(F, fobj, false).
+            //     v. Return NormalCompletion(empty).
             function_declaration.set_should_do_additional_annexB_steps();
 
-            return IterationDecision::Continue;
-        });
-
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+            return {};
+        }));
     }
 
+    // 12. Let declaredVarNames be a new empty List.
     HashTable<FlyString> declared_var_names;
 
-    program.for_each_var_scoped_variable_declaration([&](VariableDeclaration const& declaration) {
-        declaration.for_each_bound_name([&](auto const& name) {
+    // 13. For each element d of varDeclarations, do
+    TRY(program.for_each_var_scoped_variable_declaration([&](VariableDeclaration const& declaration) {
+        // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
+        // Note: This is handled by for_each_var_scoped_variable_declaration.
+
+        // i. For each String vn of the BoundNames of d, do
+        return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
+            // 1. If vn is not an element of declaredFunctionNames, then
             if (!declared_function_names.contains(name)) {
+                // a. If varEnv is a global Environment Record, then
                 if (global_var_environment) {
-                    auto variable_definable_or_error = global_var_environment->can_declare_global_var(name);
-                    if (variable_definable_or_error.is_error())
-                        return IterationDecision::Break;
-                    auto variable_definable = variable_definable_or_error.release_value();
-                    if (!variable_definable) {
-                        vm.throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalVariable, name);
-                        return IterationDecision::Break;
-                    }
+                    // i. Let vnDefinable be ? varEnv.CanDeclareGlobalVar(vn).
+                    auto variable_definable = TRY(global_var_environment->can_declare_global_var(name));
+
+                    // ii. If vnDefinable is false, throw a TypeError exception.
+                    if (!variable_definable)
+                        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotDeclareGlobalVariable, name);
                 }
+
+                // b. If vn is not an element of declaredVarNames, then
+                // i. Append vn to declaredVarNames.
                 declared_var_names.set(name);
             }
-            return IterationDecision::Continue;
+            return {};
         });
-        if (vm.exception())
-            return IterationDecision::Break;
-        return IterationDecision::Continue;
-    });
-
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    }));
 
     // 14. NOTE: No abnormal terminations occur after this algorithm step unless varEnv is a global Environment Record and the global object is a Proxy exotic object.
 
-    program.for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
-        declaration.for_each_bound_name([&](auto const& name) {
-            if (declaration.is_constant_declaration())
-                (void)lexical_environment->create_immutable_binding(global_object, name, true);
-            else
-                (void)lexical_environment->create_mutable_binding(global_object, name, false);
-            if (vm.exception())
-                return IterationDecision::Break;
-            return IterationDecision::Continue;
+    // 15. Let lexDeclarations be the LexicallyScopedDeclarations of body.
+    // 16. For each element d of lexDeclarations, do
+    TRY(program.for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
+        // a. NOTE: Lexically declared names are only instantiated here but not initialized.
+
+        // b. For each element dn of the BoundNames of d, do
+        return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
+            // i. If IsConstantDeclaration of d is true, then
+            if (declaration.is_constant_declaration()) {
+                // 1. Perform ? lexEnv.CreateImmutableBinding(dn, true).
+                TRY(lexical_environment->create_immutable_binding(global_object, name, true));
+            }
+            // ii. Else,
+            else {
+                // 1. Perform ? lexEnv.CreateMutableBinding(dn, false).
+                TRY(lexical_environment->create_mutable_binding(global_object, name, false));
+            }
+            return {};
         });
-        if (vm.exception())
-            return IterationDecision::Break;
-        return IterationDecision::Continue;
-    });
+    }));
 
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-
+    // 17. For each Parse Node f of functionsToInitialize, do
     for (auto& declaration : functions_to_initialize) {
+        // a. Let fn be the sole element of the BoundNames of f.
+        // b. Let fo be InstantiateFunctionObject of f with arguments lexEnv and privateEnv.
         auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), lexical_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object());
+
+        // c. If varEnv is a global Environment Record, then
         if (global_var_environment) {
+            // i. Perform ? varEnv.CreateGlobalFunctionBinding(fn, fo, true).
             TRY(global_var_environment->create_global_function_binding(declaration.name(), function, true));
-        } else {
+        }
+        // d. Else,
+        else {
+            // i. Let bindingExists be varEnv.HasBinding(fn).
             auto binding_exists = MUST(variable_environment->has_binding(declaration.name()));
 
+            // ii. If bindingExists is false, then
             if (!binding_exists) {
-                TRY(variable_environment->create_mutable_binding(global_object, declaration.name(), true));
-                TRY(variable_environment->initialize_binding(global_object, declaration.name(), function));
-            } else {
-                TRY(variable_environment->set_mutable_binding(global_object, declaration.name(), function, false));
+                // 1. Let status be ! varEnv.CreateMutableBinding(fn, true).
+                // 2. Assert: status is not an abrupt completion because of validation preceding step 14.
+                MUST(variable_environment->create_mutable_binding(global_object, declaration.name(), true));
+
+                // 3. Perform ! varEnv.InitializeBinding(fn, fo).
+                MUST(variable_environment->initialize_binding(global_object, declaration.name(), function));
+            }
+            // iii. Else,
+            else {
+                // 1. Perform ! varEnv.SetMutableBinding(fn, fo, false).
+                MUST(variable_environment->set_mutable_binding(global_object, declaration.name(), function, false));
             }
         }
     }
+
+    // 18. For each String vn of declaredVarNames, do
 
     for (auto& var_name : declared_var_names) {
+        // a. If varEnv is a global Environment Record, then
         if (global_var_environment) {
+            // i. Perform ? varEnv.CreateGlobalVarBinding(vn, true).
             TRY(global_var_environment->create_global_var_binding(var_name, true));
-        } else {
+        }
+        // b. Else,
+        else {
+            // i. Let bindingExists be varEnv.HasBinding(vn).
             auto binding_exists = MUST(variable_environment->has_binding(var_name));
 
+            // ii. If bindingExists is false, then
             if (!binding_exists) {
-                TRY(variable_environment->create_mutable_binding(global_object, var_name, true));
-                TRY(variable_environment->initialize_binding(global_object, var_name, js_undefined()));
+                // 1. Let status be ! varEnv.CreateMutableBinding(vn, true).
+                // 2. Assert: status is not an abrupt completion because of validation preceding step 14.
+                MUST(variable_environment->create_mutable_binding(global_object, var_name, true));
+
+                // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
+                MUST(variable_environment->initialize_binding(global_object, var_name, js_undefined()));
             }
         }
     }
 
+    // 19. Return NormalCompletion(empty).
     return {};
 }
 
@@ -849,7 +964,6 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
     // 8. Set obj.[[Delete]] as specified in 10.4.4.5.
     // 9. Set obj.[[Prototype]] to %Object.prototype%.
     auto* object = vm.heap().allocate<ArgumentsObject>(global_object, global_object, environment);
-    VERIFY(!vm.exception());
 
     // 14. Let index be 0.
     // 15. Repeat, while index < len,

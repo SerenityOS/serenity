@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "AutocompleteProvider.h"
+#include "../AutocompleteProvider.h"
 
-namespace GUI {
+namespace GUI::GML {
 
-class GMLAutocompleteProvider final : public virtual GUI::AutocompleteProvider {
+class AutocompleteProvider final : public virtual GUI::AutocompleteProvider {
 public:
-    GMLAutocompleteProvider() { }
-    virtual ~GMLAutocompleteProvider() override { }
+    AutocompleteProvider() { }
+    virtual ~AutocompleteProvider() override { }
 
 private:
     static bool can_have_declared_layout(StringView class_name)

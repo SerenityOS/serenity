@@ -18,7 +18,6 @@
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Shape.h>
-#include <LibJS/Runtime/TemporaryClearException.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {

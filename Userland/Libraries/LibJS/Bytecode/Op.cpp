@@ -42,19 +42,22 @@ String Instruction::to_string(Bytecode::Executable const& executable) const
 
 namespace JS::Bytecode::Op {
 
-void Load::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Load::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = interpreter.reg(m_src);
+    return {};
 }
 
-void LoadImmediate::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> LoadImmediate::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = m_value;
+    return {};
 }
 
-void Store::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Store::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = interpreter.accumulator();
+    return {};
 }
 
 static ThrowCompletionOr<Value> abstract_inequals(GlobalObject& global_object, Value src1, Value src2)
@@ -77,19 +80,17 @@ static ThrowCompletionOr<Value> typed_equals(GlobalObject&, Value src1, Value sr
     return Value(is_strictly_equal(src1, src2));
 }
 
-#define JS_DEFINE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                       \
-    void OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const         \
-    {                                                                                \
-        auto lhs = interpreter.reg(m_lhs_reg);                                       \
-        auto rhs = interpreter.accumulator();                                        \
-        auto result_or_error = op_snake_case(interpreter.global_object(), lhs, rhs); \
-        if (result_or_error.is_error())                                              \
-            return;                                                                  \
-        interpreter.accumulator() = result_or_error.release_value();                 \
-    }                                                                                \
-    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const            \
-    {                                                                                \
-        return String::formatted(#OpTitleCase " {}", m_lhs_reg);                     \
+#define JS_DEFINE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                                  \
+    ThrowCompletionOr<void> OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const \
+    {                                                                                           \
+        auto lhs = interpreter.reg(m_lhs_reg);                                                  \
+        auto rhs = interpreter.accumulator();                                                   \
+        interpreter.accumulator() = TRY(op_snake_case(interpreter.global_object(), lhs, rhs));  \
+        return {};                                                                              \
+    }                                                                                           \
+    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                       \
+    {                                                                                           \
+        return String::formatted(#OpTitleCase " {}", m_lhs_reg);                                \
     }
 
 JS_ENUMERATE_COMMON_BINARY_OPS(JS_DEFINE_COMMON_BINARY_OP)
@@ -104,33 +105,33 @@ static ThrowCompletionOr<Value> typeof_(GlobalObject& global_object, Value value
     return Value(js_string(global_object.vm(), value.typeof()));
 }
 
-#define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                         \
-    void OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const                          \
-    {                                                                                                 \
-        auto result_or_error = op_snake_case(interpreter.global_object(), interpreter.accumulator()); \
-        if (result_or_error.is_error())                                                               \
-            return;                                                                                   \
-        interpreter.accumulator() = result_or_error.release_value();                                  \
-    }                                                                                                 \
-    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                             \
-    {                                                                                                 \
-        return #OpTitleCase;                                                                          \
+#define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                                   \
+    ThrowCompletionOr<void> OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const                 \
+    {                                                                                                           \
+        interpreter.accumulator() = TRY(op_snake_case(interpreter.global_object(), interpreter.accumulator())); \
+        return {};                                                                                              \
+    }                                                                                                           \
+    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                                       \
+    {                                                                                                           \
+        return #OpTitleCase;                                                                                    \
     }
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
 
-void NewBigInt::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> NewBigInt::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = js_bigint(interpreter.vm().heap(), m_bigint);
+    return {};
 }
 
-void NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     Vector<Value> elements;
     elements.ensure_capacity(m_element_count);
     for (size_t i = 0; i < m_element_count; i++)
         elements.append(interpreter.reg(m_elements[i]));
     interpreter.accumulator() = Array::create_from(interpreter.global_object(), elements);
+    return {};
 }
 
 // FIXME: Since the accumulator is a Value, we store an object there and have to convert back and forth between that an Iterator records. Not great.
@@ -155,113 +156,87 @@ static Iterator object_to_iterator(GlobalObject& global_object, Object& object)
     };
 }
 
-void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& global_object = interpreter.global_object();
-    auto iterator_object_or_error = interpreter.accumulator().to_object(global_object);
-    if (iterator_object_or_error.is_error())
-        return;
-    auto iterator = object_to_iterator(global_object, *iterator_object_or_error.release_value());
+    auto iterator_object = TRY(interpreter.accumulator().to_object(global_object));
+    auto iterator = object_to_iterator(global_object, *iterator_object);
 
     auto* array = MUST(Array::create(global_object, 0));
     size_t index = 0;
 
     while (true) {
-        auto iterator_result_or_error = iterator_next(global_object, iterator);
-        if (iterator_result_or_error.is_error())
-            return;
-        auto* iterator_result = iterator_result_or_error.release_value();
+        auto* iterator_result = TRY(iterator_next(global_object, iterator));
 
-        auto complete_or_error = iterator_complete(global_object, *iterator_result);
-        if (complete_or_error.is_error())
-            return;
-        auto complete = complete_or_error.release_value();
+        auto complete = TRY(iterator_complete(global_object, *iterator_result));
 
         if (complete) {
             interpreter.accumulator() = array;
-            return;
+            return {};
         }
 
-        auto value_or_error = iterator_value(global_object, *iterator_result);
-        if (value_or_error.is_error())
-            return;
-        auto value = value_or_error.release_value();
+        auto value = TRY(iterator_value(global_object, *iterator_result));
 
         MUST(array->create_data_property_or_throw(index, value));
         index++;
     }
+    return {};
 }
 
-void NewString::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> NewString::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = js_string(interpreter.vm(), interpreter.current_executable().get_string(m_string));
+    return {};
 }
 
-void NewObject::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> NewObject::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = Object::create(interpreter.global_object(), interpreter.global_object().object_prototype());
+    return {};
 }
 
-void NewRegExp::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto source = interpreter.current_executable().get_string(m_source_index);
     auto flags = interpreter.current_executable().get_string(m_flags_index);
 
-    auto regexp_or_error = regexp_create(interpreter.global_object(), js_string(interpreter.vm(), source), js_string(interpreter.vm(), flags));
-    if (regexp_or_error.is_error())
-        return;
-    interpreter.accumulator() = regexp_or_error.value();
+    interpreter.accumulator() = TRY(regexp_create(interpreter.global_object(), js_string(interpreter.vm(), source), js_string(interpreter.vm(), flags)));
+    return {};
 }
 
-void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto from_object_or_error = interpreter.reg(m_from_object).to_object(interpreter.global_object());
-    if (from_object_or_error.is_error())
-        return;
-    auto* from_object = from_object_or_error.release_value();
+    auto* from_object = TRY(interpreter.reg(m_from_object).to_object(interpreter.global_object()));
 
     auto* to_object = Object::create(interpreter.global_object(), interpreter.global_object().object_prototype());
 
     HashTable<Value, ValueTraits> excluded_names;
-    for (size_t i = 0; i < m_excluded_names_count; ++i) {
+    for (size_t i = 0; i < m_excluded_names_count; ++i)
         excluded_names.set(interpreter.reg(m_excluded_names[i]));
-        if (interpreter.vm().exception())
-            return;
-    }
 
-    auto own_keys_or_error = from_object->internal_own_property_keys();
-    if (own_keys_or_error.is_error())
-        return;
-    auto own_keys = own_keys_or_error.release_value();
+    auto own_keys = TRY(from_object->internal_own_property_keys());
 
     for (auto& key : own_keys) {
         if (!excluded_names.contains(key)) {
-            auto property_key_or_error = key.to_property_key(interpreter.global_object());
-            if (property_key_or_error.is_error())
-                return;
-            PropertyKey property_key = property_key_or_error.release_value();
-            auto property_value_or_error = from_object->get(property_key);
-            if (property_value_or_error.is_error())
-                return;
-            auto property_value = property_value_or_error.release_value();
+            auto property_key = TRY(key.to_property_key(interpreter.global_object()));
+            auto property_value = TRY(from_object->get(property_key));
             to_object->define_direct_property(property_key, property_value, JS::default_attributes);
         }
     }
 
     interpreter.accumulator() = to_object;
+    return {};
 }
 
-void ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto result_or_error = add(interpreter.global_object(), interpreter.reg(m_lhs), interpreter.accumulator());
-    if (result_or_error.is_error())
-        return;
-    interpreter.reg(m_lhs) = result_or_error.release_value();
+    interpreter.reg(m_lhs) = TRY(add(interpreter.global_object(), interpreter.reg(m_lhs), interpreter.accumulator()));
+    return {};
 }
 
-void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto reference = [&] {
+    auto get_reference = [&]() -> ThrowCompletionOr<Reference> {
         auto const& string = interpreter.current_executable().get_identifier(m_identifier);
         if (m_cached_environment_coordinate.has_value()) {
             auto* environment = interpreter.vm().running_execution_context().lexical_environment;
@@ -275,73 +250,49 @@ void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
             m_cached_environment_coordinate = {};
         }
 
-        auto reference_or_error = interpreter.vm().resolve_binding(string);
-        if (reference_or_error.is_throw_completion()) {
-            interpreter.vm().throw_exception(interpreter.global_object(), *reference_or_error.release_error().value());
-            return Reference {};
-        }
-
-        auto reference = reference_or_error.release_value();
+        auto reference = TRY(interpreter.vm().resolve_binding(string));
         if (reference.environment_coordinate().has_value())
             m_cached_environment_coordinate = reference.environment_coordinate();
         return reference;
-    }();
-
-    if (interpreter.vm().exception())
-        return;
-
-    auto value_or_error = reference.get_value(interpreter.global_object());
-    if (value_or_error.is_error())
-        return;
-    interpreter.accumulator() = value_or_error.release_value();
+    };
+    auto reference = TRY(get_reference());
+    interpreter.accumulator() = TRY(reference.get_value(interpreter.global_object()));
+    return {};
 }
 
-void SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto reference_or_error = vm.resolve_binding(interpreter.current_executable().get_identifier(m_identifier));
-    if (reference_or_error.is_throw_completion()) {
-        interpreter.vm().throw_exception(interpreter.global_object(), *reference_or_error.release_error().value());
-        return;
-    }
+    auto reference = TRY(vm.resolve_binding(interpreter.current_executable().get_identifier(m_identifier)));
 
-    auto reference = reference_or_error.release_value();
-    // TODO: ThrowCompletionOr<void> return
-    (void)reference.put_value(interpreter.global_object(), interpreter.accumulator());
+    TRY(reference.put_value(interpreter.global_object(), interpreter.accumulator()));
+    return {};
 }
 
-void GetById::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto object_or_error = interpreter.accumulator().to_object(interpreter.global_object());
-    if (object_or_error.is_error())
-        return;
-    auto* object = object_or_error.release_value();
-    auto value_or_error = object->get(interpreter.current_executable().get_identifier(m_property));
-    if (value_or_error.is_error())
-        return;
-    interpreter.accumulator() = value_or_error.release_value();
+    auto* object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    interpreter.accumulator() = TRY(object->get(interpreter.current_executable().get_identifier(m_property)));
+    return {};
 }
 
-void PutById::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto object_or_error = interpreter.reg(m_base).to_object(interpreter.global_object());
-    if (object_or_error.is_error())
-        return;
-    auto* object = object_or_error.release_value();
-    MUST(object->set(interpreter.current_executable().get_identifier(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+    auto* object = TRY(interpreter.reg(m_base).to_object(interpreter.global_object()));
+    TRY(object->set(interpreter.current_executable().get_identifier(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+    return {};
 }
 
-void Jump::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.jump(*m_true_target);
+    return {};
 }
 
-void ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto value_or_error = interpreter.vm().resolve_this_binding(interpreter.global_object());
-    if (value_or_error.is_error())
-        return;
-    interpreter.accumulator() = value_or_error.release_value();
+    interpreter.accumulator() = TRY(interpreter.vm().resolve_this_binding(interpreter.global_object()));
+    return {};
 }
 
 void Jump::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
@@ -352,7 +303,7 @@ void Jump::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
         m_false_target = Label { to };
 }
 
-void JumpConditional::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> JumpConditional::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     VERIFY(m_true_target.has_value());
     VERIFY(m_false_target.has_value());
@@ -361,9 +312,10 @@ void JumpConditional::execute_impl(Bytecode::Interpreter& interpreter) const
         interpreter.jump(m_true_target.value());
     else
         interpreter.jump(m_false_target.value());
+    return {};
 }
 
-void JumpNullish::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> JumpNullish::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     VERIFY(m_true_target.has_value());
     VERIFY(m_false_target.has_value());
@@ -372,9 +324,10 @@ void JumpNullish::execute_impl(Bytecode::Interpreter& interpreter) const
         interpreter.jump(m_true_target.value());
     else
         interpreter.jump(m_false_target.value());
+    return {};
 }
 
-void JumpUndefined::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     VERIFY(m_true_target.has_value());
     VERIFY(m_false_target.has_value());
@@ -383,15 +336,15 @@ void JumpUndefined::execute_impl(Bytecode::Interpreter& interpreter) const
         interpreter.jump(m_true_target.value());
     else
         interpreter.jump(m_false_target.value());
+    return {};
 }
 
-void Call::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto callee = interpreter.reg(m_callee);
-    if (!callee.is_function()) {
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::IsNotA, callee.to_string_without_side_effects(), "function"sv);
-        return;
-    }
+    if (!callee.is_function())
+        return interpreter.vm().throw_completion<TypeError>(interpreter.global_object(), ErrorType::IsNotA, callee.to_string_without_side_effects(), "function"sv);
+
     auto& function = callee.as_function();
 
     auto this_value = interpreter.reg(m_this_value);
@@ -404,71 +357,64 @@ void Call::execute_impl(Bytecode::Interpreter& interpreter) const
             return_value = return_value_or_error.release_value();
     } else {
         MarkedValueList argument_values { interpreter.vm().heap() };
-        for (size_t i = 0; i < m_argument_count; ++i) {
+        for (size_t i = 0; i < m_argument_count; ++i)
             argument_values.append(interpreter.reg(m_arguments[i]));
-        }
-        if (m_type == CallType::Call) {
-            auto return_value_or_error = call(interpreter.global_object(), function, this_value, move(argument_values));
-            if (return_value_or_error.is_error())
-                return;
-            return_value = return_value_or_error.release_value();
-        } else {
-            auto return_value_or_error = construct(interpreter.global_object(), function, move(argument_values));
-            if (return_value_or_error.is_error())
-                return;
-            return_value = return_value_or_error.release_value();
-        }
+
+        if (m_type == CallType::Call)
+            return_value = TRY(call(interpreter.global_object(), function, this_value, move(argument_values)));
+        else
+            return_value = TRY(construct(interpreter.global_object(), function, move(argument_values)));
     }
 
     interpreter.accumulator() = return_value;
+    return {};
 }
 
-void NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
     interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.global_object(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.is_arrow_function());
+    return {};
 }
 
-void Return::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Return::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.do_return(interpreter.accumulator().value_or(js_undefined()));
+    return {};
 }
 
-void Increment::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Increment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto old_value_or_error = interpreter.accumulator().to_numeric(interpreter.global_object());
-    if (old_value_or_error.is_error())
-        return;
-    auto old_value = old_value_or_error.release_value();
+    auto old_value = TRY(interpreter.accumulator().to_numeric(interpreter.global_object()));
 
     if (old_value.is_number())
         interpreter.accumulator() = Value(old_value.as_double() + 1);
     else
         interpreter.accumulator() = js_bigint(interpreter.vm().heap(), old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
+    return {};
 }
 
-void Decrement::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Decrement::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto old_value_or_error = interpreter.accumulator().to_numeric(interpreter.global_object());
-    if (old_value_or_error.is_error())
-        return;
-    auto old_value = old_value_or_error.release_value();
+    auto old_value = TRY(interpreter.accumulator().to_numeric(interpreter.global_object()));
 
     if (old_value.is_number())
         interpreter.accumulator() = Value(old_value.as_double() - 1);
     else
         interpreter.accumulator() = js_bigint(interpreter.vm().heap(), old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
+    return {};
 }
 
-void Throw::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Throw::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.vm().throw_exception(interpreter.global_object(), interpreter.accumulator());
+    return throw_completion(interpreter.accumulator());
 }
 
-void EnterUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> EnterUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.enter_unwind_context(m_handler_target, m_finalizer_target);
     interpreter.jump(m_entry_point);
+    return {};
 }
 
 void EnterUnwindContext::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
@@ -481,10 +427,11 @@ void EnterUnwindContext::replace_references_impl(BasicBlock const& from, BasicBl
         m_finalizer_target = Label { to };
 }
 
-void FinishUnwind::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> FinishUnwind::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.leave_unwind_context();
     interpreter.jump(m_next_target);
+    return {};
 }
 
 void FinishUnwind::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
@@ -493,14 +440,15 @@ void FinishUnwind::replace_references_impl(BasicBlock const& from, BasicBlock co
         m_next_target = Label { to };
 }
 
-void LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.leave_unwind_context();
+    return {};
 }
 
-void ContinuePendingUnwind::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> ContinuePendingUnwind::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.continue_pending_unwind(m_resume_target);
+    return interpreter.continue_pending_unwind(m_resume_target);
 }
 
 void ContinuePendingUnwind::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
@@ -509,14 +457,15 @@ void ContinuePendingUnwind::replace_references_impl(BasicBlock const& from, Basi
         m_resume_target = Label { to };
 }
 
-void PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto* environment = interpreter.vm().heap().allocate_without_global_object<DeclarativeEnvironment>(interpreter.vm().lexical_environment());
     interpreter.vm().running_execution_context().lexical_environment = environment;
     interpreter.vm().running_execution_context().variable_environment = environment;
+    return {};
 }
 
-void Yield::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto yielded_value = interpreter.accumulator().value_or(js_undefined());
     auto object = JS::Object::create(interpreter.global_object(), nullptr);
@@ -526,6 +475,7 @@ void Yield::execute_impl(Bytecode::Interpreter& interpreter) const
     else
         object->define_direct_property("continuation", Value(0), JS::default_attributes);
     interpreter.do_return(object);
+    return {};
 }
 
 void Yield::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
@@ -534,87 +484,59 @@ void Yield::replace_references_impl(BasicBlock const& from, BasicBlock const& to
         m_continuation_label = Label { to };
 }
 
-void GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto object_or_error = interpreter.reg(m_base).to_object(interpreter.global_object());
-    if (object_or_error.is_error())
-        return;
-    auto* object = object_or_error.release_value();
-    auto property_key_or_error = interpreter.accumulator().to_property_key(interpreter.global_object());
-    if (property_key_or_error.is_error())
-        return;
-    auto value_or_error = object->get(property_key_or_error.release_value());
-    if (value_or_error.is_error())
-        return;
-    interpreter.accumulator() = value_or_error.release_value();
+    auto* object = TRY(interpreter.reg(m_base).to_object(interpreter.global_object()));
+
+    auto property_key = TRY(interpreter.accumulator().to_property_key(interpreter.global_object()));
+
+    interpreter.accumulator() = TRY(object->get(property_key));
+    return {};
 }
 
-void PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto object_or_error = interpreter.reg(m_base).to_object(interpreter.global_object());
-    if (object_or_error.is_error())
-        return;
-    auto* object = object_or_error.release_value();
-    auto property_key_or_error = interpreter.reg(m_property).to_property_key(interpreter.global_object());
-    if (property_key_or_error.is_error())
-        return;
-    MUST(object->set(property_key_or_error.release_value(), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+    auto* object = TRY(interpreter.reg(m_base).to_object(interpreter.global_object()));
+
+    auto property_key = TRY(interpreter.reg(m_property).to_property_key(interpreter.global_object()));
+    TRY(object->set(property_key, interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+    return {};
 }
 
-void GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto iterator_or_error = get_iterator(interpreter.global_object(), interpreter.accumulator());
-    if (iterator_or_error.is_error())
-        return;
-    interpreter.accumulator() = iterator_to_object(interpreter.global_object(), iterator_or_error.release_value());
+    auto iterator = TRY(get_iterator(interpreter.global_object(), interpreter.accumulator()));
+    interpreter.accumulator() = iterator_to_object(interpreter.global_object(), iterator);
+    return {};
 }
 
-void IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto iterator_object_or_error = interpreter.accumulator().to_object(interpreter.global_object());
-    if (iterator_object_or_error.is_error())
-        return;
-    auto iterator = object_to_iterator(interpreter.global_object(), *iterator_object_or_error.release_value());
+    auto* iterator_object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    auto iterator = object_to_iterator(interpreter.global_object(), *iterator_object);
 
-    auto iterator_result_or_error = iterator_next(interpreter.global_object(), iterator);
-    if (iterator_result_or_error.is_error())
-        return;
-    auto* iterator_result = iterator_result_or_error.release_value();
-
-    interpreter.accumulator() = iterator_result;
+    interpreter.accumulator() = TRY(iterator_next(interpreter.global_object(), iterator));
+    return {};
 }
 
-void IteratorResultDone::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> IteratorResultDone::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto iterator_result_or_error = interpreter.accumulator().to_object(interpreter.global_object());
-    if (iterator_result_or_error.is_error())
-        return;
-    auto* iterator_result = iterator_result_or_error.release_value();
+    auto* iterator_result = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
 
-    auto complete_or_error = iterator_complete(interpreter.global_object(), *iterator_result);
-    if (complete_or_error.is_error())
-        return;
-    auto complete = complete_or_error.release_value();
-
+    auto complete = TRY(iterator_complete(interpreter.global_object(), *iterator_result));
     interpreter.accumulator() = Value(complete);
+    return {};
 }
 
-void IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto iterator_result_or_error = interpreter.accumulator().to_object(interpreter.global_object());
-    if (iterator_result_or_error.is_error())
-        return;
-    auto* iterator_result = iterator_result_or_error.release_value();
+    auto* iterator_result = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
 
-    auto value_or_error = iterator_value(interpreter.global_object(), *iterator_result);
-    if (value_or_error.is_error())
-        return;
-    auto value = value_or_error.release_value();
-
-    interpreter.accumulator() = value;
+    interpreter.accumulator() = TRY(iterator_value(interpreter.global_object(), *iterator_result));
+    return {};
 }
 
-void NewClass::execute_impl(Bytecode::Interpreter&) const
+ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter&) const
 {
     (void)m_class_expression;
     TODO();

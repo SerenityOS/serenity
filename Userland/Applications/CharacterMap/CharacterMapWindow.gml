@@ -1,8 +1,6 @@
 @GUI::Frame {
     fill_with_background_color: true
-
-    layout: @GUI::VerticalBoxLayout {
-    }
+    layout: @GUI::VerticalBoxLayout
 
     @GUI::ToolbarContainer {
         @GUI::Toolbar {
@@ -12,7 +10,6 @@
             }
 
             name: "toolbar"
-
             @GUI::Label {
                 text: "Font: "
                 autosize: true
@@ -22,9 +19,7 @@
                 background_role: "Base"
                 fill_with_background_color: true
                 fixed_height: 20
-
-                layout: @GUI::VerticalBoxLayout {
-                }
+                layout: @GUI::VerticalBoxLayout
 
                 @GUI::Label {
                     name: "font_name"
@@ -40,7 +35,6 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-
         layout: @GUI::HorizontalBoxLayout {
             spacing: 4
             margins: [0, 2, 0, 2]

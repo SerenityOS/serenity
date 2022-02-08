@@ -3080,8 +3080,8 @@ RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<StyleComponentValueR
 
 RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const& component_values)
 {
-    auto top_left = [&](Vector<Length>& radii) { return radii[0]; };
-    auto top_right = [&](Vector<Length>& radii) {
+    auto top_left = [&](Vector<LengthPercentage>& radii) { return radii[0]; };
+    auto top_right = [&](Vector<LengthPercentage>& radii) {
         switch (radii.size()) {
         case 4:
         case 3:
@@ -3093,7 +3093,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
             VERIFY_NOT_REACHED();
         }
     };
-    auto bottom_right = [&](Vector<Length>& radii) {
+    auto bottom_right = [&](Vector<LengthPercentage>& radii) {
         switch (radii.size()) {
         case 4:
         case 3:
@@ -3105,7 +3105,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
             VERIFY_NOT_REACHED();
         }
     };
-    auto bottom_left = [&](Vector<Length>& radii) {
+    auto bottom_left = [&](Vector<LengthPercentage>& radii) {
         switch (radii.size()) {
         case 4:
             return radii[3];
@@ -3119,8 +3119,8 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
         }
     };
 
-    Vector<Length> horizontal_radii;
-    Vector<Length> vertical_radii;
+    Vector<LengthPercentage> horizontal_radii;
+    Vector<LengthPercentage> vertical_radii;
     bool reading_vertical = false;
 
     for (auto& value : component_values) {
@@ -3132,13 +3132,13 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
             continue;
         }
 
-        auto maybe_length = parse_length(value);
-        if (!maybe_length.has_value())
+        auto maybe_dimension = parse_dimension(value);
+        if (!maybe_dimension.has_value() || !maybe_dimension->is_length_percentage())
             return nullptr;
         if (reading_vertical) {
-            vertical_radii.append(maybe_length.value());
+            vertical_radii.append(maybe_dimension->length_percentage());
         } else {
-            horizontal_radii.append(maybe_length.value());
+            horizontal_radii.append(maybe_dimension->length_percentage());
         }
     }
 
@@ -3169,43 +3169,107 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(Vector<StyleComponentValueRule
             return ident;
     }
 
-    // FIXME: Also support inset, spread-radius and multiple comma-separated box-shadows
-    Length offset_x {};
-    Length offset_y {};
-    Length blur_radius {};
-    Color color {};
+    return parse_comma_separated_value_list(component_values, [this](auto& tokens) {
+        return parse_single_box_shadow_value(tokens);
+    });
+}
 
-    if (component_values.size() < 3 || component_values.size() > 4)
+RefPtr<StyleValue> Parser::parse_single_box_shadow_value(TokenStream<StyleComponentValueRule>& tokens)
+{
+    auto start_position = tokens.position();
+    auto error = [&]() {
+        tokens.rewind_to_position(start_position);
         return nullptr;
+    };
 
-    auto maybe_x = parse_length(component_values[0]);
-    if (!maybe_x.has_value())
-        return nullptr;
-    offset_x = maybe_x.value();
+    Optional<Color> color;
+    Optional<Length> offset_x;
+    Optional<Length> offset_y;
+    Optional<Length> blur_radius;
+    Optional<Length> spread_distance;
+    Optional<BoxShadowPlacement> placement;
 
-    auto maybe_y = parse_length(component_values[1]);
-    if (!maybe_y.has_value())
-        return nullptr;
-    offset_y = maybe_y.value();
+    while (tokens.has_next_token()) {
+        auto& token = tokens.peek_token();
 
-    if (component_values.size() == 3) {
-        auto parsed_color = parse_color(component_values[2]);
-        if (!parsed_color.has_value())
-            return nullptr;
-        color = parsed_color.value();
-    } else if (component_values.size() == 4) {
-        auto maybe_blur_radius = parse_length(component_values[2]);
-        if (!maybe_blur_radius.has_value())
-            return nullptr;
-        blur_radius = maybe_blur_radius.value();
+        if (auto maybe_color = parse_color(token); maybe_color.has_value()) {
+            if (color.has_value())
+                return error();
+            color = maybe_color.release_value();
+            tokens.next_token();
+            continue;
+        }
 
-        auto parsed_color = parse_color(component_values[3]);
-        if (!parsed_color.has_value())
-            return nullptr;
-        color = parsed_color.value();
+        if (auto maybe_offset_x = parse_length(token); maybe_offset_x.has_value()) {
+            // horizontal offset
+            if (offset_x.has_value())
+                return error();
+            offset_x = maybe_offset_x.release_value();
+            tokens.next_token();
+
+            // vertical offset
+            if (!tokens.has_next_token())
+                return error();
+            auto maybe_offset_y = parse_length(tokens.peek_token());
+            if (!maybe_offset_y.has_value())
+                return error();
+            offset_y = maybe_offset_y.release_value();
+            tokens.next_token();
+
+            // blur radius (optional)
+            if (!tokens.has_next_token())
+                break;
+            auto maybe_blur_radius = parse_length(tokens.peek_token());
+            if (!maybe_blur_radius.has_value())
+                continue;
+            blur_radius = maybe_blur_radius.release_value();
+            tokens.next_token();
+
+            // spread distance (optional)
+            if (!tokens.has_next_token())
+                break;
+            auto maybe_spread_distance = parse_length(tokens.peek_token());
+            if (!maybe_spread_distance.has_value())
+                continue;
+            spread_distance = maybe_spread_distance.release_value();
+            tokens.next_token();
+
+            continue;
+        }
+
+        if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("inset"sv)) {
+            if (placement.has_value())
+                return error();
+            placement = BoxShadowPlacement::Inner;
+            tokens.next_token();
+            continue;
+        }
+
+        if (token.is(Token::Type::Comma))
+            break;
+
+        return error();
     }
 
-    return BoxShadowStyleValue::create(offset_x, offset_y, blur_radius, color);
+    // FIXME: If color is absent, default to `currentColor`
+    if (!color.has_value())
+        color = Color::NamedColor::Black;
+
+    // x/y offsets are required
+    if (!offset_x.has_value() || !offset_y.has_value())
+        return error();
+
+    // Other lengths default to 0
+    if (!blur_radius.has_value())
+        blur_radius = Length::make_px(0);
+    if (!spread_distance.has_value())
+        spread_distance = Length::make_px(0);
+
+    // Placement is outer by default
+    if (!placement.has_value())
+        placement = BoxShadowPlacement::Outer;
+
+    return BoxShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value());
 }
 
 RefPtr<StyleValue> Parser::parse_flex_value(Vector<StyleComponentValueRule> const& component_values)

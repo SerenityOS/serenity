@@ -5,7 +5,9 @@
  */
 
 #include <LibJS/AST.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/ModuleEnvironment.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 

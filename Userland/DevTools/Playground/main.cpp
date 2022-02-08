@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,10 +13,10 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/GMLAutocompleteProvider.h>
-#include <LibGUI/GMLFormatter.h>
-#include <LibGUI/GMLLexer.h>
-#include <LibGUI/GMLSyntaxHighlighter.h>
+#include <LibGUI/GML/AutocompleteProvider.h>
+#include <LibGUI/GML/Formatter.h>
+#include <LibGUI/GML/Lexer.h>
+#include <LibGUI/GML/SyntaxHighlighter.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -87,8 +88,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto editor = TRY(splitter->try_add<GUI::TextEditor>());
     auto preview = TRY(splitter->try_add<GUI::Frame>());
 
-    editor->set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
-    editor->set_autocomplete_provider(make<GUI::GMLAutocompleteProvider>());
+    editor->set_syntax_highlighter(make<GUI::GML::SyntaxHighlighter>());
+    editor->set_autocomplete_provider(make<GUI::GML::AutocompleteProvider>());
     editor->set_should_autocomplete_automatically(true);
     editor->set_automatic_indentation_enabled(true);
     editor->set_ruler_visible(true);
@@ -214,22 +215,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto edit_menu = TRY(window->try_add_menu("&Edit"));
     TRY(edit_menu->try_add_action(GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
-        auto source = editor->text();
-        GUI::GMLLexer lexer(source);
-        for (auto& token : lexer.lex()) {
-            if (token.m_type == GUI::GMLToken::Type::Comment) {
-                auto result = GUI::MessageBox::show(
-                    window,
-                    "Your GML contains comments, which currently are not supported by the formatter and will be removed. Proceed?",
-                    "Warning",
-                    GUI::MessageBox::Type::Warning,
-                    GUI::MessageBox::InputType::OKCancel);
-                if (result == GUI::MessageBox::ExecCancel)
-                    return;
-                break;
-            }
-        }
-        auto formatted_gml = GUI::format_gml(source);
+        auto formatted_gml = GUI::GML::format_gml(editor->text());
         if (!formatted_gml.is_null()) {
             editor->set_text(formatted_gml);
         } else {

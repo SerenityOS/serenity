@@ -114,7 +114,6 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
         if (then.is_throw_completion()) {
             // a. Return RejectPromise(promise, then.[[Value]]).
             dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Exception while getting 'then' property, rejecting with error", &promise);
-            vm.clear_exception();
             return promise.reject(*then.throw_completion().value());
         }
 
@@ -130,15 +129,15 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
 
         // 13. Let thenJobCallback be HostMakeJobCallback(thenAction).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Creating JobCallback for then action @ {}", &promise, &then_action.as_function());
-        auto then_job_callback = make_job_callback(then_action.as_function());
+        auto then_job_callback = vm.host_make_job_callback(then_action.as_function());
 
         // 14. Let job be NewPromiseResolveThenableJob(promise, resolution, thenJobCallback).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Creating PromiseResolveThenableJob for thenable {}", &promise, resolution);
-        auto* job = PromiseResolveThenableJob::create(global_object, promise, resolution, then_job_callback);
+        auto [job, realm] = create_promise_resolve_thenable_job(global_object, promise, resolution, move(then_job_callback));
 
         // 15. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
-        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Enqueuing job @ {}", &promise, job);
-        vm.enqueue_promise_job(*job);
+        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Enqueuing job @ {} in realm {}", &promise, &job, realm);
+        vm.host_enqueue_promise_job(move(job), realm);
 
         // 16. Return undefined.
         return js_undefined();
@@ -231,7 +230,7 @@ Value Promise::reject(Value reason)
 
     // 7. If promise.[[PromiseIsHandled]] is false, perform HostPromiseRejectionTracker(promise, "reject").
     if (!m_is_handled)
-        vm.promise_rejection_tracker(*this, RejectionOperation::Reject);
+        vm.host_promise_rejection_tracker(*this, RejectionOperation::Reject);
 
     // 8. Return TriggerPromiseReactions(reactions, reason).
     trigger_reactions();
@@ -253,11 +252,11 @@ void Promise::trigger_reactions() const
     for (auto& reaction : reactions) {
         // a. Let job be NewPromiseReactionJob(reaction, argument).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / trigger_reactions()]: Creating PromiseReactionJob for PromiseReaction @ {} with argument {}", this, &reaction, m_result);
-        auto* job = PromiseReactionJob::create(global_object(), *reaction, m_result);
+        auto [job, realm] = create_promise_reaction_job(global_object(), *reaction, m_result);
 
         // b. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
-        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / trigger_reactions()]: Enqueuing job @ {}", this, job);
-        vm.enqueue_promise_job(*job);
+        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / trigger_reactions()]: Enqueuing job @ {} in realm {}", this, &job, realm);
+        vm.host_enqueue_promise_job(move(job), realm);
     }
 
     if constexpr (PROMISE_DEBUG) {
@@ -285,7 +284,7 @@ Value Promise::perform_then(Value on_fulfilled, Value on_rejected, Optional<Prom
     if (on_fulfilled.is_function()) {
         // a. Let onFulfilledJobCallback be HostMakeJobCallback(onFulfilled).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Creating JobCallback for on_fulfilled function @ {}", this, &on_fulfilled.as_function());
-        on_fulfilled_job_callback = make_job_callback(on_fulfilled.as_function());
+        on_fulfilled_job_callback = vm.host_make_job_callback(on_fulfilled.as_function());
     }
 
     // 5. If IsCallable(onRejected) is false, then
@@ -296,14 +295,14 @@ Value Promise::perform_then(Value on_fulfilled, Value on_rejected, Optional<Prom
     if (on_rejected.is_function()) {
         // a. Let onRejectedJobCallback be HostMakeJobCallback(onRejected).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Creating JobCallback for on_rejected function @ {}", this, &on_rejected.as_function());
-        on_rejected_job_callback = make_job_callback(on_rejected.as_function());
+        on_rejected_job_callback = vm.host_make_job_callback(on_rejected.as_function());
     }
 
     // 7. Let fulfillReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Fulfill, [[Handler]]: onFulfilledJobCallback }.
-    auto* fulfill_reaction = PromiseReaction::create(vm, PromiseReaction::Type::Fulfill, result_capability, on_fulfilled_job_callback);
+    auto* fulfill_reaction = PromiseReaction::create(vm, PromiseReaction::Type::Fulfill, result_capability, move(on_fulfilled_job_callback));
 
     // 8. Let rejectReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Reject, [[Handler]]: onRejectedJobCallback }.
-    auto* reject_reaction = PromiseReaction::create(vm, PromiseReaction::Type::Reject, result_capability, on_rejected_job_callback);
+    auto* reject_reaction = PromiseReaction::create(vm, PromiseReaction::Type::Reject, result_capability, move(on_rejected_job_callback));
 
     switch (m_state) {
     // 9. If promise.[[PromiseState]] is pending, then
@@ -323,11 +322,11 @@ Value Promise::perform_then(Value on_fulfilled, Value on_rejected, Optional<Prom
 
         // b. Let fulfillJob be NewPromiseReactionJob(fulfillReaction, value).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: State is State::Fulfilled, creating PromiseReactionJob for PromiseReaction @ {} with argument {}", this, fulfill_reaction, value);
-        auto* fulfill_job = PromiseReactionJob::create(global_object(), *fulfill_reaction, value);
+        auto [fulfill_job, realm] = create_promise_reaction_job(global_object(), *fulfill_reaction, value);
 
         // c. Perform HostEnqueuePromiseJob(fulfillJob.[[Job]], fulfillJob.[[Realm]]).
-        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Enqueuing job @ {}", this, fulfill_job);
-        vm.enqueue_promise_job(*fulfill_job);
+        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Enqueuing job @ {} in realm {}", this, &fulfill_job, realm);
+        vm.host_enqueue_promise_job(move(fulfill_job), realm);
         break;
     }
     // 11. Else,
@@ -339,15 +338,15 @@ Value Promise::perform_then(Value on_fulfilled, Value on_rejected, Optional<Prom
 
         // c. If promise.[[PromiseIsHandled]] is false, perform HostPromiseRejectionTracker(promise, "handle").
         if (!m_is_handled)
-            vm.promise_rejection_tracker(*this, RejectionOperation::Handle);
+            vm.host_promise_rejection_tracker(*this, RejectionOperation::Handle);
 
         // d. Let rejectJob be NewPromiseReactionJob(rejectReaction, reason).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: State is State::Rejected, creating PromiseReactionJob for PromiseReaction @ {} with argument {}", this, reject_reaction, reason);
-        auto* reject_job = PromiseReactionJob::create(global_object(), *reject_reaction, reason);
+        auto [reject_job, realm] = create_promise_reaction_job(global_object(), *reject_reaction, reason);
 
         // e. Perform HostEnqueuePromiseJob(rejectJob.[[Job]], rejectJob.[[Realm]]).
-        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Enqueuing job @ {}", this, reject_job);
-        vm.enqueue_promise_job(*reject_job);
+        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Enqueuing job @ {} in realm {}", this, &reject_job, realm);
+        vm.host_enqueue_promise_job(move(reject_job), realm);
         break;
     }
     default:

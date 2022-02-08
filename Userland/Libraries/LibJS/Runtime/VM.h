@@ -19,7 +19,6 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorTypes.h>
-#include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/MarkedValueList.h>
@@ -48,10 +47,6 @@ public:
 
     void push_interpreter(Interpreter&);
     void pop_interpreter(Interpreter&);
-
-    Exception* exception() { return m_exception; }
-    void set_exception(Exception& exception) { m_exception = &exception; }
-    void clear_exception() { m_exception = nullptr; }
 
     void dump_backtrace() const;
 
@@ -90,7 +85,6 @@ public:
 
     ThrowCompletionOr<void> push_execution_context(ExecutionContext& context, GlobalObject& global_object)
     {
-        VERIFY(!exception());
         // Ensure we got some stack space left, so the next function call doesn't kill us.
         if (did_reach_stack_space_limit())
             return throw_completion<InternalError>(global_object, ErrorType::CallStackSizeExceeded);
@@ -160,32 +154,11 @@ public:
     ThrowCompletionOr<Reference> resolve_binding(FlyString const&, Environment* = nullptr);
     ThrowCompletionOr<Reference> get_identifier_reference(Environment*, FlyString, bool strict, size_t hops = 0);
 
-    template<typename T, typename... Args>
-    void throw_exception(GlobalObject& global_object, Args&&... args)
-    {
-        return throw_exception(global_object, T::create(global_object, forward<Args>(args)...));
-    }
-
-    void throw_exception(Exception&);
-    void throw_exception(GlobalObject& global_object, Value value)
-    {
-        return throw_exception(*heap().allocate<Exception>(global_object, value));
-    }
-
-    template<typename T, typename... Args>
-    void throw_exception(GlobalObject& global_object, ErrorType type, Args&&... args)
-    {
-        return throw_exception(global_object, T::create(global_object, String::formatted(type.message(), forward<Args>(args)...)));
-    }
-
     // 5.2.3.2 Throw an Exception, https://tc39.es/ecma262/#sec-throw-an-exception
     template<typename T, typename... Args>
     Completion throw_completion(GlobalObject& global_object, Args&&... args)
     {
-        auto* error = T::create(global_object, forward<Args>(args)...);
-        // NOTE: This is temporary until we remove VM::exception().
-        throw_exception(global_object, error);
-        return JS::throw_completion(error);
+        return JS::throw_completion(T::create(global_object, forward<Args>(args)...));
     }
 
     template<typename T, typename... Args>
@@ -203,16 +176,16 @@ public:
     CommonPropertyNames names;
 
     void run_queued_promise_jobs();
-    void enqueue_promise_job(NativeFunction&);
+    void enqueue_promise_job(Function<ThrowCompletionOr<Value>()> job, Realm*);
 
     void run_queued_finalization_registry_cleanup_jobs();
     void enqueue_finalization_registry_cleanup_job(FinalizationRegistry&);
 
-    void promise_rejection_tracker(const Promise&, Promise::RejectionOperation) const;
+    void promise_rejection_tracker(Promise&, Promise::RejectionOperation) const;
 
     Function<void()> on_call_stack_emptied;
-    Function<void(const Promise&)> on_promise_unhandled_rejection;
-    Function<void(const Promise&)> on_promise_rejection_handled;
+    Function<void(Promise&)> on_promise_unhandled_rejection;
+    Function<void(Promise&)> on_promise_rejection_handled;
 
     ThrowCompletionOr<void> initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor);
 
@@ -243,6 +216,12 @@ public:
 
     void enable_default_host_import_module_dynamically_hook();
 
+    Function<void(Promise&, Promise::RejectionOperation)> host_promise_rejection_tracker;
+    Function<ThrowCompletionOr<Value>(GlobalObject&, JobCallback&, Value, MarkedValueList)> host_call_job_callback;
+    Function<void(FinalizationRegistry&)> host_enqueue_finalization_registry_cleanup_job;
+    Function<void(Function<ThrowCompletionOr<Value>()>, Realm*)> host_enqueue_promise_job;
+    Function<JobCallback(FunctionObject&)> host_make_job_callback;
+
 private:
     explicit VM(OwnPtr<CustomData>);
 
@@ -254,8 +233,6 @@ private:
 
     void import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability);
     void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability, Promise* inner_promise);
-
-    Exception* m_exception { nullptr };
 
     HashMap<String, PrimitiveString*> m_string_cache;
 
@@ -270,7 +247,7 @@ private:
 
     HashMap<String, Symbol*> m_global_symbol_map;
 
-    Vector<NativeFunction*> m_promise_jobs;
+    Vector<Function<ThrowCompletionOr<Value>()>> m_promise_jobs;
 
     Vector<FinalizationRegistry*> m_finalization_registry_cleanup_jobs;
 

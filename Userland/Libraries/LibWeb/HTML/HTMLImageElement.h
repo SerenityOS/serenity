@@ -9,12 +9,12 @@
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Forward.h>
-#include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/Loader/ImageLoader.h>
 
 namespace Web::HTML {
 
-class HTMLImageElement final : public HTMLElement {
+class HTMLImageElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLImageElementWrapper;
 

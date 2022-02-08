@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Realm.h>
 

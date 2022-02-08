@@ -6,12 +6,16 @@
 
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
+#include <AK/IterationDecision.h>
 #include <AK/JsonObject.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefPtr.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/GMLParser.h>
+#include <LibGUI/GML/AST.h>
+#include <LibGUI/GML/Parser.h>
 #include <LibGUI/Layout.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -1066,33 +1070,37 @@ bool Widget::load_from_gml(StringView gml_string)
 
 bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
 {
-    auto value = parse_gml(gml_string);
-    if (!value.is_object())
+    auto value = GML::parse_gml(gml_string);
+    if (value.is_error()) {
+        // FIXME: We don't report the error, so at least print it.
+        dbgln("Error while parsing GML: {}", value.error());
         return false;
-    return load_from_json(value.as_object(), unregistered_child_handler);
+    }
+    return load_from_gml_ast(value.release_value(), unregistered_child_handler);
 }
 
-bool Widget::load_from_json(const JsonObject& json, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
+bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
 {
-    json.for_each_member([&](auto& key, auto& value) {
+    if (is<GUI::GML::GMLFile>(ast.ptr()))
+        return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);
+
+    VERIFY(is<GUI::GML::Object>(ast.ptr()));
+    auto object = static_ptr_cast<GUI::GML::Object>(ast);
+
+    object->for_each_property([&](auto key, auto value) {
         set_property(key, value);
     });
 
-    auto layout_value = json.get("layout");
-    if (!layout_value.is_null() && !layout_value.is_object()) {
-        dbgln("layout is not an object");
-        return false;
-    }
-    if (layout_value.is_object()) {
-        auto& layout = layout_value.as_object();
-        auto class_name = layout.get("class");
+    auto layout = object->layout_object();
+    if (!layout.is_null()) {
+        auto class_name = layout->name();
         if (class_name.is_null()) {
             dbgln("Invalid layout class name");
             return false;
         }
 
         auto& layout_class = *Core::ObjectClassRegistration::find("GUI::Layout");
-        if (auto* registration = Core::ObjectClassRegistration::find(class_name.as_string())) {
+        if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
             auto layout = registration->construct();
             if (!layout || !registration->is_derived_from(layout_class)) {
                 dbgln("Invalid layout class: '{}'", class_name.to_string());
@@ -1104,40 +1112,32 @@ bool Widget::load_from_json(const JsonObject& json, RefPtr<Core::Object> (*unreg
             return false;
         }
 
-        layout.for_each_member([&](auto& key, auto& value) {
+        layout->for_each_property([&](auto key, auto value) {
             this->layout()->set_property(key, value);
         });
     }
 
     auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget");
-    auto children = json.get("children");
-    if (children.is_array()) {
-        for (auto& child_json_value : children.as_array().values()) {
-            if (!child_json_value.is_object())
-                return false;
-            auto& child_json = child_json_value.as_object();
-            auto class_name = child_json.get("class");
-            if (!class_name.is_string()) {
-                dbgln("No class name in entry");
-                return false;
-            }
+    object->for_each_child_object_interruptible([&](auto child_data) {
+        auto class_name = child_data->name();
 
-            RefPtr<Core::Object> child;
-            if (auto* registration = Core::ObjectClassRegistration::find(class_name.as_string())) {
-                child = registration->construct();
-                if (!child || !registration->is_derived_from(widget_class)) {
-                    dbgln("Invalid widget class: '{}'", class_name.to_string());
-                    return false;
-                }
-            } else {
-                child = unregistered_child_handler(class_name.as_string());
+        RefPtr<Core::Object> child;
+        if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
+            child = registration->construct();
+            if (!child || !registration->is_derived_from(widget_class)) {
+                dbgln("Invalid widget class: '{}'", class_name);
+                return IterationDecision::Break;
             }
-            if (!child)
-                return false;
-            add_child(*child);
-            child->load_from_json(child_json, unregistered_child_handler);
+        } else {
+            child = unregistered_child_handler(class_name);
         }
-    }
+        if (!child)
+            return IterationDecision::Break;
+        add_child(*child);
+        // This is possible as we ensure that Widget is a base class above.
+        static_ptr_cast<Widget>(child)->load_from_gml_ast(child_data, unregistered_child_handler);
+        return IterationDecision::Continue;
+    });
 
     return true;
 }
