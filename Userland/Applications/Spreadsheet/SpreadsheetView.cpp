@@ -79,7 +79,7 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
 
         m_is_hovering_cut_zone = false;
         m_is_hovering_extend_zone = false;
-        if (selection().size() > 0) {
+        if (selection().size() > 0 && !m_should_intercept_drag) {
             // Get top-left and bottom-right most cells of selection
             auto bottom_right_most_index = selection().first();
             auto top_left_most_index = selection().first();
@@ -123,9 +123,15 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
                 m_is_hovering_cut_zone = true;
         }
 
+        if (m_is_hovering_cut_zone || m_is_dragging_for_copy)
+            set_override_cursor(Gfx::StandardCursor::Drag);
+        else if (m_is_hovering_extend_zone)
+            set_override_cursor(Gfx::StandardCursor::Crosshair);
+        else
+            set_override_cursor(Gfx::StandardCursor::Arrow);
+
         auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Primary);
         if (m_is_dragging_for_copy) {
-            set_override_cursor(Gfx::StandardCursor::Crosshair);
             m_should_intercept_drag = false;
             if (holding_left_button) {
                 m_has_committed_to_dragging = true;
@@ -134,7 +140,6 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
                 m_left_mousedown_position = rect.center();
             }
         } else if (!m_should_intercept_drag) {
-            set_override_cursor(Gfx::StandardCursor::Arrow);
             if (!holding_left_button) {
                 m_starting_selection_index = index;
             } else {
@@ -167,12 +172,8 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
 
 void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
 {
-    if (this->model()) {
-        auto index = index_at_event_position(event.position());
-        auto rect = content_rect(index);
-        auto distance = rect.center().absolute_relative_distance_to(event.position());
-        m_is_dragging_for_copy = distance.x() >= rect.width() / 2 - 5 && distance.y() >= rect.height() / 2 - 5;
-    }
+    if (m_is_hovering_cut_zone)
+        m_is_dragging_for_copy = true;
     AbstractTableView::mousedown_event(event);
 }
 
