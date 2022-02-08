@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -97,6 +97,8 @@ public:
     int screen_y() const;
 
     Selection::Selection* get_selection();
+
+    RefPtr<HTML::Storage> local_storage();
 
 private:
     explicit Window(Document&);
