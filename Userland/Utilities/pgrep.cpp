@@ -8,14 +8,16 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     bool case_insensitive = false;
     bool invert_match = false;
@@ -25,7 +27,7 @@ int main(int argc, char** argv)
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
     args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v');
     args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
-    args_parser.parse(argc, argv);
+    args_parser.parse(args);
 
     PosixOptions options {};
     if (case_insensitive)
