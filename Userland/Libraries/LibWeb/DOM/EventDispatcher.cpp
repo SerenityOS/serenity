@@ -97,8 +97,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<EventTarget::EventListen
         // If this throws an exception, then:
         if (result.is_error()) {
             // 1. Report the exception.
-            VERIFY(result.throw_completion().value().has_value());
-            HTML::report_exception(*result.throw_completion().value());
+            HTML::report_exception(result);
 
             // FIXME: 2. Set legacyOutputDidListenersThrowFlag if given. (Only used by IndexedDB currently)
         }
