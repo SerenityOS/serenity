@@ -146,4 +146,14 @@ Vector<String> Storage::supported_property_names() const
     return m_map.keys();
 }
 
+void Storage::dump() const
+{
+    dbgln("Storage ({} key(s))", m_map.size());
+    size_t i = 0;
+    for (auto const& it : m_map) {
+        dbgln("[{}] \"{}\": \"{}\"", i, it.key, it.value);
+        ++i;
+    }
+}
+
 }
