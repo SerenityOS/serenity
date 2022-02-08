@@ -48,10 +48,12 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
                 resolved_box_shadow_data.ensure_capacity(computed_box_shadow.size());
                 for (auto const& layer : computed_box_shadow) {
                     resolved_box_shadow_data.empend(
+                        layer.color,
                         static_cast<int>(layer.offset_x.resolved_or_zero(*this).to_px(*this)),
                         static_cast<int>(layer.offset_y.resolved_or_zero(*this).to_px(*this)),
                         static_cast<int>(layer.blur_radius.resolved_or_zero(*this).to_px(*this)),
-                        layer.color);
+                        static_cast<int>(layer.spread_distance.resolved_or_zero(*this).to_px(*this)),
+                        layer.placement == CSS::BoxShadowPlacement::Outer ? Painting::BoxShadowPlacement::Outer : Painting::BoxShadowPlacement::Inner);
                 }
                 Painting::paint_box_shadow(context, enclosing_int_rect(absolute_fragment_rect), resolved_box_shadow_data);
             }
