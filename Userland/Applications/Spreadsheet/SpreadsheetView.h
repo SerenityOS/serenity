@@ -76,6 +76,7 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
     bool m_should_intercept_drag { false };
     bool m_has_committed_to_dragging { false };
