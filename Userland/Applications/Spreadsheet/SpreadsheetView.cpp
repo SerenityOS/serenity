@@ -77,6 +77,52 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
         sheet.disable_updates();
         ScopeGuard sheet_update_enabler { [&] { sheet.enable_updates(); } };
 
+        m_is_hovering_cut_zone = false;
+        m_is_hovering_extend_zone = false;
+        if (selection().size() > 0) {
+            // Get top-left and bottom-right most cells of selection
+            auto bottom_right_most_index = selection().first();
+            auto top_left_most_index = selection().first();
+            selection().for_each_index([&](auto& index) {
+                if (index.row() > bottom_right_most_index.row())
+                    bottom_right_most_index = index;
+                else if (index.column() > bottom_right_most_index.column())
+                    bottom_right_most_index = index;
+                if (index.row() < top_left_most_index.row())
+                    top_left_most_index = index;
+                else if (index.column() < top_left_most_index.column())
+                    top_left_most_index = index;
+            });
+
+            auto top_left_rect = content_rect(top_left_most_index);
+            auto bottom_right_rect = content_rect(bottom_right_most_index);
+            auto distance_tl = top_left_rect.center() - event.position();
+            auto distance_br = bottom_right_rect.center() - event.position();
+            auto is_over_top_line = false;
+            auto is_over_bottom_line = false;
+            auto is_over_left_line = false;
+            auto is_over_right_line = false;
+
+            // If cursor is within the bounds of the selection
+            auto select_padding = 2;
+            if ((distance_br.y() >= -(bottom_right_rect.height() / 2 + select_padding)) && (distance_tl.y() <= (top_left_rect.height() / 2 + select_padding)) && (distance_br.x() >= -(bottom_right_rect.width() / 2 + select_padding)) && (distance_tl.x() <= (top_left_rect.width() / 2 + select_padding))) {
+                if (distance_tl.y() >= (top_left_rect.height() / 2 - select_padding))
+                    is_over_top_line = true;
+                else if (distance_br.y() <= -(bottom_right_rect.height() / 2 - select_padding))
+                    is_over_bottom_line = true;
+
+                if (distance_tl.x() >= (top_left_rect.width() / 2 - select_padding))
+                    is_over_left_line = true;
+                else if (distance_br.x() <= -(bottom_right_rect.width() / 2 - select_padding))
+                    is_over_right_line = true;
+            }
+
+            if (is_over_bottom_line && is_over_right_line)
+                m_is_hovering_extend_zone = true;
+            else if (is_over_top_line || is_over_bottom_line || is_over_left_line || is_over_right_line)
+                m_is_hovering_cut_zone = true;
+        }
+
         auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Primary);
         if (m_is_dragging_for_copy) {
             set_override_cursor(Gfx::StandardCursor::Crosshair);
