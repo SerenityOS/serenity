@@ -7,6 +7,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/ArrayBufferConstructor.h>
 #include <LibJS/Runtime/ArrayIterator.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -694,10 +695,14 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         // 20. If same is true, then
         if (same) {
             // a. Let srcByteLength be source.[[ByteLength]].
+            auto source_byte_length = source_typed_array.byte_length();
+
             // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, %ArrayBuffer%).
+            source_buffer = TRY(clone_array_buffer(global_object, *source_buffer, source_byte_offset, source_byte_length, *global_object.array_buffer_constructor()));
             // c. NOTE: %ArrayBuffer% is used to clone srcBuffer because is it known to not have any observable side-effects.
+
             // d. Let srcByteIndex be 0.
-            TODO();
+            source_byte_index = 0;
         } else {
             // 21. Else, let srcByteIndex be srcByteOffset.
             source_byte_index = source_byte_offset;
