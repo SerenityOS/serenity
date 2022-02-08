@@ -396,14 +396,14 @@ public:
     EventLoopPusher(EventLoop& event_loop)
         : m_event_loop(event_loop)
     {
-        if (!is_main_event_loop()) {
+        if (EventLoop::has_been_instantiated()) {
             m_event_loop.take_pending_events_from(EventLoop::current());
             s_event_loop_stack->append(event_loop);
         }
     }
     ~EventLoopPusher()
     {
-        if (!is_main_event_loop()) {
+        if (EventLoop::has_been_instantiated()) {
             s_event_loop_stack->take_last();
             EventLoop::current().take_pending_events_from(m_event_loop);
         }
