@@ -306,6 +306,9 @@ void BrowserWindow::build_menus()
         if (tab.on_dump_cookies)
             tab.on_dump_cookies();
     }));
+    debug_menu.add_action(GUI::Action::create("Dump &Local Storage", [this](auto&) {
+        active_tab().m_web_content_view->debug_request("dump-local-storage");
+    }));
     debug_menu.add_separator();
     auto line_box_borders_action = GUI::Action::create_checkable(
         "Line &Box Borders", [this](auto& action) {
