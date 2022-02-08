@@ -3170,42 +3170,62 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(Vector<StyleComponentValueRule
     }
 
     // FIXME: Also support inset, spread-radius and multiple comma-separated box-shadows
-    Length offset_x {};
-    Length offset_y {};
-    Length blur_radius {};
-    Color color {};
+    Optional<Color> color;
+    Optional<Length> offset_x;
+    Optional<Length> offset_y;
+    Optional<Length> blur_radius;
 
-    if (component_values.size() < 3 || component_values.size() > 4)
+    for (size_t i = 0; i < component_values.size(); ++i) {
+        if (auto maybe_color = parse_color(component_values[i]); maybe_color.has_value()) {
+            if (color.has_value())
+                return nullptr;
+            color = maybe_color.release_value();
+            continue;
+        }
+
+        if (auto maybe_offset_x = parse_length(component_values[i]); maybe_offset_x.has_value()) {
+            // horizontal offset
+            if (offset_x.has_value())
+                return nullptr;
+            offset_x = maybe_offset_x.release_value();
+
+            // vertical offset
+            if (++i >= component_values.size())
+                return nullptr;
+            auto maybe_offset_y = parse_length(component_values[i]);
+            if (!maybe_offset_y.has_value())
+                return nullptr;
+            offset_y = maybe_offset_y.release_value();
+
+            // blur radius (optional)
+            if (i + 1 >= component_values.size())
+                break;
+            auto maybe_blur_radius = parse_length(component_values[i + 1]);
+            if (!maybe_blur_radius.has_value())
+                continue;
+            ++i;
+            blur_radius = maybe_blur_radius.release_value();
+
+            continue;
+        }
+
+        // Unrecognized value
         return nullptr;
-
-    auto maybe_x = parse_length(component_values[0]);
-    if (!maybe_x.has_value())
-        return nullptr;
-    offset_x = maybe_x.value();
-
-    auto maybe_y = parse_length(component_values[1]);
-    if (!maybe_y.has_value())
-        return nullptr;
-    offset_y = maybe_y.value();
-
-    if (component_values.size() == 3) {
-        auto parsed_color = parse_color(component_values[2]);
-        if (!parsed_color.has_value())
-            return nullptr;
-        color = parsed_color.value();
-    } else if (component_values.size() == 4) {
-        auto maybe_blur_radius = parse_length(component_values[2]);
-        if (!maybe_blur_radius.has_value())
-            return nullptr;
-        blur_radius = maybe_blur_radius.value();
-
-        auto parsed_color = parse_color(component_values[3]);
-        if (!parsed_color.has_value())
-            return nullptr;
-        color = parsed_color.value();
     }
 
-    return BoxShadowStyleValue::create(offset_x, offset_y, blur_radius, color);
+    // FIXME: If color is absent, default to `currentColor`
+    if (!color.has_value())
+        color = Color::NamedColor::Black;
+
+    // x/y offsets are required
+    if (!offset_x.has_value() || !offset_y.has_value())
+        return nullptr;
+
+    // Other lengths default to 0
+    if (!blur_radius.has_value())
+        blur_radius = Length::make_px(0);
+
+    return BoxShadowStyleValue::create(offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), color.release_value());
 }
 
 RefPtr<StyleValue> Parser::parse_flex_value(Vector<StyleComponentValueRule> const& component_values)
