@@ -125,7 +125,7 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
             }
         }
 
-        if (m_is_hovering_cut_zone || m_is_dragging_for_copy)
+        if (m_is_hovering_cut_zone || m_is_dragging_for_cut)
             set_override_cursor(Gfx::StandardCursor::Drag);
         else if (m_is_hovering_extend_zone)
             set_override_cursor(Gfx::StandardCursor::Crosshair);
@@ -133,7 +133,7 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
             set_override_cursor(Gfx::StandardCursor::Arrow);
 
         auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Primary);
-        if (m_is_dragging_for_copy) {
+        if (m_is_dragging_for_cut) {
             m_is_dragging_for_select = false;
             if (holding_left_button) {
                 m_has_committed_to_cutting = true;
@@ -176,7 +176,7 @@ void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
     // when m_is_hovering_cut_zone as it can be the case that the user is targetting
     // a cell yet be outside of its bounding box due to the select_padding.
     if (m_is_hovering_cut_zone) {
-        m_is_dragging_for_copy = true;
+        m_is_dragging_for_cut = true;
         auto rect = content_rect(m_target_cell);
         GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y() };
         AbstractTableView::mousedown_event(adjusted_event);
@@ -190,7 +190,7 @@ void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
 void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
 {
     m_is_dragging_for_select = false;
-    m_is_dragging_for_copy = false;
+    m_is_dragging_for_cut = false;
     m_has_committed_to_cutting = false;
     if (m_is_hovering_cut_zone) {
         auto rect = content_rect(m_target_cell);
@@ -204,7 +204,7 @@ void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
 void InfinitelyScrollableTableView::drop_event(GUI::DropEvent& event)
 {
     TableView::drop_event(event);
-    m_is_dragging_for_copy = false;
+    m_is_dragging_for_cut = false;
     set_override_cursor(Gfx::StandardCursor::Arrow);
     auto drop_index = index_at_event_position(event.position());
     if (selection().size() > 0) {
@@ -377,7 +377,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
                 return;
 
             auto first_position = source_positions.take_first();
-            m_sheet->copy_cells(move(source_positions), move(target_positions), first_position);
+            m_sheet->copy_cells(move(source_positions), move(target_positions), first_position, Spreadsheet::Sheet::CopyOperation::Cut);
 
             return;
         }
