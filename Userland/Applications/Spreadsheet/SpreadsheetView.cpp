@@ -117,9 +117,10 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
                     is_over_right_line = true;
             }
 
-            if (is_over_bottom_line && is_over_right_line)
+            if (is_over_bottom_line && is_over_right_line) {
+                m_target_cell = bottom_right_most_index;
                 m_is_hovering_extend_zone = true;
-            else if (is_over_top_line || is_over_bottom_line || is_over_left_line || is_over_right_line) {
+            } else if (is_over_top_line || is_over_bottom_line || is_over_left_line || is_over_right_line) {
                 m_target_cell = top_left_most_index;
                 m_is_hovering_cut_zone = true;
             }
@@ -127,7 +128,7 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
 
         if (m_is_hovering_cut_zone || m_is_dragging_for_cut)
             set_override_cursor(Gfx::StandardCursor::Drag);
-        else if (m_is_hovering_extend_zone)
+        else if (m_is_hovering_extend_zone || m_is_dragging_for_extend)
             set_override_cursor(Gfx::StandardCursor::Crosshair);
         else
             set_override_cursor(Gfx::StandardCursor::Arrow);
@@ -147,6 +148,13 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
             }
         }
 
+        if (!m_has_committed_to_extending) {
+            if (m_is_dragging_for_extend && holding_left_button) {
+                m_has_committed_to_extending = true;
+                m_starting_selection_index = m_target_cell;
+            }
+        }
+
         if (holding_left_button && m_is_dragging_for_select && !m_has_committed_to_cutting) {
             if (!m_starting_selection_index.is_valid())
                 m_starting_selection_index = index;
@@ -162,7 +170,20 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
 
             if (!event.ctrl())
                 selection().clear();
-            selection().add_all(new_selection);
+
+            // Since the extend function has similarities to the select, then do
+            // a check within the selection process to see if extending.
+            if (m_has_committed_to_extending) {
+                if (index.row() == m_target_cell.row() || index.column() == m_target_cell.column())
+                    selection().add_all(new_selection);
+                else
+                    // Prevent the target cell from being unselected in the cases
+                    // when extending in a direction that is not in the same column or
+                    // row as the same. (Extension can only be done linearly, not diagonally)
+                    selection().add(m_target_cell);
+            } else {
+                selection().add_all(new_selection);
+            }
         }
     }
 
@@ -175,8 +196,11 @@ void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
     // the one right beneath the cursor but instead the one that is referred to
     // when m_is_hovering_cut_zone as it can be the case that the user is targetting
     // a cell yet be outside of its bounding box due to the select_padding.
-    if (m_is_hovering_cut_zone) {
-        m_is_dragging_for_cut = true;
+    if (m_is_hovering_cut_zone || m_is_hovering_extend_zone) {
+        if (m_is_hovering_cut_zone)
+            m_is_dragging_for_cut = true;
+        else if (m_is_hovering_extend_zone)
+            m_is_dragging_for_extend = true;
         auto rect = content_rect(m_target_cell);
         GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y() };
         AbstractTableView::mousedown_event(adjusted_event);
@@ -189,10 +213,29 @@ void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
 
 void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
 {
+    // If done extending
+    if (m_has_committed_to_extending) {
+        Vector<Position> from;
+        Position position { (size_t)m_target_cell.column(), (size_t)m_target_cell.row() };
+        from.append(position);
+        selection().for_each_index([&](auto& index) {
+            if (index == m_starting_selection_index)
+                return;
+            auto& sheet = static_cast<SheetModel&>(*this->model()).sheet();
+            Vector<Position> to;
+            Position position { (size_t)index.column(), (size_t)index.row() };
+            to.append(position);
+            sheet.copy_cells(from, to);
+        });
+        update();
+    }
+
     m_is_dragging_for_select = false;
     m_is_dragging_for_cut = false;
+    m_is_dragging_for_extend = false;
     m_has_committed_to_cutting = false;
-    if (m_is_hovering_cut_zone) {
+    m_has_committed_to_extending = false;
+    if (m_is_hovering_cut_zone || m_is_hovering_extend_zone) {
         auto rect = content_rect(m_target_cell);
         GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y() };
         TableView::mouseup_event(adjusted_event);
