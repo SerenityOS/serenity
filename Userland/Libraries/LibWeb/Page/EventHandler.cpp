@@ -413,8 +413,22 @@ bool EventHandler::focus_next_element()
 
 bool EventHandler::focus_previous_element()
 {
-    // FIXME: Implement Shift-Tab cycling backwards through focusable elements!
-    return false;
+    if (!m_browsing_context.active_document())
+        return false;
+    auto* element = m_browsing_context.active_document()->focused_element();
+    if (!element) {
+        element = m_browsing_context.active_document()->last_child_of_type<DOM::Element>();
+        if (element && element->is_focusable()) {
+            m_browsing_context.active_document()->set_focused_element(element);
+            return true;
+        }
+    }
+
+    for (element = element->previous_element_in_pre_order(); element && !element->is_focusable(); element = element->previous_element_in_pre_order())
+        ;
+
+    m_browsing_context.active_document()->set_focused_element(element);
+    return element;
 }
 
 constexpr bool should_ignore_keydown_event(u32 code_point)
