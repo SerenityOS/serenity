@@ -1,3 +1,4 @@
+PreprocessorStatement  0:0-0:18 (#define NUMBER 1337)
 KnownType  1:0-1:2 (int)
 Identifier  1:4-1:4 (x)
 Equals  1:6-1:6 (=)
