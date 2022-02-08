@@ -778,7 +778,7 @@ Vector<BoxShadowData> StyleProperties::box_shadow() const
     auto value = value_or_error.value();
 
     auto make_box_shadow_data = [](BoxShadowStyleValue const& box) {
-        return BoxShadowData { box.offset_x(), box.offset_y(), box.blur_radius(), box.color() };
+        return BoxShadowData { box.color(), box.offset_x(), box.offset_y(), box.blur_radius(), box.spread_distance(), box.placement() };
     };
 
     if (value->is_value_list()) {
