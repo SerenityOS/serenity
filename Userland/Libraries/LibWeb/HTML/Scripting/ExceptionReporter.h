@@ -10,6 +10,13 @@
 
 namespace Web::HTML {
 
-void report_exception(JS::ThrowCompletionOr<JS::Value> const& value);
+void report_exception(JS::Completion const&);
+
+template<typename T>
+inline void report_exception(JS::ThrowCompletionOr<T> const& result)
+{
+    VERIFY(result.is_throw_completion());
+    report_exception(result.throw_completion());
+}
 
 }
