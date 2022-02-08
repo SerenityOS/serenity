@@ -12,12 +12,13 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/#report-the-exception
-void report_exception(JS::ThrowCompletionOr<JS::Value> const& result)
+void report_exception(JS::Completion const& throw_completion)
 {
     // FIXME: This is just old code, and does not strictly follow the spec of report an exception.
     // FIXME: We should probably also report these exceptions to the JS console.
-    VERIFY(result.throw_completion().value().has_value());
-    auto thrown_value = *result.throw_completion().value();
+    VERIFY(throw_completion.type() == JS::Completion::Type::Throw);
+    VERIFY(throw_completion.value().has_value());
+    auto thrown_value = *throw_completion.value();
     if (thrown_value.is_object()) {
         auto& object = thrown_value.as_object();
         auto& vm = object.vm();
