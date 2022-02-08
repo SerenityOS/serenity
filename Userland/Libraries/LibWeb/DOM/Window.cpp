@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/Page.h>
@@ -436,6 +437,17 @@ Selection::Selection* Window::get_selection()
 {
     // FIXME: Implement.
     return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage
+RefPtr<HTML::Storage> Window::local_storage()
+{
+    // FIXME: Implement according to spec.
+
+    static HashMap<Origin, NonnullRefPtr<HTML::Storage>> local_storage_per_origin;
+    return local_storage_per_origin.ensure(associated_document().origin(), [] {
+        return HTML::Storage::create();
+    });
 }
 
 }

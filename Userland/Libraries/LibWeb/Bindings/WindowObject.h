@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -93,6 +93,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(screen_y_getter);
     JS_DECLARE_NATIVE_FUNCTION(screen_left_getter);
     JS_DECLARE_NATIVE_FUNCTION(screen_top_getter);
+
+    JS_DECLARE_NATIVE_FUNCTION(local_storage_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);

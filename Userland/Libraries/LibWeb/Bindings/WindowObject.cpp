@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -32,6 +32,7 @@
 #include <LibWeb/Bindings/Replaceable.h>
 #include <LibWeb/Bindings/ScreenWrapper.h>
 #include <LibWeb/Bindings/SelectionWrapper.h>
+#include <LibWeb/Bindings/StorageWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/WindowObjectHelper.h>
 #include <LibWeb/Crypto/Crypto.h>
@@ -42,6 +43,7 @@
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Storage.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
@@ -109,6 +111,8 @@ void WindowObject::initialize_global_object()
     define_native_accessor("screenTop", screen_top_getter, {}, attr);
 
     define_direct_property("CSS", heap().allocate<CSSNamespace>(*this, *this), 0);
+
+    define_native_accessor("localStorage", local_storage_getter, {}, attr);
 
     // Legacy
     define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
@@ -644,6 +648,13 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_y_getter)
 {
     auto* impl = TRY(impl_from(vm, global_object));
     return JS::Value(impl->screen_y());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::local_storage_getter)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    // FIXME: localStorage may throw. We have to deal with that here.
+    return wrap(global_object, *impl->local_storage());
 }
 
 #define __ENUMERATE(attribute, event_name)                                                                                 \

@@ -196,6 +196,7 @@ set(SOURCES
     HTML/Scripting/ExceptionReporter.cpp
     HTML/Scripting/Script.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
+    HTML/Storage.cpp
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/TextMetrics.cpp
@@ -493,6 +494,7 @@ libweb_js_wrapper(HTML/MessageEvent)
 libweb_js_wrapper(HTML/MessagePort)
 libweb_js_wrapper(HTML/PageTransitionEvent)
 libweb_js_wrapper(HTML/PromiseRejectionEvent)
+libweb_js_wrapper(HTML/Storage)
 libweb_js_wrapper(HTML/SubmitEvent)
 libweb_js_wrapper(HTML/TextMetrics)
 libweb_js_wrapper(HTML/WebSocket)

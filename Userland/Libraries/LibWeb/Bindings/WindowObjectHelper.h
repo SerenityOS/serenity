@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -263,6 +263,8 @@
 #include <LibWeb/Bindings/SelectionPrototype.h>
 #include <LibWeb/Bindings/ShadowRootConstructor.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
+#include <LibWeb/Bindings/StorageConstructor.h>
+#include <LibWeb/Bindings/StoragePrototype.h>
 #include <LibWeb/Bindings/StyleSheetConstructor.h>
 #include <LibWeb/Bindings/StyleSheetListConstructor.h>
 #include <LibWeb/Bindings/StyleSheetListPrototype.h>
@@ -424,6 +426,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Screen)                    \
     ADD_WINDOW_OBJECT_INTERFACE(Selection)                 \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)                \
+    ADD_WINDOW_OBJECT_INTERFACE(Storage)                   \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheet)                \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheetList)            \
     ADD_WINDOW_OBJECT_INTERFACE(SubmitEvent)               \
