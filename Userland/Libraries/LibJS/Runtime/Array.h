@@ -26,13 +26,11 @@ public:
     template<typename T>
     static Array* create_from(GlobalObject& global_object, Span<T const> elements, Function<Value(T const&)> map_fn)
     {
-        auto& vm = global_object.vm();
         auto values = MarkedValueList { global_object.heap() };
         values.ensure_capacity(elements.size());
-        for (auto const& element : elements) {
+        for (auto const& element : elements)
             values.append(map_fn(element));
-            VERIFY(!vm.exception());
-        }
+
         return Array::create_from(global_object, values);
     }
 

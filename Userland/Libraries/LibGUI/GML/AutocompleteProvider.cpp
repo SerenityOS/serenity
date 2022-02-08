@@ -5,17 +5,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "GMLAutocompleteProvider.h"
-#include "GMLLexer.h"
+#include "AutocompleteProvider.h"
+#include "Lexer.h"
 #include <AK/QuickSort.h>
 
-namespace GUI {
+namespace GUI::GML {
 
-void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> callback)
+void AutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> callback)
 {
     auto cursor = m_editor->cursor();
     auto text = m_editor->text();
-    GUI::GMLLexer lexer(text);
+    Lexer lexer(text);
     // FIXME: Provide a begin() and end() for lexers PLEASE!
     auto all_tokens = lexer.lex();
     enum State {
@@ -29,16 +29,16 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     Vector<String> class_names;
     Vector<State> previous_states;
     bool should_push_state { true };
-    GUI::GMLToken* last_seen_token { nullptr };
-    GUI::GMLToken* last_identifier_token { nullptr };
+    Token* last_seen_token { nullptr };
+    Token* last_identifier_token { nullptr };
 
     for (auto& token : all_tokens) {
         auto handle_class_child = [&] {
-            if (token.m_type == GUI::GMLToken::Type::Identifier) {
+            if (token.m_type == Token::Type::Identifier) {
                 state = InIdentifier;
                 identifier_string = token.m_view;
                 last_identifier_token = &token;
-            } else if (token.m_type == GUI::GMLToken::Type::ClassMarker) {
+            } else if (token.m_type == Token::Type::ClassMarker) {
                 previous_states.append(AfterClassName);
                 state = Free;
                 should_push_state = false;
@@ -51,7 +51,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         last_seen_token = &token;
         switch (state) {
         case Free:
-            if (token.m_type == GUI::GMLToken::Type::ClassName) {
+            if (token.m_type == Token::Type::ClassName) {
                 if (should_push_state)
                     previous_states.append(state);
                 else
@@ -62,7 +62,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             }
             break;
         case InClassName:
-            if (token.m_type != GUI::GMLToken::Type::LeftCurly) {
+            if (token.m_type != Token::Type::LeftCurly) {
                 // Close empty class and immediately handle our parent's next child
                 class_names.take_last();
                 state = previous_states.take_last();
@@ -77,20 +77,20 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         case AfterClassName:
             handle_class_child();
 
-            if (token.m_type == GUI::GMLToken::Type::RightCurly) {
+            if (token.m_type == Token::Type::RightCurly) {
                 class_names.take_last();
                 state = previous_states.take_last();
                 break;
             }
             break;
         case InIdentifier:
-            if (token.m_type == GUI::GMLToken::Type::Colon)
+            if (token.m_type == Token::Type::Colon)
                 state = AfterIdentifier;
             break;
         case AfterIdentifier:
-            if (token.m_type == GUI::GMLToken::Type::RightCurly || token.m_type == GUI::GMLToken::Type::LeftCurly)
+            if (token.m_type == Token::Type::RightCurly || token.m_type == Token::Type::LeftCurly)
                 break;
-            if (token.m_type == GUI::GMLToken::Type::ClassMarker) {
+            if (token.m_type == Token::Type::ClassMarker) {
                 previous_states.append(AfterClassName);
                 state = Free;
                 should_push_state = false;
@@ -121,7 +121,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         return fuzzy_str_builder.build();
     };
 
-    Vector<GUI::AutocompleteProvider::Entry> class_entries, identifier_entries;
+    Vector<AutocompleteProvider::Entry> class_entries, identifier_entries;
 
     auto register_layouts_matching_pattern = [&](String pattern, size_t partial_input_length) {
         Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
@@ -211,7 +211,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         break;
     case AfterClassName:
         if (last_seen_token && last_seen_token->m_end.line == cursor.line()) {
-            if (last_seen_token->m_type != GUI::GMLToken::Type::Identifier || last_seen_token->m_end.column != cursor.column()) {
+            if (last_seen_token->m_type != Token::Type::Identifier || last_seen_token->m_end.column != cursor.column()) {
                 // Inside braces, but on the same line as some other stuff (and not the continuation of one!)
                 // The user expects nothing here.
                 break;

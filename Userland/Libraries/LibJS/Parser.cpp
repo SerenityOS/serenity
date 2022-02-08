@@ -550,20 +550,14 @@ void Parser::parse_module(Program& program)
             auto const& exported_name = entry.local_or_import_name;
             bool found = false;
             program.for_each_lexically_declared_name([&](auto const& name) {
-                if (name == exported_name) {
+                if (name == exported_name)
                     found = true;
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
             });
             if (found)
                 continue;
             program.for_each_var_declared_name([&](auto const& name) {
-                if (name == exported_name) {
+                if (name == exported_name)
                     found = true;
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
             });
             if (!found)
                 syntax_error(String::formatted("'{}' is not declared", exported_name));

@@ -11,7 +11,6 @@ set(SOURCES
     Bindings/MainThreadVM.cpp
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
-    Bindings/ScriptExecutionContext.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
     Crypto/Crypto.cpp
@@ -74,7 +73,6 @@ set(SOURCES
     DOM/ElementFactory.cpp
     DOM/Event.cpp
     DOM/EventDispatcher.cpp
-    DOM/EventListener.cpp
     DOM/EventTarget.cpp
     DOM/HTMLCollection.cpp
     DOM/LiveNodeList.cpp
@@ -194,7 +192,11 @@ set(SOURCES
     HTML/Parser/ListOfActiveFormattingElements.cpp
     HTML/Parser/StackOfOpenElements.cpp
     HTML/Scripting/ClassicScript.cpp
+    HTML/Scripting/Environments.cpp
+    HTML/Scripting/ExceptionReporter.cpp
     HTML/Scripting/Script.cpp
+    HTML/Scripting/WindowEnvironmentSettingsObject.cpp
+    HTML/Storage.cpp
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/TextMetrics.cpp
@@ -413,6 +415,7 @@ libweb_js_wrapper(HTML/CanvasRenderingContext2D)
 libweb_js_wrapper(HTML/CloseEvent)
 libweb_js_wrapper(HTML/DOMParser)
 libweb_js_wrapper(HTML/DOMStringMap)
+libweb_js_wrapper(HTML/ErrorEvent)
 libweb_js_wrapper(HTML/History)
 libweb_js_wrapper(HTML/HTMLAnchorElement)
 libweb_js_wrapper(HTML/HTMLAreaElement)
@@ -491,6 +494,7 @@ libweb_js_wrapper(HTML/MessageEvent)
 libweb_js_wrapper(HTML/MessagePort)
 libweb_js_wrapper(HTML/PageTransitionEvent)
 libweb_js_wrapper(HTML/PromiseRejectionEvent)
+libweb_js_wrapper(HTML/Storage)
 libweb_js_wrapper(HTML/SubmitEvent)
 libweb_js_wrapper(HTML/TextMetrics)
 libweb_js_wrapper(HTML/WebSocket)

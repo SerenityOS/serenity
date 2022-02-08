@@ -138,9 +138,8 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto* promise = TRY(promise_resolve(global_object, constructor, result));
 
             // iv. Let thrower be ! CreateBuiltinFunction(throwReason, 0, "", « »).
-            auto* thrower = NativeFunction::create(global_object, "", [reason](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+            auto* thrower = NativeFunction::create(global_object, "", [reason](auto&, auto&) -> ThrowCompletionOr<Value> {
                 // 1. Return ThrowCompletion(reason).
-                vm.throw_exception(global_object, reason);
                 return throw_completion(reason);
             });
 

@@ -107,11 +107,7 @@ public:
         }
     }
 
-    struct ValueAndException {
-        JS::Value value;
-        JS::Exception* exception { nullptr };
-    };
-    ValueAndException evaluate(StringView, Cell* = nullptr);
+    JS::ThrowCompletionOr<JS::Value> evaluate(StringView, Cell* = nullptr);
     JS::Interpreter& interpreter() const;
     SheetGlobalObject& global_object() const { return *m_global_object; }
 

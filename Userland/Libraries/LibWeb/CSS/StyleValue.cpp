@@ -271,7 +271,11 @@ String BorderRadiusStyleValue::to_string() const
 
 String BoxShadowStyleValue::to_string() const
 {
-    return String::formatted("{} {} {} {}", m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_color.to_string());
+    StringBuilder builder;
+    builder.appendff("{} {} {} {} {}", m_color.to_string(), m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_spread_distance.to_string());
+    if (m_placement == BoxShadowPlacement::Inner)
+        builder.append(" inset");
+    return builder.to_string();
 }
 
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)

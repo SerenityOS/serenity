@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -125,9 +125,13 @@ namespace Web::HTML {
 class BrowsingContext;
 class BrowsingContextContainer;
 class CanvasRenderingContext2D;
+class ClassicScript;
 class CloseEvent;
 class DOMParser;
 class DOMStringMap;
+struct Environment;
+struct EnvironmentSettingsObject;
+class ErrorEvent;
 struct EventHandler;
 class EventLoop;
 class HTMLAnchorElement;
@@ -209,9 +213,11 @@ class MessageEvent;
 class MessagePort;
 class PageTransitionEvent;
 class PromiseRejectionEvent;
+class Storage;
 class SubmitEvent;
 class TextMetrics;
 class WebSocket;
+class WindowEnvironmentSettingsObject;
 }
 
 namespace Web::HighResolutionTime {
@@ -307,6 +313,7 @@ namespace Web::Bindings {
 class AbortControllerWrapper;
 class AbortSignalWrapper;
 class AttributeWrapper;
+struct CallbackType;
 class CanvasGradientWrapper;
 class CanvasRenderingContext2DWrapper;
 class CharacterDataWrapper;
@@ -330,6 +337,7 @@ class DOMRectWrapper;
 class DOMStringMapWrapper;
 class DOMTokenListWrapper;
 class ElementWrapper;
+class ErrorEventWrapper;
 class EventListenerWrapper;
 class EventTargetWrapper;
 class EventWrapper;
@@ -432,8 +440,8 @@ class RangePrototype;
 class RangeWrapper;
 class ResizeObserverWrapper;
 class ScreenWrapper;
-class ScriptExecutionContext;
 class SelectionWrapper;
+class StorageWrapper;
 class StyleSheetListWrapper;
 class StyleSheetWrapper;
 class SubmitEventWrapper;

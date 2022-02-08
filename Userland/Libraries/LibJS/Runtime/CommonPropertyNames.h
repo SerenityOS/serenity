@@ -436,6 +436,7 @@ namespace JS {
     P(source)                                \
     P(splice)                                \
     P(sqrt)                                  \
+    P(stack)                                 \
     P(startOfDay)                            \
     P(startsWith)                            \
     P(status)                                \

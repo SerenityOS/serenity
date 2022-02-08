@@ -9,6 +9,7 @@
 #include <AK/SinglyLinkedList.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/JobCallback.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/WeakContainer.h>
@@ -21,21 +22,26 @@ class FinalizationRegistry final
     JS_OBJECT(FinalizationRegistry, Object);
 
 public:
-    static FinalizationRegistry* create(GlobalObject&, FunctionObject&);
-
-    explicit FinalizationRegistry(FunctionObject&, Object& prototype);
+    explicit FinalizationRegistry(Realm&, JS::JobCallback, Object& prototype);
     virtual ~FinalizationRegistry() override;
 
     void add_finalization_record(Cell& target, Value held_value, Object* unregister_token);
     bool remove_by_token(Object& unregister_token);
-    void cleanup(FunctionObject* callback = nullptr);
+    ThrowCompletionOr<void> cleanup(Optional<JobCallback> = {});
 
     virtual void remove_dead_cells(Badge<Heap>) override;
+
+    Realm& realm() { return *m_realm.cell(); }
+    Realm const& realm() const { return *m_realm.cell(); }
+
+    JobCallback& cleanup_callback() { return m_cleanup_callback; }
+    JobCallback const& cleanup_callback() const { return m_cleanup_callback; }
 
 private:
     virtual void visit_edges(Visitor& visitor) override;
 
-    FunctionObject* m_cleanup_callback { nullptr };
+    Handle<Realm> m_realm;
+    JS::JobCallback m_cleanup_callback;
 
     struct FinalizationRecord {
         Cell* target { nullptr };

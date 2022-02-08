@@ -72,7 +72,6 @@ set(SOURCES
     Runtime/ErrorConstructor.cpp
     Runtime/ErrorPrototype.cpp
     Runtime/ErrorTypes.cpp
-    Runtime/Exception.cpp
     Runtime/FinalizationRegistry.cpp
     Runtime/FinalizationRegistryConstructor.cpp
     Runtime/FinalizationRegistryPrototype.cpp

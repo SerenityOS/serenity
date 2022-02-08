@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/RefPtr.h>
 #include <LibGUI/Layout.h>
 #include <LibGUI/ScrollableContainerWidget.h>
 
@@ -85,48 +86,46 @@ void ScrollableContainerWidget::set_widget(GUI::Widget* widget)
     update_widget_position();
 }
 
-bool ScrollableContainerWidget::load_from_json(const JsonObject& json, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
+bool ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
 {
-    json.for_each_member([&](auto& key, auto& value) {
+    if (is<GUI::GML::GMLFile>(ast.ptr()))
+        return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);
+
+    VERIFY(is<GUI::GML::Object>(ast.ptr()));
+    auto object = static_ptr_cast<GUI::GML::Object>(ast);
+
+    object->for_each_property([&](auto key, auto value) {
         set_property(key, value);
     });
 
-    auto layout_value = json.get("layout");
-    if (!layout_value.is_null()) {
-        dbgln("Layout specified in ScrollableContainerWidget, this is not supported.");
-        return false;
-    }
-
-    auto content_widget_value = json.get("content_widget");
-    if (!content_widget_value.is_null() && !content_widget_value.is_object()) {
+    auto content_widget_value = object->get_property("content_widget"sv);
+    if (!content_widget_value.is_null() && !is<Object>(content_widget_value.ptr())) {
         dbgln("content widget is not an object");
         return false;
     }
 
-    if (!json.get("children").is_null()) {
+    auto has_children = false;
+    object->for_each_child_object([&](auto) { has_children = true; });
+    if (has_children) {
         dbgln("children specified for ScrollableContainerWidget, but only 1 widget as content_widget is supported");
         return false;
     }
 
-    if (content_widget_value.is_object()) {
-        auto& content_widget = content_widget_value.as_object();
-        auto class_name = content_widget.get("class");
-        if (!class_name.is_string()) {
-            dbgln("Invalid content widget class name");
-            return false;
-        }
+    if (!content_widget_value.is_null() && is<Object>(content_widget_value.ptr())) {
+        auto content_widget = static_ptr_cast<GUI::GML::Object>(content_widget_value);
+        auto class_name = content_widget->name();
 
         RefPtr<Core::Object> child;
-        if (auto* registration = Core::ObjectClassRegistration::find(class_name.as_string())) {
+        if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
             child = registration->construct();
         } else {
-            child = unregistered_child_handler(class_name.as_string());
+            child = unregistered_child_handler(class_name);
         }
         if (!child)
             return false;
         auto widget_ptr = verify_cast<GUI::Widget>(child.ptr());
         set_widget(widget_ptr);
-        child->load_from_json(content_widget, unregistered_child_handler);
+        static_ptr_cast<Widget>(child)->load_from_gml_ast(content_widget.release_nonnull(), unregistered_child_handler);
         return true;
     }
 

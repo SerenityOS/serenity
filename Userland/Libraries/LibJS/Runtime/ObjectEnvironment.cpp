@@ -106,7 +106,6 @@ ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject& glo
             return result_or_error.release_error();
         auto property = property_or_error.release_value();
         if (property.has_value() && !property->writable.value_or(true)) {
-            vm.clear_exception();
             return vm.throw_completion<TypeError>(global_object, ErrorType::DescWriteNonWritable, name);
         }
     }

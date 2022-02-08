@@ -1,40 +1,32 @@
 @GUI::Widget {
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         spacing: 2
     }
 
     @GUI::ToolbarContainer {
         name: "toolbar_container"
-
         @GUI::Toolbar {
             name: "toolbar"
         }
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Widget {
             name: "left_column_container"
-
-            layout: @GUI::VerticalBoxLayout {
-            }
+            layout: @GUI::VerticalBoxLayout
 
             @GUI::Widget {
                 name: "glyph_editor_container"
+                layout: @GUI::VerticalBoxLayout
 
-                layout: @GUI::VerticalBoxLayout {
-                }
             }
 
             @GUI::Widget {
                 shrink_to_fit: true
-
-                layout: @GUI::VerticalBoxLayout {
-                }
+                layout: @GUI::VerticalBoxLayout
 
                 @GUI::SpinBox {
                     name: "glyph_editor_width_spinbox"
@@ -49,7 +41,6 @@
 
             @GUI::ToolbarContainer {
                 name: "glyph_toolbar_container"
-
                 @GUI::Toolbar {
                     name: "glyph_mode_toolbar"
                 }
@@ -62,32 +53,27 @@
 
         @GUI::Widget {
             name: "right_column_container"
-
             layout: @GUI::VerticalBoxLayout {
                 spacing: 6
             }
 
             @GUI::Widget {
                 name: "glyph_map_container"
+                layout: @GUI::VerticalBoxLayout
 
-                layout: @GUI::VerticalBoxLayout {
-                }
             }
 
             @GUI::GroupBox {
                 name: "font_metadata_groupbox"
                 title: "Metadata"
                 shrink_to_fit: true
-
                 layout: @GUI::VerticalBoxLayout {
                     margins: [6, 6, 6, 6]
                 }
 
                 @GUI::Widget {
                     fixed_height: 22
-
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
+                    layout: @GUI::HorizontalBoxLayout
 
                     @GUI::Label {
                         name: "name_label"
@@ -103,9 +89,7 @@
 
                 @GUI::Widget {
                     fixed_height: 22
-
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
+                    layout: @GUI::HorizontalBoxLayout
 
                     @GUI::Label {
                         name: "family_label"
@@ -121,9 +105,7 @@
 
                 @GUI::Widget {
                     fixed_height: 22
-
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
+                    layout: @GUI::HorizontalBoxLayout
 
                     @GUI::Label {
                         name: "weight_label"
@@ -140,9 +122,7 @@
 
                 @GUI::Widget {
                     fixed_height: 22
-
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
+                    layout: @GUI::HorizontalBoxLayout
 
                     @GUI::Label {
                         name: "slope_label"
@@ -159,9 +139,7 @@
 
                 @GUI::Widget {
                     fixed_height: 22
-
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
+                    layout: @GUI::HorizontalBoxLayout
 
                     @GUI::Label {
                         name: "presentation_label"
@@ -179,9 +157,7 @@
 
                 @GUI::Widget {
                     fixed_height: 22
-
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
+                    layout: @GUI::HorizontalBoxLayout
 
                     @GUI::Label {
                         name: "mean_line_label"
@@ -198,9 +174,7 @@
 
                 @GUI::Widget {
                     fixed_height: 22
-
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
+                    layout: @GUI::HorizontalBoxLayout
 
                     @GUI::Label {
                         name: "baseline_label"
@@ -217,9 +191,7 @@
 
                 @GUI::Widget {
                     fixed_height: 22
-
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
+                    layout: @GUI::HorizontalBoxLayout
 
                     @GUI::Label {
                         name: "spacing_label"

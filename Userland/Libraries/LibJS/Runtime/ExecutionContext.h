@@ -8,14 +8,16 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/WeakPtr.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Module.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-using ScriptOrModule = Variant<Empty, Script*, Module*>;
+using ScriptOrModule = Variant<Empty, WeakPtr<Script>, WeakPtr<Module>>;
 
 // 9.4 Execution Contexts, https://tc39.es/ecma262/#sec-execution-contexts
 struct ExecutionContext {
@@ -61,6 +63,10 @@ public:
     Value this_value;
     MarkedValueList arguments;
     bool is_strict_mode { false };
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#skip-when-determining-incumbent-counter
+    // FIXME: Move this out of LibJS (e.g. by using the CustomData concept), as it's used exclusively by LibWeb.
+    size_t skip_when_determining_incumbent_counter { 0 };
 };
 
 }

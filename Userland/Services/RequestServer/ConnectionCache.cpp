@@ -64,6 +64,7 @@ void request_did_finish(URL const& url, Core::Stream::Socket const* socket)
                 connection->timer.start();
                 connection->current_url = url;
                 connection->job_data = connection->request_queue.take_first();
+                connection->socket->set_notifications_enabled(true);
                 connection->job_data.start(*connection->socket);
             });
         }

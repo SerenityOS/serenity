@@ -48,7 +48,9 @@ enum class WindowTileType {
     TopLeft,
     TopRight,
     BottomLeft,
-    BottomRight
+    BottomRight,
+    VerticallyMaximized,
+    HorizontallyMaximized,
 };
 
 enum class WindowMenuAction {
@@ -111,16 +113,18 @@ public:
     bool is_always_on_top() const { return m_always_on_top; }
     void set_always_on_top(bool);
 
-    void set_vertically_maximized();
-
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
 
-    WindowTileType tiled() const { return m_tiled; }
+    WindowTileType tile_type() const { return m_tile_type; }
+    bool is_tiled() const { return m_tile_type != WindowTileType::None; }
     void set_tiled(Screen*, WindowTileType);
     WindowTileType tile_type_based_on_rect(Gfx::IntRect const&) const;
     void check_untile_due_to_resize(Gfx::IntRect const&);
     bool set_untiled(Optional<Gfx::IntPoint> fixed_point = {});
+
+    Gfx::IntRect floating_rect() const { return m_floating_rect; }
+    void set_floating_rect(Gfx::IntRect rect) { m_floating_rect = rect; }
 
     void set_forced_shadow(bool b) { m_forced_shadow = b; }
     bool has_forced_shadow() const { return m_forced_shadow; }
@@ -434,8 +438,8 @@ private:
     bool m_moving_to_another_stack { false };
     bool m_invalidate_last_render_rects { false };
     Vector<i32> m_stealable_by_client_ids;
-    WindowTileType m_tiled { WindowTileType::None };
-    Gfx::IntRect m_untiled_rect;
+    WindowTileType m_tile_type { WindowTileType::None };
+    Gfx::IntRect m_floating_rect;
     bool m_occluded { false };
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;

@@ -159,10 +159,9 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     // FIXME: This shouldn't block!
     auto buffer_or_error = vm.argument(0).to_object(global_object);
     JS::Value rejection_value;
-    if (buffer_or_error.is_error()) {
+    if (buffer_or_error.is_error())
         rejection_value = *buffer_or_error.throw_completion().value();
-        vm.clear_exception();
-    }
+
     auto promise = JS::Promise::create(global_object);
     if (!rejection_value.is_empty()) {
         promise->reject(rejection_value);
@@ -217,7 +216,6 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
 
                             auto result_or_error = JS::call(global_object, function, JS::js_undefined(), move(argument_values));
                             if (result_or_error.is_error()) {
-                                vm.clear_exception();
                                 return Wasm::Trap();
                             }
                             if (type.results().is_empty())
@@ -325,7 +323,6 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     bool should_return_module = false;
     if (buffer_or_error.is_error()) {
         auto rejection_value = *buffer_or_error.throw_completion().value();
-        vm.clear_exception();
         promise->reject(rejection_value);
         return promise;
     }

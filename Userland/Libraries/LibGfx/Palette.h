@@ -108,7 +108,7 @@ public:
     Color rubber_band_fill() const { return color(ColorRole::RubberBandFill); }
     Color rubber_band_border() const { return color(ColorRole::RubberBandBorder); }
     Color gutter() const { return color(ColorRole::Gutter); }
-    Color gutter_border() const { return color(ColorRole::Gutter); }
+    Color gutter_border() const { return color(ColorRole::GutterBorder); }
     Color ruler() const { return color(ColorRole::Ruler); }
     Color ruler_border() const { return color(ColorRole::RulerBorder); }
     Color ruler_active_text() const { return color(ColorRole::RulerActiveText); }

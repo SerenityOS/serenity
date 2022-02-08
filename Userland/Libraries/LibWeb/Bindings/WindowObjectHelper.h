@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -56,6 +56,8 @@
 #include <LibWeb/Bindings/DocumentTypePrototype.h>
 #include <LibWeb/Bindings/ElementConstructor.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
+#include <LibWeb/Bindings/ErrorEventConstructor.h>
+#include <LibWeb/Bindings/ErrorEventPrototype.h>
 #include <LibWeb/Bindings/EventConstructor.h>
 #include <LibWeb/Bindings/EventPrototype.h>
 #include <LibWeb/Bindings/EventTargetConstructor.h>
@@ -261,6 +263,8 @@
 #include <LibWeb/Bindings/SelectionPrototype.h>
 #include <LibWeb/Bindings/ShadowRootConstructor.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
+#include <LibWeb/Bindings/StorageConstructor.h>
+#include <LibWeb/Bindings/StoragePrototype.h>
 #include <LibWeb/Bindings/StyleSheetConstructor.h>
 #include <LibWeb/Bindings/StyleSheetListConstructor.h>
 #include <LibWeb/Bindings/StyleSheetListPrototype.h>
@@ -325,6 +329,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(DOMRectReadOnly)           \
     ADD_WINDOW_OBJECT_INTERFACE(DOMStringMap)              \
     ADD_WINDOW_OBJECT_INTERFACE(Element)                   \
+    ADD_WINDOW_OBJECT_INTERFACE(ErrorEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Event)                     \
     ADD_WINDOW_OBJECT_INTERFACE(EventTarget)               \
     ADD_WINDOW_OBJECT_INTERFACE(History)                   \
@@ -421,6 +426,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Screen)                    \
     ADD_WINDOW_OBJECT_INTERFACE(Selection)                 \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)                \
+    ADD_WINDOW_OBJECT_INTERFACE(Storage)                   \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheet)                \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheetList)            \
     ADD_WINDOW_OBJECT_INTERFACE(SubmitEvent)               \

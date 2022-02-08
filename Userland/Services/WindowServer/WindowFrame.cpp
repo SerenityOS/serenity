@@ -84,7 +84,18 @@ void WindowFrame::window_was_constructed(Badge<Window>)
             m_window.handle_window_menu_action(WindowMenuAction::MaximizeOrRestore);
         });
         button->on_middle_click = [&](auto&) {
-            m_window.set_vertically_maximized();
+            auto& window_screen = Screen::closest_to_location(m_window.rect().location());
+            if (m_window.tile_type() == WindowTileType::VerticallyMaximized)
+                m_window.set_untiled();
+            else
+                m_window.set_tiled(&window_screen, WindowTileType::VerticallyMaximized);
+        };
+        button->on_secondary_click = [&](auto&) {
+            auto& window_screen = Screen::closest_to_location(m_window.rect().location());
+            if (m_window.tile_type() == WindowTileType::HorizontallyMaximized)
+                m_window.set_untiled();
+            else
+                m_window.set_tiled(&window_screen, WindowTileType::HorizontallyMaximized);
         };
         m_maximize_button = button.ptr();
         m_buttons.append(move(button));
@@ -532,7 +543,7 @@ Gfx::IntRect WindowFrame::rect() const
 
 Gfx::IntRect WindowFrame::constrained_render_rect_to_screen(const Gfx::IntRect& render_rect) const
 {
-    if (m_window.is_maximized() || m_window.tiled() != WindowTileType::None)
+    if (m_window.is_maximized() || m_window.is_tiled())
         return render_rect.intersected(Screen::closest_to_rect(rect()).rect());
     return render_rect;
 }

@@ -9,15 +9,11 @@
 
 namespace JS {
 
-FinalizationRegistry* FinalizationRegistry::create(GlobalObject& global_object, FunctionObject& cleanup_callback)
-{
-    return global_object.heap().allocate<FinalizationRegistry>(global_object, cleanup_callback, *global_object.finalization_registry_prototype());
-}
-
-FinalizationRegistry::FinalizationRegistry(FunctionObject& cleanup_callback, Object& prototype)
+FinalizationRegistry::FinalizationRegistry(Realm& realm, JS::JobCallback cleanup_callback, Object& prototype)
     : Object(prototype)
     , WeakContainer(heap())
-    , m_cleanup_callback(&cleanup_callback)
+    , m_realm(JS::make_handle(realm))
+    , m_cleanup_callback(move(cleanup_callback))
 {
 }
 
@@ -54,28 +50,43 @@ void FinalizationRegistry::remove_dead_cells(Badge<Heap>)
         break;
     }
     if (any_cells_were_removed)
-        vm().enqueue_finalization_registry_cleanup_job(*this);
+        vm().host_enqueue_finalization_registry_cleanup_job(*this);
 }
 
 // 9.13 CleanupFinalizationRegistry ( finalizationRegistry ), https://tc39.es/ecma262/#sec-cleanup-finalization-registry
-void FinalizationRegistry::cleanup(FunctionObject* callback)
+ThrowCompletionOr<void> FinalizationRegistry::cleanup(Optional<JobCallback> callback)
 {
     auto& vm = this->vm();
-    auto cleanup_callback = callback ?: m_cleanup_callback;
+    auto& global_object = this->global_object();
+
+    // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
+    // Note: Ensured by type.
+
+    // 2. Let callback be finalizationRegistry.[[CleanupCallback]].
+    auto& cleanup_callback = callback.has_value() ? callback.value() : m_cleanup_callback;
+
+    // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
     for (auto it = m_records.begin(); it != m_records.end(); ++it) {
+        // a. Choose any such cell.
         if (it->target != nullptr)
             continue;
-        (void)call(global_object(), *cleanup_callback, js_undefined(), it->held_value);
+
+        // b. Remove cell from finalizationRegistry.[[Cells]].
+        MarkedValueList arguments(vm.heap());
+        arguments.append(it->held_value);
         it.remove(m_records);
-        if (vm.exception())
-            return;
+
+        // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
+        TRY(vm.host_call_job_callback(global_object, cleanup_callback, js_undefined(), move(arguments)));
     }
+
+    // 4. Return NormalCompletion(empty).
+    return {};
 }
 
 void FinalizationRegistry::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_cleanup_callback);
     for (auto& record : m_records) {
         visitor.visit(record.held_value);
         visitor.visit(record.unregister_token);

@@ -24,14 +24,14 @@ class AbortController final
 public:
     using WrapperType = Bindings::AbortControllerWrapper;
 
-    static NonnullRefPtr<AbortController> create(Document& document)
+    static NonnullRefPtr<AbortController> create()
     {
-        return adopt_ref(*new AbortController(document));
+        return adopt_ref(*new AbortController());
     }
 
-    static NonnullRefPtr<AbortController> create_with_global_object(Bindings::WindowObject& window_object)
+    static NonnullRefPtr<AbortController> create_with_global_object(Bindings::WindowObject&)
     {
-        return AbortController::create(window_object.impl().associated_document());
+        return AbortController::create();
     }
 
     virtual ~AbortController() override;
@@ -42,7 +42,7 @@ public:
     void abort(JS::Value reason);
 
 private:
-    AbortController(Document& document);
+    AbortController();
 
     // https://dom.spec.whatwg.org/#abortcontroller-signal
     NonnullRefPtr<AbortSignal> m_signal;

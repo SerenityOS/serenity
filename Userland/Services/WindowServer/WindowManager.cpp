@@ -674,6 +674,7 @@ void WindowManager::start_window_move(Window& window, Gfx::IntPoint const& origi
     m_move_window->set_default_positioned(false);
     m_move_origin = origin;
     m_move_window_origin = window.position();
+    m_move_window_cursor_position = window.is_tiled() || window.is_maximized() ? to_floating_cursor_position(m_mouse_down_origin) : m_mouse_down_origin;
     m_geometry_overlay = Compositor::the().create_overlay<WindowGeometryOverlay>(window);
     m_geometry_overlay->set_enabled(true);
     window.invalidate(true, true);
@@ -740,6 +741,9 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
 
         dbgln_if(MOVE_DEBUG, "[WM] Finish moving Window({})", m_move_window);
 
+        if (!m_move_window->is_tiled() && !m_move_window->is_maximized())
+            m_move_window->set_floating_rect(m_move_window->rect());
+
         m_move_window->invalidate(true, true);
         if (m_move_window->is_resizable()) {
             process_event_for_doubleclick(*m_move_window, event);
@@ -767,11 +771,13 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
         if (m_move_window->is_maximized()) {
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
             if (pixels_moved_from_start > 5) {
-                // dbgln("[WM] de-maximizing window");
+                dbgln_if(MOVE_DEBUG, "[WM] de-maximizing window");
                 m_move_origin = event.position();
                 if (m_move_origin.y() <= secondary_deadzone + desktop.top())
                     return true;
-                m_move_window->set_maximized(false, event.position());
+                Gfx::IntPoint adjusted_position = event.position().translated(-m_move_window_cursor_position);
+                m_move_window->set_maximized(false);
+                m_move_window->move_to(adjusted_position);
                 m_move_window_origin = m_move_window->position();
             }
         } else {
@@ -797,15 +803,18 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                 m_move_window->set_tiled(&cursor_screen, WindowTileType::Top);
             } else if (is_resizable && event_location_relative_to_screen.y() >= desktop_relative_to_screen.bottom() - secondary_deadzone) {
                 m_move_window->set_tiled(&cursor_screen, WindowTileType::Bottom);
-            } else if (m_move_window->tiled() == WindowTileType::None) {
+            } else if (!m_move_window->is_tiled()) {
                 Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
                 // "Bounce back" the window if it would end up too far outside the screen.
-                // If the user has let go of Mod_Super, maybe they didn't intentionally press it to begin with. Therefore, refuse to go into a state where knowledge about super-drags is necessary.
+                // If the user has let go of Mod_Super, maybe they didn't intentionally press it to begin with.
+                // Therefore, refuse to go into a state where knowledge about super-drags is necessary.
                 bool force_titlebar_visible = !(m_keyboard_modifiers & Mod_Super);
                 m_move_window->nudge_into_desktop(&cursor_screen, force_titlebar_visible);
             } else if (pixels_moved_from_start > 5) {
-                m_move_window->set_untiled(event.position());
+                Gfx::IntPoint adjusted_position = event.position().translated(-m_move_window_cursor_position);
+                m_move_window->set_untiled();
+                m_move_window->move_to(adjusted_position);
                 m_move_origin = event.position();
                 m_move_window_origin = m_move_window->position();
             }
@@ -816,27 +825,59 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
     return true;
 }
 
+Gfx::IntPoint WindowManager::to_floating_cursor_position(Gfx::IntPoint const& origin) const
+{
+    VERIFY(m_move_window);
+
+    Gfx::IntPoint new_position;
+    auto dist_from_right = m_move_window->rect().width() - origin.x();
+    auto dist_from_bottom = m_move_window->rect().height() - origin.y();
+    auto floating_width = m_move_window->floating_rect().width();
+    auto floating_height = m_move_window->floating_rect().height();
+
+    if (origin.x() < dist_from_right && origin.x() < floating_width / 2)
+        new_position.set_x(origin.x());
+    else if (dist_from_right < origin.x() && dist_from_right < floating_width / 2)
+        new_position.set_x(floating_width - dist_from_right);
+    else
+        new_position.set_x(floating_width / 2);
+
+    if (origin.y() < dist_from_bottom && origin.y() < floating_height / 2)
+        new_position.set_y(origin.y());
+    else if (dist_from_bottom < origin.y() && dist_from_bottom < floating_height / 2)
+        new_position.set_y(floating_height - dist_from_bottom);
+    else
+        new_position.set_y(floating_height / 2);
+
+    return new_position;
+}
+
 bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
 {
     if (!m_resize_window)
         return false;
 
-    if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
-        dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
-
+    if (event.type() == Event::MouseMove) {
         const int vertical_maximize_deadzone = 5;
         auto& cursor_screen = ScreenInput::the().cursor_location_screen();
         if (&cursor_screen == &Screen::closest_to_rect(m_resize_window->rect())) {
             auto desktop_rect = this->desktop_rect(cursor_screen);
             if (event.y() >= desktop_rect.bottom() - vertical_maximize_deadzone + 1 || event.y() <= desktop_rect.top() + vertical_maximize_deadzone - 1) {
-                dbgln_if(RESIZE_DEBUG, "Should Maximize vertically");
-                m_resize_window->set_vertically_maximized();
+                dbgln_if(RESIZE_DEBUG, "Should tile as VerticallyMaximized");
+                m_resize_window->set_tiled(&cursor_screen, WindowTileType::VerticallyMaximized);
                 m_resize_window = nullptr;
                 m_geometry_overlay = nullptr;
                 m_resizing_mouse_button = MouseButton::None;
                 return true;
             }
         }
+    }
+
+    if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
+        dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
+
+        if (!m_resize_window->is_tiled() && !m_resize_window->is_maximized())
+            m_resize_window->set_floating_rect(m_resize_window->rect());
 
         Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect()));
         m_resize_window->invalidate(true, true);
@@ -941,7 +982,7 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
     if (m_resize_window->rect() == new_rect)
         return true;
 
-    if (m_resize_window->tiled() != WindowTileType::None) {
+    if (m_resize_window->is_tiled()) {
         // Check if we should be un-tiling the window. This should happen when one side touching
         // the screen border changes. We need to un-tile because while it is tiled, rendering is
         // constrained to the screen where it's tiled on, and if one of these sides move we should
@@ -1171,6 +1212,12 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
 {
     auto& window = *result.window;
     auto* blocking_modal_window = window.blocking_modal_window();
+
+    if (event.type() == Event::MouseDown) {
+        m_mouse_down_origin = result.is_frame_hit
+            ? event.position().translated(-window.position())
+            : result.window_relative_position;
+    }
 
     // First check if we should initiate a move or resize (Super+LMB or Super+RMB).
     // In those cases, the event is swallowed by the window manager.
@@ -1639,9 +1686,7 @@ void WindowManager::process_key_event(KeyEvent& event)
                 return;
             }
             if (event.key() == Key_Left) {
-                if (active_input_window->tiled() == WindowTileType::Left)
-                    return;
-                if (active_input_window->tiled() != WindowTileType::None) {
+                if (active_input_window->tile_type() == WindowTileType::Left) {
                     active_input_window->set_untiled();
                     return;
                 }
@@ -1651,9 +1696,7 @@ void WindowManager::process_key_event(KeyEvent& event)
                 return;
             }
             if (event.key() == Key_Right) {
-                if (active_input_window->tiled() == WindowTileType::Right)
-                    return;
-                if (active_input_window->tiled() != WindowTileType::None) {
+                if (active_input_window->tile_type() == WindowTileType::Right) {
                     active_input_window->set_untiled();
                     return;
                 }
@@ -1664,6 +1707,32 @@ void WindowManager::process_key_event(KeyEvent& event)
             }
         }
     }
+
+    if (event.type() == Event::KeyDown && event.modifiers() == (Mod_Super | Mod_Alt) && active_input_window->type() != WindowType::Desktop) {
+        if (active_input_window->is_resizable()) {
+            if (event.key() == Key_Right || event.key() == Key_Left) {
+                if (active_input_window->tile_type() == WindowTileType::HorizontallyMaximized) {
+                    active_input_window->set_untiled();
+                    return;
+                }
+                if (active_input_window->is_maximized())
+                    maximize_windows(*active_input_window, false);
+                active_input_window->set_tiled(nullptr, WindowTileType::HorizontallyMaximized);
+                return;
+            }
+            if (event.key() == Key_Up || event.key() == Key_Down) {
+                if (active_input_window->tile_type() == WindowTileType::VerticallyMaximized) {
+                    active_input_window->set_untiled();
+                    return;
+                }
+                if (active_input_window->is_maximized())
+                    maximize_windows(*active_input_window, false);
+                active_input_window->set_tiled(nullptr, WindowTileType::VerticallyMaximized);
+                return;
+            }
+        }
+    }
+
     active_input_window->dispatch_event(event);
 }
 

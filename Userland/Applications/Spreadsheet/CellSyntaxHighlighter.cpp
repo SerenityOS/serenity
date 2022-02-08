@@ -34,21 +34,24 @@ void CellSyntaxHighlighter::rehighlight(const Palette& palette)
         (u64)-1,
         false);
 
-    if (m_cell && m_cell->exception()) {
-        auto& traceback = m_cell->exception()->traceback();
-        auto& range = traceback.first().source_range;
-        GUI::TextRange text_range { { range.start.line - 1, range.start.column }, { range.end.line - 1, range.end.column } };
-        m_client->spans().prepend(
-            GUI::TextDocumentSpan {
-                text_range,
-                Gfx::TextAttributes {
-                    Color::Black,
-                    Color::Red,
-                    false,
-                    false,
-                },
-                (u64)-1,
-                false });
+    if (m_cell && m_cell->thrown_value().has_value()) {
+        if (auto value = m_cell->thrown_value().value(); value.is_object() && is<JS::Error>(value.as_object())) {
+            auto& error = static_cast<JS::Error const&>(value.as_object());
+            auto& traceback = error.traceback();
+            auto& range = traceback.first().source_range;
+            GUI::TextRange text_range { { range.start.line - 1, range.start.column }, { range.end.line - 1, range.end.column } };
+            m_client->spans().prepend(
+                GUI::TextDocumentSpan {
+                    text_range,
+                    Gfx::TextAttributes {
+                        Color::Black,
+                        Color::Red,
+                        false,
+                        false,
+                    },
+                    (u64)-1,
+                    false });
+        }
     }
     m_client->do_update();
 }

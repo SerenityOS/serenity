@@ -44,7 +44,6 @@ Interpreter::~Interpreter()
 ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
 {
     auto& vm = this->vm();
-    VERIFY(!vm.exception());
 
     VM::InterpreterExecutionScope scope(*this);
 
@@ -63,7 +62,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
     script_context.realm = &script_record.realm();
 
     // 5. Set the ScriptOrModule of scriptContext to scriptRecord.
-    script_context.script_or_module = &script_record;
+    script_context.script_or_module = script_record.make_weak_ptr();
 
     // 6. Set the VariableEnvironment of scriptContext to globalEnv.
     script_context.variable_environment = &global_environment;
@@ -136,24 +135,15 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     //        To avoid work we use link_and_eval_module however that can already be
     //        dangerous if the vm loaded other modules.
     auto& vm = this->vm();
-    VERIFY(!vm.exception());
 
     VM::InterpreterExecutionScope scope(*this);
 
-    auto evaluated_or_error = vm.link_and_eval_module({}, module);
-    // This error does not set vm.exception so we set that here for the stuff that needs it
-    if (evaluated_or_error.is_throw_completion()) {
-        auto* error = vm.heap().allocate<Exception>(global_object(), *(evaluated_or_error.throw_completion().value()));
-        vm.set_exception(*error);
-        return evaluated_or_error.throw_completion();
-    }
-    VERIFY(!vm.exception());
+    TRY(vm.link_and_eval_module({}, module));
 
     vm.run_queued_promise_jobs();
 
     vm.run_queued_finalization_registry_cleanup_jobs();
 
-    VERIFY(!vm.exception());
     return js_undefined();
 }
 

@@ -28,7 +28,7 @@
 namespace Web::XHR {
 
 XMLHttpRequest::XMLHttpRequest(DOM::Window& window)
-    : XMLHttpRequestEventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.associated_document()))
+    : XMLHttpRequestEventTarget()
     , m_window(window)
 {
 }
@@ -263,12 +263,12 @@ JS::Object* XMLHttpRequest::create_wrapper(JS::GlobalObject& global_object)
     return wrap(global_object, *this);
 }
 
-HTML::EventHandler XMLHttpRequest::onreadystatechange()
+Bindings::CallbackType* XMLHttpRequest::onreadystatechange()
 {
     return event_handler_attribute(Web::XHR::EventNames::readystatechange);
 }
 
-void XMLHttpRequest::set_onreadystatechange(HTML::EventHandler value)
+void XMLHttpRequest::set_onreadystatechange(Optional<Bindings::CallbackType> value)
 {
     set_event_handler_attribute(Web::XHR::EventNames::readystatechange, move(value));
 }

@@ -1,6 +1,5 @@
 @GUI::Frame {
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         margins: [10]
         spacing: 5
@@ -9,7 +8,6 @@
     @GUI::GroupBox {
         title: "Server Settings"
         fixed_height: 170
-
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
             spacing: 2
@@ -93,7 +91,6 @@
     @GUI::GroupBox {
         title: "User Settings"
         fixed_height: 110
-
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
             spacing: 2

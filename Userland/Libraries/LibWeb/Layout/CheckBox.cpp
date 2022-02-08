@@ -87,12 +87,18 @@ void CheckBox::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& positi
 
 void CheckBox::handle_associated_label_mousedown(Badge<Label>)
 {
+    if (!dom_node().enabled())
+        return;
+
     m_being_pressed = true;
     set_needs_display();
 }
 
 void CheckBox::handle_associated_label_mouseup(Badge<Label>)
 {
+    if (!dom_node().enabled())
+        return;
+
     // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protect = *this;
 
@@ -102,7 +108,7 @@ void CheckBox::handle_associated_label_mouseup(Badge<Label>)
 
 void CheckBox::handle_associated_label_mousemove(Badge<Label>, bool is_inside_node_or_label)
 {
-    if (m_being_pressed == is_inside_node_or_label)
+    if (m_being_pressed == is_inside_node_or_label || !dom_node().enabled())
         return;
 
     m_being_pressed = is_inside_node_or_label;

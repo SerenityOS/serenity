@@ -36,12 +36,10 @@ void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
     HashTable<FlyString> functions_initialized;
     for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) {
         if (functions_initialized.set(function.name()) != AK::HashSetResult::InsertedNewEntry)
-            return IterationDecision::Continue;
+            return;
 
         generator.emit<Bytecode::Op::NewFunction>(function);
         generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(function.name()));
-
-        return IterationDecision::Continue;
     });
 
     // FIXME: Register lexical and variable scope declarations

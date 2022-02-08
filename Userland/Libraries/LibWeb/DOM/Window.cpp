@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -8,6 +8,7 @@
 #include <LibGUI/DisplayLink.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/Crypto/Crypto.h>
@@ -19,6 +20,8 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
+#include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/Page.h>
@@ -108,7 +111,7 @@ NonnullRefPtr<Window> Window::create_with_document(Document& document)
 }
 
 Window::Window(Document& document)
-    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
+    : EventTarget()
     , m_associated_document(document)
     , m_performance(make<HighResolutionTime::Performance>(*this))
     , m_crypto(Crypto::Crypto::create())
@@ -145,16 +148,16 @@ String Window::prompt(String const& message, String const& default_)
     return {};
 }
 
-i32 Window::set_interval(JS::FunctionObject& callback, i32 interval)
+i32 Window::set_interval(NonnullOwnPtr<Bindings::CallbackType> callback, i32 interval)
 {
-    auto timer = Timer::create_interval(*this, interval, callback);
+    auto timer = Timer::create_interval(*this, interval, move(callback));
     m_timers.set(timer->id(), timer);
     return timer->id();
 }
 
-i32 Window::set_timeout(JS::FunctionObject& callback, i32 interval)
+i32 Window::set_timeout(NonnullOwnPtr<Bindings::CallbackType> callback, i32 interval)
 {
-    auto timer = Timer::create_timeout(*this, interval, callback);
+    auto timer = Timer::create_timeout(*this, interval, move(callback));
     m_timers.set(timer->id(), timer);
     return timer->id();
 }
@@ -167,14 +170,13 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
         m_timers.remove(timer.id());
     }
 
-    HTML::queue_global_task(HTML::Task::Source::TimerTask, associated_document(), [this, strong_this = NonnullRefPtr(*this), strong_timer = NonnullRefPtr(timer)]() mutable {
-        // We should not be here if there's no JS wrapper for the Window object.
-        VERIFY(wrapper());
-        auto& vm = wrapper()->vm();
+    // We should not be here if there's no JS wrapper for the Window object.
+    VERIFY(wrapper());
 
-        [[maybe_unused]] auto rc = JS::call(wrapper()->global_object(), strong_timer->callback(), wrapper());
-        if (vm.exception())
-            vm.clear_exception();
+    HTML::queue_global_task(HTML::Task::Source::TimerTask, *wrapper(), [this, strong_this = NonnullRefPtr(*this), strong_timer = NonnullRefPtr(timer)]() mutable {
+        auto result = Bindings::IDL::invoke_callback(strong_timer->callback(), wrapper());
+        if (result.is_error())
+            HTML::report_exception(result);
     });
 }
 
@@ -198,14 +200,16 @@ void Window::clear_interval(i32 timer_id)
     m_timers.remove(timer_id);
 }
 
-i32 Window::request_animation_frame(JS::FunctionObject& js_callback)
+// https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks
+i32 Window::request_animation_frame(NonnullOwnPtr<Bindings::CallbackType> js_callback)
 {
-    auto callback = request_animation_frame_driver().add([this, handle = JS::make_handle(&js_callback)](i32 id) mutable {
-        auto& function = *handle.cell();
-        auto& vm = function.vm();
-        (void)JS::call(function.global_object(), function, JS::js_undefined(), JS::Value(performance().now()));
-        if (vm.exception())
-            vm.clear_exception();
+    auto callback = request_animation_frame_driver().add([this, js_callback = move(js_callback)](i32 id) mutable {
+        // 3. Invoke callback, passing now as the only argument,
+        auto result = Bindings::IDL::invoke_callback(*js_callback, {}, JS::Value(performance().now()));
+
+        // and if an exception is thrown, report the exception.
+        if (result.is_error())
+            HTML::report_exception(result);
         m_request_animation_frame_callbacks.remove(id);
     });
     m_request_animation_frame_callbacks.set(callback->id(), callback);
@@ -395,15 +399,14 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
 }
 
 // https://html.spec.whatwg.org/#dom-queuemicrotask
-void Window::queue_microtask(JS::FunctionObject& callback)
+void Window::queue_microtask(NonnullOwnPtr<Bindings::CallbackType> callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
-    HTML::queue_a_microtask(associated_document(), [&callback, handle = JS::make_handle(&callback)]() {
-        auto& vm = callback.vm();
-        [[maybe_unused]] auto rc = JS::call(callback.global_object(), callback, JS::js_null());
-        // FIXME: ...and if callback throws an exception, report the exception.
-        if (vm.exception())
-            vm.clear_exception();
+    HTML::queue_a_microtask(&associated_document(), [callback = move(callback)]() mutable {
+        auto result = Bindings::IDL::invoke_callback(*callback, {});
+        // and if callback throws an exception, report the exception.
+        if (result.is_error())
+            HTML::report_exception(result);
     });
 }
 
@@ -434,6 +437,17 @@ Selection::Selection* Window::get_selection()
 {
     // FIXME: Implement.
     return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage
+RefPtr<HTML::Storage> Window::local_storage()
+{
+    // FIXME: Implement according to spec.
+
+    static HashMap<Origin, NonnullRefPtr<HTML::Storage>> local_storage_per_origin;
+    return local_storage_per_origin.ensure(associated_document().origin(), [] {
+        return HTML::Storage::create();
+    });
 }
 
 }

@@ -571,6 +571,7 @@
       "flex",
       "inline",
       "inline-block",
+      "inline-flex",
       "inline-table",
       "list-item",
       "none",
@@ -1141,6 +1142,7 @@
     "initial": "auto",
     "valid-identifiers": [
       "auto",
+      "all",
       "none"
     ]
   },

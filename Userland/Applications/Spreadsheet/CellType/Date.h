@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Numeric.h"
 #include "Type.h"
 
 namespace Spreadsheet {

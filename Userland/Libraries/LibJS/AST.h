@@ -167,21 +167,30 @@ private:
     NonnullRefPtr<Expression> m_expression;
 };
 
+template<typename Func, typename... Args>
+concept ThrowCompletionOrVoidFunction = requires(Func func, Args... args)
+{
+    {
+        func(args...)
+    }
+    ->SameAs<ThrowCompletionOr<void>>;
+};
+
 template<typename... Args>
-class IteratorOrVoidFunction : public Function<IterationDecision(Args...)> {
+class ThrowCompletionOrVoidCallback : public Function<ThrowCompletionOr<void>(Args...)> {
 public:
     template<typename CallableType>
-    IteratorOrVoidFunction(CallableType&& callable) requires(VoidFunction<CallableType, Args...>)
-        : Function<IterationDecision(Args...)>([callable = forward<CallableType>(callable)](Args... args) {
+    ThrowCompletionOrVoidCallback(CallableType&& callable) requires(VoidFunction<CallableType, Args...>)
+        : Function<ThrowCompletionOr<void>(Args...)>([callable = forward<CallableType>(callable)](Args... args) {
             callable(args...);
-            return IterationDecision::Continue;
+            return ThrowCompletionOr<void> {};
         })
     {
     }
 
     template<typename CallableType>
-    IteratorOrVoidFunction(CallableType&& callable) requires(IteratorFunction<CallableType, Args...>)
-        : Function<IterationDecision(Args...)>(forward<CallableType>(callable))
+    ThrowCompletionOrVoidCallback(CallableType&& callable) requires(ThrowCompletionOrVoidFunction<CallableType, Args...>)
+        : Function<ThrowCompletionOr<void>(Args...)>(forward<CallableType>(callable))
     {
     }
 };
@@ -216,17 +225,17 @@ public:
     [[nodiscard]] size_t var_declaration_count() const { return m_var_declarations.size(); }
     [[nodiscard]] size_t lexical_declaration_count() const { return m_lexical_declarations.size(); }
 
-    void for_each_lexically_scoped_declaration(IteratorOrVoidFunction<Declaration const&>&& callback) const;
-    void for_each_lexically_declared_name(IteratorOrVoidFunction<FlyString const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_lexically_scoped_declaration(ThrowCompletionOrVoidCallback<Declaration const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_lexically_declared_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const;
 
-    void for_each_var_declared_name(IteratorOrVoidFunction<FlyString const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_var_declared_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const;
 
-    void for_each_var_function_declaration_in_reverse_order(IteratorOrVoidFunction<FunctionDeclaration const&>&& callback) const;
-    void for_each_var_scoped_variable_declaration(IteratorOrVoidFunction<VariableDeclaration const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_var_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_var_scoped_variable_declaration(ThrowCompletionOrVoidCallback<VariableDeclaration const&>&& callback) const;
 
     void block_declaration_instantiation(GlobalObject& global_object, Environment* environment) const;
 
-    void for_each_function_hoistable_with_annexB_extension(IteratorOrVoidFunction<FunctionDeclaration&>&& callback) const;
+    ThrowCompletionOr<void> for_each_function_hoistable_with_annexB_extension(ThrowCompletionOrVoidCallback<FunctionDeclaration&>&& callback) const;
 
 protected:
     explicit ScopeNode(SourceRange source_range)
@@ -519,7 +528,7 @@ public:
     {
     }
 
-    virtual void for_each_bound_name(IteratorOrVoidFunction<FlyString const&> callback) const = 0;
+    virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const = 0;
 
     // 8.1.3 Static Semantics: IsConstantDeclaration, https://tc39.es/ecma262/#sec-static-semantics-isconstantdeclaration
     virtual bool is_constant_declaration() const { return false; }
@@ -535,7 +544,7 @@ public:
     }
     Completion execute(Interpreter&, GlobalObject&) const override { return {}; }
 
-    void for_each_bound_name(IteratorOrVoidFunction<FlyString const&>) const override
+    ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<FlyString const&>&&) const override
     {
         VERIFY_NOT_REACHED();
     }
@@ -560,8 +569,7 @@ struct BindingPattern : RefCounted<BindingPattern> {
 
     void dump(int indent) const;
 
-    template<typename C>
-    void for_each_bound_name(C&& callback) const;
+    ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const;
 
     bool contains_expression() const;
 
@@ -643,7 +651,7 @@ public:
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
-    void for_each_bound_name(IteratorOrVoidFunction<FlyString const&> callback) const override;
+    virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const override;
 
     virtual bool is_function_declaration() const override { return true; }
 
@@ -1372,7 +1380,7 @@ public:
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
-    void for_each_bound_name(IteratorOrVoidFunction<FlyString const&> callback) const override;
+    virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const override;
 
     virtual bool is_lexical_declaration() const override { return true; }
 
@@ -1599,7 +1607,7 @@ public:
 
     NonnullRefPtrVector<VariableDeclarator> const& declarations() const { return m_declarations; }
 
-    virtual void for_each_bound_name(IteratorOrVoidFunction<FlyString const&> callback) const override;
+    virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const override;
 
     virtual bool is_constant_declaration() const override { return m_declaration_kind == DeclarationKind::Const; };
 
@@ -2034,23 +2042,6 @@ private:
     Reference m_reference;
     Value m_value;
 };
-
-template<typename C>
-void BindingPattern::for_each_bound_name(C&& callback) const
-{
-    for (auto& entry : entries) {
-        auto& alias = entry.alias;
-        if (alias.has<NonnullRefPtr<Identifier>>()) {
-            callback(alias.get<NonnullRefPtr<Identifier>>()->string());
-        } else if (alias.has<NonnullRefPtr<BindingPattern>>()) {
-            alias.get<NonnullRefPtr<BindingPattern>>()->for_each_bound_name(forward<C>(callback));
-        } else {
-            auto& name = entry.name;
-            if (name.has<NonnullRefPtr<Identifier>>())
-                callback(name.get<NonnullRefPtr<Identifier>>()->string());
-        }
-    }
-}
 
 template<>
 inline bool ASTNode::fast_is<NewExpression>() const { return is_new_expression(); }

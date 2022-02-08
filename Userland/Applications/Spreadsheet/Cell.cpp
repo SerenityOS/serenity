@@ -96,15 +96,18 @@ void Cell::update_data(Badge<Sheet>)
     if (!m_dirty)
         return;
 
-    m_js_exception = {};
-
     if (m_dirty) {
         m_dirty = false;
         if (m_kind == Formula) {
             if (!m_evaluated_externally) {
-                auto [value, exception] = m_sheet->evaluate(m_data, this);
-                m_evaluated_data = value;
-                m_js_exception = move(exception);
+                auto value_or_error = m_sheet->evaluate(m_data, this);
+                if (value_or_error.is_error()) {
+                    m_evaluated_data = JS::js_undefined();
+                    m_thrown_value = *value_or_error.release_error().release_value();
+                } else {
+                    m_evaluated_data = value_or_error.release_value();
+                    m_thrown_value = {};
+                }
             }
         }
 
@@ -118,14 +121,14 @@ void Cell::update_data(Badge<Sheet>)
 
     m_evaluated_formats.background_color.clear();
     m_evaluated_formats.foreground_color.clear();
-    if (!m_js_exception) {
+    if (m_thrown_value.is_empty()) {
         for (auto& fmt : m_conditional_formats) {
             if (!fmt.condition.is_empty()) {
-                auto [value, exception] = m_sheet->evaluate(fmt.condition, this);
-                if (exception) {
-                    m_js_exception = move(exception);
+                auto value_or_error = m_sheet->evaluate(fmt.condition, this);
+                if (value_or_error.is_error()) {
+                    m_thrown_value = *value_or_error.release_error().release_value();
                 } else {
-                    if (value.to_boolean()) {
+                    if (value_or_error.release_value().to_boolean()) {
                         if (fmt.background_color.has_value())
                             m_evaluated_formats.background_color = fmt.background_color;
                         if (fmt.foreground_color.has_value())
@@ -185,8 +188,7 @@ void Cell::copy_from(const Cell& other)
     m_type_metadata = other.m_type_metadata;
     m_conditional_formats = other.m_conditional_formats;
     m_evaluated_formats = other.m_evaluated_formats;
-    if (!other.m_js_exception)
-        m_js_exception = other.m_js_exception;
+    m_thrown_value = other.m_thrown_value;
 }
 
 }

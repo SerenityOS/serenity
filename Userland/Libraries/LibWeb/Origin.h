@@ -33,6 +33,9 @@ public:
             && port() == other.port();
     }
 
+    bool operator==(Origin const& other) const { return is_same(other); }
+    bool operator!=(Origin const& other) const { return !is_same(other); }
+
 private:
     String m_protocol;
     String m_host;
@@ -40,3 +43,13 @@ private:
 };
 
 }
+
+namespace AK {
+template<>
+struct Traits<Web::Origin> : public GenericTraits<Web::Origin> {
+    static unsigned hash(Web::Origin const& origin)
+    {
+        return pair_int_hash(origin.protocol().hash(), pair_int_hash(int_hash(origin.port()), origin.host().hash()));
+    }
+};
+} // namespace AK

@@ -43,14 +43,19 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
             auto border_radius_data = Painting::normalized_border_radius_data(*this, absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
             Painting::paint_background(context, *this, enclosing_int_rect(absolute_fragment_rect), computed_values().background_color(), &computed_values().background_layers(), border_radius_data);
 
-            if (auto computed_box_shadow = computed_values().box_shadow(); computed_box_shadow.has_value()) {
-                auto box_shadow_data = Painting::BoxShadowData {
-                    .offset_x = (int)computed_box_shadow->offset_x.resolved_or_zero(*this).to_px(*this),
-                    .offset_y = (int)computed_box_shadow->offset_y.resolved_or_zero(*this).to_px(*this),
-                    .blur_radius = (int)computed_box_shadow->blur_radius.resolved_or_zero(*this).to_px(*this),
-                    .color = computed_box_shadow->color
-                };
-                Painting::paint_box_shadow(context, enclosing_int_rect(absolute_fragment_rect), box_shadow_data);
+            if (auto computed_box_shadow = computed_values().box_shadow(); !computed_box_shadow.is_empty()) {
+                Vector<Painting::BoxShadowData> resolved_box_shadow_data;
+                resolved_box_shadow_data.ensure_capacity(computed_box_shadow.size());
+                for (auto const& layer : computed_box_shadow) {
+                    resolved_box_shadow_data.empend(
+                        layer.color,
+                        static_cast<int>(layer.offset_x.resolved_or_zero(*this).to_px(*this)),
+                        static_cast<int>(layer.offset_y.resolved_or_zero(*this).to_px(*this)),
+                        static_cast<int>(layer.blur_radius.resolved_or_zero(*this).to_px(*this)),
+                        static_cast<int>(layer.spread_distance.resolved_or_zero(*this).to_px(*this)),
+                        layer.placement == CSS::BoxShadowPlacement::Outer ? Painting::BoxShadowPlacement::Outer : Painting::BoxShadowPlacement::Inner);
+                }
+                Painting::paint_box_shadow(context, enclosing_int_rect(absolute_fragment_rect), resolved_box_shadow_data);
             }
 
             return IterationDecision::Continue;

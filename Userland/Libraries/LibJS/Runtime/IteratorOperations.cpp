@@ -11,7 +11,6 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
-#include <LibJS/Runtime/TemporaryClearException.h>
 
 namespace JS {
 
@@ -140,10 +139,6 @@ static Completion iterator_close_impl(GlobalObject& global_object, Iterator cons
 
     // 2. Let iterator be iteratorRecord.[[Iterator]].
     auto* iterator = iterator_record.iterator;
-
-    // The callers of iterator_close() are often in an exceptional state.
-    // Temporarily clear that exception for invocation(s) to Call.
-    TemporaryClearException clear_exception(vm);
 
     // 3. Let innerResult be GetMethod(iterator, "return").
     auto inner_result = ThrowCompletionOr<Value> { js_undefined() };

@@ -10,8 +10,14 @@
 #include <AK/FlyString.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/SourceRange.h>
 
 namespace JS {
+
+struct TracebackFrame {
+    FlyString function_name;
+    SourceRange source_range;
+};
 
 class Error : public Object {
     JS_OBJECT(Error, Object);
@@ -23,7 +29,15 @@ public:
     explicit Error(Object& prototype);
     virtual ~Error() override = default;
 
+    [[nodiscard]] String stack_string() const;
+
     ThrowCompletionOr<void> install_error_cause(Value options);
+
+    Vector<TracebackFrame, 32> const& traceback() const { return m_traceback; }
+
+private:
+    void populate_stack();
+    Vector<TracebackFrame, 32> m_traceback;
 };
 
 // NOTE: Making these inherit from Error is not required by the spec but

@@ -222,7 +222,7 @@ void HTMLParser::the_end()
     }
 
     // 6. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following substeps:
-    queue_global_task(HTML::Task::Source::DOMManipulation, *m_document, [document = m_document]() mutable {
+    old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, m_document, [document = m_document]() mutable {
         // FIXME: 1. Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
 
         // 2. Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
@@ -249,7 +249,7 @@ void HTMLParser::the_end()
     });
 
     // 9. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following steps:
-    queue_global_task(HTML::Task::Source::DOMManipulation, *m_document, [document = m_document]() mutable {
+    old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, m_document, [document = m_document]() mutable {
         // 1. Update the current document readiness to "complete".
         document->update_readiness(HTML::DocumentReadyState::Complete);
 

@@ -4,9 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/GlobalEnvironment.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Realm.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS {
+
+// 9.3.1 CreateRealm ( ), https://tc39.es/ecma262/#sec-createrealm
+Realm* Realm::create(VM& vm)
+{
+    return vm.heap().allocate_without_global_object<Realm>();
+}
 
 // 9.3.3 SetRealmGlobalObject ( realmRec, globalObj, thisValue ), https://tc39.es/ecma262/#sec-setrealmglobalobject
 void Realm::set_global_object(GlobalObject& global_object, Object* this_value)
