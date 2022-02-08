@@ -3169,11 +3169,13 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(Vector<StyleComponentValueRule
             return ident;
     }
 
-    // FIXME: Also support inset, spread-radius and multiple comma-separated box-shadows
+    // FIXME: Also support multiple comma-separated box-shadows
     Optional<Color> color;
     Optional<Length> offset_x;
     Optional<Length> offset_y;
     Optional<Length> blur_radius;
+    Optional<Length> spread_distance;
+    Optional<BoxShadowPlacement> placement;
 
     for (size_t i = 0; i < component_values.size(); ++i) {
         if (auto maybe_color = parse_color(component_values[i]); maybe_color.has_value()) {
@@ -3206,6 +3208,22 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(Vector<StyleComponentValueRule
             ++i;
             blur_radius = maybe_blur_radius.release_value();
 
+            // spread distance (optional)
+            if (i + 1 >= component_values.size())
+                break;
+            auto maybe_spread_distance = parse_length(component_values[i + 1]);
+            if (!maybe_spread_distance.has_value())
+                continue;
+            ++i;
+            spread_distance = maybe_spread_distance.release_value();
+
+            continue;
+        }
+
+        if (component_values[i].is(Token::Type::Ident) && component_values[i].token().ident().equals_ignoring_case("inset"sv)) {
+            if (placement.has_value())
+                return nullptr;
+            placement = BoxShadowPlacement::Inner;
             continue;
         }
 
@@ -3224,8 +3242,14 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(Vector<StyleComponentValueRule
     // Other lengths default to 0
     if (!blur_radius.has_value())
         blur_radius = Length::make_px(0);
+    if (!spread_distance.has_value())
+        spread_distance = Length::make_px(0);
 
-    return BoxShadowStyleValue::create(offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), color.release_value());
+    // Placement is outer by default
+    if (!placement.has_value())
+        placement = BoxShadowPlacement::Outer;
+
+    return BoxShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value());
 }
 
 RefPtr<StyleValue> Parser::parse_flex_value(Vector<StyleComponentValueRule> const& component_values)
