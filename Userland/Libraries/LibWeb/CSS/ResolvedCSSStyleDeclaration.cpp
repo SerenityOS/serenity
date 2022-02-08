@@ -522,7 +522,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         if (!maybe_box_shadow.has_value())
             return {};
         auto box_shadow_data = maybe_box_shadow.release_value();
-        return BoxShadowStyleValue::create(box_shadow_data.offset_x, box_shadow_data.offset_y, box_shadow_data.blur_radius, box_shadow_data.color);
+        // FIXME: Add extra properties to BoxShadowData so we can include them here!
+        return BoxShadowStyleValue::create(box_shadow_data.color, box_shadow_data.offset_x, box_shadow_data.offset_y, box_shadow_data.blur_radius, Length::make_px(0), BoxShadowPlacement::Outer);
     }
     case CSS::PropertyID::Width:
         return style_value_for_length_percentage(layout_node.computed_values().width());
