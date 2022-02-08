@@ -80,6 +80,8 @@ private:
     bool m_should_intercept_drag { false };
     bool m_has_committed_to_dragging { false };
     bool m_is_dragging_for_copy { false };
+    bool m_is_hovering_extend_zone { false };
+    bool m_is_hovering_cut_zone { false };
     GUI::ModelIndex m_starting_selection_index;
     RefPtr<Core::Timer> m_horizontal_scroll_end_timer;
     RefPtr<Core::Timer> m_vertical_scroll_end_timer;
