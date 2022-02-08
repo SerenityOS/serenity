@@ -64,7 +64,7 @@ public:
     Optional<CSS::JustifyContent> justify_content() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
-    Optional<CSS::BoxShadowData> box_shadow() const;
+    Vector<CSS::BoxShadowData> box_shadow() const;
     CSS::BoxSizing box_sizing() const;
     Optional<CSS::PointerEvents> pointer_events() const;
 

@@ -99,15 +99,18 @@ void Box::paint_background(PaintContext& context)
 void Box::paint_box_shadow(PaintContext& context)
 {
     auto box_shadow_data = computed_values().box_shadow();
-    if (!box_shadow_data.has_value())
+    if (box_shadow_data.is_empty())
         return;
 
-    auto resolved_box_shadow_data = Painting::BoxShadowData {
-        .offset_x = (int)box_shadow_data->offset_x.resolved_or_zero(*this).to_px(*this),
-        .offset_y = (int)box_shadow_data->offset_y.resolved_or_zero(*this).to_px(*this),
-        .blur_radius = (int)box_shadow_data->blur_radius.resolved_or_zero(*this).to_px(*this),
-        .color = box_shadow_data->color
-    };
+    Vector<Painting::BoxShadowData> resolved_box_shadow_data;
+    resolved_box_shadow_data.ensure_capacity(box_shadow_data.size());
+    for (auto const& layer : box_shadow_data) {
+        resolved_box_shadow_data.empend(
+            static_cast<int>(layer.offset_x.resolved_or_zero(*this).to_px(*this)),
+            static_cast<int>(layer.offset_y.resolved_or_zero(*this).to_px(*this)),
+            static_cast<int>(layer.blur_radius.resolved_or_zero(*this).to_px(*this)),
+            layer.color);
+    }
     Painting::paint_box_shadow(context, enclosing_int_rect(bordered_rect()), resolved_box_shadow_data);
 }
 
