@@ -78,9 +78,9 @@ private:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
-    bool m_should_intercept_drag { false };
-    bool m_has_committed_to_dragging { false };
+    bool m_is_dragging_for_select { false };
     bool m_is_dragging_for_copy { false };
+    bool m_has_committed_to_cutting { false };
     bool m_is_hovering_extend_zone { false };
     bool m_is_hovering_cut_zone { false };
     GUI::ModelIndex m_starting_selection_index;

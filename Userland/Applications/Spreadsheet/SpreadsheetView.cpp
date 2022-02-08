@@ -79,7 +79,7 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
 
         m_is_hovering_cut_zone = false;
         m_is_hovering_extend_zone = false;
-        if (selection().size() > 0 && !m_should_intercept_drag) {
+        if (selection().size() > 0 && !m_is_dragging_for_select) {
             // Get top-left and bottom-right most cells of selection
             auto bottom_right_most_index = selection().first();
             auto top_left_most_index = selection().first();
@@ -134,20 +134,20 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
 
         auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Primary);
         if (m_is_dragging_for_copy) {
-            m_should_intercept_drag = false;
+            m_is_dragging_for_select = false;
             if (holding_left_button) {
-                m_has_committed_to_dragging = true;
+                m_has_committed_to_cutting = true;
             }
-        } else if (!m_should_intercept_drag) {
+        } else if (!m_is_dragging_for_select) {
             if (!holding_left_button) {
                 m_starting_selection_index = index;
             } else {
-                m_should_intercept_drag = true;
+                m_is_dragging_for_select = true;
                 m_might_drag = false;
             }
         }
 
-        if (holding_left_button && m_should_intercept_drag && !m_has_committed_to_dragging) {
+        if (holding_left_button && m_is_dragging_for_select && !m_has_committed_to_cutting) {
             if (!m_starting_selection_index.is_valid())
                 m_starting_selection_index = index;
 
@@ -189,9 +189,9 @@ void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
 
 void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
 {
-    m_should_intercept_drag = false;
-    m_has_committed_to_dragging = false;
+    m_is_dragging_for_select = false;
     m_is_dragging_for_copy = false;
+    m_has_committed_to_cutting = false;
     if (m_is_hovering_cut_zone) {
         auto rect = content_rect(m_target_cell);
         GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y() };
