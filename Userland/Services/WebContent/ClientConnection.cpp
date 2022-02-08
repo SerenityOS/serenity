@@ -17,9 +17,11 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
+#include <LibWeb/HTML/Storage.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -221,6 +223,11 @@ void ClientConnection::debug_request(const String& request, const String& argume
 
     if (request == "same-origin-policy") {
         m_page_host->page().set_same_origin_policy_enabled(argument == "on");
+    }
+
+    if (request == "dump-local-storage") {
+        if (auto* doc = page().top_level_browsing_context().active_document())
+            doc->window().local_storage()->dump();
     }
 }
 

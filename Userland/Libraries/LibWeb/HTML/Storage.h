@@ -32,6 +32,8 @@ public:
 
     Vector<String> supported_property_names() const;
 
+    void dump() const;
+
 private:
     Storage();
 
