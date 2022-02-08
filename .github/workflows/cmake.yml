@@ -15,6 +15,7 @@ concurrency:
 jobs:
   build_and_test_serenity:
     runs-on: ${{ matrix.os }}
+    if: always() && github.repository == 'SerenityOS/serenity' 
     strategy:
       fail-fast: false
       matrix:
