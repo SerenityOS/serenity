@@ -7,12 +7,14 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-static int pid_of(const String& process_name, bool single_shot, bool omit_pid, pid_t pid)
+static ErrorOr<int> pid_of(const String& process_name, bool single_shot, bool omit_pid, pid_t pid)
 {
     bool displayed_at_least_one = false;
 
@@ -38,8 +40,13 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
     return 0;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments args)
 {
+    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+
     bool single_shot = false;
     const char* omit_pid_value = nullptr;
     const char* process_name = nullptr;
@@ -49,7 +56,7 @@ int main(int argc, char** argv)
     args_parser.add_option(omit_pid_value, "Omit the given PID, or the parent process if the special value %PPID is passed", nullptr, 'o', "pid");
     args_parser.add_positional_argument(process_name, "Process name to search for", "process-name");
 
-    args_parser.parse(argc, argv);
+    args_parser.parse(args);
 
     pid_t pid_to_omit = 0;
     if (omit_pid_value) {
@@ -59,7 +66,7 @@ int main(int argc, char** argv)
             auto number = StringView(omit_pid_value).to_uint();
             if (!number.has_value()) {
                 warnln("Invalid value for -o");
-                args_parser.print_usage(stderr, argv[0]);
+                args_parser.print_usage(stderr, args.argv[0]);
                 return 1;
             }
             pid_to_omit = number.value();
