@@ -41,7 +41,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
     if (vm.argument_count() > 0 && !callback.is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
 
-    // IMPLEMENTATION DEFINED: The specification for this function hasn't been updated to accomodate for JobCallback records.
+    // IMPLEMENTATION DEFINED: The specification for this function hasn't been updated to accommodate for JobCallback records.
     //                         This just follows how the constructor immediately converts the callback to a JobCallback using HostMakeJobCallback.
     TRY(finalization_registry->cleanup(callback.is_undefined() ? Optional<JobCallback> {} : vm.host_make_job_callback(callback.as_function())));
 

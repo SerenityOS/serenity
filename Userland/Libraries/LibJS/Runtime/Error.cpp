@@ -76,7 +76,7 @@ String Error::stack_string() const
     StringBuilder stack_string_builder;
     // Note: We roughly follow V8's formatting
     // Note: The error's name and message get prepended by ErrorPrototype::stack
-    // Note: We don't want to capture the global exectution context, so we omit the last frame
+    // Note: We don't want to capture the global execution context, so we omit the last frame
     // FIXME: We generate a stack-frame for the Errors constructor, other engines do not
     for (size_t i = 0; i < m_traceback.size() - 1; ++i) {
         auto const& frame = m_traceback[i];
