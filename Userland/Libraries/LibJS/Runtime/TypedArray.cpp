@@ -395,7 +395,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                                                                                                                                        \
     ClassName::~ClassName() { }                                                                                                        \
                                                                                                                                        \
-    String ClassName::element_name() const                                                                                             \
+    FlyString const& ClassName::element_name() const                                                                                   \
     {                                                                                                                                  \
         return vm().names.ClassName.as_string();                                                                                       \
     }                                                                                                                                  \
