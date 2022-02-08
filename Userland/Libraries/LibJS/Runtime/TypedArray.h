@@ -44,7 +44,7 @@ public:
     void set_viewed_array_buffer(ArrayBuffer* array_buffer) { m_viewed_array_buffer = array_buffer; }
 
     virtual size_t element_size() const = 0;
-    virtual String element_name() const = 0;
+    virtual FlyString const& element_name() const = 0;
 
     // 25.1.2.6 IsUnclampedIntegerElementType ( type ), https://tc39.es/ecma262/#sec-isunclampedintegerelementtype
     virtual bool is_unclamped_integer_element_type() const = 0;
@@ -482,7 +482,7 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
         static ThrowCompletionOr<ClassName*> create(GlobalObject&, u32 length);             \
         static ClassName* create(GlobalObject&, u32 length, ArrayBuffer& buffer);           \
         ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer);                \
-        virtual String element_name() const override;                                       \
+        virtual FlyString const& element_name() const override;                             \
     };                                                                                      \
     class PrototypeName final : public Object {                                             \
         JS_OBJECT(PrototypeName, Object);                                                   \
