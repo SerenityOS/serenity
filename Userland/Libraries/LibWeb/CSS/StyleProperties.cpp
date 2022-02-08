@@ -769,18 +769,35 @@ Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) c
     }
 }
 
-Optional<CSS::BoxShadowData> StyleProperties::box_shadow() const
+Vector<BoxShadowData> StyleProperties::box_shadow() const
 {
-    auto value_or_error = property(CSS::PropertyID::BoxShadow);
+    auto value_or_error = property(PropertyID::BoxShadow);
     if (!value_or_error.has_value())
         return {};
 
     auto value = value_or_error.value();
-    if (!value->is_box_shadow())
-        return {};
 
-    auto& box = value->as_box_shadow();
-    return { { box.offset_x(), box.offset_y(), box.blur_radius(), box.color() } };
+    auto make_box_shadow_data = [](BoxShadowStyleValue const& box) {
+        return BoxShadowData { box.offset_x(), box.offset_y(), box.blur_radius(), box.color() };
+    };
+
+    if (value->is_value_list()) {
+        auto& value_list = value->as_value_list();
+
+        Vector<BoxShadowData> box_shadow_data;
+        box_shadow_data.ensure_capacity(value_list.size());
+        for (auto const& layer_value : value_list.values())
+            box_shadow_data.append(make_box_shadow_data(layer_value.as_box_shadow()));
+
+        return box_shadow_data;
+    }
+
+    if (value->is_box_shadow()) {
+        auto& box = value->as_box_shadow();
+        return { make_box_shadow_data(box) };
+    }
+
+    return {};
 }
 
 CSS::BoxSizing StyleProperties::box_sizing() const
