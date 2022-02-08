@@ -232,6 +232,7 @@ private:
     RefPtr<StyleValue> parse_border_radius_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_box_shadow_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_single_box_shadow_value(TokenStream<StyleComponentValueRule>&);
     RefPtr<StyleValue> parse_flex_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_flex_flow_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_font_value(Vector<StyleComponentValueRule> const&);
