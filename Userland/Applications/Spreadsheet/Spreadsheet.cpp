@@ -294,6 +294,10 @@ Position Sheet::offset_relative_to(const Position& base, const Position& offset,
 
 void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to, CopyOperation copy_operation)
 {
+    Vector<Position> target_cells;
+    for (auto& position : from)
+        target_cells.append(resolve_relative_to.has_value() ? offset_relative_to(to.first(), position, resolve_relative_to.value()) : to.first());
+
     auto copy_to = [&](auto& source_position, Position target_position) {
         auto& target_cell = ensure(target_position);
         auto* source_cell = at(source_position);
@@ -305,7 +309,8 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
 
         target_cell.copy_from(*source_cell);
         if (copy_operation == CopyOperation::Cut)
-            source_cell->set_data("");
+            if (!target_cells.contains_slow(source_position))
+                source_cell->set_data("");
     };
 
     if (from.size() == to.size()) {
