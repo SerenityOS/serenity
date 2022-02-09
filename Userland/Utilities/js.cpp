@@ -375,13 +375,12 @@ static void print_map(JS::Object const& object, HashTable<JS::Object*>& seen_obj
 static void print_set(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& set = static_cast<JS::Set const&>(object);
-    auto& values = set.values();
     print_type("Set");
     js_out(" {{");
     bool first = true;
-    for (auto& value : values) {
+    for (auto& entry : set) {
         print_separator(first);
-        print_value(value, seen_objects);
+        print_value(entry.key, seen_objects);
     }
     if (!first)
         js_out(" ");
