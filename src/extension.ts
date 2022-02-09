@@ -8,7 +8,6 @@ import {spawnSync} from 'child_process';
 export function activate(context: vscode.ExtensionContext) {
   vscode.languages.registerDocumentFormattingEditProvider('serenity-gml', {
     provideDocumentFormattingEdits(document: vscode.TextDocument) {
-      // FIXME: Allow partial re-formatting
 
       let filename = document.fileName;
       let rootPath = vscode.workspace.rootPath;
