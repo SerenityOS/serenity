@@ -71,12 +71,12 @@ void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback c
     }
 }
 
-Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin declaration_type) const
+Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin cascade_origin) const
 {
     Vector<MatchingRule> matching_rules;
 
     size_t style_sheet_index = 0;
-    for_each_stylesheet(declaration_type, [&](auto& sheet) {
+    for_each_stylesheet(cascade_origin, [&](auto& sheet) {
         size_t rule_index = 0;
         static_cast<CSSStyleSheet const&>(sheet).for_each_effective_style_rule([&](auto const& rule) {
             size_t selector_index = 0;
