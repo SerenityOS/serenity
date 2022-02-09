@@ -25,7 +25,6 @@ class Relation;
 class Result;
 class Row;
 class SchemaDef;
-class SQLResult;
 class Serializer;
 class TableDef;
 class TreeNode;
