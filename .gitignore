@@ -107,3 +107,6 @@ dist
 .vscode/
 
 *.vsix
+
+# Generated files
+out/
