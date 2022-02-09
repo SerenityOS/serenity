@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,7 +58,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio, b
             }
 
             {
-                static constexpr PCI::HardwareID vmd_device = { 0x8086, 0x9a0b };
+                constexpr PCI::HardwareID vmd_device = { 0x8086, 0x9a0b };
                 if (device_identifier.hardware_id() == vmd_device) {
                     auto controller = PCI::VolumeManagementDevice::must_create(device_identifier);
                     PCI::Access::the().add_host_controller_and_enumerate_attached_devices(move(controller), [this, nvme_poll](PCI::DeviceIdentifier const& device_identifier) -> void {

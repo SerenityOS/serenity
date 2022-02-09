@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Pankaj R <pankydev8@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -71,7 +72,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
 
 bool NVMeController::wait_for_ready(bool expected_ready_bit_value)
 {
-    static constexpr size_t one_ms_io_delay = 1000;
+    constexpr size_t one_ms_io_delay = 1000;
     auto wait_iterations = m_ready_timeout.to_milliseconds();
 
     u32 expected_rdy = expected_ready_bit_value ? 1 : 0;

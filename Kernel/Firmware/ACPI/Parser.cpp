@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Liav A. <liavalb@hotmail.co.il>
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -395,7 +396,7 @@ static bool validate_table(const Structures::SDTHeader& v_header, size_t length)
 // https://uefi.org/specs/ACPI/6.4/05_ACPI_Software_Programming_Model/ACPI_Software_Programming_Model.html#finding-the-rsdp-on-ia-pc-systems
 UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_rsdp()
 {
-    static constexpr auto signature = "RSD PTR "sv;
+    constexpr auto signature = "RSD PTR "sv;
     auto ebda_or_error = map_ebda();
     if (!ebda_or_error.is_error()) {
         auto rsdp = ebda_or_error.value().find_chunk_starting_with(signature, 16);
