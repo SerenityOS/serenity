@@ -33,6 +33,20 @@ describe("basic behavior", () => {
             )
         ).toBe(12);
     });
+
+    test("name has 'bound' prefix", () => {
+        function foo() {}
+        const boundFoo = foo.bind(123);
+        expect(foo.name).toBe("foo");
+        expect(boundFoo.name).toBe("bound foo");
+    });
+
+    test("prototype is inherited from target function", () => {
+        function foo() {}
+        Object.setPrototypeOf(foo, Array.prototype);
+        const boundFoo = Function.prototype.bind.call(foo, 123);
+        expect(Object.getPrototypeOf(boundFoo)).toBe(Array.prototype);
+    });
 });
 
 describe("bound function arguments", () => {
@@ -144,6 +158,6 @@ describe("errors", () => {
     test("does not accept non-function values", () => {
         expect(() => {
             Function.prototype.bind.call("foo");
-        }).toThrowWithMessage(TypeError, "Not an object of type Function");
+        }).toThrowWithMessage(TypeError, "foo is not a function");
     });
 });

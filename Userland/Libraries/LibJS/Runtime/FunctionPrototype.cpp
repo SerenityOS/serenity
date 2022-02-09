@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/ShadowRealm.h>
 
 namespace JS {
 
@@ -58,13 +59,19 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 }
 
 // 20.2.3.2 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.bind
+// 3.1.2.1 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/proposal-shadowrealm/#sec-function.prototype.bind
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-    auto& this_function = static_cast<FunctionObject&>(*this_object);
-    auto bound_this_arg = vm.argument(0);
+    auto this_argument = vm.argument(0);
+
+    // 1. Let Target be the this value.
+    auto target_value = vm.this_value(global_object);
+
+    // 2. If IsCallable(Target) is false, throw a TypeError exception.
+    if (!target_value.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, target_value.to_string_without_side_effects());
+
+    auto& target = static_cast<FunctionObject&>(target_value.as_object());
 
     Vector<Value> arguments;
     if (vm.argument_count() > 1) {
@@ -72,7 +79,17 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
         arguments.remove(0);
     }
 
-    return TRY(this_function.bind(bound_this_arg, move(arguments)));
+    // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
+    auto* function = TRY(BoundFunction::create(global_object, target, this_argument, move(arguments)));
+
+    // 4. Let argCount be the number of elements in args.
+    auto arg_count = vm.argument_count() - 1;
+
+    // 5. Perform ? CopyNameAndLength(F, Target, "bound", argCount).
+    TRY(copy_name_and_length(global_object, *function, target, "bound"sv, arg_count));
+
+    // 6. Return F.
+    return function;
 }
 
 // 20.2.3.3 Function.prototype.call ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.call
