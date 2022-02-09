@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,6 +24,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -298,9 +299,9 @@ static String get_absolute_path_to_selected_node(const SpaceAnalyzer::TreeMapWid
     return path_builder.build();
 }
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments);
 
     RefPtr<Tree> tree = adopt_ref(*new Tree(""));
 
