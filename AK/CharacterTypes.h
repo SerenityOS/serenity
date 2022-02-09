@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -162,10 +163,10 @@ constexpr u32 parse_ascii_base36_digit(u32 code_point)
     VERIFY_NOT_REACHED();
 }
 
-static constexpr Array<char, 36> base36_map = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 constexpr u32 to_ascii_base36_digit(u32 digit)
 {
-    VERIFY(digit < 36);
+    constexpr Array<char, 36> base36_map = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+    VERIFY(digit < base36_map.size());
     return base36_map[digit];
 }
 
