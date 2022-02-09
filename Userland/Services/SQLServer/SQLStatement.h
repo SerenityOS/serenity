@@ -10,7 +10,7 @@
 #include <AK/String.h>
 #include <LibCore/Object.h>
 #include <LibSQL/AST/AST.h>
-#include <LibSQL/SQLResult.h>
+#include <LibSQL/Result.h>
 #include <SQLServer/DatabaseConnection.h>
 #include <SQLServer/Forward.h>
 

@@ -6,7 +6,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibSQL/SQLResult.h>
+#include <LibSQL/Result.h>
 #include <SQLServer/ClientConnection.h>
 #include <SQLServer/DatabaseConnection.h>
 #include <SQLServer/SQLStatement.h>

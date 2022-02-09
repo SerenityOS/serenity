@@ -5,7 +5,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibSQL/SQLResult.h>
+#include <LibSQL/Result.h>
 
 namespace SQL {
 
