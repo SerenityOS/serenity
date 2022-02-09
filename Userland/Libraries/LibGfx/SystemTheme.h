@@ -80,6 +80,12 @@ namespace Gfx {
     C(SyntaxPunctuation)           \
     C(SyntaxString)                \
     C(SyntaxType)                  \
+    C(SyntaxFunction)              \
+    C(SyntaxVariable)              \
+    C(SyntaxCustomType)            \
+    C(SyntaxNamespace)             \
+    C(SyntaxMember)                \
+    C(SyntaxParameter)             \
     C(TextCursor)                  \
     C(ThreedHighlight)             \
     C(ThreedShadow1)               \

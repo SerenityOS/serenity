@@ -1,6 +1,6 @@
 TranslationUnit[0:0->144:0]
   VariableDeclaration[0:0->2:0]
-    NamedType[0:0->0:11]
+    NamedType[0:0->0:9]
       [static] int
     g_pid
     UnaryExpression[0:19->0:20]
@@ -9,12 +9,12 @@ TranslationUnit[0:0->144:0]
       1
   FunctionDeclaration[2:0->10:0]
     [static]
-    NamedType[2:7->2:12]
+    NamedType[2:7->2:10]
       void
     handle_sigint
     (
-    Parameter[2:26->2:29]
-      NamedType[2:26->2:29]
+    Parameter[2:26->2:28]
+      NamedType[2:26->2:28]
         int
     )
     FunctionDefinition[3:0->10:0]
@@ -22,7 +22,7 @@ TranslationUnit[0:0->144:0]
       IfStatement[4:4->5:14]
         Predicate:
         BinaryExpression[4:8->4:18]
-          Name[4:8->4:14]
+          Name[4:8->4:12]
           g_pid
           ==
           UnaryExpression[4:17->4:18]
@@ -35,11 +35,11 @@ TranslationUnit[0:0->144:0]
         Predicate:
         BinaryExpression[7:8->7:43]
           FunctionCall[7:8->7:39]
-            Name[7:8->7:14]
+            Name[7:8->7:13]
             ptrace
-            Name[7:15->7:24]
+            Name[7:15->7:23]
             PT_DETACH
-            Name[7:26->7:31]
+            Name[7:26->7:30]
             g_pid
             NumericLiteral[7:33->7:33]
             0
@@ -53,23 +53,23 @@ TranslationUnit[0:0->144:0]
         Then:
         BlockStatement[7:46->10:0]
           FunctionCall[8:8->8:24]
-            Name[8:8->8:14]
+            Name[8:8->8:13]
             perror
             StringLiteral[8:15->8:22]
               "detach"
     }
   FunctionDeclaration[12:0->144:0]
-    NamedType[12:0->12:4]
+    NamedType[12:0->12:2]
       int
     main
     (
     Parameter[12:9->12:16]
     argc
-      NamedType[12:9->12:13]
+      NamedType[12:9->12:11]
         int
     Parameter[12:19->12:29]
     argv
-      Pointer[12:19->12:26]
+      Pointer[12:19->12:24]
         Pointer[12:19->12:24]
           NamedType[12:19->12:23]
             char
@@ -80,7 +80,7 @@ TranslationUnit[0:0->144:0]
         Predicate:
         BinaryExpression[14:8->14:74]
           FunctionCall[14:8->14:72]
-            Name[14:8->14:14]
+            Name[14:8->14:13]
             pledge
             StringLiteral[14:15->14:60]
               "stdio wpath cpath proc exec ptrace sigaction"
@@ -91,7 +91,7 @@ TranslationUnit[0:0->144:0]
         Then:
         BlockStatement[14:77->19:4]
           FunctionCall[15:8->15:24]
-            Name[15:8->15:14]
+            Name[15:8->15:13]
             perror
             StringLiteral[15:15->15:22]
               "pledge"
@@ -99,29 +99,29 @@ TranslationUnit[0:0->144:0]
             NumericLiteral[16:15->16:15]
             1
       VariableDeclaration[19:4->19:34]
-        NamedType[19:4->19:24]
+        NamedType[19:4->19:22]
           Vector<[const] char*>
         child_argv
       VariableDeclaration[21:4->21:41]
-        Pointer[21:4->21:16]
+        Pointer[21:4->21:14]
           NamedType[21:4->21:14]
             [const] char
         output_filename
         NullPointerLiteral[21:34->21:40]
       VariableDeclaration[22:4->22:50]
-        NamedType[22:4->22:9]
+        NamedType[22:4->22:7]
           auto
         trace_file
         FunctionCall[22:22->22:50]
-          Name[22:22->22:48]
+          Name[22:22->22:47]
           Core::File::standard_error
       VariableDeclaration[24:4->24:27]
-        NamedType[24:4->24:21]
+        NamedType[24:4->24:19]
           Core::ArgsParser
         parser
       FunctionCall[25:4->26:47]
         MemberExpression[25:4->25:27]
-          Name[25:4->25:10]
+          Name[25:4->25:9]
           parser
           Identifier[25:11->25:26]
           set_general_help
@@ -129,11 +129,11 @@ TranslationUnit[0:0->144:0]
           "Trace all syscalls and their result."
       FunctionCall[27:4->27:70]
         MemberExpression[27:4->27:21]
-          Name[27:4->27:10]
+          Name[27:4->27:9]
           parser
           Identifier[27:11->27:20]
           add_option
-        Name[27:22->27:27]
+        Name[27:22->27:26]
         g_pid
         StringLiteral[27:29->27:49]
           "Trace the given PID"
@@ -145,11 +145,11 @@ TranslationUnit[0:0->144:0]
           "pid"
       FunctionCall[28:4->28:94]
         MemberExpression[28:4->28:21]
-          Name[28:4->28:10]
+          Name[28:4->28:9]
           parser
           Identifier[28:11->28:20]
           add_option
-        Name[28:22->28:37]
+        Name[28:22->28:36]
         output_filename
         StringLiteral[28:39->28:67]
           "Filename to write output to"
@@ -161,68 +161,68 @@ TranslationUnit[0:0->144:0]
           "output"
       FunctionCall[29:4->29:111]
         MemberExpression[29:4->29:34]
-          Name[29:4->29:10]
+          Name[29:4->29:9]
           parser
           Identifier[29:11->29:33]
           add_positional_argument
-        Name[29:35->29:45]
+        Name[29:35->29:44]
         child_argv
         StringLiteral[29:47->29:65]
           "Arguments to exec"
         StringLiteral[29:68->29:77]
           "argument"
-        Name[29:80->29:110]
+        Name[29:80->29:109]
         Core::ArgsParser::Required::No
       FunctionCall[31:4->31:28]
         MemberExpression[31:4->31:16]
-          Name[31:4->31:10]
+          Name[31:4->31:9]
           parser
           Identifier[31:11->31:15]
           parse
-        Name[31:17->31:21]
+        Name[31:17->31:20]
         argc
-        Name[31:23->31:27]
+        Name[31:23->31:26]
         argv
       IfStatement[33:4->42:4]
         Predicate:
         BinaryExpression[33:8->33:33]
-          Name[33:8->33:24]
+          Name[33:8->33:22]
           output_filename
           !=
           NullPointerLiteral[33:27->33:33]
         Then:
         BlockStatement[33:36->42:4]
           VariableDeclaration[34:8->34:87]
-            NamedType[34:8->34:13]
+            NamedType[34:8->34:11]
               auto
             open_result
             FunctionCall[34:27->34:87]
-              Name[34:27->34:43]
+              Name[34:27->34:42]
               Core::File::open
-              Name[34:44->34:59]
+              Name[34:44->34:58]
               output_filename
-              Name[34:61->34:86]
+              Name[34:61->34:85]
               Core::OpenMode::WriteOnly
           IfStatement[35:8->39:8]
             Predicate:
             FunctionCall[35:12->35:34]
               MemberExpression[35:12->35:32]
-                Name[35:12->35:23]
+                Name[35:12->35:22]
                 open_result
                 Identifier[35:24->35:31]
                 is_error
             Then:
             BlockStatement[35:36->39:8]
               FunctionCall[36:12->36:80]
-                Name[36:12->36:17]
+                Name[36:12->36:16]
                 outln
-                Name[36:18->36:24]
+                Name[36:18->36:23]
                 stderr
                 StringLiteral[36:26->36:57]
                   "Failed to open output file: {}"
                 FunctionCall[36:60->36:79]
                   MemberExpression[36:60->36:77]
-                    Name[36:60->36:71]
+                    Name[36:60->36:70]
                     open_result
                     Identifier[36:72->36:76]
                     error
@@ -230,12 +230,12 @@ TranslationUnit[0:0->144:0]
                 NumericLiteral[37:19->37:19]
                 1
           AssignmentExpression[39:8->39:40]
-            Name[39:8->39:19]
+            Name[39:8->39:17]
             trace_file
             =
             FunctionCall[39:21->39:40]
               MemberExpression[39:21->39:38]
-                Name[39:21->39:32]
+                Name[39:21->39:31]
                 open_result
                 Identifier[39:33->39:37]
                 value
@@ -243,7 +243,7 @@ TranslationUnit[0:0->144:0]
         Predicate:
         BinaryExpression[42:8->42:62]
           FunctionCall[42:8->42:60]
-            Name[42:8->42:14]
+            Name[42:8->42:13]
             pledge
             StringLiteral[42:15->42:48]
               "stdio proc exec ptrace sigaction"
@@ -254,7 +254,7 @@ TranslationUnit[0:0->144:0]
         Then:
         BlockStatement[42:65->47:4]
           FunctionCall[43:8->43:24]
-            Name[43:8->43:14]
+            Name[43:8->43:13]
             perror
             StringLiteral[43:15->43:22]
               "pledge"
@@ -262,13 +262,13 @@ TranslationUnit[0:0->144:0]
             NumericLiteral[44:15->44:15]
             1
       VariableDeclaration[47:4->47:14]
-        NamedType[47:4->47:8]
+        NamedType[47:4->47:6]
           int
         status
       IfStatement[48:4->81:4]
         Predicate:
         BinaryExpression[48:8->48:18]
-          Name[48:8->48:14]
+          Name[48:8->48:12]
           g_pid
           ==
           UnaryExpression[48:17->48:18]
@@ -281,16 +281,16 @@ TranslationUnit[0:0->144:0]
             Predicate:
             FunctionCall[49:12->49:33]
               MemberExpression[49:12->49:31]
-                Name[49:12->49:22]
+                Name[49:12->49:21]
                 child_argv
                 Identifier[49:23->49:30]
                 is_empty
             Then:
             BlockStatement[49:35->54:8]
               FunctionCall[50:12->50:78]
-                Name[50:12->50:17]
+                Name[50:12->50:16]
                 outln
-                Name[50:18->50:24]
+                Name[50:18->50:23]
                 stderr
                 StringLiteral[50:26->50:76]
                   "strace: Expected either a pid or some arguments\n"
@@ -299,22 +299,22 @@ TranslationUnit[0:0->144:0]
                 1
           FunctionCall[54:8->54:34]
             MemberExpression[54:8->54:25]
-              Name[54:8->54:18]
+              Name[54:8->54:17]
               child_argv
               Identifier[54:19->54:24]
               append
             NullPointerLiteral[54:26->54:32]
           VariableDeclaration[55:8->55:24]
-            NamedType[55:8->55:12]
+            NamedType[55:8->55:10]
               int
             pid
             FunctionCall[55:18->55:24]
-              Name[55:18->55:22]
+              Name[55:18->55:21]
               fork
           IfStatement[56:8->61:8]
             Predicate:
             BinaryExpression[56:12->56:18]
-              Name[56:12->56:16]
+              Name[56:12->56:14]
               pid
               <
               NumericLiteral[56:18->56:18]
@@ -322,7 +322,7 @@ TranslationUnit[0:0->144:0]
             Then:
             BlockStatement[56:21->61:8]
               FunctionCall[57:12->57:26]
-                Name[57:12->57:18]
+                Name[57:12->57:17]
                 perror
                 StringLiteral[57:19->57:24]
                   "fork"
@@ -331,9 +331,9 @@ TranslationUnit[0:0->144:0]
                 1
           IfStatement[61:8->74:8]
             Predicate:
-            UnaryExpression[61:12->61:16]
+            UnaryExpression[61:12->61:15]
               !
-              Name[61:13->61:16]
+              Name[61:13->61:15]
               pid
             Then:
             BlockStatement[61:18->74:8]
@@ -341,9 +341,9 @@ TranslationUnit[0:0->144:0]
                 Predicate:
                 BinaryExpression[62:16->62:49]
                   FunctionCall[62:16->62:45]
-                    Name[62:16->62:22]
+                    Name[62:16->62:21]
                     ptrace
-                    Name[62:23->62:34]
+                    Name[62:23->62:33]
                     PT_TRACE_ME
                     NumericLiteral[62:36->62:36]
                     0
@@ -359,7 +359,7 @@ TranslationUnit[0:0->144:0]
                 Then:
                 BlockStatement[62:52->66:12]
                   FunctionCall[63:16->63:33]
-                    Name[63:16->63:22]
+                    Name[63:16->63:21]
                     perror
                     StringLiteral[63:23->63:31]
                       "traceme"
@@ -367,36 +367,36 @@ TranslationUnit[0:0->144:0]
                     NumericLiteral[64:23->64:23]
                     1
               VariableDeclaration[66:12->66:86]
-                NamedType[66:12->66:16]
+                NamedType[66:12->66:14]
                   int
                 rc
                 FunctionCall[66:21->66:86]
-                  Name[66:21->66:27]
+                  Name[66:21->66:26]
                   execvp
                   FunctionCall[66:28->66:46]
                     MemberExpression[66:28->66:44]
-                      Name[66:28->66:38]
+                      Name[66:28->66:37]
                       child_argv
                       Identifier[66:39->66:43]
                       first
                   CppCastExpression[66:48->66:85]
                   const_cast
                     <
-                    Pointer[66:59->66:65]
+                    Pointer[66:59->66:64]
                       Pointer[66:59->66:64]
                         NamedType[66:59->66:63]
                           char
                     >
                     FunctionCall[66:67->66:84]
                       MemberExpression[66:67->66:82]
-                        Name[66:67->66:77]
+                        Name[66:67->66:76]
                         child_argv
                         Identifier[66:78->66:81]
                         data
               IfStatement[67:12->71:12]
                 Predicate:
                 BinaryExpression[67:16->67:21]
-                  Name[67:16->67:19]
+                  Name[67:16->67:17]
                   rc
                   <
                   NumericLiteral[67:21->67:21]
@@ -404,58 +404,58 @@ TranslationUnit[0:0->144:0]
                 Then:
                 BlockStatement[67:24->71:12]
                   FunctionCall[68:16->68:32]
-                    Name[68:16->68:22]
+                    Name[68:16->68:21]
                     perror
                     StringLiteral[68:23->68:30]
                       "execvp"
                   FunctionCall[69:16->69:23]
-                    Name[69:16->69:20]
+                    Name[69:16->69:19]
                     exit
                     NumericLiteral[69:21->69:21]
                     1
               FunctionCall[71:12->71:32]
-                Name[71:12->71:30]
+                Name[71:12->71:29]
                 VERIFY_NOT_REACHED
-          AssignmentExpression[74:8->74:19]
-            Name[74:8->74:14]
+          AssignmentExpression[74:8->74:18]
+            Name[74:8->74:12]
             g_pid
             =
-            Name[74:16->74:19]
+            Name[74:16->74:18]
             pid
           IfStatement[75:8->79:4]
             Predicate:
             BinaryExpression[75:12->75:83]
               FunctionCall[75:12->75:54]
-                Name[75:12->75:19]
+                Name[75:12->75:18]
                 waitpid
-                Name[75:20->75:23]
+                Name[75:20->75:22]
                 pid
-                UnaryExpression[75:25->75:32]
+                UnaryExpression[75:25->75:31]
                   &
-                  Name[75:26->75:32]
+                  Name[75:26->75:31]
                   status
-                BinaryExpression[75:34->75:52]
-                  Name[75:34->75:43]
+                BinaryExpression[75:34->75:51]
+                  Name[75:34->75:41]
                   WSTOPPED
                   |
-                  Name[75:45->75:52]
+                  Name[75:45->75:51]
                   WEXITED
               !=
               BinaryExpression[75:57->75:83]
-                Name[75:57->75:61]
+                Name[75:57->75:59]
                 pid
                 ||
                 UnaryExpression[75:64->75:83]
                   !
                   FunctionCall[75:65->75:83]
-                    Name[75:65->75:75]
+                    Name[75:65->75:74]
                     WIFSTOPPED
-                    Name[75:76->75:82]
+                    Name[75:76->75:81]
                     status
             Then:
             BlockStatement[75:85->79:4]
               FunctionCall[76:12->76:29]
-                Name[76:12->76:18]
+                Name[76:12->76:17]
                 perror
                 StringLiteral[76:19->76:27]
                   "waitpid"
@@ -463,49 +463,49 @@ TranslationUnit[0:0->144:0]
                 NumericLiteral[77:19->77:19]
                 1
       VariableDeclaration[81:4->81:23]
-        NamedType[81:4->81:21]
+        NamedType[81:4->81:19]
           sigaction
         sa
       FunctionCall[82:4->82:44]
-        Name[82:4->82:10]
+        Name[82:4->82:9]
         memset
-        UnaryExpression[82:11->82:14]
+        UnaryExpression[82:11->82:13]
           &
-          Name[82:12->82:14]
+          Name[82:12->82:13]
           sa
         NumericLiteral[82:16->82:16]
         0
         SizeofExpression[82:19->82:43]
-          NamedType[82:26->82:42]
+          NamedType[82:26->82:41]
             sigaction
-      AssignmentExpression[83:4->83:33]
+      AssignmentExpression[83:4->83:32]
         MemberExpression[83:4->83:18]
-          Name[83:4->83:6]
+          Name[83:4->83:5]
           sa
           Identifier[83:7->83:16]
           sa_handler
         =
-        Name[83:20->83:33]
+        Name[83:20->83:32]
         handle_sigint
       FunctionCall[84:4->84:35]
-        Name[84:4->84:13]
+        Name[84:4->84:12]
         sigaction
-        Name[84:14->84:20]
+        Name[84:14->84:19]
         SIGINT
-        UnaryExpression[84:22->84:25]
+        UnaryExpression[84:22->84:24]
           &
-          Name[84:23->84:25]
+          Name[84:23->84:24]
           sa
         NullPointerLiteral[84:27->84:33]
       IfStatement[86:4->90:4]
         Predicate:
         BinaryExpression[86:8->86:43]
           FunctionCall[86:8->86:39]
-            Name[86:8->86:14]
+            Name[86:8->86:13]
             ptrace
-            Name[86:15->86:24]
+            Name[86:15->86:23]
             PT_ATTACH
-            Name[86:26->86:31]
+            Name[86:26->86:30]
             g_pid
             NumericLiteral[86:33->86:33]
             0
@@ -519,7 +519,7 @@ TranslationUnit[0:0->144:0]
         Then:
         BlockStatement[86:46->90:4]
           FunctionCall[87:8->87:24]
-            Name[87:8->87:14]
+            Name[87:8->87:13]
             perror
             StringLiteral[87:15->87:22]
               "attach"
@@ -530,36 +530,36 @@ TranslationUnit[0:0->144:0]
         Predicate:
         BinaryExpression[90:8->90:83]
           FunctionCall[90:8->90:52]
-            Name[90:8->90:15]
+            Name[90:8->90:14]
             waitpid
-            Name[90:16->90:21]
+            Name[90:16->90:20]
             g_pid
-            UnaryExpression[90:23->90:30]
+            UnaryExpression[90:23->90:29]
               &
-              Name[90:24->90:30]
+              Name[90:24->90:29]
               status
-            BinaryExpression[90:32->90:50]
-              Name[90:32->90:41]
+            BinaryExpression[90:32->90:49]
+              Name[90:32->90:39]
               WSTOPPED
               |
-              Name[90:43->90:50]
+              Name[90:43->90:49]
               WEXITED
           !=
           BinaryExpression[90:55->90:83]
-            Name[90:55->90:61]
+            Name[90:55->90:59]
             g_pid
             ||
             UnaryExpression[90:64->90:83]
               !
               FunctionCall[90:65->90:83]
-                Name[90:65->90:75]
+                Name[90:65->90:74]
                 WIFSTOPPED
-                Name[90:76->90:82]
+                Name[90:76->90:81]
                 status
         Then:
         BlockStatement[90:85->95:4]
           FunctionCall[91:8->91:25]
-            Name[91:8->91:14]
+            Name[91:8->91:13]
             perror
             StringLiteral[91:15->91:23]
               "waitpid"
@@ -572,11 +572,11 @@ TranslationUnit[0:0->144:0]
             Predicate:
             BinaryExpression[96:12->96:48]
               FunctionCall[96:12->96:44]
-                Name[96:12->96:18]
+                Name[96:12->96:17]
                 ptrace
-                Name[96:19->96:29]
+                Name[96:19->96:28]
                 PT_SYSCALL
-                Name[96:31->96:36]
+                Name[96:31->96:35]
                 g_pid
                 NumericLiteral[96:38->96:38]
                 0
@@ -590,7 +590,7 @@ TranslationUnit[0:0->144:0]
             Then:
             BlockStatement[96:51->100:8]
               FunctionCall[97:12->97:29]
-                Name[97:12->97:18]
+                Name[97:12->97:17]
                 perror
                 StringLiteral[97:19->97:27]
                   "syscall"
@@ -601,36 +601,36 @@ TranslationUnit[0:0->144:0]
             Predicate:
             BinaryExpression[100:12->100:87]
               FunctionCall[100:12->100:56]
-                Name[100:12->100:19]
+                Name[100:12->100:18]
                 waitpid
-                Name[100:20->100:25]
+                Name[100:20->100:24]
                 g_pid
-                UnaryExpression[100:27->100:34]
+                UnaryExpression[100:27->100:33]
                   &
-                  Name[100:28->100:34]
+                  Name[100:28->100:33]
                   status
-                BinaryExpression[100:36->100:54]
-                  Name[100:36->100:45]
+                BinaryExpression[100:36->100:53]
+                  Name[100:36->100:43]
                   WSTOPPED
                   |
-                  Name[100:47->100:54]
+                  Name[100:47->100:53]
                   WEXITED
               !=
               BinaryExpression[100:59->100:87]
-                Name[100:59->100:65]
+                Name[100:59->100:63]
                 g_pid
                 ||
                 UnaryExpression[100:68->100:87]
                   !
                   FunctionCall[100:69->100:87]
-                    Name[100:69->100:79]
+                    Name[100:69->100:78]
                     WIFSTOPPED
-                    Name[100:80->100:86]
+                    Name[100:80->100:85]
                     status
             Then:
             BlockStatement[100:89->104:8]
               FunctionCall[101:12->101:30]
-                Name[101:12->101:18]
+                Name[101:12->101:17]
                 perror
                 StringLiteral[101:19->101:28]
                   "wait_pid"
@@ -638,7 +638,7 @@ TranslationUnit[0:0->144:0]
                 NumericLiteral[102:19->102:19]
                 1
           VariableDeclaration[104:8->104:33]
-            NamedType[104:8->104:24]
+            NamedType[104:8->104:22]
               PtraceRegisters
             regs
             BracedInitList[104:31->104:33]
@@ -646,15 +646,15 @@ TranslationUnit[0:0->144:0]
             Predicate:
             BinaryExpression[105:12->105:52]
               FunctionCall[105:12->105:48]
-                Name[105:12->105:18]
+                Name[105:12->105:17]
                 ptrace
-                Name[105:19->105:29]
+                Name[105:19->105:28]
                 PT_GETREGS
-                Name[105:31->105:36]
+                Name[105:31->105:35]
                 g_pid
-                UnaryExpression[105:38->105:43]
+                UnaryExpression[105:38->105:42]
                   &
-                  Name[105:39->105:43]
+                  Name[105:39->105:42]
                   regs
                 NumericLiteral[105:45->105:45]
                 0
@@ -666,7 +666,7 @@ TranslationUnit[0:0->144:0]
             Then:
             BlockStatement[105:55->109:8]
               FunctionCall[106:12->106:29]
-                Name[106:12->106:18]
+                Name[106:12->106:17]
                 perror
                 StringLiteral[106:19->106:27]
                   "getregs"
@@ -674,38 +674,38 @@ TranslationUnit[0:0->144:0]
                 NumericLiteral[107:19->107:19]
                 1
           VariableDeclaration[109:8->109:36]
-            NamedType[109:8->109:12]
+            NamedType[109:8->109:10]
               u32
             syscall_index
             MemberExpression[109:28->109:36]
-              Name[109:28->109:32]
+              Name[109:28->109:31]
               regs
               Identifier[109:33->109:35]
               eax
           VariableDeclaration[110:8->110:27]
-            NamedType[110:8->110:12]
+            NamedType[110:8->110:10]
               u32
             arg1
             MemberExpression[110:19->110:27]
-              Name[110:19->110:23]
+              Name[110:19->110:22]
               regs
               Identifier[110:24->110:26]
               edx
           VariableDeclaration[111:8->111:27]
-            NamedType[111:8->111:12]
+            NamedType[111:8->111:10]
               u32
             arg2
             MemberExpression[111:19->111:27]
-              Name[111:19->111:23]
+              Name[111:19->111:22]
               regs
               Identifier[111:24->111:26]
               ecx
           VariableDeclaration[112:8->112:27]
-            NamedType[112:8->112:12]
+            NamedType[112:8->112:10]
               u32
             arg3
             MemberExpression[112:19->112:27]
-              Name[112:19->112:23]
+              Name[112:19->112:22]
               regs
               Identifier[112:24->112:26]
               ebx
@@ -713,11 +713,11 @@ TranslationUnit[0:0->144:0]
             Predicate:
             BinaryExpression[114:12->114:48]
               FunctionCall[114:12->114:44]
-                Name[114:12->114:18]
+                Name[114:12->114:17]
                 ptrace
-                Name[114:19->114:29]
+                Name[114:19->114:28]
                 PT_SYSCALL
-                Name[114:31->114:36]
+                Name[114:31->114:35]
                 g_pid
                 NumericLiteral[114:38->114:38]
                 0
@@ -731,7 +731,7 @@ TranslationUnit[0:0->144:0]
             Then:
             BlockStatement[114:51->118:8]
               FunctionCall[115:12->115:29]
-                Name[115:12->115:18]
+                Name[115:12->115:17]
                 perror
                 StringLiteral[115:19->115:27]
                   "syscall"
@@ -742,36 +742,36 @@ TranslationUnit[0:0->144:0]
             Predicate:
             BinaryExpression[118:12->118:87]
               FunctionCall[118:12->118:56]
-                Name[118:12->118:19]
+                Name[118:12->118:18]
                 waitpid
-                Name[118:20->118:25]
+                Name[118:20->118:24]
                 g_pid
-                UnaryExpression[118:27->118:34]
+                UnaryExpression[118:27->118:33]
                   &
-                  Name[118:28->118:34]
+                  Name[118:28->118:33]
                   status
-                BinaryExpression[118:36->118:54]
-                  Name[118:36->118:45]
+                BinaryExpression[118:36->118:53]
+                  Name[118:36->118:43]
                   WSTOPPED
                   |
-                  Name[118:47->118:54]
+                  Name[118:47->118:53]
                   WEXITED
               !=
               BinaryExpression[118:59->118:87]
-                Name[118:59->118:65]
+                Name[118:59->118:63]
                 g_pid
                 ||
                 UnaryExpression[118:68->118:87]
                   !
                   FunctionCall[118:69->118:87]
-                    Name[118:69->118:79]
+                    Name[118:69->118:78]
                     WIFSTOPPED
-                    Name[118:80->118:86]
+                    Name[118:80->118:85]
                     status
             Then:
             BlockStatement[118:89->123:8]
               FunctionCall[119:12->119:30]
-                Name[119:12->119:18]
+                Name[119:12->119:17]
                 perror
                 StringLiteral[119:19->119:28]
                   "wait_pid"
@@ -782,15 +782,15 @@ TranslationUnit[0:0->144:0]
             Predicate:
             BinaryExpression[123:12->123:52]
               FunctionCall[123:12->123:48]
-                Name[123:12->123:18]
+                Name[123:12->123:17]
                 ptrace
-                Name[123:19->123:29]
+                Name[123:19->123:28]
                 PT_GETREGS
-                Name[123:31->123:36]
+                Name[123:31->123:35]
                 g_pid
-                UnaryExpression[123:38->123:43]
+                UnaryExpression[123:38->123:42]
                   &
-                  Name[123:39->123:43]
+                  Name[123:39->123:42]
                   regs
                 NumericLiteral[123:45->123:45]
                 0
@@ -802,7 +802,7 @@ TranslationUnit[0:0->144:0]
             Then:
             BlockStatement[123:55->128:8]
               FunctionCall[124:12->124:29]
-                Name[124:12->124:18]
+                Name[124:12->124:17]
                 perror
                 StringLiteral[124:19->124:27]
                   "getregs"
@@ -810,65 +810,65 @@ TranslationUnit[0:0->144:0]
                 NumericLiteral[125:19->125:19]
                 1
           VariableDeclaration[128:8->128:26]
-            NamedType[128:8->128:12]
+            NamedType[128:8->128:10]
               u32
             res
             MemberExpression[128:18->128:26]
-              Name[128:18->128:22]
+              Name[128:18->128:21]
               regs
               Identifier[128:23->128:25]
               eax
           VariableDeclaration[130:8->135:16]
-            NamedType[130:8->130:13]
+            NamedType[130:8->130:11]
               auto
             string
             FunctionCall[130:22->135:16]
-              Name[130:22->130:39]
+              Name[130:22->130:38]
               String::formatted
               StringLiteral[130:40->130:77]
                 "{}({:#08x}, {:#08x}, {:#08x})\t={}\n"
               FunctionCall[131:12->131:64]
-                Name[131:12->131:30]
+                Name[131:12->131:29]
                 Syscall::to_string
                 CStyleCastExpression[131:31->131:63]
-                  NamedType[131:32->131:49]
+                  NamedType[131:32->131:48]
                     Syscall::Function
-                  Name[131:50->131:63]
+                  Name[131:50->131:62]
                   syscall_index
-              Name[132:12->132:16]
+              Name[132:12->132:15]
               arg1
-              Name[133:12->133:16]
+              Name[133:12->133:15]
               arg2
-              Name[134:12->134:16]
+              Name[134:12->134:15]
               arg3
-              Name[135:12->135:15]
+              Name[135:12->135:14]
               res
           IfStatement[137:8->141:4]
             Predicate:
             UnaryExpression[137:12->137:38]
               !
               BinaryExpression[137:13->137:38]
-                Name[137:13->137:23]
+                Name[137:13->137:22]
                 trace_file
                 ->
                 FunctionCall[137:25->137:38]
-                  Name[137:25->137:30]
+                  Name[137:25->137:29]
                   write
-                  Name[137:31->137:37]
+                  Name[137:31->137:36]
                   string
             Then:
             BlockStatement[137:40->141:4]
               FunctionCall[138:12->138:59]
-                Name[138:12->138:18]
+                Name[138:12->138:17]
                 warnln
                 StringLiteral[138:19->138:29]
                   "write: {}"
                 BinaryExpression[138:32->138:58]
-                  Name[138:32->138:42]
+                  Name[138:32->138:41]
                   trace_file
                   ->
                   FunctionCall[138:44->138:58]
-                    Name[138:44->138:56]
+                    Name[138:44->138:55]
                     error_string
               ReturnStatement[139:12->139:20]
                 NumericLiteral[139:19->139:19]

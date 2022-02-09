@@ -769,6 +769,7 @@ Optional<NonnullRefPtrVector<Parameter>> Parser::parse_parameter_list(ASTNode& p
                 name = text_of_token(name_identifier.value());
 
             auto param = create_ast_node<Parameter>(parent, type->start(), name_identifier.has_value() ? name_identifier.value().end() : type->end(), name);
+            type->set_parent(*param.ptr());
 
             param->set_type(move(type));
             parameters.append(move(param));
@@ -947,6 +948,13 @@ Position Parser::position() const
         return m_tokens.last().end();
 
     return peek().start();
+}
+
+Position Parser::previous_token_end() const
+{
+    if (m_state.token_index < 1)
+        return {};
+    return m_tokens[m_state.token_index - 1].end();
 }
 
 RefPtr<ASTNode> Parser::node_at(Position pos) const
@@ -1265,7 +1273,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
         type = fn_type;
     }
 
-    type->set_end(position());
+    type->set_end(previous_token_end());
 
     return type;
 }
@@ -1450,7 +1458,7 @@ NonnullRefPtr<Name> Parser::parse_name(ASTNode& parent)
         consume(Token::Type::Greater);
     }
 
-    name_node->set_end(position());
+    name_node->set_end(previous_token_end());
     return name_node;
 }
 

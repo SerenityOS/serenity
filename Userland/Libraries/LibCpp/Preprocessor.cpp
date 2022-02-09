@@ -24,11 +24,14 @@ Vector<Token> Preprocessor::process_and_lex()
     lexer.set_ignore_whitespace(true);
     auto tokens = lexer.lex();
 
+    m_unprocessed_tokens = tokens;
+
     for (size_t token_index = 0; token_index < tokens.size(); ++token_index) {
         auto& token = tokens[token_index];
         m_current_line = token.start().line;
         if (token.type() == Token::Type::PreprocessorStatement) {
             handle_preprocessor_statement(token.text());
+            m_processed_tokens.append(tokens[token_index]);
             continue;
         }
 
@@ -43,6 +46,7 @@ Vector<Token> Preprocessor::process_and_lex()
                 m_processed_tokens.append(tokens[token_index]);
                 m_processed_tokens.append(tokens[token_index + 1]);
             }
+            ++token_index; // Also skip IncludePath token
             continue;
         }
 

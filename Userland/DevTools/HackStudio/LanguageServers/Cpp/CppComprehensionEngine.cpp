@@ -401,16 +401,22 @@ Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::fin
         return {};
 
     const auto& document = *document_ptr;
+    auto decl = find_declaration_of(document, identifier_position);
+    if (decl) {
+        return GUI::AutocompleteProvider::ProjectLocation { decl->filename(), decl->start().line, decl->start().column };
+    }
+
+    return find_preprocessor_definition(document, identifier_position);
+}
+
+RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentData& document, const GUI::TextPosition& identifier_position)
+{
     auto node = document.parser().node_at(Cpp::Position { identifier_position.line(), identifier_position.column() });
     if (!node) {
         dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", identifier_position.line(), identifier_position.column());
         return {};
     }
-    auto decl = find_declaration_of(document, *node);
-    if (decl)
-        return GUI::AutocompleteProvider::ProjectLocation { decl->filename(), decl->start().line, decl->start().column };
-
-    return find_preprocessor_definition(document, identifier_position);
+    return find_declaration_of(document, *node);
 }
 
 Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::find_preprocessor_definition(const DocumentData& document, const GUI::TextPosition& text_position)
@@ -439,15 +445,27 @@ struct TargetDeclaration {
     String name;
 };
 
+static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node, String name);
 static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node)
 {
-    if (!node.is_identifier()) {
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "node is not an identifier");
-        return {};
+    if (node.is_identifier()) {
+        return get_target_declaration(node, static_cast<const Identifier&>(node).name());
     }
 
-    String name = static_cast<const Identifier&>(node).name();
+    if (node.is_declaration()) {
+        return get_target_declaration(node, verify_cast<Declaration>(node).name());
+    }
 
+    if (node.is_type() && node.parent() && node.parent()->is_declaration()) {
+        return get_target_declaration(*node.parent(), verify_cast<Declaration>(node.parent())->name());
+    }
+
+    dbgln("get_target_declaration: Invalid argument node of type: {}", node.class_name());
+    return {};
+}
+
+static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node, String name)
+{
     if ((node.parent() && node.parent()->is_function_call()) || (node.parent()->is_name() && node.parent()->parent() && node.parent()->parent()->is_function_call())) {
         return TargetDeclaration { TargetDeclaration::Type::Function, name };
     }
@@ -460,14 +478,9 @@ static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node)
 
     return TargetDeclaration { TargetDeclaration::Type::Variable, name };
 }
-
 RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentData& document_data, const ASTNode& node) const
 {
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "find_declaration_of: {} ({})", document_data.parser().text_of_node(node), node.class_name());
-    if (!node.is_identifier()) {
-        dbgln("node is not an identifier, can't find declaration");
-        return {};
-    }
 
     auto target_decl = get_target_declaration(node);
     if (!target_decl.has_value())
@@ -879,6 +892,81 @@ Optional<CppComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::get
     }
 
     return hint;
+}
+
+Vector<GUI::AutocompleteProvider::TokenInfo> CppComprehensionEngine::get_tokens_info(const String& filename)
+{
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "CppComprehensionEngine::get_tokens_info: {}", filename);
+
+    const auto* document_ptr = get_or_create_document_data(filename);
+    if (!document_ptr)
+        return {};
+
+    const auto& document = *document_ptr;
+
+    Vector<GUI::AutocompleteProvider::TokenInfo> tokens_info;
+    size_t i = 0;
+    for (auto const& token : document.preprocessor().unprocessed_tokens()) {
+
+        tokens_info.append({ get_token_semantic_type(document, token),
+            token.start().line, token.start().column, token.end().line, token.end().column });
+        ++i;
+    }
+    return tokens_info;
+}
+
+GUI::AutocompleteProvider::TokenInfo::SemanticType CppComprehensionEngine::get_token_semantic_type(DocumentData const& document, Token const& token)
+{
+    using GUI::AutocompleteProvider;
+    switch (token.type()) {
+    case Cpp::Token::Type::Identifier:
+        return get_semantic_type_for_identifier(document, token.start());
+    case Cpp::Token::Type::Keyword:
+        return AutocompleteProvider::TokenInfo::SemanticType::Keyword;
+    case Cpp::Token::Type::KnownType:
+        return AutocompleteProvider::TokenInfo::SemanticType::Type;
+    case Cpp::Token::Type::DoubleQuotedString:
+    case Cpp::Token::Type::SingleQuotedString:
+    case Cpp::Token::Type::RawString:
+        return AutocompleteProvider::TokenInfo::SemanticType::String;
+    case Cpp::Token::Type::Integer:
+    case Cpp::Token::Type::Float:
+        return AutocompleteProvider::TokenInfo::SemanticType::Number;
+    case Cpp::Token::Type::IncludePath:
+        return AutocompleteProvider::TokenInfo::SemanticType::IncludePath;
+    case Cpp::Token::Type::EscapeSequence:
+        return AutocompleteProvider::TokenInfo::SemanticType::Keyword;
+    case Cpp::Token::Type::PreprocessorStatement:
+    case Cpp::Token::Type::IncludeStatement:
+        return AutocompleteProvider::TokenInfo::SemanticType::PreprocessorStatement;
+    case Cpp::Token::Type::Comment:
+        return AutocompleteProvider::TokenInfo::SemanticType::Comment;
+    default:
+        return AutocompleteProvider::TokenInfo::SemanticType::Unknown;
+    }
+}
+
+GUI::AutocompleteProvider::TokenInfo::SemanticType CppComprehensionEngine::get_semantic_type_for_identifier(DocumentData const& document, Position position)
+{
+    auto decl = find_declaration_of(document, GUI::TextPosition { position.line, position.column });
+    if (!decl)
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Identifier;
+
+    if (decl->is_function())
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Function;
+    if (decl->is_parameter())
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Parameter;
+    if (decl->is_variable_declaration()) {
+        if (decl->is_member())
+            return GUI::AutocompleteProvider::TokenInfo::SemanticType::Member;
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Variable;
+    }
+    if (decl->is_struct_or_class())
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::CustomType;
+    if (decl->is_namespace())
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Namespace;
+
+    return GUI::AutocompleteProvider::TokenInfo::SemanticType::Identifier;
 }
 
 }

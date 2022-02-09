@@ -16,6 +16,8 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/Timer.h>
+#include <LibCpp/SemanticSyntaxHighlighter.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -51,6 +53,8 @@ ErrorOr<NonnullRefPtr<Editor>> Editor::try_create()
 
 Editor::Editor()
 {
+    create_tokens_info_timer();
+
     set_document(CodeDocument::create());
     m_evaluate_expression_action = GUI::Action::create("Evaluate expression", { Mod_Ctrl, Key_E }, [this](auto&) {
         VERIFY(is_program_running());
@@ -476,8 +480,8 @@ void Editor::set_document(GUI::TextDocument& doc)
 
     auto& code_document = static_cast<CodeDocument&>(doc);
 
-    set_syntax_highlighter_for(code_document);
     set_language_client_for(code_document);
+    set_syntax_highlighter_for(code_document);
 
     if (m_language_client) {
         set_autocomplete_provider(make<LanguageServerAidedAutocompleteProvider>(*m_language_client));
@@ -602,7 +606,13 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
 {
     switch (document.language()) {
     case Language::Cpp:
-        set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
+        if (m_use_semantic_syntax_highlighting) {
+            set_syntax_highlighter(make<Cpp::SemanticSyntaxHighlighter>());
+            on_token_info_timer_tick();
+            m_tokens_info_timer->restart();
+        } else
+            set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
+
         break;
     case Language::CSS:
         set_syntax_highlighter(make<Web::CSS::SyntaxHighlighter>());
@@ -631,6 +641,8 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
     default:
         set_syntax_highlighter({});
     }
+
+    force_rehighlight();
 }
 
 void Editor::set_autocomplete_provider_for(CodeDocument const& document)
@@ -654,6 +666,12 @@ void Editor::set_language_client_for(const CodeDocument& document)
 
     if (document.language() == Language::Shell)
         m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_path());
+
+    if (m_language_client) {
+        m_language_client->on_tokens_info_result = [this](Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info) {
+            on_tokens_info_result(tokens_info);
+        };
+    }
 }
 
 void Editor::keydown_event(GUI::KeyEvent& event)
@@ -665,6 +683,8 @@ void Editor::keydown_event(GUI::KeyEvent& event)
     if (!event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_P) {
         handle_function_parameters_hint_request();
     }
+
+    m_tokens_info_timer->restart();
 }
 
 void Editor::handle_function_parameters_hint_request()
@@ -709,6 +729,40 @@ void Editor::set_debug_mode(bool enabled)
 {
     m_evaluate_expression_action->set_enabled(enabled);
     m_move_execution_to_line_action->set_enabled(enabled);
+}
+
+void Editor::on_token_info_timer_tick()
+{
+    if (!m_language_client || !m_language_client->is_active_client())
+        return;
+
+    m_language_client->get_tokens_info(code_document().file_path());
+}
+
+void Editor::on_tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info)
+{
+    auto highlighter = syntax_highlighter();
+    if (highlighter && highlighter->is_cpp_semantic_highlighter()) {
+        auto& semantic_cpp_highlighter = verify_cast<Cpp::SemanticSyntaxHighlighter>(*highlighter);
+        semantic_cpp_highlighter.update_tokens_info(tokens_info);
+        force_rehighlight();
+    }
+}
+
+void Editor::create_tokens_info_timer()
+{
+    static constexpr size_t token_info_timer_interval_ms = 1000;
+    m_tokens_info_timer = Core::Timer::create_repeating((int)token_info_timer_interval_ms, [this] {
+        on_token_info_timer_tick();
+        m_tokens_info_timer->stop();
+    });
+    m_tokens_info_timer->start();
+}
+
+void Editor::set_semantic_syntax_highlighting(bool value)
+{
+    m_use_semantic_syntax_highlighting = value;
+    set_syntax_highlighter_for(code_document());
 }
 
 }

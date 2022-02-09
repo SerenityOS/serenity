@@ -175,6 +175,7 @@ public:
     void set_cursor(size_t line, size_t column);
     virtual void set_cursor(TextPosition const&);
 
+    Syntax::Highlighter* syntax_highlighter();
     Syntax::Highlighter const* syntax_highlighter() const;
     void set_syntax_highlighter(OwnPtr<Syntax::Highlighter>);
 
@@ -209,6 +210,7 @@ public:
 
     bool text_is_secret() const { return m_text_is_secret; }
     void set_text_is_secret(bool text_is_secret);
+    void force_rehighlight();
 
 protected:
     explicit TextEditor(Type = Type::MultiLine);

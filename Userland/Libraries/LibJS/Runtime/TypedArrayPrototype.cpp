@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/ArrayBufferConstructor.h>
 #include <LibJS/Runtime/ArrayIterator.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -610,124 +611,230 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
 // 23.2.3.24 %TypedArray%.prototype.set ( source [ , offset ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.set
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
 {
-    auto* typed_array = TRY(typed_array_from_this(global_object));
-
     auto source = vm.argument(0);
 
-    auto target_offset = TRY(vm.argument(1).to_integer_or_infinity(global_object));
-    if (target_offset < 0)
-        return vm.throw_completion<JS::RangeError>(global_object, "Invalid target offset");
+    // 1. Let target be the this value.
+    // 2. Perform ? RequireInternalSlot(target, [[TypedArrayName]]).
+    auto* typed_array = TRY(typed_array_from_this(global_object));
 
+    // 3. Assert: target has a [[ViewedArrayBuffer]] internal slot.
+
+    // 4. Let targetOffset be ? ToIntegerOrInfinity(offset).
+    auto target_offset = TRY(vm.argument(1).to_integer_or_infinity(global_object));
+
+    // 5. If targetOffset < 0, throw a RangeError exception.
+    if (target_offset < 0)
+        return vm.throw_completion<RangeError>(global_object, "Invalid target offset");
+
+    // 6. If source is an Object that has a [[TypedArrayName]] internal slot, then
     if (source.is_object() && is<TypedArrayBase>(source.as_object())) {
-        auto& source_typed_array = static_cast<TypedArrayBase&>(source.as_object());
+        // a. Perform ? SetTypedArrayFromTypedArray(target, targetOffset, source).
+
         // 23.2.3.23.1 SetTypedArrayFromTypedArray ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray
-        auto target_buffer = typed_array->viewed_array_buffer();
+
+        auto& source_typed_array = static_cast<TypedArrayBase&>(source.as_object());
+
+        // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
+        auto* target_buffer = typed_array->viewed_array_buffer();
+
+        // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
         if (target_buffer->is_detached())
-            return vm.throw_completion<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+            return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+
+        // 3. Let targetLength be target.[[ArrayLength]].
         auto target_length = typed_array->array_length();
+
+        // 4. Let srcBuffer be source.[[ViewedArrayBuffer]].
+        auto* source_buffer = source_typed_array.viewed_array_buffer();
+
+        // 5. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
+        if (source_buffer->is_detached())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+
+        // 6. Let targetName be the String value of target.[[TypedArrayName]].
+        // 7. Let targetType be the Element Type value in Table 69 for targetName.
+        // 8. Let targetElementSize be the Element Size value specified in Table 69 for targetName.
+        auto target_element_size = typed_array->element_size();
+
+        // 9. Let targetByteOffset be target.[[ByteOffset]].
         auto target_byte_offset = typed_array->byte_offset();
 
-        auto source_buffer = source_typed_array.viewed_array_buffer();
-        if (source_buffer->is_detached())
-            return vm.throw_completion<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        // 10. Let srcName be the String value of source.[[TypedArrayName]].
+        // 11. Let srcType be the Element Type value in Table 69 for srcName.
+        // 12. Let srcElementSize be the Element Size value specified in Table 69 for srcName.
+        auto source_element_size = source_typed_array.element_size();
+
+        // 13. Let srcLength be source.[[ArrayLength]].
         auto source_length = source_typed_array.array_length();
+
+        // 14. Let srcByteOffset be source.[[ByteOffset]].
         auto source_byte_offset = source_typed_array.byte_offset();
 
+        // 15. If targetOffset is +∞, throw a RangeError exception.
         if (isinf(target_offset))
-            return vm.throw_completion<JS::RangeError>(global_object, "Invalid target offset");
+            return vm.throw_completion<RangeError>(global_object, "Invalid target offset");
 
+        // 16. If srcLength + targetOffset > targetLength, throw a RangeError exception.
         Checked<size_t> checked = source_length;
         checked += static_cast<u32>(target_offset);
         if (checked.has_overflow() || checked.value() > target_length)
-            return vm.throw_completion<JS::RangeError>(global_object, "Overflow or out of bounds in target length");
+            return vm.throw_completion<RangeError>(global_object, "Overflow or out of bounds in target length");
 
+        // 17. If target.[[ContentType]] ≠ source.[[ContentType]], throw a TypeError exception.
         if (typed_array->content_type() != source_typed_array.content_type())
-            return vm.throw_completion<JS::TypeError>(global_object, "Copy between arrays of different content types is prohibited");
+            return vm.throw_completion<TypeError>(global_object, "Copy between arrays of different content types is prohibited");
+
+        // FIXME: 18. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
+        // FIXME: a. If srcBuffer.[[ArrayBufferData]] and targetBuffer.[[ArrayBufferData]] are the same Shared Data Block values, let same be true; else let same be false.
+
+        // 19. Else, let same be SameValue(srcBuffer, targetBuffer).
+        auto same = same_value(source_buffer, target_buffer);
 
         size_t source_byte_index;
-        bool same = false;
-        // FIXME: Step 19: If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true...
-        same = same_value(source_buffer, target_buffer);
+
+        // 20. If same is true, then
         if (same) {
-            // FIXME: Implement this: Step 21
-            TODO();
+            // a. Let srcByteLength be source.[[ByteLength]].
+            auto source_byte_length = source_typed_array.byte_length();
+
+            // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, %ArrayBuffer%).
+            source_buffer = TRY(clone_array_buffer(global_object, *source_buffer, source_byte_offset, source_byte_length, *global_object.array_buffer_constructor()));
+            // c. NOTE: %ArrayBuffer% is used to clone srcBuffer because is it known to not have any observable side-effects.
+
+            // d. Let srcByteIndex be 0.
+            source_byte_index = 0;
         } else {
+            // 21. Else, let srcByteIndex be srcByteOffset.
             source_byte_index = source_byte_offset;
         }
+
+        // 22. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
         Checked<size_t> checked_target_byte_index(static_cast<size_t>(target_offset));
-        checked_target_byte_index *= typed_array->element_size();
+        checked_target_byte_index *= target_element_size;
         checked_target_byte_index += target_byte_offset;
         if (checked_target_byte_index.has_overflow())
-            return vm.throw_completion<JS::RangeError>(global_object, "Overflow in target byte index");
+            return vm.throw_completion<RangeError>(global_object, "Overflow in target byte index");
         auto target_byte_index = checked_target_byte_index.value();
 
+        // 23. Let limit be targetByteIndex + targetElementSize × srcLength.
         Checked<size_t> checked_limit(source_length);
-        checked_limit *= typed_array->element_size();
+        checked_limit *= target_element_size;
         checked_limit += target_byte_index;
         if (checked_limit.has_overflow())
-            return vm.throw_completion<JS::RangeError>(global_object, "Overflow in target limit");
+            return vm.throw_completion<RangeError>(global_object, "Overflow in target limit");
         auto limit = checked_limit.value();
 
-        if (source_typed_array.element_size() == typed_array->element_size()) {
-            // FIXME: SharedBuffers use a different mechanism, implement that when SharedBuffers are implemented.
+        // 24. If srcType is the same as targetType, then
+        if (source_typed_array.element_name() == typed_array->element_name()) {
+            // a. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
+            // b. Repeat, while targetByteIndex < limit,
+            //     i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
+            //     ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
+            //     iii. Set srcByteIndex to srcByteIndex + 1.
+            //     iv. Set targetByteIndex to targetByteIndex + 1.
             target_buffer->buffer().overwrite(target_byte_index, source_buffer->buffer().data(), limit - target_byte_index);
         } else {
+            // a. Repeat, while targetByteIndex < limit,
             while (target_byte_index < limit) {
+                // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, Unordered).
                 auto value = source_typed_array.get_value_from_buffer(source_byte_index, ArrayBuffer::Unordered);
+                // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
                 typed_array->set_value_in_buffer(target_byte_index, value, ArrayBuffer::Unordered);
-                source_byte_index += source_typed_array.element_size();
+                // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
+                source_byte_index += source_element_size;
+                // iv. Set targetByteIndex to targetByteIndex + targetElementSize.
                 target_byte_index += typed_array->element_size();
             }
         }
-    } else {
+    }
+    // 7. Else,
+    else {
+        // a. Perform ? SetTypedArrayFromArrayLike(target, targetOffset, source).
+
         // 23.2.3.23.2 SetTypedArrayFromArrayLike ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromarraylike
-        auto target_buffer = typed_array->viewed_array_buffer();
+
+        // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
+        auto* target_buffer = typed_array->viewed_array_buffer();
+
+        // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
         if (target_buffer->is_detached())
-            return vm.throw_completion<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+            return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+
+        // 3. Let targetLength be target.[[ArrayLength]].
         auto target_length = typed_array->array_length();
+
+        // 4. Let targetName be the String value of target.[[TypedArrayName]].
+        // 5. Let targetElementSize be the Element Size value specified in Table 69 for targetName.
+        // 6. Let targetType be the Element Type value in Table 69 for targetName.
+        auto target_element_size = typed_array->element_size();
+
+        // 7. Let targetByteOffset be target.[[ByteOffset]].
         auto target_byte_offset = typed_array->byte_offset();
 
-        auto src = TRY(source.to_object(global_object));
+        // 8. Let src be ? ToObject(source).
+        auto* src = TRY(source.to_object(global_object));
+
+        // 9. Let srcLength be ? LengthOfArrayLike(src).
         auto source_length = TRY(length_of_array_like(global_object, *src));
 
+        // 10. If targetOffset is +∞, throw a RangeError exception.
         if (isinf(target_offset))
-            return vm.throw_completion<JS::RangeError>(global_object, "Invalid target offset");
+            return vm.throw_completion<RangeError>(global_object, "Invalid target offset");
 
+        // 11. If srcLength + targetOffset > targetLength, throw a RangeError exception.
         Checked<size_t> checked = source_length;
         checked += static_cast<u32>(target_offset);
         if (checked.has_overflow() || checked.value() > target_length)
-            return vm.throw_completion<JS::RangeError>(global_object, "Overflow or out of bounds in target length");
+            return vm.throw_completion<RangeError>(global_object, "Overflow or out of bounds in target length");
 
+        // 12. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
         Checked<size_t> checked_target_byte_index(static_cast<size_t>(target_offset));
-        checked_target_byte_index *= typed_array->element_size();
+        checked_target_byte_index *= target_element_size;
         checked_target_byte_index += target_byte_offset;
         if (checked_target_byte_index.has_overflow())
-            return vm.throw_completion<JS::RangeError>(global_object, "Overflow in target byte index");
+            return vm.throw_completion<RangeError>(global_object, "Overflow in target byte index");
         auto target_byte_index = checked_target_byte_index.value();
 
+        // 13. Let k be 0.
+        auto k = 0;
+
+        // 14. Let limit be targetByteIndex + targetElementSize × srcLength.
         Checked<size_t> checked_limit(source_length);
-        checked_limit *= typed_array->element_size();
+        checked_limit *= target_element_size;
         checked_limit += target_byte_index;
         if (checked_limit.has_overflow())
-            return vm.throw_completion<JS::RangeError>(global_object, "Overflow in target limit");
-
+            return vm.throw_completion<RangeError>(global_object, "Overflow in target limit");
         auto limit = checked_limit.value();
-        auto k = 0;
+
+        // 15. Repeat, while targetByteIndex < limit,
         while (target_byte_index < limit) {
+            // a. Let Pk be ! ToString(𝔽(k)).
+            // b. Let value be ? Get(src, Pk).
             auto value = TRY(src->get(k));
+
+            // c. If target.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
             if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
                 value = TRY(value.to_bigint(global_object));
+            // d. Otherwise, set value to ? ToNumber(value).
             else
                 value = TRY(value.to_number(global_object));
 
+            // e. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
             if (target_buffer->is_detached())
-                return vm.throw_completion<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+                return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
+            // f. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
             typed_array->set_value_in_buffer(target_byte_index, value, ArrayBuffer::Unordered);
+
+            // g. Set k to k + 1.
             ++k;
-            target_byte_index += typed_array->element_size();
+
+            // h. Set targetByteIndex to targetByteIndex + targetElementSize.
+            target_byte_index += target_element_size;
         }
     }
+
+    // 8. Return undefined.
     return js_undefined();
 }
 

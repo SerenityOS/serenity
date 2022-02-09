@@ -390,8 +390,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     m_new_file_actions.append(create_new_file_action("GML File", "/res/icons/16x16/filetype-gml.png", "gml"));
     m_new_file_actions.append(create_new_file_action("JavaScript Source File", "/res/icons/16x16/filetype-javascript.png", "js"));
     m_new_file_actions.append(create_new_file_action("HTML File", "/res/icons/16x16/filetype-html.png", "html"));
-    // FIXME: Create a file icon for CSS files
-    m_new_file_actions.append(create_new_file_action("CSS File", "/res/icons/16x16/new.png", "css"));
+    m_new_file_actions.append(create_new_file_action("CSS File", "/res/icons/16x16/filetype-css.png", "css"));
 
     m_new_plain_file_action = create_new_file_action("Plain File", "/res/icons/16x16/new.png", "");
 
@@ -1159,9 +1158,11 @@ void HackStudioWidget::create_project_menu(GUI::Window& window)
     for (auto& new_file_action : m_new_file_actions) {
         new_submenu.add_action(new_file_action);
     }
+
     new_submenu.add_action(*m_new_plain_file_action);
     new_submenu.add_separator();
     new_submenu.add_action(*m_new_directory_action);
+    project_menu.add_action(create_toggle_syntax_highlighting_mode_action());
 }
 
 void HackStudioWidget::create_edit_menu(GUI::Window& window)
@@ -1519,6 +1520,16 @@ void HackStudioWidget::for_each_open_file(Function<void(ProjectFile const&)> fun
     for (auto& open_file : m_open_files) {
         func(*open_file.value);
     }
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_toggle_syntax_highlighting_mode_action()
+{
+    auto action = GUI::Action::create_checkable("&Semantic Highlighting", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-cplusplus.png").release_value_but_fixme_should_propagate_errors(), [this](auto& action) {
+        for (auto& editor_wrapper : m_all_editor_wrappers)
+            editor_wrapper.editor().set_semantic_syntax_highlighting(action.is_checked());
+    });
+
+    return action;
 }
 
 }

@@ -43,12 +43,15 @@ public:
 
     virtual void die() override;
 
+    const LanguageClient* active_client() const { return !m_current_language_client ? nullptr : m_current_language_client.ptr(); }
+
 protected:
     virtual void auto_complete_suggestions(Vector<GUI::AutocompleteProvider::Entry> const&) override;
     virtual void declaration_location(GUI::AutocompleteProvider::ProjectLocation const&) override;
     virtual void declarations_in_document(String const&, Vector<GUI::AutocompleteProvider::Declaration> const&) override;
     virtual void todo_entries_in_document(String const&, Vector<Cpp::Parser::TodoEntry> const&) override;
     virtual void parameters_hint_result(Vector<String> const&, int index) override;
+    virtual void tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const&) override;
     void set_wrapper(ServerConnectionWrapper& wrapper) { m_wrapper = &wrapper; }
 
     String m_project_path;
@@ -124,6 +127,7 @@ public:
 
     Language language() const { return m_connection_wrapper.language(); }
     void set_active_client();
+    bool is_active_client() const;
     virtual void open_file(const String& path, int fd);
     virtual void set_file_content(const String& path, const String& content);
     virtual void insert_text(const String& path, const String& text, size_t line, size_t column);
@@ -131,6 +135,7 @@ public:
     virtual void request_autocomplete(const String& path, size_t cursor_line, size_t cursor_column);
     virtual void search_declaration(const String& path, size_t line, size_t column);
     virtual void get_parameters_hint(const String& path, size_t line, size_t column);
+    virtual void get_tokens_info(const String& filename);
 
     void provide_autocomplete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>&) const;
     void declaration_found(const String& file, size_t line, size_t column) const;
@@ -140,6 +145,7 @@ public:
     Function<void(Vector<GUI::AutocompleteProvider::Entry>)> on_autocomplete_suggestions;
     Function<void(const String&, size_t, size_t)> on_declaration_found;
     Function<void(Vector<String> const&, size_t)> on_function_parameters_hint_result;
+    Function<void(Vector<GUI::AutocompleteProvider::TokenInfo> const&)> on_tokens_info_result;
 
 private:
     ServerConnectionWrapper& m_connection_wrapper;

@@ -32,6 +32,7 @@ public:
     String text_of_node(const ASTNode&) const;
     StringView text_of_token(const Cpp::Token& token) const;
     void print_tokens() const;
+    Vector<Token> const& tokens() const { return m_tokens; }
     const Vector<String>& errors() const { return m_errors; }
 
     struct TodoEntry {
@@ -133,6 +134,7 @@ private:
     Token peek(size_t offset = 0) const;
     Optional<Token> peek(Token::Type) const;
     Position position() const;
+    Position previous_token_end() const;
     String text_in_range(Position start, Position end) const;
 
     void save_state();

@@ -30,6 +30,7 @@ public:
     virtual void file_opened([[maybe_unused]] const String& file) override;
     virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position) override;
     virtual Optional<FunctionParamsHint> get_function_params_hint(const String&, const GUI::TextPosition&) override;
+    virtual Vector<GUI::AutocompleteProvider::TokenInfo> get_tokens_info(const String& filename) override;
 
 private:
     struct SymbolName {
@@ -102,6 +103,7 @@ private:
     bool is_property(const ASTNode&) const;
     RefPtr<Declaration> find_declaration_of(const DocumentData&, const ASTNode&) const;
     RefPtr<Declaration> find_declaration_of(const DocumentData&, const SymbolName&) const;
+    RefPtr<Declaration> find_declaration_of(const DocumentData&, const GUI::TextPosition& identifier_position);
 
     enum class RecurseIntoScopes {
         No,
@@ -138,6 +140,9 @@ private:
 
     template<typename Func>
     void for_each_included_document_recursive(const DocumentData&, Func) const;
+
+    GUI::AutocompleteProvider::TokenInfo::SemanticType get_token_semantic_type(DocumentData const&, Token const&);
+    GUI::AutocompleteProvider::TokenInfo::SemanticType get_semantic_type_for_identifier(DocumentData const&, Position);
 
     HashMap<String, OwnPtr<DocumentData>> m_documents;
 

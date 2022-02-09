@@ -107,6 +107,7 @@ private:
     NonnullRefPtr<GUI::Action> create_build_action();
     NonnullRefPtr<GUI::Action> create_run_action();
     NonnullRefPtr<GUI::Action> create_stop_action();
+    NonnullRefPtr<GUI::Action> create_toggle_syntax_highlighting_mode_action();
     void create_location_history_actions();
 
     void add_new_editor(GUI::Widget& parent);
