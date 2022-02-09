@@ -30,6 +30,7 @@ set(SOURCES
     Filters/LaplaceDiagonal.cpp
     Filters/Sepia.cpp
     Filters/Sharpen.cpp
+    IconBag.cpp
     Image.cpp
     ImageEditor.cpp
     Layer.cpp
