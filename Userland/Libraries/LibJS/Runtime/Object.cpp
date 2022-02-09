@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,6 +42,13 @@ Object::Object(GlobalObjectTag)
 Object::Object(ConstructWithoutPrototypeTag, GlobalObject& global_object)
 {
     m_shape = heap().allocate_without_global_object<Shape>(global_object);
+}
+
+Object::Object(GlobalObject& global_object, Object* prototype)
+{
+    m_shape = global_object.empty_object_shape();
+    if (prototype != nullptr)
+        set_prototype(prototype);
 }
 
 Object::Object(Object& prototype)
