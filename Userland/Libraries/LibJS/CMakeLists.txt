@@ -129,7 +129,6 @@ set(SOURCES
     Runtime/MapIterator.cpp
     Runtime/MapIteratorPrototype.cpp
     Runtime/MapPrototype.cpp
-    Runtime/MarkedValueList.cpp
     Runtime/MathObject.cpp
     Runtime/ModuleEnvironment.cpp
     Runtime/ModuleNamespaceObject.cpp
