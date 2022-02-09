@@ -98,7 +98,7 @@ static ThrowCompletionOr<Array*> get_own_property_keys(GlobalObject& global_obje
     auto keys = TRY(object->internal_own_property_keys());
 
     // 3. Let nameList be a new empty List.
-    auto name_list = MarkedValueList { vm.heap() };
+    auto name_list = MarkedVector<Value> { vm.heap() };
 
     // 4. For each element nextKey of keys, do
     for (auto& next_key : keys) {

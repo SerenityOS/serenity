@@ -352,7 +352,7 @@ public:
 private:
     Type m_type { Type::Empty };
 
-    [[nodiscard]] ThrowCompletionOr<Value> invoke_internal(GlobalObject& global_object, PropertyKey const&, Optional<MarkedValueList> arguments);
+    [[nodiscard]] ThrowCompletionOr<Value> invoke_internal(GlobalObject& global_object, PropertyKey const&, Optional<MarkedVector<Value>> arguments);
 
     ThrowCompletionOr<i32> to_i32_slow_case(GlobalObject&) const;
 

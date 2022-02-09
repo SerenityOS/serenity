@@ -44,7 +44,7 @@ WrappedFunction::WrappedFunction(Realm& realm, FunctionObject& wrapped_target_fu
 }
 
 // 2.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/proposal-shadowrealm/#sec-wrapped-function-exotic-objects-call-thisargument-argumentslist
-ThrowCompletionOr<Value> WrappedFunction::internal_call(Value this_argument, MarkedValueList arguments_list)
+ThrowCompletionOr<Value> WrappedFunction::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -64,7 +64,7 @@ ThrowCompletionOr<Value> WrappedFunction::internal_call(Value this_argument, Mar
     // 5. NOTE: Any exception objects produced after this point are associated with callerRealm.
 
     // 6. Let wrappedArgs be a new empty List.
-    auto wrapped_args = MarkedValueList { vm.heap() };
+    auto wrapped_args = MarkedVector<Value> { vm.heap() };
     wrapped_args.ensure_capacity(arguments_list.size());
 
     // 7. For each element arg of argumentsList, do

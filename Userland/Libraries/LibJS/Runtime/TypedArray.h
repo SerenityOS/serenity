@@ -388,12 +388,12 @@ public:
     }
 
     // 10.4.5.7 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-ownpropertykeys
-    virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const override
+    virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const override
     {
         auto& vm = this->vm();
 
         // 1. Let keys be a new empty List.
-        auto keys = MarkedValueList { heap() };
+        auto keys = MarkedVector<Value> { heap() };
 
         // 2. Assert: O is an Integer-Indexed exotic object.
 
@@ -469,7 +469,7 @@ private:
     virtual bool is_typed_array() const final { return true; }
 };
 
-ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedValueList arguments);
+ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedVector<Value> arguments);
 
 #define JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     class ClassName : public TypedArray<Type> {                                             \

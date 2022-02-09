@@ -142,7 +142,7 @@ static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, GlobalObject& glo
 }
 
 // 23.2.4.1 TypedArraySpeciesCreate ( exemplar, argumentList ), https://tc39.es/ecma262/#typedarray-species-create
-static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(GlobalObject& global_object, TypedArrayBase const& exemplar, MarkedValueList arguments)
+static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(GlobalObject& global_object, TypedArrayBase const& exemplar, MarkedVector<Value> arguments)
 {
     auto& vm = global_object.vm();
 
@@ -871,7 +871,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 
     auto count = max(final - k, 0);
 
-    MarkedValueList arguments(vm.heap());
+    MarkedVector<Value> arguments(vm.heap());
     arguments.empend(count);
     auto* new_array = TRY(typed_array_species_create(global_object, *typed_array, move(arguments)));
 
@@ -917,14 +917,14 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
     return new_array;
 }
 
-static ThrowCompletionOr<void> typed_array_merge_sort(GlobalObject& global_object, FunctionObject* compare_function, ArrayBuffer& buffer, MarkedValueList& arr_to_sort)
+static ThrowCompletionOr<void> typed_array_merge_sort(GlobalObject& global_object, FunctionObject* compare_function, ArrayBuffer& buffer, MarkedVector<Value>& arr_to_sort)
 {
     auto& vm = global_object.vm();
     if (arr_to_sort.size() <= 1)
         return {};
 
-    MarkedValueList left(vm.heap());
-    MarkedValueList right(vm.heap());
+    MarkedVector<Value> left(vm.heap());
+    MarkedVector<Value> right(vm.heap());
 
     left.ensure_capacity(arr_to_sort.size() / 2);
     right.ensure_capacity(arr_to_sort.size() / 2 + (arr_to_sort.size() & 1));
@@ -1014,7 +1014,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
 
     auto length = typed_array->array_length();
 
-    MarkedValueList items(vm.heap());
+    MarkedVector<Value> items(vm.heap());
     for (u32 k = 0; k < length; ++k) {
         auto k_present = TRY(typed_array->has_property(k));
 
@@ -1077,7 +1077,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
         return typed_array;
     }
 
-    MarkedValueList arguments(vm.heap());
+    MarkedVector<Value> arguments(vm.heap());
     arguments.empend(typed_array->viewed_array_buffer());
     arguments.empend(begin_byte_offset.value());
     arguments.empend(new_length);
@@ -1306,7 +1306,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
     auto* callback_function = TRY(callback_from_args(global_object, "filter"));
 
     // 5. Let kept be a new empty List.
-    MarkedValueList kept(vm.heap());
+    MarkedVector<Value> kept(vm.heap());
 
     // 7. Let captured be 0.
     size_t captured = 0;
@@ -1336,7 +1336,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
     }
 
     // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(captured) »).
-    MarkedValueList arguments(vm.heap());
+    MarkedVector<Value> arguments(vm.heap());
     arguments.empend(captured);
     auto* filter_array = TRY(typed_array_species_create(global_object, *typed_array, move(arguments)));
 
@@ -1370,7 +1370,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
     auto* callback_function = TRY(callback_from_args(global_object, "map"));
 
     // 5. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(len) »).
-    MarkedValueList arguments(vm.heap());
+    MarkedVector<Value> arguments(vm.heap());
     arguments.empend(initial_length);
     auto* return_array = TRY(typed_array_species_create(global_object, *typed_array, move(arguments)));
 

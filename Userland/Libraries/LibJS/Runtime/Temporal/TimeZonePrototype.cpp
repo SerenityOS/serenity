@@ -151,7 +151,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
     auto possible_epoch_nanoseconds = get_iana_time_zone_epoch_value(global_object, time_zone->identifier(), date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
 
     // 6. Let possibleInstants be a new empty List.
-    auto possible_instants = MarkedValueList { vm.heap() };
+    auto possible_instants = MarkedVector<Value> { vm.heap() };
 
     // 7. For each value epochNanoseconds in possibleEpochNanoseconds, do
     for (auto& epoch_nanoseconds : possible_epoch_nanoseconds) {

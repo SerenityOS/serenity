@@ -15,7 +15,7 @@ class FunctionConstructor final : public NativeFunction {
     JS_OBJECT(FunctionConstructor, NativeFunction);
 
 public:
-    static ThrowCompletionOr<ECMAScriptFunctionObject*> create_dynamic_function(GlobalObject& global_object, FunctionObject& constructor, FunctionObject* new_target, FunctionKind kind, MarkedValueList const& args);
+    static ThrowCompletionOr<ECMAScriptFunctionObject*> create_dynamic_function(GlobalObject& global_object, FunctionObject& constructor, FunctionObject* new_target, FunctionKind kind, MarkedVector<Value> const& args);
 
     explicit FunctionConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;

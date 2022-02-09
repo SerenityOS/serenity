@@ -1569,7 +1569,7 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, bool left_
 }
 
 // 7.3.21 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
-ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, JS::PropertyKey const& property_key, Optional<MarkedValueList> arguments)
+ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, JS::PropertyKey const& property_key, Optional<MarkedVector<Value>> arguments)
 {
     auto& vm = global_object.vm();
     auto property = TRY(get(global_object, property_key));

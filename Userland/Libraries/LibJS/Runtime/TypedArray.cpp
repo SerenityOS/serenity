@@ -291,7 +291,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObje
 
 // 23.2.5.1.4 InitializeTypedArrayFromList, https://tc39.es/ecma262/#sec-initializetypedarrayfromlist
 template<typename T>
-static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, const MarkedValueList& list)
+static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, const MarkedVector<Value>& list)
 {
     auto& vm = global_object.vm();
 
@@ -332,7 +332,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& gl
 }
 
 // 23.2.4.2 TypedArrayCreate ( constructor, argumentList ), https://tc39.es/ecma262/#typedarray-create
-ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedValueList arguments)
+ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedVector<Value> arguments)
 {
     auto& vm = global_object.vm();
 

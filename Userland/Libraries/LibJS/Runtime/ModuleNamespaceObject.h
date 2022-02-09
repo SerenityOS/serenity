@@ -30,7 +30,7 @@ public:
     virtual ThrowCompletionOr<Value> internal_get(PropertyKey const&, Value receiver) const override;
     virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver) override;
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&) override;
-    virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const override;
+    virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const override;
     virtual void initialize(GlobalObject& object) override;
 
 private:
