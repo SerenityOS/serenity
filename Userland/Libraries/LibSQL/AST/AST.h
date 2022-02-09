@@ -14,7 +14,7 @@
 #include <AK/String.h>
 #include <LibSQL/AST/Token.h>
 #include <LibSQL/Forward.h>
-#include <LibSQL/SQLResult.h>
+#include <LibSQL/Result.h>
 #include <LibSQL/Type.h>
 
 namespace SQL::AST {
