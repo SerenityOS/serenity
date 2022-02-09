@@ -39,7 +39,7 @@ UNMAP_AFTER_INIT void VGACompatibleAdapter::initialize_framebuffer_devices()
 UNMAP_AFTER_INIT VGACompatibleAdapter::VGACompatibleAdapter(PCI::Address address)
     : PCI::Device(address)
 {
-    m_framebuffer_console = Graphics::TextModeConsole::initialize(*this);
+    m_framebuffer_console = Graphics::TextModeConsole::initialize();
     GraphicsManagement::the().set_console(*m_framebuffer_console);
 }
 
