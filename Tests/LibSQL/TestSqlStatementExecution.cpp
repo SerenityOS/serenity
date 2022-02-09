@@ -177,6 +177,17 @@ TEST_CASE(insert_without_column_names)
     EXPECT_EQ(rows_or_error.value().size(), 2u);
 }
 
+TEST_CASE(select_from_empty_table)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    auto result = execute(database, "SELECT * FROM TestSchema.TestTable;");
+    EXPECT(!result.is_error());
+    EXPECT(!result.has_results());
+}
+
 TEST_CASE(select_from_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
