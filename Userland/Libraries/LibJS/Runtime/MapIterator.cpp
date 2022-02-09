@@ -18,7 +18,7 @@ MapIterator::MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& 
     : Object(prototype)
     , m_map(map)
     , m_iteration_kind(iteration_kind)
-    , m_iterator(map.entries().begin())
+    , m_iterator(static_cast<Map const&>(map).begin())
 {
 }
 
