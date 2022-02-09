@@ -25,7 +25,7 @@
 							"name": "entity.name.type.serenity-gml"
 						},
 						"3": {
-							"name": "keyword.operator.namespace.serenity-gml"
+							"name": "punctuation.separator.namespace.serenity-gml"
 						},
 						"4": {
 							"name": "entity.name.type.serenity-gml"
@@ -62,7 +62,7 @@
 							"name": "entity.name.type.serenity-gml"
 						},
 						"3": {
-							"name": "keyword.operator.namespace.serenity-gml"
+							"name": "punctuation.separator.namespace.serenity-gml"
 						},
 						"4": {
 							"name": "entity.name.type.serenity-gml"
