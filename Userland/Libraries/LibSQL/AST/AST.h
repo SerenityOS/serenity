@@ -298,7 +298,7 @@ private:
 
 struct ExecutionContext {
     NonnullRefPtr<Database> database;
-    RefPtr<SQLResult> result { nullptr };
+    Optional<Result> result;
     class Statement const* statement;
     Tuple* current_row { nullptr };
 };
@@ -725,8 +725,12 @@ private:
 
 class Statement : public ASTNode {
 public:
-    RefPtr<SQLResult> execute(AK::NonnullRefPtr<Database> database) const;
-    virtual RefPtr<SQLResult> execute(ExecutionContext&) const { return nullptr; }
+    Result execute(AK::NonnullRefPtr<Database> database) const;
+
+    virtual Result execute(ExecutionContext&) const
+    {
+        return { SQLCommand::Unknown, SQLErrorCode::NotYetImplemented };
+    }
 };
 
 class ErrorStatement final : public Statement {
@@ -743,7 +747,7 @@ public:
     const String& schema_name() const { return m_schema_name; }
     bool is_error_if_schema_exists() const { return m_is_error_if_schema_exists; }
 
-    RefPtr<SQLResult> execute(ExecutionContext&) const override;
+    Result execute(ExecutionContext&) const override;
 
 private:
     String m_schema_name;
@@ -782,7 +786,7 @@ public:
     bool is_temporary() const { return m_is_temporary; }
     bool is_error_if_table_exists() const { return m_is_error_if_table_exists; }
 
-    RefPtr<SQLResult> execute(ExecutionContext&) const override;
+    Result execute(ExecutionContext&) const override;
 
 private:
     String m_schema_name;
@@ -945,7 +949,7 @@ public:
     bool has_selection() const { return !m_select_statement.is_null(); }
     const RefPtr<Select>& select_statement() const { return m_select_statement; }
 
-    virtual RefPtr<SQLResult> execute(ExecutionContext&) const override;
+    virtual Result execute(ExecutionContext&) const override;
 
 private:
     RefPtr<CommonTableExpressionList> m_common_table_expression_list;
@@ -1038,7 +1042,7 @@ public:
     const RefPtr<GroupByClause>& group_by_clause() const { return m_group_by_clause; }
     const NonnullRefPtrVector<OrderingTerm>& ordering_term_list() const { return m_ordering_term_list; }
     const RefPtr<LimitClause>& limit_clause() const { return m_limit_clause; }
-    RefPtr<SQLResult> execute(ExecutionContext&) const override;
+    Result execute(ExecutionContext&) const override;
 
 private:
     RefPtr<CommonTableExpressionList> m_common_table_expression_list;
@@ -1059,7 +1063,7 @@ public:
     }
 
     NonnullRefPtr<QualifiedTableName> qualified_table_name() const { return m_qualified_table_name; }
-    RefPtr<SQLResult> execute(ExecutionContext&) const override;
+    Result execute(ExecutionContext&) const override;
 
 private:
     NonnullRefPtr<QualifiedTableName> m_qualified_table_name;

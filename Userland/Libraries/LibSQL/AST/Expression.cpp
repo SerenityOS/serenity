@@ -19,7 +19,7 @@ Value Expression::evaluate(ExecutionContext&) const
 
 Value NumericLiteral::evaluate(ExecutionContext& context) const
 {
-    if (context.result->has_error())
+    if (context.result->is_error())
         return Value::null();
     Value ret(SQLType::Float);
     ret = value();
@@ -28,7 +28,7 @@ Value NumericLiteral::evaluate(ExecutionContext& context) const
 
 Value StringLiteral::evaluate(ExecutionContext& context) const
 {
-    if (context.result->has_error())
+    if (context.result->is_error())
         return Value::null();
     Value ret(SQLType::Text);
     ret = value();
@@ -42,14 +42,14 @@ Value NullLiteral::evaluate(ExecutionContext&) const
 
 Value NestedExpression::evaluate(ExecutionContext& context) const
 {
-    if (context.result->has_error())
+    if (context.result->is_error())
         return Value::null();
     return expression()->evaluate(context);
 }
 
 Value ChainedExpression::evaluate(ExecutionContext& context) const
 {
-    if (context.result->has_error())
+    if (context.result->is_error())
         return Value::null();
     Value ret(SQLType::Tuple);
     Vector<Value> values;
@@ -62,14 +62,14 @@ Value ChainedExpression::evaluate(ExecutionContext& context) const
 
 Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
 {
-    if (context.result->has_error())
+    if (context.result->is_error())
         return Value::null();
     Value lhs_value = lhs()->evaluate(context);
     Value rhs_value = rhs()->evaluate(context);
     switch (type()) {
     case BinaryOperator::Concatenate: {
         if (lhs_value.type() != SQLType::Text) {
-            context.result->set_error(SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()));
+            context.result = Result { SQLCommand::Unknown, SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()) };
             return Value::null();
         }
         AK::StringBuilder builder;
@@ -111,7 +111,7 @@ Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
         auto lhs_bool_maybe = lhs_value.to_bool();
         auto rhs_bool_maybe = rhs_value.to_bool();
         if (!lhs_bool_maybe.has_value() || !rhs_bool_maybe.has_value()) {
-            context.result->set_error(SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()));
+            context.result = Result { SQLCommand::Unknown, SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()) };
             return Value::null();
         }
         return Value(lhs_bool_maybe.release_value() && rhs_bool_maybe.release_value());
@@ -120,7 +120,7 @@ Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
         auto lhs_bool_maybe = lhs_value.to_bool();
         auto rhs_bool_maybe = rhs_value.to_bool();
         if (!lhs_bool_maybe.has_value() || !rhs_bool_maybe.has_value()) {
-            context.result->set_error(SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()));
+            context.result = Result { SQLCommand::Unknown, SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()) };
             return Value::null();
         }
         return Value(lhs_bool_maybe.release_value() || rhs_bool_maybe.release_value());
@@ -132,14 +132,14 @@ Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
 
 Value UnaryOperatorExpression::evaluate(ExecutionContext& context) const
 {
-    if (context.result->has_error())
+    if (context.result->is_error())
         return Value::null();
     Value expression_value = NestedExpression::evaluate(context);
     switch (type()) {
     case UnaryOperator::Plus:
         if (expression_value.type() == SQLType::Integer || expression_value.type() == SQLType::Float)
             return expression_value;
-        context.result->set_error(SQLErrorCode::NumericOperatorTypeMismatch, UnaryOperator_name(type()));
+        context.result = Result { SQLCommand::Unknown, SQLErrorCode::NumericOperatorTypeMismatch, UnaryOperator_name(type()) };
         return Value::null();
     case UnaryOperator::Minus:
         if (expression_value.type() == SQLType::Integer) {
@@ -150,21 +150,21 @@ Value UnaryOperatorExpression::evaluate(ExecutionContext& context) const
             expression_value = -double(expression_value);
             return expression_value;
         }
-        context.result->set_error(SQLErrorCode::NumericOperatorTypeMismatch, UnaryOperator_name(type()));
+        context.result = Result { SQLCommand::Unknown, SQLErrorCode::NumericOperatorTypeMismatch, UnaryOperator_name(type()) };
         return Value::null();
     case UnaryOperator::Not:
         if (expression_value.type() == SQLType::Boolean) {
             expression_value = !bool(expression_value);
             return expression_value;
         }
-        context.result->set_error(SQLErrorCode::BooleanOperatorTypeMismatch, UnaryOperator_name(type()));
+        context.result = Result { SQLCommand::Unknown, SQLErrorCode::BooleanOperatorTypeMismatch, UnaryOperator_name(type()) };
         return Value::null();
     case UnaryOperator::BitwiseNot:
         if (expression_value.type() == SQLType::Integer) {
             expression_value = ~u32(expression_value);
             return expression_value;
         }
-        context.result->set_error(SQLErrorCode::IntegerOperatorTypeMismatch, UnaryOperator_name(type()));
+        context.result = Result { SQLCommand::Unknown, SQLErrorCode::IntegerOperatorTypeMismatch, UnaryOperator_name(type()) };
         return Value::null();
     }
     VERIFY_NOT_REACHED();
@@ -173,7 +173,7 @@ Value UnaryOperatorExpression::evaluate(ExecutionContext& context) const
 Value ColumnNameExpression::evaluate(ExecutionContext& context) const
 {
     if (!context.current_row) {
-        context.result->set_error(SQLErrorCode::SyntaxError, column_name());
+        context.result = Result { SQLCommand::Unknown, SQLErrorCode::SyntaxError, column_name() };
         return Value::null();
     }
     auto& descriptor = *context.current_row->descriptor();
@@ -185,7 +185,7 @@ Value ColumnNameExpression::evaluate(ExecutionContext& context) const
             continue;
         if (column_descriptor.name == column_name()) {
             if (index_in_row.has_value()) {
-                context.result->set_error(SQLErrorCode::AmbiguousColumnName, column_name());
+                context.result = Result { SQLCommand::Unknown, SQLErrorCode::AmbiguousColumnName, column_name() };
                 return Value::null();
             }
             index_in_row = ix;
@@ -193,13 +193,13 @@ Value ColumnNameExpression::evaluate(ExecutionContext& context) const
     }
     if (index_in_row.has_value())
         return (*context.current_row)[index_in_row.value()];
-    context.result->set_error(SQLErrorCode::ColumnDoesNotExist, column_name());
+    context.result = Result { SQLCommand::Unknown, SQLErrorCode::ColumnDoesNotExist, column_name() };
     return Value::null();
 }
 
 Value MatchExpression::evaluate(ExecutionContext& context) const
 {
-    if (context.result->has_error())
+    if (context.result->is_error())
         return Value::null();
     switch (type()) {
     case MatchOperator::Like: {
@@ -209,7 +209,7 @@ Value MatchExpression::evaluate(ExecutionContext& context) const
         if (escape()) {
             auto escape_str = escape()->evaluate(context).to_string();
             if (escape_str.length() != 1) {
-                context.result->set_error(SQLErrorCode::SyntaxError, "ESCAPE should be a single character");
+                context.result = Result { SQLCommand::Unknown, SQLErrorCode::SyntaxError, "ESCAPE should be a single character" };
                 return Value::null();
             }
             escape_char = escape_str[0];
@@ -253,7 +253,7 @@ Value MatchExpression::evaluate(ExecutionContext& context) const
             builder.append("Regular expression: ");
             builder.append(get_error_string(err));
 
-            context.result->set_error(SQLErrorCode::SyntaxError, builder.build());
+            context.result = Result { SQLCommand::Unknown, SQLErrorCode::SyntaxError, builder.build() };
             return Value(false);
         }
 
