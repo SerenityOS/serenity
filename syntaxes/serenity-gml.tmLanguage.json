@@ -136,7 +136,7 @@
 			]
 		},
 		"booleans": {
-			"name": "constant.boolean.serenity-gml",
+			"name": "constant.language.$1.serenity-gml",
 			"match": "\\b(true|false)\\b"
 		},
 		"strings": {
