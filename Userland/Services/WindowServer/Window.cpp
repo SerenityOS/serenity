@@ -294,12 +294,12 @@ void Window::update_window_menu_items()
     m_window_menu_minimize_item->set_text(m_minimized_state != WindowMinimizedState::None ? "&Unminimize" : "Mi&nimize");
     m_window_menu_minimize_item->set_enabled(m_minimizable);
 
-    m_window_menu_maximize_item->set_text(m_maximized ? "&Restore" : "Ma&ximize");
+    m_window_menu_maximize_item->set_text(is_maximized() ? "&Restore" : "Ma&ximize");
     m_window_menu_maximize_item->set_enabled(m_resizable);
 
     m_window_menu_close_item->set_enabled(m_closeable);
 
-    m_window_menu_move_item->set_enabled(m_minimized_state == WindowMinimizedState::None && !m_maximized && !m_fullscreen);
+    m_window_menu_move_item->set_enabled(m_minimized_state == WindowMinimizedState::None && !is_maximized() && !m_fullscreen);
 }
 
 void Window::set_minimized(bool minimized)
@@ -476,16 +476,15 @@ void Window::set_occluded(bool occluded)
 
 void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
 {
-    if (m_maximized == maximized)
+    if (is_maximized() == maximized)
         return;
     if (maximized && (!is_resizable() || resize_aspect_ratio().has_value()))
         return;
-    m_tile_type = WindowTileType::None;
-    m_maximized = maximized;
+    m_tile_type = maximized ? WindowTileType::Maximized : WindowTileType::None;
     update_window_menu_items();
     if (maximized) {
         m_unmaximized_rect = m_floating_rect;
-        set_rect(WindowManager::the().maximized_window_rect(*this));
+        set_rect(WindowManager::the().tiled_window_rect(*this));
     } else {
         if (fixed_point.has_value()) {
             auto new_rect = Gfx::IntRect(m_rect);
@@ -837,7 +836,7 @@ void Window::handle_window_menu_action(WindowMenuAction action)
             WindowManager::the().move_to_front_and_make_active(*this);
         break;
     case WindowMenuAction::MaximizeOrRestore:
-        WindowManager::the().maximize_windows(*this, !m_maximized);
+        WindowManager::the().maximize_windows(*this, !is_maximized());
         WindowManager::the().move_to_front_and_make_active(*this);
         break;
     case WindowMenuAction::Move:
@@ -881,7 +880,7 @@ void Window::popup_window_menu(const Gfx::IntPoint& position, WindowMenuDefaultA
     m_window_menu_minimize_item->set_default(default_action == WindowMenuDefaultAction::Minimize || default_action == WindowMenuDefaultAction::Unminimize);
     m_window_menu_minimize_item->set_icon(m_minimized_state != WindowMinimizedState::None ? nullptr : &minimize_icon());
     m_window_menu_maximize_item->set_default(default_action == WindowMenuDefaultAction::Maximize || default_action == WindowMenuDefaultAction::Restore);
-    m_window_menu_maximize_item->set_icon(m_maximized ? &restore_icon() : &maximize_icon());
+    m_window_menu_maximize_item->set_icon(is_maximized() ? &restore_icon() : &maximize_icon());
     m_window_menu_close_item->set_default(default_action == WindowMenuDefaultAction::Close);
     m_window_menu_menubar_visibility_item->set_enabled(m_menubar.has_menus());
     m_window_menu_menubar_visibility_item->set_checked(m_menubar.has_menus() && m_should_show_menubar);
@@ -921,118 +920,6 @@ void Window::set_fullscreen(bool fullscreen)
     set_rect(new_window_rect);
 }
 
-Gfx::IntRect Window::tiled_rect(Screen* target_screen, WindowTileType tile_type) const
-{
-    if (!target_screen) {
-        // If no explicit target screen was supplied,
-        // guess based on the current frame rectangle
-        target_screen = &Screen::closest_to_rect(frame().rect());
-    }
-
-    VERIFY(tile_type != WindowTileType::None);
-
-    int frame_width = (m_frame.rect().width() - m_rect.width()) / 2;
-    int titlebar_height = m_frame.titlebar_rect().height();
-    auto maximized_rect_relative_to_window_screen = WindowManager::the().maximized_window_rect(*this, true);
-    int menu_height = maximized_rect_relative_to_window_screen.y();
-    int max_height = maximized_rect_relative_to_window_screen.height();
-
-    auto& screen = *target_screen;
-    auto screen_location = screen.rect().location();
-    switch (tile_type) {
-    case WindowTileType::Left:
-        return Gfx::IntRect(0,
-            menu_height,
-            screen.width() / 2 - frame_width,
-            max_height)
-            .translated(screen_location);
-    case WindowTileType::Right: {
-        Gfx::IntPoint location {
-            screen.width() / 2 + frame_width,
-            menu_height
-        };
-        return Gfx::IntRect(
-            location,
-            { screen.width() - location.x(), max_height })
-            .translated(screen_location);
-    }
-    case WindowTileType::Top:
-        return Gfx::IntRect(0,
-            menu_height,
-            screen.width(),
-            (max_height - titlebar_height) / 2 - frame_width)
-            .translated(screen_location);
-    case WindowTileType::Bottom: {
-        Gfx::IntPoint location {
-            0,
-            menu_height + (titlebar_height + max_height) / 2 + frame_width
-        };
-        return Gfx::IntRect(
-            location,
-            { screen.width(), screen.height() - location.y() })
-            .translated(screen_location);
-    }
-    case WindowTileType::TopLeft:
-        return Gfx::IntRect(0,
-            menu_height,
-            screen.width() / 2 - frame_width,
-            (max_height - titlebar_height) / 2 - frame_width)
-            .translated(screen_location);
-    case WindowTileType::TopRight: {
-        Gfx::IntPoint location {
-            screen.width() / 2 + frame_width,
-            menu_height
-        };
-        return Gfx::IntRect(
-            location,
-            { screen.width() - location.x(), (max_height - titlebar_height) / 2 - frame_width })
-            .translated(screen_location);
-    }
-    case WindowTileType::BottomLeft: {
-        Gfx::IntPoint location {
-            0,
-            menu_height + (titlebar_height + max_height) / 2 + frame_width
-        };
-        return Gfx::IntRect(
-            location,
-            { screen.width() / 2 - frame_width, screen.height() - location.y() })
-            .translated(screen_location);
-    }
-    case WindowTileType::BottomRight: {
-        Gfx::IntPoint location {
-            screen.width() / 2 + frame_width,
-            menu_height + (titlebar_height + max_height) / 2 + frame_width
-        };
-        return Gfx::IntRect(
-            location,
-            { screen.width() - location.x(), screen.height() - location.y() })
-            .translated(screen_location);
-    }
-    case WindowTileType::VerticallyMaximized: {
-        Gfx::IntPoint location {
-            floating_rect().location().x(),
-            menu_height
-        };
-        return Gfx::IntRect(
-            location,
-            { floating_rect().width(), max_height })
-            .translated(screen_location);
-    }
-    case WindowTileType::HorizontallyMaximized: {
-        Gfx::IntPoint location {
-            0,
-            floating_rect().location().y()
-        };
-        return Gfx::IntRect(
-            location,
-            { screen.width(), floating_rect().height() })
-            .translated(screen_location);
-    }
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
 WindowTileType Window::tile_type_based_on_rect(Gfx::IntRect const& rect) const
 {
     auto& window_screen = Screen::closest_to_rect(this->rect()); // based on currently used rect
@@ -1044,7 +931,7 @@ WindowTileType Window::tile_type_based_on_rect(Gfx::IntRect const& rect) const
         bool tiling_to_left = current_tile_type == WindowTileType::Left || current_tile_type == WindowTileType::TopLeft || current_tile_type == WindowTileType::BottomLeft;
         bool tiling_to_right = current_tile_type == WindowTileType::Right || current_tile_type == WindowTileType::TopRight || current_tile_type == WindowTileType::BottomRight;
 
-        auto ideal_tiled_rect = tiled_rect(&window_screen, current_tile_type);
+        auto ideal_tiled_rect = WindowManager::the().tiled_window_rect(*this, current_tile_type);
         bool same_top = ideal_tiled_rect.top() == rect.top();
         bool same_left = ideal_tiled_rect.left() == rect.left();
         bool same_right = ideal_tiled_rect.right() == rect.right();
@@ -1056,9 +943,9 @@ WindowTileType Window::tile_type_based_on_rect(Gfx::IntRect const& rect) const
         if (tiling_to_top && same_top && same_left && same_right)
             return WindowTileType::Top;
         else if ((tiling_to_top || tiling_to_left) && same_top && same_left)
-            return rect.bottom() == tiled_rect(&window_screen, WindowTileType::Bottom).bottom() ? WindowTileType::Left : WindowTileType::TopLeft;
+            return rect.bottom() == WindowManager::the().tiled_window_rect(*this, WindowTileType::Bottom).bottom() ? WindowTileType::Left : WindowTileType::TopLeft;
         else if ((tiling_to_top || tiling_to_right) && same_top && same_right)
-            return rect.bottom() == tiled_rect(&window_screen, WindowTileType::Bottom).bottom() ? WindowTileType::Right : WindowTileType::TopRight;
+            return rect.bottom() == WindowManager::the().tiled_window_rect(*this, WindowTileType::Bottom).bottom() ? WindowTileType::Right : WindowTileType::TopRight;
         else if (tiling_to_left && same_left && same_top && same_bottom)
             return WindowTileType::Left;
         else if (tiling_to_right && same_right && same_top && same_bottom)
@@ -1066,9 +953,9 @@ WindowTileType Window::tile_type_based_on_rect(Gfx::IntRect const& rect) const
         else if (tiling_to_bottom && same_bottom && same_left && same_right)
             return WindowTileType::Bottom;
         else if ((tiling_to_bottom || tiling_to_left) && same_bottom && same_left)
-            return rect.top() == tiled_rect(&window_screen, WindowTileType::Left).top() ? WindowTileType::Left : WindowTileType::BottomLeft;
+            return rect.top() == WindowManager::the().tiled_window_rect(*this, WindowTileType::Left).top() ? WindowTileType::Left : WindowTileType::BottomLeft;
         else if ((tiling_to_bottom || tiling_to_right) && same_bottom && same_right)
-            return rect.top() == tiled_rect(&window_screen, WindowTileType::Right).top() ? WindowTileType::Right : WindowTileType::BottomRight;
+            return rect.top() == WindowManager::the().tiled_window_rect(*this, WindowTileType::Right).top() ? WindowTileType::Right : WindowTileType::BottomRight;
     }
     return tile_type;
 }
@@ -1111,7 +998,7 @@ bool Window::set_untiled(Optional<Gfx::IntPoint> fixed_point)
     return true;
 }
 
-void Window::set_tiled(Screen* screen, WindowTileType tile_type)
+void Window::set_tiled(WindowTileType tile_type)
 {
     VERIFY(tile_type != WindowTileType::None);
 
@@ -1126,7 +1013,7 @@ void Window::set_tiled(Screen* screen, WindowTileType tile_type)
 
     m_tile_type = tile_type;
 
-    set_rect(tiled_rect(screen, tile_type));
+    set_rect(WindowManager::the().tiled_window_rect(*this, tile_type));
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
 }
 
@@ -1142,9 +1029,7 @@ void Window::recalculate_rect()
 
     bool send_event = true;
     if (is_tiled()) {
-        set_rect(tiled_rect(nullptr, m_tile_type));
-    } else if (is_maximized()) {
-        set_rect(WindowManager::the().maximized_window_rect(*this));
+        set_rect(WindowManager::the().tiled_window_rect(*this, m_tile_type));
     } else if (type() == WindowType::Desktop) {
         set_rect(WindowManager::the().arena_rect_for_type(Screen::main(), WindowType::Desktop));
     } else {
