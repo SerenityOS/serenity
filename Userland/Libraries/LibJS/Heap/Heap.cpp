@@ -120,10 +120,8 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
         }
     }
 
-    for (auto& vector : m_marked_vectors) {
-        for (auto* cell : vector.cells())
-            roots.set(cell);
-    }
+    for (auto& vector : m_marked_vectors)
+        vector.gather_roots(roots);
 
     if constexpr (HEAP_DEBUG) {
         dbgln("gather_roots:");
