@@ -33,7 +33,7 @@ private:
     Map& m_map;
     bool m_done { false };
     Object::PropertyKind m_iteration_kind;
-    OrderedHashMap<Value, Value, ValueTraits>::IteratorType m_iterator;
+    Map::ConstIterator m_iterator;
 };
 
 }
