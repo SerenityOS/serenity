@@ -110,7 +110,7 @@ class IndexDef : public Relation {
 public:
     ~IndexDef() override = default;
 
-    NonnullRefPtrVector<KeyPartDef> key_definition() const { return m_key_definition; }
+    NonnullRefPtrVector<KeyPartDef> const& key_definition() const { return m_key_definition; }
     bool unique() const { return m_unique; }
     [[nodiscard]] size_t size() const { return m_key_definition.size(); }
     void append_column(String, SQLType, Order = Order::Ascending);
@@ -138,8 +138,8 @@ public:
     void append_column(Key const&);
     size_t num_columns() { return m_columns.size(); }
     size_t num_indexes() { return m_indexes.size(); }
-    NonnullRefPtrVector<ColumnDef> columns() const { return m_columns; }
-    NonnullRefPtrVector<IndexDef> indexes() const { return m_indexes; }
+    NonnullRefPtrVector<ColumnDef> const& columns() const { return m_columns; }
+    NonnullRefPtrVector<IndexDef> const& indexes() const { return m_indexes; }
     [[nodiscard]] NonnullRefPtr<TupleDescriptor> to_tuple_descriptor() const;
 
     static NonnullRefPtr<IndexDef> index_def();
