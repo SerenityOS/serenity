@@ -59,6 +59,7 @@ RefPtr<GUI::Widget> Bloom::get_settings_widget()
         luma_lower_slider.set_value(m_luma_lower);
         luma_lower_slider.on_change = [&](int value) {
             m_luma_lower = value;
+            update_preview();
         };
 
         auto& radius_container = m_settings_widget->add<GUI::Widget>();
@@ -75,6 +76,7 @@ RefPtr<GUI::Widget> Bloom::get_settings_widget()
         radius_slider.set_value(m_blur_radius);
         radius_slider.on_change = [&](int value) {
             m_blur_radius = value;
+            update_preview();
         };
     }
 
