@@ -59,21 +59,20 @@ ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<Err
 
 ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& procfs, StringView name) const
 {
-    ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
+    auto maybe_needle = name.to_uint();
+    if (!maybe_needle.has_value())
+        return ENOENT;
+    auto needle = maybe_needle.release_value();
 
-    // FIXME: Try to exit the loop earlier
+    ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
     for_each_thread([&](const Thread& thread) {
         int tid = thread.tid().value();
         VERIFY(!(tid < 0));
-        if (name.to_int() == tid) {
-            auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_thread_stack(procfs, thread.tid(), pid());
-            if (maybe_inode.is_error()) {
-                thread_stack_inode = maybe_inode.release_error();
-                return;
-            }
-
-            thread_stack_inode = maybe_inode.release_value();
+        if (needle == (unsigned)tid) {
+            thread_stack_inode = ProcFSProcessPropertyInode::try_create_for_thread_stack(procfs, thread.tid(), pid());
+            return IterationDecision::Break;
         }
+        return IterationDecision::Continue;
     });
 
     if (thread_stack_inode.is_error())
