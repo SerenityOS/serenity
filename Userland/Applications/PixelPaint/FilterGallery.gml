@@ -13,9 +13,27 @@
         }
 
         @GUI::Widget {
-            name: "config_widget"
-            layout: @GUI::VerticalBoxLayout {
+            layout:@GUI::VerticalBoxLayout {
                 margins: [4]
+            }
+
+            @GUI::Widget {
+                name: "config_widget"
+
+                layout:@GUI::VerticalBoxLayout {
+                    margins: [4]
+                }
+            }
+
+            @GUI::GroupBox {
+                title: "Preview"
+                layout: @GUI::VerticalBoxLayout {
+                    margins: [4]
+                }
+
+                @PixelPaint::FilterPreviewWidget {
+                    name: "preview_widget"
+                }
             }
 
         }
@@ -28,6 +46,8 @@
         }
 
         @GUI::Widget
+
+        
 
         @GUI::Button {
             name: "apply_button"

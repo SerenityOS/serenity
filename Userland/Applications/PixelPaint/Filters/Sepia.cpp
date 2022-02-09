@@ -42,6 +42,7 @@ RefPtr<GUI::Widget> Sepia::get_settings_widget()
         amount_slider.set_value(m_amount * 100);
         amount_slider.on_change = [&](int value) {
             m_amount = value * 0.01f;
+            update_preview();
         };
     }
 

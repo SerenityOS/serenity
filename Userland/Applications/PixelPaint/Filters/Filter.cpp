@@ -37,4 +37,10 @@ void Filter::apply() const
     }
 }
 
+void Filter::update_preview()
+{
+    if (on_settings_change)
+        on_settings_change();
+}
+
 }
