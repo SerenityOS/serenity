@@ -310,6 +310,11 @@ void Job::on_socket_connected()
                     if (result.value() == 0 && !m_headers.get("Transfer-Encoding"sv).value_or(""sv).view().trim_whitespace().equals_ignoring_case("chunked"sv))
                         return finish_up();
                 }
+                // There's also the possibility that the server responds with 204 (No Content),
+                // and manages to set a Content-Length anyway, in such cases ignore Content-Length and quit early;
+                // As the HTTP spec explicitly prohibits presence of Content-Length when the response code is 204.
+                if (m_code == 204)
+                    return finish_up();
 
                 can_read_line = m_socket->can_read_line();
                 if (can_read_line.is_error())
