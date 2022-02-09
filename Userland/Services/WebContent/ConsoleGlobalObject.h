@@ -33,7 +33,7 @@ public:
     virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyKey const&, JS::Value) const override;
     virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value value, JS::Value receiver) override;
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const& name) override;
-    virtual JS::ThrowCompletionOr<JS::MarkedValueList> internal_own_property_keys() const override;
+    virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
 
     virtual void initialize_global_object() override;
 

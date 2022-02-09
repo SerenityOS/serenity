@@ -12,9 +12,9 @@
 #include <AK/String.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/IndexedProperties.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
@@ -100,7 +100,7 @@ public:
     ThrowCompletionOr<bool> has_own_property(PropertyKey const&) const;
     ThrowCompletionOr<bool> set_integrity_level(IntegrityLevel);
     ThrowCompletionOr<bool> test_integrity_level(IntegrityLevel) const;
-    ThrowCompletionOr<MarkedValueList> enumerable_own_property_names(PropertyKind kind) const;
+    ThrowCompletionOr<MarkedVector<Value>> enumerable_own_property_names(PropertyKind kind) const;
     ThrowCompletionOr<Object*> copy_data_properties(Value source, HashTable<PropertyKey> const& seen_names, GlobalObject& global_object);
 
     PrivateElement* private_element_find(PrivateName const& name);
@@ -122,7 +122,7 @@ public:
     virtual ThrowCompletionOr<Value> internal_get(PropertyKey const&, Value receiver) const;
     virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver);
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&);
-    virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const;
+    virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const;
 
     ThrowCompletionOr<bool> ordinary_set_with_own_descriptor(PropertyKey const&, Value, Value, Optional<PropertyDescriptor>);
 

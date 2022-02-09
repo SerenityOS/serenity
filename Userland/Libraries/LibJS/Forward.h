@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 #define JS_DECLARE_NATIVE_FUNCTION(name) \
     static JS::ThrowCompletionOr<JS::Value> name(JS::VM&, JS::GlobalObject&)
 
@@ -157,7 +159,6 @@ class HandleImpl;
 class Heap;
 class HeapBlock;
 class Interpreter;
-class MarkedValueList;
 class Module;
 class NativeFunction;
 class ObjectEnvironment;
@@ -241,7 +242,7 @@ class ThrowCompletionOr;
 template<class T>
 class Handle;
 
-template<class T>
+template<class T, size_t inline_capacity = 32>
 class MarkedVector;
 
 namespace Bytecode {

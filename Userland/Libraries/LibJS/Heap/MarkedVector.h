@@ -1,13 +1,14 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
-#include <AK/Noncopyable.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
@@ -15,56 +16,65 @@
 namespace JS {
 
 class MarkedVectorBase {
-    AK_MAKE_NONCOPYABLE(MarkedVectorBase);
-
 public:
-    void append(Cell* cell) { m_cells.append(cell); }
-    void prepend(Cell* cell) { m_cells.prepend(cell); }
-    size_t size() const { return m_cells.size(); }
-
-    Span<Cell*> cells() { return m_cells.span(); }
+    virtual void gather_roots(HashTable<Cell*>&) const = 0;
 
 protected:
     explicit MarkedVectorBase(Heap&);
-
-    MarkedVectorBase(MarkedVectorBase&&);
-    MarkedVectorBase& operator=(MarkedVectorBase&& other)
-    {
-        m_cells = move(other.m_cells);
-        return *this;
-    }
-
     ~MarkedVectorBase();
 
-    Heap& m_heap;
+    MarkedVectorBase& operator=(MarkedVectorBase const&);
 
+    Heap* m_heap { nullptr };
     IntrusiveListNode<MarkedVectorBase> m_list_node;
-    Vector<Cell*> m_cells;
 
 public:
     using List = IntrusiveList<&MarkedVectorBase::m_list_node>;
 };
 
-template<typename T>
-class MarkedVector : public MarkedVectorBase {
+template<typename T, size_t inline_capacity>
+class MarkedVector
+    : public MarkedVectorBase
+    , public Vector<T, inline_capacity> {
+
 public:
     explicit MarkedVector(Heap& heap)
         : MarkedVectorBase(heap)
     {
     }
 
-    ~MarkedVector() = default;
+    virtual ~MarkedVector() = default;
 
-    MarkedVector(MarkedVector&&) = default;
-    MarkedVector& operator=(MarkedVector&&) = default;
+    MarkedVector(MarkedVector const& other)
+        : MarkedVectorBase(*other.m_heap)
+        , Vector<T, inline_capacity>(other)
+    {
+    }
 
-    Span<T*> span() { return Span<T*> { bit_cast<T**>(m_cells.data()), m_cells.size() }; }
+    MarkedVector(MarkedVector&& other)
+        : MarkedVectorBase(*other.m_heap)
+        , Vector<T, inline_capacity>(move(static_cast<Vector<T, inline_capacity>&>(other)))
+    {
+    }
 
-    auto begin() { return span().begin(); }
-    auto begin() const { return span().begin(); }
+    MarkedVector& operator=(MarkedVector const& other)
+    {
+        Vector<T, inline_capacity>::operator=(other);
+        MarkedVectorBase::operator=(other);
+        return *this;
+    }
 
-    auto end() { return span().end(); }
-    auto end() const { return span().end(); }
+    virtual void gather_roots(HashTable<Cell*>& roots) const override
+    {
+        for (auto& value : *this) {
+            if constexpr (IsSame<Value, T>) {
+                if (value.is_cell())
+                    roots.set(&const_cast<T&>(value).as_cell());
+            } else {
+                roots.set(value);
+            }
+        }
+    };
 };
 
 }

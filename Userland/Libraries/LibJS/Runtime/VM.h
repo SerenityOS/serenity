@@ -15,13 +15,13 @@
 #include <AK/StackInfo.h>
 #include <AK/Variant.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/CommonPropertyNames.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/Iterator.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -167,7 +167,7 @@ public:
         return throw_completion<T>(global_object, String::formatted(type.message(), forward<Args>(args)...));
     }
 
-    Value construct(FunctionObject&, FunctionObject& new_target, Optional<MarkedValueList> arguments);
+    Value construct(FunctionObject&, FunctionObject& new_target, Optional<MarkedVector<Value>> arguments);
 
     String join_arguments(size_t start_index = 0) const;
 
@@ -217,7 +217,7 @@ public:
     void enable_default_host_import_module_dynamically_hook();
 
     Function<void(Promise&, Promise::RejectionOperation)> host_promise_rejection_tracker;
-    Function<ThrowCompletionOr<Value>(GlobalObject&, JobCallback&, Value, MarkedValueList)> host_call_job_callback;
+    Function<ThrowCompletionOr<Value>(GlobalObject&, JobCallback&, Value, MarkedVector<Value>)> host_call_job_callback;
     Function<void(FinalizationRegistry&)> host_enqueue_finalization_registry_cleanup_job;
     Function<void(Function<ThrowCompletionOr<Value>()>, Realm*)> host_enqueue_promise_job;
     Function<JobCallback(FunctionObject&)> host_make_job_callback;

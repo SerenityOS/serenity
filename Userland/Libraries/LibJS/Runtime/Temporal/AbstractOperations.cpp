@@ -38,7 +38,7 @@ static Optional<OptionType> to_option_type(Value value)
 }
 
 // 13.1 IterableToListOfType ( items, elementTypes ), https://tc39.es/proposal-temporal/#sec-iterabletolistoftype
-ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject& global_object, Value items, Vector<OptionType> const& element_types)
+ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(GlobalObject& global_object, Value items, Vector<OptionType> const& element_types)
 {
     auto& vm = global_object.vm();
     auto& heap = global_object.heap();
@@ -47,7 +47,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject& global
     auto iterator_record = TRY(get_iterator(global_object, items, IteratorHint::Sync));
 
     // 2. Let values be a new empty List.
-    MarkedValueList values(heap);
+    MarkedVector<Value> values(heap);
 
     // 3. Let next be true.
     auto next = true;

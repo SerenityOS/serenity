@@ -212,10 +212,10 @@ Object* create_iterator_result_object(GlobalObject& global_object, Value value, 
 }
 
 // 7.4.11 IterableToList ( items [ , method ] ), https://tc39.es/ecma262/#sec-iterabletolist
-ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject& global_object, Value iterable, Optional<Value> method)
+ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(GlobalObject& global_object, Value iterable, Optional<Value> method)
 {
     auto& vm = global_object.vm();
-    MarkedValueList values(vm.heap());
+    MarkedVector<Value> values(vm.heap());
 
     (void)TRY(get_iterator_values(
         global_object, iterable, [&](auto value) -> Optional<Completion> {

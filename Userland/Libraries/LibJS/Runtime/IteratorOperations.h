@@ -30,7 +30,7 @@ ThrowCompletionOr<Value> iterator_value(GlobalObject&, Object& iterator_result);
 Completion iterator_close(GlobalObject&, Iterator const&, Completion);
 Completion async_iterator_close(GlobalObject&, Iterator const&, Completion);
 Object* create_iterator_result_object(GlobalObject&, Value, bool done);
-ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject&, Value iterable, Optional<Value> method = {});
+ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(GlobalObject&, Value iterable, Optional<Value> method = {});
 
 using IteratorValueCallback = Function<Optional<Completion>(Value)>;
 Completion get_iterator_values(GlobalObject&, Value iterable, IteratorValueCallback callback, Optional<Value> method = {});

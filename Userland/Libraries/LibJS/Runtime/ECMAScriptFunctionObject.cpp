@@ -136,7 +136,7 @@ ECMAScriptFunctionObject::~ECMAScriptFunctionObject()
 }
 
 // 10.2.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist
-ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argument, MarkedValueList arguments_list)
+ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
 {
     auto& vm = this->vm();
 
@@ -194,7 +194,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 }
 
 // 10.2.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget
-ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedValueList arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();

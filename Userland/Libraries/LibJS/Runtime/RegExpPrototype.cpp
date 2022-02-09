@@ -640,7 +640,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     }
 
     // 9. Let results be a new empty List.
-    MarkedValueList results(vm.heap());
+    MarkedVector<Value> results(vm.heap());
 
     // 10. Let done be false.
     // 11. Repeat, while done is false,
@@ -705,7 +705,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // g. Let n be 1.
 
         // h. Let captures be a new empty List.
-        MarkedValueList captures(vm.heap());
+        MarkedVector<Value> captures(vm.heap());
 
         // i. Repeat, while n ≤ nCaptures,
         for (size_t n = 1; n <= n_captures; ++n) {
@@ -733,7 +733,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // k. If functionalReplace is true, then
         if (replace_value.is_function()) {
             // i. Let replacerArgs be « matched ».
-            MarkedValueList replacer_args(vm.heap());
+            MarkedVector<Value> replacer_args(vm.heap());
             replacer_args.append(js_string(vm, move(matched)));
 
             // ii. Append in List order the elements of captures to the end of the List replacerArgs.

@@ -52,7 +52,7 @@ NativeFunction::~NativeFunction()
 // these good candidates for a bit of code duplication :^)
 
 // 10.3.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-built-in-function-objects-call-thisargument-argumentslist
-ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, MarkedValueList arguments_list)
+ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -117,7 +117,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
 }
 
 // 10.3.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-built-in-function-objects-construct-argumentslist-newtarget
-ThrowCompletionOr<Object*> NativeFunction::internal_construct(MarkedValueList arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<Object*> NativeFunction::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();

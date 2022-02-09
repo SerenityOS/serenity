@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Paul Scharnofske
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,10 @@
 
 #ifndef AC97_DEBUG
 #cmakedefine01 AC97_DEBUG
+#endif
+
+#ifndef AHCI_DEBUG
+#cmakedefine01 AHCI_DEBUG
 #endif
 
 #ifndef ACPI_DEBUG
@@ -74,12 +79,12 @@
 #cmakedefine01 EXT2_DEBUG
 #endif
 
-#ifndef FRAMEBUFFER_DEVICE_DEBUG
-#cmakedefine01 FRAMEBUFFER_DEVICE_DEBUG
-#endif
-
 #ifndef EXT2_VERY_DEBUG
 #cmakedefine01 EXT2_VERY_DEBUG
+#endif
+
+#ifndef FRAMEBUFFER_DEVICE_DEBUG
+#cmakedefine01 FRAMEBUFFER_DEVICE_DEBUG
 #endif
 
 #ifndef FILEDESCRIPTION_DEBUG
@@ -122,12 +127,12 @@
 #cmakedefine01 INTERRUPT_DEBUG
 #endif
 
-#ifndef IOAPIC_DEBUG
-#cmakedefine01 IOAPIC_DEBUG
-#endif
-
 #ifndef IO_DEBUG
 #cmakedefine01 IO_DEBUG
+#endif
+
+#ifndef IOAPIC_DEBUG
+#cmakedefine01 IOAPIC_DEBUG
 #endif
 
 #ifndef ISO9660_DEBUG
@@ -228,10 +233,6 @@
 
 #ifndef PATA_DEBUG
 #cmakedefine01 PATA_DEBUG
-#endif
-
-#ifndef AHCI_DEBUG
-#cmakedefine01 AHCI_DEBUG
 #endif
 
 #ifndef PCI_DEBUG

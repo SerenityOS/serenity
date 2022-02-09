@@ -15,6 +15,7 @@
 #include <AK/TemporaryChange.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/AST.h>
+#include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -25,7 +26,6 @@
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -351,7 +351,7 @@ ThrowCompletionOr<CallExpression::ThisAndCallee> CallExpression::compute_this_an
 }
 
 // 13.3.8.1 Runtime Semantics: ArgumentListEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
-static ThrowCompletionOr<void> argument_list_evaluation(Interpreter& interpreter, GlobalObject& global_object, Vector<CallExpression::Argument> const& arguments, MarkedValueList& list)
+static ThrowCompletionOr<void> argument_list_evaluation(Interpreter& interpreter, GlobalObject& global_object, Vector<CallExpression::Argument> const& arguments, MarkedVector<Value>& list)
 {
     list.ensure_capacity(arguments.size());
 
@@ -383,7 +383,7 @@ Completion NewExpression::execute(Interpreter& interpreter, GlobalObject& global
     // 3. If arguments is empty, let argList be a new empty List.
     // 4. Else,
     //    a. Let argList be ? ArgumentListEvaluation of arguments.
-    MarkedValueList arg_list(vm.heap());
+    MarkedVector<Value> arg_list(vm.heap());
     TRY(argument_list_evaluation(interpreter, global_object, m_arguments, arg_list));
 
     // 5. If IsConstructor(constructor) is false, throw a TypeError exception.
@@ -421,7 +421,7 @@ Completion CallExpression::execute(Interpreter& interpreter, GlobalObject& globa
 
     VERIFY(!callee.is_empty());
 
-    MarkedValueList arg_list(vm.heap());
+    MarkedVector<Value> arg_list(vm.heap());
     TRY(argument_list_evaluation(interpreter, global_object, m_arguments, arg_list));
 
     if (!callee.is_function())
@@ -458,7 +458,7 @@ Completion SuperCall::execute(Interpreter& interpreter, GlobalObject& global_obj
     auto* func = get_super_constructor(interpreter.vm());
 
     // 4. Let argList be ? ArgumentListEvaluation of Arguments.
-    MarkedValueList arg_list(vm.heap());
+    MarkedVector<Value> arg_list(vm.heap());
     TRY(argument_list_evaluation(interpreter, global_object, m_arguments, arg_list));
 
     // 5. If IsConstructor(func) is false, throw a TypeError exception.
@@ -3549,7 +3549,7 @@ Completion TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject
     auto tag = TRY(m_tag->execute(interpreter, global_object)).release_value();
     auto& expressions = m_template_literal->expressions();
     auto* strings = MUST(Array::create(global_object, 0));
-    MarkedValueList arguments(vm.heap());
+    MarkedVector<Value> arguments(vm.heap());
     arguments.append(strings);
     for (size_t i = 0; i < expressions.size(); ++i) {
         auto value = TRY(expressions[i].execute(interpreter, global_object)).release_value();

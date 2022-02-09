@@ -66,9 +66,6 @@ public:
     void did_create_handle(Badge<HandleImpl>, HandleImpl&);
     void did_destroy_handle(Badge<HandleImpl>, HandleImpl&);
 
-    void did_create_marked_value_list(Badge<MarkedValueList>, MarkedValueList&);
-    void did_destroy_marked_value_list(Badge<MarkedValueList>, MarkedValueList&);
-
     void did_create_marked_vector(Badge<MarkedVectorBase>, MarkedVectorBase&);
     void did_destroy_marked_vector(Badge<MarkedVectorBase>, MarkedVectorBase&);
 
@@ -111,10 +108,7 @@ private:
     Vector<NonnullOwnPtr<CellAllocator>> m_allocators;
 
     HandleImpl::List m_handles;
-
     MarkedVectorBase::List m_marked_vectors;
-    MarkedValueList::List m_marked_value_lists;
-
     WeakContainer::List m_weak_containers;
 
     Vector<Cell*> m_uprooted_cells;

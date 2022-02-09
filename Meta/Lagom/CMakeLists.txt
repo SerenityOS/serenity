@@ -304,7 +304,7 @@ if (BUILD_LAGOM)
     )
 
     # ELF
-    # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem 
+    # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
     #        for Lagom on Apple M1
     if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
         file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
@@ -462,7 +462,7 @@ if (BUILD_LAGOM)
     )
 
     # x86
-    # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem 
+    # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
     #        for Lagom on Apple M1
     if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
         file(GLOB LIBX86_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibX86/*.cpp")
@@ -484,7 +484,7 @@ if (BUILD_LAGOM)
         set_target_properties(adjtime_lagom PROPERTIES OUTPUT_NAME adjtime)
         target_link_libraries(adjtime_lagom LagomCore LagomMain)
 
-        # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem 
+        # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
         #        for Lagom on Apple M1
         if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
             add_executable(disasm_lagom ../../Userland/Utilities/disasm.cpp)
@@ -658,6 +658,20 @@ if (BUILD_LAGOM)
                 PASS_REGULAR_EXPRESSION "PASS"
             )
         endforeach()
+
+        # FIXME: When we are using CMake >= 3.21, the library installations can be replaced with RUNTIME_DEPENDENCIES.
+        #        https://cmake.org/cmake/help/latest/command/install.html
+        include(get_linked_lagom_libraries.cmake)
+        get_linked_lagom_libraries(js_lagom js_lagom_libraries)
+
+        install(TARGETS js_lagom ${js_lagom_libraries} COMPONENT js)
+
+        set(CPACK_GENERATOR "TGZ")
+        set(CPACK_STRIP_FILES TRUE)
+        set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+        set(CPACK_COMPONENTS_ALL js)
+        set(CPACK_PACKAGE_FILE_NAME serenity-js)
+        include(CPack)
     endif()
 endif()
 

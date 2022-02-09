@@ -641,8 +641,6 @@ static bool fill_getproto_buffers(const char* line, ssize_t read)
 
 int getaddrinfo(const char* __restrict node, const char* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res)
 {
-    dbgln("getaddrinfo: node={}, service={}, hints->ai_family={}", (const char*)node, (const char*)service, hints ? hints->ai_family : 0);
-
     *res = nullptr;
 
     if (hints && hints->ai_family != AF_INET && hints->ai_family != AF_UNSPEC)

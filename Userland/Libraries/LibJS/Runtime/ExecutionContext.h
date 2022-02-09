@@ -10,8 +10,8 @@
 #include <AK/FlyString.h>
 #include <AK/WeakPtr.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Module.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -45,7 +45,7 @@ struct ExecutionContext {
     }
 
 private:
-    explicit ExecutionContext(MarkedValueList existing_arguments)
+    explicit ExecutionContext(MarkedVector<Value> existing_arguments)
         : arguments(move(existing_arguments))
     {
     }
@@ -61,7 +61,7 @@ public:
     ASTNode const* current_node { nullptr };
     FlyString function_name;
     Value this_value;
-    MarkedValueList arguments;
+    MarkedVector<Value> arguments;
     bool is_strict_mode { false };
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#skip-when-determining-incumbent-counter

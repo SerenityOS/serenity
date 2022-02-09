@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/PluralRulesPrototype.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 
 namespace JS::Intl {
 
@@ -59,7 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
 
     // 5. Let pluralCategories be a List of Strings containing all possible results of PluralRuleSelect for the selected locale pr.[[Locale]].
     // FIXME: Implement this when the data is available in LibUnicode.
-    MarkedValueList plural_categories { vm.heap() };
+    MarkedVector<Value> plural_categories { vm.heap() };
 
     // 6. Perform ! CreateDataProperty(options, "pluralCategories", CreateArrayFromList(pluralCategories)).
     MUST(options->create_data_property_or_throw(vm.names.pluralCategories, Array::create_from(global_object, plural_categories)));

@@ -1,0 +1,8 @@
+[Exposed=Worker]
+interface WorkerNavigator {};
+
+// FIXME: Add these mixins that are used to prevent duplication b/w WorkerNavigator and Navigator
+// WorkerNavigator includes NavigatorID;
+// WorkerNavigator includes NavigatorLanguage;
+// WorkerNavigator includes NavigatorOnLine;
+// WorkerNavigator includes NavigatorConcurrentHardware;

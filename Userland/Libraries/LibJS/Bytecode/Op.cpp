@@ -356,7 +356,7 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
         if (!return_value_or_error.is_error())
             return_value = return_value_or_error.release_value();
     } else {
-        MarkedValueList argument_values { interpreter.vm().heap() };
+        MarkedVector<Value> argument_values { interpreter.vm().heap() };
         for (size_t i = 0; i < m_argument_count; ++i)
             argument_values.append(interpreter.reg(m_arguments[i]));
 

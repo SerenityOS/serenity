@@ -144,15 +144,14 @@ ISODateTime get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
 }
 
 // 11.6.3 GetIANATimeZoneEpochValue ( timeZoneIdentifier, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneepochvalue
-MarkedValueList get_iana_time_zone_epoch_value(GlobalObject& global_object, [[maybe_unused]] StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
+MarkedVector<BigInt*> get_iana_time_zone_epoch_value(GlobalObject& global_object, [[maybe_unused]] StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
     // The abstract operation GetIANATimeZoneEpochValue is an implementation-defined algorithm that returns a List of integers. Each integer in the List represents a number of nanoseconds since the Unix epoch in UTC that may correspond to the given calendar date and wall-clock time in the IANA time zone identified by timeZoneIdentifier.
     // When the input represents a local time repeating multiple times at a negative time zone transition (e.g. when the daylight saving time ends or the time zone offset is decreased due to a time zone rule change), the returned List will have more than one element. When the input represents a skipped local time at a positive time zone transition (e.g. when the daylight saving time starts or the time zone offset is increased due to a time zone rule change), the returned List will be empty. Otherwise, the returned List will have one element.
 
     // FIXME: Implement this properly for non-UTC timezones.
-    // FIXME: MarkedValueList<T> for T != Value would still be nice.
     auto& vm = global_object.vm();
-    auto list = MarkedValueList { vm.heap() };
+    auto list = MarkedVector<BigInt*> { vm.heap() };
     list.append(get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond));
     return list;
 }
@@ -529,10 +528,8 @@ ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(GlobalObject& glob
 }
 
 // 11.6.15 DisambiguatePossibleInstants ( possibleInstants, timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleinstants
-ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_object, Vector<Value> const& possible_instants, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
+ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_object, MarkedVector<Instant*> const& possible_instants, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
 {
-    // TODO: MarkedValueList<T> would be nice, then we could pass a Vector<Instant*> here and wouldn't need the casts...
-
     auto& vm = global_object.vm();
 
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
@@ -543,8 +540,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
     // 3. If n = 1, then
     if (n == 1) {
         // a. Return possibleInstants[0].
-        auto& instant = possible_instants[0];
-        return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
+        return possible_instants[0];
     }
 
     // 4. If n ≠ 0, then
@@ -552,15 +548,13 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
         // a. If disambiguation is "earlier" or "compatible", then
         if (disambiguation.is_one_of("earlier"sv, "compatible"sv)) {
             // i. Return possibleInstants[0].
-            auto& instant = possible_instants[0];
-            return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
+            return possible_instants[0];
         }
 
         // b. If disambiguation is "later", then
         if (disambiguation == "later"sv) {
             // i. Return possibleInstants[n − 1].
-            auto& instant = possible_instants[n - 1];
-            return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
+            return possible_instants[n - 1];
         }
 
         // c. Assert: disambiguation is "reject".
@@ -606,15 +600,14 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
         auto* earlier_date_time = MUST(create_temporal_date_time(global_object, earlier.year, earlier.month, earlier.day, earlier.hour, earlier.minute, earlier.second, earlier.millisecond, earlier.microsecond, earlier.nanosecond, date_time.calendar()));
 
         // c. Set possibleInstants to ? GetPossibleInstantsFor(timeZone, earlierDateTime).
-        auto possible_instants_mvl = TRY(get_possible_instants_for(global_object, time_zone, *earlier_date_time));
+        auto possible_instants_ = TRY(get_possible_instants_for(global_object, time_zone, *earlier_date_time));
 
         // d. If possibleInstants is empty, throw a RangeError exception.
-        if (possible_instants_mvl.is_empty())
+        if (possible_instants_.is_empty())
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsEarlierZero);
 
         // e. Return possibleInstants[0].
-        auto& instant = possible_instants_mvl[0];
-        return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
+        return possible_instants_[0];
     }
 
     // 14. Assert: disambiguation is "compatible" or "later".
@@ -627,22 +620,21 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
     auto* later_date_time = MUST(create_temporal_date_time(global_object, later.year, later.month, later.day, later.hour, later.minute, later.second, later.millisecond, later.microsecond, later.nanosecond, date_time.calendar()));
 
     // 17. Set possibleInstants to ? GetPossibleInstantsFor(timeZone, laterDateTime).
-    auto possible_instants_mvl = TRY(get_possible_instants_for(global_object, time_zone, *later_date_time));
+    auto possible_instants_ = TRY(get_possible_instants_for(global_object, time_zone, *later_date_time));
 
     // 18. Set n to possibleInstants's length.
-    n = possible_instants_mvl.size();
+    n = possible_instants_.size();
 
     // 19. If n = 0, throw a RangeError exception.
     if (n == 0)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsZero);
 
     // 20. Return possibleInstants[n − 1].
-    auto& instant = possible_instants_mvl[n - 1];
-    return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
+    return possible_instants_[n - 1];
 }
 
 // 11.6.16 GetPossibleInstantsFor ( timeZone, dateTime ), https://tc39.es/proposal-temporal/#sec-temporal-getpossibleinstantsfor
-ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject& global_object, Value time_zone, PlainDateTime& date_time)
+ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(GlobalObject& global_object, Value time_zone, PlainDateTime& date_time)
 {
     auto& vm = global_object.vm();
 
@@ -655,7 +647,7 @@ ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject& globa
     auto iterator = TRY(get_iterator(global_object, possible_instants, IteratorHint::Sync));
 
     // 4. Let list be a new empty List.
-    auto list = MarkedValueList { vm.heap() };
+    auto list = MarkedVector<Instant*> { vm.heap() };
 
     // 5. Let next be true.
     Object* next = nullptr;
@@ -680,7 +672,7 @@ ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject& globa
             }
 
             // iii. Append nextValue to the end of the List list.
-            list.append(next_value);
+            list.append(static_cast<Instant*>(&next_value.as_object()));
         }
     } while (next != nullptr);
 

@@ -6,6 +6,7 @@
 
 #include <AK/Function.h>
 #include <AK/StringBuilder.h>
+#include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BoundFunction.h>
@@ -14,7 +15,6 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
@@ -83,7 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
     auto& function = static_cast<FunctionObject&>(*this_object);
     auto this_arg = vm.argument(0);
-    MarkedValueList arguments(vm.heap());
+    MarkedVector<Value> arguments(vm.heap());
     if (vm.argument_count() > 1) {
         for (size_t i = 1; i < vm.argument_count(); ++i)
             arguments.append(vm.argument(i));

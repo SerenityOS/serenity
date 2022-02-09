@@ -53,7 +53,7 @@ static ThrowCompletionOr<Value> run_reaction_job(GlobalObject& global_object, Pr
     // e. Else, let handlerResult be HostCallJobCallback(handler, undefined, « argument »).
     else {
         dbgln_if(PROMISE_DEBUG, "run_reaction_job: Calling handler callback {} @ {} with argument {}", handler.value().callback.cell()->class_name(), handler.value().callback.cell(), argument);
-        MarkedValueList arguments(vm.heap());
+        MarkedVector<Value> arguments(vm.heap());
         arguments.append(argument);
         handler_result = vm.host_call_job_callback(global_object, handler.value(), js_undefined(), move(arguments));
     }
@@ -133,7 +133,7 @@ static ThrowCompletionOr<Value> run_resolve_thenable_job(GlobalObject& global_ob
 
     // b. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
     dbgln_if(PROMISE_DEBUG, "run_resolve_thenable_job: Calling then job callback for thenable {}", &thenable);
-    MarkedValueList arguments(vm.heap());
+    MarkedVector<Value> arguments(vm.heap());
     arguments.append(Value(&resolve_function));
     arguments.append(Value(&reject_function));
     auto then_call_result = vm.host_call_job_callback(global_object, then, thenable, move(arguments));
