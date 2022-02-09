@@ -123,26 +123,24 @@ int sprintf(char* buffer, const char* fmt, ...)
     return ret;
 }
 
-static size_t __vsnprintf_space_remaining;
-ALWAYS_INLINE void sized_buffer_putch(char*& bufptr, char ch)
-{
-    if (__vsnprintf_space_remaining) {
-        *bufptr++ = ch;
-        --__vsnprintf_space_remaining;
-    }
-}
-
 int snprintf(char* buffer, size_t size, const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
+    size_t space_remaining = 0;
     if (size) {
-        __vsnprintf_space_remaining = size - 1;
+        space_remaining = size - 1;
     } else {
-        __vsnprintf_space_remaining = 0;
+        space_remaining = 0;
     }
+    auto sized_buffer_putch = [&](char*& bufptr, char ch) {
+        if (space_remaining) {
+            *bufptr++ = ch;
+            --space_remaining;
+        }
+    };
     int ret = printf_internal(sized_buffer_putch, buffer, fmt, ap);
-    if (__vsnprintf_space_remaining) {
+    if (space_remaining) {
         buffer[ret] = '\0';
     } else if (size > 0) {
         buffer[size - 1] = '\0';
