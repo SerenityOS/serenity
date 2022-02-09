@@ -11,32 +11,31 @@
 
 namespace SQL::AST {
 
-RefPtr<SQLResult> DescribeTable::execute(ExecutionContext& context) const
+Result DescribeTable::execute(ExecutionContext& context) const
 {
     auto schema_name = m_qualified_table_name->schema_name();
     auto table_name = m_qualified_table_name->table_name();
 
-    auto table_def_or_error = context.database->get_table(schema_name, table_name);
-    auto table_def = table_def_or_error.release_value();
+    auto table_def = TRY(context.database->get_table(schema_name, table_name));
     if (!table_def) {
-        if (schema_name.is_null() || schema_name.is_empty())
-            schema_name = "default";
-        return SQLResult::construct(SQLCommand::Describe, SQLErrorCode::TableDoesNotExist, String::formatted("{}.{}", schema_name, table_name));
+        if (schema_name.is_empty())
+            schema_name = "default"sv;
+        return { SQLCommand::Describe, SQLErrorCode::TableDoesNotExist, String::formatted("{}.{}", schema_name, table_name) };
     }
 
-    auto describe_table_def = context.database->get_table("master", "internal_describe_table").value();
-    NonnullRefPtr<TupleDescriptor> descriptor = describe_table_def->to_tuple_descriptor();
+    auto describe_table_def = MUST(context.database->get_table("master"sv, "internal_describe_table"sv));
+    auto descriptor = describe_table_def->to_tuple_descriptor();
 
-    context.result = SQLResult::construct();
+    Result result { SQLCommand::Describe };
 
     for (auto& column : table_def->columns()) {
         Tuple tuple(descriptor);
         tuple[0] = column.name();
         tuple[1] = SQLType_name(column.type());
-        context.result->insert(tuple, Tuple {});
+        result.insert(tuple, Tuple {});
     }
 
-    return context.result;
+    return result;
 }
 
 }

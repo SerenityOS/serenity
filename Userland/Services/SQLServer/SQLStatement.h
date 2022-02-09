@@ -30,15 +30,15 @@ public:
 
 private:
     SQLStatement(DatabaseConnection&, String sql);
-    Optional<SQL::SQLError> parse();
+    Optional<SQL::Result> parse();
     void next();
-    void report_error(SQL::SQLError);
+    void report_error();
 
     int m_statement_id;
     String m_sql;
     size_t m_index { 0 };
     RefPtr<SQL::AST::Statement> m_statement { nullptr };
-    RefPtr<SQL::SQLResult> m_result { nullptr };
+    Optional<SQL::Result> m_result {};
 };
 
 }
