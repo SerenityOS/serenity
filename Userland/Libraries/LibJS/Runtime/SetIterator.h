@@ -33,7 +33,7 @@ private:
     Set& m_set;
     bool m_done { false };
     Object::PropertyKind m_iteration_kind;
-    OrderedHashTable<Value, ValueTraits>::Iterator m_iterator;
+    Map::ConstIterator m_iterator;
 };
 
 }
