@@ -65,7 +65,6 @@ public:
     };
 
     Vector<MatchingRule> collect_matching_rules(DOM::Element const&, CascadeOrigin = CascadeOrigin::Any) const;
-    void sort_matching_rules(Vector<MatchingRule>&) const;
     struct CustomPropertyResolutionTuple {
         Optional<StyleProperty> style {};
         u32 specificity { 0 };
