@@ -117,17 +117,12 @@ ThrowCompletionOr<BoundFunction*> FunctionObject::bind(Value bound_this_value, V
     if (length_property.is_number())
         computed_length = max(0, length_property.as_i32() - static_cast<i32>(arguments.size()));
 
-    Object* constructor_prototype = nullptr;
-    auto prototype_property = TRY(target_function.get(vm.names.prototype));
-    if (prototype_property.is_object())
-        constructor_prototype = &prototype_property.as_object();
-
     Vector<Value> all_bound_arguments;
     if (is<BoundFunction>(*this))
         all_bound_arguments.extend(static_cast<BoundFunction&>(*this).bound_arguments());
     all_bound_arguments.extend(move(arguments));
 
-    return heap().allocate<BoundFunction>(global_object(), global_object(), target_function, bound_this_object, move(all_bound_arguments), computed_length, constructor_prototype);
+    return heap().allocate<BoundFunction>(global_object(), global_object(), target_function, bound_this_object, move(all_bound_arguments), computed_length);
 }
 
 }

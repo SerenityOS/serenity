@@ -14,7 +14,7 @@ class BoundFunction final : public FunctionObject {
     JS_OBJECT(BoundFunction, FunctionObject);
 
 public:
-    BoundFunction(GlobalObject&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments, i32 length, Object* constructor_prototype);
+    BoundFunction(GlobalObject&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments, i32 length);
     virtual void initialize(GlobalObject&) override;
     virtual ~BoundFunction();
 
@@ -36,7 +36,6 @@ private:
     Value m_bound_this;                                  // [[BoundThis]]
     Vector<Value> m_bound_arguments;                     // [[BoundArguments]]
 
-    Object* m_constructor_prototype { nullptr };
     FlyString m_name;
     i32 m_length { 0 };
 };
