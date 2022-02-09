@@ -34,6 +34,7 @@
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/SysFSFirmware.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
+#include <Kernel/Graphics/Console/TextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/APIC.h>
@@ -136,7 +137,7 @@ READONLY_AFTER_INIT u8 multiboot_framebuffer_bpp;
 READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 }
 
-Atomic<Graphics::BootFramebufferConsole*> boot_framebuffer_console;
+Atomic<Graphics::Console*> g_boot_console;
 
 extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 {
@@ -190,9 +191,13 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     CommandLine::initialize();
     Memory::MemoryManager::initialize(0);
 
+    // NOTE: If the bootloader provided a framebuffer, then set up an initial console.
+    // If the bootloader didn't provide a framebuffer, then set up an initial text console.
+    // We do so we can see the output on the screen as soon as possible.
     if (!multiboot_framebuffer_addr.is_null()) {
-        // NOTE: If the bootloader provided a framebuffer, then set up an initial console so we can see the output on the screen as soon as possible!
-        boot_framebuffer_console = &try_make_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
+        g_boot_console = &try_make_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
+    } else {
+        g_boot_console = &Graphics::TextModeConsole::initialize().leak_ref();
     }
     dmesgln("Starting SerenityOS...");
 
