@@ -79,17 +79,14 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
     auto possible_instants = TRY(get_possible_instants_for(global_object, time_zone, *date_time));
 
     // 9. For each element candidate of possibleInstants, do
-    for (auto& candidate_value : possible_instants) {
-        // TODO: As per the comment in disambiguate_possible_instants, having a MarkedValueList<T> would allow us to remove this cast.
-        auto& candidate = static_cast<Instant&>(candidate_value.as_object());
-
+    for (auto* candidate : possible_instants) {
         // a. Let candidateNanoseconds be ? GetOffsetNanosecondsFor(timeZone, candidate).
-        auto candidate_nanoseconds = TRY(get_offset_nanoseconds_for(global_object, time_zone, candidate));
+        auto candidate_nanoseconds = TRY(get_offset_nanoseconds_for(global_object, time_zone, *candidate));
 
         // b. If candidateNanoseconds = offsetNanoseconds, then
         if (candidate_nanoseconds == offset_nanoseconds) {
             // i. Return candidate.[[Nanoseconds]].
-            return &candidate.nanoseconds();
+            return &candidate->nanoseconds();
         }
 
         // c. If matchBehaviour is match minutes, then
@@ -100,7 +97,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
             // ii. If roundedCandidateNanoseconds = offsetNanoseconds, then
             if (rounded_candidate_nanoseconds == offset_nanoseconds) {
                 // 1. Return candidate.[[Nanoseconds]].
-                return &candidate.nanoseconds();
+                return &candidate->nanoseconds();
             }
         }
     }
