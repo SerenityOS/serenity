@@ -31,7 +31,7 @@ public:
     virtual void flush(size_t, size_t, size_t, size_t) override { }
 
     virtual void enable() override { }
-    virtual void disable() override { VERIFY_NOT_REACHED(); }
+    virtual void disable() override { }
 
 private:
     void clear_vga_row(u16 row);
