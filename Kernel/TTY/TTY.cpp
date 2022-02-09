@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -403,7 +404,7 @@ ErrorOr<void> TTY::set_termios(const termios& t)
         StringView name;
     };
 
-    static constexpr FlagDescription unimplemented_iflags[] = {
+    constexpr FlagDescription unimplemented_iflags[] = {
         { IGNBRK, "IGNBRK" },
         { BRKINT, "BRKINT" },
         { IGNPAR, "IGNPAR" },
@@ -424,7 +425,7 @@ ErrorOr<void> TTY::set_termios(const termios& t)
         }
     }
 
-    static constexpr FlagDescription unimplemented_oflags[] = {
+    constexpr FlagDescription unimplemented_oflags[] = {
         { OLCUC, "OLCUC" },
         { ONOCR, "ONOCR" },
         { ONLRET, "ONLRET" },
@@ -443,7 +444,7 @@ ErrorOr<void> TTY::set_termios(const termios& t)
         rc = ENOTIMPL;
     }
 
-    static constexpr FlagDescription unimplemented_cflags[] = {
+    constexpr FlagDescription unimplemented_cflags[] = {
         { CSTOPB, "CSTOPB" },
         { CREAD, "CREAD" },
         { PARENB, "PARENB" },
@@ -458,7 +459,7 @@ ErrorOr<void> TTY::set_termios(const termios& t)
         }
     }
 
-    static constexpr FlagDescription unimplemented_lflags[] = {
+    constexpr FlagDescription unimplemented_lflags[] = {
         { TOSTOP, "TOSTOP" },
         { IEXTEN, "IEXTEN" }
     };

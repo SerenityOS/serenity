@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Nico Weber <thakis@chromium.org>
  * Copyright (c) 2021, Marcin Undak <mcinek@gmail.com>
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -99,7 +100,7 @@ void __stack_chk_fail()
 
 extern "C" void exception_common(TrapFrame const* const trap_frame)
 {
-    static constexpr bool print_stack_frame = true;
+    constexpr bool print_stack_frame = true;
 
     if constexpr (print_stack_frame) {
         auto& uart = Prekernel::UART::the();

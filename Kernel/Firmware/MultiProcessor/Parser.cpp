@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -86,7 +87,7 @@ UNMAP_AFTER_INIT void MultiProcessorParser::parse_configuration_table()
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> MultiProcessorParser::find_floating_pointer()
 {
-    static constexpr auto signature = "_MP_"sv;
+    constexpr auto signature = "_MP_"sv;
     auto ebda_or_error = map_ebda();
     if (!ebda_or_error.is_error()) {
         auto mp_floating_pointer = ebda_or_error.value().find_chunk_starting_with(signature, 16);
