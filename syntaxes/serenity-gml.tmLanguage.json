@@ -77,7 +77,7 @@
 			"end": "$",
 			"beginCaptures": {
 				"1": {
-					"name": "entity.name.attribute.serenity-gml"
+					"name": "variable.attribute.serenity-gml"
 				},
 				"2": {
 					"name": "punctuation.attribute.serenity-gml"
