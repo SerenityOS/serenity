@@ -188,7 +188,11 @@ ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigac
     return {};
 }
 
+<<<<<<< HEAD
 #if defined(__APPLE__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+=======
+#if defined(__APPLE__) || defined(__OpenBSD__) || (__FreeBSD__)
+>>>>>>> 0e546ca24f (LibJS: Implement Function.prototype.bind() according to the spec :^))
 ErrorOr<sig_t> signal(int signal, sig_t handler)
 #else
 ErrorOr<sighandler_t> signal(int signal, sighandler_t handler)
