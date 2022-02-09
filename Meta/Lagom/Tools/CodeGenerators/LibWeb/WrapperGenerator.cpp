@@ -82,9 +82,8 @@ static size_t get_function_length(FunctionType& function)
 }
 
 enum class SequenceStorageType {
-    Vector,          // Used to safely store non-JS values
-    MarkedValueList, // Used to safely store JS::Value
-    MarkedVector,    // Used to safely store anything that inherits JS::Cell, e.g. JS::Object
+    Vector,       // Used to safely store non-JS values
+    MarkedVector, // Used to safely store JS::Value and anything that inherits JS::Cell, e.g. JS::Object
 };
 
 struct CppType {
@@ -954,8 +953,6 @@ static StringView sequence_storage_type_to_cpp_storage_type_name(SequenceStorage
     switch (sequence_storage_type) {
     case SequenceStorageType::Vector:
         return "Vector"sv;
-    case SequenceStorageType::MarkedValueList:
-        return "JS::MarkedValueList"sv;
     case SequenceStorageType::MarkedVector:
         return "JS::MarkedVector"sv;
     default:
@@ -991,7 +988,7 @@ static CppType idl_type_name_to_cpp_type(Type const& type)
         return { .name = "i32", .sequence_storage_type = SequenceStorageType::Vector };
 
     if (type.name == "any")
-        return { .name = "JS::Value", .sequence_storage_type = SequenceStorageType::MarkedValueList };
+        return { .name = "JS::Value", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
     if (type.name == "sequence") {
         auto& parameterized_type = verify_cast<ParameterizedType>(type);
@@ -999,7 +996,7 @@ static CppType idl_type_name_to_cpp_type(Type const& type)
         auto sequence_cpp_type = idl_type_name_to_cpp_type(sequence_type);
         auto storage_type_name = sequence_storage_type_to_cpp_storage_type_name(sequence_cpp_type.sequence_storage_type);
 
-        if (sequence_cpp_type.sequence_storage_type == SequenceStorageType::MarkedValueList || sequence_cpp_type.sequence_storage_type == SequenceStorageType::MarkedVector)
+        if (sequence_cpp_type.sequence_storage_type == SequenceStorageType::MarkedVector)
             return { .name = storage_type_name, .sequence_storage_type = SequenceStorageType::Vector };
 
         return { .name = String::formatted("{}<{}>", storage_type_name, sequence_cpp_type.name), .sequence_storage_type = SequenceStorageType::Vector };
