@@ -11,12 +11,11 @@
 
 namespace JS {
 
-BoundFunction::BoundFunction(GlobalObject& global_object, FunctionObject& bound_target_function, Value bound_this, Vector<Value> bound_arguments, i32 length, Object* constructor_prototype)
+BoundFunction::BoundFunction(GlobalObject& global_object, FunctionObject& bound_target_function, Value bound_this, Vector<Value> bound_arguments, i32 length)
     : FunctionObject(*global_object.function_prototype())
     , m_bound_target_function(&bound_target_function)
     , m_bound_this(bound_this)
     , m_bound_arguments(move(bound_arguments))
-    , m_constructor_prototype(constructor_prototype)
     , m_name(String::formatted("bound {}", bound_target_function.name()))
     , m_length(length)
 {
@@ -88,8 +87,6 @@ void BoundFunction::visit_edges(Visitor& visitor)
     visitor.visit(m_bound_this);
     for (auto argument : m_bound_arguments)
         visitor.visit(argument);
-
-    visitor.visit(m_constructor_prototype);
 }
 
 }
