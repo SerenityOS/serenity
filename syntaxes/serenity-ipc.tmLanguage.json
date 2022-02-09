@@ -225,12 +225,12 @@
 					"end": "(>)",
 					"beginCaptures": {
 						"1": {
-							"name": "punctuation.lt-gt.begin.serenity-ipc"
+							"name": "punctuation.section.angle-brackets.begin.template.call.serenity-ipc"
 						}
 					},
 					"endCaptures": {
 						"1": {
-							"name": "punctuation.lt-gt.end.serenity-ipc"
+							"name": "punctuation.section.angle-brackets.end.template.call.serenity-ipc"
 						}
 					},
 					"patterns": [
