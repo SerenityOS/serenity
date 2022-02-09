@@ -159,7 +159,6 @@ class HandleImpl;
 class Heap;
 class HeapBlock;
 class Interpreter;
-class MarkedValueList;
 class Module;
 class NativeFunction;
 class ObjectEnvironment;
