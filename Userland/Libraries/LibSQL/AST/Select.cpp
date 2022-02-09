@@ -69,8 +69,8 @@ Result Select::execute(ExecutionContext& context) const
         auto old_descriptor_size = descriptor->size();
         descriptor->extend(table_def->to_tuple_descriptor());
 
-        for (auto cartesian_row = rows.first(); cartesian_row.size() == old_descriptor_size; cartesian_row = rows.first()) {
-            rows.remove(0);
+        while (!rows.is_empty() && (rows.first().size() == old_descriptor_size)) {
+            auto cartesian_row = rows.take_first();
             auto table_rows = TRY(context.database->select_all(*table_def));
 
             for (auto& table_row : table_rows) {
