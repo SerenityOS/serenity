@@ -89,7 +89,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, O
     auto fields = TRY(Value(&calendar).get_method(global_object, vm.names.fields));
 
     // 2. Let fieldsArray be ! CreateArrayFromList(fieldNames).
-    auto field_names_values = MarkedValueList { vm.heap() };
+    auto field_names_values = MarkedVector<Value> { vm.heap() };
     for (auto& field_name : field_names)
         field_names_values.append(js_string(vm, field_name));
     Value fields_array = Array::create_from(global_object, field_names_values);

@@ -205,7 +205,7 @@ ThrowCompletionOr<bool> ModuleNamespaceObject::internal_delete(PropertyKey const
 }
 
 // 10.4.6.11 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-ownpropertykeys
-ThrowCompletionOr<MarkedValueList> ModuleNamespaceObject::internal_own_property_keys() const
+ThrowCompletionOr<MarkedVector<Value>> ModuleNamespaceObject::internal_own_property_keys() const
 {
     // 1. Let exports be O.[[Exports]].
 

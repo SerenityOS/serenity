@@ -2218,7 +2218,7 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyKey const&, JS::PropertyDescriptor const&) override;
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const&) override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
-    virtual JS::ThrowCompletionOr<JS::MarkedValueList> internal_own_property_keys() const override;
+    virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
 )~~~");
     }
 
@@ -3053,12 +3053,12 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_prevent_extensions()
 
         // 3.9.6. [[OwnPropertyKeys]], https://webidl.spec.whatwg.org/#legacy-platform-object-ownpropertykeys
         scoped_generator.append(R"~~~(
-JS::ThrowCompletionOr<JS::MarkedValueList> @class_name@::internal_own_property_keys() const
+JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> @class_name@::internal_own_property_keys() const
 {
     auto& vm = this->vm();
 
     // 1. Let keys be a new empty list of ECMAScript String and Symbol values.
-    JS::MarkedValueList keys { heap() };
+    JS::MarkedVector<JS::Value> keys { heap() };
 
 )~~~");
 

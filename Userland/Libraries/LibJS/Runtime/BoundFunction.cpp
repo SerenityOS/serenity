@@ -34,7 +34,7 @@ BoundFunction::~BoundFunction()
 }
 
 // 10.4.1.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-bound-function-exotic-objects-call-thisargument-argumentslist
-ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value this_argument, MarkedValueList arguments_list)
+ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value this_argument, MarkedVector<Value> arguments_list)
 {
     // 1. Let target be F.[[BoundTargetFunction]].
     auto& target = *m_bound_target_function;
@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value thi
     auto& bound_args = m_bound_arguments;
 
     // 4. Let args be the list-concatenation of boundArgs and argumentsList.
-    auto args = MarkedValueList { heap() };
+    auto args = MarkedVector<Value> { heap() };
     args.extend(bound_args);
     args.extend(move(arguments_list));
 
@@ -55,7 +55,7 @@ ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value thi
 }
 
 // 10.4.1.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-bound-function-exotic-objects-construct-argumentslist-newtarget
-ThrowCompletionOr<Object*> BoundFunction::internal_construct(MarkedValueList arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<Object*> BoundFunction::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     // 1. Let target be F.[[BoundTargetFunction]].
     auto& target = *m_bound_target_function;
@@ -67,7 +67,7 @@ ThrowCompletionOr<Object*> BoundFunction::internal_construct(MarkedValueList arg
     auto& bound_args = m_bound_arguments;
 
     // 4. Let args be the list-concatenation of boundArgs and argumentsList.
-    auto args = MarkedValueList { heap() };
+    auto args = MarkedVector<Value> { heap() };
     args.extend(bound_args);
     args.extend(move(arguments_list));
 

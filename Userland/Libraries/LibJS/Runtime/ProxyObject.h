@@ -42,9 +42,9 @@ public:
     virtual ThrowCompletionOr<Value> internal_get(PropertyKey const&, Value receiver) const override;
     virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver) override;
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&) override;
-    virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const override;
-    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedValueList arguments_list) override;
-    virtual ThrowCompletionOr<Object*> internal_construct(MarkedValueList arguments_list, FunctionObject& new_target) override;
+    virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const override;
+    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;
+    virtual ThrowCompletionOr<Object*> internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target) override;
 
 private:
     virtual void visit_edges(Visitor&) override;

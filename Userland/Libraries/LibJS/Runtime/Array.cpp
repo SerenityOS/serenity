@@ -217,7 +217,7 @@ ThrowCompletionOr<bool> Array::internal_delete(PropertyKey const& property_key)
 }
 
 // NON-STANDARD: Used to inject the ephemeral length property's key
-ThrowCompletionOr<MarkedValueList> Array::internal_own_property_keys() const
+ThrowCompletionOr<MarkedVector<Value>> Array::internal_own_property_keys() const
 {
     auto& vm = this->vm();
     auto keys = TRY(Object::internal_own_property_keys());

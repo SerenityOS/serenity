@@ -72,7 +72,7 @@ ThrowCompletionOr<void> FinalizationRegistry::cleanup(Optional<JobCallback> call
             continue;
 
         // b. Remove cell from finalizationRegistry.[[Cells]].
-        MarkedValueList arguments(vm.heap());
+        MarkedVector<Value> arguments(vm.heap());
         arguments.append(it->held_value);
         it.remove(m_records);
 

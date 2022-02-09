@@ -489,7 +489,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
     auto iterator_record = TRY(get_iterator(global_object, fields, IteratorHint::Sync));
 
     // 5. Let fieldNames be a new empty List.
-    auto field_names = MarkedValueList { vm.heap() };
+    auto field_names = MarkedVector<Value> { vm.heap() };
 
     // 6. Let next be true.
     // 7. Repeat, while next is not false,

@@ -76,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
     if (using_iterator) {
         auto values = TRY(iterable_to_list(global_object, source, using_iterator));
 
-        MarkedValueList arguments(vm.heap());
+        MarkedVector<Value> arguments(vm.heap());
         arguments.empend(values.size());
         auto target_object = TRY(typed_array_create(global_object, constructor.as_function(), move(arguments)));
 
@@ -96,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
     auto array_like = MUST(source.to_object(global_object));
     auto length = TRY(length_of_array_like(global_object, *array_like));
 
-    MarkedValueList arguments(vm.heap());
+    MarkedVector<Value> arguments(vm.heap());
     arguments.empend(length);
     auto target_object = TRY(typed_array_create(global_object, constructor.as_function(), move(arguments)));
 
@@ -120,7 +120,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
     auto constructor = vm.this_value(global_object);
     if (!constructor.is_constructor())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
-    MarkedValueList arguments(vm.heap());
+    MarkedVector<Value> arguments(vm.heap());
     arguments.append(Value(length));
     auto new_object = TRY(typed_array_create(global_object, constructor.as_function(), move(arguments)));
     for (size_t k = 0; k < length; ++k) {
