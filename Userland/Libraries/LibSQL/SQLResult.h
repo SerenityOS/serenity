@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <AK/Error.h>
+#include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Vector.h>
 #include <LibCore/Object.h>
@@ -17,6 +19,7 @@
 namespace SQL {
 
 #define ENUMERATE_SQL_COMMANDS(S) \
+    S(Unknown)                    \
     S(Create)                     \
     S(Delete)                     \
     S(Describe)                   \
@@ -160,6 +163,78 @@ private:
     int m_delete_count { 0 };
     bool m_has_results { false };
     ResultSet m_result_set;
+};
+
+class [[nodiscard]] Result {
+public:
+    ALWAYS_INLINE Result(SQLCommand command, size_t update_count = 0, size_t insert_count = 0, size_t delete_count = 0)
+        : m_command(command)
+        , m_update_count(update_count)
+        , m_insert_count(insert_count)
+        , m_delete_count(delete_count)
+    {
+    }
+
+    ALWAYS_INLINE Result(SQLCommand command, SQLErrorCode error)
+        : m_command(command)
+        , m_error(error)
+    {
+    }
+
+    ALWAYS_INLINE Result(SQLCommand command, SQLErrorCode error, String error_message)
+        : m_command(command)
+        , m_error(error)
+        , m_error_message(move(error_message))
+    {
+    }
+
+    ALWAYS_INLINE Result(Error error)
+        : m_error(static_cast<SQLErrorCode>(error.code()))
+        , m_error_message(error.string_literal())
+    {
+    }
+
+    Result(Result&&) = default;
+    Result& operator=(Result&&) = default;
+
+    SQLCommand command() const { return m_command; }
+    SQLErrorCode error() const { return m_error; }
+    String error_string() const;
+
+    void insert(Tuple const& row, Tuple const& sort_key);
+    void limit(size_t offset, size_t limit);
+
+    bool has_results() const { return m_result_set.has_value(); }
+    ResultSet const& results() const { return m_result_set.value(); }
+
+    size_t updated() const { return m_update_count; }
+    size_t inserted() const { return m_insert_count; }
+    size_t deleted() const { return m_delete_count; }
+
+    // These are for compatibility with the TRY() macro in AK.
+    [[nodiscard]] bool is_error() const { return m_error != SQLErrorCode::NoError; }
+    [[nodiscard]] ResultSet release_value() { return m_result_set.release_value(); }
+    Result release_error()
+    {
+        VERIFY(is_error());
+
+        if (m_error_message.has_value())
+            return { m_command, m_error, m_error_message.release_value() };
+        return { m_command, m_error };
+    }
+
+private:
+    AK_MAKE_NONCOPYABLE(Result);
+
+    SQLCommand m_command { SQLCommand::Unknown };
+
+    SQLErrorCode m_error { SQLErrorCode::NoError };
+    Optional<String> m_error_message {};
+
+    Optional<ResultSet> m_result_set {};
+    size_t m_update_count { 0 };
+    size_t m_insert_count { 0 };
+    size_t m_delete_count { 0 };
 };
 
 }

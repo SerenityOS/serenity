@@ -22,6 +22,7 @@ class IndexDef;
 class Key;
 class KeyPartDef;
 class Relation;
+class Result;
 class Row;
 class SchemaDef;
 class SQLResult;
