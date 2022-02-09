@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -514,7 +515,7 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
     Vector<FlatPtr, 32> stack_trace;
 
     auto walk_stack = [&](FlatPtr stack_ptr) -> ErrorOr<void> {
-        static constexpr size_t max_stack_frames = 4096;
+        constexpr size_t max_stack_frames = 4096;
         bool is_walking_userspace_stack = false;
         TRY(stack_trace.try_append(ip));
         size_t count = 1;

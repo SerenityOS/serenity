@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -196,7 +197,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     asm volatile(""
                  : "=m"(*ptr));
 
-    static constexpr FlatPtr iopl_mask = 3u << 12;
+    constexpr FlatPtr iopl_mask = 3u << 12;
 
     FlatPtr flags = regs.flags();
     if ((flags & (iopl_mask)) != 0) {

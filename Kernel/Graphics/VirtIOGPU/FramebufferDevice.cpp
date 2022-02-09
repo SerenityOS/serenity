@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Sahan Fernando <sahan.h.fernando@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -342,7 +343,7 @@ void FramebufferDevice::clear_to_black(Buffer& buffer)
 
 void FramebufferDevice::draw_ntsc_test_pattern(Buffer& buffer)
 {
-    static constexpr u8 colors[12][4] = {
+    constexpr u8 colors[12][4] = {
         { 0xff, 0xff, 0xff, 0xff }, // White
         { 0x00, 0xff, 0xff, 0xff }, // Primary + Composite colors
         { 0xff, 0xff, 0x00, 0xff },

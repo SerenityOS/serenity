@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,8 +58,8 @@ static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, N
     total_arguments_size += sizeof(char*) * (arguments.size() + 1);
     total_environment_size += sizeof(char*) * (environment.size() + 1);
 
-    static constexpr size_t max_arguments_size = Thread::default_userspace_stack_size / 8;
-    static constexpr size_t max_environment_size = Thread::default_userspace_stack_size / 8;
+    constexpr size_t max_arguments_size = Thread::default_userspace_stack_size / 8;
+    constexpr size_t max_environment_size = Thread::default_userspace_stack_size / 8;
 
     if (total_arguments_size > max_arguments_size)
         return false;
