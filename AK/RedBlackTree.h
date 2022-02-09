@@ -131,6 +131,20 @@ protected:
         return candidate;
     }
 
+    static Node* find_smallest_not_below(Node* node, K key)
+    {
+        while (node) {
+            if (node->key >= key && (!node->left_child || node->left_child->key < key))
+                return node;
+
+            if (node->key <= key)
+                node = node->right_child;
+            else
+                node = node->left_child;
+        }
+        return node;
+    }
+
     void insert(Node* node)
     {
         VERIFY(node);
@@ -488,6 +502,14 @@ public:
     ConstIterator find_largest_not_above_iterator(K key) const
     {
         auto node = static_cast<Node*>(BaseTree::find_largest_not_above(this->m_root, key));
+        if (!node)
+            return end();
+        return ConstIterator(node, static_cast<Node*>(BaseTree::predecessor(node)));
+    }
+
+    ConstIterator find_smallest_not_below_iterator(K key) const
+    {
+        auto node = static_cast<Node*>(BaseTree::find_smallest_not_below(this->m_root, key));
         if (!node)
             return end();
         return ConstIterator(node, static_cast<Node*>(BaseTree::predecessor(node)));
