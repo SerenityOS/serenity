@@ -47,7 +47,7 @@ MapPrototype::~MapPrototype()
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::clear)
 {
     auto* map = TRY(typed_this_object(global_object));
-    map->entries().clear();
+    map->map_clear();
     return js_undefined();
 }
 
@@ -55,7 +55,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::clear)
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::delete_)
 {
     auto* map = TRY(typed_this_object(global_object));
-    return Value(map->entries().remove(vm.argument(0)));
+    return Value(map->map_remove(vm.argument(0)));
 }
 
 // 24.1.3.4 Map.prototype.entries ( ), https://tc39.es/ecma262/#sec-map.prototype.entries
@@ -73,7 +73,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::for_each)
     if (!vm.argument(0).is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, vm.argument(0).to_string_without_side_effects());
     auto this_value = vm.this_value(global_object);
-    for (auto& entry : map->entries())
+    for (auto& entry : *map)
         TRY(call(global_object, vm.argument(0).as_function(), vm.argument(1), entry.value, entry.key, this_value));
     return js_undefined();
 }
@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::for_each)
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::get)
 {
     auto* map = TRY(typed_this_object(global_object));
-    auto result = map->entries().get(vm.argument(0));
+    auto result = map->map_get(vm.argument(0));
     if (!result.has_value())
         return js_undefined();
     return result.value();
@@ -92,8 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::get)
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::has)
 {
     auto* map = TRY(typed_this_object(global_object));
-    auto& entries = map->entries();
-    return Value(entries.find(vm.argument(0)) != entries.end());
+    return map->map_has(vm.argument(0));
 }
 
 // 24.1.3.8 Map.prototype.keys ( ), https://tc39.es/ecma262/#sec-map.prototype.keys
@@ -111,7 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::set)
     auto key = vm.argument(0);
     if (key.is_negative_zero())
         key = Value(0);
-    map->entries().set(key, vm.argument(1));
+    map->map_set(key, vm.argument(1));
     return map;
 }
 
@@ -127,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::values)
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::size_getter)
 {
     auto* map = TRY(typed_this_object(global_object));
-    return Value(map->entries().size());
+    return Value(map->map_size());
 }
 
 }

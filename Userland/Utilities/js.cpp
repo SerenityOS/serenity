@@ -358,11 +358,10 @@ static void print_proxy_object(JS::Object const& object, HashTable<JS::Object*>&
 static void print_map(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& map = static_cast<JS::Map const&>(object);
-    auto& entries = map.entries();
     print_type("Map");
     js_out(" {{");
     bool first = true;
-    for (auto& entry : entries) {
+    for (auto& entry : map) {
         print_separator(first);
         print_value(entry.key, seen_objects);
         js_out(" => ");
