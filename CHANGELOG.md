@@ -12,3 +12,8 @@
 ## 0.1.0
 
 - Support for formatting GML files with Serenity's own GML formatter.
+
+## 0.1.1
+
+- Fixed GML formatting behavior. A temporary file is used instead of saving the file in order to avoid formatting loops.
+- Fixes to IPC and GML syntax highlighting mostly aimed at better compatibility with more themes.
