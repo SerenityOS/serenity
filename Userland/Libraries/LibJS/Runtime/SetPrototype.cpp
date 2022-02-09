@@ -52,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)
     auto value = vm.argument(0);
     if (value.is_negative_zero())
         value = Value(0);
-    set->values().set(value, AK::HashSetExistingEntryBehavior::Keep);
+    set->set_add(value);
     return set;
 }
 
@@ -60,7 +60,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::clear)
 {
     auto* set = TRY(typed_this_object(global_object));
-    set->values().clear();
+    set->set_clear();
     return js_undefined();
 }
 
@@ -68,7 +68,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::clear)
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::delete_)
 {
     auto* set = TRY(typed_this_object(global_object));
-    return Value(set->values().remove(vm.argument(0)));
+    return Value(set->set_remove(vm.argument(0)));
 }
 
 // 24.2.3.5 Set.prototype.entries ( ), https://tc39.es/ecma262/#sec-set.prototype.entries
@@ -86,8 +86,8 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
     if (!vm.argument(0).is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, vm.argument(0).to_string_without_side_effects());
     auto this_value = vm.this_value(global_object);
-    for (auto& value : set->values())
-        TRY(call(global_object, vm.argument(0).as_function(), vm.argument(1), value, value, this_value));
+    for (auto& entry : *set)
+        TRY(call(global_object, vm.argument(0).as_function(), vm.argument(1), entry.key, entry.key, this_value));
     return js_undefined();
 }
 
@@ -95,8 +95,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::has)
 {
     auto* set = TRY(typed_this_object(global_object));
-    auto& values = set->values();
-    return Value(values.find(vm.argument(0)) != values.end());
+    return Value(set->set_has(vm.argument(0)));
 }
 
 // 24.2.3.10 Set.prototype.values ( ), https://tc39.es/ecma262/#sec-set.prototype.values
@@ -111,7 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::values)
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::size_getter)
 {
     auto* set = TRY(typed_this_object(global_object));
-    return Value(set->values().size());
+    return Value(set->set_size());
 }
 
 }

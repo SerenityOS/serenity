@@ -14,7 +14,7 @@
 namespace Kernel::Graphics {
 class TextModeConsole final : public VGAConsole {
 public:
-    static NonnullRefPtr<TextModeConsole> initialize(const VGACompatibleAdapter& adapter);
+    static NonnullRefPtr<TextModeConsole> initialize();
     virtual size_t chars_per_line() const override { return width(); };
 
     virtual bool has_hardware_cursor() const override { return true; }
@@ -31,12 +31,12 @@ public:
     virtual void flush(size_t, size_t, size_t, size_t) override { }
 
     virtual void enable() override { }
-    virtual void disable() override { VERIFY_NOT_REACHED(); }
+    virtual void disable() override { }
 
 private:
     void clear_vga_row(u16 row);
 
-    explicit TextModeConsole(const VGACompatibleAdapter&);
+    TextModeConsole();
 
     mutable Spinlock m_vga_lock;
 

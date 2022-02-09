@@ -1,13 +1,17 @@
 /*
  * Copyright (c) 2021, Spencer Dixon <spencercdixon@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Providers.h"
+#include <AK/Error.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
+#include <AK/Try.h>
 #include <LibCore/LockFile.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Event.h>
@@ -17,6 +21,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Palette.h>
+#include <LibMain/Main.h>
 #include <LibThreading/Mutex.h>
 #include <string.h>
 #include <unistd.h>
@@ -186,12 +191,9 @@ private:
 
 static constexpr size_t MAX_SEARCH_RESULTS = 6;
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath cpath unix proc exec thread", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath unix proc exec thread", nullptr));
 
     Core::LockFile lockfile("/tmp/lock/assistant.lock");
 
@@ -205,7 +207,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments);
     auto window = GUI::Window::construct();
     window->set_minimizable(false);
 

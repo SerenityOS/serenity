@@ -19,9 +19,17 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction"));
+    if constexpr (TLS_SSL_KEYLOG_DEBUG)
+        TRY(Core::System::pledge("stdio inet accept unix cpath wpath rpath sendfd recvfd sigaction"));
+    else
+        TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction"));
+
     signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
-    TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd"));
+
+    if constexpr (TLS_SSL_KEYLOG_DEBUG)
+        TRY(Core::System::pledge("stdio inet accept unix cpath wpath rpath sendfd recvfd"));
+    else
+        TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd"));
 
     // Ensure the certificates are read out here.
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
@@ -30,6 +38,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
+    if constexpr (TLS_SSL_KEYLOG_DEBUG)
+        TRY(Core::System::unveil("/home/anon", "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     [[maybe_unused]] auto gemini = make<RequestServer::GeminiProtocol>();

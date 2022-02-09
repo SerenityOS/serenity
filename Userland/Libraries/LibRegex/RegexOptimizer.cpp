@@ -484,7 +484,12 @@ void Optimizer::append_alternation(ByteCode& target, ByteCode&& left, ByteCode&&
         if (left.spans().slice(left_block.start, left_end - left_block.start) != right.spans().slice(right_block.start, right_end - right_block.start))
             break;
 
-        left_skip = left_end;
+        state.instruction_position = 0;
+        while (state.instruction_position < left_end) {
+            auto& opcode = left.get_opcode(state);
+            left_skip = state.instruction_position;
+            state.instruction_position += opcode.size();
+        }
     }
 
     dbgln_if(REGEX_DEBUG, "Skipping {}/{} bytecode entries from {}/{}", left_skip, 0, left.size(), right.size());

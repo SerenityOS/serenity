@@ -20,7 +20,7 @@
 #include <LibC/stdarg.h>
 
 namespace Kernel {
-extern Atomic<Graphics::BootFramebufferConsole*> boot_framebuffer_console;
+extern Atomic<Graphics::Console*> g_boot_console;
 }
 
 static bool serial_debug;
@@ -80,7 +80,7 @@ static void critical_console_out(char ch)
     // especially when we want to avoid any memory allocations...
     if (GraphicsManagement::is_initialized() && GraphicsManagement::the().console()) {
         GraphicsManagement::the().console()->write(ch, true);
-    } else if (auto* boot_console = boot_framebuffer_console.load()) {
+    } else if (auto* boot_console = g_boot_console.load()) {
         boot_console->write(ch, true);
     }
 }
@@ -99,7 +99,7 @@ static void console_out(char ch)
     }
     if (ConsoleManagement::is_initialized()) {
         ConsoleManagement::the().debug_tty()->emit_char(ch);
-    } else if (auto* boot_console = boot_framebuffer_console.load()) {
+    } else if (auto* boot_console = g_boot_console.load()) {
         boot_console->write(ch, true);
     }
 }

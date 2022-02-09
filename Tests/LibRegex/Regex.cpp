@@ -923,6 +923,8 @@ TEST_CASE(optimizer_atomic_groups)
         Tuple { "(a|)"sv, ""sv, true },                   // Ensure that empty alternatives are not outright removed
         Tuple { "a{2,3}|a{5,8}"sv, "abc"sv, false },      // Optimizer should not mess up the instruction stream by ignoring inter-insn dependencies, see #11247.
         Tuple { "^(a{2,3}|a{5,8})$"sv, "aaaa"sv, false }, // Optimizer should not mess up the instruction stream by ignoring inter-insn dependencies, see #11247.
+        // Optimizer should not chop off *half* of an instruction when fusing instructions.
+        Tuple { "cubic-bezier\\(\\s*(-?\\d+\\.?\\d*|-?\\.\\d+)\\s*,\\s*(-?\\d+\\.?\\d*|-?\\.\\d+)\\s*,\\s*(-?\\d+\\.?\\d*|-?\\.\\d+)\\s*,\\s*(-?\\d+\\.?\\d*|-?\\.\\d+)\\s*\\)"sv, "cubic-bezier(.05, 0, 0, 1)"sv, true },
         // ForkReplace shouldn't be applied where it would change the semantics
         Tuple { "(1+)\\1"sv, "11"sv, true },
         Tuple { "(1+)1"sv, "11"sv, true },

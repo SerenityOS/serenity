@@ -205,7 +205,7 @@ void BrowserWindow::build_menus()
     m_view_source_action->set_status_tip("View source code of the current page");
 
     m_inspect_dom_tree_action = GUI::Action::create(
-        "Inspect &DOM Tree", { Mod_None, Key_F12 }, g_icon_bag.tree, [this](auto&) {
+        "Inspect &DOM Tree", { Mod_None, Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::Document);
         },
         this);
@@ -279,7 +279,7 @@ void BrowserWindow::build_menus()
 
     auto& debug_menu = add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
-        "Dump &DOM Tree", g_icon_bag.tree, [this](auto&) {
+        "Dump &DOM Tree", g_icon_bag.dom_tree, [this](auto&) {
             active_tab().m_web_content_view->debug_request("dump-dom-tree");
         },
         this));
@@ -294,7 +294,7 @@ void BrowserWindow::build_menus()
         },
         this));
     debug_menu.add_action(GUI::Action::create(
-        "Dump &Style Sheets", [this](auto&) {
+        "Dump &Style Sheets", g_icon_bag.filetype_css, [this](auto&) {
             active_tab().m_web_content_view->debug_request("dump-style-sheets");
         },
         this));
@@ -306,7 +306,7 @@ void BrowserWindow::build_menus()
         if (tab.on_dump_cookies)
             tab.on_dump_cookies();
     }));
-    debug_menu.add_action(GUI::Action::create("Dump Loc&al Storage", [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Dump Loc&al Storage", g_icon_bag.local_storage, [this](auto&) {
         active_tab().m_web_content_view->debug_request("dump-local-storage");
     }));
     debug_menu.add_separator();

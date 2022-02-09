@@ -38,8 +38,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
     if (map_iterator->done())
         return create_iterator_result_object(global_object, js_undefined(), true);
 
-    auto& map = map_iterator->map();
-    if (map_iterator->m_iterator == map.entries().end()) {
+    if (map_iterator->m_iterator.is_end()) {
         map_iterator->m_done = true;
         return create_iterator_result_object(global_object, js_undefined(), true);
     }
@@ -50,7 +49,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
     ++map_iterator->m_iterator;
     if (iteration_kind == Object::PropertyKind::Key)
         return create_iterator_result_object(global_object, entry.key, false);
-    else if (iteration_kind == Object::PropertyKind::Value)
+    if (iteration_kind == Object::PropertyKind::Value)
         return create_iterator_result_object(global_object, entry.value, false);
 
     return create_iterator_result_object(global_object, Array::create_from(global_object, { entry.key, entry.value }), false);

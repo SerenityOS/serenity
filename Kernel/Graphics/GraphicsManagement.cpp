@@ -23,7 +23,7 @@ namespace Kernel {
 
 static Singleton<GraphicsManagement> s_the;
 
-extern Atomic<Graphics::BootFramebufferConsole*> boot_framebuffer_console;
+extern Atomic<Graphics::Console*> g_boot_console;
 
 GraphicsManagement& GraphicsManagement::the()
 {
@@ -221,7 +221,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     if (!m_console) {
         // If no graphics driver was instantiated and we had a bootloader provided
         // framebuffer console we can simply re-use it.
-        if (auto* boot_console = boot_framebuffer_console.load()) {
+        if (auto* boot_console = g_boot_console.load()) {
             m_console = *boot_console;
             boot_console->unref(); // Drop the leaked reference from Kernel::init()
         }
@@ -247,7 +247,7 @@ void GraphicsManagement::set_console(Graphics::Console& console)
 {
     m_console = console;
 
-    if (auto* boot_console = boot_framebuffer_console.exchange(nullptr)) {
+    if (auto* boot_console = g_boot_console.exchange(nullptr)) {
         // Disable the initial boot framebuffer console permanently
         boot_console->disable();
         // TODO: Even though we swapped the pointer and disabled the console

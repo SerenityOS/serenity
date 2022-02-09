@@ -1815,7 +1815,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by_to_map)
 
         // b. Let entry be the Record { [[Key]]: g.[[Key]], [[Value]]: elements }.
         // c. Append entry as the last element of map.[[MapData]].
-        map->entries().set(group.key.value(), elements);
+        map->map_set(group.key.value(), elements);
     }
 
     // 9. Return map.

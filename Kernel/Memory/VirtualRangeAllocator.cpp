@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -68,7 +69,7 @@ ErrorOr<VirtualRange> VirtualRangeAllocator::try_allocate_randomized(size_t size
     VERIFY((alignment % PAGE_SIZE) == 0);
 
     // FIXME: I'm sure there's a smarter way to do this.
-    static constexpr size_t maximum_randomization_attempts = 1000;
+    constexpr size_t maximum_randomization_attempts = 1000;
     for (size_t i = 0; i < maximum_randomization_attempts; ++i) {
         VirtualAddress random_address { round_up_to_power_of_two(get_fast_random<FlatPtr>() % m_total_range.end().get(), alignment) };
 
