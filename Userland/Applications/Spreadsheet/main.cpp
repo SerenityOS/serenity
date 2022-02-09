@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,8 +9,10 @@
 #include "Spreadsheet.h"
 #include "SpreadsheetWidget.h"
 #include <AK/ScopeGuard.h>
+#include <AK/Try.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>
@@ -19,23 +21,21 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath fattr unix cpath wpath thread", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath fattr unix cpath wpath thread", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments);
 
     const char* filename = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(filename, "File to read from", "file", Core::ArgsParser::Required::No);
 
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (filename) {
         if (!Core::File::exists(filename) || Core::File::is_directory(filename)) {
@@ -44,36 +44,13 @@ int main(int argc, char* argv[])
         }
     }
 
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
+    TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     // For writing temporary files when exporting.
-    if (unveil("/tmp", "crw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(Core::StandardPaths::home_directory().characters(), "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil("/tmp", "crw"));
+    TRY(Core::System::unveil("/etc", "r"));
+    TRY(Core::System::unveil(Core::StandardPaths::home_directory().characters(), "rwc"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-spreadsheet");
     auto window = GUI::Window::construct();
