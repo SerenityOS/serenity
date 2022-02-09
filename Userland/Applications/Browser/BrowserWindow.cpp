@@ -289,7 +289,7 @@ void BrowserWindow::build_menus()
         },
         this));
     debug_menu.add_action(GUI::Action::create(
-        "Dump &Stacking Context Tree", g_icon_bag.layers, [this](auto&) {
+        "Dump S&tacking Context Tree", g_icon_bag.layers, [this](auto&) {
             active_tab().m_web_content_view->debug_request("dump-stacking-context-tree");
         },
         this));
@@ -306,7 +306,7 @@ void BrowserWindow::build_menus()
         if (tab.on_dump_cookies)
             tab.on_dump_cookies();
     }));
-    debug_menu.add_action(GUI::Action::create("Dump &Local Storage", [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Dump Loc&al Storage", [this](auto&) {
         active_tab().m_web_content_view->debug_request("dump-local-storage");
     }));
     debug_menu.add_separator();
@@ -366,7 +366,7 @@ void BrowserWindow::build_menus()
 
     debug_menu.add_separator();
     auto same_origin_policy_action = GUI::Action::create_checkable(
-        "Enable Same &Origin Policy", [this](auto& action) {
+        "Enable Same Origin &Policy", [this](auto& action) {
             active_tab().m_web_content_view->debug_request("same-origin-policy", action.is_checked() ? "on" : "off");
         },
         this);
