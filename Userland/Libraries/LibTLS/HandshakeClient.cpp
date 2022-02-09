@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Hex.h>
 #include <AK/Random.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
@@ -136,6 +137,16 @@ bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
         dbgln("master key:");
         print_buffer(m_context.master_key);
     }
+
+    if constexpr (TLS_SSL_KEYLOG_DEBUG) {
+        auto file = MUST(Core::Stream::File::open("/home/anon/ssl_keylog", Core::Stream::OpenMode::Append | Core::Stream::OpenMode::Write));
+        VERIFY(file->write_or_error("CLIENT_RANDOM "sv.bytes()));
+        VERIFY(file->write_or_error(encode_hex({ m_context.local_random, 32 }).bytes()));
+        VERIFY(file->write_or_error(" "sv.bytes()));
+        VERIFY(file->write_or_error(encode_hex(m_context.master_key).bytes()));
+        VERIFY(file->write_or_error("\n"sv.bytes()));
+    }
+
     expand_key();
     return true;
 }
