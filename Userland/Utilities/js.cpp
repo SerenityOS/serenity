@@ -1347,6 +1347,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
+    StringView evaluate_script;
     Vector<StringView> script_paths;
 
     Core::ArgsParser args_parser;
@@ -1357,10 +1358,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(s_opt_bytecode, "Optimize the bytecode", "optimize-bytecode", 'p');
     args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
-    args_parser.add_option(s_strip_ansi, "Disable ANSI colors", "disable-ansi-colors", 'c');
+    args_parser.add_option(s_strip_ansi, "Disable ANSI colors", "disable-ansi-colors", 'i');
     args_parser.add_option(s_disable_source_location_hints, "Disable source location hints", "disable-source-location-hints", 'h');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
+    args_parser.add_option(evaluate_script, "Evaluate argument as a script", "evaluate", 'c', "script");
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -1393,7 +1395,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // FIXME: Figure out some way to interrupt the interpreter now that vm.exception() is gone.
 
-    if (script_paths.is_empty()) {
+    if (evaluate_script.is_empty() && script_paths.is_empty()) {
         s_print_last_result = true;
         interpreter = JS::Interpreter::create<ReplObject>(*vm);
         ReplConsoleClient console_client(interpreter->global_object().console());
@@ -1615,20 +1617,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             sigint_handler();
         });
 
-        if (script_paths.size() > 1)
-            warnln("Warning: Multiple files supplied, this will concatenate the sources and resolve modules as if it was the first file");
-
         StringBuilder builder;
-        for (auto& path : script_paths) {
-            auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
-            auto file_contents = file->read_all();
-            auto source = StringView { file_contents };
-            builder.append(source);
+        StringView source_name;
+
+        if (evaluate_script.is_empty()) {
+            if (script_paths.size() > 1)
+                warnln("Warning: Multiple files supplied, this will concatenate the sources and resolve modules as if it was the first file");
+
+            for (auto& path : script_paths) {
+                auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
+                auto file_contents = file->read_all();
+                auto source = StringView { file_contents };
+                builder.append(source);
+            }
+
+            source_name = script_paths[0];
+        } else {
+            builder.append(evaluate_script);
+            source_name = "eval"sv;
         }
 
         // We resolve modules as if it is the first file
 
-        if (!parse_and_run(*interpreter, builder.string_view(), script_paths[0]))
+        if (!parse_and_run(*interpreter, builder.string_view(), source_name))
             return 1;
     }
 
