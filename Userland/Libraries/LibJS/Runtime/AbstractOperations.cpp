@@ -44,13 +44,13 @@ ThrowCompletionOr<Value> require_object_coercible(GlobalObject& global_object, V
 }
 
 // 7.3.14 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
-ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, Value function, Value this_value, Optional<MarkedValueList> arguments_list)
+ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, Value function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
 {
     auto& vm = global_object.vm();
 
     // 1. If argumentsList is not present, set argumentsList to a new empty List.
     if (!arguments_list.has_value())
-        arguments_list = MarkedValueList { global_object.heap() };
+        arguments_list = MarkedVector<Value> { global_object.heap() };
 
     // 2. If IsCallable(F) is false, throw a TypeError exception.
     if (!function.is_function())
@@ -60,11 +60,11 @@ ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, Value function, 
     return function.as_function().internal_call(this_value, move(*arguments_list));
 }
 
-ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments_list)
+ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
 {
     // 1. If argumentsList is not present, set argumentsList to a new empty List.
     if (!arguments_list.has_value())
-        arguments_list = MarkedValueList { global_object.heap() };
+        arguments_list = MarkedVector<Value> { global_object.heap() };
 
     // 2. If IsCallable(F) is false, throw a TypeError exception.
     // Note: Called with a FunctionObject ref
@@ -74,7 +74,7 @@ ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, FunctionObject& 
 }
 
 // 7.3.15 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
-ThrowCompletionOr<Object*> construct_impl(GlobalObject& global_object, FunctionObject& function, Optional<MarkedValueList> arguments_list, FunctionObject* new_target)
+ThrowCompletionOr<Object*> construct_impl(GlobalObject& global_object, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target)
 {
     // 1. If newTarget is not present, set newTarget to F.
     if (!new_target)
@@ -82,7 +82,7 @@ ThrowCompletionOr<Object*> construct_impl(GlobalObject& global_object, FunctionO
 
     // 2. If argumentsList is not present, set argumentsList to a new empty List.
     if (!arguments_list.has_value())
-        arguments_list = MarkedValueList { global_object.heap() };
+        arguments_list = MarkedVector<Value> { global_object.heap() };
 
     // 3. Return ? F.[[Construct]](argumentsList, newTarget).
     return function.internal_construct(move(*arguments_list), *new_target);
@@ -97,7 +97,7 @@ ThrowCompletionOr<size_t> length_of_array_like(GlobalObject& global_object, Obje
 }
 
 // 7.3.20 CreateListFromArrayLike ( obj [ , elementTypes ] ), https://tc39.es/ecma262/#sec-createlistfromarraylike
-ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& global_object, Value value, Function<ThrowCompletionOr<void>(Value)> check_value)
+ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(GlobalObject& global_object, Value value, Function<ThrowCompletionOr<void>(Value)> check_value)
 {
     auto& vm = global_object.vm();
     auto& heap = global_object.heap();
@@ -114,7 +114,7 @@ ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& glo
     auto length = TRY(length_of_array_like(global_object, array_like));
 
     // 4. Let list be a new empty List.
-    auto list = MarkedValueList { heap };
+    auto list = MarkedVector<Value> { heap };
 
     // 5. Let index be 0.
     // 6. Repeat, while index < len,

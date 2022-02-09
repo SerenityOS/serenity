@@ -641,7 +641,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property
 }
 
 // 10.5.11 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys
-ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() const
+ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys() const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -692,10 +692,10 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
     // 13. Assert: targetKeys contains no duplicate entries.
 
     // 14. Let targetConfigurableKeys be a new empty List.
-    auto target_configurable_keys = MarkedValueList { heap() };
+    auto target_configurable_keys = MarkedVector<Value> { heap() };
 
     // 15. Let targetNonconfigurableKeys be a new empty List.
-    auto target_nonconfigurable_keys = MarkedValueList { heap() };
+    auto target_nonconfigurable_keys = MarkedVector<Value> { heap() };
 
     // 16. For each element key of targetKeys, do
     for (auto& key : target_keys) {
@@ -723,7 +723,7 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
     }
 
     // 18. Let uncheckedResultKeys be a List whose elements are the elements of trapResult.
-    auto unchecked_result_keys = MarkedValueList { heap() };
+    auto unchecked_result_keys = MarkedVector<Value> { heap() };
     unchecked_result_keys.extend(trap_result);
 
     // 19. For each element key of targetNonconfigurableKeys, do
@@ -763,7 +763,7 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
 }
 
 // 10.5.12 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist
-ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedValueList arguments_list)
+ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -811,7 +811,7 @@ bool ProxyObject::has_constructor() const
 }
 
 // 10.5.13 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget
-ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedValueList arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();

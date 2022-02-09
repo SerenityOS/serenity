@@ -173,12 +173,12 @@ template<typename... Args>
 [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> Value::invoke(GlobalObject& global_object, PropertyKey const& property_key, Args... args)
 {
     if constexpr (sizeof...(Args) > 0) {
-        MarkedValueList arglist { global_object.vm().heap() };
+        MarkedVector<Value> arglist { global_object.vm().heap() };
         (..., arglist.append(move(args)));
         return invoke_internal(global_object, property_key, move(arglist));
     }
 
-    return invoke_internal(global_object, property_key, Optional<MarkedValueList> {});
+    return invoke_internal(global_object, property_key, Optional<MarkedVector<Value>> {});
 }
 
 }

@@ -5,7 +5,7 @@
  */
 
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Runtime/MarkedValueList.h>
+#include <LibJS/Heap/MarkedVector.h>
 
 namespace JS {
 

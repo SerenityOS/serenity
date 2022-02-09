@@ -210,7 +210,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
                     //        just extract its address and resolve to that.
                     Wasm::HostFunction host_function {
                         [&](auto&, auto& arguments) -> Wasm::Result {
-                            JS::MarkedValueList argument_values { vm.heap() };
+                            JS::MarkedVector<JS::Value> argument_values { vm.heap() };
                             for (auto& entry : arguments)
                                 argument_values.append(to_js_value(global_object, entry));
 

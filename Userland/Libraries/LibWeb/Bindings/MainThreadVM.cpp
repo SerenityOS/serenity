@@ -127,7 +127,7 @@ JS::VM& main_thread_vm()
         };
 
         // 8.1.5.3.1 HostCallJobCallback(callback, V, argumentsList), https://html.spec.whatwg.org/multipage/webappapis.html#hostcalljobcallback
-        vm->host_call_job_callback = [](JS::GlobalObject& global_object, JS::JobCallback& callback, JS::Value this_value, JS::MarkedValueList arguments_list) {
+        vm->host_call_job_callback = [](JS::GlobalObject& global_object, JS::JobCallback& callback, JS::Value this_value, JS::MarkedVector<JS::Value> arguments_list) {
             auto& callback_host_defined = verify_cast<WebEngineCustomJobCallbackData>(*callback.custom_data);
 
             // 1. Let incumbent settings be callback.[[HostDefined]].[[IncumbentSettings]]. (NOTE: Not necessary)

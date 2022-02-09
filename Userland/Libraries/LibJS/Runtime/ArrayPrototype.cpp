@@ -864,15 +864,15 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
     return this_object;
 }
 
-static ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject* compare_func, MarkedValueList& arr_to_sort)
+static ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort)
 {
     // FIXME: it would probably be better to switch to insertion sort for small arrays for
     // better performance
     if (arr_to_sort.size() <= 1)
         return {};
 
-    MarkedValueList left(vm.heap());
-    MarkedValueList right(vm.heap());
+    MarkedVector<Value> left(vm.heap());
+    MarkedVector<Value> right(vm.heap());
 
     left.ensure_capacity(arr_to_sort.size() / 2);
     right.ensure_capacity(arr_to_sort.size() / 2 + (arr_to_sort.size() & 1));
@@ -972,7 +972,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
 
     auto length = TRY(length_of_array_like(global_object, *object));
 
-    MarkedValueList items(vm.heap());
+    MarkedVector<Value> items(vm.heap());
     for (size_t k = 0; k < length; ++k) {
         auto k_present = TRY(object->has_property(k));
 
@@ -1689,7 +1689,7 @@ static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& gr
     }
 
     // 2. Let group be the Record { [[Key]]: key, [[Elements]]: « value » }.
-    MarkedValueList new_elements { global_object.heap() };
+    MarkedVector<Value> new_elements { global_object.heap() };
     new_elements.append(value);
 
     // 3. Append group as the last element of groups.
@@ -1714,7 +1714,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by)
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 5. Let groups be a new empty List.
-    OrderedHashMap<PropertyKey, MarkedValueList> groups;
+    OrderedHashMap<PropertyKey, MarkedVector<Value>> groups;
 
     // 4. Let k be 0.
     // 6. Repeat, while k < len
@@ -1781,7 +1781,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by_to_map)
     };
 
     // 5. Let groups be a new empty List.
-    OrderedHashMap<Handle<Value>, MarkedValueList, KeyedGroupTraits> groups;
+    OrderedHashMap<Handle<Value>, MarkedVector<Value>, KeyedGroupTraits> groups;
 
     // 4. Let k be 0.
     // 6. Repeat, while k < len
