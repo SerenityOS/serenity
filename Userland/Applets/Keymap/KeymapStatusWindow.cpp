@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Timur Sultanov <SultanovTS@yandex.ru>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,10 +29,6 @@ KeymapStatusWindow::KeymapStatusWindow()
     auto current_keymap_name = current_keymap.character_map_name();
     m_status_widget->set_tooltip(current_keymap_name);
     m_status_widget->set_text(current_keymap_name.substring(0, 2));
-}
-
-KeymapStatusWindow::~KeymapStatusWindow()
-{
 }
 
 void KeymapStatusWindow::wm_event(GUI::WMEvent& event)

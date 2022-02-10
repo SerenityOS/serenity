@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
  * Copyright (c) 2021, David Isaksson <davidisaksson93@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -134,7 +135,7 @@ private:
     };
 
 public:
-    virtual ~AudioWidget() override { }
+    virtual ~AudioWidget() override = default;
 
     void set_audio_widget_size(bool show_percent)
     {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,9 +16,7 @@ class DesktopStatusWidget : public GUI::Widget {
     C_OBJECT(DesktopStatusWidget);
 
 public:
-    virtual ~DesktopStatusWidget() override
-    {
-    }
+    virtual ~DesktopStatusWidget() override = default;
 
     Gfx::IntRect rect_for_desktop(unsigned row, unsigned col) const
     {
@@ -94,14 +93,12 @@ public:
     unsigned gap() const { return m_gap; }
 
 private:
-    DesktopStatusWidget()
-    {
-    }
+    DesktopStatusWidget() = default;
 
     unsigned m_gap { 1 };
 
-    unsigned m_current_row;
-    unsigned m_current_col;
+    unsigned m_current_row { 0 };
+    unsigned m_current_col { 0 };
 };
 
 DesktopStatusWindow::DesktopStatusWindow()
@@ -112,10 +109,6 @@ DesktopStatusWindow::DesktopStatusWindow()
     set_window_type(GUI::WindowType::Applet);
     set_has_alpha_channel(true);
     m_widget = &set_main_widget<DesktopStatusWidget>();
-}
-
-DesktopStatusWindow::~DesktopStatusWindow()
-{
 }
 
 void DesktopStatusWindow::wm_event(GUI::WMEvent& event)
