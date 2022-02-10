@@ -18,7 +18,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include <unistd.h>
+
+struct termios g_save;
 
 struct TopOption {
     enum class SortBy {
@@ -88,6 +92,55 @@ struct Snapshot {
     u64 total_time_scheduled { 0 };
     u64 total_time_scheduled_kernel { 0 };
 };
+
+static ErrorOr<void> setup_tty()
+{
+    g_save = TRY(Core::System::tcgetattr(STDOUT_FILENO));
+    struct termios raw = g_save;
+    raw.c_lflag &= ~(ECHO | ICANON);
+
+    TRY(Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, raw));
+
+    return {};
+}
+
+static ErrorOr<void> teardown_tty()
+{
+    TRY(Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, g_save));
+
+    return {};
+}
+
+// 	This function waits a certain amount of time (timeout) for user
+// 	keystrokes. Once timeout reach, the control is returned
+// 	to the caller.
+static bool wait_stdin_input(int timeout)
+{
+    timeval tv;
+    fd_set rfds {};
+
+    tv.tv_sec = timeout;
+    tv.tv_usec = 0;
+    FD_ZERO(&rfds);
+    FD_SET(STDIN_FILENO, &rfds);
+    int ready = select(STDIN_FILENO + 1, &rfds, nullptr, nullptr, &tv);
+
+    return ready > 0;
+}
+
+static void handle_stdin_input()
+{
+    char buff[1];
+    read(STDIN_FILENO, buff, sizeof(buff));
+
+    // TODO: implement interactive command here
+    switch (buff[0]) {
+    case ' ':
+        break;
+    default:
+        break;
+    }
+}
 
 static Snapshot get_snapshot()
 {
@@ -189,6 +242,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
     TRY(Core::System::pledge("stdio rpath tty"));
+
+    TRY(setup_tty());
+
     TopOption top_option;
     parse_args(arguments, top_option);
 
@@ -277,6 +333,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         threads.clear_with_capacity();
         prev = move(current);
-        sleep(top_option.delay_time);
+        if (wait_stdin_input(top_option.delay_time)) {
+            handle_stdin_input();
+        }
     }
+
+    TRY(teardown_tty());
 }
