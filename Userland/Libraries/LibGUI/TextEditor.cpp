@@ -652,7 +652,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 if (physical_column < end_of_visual_line) {
                     size_t visual_column = physical_column > start_of_visual_line ? (physical_column - start_of_visual_line) : 0;
                     Gfx::IntRect whitespace_rect {
-                        content_x_for_position({ line_index, visual_column }),
+                        content_x_for_position({ line_index, physical_column }),
                         visual_line_rect.y(),
                         text_width_for_font(visual_line_text.substring_view(visual_column, visual_line_text.length() - visual_column), font()),
                         visual_line_rect.height()
