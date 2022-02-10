@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Timur Sultanov <SultanovTS@yandex.ru>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +18,7 @@ class KeymapStatusWidget : public GUI::Label {
 class KeymapStatusWindow final : public GUI::Window {
     C_OBJECT(KeymapStatusWindow)
 public:
-    virtual ~KeymapStatusWindow() override;
+    virtual ~KeymapStatusWindow() override = default;
 
 private:
     virtual void wm_event(GUI::WMEvent&) override;

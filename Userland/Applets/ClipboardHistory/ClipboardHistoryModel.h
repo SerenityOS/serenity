@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,7 +26,7 @@ public:
         __Count
     };
 
-    virtual ~ClipboardHistoryModel() override;
+    virtual ~ClipboardHistoryModel() override = default;
 
     const GUI::Clipboard::DataAndType& item_at(int index) const { return m_history_items[index]; }
     void remove_item(int index);

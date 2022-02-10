@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,10 +18,6 @@ NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()
 
 ClipboardHistoryModel::ClipboardHistoryModel()
     : m_history_limit(Config::read_i32("ClipboardHistory", "ClipboardHistory", "NumHistoryItems", 20))
-{
-}
-
-ClipboardHistoryModel::~ClipboardHistoryModel()
 {
 }
 
