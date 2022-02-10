@@ -188,6 +188,8 @@ public:
 
     void remap();
 
+    [[nodiscard]] bool is_mapped() const { return m_page_directory != nullptr; }
+
     void clear_to_zero();
 
     [[nodiscard]] bool is_syscall_region() const { return m_syscall_region; }
