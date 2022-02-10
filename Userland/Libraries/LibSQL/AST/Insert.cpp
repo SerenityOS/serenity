@@ -47,10 +47,7 @@ ResultOr<ResultSet> Insert::execute(ExecutionContext& context) const
                 row[column_def.name()] = column_def.default_value();
         }
 
-        auto row_value = row_expr.evaluate(context);
-        if (context.result->is_error())
-            return context.result.release_value();
-
+        auto row_value = TRY(row_expr.evaluate(context));
         VERIFY(row_value.type() == SQLType::Tuple);
         auto values = row_value.to_vector().value();
 
