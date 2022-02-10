@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -539,9 +539,5 @@ void SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     auto& help_menu = window.add_menu("&Help");
     help_menu.add_action(*m_functions_help_action);
     help_menu.add_action(*m_about_action);
-}
-
-SpreadsheetWidget::~SpreadsheetWidget()
-{
 }
 }

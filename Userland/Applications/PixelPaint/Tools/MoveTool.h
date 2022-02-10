@@ -1,19 +1,21 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include "../Layer.h"
 #include "Tool.h"
 
 namespace PixelPaint {
 
 class MoveTool final : public Tool {
 public:
-    MoveTool();
-    virtual ~MoveTool() override;
+    MoveTool() = default;
+    virtual ~MoveTool() override = default;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual void on_mousemove(Layer*, MouseEvent&) override;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,10 +19,6 @@ DesktopSettingsWidget::DesktopSettingsWidget()
 {
     create_frame();
     load_current_settings();
-}
-
-DesktopSettingsWidget::~DesktopSettingsWidget()
-{
 }
 
 void DesktopSettingsWidget::create_frame()

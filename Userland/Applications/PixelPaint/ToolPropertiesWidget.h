@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ben Jilks <benjyjilks@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,7 @@ class ToolPropertiesWidget final : public GUI::Widget {
     C_OBJECT(ToolPropertiesWidget);
 
 public:
-    virtual ~ToolPropertiesWidget() override;
+    virtual ~ToolPropertiesWidget() override = default;
 
     void set_active_tool(Tool*);
 

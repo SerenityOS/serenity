@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -50,10 +51,6 @@ MainWidget::MainWidget(TrackManager& track_manager, AudioPlayerLoop& loop)
     m_knobs_widget = m_keys_and_knobs_container->add<KnobsWidget>(track_manager, *this);
 
     m_roll_widget->set_keys_widget(m_keys_widget);
-}
-
-MainWidget::~MainWidget()
-{
 }
 
 void MainWidget::add_track_actions(GUI::Menu& menu)

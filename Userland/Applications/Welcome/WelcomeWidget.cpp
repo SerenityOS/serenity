@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -78,10 +78,6 @@ WelcomeWidget::WelcomeWidget()
     open_and_parse_readme_file();
     open_and_parse_tips_file();
     set_random_tip();
-}
-
-WelcomeWidget::~WelcomeWidget()
-{
 }
 
 void WelcomeWidget::open_and_parse_tips_file()

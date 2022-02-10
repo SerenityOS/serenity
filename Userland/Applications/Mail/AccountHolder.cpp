@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,10 +10,6 @@
 AccountHolder::AccountHolder()
 {
     m_mailbox_tree_model = MailboxTreeModel::create(*this);
-}
-
-AccountHolder::~AccountHolder()
-{
 }
 
 void AccountHolder::add_account_with_name_and_mailboxes(String name, Vector<IMAP::ListItem> const& mailboxes)

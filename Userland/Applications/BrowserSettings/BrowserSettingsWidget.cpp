@@ -105,10 +105,6 @@ BrowserSettingsWidget::BrowserSettingsWidget()
     m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", default_auto_close_download_windows), GUI::AllowCallback::No);
 }
 
-BrowserSettingsWidget::~BrowserSettingsWidget()
-{
-}
-
 void BrowserSettingsWidget::set_color_scheme(StringView color_scheme)
 {
     bool found_color_scheme = false;

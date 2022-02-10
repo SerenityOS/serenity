@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -108,10 +109,6 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_close_button->on_click = [this](auto) {
         window()->close();
     };
-}
-
-DownloadWidget::~DownloadWidget()
-{
 }
 
 void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)

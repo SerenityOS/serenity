@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@ namespace PixelPaint {
 class BucketTool final : public Tool {
 public:
     BucketTool();
-    virtual ~BucketTool() override;
+    virtual ~BucketTool() override = default;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;

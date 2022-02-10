@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,14 +30,6 @@ static Gfx::IntPoint constrain_line_angle(Gfx::IntPoint const& start_pos, Gfx::I
 
     return { start_pos.x() + (int)(AK::cos(constrained_angle) * line_length),
         start_pos.y() + (int)(AK::sin(constrained_angle) * line_length) };
-}
-
-LineTool::LineTool()
-{
-}
-
-LineTool::~LineTool()
-{
 }
 
 void LineTool::on_mousedown(Layer* layer, MouseEvent& event)

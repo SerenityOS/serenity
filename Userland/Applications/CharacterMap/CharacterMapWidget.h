@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ class CharacterMapWidget final : public GUI::Widget {
     C_OBJECT(CharacterMapWidget);
 
 public:
-    virtual ~CharacterMapWidget() override;
+    virtual ~CharacterMapWidget() override = default;
 
     void initialize_menubar(GUI::Window& window);
 

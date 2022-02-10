@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,8 +14,8 @@ namespace PixelPaint {
 
 class ZoomTool final : public Tool {
 public:
-    ZoomTool();
-    virtual ~ZoomTool() override;
+    ZoomTool() = default;
+    virtual ~ZoomTool() override = default;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;

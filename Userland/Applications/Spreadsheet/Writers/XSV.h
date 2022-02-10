@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -75,7 +75,7 @@ public:
         generate();
     }
 
-    virtual ~XSV() { }
+    virtual ~XSV() = default;
 
     bool has_error() const { return m_error != WriteError::None; }
     WriteError error() const { return m_error; }

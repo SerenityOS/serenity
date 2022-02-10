@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,14 +20,6 @@
 #include <LibGfx/Rect.h>
 
 namespace PixelPaint {
-
-RectangleTool::RectangleTool()
-{
-}
-
-RectangleTool::~RectangleTool()
-{
-}
 
 void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness)
 {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,10 +23,6 @@ ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget()
 
     m_model = GUI::JsonArrayModel::create({}, move(pid_unveil_fields));
     m_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_model)));
-}
-
-ProcessUnveiledPathsWidget::~ProcessUnveiledPathsWidget()
-{
 }
 
 void ProcessUnveiledPathsWidget::set_pid(pid_t pid)

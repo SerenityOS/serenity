@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Felix Rauch <noreply@felixrau.ch>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,9 +26,7 @@ class ColorWidget : public GUI::Frame {
     C_OBJECT(ColorWidget);
 
 public:
-    virtual ~ColorWidget() override
-    {
-    }
+    virtual ~ColorWidget() override = default;
 
     virtual Color color() { return m_color; }
 
@@ -66,7 +65,7 @@ class SelectedColorWidget : public GUI::Frame {
     C_OBJECT(SelectedColorWidget);
 
 public:
-    virtual ~SelectedColorWidget() override { }
+    virtual ~SelectedColorWidget() override = default;
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
@@ -160,10 +159,6 @@ void PaletteWidget::set_image_editor(ImageEditor* editor)
     editor->on_secondary_color_change = [this](Color color) {
         set_secondary_color(color);
     };
-}
-
-PaletteWidget::~PaletteWidget()
-{
 }
 
 void PaletteWidget::set_primary_color(Color color)

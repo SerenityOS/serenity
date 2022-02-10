@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,7 +13,7 @@ class ProcessStateWidget final : public GUI::Widget {
     C_OBJECT(ProcessStateWidget);
 
 public:
-    virtual ~ProcessStateWidget() override;
+    virtual ~ProcessStateWidget() override = default;
 
 private:
     explicit ProcessStateWidget(pid_t);

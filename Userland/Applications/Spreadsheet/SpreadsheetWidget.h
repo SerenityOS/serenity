@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@ class SpreadsheetWidget final : public GUI::Widget {
     C_OBJECT(SpreadsheetWidget);
 
 public:
-    ~SpreadsheetWidget();
+    virtual ~SpreadsheetWidget() override = default;
 
     void save(StringView filename);
     void load_file(Core::File&);

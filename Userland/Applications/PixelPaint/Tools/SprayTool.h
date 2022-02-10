@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,7 @@ namespace PixelPaint {
 class SprayTool final : public Tool {
 public:
     SprayTool();
-    virtual ~SprayTool() override;
+    virtual ~SprayTool() override = default;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual void on_mouseup(Layer*, MouseEvent&) override;

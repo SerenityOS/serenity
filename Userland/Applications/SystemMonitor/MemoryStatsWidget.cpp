@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -56,10 +57,6 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
     m_kmalloc_difference_label = build_widgets_for_label("Difference:");
 
     refresh();
-}
-
-MemoryStatsWidget::~MemoryStatsWidget()
-{
 }
 
 static inline u64 page_count_to_bytes(size_t count)

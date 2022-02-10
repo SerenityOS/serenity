@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -79,10 +79,6 @@ Sheet::Sheet(Workbook& workbook)
             }
         }
     }
-}
-
-Sheet::~Sheet()
-{
 }
 
 JS::Interpreter& Sheet::interpreter() const

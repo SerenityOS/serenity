@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,15 +14,6 @@
 REGISTER_WIDGET(SpaceAnalyzer, TreeMapWidget)
 
 namespace SpaceAnalyzer {
-
-TreeMapWidget::TreeMapWidget()
-    : m_viewpoint(0)
-{
-}
-
-TreeMapWidget::~TreeMapWidget()
-{
-}
 
 static const Color colors[] = {
     Color(253, 231, 37),

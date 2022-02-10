@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -86,7 +87,7 @@ private:
 
 class AccountHolder {
 public:
-    ~AccountHolder();
+    ~AccountHolder() = default;
 
     static NonnullOwnPtr<AccountHolder> create()
     {

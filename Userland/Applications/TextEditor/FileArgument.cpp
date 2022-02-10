@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, ry755 <ryanst755@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,9 +49,4 @@ FileArgument::FileArgument(String file_argument)
         m_filename = groups.at(0).view.to_string();
     }
 }
-
-FileArgument::~FileArgument()
-{
-}
-
 }

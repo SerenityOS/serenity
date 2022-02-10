@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nick Vella <nick@nxk.io>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -67,10 +68,6 @@ RunWindow::RunWindow()
         if (path.has_value())
             m_path_combo_box->set_text(path.value().view());
     };
-}
-
-RunWindow::~RunWindow()
-{
 }
 
 void RunWindow::event(Core::Event& event)

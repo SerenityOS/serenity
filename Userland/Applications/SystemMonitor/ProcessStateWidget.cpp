@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -88,8 +89,4 @@ ProcessStateWidget::ProcessStateWidget(pid_t pid)
     m_table_view->set_model(adopt_ref(*new ProcessStateModel(ProcessModel::the(), pid)));
     m_table_view->column_header().set_visible(false);
     m_table_view->column_header().set_section_size(0, 90);
-}
-
-ProcessStateWidget::~ProcessStateWidget()
-{
 }

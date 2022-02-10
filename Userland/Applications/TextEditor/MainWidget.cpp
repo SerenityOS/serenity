@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -324,10 +325,6 @@ MainWidget::MainWidget()
 
     m_toolbar->add_action(m_editor->undo_action());
     m_toolbar->add_action(m_editor->redo_action());
-}
-
-MainWidget::~MainWidget()
-{
 }
 
 Web::OutOfProcessWebView& MainWidget::ensure_web_view()

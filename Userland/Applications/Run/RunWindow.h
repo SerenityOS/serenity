@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nick Vella <nick@nxk.io>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@
 class RunWindow final : public GUI::Window {
     C_OBJECT(RunWindow)
 public:
-    virtual ~RunWindow() override;
+    virtual ~RunWindow() override = default;
 
     virtual void event(Core::Event&) override;
 

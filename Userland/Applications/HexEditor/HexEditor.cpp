@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,10 +46,6 @@ HexEditor::HexEditor()
         update();
     };
     m_blink_timer->start();
-}
-
-HexEditor::~HexEditor()
-{
 }
 
 void HexEditor::set_readonly(bool readonly)

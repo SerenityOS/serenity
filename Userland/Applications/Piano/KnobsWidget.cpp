@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -101,10 +102,6 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         m_delay_labels.append(m_labels_container->add<GUI::Label>(String::formatted("Delay: {}", parameter.name())));
         m_delay_knobs.append(m_knobs_container->add<ProcessorParameterSlider>(Orientation::Vertical, parameter, parameter_knob_value));
     }
-}
-
-KnobsWidget::~KnobsWidget()
-{
 }
 
 void KnobsWidget::cycle_waveform()

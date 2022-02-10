@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,14 +13,6 @@
 #include <LibGUI/CheckBox.h>
 
 namespace PixelPaint {
-
-PickerTool::PickerTool()
-{
-}
-
-PickerTool::~PickerTool()
-{
-}
 
 void PickerTool::on_mousedown(Layer* layer, MouseEvent& event)
 {

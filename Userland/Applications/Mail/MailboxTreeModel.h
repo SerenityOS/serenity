@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +19,7 @@ public:
         return adopt_ref(*new MailboxTreeModel(account_holder));
     }
 
-    virtual ~MailboxTreeModel() override;
+    virtual ~MailboxTreeModel() override = default;
 
     virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override;
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override;

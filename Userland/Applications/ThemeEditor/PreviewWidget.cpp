@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -98,10 +99,6 @@ PreviewWidget::PreviewWidget(const Gfx::Palette& preview_palette)
 
     m_gallery = add<MiniWidgetGallery>();
     set_greedy_for_hits(true);
-}
-
-PreviewWidget::~PreviewWidget()
-{
 }
 
 void PreviewWidget::load_theme_bitmaps()

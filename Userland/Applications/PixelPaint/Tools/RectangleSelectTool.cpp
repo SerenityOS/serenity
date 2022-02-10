@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,14 +18,6 @@
 #include <LibGUI/ValueSlider.h>
 
 namespace PixelPaint {
-
-RectangleSelectTool::RectangleSelectTool()
-{
-}
-
-RectangleSelectTool::~RectangleSelectTool()
-{
-}
 
 void RectangleSelectTool::on_mousedown(Layer*, MouseEvent& event)
 {

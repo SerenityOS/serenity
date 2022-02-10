@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
  * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,10 +27,6 @@ RollWidget::RollWidget(TrackManager& track_manager)
     set_should_hide_unnecessary_scrollbars(true);
     set_content_size({ 0, roll_height });
     vertical_scrollbar().set_value(roll_height / 2);
-}
-
-RollWidget::~RollWidget()
-{
 }
 
 void RollWidget::paint_event(GUI::PaintEvent& event)

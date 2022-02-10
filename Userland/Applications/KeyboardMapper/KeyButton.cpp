@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
  * Copyright (c) 2021, Rasmus Nylander <RasmusNylander.SerenityOS@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,10 +11,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
-
-KeyButton::~KeyButton()
-{
-}
 
 void KeyButton::paint_event(GUI::PaintEvent& event)
 {

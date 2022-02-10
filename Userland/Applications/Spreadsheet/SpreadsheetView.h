@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +20,7 @@ class CellEditor final : public GUI::TextEditor {
     C_OBJECT(CellEditor);
 
 public:
-    virtual ~CellEditor() { }
+    virtual ~CellEditor() = default;
 
     Function<void(GUI::KeyEvent&)> on_cursor_key_pressed;
 
@@ -89,7 +89,7 @@ class SpreadsheetView final : public GUI::Widget {
     C_OBJECT(SpreadsheetView);
 
 public:
-    ~SpreadsheetView();
+    ~SpreadsheetView() = default;
 
     Sheet* sheet_if_available() { return m_sheet; }
 

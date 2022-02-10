@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,7 +29,7 @@
 class KeymapSelectionDialog final : public GUI::Dialog {
     C_OBJECT(KeymapSelectionDialog)
 public:
-    virtual ~KeymapSelectionDialog() override {};
+    virtual ~KeymapSelectionDialog() override = default;
 
     static String select_keymap(Window* parent_window, Vector<String> const& selected_keymaps)
     {

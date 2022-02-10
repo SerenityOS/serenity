@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +16,7 @@ class DesktopSettingsWidget : public GUI::SettingsWindow::Tab {
     C_OBJECT(DesktopSettingsWidget);
 
 public:
-    virtual ~DesktopSettingsWidget() override;
+    virtual ~DesktopSettingsWidget() override = default;
 
     virtual void apply_settings() override;
 

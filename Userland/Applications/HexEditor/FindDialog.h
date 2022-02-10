@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,7 +29,7 @@ private:
     bool find_all() const { return m_find_all; }
 
     FindDialog();
-    virtual ~FindDialog() override;
+    virtual ~FindDialog() override = default;
 
     RefPtr<GUI::TextEditor> m_text_editor;
     RefPtr<GUI::Button> m_find_button;

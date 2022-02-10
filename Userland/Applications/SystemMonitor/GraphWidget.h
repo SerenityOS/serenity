@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@
 class GraphWidget final : public GUI::Frame {
     C_OBJECT(GraphWidget)
 public:
-    virtual ~GraphWidget() override;
+    virtual ~GraphWidget() override = default;
 
     void set_max(u64 max) { m_max = max; }
     u64 max() const { return m_max; }
@@ -34,7 +35,7 @@ public:
     void set_stack_values(bool stack_values) { m_stack_values = stack_values; }
 
 private:
-    explicit GraphWidget();
+    explicit GraphWidget() = default;
 
     virtual void paint_event(GUI::PaintEvent&) override;
 

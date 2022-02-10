@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021, Undefine <cqundefine@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -93,10 +94,6 @@ MailWidget::MailWidget()
         m_image_context_menu_bitmap = shareable_bitmap;
         m_image_context_menu->popup(screen_position);
     };
-}
-
-MailWidget::~MailWidget()
-{
 }
 
 bool MailWidget::connect_and_login()

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ben Jilks <benjyjilks@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,9 +43,4 @@ void ToolPropertiesWidget::set_active_tool(Tool* tool)
 
     m_tool_widget_stack->set_active_widget(m_active_tool_widget);
 }
-
-ToolPropertiesWidget::~ToolPropertiesWidget()
-{
-}
-
 }
