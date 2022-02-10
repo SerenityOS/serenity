@@ -1105,13 +1105,7 @@ int fclose(FILE* stream)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/rename.html
 int rename(const char* oldpath, const char* newpath)
 {
-    if (!oldpath || !newpath) {
-        errno = EFAULT;
-        return -1;
-    }
-    Syscall::SC_rename_params params { { oldpath, strlen(oldpath) }, { newpath, strlen(newpath) } };
-    int rc = syscall(SC_rename, &params);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return renameat(AT_FDCWD, oldpath, AT_FDCWD, newpath);
 }
 
 void dbgputstr(const char* characters, size_t length)
@@ -1305,6 +1299,22 @@ void __fpurge(FILE* stream)
 {
     ScopedFileLock lock(stream);
     stream->purge();
+}
+
+int renameat(int olddirfd, char const* oldpath, int newdirfd, const char* newpath)
+{
+    if (!oldpath || !newpath) {
+        errno = EFAULT;
+        return -1;
+    }
+    Syscall::SC_rename_params params {
+        olddirfd,
+        { oldpath, strlen(oldpath) },
+        newdirfd,
+        { newpath, strlen(newpath) },
+    };
+    int rc = syscall(SC_rename, &params);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }
 
