@@ -239,11 +239,12 @@ ResultOr<Value> MatchExpression::evaluate(ExecutionContext& context) const
         return Value(invert_expression() ? !result.success : result.success);
     }
     case MatchOperator::Glob:
+        return Result { SQLCommand::Unknown, SQLErrorCode::NotYetImplemented, "GLOB expression is not yet implemented"sv };
     case MatchOperator::Match:
+        return Result { SQLCommand::Unknown, SQLErrorCode::NotYetImplemented, "MATCH expression is not yet implemented"sv };
     default:
         VERIFY_NOT_REACHED();
     }
-    return Value::null();
 }
 
 }
