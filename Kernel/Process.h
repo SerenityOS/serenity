@@ -343,6 +343,7 @@ public:
     ErrorOr<FlatPtr> sys$setuid(UserID);
     ErrorOr<FlatPtr> sys$setgid(GroupID);
     ErrorOr<FlatPtr> sys$setreuid(UserID, UserID);
+    ErrorOr<FlatPtr> sys$setregid(GroupID, GroupID);
     ErrorOr<FlatPtr> sys$setresuid(UserID, UserID, UserID);
     ErrorOr<FlatPtr> sys$setresgid(GroupID, GroupID, GroupID);
     ErrorOr<FlatPtr> sys$alarm(unsigned seconds);

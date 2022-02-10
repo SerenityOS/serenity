@@ -115,6 +115,32 @@ ErrorOr<FlatPtr> Process::sys$setreuid(UserID new_ruid, UserID new_euid)
     return 0;
 }
 
+ErrorOr<FlatPtr> Process::sys$setregid(GroupID new_rgid, GroupID new_egid)
+{
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    TRY(require_promise(Pledge::id));
+
+    if (new_rgid == (gid_t)-1)
+        new_rgid = gid();
+    if (new_egid == (gid_t)-1)
+        new_egid = egid();
+
+    auto ok = [this](GroupID id) { return id == gid() || id == egid() || id == sgid(); };
+    if (!ok(new_rgid) || !ok(new_egid))
+        return EPERM;
+
+    if (new_rgid < (gid_t)-1 || new_egid < (gid_t)-1)
+        return EINVAL;
+
+    if (egid() != new_egid)
+        set_dumpable(false);
+
+    ProtectedDataMutationScope scope { *this };
+    m_protected_values.gid = new_rgid;
+    m_protected_values.egid = new_egid;
+    return 0;
+}
+
 ErrorOr<FlatPtr> Process::sys$setresuid(UserID new_ruid, UserID new_euid, UserID new_suid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
