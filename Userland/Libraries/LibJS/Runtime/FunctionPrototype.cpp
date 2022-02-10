@@ -112,16 +112,25 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 // 20.2.3.3 Function.prototype.call ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.call
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-    auto& function = static_cast<FunctionObject&>(*this_object);
+    // 1. Let func be the this value.
+    auto function_value = vm.this_value(global_object);
+
+    // 2. If IsCallable(func) is false, throw a TypeError exception.
+    if (!function_value.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, function_value.to_string_without_side_effects());
+
+    auto& function = static_cast<FunctionObject&>(function_value.as_object());
+
+    // FIXME: 3. Perform PrepareForTailCall().
+
     auto this_arg = vm.argument(0);
     MarkedVector<Value> arguments(vm.heap());
     if (vm.argument_count() > 1) {
         for (size_t i = 1; i < vm.argument_count(); ++i)
             arguments.append(vm.argument(i));
     }
+
+    // 4. Return ? Call(func, thisArg, args).
     return TRY(JS::call(global_object, function, this_arg, move(arguments)));
 }
 
