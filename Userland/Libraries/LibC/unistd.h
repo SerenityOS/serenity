@@ -92,6 +92,7 @@ int ttyname_r(int fd, char* buffer, size_t);
 off_t lseek(int fd, off_t, int whence);
 int link(char const* oldpath, char const* newpath);
 int unlink(char const* pathname);
+int unlinkat(int dirfd, char const* pathname, int flags);
 int symlink(char const* target, char const* linkpath);
 int rmdir(char const* pathname);
 int dup(int old_fd);
