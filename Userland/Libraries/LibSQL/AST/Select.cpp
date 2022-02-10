@@ -93,9 +93,7 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
         context.current_row = &row;
 
         if (where_clause()) {
-            auto where_result = where_clause()->evaluate(context);
-            if (context.result->is_error())
-                return context.result.release_value();
+            auto where_result = TRY(where_clause()->evaluate(context));
             if (!where_result)
                 continue;
         }
@@ -103,18 +101,14 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
         tuple.clear();
 
         for (auto& col : columns) {
-            auto value = col.expression()->evaluate(context);
-            if (context.result->is_error())
-                return context.result.release_value();
+            auto value = TRY(col.expression()->evaluate(context));
             tuple.append(value);
         }
 
         if (has_ordering) {
             sort_key.clear();
             for (auto& term : m_ordering_term_list) {
-                auto value = term.expression()->evaluate(context);
-                if (context.result->is_error())
-                    return context.result.release_value();
+                auto value = TRY(term.expression()->evaluate(context));
                 sort_key.append(value);
             }
         }
@@ -126,7 +120,7 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
         size_t limit_value = NumericLimits<size_t>::max();
         size_t offset_value = 0;
 
-        auto limit = m_limit_clause->limit_expression()->evaluate(context);
+        auto limit = TRY(m_limit_clause->limit_expression()->evaluate(context));
         if (!limit.is_null()) {
             auto limit_value_maybe = limit.to_u32();
             if (!limit_value_maybe.has_value())
@@ -136,7 +130,7 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
         }
 
         if (m_limit_clause->offset_expression() != nullptr) {
-            auto offset = m_limit_clause->offset_expression()->evaluate(context);
+            auto offset = TRY(m_limit_clause->offset_expression()->evaluate(context));
             if (!offset.is_null()) {
                 auto offset_value_maybe = offset.to_u32();
                 if (!offset_value_maybe.has_value())
