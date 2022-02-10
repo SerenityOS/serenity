@@ -46,15 +46,32 @@ FunctionPrototype::~FunctionPrototype()
 // 20.2.3.1 Function.prototype.apply ( thisArg, argArray ), https://tc39.es/ecma262/#sec-function.prototype.apply
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-    auto& function = static_cast<FunctionObject&>(*this_object);
+    // 1. Let func be the this value.
+    auto function_value = vm.this_value(global_object);
+
+    // 2. If IsCallable(func) is false, throw a TypeError exception.
+    if (!function_value.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, function_value.to_string_without_side_effects());
+
+    auto& function = static_cast<FunctionObject&>(function_value.as_object());
+
     auto this_arg = vm.argument(0);
     auto arg_array = vm.argument(1);
-    if (arg_array.is_nullish())
+
+    // 3. If argArray is undefined or null, then
+    if (arg_array.is_nullish()) {
+        // FIXME: a. Perform PrepareForTailCall().
+
+        // b. Return ? Call(func, thisArg).
         return TRY(JS::call(global_object, function, this_arg));
+    }
+
+    // 4. Let argList be ? CreateListFromArrayLike(argArray).
     auto arguments = TRY(create_list_from_array_like(global_object, arg_array));
+
+    // FIXME: 5. Perform PrepareForTailCall().
+
+    // 6. Return ? Call(func, thisArg, argList).
     return TRY(JS::call(global_object, function, this_arg, move(arguments)));
 }
 
