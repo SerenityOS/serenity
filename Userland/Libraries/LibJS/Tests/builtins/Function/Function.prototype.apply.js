@@ -49,3 +49,19 @@ test("basic functionality", () => {
 
     expect((() => this).apply("foo")).toBe(globalThis);
 });
+
+describe("errors", () => {
+    test("does not accept non-function values", () => {
+        expect(() => {
+            Function.prototype.apply.call("foo");
+        }).toThrowWithMessage(TypeError, "foo is not a function");
+
+        expect(() => {
+            Function.prototype.apply.call(undefined);
+        }).toThrowWithMessage(TypeError, "undefined is not a function");
+
+        expect(() => {
+            Function.prototype.apply.call(null);
+        }).toThrowWithMessage(TypeError, "null is not a function");
+    });
+});
