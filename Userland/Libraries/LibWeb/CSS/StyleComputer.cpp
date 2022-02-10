@@ -81,6 +81,8 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
             if (auto it = m_rule_cache->rules_by_id.find(id); it != m_rule_cache->rules_by_id.end())
                 rules_to_run.extend(it->value);
         }
+        if (auto it = m_rule_cache->rules_by_tag_name.find(element.local_name()); it != m_rule_cache->rules_by_tag_name.end())
+            rules_to_run.extend(it->value);
         rules_to_run.extend(m_rule_cache->other_rules);
 
         Vector<MatchingRule> matching_rules;
@@ -989,6 +991,7 @@ void StyleComputer::build_rule_cache()
 
     size_t num_class_rules = 0;
     size_t num_id_rules = 0;
+    size_t num_tag_name_rules = 0;
 
     Vector<MatchingRule> matching_rules;
     size_t style_sheet_index = 0;
@@ -1013,6 +1016,12 @@ void StyleComputer::build_rule_cache()
                         added_to_bucket = true;
                         break;
                     }
+                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
+                        m_rule_cache->rules_by_tag_name.ensure(simple_selector.value).append(move(matching_rule));
+                        ++num_tag_name_rules;
+                        added_to_bucket = true;
+                        break;
+                    }
                 }
                 if (!added_to_bucket)
                     m_rule_cache->other_rules.append(move(matching_rule));
@@ -1028,8 +1037,9 @@ void StyleComputer::build_rule_cache()
         dbgln("Built rule cache!");
         dbgln("     ID: {}", num_id_rules);
         dbgln("  Class: {}", num_class_rules);
+        dbgln("TagName: {}", num_tag_name_rules);
         dbgln("  Other: {}", m_rule_cache->other_rules.size());
-        dbgln("  Total: {}", num_class_rules + num_id_rules + m_rule_cache->other_rules.size());
+        dbgln("  Total: {}", num_class_rules + num_id_rules + num_tag_name_rules + m_rule_cache->other_rules.size());
     }
 
     m_rule_cache->generation = m_document.style_sheets().generation();

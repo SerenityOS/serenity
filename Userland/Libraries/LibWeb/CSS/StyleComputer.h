@@ -98,6 +98,7 @@ private:
     struct RuleCache {
         HashMap<FlyString, Vector<MatchingRule>> rules_by_id;
         HashMap<FlyString, Vector<MatchingRule>> rules_by_class;
+        HashMap<FlyString, Vector<MatchingRule>> rules_by_tag_name;
         Vector<MatchingRule> other_rules;
         int generation { 0 };
     };
