@@ -550,7 +550,13 @@ int sethostname(const char* hostname, ssize_t size)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/readlink.html
 ssize_t readlink(const char* path, char* buffer, size_t size)
 {
-    Syscall::SC_readlink_params params { { path, strlen(path) }, { buffer, size } };
+    return readlinkat(AT_FDCWD, path, buffer, size);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/readlinkat.html
+ssize_t readlinkat(int fd, const char* path, char* buffer, size_t size)
+{
+    Syscall::SC_readlink_params params { { path, strlen(path) }, { buffer, size }, fd };
     int rc = syscall(SC_readlink, &params);
     // Return the number of bytes placed in the buffer, not the full path size.
     __RETURN_WITH_ERRNO(rc, min((size_t)rc, size), -1);

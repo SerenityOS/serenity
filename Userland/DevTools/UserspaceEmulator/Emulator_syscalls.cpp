@@ -1594,6 +1594,7 @@ int Emulator::virt$readlink(FlatPtr params_addr)
     Syscall::SC_readlink_params host_params;
     host_params.path = { (const char*)path.data(), path.size() };
     host_params.buffer = { (char*)host_buffer.data(), host_buffer.size() };
+    host_params.dirfd = params.dirfd;
     int rc = syscall(SC_readlink, &host_params);
     if (rc < 0)
         return rc;

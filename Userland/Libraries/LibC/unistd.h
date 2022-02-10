@@ -87,6 +87,7 @@ int usleep(useconds_t);
 int gethostname(char*, size_t);
 int sethostname(const char*, ssize_t);
 ssize_t readlink(const char* path, char* buffer, size_t);
+ssize_t readlinkat(int fd, const char* path, char* buffer, size_t);
 char* ttyname(int fd);
 int ttyname_r(int fd, char* buffer, size_t);
 off_t lseek(int fd, off_t, int whence);

@@ -17,7 +17,18 @@ ErrorOr<FlatPtr> Process::sys$readlink(Userspace<const Syscall::SC_readlink_para
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto path = TRY(get_syscall_path_argument(params.path));
-    auto description = TRY(VirtualFileSystem::the().open(path->view(), O_RDONLY | O_NOFOLLOW_NOERROR, 0, current_directory()));
+
+    RefPtr<Custody> base;
+    if (params.dirfd == AT_FDCWD) {
+        base = current_directory();
+    } else {
+        auto base_description = TRY(open_file_description(params.dirfd));
+        if (!base_description->custody())
+            return EINVAL;
+        base = base_description->custody();
+    }
+
+    auto description = TRY(VirtualFileSystem::the().open(path->view(), O_RDONLY | O_NOFOLLOW_NOERROR, 0, *base));
 
     if (!description->metadata().is_symlink())
         return EINVAL;
