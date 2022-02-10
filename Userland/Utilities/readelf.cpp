@@ -102,6 +102,8 @@ static const char* object_section_header_type_to_string(ElfW(Word) type)
         return "GROUP";
     case SHT_SYMTAB_SHNDX:
         return "SYMTAB_SHNDX";
+    case SHT_RELR:
+        return "RELR";
     case SHT_LOOS:
         return "SOOS";
     case SHT_SUNW_dof:
@@ -533,6 +535,16 @@ int main(int argc, char** argv)
                     out(" {}", reloc.symbol().name());
                     outln();
                 });
+            }
+
+            outln();
+
+            size_t relr_count = 0;
+            object->for_each_relr_relocation([&relr_count](auto) { ++relr_count; });
+            if (relr_count != 0) {
+                outln("Relocation section '.relr.dyn' at offset {:#08x} contains {} entries:", object->relr_relocation_section().offset(), object->relr_relocation_section().entry_count());
+                outln("{:>8x} offsets", relr_count);
+                object->for_each_relr_relocation([](auto offset) { outln("{:p}", offset); });
             }
         } else {
             outln("No relocations in this file.");
