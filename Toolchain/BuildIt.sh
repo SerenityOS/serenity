@@ -71,8 +71,8 @@ echo SYSROOT is "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
 
-BINUTILS_VERSION="2.37"
-BINUTILS_MD5SUM="1e55743d73c100b7a0d67ffb32398cdb"
+BINUTILS_VERSION="2.38"
+BINUTILS_MD5SUM="f430dff91bdc8772fcef06ffdc0656ab"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
@@ -251,7 +251,7 @@ pushd "$DIR/Tarballs"
             git init > /dev/null
             git add . > /dev/null
             git commit -am "BASE" > /dev/null
-            git apply "$DIR"/Patches/binutils.patch > /dev/null
+            git am "$DIR"/Patches/binutils.patch > /dev/null
         else
             patch -p1 < "$DIR"/Patches/binutils.patch > /dev/null
         fi
