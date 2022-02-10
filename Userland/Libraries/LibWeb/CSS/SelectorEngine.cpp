@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -11,7 +11,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/AttributeNames.h>
-#include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/HTMLHtmlElement.h>
 
 namespace Web::SelectorEngine {
 
@@ -77,7 +77,7 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Empty:
         return !(element.first_child_of_type<DOM::Element>() || element.first_child_of_type<DOM::Text>());
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
-        return is<HTML::HTMLElement>(element);
+        return is<HTML::HTMLHtmlElement>(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
         for (auto* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
             if (sibling->tag_name() == element.tag_name())
