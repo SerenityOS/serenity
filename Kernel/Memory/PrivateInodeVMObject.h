@@ -23,8 +23,8 @@ public:
 private:
     virtual bool is_private_inode() const override { return true; }
 
-    explicit PrivateInodeVMObject(Inode&, FixedArray<RefPtr<PhysicalPage>>&&);
-    explicit PrivateInodeVMObject(PrivateInodeVMObject const&, FixedArray<RefPtr<PhysicalPage>>&&);
+    explicit PrivateInodeVMObject(Inode&, FixedArray<RefPtr<PhysicalPage>>&&, Bitmap dirty_pages);
+    explicit PrivateInodeVMObject(PrivateInodeVMObject const&, FixedArray<RefPtr<PhysicalPage>>&&, Bitmap dirty_pages);
 
     virtual StringView class_name() const override { return "PrivateInodeVMObject"sv; }
 
