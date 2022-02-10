@@ -11,6 +11,7 @@
 #include <LibCore/Object.h>
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Result.h>
+#include <LibSQL/ResultSet.h>
 #include <SQLServer/DatabaseConnection.h>
 #include <SQLServer/Forward.h>
 
@@ -30,15 +31,16 @@ public:
 
 private:
     SQLStatement(DatabaseConnection&, String sql);
-    Optional<SQL::Result> parse();
+    SQL::ResultOr<void> parse();
+    bool should_send_result_rows() const;
     void next();
-    void report_error();
+    void report_error(SQL::Result);
 
     int m_statement_id;
     String m_sql;
     size_t m_index { 0 };
     RefPtr<SQL::AST::Statement> m_statement { nullptr };
-    Optional<SQL::Result> m_result {};
+    Optional<SQL::ResultSet> m_result {};
 };
 
 }

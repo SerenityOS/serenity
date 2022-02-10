@@ -23,6 +23,7 @@ class Key;
 class KeyPartDef;
 class Relation;
 class Result;
+class ResultSet;
 class Row;
 class SchemaDef;
 class Serializer;

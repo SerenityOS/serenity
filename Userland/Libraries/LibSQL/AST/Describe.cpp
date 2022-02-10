@@ -7,11 +7,12 @@
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Meta.h>
+#include <LibSQL/ResultSet.h>
 #include <LibSQL/Row.h>
 
 namespace SQL::AST {
 
-Result DescribeTable::execute(ExecutionContext& context) const
+ResultOr<ResultSet> DescribeTable::execute(ExecutionContext& context) const
 {
     auto schema_name = m_qualified_table_name->schema_name();
     auto table_name = m_qualified_table_name->table_name();
@@ -20,19 +21,21 @@ Result DescribeTable::execute(ExecutionContext& context) const
     if (!table_def) {
         if (schema_name.is_empty())
             schema_name = "default"sv;
-        return { SQLCommand::Describe, SQLErrorCode::TableDoesNotExist, String::formatted("{}.{}", schema_name, table_name) };
+        return Result { SQLCommand::Describe, SQLErrorCode::TableDoesNotExist, String::formatted("{}.{}", schema_name, table_name) };
     }
 
     auto describe_table_def = MUST(context.database->get_table("master"sv, "internal_describe_table"sv));
     auto descriptor = describe_table_def->to_tuple_descriptor();
 
-    Result result { SQLCommand::Describe };
+    ResultSet result { SQLCommand::Describe };
+    TRY(result.try_ensure_capacity(table_def->columns().size()));
 
     for (auto& column : table_def->columns()) {
         Tuple tuple(descriptor);
         tuple[0] = column.name();
         tuple[1] = SQLType_name(column.type());
-        result.insert(tuple, Tuple {});
+
+        result.insert_row(tuple, Tuple {});
     }
 
     return result;

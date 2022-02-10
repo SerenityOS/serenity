@@ -8,12 +8,11 @@
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Meta.h>
-#include <LibSQL/ResultSet.h>
 #include <LibSQL/Row.h>
 
 namespace SQL::AST {
 
-Result Select::execute(ExecutionContext& context) const
+ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
 {
     NonnullRefPtrVector<ResultColumn> columns;
 
@@ -22,11 +21,11 @@ Result Select::execute(ExecutionContext& context) const
 
     for (auto& table_descriptor : table_or_subquery_list()) {
         if (!table_descriptor.is_table())
-            return { SQLCommand::Select, SQLErrorCode::NotYetImplemented, "Sub-selects are not yet implemented"sv };
+            return Result { SQLCommand::Select, SQLErrorCode::NotYetImplemented, "Sub-selects are not yet implemented"sv };
 
         auto table_def = TRY(context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name()));
         if (!table_def)
-            return { SQLCommand::Select, SQLErrorCode::TableDoesNotExist, table_descriptor.table_name() };
+            return Result { SQLCommand::Select, SQLErrorCode::TableDoesNotExist, table_descriptor.table_name() };
 
         if (result_column_list.size() == 1 && result_column_list[0].type() == ResultType::All) {
             for (auto& col : table_def->columns()) {
@@ -42,7 +41,7 @@ Result Select::execute(ExecutionContext& context) const
         for (auto& col : result_column_list) {
             if (col.type() == ResultType::All) {
                 // FIXME can have '*' for example in conjunction with computed columns
-                return { SQLCommand::Select, SQLErrorCode::SyntaxError, "*"sv };
+                return Result { SQLCommand::Select, SQLErrorCode::SyntaxError, "*"sv };
             }
 
             columns.append(col);
@@ -50,6 +49,7 @@ Result Select::execute(ExecutionContext& context) const
     }
 
     context.result = Result { SQLCommand::Select };
+    ResultSet result { SQLCommand::Select };
 
     auto descriptor = adopt_ref(*new TupleDescriptor);
     Tuple tuple(descriptor);
@@ -60,7 +60,7 @@ Result Select::execute(ExecutionContext& context) const
 
     for (auto& table_descriptor : table_or_subquery_list()) {
         if (!table_descriptor.is_table())
-            return { SQLCommand::Select, SQLErrorCode::NotYetImplemented, "Sub-selects are not yet implemented"sv };
+            return Result { SQLCommand::Select, SQLErrorCode::NotYetImplemented, "Sub-selects are not yet implemented"sv };
 
         auto table_def = TRY(context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name()));
         if (table_def->num_columns() == 0)
@@ -119,7 +119,7 @@ Result Select::execute(ExecutionContext& context) const
             }
         }
 
-        context.result->insert(tuple, sort_key);
+        result.insert_row(tuple, sort_key);
     }
 
     if (m_limit_clause != nullptr) {
@@ -130,7 +130,7 @@ Result Select::execute(ExecutionContext& context) const
         if (!limit.is_null()) {
             auto limit_value_maybe = limit.to_u32();
             if (!limit_value_maybe.has_value())
-                return { SQLCommand::Select, SQLErrorCode::SyntaxError, "LIMIT clause must evaluate to an integer value"sv };
+                return Result { SQLCommand::Select, SQLErrorCode::SyntaxError, "LIMIT clause must evaluate to an integer value"sv };
 
             limit_value = limit_value_maybe.value();
         }
@@ -140,16 +140,16 @@ Result Select::execute(ExecutionContext& context) const
             if (!offset.is_null()) {
                 auto offset_value_maybe = offset.to_u32();
                 if (!offset_value_maybe.has_value())
-                    return { SQLCommand::Select, SQLErrorCode::SyntaxError, "OFFSET clause must evaluate to an integer value"sv };
+                    return Result { SQLCommand::Select, SQLErrorCode::SyntaxError, "OFFSET clause must evaluate to an integer value"sv };
 
                 offset_value = offset_value_maybe.value();
             }
         }
 
-        context.result->limit(offset_value, limit_value);
+        result.limit(offset_value, limit_value);
     }
 
-    return context.result.release_value();
+    return result;
 }
 
 }
