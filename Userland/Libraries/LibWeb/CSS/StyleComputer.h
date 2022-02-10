@@ -66,6 +66,8 @@ public:
 
     Vector<MatchingRule> collect_matching_rules(DOM::Element const&, CascadeOrigin = CascadeOrigin::Any) const;
 
+    void invalidate_rule_cache();
+
 private:
     void compute_cascaded_values(StyleProperties&, DOM::Element&) const;
     void compute_font(StyleProperties&, DOM::Element const*) const;
@@ -88,7 +90,17 @@ private:
 
     void cascade_declarations(StyleProperties&, DOM::Element&, Vector<MatchingRule> const&, CascadeOrigin, bool important, HashMap<String, StyleProperty const*> const&) const;
 
+    void build_rule_cache();
+    void build_rule_cache_if_needed() const;
+
     DOM::Document& m_document;
+
+    struct RuleCache {
+        HashMap<FlyString, Vector<MatchingRule>> rules_by_class;
+        Vector<MatchingRule> other_rules;
+        int generation { 0 };
+    };
+    OwnPtr<RuleCache> m_rule_cache;
 };
 
 }

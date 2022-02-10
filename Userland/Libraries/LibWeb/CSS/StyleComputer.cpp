@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
 #include <LibGfx/Font.h>
@@ -70,8 +71,24 @@ void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback c
 
 Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin cascade_origin) const
 {
-    Vector<MatchingRule> matching_rules;
+    if (cascade_origin == CascadeOrigin::Author) {
+        Vector<MatchingRule> rules_to_run;
+        for (auto const& class_name : element.class_names()) {
+            if (auto it = m_rule_cache->rules_by_class.find(class_name); it != m_rule_cache->rules_by_class.end())
+                rules_to_run.extend(it->value);
+        }
+        rules_to_run.extend(m_rule_cache->other_rules);
 
+        Vector<MatchingRule> matching_rules;
+        for (auto const& rule_to_run : rules_to_run) {
+            auto const& selector = rule_to_run.rule->selectors()[rule_to_run.selector_index];
+            if (SelectorEngine::matches(selector, element))
+                matching_rules.append(rule_to_run);
+        }
+        return matching_rules;
+    }
+
+    Vector<MatchingRule> matching_rules;
     size_t style_sheet_index = 0;
     for_each_stylesheet(cascade_origin, [&](auto& sheet) {
         size_t rule_index = 0;
@@ -902,6 +919,8 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
 
 NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& element) const
 {
+    build_rule_cache_if_needed();
+
     auto style = StyleProperties::create();
     // 1. Perform the cascade. This produces the "specified style"
     compute_cascaded_values(style, element);
@@ -950,4 +969,63 @@ bool PropertyDependencyNode::has_cycles()
     }
     return false;
 }
+
+void StyleComputer::build_rule_cache_if_needed() const
+{
+    if (m_rule_cache && m_rule_cache->generation == m_document.style_sheets().generation())
+        return;
+    const_cast<StyleComputer&>(*this).build_rule_cache();
+}
+
+void StyleComputer::build_rule_cache()
+{
+    // FIXME: Make a rule cache for UA style as well.
+
+    m_rule_cache = make<RuleCache>();
+
+    size_t num_class_rules = 0;
+
+    Vector<MatchingRule> matching_rules;
+    size_t style_sheet_index = 0;
+    for_each_stylesheet(CascadeOrigin::Author, [&](auto& sheet) {
+        size_t rule_index = 0;
+        static_cast<CSSStyleSheet const&>(sheet).for_each_effective_style_rule([&](auto const& rule) {
+            size_t selector_index = 0;
+            for (CSS::Selector const& selector : rule.selectors()) {
+                MatchingRule matching_rule { rule, style_sheet_index, rule_index, selector_index, selector.specificity() };
+
+                bool added_to_bucket = false;
+                for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
+                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Class) {
+                        m_rule_cache->rules_by_class.ensure(simple_selector.value).append(move(matching_rule));
+                        ++num_class_rules;
+                        added_to_bucket = true;
+                        break;
+                    }
+                }
+                if (!added_to_bucket)
+                    m_rule_cache->other_rules.append(move(matching_rule));
+
+                ++selector_index;
+            }
+            ++rule_index;
+        });
+        ++style_sheet_index;
+    });
+
+    if constexpr (LIBWEB_CSS_DEBUG) {
+        dbgln("Built rule cache!");
+        dbgln("  Class: {}", num_class_rules);
+        dbgln("  Other: {}", m_rule_cache->other_rules.size());
+        dbgln("  Total: {}", num_class_rules + m_rule_cache->other_rules.size());
+    }
+
+    m_rule_cache->generation = m_document.style_sheets().generation();
+}
+
+void StyleComputer::invalidate_rule_cache()
+{
+    m_rule_cache = nullptr;
+}
+
 }

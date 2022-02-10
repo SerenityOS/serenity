@@ -42,11 +42,16 @@ public:
 
     bool is_supported_property_index(u32) const;
 
+    int generation() const { return m_generation; }
+    void bump_generation() { ++m_generation; }
+
 private:
     explicit StyleSheetList(DOM::Document&);
 
     DOM::Document& m_document;
     NonnullRefPtrVector<CSSStyleSheet> m_sheets;
+
+    int m_generation { 0 };
 };
 
 }
