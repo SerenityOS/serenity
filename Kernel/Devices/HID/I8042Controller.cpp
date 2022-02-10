@@ -31,8 +31,30 @@ UNMAP_AFTER_INIT I8042Controller::I8042Controller()
 {
 }
 
+UNMAP_AFTER_INIT bool I8042Controller::check_existence()
+{
+    {
+        SpinlockLocker lock(m_lock);
+        // Note: Perform controller self-test before touching the controller
+        // Try to probe the controller for 5 times and give up if nothing
+        // responded.
+        for (int attempt = 0; attempt < 5; attempt++) {
+            do_write(I8042Port::Command, I8042Command::TestPS2Controller);
+            if (do_read(I8042Port::Buffer) == I8042Response::ControllerTestPassed)
+                return true;
+            // Note: Wait 50 microseconds in case the controller couldn't respond
+            IO::delay(50);
+        }
+        dbgln("I8042: Trying to probe for existence of controller failed");
+        return false;
+    }
+}
+
 UNMAP_AFTER_INIT void I8042Controller::detect_devices()
 {
+    if (!check_existence())
+        return;
+
     u8 configuration;
     {
         SpinlockLocker lock(m_lock);
@@ -253,6 +275,18 @@ void I8042Controller::prepare_for_output()
         if (!(status & I8042StatusFlag::InputBuffer))
             return;
     }
+}
+
+UNMAP_AFTER_INIT void I8042Controller::do_write(u8 port, u8 data)
+{
+    VERIFY(m_lock.is_locked());
+    IO::out8(port, data);
+}
+
+UNMAP_AFTER_INIT u8 I8042Controller::do_read(u8 port)
+{
+    VERIFY(m_lock.is_locked());
+    return IO::in8(port);
 }
 
 void I8042Controller::do_wait_then_write(u8 port, u8 data)
