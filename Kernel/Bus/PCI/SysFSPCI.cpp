@@ -32,6 +32,13 @@ UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(NonnullOwnPtr<
     m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::PROG_IF, 1));
     m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::SUBSYSTEM_VENDOR_ID, 2));
     m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::SUBSYSTEM_ID, 2));
+
+    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR0, 4));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR1, 4));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR2, 4));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR3, 4));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR4, 4));
+    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR5, 4));
 }
 
 UNMAP_AFTER_INIT void PCIBusSysFSDirectory::initialize()
@@ -68,6 +75,18 @@ StringView PCIDeviceAttributeSysFSComponent::name() const
         return "subsystem_vendor"sv;
     case PCI::RegisterOffset::SUBSYSTEM_ID:
         return "subsystem_id"sv;
+    case PCI::RegisterOffset::BAR0:
+        return "bar0"sv;
+    case PCI::RegisterOffset::BAR1:
+        return "bar1"sv;
+    case PCI::RegisterOffset::BAR2:
+        return "bar2"sv;
+    case PCI::RegisterOffset::BAR3:
+        return "bar3"sv;
+    case PCI::RegisterOffset::BAR4:
+        return "bar4"sv;
+    case PCI::RegisterOffset::BAR5:
+        return "bar5"sv;
     default:
         VERIFY_NOT_REACHED();
     }
