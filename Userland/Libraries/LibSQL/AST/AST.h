@@ -299,7 +299,6 @@ private:
 
 struct ExecutionContext {
     NonnullRefPtr<Database> database;
-    Optional<Result> result;
     class Statement const* statement;
     Tuple* current_row { nullptr };
 };
