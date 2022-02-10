@@ -8,6 +8,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceAttribute.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceExpansionROM.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -34,6 +35,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirect
         list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::BAR3, 4));
         list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::BAR4, 4));
         list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::BAR5, 4));
+        list.append(PCIDeviceExpansionROMSysFSComponent::create(*directory));
         return {};
     }));
     return directory;

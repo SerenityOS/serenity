@@ -232,6 +232,19 @@ size_t get_BAR_space_size(DeviceIdentifier const& identifier, HeaderType0BaseReg
     return space_size;
 }
 
+size_t get_expansion_rom_space_size(DeviceIdentifier const& identifier)
+{
+    SpinlockLocker locker(identifier.operation_lock());
+    u8 field = to_underlying(PCI::RegisterOffset::EXPANSION_ROM_POINTER);
+    u32 bar_reserved = read32_offsetted(identifier, field);
+    write32_offsetted(identifier, field, 0xFFFFFFFF);
+    u32 space_size = read32_offsetted(identifier, field);
+    write32_offsetted(identifier, field, bar_reserved);
+    space_size &= 0xfffffff0;
+    space_size = (~space_size) + 1;
+    return space_size;
+}
+
 void raw_access(DeviceIdentifier const& identifier, u32 field, size_t access_size, u32 value)
 {
     SpinlockLocker locker(identifier.operation_lock());
