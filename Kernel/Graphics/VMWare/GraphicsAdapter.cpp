@@ -36,7 +36,7 @@ ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> VMWareGraphicsAdapter::create
 }
 
 UNMAP_AFTER_INIT VMWareGraphicsAdapter::VMWareGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window)
-    : PCI::Device(pci_device_identifier.address())
+    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
     , m_registers_io_window(move(registers_io_window))
 {
     dbgln("VMWare SVGA @ {}, {}", pci_device_identifier.address(), m_registers_io_window);
@@ -59,7 +59,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::negotiate_device_version()
 {
     write_io_register(VMWareDisplayRegistersOffset::ID, vmware_svga_version_2_id);
     auto accepted_version = read_io_register(VMWareDisplayRegistersOffset::ID);
-    dbgln("VMWare SVGA @ {}: Accepted version {}", pci_address(), accepted_version);
+    dbgln("VMWare SVGA @ {}: Accepted version {}", device_identifier().address(), accepted_version);
     if (read_io_register(VMWareDisplayRegistersOffset::ID) == vmware_svga_version_2_id)
         return {};
     return Error::from_errno(ENOTSUP);
@@ -69,11 +69,11 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_fifo_registers(
 {
     auto framebuffer_size = read_io_register(VMWareDisplayRegistersOffset::FB_SIZE);
     auto fifo_size = read_io_register(VMWareDisplayRegistersOffset::MEM_SIZE);
-    auto fifo_physical_address = PhysicalAddress(PCI::get_BAR2(pci_address()) & 0xfffffff0);
+    auto fifo_physical_address = PhysicalAddress(PCI::get_BAR2(device_identifier()) & 0xfffffff0);
 
-    dbgln("VMWare SVGA @ {}: framebuffer size {} bytes, FIFO size {} bytes @ {}", pci_address(), framebuffer_size, fifo_size, fifo_physical_address);
+    dbgln("VMWare SVGA @ {}: framebuffer size {} bytes, FIFO size {} bytes @ {}", device_identifier().address(), framebuffer_size, fifo_size, fifo_physical_address);
     if (framebuffer_size < 0x100000 || fifo_size < 0x10000) {
-        dbgln("VMWare SVGA @ {}: invalid framebuffer or fifo size", pci_address());
+        dbgln("VMWare SVGA @ {}: invalid framebuffer or fifo size", device_identifier().address());
         return Error::from_errno(ENOTSUP);
     }
 
@@ -183,9 +183,9 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_adapter()
     // Note: enable the device by modesetting the primary screen resolution
     modeset_primary_screen_resolution(640, 480);
 
-    auto bar1_space_size = PCI::get_BAR_space_size(pci_address(), PCI::HeaderType0BaseRegister::BAR1);
+    auto bar1_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR1);
 
-    m_display_connector = VMWareDisplayConnector::must_create(*this, PhysicalAddress(PCI::get_BAR1(pci_address()) & 0xfffffff0), bar1_space_size);
+    m_display_connector = VMWareDisplayConnector::must_create(*this, PhysicalAddress(PCI::get_BAR1(device_identifier()) & 0xfffffff0), bar1_space_size);
     TRY(m_display_connector->set_safe_mode_setting());
     return {};
 }

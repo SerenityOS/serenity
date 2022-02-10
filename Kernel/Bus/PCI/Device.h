@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
@@ -15,7 +16,7 @@ namespace Kernel::PCI {
 
 class Device {
 public:
-    Address pci_address() const { return m_pci_address; };
+    DeviceIdentifier& device_identifier() const { return *m_pci_identifier; };
 
     virtual ~Device() = default;
 
@@ -34,10 +35,10 @@ public:
     void disable_extended_message_signalled_interrupts();
 
 protected:
-    explicit Device(Address pci_address);
+    explicit Device(DeviceIdentifier const& pci_identifier);
 
 private:
-    Address m_pci_address;
+    NonnullRefPtr<DeviceIdentifier> m_pci_identifier;
 };
 
 template<typename... Parameters>
@@ -48,7 +49,7 @@ void dmesgln_pci(Device const& device, AK::CheckedFormatString<Parameters...>&& 
         return;
     if (builder.try_append(fmt.view()).is_error())
         return;
-    AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::Yes, StringView, Address, Parameters...> variadic_format_params { device.device_name(), device.pci_address(), parameters... };
+    AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::Yes, StringView, Address, Parameters...> variadic_format_params { device.device_name(), device.device_identifier().address(), parameters... };
     vdmesgln(builder.string_view(), variadic_format_params);
 }
 

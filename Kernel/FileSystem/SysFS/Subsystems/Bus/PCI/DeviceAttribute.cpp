@@ -75,15 +75,16 @@ ErrorOr<size_t> PCIDeviceAttributeSysFSComponent::read_bytes(off_t offset, size_
 ErrorOr<NonnullOwnPtr<KBuffer>> PCIDeviceAttributeSysFSComponent::try_to_generate_buffer() const
 {
     OwnPtr<KString> value;
+    SpinlockLocker locker(m_device->device_identifier().operation_lock());
     switch (m_field_bytes_width) {
     case 1:
-        value = TRY(KString::formatted("{:#x}", PCI::read8(m_device->address(), m_offset)));
+        value = TRY(KString::formatted("{:#x}", PCI::read8_locked(m_device->device_identifier(), m_offset)));
         break;
     case 2:
-        value = TRY(KString::formatted("{:#x}", PCI::read16(m_device->address(), m_offset)));
+        value = TRY(KString::formatted("{:#x}", PCI::read16_locked(m_device->device_identifier(), m_offset)));
         break;
     case 4:
-        value = TRY(KString::formatted("{:#x}", PCI::read32(m_device->address(), m_offset)));
+        value = TRY(KString::formatted("{:#x}", PCI::read32_locked(m_device->device_identifier(), m_offset)));
         break;
     default:
         VERIFY_NOT_REACHED();

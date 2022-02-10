@@ -37,7 +37,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<AC97>> AC97::try_create(PCI::DeviceId
 }
 
 UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<AC97Channel> pcm_out_channel, NonnullOwnPtr<IOWindow> mixer_io_window, NonnullOwnPtr<IOWindow> bus_io_window)
-    : PCI::Device(pci_device_identifier.address())
+    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
     , IRQHandler(pci_device_identifier.interrupt_line().value())
     , m_mixer_io_window(move(mixer_io_window))
     , m_bus_io_window(move(bus_io_window))
@@ -50,7 +50,7 @@ UNMAP_AFTER_INIT AC97::~AC97() = default;
 bool AC97::handle_irq(RegisterState const&)
 {
     auto pcm_out_status = m_pcm_out_channel->io_window().read16(AC97Channel::Register::Status);
-    dbgln_if(AC97_DEBUG, "AC97 @ {}: interrupt received - status: {:#05b}", pci_address(), pcm_out_status);
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: interrupt received - status: {:#05b}", device_identifier().address(), pcm_out_status);
 
     bool is_dma_halted = (pcm_out_status & AudioStatusRegisterFlag::DMAControllerHalted) > 0;
     bool current_equals_last_valid = (pcm_out_status & AudioStatusRegisterFlag::CurrentEqualsLastValid) > 0;
@@ -81,13 +81,13 @@ bool AC97::handle_irq(RegisterState const&)
 
 UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize()
 {
-    dbgln_if(AC97_DEBUG, "AC97 @ {}: mixer base: {:#04x}", pci_address(), m_mixer_io_window);
-    dbgln_if(AC97_DEBUG, "AC97 @ {}: bus base: {:#04x}", pci_address(), m_bus_io_window);
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: mixer base: {:#04x}", device_identifier().address(), m_mixer_io_window);
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: bus base: {:#04x}", device_identifier().address(), m_bus_io_window);
 
     // Read out AC'97 codec revision and vendor
     auto extended_audio_id = m_mixer_io_window->read16(NativeAudioMixerRegister::ExtendedAudioID);
     m_codec_revision = static_cast<AC97Revision>(((extended_audio_id & ExtendedAudioMask::Revision) >> 10) & 0b11);
-    dbgln_if(AC97_DEBUG, "AC97 @ {}: codec revision {:#02b}", pci_address(), to_underlying(m_codec_revision));
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: codec revision {:#02b}", device_identifier().address(), to_underlying(m_codec_revision));
     if (m_codec_revision == AC97Revision::Reserved)
         return ENOTSUP;
 
@@ -97,7 +97,7 @@ UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize()
 
     // Bus cold reset, enable interrupts
     enable_pin_based_interrupts();
-    PCI::enable_bus_mastering(pci_address());
+    PCI::enable_bus_mastering(device_identifier());
     auto control = m_bus_io_window->read32(NativeAudioBusRegister::GlobalControl);
     control |= GlobalControlFlag::GPIInterruptEnable;
     control |= GlobalControlFlag::AC97ColdReset;
@@ -251,7 +251,7 @@ ErrorOr<void> AC97::write_single_buffer(UserOrKernelBuffer const& data, size_t o
             if (head_distance < m_output_buffer_page_count)
                 break;
 
-            dbgln_if(AC97_DEBUG, "AC97 @ {}: waiting on interrupt - status: {:#05b} CI: {} LVI: {}", pci_address(), pcm_out_status, current_index, last_valid_index);
+            dbgln_if(AC97_DEBUG, "AC97 @ {}: waiting on interrupt - status: {:#05b} CI: {} LVI: {}", device_identifier().address(), pcm_out_status, current_index, last_valid_index);
             m_irq_queue.wait_forever("AC97"sv);
         } while (m_pcm_out_channel->dma_running());
     }

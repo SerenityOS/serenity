@@ -10,31 +10,31 @@
 
 namespace Kernel::PCI {
 
-Device::Device(Address address)
-    : m_pci_address(address)
+Device::Device(DeviceIdentifier const& pci_identifier)
+    : m_pci_identifier(pci_identifier)
 {
 }
 
 bool Device::is_msi_capable() const
 {
     return AK::any_of(
-        PCI::get_device_identifier(pci_address()).capabilities(),
+        m_pci_identifier->capabilities(),
         [](auto const& capability) { return capability.id().value() == PCI::Capabilities::ID::MSI; });
 }
 bool Device::is_msix_capable() const
 {
     return AK::any_of(
-        PCI::get_device_identifier(pci_address()).capabilities(),
+        m_pci_identifier->capabilities(),
         [](auto const& capability) { return capability.id().value() == PCI::Capabilities::ID::MSIX; });
 }
 
 void Device::enable_pin_based_interrupts() const
 {
-    PCI::enable_interrupt_line(pci_address());
+    PCI::enable_interrupt_line(m_pci_identifier);
 }
 void Device::disable_pin_based_interrupts() const
 {
-    PCI::disable_interrupt_line(pci_address());
+    PCI::disable_interrupt_line(m_pci_identifier);
 }
 
 void Device::enable_message_signalled_interrupts()

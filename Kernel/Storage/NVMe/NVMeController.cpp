@@ -27,9 +27,8 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NVMeController>> NVMeController::try_
 }
 
 UNMAP_AFTER_INIT NVMeController::NVMeController(const PCI::DeviceIdentifier& device_identifier, u32 hardware_relative_controller_id)
-    : PCI::Device(device_identifier.address())
+    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(device_identifier))
     , StorageController(hardware_relative_controller_id)
-    , m_pci_device_id(device_identifier)
 {
 }
 
@@ -37,11 +36,11 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
 {
     // Nr of queues = one queue per core
     auto nr_of_queues = Processor::count();
-    auto irq = is_queue_polled ? Optional<u8> {} : m_pci_device_id.interrupt_line().value();
+    auto irq = is_queue_polled ? Optional<u8> {} : device_identifier().interrupt_line().value();
 
-    PCI::enable_memory_space(m_pci_device_id.address());
-    PCI::enable_bus_mastering(m_pci_device_id.address());
-    m_bar = PCI::get_BAR0(m_pci_device_id.address()) & BAR_ADDR_MASK;
+    PCI::enable_memory_space(device_identifier());
+    PCI::enable_bus_mastering(device_identifier());
+    m_bar = PCI::get_BAR0(device_identifier()) & BAR_ADDR_MASK;
     static_assert(sizeof(ControllerRegister) == REG_SQ0TDBL_START);
     static_assert(sizeof(NVMeSubmission) == (1 << SQ_WIDTH));
 

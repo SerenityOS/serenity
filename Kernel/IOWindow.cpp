@@ -64,9 +64,9 @@ ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_from_io_window_with_offset(u64
     return create_from_io_window_with_offset(offset, m_memory_mapped_range->length - offset);
 }
 
-ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Address const& pci_address, PCI::HeaderType0BaseRegister pci_bar, u64 space_length)
+ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::DeviceIdentifier const& pci_device_identifier, PCI::HeaderType0BaseRegister pci_bar, u64 space_length)
 {
-    u64 pci_bar_value = PCI::get_BAR(pci_address, pci_bar);
+    u64 pci_bar_value = PCI::get_BAR(pci_device_identifier, pci_bar);
     auto pci_bar_space_type = PCI::get_BAR_space_type(pci_bar_value);
     if (pci_bar_space_type == PCI::BARSpaceType::Memory64BitSpace) {
         // FIXME: In theory, BAR5 cannot be assigned to 64 bit as it is the last one...
@@ -75,11 +75,11 @@ ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Addres
         if (pci_bar == PCI::HeaderType0BaseRegister::BAR5) {
             return Error::from_errno(EINVAL);
         }
-        u64 next_pci_bar_value = PCI::get_BAR(pci_address, static_cast<PCI::HeaderType0BaseRegister>(to_underlying(pci_bar) + 1));
+        u64 next_pci_bar_value = PCI::get_BAR(pci_device_identifier, static_cast<PCI::HeaderType0BaseRegister>(to_underlying(pci_bar) + 1));
         pci_bar_value |= next_pci_bar_value << 32;
     }
 
-    auto pci_bar_space_size = PCI::get_BAR_space_size(pci_address, pci_bar);
+    auto pci_bar_space_size = PCI::get_BAR_space_size(pci_device_identifier, pci_bar);
     if (pci_bar_space_size < space_length)
         return Error::from_errno(EIO);
 
@@ -105,21 +105,10 @@ ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Addres
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) IOWindow(move(memory_mapped_range))));
 }
 
-ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Address const& pci_address, PCI::HeaderType0BaseRegister pci_bar)
-{
-    u64 pci_bar_space_size = PCI::get_BAR_space_size(pci_address, pci_bar);
-    return create_for_pci_device_bar(pci_address, pci_bar, pci_bar_space_size);
-}
-
 ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::DeviceIdentifier const& pci_device_identifier, PCI::HeaderType0BaseRegister pci_bar)
 {
-    u64 pci_bar_space_size = PCI::get_BAR_space_size(pci_device_identifier.address(), pci_bar);
-    return create_for_pci_device_bar(pci_device_identifier.address(), pci_bar, pci_bar_space_size);
-}
-
-ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::DeviceIdentifier const& pci_device_identifier, PCI::HeaderType0BaseRegister pci_bar, u64 space_length)
-{
-    return create_for_pci_device_bar(pci_device_identifier.address(), pci_bar, space_length);
+    u64 pci_bar_space_size = PCI::get_BAR_space_size(pci_device_identifier, pci_bar);
+    return create_for_pci_device_bar(pci_device_identifier, pci_bar, pci_bar_space_size);
 }
 
 IOWindow::IOWindow(NonnullOwnPtr<Memory::TypedMapping<u8 volatile>> memory_mapped_range)

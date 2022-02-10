@@ -32,7 +32,7 @@ public:
 private:
     ErrorOr<void> initialize_adapter(PCI::DeviceIdentifier const&);
 
-    explicit BochsGraphicsAdapter(PCI::Address const&);
+    explicit BochsGraphicsAdapter(PCI::DeviceIdentifier const&);
 
     LockRefPtr<DisplayConnector> m_display_connector;
 };

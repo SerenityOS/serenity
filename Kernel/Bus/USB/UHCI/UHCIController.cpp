@@ -75,7 +75,7 @@ ErrorOr<NonnullLockRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI
 
 ErrorOr<void> UHCIController::initialize()
 {
-    dmesgln_pci(*this, "Controller found {} @ {}", PCI::get_hardware_id(pci_address()), pci_address());
+    dmesgln_pci(*this, "Controller found {} @ {}", PCI::get_hardware_id(device_identifier()), device_identifier().address());
     dmesgln_pci(*this, "I/O base {}", m_registers_io_window);
     dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
 
@@ -87,7 +87,7 @@ ErrorOr<void> UHCIController::initialize()
 }
 
 UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window)
-    : PCI::Device(pci_device_identifier.address())
+    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
     , IRQHandler(pci_device_identifier.interrupt_line().value())
     , m_registers_io_window(move(registers_io_window))
 {

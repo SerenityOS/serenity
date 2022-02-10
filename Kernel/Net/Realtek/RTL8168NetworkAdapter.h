@@ -42,7 +42,7 @@ private:
     static constexpr size_t number_of_rx_descriptors = 64;
     static constexpr size_t number_of_tx_descriptors = 16;
 
-    RTL8168NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString>);
+    RTL8168NetworkAdapter(PCI::DeviceIdentifier const&, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString>);
 
     virtual bool handle_irq(RegisterState const&) override;
     virtual StringView class_name() const override { return "RTL8168NetworkAdapter"sv; }

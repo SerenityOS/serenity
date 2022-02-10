@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT PCIBusSysFSDirectory::PCIBusSysFSDirectory()
 {
     MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
         MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
-            auto pci_device = PCIDeviceSysFSDirectory::create(*this, device_identifier.address());
+            auto pci_device = PCIDeviceSysFSDirectory::create(*this, device_identifier);
             list.append(pci_device);
         }));
         return {};

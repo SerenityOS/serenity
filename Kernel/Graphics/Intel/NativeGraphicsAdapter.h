@@ -30,7 +30,7 @@ public:
 private:
     ErrorOr<void> initialize_adapter();
 
-    explicit IntelNativeGraphicsAdapter(PCI::Address);
+    explicit IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const&);
 
     LockRefPtr<IntelNativeDisplayConnector> m_display_connector;
 };
