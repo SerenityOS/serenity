@@ -17,9 +17,11 @@
 #include <LibPCIDB/Database.h>
 
 static bool flag_show_numerical = false;
+static bool flag_verbose = false;
 
 static const char* format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
 static const char* format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
+static const char* format_region = "\tBAR {}: {} region @ {:#x}";
 
 static u32 read_hex_string_from_bytebuffer(ByteBuffer const& buf)
 {
@@ -45,6 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List PCI devices.");
     args_parser.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n');
+    args_parser.add_option(flag_verbose, "Show verbose info on devices", "verbose", 'v');
     args_parser.parse(arguments);
 
     const char* format = flag_show_numerical ? format_numerical : format_textual;
@@ -128,6 +131,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             class_name = String::formatted("{:02x}{:02x}", class_id, subclass_id);
 
         outln(format, domain, bus, device, function, class_name, vendor_name, device_name, revision_id);
+
+        if (!flag_verbose)
+            continue;
+        for (size_t bar_index = 0; bar_index <= 5; bar_index++) {
+            auto bar_value_file = Core::File::construct(String::formatted("/sys/bus/pci/{}/bar{}", dir, bar_index));
+            if (!bar_value_file->open(Core::OpenMode::ReadOnly)) {
+                dbgln("Error: Could not open {}: {}", bar_value_file->name(), bar_value_file->error_string());
+                continue;
+            }
+            u32 bar_value = read_hex_string_from_bytebuffer(bar_value_file->read_all());
+            if (bar_value == 0)
+                continue;
+            bool memory_region = ((bar_value & 1) == 0);
+            outln(format_region, bar_index, memory_region ? "Memory" : "IO", bar_value);
+        }
     }
 
     return 0;
