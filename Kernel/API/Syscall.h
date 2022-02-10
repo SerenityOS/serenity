@@ -490,6 +490,13 @@ struct SC_chmod_params {
     int follow_symlinks;
 };
 
+struct SC_access_params {
+    StringArgument path;
+    int dirfd;
+    int mode;
+    int flags;
+};
+
 void initialize();
 int sync();
 

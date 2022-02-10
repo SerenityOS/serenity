@@ -715,11 +715,24 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/access.html
 int access(const char* pathname, int mode)
 {
-    if (!pathname) {
+    return faccessat(AT_FDCWD, pathname, mode, 0);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/faccessat.html
+int faccessat(int fd, const char* path, int mode, int flag)
+{
+    if (!path) {
         errno = EFAULT;
         return -1;
     }
-    int rc = syscall(SC_access, pathname, strlen(pathname), mode);
+
+    Syscall::SC_access_params params {
+        { path, strlen(path) },
+        fd,
+        mode,
+        flag
+    };
+    int rc = syscall(SC_access, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

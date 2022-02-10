@@ -387,25 +387,29 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
     return {};
 }
 
-ErrorOr<void> VirtualFileSystem::access(StringView path, int mode, Custody& base)
+ErrorOr<void> VirtualFileSystem::access(StringView path, int mode, Custody& base, int flags)
 {
-    auto custody = TRY(resolve_path(path, base));
+    auto custody = TRY(resolve_path(path, base, nullptr, flags & AT_SYMLINK_NOFOLLOW ? O_NOFOLLOW_NOERROR : 0));
 
     auto& inode = custody->inode();
     auto metadata = inode.metadata();
     auto& current_process = Process::current();
+    bool effective_ids = flags & AT_EACCESS;
     if (mode & R_OK) {
-        if (!metadata.may_read(current_process))
+        bool okay = effective_ids ? metadata.may_read(current_process) : metadata.may_read_real(current_process);
+        if (!okay)
             return EACCES;
     }
     if (mode & W_OK) {
-        if (!metadata.may_write(current_process))
+        bool okay = effective_ids ? metadata.may_write(current_process) : metadata.may_write_real(current_process);
+        if (!okay)
             return EACCES;
         if (custody->is_readonly())
             return EROFS;
     }
     if (mode & X_OK) {
-        if (!metadata.may_execute(current_process))
+        bool okay = effective_ids ? metadata.may_execute(current_process) : metadata.may_execute_real(current_process);
+        if (!okay)
             return EACCES;
     }
     return {};

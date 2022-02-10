@@ -130,7 +130,7 @@ private:
     void emit_profile_event(AK::OutputStream&, StringView event_name, String const& contents);
 
     int virt$accept4(FlatPtr);
-    int virt$access(FlatPtr, size_t, int);
+    int virt$access(FlatPtr);
     u32 virt$allocate_tls(FlatPtr, size_t);
     int virt$anon_create(size_t, int);
     int virt$beep();

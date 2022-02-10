@@ -61,7 +61,7 @@ public:
     ErrorOr<void> chmod(Custody&, mode_t);
     ErrorOr<void> chown(StringView path, UserID, GroupID, Custody& base, int options);
     ErrorOr<void> chown(Custody&, UserID, GroupID);
-    ErrorOr<void> access(StringView path, int mode, Custody& base);
+    ErrorOr<void> access(StringView path, int mode, Custody& base, int flags);
     ErrorOr<InodeMetadata> lookup_metadata(StringView path, Custody& base, int options = 0);
     ErrorOr<void> utime(StringView path, Custody& base, time_t atime, time_t mtime);
     ErrorOr<void> rename(Custody& old_base, StringView old_path, Custody& new_base, StringView new_path);
