@@ -463,9 +463,7 @@ int nanosleep(const struct timespec* requested_sleep, struct timespec* remaining
 
 int clock_getres(clockid_t, struct timespec*)
 {
-    dbgln("FIXME: Implement clock_getres()");
-    auto rc = -ENOSYS;
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return 1000000;
 }
 
 double difftime(time_t t1, time_t t0)
