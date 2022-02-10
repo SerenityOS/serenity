@@ -365,7 +365,7 @@ int Emulator::virt$rmdir(FlatPtr path, size_t path_length)
 int Emulator::virt$unlink(FlatPtr path, size_t path_length)
 {
     auto buffer = mmu().copy_buffer_from_vm(path, path_length);
-    return syscall(SC_unlink, buffer.data(), buffer.size());
+    return syscall(SC_unlink, AT_FDCWD, buffer.data(), buffer.size(), 0);
 }
 
 int Emulator::virt$symlink(FlatPtr params_addr)

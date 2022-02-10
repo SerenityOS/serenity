@@ -353,7 +353,7 @@ public:
     ErrorOr<FlatPtr> sys$times(Userspace<tms*>);
     ErrorOr<FlatPtr> sys$utime(Userspace<const char*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
     ErrorOr<FlatPtr> sys$link(Userspace<const Syscall::SC_link_params*>);
-    ErrorOr<FlatPtr> sys$unlink(Userspace<const char*> pathname, size_t path_length);
+    ErrorOr<FlatPtr> sys$unlink(int dirfd, Userspace<const char*> pathname, size_t path_length, int flags);
     ErrorOr<FlatPtr> sys$symlink(Userspace<const Syscall::SC_symlink_params*>);
     ErrorOr<FlatPtr> sys$rmdir(Userspace<const char*> pathname, size_t path_length);
     ErrorOr<FlatPtr> sys$mount(Userspace<const Syscall::SC_mount_params*>);

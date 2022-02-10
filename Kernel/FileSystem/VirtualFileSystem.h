@@ -54,7 +54,7 @@ public:
     ErrorOr<NonnullRefPtr<OpenFileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
     ErrorOr<void> mkdir(StringView path, mode_t mode, Custody& base);
     ErrorOr<void> link(StringView old_path, StringView new_path, Custody& base);
-    ErrorOr<void> unlink(StringView path, Custody& base);
+    ErrorOr<void> unlink(StringView path, Custody& base, int flags);
     ErrorOr<void> symlink(StringView target, StringView linkpath, Custody& base);
     ErrorOr<void> rmdir(StringView path, Custody& base);
     ErrorOr<void> chmod(StringView path, mode_t, Custody& base, int options = 0);

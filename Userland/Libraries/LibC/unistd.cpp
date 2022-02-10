@@ -577,8 +577,7 @@ int link(const char* old_path, const char* new_path)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/unlink.html
 int unlink(const char* pathname)
 {
-    int rc = syscall(SC_unlink, pathname, strlen(pathname));
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return unlinkat(AT_FDCWD, pathname, 0);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/symlink.html
@@ -913,5 +912,12 @@ int chroot(const char* path)
 {
     dbgln("FIXME: chroot(\"{}\")", path);
     return -1;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/unlinkat.html
+int unlinkat(int dirfd, char const* pathname, int flags)
+{
+    int rc = syscall(SC_unlink, dirfd, pathname, strlen(pathname), flags);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }

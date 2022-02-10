@@ -623,14 +623,17 @@ ErrorOr<void> VirtualFileSystem::link(StringView old_path, StringView new_path, 
     return parent_inode.add_child(old_inode, KLexicalPath::basename(new_path), old_inode.mode());
 }
 
-ErrorOr<void> VirtualFileSystem::unlink(StringView path, Custody& base)
+ErrorOr<void> VirtualFileSystem::unlink(StringView path, Custody& base, int flags)
 {
     RefPtr<Custody> parent_custody;
     auto custody = TRY(resolve_path(path, base, &parent_custody, O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL));
     auto& inode = custody->inode();
 
-    if (inode.is_directory())
+    if (inode.is_directory()) {
+        if ((flags & AT_REMOVEDIR) != 0)
+            return rmdir(path, base);
         return EISDIR;
+    }
 
     // We have just checked that the inode is not a directory, and thus it's not
     // the root. So it should have a parent. Note that this would be invalidated

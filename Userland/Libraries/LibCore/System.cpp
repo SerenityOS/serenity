@@ -809,7 +809,7 @@ ErrorOr<void> unlink(StringView path)
         return Error::from_errno(EFAULT);
 
 #ifdef __serenity__
-    int rc = syscall(SC_unlink, path.characters_without_null_termination(), path.length());
+    int rc = syscall(SC_unlink, AT_FDCWD, path.characters_without_null_termination(), path.length(), 0);
     HANDLE_SYSCALL_RETURN_VALUE("unlink"sv, rc, {});
 #else
     String path_string = path;
