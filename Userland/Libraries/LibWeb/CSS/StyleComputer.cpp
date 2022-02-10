@@ -410,42 +410,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-StyleComputer::CustomPropertyResolutionTuple StyleComputer::resolve_custom_property_with_specificity(DOM::Element& element, String const& custom_property_name) const
-{
-    if (auto maybe_property = element.resolve_custom_property(custom_property_name); maybe_property.has_value())
-        return maybe_property.value();
-
-    auto* parent_element = element.parent_element();
-    CustomPropertyResolutionTuple parent_resolved {};
-    if (parent_element)
-        parent_resolved = resolve_custom_property_with_specificity(*parent_element, custom_property_name);
-
-    auto matching_rules = collect_matching_rules(element);
-    sort_matching_rules(matching_rules);
-
-    for (int i = matching_rules.size() - 1; i >= 0; --i) {
-        auto& match = matching_rules[i];
-        if (match.specificity < parent_resolved.specificity)
-            continue;
-
-        auto custom_property_style = verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).custom_property(custom_property_name);
-        if (custom_property_style.has_value()) {
-            element.add_custom_property(custom_property_name, { custom_property_style.value(), match.specificity });
-            return { custom_property_style.value(), match.specificity };
-        }
-    }
-
-    return parent_resolved;
-}
-
-Optional<StyleProperty> StyleComputer::resolve_custom_property(DOM::Element& element, String const& custom_property_name) const
-{
-    auto resolved_with_specificity = resolve_custom_property_with_specificity(element, custom_property_name);
-
-    return resolved_with_specificity.style;
-}
-
-bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<String, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<String, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index, HashMap<String, StyleProperty const*> const& custom_properties) const
 {
     // FIXME: Do this better!
     // We build a copy of the tree of StyleComponentValueRules, with all var()s replaced with their contents.
@@ -459,10 +424,10 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
         return false;
     }
 
-    auto get_custom_property = [this, &element](auto& name) -> RefPtr<StyleValue> {
-        auto custom_property = resolve_custom_property(element, name);
-        if (custom_property.has_value())
-            return custom_property.value().value;
+    auto get_custom_property = [&custom_properties](auto& name) -> RefPtr<StyleValue> {
+        auto it = custom_properties.find(name);
+        if (it != custom_properties.end())
+            return it->value->value;
         return nullptr;
     };
 
@@ -502,14 +467,14 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
 
                 if (auto custom_property_value = get_custom_property(custom_property_name)) {
                     VERIFY(custom_property_value->is_unresolved());
-                    if (!expand_unresolved_values(element, custom_property_name, dependencies, custom_property_value->as_unresolved().values(), dest))
+                    if (!expand_unresolved_values(element, custom_property_name, dependencies, custom_property_value->as_unresolved().values(), dest, 0, custom_properties))
                         return false;
                     continue;
                 }
 
                 // Use the provided fallback value, if any.
                 if (var_contents.size() > 2 && var_contents[1].is(Token::Type::Comma)) {
-                    if (!expand_unresolved_values(element, property_name, dependencies, var_contents, dest, 2))
+                    if (!expand_unresolved_values(element, property_name, dependencies, var_contents, dest, 2, custom_properties))
                         return false;
                     continue;
                 }
@@ -517,7 +482,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
 
             auto const& source_function = value.function();
             Vector<StyleComponentValueRule> function_values;
-            if (!expand_unresolved_values(element, property_name, dependencies, source_function.values(), function_values))
+            if (!expand_unresolved_values(element, property_name, dependencies, source_function.values(), function_values, 0, custom_properties))
                 return false;
             NonnullRefPtr<StyleFunctionRule> function = adopt_ref(*new StyleFunctionRule(source_function.name(), move(function_values)));
             dest.empend(function);
@@ -526,7 +491,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
         if (value.is_block()) {
             auto const& source_block = value.block();
             Vector<StyleComponentValueRule> block_values;
-            if (!expand_unresolved_values(element, property_name, dependencies, source_block.values(), block_values))
+            if (!expand_unresolved_values(element, property_name, dependencies, source_block.values(), block_values, 0, custom_properties))
                 return false;
             NonnullRefPtr<StyleBlockRule> block = adopt_ref(*new StyleBlockRule(source_block.token(), move(block_values)));
             dest.empend(block);
@@ -538,7 +503,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
     return true;
 }
 
-RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved) const
+RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved, HashMap<String, StyleProperty const*> const& custom_properties) const
 {
     // Unresolved always contains a var(), unless it is a custom property's value, in which case we shouldn't be trying
     // to produce a different StyleValue from it.
@@ -546,7 +511,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
 
     Vector<StyleComponentValueRule> expanded_values;
     HashMap<String, NonnullRefPtr<PropertyDependencyNode>> dependencies;
-    if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values))
+    if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values, 0, custom_properties))
         return {};
 
     if (auto parsed_value = Parser::parse_css_value({}, ParsingContext { document() }, property_id, expanded_values))
@@ -555,7 +520,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     return {};
 }
 
-void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, bool important) const
+void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, bool important, HashMap<String, StyleProperty const*> const& custom_properties) const
 {
     for (auto const& match : matching_rules) {
         for (auto const& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
@@ -563,7 +528,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                 continue;
             auto property_value = property.value;
             if (property.value->is_unresolved()) {
-                if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved()))
+                if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved(), custom_properties))
                     property_value = resolved.release_nonnull();
             }
             set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
@@ -581,6 +546,28 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     }
 }
 
+static HashMap<String, StyleProperty const*> cascade_custom_properties(DOM::Element& element, Vector<MatchingRule> const& matching_rules)
+{
+    HashMap<String, StyleProperty const*> custom_properties;
+
+    if (auto* parent_element = element.parent_element()) {
+        for (auto const& it : parent_element->custom_properties())
+            custom_properties.set(it.key, &it.value);
+    }
+
+    for (auto const& matching_rule : matching_rules) {
+        for (auto const& it : verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties()) {
+            custom_properties.set(it.key, &it.value);
+        }
+    }
+
+    element.custom_properties().clear();
+    for (auto& it : custom_properties)
+        element.add_custom_property(it.key, *it.value);
+
+    return custom_properties;
+}
+
 // https://www.w3.org/TR/css-cascade/#cascading
 void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element) const
 {
@@ -591,15 +578,18 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     matching_rule_set.author_rules = collect_matching_rules(element, CascadeOrigin::Author);
     sort_matching_rules(matching_rule_set.author_rules);
 
+    // Then we resolve all the CSS custom properties ("variables") for this element:
+    auto custom_properties = cascade_custom_properties(element, matching_rule_set.author_rules);
+
     // Then we apply the declarations from the matched rules in cascade order:
 
     // Normal user agent declarations
-    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, false);
+    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, false, custom_properties);
 
     // FIXME: Normal user declarations
 
     // Normal author declarations
-    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, false);
+    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, false, custom_properties);
 
     // Author presentational hints (NOTE: The spec doesn't say exactly how to prioritize these.)
     element.apply_presentational_hints(style);
@@ -607,12 +597,12 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     // FIXME: Animation declarations [css-animations-1]
 
     // Important author declarations
-    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, true);
+    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, true, custom_properties);
 
     // FIXME: Important user declarations
 
     // Important user agent declarations
-    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, true);
+    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, true, custom_properties);
 
     // FIXME: Transition declarations [css-transitions-1]
 }

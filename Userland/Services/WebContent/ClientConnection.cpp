@@ -288,9 +288,9 @@ Messages::WebContentServer::InspectDomNodeResponse ClientConnection::inspect_dom
             auto const* element_to_check = &element;
             while (element_to_check) {
                 for (auto const& property : element_to_check->custom_properties()) {
-                    if (!seen_properties.contains(property.key) && property.value.style.has_value()) {
+                    if (!seen_properties.contains(property.key)) {
                         seen_properties.set(property.key);
-                        serializer.add(property.key, property.value.style.value().value->to_string());
+                        serializer.add(property.key, property.value.value->to_string());
                     }
                 }
 
