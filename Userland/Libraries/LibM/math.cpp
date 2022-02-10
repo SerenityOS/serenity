@@ -1014,6 +1014,16 @@ float nearbyintf(float value) NOEXCEPT
 {
     return internal_to_integer(value, RoundingMode { fegetround() });
 }
+
+double fma(double x, double y, double z) NOEXCEPT
+{
+    return x * y + z;
+}
+
+float fmaf(float x, float y, float z) NOEXCEPT
+{
+    return x * y + z;
+}
 }
 
 #ifdef __clang__
