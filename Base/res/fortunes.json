@@ -190,5 +190,12 @@
     "url": "https://discord.com/channels/830522505605283862/851522357734408232/939601822941843476",
     "utc_time": 1644088920,
     "context": "Overly complicated, evidently abandoned proposals can just be ignored"
+  },
+  {
+    "quote": "'y u capture by ref?' - 'reason: am idiot'",
+    "author": "CxByte, awesomekling",
+    "url": "https://discord.com/channels/830522505605283862/831544568767578162/935533306873774140",
+    "context": "'these frame_index/frame_count thingies are stack values'",
+    "utc_time": 1643118899
   }
 ]
