@@ -153,7 +153,7 @@ ErrorOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_re
     size_t page_offset_in_source_region = (offset_in_vmobject - source_region.offset_in_vmobject()) / PAGE_SIZE;
     for (size_t i = 0; i < region->page_count(); ++i) {
         if (source_region.should_cow(page_offset_in_source_region + i))
-            region->set_should_cow(i, true);
+            TRY(region->set_should_cow(i, true));
     }
     return region;
 }
