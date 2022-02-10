@@ -48,7 +48,6 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
         }
     }
 
-    context.result = Result { SQLCommand::Select };
     ResultSet result { SQLCommand::Select };
 
     auto descriptor = adopt_ref(*new TupleDescriptor);
