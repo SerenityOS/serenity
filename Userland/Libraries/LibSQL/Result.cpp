@@ -9,30 +9,6 @@
 
 namespace SQL {
 
-void Result::insert(Tuple const& row, Tuple const& sort_key)
-{
-    if (!m_result_set.has_value())
-        m_result_set = ResultSet {};
-    m_result_set->insert_row(row, sort_key);
-}
-
-void Result::limit(size_t offset, size_t limit)
-{
-    VERIFY(has_results());
-
-    if (offset > 0) {
-        if (offset > m_result_set->size()) {
-            m_result_set->clear();
-            return;
-        }
-
-        m_result_set->remove(0, offset);
-    }
-
-    if (m_result_set->size() > limit)
-        m_result_set->remove(limit, m_result_set->size() - limit);
-}
-
 String Result::error_string() const
 {
     VERIFY(is_error());

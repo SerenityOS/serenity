@@ -9,19 +9,19 @@
 
 namespace SQL::AST {
 
-Result CreateTable::execute(ExecutionContext& context) const
+ResultOr<ResultSet> CreateTable::execute(ExecutionContext& context) const
 {
     auto schema_name = m_schema_name.is_empty() ? String { "default"sv } : m_schema_name;
 
     auto schema_def = TRY(context.database->get_schema(schema_name));
     if (!schema_def)
-        return { SQLCommand::Create, SQLErrorCode::SchemaDoesNotExist, schema_name };
+        return Result { SQLCommand::Create, SQLErrorCode::SchemaDoesNotExist, schema_name };
 
     auto table_def = TRY(context.database->get_table(schema_name, m_table_name));
     if (table_def) {
         if (m_is_error_if_table_exists)
-            return { SQLCommand::Create, SQLErrorCode::TableExists, m_table_name };
-        return { SQLCommand::Create };
+            return Result { SQLCommand::Create, SQLErrorCode::TableExists, m_table_name };
+        return ResultSet { SQLCommand::Create };
     }
 
     table_def = TableDef::construct(schema_def, m_table_name);
@@ -36,13 +36,13 @@ Result CreateTable::execute(ExecutionContext& context) const
         else if (column.type_name()->name().is_one_of("FLOAT"sv, "NUMBER"sv))
             type = SQLType::Float;
         else
-            return { SQLCommand::Create, SQLErrorCode::InvalidType, column.type_name()->name() };
+            return Result { SQLCommand::Create, SQLErrorCode::InvalidType, column.type_name()->name() };
 
         table_def->append_column(column.name(), type);
     }
 
     TRY(context.database->add_table(*table_def));
-    return { SQLCommand::Create, 0, 1 };
+    return ResultSet { SQLCommand::Create };
 }
 
 }

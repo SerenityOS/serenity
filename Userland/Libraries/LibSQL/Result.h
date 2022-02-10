@@ -9,8 +9,6 @@
 
 #include <AK/Error.h>
 #include <AK/Noncopyable.h>
-#include <LibSQL/ResultSet.h>
-#include <LibSQL/Tuple.h>
 #include <LibSQL/Type.h>
 
 namespace SQL {
@@ -75,11 +73,8 @@ enum class SQLErrorCode {
 
 class [[nodiscard]] Result {
 public:
-    ALWAYS_INLINE Result(SQLCommand command, size_t update_count = 0, size_t insert_count = 0, size_t delete_count = 0)
+    ALWAYS_INLINE Result(SQLCommand command)
         : m_command(command)
-        , m_update_count(update_count)
-        , m_insert_count(insert_count)
-        , m_delete_count(delete_count)
     {
     }
 
@@ -109,19 +104,9 @@ public:
     SQLErrorCode error() const { return m_error; }
     String error_string() const;
 
-    void insert(Tuple const& row, Tuple const& sort_key);
-    void limit(size_t offset, size_t limit);
-
-    bool has_results() const { return m_result_set.has_value(); }
-    ResultSet const& results() const { return m_result_set.value(); }
-
-    size_t updated() const { return m_update_count; }
-    size_t inserted() const { return m_insert_count; }
-    size_t deleted() const { return m_delete_count; }
-
     // These are for compatibility with the TRY() macro in AK.
     [[nodiscard]] bool is_error() const { return m_error != SQLErrorCode::NoError; }
-    [[nodiscard]] ResultSet release_value() { return m_result_set.release_value(); }
+    [[nodiscard]] Result release_value() { return move(*this); }
     Result release_error()
     {
         VERIFY(is_error());
@@ -138,11 +123,9 @@ private:
 
     SQLErrorCode m_error { SQLErrorCode::NoError };
     Optional<String> m_error_message {};
-
-    Optional<ResultSet> m_result_set {};
-    size_t m_update_count { 0 };
-    size_t m_insert_count { 0 };
-    size_t m_delete_count { 0 };
 };
+
+template<typename ValueType>
+using ResultOr = ErrorOr<ValueType, Result>;
 
 }

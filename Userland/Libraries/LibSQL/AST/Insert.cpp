@@ -21,23 +21,23 @@ static bool does_value_data_type_match(SQLType expected, SQLType actual)
     return expected == actual;
 }
 
-Result Insert::execute(ExecutionContext& context) const
+ResultOr<ResultSet> Insert::execute(ExecutionContext& context) const
 {
     auto table_def = TRY(context.database->get_table(m_schema_name, m_table_name));
 
     if (!table_def) {
         auto schema_name = m_schema_name.is_empty() ? String("default"sv) : m_schema_name;
-        return { SQLCommand::Insert, SQLErrorCode::TableDoesNotExist, String::formatted("{}.{}", schema_name, m_table_name) };
+        return Result { SQLCommand::Insert, SQLErrorCode::TableDoesNotExist, String::formatted("{}.{}", schema_name, m_table_name) };
     }
 
     Row row(table_def);
     for (auto& column : m_column_names) {
         if (!row.has(column))
-            return { SQLCommand::Insert, SQLErrorCode::ColumnDoesNotExist, column };
+            return Result { SQLCommand::Insert, SQLErrorCode::ColumnDoesNotExist, column };
     }
 
-    Vector<Row> inserted_rows;
-    TRY(inserted_rows.try_ensure_capacity(m_chained_expressions.size()));
+    ResultSet result { SQLCommand::Insert };
+    TRY(result.try_ensure_capacity(m_chained_expressions.size()));
 
     context.result = Result { SQLCommand::Insert };
 
@@ -55,7 +55,7 @@ Result Insert::execute(ExecutionContext& context) const
         auto values = row_value.to_vector().value();
 
         if (m_column_names.is_empty() && values.size() != row.size())
-            return { SQLCommand::Insert, SQLErrorCode::InvalidNumberOfValues, String::empty() };
+            return Result { SQLCommand::Insert, SQLErrorCode::InvalidNumberOfValues, String::empty() };
 
         for (auto ix = 0u; ix < values.size(); ix++) {
             auto input_value_type = values[ix].type();
@@ -65,18 +65,16 @@ Result Insert::execute(ExecutionContext& context) const
             auto element_type = tuple_descriptor[element_index].type;
 
             if (!does_value_data_type_match(element_type, input_value_type))
-                return { SQLCommand::Insert, SQLErrorCode::InvalidValueType, table_def->columns()[element_index].name() };
+                return Result { SQLCommand::Insert, SQLErrorCode::InvalidValueType, table_def->columns()[element_index].name() };
 
             row[element_index] = values[ix];
         }
 
-        inserted_rows.append(row);
+        TRY(context.database->insert(row));
+        result.insert_row(row, {});
     }
 
-    for (auto& inserted_row : inserted_rows)
-        TRY(context.database->insert(inserted_row));
-
-    return { SQLCommand::Insert, 0, m_chained_expressions.size() };
+    return result;
 }
 
 }

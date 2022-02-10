@@ -11,7 +11,7 @@
 
 namespace SQL::AST {
 
-Result Statement::execute(AK::NonnullRefPtr<Database> database) const
+ResultOr<ResultSet> Statement::execute(AK::NonnullRefPtr<Database> database) const
 {
     ExecutionContext context { move(database), {}, this, nullptr };
     return execute(context);
