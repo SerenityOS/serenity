@@ -144,6 +144,11 @@ private:
     u8 do_wait_then_read(u8 port);
     void drain_output_buffer();
 
+    // Note: These functions exist only for the initialization process of the controller
+    void do_write(u8 port, u8 data);
+    u8 do_read(u8 port);
+    bool check_existence();
+
     Spinlock m_lock;
     bool m_first_port_available { false };
     bool m_second_port_available { false };
