@@ -305,7 +305,7 @@ struct ExecutionContext {
 
 class Expression : public ASTNode {
 public:
-    virtual Value evaluate(ExecutionContext&) const;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const;
 };
 
 class ErrorExpression final : public Expression {
@@ -319,7 +319,7 @@ public:
     }
 
     double value() const { return m_value; }
-    virtual Value evaluate(ExecutionContext&) const override;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
     double m_value;
@@ -333,7 +333,7 @@ public:
     }
 
     const String& value() const { return m_value; }
-    virtual Value evaluate(ExecutionContext&) const override;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
     String m_value;
@@ -354,13 +354,13 @@ private:
 
 class NullLiteral : public Expression {
 public:
-    virtual Value evaluate(ExecutionContext&) const override;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 };
 
 class NestedExpression : public Expression {
 public:
     const NonnullRefPtr<Expression>& expression() const { return m_expression; }
-    virtual Value evaluate(ExecutionContext&) const override;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 protected:
     explicit NestedExpression(NonnullRefPtr<Expression> expression)
@@ -431,7 +431,7 @@ public:
     const String& schema_name() const { return m_schema_name; }
     const String& table_name() const { return m_table_name; }
     const String& column_name() const { return m_column_name; }
-    virtual Value evaluate(ExecutionContext&) const override;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
     String m_schema_name;
@@ -474,7 +474,7 @@ public:
     }
 
     UnaryOperator type() const { return m_type; }
-    virtual Value evaluate(ExecutionContext&) const override;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
     UnaryOperator m_type;
@@ -530,7 +530,7 @@ public:
     }
 
     BinaryOperator type() const { return m_type; }
-    virtual Value evaluate(ExecutionContext&) const override;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
     BinaryOperator m_type;
@@ -544,7 +544,7 @@ public:
     }
 
     const NonnullRefPtrVector<Expression>& expressions() const { return m_expressions; }
-    virtual Value evaluate(ExecutionContext&) const override;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
     NonnullRefPtrVector<Expression> m_expressions;
@@ -637,7 +637,7 @@ public:
 
     MatchOperator type() const { return m_type; }
     const RefPtr<Expression>& escape() const { return m_escape; }
-    virtual Value evaluate(ExecutionContext&) const override;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
     MatchOperator m_type;
