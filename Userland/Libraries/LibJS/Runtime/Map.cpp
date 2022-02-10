@@ -34,7 +34,7 @@ bool Map::map_remove(Value const& key)
 {
     Optional<size_t> index;
 
-    for (auto it = m_keys.begin(); it != m_keys.end(); ++it) {
+    for (auto it = m_keys.begin(); !it.is_end(); ++it) {
         if (ValueTraits::equals(*it, key)) {
             index = it.key();
             break;
