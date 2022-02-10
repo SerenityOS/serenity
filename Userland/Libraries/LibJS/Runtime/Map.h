@@ -38,32 +38,26 @@ public:
     struct IteratorImpl {
         bool is_end() const
         {
-            if (m_index.has_value()) {
-                return m_map.m_keys.begin_from(*m_index).is_end()
-                    && m_map.m_keys.find_smallest_not_below_iterator(*m_index).is_end();
-            }
-
-            // First attempt and no iteration, ask the map if it has anything.
-            return m_map.m_keys.is_empty();
+            return m_map.m_keys.begin_from(m_index).is_end()
+                && m_map.m_keys.find_smallest_not_below_iterator(m_index).is_end();
         }
 
         IteratorImpl& operator++()
         {
-            if (auto it = m_map.m_keys.find_smallest_not_below_iterator(ensure_index() + 1); it.is_end())
-                m_index = m_map.m_next_insertion_id;
-            else
-                m_index = it.key();
+            ++m_index;
             return *this;
         }
 
         decltype(auto) operator*()
         {
-            return *m_map.m_entries.find(*m_map.m_keys.begin_from(ensure_index()));
+            ensure_next_element();
+            return *m_map.m_entries.find(*m_map.m_keys.begin_from(m_index));
         }
 
         decltype(auto) operator*() const
         {
-            return *m_map.m_entries.find(*m_map.m_keys.begin_from(ensure_index()));
+            ensure_next_element();
+            return *m_map.m_entries.find(*m_map.m_keys.begin_from(m_index));
         }
 
         bool operator==(IteratorImpl const& other) const { return m_index == other.m_index && &m_map == &other.m_map; }
@@ -74,24 +68,33 @@ public:
         IteratorImpl(Map const& map) requires(IsConst)
             : m_map(map)
         {
+            ensure_index();
         }
 
         IteratorImpl(Map& map) requires(!IsConst)
             : m_map(map)
         {
+            ensure_index();
         }
 
-        size_t ensure_index()
+        void ensure_index() const
         {
-            if (!m_index.has_value()) {
-                VERIFY(!m_map.m_keys.is_empty());
+            if (m_map.m_keys.is_empty())
+                m_index = m_map.m_next_insertion_id;
+            else
                 m_index = m_map.m_keys.begin().key();
-            }
-            return *m_index;
+        }
+
+        void ensure_next_element() const
+        {
+            if (auto it = m_map.m_keys.find_smallest_not_below_iterator(m_index); it.is_end())
+                m_index = m_map.m_next_insertion_id;
+            else
+                m_index = it.key();
         }
 
         Conditional<IsConst, Map const&, Map&> m_map;
-        mutable Optional<size_t> m_index;
+        mutable size_t m_index { 0 };
     };
 
     using Iterator = IteratorImpl<false>;
