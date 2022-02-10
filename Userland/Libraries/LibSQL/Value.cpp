@@ -773,8 +773,11 @@ int FloatImpl::compare(Value const& other) const
     if (!casted.has_value()) {
         return 1;
     }
+
     auto diff = value() - casted.value();
-    return (diff < NumericLimits<double>::epsilon()) ? 0 : ((diff > 0) ? 1 : -1);
+    if (fabs(diff) < NumericLimits<double>::epsilon())
+        return 0;
+    return diff < 0 ? -1 : 1;
 }
 
 String BooleanImpl::to_string() const
