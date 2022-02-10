@@ -353,7 +353,7 @@ int Emulator::virt$close(int fd)
 int Emulator::virt$mkdir(FlatPtr path, size_t path_length, mode_t mode)
 {
     auto buffer = mmu().copy_buffer_from_vm(path, path_length);
-    return syscall(SC_mkdir, buffer.data(), buffer.size(), mode);
+    return syscall(SC_mkdir, AT_FDCWD, buffer.data(), buffer.size(), mode);
 }
 
 int Emulator::virt$rmdir(FlatPtr path, size_t path_length)

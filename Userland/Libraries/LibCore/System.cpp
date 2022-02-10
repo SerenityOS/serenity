@@ -741,7 +741,7 @@ ErrorOr<void> mkdir(StringView path, mode_t mode)
     if (path.is_null())
         return Error::from_errno(EFAULT);
 #ifdef __serenity__
-    int rc = syscall(SC_mkdir, path.characters_without_null_termination(), path.length(), mode);
+    int rc = syscall(SC_mkdir, AT_FDCWD, path.characters_without_null_termination(), path.length(), mode);
     HANDLE_SYSCALL_RETURN_VALUE("mkdir"sv, rc, {});
 #else
     String path_string = path;

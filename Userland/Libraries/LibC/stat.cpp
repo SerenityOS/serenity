@@ -24,12 +24,7 @@ mode_t umask(mode_t mask)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkdir.html
 int mkdir(const char* pathname, mode_t mode)
 {
-    if (!pathname) {
-        errno = EFAULT;
-        return -1;
-    }
-    int rc = syscall(SC_mkdir, pathname, strlen(pathname), mode);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return mkdirat(AT_FDCWD, pathname, mode);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/chmod.html
@@ -108,5 +103,16 @@ int fstat(int fd, struct stat* statbuf)
 int fstatat(int fd, const char* path, struct stat* statbuf, int flags)
 {
     return do_stat(fd, path, statbuf, !(flags & AT_SYMLINK_NOFOLLOW));
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkdirat.html
+int mkdirat(int dirfd, char const* pathname, mode_t mode)
+{
+    if (!pathname) {
+        errno = EFAULT;
+        return -1;
+    }
+    int rc = syscall(SC_mkdir, dirfd, pathname, strlen(pathname), mode);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }

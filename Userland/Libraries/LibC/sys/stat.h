@@ -18,6 +18,7 @@ int chmod(const char* pathname, mode_t);
 int fchmodat(int fd, char const* path, mode_t mode, int flag);
 int fchmod(int fd, mode_t);
 int mkdir(const char* pathname, mode_t);
+int mkdirat(int dirfd, char const* pathname, mode_t mode);
 int mkfifo(const char* pathname, mode_t);
 int fstat(int fd, struct stat* statbuf);
 int lstat(const char* path, struct stat* statbuf);
