@@ -31,7 +31,7 @@ UNMAP_AFTER_INIT I8042Controller::I8042Controller()
 {
 }
 
-UNMAP_AFTER_INIT bool I8042Controller::check_existence()
+UNMAP_AFTER_INIT bool I8042Controller::check_existence(Badge<HIDManagement>)
 {
     {
         SpinlockLocker lock(m_lock);
@@ -50,59 +50,60 @@ UNMAP_AFTER_INIT bool I8042Controller::check_existence()
     }
 }
 
-UNMAP_AFTER_INIT void I8042Controller::detect_devices()
+UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
 {
-    if (!check_existence())
-        return;
 
     u8 configuration;
     {
         SpinlockLocker lock(m_lock);
 
-        drain_output_buffer();
+        TRY(drain_output_buffer());
 
-        do_wait_then_write(I8042Port::Command, I8042Command::DisableFirstPS2Port);
-        do_wait_then_write(I8042Port::Command, I8042Command::DisableSecondPS2Port); // ignored if it doesn't exist
+        TRY(do_wait_then_write(I8042Port::Command, I8042Command::DisableFirstPS2Port));
+        TRY(do_wait_then_write(I8042Port::Command, I8042Command::DisableSecondPS2Port)); // ignored if it doesn't exist
 
-        do_wait_then_write(I8042Port::Command, I8042Command::ReadConfiguration);
-        configuration = do_wait_then_read(I8042Port::Buffer);
-        do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration);
+        TRY(do_wait_then_write(I8042Port::Command, I8042Command::ReadConfiguration));
+        configuration = TRY(do_wait_then_read(I8042Port::Buffer));
+        TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
         configuration &= ~I8042ConfigurationFlag::FirstPS2PortInterrupt;
         configuration &= ~I8042ConfigurationFlag::SecondPS2PortInterrupt;
-        do_wait_then_write(I8042Port::Buffer, configuration);
+        TRY(do_wait_then_write(I8042Port::Buffer, configuration));
 
         m_is_dual_channel = (configuration & I8042ConfigurationFlag::SecondPS2PortClock) != 0;
         dbgln("I8042: {} channel controller", m_is_dual_channel ? "Dual" : "Single");
 
         // Perform controller self-test
-        do_wait_then_write(I8042Port::Command, I8042Command::TestPS2Controller);
-        if (do_wait_then_read(I8042Port::Buffer) == I8042Response::ControllerTestPassed) {
+        TRY(do_wait_then_write(I8042Port::Command, I8042Command::TestPS2Controller));
+        auto self_test_result = TRY(do_wait_then_read(I8042Port::Buffer));
+        if (self_test_result == I8042Response::ControllerTestPassed) {
             // Restore configuration in case the controller reset
-            do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration);
-            do_wait_then_write(I8042Port::Buffer, configuration);
+            TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
+            TRY(do_wait_then_write(I8042Port::Buffer, configuration));
         } else {
             dbgln("I8042: Controller self test failed");
         }
 
         // Test ports and enable them if available
-        do_wait_then_write(I8042Port::Command, I8042Command::TestFirstPS2Port);
-        m_first_port_available = (do_wait_then_read(I8042Port::Buffer) == 0);
+        TRY(do_wait_then_write(I8042Port::Command, I8042Command::TestFirstPS2Port));
+        auto first_port_test_result = TRY(do_wait_then_read(I8042Port::Buffer));
+        m_first_port_available = (first_port_test_result == 0);
 
         if (m_first_port_available) {
-            do_wait_then_write(I8042Port::Command, I8042Command::EnableFirstPS2Port);
+            TRY(do_wait_then_write(I8042Port::Command, I8042Command::EnableFirstPS2Port));
             configuration |= I8042ConfigurationFlag::FirstPS2PortInterrupt;
             configuration &= ~I8042ConfigurationFlag::FirstPS2PortClock;
         } else {
             dbgln("I8042: Keyboard port not available");
         }
 
-        drain_output_buffer();
+        TRY(drain_output_buffer());
 
         if (m_is_dual_channel) {
-            do_wait_then_write(I8042Port::Command, I8042Command::TestSecondPS2Port);
-            m_second_port_available = (do_wait_then_read(I8042Port::Buffer) == 0);
+            TRY(do_wait_then_write(I8042Port::Command, I8042Command::TestSecondPS2Port));
+            auto test_second_port_result = TRY(do_wait_then_read(I8042Port::Buffer));
+            m_second_port_available = (test_second_port_result == 0);
             if (m_second_port_available) {
-                do_wait_then_write(I8042Port::Command, I8042Command::EnableSecondPS2Port);
+                TRY(do_wait_then_write(I8042Port::Command, I8042Command::EnableSecondPS2Port));
                 configuration |= I8042ConfigurationFlag::SecondPS2PortInterrupt;
                 configuration &= ~I8042ConfigurationFlag::SecondPS2PortClock;
             } else {
@@ -114,8 +115,8 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
         if (m_first_port_available || m_second_port_available) {
             configuration &= ~I8042ConfigurationFlag::FirstPS2PortClock;
             configuration &= ~I8042ConfigurationFlag::SecondPS2PortClock;
-            do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration);
-            do_wait_then_write(I8042Port::Buffer, configuration);
+            TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
+            TRY(do_wait_then_write(I8042Port::Buffer, configuration));
         }
     }
 
@@ -128,8 +129,8 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
             configuration &= ~I8042ConfigurationFlag::FirstPS2PortInterrupt;
             configuration |= I8042ConfigurationFlag::FirstPS2PortClock;
             SpinlockLocker lock(m_lock);
-            do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration);
-            do_wait_then_write(I8042Port::Buffer, configuration);
+            TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
+            TRY(do_wait_then_write(I8042Port::Buffer, configuration));
         }
     }
     if (m_second_port_available) {
@@ -141,8 +142,8 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
                 m_second_port_available = false;
                 configuration |= I8042ConfigurationFlag::SecondPS2PortClock;
                 SpinlockLocker lock(m_lock);
-                do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration);
-                do_wait_then_write(I8042Port::Buffer, configuration);
+                TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
+                TRY(do_wait_then_write(I8042Port::Buffer, configuration));
             }
         }
     }
@@ -152,6 +153,7 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
         m_keyboard_device->enable_interrupts();
     if (m_mouse_device)
         m_mouse_device->enable_interrupts();
+    return {};
 }
 
 bool I8042Controller::irq_process_input_buffer(HIDDevice::Type instrument_type)
@@ -175,29 +177,39 @@ bool I8042Controller::irq_process_input_buffer(HIDDevice::Type instrument_type)
     return false;
 }
 
-void I8042Controller::drain_output_buffer()
+ErrorOr<void> I8042Controller::drain_output_buffer()
 {
-    for (;;) {
+    for (int attempt = 0; attempt < 5; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::OutputBuffer))
-            return;
+            return {};
         IO::in8(I8042Port::Buffer);
+
+        IO::delay(100);
     }
+    return Error::from_errno(EBUSY);
 }
 
-bool I8042Controller::do_reset_device(HIDDevice::Type device)
+ErrorOr<void> I8042Controller::do_reset_device(HIDDevice::Type device)
 {
     VERIFY(device != HIDDevice::Type::Unknown);
     VERIFY(m_lock.is_locked());
 
     VERIFY(!Processor::current_in_irq());
-    if (do_send_command(device, I8042Command::Reset) != I8042Response::Acknowledge)
-        return false;
+    auto reset_result = TRY(do_send_command(device, I8042Command::Reset));
+    // FIXME: Is this the correct errno value for this?
+    if (reset_result != I8042Response::Acknowledge)
+        return Error::from_errno(EIO);
     // Wait until we get the self-test result
-    return do_wait_then_read(I8042Port::Buffer) == I8042Response::Success;
+    auto self_test_result = TRY(do_wait_then_read(I8042Port::Buffer));
+
+    // FIXME: Is this the correct errno value for this?
+    if (self_test_result != I8042Response::Success)
+        return Error::from_errno(EIO);
+    return {};
 }
 
-u8 I8042Controller::do_send_command(HIDDevice::Type device, u8 command)
+ErrorOr<u8> I8042Controller::do_send_command(HIDDevice::Type device, u8 command)
 {
     VERIFY(device != HIDDevice::Type::Unknown);
     VERIFY(m_lock.is_locked());
@@ -207,20 +219,20 @@ u8 I8042Controller::do_send_command(HIDDevice::Type device, u8 command)
     return do_write_to_device(device, command);
 }
 
-u8 I8042Controller::do_send_command(HIDDevice::Type device, u8 command, u8 data)
+ErrorOr<u8> I8042Controller::do_send_command(HIDDevice::Type device, u8 command, u8 data)
 {
     VERIFY(device != HIDDevice::Type::Unknown);
     VERIFY(m_lock.is_locked());
 
     VERIFY(!Processor::current_in_irq());
 
-    u8 response = do_write_to_device(device, command);
+    u8 response = TRY(do_write_to_device(device, command));
     if (response == I8042Response::Acknowledge)
-        response = do_write_to_device(device, data);
+        response = TRY(do_write_to_device(device, data));
     return response;
 }
 
-u8 I8042Controller::do_write_to_device(HIDDevice::Type device, u8 data)
+ErrorOr<u8> I8042Controller::do_write_to_device(HIDDevice::Type device, u8 data)
 {
     VERIFY(device != HIDDevice::Type::Unknown);
     VERIFY(m_lock.is_locked());
@@ -231,50 +243,56 @@ u8 I8042Controller::do_write_to_device(HIDDevice::Type device, u8 data)
     u8 response;
     do {
         if (device != HIDDevice::Type::Keyboard) {
-            prepare_for_output();
+            TRY(prepare_for_output());
             IO::out8(I8042Port::Command, I8042Command::WriteSecondPS2PortInputBuffer);
         }
-        prepare_for_output();
+        TRY(prepare_for_output());
         IO::out8(I8042Port::Buffer, data);
 
-        response = do_wait_then_read(I8042Port::Buffer);
+        response = TRY(do_wait_then_read(I8042Port::Buffer));
     } while (response == I8042Response::Resend && ++attempts < 3);
     if (attempts >= 3)
         dbgln("Failed to write byte to device, gave up");
     return response;
 }
 
-u8 I8042Controller::do_read_from_device(HIDDevice::Type device)
+ErrorOr<u8> I8042Controller::do_read_from_device(HIDDevice::Type device)
 {
     VERIFY(device != HIDDevice::Type::Unknown);
 
-    prepare_for_input(device);
+    TRY(prepare_for_input(device));
     return IO::in8(I8042Port::Buffer);
 }
 
-void I8042Controller::prepare_for_input(HIDDevice::Type device)
+ErrorOr<void> I8042Controller::prepare_for_input(HIDDevice::Type device)
 {
     VERIFY(m_lock.is_locked());
     u8 const second_port_flag = device == HIDDevice::Type::Keyboard ? 0 : I8042StatusFlag::SecondPS2PortOutputBuffer;
-    for (;;) {
+    for (int attempt = 0; attempt < 5; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
-        if (!(status & I8042StatusFlag::OutputBuffer))
+        if (!(status & I8042StatusFlag::OutputBuffer)) {
+            IO::delay(100);
             continue;
+        }
         if (device == HIDDevice::Type::Unknown)
-            return;
+            return {};
         if ((status & I8042StatusFlag::SecondPS2PortOutputBuffer) == second_port_flag)
-            return;
+            return {};
+        IO::delay(100);
     }
+    return Error::from_errno(EBUSY);
 }
 
-void I8042Controller::prepare_for_output()
+ErrorOr<void> I8042Controller::prepare_for_output()
 {
     VERIFY(m_lock.is_locked());
-    for (;;) {
+    for (int attempt = 0; attempt < 5; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::InputBuffer))
-            return;
+            return {};
+        IO::delay(100);
     }
+    return Error::from_errno(EBUSY);
 }
 
 UNMAP_AFTER_INIT void I8042Controller::do_write(u8 port, u8 data)
@@ -289,17 +307,18 @@ UNMAP_AFTER_INIT u8 I8042Controller::do_read(u8 port)
     return IO::in8(port);
 }
 
-void I8042Controller::do_wait_then_write(u8 port, u8 data)
+ErrorOr<void> I8042Controller::do_wait_then_write(u8 port, u8 data)
 {
     VERIFY(m_lock.is_locked());
-    prepare_for_output();
+    TRY(prepare_for_output());
     IO::out8(port, data);
+    return {};
 }
 
-u8 I8042Controller::do_wait_then_read(u8 port)
+ErrorOr<u8> I8042Controller::do_wait_then_read(u8 port)
 {
     VERIFY(m_lock.is_locked());
-    prepare_for_input(HIDDevice::Type::Unknown);
+    TRY(prepare_for_input(HIDDevice::Type::Unknown));
     return IO::in8(port);
 }
 
