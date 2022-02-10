@@ -96,6 +96,7 @@ private:
     DOM::Document& m_document;
 
     struct RuleCache {
+        HashMap<FlyString, Vector<MatchingRule>> rules_by_id;
         HashMap<FlyString, Vector<MatchingRule>> rules_by_class;
         Vector<MatchingRule> other_rules;
         int generation { 0 };

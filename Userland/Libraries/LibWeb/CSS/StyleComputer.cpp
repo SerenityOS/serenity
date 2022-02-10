@@ -77,6 +77,10 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
             if (auto it = m_rule_cache->rules_by_class.find(class_name); it != m_rule_cache->rules_by_class.end())
                 rules_to_run.extend(it->value);
         }
+        if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null()) {
+            if (auto it = m_rule_cache->rules_by_id.find(id); it != m_rule_cache->rules_by_id.end())
+                rules_to_run.extend(it->value);
+        }
         rules_to_run.extend(m_rule_cache->other_rules);
 
         Vector<MatchingRule> matching_rules;
@@ -984,6 +988,7 @@ void StyleComputer::build_rule_cache()
     m_rule_cache = make<RuleCache>();
 
     size_t num_class_rules = 0;
+    size_t num_id_rules = 0;
 
     Vector<MatchingRule> matching_rules;
     size_t style_sheet_index = 0;
@@ -996,6 +1001,12 @@ void StyleComputer::build_rule_cache()
 
                 bool added_to_bucket = false;
                 for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
+                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Id) {
+                        m_rule_cache->rules_by_id.ensure(simple_selector.value).append(move(matching_rule));
+                        ++num_id_rules;
+                        added_to_bucket = true;
+                        break;
+                    }
                     if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Class) {
                         m_rule_cache->rules_by_class.ensure(simple_selector.value).append(move(matching_rule));
                         ++num_class_rules;
@@ -1015,9 +1026,10 @@ void StyleComputer::build_rule_cache()
 
     if constexpr (LIBWEB_CSS_DEBUG) {
         dbgln("Built rule cache!");
+        dbgln("     ID: {}", num_id_rules);
         dbgln("  Class: {}", num_class_rules);
         dbgln("  Other: {}", m_rule_cache->other_rules.size());
-        dbgln("  Total: {}", num_class_rules + m_rule_cache->other_rules.size());
+        dbgln("  Total: {}", num_class_rules + num_id_rules + m_rule_cache->other_rules.size());
     }
 
     m_rule_cache->generation = m_document.style_sheets().generation();
