@@ -35,6 +35,8 @@ u32 get_BAR5(DeviceIdentifier const&);
 u32 get_BAR(DeviceIdentifier const&, HeaderType0BaseRegister);
 size_t get_BAR_space_size(DeviceIdentifier const&, HeaderType0BaseRegister);
 BARSpaceType get_BAR_space_type(u32 pci_bar_value);
+size_t get_expansion_rom_space_size(DeviceIdentifier const&);
+
 void enable_bus_mastering(DeviceIdentifier const&);
 void disable_bus_mastering(DeviceIdentifier const&);
 void enable_io_space(DeviceIdentifier const&);
