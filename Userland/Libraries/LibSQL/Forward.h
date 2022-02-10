@@ -32,6 +32,9 @@ class Tuple;
 class TupleDescriptor;
 struct TupleElementDescriptor;
 class Value;
+
+template<typename ValueType>
+class ResultOr;
 }
 
 namespace SQL::AST {

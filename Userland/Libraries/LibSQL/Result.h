@@ -145,4 +145,33 @@ private:
     size_t m_delete_count { 0 };
 };
 
+template<typename ValueType>
+class [[nodiscard]] ResultOr {
+public:
+    ALWAYS_INLINE ResultOr(Result error)
+        : m_error(move(error))
+    {
+        VERIFY(m_error->is_error());
+    }
+
+    ALWAYS_INLINE ResultOr(ValueType value)
+        : m_value(move(value))
+    {
+    }
+
+    ResultOr(ResultOr&&) = default;
+    ResultOr& operator=(ResultOr&&) = default;
+
+    // These are for compatibility with the TRY() macro in AK.
+    [[nodiscard]] bool is_error() const { return m_error.has_value(); }
+    [[nodiscard]] ValueType release_value() { return m_value.release_value(); }
+    Result release_error() { return m_error.release_value(); }
+
+private:
+    AK_MAKE_NONCOPYABLE(ResultOr);
+
+    Optional<Result> m_error;
+    Optional<ValueType> m_value;
+};
+
 }
