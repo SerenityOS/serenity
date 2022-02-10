@@ -230,6 +230,7 @@ protected:
         // special case: deleting the only node
         if (m_size == 1) {
             m_root = nullptr;
+            m_minimum = nullptr;
             m_size = 0;
             return;
         }

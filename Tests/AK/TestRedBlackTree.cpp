@@ -128,3 +128,17 @@ TEST_CASE(find_smallest_not_below_iterator)
         EXPECT_EQ(smallest_not_below_three.key(), 3u);
     }
 }
+
+TEST_CASE(iterators_on_emptied_tree)
+{
+    RedBlackTree<size_t, size_t> test;
+    test.insert(1, 1);
+    test.remove(1);
+    EXPECT_EQ(test.size(), 0u);
+    auto begin_iterator = test.begin();
+    auto end_iterator = test.end();
+    EXPECT(begin_iterator.is_end());
+
+    EXPECT_EQ(begin_iterator, end_iterator);
+    EXPECT(!(begin_iterator != end_iterator));
+}
