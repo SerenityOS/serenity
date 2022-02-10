@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@ class TrackManager;
 class KeysWidget final : public GUI::Frame {
     C_OBJECT(KeysWidget)
 public:
-    virtual ~KeysWidget() override;
+    virtual ~KeysWidget() override = default;
 
     int key_code_to_key(int key_code) const;
     int mouse_note() const;

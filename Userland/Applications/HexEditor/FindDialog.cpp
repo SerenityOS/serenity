@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -149,8 +149,4 @@ FindDialog::FindDialog()
     m_cancel_button->on_click = [this](auto) {
         done(ExecResult::ExecCancel);
     };
-}
-
-FindDialog::~FindDialog()
-{
 }

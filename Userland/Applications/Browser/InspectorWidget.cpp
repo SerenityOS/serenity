@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -93,10 +94,6 @@ InspectorWidget::InspectorWidget()
     m_custom_properties_table_view = custom_properties_table_container.add<GUI::TableView>();
 
     m_dom_tree_view->set_focus(true);
-}
-
-InspectorWidget::~InspectorWidget()
-{
 }
 
 void InspectorWidget::select_default_node()

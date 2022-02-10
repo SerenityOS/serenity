@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Valtteri Koskivuori <vkoskiv@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ class MagnifierWidget final : public GUI::Frame {
     C_OBJECT(MagnifierWidget);
 
 public:
-    virtual ~MagnifierWidget();
+    virtual ~MagnifierWidget() override = default;
     void set_scale_factor(int scale_factor);
     void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>);
     void pause_capture(bool pause)

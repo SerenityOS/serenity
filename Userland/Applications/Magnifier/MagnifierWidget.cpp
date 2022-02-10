@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Valtteri Koskivuori <vkoskiv@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,10 +15,6 @@
 MagnifierWidget::MagnifierWidget()
 {
     GUI::DisplayLink::register_callback([this](auto) { sync(); });
-}
-
-MagnifierWidget::~MagnifierWidget()
-{
 }
 
 void MagnifierWidget::set_scale_factor(int scale_factor)

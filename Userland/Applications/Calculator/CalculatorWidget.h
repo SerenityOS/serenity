@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Glenford Williams <gw_dev@outlook.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,7 @@
 class CalculatorWidget final : public GUI::Widget {
     C_OBJECT(CalculatorWidget)
 public:
-    virtual ~CalculatorWidget() override;
+    virtual ~CalculatorWidget() override = default;
     String get_entry();
     void set_entry(KeypadValue);
 

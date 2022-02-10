@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,8 +18,8 @@
 
 class Calculator final {
 public:
-    Calculator();
-    ~Calculator();
+    Calculator() = default;
+    ~Calculator() = default;
 
     enum class Operation {
         None,

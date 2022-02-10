@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,7 @@ struct SearchResult {
 
 class CharacterSearchModel final : public GUI::Model {
 public:
-    CharacterSearchModel() { }
+    CharacterSearchModel() = default;
 
     int row_count(GUI::ModelIndex const&) const override { return m_data.size(); }
     int column_count(GUI::ModelIndex const&) const override { return 2; }
@@ -70,10 +71,6 @@ CharacterSearchWidget::CharacterSearchWidget()
         if (on_character_selected)
             on_character_selected(code_point);
     };
-}
-
-CharacterSearchWidget::~CharacterSearchWidget()
-{
 }
 
 void CharacterSearchWidget::search()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +14,7 @@
 class MouseCursorModel final : public GUI::Model {
 public:
     static NonnullRefPtr<MouseCursorModel> create() { return adopt_ref(*new MouseCursorModel); }
-    virtual ~MouseCursorModel() override { }
+    virtual ~MouseCursorModel() override = default;
 
     enum Column {
         Bitmap,
@@ -36,7 +36,7 @@ public:
     }
 
 private:
-    MouseCursorModel() { }
+    MouseCursorModel() = default;
 
     struct Cursor {
         RefPtr<Gfx::Bitmap> bitmap;
@@ -65,7 +65,7 @@ private:
 class ThemeWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT(ThemeWidget)
 public:
-    virtual ~ThemeWidget() override;
+    virtual ~ThemeWidget() override = default;
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;

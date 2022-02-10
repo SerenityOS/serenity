@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -54,7 +55,7 @@ public:
     static ProcessModel& the();
 
     static NonnullRefPtr<ProcessModel> create() { return adopt_ref(*new ProcessModel); }
-    virtual ~ProcessModel() override;
+    virtual ~ProcessModel() override = default;
 
     virtual int row_count(GUI::ModelIndex const&) const override;
     virtual int column_count(GUI::ModelIndex const&) const override;

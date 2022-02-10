@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,7 +13,7 @@ class KeyButton final : public GUI::AbstractButton {
     C_OBJECT(KeyButton)
 
 public:
-    virtual ~KeyButton() override;
+    virtual ~KeyButton() override = default;
 
     void set_pressed(bool value) { m_pressed = value; }
 

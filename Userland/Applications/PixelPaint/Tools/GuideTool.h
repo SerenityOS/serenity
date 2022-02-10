@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,14 +10,15 @@
 #include "../Guide.h"
 #include "Tool.h"
 #include <AK/RefPtr.h>
+#include <LibGUI/Menu.h>
 
 namespace PixelPaint {
 
 class GuideTool final : public Tool {
 public:
-    GuideTool();
+    GuideTool() = default;
 
-    virtual ~GuideTool() override;
+    virtual ~GuideTool() override = default;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual void on_mousemove(Layer*, MouseEvent&) override;

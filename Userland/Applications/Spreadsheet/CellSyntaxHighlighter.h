@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,8 +13,8 @@ namespace Spreadsheet {
 
 class CellSyntaxHighlighter final : public JS::SyntaxHighlighter {
 public:
-    CellSyntaxHighlighter() { }
-    virtual ~CellSyntaxHighlighter() override;
+    CellSyntaxHighlighter() = default;
+    virtual ~CellSyntaxHighlighter() override = default;
 
     virtual void rehighlight(const Palette&) override;
     void set_cell(const Cell* cell) { m_cell = cell; }

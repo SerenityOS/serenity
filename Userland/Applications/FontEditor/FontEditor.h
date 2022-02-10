@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +22,7 @@ class FontEditorWidget final
     , public Config::Listener {
     C_OBJECT(FontEditorWidget)
 public:
-    virtual ~FontEditorWidget() override;
+    virtual ~FontEditorWidget() override = default;
 
     bool open_file(String const&);
     bool save_file(String const&);

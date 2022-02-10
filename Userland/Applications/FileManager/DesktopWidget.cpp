@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,14 +9,6 @@
 #include <LibGUI/Painter.h>
 
 namespace FileManager {
-
-DesktopWidget::DesktopWidget()
-{
-}
-
-DesktopWidget::~DesktopWidget()
-{
-}
 
 void DesktopWidget::paint_event(GUI::PaintEvent& event)
 {

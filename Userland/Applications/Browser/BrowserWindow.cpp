@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -129,10 +130,6 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     build_menus();
 
     create_new_tab(move(url), true);
-}
-
-BrowserWindow::~BrowserWindow()
-{
 }
 
 void BrowserWindow::build_menus()

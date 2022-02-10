@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Hunter Salyer <thefalsehonesty@gmail.com>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +18,7 @@ namespace Browser {
 class ConsoleWidget final : public GUI::Widget {
     C_OBJECT(ConsoleWidget)
 public:
-    virtual ~ConsoleWidget();
+    virtual ~ConsoleWidget() = default;
 
     void notify_about_new_console_message(i32 message_index);
     void handle_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages);

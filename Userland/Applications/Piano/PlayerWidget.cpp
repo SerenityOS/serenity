@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, JJ Roberts-White <computerfido@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -93,10 +94,6 @@ PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
     m_next_button->on_click = [this](unsigned) {
         m_track_manager.time_forward((sample_rate / (beats_per_minute / 60) / notes_per_beat));
     };
-}
-
-PlayerWidget::~PlayerWidget()
-{
 }
 
 void PlayerWidget::add_track()

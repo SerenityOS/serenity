@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,10 +22,6 @@ namespace PixelPaint {
 BucketTool::BucketTool()
 {
     m_cursor = Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png").release_value_but_fixme_should_propagate_errors();
-}
-
-BucketTool::~BucketTool()
-{
 }
 
 static float color_distance_squared(Gfx::Color const& lhs, Gfx::Color const& rhs)

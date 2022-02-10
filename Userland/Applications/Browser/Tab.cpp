@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Maciej Zygmanowski <sppmacd@pm.me>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -349,10 +350,6 @@ Tab::Tab(BrowserWindow& window)
     hooks().on_context_menu_request = [&](auto& screen_position) {
         m_page_context_menu->popup(screen_position);
     };
-}
-
-Tab::~Tab()
-{
 }
 
 void Tab::load(const URL& url, LoadType load_type)

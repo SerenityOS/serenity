@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,7 +25,7 @@ class SheetGlobalObject final : public JS::GlobalObject {
 public:
     SheetGlobalObject(Sheet&);
 
-    virtual ~SheetGlobalObject() override;
+    virtual ~SheetGlobalObject() override = default;
 
     virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyKey const& name) const override;
     virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyKey const&, JS::Value receiver) const override;
@@ -51,7 +51,7 @@ class WorkbookObject final : public JS::Object {
 public:
     WorkbookObject(Workbook&, JS::GlobalObject&);
 
-    virtual ~WorkbookObject() override;
+    virtual ~WorkbookObject() override = default;
 
     virtual void initialize(JS::GlobalObject&) override;
 

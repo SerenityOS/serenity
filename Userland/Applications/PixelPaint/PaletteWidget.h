@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Felix Rauch <noreply@felixrau.ch>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +22,7 @@ class PaletteWidget final : public GUI::Frame {
     C_OBJECT(PaletteWidget);
 
 public:
-    virtual ~PaletteWidget() override;
+    virtual ~PaletteWidget() override = default;
 
     void set_primary_color(Color);
     void set_secondary_color(Color);

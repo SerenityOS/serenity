@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Cesar Torres <shortanemoia@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@ class BarsVisualizationWidget final : public VisualizationWidget {
     C_OBJECT(BarsVisualizationWidget)
 
 public:
-    ~BarsVisualizationWidget() override;
+    ~BarsVisualizationWidget() override = default;
     void set_buffer(RefPtr<Audio::Buffer> buffer) override;
     void set_samplerate(int samplerate) override;
 

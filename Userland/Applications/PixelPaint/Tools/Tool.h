@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #pragma once
 
 #include <AK/Variant.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ValueSlider.h>
@@ -20,7 +22,7 @@ class Layer;
 
 class Tool {
 public:
-    virtual ~Tool();
+    virtual ~Tool() = default;
 
     class MouseEvent {
     public:
@@ -73,7 +75,7 @@ public:
     void set_action(GUI::Action*);
 
 protected:
-    Tool();
+    Tool() = default;
     WeakPtr<ImageEditor> m_editor;
     RefPtr<GUI::Action> m_action;
 

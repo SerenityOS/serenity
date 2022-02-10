@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +23,7 @@ class HelpListModel final : public GUI::Model {
 public:
     static NonnullRefPtr<HelpListModel> create() { return adopt_ref(*new HelpListModel); }
 
-    virtual ~HelpListModel() override { }
+    virtual ~HelpListModel() override = default;
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_keys.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
@@ -197,9 +197,5 @@ void HelpWindow::set_docs(JsonObject&& docs)
     m_docs = move(docs);
     static_cast<HelpListModel*>(m_listview->model())->set_from(m_docs);
     m_listview->update();
-}
-
-HelpWindow::~HelpWindow()
-{
 }
 }

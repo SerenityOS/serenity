@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -41,10 +42,6 @@ ProcessModel::ProcessModel()
         m_cpus.append(make<CpuInfo>(0));
 
     m_kernel_process_icon = GUI::Icon::default_icon("gear");
-}
-
-ProcessModel::~ProcessModel()
-{
 }
 
 int ProcessModel::row_count(GUI::ModelIndex const&) const

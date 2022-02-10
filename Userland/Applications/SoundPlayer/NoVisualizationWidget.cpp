@@ -1,19 +1,12 @@
 /*
  * Copyright (c) 2021, Cesar Torres <shortanemoia@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "NoVisualizationWidget.h"
 #include <LibGUI/Painter.h>
-
-NoVisualizationWidget::NoVisualizationWidget()
-{
-}
-
-NoVisualizationWidget::~NoVisualizationWidget()
-{
-}
 
 void NoVisualizationWidget::paint_event(GUI::PaintEvent& event)
 {

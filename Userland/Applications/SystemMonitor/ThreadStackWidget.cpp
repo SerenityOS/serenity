@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -71,10 +72,6 @@ ThreadStackWidget::ThreadStackWidget()
     layout()->set_margins(4);
     m_stack_table = add<GUI::TableView>();
     m_stack_table->set_model(adopt_ref(*new ThreadStackModel()));
-}
-
-ThreadStackWidget::~ThreadStackWidget()
-{
 }
 
 void ThreadStackWidget::show_event(GUI::ShowEvent&)

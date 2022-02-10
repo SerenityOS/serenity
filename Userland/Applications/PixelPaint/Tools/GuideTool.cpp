@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,14 +15,6 @@
 #include <LibGUI/Widget.h>
 
 namespace PixelPaint {
-
-GuideTool::GuideTool()
-{
-}
-
-GuideTool::~GuideTool()
-{
-}
 
 RefPtr<Guide> GuideTool::closest_guide(const Gfx::IntPoint& point)
 {

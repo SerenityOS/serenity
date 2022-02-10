@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
  * Copyright (c) 2021, JJ Roberts-White <computerfido@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +22,7 @@ class TrackManager {
 
 public:
     TrackManager();
-    ~TrackManager();
+    ~TrackManager() = default;
 
     Track& current_track() { return *m_tracks[m_current_track]; }
     Span<const Sample> buffer() const { return m_current_front_buffer; }

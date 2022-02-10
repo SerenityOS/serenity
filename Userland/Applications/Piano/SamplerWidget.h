@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, William McPherson <willmcpherson2@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@ class TrackManager;
 class WaveEditor final : public GUI::Frame {
     C_OBJECT(WaveEditor)
 public:
-    virtual ~WaveEditor() override;
+    virtual ~WaveEditor() override = default;
 
 private:
     explicit WaveEditor(TrackManager&);
@@ -28,7 +29,7 @@ private:
 class SamplerWidget final : public GUI::Frame {
     C_OBJECT(SamplerWidget)
 public:
-    virtual ~SamplerWidget() override;
+    virtual ~SamplerWidget() override = default;
 
 private:
     explicit SamplerWidget(TrackManager&);

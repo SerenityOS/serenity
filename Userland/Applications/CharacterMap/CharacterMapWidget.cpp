@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -121,10 +122,6 @@ CharacterMapWidget::CharacterMapWidget()
 
     did_change_font();
     update_statusbar();
-}
-
-CharacterMapWidget::~CharacterMapWidget()
-{
 }
 
 void CharacterMapWidget::initialize_menubar(GUI::Window& window)

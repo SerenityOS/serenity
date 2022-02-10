@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,14 +9,6 @@
 #include <AK/Math.h>
 #include <LibAudio/Buffer.h>
 #include <LibGUI/Painter.h>
-
-SampleWidget::SampleWidget()
-{
-}
-
-SampleWidget::~SampleWidget()
-{
-}
 
 void SampleWidget::paint_event(GUI::PaintEvent& event)
 {

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,8 +16,8 @@ namespace PixelPaint {
 
 class RectangleTool final : public Tool {
 public:
-    RectangleTool();
-    virtual ~RectangleTool() override;
+    RectangleTool() = default;
+    virtual ~RectangleTool() override = default;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual void on_mousemove(Layer*, MouseEvent&) override;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -64,8 +64,4 @@ void MouseWidget::reset_default_values()
     m_scroll_length_spinbox->set_value(default_scroll_length);
     m_double_click_speed_slider->set_value(double_click_speed_default);
     m_switch_buttons_checkbox->set_checked(false);
-}
-
-MouseWidget::~MouseWidget()
-{
 }

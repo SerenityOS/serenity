@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +18,7 @@ public:
 
 private:
     GoToOffsetDialog();
-    virtual ~GoToOffsetDialog() override;
+    virtual ~GoToOffsetDialog() override = default;
     void update_statusbar();
     int process_input();
     int calculate_new_offset(int offset);

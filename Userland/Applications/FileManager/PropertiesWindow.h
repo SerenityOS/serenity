@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +19,7 @@ class PropertiesWindow final : public GUI::Window {
     C_OBJECT(PropertiesWindow);
 
 public:
-    virtual ~PropertiesWindow() override;
+    virtual ~PropertiesWindow() override = default;
 
 private:
     PropertiesWindow(String const& path, bool disable_rename, Window* parent = nullptr);
