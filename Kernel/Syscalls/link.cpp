@@ -29,7 +29,18 @@ ErrorOr<FlatPtr> Process::sys$symlink(Userspace<const Syscall::SC_symlink_params
 
     auto target = TRY(get_syscall_path_argument(params.target));
     auto linkpath = TRY(get_syscall_path_argument(params.linkpath));
-    TRY(VirtualFileSystem::the().symlink(target->view(), linkpath->view(), current_directory()));
+
+    RefPtr<Custody> base;
+    if (params.dirfd == AT_FDCWD) {
+        base = current_directory();
+    } else {
+        auto base_description = TRY(open_file_description(params.dirfd));
+        if (!base_description->custody())
+            return EINVAL;
+        base = base_description->custody();
+    }
+
+    TRY(VirtualFileSystem::the().symlink(target->view(), linkpath->view(), *base));
     return 0;
 }
 
