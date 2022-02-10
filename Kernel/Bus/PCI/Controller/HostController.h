@@ -31,12 +31,12 @@ public:
 
     u32 domain_number() const { return m_domain.domain_number(); }
 
-    void enumerate_attached_devices(Function<IterationDecision(DeviceIdentifier)> callback);
+    void enumerate_attached_devices(Function<IterationDecision(EnumerableDeviceIdentifier)> callback);
 
 private:
-    void enumerate_bus(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber, bool recursive);
-    void enumerate_functions(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber, DeviceNumber, FunctionNumber, bool recursive);
-    void enumerate_device(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive);
+    void enumerate_bus(Function<IterationDecision(EnumerableDeviceIdentifier)> const& callback, BusNumber, bool recursive);
+    void enumerate_functions(Function<IterationDecision(EnumerableDeviceIdentifier)> const& callback, BusNumber, DeviceNumber, FunctionNumber, bool recursive);
+    void enumerate_device(Function<IterationDecision(EnumerableDeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive);
 
     u8 read8_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field);
     u16 read16_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field);

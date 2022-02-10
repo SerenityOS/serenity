@@ -88,10 +88,9 @@ static StringView determine_device_class(PCI::DeviceIdentifier const& device_ide
 
 UNMAP_AFTER_INIT void Device::initialize()
 {
-    auto address = pci_address();
-    enable_bus_mastering(pci_address());
+    enable_bus_mastering(device_identifier());
 
-    auto capabilities = PCI::get_device_identifier(address).capabilities();
+    auto capabilities = device_identifier().capabilities();
     for (auto& capability : capabilities) {
         if (capability.id().value() == PCI::Capabilities::ID::VendorSpecific) {
             // We have a virtio_pci_cap
@@ -126,21 +125,21 @@ UNMAP_AFTER_INIT void Device::initialize()
 
     if (m_use_mmio) {
         for (auto& cfg : m_configs) {
-            auto mapping_io_window = IOWindow::create_for_pci_device_bar(pci_address(), static_cast<PCI::HeaderType0BaseRegister>(cfg.bar)).release_value_but_fixme_should_propagate_errors();
+            auto mapping_io_window = IOWindow::create_for_pci_device_bar(device_identifier(), static_cast<PCI::HeaderType0BaseRegister>(cfg.bar)).release_value_but_fixme_should_propagate_errors();
             m_register_bases[cfg.bar] = move(mapping_io_window);
         }
         m_common_cfg = get_config(ConfigurationType::Common, 0);
         m_notify_cfg = get_config(ConfigurationType::Notify, 0);
         m_isr_cfg = get_config(ConfigurationType::ISR, 0);
     } else {
-        auto mapping_io_window = IOWindow::create_for_pci_device_bar(pci_address(), PCI::HeaderType0BaseRegister::BAR0).release_value_but_fixme_should_propagate_errors();
+        auto mapping_io_window = IOWindow::create_for_pci_device_bar(device_identifier(), PCI::HeaderType0BaseRegister::BAR0).release_value_but_fixme_should_propagate_errors();
         m_register_bases[0] = move(mapping_io_window);
     }
 
     // Note: We enable interrupts at least after the m_register_bases[0] ptr is
     // assigned with an IOWindow, to ensure that in case of getting an interrupt
     // we can access registers from that IO window range.
-    PCI::enable_interrupt_line(pci_address());
+    PCI::enable_interrupt_line(device_identifier());
     enable_irq();
 
     reset_device();
@@ -150,11 +149,11 @@ UNMAP_AFTER_INIT void Device::initialize()
 }
 
 UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::DeviceIdentifier const& device_identifier)
-    : PCI::Device(device_identifier.address())
+    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(device_identifier))
     , IRQHandler(device_identifier.interrupt_line().value())
     , m_class_name(VirtIO::determine_device_class(device_identifier))
 {
-    dbgln("{}: Found @ {}", m_class_name, pci_address());
+    dbgln("{}: Found @ {}", m_class_name, device_identifier.address());
 }
 
 void Device::notify_queue(u16 queue_index)

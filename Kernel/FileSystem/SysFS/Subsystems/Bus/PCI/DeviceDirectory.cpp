@@ -12,11 +12,12 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, PCI::Address address)
+UNMAP_AFTER_INIT NonnullLockRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, PCI::DeviceIdentifier const& device_identifier)
 {
     // FIXME: Handle allocation failure gracefully
+    auto& address = device_identifier.address();
     auto device_name = MUST(KString::formatted("{:04x}:{:02x}:{:02x}.{}", address.domain(), address.bus(), address.device(), address.function()));
-    auto directory = adopt_lock_ref(*new (nothrow) PCIDeviceSysFSDirectory(move(device_name), parent_directory, address));
+    auto directory = adopt_lock_ref(*new (nothrow) PCIDeviceSysFSDirectory(move(device_name), parent_directory, device_identifier));
     MUST(directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::VENDOR_ID, 2));
         list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::DEVICE_ID, 2));
@@ -38,9 +39,9 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirect
     return directory;
 }
 
-UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const& parent_directory, PCI::Address address)
+UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const& parent_directory, PCI::DeviceIdentifier const& device_identifier)
     : SysFSDirectory(parent_directory)
-    , m_address(address)
+    , m_device_identifier(device_identifier)
     , m_device_directory_name(move(device_directory_name))
 {
 }

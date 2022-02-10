@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::PCI {
@@ -38,30 +39,31 @@ enum class BARSpaceType {
 };
 
 enum class RegisterOffset {
-    VENDOR_ID = 0x00,            // word
-    DEVICE_ID = 0x02,            // word
-    COMMAND = 0x04,              // word
-    STATUS = 0x06,               // word
-    REVISION_ID = 0x08,          // byte
-    PROG_IF = 0x09,              // byte
-    SUBCLASS = 0x0a,             // byte
-    CLASS = 0x0b,                // byte
-    CACHE_LINE_SIZE = 0x0c,      // byte
-    LATENCY_TIMER = 0x0d,        // byte
-    HEADER_TYPE = 0x0e,          // byte
-    BIST = 0x0f,                 // byte
-    BAR0 = 0x10,                 // u32
-    BAR1 = 0x14,                 // u32
-    BAR2 = 0x18,                 // u32
-    SECONDARY_BUS = 0x19,        // byte
-    BAR3 = 0x1C,                 // u32
-    BAR4 = 0x20,                 // u32
-    BAR5 = 0x24,                 // u32
-    SUBSYSTEM_VENDOR_ID = 0x2C,  // u16
-    SUBSYSTEM_ID = 0x2E,         // u16
-    CAPABILITIES_POINTER = 0x34, // u8
-    INTERRUPT_LINE = 0x3C,       // byte
-    INTERRUPT_PIN = 0x3D,        // byte
+    VENDOR_ID = 0x00,             // word
+    DEVICE_ID = 0x02,             // word
+    COMMAND = 0x04,               // word
+    STATUS = 0x06,                // word
+    REVISION_ID = 0x08,           // byte
+    PROG_IF = 0x09,               // byte
+    SUBCLASS = 0x0a,              // byte
+    CLASS = 0x0b,                 // byte
+    CACHE_LINE_SIZE = 0x0c,       // byte
+    LATENCY_TIMER = 0x0d,         // byte
+    HEADER_TYPE = 0x0e,           // byte
+    BIST = 0x0f,                  // byte
+    BAR0 = 0x10,                  // u32
+    BAR1 = 0x14,                  // u32
+    BAR2 = 0x18,                  // u32
+    SECONDARY_BUS = 0x19,         // byte
+    BAR3 = 0x1C,                  // u32
+    BAR4 = 0x20,                  // u32
+    BAR5 = 0x24,                  // u32
+    SUBSYSTEM_VENDOR_ID = 0x2C,   // u16
+    SUBSYSTEM_ID = 0x2E,          // u16
+    EXPANSION_ROM_POINTER = 0x30, // u32
+    CAPABILITIES_POINTER = 0x34,  // u8
+    INTERRUPT_LINE = 0x3C,        // byte
+    INTERRUPT_PIN = 0x3D,         // byte
 };
 
 enum class Limits {
@@ -213,7 +215,7 @@ private:
 
 class Capability {
 public:
-    Capability(Address const& address, u8 id, u8 ptr)
+    Capability(Address address, u8 id, u8 ptr)
         : m_address(address)
         , m_id(id)
         , m_ptr(ptr)
@@ -222,15 +224,12 @@ public:
 
     CapabilityID id() const { return m_id; }
 
-    u8 read8(u32) const;
-    u16 read16(u32) const;
-    u32 read32(u32) const;
-    void write8(u32, u8);
-    void write16(u32, u16);
-    void write32(u32, u32);
+    u8 read8(size_t offset) const;
+    u16 read16(size_t offset) const;
+    u32 read32(size_t offset) const;
 
 private:
-    Address m_address;
+    const Address m_address;
     const CapabilityID m_id;
     const u8 m_ptr;
 };
@@ -245,9 +244,9 @@ AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptLine);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptPin);
 
 class Access;
-class DeviceIdentifier {
+class EnumerableDeviceIdentifier {
 public:
-    DeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, InterruptLine interrupt_line, InterruptPin interrupt_pin, Vector<Capability> const& capabilities)
+    EnumerableDeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, InterruptLine interrupt_line, InterruptPin interrupt_pin, Vector<Capability> const& capabilities)
         : m_address(address)
         , m_hardware_id(hardware_id)
         , m_revision_id(revision_id)
@@ -289,7 +288,7 @@ public:
         m_prog_if = new_progif;
     }
 
-private:
+protected:
     Address m_address;
     HardwareID m_hardware_id;
 
@@ -304,6 +303,38 @@ private:
     InterruptPin m_interrupt_pin;
 
     Vector<Capability> m_capabilities;
+};
+
+class DeviceIdentifier
+    : public RefCounted<DeviceIdentifier>
+    , public EnumerableDeviceIdentifier {
+    AK_MAKE_NONCOPYABLE(DeviceIdentifier);
+
+public:
+    static ErrorOr<NonnullRefPtr<DeviceIdentifier>> from_enumerable_identifier(EnumerableDeviceIdentifier const& other_identifier);
+
+    Spinlock<LockRank::None>& operation_lock() { return m_operation_lock; }
+    Spinlock<LockRank::None>& operation_lock() const { return m_operation_lock; }
+
+    virtual ~DeviceIdentifier() = default;
+
+private:
+    DeviceIdentifier(EnumerableDeviceIdentifier const& other_identifier)
+        : EnumerableDeviceIdentifier(other_identifier.address(),
+            other_identifier.hardware_id(),
+            other_identifier.revision_id(),
+            other_identifier.class_code(),
+            other_identifier.subclass_code(),
+            other_identifier.prog_if(),
+            other_identifier.subsystem_id(),
+            other_identifier.subsystem_vendor_id(),
+            other_identifier.interrupt_line(),
+            other_identifier.interrupt_pin(),
+            other_identifier.capabilities())
+    {
+    }
+
+    mutable Spinlock<LockRank::None> m_operation_lock;
 };
 
 class Domain;

@@ -69,7 +69,6 @@ private:
     bool wait_for_ready(bool);
 
 private:
-    PCI::DeviceIdentifier m_pci_device_id;
     LockRefPtr<NVMeQueue> m_admin_queue;
     NonnullLockRefPtrVector<NVMeQueue> m_queues;
     NonnullLockRefPtrVector<NVMeNameSpace> m_namespaces;

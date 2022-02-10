@@ -199,7 +199,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> E1000ENetworkAdapter
     auto rx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors)), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
     auto tx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors)), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
 
-    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) E1000ENetworkAdapter(pci_device_identifier.address(),
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) E1000ENetworkAdapter(pci_device_identifier,
         irq, move(registers_io_window),
         move(rx_buffer_region),
         move(tx_buffer_region),
@@ -210,8 +210,8 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> E1000ENetworkAdapter
 
 UNMAP_AFTER_INIT ErrorOr<void> E1000ENetworkAdapter::initialize(Badge<NetworkingManagement>)
 {
-    dmesgln("E1000e: Found @ {}", pci_address());
-    enable_bus_mastering(pci_address());
+    dmesgln("E1000e: Found @ {}", device_identifier().address());
+    enable_bus_mastering(device_identifier());
 
     dmesgln("E1000e: IO base: {}", m_registers_io_window);
     dmesgln("E1000e: Interrupt line: {}", interrupt_number());
@@ -229,11 +229,11 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000ENetworkAdapter::initialize(Badge<Networking
     return {};
 }
 
-UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(PCI::Address address, u8 irq,
+UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(PCI::DeviceIdentifier const& device_identifier, u8 irq,
     NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
     NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
     NonnullOwnPtr<Memory::Region> tx_descriptors_region, NonnullOwnPtr<KString> interface_name)
-    : E1000NetworkAdapter(address, irq, move(registers_io_window),
+    : E1000NetworkAdapter(device_identifier, irq, move(registers_io_window),
         move(rx_buffer_region),
         move(tx_buffer_region),
         move(rx_descriptors_region),
