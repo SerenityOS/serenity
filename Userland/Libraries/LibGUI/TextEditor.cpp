@@ -512,7 +512,11 @@ void TextEditor::paint_event(PaintEvent& event)
         size_t selection_end_column_within_line = selection.end().line() == line_index ? selection.end().column() : line.length();
 
         size_t visual_line_index = 0;
+        size_t last_start_of_visual_line = 0;
+        Optional<size_t> multiline_trailing_space_offset {};
         for_each_visual_line(line_index, [&](Gfx::IntRect const& visual_line_rect, auto& visual_line_text, size_t start_of_visual_line, [[maybe_unused]] bool is_last_visual_line) {
+            ScopeGuard update_last_start_of_visual_line { [&]() { last_start_of_visual_line = start_of_visual_line; } };
+
             if (is_focused() && is_multi_line() && line_index == m_cursor.line() && is_cursor_line_highlighted()) {
                 Gfx::IntRect visible_content_line_rect {
                     visible_content_rect().x(),
@@ -650,7 +654,10 @@ void TextEditor::paint_event(PaintEvent& event)
                     physical_column = 0;
                 size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
                 if (physical_column < end_of_visual_line) {
+                    physical_column -= multiline_trailing_space_offset.value_or(0);
+
                     size_t visual_column = physical_column > start_of_visual_line ? (physical_column - start_of_visual_line) : 0;
+
                     Gfx::IntRect whitespace_rect {
                         content_x_for_position({ line_index, physical_column }),
                         visual_line_rect.y(),
@@ -658,6 +665,9 @@ void TextEditor::paint_event(PaintEvent& event)
                         visual_line_rect.height()
                     };
                     painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(255, 192, 192));
+
+                    if (!multiline_trailing_space_offset.has_value())
+                        multiline_trailing_space_offset = physical_column - last_start_of_visual_line;
                 }
             }
             if (m_visualize_leading_whitespace && line.leading_spaces() > 0) {
