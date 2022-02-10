@@ -1,15 +1,37 @@
 /*
  * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "PDFViewer.h"
+#include <AK/Array.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Painter.h>
 #include <LibPDF/Renderer.h>
 
 static constexpr int PAGE_PADDING = 25;
+
+static constexpr Array zoom_levels = {
+    17,
+    21,
+    26,
+    33,
+    41,
+    51,
+    64,
+    80,
+    100,
+    120,
+    144,
+    173,
+    207,
+    249,
+    299,
+    358,
+    430
+};
 
 PDFViewer::PDFViewer()
 {
@@ -147,7 +169,7 @@ void PDFViewer::timer_event(Core::TimerEvent&)
 
 void PDFViewer::zoom_in()
 {
-    if (m_zoom_level < number_of_zoom_levels - 1) {
+    if (m_zoom_level < zoom_levels.size() - 1) {
         m_zoom_level++;
         update();
     }

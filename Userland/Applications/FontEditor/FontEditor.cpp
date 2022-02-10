@@ -8,6 +8,7 @@
 #include "FontEditor.h"
 #include "GlyphEditorWidget.h"
 #include "NewFontDialog.h"
+#include <AK/Array.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
@@ -42,18 +43,6 @@
 #include <LibGfx/TextDirection.h>
 #include <LibUnicode/CharacterTypes.h>
 
-static constexpr int s_pangram_count = 8;
-static char const* pangrams[s_pangram_count] = {
-    "quick fox jumps nightly above wizard",
-    "five quacking zephyrs jolt my wax bed",
-    "pack my box with five dozen liquor jugs",
-    "quick brown fox jumps over the lazy dog",
-    "waxy and quivering jocks fumble the pizza",
-    "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;",
-    "byxfjärmat föl gick på duvshowen",
-    "         "
-};
-
 static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
 {
     auto window = GUI::Window::construct(&editor);
@@ -84,6 +73,17 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     textbox_button_container.set_layout<GUI::HorizontalBoxLayout>();
     textbox_button_container.set_fixed_height(22);
 
+    constexpr Array pangrams = {
+        "quick fox jumps nightly above wizard",
+        "five quacking zephyrs jolt my wax bed",
+        "pack my box with five dozen liquor jugs",
+        "quick brown fox jumps over the lazy dog",
+        "waxy and quivering jocks fumble the pizza",
+        "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;",
+        "byxfjärmat föl gick på duvshowen",
+        "         "
+    };
+
     auto& preview_textbox = textbox_button_container.add<GUI::TextBox>();
     preview_textbox.set_text(pangrams[0]);
     preview_textbox.set_placeholder("Preview text");
@@ -99,8 +99,8 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     reload_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png").release_value_but_fixme_should_propagate_errors());
     reload_button.set_fixed_width(22);
     reload_button.on_click = [&](auto) {
-        static int i = 1;
-        if (i >= s_pangram_count)
+        static size_t i = 1;
+        if (i >= pangrams.size())
             i = 0;
         preview_textbox.set_text(pangrams[i]);
         i++;

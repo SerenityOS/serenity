@@ -8,6 +8,7 @@
 #include <AK/Array.h>
 #include <AK/Hex.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <Applications/HexEditor/FindDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -17,17 +18,10 @@
 #include <LibGUI/Widget.h>
 
 struct Option {
-    String title;
+    StringView title;
     OptionId opt;
     bool enabled;
     bool default_action;
-};
-
-static const Array<Option, 2> options = {
-    {
-        { "ASCII String", OPTION_ASCII_STRING, true, true },
-        { "Hex value", OPTION_HEX_VALUE, true, false },
-    }
 };
 
 int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer, bool& find_all)
@@ -107,6 +101,13 @@ FindDialog::FindDialog()
     m_find_all_button = *main_widget.find_descendant_of_type_named<GUI::Button>("find_all_button");
     m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
 
+    constexpr Array<Option, 2> options = {
+        {
+            { "ASCII String", OPTION_ASCII_STRING, true, true },
+            { "Hex value", OPTION_HEX_VALUE, true, false },
+        }
+    };
+
     auto& radio_container = *main_widget.find_descendant_of_type_named<GUI::Widget>("radio_container");
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
@@ -114,7 +115,7 @@ FindDialog::FindDialog()
         radio.set_enabled(action.enabled);
         radio.set_text(action.title);
 
-        radio.on_checked = [this, i](auto) {
+        radio.on_checked = [this, i, &options](auto) {
             m_selected_option = options[i].opt;
         };
 

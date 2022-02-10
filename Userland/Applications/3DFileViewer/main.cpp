@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,9 +29,6 @@
 #include "Mesh.h"
 #include "WavefrontOBJLoader.h"
 
-static constexpr u16 RENDER_WIDTH = 640;
-static constexpr u16 RENDER_HEIGHT = 480;
-
 class GLContextWidget final : public GUI::Frame {
     C_OBJECT(GLContextWidget);
 
@@ -58,6 +56,8 @@ private:
     GLContextWidget()
         : m_mesh_loader(adopt_own(*new WavefrontOBJLoader()))
     {
+        constexpr u16 RENDER_WIDTH = 640;
+        constexpr u16 RENDER_HEIGHT = 480;
         m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT }).release_value_but_fixme_should_propagate_errors();
         m_context = GL::create_context(*m_bitmap);
 
