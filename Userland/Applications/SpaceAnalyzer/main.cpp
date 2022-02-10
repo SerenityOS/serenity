@@ -8,6 +8,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
+#include <AK/StringView.h>
 #include <AK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
 #include <LibCore/DirIterator.h>
@@ -29,7 +30,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static const char* APP_NAME = "Space Analyzer";
+static constexpr StringView APP_NAME = "Space Analyzer";
 static constexpr size_t FILES_ENCOUNTERED_UPDATE_STEP_SIZE = 25;
 
 struct TreeNode : public SpaceAnalyzer::TreeMapNode {
