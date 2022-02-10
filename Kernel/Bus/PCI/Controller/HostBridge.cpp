@@ -19,7 +19,7 @@ NonnullOwnPtr<HostBridge> HostBridge::must_create_with_io_access()
 
 HostBridge::HostBridge(PCI::Domain const& domain)
     : HostController(domain)
-    , m_enumerated_buses(256, false)
+    , m_enumerated_buses(Bitmap::try_create(256, false).release_value_but_fixme_should_propagate_errors())
 {
 }
 
