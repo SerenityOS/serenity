@@ -16,14 +16,14 @@ TEST_CASE(construct_empty)
 
 TEST_CASE(find_first_set)
 {
-    Bitmap bitmap(128, false);
+    auto bitmap = Bitmap::must_create(128, false);
     bitmap.set(69, true);
     EXPECT_EQ(bitmap.find_first_set().value(), 69u);
 }
 
 TEST_CASE(find_first_unset)
 {
-    Bitmap bitmap(128, true);
+    auto bitmap = Bitmap::must_create(128, true);
     bitmap.set(51, false);
     EXPECT_EQ(bitmap.find_first_unset().value(), 51u);
 }
@@ -31,7 +31,7 @@ TEST_CASE(find_first_unset)
 TEST_CASE(find_one_anywhere_set)
 {
     {
-        Bitmap bitmap(168, false);
+        auto bitmap = Bitmap::must_create(168, false);
         bitmap.set(34, true);
         bitmap.set(97, true);
         EXPECT_EQ(bitmap.find_one_anywhere_set(0).value(), 34u);
@@ -48,7 +48,7 @@ TEST_CASE(find_one_anywhere_set)
         EXPECT_EQ(bitmap.find_one_anywhere_set(128).value(), 34u);
     }
     {
-        Bitmap bitmap(128 + 24, false);
+        auto bitmap = Bitmap::must_create(128 + 24, false);
         bitmap.set(34, true);
         bitmap.set(126, true);
         EXPECT_EQ(bitmap.find_one_anywhere_set(0).value(), 34u);
@@ -56,7 +56,7 @@ TEST_CASE(find_one_anywhere_set)
         EXPECT_EQ(bitmap.find_one_anywhere_set(64).value(), 126u);
     }
     {
-        Bitmap bitmap(32, false);
+        auto bitmap = Bitmap::must_create(32, false);
         bitmap.set(12, true);
         bitmap.set(24, true);
         auto got = bitmap.find_one_anywhere_set(0).value();
@@ -67,7 +67,7 @@ TEST_CASE(find_one_anywhere_set)
 TEST_CASE(find_one_anywhere_unset)
 {
     {
-        Bitmap bitmap(168, true);
+        auto bitmap = Bitmap::must_create(168, true);
         bitmap.set(34, false);
         bitmap.set(97, false);
         EXPECT_EQ(bitmap.find_one_anywhere_unset(0).value(), 34u);
@@ -84,7 +84,7 @@ TEST_CASE(find_one_anywhere_unset)
         EXPECT_EQ(bitmap.find_one_anywhere_unset(128).value(), 34u);
     }
     {
-        Bitmap bitmap(128 + 24, true);
+        auto bitmap = Bitmap::must_create(128 + 24, true);
         bitmap.set(34, false);
         bitmap.set(126, false);
         EXPECT_EQ(bitmap.find_one_anywhere_unset(0).value(), 34u);
@@ -92,7 +92,7 @@ TEST_CASE(find_one_anywhere_unset)
         EXPECT_EQ(bitmap.find_one_anywhere_unset(64).value(), 126u);
     }
     {
-        Bitmap bitmap(32, true);
+        auto bitmap = Bitmap::must_create(32, true);
         bitmap.set(12, false);
         bitmap.set(24, false);
         auto got = bitmap.find_one_anywhere_unset(0).value();
@@ -102,7 +102,7 @@ TEST_CASE(find_one_anywhere_unset)
 
 TEST_CASE(find_first_range)
 {
-    Bitmap bitmap(128, true);
+    auto bitmap = Bitmap::must_create(128, true);
     bitmap.set(47, false);
     bitmap.set(48, false);
     bitmap.set(49, false);
@@ -118,7 +118,7 @@ TEST_CASE(find_first_range)
 TEST_CASE(set_range)
 {
     {
-        Bitmap bitmap(128, false);
+        auto bitmap = Bitmap::must_create(128, false);
         bitmap.set_range(41, 10, true);
         EXPECT_EQ(bitmap.get(40), false);
         EXPECT_EQ(bitmap.get(41), true);
@@ -134,7 +134,7 @@ TEST_CASE(set_range)
         EXPECT_EQ(bitmap.get(51), false);
     }
     {
-        Bitmap bitmap(288, false);
+        auto bitmap = Bitmap::must_create(288, false);
         bitmap.set_range(48, 32, true);
         bitmap.set_range(94, 39, true);
         bitmap.set_range(190, 71, true);
@@ -152,12 +152,12 @@ TEST_CASE(set_range)
 TEST_CASE(find_first_fit)
 {
     {
-        Bitmap bitmap(32, true);
+        auto bitmap = Bitmap::must_create(32, true);
         auto fit = bitmap.find_first_fit(1);
         EXPECT_EQ(fit.has_value(), false);
     }
     {
-        Bitmap bitmap(32, true);
+        auto bitmap = Bitmap::must_create(32, true);
         bitmap.set(31, false);
         auto fit = bitmap.find_first_fit(1);
         EXPECT_EQ(fit.has_value(), true);
@@ -165,7 +165,7 @@ TEST_CASE(find_first_fit)
     }
 
     for (size_t i = 0; i < 128; ++i) {
-        Bitmap bitmap(128, true);
+        auto bitmap = Bitmap::must_create(128, true);
         bitmap.set(i, false);
         auto fit = bitmap.find_first_fit(1);
         EXPECT_EQ(fit.has_value(), true);
@@ -173,7 +173,7 @@ TEST_CASE(find_first_fit)
     }
 
     for (size_t i = 0; i < 127; ++i) {
-        Bitmap bitmap(128, true);
+        auto bitmap = Bitmap::must_create(128, true);
         bitmap.set(i, false);
         bitmap.set(i + 1, false);
         auto fit = bitmap.find_first_fit(2);
@@ -184,7 +184,7 @@ TEST_CASE(find_first_fit)
     size_t bitmap_size = 1024;
     for (size_t chunk_size = 1; chunk_size < 64; ++chunk_size) {
         for (size_t i = 0; i < bitmap_size - chunk_size; ++i) {
-            Bitmap bitmap(bitmap_size, true);
+            auto bitmap = Bitmap::must_create(bitmap_size, true);
             for (size_t c = 0; c < chunk_size; ++c)
                 bitmap.set(i + c, false);
             auto fit = bitmap.find_first_fit(chunk_size);
@@ -196,7 +196,7 @@ TEST_CASE(find_first_fit)
 
 TEST_CASE(find_longest_range_of_unset_bits_edge)
 {
-    Bitmap bitmap(36, true);
+    auto bitmap = Bitmap::must_create(36, true);
     bitmap.set_range(32, 4, false);
     size_t found_range_size = 0;
     auto result = bitmap.find_longest_range_of_unset_bits(1, found_range_size);
@@ -206,7 +206,7 @@ TEST_CASE(find_longest_range_of_unset_bits_edge)
 
 TEST_CASE(count_in_range)
 {
-    Bitmap bitmap(256, false);
+    auto bitmap = Bitmap::must_create(256, false);
     bitmap.set(14, true);
     bitmap.set(17, true);
     bitmap.set(19, true);
@@ -252,14 +252,14 @@ TEST_CASE(count_in_range)
 TEST_CASE(byte_aligned_access)
 {
     {
-        Bitmap bitmap(16, true);
+        auto bitmap = Bitmap::must_create(16, true);
         EXPECT_EQ(bitmap.count_in_range(0, 16, true), 16u);
         EXPECT_EQ(bitmap.count_in_range(8, 8, true), 8u);
         EXPECT_EQ(bitmap.count_in_range(0, 8, true), 8u);
         EXPECT_EQ(bitmap.count_in_range(4, 8, true), 8u);
     }
     {
-        Bitmap bitmap(16, false);
+        auto bitmap = Bitmap::must_create(16, false);
         bitmap.set_range(4, 8, true);
         EXPECT_EQ(bitmap.count_in_range(0, 16, true), 8u);
         EXPECT_EQ(bitmap.count_in_range(8, 8, true), 4u);
@@ -267,7 +267,7 @@ TEST_CASE(byte_aligned_access)
         EXPECT_EQ(bitmap.count_in_range(4, 8, true), 8u);
     }
     {
-        Bitmap bitmap(8, false);
+        auto bitmap = Bitmap::must_create(8, false);
         bitmap.set(2, true);
         bitmap.set(4, true);
         EXPECT_EQ(bitmap.count_in_range(0, 2, true), 0u);

@@ -253,7 +253,7 @@ NonnullRefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(Badge<Reg
 Bitmap& AnonymousVMObject::ensure_cow_map()
 {
     if (m_cow_map.is_null())
-        m_cow_map = Bitmap { page_count(), true };
+        m_cow_map = Bitmap::try_create(page_count(), true).release_value_but_fixme_should_propagate_errors();
     return m_cow_map;
 }
 
