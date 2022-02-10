@@ -39,8 +39,6 @@ Result Insert::execute(ExecutionContext& context) const
     Vector<Row> inserted_rows;
     TRY(inserted_rows.try_ensure_capacity(m_chained_expressions.size()));
 
-    context.result = Result { SQLCommand::Insert };
-
     for (auto& row_expr : m_chained_expressions) {
         for (auto& column_def : table_def->columns()) {
             if (!m_column_names.contains_slow(column_def.name()))

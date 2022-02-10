@@ -49,7 +49,7 @@ Result Select::execute(ExecutionContext& context) const
         }
     }
 
-    context.result = Result { SQLCommand::Select };
+    Result result { SQLCommand::Select };
 
     auto descriptor = adopt_ref(*new TupleDescriptor);
     Tuple tuple(descriptor);
@@ -113,7 +113,7 @@ Result Select::execute(ExecutionContext& context) const
             }
         }
 
-        context.result->insert(tuple, sort_key);
+        result.insert(tuple, sort_key);
     }
 
     if (m_limit_clause != nullptr) {
@@ -140,10 +140,10 @@ Result Select::execute(ExecutionContext& context) const
             }
         }
 
-        context.result->limit(offset_value, limit_value);
+        result.limit(offset_value, limit_value);
     }
 
-    return context.result.release_value();
+    return result;
 }
 
 }
