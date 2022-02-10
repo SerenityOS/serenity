@@ -219,7 +219,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 max_ms = ms;
 
             char addr_buf[INET_ADDRSTRLEN];
-            outln("Pong from {}: id={}, seq={}{}, time={}ms, size={}",
+            outln("Ping from {}: id={}, seq={}{}, time={}ms, size={}",
                 inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf)),
                 ntohs(pong_hdr->un.echo.id),
                 ntohs(pong_hdr->un.echo.sequence),
