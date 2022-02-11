@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibSQL/AST/AST.h>
 #include <LibSQL/Serializer.h>
 #include <LibSQL/Value.h>
 #include <math.h>
@@ -390,135 +391,117 @@ bool Value::operator>=(Value const& other) const
     return compare(other) >= 0;
 }
 
-Value Value::add(Value const& other) const
+static Result invalid_type_for_numeric_operator(AST::BinaryOperator op)
+{
+    return { SQLCommand::Unknown, SQLErrorCode::NumericOperatorTypeMismatch, BinaryOperator_name(op) };
+}
+
+ResultOr<Value> Value::add(Value const& other) const
 {
     if (auto double_maybe = to_double(); double_maybe.has_value()) {
         if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
             return Value(double_maybe.value() + other_double_maybe.value());
         if (auto int_maybe = other.to_int(); int_maybe.has_value())
             return Value(double_maybe.value() + (double)int_maybe.value());
-        VERIFY_NOT_REACHED();
-    }
-    if (auto int_maybe = to_double(); int_maybe.has_value()) {
+    } else if (auto int_maybe = to_int(); int_maybe.has_value()) {
         if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
             return Value(other_double_maybe.value() + (double)int_maybe.value());
         if (auto other_int_maybe = other.to_int(); other_int_maybe.has_value())
             return Value(int_maybe.value() + other_int_maybe.value());
-        VERIFY_NOT_REACHED();
     }
-    VERIFY_NOT_REACHED();
+    return invalid_type_for_numeric_operator(AST::BinaryOperator::Plus);
 }
 
-Value Value::subtract(Value const& other) const
+ResultOr<Value> Value::subtract(Value const& other) const
 {
     if (auto double_maybe = to_double(); double_maybe.has_value()) {
         if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
             return Value(double_maybe.value() - other_double_maybe.value());
         if (auto int_maybe = other.to_int(); int_maybe.has_value())
             return Value(double_maybe.value() - (double)int_maybe.value());
-        VERIFY_NOT_REACHED();
-    }
-    if (auto int_maybe = to_double(); int_maybe.has_value()) {
+    } else if (auto int_maybe = to_int(); int_maybe.has_value()) {
         if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
             return Value((double)int_maybe.value() - other_double_maybe.value());
         if (auto other_int_maybe = other.to_int(); other_int_maybe.has_value())
             return Value(int_maybe.value() - other_int_maybe.value());
-        VERIFY_NOT_REACHED();
     }
-    VERIFY_NOT_REACHED();
+    return invalid_type_for_numeric_operator(AST::BinaryOperator::Minus);
 }
 
-Value Value::multiply(Value const& other) const
+ResultOr<Value> Value::multiply(Value const& other) const
 {
     if (auto double_maybe = to_double(); double_maybe.has_value()) {
         if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
             return Value(double_maybe.value() * other_double_maybe.value());
         if (auto int_maybe = other.to_int(); int_maybe.has_value())
             return Value(double_maybe.value() * (double)int_maybe.value());
-        VERIFY_NOT_REACHED();
-    }
-    if (auto int_maybe = to_double(); int_maybe.has_value()) {
+    } else if (auto int_maybe = to_int(); int_maybe.has_value()) {
         if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
             return Value((double)int_maybe.value() * other_double_maybe.value());
         if (auto other_int_maybe = other.to_int(); other_int_maybe.has_value())
             return Value(int_maybe.value() * other_int_maybe.value());
-        VERIFY_NOT_REACHED();
     }
-    VERIFY_NOT_REACHED();
+    return invalid_type_for_numeric_operator(AST::BinaryOperator::Multiplication);
 }
 
-Value Value::divide(Value const& other) const
+ResultOr<Value> Value::divide(Value const& other) const
 {
     if (auto double_maybe = to_double(); double_maybe.has_value()) {
         if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
             return Value(double_maybe.value() / other_double_maybe.value());
         if (auto int_maybe = other.to_int(); int_maybe.has_value())
             return Value(double_maybe.value() / (double)int_maybe.value());
-        VERIFY_NOT_REACHED();
-    }
-
-    if (auto int_maybe = to_double(); int_maybe.has_value()) {
+    } else if (auto int_maybe = to_int(); int_maybe.has_value()) {
         if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
             return Value((double)int_maybe.value() / other_double_maybe.value());
         if (auto other_int_maybe = other.to_int(); other_int_maybe.has_value())
             return Value(int_maybe.value() / other_int_maybe.value());
-        VERIFY_NOT_REACHED();
     }
-    VERIFY_NOT_REACHED();
+    return invalid_type_for_numeric_operator(AST::BinaryOperator::Division);
 }
 
-Value Value::modulo(Value const& other) const
+ResultOr<Value> Value::modulo(Value const& other) const
 {
     auto int_maybe_1 = to_int();
     auto int_maybe_2 = other.to_int();
-    if (!int_maybe_1.has_value() || !int_maybe_2.has_value()) {
-        // TODO Error handling
-        VERIFY_NOT_REACHED();
-    }
+    if (!int_maybe_1.has_value() || !int_maybe_2.has_value())
+        return invalid_type_for_numeric_operator(AST::BinaryOperator::Modulo);
     return Value(int_maybe_1.value() % int_maybe_2.value());
 }
 
-Value Value::shift_left(Value const& other) const
+ResultOr<Value> Value::shift_left(Value const& other) const
 {
     auto u32_maybe = to_u32();
     auto num_bytes_maybe = other.to_int();
-    if (!u32_maybe.has_value() || !num_bytes_maybe.has_value()) {
-        // TODO Error handling
-        VERIFY_NOT_REACHED();
-    }
+    if (!u32_maybe.has_value() || !num_bytes_maybe.has_value())
+        return invalid_type_for_numeric_operator(AST::BinaryOperator::ShiftLeft);
     return Value(u32_maybe.value() << num_bytes_maybe.value());
 }
 
-Value Value::shift_right(Value const& other) const
+ResultOr<Value> Value::shift_right(Value const& other) const
 {
     auto u32_maybe = to_u32();
     auto num_bytes_maybe = other.to_int();
-    if (!u32_maybe.has_value() || !num_bytes_maybe.has_value()) {
-        // TODO Error handling
-        VERIFY_NOT_REACHED();
-    }
+    if (!u32_maybe.has_value() || !num_bytes_maybe.has_value())
+        return invalid_type_for_numeric_operator(AST::BinaryOperator::ShiftRight);
     return Value(u32_maybe.value() >> num_bytes_maybe.value());
 }
 
-Value Value::bitwise_or(Value const& other) const
+ResultOr<Value> Value::bitwise_or(Value const& other) const
 {
     auto u32_maybe_1 = to_u32();
     auto u32_maybe_2 = other.to_u32();
-    if (!u32_maybe_1.has_value() || !u32_maybe_2.has_value()) {
-        // TODO Error handling
-        VERIFY_NOT_REACHED();
-    }
+    if (!u32_maybe_1.has_value() || !u32_maybe_2.has_value())
+        return invalid_type_for_numeric_operator(AST::BinaryOperator::BitwiseOr);
     return Value(u32_maybe_1.value() | u32_maybe_2.value());
 }
 
-Value Value::bitwise_and(Value const& other) const
+ResultOr<Value> Value::bitwise_and(Value const& other) const
 {
     auto u32_maybe_1 = to_u32();
     auto u32_maybe_2 = other.to_u32();
-    if (!u32_maybe_1.has_value() || !u32_maybe_2.has_value()) {
-        // TODO Error handling
-        VERIFY_NOT_REACHED();
-    }
+    if (!u32_maybe_1.has_value() || !u32_maybe_2.has_value())
+        return invalid_type_for_numeric_operator(AST::BinaryOperator::BitwiseAnd);
     return Value(u32_maybe_1.value() & u32_maybe_2.value());
 }
 

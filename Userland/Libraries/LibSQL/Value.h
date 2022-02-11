@@ -12,6 +12,7 @@
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibSQL/Forward.h>
+#include <LibSQL/Result.h>
 #include <LibSQL/TupleDescriptor.h>
 #include <LibSQL/Type.h>
 #include <LibSQL/ValueImpl.h>
@@ -118,15 +119,15 @@ public:
     bool operator>(Value const&) const;
     bool operator>=(Value const&) const;
 
-    Value add(Value const&) const;
-    Value subtract(Value const&) const;
-    Value multiply(Value const&) const;
-    Value divide(Value const&) const;
-    Value modulo(Value const&) const;
-    Value shift_left(Value const&) const;
-    Value shift_right(Value const&) const;
-    Value bitwise_or(Value const&) const;
-    Value bitwise_and(Value const&) const;
+    ResultOr<Value> add(Value const&) const;
+    ResultOr<Value> subtract(Value const&) const;
+    ResultOr<Value> multiply(Value const&) const;
+    ResultOr<Value> divide(Value const&) const;
+    ResultOr<Value> modulo(Value const&) const;
+    ResultOr<Value> shift_left(Value const&) const;
+    ResultOr<Value> shift_right(Value const&) const;
+    ResultOr<Value> bitwise_or(Value const&) const;
+    ResultOr<Value> bitwise_and(Value const&) const;
 
     [[nodiscard]] TupleElementDescriptor descriptor() const
     {
