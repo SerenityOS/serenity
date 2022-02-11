@@ -83,6 +83,7 @@
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/SVGPathElementWrapper.h>
+#include <LibWeb/Bindings/SVGRectElementWrapper.h>
 #include <LibWeb/Bindings/SVGSVGElementWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/DOM/Document.h>
@@ -157,6 +158,7 @@
 #include <LibWeb/HTML/HTMLUnknownElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/SVG/SVGPathElement.h>
+#include <LibWeb/SVG/SVGRectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
 namespace Web::Bindings {
@@ -311,6 +313,8 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<SVG::SVGSVGElement>(node)));
     if (is<SVG::SVGPathElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<SVG::SVGPathElement>(node)));
+    if (is<SVG::SVGRectElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<SVG::SVGRectElement>(node)));
     if (is<DOM::Element>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<DOM::Element>(node)));
     if (is<DOM::DocumentFragment>(node))

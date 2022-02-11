@@ -255,6 +255,8 @@
 #include <LibWeb/Bindings/SVGGraphicsElementPrototype.h>
 #include <LibWeb/Bindings/SVGPathElementConstructor.h>
 #include <LibWeb/Bindings/SVGPathElementPrototype.h>
+#include <LibWeb/Bindings/SVGRectElementConstructor.h>
+#include <LibWeb/Bindings/SVGRectElementPrototype.h>
 #include <LibWeb/Bindings/SVGSVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGSVGElementPrototype.h>
 #include <LibWeb/Bindings/ScreenConstructor.h>
@@ -435,6 +437,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGGeometryElement)        \
     ADD_WINDOW_OBJECT_INTERFACE(SVGGraphicsElement)        \
     ADD_WINDOW_OBJECT_INTERFACE(SVGPathElement)            \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGRectElement)            \
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)             \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                      \
     ADD_WINDOW_OBJECT_INTERFACE(TextEncoder)               \
