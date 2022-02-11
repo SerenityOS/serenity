@@ -19,6 +19,8 @@ namespace Web::SVG::AttributeNames {
     E(clipPathUnits)                \
     E(contentScriptType)            \
     E(contentStyleType)             \
+    E(cx)                           \
+    E(cy)                           \
     E(diffuseConstant)              \
     E(edgeMode)                     \
     E(filterUnits)                  \
@@ -49,6 +51,7 @@ namespace Web::SVG::AttributeNames {
     E(preserveAlpha)                \
     E(preserveAspectRatio)          \
     E(primitiveUnits)               \
+    E(r)                            \
     E(refX)                         \
     E(refY)                         \
     E(repeatCount)                  \
