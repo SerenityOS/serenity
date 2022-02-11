@@ -22,11 +22,6 @@ UNMAP_AFTER_INIT void DeviceManagement::initialize()
     s_the.ensure_instance();
 }
 
-UNMAP_AFTER_INIT void DeviceManagement::attach_audio_device(CharacterDevice const& device)
-{
-    m_audio_devices.append(device);
-}
-
 UNMAP_AFTER_INIT void DeviceManagement::attach_console_device(ConsoleDevice const& device)
 {
     m_console_device = device;

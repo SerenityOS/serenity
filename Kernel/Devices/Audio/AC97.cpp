@@ -7,7 +7,6 @@
 #include <Kernel/Devices/Audio/AC97.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
@@ -20,28 +19,14 @@ static constexpr u16 pcm_fixed_sample_rate = 48000;
 static constexpr u16 pcm_sample_rate_minimum = 8000;
 static constexpr u16 pcm_sample_rate_maximum = 48000;
 
-UNMAP_AFTER_INIT void AC97::detect()
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AC97>> AC97::try_create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
-        // Only consider PCI audio controllers
-        if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::Multimedia)
-            || device_identifier.subclass_code().value() != to_underlying(PCI::Multimedia::SubclassID::AudioController))
-            return;
-
-        dbgln("AC97: found audio controller at {}", device_identifier.address());
-        auto device_or_error = DeviceManagement::try_create_device<AC97>(device_identifier);
-        if (device_or_error.is_error()) {
-            dbgln("AC97: failed to initialize device {}", device_identifier.address());
-            return;
-        }
-        DeviceManagement::the().attach_audio_device(device_or_error.release_value());
-    });
+    return adopt_nonnull_ref_or_enomem(new (nothrow) AC97(pci_device_identifier));
 }
 
 UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier const& pci_device_identifier)
     : PCI::Device(pci_device_identifier.address())
     , IRQHandler(pci_device_identifier.interrupt_line().value())
-    , CharacterDevice(42, 42)
     , m_io_mixer_base(PCI::get_BAR0(pci_address()) & ~1)
     , m_io_bus_base(PCI::get_BAR1(pci_address()) & ~1)
     , m_pcm_out_channel(channel("PCMOut"sv, NativeAudioBusChannel::PCMOutChannel))
@@ -129,28 +114,6 @@ UNMAP_AFTER_INIT void AC97::initialize()
     enable_irq();
 }
 
-ErrorOr<void> AC97::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
-{
-    switch (request) {
-    case SOUNDCARD_IOCTL_GET_SAMPLE_RATE: {
-        auto output = static_ptr_cast<u32*>(arg);
-        return copy_to_user(output, &m_sample_rate);
-    }
-    case SOUNDCARD_IOCTL_SET_SAMPLE_RATE: {
-        auto sample_rate = static_cast<u32>(arg.ptr());
-        TRY(set_pcm_output_sample_rate(sample_rate));
-        return {};
-    }
-    default:
-        return EINVAL;
-    }
-}
-
-ErrorOr<size_t> AC97::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
-{
-    return 0;
-}
-
 void AC97::reset_pcm_out()
 {
     m_pcm_out_channel.reset();
@@ -194,8 +157,36 @@ void AC97::set_pcm_output_volume(u8 left_channel, u8 right_channel, Muted mute)
     m_io_mixer_base.offset(NativeAudioMixerRegister::SetPCMOutputVolume).out(volume_value);
 }
 
-ErrorOr<size_t> AC97::write(OpenFileDescription&, u64, UserOrKernelBuffer const& data, size_t length)
+RefPtr<AudioChannel> AC97::audio_channel(u32 index) const
 {
+    if (index == 0)
+        return m_audio_channel;
+    return {};
+}
+void AC97::detect_hardware_audio_channels(Badge<AudioManagement>)
+{
+    m_audio_channel = AudioChannel::must_create(*this, 0);
+}
+
+ErrorOr<void> AC97::set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate)
+{
+    if (channel_index != 0)
+        return Error::from_errno(ENODEV);
+    TRY(set_pcm_output_sample_rate(samples_per_second_rate));
+    return {};
+}
+ErrorOr<u32> AC97::get_pcm_output_sample_rate(size_t channel_index)
+{
+    if (channel_index != 0)
+        return Error::from_errno(ENODEV);
+    return m_sample_rate;
+}
+
+ErrorOr<size_t> AC97::write(size_t channel_index, UserOrKernelBuffer const& data, size_t length)
+{
+    if (channel_index != 0)
+        return Error::from_errno(ENODEV);
+
     if (!m_output_buffer) {
         m_output_buffer = TRY(MM.allocate_dma_buffer_pages(m_output_buffer_page_count * PAGE_SIZE, "AC97 Output buffer"sv, Memory::Region::Access::Write));
     }
