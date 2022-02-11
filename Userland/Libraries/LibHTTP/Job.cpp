@@ -316,12 +316,6 @@ void Job::on_socket_connected()
                 if (m_code == 204)
                     return finish_up();
 
-                can_read_line = m_socket->can_read_line();
-                if (can_read_line.is_error())
-                    return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-
-                if (!can_read_line.value())
-                    return;
                 break;
             }
             auto parts = line.split_view(':');
