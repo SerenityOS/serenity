@@ -251,6 +251,7 @@ class SVGGeometryElement;
 class SVGGraphicsElement;
 class SVGLineElement;
 class SVGPathElement;
+class SVGPolylineElement;
 class SVGRectElement;
 class SVGSVGElement;
 }
@@ -460,6 +461,7 @@ class SVGGeometryElementWrapper;
 class SVGGraphicsElementWrapper;
 class SVGLineElementWrapper;
 class SVGPathElementWrapper;
+class SVGPolylineElementWrapper;
 class SVGRectElementWrapper;
 class SVGSVGElementWrapper;
 class TextEncoderWrapper;

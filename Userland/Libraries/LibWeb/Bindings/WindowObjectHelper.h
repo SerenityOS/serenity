@@ -261,6 +261,8 @@
 #include <LibWeb/Bindings/SVGLineElementPrototype.h>
 #include <LibWeb/Bindings/SVGPathElementConstructor.h>
 #include <LibWeb/Bindings/SVGPathElementPrototype.h>
+#include <LibWeb/Bindings/SVGPolylineElementConstructor.h>
+#include <LibWeb/Bindings/SVGPolylineElementPrototype.h>
 #include <LibWeb/Bindings/SVGRectElementConstructor.h>
 #include <LibWeb/Bindings/SVGRectElementPrototype.h>
 #include <LibWeb/Bindings/SVGSVGElementConstructor.h>
@@ -446,6 +448,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGGraphicsElement)        \
     ADD_WINDOW_OBJECT_INTERFACE(SVGLineElement)            \
     ADD_WINDOW_OBJECT_INTERFACE(SVGPathElement)            \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGPolylineElement)        \
     ADD_WINDOW_OBJECT_INTERFACE(SVGRectElement)            \
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)             \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                      \
