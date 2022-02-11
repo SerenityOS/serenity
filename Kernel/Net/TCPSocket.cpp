@@ -237,17 +237,17 @@ ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* pa
     tcp_packet.set_data_offset(tcp_header_size / sizeof(u32));
     tcp_packet.set_flags(flags);
 
-    if (flags & TCPFlags::ACK) {
-        m_last_ack_number_sent = m_ack_number;
-        m_last_ack_sent_time = kgettimeofday();
-        tcp_packet.set_ack_number(m_ack_number);
-    }
-
     if (payload) {
         if (auto result = payload->read(tcp_packet.payload(), payload_size); result.is_error()) {
             routing_decision.adapter->release_packet_buffer(*packet);
             return set_so_error(result.release_error());
         }
+    }
+
+    if (flags & TCPFlags::ACK) {
+        m_last_ack_number_sent = m_ack_number;
+        m_last_ack_sent_time = kgettimeofday();
+        tcp_packet.set_ack_number(m_ack_number);
     }
 
     if (flags & TCPFlags::SYN) {
