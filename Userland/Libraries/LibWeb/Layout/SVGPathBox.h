@@ -7,17 +7,17 @@
 #pragma once
 
 #include <LibWeb/Layout/SVGGraphicsBox.h>
-#include <LibWeb/SVG/SVGPathElement.h>
+#include <LibWeb/SVG/SVGGeometryElement.h>
 
 namespace Web::Layout {
 
 class SVGPathBox final : public SVGGraphicsBox {
 public:
-    SVGPathBox(DOM::Document&, SVG::SVGPathElement&, NonnullRefPtr<CSS::StyleProperties>);
+    SVGPathBox(DOM::Document&, SVG::SVGGeometryElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~SVGPathBox() override = default;
 
-    SVG::SVGPathElement& dom_node() { return verify_cast<SVG::SVGPathElement>(SVGGraphicsBox::dom_node()); }
-    SVG::SVGPathElement const& dom_node() const { return verify_cast<SVG::SVGPathElement>(SVGGraphicsBox::dom_node()); }
+    SVG::SVGGeometryElement& dom_node() { return verify_cast<SVG::SVGGeometryElement>(SVGGraphicsBox::dom_node()); }
+    SVG::SVGGeometryElement const& dom_node() const { return verify_cast<SVG::SVGGeometryElement>(SVGGraphicsBox::dom_node()); }
 
     virtual void paint(PaintContext& context, PaintPhase phase) override;
 

@@ -89,11 +89,9 @@ public:
     SVGPathElement(DOM::Document&, QualifiedName);
     virtual ~SVGPathElement() override = default;
 
-    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
-
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
-    Gfx::Path& get_path();
+    virtual Gfx::Path& get_path() override;
 
 private:
     Vector<PathInstruction> m_instructions;
