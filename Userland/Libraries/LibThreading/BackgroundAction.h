@@ -63,7 +63,7 @@ private:
                     m_on_complete(m_result.release_value());
                     remove_from_parent();
                 });
-                Core::EventLoop::wake();
+                origin_event_loop->wake();
             } else {
                 this->remove_from_parent();
             }
