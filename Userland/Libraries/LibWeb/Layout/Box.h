@@ -59,18 +59,6 @@ public:
         return rect;
     }
 
-    float margin_box_width() const
-    {
-        auto margin_box = box_model().margin_box();
-        return content_width() + margin_box.left + margin_box.right;
-    }
-
-    float margin_box_height() const
-    {
-        auto margin_box = box_model().margin_box();
-        return content_height() + margin_box.top + margin_box.bottom;
-    }
-
     float border_box_width() const
     {
         auto border_box = box_model().border_box();
@@ -86,17 +74,6 @@ public:
     Gfx::FloatRect content_box_as_relative_rect() const
     {
         return { m_offset, m_content_size };
-    }
-
-    Gfx::FloatRect border_box_as_relative_rect() const
-    {
-        auto rect = content_box_as_relative_rect();
-        auto border_box = box_model().border_box();
-        rect.set_x(rect.x() - border_box.left);
-        rect.set_width(rect.width() + border_box.left + border_box.right);
-        rect.set_y(rect.y() - border_box.top);
-        rect.set_height(rect.height() + border_box.top + border_box.bottom);
-        return rect;
     }
 
     Gfx::FloatRect margin_box_as_relative_rect() const
