@@ -1152,8 +1152,6 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
     if (m_handler) {
         auto& handler_block = generator.make_block();
         generator.switch_to_basic_block(handler_block);
-        if (!m_finalizer)
-            generator.emit<Bytecode::Op::LeaveUnwindContext>();
         m_handler->parameter().visit(
             [&](FlyString const& parameter) {
                 if (!parameter.is_empty()) {
