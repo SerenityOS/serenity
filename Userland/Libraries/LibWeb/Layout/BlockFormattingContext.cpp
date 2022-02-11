@@ -532,10 +532,6 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     auto viewport_rect = root().browsing_context().viewport_rect();
 
     auto& icb = verify_cast<Layout::InitialContainingBlock>(root());
-    icb.build_stacking_context_tree();
-
-    icb.set_content_width(viewport_rect.width());
-    icb.set_content_height(viewport_rect.height());
 
     VERIFY(!icb.children_are_inline());
     layout_block_level_children(root(), layout_mode);
