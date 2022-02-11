@@ -86,6 +86,7 @@
 #include <LibWeb/Bindings/SVGEllipseElementWrapper.h>
 #include <LibWeb/Bindings/SVGLineElementWrapper.h>
 #include <LibWeb/Bindings/SVGPathElementWrapper.h>
+#include <LibWeb/Bindings/SVGPolylineElementWrapper.h>
 #include <LibWeb/Bindings/SVGRectElementWrapper.h>
 #include <LibWeb/Bindings/SVGSVGElementWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
@@ -164,6 +165,7 @@
 #include <LibWeb/SVG/SVGEllipseElement.h>
 #include <LibWeb/SVG/SVGLineElement.h>
 #include <LibWeb/SVG/SVGPathElement.h>
+#include <LibWeb/SVG/SVGPolylineElement.h>
 #include <LibWeb/SVG/SVGRectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
@@ -323,6 +325,8 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<SVG::SVGEllipseElement>(node)));
     if (is<SVG::SVGLineElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<SVG::SVGLineElement>(node)));
+    if (is<SVG::SVGPolylineElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<SVG::SVGPolylineElement>(node)));
     if (is<SVG::SVGPathElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<SVG::SVGPathElement>(node)));
     if (is<SVG::SVGRectElement>(node))

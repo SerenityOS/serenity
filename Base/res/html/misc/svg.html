@@ -11,7 +11,7 @@
     </style>
 </head>
 <body>
-<svg width="800" height="800">
+<svg width="800" height="1000">
     <path d="M 10 10 h 100 l -50 80 z" fill="green" stroke="black" stroke-width="3"></path>
     <path d="M 60 10 h 100 l -50 80 z" fill="red" stroke="blue" stroke-width="3"></path>
     <path d="M 110 10 h 100 l -50 80 z" class="css"></path>
@@ -65,6 +65,16 @@
         <line x1="340" y1="700" x2="440" y2="600" stroke-width="20" />
         <line x1="450" y1="700" x2="550" y2="600" stroke-width="25" />
     </g>
+
+    <!-- Based on https://svgwg.org/svg2-draft/shapes.html#PolylineElement -->
+    <polyline fill="none" stroke="blue" stroke-width="5"
+              points="25,850
+                      75,850  75,825 125,825 125,850
+                     175,850 175,800 225,800 225,850
+                     275,850 275,775 325,775 325,850
+                     375,850 375,750 425,750 425,850
+                     475,850 475,725 525,725 525,850
+                     575,850" />
 </svg>
 </body>
 </html>

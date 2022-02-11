@@ -64,6 +64,32 @@ Optional<float> AttributeParser::parse_positive_length(StringView input)
     return result;
 }
 
+Vector<Gfx::FloatPoint> AttributeParser::parse_points(StringView input)
+{
+    AttributeParser parser { input };
+
+    parser.parse_whitespace();
+
+    // FIXME: "If an odd number of coordinates is provided, then the element is in error, with the same user agent behavior
+    //        as occurs with an incorrectly specified ‘path’ element. In such error cases the user agent will drop the last,
+    //        odd coordinate and otherwise render the shape."
+    //        The parser currently doesn't notice that there is a missing coordinate, so make it notice!
+    auto coordinate_pair_sequence = parser.parse_coordinate_pair_sequence();
+
+    parser.parse_whitespace();
+    if (!parser.done())
+        return {};
+
+    // FIXME: This is awkward. Can we return Gfx::FloatPoints from some of these parsing methods instead of Vector<float>?
+    Vector<Gfx::FloatPoint> points;
+    points.ensure_capacity(coordinate_pair_sequence.size());
+
+    for (auto const& pair : coordinate_pair_sequence)
+        points.empend(pair[0], pair[1]);
+
+    return points;
+}
+
 void AttributeParser::parse_drawto()
 {
     if (match('M') || match('m')) {

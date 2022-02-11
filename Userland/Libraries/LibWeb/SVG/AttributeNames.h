@@ -45,6 +45,7 @@ namespace Web::SVG::AttributeNames {
     E(patternContentUnits)          \
     E(patternTransform)             \
     E(patternUnits)                 \
+    E(points)                       \
     E(pointsAtX)                    \
     E(pointsAtY)                    \
     E(pointsAtZ)                    \

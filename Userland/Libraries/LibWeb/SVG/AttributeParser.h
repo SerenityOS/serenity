@@ -9,6 +9,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibGfx/Point.h>
 
 namespace Web::SVG {
 
@@ -42,6 +43,7 @@ public:
     static Optional<float> parse_coordinate(StringView input);
     static Optional<float> parse_length(StringView input);
     static Optional<float> parse_positive_length(StringView input);
+    static Vector<Gfx::FloatPoint> parse_points(StringView input);
 
 private:
     void parse_drawto();
