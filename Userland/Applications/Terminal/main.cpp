@@ -245,7 +245,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix"));
 
-    Config::pledge_domains("Terminal");
+    Config::pledge_domain("Terminal");
 
     const char* command_to_execute = nullptr;
     bool keep_open = false;

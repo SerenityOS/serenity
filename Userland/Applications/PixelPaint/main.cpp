@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix wpath cpath"));
 
     auto app = GUI::Application::construct(arguments);
-    Config::pledge_domains("PixelPaint");
+    Config::pledge_domain("PixelPaint");
 
     const char* image_file = nullptr;
     Core::ArgsParser args_parser;
