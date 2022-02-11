@@ -954,6 +954,28 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_user_physical_page(
     return page.release_nonnull();
 }
 
+ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_user_physical_pages(size_t size)
+{
+    VERIFY(!(size % PAGE_SIZE));
+    SpinlockLocker lock(s_mm_lock);
+    size_t page_count = ceil_div(size, static_cast<size_t>(PAGE_SIZE));
+
+    for (auto& physical_region : m_user_physical_regions) {
+        auto physical_pages = physical_region.take_contiguous_free_pages(page_count);
+        if (!physical_pages.is_empty()) {
+            {
+                auto cleanup_region = TRY(MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * page_count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write));
+                memset(cleanup_region->vaddr().as_ptr(), 0, PAGE_SIZE * page_count);
+            }
+            m_system_memory_info.user_physical_pages_used += page_count;
+            return physical_pages;
+        }
+    }
+
+    dmesgln("MM: no contiguous user physical pages available");
+    return ENOMEM;
+}
+
 ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
 {
     VERIFY(!(size % PAGE_SIZE));

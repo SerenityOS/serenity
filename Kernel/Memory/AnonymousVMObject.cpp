@@ -82,7 +82,7 @@ ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_siz
 
 ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
 {
-    auto contiguous_physical_pages = TRY(MM.allocate_contiguous_supervisor_physical_pages(size));
+    auto contiguous_physical_pages = TRY(MM.allocate_contiguous_user_physical_pages(size));
 
     auto new_physical_pages = TRY(FixedArray<RefPtr<PhysicalPage>>::try_create(contiguous_physical_pages.span()));
 
