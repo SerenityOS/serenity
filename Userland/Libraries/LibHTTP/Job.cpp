@@ -380,12 +380,6 @@ void Job::on_socket_connected()
         }
         VERIFY(m_state == State::InBody);
 
-        auto can_read_without_blocking = m_socket->can_read_without_blocking();
-        if (can_read_without_blocking.is_error())
-            return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-        if (!can_read_without_blocking.value())
-            return;
-
         while (true) {
             auto can_read_without_blocking = m_socket->can_read_without_blocking();
             if (can_read_without_blocking.is_error())
