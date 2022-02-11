@@ -27,7 +27,7 @@ public:
     ~StyleRule();
 
     Vector<StyleComponentValueRule> const& prelude() const { return m_prelude; }
-    StyleBlockRule const& block() const { return *m_block; }
+    RefPtr<StyleBlockRule> const block() const { return m_block; }
 
     String to_string() const;
 
