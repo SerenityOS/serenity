@@ -106,8 +106,10 @@ private:
     RefPtr<Gfx::PaletteImpl> m_system_palette;
     HashMap<Shortcut, Action*> m_global_shortcut_actions;
     class TooltipWindow;
+#ifdef __serenity__
     RefPtr<Core::Timer> m_tooltip_show_timer;
     RefPtr<Core::Timer> m_tooltip_hide_timer;
+#endif
     RefPtr<TooltipWindow> m_tooltip_window;
     RefPtr<Widget> m_tooltip_source_widget;
     WeakPtr<Window> m_active_window;

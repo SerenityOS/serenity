@@ -7,7 +7,10 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuItem.h>
-#include <LibGUI/WindowServerConnection.h>
+#ifdef __serenity__
+#    include <LibGUI/WindowServerConnection.h>
+#else
+#endif
 
 namespace GUI {
 
@@ -72,9 +75,12 @@ void MenuItem::update_window_server()
 {
     if (m_menu_id < 0)
         return;
+
+#ifdef __serenity__
     auto& action = *m_action;
     auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : String();
     WindowServerConnection::the().async_update_menu_item(m_menu_id, m_identifier, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, m_default, shortcut_text);
+#endif
 }
 
 void MenuItem::set_menu_id(Badge<Menu>, unsigned int menu_id)

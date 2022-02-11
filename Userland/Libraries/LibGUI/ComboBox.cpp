@@ -6,7 +6,9 @@
 
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
-#include <LibGUI/Desktop.h>
+#ifdef __serenity
+#    include <LibGUI/Desktop.h>
+#endif
 #include <LibGUI/Event.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
@@ -240,9 +242,15 @@ void ComboBox::open()
         model()->row_count() * m_list_view->item_height() + m_list_view->frame_thickness() * 2
     };
 
+#ifdef __serenity__
     auto taskbar_height = GUI::Desktop::the().taskbar_height();
+#endif
+
     Gfx::IntRect list_window_rect { my_screen_rect.bottom_left(), size };
+
+#ifdef __serenity__
     list_window_rect.intersect(Desktop::the().rect().shrunken(0, taskbar_height * 2));
+#endif
 
     m_editor->set_focus(true);
     if (m_selected_index.has_value()) {
@@ -258,7 +266,9 @@ void ComboBox::open()
     if (go_upwards_instead) {
         auto origin_point = my_screen_rect.top_left();
         list_window_rect = { Gfx::IntPoint { origin_point.x(), origin_point.y() - size.height() }, size };
+#ifdef __serenity__
         list_window_rect.intersect(Desktop::the().rect());
+#endif
     }
 
     m_list_window->set_rect(list_window_rect);

@@ -4,6 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#ifndef __serenity__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/IDAllocator.h>
@@ -11,7 +16,10 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuItem.h>
-#include <LibGUI/WindowServerConnection.h>
+#ifdef __serenity__
+#    include <LibGUI/WindowServerConnection.h>
+#else
+#endif
 #include <LibGfx/Bitmap.h>
 
 namespace GUI {
@@ -111,14 +119,18 @@ void Menu::realize_if_needed(const RefPtr<Action>& default_action)
 void Menu::popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action)
 {
     realize_if_needed(default_action);
+#ifdef __serenity__
     WindowServerConnection::the().async_popup_menu(m_menu_id, screen_position);
+#endif
 }
 
 void Menu::dismiss()
 {
     if (m_menu_id == -1)
         return;
+#ifdef __serenity__
     WindowServerConnection::the().async_dismiss_menu(m_menu_id);
+#endif
 }
 
 int Menu::realize_menu(RefPtr<Action> default_action)
@@ -126,7 +138,9 @@ int Menu::realize_menu(RefPtr<Action> default_action)
     unrealize_menu();
     m_menu_id = s_menu_id_allocator.allocate();
 
+#ifdef __serenity__
     WindowServerConnection::the().async_create_menu(m_menu_id, m_name);
+#endif
 
     dbgln_if(MENU_DEBUG, "GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
     VERIFY(m_menu_id > 0);
@@ -145,7 +159,9 @@ void Menu::unrealize_menu()
     if (m_menu_id == -1)
         return;
     all_menus().remove(m_menu_id);
+#ifdef __serenity__
     WindowServerConnection::the().async_destroy_menu(m_menu_id);
+#endif
     m_menu_id = -1;
 }
 
@@ -181,6 +197,7 @@ void Menu::visibility_did_change(Badge<WindowServerConnection>, bool visible)
 
 void Menu::realize_menu_item(MenuItem& item, int item_id)
 {
+#ifdef __serenity__
     item.set_menu_id({}, m_menu_id);
     item.set_identifier({}, item_id);
     switch (item.type()) {
@@ -207,6 +224,11 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
     default:
         VERIFY_NOT_REACHED();
     }
+#endif
 }
 
 }
+
+#ifndef __serenity__
+#    pragma GCC diagnostic pop
+#endif

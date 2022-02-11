@@ -5,7 +5,9 @@
  */
 
 #include <LibCore/EventLoop.h>
-#include <LibGUI/Desktop.h>
+#ifdef __serenity__
+#    include <LibGUI/Desktop.h>
+#endif
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Event.h>
 
@@ -28,11 +30,19 @@ int Dialog::exec()
     VERIFY(!m_event_loop);
     m_event_loop = make<Core::EventLoop>();
 
+#ifdef __serenity__
     auto desktop_rect = Desktop::the().rect();
+#else
+    auto desktop_rect = Gfx::IntRect(0, 0, 0, 0);
+#endif
     auto window_rect = rect();
 
     auto top_align = [](Gfx::Rect<int>& rect) { rect.set_y(32); };
+#ifdef __serenity__
     auto bottom_align = [this, desktop_rect](Gfx::Rect<int>& rect) { rect.set_y(desktop_rect.height() - Desktop::the().taskbar_height() - height() - 12); };
+#else
+    auto bottom_align = [this, desktop_rect](Gfx::Rect<int>&) {};
+#endif
 
     auto left_align = [](Gfx::Rect<int>& rect) { rect.set_x(12); };
     auto right_align = [this, desktop_rect](Gfx::Rect<int>& rect) { rect.set_x(desktop_rect.width() - width() - 12); };

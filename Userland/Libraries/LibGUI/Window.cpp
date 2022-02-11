@@ -4,6 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#ifndef __serenity__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/IDAllocator.h>
@@ -14,15 +19,19 @@
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/Desktop.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/MenuItem.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowManagerServerConnection.h>
-#include <LibGUI/WindowServerConnection.h>
+#ifdef __serenity__
+#    include <LibGUI/Desktop.h>
+#    include <LibGUI/WindowManagerServerConnection.h>
+#    include <LibGUI/WindowServerConnection.h>
+#else
+#    include <LibGUI/Lagom/WindowServerConnection.h>
+#endif
 #include <LibGfx/Bitmap.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -110,7 +119,9 @@ void Window::move_to_front()
     if (!is_visible())
         return;
 
+#ifdef __serenity__
     WindowServerConnection::the().async_move_window_to_front(m_window_id);
+#endif
 }
 
 void Window::show()
@@ -159,13 +170,16 @@ void Window::show()
         m_title_when_windowless,
         parent_window ? parent_window->window_id() : 0,
         launch_origin_rect);
+
     m_visible = true;
 
     apply_icon();
 
     m_menubar->for_each_menu([&](Menu& menu) {
         menu.realize_menu_if_needed();
+#ifdef __serenity__
         WindowServerConnection::the().async_add_menu(m_window_id, menu.menu_id());
+#endif
         return IterationDecision::Continue;
     });
 
@@ -205,6 +219,7 @@ void Window::hide()
     if (GUI::Application::in_teardown())
         return;
 
+#ifdef __serenity__
     auto destroyed_window_ids = WindowServerConnection::the().destroy_window(m_window_id);
     server_did_destroy();
 
@@ -225,6 +240,7 @@ void Window::hide()
         if (!app_has_visible_windows)
             app->did_delete_last_window({});
     }
+#endif
 }
 
 void Window::set_title(String title)
@@ -232,27 +248,43 @@ void Window::set_title(String title)
     m_title_when_windowless = move(title);
     if (!is_visible())
         return;
+
+#ifdef __serenity__
     WindowServerConnection::the().async_set_window_title(m_window_id, m_title_when_windowless);
+#endif
 }
 
 String Window::title() const
 {
     if (!is_visible())
         return m_title_when_windowless;
+#ifdef __serenity__
     return WindowServerConnection::the().get_window_title(m_window_id);
+#else
+    return "";
+#endif
 }
 
 Gfx::IntRect Window::applet_rect_on_screen() const
 {
     VERIFY(m_window_type == WindowType::Applet);
+#ifdef __serenity__
     return WindowServerConnection::the().get_applet_rect_on_screen(m_window_id);
+#else
+    return { 0, 0, 0, 0 };
+#endif
 }
 
 Gfx::IntRect Window::rect() const
 {
     if (!is_visible())
         return m_rect_when_windowless;
+
+#ifdef __serenity__
     return WindowServerConnection::the().get_window_rect(m_window_id);
+#else
+    return { 0, 0, 0, 0 };
+#endif
 }
 
 void Window::set_rect(const Gfx::IntRect& a_rect)
@@ -267,13 +299,17 @@ void Window::set_rect(const Gfx::IntRect& a_rect)
             m_main_widget->resize(m_rect_when_windowless.size());
         return;
     }
+
+#ifdef __serenity__
     auto window_rect = WindowServerConnection::the().set_window_rect(m_window_id, a_rect);
+
     if (m_back_store && m_back_store->size() != window_rect.size())
         m_back_store = nullptr;
     if (m_front_store && m_front_store->size() != window_rect.size())
         m_front_store = nullptr;
     if (m_main_widget)
         m_main_widget->resize(window_rect.size());
+#endif
 }
 
 Gfx::IntSize Window::minimum_size() const
@@ -281,7 +317,11 @@ Gfx::IntSize Window::minimum_size() const
     if (!is_visible())
         return m_minimum_size_when_windowless;
 
+#ifdef __serenity__
     return WindowServerConnection::the().get_window_minimum_size(m_window_id);
+#else
+    return Gfx::IntSize(0, 0);
+#endif
 }
 
 void Window::set_minimum_size(const Gfx::IntSize& size)
@@ -289,13 +329,17 @@ void Window::set_minimum_size(const Gfx::IntSize& size)
     m_minimum_size_modified = true;
     m_minimum_size_when_windowless = size;
 
+#ifdef __serenity__
     if (is_visible())
         WindowServerConnection::the().async_set_window_minimum_size(m_window_id, size);
+#endif
 }
 
 void Window::center_on_screen()
 {
+#ifdef __serenity__
     set_rect(rect().centered_within(Desktop::the().rect()));
+#endif
 }
 
 void Window::center_within(const Window& other)
@@ -320,8 +364,10 @@ void Window::set_window_type(WindowType window_type)
 
 void Window::make_window_manager(unsigned event_mask)
 {
+#ifdef __serenity__
     GUI::WindowManagerServerConnection::the().async_set_event_mask(event_mask);
     GUI::WindowManagerServerConnection::the().async_set_manager_window(m_window_id);
+#endif
 }
 
 bool Window::are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& left, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& right) const
@@ -443,8 +489,10 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     else if (created_new_backing_store)
         set_current_backing_store(*m_back_store, true);
 
+#ifdef __serenity__
     if (is_visible())
         WindowServerConnection::the().async_did_finish_painting(m_window_id, rects);
+#endif
 }
 
 void Window::handle_key_event(KeyEvent& event)
@@ -454,8 +502,12 @@ void Window::handle_key_event(KeyEvent& event)
     }
 
     if (m_default_return_key_widget && event.key() == Key_Return)
+#ifdef __serenity__
         if (!m_focused_widget || !is<Button>(m_focused_widget.ptr()))
             return default_return_key_widget()->dispatch_event(event, this);
+#else
+        return;
+#endif
 
     if (m_focused_widget)
         return m_focused_widget->dispatch_event(event, this);
@@ -684,8 +736,11 @@ void Window::force_update()
 {
     if (!is_visible())
         return;
+
+#ifdef __serenity__
     auto rect = this->rect();
     WindowServerConnection::the().async_invalidate_rect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true);
+#endif
 }
 
 void Window::update(const Gfx::IntRect& a_rect)
@@ -705,7 +760,10 @@ void Window::update(const Gfx::IntRect& a_rect)
             auto rects = move(m_pending_paint_event_rects);
             if (rects.is_empty())
                 return;
+
+#ifdef __serenity__
             WindowServerConnection::the().async_invalidate_rect(m_window_id, rects, false);
+#endif
         });
     }
     m_pending_paint_event_rects.append(a_rect);
@@ -791,7 +849,10 @@ void Window::set_has_alpha_channel(bool value)
     m_back_store = nullptr;
     m_front_store = nullptr;
 
+#ifdef __serenity__
     WindowServerConnection::the().async_set_window_has_alpha_channel(m_window_id, value);
+#endif
+
     update();
 }
 
@@ -806,7 +867,10 @@ void Window::set_opacity(float opacity)
     m_opacity_when_windowless = opacity;
     if (!is_visible())
         return;
+
+#ifdef __serenity__
     WindowServerConnection::the().async_set_window_opacity(m_window_id, opacity);
+#endif
 }
 
 void Window::set_alpha_hit_threshold(float threshold)
@@ -820,7 +884,10 @@ void Window::set_alpha_hit_threshold(float threshold)
     m_alpha_hit_threshold = threshold;
     if (!is_visible())
         return;
+
+#ifdef __serenity__
     WindowServerConnection::the().async_set_window_alpha_hit_threshold(m_window_id, threshold);
+#endif
 }
 
 void Window::set_hovered_widget(Widget* widget)
@@ -843,8 +910,11 @@ void Window::set_hovered_widget(Widget* widget)
 
 void Window::set_current_backing_store(WindowBackingStore& backing_store, bool flush_immediately)
 {
+#ifdef __serenity__
     auto& bitmap = backing_store.bitmap();
+
     WindowServerConnection::the().set_window_backing_store(m_window_id, 32, bitmap.pitch(), bitmap.anonymous_buffer().fd(), backing_store.serial(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
+#endif
 }
 
 void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
@@ -935,12 +1005,16 @@ void Window::apply_icon()
     if (!is_visible())
         return;
 
+#ifdef __serenity__
     WindowServerConnection::the().async_set_window_icon_bitmap(m_window_id, m_icon->to_shareable_bitmap());
+#endif
 }
 
 void Window::start_interactive_resize()
 {
+#ifdef __serenity__
     WindowServerConnection::the().async_start_window_resize(m_window_id);
+#endif
 }
 
 Vector<Widget&> Window::focusable_widgets(FocusSource source) const
@@ -993,7 +1067,10 @@ void Window::set_fullscreen(bool fullscreen)
     m_fullscreen = fullscreen;
     if (!is_visible())
         return;
+
+#ifdef __serenity__
     WindowServerConnection::the().async_set_fullscreen(m_window_id, fullscreen);
+#endif
 }
 
 void Window::set_frameless(bool frameless)
@@ -1003,7 +1080,10 @@ void Window::set_frameless(bool frameless)
     m_frameless = frameless;
     if (!is_visible())
         return;
+
+#ifdef __serenity__
     WindowServerConnection::the().async_set_frameless(m_window_id, frameless);
+#endif
 
     if (!frameless)
         apply_icon();
@@ -1016,7 +1096,10 @@ void Window::set_forced_shadow(bool shadow)
     m_forced_shadow = shadow;
     if (!is_visible())
         return;
+
+#ifdef __serenity__
     WindowServerConnection::the().async_set_forced_shadow(m_window_id, shadow);
+#endif
 }
 
 bool Window::is_maximized() const
@@ -1024,7 +1107,11 @@ bool Window::is_maximized() const
     if (!is_visible())
         return m_maximized_when_windowless;
 
+#ifdef __serenity__
     return WindowServerConnection::the().is_maximized(m_window_id);
+#else
+    return false;
+#endif
 }
 
 void Window::set_maximized(bool maximized)
@@ -1033,7 +1120,9 @@ void Window::set_maximized(bool maximized)
     if (!is_visible())
         return;
 
+#ifdef __serenity__
     WindowServerConnection::the().async_set_maximized(m_window_id, maximized);
+#endif
 }
 
 void Window::schedule_relayout()
@@ -1051,7 +1140,9 @@ void Window::schedule_relayout()
 
 void Window::refresh_system_theme()
 {
+#ifdef __serenity__
     WindowServerConnection::the().async_refresh_system_theme();
+#endif
 }
 
 void Window::for_each_window(Badge<WindowServerConnection>, Function<void(Window&)> callback)
@@ -1116,7 +1207,11 @@ void Window::set_base_size(const Gfx::IntSize& base_size)
         return;
     m_base_size = base_size;
     if (is_visible())
+#ifdef __serenity__
         WindowServerConnection::the().async_set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
+#else
+        return;
+#endif
 }
 
 void Window::set_size_increment(const Gfx::IntSize& size_increment)
@@ -1125,7 +1220,11 @@ void Window::set_size_increment(const Gfx::IntSize& size_increment)
         return;
     m_size_increment = size_increment;
     if (is_visible())
+#ifdef __serenity__
         WindowServerConnection::the().async_set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
+#else
+        return;
+#endif
 }
 
 void Window::set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
@@ -1134,8 +1233,13 @@ void Window::set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
         return;
 
     m_resize_aspect_ratio = ratio;
+
     if (is_visible())
+#ifdef __serenity__
         WindowServerConnection::the().async_set_window_resize_aspect_ratio(m_window_id, m_resize_aspect_ratio);
+#else
+        return;
+#endif
 }
 
 void Window::did_add_widget(Badge<Widget>, Widget&)
@@ -1157,11 +1261,15 @@ void Window::did_remove_widget(Badge<Widget>, Widget& widget)
 void Window::set_progress(Optional<int> progress)
 {
     VERIFY(m_window_id);
+
+#ifdef __serenity__
     WindowServerConnection::the().async_set_window_progress(m_window_id, progress);
+#endif
 }
 
 void Window::update_cursor()
 {
+#ifdef __serenity__
     auto new_cursor = m_cursor;
 
     if (m_hovered_widget) {
@@ -1178,6 +1286,7 @@ void Window::update_cursor()
         WindowServerConnection::the().async_set_window_custom_cursor(m_window_id, new_cursor.get<NonnullRefPtr<Gfx::Bitmap>>()->to_shareable_bitmap());
     else
         WindowServerConnection::the().async_set_window_cursor(m_window_id, (u32)new_cursor.get<Gfx::StandardCursor>());
+#endif
 }
 
 void Window::focus_a_widget_if_possible(FocusSource source)
@@ -1208,7 +1317,9 @@ ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
     auto menu = TRY(m_menubar->try_add_menu({}, move(name)));
     if (m_window_id) {
         menu->realize_menu_if_needed();
+#ifdef __serenity__
         WindowServerConnection::the().async_add_menu(m_window_id, menu->menu_id());
+#endif
     }
     return menu;
 }
@@ -1225,21 +1336,29 @@ void Window::flash_menubar_menu_for(const MenuItem& menu_item)
     if (menu_id < 0)
         return;
 
+#ifdef __serenity__
     WindowServerConnection::the().async_flash_menubar_menu(m_window_id, menu_id);
+#endif
 }
 
 bool Window::is_modified() const
 {
     if (!m_window_id)
         return false;
+#ifdef __serenity__
     return WindowServerConnection::the().is_window_modified(m_window_id);
+#else
+    return false;
+#endif
 }
 
 void Window::set_modified(bool modified)
 {
     if (!m_window_id)
         return;
+#ifdef __serenity__
     WindowServerConnection::the().async_set_window_modified(m_window_id, modified);
+#endif
 }
 
 void Window::flush_pending_paints_immediately()
@@ -1251,5 +1370,8 @@ void Window::flush_pending_paints_immediately()
     MultiPaintEvent paint_event(move(m_pending_paint_event_rects), size());
     handle_multi_paint_event(paint_event);
 }
-
 }
+
+#ifndef __serenity__
+#    pragma GCC diagnostic pop
+#endif
