@@ -54,6 +54,8 @@ namespace Web::SVG::AttributeNames {
     E(repeatCount)                  \
     E(repeatDur)                    \
     E(requiredExtensions)           \
+    E(rx)                           \
+    E(ry)                           \
     E(requiredFeatures)             \
     E(specularConstant)             \
     E(specularExponent)             \

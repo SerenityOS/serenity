@@ -271,6 +271,7 @@ set(SOURCES
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp
     SVG/SVGPathElement.cpp
+    SVG/SVGRectElement.cpp
     SVG/SVGSVGElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp
@@ -513,6 +514,7 @@ libweb_js_wrapper(SVG/SVGElement)
 libweb_js_wrapper(SVG/SVGGeometryElement)
 libweb_js_wrapper(SVG/SVGGraphicsElement)
 libweb_js_wrapper(SVG/SVGPathElement)
+libweb_js_wrapper(SVG/SVGRectElement)
 libweb_js_wrapper(SVG/SVGSVGElement)
 libweb_js_wrapper(Selection/Selection)
 libweb_js_wrapper(UIEvents/FocusEvent)
