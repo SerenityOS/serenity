@@ -728,6 +728,11 @@ Optional<int> FloatImpl::to_int() const
     return static_cast<int>(round(value()));
 }
 
+Optional<bool> FloatImpl::to_bool() const
+{
+    return fabs(value()) > NumericLimits<double>::epsilon();
+}
+
 Optional<double> FloatImpl::to_double() const
 {
     return value();
@@ -997,6 +1002,19 @@ int TupleImpl::compare(Value const& other) const
         }
     }
     return 0;
+}
+
+Optional<bool> TupleImpl::to_bool() const
+{
+    for (auto const& value : value()) {
+        auto as_bool = Value(value).to_bool();
+        if (!as_bool.has_value())
+            return {};
+        if (!as_bool.value())
+            return false;
+    }
+
+    return true;
 }
 
 void TupleImpl::serialize(Serializer& serializer) const
