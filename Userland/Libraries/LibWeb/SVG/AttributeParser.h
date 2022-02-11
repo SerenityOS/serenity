@@ -35,19 +35,18 @@ struct PathInstruction {
 
 class AttributeParser final {
 public:
-    AttributeParser(StringView source);
     ~AttributeParser() = default;
-
-    Vector<PathInstruction> parse_path_data();
 
     static Optional<float> parse_coordinate(StringView input);
     static Optional<float> parse_length(StringView input);
     static Optional<float> parse_positive_length(StringView input);
     static Vector<Gfx::FloatPoint> parse_points(StringView input);
+    static Vector<PathInstruction> parse_path_data(StringView input);
 
 private:
-    void parse_drawto();
+    AttributeParser(StringView source);
 
+    void parse_drawto();
     void parse_moveto();
     void parse_closepath();
     void parse_lineto();

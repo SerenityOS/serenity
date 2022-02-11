@@ -93,7 +93,7 @@ void SVGPathElement::parse_attribute(const FlyString& name, const String& value)
     SVGGeometryElement::parse_attribute(name, value);
 
     if (name == "d")
-        m_instructions = AttributeParser(value).parse_path_data();
+        m_instructions = AttributeParser::parse_path_data(value);
 }
 
 Gfx::Path& SVGPathElement::get_path()

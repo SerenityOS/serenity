@@ -16,14 +16,17 @@ AttributeParser::AttributeParser(StringView source)
 {
 }
 
-Vector<PathInstruction> AttributeParser::parse_path_data()
+Vector<PathInstruction> AttributeParser::parse_path_data(StringView input)
 {
-    parse_whitespace();
-    while (!done())
-        parse_drawto();
-    if (!m_instructions.is_empty() && m_instructions[0].type != PathInstructionType::Move)
-        VERIFY_NOT_REACHED();
-    return m_instructions;
+    AttributeParser parser { input };
+    parser.parse_whitespace();
+    while (!parser.done())
+        parser.parse_drawto();
+    if (!parser.m_instructions.is_empty() && parser.m_instructions[0].type != PathInstructionType::Move) {
+        // Invalid. "A path data segment (if there is one) must begin with a "moveto" command."
+        return {};
+    }
+    return parser.m_instructions;
 }
 
 Optional<float> AttributeParser::parse_coordinate(StringView input)
