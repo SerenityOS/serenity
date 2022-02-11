@@ -443,11 +443,6 @@ SVGPathElement::SVGPathElement(DOM::Document& document, QualifiedName qualified_
 {
 }
 
-RefPtr<Layout::Node> SVGPathElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
-{
-    return adopt_ref(*new Layout::SVGPathBox(document(), *this, move(style)));
-}
-
 void SVGPathElement::parse_attribute(const FlyString& name, const String& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
