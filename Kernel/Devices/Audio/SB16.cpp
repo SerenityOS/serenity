@@ -252,9 +252,7 @@ ErrorOr<size_t> SB16::write(size_t channel_index, UserOrKernelBuffer const& data
 
     dbgln_if(SB16_DEBUG, "SB16: Writing buffer of {} bytes", length);
 
-    VERIFY(length <= PAGE_SIZE);
-    int const BLOCK_SIZE = 32 * 1024;
-    if (length > BLOCK_SIZE) {
+    if (length > PAGE_SIZE) {
         return ENOSPC;
     }
 
