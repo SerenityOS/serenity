@@ -6,6 +6,7 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibProtocol/WebSocket.h>
 #include <LibProtocol/WebSocketClient.h>
@@ -209,14 +210,27 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
         return;
     if (is_text) {
         auto text_message = String(ReadonlyBytes(message));
-        MessageEventInit event_init {};
+        MessageEventInit event_init;
         event_init.data = JS::js_string(wrapper()->vm(), text_message);
         event_init.origin = url();
         dispatch_event(MessageEvent::create(EventNames::message, event_init));
         return;
     }
-    // type indicates that the data is Binary and binaryType is "blob"
-    // type indicates that the data is Binary and binaryType is "arraybuffer"
+
+    if (m_binary_type == "blob") {
+        // type indicates that the data is Binary and binaryType is "blob"
+        TODO();
+    } else if (m_binary_type == "arraybuffer") {
+        // type indicates that the data is Binary and binaryType is "arraybuffer"
+        auto& global_object = wrapper()->global_object();
+        MessageEventInit event_init;
+        event_init.data = JS::ArrayBuffer::create(global_object, message);
+        event_init.origin = url();
+        dispatch_event(MessageEvent::create(EventNames::message, event_init));
+        return;
+    }
+
+    dbgln("Unsupported WebSocket message type {}", m_binary_type);
     TODO();
 }
 
