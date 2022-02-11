@@ -20,6 +20,7 @@ CyrillicDecoder s_cyrillic_decoder;
 Koi8RDecoder s_koi8r_decoder;
 Latin9Decoder s_latin9_decoder;
 TurkishDecoder s_turkish_decoder;
+XUserDefinedDecoder s_x_user_defined_decoder;
 }
 
 Decoder* decoder_for(const String& a_encoding)
@@ -44,6 +45,8 @@ Decoder* decoder_for(const String& a_encoding)
             return &s_latin9_decoder;
         if (encoding.value().equals_ignoring_case("windows-1254"))
             return &s_turkish_decoder;
+        if (encoding.value().equals_ignoring_case("x-user-defined"))
+            return &s_x_user_defined_decoder;
     }
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
     return nullptr;
@@ -464,6 +467,28 @@ void TurkishDecoder::process(StringView input, Function<void(u32)> on_code_point
     for (auto ch : input) {
         on_code_point(convert_turkish_to_utf8(ch));
     }
+}
+
+// https://encoding.spec.whatwg.org/#x-user-defined-decoder
+void XUserDefinedDecoder::process(StringView input, Function<void(u32)> on_code_point)
+{
+    auto convert_x_user_defined_to_utf8 = [](u8 ch) -> u32 {
+        // 2. If byte is an ASCII byte, return a code point whose value is byte.
+        // https://infra.spec.whatwg.org/#ascii-byte
+        // An ASCII byte is a byte in the range 0x00 (NUL) to 0x7F (DEL), inclusive.
+        // NOTE: This doesn't check for ch >= 0x00, as that would always be true due to being unsigned.
+        if (ch <= 0x7f)
+            return ch;
+
+        // 3. Return a code point whose value is 0xF780 + byte − 0x80.
+        return 0xF780 + ch - 0x80;
+    };
+
+    for (auto ch : input) {
+        on_code_point(convert_x_user_defined_to_utf8(ch));
+    }
+
+    // 1. If byte is end-of-queue, return finished.
 }
 
 }
