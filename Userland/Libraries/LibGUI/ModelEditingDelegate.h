@@ -7,7 +7,9 @@
 #pragma once
 
 #include <LibGUI/Model.h>
-#include <LibGUI/TextBox.h>
+#ifdef __serenity__
+#    include <LibGUI/TextBox.h>
+#endif
 #include <LibGUI/Widget.h>
 
 namespace GUI {
@@ -77,6 +79,7 @@ public:
 
     virtual RefPtr<Widget> create_widget() override
     {
+#ifdef __serenity__
         auto textbox = TextBox::construct();
         textbox->set_frame_shape(Gfx::FrameShape::NoFrame);
 
@@ -90,6 +93,9 @@ public:
             change();
         };
         return textbox;
+#else
+        return nullptr;
+#endif
     }
     virtual Variant value() const override { return static_cast<const TextBox*>(widget())->text(); }
     virtual void set_value(Variant const& value, SelectionBehavior selection_behavior) override

@@ -13,7 +13,9 @@
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextBox.h>
-#include <LibGUI/WindowServerConnection.h>
+#ifdef __serenity__
+#    include <LibGUI/WindowServerConnection.h>
+#endif
 #include <LibGfx/Palette.h>
 
 namespace GUI {

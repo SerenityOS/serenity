@@ -4,6 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#ifndef __serenity__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 #include <AK/NeverDestroyed.h>
 #include <LibCore/EventLoop.h>
 #include <LibGUI/Action.h>
@@ -14,7 +19,10 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
+#ifdef __serenity__
+#    include <LibGUI/WindowServerConnection.h>
+#else
+#endif
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
@@ -32,9 +40,11 @@ public:
         int glyph_height = m_label->font().glyph_height();
         int tooltip_height = glyph_height * (1 + line_count) + ((glyph_height + 1) / 2) * line_count + 8;
 
+#ifdef __serenity__
         Gfx::IntRect desktop_rect = Desktop::the().rect();
         if (tooltip_width > desktop_rect.width())
             tooltip_width = desktop_rect.width();
+#endif
 
         set_rect(rect().x(), rect().y(), tooltip_width, tooltip_height);
     }
@@ -73,8 +83,10 @@ Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable
     VERIFY(!*s_the);
     *s_the = *this;
     m_event_loop = make<Core::EventLoop>(make_inspectable);
+#ifdef __serenity__
     WindowServerConnection::the();
     Clipboard::initialize({});
+#endif
     if (argc > 0)
         m_invoked_as = argv[0];
 
@@ -92,6 +104,7 @@ Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable
         m_args.append(move(arg));
     }
 
+#ifdef __serenity__
     m_tooltip_show_timer = Core::Timer::create_single_shot(700, [this] {
         request_tooltip_show();
     });
@@ -99,6 +112,7 @@ Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable
     m_tooltip_hide_timer = Core::Timer::create_single_shot(50, [this] {
         tooltip_hide_timer_did_fire();
     });
+#endif
 }
 
 static bool s_in_teardown;
@@ -155,11 +169,13 @@ void Application::show_tooltip(String tooltip, const Widget* tooltip_source_widg
 
     if (m_tooltip_window->is_visible()) {
         request_tooltip_show();
+#ifdef __serenity__
         m_tooltip_show_timer->stop();
         m_tooltip_hide_timer->stop();
     } else {
         m_tooltip_show_timer->restart();
         m_tooltip_hide_timer->stop();
+#endif
     }
 }
 
@@ -173,14 +189,18 @@ void Application::show_tooltip_immediately(String tooltip, const Widget* tooltip
     m_tooltip_window->set_tooltip(move(tooltip));
 
     request_tooltip_show();
+#ifdef __serenity__
     m_tooltip_show_timer->stop();
     m_tooltip_hide_timer->stop();
+#endif
 }
 
 void Application::hide_tooltip()
 {
+#ifdef __serenity__
     m_tooltip_show_timer->stop();
     m_tooltip_hide_timer->start();
+#endif
 }
 
 void Application::did_create_window(Badge<Window>)
@@ -219,10 +239,18 @@ Gfx::Palette Application::palette() const
 void Application::request_tooltip_show()
 {
     VERIFY(m_tooltip_window);
+#ifdef __serenity__
     Gfx::IntRect desktop_rect = Desktop::the().rect();
+#else
+    Gfx::IntRect desktop_rect = { 0, 0, 0, 0 };
+#endif
 
     const int margin = 30;
+#ifdef __serenity__
     Gfx::IntPoint adjusted_pos = WindowServerConnection::the().get_global_cursor_position();
+#else
+    Gfx::IntPoint adjusted_pos = { 0, 0 };
+#endif
 
     adjusted_pos.translate_by(0, 18);
 
@@ -300,6 +328,7 @@ void Application::notify_drag_cancelled(Badge<WindowServerConnection>)
 
 void Application::event(Core::Event& event)
 {
+    dbgln("!! {}", event.type());
     if (event.type() == GUI::Event::ActionEnter || event.type() == GUI::Event::ActionLeave) {
         auto& action_event = static_cast<ActionEvent&>(event);
         auto& action = action_event.action();
@@ -315,3 +344,7 @@ void Application::event(Core::Event& event)
 }
 
 }
+
+#ifndef __serenity__
+#    pragma GCC diagnostic pop
+#endif

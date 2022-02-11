@@ -21,7 +21,10 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
+#ifdef __serenity__
+#    include <LibGUI/WindowServerConnection.h>
+#else
+#endif
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>

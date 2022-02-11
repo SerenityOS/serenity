@@ -461,6 +461,53 @@ if (BUILD_LAGOM)
         SOURCES ${LIBWASM_SOURCES}
     )
 
+    # LibGUI
+    find_package(SDL2)
+    if(${SDL2_FOUND})
+        file(GLOB LIBGUI_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/*.cpp")
+        file(GLOB LIBGUI_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/Lagom/*.cpp")
+
+        # FIXME: Let's exclude a bunch of things to get something building :^)
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/Breadcrumbbar.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/Clipboard.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/ColorInput.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/Desktop.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/DisplayLink.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/Notification.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/MouseTracker.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/FileSystemModel.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/PasswordInputDialog.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/ScreenLayout.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/SettingsWindow.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/ProcessChooser.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/WindowManagerServerConnection.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/WindowServerConnection.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/(.*)Engine.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/(.*)View.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/(.*)Model.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/(.*)Picker(.*).*")
+        
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/AutocompleteProvider.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/CommandPalette.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/ComboBox.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/TableView.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/TextEditor.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/TextBox.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/TextDocument.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/InputBox.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/PasswordBox.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/IconView.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/SpinBox.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/MultiView.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/LinkLabel.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/ValueSlider.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/(.*)Highlighter.*")
+        lagom_lib(GUI gui
+            SOURCES ${SDL2_INCLUDE_DIRS} ${LIBGUI_SUBDIR_SOURCES} ${LIBGUI_SOURCES}
+            LIBS SDL2::SDL2 LagomELF LagomGfx LagomGML
+        )
+    endif()
+
     # x86
     # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
     #        for Lagom on Apple M1
@@ -475,6 +522,11 @@ if (BUILD_LAGOM)
         # Lagom Examples
         add_executable(TestApp TestApp.cpp)
         target_link_libraries(TestApp LagomCore)
+
+        if(${SDL2_FOUND})
+            add_executable(TestGUI TestGUI.cpp)
+            target_link_libraries(TestGUI LagomCore LagomMain LagomGUI)
+        endif()
 
         add_executable(TestJson TestJson.cpp)
         target_link_libraries(TestJson LagomCore)

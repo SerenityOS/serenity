@@ -8,7 +8,9 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/DragOperation.h>
-#include <LibGUI/WindowServerConnection.h>
+#ifdef __serenity__
+#    include <LibGUI/WindowServerConnection.h>
+#endif
 #include <LibGfx/Bitmap.h>
 
 namespace GUI {
@@ -30,6 +32,7 @@ DragOperation::Outcome DragOperation::exec()
     VERIFY(!m_event_loop);
     VERIFY(m_mime_data);
 
+#ifdef __serenity__
     Gfx::ShareableBitmap drag_bitmap;
     if (m_mime_data->has_format("image/x-raw-bitmap")) {
         auto data = m_mime_data->data("image/x-raw-bitmap");
@@ -46,6 +49,7 @@ DragOperation::Outcome DragOperation::exec()
         m_outcome = Outcome::Cancelled;
         return m_outcome;
     }
+#endif
 
     s_current_drag_operation = this;
     m_event_loop = make<Core::EventLoop>();

@@ -569,9 +569,9 @@ void AbstractView::keydown_event(KeyEvent& event)
     if (is_searchable()) {
         if (event.key() == KeyCode::Key_Backspace) {
             if (!m_highlighted_search.is_null()) {
-                //if (event.modifiers() == Mod_Ctrl) {
-                // TODO: delete last word
-                //}
+                // if (event.modifiers() == Mod_Ctrl) {
+                //  TODO: delete last word
+                // }
                 Utf8View view(m_highlighted_search);
                 size_t n_code_points = view.length();
                 if (n_code_points > 1) {
