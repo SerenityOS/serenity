@@ -36,14 +36,14 @@ UNMAP_AFTER_INIT bool I8042Controller::check_existence(Badge<HIDManagement>)
     {
         SpinlockLocker lock(m_lock);
         // Note: Perform controller self-test before touching the controller
-        // Try to probe the controller for 5 times and give up if nothing
+        // Try to probe the controller for 10 times and give up if nothing
         // responded.
-        for (int attempt = 0; attempt < 5; attempt++) {
+        for (int attempt = 0; attempt < 10; attempt++) {
             do_write(I8042Port::Command, I8042Command::TestPS2Controller);
             if (do_read(I8042Port::Buffer) == I8042Response::ControllerTestPassed)
                 return true;
-            // Note: Wait 50 microseconds in case the controller couldn't respond
-            IO::delay(50);
+            // Note: Wait 500 microseconds in case the controller couldn't respond
+            IO::delay(500);
         }
         dbgln("I8042: Trying to probe for existence of controller failed");
         return false;
