@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
 
-    Config::pledge_domains("2048");
+    Config::pledge_domain("2048");
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man6/2048.md") }));
     TRY(Desktop::Launcher::seal_allowlist());

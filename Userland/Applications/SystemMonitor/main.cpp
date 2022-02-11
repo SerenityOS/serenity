@@ -107,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    Config::pledge_domains("SystemMonitor");
+    Config::pledge_domain("SystemMonitor");
 
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/res", "r"));

@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-hearts"));
 
-    Config::pledge_domains("Hearts");
+    Config::pledge_domain("Hearts");
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 

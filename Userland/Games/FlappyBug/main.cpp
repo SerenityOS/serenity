@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    Config::pledge_domains("FlappyBug");
+    Config::pledge_domain("FlappyBug");
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man6/FlappyBug.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
