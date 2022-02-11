@@ -64,7 +64,7 @@ public:
         Transition,
     };
 
-    Vector<MatchingRule> collect_matching_rules(DOM::Element const&, CascadeOrigin = CascadeOrigin::Any) const;
+    Vector<MatchingRule> collect_matching_rules(DOM::Element const&, CascadeOrigin) const;
 
     void invalidate_rule_cache();
 

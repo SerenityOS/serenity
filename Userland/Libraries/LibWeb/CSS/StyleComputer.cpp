@@ -57,12 +57,12 @@ static StyleSheet& quirks_mode_stylesheet()
 template<typename Callback>
 void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback callback) const
 {
-    if (cascade_origin == CascadeOrigin::Any || cascade_origin == CascadeOrigin::UserAgent) {
+    if (cascade_origin == CascadeOrigin::UserAgent) {
         callback(default_stylesheet());
         if (document().in_quirks_mode())
             callback(quirks_mode_stylesheet());
     }
-    if (cascade_origin == CascadeOrigin::Any || cascade_origin == CascadeOrigin::Author) {
+    if (cascade_origin == CascadeOrigin::Author) {
         for (auto const& sheet : document().style_sheets().sheets()) {
             callback(sheet);
         }
