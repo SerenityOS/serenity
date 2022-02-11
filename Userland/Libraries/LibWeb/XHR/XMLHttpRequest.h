@@ -14,6 +14,7 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/MimeSniff/MimeType.h>
 #include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
 
 namespace Web::XHR {
@@ -62,6 +63,8 @@ public:
     Bindings::CallbackType* onreadystatechange();
     void set_onreadystatechange(Optional<Bindings::CallbackType>);
 
+    DOM::ExceptionOr<void> override_mime_type(String const& mime);
+
 private:
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
@@ -91,6 +94,9 @@ private:
     bool m_timed_out { false };
 
     ByteBuffer m_response_object;
+
+    // https://xhr.spec.whatwg.org/#override-mime-type
+    Optional<MimeSniff::MimeType> m_override_mime_type;
 };
 
 }
