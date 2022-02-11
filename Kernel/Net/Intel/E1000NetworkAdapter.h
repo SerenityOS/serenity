@@ -79,8 +79,8 @@ protected:
 
     void receive();
 
-    static constexpr size_t number_of_rx_descriptors = 32;
-    static constexpr size_t number_of_tx_descriptors = 8;
+    static constexpr size_t number_of_rx_descriptors = 256;
+    static constexpr size_t number_of_tx_descriptors = 256;
 
     IOAddress m_io_base;
     VirtualAddress m_mmio_base;
