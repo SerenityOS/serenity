@@ -174,6 +174,7 @@ public:
     ErrorOr<NonnullRefPtr<PhysicalPage>> allocate_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
     ErrorOr<NonnullRefPtr<PhysicalPage>> allocate_supervisor_physical_page();
     ErrorOr<NonnullRefPtrVector<PhysicalPage>> allocate_contiguous_supervisor_physical_pages(size_t size);
+    ErrorOr<NonnullRefPtrVector<PhysicalPage>> allocate_contiguous_user_physical_pages(size_t size);
     void deallocate_physical_page(PhysicalAddress);
 
     ErrorOr<NonnullOwnPtr<Region>> allocate_contiguous_kernel_region(size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
