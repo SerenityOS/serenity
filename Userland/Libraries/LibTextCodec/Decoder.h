@@ -67,6 +67,11 @@ public:
     virtual void process(StringView, Function<void(u32)> on_code_point) override;
 };
 
+class XUserDefinedDecoder final : public Decoder {
+public:
+    virtual void process(StringView, Function<void(u32)> on_code_point) override;
+};
+
 Decoder* decoder_for(String const& encoding);
 Optional<String> get_standardized_encoding(const String& encoding);
 
