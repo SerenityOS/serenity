@@ -169,7 +169,18 @@ TEST_CASE(float_value)
         EXPECT(v.to_int().has_value());
         EXPECT_EQ(v.to_int().value(), 3);
         EXPECT_EQ(v.to_string(), "3.14");
-        EXPECT(!v.to_bool().has_value());
+        EXPECT(v.to_bool().has_value());
+        EXPECT(v.to_bool().value());
+
+        v = 0.0;
+        EXPECT(!v.is_null());
+        EXPECT(v.to_double().has_value());
+        EXPECT(v.to_double().value() < NumericLimits<double>().epsilon());
+        EXPECT(v.to_int().has_value());
+        EXPECT_EQ(v.to_int().value(), 0);
+        EXPECT_EQ(v.to_string(), "0");
+        EXPECT(v.to_bool().has_value());
+        EXPECT(!v.to_bool().value());
     }
     {
         SQL::Value v(3.14);
