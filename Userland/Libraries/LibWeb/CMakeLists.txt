@@ -235,8 +235,8 @@ set(SOURCES
     Layout/ReplacedBox.cpp
     Layout/SVGBox.cpp
     Layout/SVGFormattingContext.cpp
+    Layout/SVGGeometryBox.cpp
     Layout/SVGGraphicsBox.cpp
-    Layout/SVGPathBox.cpp
     Layout/SVGSVGBox.cpp
     Layout/TableBox.cpp
     Layout/TableCellBox.cpp

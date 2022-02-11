@@ -6,17 +6,17 @@
 
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
-#include <LibWeb/Layout/SVGPathBox.h>
+#include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 
 namespace Web::Layout {
 
-SVGPathBox::SVGPathBox(DOM::Document& document, SVG::SVGGeometryElement& element, NonnullRefPtr<CSS::StyleProperties> properties)
+SVGGeometryBox::SVGGeometryBox(DOM::Document& document, SVG::SVGGeometryElement& element, NonnullRefPtr<CSS::StyleProperties> properties)
     : SVGGraphicsBox(document, element, properties)
 {
 }
 
-void SVGPathBox::paint(PaintContext& context, PaintPhase phase)
+void SVGGeometryBox::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;

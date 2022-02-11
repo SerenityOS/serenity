@@ -6,7 +6,7 @@
 
 #include <AK/Format.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
-#include <LibWeb/Layout/SVGPathBox.h>
+#include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
 
 namespace Web::Layout {
@@ -29,10 +29,10 @@ void SVGFormattingContext::run(Box& box, LayoutMode)
     Gfx::FloatRect total_bounding_box;
 
     box.for_each_in_subtree_of_type<SVGBox>([&](auto& descendant) {
-        if (is<SVGPathBox>(descendant)) {
-            auto& path_box = static_cast<SVGPathBox&>(descendant);
-            auto& path = path_box.dom_node().get_path();
-            path_box.set_content_size(path.bounding_box().size());
+        if (is<SVGGeometryBox>(descendant)) {
+            auto& geometry_box = static_cast<SVGGeometryBox&>(descendant);
+            auto& path = geometry_box.dom_node().get_path();
+            geometry_box.set_content_size(path.bounding_box().size());
 
             total_bounding_box = total_bounding_box.united(path.bounding_box());
         }

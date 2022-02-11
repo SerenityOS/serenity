@@ -11,10 +11,10 @@
 
 namespace Web::Layout {
 
-class SVGPathBox final : public SVGGraphicsBox {
+class SVGGeometryBox final : public SVGGraphicsBox {
 public:
-    SVGPathBox(DOM::Document&, SVG::SVGGeometryElement&, NonnullRefPtr<CSS::StyleProperties>);
-    virtual ~SVGPathBox() override = default;
+    SVGGeometryBox(DOM::Document&, SVG::SVGGeometryElement&, NonnullRefPtr<CSS::StyleProperties>);
+    virtual ~SVGGeometryBox() override = default;
 
     SVG::SVGGeometryElement& dom_node() { return verify_cast<SVG::SVGGeometryElement>(SVGGraphicsBox::dom_node()); }
     SVG::SVGGeometryElement const& dom_node() const { return verify_cast<SVG::SVGGeometryElement>(SVGGraphicsBox::dom_node()); }
@@ -22,10 +22,10 @@ public:
     virtual void paint(PaintContext& context, PaintPhase phase) override;
 
 private:
-    virtual bool is_svg_path_box() const final { return true; }
+    virtual bool is_svg_geometry_box() const final { return true; }
 };
 
 template<>
-inline bool Node::fast_is<SVGPathBox>() const { return is_svg_path_box(); }
+inline bool Node::fast_is<SVGGeometryBox>() const { return is_svg_geometry_box(); }
 
 }
