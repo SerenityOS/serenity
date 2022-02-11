@@ -37,7 +37,7 @@ public:
     float content_width() const { return m_content_size.width(); }
     float content_height() const { return m_content_size.height(); }
 
-    Gfx::FloatRect padded_rect() const
+    Gfx::FloatRect absolute_padding_box_rect() const
     {
         auto absolute_rect = this->absolute_rect();
         Gfx::FloatRect rect;
@@ -48,9 +48,9 @@ public:
         return rect;
     }
 
-    Gfx::FloatRect bordered_rect() const
+    Gfx::FloatRect absolute_border_box_rect() const
     {
-        auto padded_rect = this->padded_rect();
+        auto padded_rect = this->absolute_padding_box_rect();
         Gfx::FloatRect rect;
         rect.set_x(padded_rect.x() - box_model().border.left);
         rect.set_width(padded_rect.width() + box_model().border.left + box_model().border.right);
