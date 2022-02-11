@@ -26,6 +26,44 @@ Vector<PathInstruction> AttributeParser::parse_path_data()
     return m_instructions;
 }
 
+Optional<float> AttributeParser::parse_coordinate(StringView input)
+{
+    AttributeParser parser { input };
+    parser.parse_whitespace();
+    if (parser.match_coordinate()) {
+        float result = parser.parse_coordinate();
+        parser.parse_whitespace();
+        if (parser.done())
+            return result;
+    }
+
+    return {};
+}
+
+Optional<float> AttributeParser::parse_length(StringView input)
+{
+    AttributeParser parser { input };
+    parser.parse_whitespace();
+    if (parser.match_coordinate()) {
+        float result = parser.parse_length();
+        parser.parse_whitespace();
+        if (parser.done())
+            return result;
+    }
+
+    return {};
+}
+
+Optional<float> AttributeParser::parse_positive_length(StringView input)
+{
+    // FIXME: Where this is used, the spec usually (always?) says "A negative value is an error (see Error processing)."
+    //        So, implement error processing! Maybe this should return ErrorOr.
+    auto result = parse_length(input);
+    if (result.has_value() && result.value() < 0)
+        result.clear();
+    return result;
+}
+
 void AttributeParser::parse_drawto()
 {
     if (match('M') || match('m')) {
@@ -161,9 +199,16 @@ void AttributeParser::parse_elliptical_arc()
     }
 }
 
-float AttributeParser::parse_coordinate()
+float AttributeParser::parse_length()
 {
     return parse_sign() * parse_number();
+}
+
+float AttributeParser::parse_coordinate()
+{
+    // https://www.w3.org/TR/SVG11/types.html#DataTypeCoordinate
+    // coordinate ::= length
+    return parse_length();
 }
 
 Vector<float> AttributeParser::parse_coordinate_pair()
@@ -360,6 +405,11 @@ bool AttributeParser::match_comma_whitespace() const
 }
 
 bool AttributeParser::match_coordinate() const
+{
+    return match_length();
+}
+
+bool AttributeParser::match_length() const
 {
     return !done() && (isdigit(ch()) || ch() == '-' || ch() == '+' || ch() == '.');
 }

@@ -39,6 +39,10 @@ public:
 
     Vector<PathInstruction> parse_path_data();
 
+    static Optional<float> parse_coordinate(StringView input);
+    static Optional<float> parse_length(StringView input);
+    static Optional<float> parse_positive_length(StringView input);
+
 private:
     void parse_drawto();
 
@@ -53,6 +57,7 @@ private:
     void parse_smooth_quadratic_bezier_curveto();
     void parse_elliptical_arc();
 
+    float parse_length();
     float parse_coordinate();
     Vector<float> parse_coordinate_pair();
     Vector<float> parse_coordinate_sequence();
@@ -71,6 +76,7 @@ private:
     bool match_whitespace() const;
     bool match_comma_whitespace() const;
     bool match_coordinate() const;
+    bool match_length() const;
     bool match(char c) const { return !done() && ch() == c; }
 
     bool done() const { return m_cursor >= m_source.length(); }
