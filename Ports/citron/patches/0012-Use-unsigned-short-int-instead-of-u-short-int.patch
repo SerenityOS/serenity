@@ -1,0 +1,34 @@
+From 5535c5453bd5cc043f5293d51a3244c644f07064 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 11 Feb 2022 16:51:57 +0330
+Subject: [PATCH 12/18] Use unsigned (short int) instead of u(short int)
+
+---
+ src/ctypes.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/ctypes.c b/src/ctypes.c
+index d472595..f22cb9b 100644
+--- a/src/ctypes.c
++++ b/src/ctypes.c
+@@ -706,7 +706,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_TSTR(ushort)
+ {
+     char buf[1024];
+     sprintf(buf, "<CTypes ushort at: %p value: %ui>", myself->value.rvalue->ptr,
+-        *(ushort*)myself->value.rvalue->ptr);
++        *(unsigned short*)myself->value.rvalue->ptr);
+     return ctr_build_string_from_cstring(buf);
+ }
+ 
+@@ -779,7 +779,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_TSTR(uint)
+ {
+     char buf[1024];
+     sprintf(buf, "<CTypes uint at: %p value: %ui>", myself->value.rvalue->ptr,
+-        *(uint*)myself->value.rvalue->ptr);
++        *(unsigned int*)myself->value.rvalue->ptr);
+     return ctr_build_string_from_cstring(buf);
+ }
+ 
+-- 
+2.34.1
+
