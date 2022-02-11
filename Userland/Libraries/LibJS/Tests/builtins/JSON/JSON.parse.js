@@ -43,3 +43,10 @@ test("negative zero", () => {
 
     expect(JSON.parse(-0)).toEqual(0);
 });
+
+// The underlying parser resolves decimal numbers by storing the decimal portion in an integer
+// This test handles a regression where the decimal portion was only using a u32 vs. u64
+// and would fail to parse.
+test("long decimal parse", () => {
+    expect(JSON.parse("1644452550.6489999294281")).toEqual(1644452550.6489999294281);
+});
