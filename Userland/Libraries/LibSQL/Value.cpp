@@ -983,8 +983,11 @@ bool TupleImpl::can_cast(Value const& other_value) const
 
 int TupleImpl::compare(Value const& other) const
 {
-    if (other.type() != SQLType::Tuple)
+    if (other.type() != SQLType::Tuple) {
+        if (size() == 1)
+            return Value(value().at(0)).compare(other);
         return 1;
+    }
 
     auto& other_impl = other.get_impl<TupleImpl>({});
     if (m_descriptor && other_impl.m_descriptor && m_descriptor->compare_ignoring_names(*other_impl.m_descriptor))
