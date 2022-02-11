@@ -141,6 +141,41 @@ Optional<String> get_standardized_encoding(const String& encoding)
     return {};
 }
 
+// https://encoding.spec.whatwg.org/#bom-sniff
+Decoder* bom_sniff_to_decoder(StringView input)
+{
+    // 1. Let BOM be the result of peeking 3 bytes from ioQueue, converted to a byte sequence.
+    // 2. For each of the rows in the table below, starting with the first one and going down,
+    //    if BOM starts with the bytes given in the first column, then return the encoding given
+    //    in the cell in the second column of that row. Otherwise, return null.
+
+    // Byte Order Mark | Encoding
+    // --------------------------
+    // 0xEF 0xBB 0xBF  | UTF-8
+    // 0xFE 0xFF       | UTF-16BE
+    // 0xFF 0xFE       | UTF-16LE
+
+    auto bytes = input.bytes();
+    if (bytes.size() < 2)
+        return nullptr;
+
+    auto first_byte = bytes[0];
+
+    switch (first_byte) {
+    case 0xEF: // UTF-8
+        if (bytes.size() < 3)
+            return nullptr;
+        return bytes[1] == 0xBB && bytes[2] == 0xBF ? &s_utf8_decoder : nullptr;
+    case 0xFE: // UTF-16BE
+        return bytes[1] == 0xFF ? &s_utf16be_decoder : nullptr;
+    case 0xFF: // UTF-16LE
+        // FIXME: There is currently no UTF-16LE decoder.
+        TODO();
+    }
+
+    return nullptr;
+}
+
 String Decoder::to_utf8(StringView input)
 {
     StringBuilder builder(input.length());
