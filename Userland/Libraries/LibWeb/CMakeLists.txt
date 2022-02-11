@@ -93,6 +93,7 @@ set(SOURCES
     DOMTreeModel.cpp
     Dump.cpp
     Encoding/TextEncoder.cpp
+    Fetch/AbstractOperations.cpp
     FontCache.cpp
     HTML/AttributeNames.cpp
     HTML/BrowsingContext.cpp
@@ -252,6 +253,7 @@ set(SOURCES
     Loader/LoadRequest.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
+    MimeSniff/MimeType.cpp
     Namespace.cpp
     NavigationTiming/PerformanceTiming.cpp
     OutOfProcessWebView.cpp

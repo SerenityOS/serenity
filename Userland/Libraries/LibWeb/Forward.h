@@ -231,6 +231,10 @@ namespace Web::IntersectionObserver {
 class IntersectionObserver;
 }
 
+namespace Web::MimeSniff {
+class MimeType;
+}
+
 namespace Web::NavigationTiming {
 class PerformanceTiming;
 }
