@@ -18,6 +18,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
     ByteString? getResponseHeader(ByteString name);
     ByteString getAllResponseHeaders();
+    undefined overrideMimeType(DOMString mime);
 
     attribute EventHandler onreadystatechange;
 

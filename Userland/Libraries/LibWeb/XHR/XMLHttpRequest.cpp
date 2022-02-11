@@ -291,4 +291,21 @@ String XMLHttpRequest::get_all_response_headers() const
     return builder.to_string();
 }
 
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-overridemimetype
+DOM::ExceptionOr<void> XMLHttpRequest::override_mime_type(String const& mime)
+{
+    // 1. If this’s state is loading or done, then throw an "InvalidStateError" DOMException.
+    if (m_ready_state == ReadyState::Loading || m_ready_state == ReadyState::Done)
+        return DOM::InvalidStateError::create("Cannot override MIME type when state is Loading or Done.");
+
+    // 2. Set this’s override MIME type to the result of parsing mime.
+    m_override_mime_type = MimeSniff::MimeType::from_string(mime);
+
+    // 3. If this’s override MIME type is failure, then set this’s override MIME type to application/octet-stream.
+    if (!m_override_mime_type.has_value())
+        m_override_mime_type = MimeSniff::MimeType("application"sv, "octet-stream"sv);
+
+    return {};
+}
+
 }
