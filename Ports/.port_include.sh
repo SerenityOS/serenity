@@ -246,6 +246,27 @@ do_download_file() {
     fi
 }
 
+do_git_clone() {
+    local repo_url="$1"
+    local local_dest="${2:-${repo_url##*/}}"
+    local_dest=${2:-${local_dest%.git}}
+    local accept_existing="${3:-true}"
+
+    echo "Cloning Repository: $url"
+
+    if !command -v git 2>/dev/null 1>&2; then
+        >&2 echo "Error: git command not found. not cloning.."
+        exit 1
+    fi
+
+    if $accept_existing && [[ -d $local_dest ]]; then
+        echo "$local_dest already exists.. Clone skipping.."
+        return
+    fi
+
+    run_nocd git clone $repo_url $local_dest
+}
+
 fetch() {
     pre_fetch
 
@@ -264,6 +285,12 @@ fetch() {
         for f in $files; do
             IFS=$OLDIFS
             read url filename auth_sum<<< $(echo "$f")
+
+            if [[ $url =~ \.git$ ]]; then
+                do_git_clone $url $filename
+                continue
+            fi
+
             do_download_file "$url" "$filename"
         done
 
@@ -274,6 +301,8 @@ fetch() {
         for f in $files; do
             IFS=$OLDIFS
             read url filename auth_sum<<< $(echo "$f")
+
+            [[ $url =~ \.git$ ]] && continue
 
             # check sha256sum if given
             if [ "$auth_type" = "sha256" ]; then
@@ -296,7 +325,7 @@ fetch() {
         done
 
         # check signature
-        if [ "$auth_type" = "sig" ]; then
+        if [[ "$auth_type" == "sig" ]]; then
             if $NO_GPG; then
                 echo "WARNING: gpg signature check was disabled by --no-gpg-verification"
             else
