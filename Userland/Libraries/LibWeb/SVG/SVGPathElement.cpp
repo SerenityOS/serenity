@@ -88,12 +88,14 @@ SVGPathElement::SVGPathElement(DOM::Document& document, QualifiedName qualified_
 {
 }
 
-void SVGPathElement::parse_attribute(const FlyString& name, const String& value)
+void SVGPathElement::parse_attribute(FlyString const& name, String const& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
 
-    if (name == "d")
+    if (name == "d") {
         m_instructions = AttributeParser::parse_path_data(value);
+        m_path.clear();
+    }
 }
 
 Gfx::Path& SVGPathElement::get_path()
