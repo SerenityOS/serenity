@@ -77,8 +77,12 @@ namespace Web::SVG::AttributeNames {
     E(viewTarget)                   \
     E(width)                        \
     E(x)                            \
+    E(x1)                           \
+    E(x2)                           \
     E(xChannelSelector)             \
     E(y)                            \
+    E(y1)                           \
+    E(y2)                           \
     E(yChannelSelector)             \
     E(zoomAndPan)
 

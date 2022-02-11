@@ -79,6 +79,7 @@
 #include <LibWeb/SVG/SVGCircleElement.h>
 #include <LibWeb/SVG/SVGEllipseElement.h>
 #include <LibWeb/SVG/SVGGElement.h>
+#include <LibWeb/SVG/SVGLineElement.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGRectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
@@ -241,6 +242,8 @@ NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_n
         return adopt_ref(*new SVG::SVGCircleElement(document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::ellipse)
         return adopt_ref(*new SVG::SVGEllipseElement(document, move(qualified_name)));
+    if (lowercase_tag_name == SVG::TagNames::line)
+        return adopt_ref(*new SVG::SVGLineElement(document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::path)
         return adopt_ref(*new SVG::SVGPathElement(document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::rect)
