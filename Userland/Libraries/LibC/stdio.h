@@ -57,6 +57,7 @@ int remove(const char* pathname);
 FILE* fdopen(int fd, const char* mode);
 FILE* fopen(const char* pathname, const char* mode);
 FILE* freopen(const char* pathname, const char* mode, FILE*);
+FILE* fmemopen(void* buf, size_t size, const char* mode);
 void flockfile(FILE* filehandle);
 void funlockfile(FILE* filehandle);
 int fclose(FILE*);

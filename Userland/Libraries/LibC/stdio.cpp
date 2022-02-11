@@ -1067,6 +1067,13 @@ FILE* fdopen(int fd, const char* mode)
     return FILE::create(fd, flags);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fmemopen.html
+FILE* fmemopen(void*, size_t, const char*)
+{
+    // FIXME: Implement me :^)
+    TODO();
+}
+
 static inline bool is_default_stream(FILE* stream)
 {
     return stream == stdin || stream == stdout || stream == stderr;
