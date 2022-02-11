@@ -70,4 +70,7 @@ public:
 Decoder* decoder_for(String const& encoding);
 Optional<String> get_standardized_encoding(const String& encoding);
 
+// This returns the appropriate Unicode decoder for the sniffed BOM or nullptr if there is no appropriate decoder.
+Decoder* bom_sniff_to_decoder(StringView);
+
 }
