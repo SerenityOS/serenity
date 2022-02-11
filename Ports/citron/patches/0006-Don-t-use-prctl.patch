@@ -1,0 +1,56 @@
+From 5af77986e0c5c7344fbb326cd319d086e25321c3 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 11 Feb 2022 16:29:30 +0330
+Subject: [PATCH 06/18] Don't use prctl
+
+---
+ src/compcompat_pthread.h | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/src/compcompat_pthread.h b/src/compcompat_pthread.h
+index bbdd063..1146b43 100644
+--- a/src/compcompat_pthread.h
++++ b/src/compcompat_pthread.h
+@@ -10,11 +10,19 @@
+ 
+ int pthread_getname_np(pthread_t pth, char* buf, size_t len)
+ {
++#ifdef __serenity__
++    return 0;
++#else
+     return prctl(PR_GET_NAME, buf);
++#endif
+ }
+ int pthread_setname_np(pthread_t pth, const char* buf)
+ {
++#ifdef __serenity__
++    return 0;
++#else
+     return prctl(PR_SET_NAME, buf);
++#endif
+ }
+ #        else //__has_include
+ 
+@@ -30,11 +38,19 @@ int pthread_setname_np(pthread_t pth, const char* buf) { return 1; }
+ 
+ int pthread_getname_np(pthread_t pth, char* buf, size_t len)
+ {
++#ifdef __serenity__
++    return 0;
++#else
+     return prctl(PR_GET_NAME, buf);
++#endif
+ }
+ int pthread_setname_np(pthread_t pth, const char* buf)
+ {
++#ifdef __serenity__
++    return 0;
++#else
+     return prctl(PR_SET_NAME, buf);
++#endif
+ }
+ #    endif // ifdef  __has_include
+ #endif     // ifndef _GNU_SOURCE
+-- 
+2.34.1
+

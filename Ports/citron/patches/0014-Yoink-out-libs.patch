@@ -1,0 +1,49 @@
+From f222a3a3977516ec408d5c8e55899dd0d3995a2d Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 11 Feb 2022 16:55:43 +0330
+Subject: [PATCH 14/18] Yoink out libs
+
+---
+ makefile | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/makefile b/makefile
+index 0d7d7f0..9b9a02c 100644
+--- a/makefile
++++ b/makefile
+@@ -43,6 +43,7 @@ endif
+ 
+ CFLAGS += -Isrc/lib/
+ LEXTRACF += $(LDFLAGS) -flto -lstdc++
++LIBS = -lm -ldl -lpcre -pthread -lffi -lc
+ 
+ OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
+ 	   lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o \
+@@ -82,13 +83,13 @@ $(BUILDDIR):
+ 	mkdir -p $@
+ 
+ $(BUILDDIR)/ctr: build_tcc_statics $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
+-	$(CXX) $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) -lm -ldl -lbsd -lpcre -lffi -lpthread $(LEXTRACF) -o $@
++	$(CXX) $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) $(LIBS) $(LEXTRACF) -o $@
+ 
+ ctr: $(BUILDDIR)/ctr
+ 
+ $(BUILDDIR)/libctr.so: CFLAGS += -fPIC -DCITRON_LIBRARY
+ $(BUILDDIR)/libctr.so: $(OBJS)
+-	$(CC) $(OBJS) -fpic -shared -export-dynamic -ldl -lbsd -lpcre -lffi -lpthread -o $@
++	$(CC) $(OBJS) -fpic -shared -export-dynamic $(LIBS) -o $@
+ 
+ libctr: $(BUILDDIR)/libctr.so
+ 
+@@ -96,7 +97,7 @@ libctr: $(BUILDDIR)/libctr.so
+ # compiler: cxx
+ # compiler: $(COBJS)
+ # 	cd $(BUILDDIR)
+-# 	$(CC) $< -lm -ldl -lbsd -lpcre -lffi -lprofiler -lpthread $(LEXTRACF) -o ctrc
++# 	$(CC) $< $(LIBS) -lprofiler $(LEXTRACF) -o ctrc
+ # 	cd -
+ 
+ install: $(BUILDDIR)/ctr $(BUILDDIR)/libctr.so $(BUILDDIR)/ctrconfig Library mods extensions
+-- 
+2.34.1
+

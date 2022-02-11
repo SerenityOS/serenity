@@ -1,0 +1,26 @@
+From 1ecf9016d5802aafb51a0ae224724db7f8be79a3 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 11 Feb 2022 16:39:23 +0330
+Subject: [PATCH 09/18] Use setjmp for callcc
+
+---
+ src/base_extensions.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/base_extensions.c b/src/base_extensions.c
+index aa746f0..1aefc28 100644
+--- a/src/base_extensions.c
++++ b/src/base_extensions.c
+@@ -6,7 +6,9 @@
+ #include <stdio.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
++#ifndef __serenity__
+ #define WITH_UCONTEXT
++#endif
+ #ifdef WITH_UCONTEXT
+ #    include <ucontext.h>
+ #else
+-- 
+2.34.1
+
