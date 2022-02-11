@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Kernel/Devices/Audio/Controller.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Memory/PhysicalPage.h>
@@ -16,33 +17,29 @@ namespace Kernel {
 
 class SB16;
 
-class SB16 final : public IRQHandler
-    , public CharacterDevice {
-    friend class DeviceManagement;
+class SB16 final
+    : public AudioController
+    , public IRQHandler {
 
 public:
     virtual ~SB16() override;
 
-    static RefPtr<SB16> try_detect_and_create();
+    static ErrorOr<NonnullRefPtr<SB16>> try_detect_and_create();
 
-    // ^CharacterDevice
-    virtual bool can_read(const OpenFileDescription&, u64) const override;
-    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const OpenFileDescription&, u64) const override { return true; }
-
-    virtual StringView purpose() const override { return class_name(); }
-
-    virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned, Userspace<void*>) override;
+    virtual StringView purpose() const override { return "SB16"sv; }
 
 private:
+    // ^AudioController
+    virtual RefPtr<AudioChannel> audio_channel(u32 index) const override;
+    virtual ErrorOr<size_t> write(size_t channel_index, UserOrKernelBuffer const& data, size_t length) override;
+    virtual void detect_hardware_audio_channels(Badge<AudioManagement>) override;
+    virtual ErrorOr<void> set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate) override;
+    virtual ErrorOr<u32> get_pcm_output_sample_rate(size_t channel_index) override;
+
     SB16();
 
     // ^IRQHandler
     virtual bool handle_irq(const RegisterState&) override;
-
-    // ^CharacterDevice
-    virtual StringView class_name() const override { return "SB16"sv; }
 
     void initialize();
     void wait_for_irq();
@@ -59,5 +56,6 @@ private:
     u16 m_sample_rate { 44100 };
 
     WaitQueue m_irq_queue;
+    RefPtr<AudioChannel> m_audio_channel;
 };
 }
