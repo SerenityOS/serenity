@@ -150,6 +150,22 @@ public:
         invalidate_split_lines();
     }
 
+    void horizontal_line_to(float x)
+    {
+        float previous_y = 0;
+        if (!m_segments.is_empty())
+            previous_y = m_segments.last().point().y();
+        line_to({ x, previous_y });
+    }
+
+    void vertical_line_to(float y)
+    {
+        float previous_x = 0;
+        if (!m_segments.is_empty())
+            previous_x = m_segments.last().point().x();
+        line_to({ previous_x, y });
+    }
+
     void quadratic_bezier_curve_to(const FloatPoint& through, const FloatPoint& point)
     {
         append_segment<QuadraticBezierCurveSegment>(point, through);
