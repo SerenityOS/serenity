@@ -176,6 +176,30 @@ Decoder* bom_sniff_to_decoder(StringView input)
     return nullptr;
 }
 
+// https://encoding.spec.whatwg.org/#decode
+String convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(Decoder& fallback_decoder, StringView input)
+{
+    Decoder* actual_decoder = &fallback_decoder;
+
+    // 1. Let BOMEncoding be the result of BOM sniffing ioQueue.
+    // 2. If BOMEncoding is non-null:
+    if (auto* unicode_decoder = bom_sniff_to_decoder(input); unicode_decoder) {
+        // 1. Set encoding to BOMEncoding.
+        actual_decoder = unicode_decoder;
+
+        // 2. Read three bytes from ioQueue, if BOMEncoding is UTF-8; otherwise read two bytes. (Do nothing with those bytes.)
+        // FIXME: I imagine this will be pretty slow for large inputs, as it's regenerating the input without the first 2/3 bytes.
+        input = input.substring_view(unicode_decoder == &s_utf8_decoder ? 3 : 2);
+    }
+
+    VERIFY(actual_decoder);
+
+    // FIXME: 3. Process a queue with an instance of encoding’s decoder, ioQueue, output, and "replacement".
+    //        This isn't the exact same as the spec, especially the error mode of "replacement", which we don't have the concept of yet.
+    // 4. Return output.
+    return actual_decoder->to_utf8(input);
+}
+
 String Decoder::to_utf8(StringView input)
 {
     StringBuilder builder(input.length());
