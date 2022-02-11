@@ -11,7 +11,7 @@
 
 namespace Web::SVG {
 
-AttributeParser::AttributeParser(String source)
+AttributeParser::AttributeParser(StringView source)
     : m_source(move(source))
 {
 }

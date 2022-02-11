@@ -35,7 +35,7 @@ struct PathInstruction {
 
 class AttributeParser final {
 public:
-    AttributeParser(String source);
+    AttributeParser(StringView source);
     ~AttributeParser() = default;
 
     Vector<PathInstruction> parse_path_data();
@@ -85,7 +85,7 @@ private:
     char ch() const { return m_source[m_cursor]; }
     char consume() { return m_source[m_cursor++]; }
 
-    String m_source;
+    StringView m_source;
     size_t m_cursor { 0 };
     Vector<PathInstruction> m_instructions;
 };
