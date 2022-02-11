@@ -363,6 +363,10 @@ fetch() {
     post_fetch
 }
 
+func_defined pre_install || pre_install() {
+    :
+}
+
 func_defined pre_patch || pre_patch() {
     :
 }
@@ -520,6 +524,7 @@ do_build() {
 }
 do_install() {
     ensure_build
+    pre_install
     echo "Installing $port..."
     install
     install_main_launcher
