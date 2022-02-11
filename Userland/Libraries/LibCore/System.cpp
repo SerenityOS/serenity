@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/System.h>
@@ -22,6 +23,16 @@
 
 #ifdef __serenity__
 #    include <serenity.h>
+#endif
+
+#if defined(__linux__) && !defined(MFD_CLOEXEC)
+#    include <linux/memfd.h>
+#    include <sys/syscall.h>
+
+static int memfd_create(const char* name, unsigned int flags)
+{
+    return syscall(SYS_memfd_create, name, flags);
+}
 #endif
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
@@ -243,6 +254,28 @@ ErrorOr<void> munmap(void* address, size_t size)
     if (::munmap(address, size) < 0)
         return Error::from_syscall("munmap"sv, -errno);
     return {};
+}
+
+ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int options)
+{
+    int fd = -1;
+#if defined(__serenity__)
+    fd = ::anon_create(round_up_to_power_of_two(size, PAGE_SIZE), options);
+#elif defined(__linux__)
+    // FIXME: Support more options on Linux.
+    auto linux_options = ((options & O_CLOEXEC) > 0) ? MFD_CLOEXEC : 0;
+    fd = memfd_create("", linux_options);
+    if (fd < 0)
+        return Error::from_errno(errno);
+    if (::ftruncate(fd, size) < 0) {
+        auto saved_errno = errno;
+        TRY(close(fd));
+        return Error::from_errno(saved_errno);
+    }
+#endif
+    if (fd < 0)
+        return Error::from_errno(errno);
+    return fd;
 }
 
 ErrorOr<int> open(StringView path, int options, ...)

@@ -143,6 +143,10 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         }
     }
 
+#if ARCH(X86_64)
+    m_has_qemu_hvf_quirk = false;
+#endif
+
     if (max_extended_leaf >= 0x80000008) {
         // CPUID.80000008H:EAX[7:0] reports the physical-address width supported by the processor.
         CPUID cpuid(0x80000008);
@@ -154,6 +158,22 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         m_physical_address_bit_width = has_feature(CPUFeature::PAE) ? 36 : 32;
         // Processors that do not support CPUID function 80000008H, support a linear-address width of 32.
         m_virtual_address_bit_width = 32;
+#if ARCH(X86_64)
+        // Workaround QEMU hypervisor.framework bug
+        // https://gitlab.com/qemu-project/qemu/-/issues/664
+        //
+        // We detect this as follows:
+        //    * We're in a hypervisor
+        //    * hypervisor_leaf_range is null under Hypervisor.framework
+        //    * m_physical_address_bit_width is 36 bits
+        if (has_feature(CPUFeature::HYPERVISOR)) {
+            CPUID hypervisor_leaf_range(0x40000000);
+            if (!hypervisor_leaf_range.ebx() && m_physical_address_bit_width == 36) {
+                m_has_qemu_hvf_quirk = true;
+                m_virtual_address_bit_width = 48;
+            }
+        }
+#endif
     }
 
     CPUID extended_features(0x7);
@@ -389,6 +409,10 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
         dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", current_id());
     dmesgln("CPU[{}]: Physical address bit width: {}", current_id(), m_physical_address_bit_width);
     dmesgln("CPU[{}]: Virtual address bit width: {}", current_id(), m_virtual_address_bit_width);
+#if ARCH(X86_64)
+    if (m_has_qemu_hvf_quirk)
+        dmesgln("CPU[{}]: Applied correction for QEMU Hypervisor.framework quirk", current_id());
+#endif
 
     if (cpu == 0)
         idt_init();

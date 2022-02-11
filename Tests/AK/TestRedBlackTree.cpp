@@ -86,3 +86,59 @@ TEST_CASE(clear)
     test.clear();
     EXPECT_EQ(test.size(), 0u);
 }
+
+TEST_CASE(find_smallest_not_below_iterator)
+{
+    RedBlackTree<size_t, size_t> test;
+
+    for (size_t i = 0; i < 8; i++) {
+        auto above_all = test.find_smallest_not_below_iterator(i);
+        EXPECT(above_all.is_end());
+
+        test.insert(i, i);
+
+        auto only_just_added_i_is_not_below = test.find_smallest_not_below_iterator(i);
+        EXPECT(!only_just_added_i_is_not_below.is_end());
+        EXPECT_EQ(only_just_added_i_is_not_below.key(), i);
+    }
+
+    {
+        auto smallest_not_below_two = test.find_smallest_not_below_iterator(2);
+        EXPECT(!smallest_not_below_two.is_end());
+        EXPECT_EQ(smallest_not_below_two.key(), 2u);
+    }
+
+    test.remove(2);
+
+    {
+        auto smallest_not_below_two_without_two = test.find_smallest_not_below_iterator(2);
+        EXPECT(!smallest_not_below_two_without_two.is_end());
+        EXPECT_EQ(smallest_not_below_two_without_two.key(), 3u);
+    }
+
+    {
+        auto smallest_not_below_one = test.find_smallest_not_below_iterator(1);
+        EXPECT(!smallest_not_below_one.is_end());
+        EXPECT_EQ(smallest_not_below_one.key(), 1u);
+    }
+
+    {
+        auto smallest_not_below_three = test.find_smallest_not_below_iterator(3);
+        EXPECT(!smallest_not_below_three.is_end());
+        EXPECT_EQ(smallest_not_below_three.key(), 3u);
+    }
+}
+
+TEST_CASE(iterators_on_emptied_tree)
+{
+    RedBlackTree<size_t, size_t> test;
+    test.insert(1, 1);
+    test.remove(1);
+    EXPECT_EQ(test.size(), 0u);
+    auto begin_iterator = test.begin();
+    auto end_iterator = test.end();
+    EXPECT(begin_iterator.is_end());
+
+    EXPECT_EQ(begin_iterator, end_iterator);
+    EXPECT(!(begin_iterator != end_iterator));
+}

@@ -9,43 +9,40 @@
 
 namespace SQL::AST {
 
-RefPtr<SQLResult> CreateTable::execute(ExecutionContext& context) const
+ResultOr<ResultSet> CreateTable::execute(ExecutionContext& context) const
 {
-    auto schema_name = (!m_schema_name.is_null() && !m_schema_name.is_empty()) ? m_schema_name : "default";
-    auto schema_def_or_error = context.database->get_schema(schema_name);
-    if (schema_def_or_error.is_error())
-        return SQLResult::construct(SQLCommand::Create, SQLErrorCode::InternalError, schema_def_or_error.error());
-    auto schema_def = schema_def_or_error.release_value();
+    auto schema_name = m_schema_name.is_empty() ? String { "default"sv } : m_schema_name;
+
+    auto schema_def = TRY(context.database->get_schema(schema_name));
     if (!schema_def)
-        return SQLResult::construct(SQLCommand::Create, SQLErrorCode::SchemaDoesNotExist, m_schema_name);
-    auto table_def_or_error = context.database->get_table(schema_name, m_table_name);
-    if (table_def_or_error.is_error())
-        return SQLResult::construct(SQLCommand::Create, SQLErrorCode::InternalError, table_def_or_error.error());
-    auto table_def = table_def_or_error.release_value();
+        return Result { SQLCommand::Create, SQLErrorCode::SchemaDoesNotExist, schema_name };
+
+    auto table_def = TRY(context.database->get_table(schema_name, m_table_name));
     if (table_def) {
-        if (m_is_error_if_table_exists) {
-            return SQLResult::construct(SQLCommand::Create, SQLErrorCode::TableExists, m_table_name);
-        } else {
-            return SQLResult::construct(SQLCommand::Create);
-        }
+        if (m_is_error_if_table_exists)
+            return Result { SQLCommand::Create, SQLErrorCode::TableExists, m_table_name };
+        return ResultSet { SQLCommand::Create };
     }
+
     table_def = TableDef::construct(schema_def, m_table_name);
+
     for (auto& column : m_columns) {
         SQLType type;
-        if (column.type_name()->name() == "VARCHAR" || column.type_name()->name() == "TEXT") {
+
+        if (column.type_name()->name().is_one_of("VARCHAR"sv, "TEXT"sv))
             type = SQLType::Text;
-        } else if (column.type_name()->name() == "INT" || column.type_name()->name() == "INTEGER") {
+        else if (column.type_name()->name().is_one_of("INT"sv, "INTEGER"sv))
             type = SQLType::Integer;
-        } else if (column.type_name()->name() == "FLOAT" || column.type_name()->name() == "NUMBER") {
+        else if (column.type_name()->name().is_one_of("FLOAT"sv, "NUMBER"sv))
             type = SQLType::Float;
-        } else {
-            return SQLResult::construct(SQLCommand::Create, SQLErrorCode::InvalidType, column.type_name()->name());
-        }
+        else
+            return Result { SQLCommand::Create, SQLErrorCode::InvalidType, column.type_name()->name() };
+
         table_def->append_column(column.name(), type);
     }
-    if (auto maybe_error = context.database->add_table(*table_def); maybe_error.is_error())
-        return SQLResult::construct(SQLCommand::Create, SQLErrorCode::InternalError, maybe_error.release_error());
-    return SQLResult::construct(SQLCommand::Create, 0, 1);
+
+    TRY(context.database->add_table(*table_def));
+    return ResultSet { SQLCommand::Create };
 }
 
 }

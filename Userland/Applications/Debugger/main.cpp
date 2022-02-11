@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,11 +10,14 @@
 #include <AK/OwnPtr.h>
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
+#include <AK/Try.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibDebug/DebugSession.h>
 #include <LibLine/Editor.h>
+#include <LibMain/Main.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/Instruction.h>
 #include <signal.h>
@@ -204,21 +208,18 @@ static void print_help()
         "x <address> - examine dword in memory\n");
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     editor = Line::Editor::construct();
 
-    if (pledge("stdio proc ptrace exec rpath tty sigaction cpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio proc ptrace exec rpath tty sigaction cpath unix", nullptr));
 
     const char* command = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(command,
         "The program to be debugged, along with its arguments",
         "program", Core::ArgsParser::Required::Yes);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto result = Debug::DebugSession::exec_and_attach(command);
     if (!result) {
@@ -230,7 +231,7 @@ int main(int argc, char** argv)
     struct sigaction sa {
     };
     sa.sa_handler = handle_sigint;
-    sigaction(SIGINT, &sa, nullptr);
+    TRY(Core::System::sigaction(SIGINT, &sa, nullptr));
 
     Debug::DebugInfo::SourcePosition previous_source_position;
     bool in_step_line = false;
@@ -331,4 +332,6 @@ int main(int argc, char** argv)
                 return decision.value();
         }
     });
+
+    return 0;
 }

@@ -1147,6 +1147,10 @@ void Document::evaluate_media_queries_and_report_changes()
     for (auto& style_sheet : style_sheets().sheets()) {
         style_sheet.evaluate_media_queries(window());
     }
+
+    // FIXME: This invalidates too often!
+    //        We should only invalidate when one or more @media rules changes evaluation status.
+    style_computer().invalidate_rule_cache();
 }
 
 NonnullRefPtr<DOMImplementation> Document::implementation() const

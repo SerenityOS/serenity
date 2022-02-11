@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/ShadowRealm.h>
 
 namespace JS {
 
@@ -45,26 +46,49 @@ FunctionPrototype::~FunctionPrototype()
 // 20.2.3.1 Function.prototype.apply ( thisArg, argArray ), https://tc39.es/ecma262/#sec-function.prototype.apply
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-    auto& function = static_cast<FunctionObject&>(*this_object);
+    // 1. Let func be the this value.
+    auto function_value = vm.this_value(global_object);
+
+    // 2. If IsCallable(func) is false, throw a TypeError exception.
+    if (!function_value.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, function_value.to_string_without_side_effects());
+
+    auto& function = static_cast<FunctionObject&>(function_value.as_object());
+
     auto this_arg = vm.argument(0);
     auto arg_array = vm.argument(1);
-    if (arg_array.is_nullish())
+
+    // 3. If argArray is undefined or null, then
+    if (arg_array.is_nullish()) {
+        // FIXME: a. Perform PrepareForTailCall().
+
+        // b. Return ? Call(func, thisArg).
         return TRY(JS::call(global_object, function, this_arg));
+    }
+
+    // 4. Let argList be ? CreateListFromArrayLike(argArray).
     auto arguments = TRY(create_list_from_array_like(global_object, arg_array));
+
+    // FIXME: 5. Perform PrepareForTailCall().
+
+    // 6. Return ? Call(func, thisArg, argList).
     return TRY(JS::call(global_object, function, this_arg, move(arguments)));
 }
 
 // 20.2.3.2 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.bind
+// 3.1.2.1 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/proposal-shadowrealm/#sec-function.prototype.bind
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-    auto& this_function = static_cast<FunctionObject&>(*this_object);
-    auto bound_this_arg = vm.argument(0);
+    auto this_argument = vm.argument(0);
+
+    // 1. Let Target be the this value.
+    auto target_value = vm.this_value(global_object);
+
+    // 2. If IsCallable(Target) is false, throw a TypeError exception.
+    if (!target_value.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, target_value.to_string_without_side_effects());
+
+    auto& target = static_cast<FunctionObject&>(target_value.as_object());
 
     Vector<Value> arguments;
     if (vm.argument_count() > 1) {
@@ -72,22 +96,41 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
         arguments.remove(0);
     }
 
-    return TRY(this_function.bind(bound_this_arg, move(arguments)));
+    // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
+    auto* function = TRY(BoundFunction::create(global_object, target, this_argument, move(arguments)));
+
+    // 4. Let argCount be the number of elements in args.
+    auto arg_count = vm.argument_count() - 1;
+
+    // 5. Perform ? CopyNameAndLength(F, Target, "bound", argCount).
+    TRY(copy_name_and_length(global_object, *function, target, "bound"sv, arg_count));
+
+    // 6. Return F.
+    return function;
 }
 
 // 20.2.3.3 Function.prototype.call ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.call
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-    auto& function = static_cast<FunctionObject&>(*this_object);
+    // 1. Let func be the this value.
+    auto function_value = vm.this_value(global_object);
+
+    // 2. If IsCallable(func) is false, throw a TypeError exception.
+    if (!function_value.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, function_value.to_string_without_side_effects());
+
+    auto& function = static_cast<FunctionObject&>(function_value.as_object());
+
+    // FIXME: 3. Perform PrepareForTailCall().
+
     auto this_arg = vm.argument(0);
     MarkedVector<Value> arguments(vm.heap());
     if (vm.argument_count() > 1) {
         for (size_t i = 1; i < vm.argument_count(); ++i)
             arguments.append(vm.argument(i));
     }
+
+    // 4. Return ? Call(func, thisArg, args).
     return TRY(JS::call(global_object, function, this_arg, move(arguments)));
 }
 

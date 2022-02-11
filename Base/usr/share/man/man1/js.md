@@ -28,16 +28,24 @@ Run `help()` in REPL mode to see its available built-in functions.
 * `-m`, `--as-module`: Treat as module
 * `-l`, `--print-last-result`: Print the result of the last statement executed.
 * `-g`, `--gc-on-every-allocation`: Run garbage collection on every allocation.
-* `-c`, `--disable-ansi-colors`: Disable ANSI colors
+* `-i`, `--disable-ansi-colors`: Disable ANSI colors
 * `-h`, `--disable-source-location-hints`: Disable source location hints
 * `-s`, `--no-syntax-highlight`: Disable live syntax highlighting in the REPL
+* `-c`, `--evaluate`: Evaluate the argument as a script
 
 ## Examples
 
-Here's how you execute a script:
+Here's how you execute a script from a file:
 
 ```sh
 $ js ~/Source/js/type-play.js
+```
+
+Here's how you execute a script as a command line argument:
+
+```sh
+$ js -c "console.log(42)"
+42
 ```
 
 And here's an example of an interactive REPL session:

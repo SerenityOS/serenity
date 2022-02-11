@@ -35,4 +35,19 @@ void ResultSet::insert_row(Tuple const& row, Tuple const& sort_key)
     insert(ix, ResultRow { row, sort_key });
 }
 
+void ResultSet::limit(size_t offset, size_t limit)
+{
+    if (offset > 0) {
+        if (offset > size()) {
+            clear();
+            return;
+        }
+
+        remove(0, offset);
+    }
+
+    if (size() > limit)
+        remove(limit, size() - limit);
+}
+
 }

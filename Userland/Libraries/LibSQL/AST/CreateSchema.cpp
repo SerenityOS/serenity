@@ -10,23 +10,20 @@
 
 namespace SQL::AST {
 
-RefPtr<SQLResult> CreateSchema::execute(ExecutionContext& context) const
+ResultOr<ResultSet> CreateSchema::execute(ExecutionContext& context) const
 {
-    auto schema_def_or_error = context.database->get_schema(m_schema_name);
-    if (schema_def_or_error.is_error())
-        return SQLResult::construct(SQLCommand::Create, SQLErrorCode::InternalError, schema_def_or_error.error());
-    auto schema_def = schema_def_or_error.release_value();
+    auto schema_def = TRY(context.database->get_schema(m_schema_name));
+
     if (schema_def) {
-        if (m_is_error_if_schema_exists) {
-            return SQLResult::construct(SQLCommand::Create, SQLErrorCode::SchemaExists, m_schema_name);
-        }
-        return SQLResult::construct(SQLCommand::Create);
+        if (m_is_error_if_schema_exists)
+            return Result { SQLCommand::Create, SQLErrorCode::SchemaExists, m_schema_name };
+        return ResultSet { SQLCommand::Create };
     }
 
     schema_def = SchemaDef::construct(m_schema_name);
-    if (auto maybe_error = context.database->add_schema(*schema_def); maybe_error.is_error())
-        return SQLResult::construct(SQLCommand::Create, SQLErrorCode::InternalError, maybe_error.error());
-    return SQLResult::construct(SQLCommand::Create, 0, 1);
+    TRY(context.database->add_schema(*schema_def));
+
+    return ResultSet { SQLCommand::Create };
 }
 
 }

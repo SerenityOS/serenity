@@ -133,16 +133,19 @@ protected:
 
     static Node* find_smallest_not_below(Node* node, K key)
     {
+        Node* candidate = nullptr;
         while (node) {
-            if (node->key >= key && (!node->left_child || node->left_child->key < key))
+            if (node->key == key)
                 return node;
 
-            if (node->key <= key)
+            if (node->key <= key) {
                 node = node->right_child;
-            else
+            } else {
+                candidate = node;
                 node = node->left_child;
+            }
         }
-        return node;
+        return candidate;
     }
 
     void insert(Node* node)
@@ -227,6 +230,7 @@ protected:
         // special case: deleting the only node
         if (m_size == 1) {
             m_root = nullptr;
+            m_minimum = nullptr;
             m_size = 0;
             return;
         }

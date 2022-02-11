@@ -111,15 +111,13 @@ public:
     const ShadowRoot* shadow_root() const { return m_shadow_root; }
     void set_shadow_root(RefPtr<ShadowRoot>);
 
-    Optional<CSS::StyleComputer::CustomPropertyResolutionTuple> resolve_custom_property(const String& custom_property_name) const
+    void add_custom_property(String custom_property_name, CSS::StyleProperty style_property)
     {
-        return m_custom_properties.get(custom_property_name);
+        m_custom_properties.set(move(custom_property_name), move(style_property));
     }
-    void add_custom_property(const String& custom_property_name, CSS::StyleComputer::CustomPropertyResolutionTuple style_property)
-    {
-        m_custom_properties.set(custom_property_name, style_property);
-    }
-    HashMap<String, CSS::StyleComputer::CustomPropertyResolutionTuple> const& custom_properties() const { return m_custom_properties; }
+
+    HashMap<String, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
+    HashMap<String, CSS::StyleProperty>& custom_properties() { return m_custom_properties; }
 
     void queue_an_element_task(HTML::Task::Source, Function<void()>);
 
@@ -146,7 +144,7 @@ private:
     RefPtr<CSS::CSSStyleDeclaration> m_inline_style;
 
     RefPtr<CSS::StyleProperties> m_specified_css_values;
-    HashMap<String, CSS::StyleComputer::CustomPropertyResolutionTuple> m_custom_properties;
+    HashMap<String, CSS::StyleProperty> m_custom_properties;
 
     RefPtr<DOMTokenList> m_class_list;
     Vector<FlyString> m_classes;

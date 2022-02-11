@@ -37,7 +37,7 @@ public:
     static void initialize();
     static HIDManagement& the();
 
-    void enumerate();
+    ErrorOr<void> enumerate();
 
     StringView keymap_name() const { return m_character_map_name->view(); }
     Keyboard::CharacterMapData const& character_map() const { return m_character_map; }

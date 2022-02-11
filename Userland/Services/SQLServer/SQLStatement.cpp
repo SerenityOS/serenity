@@ -33,22 +33,22 @@ SQLStatement::SQLStatement(DatabaseConnection& connection, String sql)
     s_statements.set(m_statement_id, *this);
 }
 
-void SQLStatement::report_error(SQL::SQLError error)
+void SQLStatement::report_error(SQL::Result result)
 {
-    dbgln_if(SQLSERVER_DEBUG, "SQLStatement::report_error(statement_id {}, error {}", statement_id(), error.to_string());
+    dbgln_if(SQLSERVER_DEBUG, "SQLStatement::report_error(statement_id {}, error {}", statement_id(), result.error_string());
+
     auto client_connection = ClientConnection::client_connection_for(connection()->client_id());
-    m_statement = nullptr;
-    m_result = nullptr;
-    remove_from_parent();
+
     s_statements.remove(statement_id());
-    if (!client_connection) {
+    remove_from_parent();
+
+    if (client_connection)
+        client_connection->async_execution_error(statement_id(), (int)result.error(), result.error_string());
+    else
         warnln("Cannot return execution error. Client disconnected");
-        warnln("SQLStatement::report_error(statement_id {}, error {}", statement_id(), error.to_string());
-        m_result = nullptr;
-        return;
-    }
-    client_connection->async_execution_error(statement_id(), (int)error.code, error.to_string());
-    m_result = nullptr;
+
+    m_statement = nullptr;
+    m_result = {};
 }
 
 void SQLStatement::execute()
@@ -60,51 +60,75 @@ void SQLStatement::execute()
         return;
     }
 
-    deferred_invoke([this]() {
-        auto maybe_error = parse();
-        if (maybe_error.has_value()) {
-            report_error(maybe_error.value());
+    deferred_invoke([this]() mutable {
+        auto parse_result = parse();
+        if (parse_result.is_error()) {
+            report_error(parse_result.release_error());
             return;
         }
+
         VERIFY(!connection()->database().is_null());
-        m_result = m_statement->execute(connection()->database().release_nonnull());
-        if (m_result->error().code != SQL::SQLErrorCode::NoError) {
-            report_error(m_result->error());
+
+        auto execution_result = m_statement->execute(connection()->database().release_nonnull());
+        if (execution_result.is_error()) {
+            report_error(execution_result.release_error());
             return;
         }
+
         auto client_connection = ClientConnection::client_connection_for(connection()->client_id());
         if (!client_connection) {
             warnln("Cannot return statement execution results. Client disconnected");
             return;
         }
-        client_connection->async_execution_success(statement_id(), m_result->has_results(), m_result->updated(), m_result->inserted(), m_result->deleted());
-        if (m_result->has_results()) {
+
+        m_result = execution_result.release_value();
+
+        if (should_send_result_rows()) {
+            client_connection->async_execution_success(statement_id(), true, 0, 0, 0);
             m_index = 0;
             next();
+        } else {
+            client_connection->async_execution_success(statement_id(), false, 0, m_result->size(), 0);
         }
     });
 }
 
-Optional<SQL::SQLError> SQLStatement::parse()
+SQL::ResultOr<void> SQLStatement::parse()
 {
     auto parser = SQL::AST::Parser(SQL::AST::Lexer(m_sql));
     m_statement = parser.next_statement();
-    if (parser.has_errors()) {
-        return SQL::SQLError { SQL::SQLErrorCode::SyntaxError, parser.errors()[0].to_string() };
-    }
+
+    if (parser.has_errors())
+        return SQL::Result { SQL::SQLCommand::Unknown, SQL::SQLErrorCode::SyntaxError, parser.errors()[0].to_string() };
     return {};
+}
+
+bool SQLStatement::should_send_result_rows() const
+{
+    VERIFY(m_result.has_value());
+
+    if (m_result->is_empty())
+        return false;
+
+    switch (m_result->command()) {
+    case SQL::SQLCommand::Describe:
+    case SQL::SQLCommand::Select:
+        return true;
+    default:
+        return false;
+    }
 }
 
 void SQLStatement::next()
 {
-    VERIFY(m_result->has_results());
+    VERIFY(!m_result->is_empty());
     auto client_connection = ClientConnection::client_connection_for(connection()->client_id());
     if (!client_connection) {
         warnln("Cannot yield next result. Client disconnected");
         return;
     }
-    if (m_index < m_result->results().size()) {
-        auto& tuple = m_result->results()[m_index++].row;
+    if (m_index < m_result->size()) {
+        auto& tuple = m_result->at(m_index++).row;
         client_connection->async_next_result(statement_id(), tuple.to_string_vector());
         deferred_invoke([this]() {
             next();

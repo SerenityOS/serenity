@@ -65,13 +65,8 @@ public:
     };
 
     Vector<MatchingRule> collect_matching_rules(DOM::Element const&, CascadeOrigin = CascadeOrigin::Any) const;
-    void sort_matching_rules(Vector<MatchingRule>&) const;
-    struct CustomPropertyResolutionTuple {
-        Optional<StyleProperty> style {};
-        u32 specificity { 0 };
-    };
-    CustomPropertyResolutionTuple resolve_custom_property_with_specificity(DOM::Element&, String const&) const;
-    Optional<StyleProperty> resolve_custom_property(DOM::Element&, String const&) const;
+
+    void invalidate_rule_cache();
 
 private:
     void compute_cascaded_values(StyleProperties&, DOM::Element&) const;
@@ -82,8 +77,8 @@ private:
 
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID) const;
 
-    RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, PropertyID, UnresolvedStyleValue const&) const;
-    bool expand_unresolved_values(DOM::Element&, StringView property_name, HashMap<String, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index = 0) const;
+    RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, PropertyID, UnresolvedStyleValue const&, HashMap<String, StyleProperty const*> const&) const;
+    bool expand_unresolved_values(DOM::Element&, StringView property_name, HashMap<String, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index, HashMap<String, StyleProperty const*> const& custom_properties) const;
 
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;
@@ -93,9 +88,21 @@ private:
         Vector<MatchingRule> author_rules;
     };
 
-    void cascade_declarations(StyleProperties&, DOM::Element&, Vector<MatchingRule> const&, CascadeOrigin, bool important) const;
+    void cascade_declarations(StyleProperties&, DOM::Element&, Vector<MatchingRule> const&, CascadeOrigin, bool important, HashMap<String, StyleProperty const*> const&) const;
+
+    void build_rule_cache();
+    void build_rule_cache_if_needed() const;
 
     DOM::Document& m_document;
+
+    struct RuleCache {
+        HashMap<FlyString, Vector<MatchingRule>> rules_by_id;
+        HashMap<FlyString, Vector<MatchingRule>> rules_by_class;
+        HashMap<FlyString, Vector<MatchingRule>> rules_by_tag_name;
+        Vector<MatchingRule> other_rules;
+        int generation { 0 };
+    };
+    OwnPtr<RuleCache> m_rule_cache;
 };
 
 }

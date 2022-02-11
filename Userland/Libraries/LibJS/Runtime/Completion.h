@@ -101,7 +101,7 @@ public:
     ThrowCompletionOr(Completion throw_completion)
         : m_throw_completion(move(throw_completion))
     {
-        VERIFY(throw_completion.is_error());
+        VERIFY(m_throw_completion->is_error());
     }
 
     // Not `explicit` on purpose so that `return value;` is possible.
@@ -109,7 +109,7 @@ public:
         : m_value(move(value))
     {
         if constexpr (IsSame<ValueType, Value>)
-            VERIFY(!value.is_empty());
+            VERIFY(!m_value->is_empty());
     }
 
     // Allows implicit construction of ThrowCompletionOr<T> from a type U if T(U) is a supported constructor.

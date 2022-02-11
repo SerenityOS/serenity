@@ -7,16 +7,14 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Vector.h>
-#include <LibCore/Object.h>
-#include <LibSQL/ResultSet.h>
-#include <LibSQL/Tuple.h>
+#include <AK/Error.h>
+#include <AK/Noncopyable.h>
 #include <LibSQL/Type.h>
 
 namespace SQL {
 
 #define ENUMERATE_SQL_COMMANDS(S) \
+    S(Unknown)                    \
     S(Create)                     \
     S(Delete)                     \
     S(Describe)                   \
@@ -73,93 +71,61 @@ enum class SQLErrorCode {
 #undef __ENUMERATE_SQL_ERROR
 };
 
-struct SQLError {
-    SQLErrorCode code { SQLErrorCode::NoError };
-    String error_argument { "" };
-
-    String to_string() const
-    {
-        String code_string;
-        String message;
-        switch (code) {
-#undef __ENUMERATE_SQL_ERROR
-#define __ENUMERATE_SQL_ERROR(error, description) \
-    case SQLErrorCode::error:                     \
-        code_string = #error;                     \
-        message = description;                    \
-        break;
-            ENUMERATE_SQL_ERRORS(__ENUMERATE_SQL_ERROR)
-#undef __ENUMERATE_SQL_ERROR
-        default:
-            VERIFY_NOT_REACHED();
-        }
-        if (!error_argument.is_null() && !error_argument.is_empty()) {
-            if (message.find("{}").has_value()) {
-                message = String::formatted(message, error_argument);
-            } else {
-                message = String::formatted("{}: {}", message, error_argument);
-            }
-        }
-        if (message.is_null() || (message.is_empty())) {
-            return code_string;
-        } else {
-            return String::formatted("{}: {}", code_string, message);
-        }
-    }
-};
-
-class SQLResult : public Core::Object {
-    C_OBJECT(SQLResult)
-
+class [[nodiscard]] Result {
 public:
-    void insert(Tuple const& row, Tuple const& sort_key);
-    void limit(size_t offset, size_t limit);
-    SQLCommand command() const { return m_command; }
-    int updated() const { return m_update_count; }
-    int inserted() const { return m_insert_count; }
-    int deleted() const { return m_delete_count; }
-    void set_error(SQLErrorCode code, String argument = {})
+    ALWAYS_INLINE Result(SQLCommand command)
+        : m_command(command)
     {
-        m_error.code = code;
-        m_error.error_argument = argument;
     }
 
-    bool has_error() const { return m_error.code != SQLErrorCode::NoError; }
-    SQLError const& error() const { return m_error; }
-    bool has_results() const { return m_has_results; }
-    ResultSet const& results() const { return m_result_set; }
+    ALWAYS_INLINE Result(SQLCommand command, SQLErrorCode error)
+        : m_command(command)
+        , m_error(error)
+    {
+    }
+
+    ALWAYS_INLINE Result(SQLCommand command, SQLErrorCode error, String error_message)
+        : m_command(command)
+        , m_error(error)
+        , m_error_message(move(error_message))
+    {
+    }
+
+    ALWAYS_INLINE Result(Error error)
+        : m_error(static_cast<SQLErrorCode>(error.code()))
+        , m_error_message(error.string_literal())
+    {
+    }
+
+    Result(Result&&) = default;
+    Result& operator=(Result&&) = default;
+
+    SQLCommand command() const { return m_command; }
+    SQLErrorCode error() const { return m_error; }
+    String error_string() const;
+
+    // These are for compatibility with the TRY() macro in AK.
+    [[nodiscard]] bool is_error() const { return m_error != SQLErrorCode::NoError; }
+    [[nodiscard]] Result release_value() { return move(*this); }
+    Result release_error()
+    {
+        VERIFY(is_error());
+
+        if (m_error_message.has_value())
+            return { m_command, m_error, m_error_message.release_value() };
+        return { m_command, m_error };
+    }
 
 private:
-    SQLResult() = default;
+    AK_MAKE_NONCOPYABLE(Result);
 
-    explicit SQLResult(SQLCommand command, int update_count = 0, int insert_count = 0, int delete_count = 0)
-        : m_command(command)
-        , m_update_count(update_count)
-        , m_insert_count(insert_count)
-        , m_delete_count(delete_count)
-        , m_has_results(command == SQLCommand::Select)
-    {
-    }
+    SQLCommand m_command { SQLCommand::Unknown };
 
-    SQLResult(SQLCommand command, SQLErrorCode error_code, String error_argument)
-        : m_command(command)
-        , m_error({ error_code, move(error_argument) })
-    {
-    }
-
-    SQLResult(SQLCommand command, SQLErrorCode error_code, AK::Error error)
-        : m_command(command)
-        , m_error({ error_code, error.string_literal() })
-    {
-    }
-
-    SQLCommand m_command { SQLCommand::Select };
-    SQLError m_error { SQLErrorCode::NoError, "" };
-    int m_update_count { 0 };
-    int m_insert_count { 0 };
-    int m_delete_count { 0 };
-    bool m_has_results { false };
-    ResultSet m_result_set;
+    SQLErrorCode m_error { SQLErrorCode::NoError };
+    Optional<String> m_error_message {};
 };
+
+template<typename ValueType>
+using ResultOr = ErrorOr<ValueType, Result>;
 
 }
