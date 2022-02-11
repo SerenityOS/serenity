@@ -10,6 +10,7 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Realm.h>
@@ -191,6 +192,14 @@ ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume
 
     jump(resume_label);
     return {};
+}
+
+VM::InterpreterExecutionScope Interpreter::ast_interpreter_scope()
+{
+    if (!m_ast_interpreter)
+        m_ast_interpreter = JS::Interpreter::create_with_existing_realm(m_realm);
+
+    return { *m_ast_interpreter };
 }
 
 AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> Interpreter::s_optimization_pipelines {};
