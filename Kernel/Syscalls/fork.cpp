@@ -106,8 +106,8 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         for (auto& region : address_space().regions()) {
             dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
             auto region_clone = TRY(region->try_clone());
+            TRY(region_clone->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No));
             auto* child_region = TRY(child->address_space().add_region(move(region_clone)));
-            TRY(child_region->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No));
 
             if (region == m_master_tls_region.unsafe_ptr())
                 child->m_master_tls_region = child_region;

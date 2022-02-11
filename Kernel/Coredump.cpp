@@ -186,6 +186,10 @@ ErrorOr<void> Coredump::write_regions()
         if (region->access() == Memory::Region::Access::None)
             continue;
 
+        // If we crashed in the middle of mapping in Regions, they do not have a page directory yet, and will crash on a remap() call
+        if (!region->is_mapped())
+            continue;
+
         region->set_readable(true);
         region->remap();
 

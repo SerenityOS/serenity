@@ -18,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath recvfd sendfd unix proc exec"));
     auto app = TRY(GUI::Application::try_create(arguments));
-    Config::pledge_domains("KeyboardSettings");
+    Config::pledge_domain("KeyboardSettings");
 
     TRY(Core::System::pledge("stdio rpath recvfd sendfd proc exec"));
     TRY(Core::System::unveil("/res", "r"));

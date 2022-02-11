@@ -56,7 +56,6 @@ public:
 
     // https://www.w3.org/TR/css-cascade/#origin
     enum class CascadeOrigin {
-        Any, // FIXME: This is not part of the spec. Get rid of it.
         Author,
         User,
         UserAgent,

@@ -1,193 +1,151 @@
+From e80a89e9446501bcaf42dc8ade8ff8a1cd0458bb Mon Sep 17 00:00:00 2001
+From: Daniel Bertalan <dani@danielbertalan.dev>
+Date: Thu, 10 Feb 2022 17:49:12 +0100
+Subject: [PATCH] Add support for SerenityOS
+
+Teaches the assembler, BFD, and the linker about the SerenityOS target
+triple.
+
+On x86_64, we override the default base address of non-PIE executables,
+because the default (0x400000) is too close to the beginning of the
+address space, and DynamicLoader often ends up allocating internal data
+at that address. See commit 292398b5857d0104f7c33fdb5d79f45fe8b395dd.
+---
+ bfd/config.bfd                       | 15 +++++++++++++++
+ gas/configure.tgt                    |  2 ++
+ ld/Makefile.am                       |  1 +
+ ld/Makefile.in                       |  1 +
+ ld/configure.tgt                     |  9 +++++++++
+ ld/emulparams/elf_x86_64_serenity.sh |  2 ++
+ 6 files changed, 30 insertions(+)
+ create mode 100644 ld/emulparams/elf_x86_64_serenity.sh
+
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 30087e3b..8b192b2e 100644
+index cfe58247..9a10e011 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -223,7 +223,29 @@ esac
- 
- case "${targ}" in
- # START OF targmatch.h
-+
-+  i[3-7]86-*-serenity*)
-+    targ_defvec=i386_elf32_vec
-+    targ_selvecs=
-+    ;;
- #ifdef BFD64
-+  x86_64-*-serenity*)
-+    targ_defvec=x86_64_elf64_vec
-+    targ_selvecs=i386_elf32_vec
-+    want64=true
-+    ;;
-+
-+  arm-*-serenity*)
-+    targ_defvec=arm_elf32_le_vec
-+    targ_selvecs=
-+    targ64_selvecs=
-+    ;;
+@@ -277,6 +277,11 @@ case "${targ}" in
+     targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec"
+     want64=true
+     ;;
 +  aarch64-*-serenity*)
 +    targ_defvec=aarch64_elf64_le_vec
 +    targ_selvecs=
 +    want64=true
 +    ;;
-+
-   aarch64-*-darwin*)
-     targ_defvec=aarch64_mach_o_vec
-     targ_selvecs="arm_mach_o_vec mach_o_le_vec mach_o_be_vec mach_o_fat_vec"
-diff --git a/config.sub b/config.sub
-index 7384e919..aa02c3f6 100755
---- a/config.sub
-+++ b/config.sub
-@@ -1700,6 +1700,7 @@ case $os in
- 	# The portable systems comes first.
- 	# Each alternative MUST end in a * to match a version number.
- 	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
-+	     | serenity* \
- 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
- 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
- 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
+   aarch64-*-linux* | aarch64-*-netbsd*)
+     targ_defvec=aarch64_elf64_le_vec
+     targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec aarch64_pei_vec"
+@@ -656,6 +661,11 @@ case "${targ}" in
+     targ_selvecs=
+     targ64_selvecs=x86_64_elf64_vec
+     ;;
++  i[3-7]86-*-serenity*)
++    targ_defvec=i386_elf32_vec
++    targ_selvecs=
++    targ64_selvecs=x86_64_elf64_vec
++    ;;
+ #ifdef BFD64
+   x86_64-*-cloudabi*)
+     targ_defvec=x86_64_elf64_cloudabi_vec
+@@ -721,6 +731,11 @@ case "${targ}" in
+     targ_selvecs=i386_elf32_vec
+     want64=true
+     ;;
++  x86_64-*-serenity*)
++    targ_defvec=x86_64_elf64_vec
++    targ_selvecs=i386_elf32_vec
++    want64=true
++    ;;
+ #endif
+   i[3-7]86-*-lynxos*)
+     targ_defvec=i386_elf32_vec
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index 338892ad..3c03ee8b 100644
+index 62f806bd..cfc93df9 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -123,6 +123,9 @@ esac
- generic_target=${cpu_type}-$vendor-$os
- # Note: This table is alpha-sorted, please try to keep it that way.
- case ${generic_target} in
-+  i386-*-serenity*)                     fmt=elf;;
-+  arm-*-serenity*)                      fmt=elf;;
-+  aarch64-*-serenity*)                  fmt=elf;;
-   aarch64*-*-elf*)			fmt=elf;;
-   aarch64*-*-fuchsia*)			fmt=elf;;
-   aarch64*-*-genode*)			fmt=elf;;
+@@ -134,6 +134,7 @@ case ${generic_target} in
+       aarch64*-linux-gnu_ilp32)		arch=aarch64:32 ;;
+     esac ;;
+   aarch64*-*-netbsd*)			fmt=elf em=nbsd;;
++  aarch64*-*-serenity*)			fmt=elf ;;
+ 
+   alpha-*-*vms*)			fmt=evax ;;
+   alpha-*-osf*)				fmt=ecoff ;;
+@@ -263,6 +264,7 @@ case ${generic_target} in
+   i386-*-*nt*)				fmt=coff em=pe ;;
+   i386-*-rdos*)				fmt=elf ;;
+   i386-*-darwin*)			fmt=macho ;;
++  i386-*-serenity)			fmt=elf ;;
+ 
+   ia16-*-elf*)				fmt=elf ;;
+ 
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index f8e99325..bc55fd2b 100644
+index b55a873d..760f328a 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
-@@ -174,6 +174,7 @@ ALL_EMULATION_SOURCES = \
- 	earmelf_nbsd.c \
- 	earmelf_phoenix.c \
- 	earmelf_vxworks.c \
-+	earmelf_serenity.c \
- 	earmelfb.c \
- 	earmelfb_fbsd.c \
- 	earmelfb_fuchsia.c \
-diff --git a/ld/Makefile.in b/ld/Makefile.in
-index ef2e99e0..657d24a2 100644
---- a/ld/Makefile.in
-+++ b/ld/Makefile.in
-@@ -664,6 +664,7 @@ ALL_EMULATION_SOURCES = \
- 	earmelf_nbsd.c \
- 	earmelf_phoenix.c \
- 	earmelf_vxworks.c \
-+	earmelf_serenity.c \
- 	earmelfb.c \
- 	earmelfb_fbsd.c \
- 	earmelfb_fuchsia.c \
-@@ -774,6 +775,7 @@ ALL_EMULATION_SOURCES = \
- 	eelf_i386_vxworks.c \
- 	eelf_iamcu.c \
- 	eelf_s390.c \
-+	eelf_i386_serenity.c \
- 	eh8300elf.c \
- 	eh8300elf_linux.c \
- 	eh8300helf.c \
-@@ -945,6 +947,7 @@ ALL_64_EMULATION_SOURCES = \
+@@ -463,6 +463,7 @@ ALL_64_EMULATION_SOURCES = \
  	eelf_x86_64_cloudabi.c \
  	eelf_x86_64_fbsd.c \
- 	eelf_x86_64_sol2.c \
+ 	eelf_x86_64_haiku.c \
 +	eelf_x86_64_serenity.c \
+ 	eelf_x86_64_sol2.c \
  	ehppa64linux.c \
  	ei386pep.c \
- 	emmo.c
+diff --git a/ld/Makefile.in b/ld/Makefile.in
+index 61e93eea..8b9ee2cf 100644
+--- a/ld/Makefile.in
++++ b/ld/Makefile.in
+@@ -953,6 +953,7 @@ ALL_64_EMULATION_SOURCES = \
+ 	eelf_x86_64_cloudabi.c \
+ 	eelf_x86_64_fbsd.c \
+ 	eelf_x86_64_haiku.c \
++	eelf_x86_64_serenity.c \
+ 	eelf_x86_64_sol2.c \
+ 	ehppa64linux.c \
+ 	ei386pep.c \
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index 6205d7c9..00d97c37 100644
+index c7acf3f1..19982e51 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
-@@ -43,6 +43,23 @@ targ64_extra_libpath=
- # Please try to keep this table more or less in alphabetic order - it
- # makes it much easier to lookup a specific archictecture.
- case "${targ}" in
-+i[3-7]86-*-serenity*)
-+			targ_emul=elf_i386_serenity
-+			targ_extra_emuls=elf_i386
-+			targ64_extra_emuls="elf_x86_64_serenity elf_x86_64"
-+			;;
-+x86_64-*-serenity*)
-+			targ_emul=elf_x86_64_serenity
-+			targ_extra_emuls="elf_i386_serenity elf_x86_64 elf_i386"
-+			;;
-+arm-*-serenity*)
-+			targ_emul=armelf_serenity
-+			targ_extra_emuls="armelf_serenity armelf"
-+			;;
-+aarch64-*-serenity*)
-+			targ_emul=aarch64elf
+@@ -59,6 +59,9 @@ aarch64-*-freebsd*)	targ_emul=aarch64fbsd
+ aarch64-*-fuchsia*)	targ_emul=aarch64elf
+ 			targ_extra_emuls="aarch64elfb armelf armelfb"
+ 			;;
++aarch64-*-serenity*)	targ_emul=aarch64elf
 +			targ_extra_emuls=
 +			;;
- aarch64_be-*-elf)	targ_emul=aarch64elfb
- 			targ_extra_emuls="aarch64elf aarch64elf32 aarch64elf32b armelfb armelf"
+ aarch64_be-*-linux-gnu_ilp32)
+ 			targ_emul=aarch64linux32b
+ 			targ_extra_libpath="aarch64linuxb aarch64linux aarch64linux32 armelfb_linux_eabi armelf_linux_eabi"
+@@ -332,6 +335,9 @@ i[3-7]86-*-linux-*)	targ_emul=elf_i386
+ i[3-7]86-*-redox*)	targ_emul=elf_i386
+ 			targ_extra_emuls=elf_x86_64
  			;;
-diff --git a/ld/emulparams/armelf_serenity.sh b/ld/emulparams/armelf_serenity.sh
-new file mode 100644
-index 00000000..517cd626
---- /dev/null
-+++ b/ld/emulparams/armelf_serenity.sh
-@@ -0,0 +1,7 @@
-+. ${srcdir}/emulparams/armelf.sh
-+MAXPAGESIZE="CONSTANT (MAXPAGESIZE)"
-+TEXT_START_ADDR=0x00008000
-+TARGET2_TYPE=got-rel
-+
-+unset STACK_ADDR
-+unset EMBEDDED
-diff --git a/ld/emulparams/elf_aarch64_serenity.sh b/ld/emulparams/elf_aarch64_serenity.sh
-new file mode 100644
-index 00000000..45a05bf4
---- /dev/null
-+++ b/ld/emulparams/elf_aarch64_serenity.sh
-@@ -0,0 +1 @@
-+. ${srcdir}/emulparams/elf_aarch64.sh
-diff --git a/ld/emulparams/elf_i386_serenity.sh b/ld/emulparams/elf_i386_serenity.sh
-new file mode 100644
-index 00000000..342d5298
---- /dev/null
-+++ b/ld/emulparams/elf_i386_serenity.sh
-@@ -0,0 +1,3 @@
-+. ${srcdir}/emulparams/elf_i386.sh
-+GENERATE_SHLIB_SCRIPT=yes
-+GENERATE_PIE_SCRIPT=yes
++i[3-7]86-*-serenity*)	targ_emul=elf_i386
++			targ64_extra_emuls="elf_x86_64_serenity elf_x86_64"
++			;;
+ i[3-7]86-*-sysv[45]*)	targ_emul=elf_i386
+ 			targ_extra_emuls=elf_iamcu
+ 			;;
+@@ -970,6 +976,9 @@ x86_64-*-linux-*)	targ_emul=elf_x86_64
+ x86_64-*-redox*)	targ_emul=elf_x86_64
+ 			targ_extra_emuls=elf_i386
+ 			;;
++x86_64-*-serenity*)	targ_emul=elf_x86_64_serenity
++			targ_extra_emuls="elf_x86_64 elf_i386"
++			;;
+ x86_64-*-solaris2*)	targ_emul=elf_x86_64_sol2
+ 			targ_extra_emuls="elf_x86_64 elf_i386_sol2 elf_i386_ldso elf_i386 elf_iamcu elf_l1om elf_k1om"
+ 			targ_extra_libpath=$targ_extra_emuls
 diff --git a/ld/emulparams/elf_x86_64_serenity.sh b/ld/emulparams/elf_x86_64_serenity.sh
 new file mode 100644
-index 00000000..a2af90a6
+index 00000000..973b3b2a
 --- /dev/null
 +++ b/ld/emulparams/elf_x86_64_serenity.sh
-@@ -0,0 +1 @@
+@@ -0,0 +1,2 @@
 +. ${srcdir}/emulparams/elf_x86_64.sh
-diff --git a/libiberty/rust-demangle.c b/libiberty/rust-demangle.c
-index df09b7b8..21566f5f 100644
---- a/libiberty/rust-demangle.c
-+++ b/libiberty/rust-demangle.c
-@@ -75,10 +75,10 @@ struct rust_demangler
-   int version;
- 
-   /* Recursion depth.  */
--  uint recursion;
-+  unsigned int recursion;
-   /* Maximum number of times demangle_path may be called recursively.  */
- #define RUST_MAX_RECURSION_COUNT  1024
--#define RUST_NO_RECURSION_LIMIT   ((uint) -1)
-+#define RUST_NO_RECURSION_LIMIT   ((unsigned int) -1)
- 
-   uint64_t bound_lifetime_depth;
- };
-diff -ur a/ld/emulparams/elf_x86_64.sh b/ld/emulparams/elf_x86_64.sh
---- a/ld/emulparams/elf_x86_64.sh	2021-07-08 13:37:20.000000000 +0200
-+++ b/ld/emulparams/elf_x86_64.sh	2021-11-13 17:52:50.396490742 +0100
-@@ -12,7 +12,7 @@
- ELFSIZE=64
- OUTPUT_FORMAT="elf64-x86-64"
- NO_REL_RELOCS=yes
--TEXT_START_ADDR=0x400000
 +TEXT_START_ADDR=0x08200000
- MAXPAGESIZE="CONSTANT (MAXPAGESIZE)"
- COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
- ARCH="i386:x86-64"
+-- 
+2.35.1
+

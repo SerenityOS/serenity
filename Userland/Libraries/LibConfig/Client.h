@@ -100,9 +100,9 @@ inline void pledge_domains(Vector<String> const& domains)
     Client::the().pledge_domains(domains);
 }
 
-inline void pledge_domains(String const& domains)
+inline void pledge_domain(String const& domain)
 {
-    Client::the().pledge_domains({ domains });
+    Client::the().pledge_domains({ domain });
 }
 
 inline void monitor_domain(String const& domain)

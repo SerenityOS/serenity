@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    Config::pledge_domains("HexEditor");
+    Config::pledge_domain("HexEditor");
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-hex-editor"));
 

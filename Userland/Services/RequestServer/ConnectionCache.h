@@ -106,7 +106,7 @@ template<typename T>
 ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
 {
     using SocketType = typename T::SocketType;
-    if (!connection.socket->is_open()) {
+    if (!connection.socket->is_open() || connection.socket->is_eof()) {
         // Create another socket for the connection.
         auto set_socket = [&](auto socket) -> ErrorOr<void> {
             connection.socket = TRY(Core::Stream::BufferedSocket<SocketType>::create(move(socket)));

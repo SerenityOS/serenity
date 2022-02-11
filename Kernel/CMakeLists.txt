@@ -422,6 +422,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     link_directories(${TOOLCHAIN_ROOT}/lib/gcc/${SERENITY_ARCH}-pc-serenity/${GCC_VERSION}/)
 
     set(TARGET_STRING "")
+
+    add_link_options(LINKER:-z,pack-relative-relocs)
 else() # Assume Clang
     add_compile_options(-Waddress-of-packed-member)
     add_compile_options(-faligned-allocation)
@@ -429,7 +431,7 @@ else() # Assume Clang
     # We need this in order to pick up the #define __serenity__, otherwise we end up including unistd.h into the linker script
     set(TARGET_STRING "--target=${CMAKE_CXX_COMPILER_TARGET}")
     
-    add_link_options(LINKER:--build-id=none)
+    add_link_options(LINKER:--build-id=none LINKER:--pack-dyn-relocs=relr)
 endif()
 
 macro (set_new_alignment alignment)
