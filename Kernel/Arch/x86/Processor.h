@@ -84,6 +84,9 @@ class Processor {
     static Atomic<u32> g_total_processors;
     u8 m_physical_address_bit_width;
     u8 m_virtual_address_bit_width;
+#if ARCH(X86_64)
+    bool m_has_qemu_hvf_quirk;
+#endif
 
     ProcessorInfo* m_info;
     Thread* m_current_thread;
