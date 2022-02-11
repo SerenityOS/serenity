@@ -536,10 +536,14 @@ ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter&
     return {};
 }
 
-ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter&) const
+ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    (void)m_class_expression;
-    TODO();
+    auto name = m_class_expression.name();
+    auto scope = interpreter.ast_interpreter_scope();
+    auto& ast_interpreter = scope.interpreter();
+    auto class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, interpreter.global_object(), name, name.is_null() ? "" : name));
+    interpreter.accumulator() = class_object;
+    return {};
 }
 
 String Load::to_string_impl(Bytecode::Executable const&) const
