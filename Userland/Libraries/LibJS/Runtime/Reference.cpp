@@ -63,15 +63,26 @@ ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
         return throw_reference_error(global_object);
 
     if (is_property_reference()) {
-        auto* base_obj = TRY(m_base_value.to_object(global_object));
-
         if (is_private_reference()) {
             // FIXME: We need to be able to specify the receiver for this
             // if we want to use it in error messages in future
             // as things currently stand this does the "wrong thing" but
             // the error is unobservable
+            auto base_obj = TRY(m_base_value.to_object(global_object));
             return base_obj->private_get(m_private_name);
         }
+        Object* base_obj = nullptr;
+        if (m_base_value.is_string()) {
+            auto string_value = m_base_value.as_string().get(global_object, m_name);
+            if (string_value.has_value())
+                return *string_value;
+            base_obj = global_object.string_prototype();
+        } else if (m_base_value.is_number())
+            base_obj = global_object.number_prototype();
+        else if (m_base_value.is_boolean())
+            base_obj = global_object.boolean_prototype();
+        else
+            base_obj = TRY(m_base_value.to_object(global_object));
 
         return base_obj->internal_get(m_name, m_base_value);
     }

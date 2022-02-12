@@ -4,9 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "LibJS/Runtime/Value.h"
 #include <AK/CharacterTypes.h>
 #include <AK/Utf16View.h>
+#include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
@@ -49,6 +53,26 @@ Utf16String const& PrimitiveString::utf16_string() const
 Utf16View PrimitiveString::utf16_string_view() const
 {
     return utf16_string().view();
+}
+
+Optional<Value> PrimitiveString::get(GlobalObject& global_object, PropertyKey const& property_key) const
+{
+    if (property_key.is_symbol())
+        return {};
+    if (property_key.is_string()) {
+        if (property_key.as_string() == global_object.vm().names.length.as_string()) {
+            auto length = utf16_string().length_in_code_units();
+            return Value(static_cast<double>(length));
+        }
+    }
+    auto index = canonical_numeric_index_string(property_key);
+    if (!index.has_value())
+        return {};
+    auto str = utf16_string_view();
+    auto length = str.length_in_code_units();
+    if (length <= *index)
+        return {};
+    return js_string(vm(), str.substring_view(*index, 1));
 }
 
 PrimitiveString* js_string(Heap& heap, Utf16View const& view)

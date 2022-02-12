@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueTraits.h>
 
 namespace JS::Bytecode::Op {
 

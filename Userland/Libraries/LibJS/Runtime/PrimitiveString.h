@@ -7,7 +7,9 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/Utf16String.h>
 
 namespace JS {
@@ -28,6 +30,7 @@ public:
     Utf16View utf16_string_view() const;
     bool has_utf16_string() const { return m_has_utf16_string; }
 
+    Optional<Value> get(GlobalObject&, PropertyKey const&) const;
 private:
     virtual const char* class_name() const override { return "PrimitiveString"; }
 
