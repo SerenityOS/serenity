@@ -1,9 +1,10 @@
 @GUI::Widget {
-    layout: @GUI::VerticalBoxLayout
+    layout: @GUI::VerticalBoxLayout {}
 
     @GUI::ToolbarContainer {
         @GUI::Toolbar {
             name: "toolbar"
+
             @GUI::Label {
                 text: "Columns: "
                 autosize: true
@@ -16,7 +17,7 @@
                 fixed_width: 40
             }
 
-            @GUI::VerticalSeparator
+            @GUI::VerticalSeparator {}
 
             @GUI::Label {
                 text: "Rows: "
@@ -30,7 +31,7 @@
                 fixed_width: 40
             }
 
-            @GUI::VerticalSeparator
+            @GUI::VerticalSeparator {}
 
             @GUI::Label {
                 text: "Update Speed: "
@@ -49,7 +50,7 @@
                 autosize: true
             }
 
-            @GUI::VerticalSeparator
+            @GUI::VerticalSeparator {}
         }
     }
 

@@ -1,6 +1,6 @@
 @GUI::Frame {
     fill_with_background_color: true
-    layout: @GUI::VerticalBoxLayout
+    layout: @GUI::VerticalBoxLayout {}
 
     @GUI::Widget {
         layout: @GUI::VerticalBoxLayout {
@@ -30,8 +30,8 @@
         layout: @GUI::HorizontalBoxLayout {
             margins: [4]
         }
-
         shrink_to_fit: true
+
         @GUI::Label {
             text: "Offset"
             text_alignment: "CenterLeft"
@@ -48,7 +48,7 @@
             margins: [4]
         }
 
-        @GUI::Widget
+        @GUI::Widget {}
 
         @GUI::Button {
             name: "ok_button"

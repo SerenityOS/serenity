@@ -23,7 +23,7 @@
             fixed_width: 40
         }
 
-        @GUI::VerticalSeparator
+        @GUI::VerticalSeparator {}
 
         @GUI::Label {
             text: "Rows: "
@@ -37,7 +37,7 @@
             fixed_width: 40
         }
 
-        @GUI::VerticalSeparator
+        @GUI::VerticalSeparator {}
 
         @GUI::Label {
             text: "Mines: "
@@ -54,9 +54,9 @@
 
     @GUI::Widget {
         max_height: 24
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
-        @GUI::Widget
+        @GUI::Widget {}
 
         @GUI::Button {
             name: "ok_button"

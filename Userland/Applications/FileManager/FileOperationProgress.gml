@@ -6,7 +6,7 @@
 
     @GUI::Widget {
         fixed_height: 32
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::ImageWidget {
             name: "source_folder_icon"
@@ -35,7 +35,7 @@
 
     @GUI::Widget {
         fixed_height: 22
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
             text: "Copying: "
@@ -54,7 +54,7 @@
 
     @GUI::Widget {
         fixed_height: 22
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
             text: "Time left: "
@@ -82,9 +82,9 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
-        @GUI::Widget
+        @GUI::Widget {}
 
         @GUI::Button {
             text: "Cancel"

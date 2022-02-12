@@ -14,7 +14,7 @@
             text: "Start wizard"
         }
 
-        @GUI::HorizontalSeparator
+        @GUI::HorizontalSeparator {}
 
         @GUI::TextEditor {
             name: "wizard_output"

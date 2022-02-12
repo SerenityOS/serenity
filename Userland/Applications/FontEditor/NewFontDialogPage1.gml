@@ -5,10 +5,10 @@
 
     @GUI::Widget {
         fixed_height: 160
-        layout: @GUI::VerticalBoxLayout
+        layout: @GUI::VerticalBoxLayout {}
 
         @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
                 fixed_width: 100
@@ -22,7 +22,7 @@
         }
 
         @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
                 fixed_width: 100
@@ -40,7 +40,7 @@
         }
 
         @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
                 text: "Weight:"
@@ -56,7 +56,7 @@
         }
 
         @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
                 fixed_width: 100
@@ -72,7 +72,7 @@
         }
 
         @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
                 fixed_width: 100

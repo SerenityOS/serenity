@@ -6,10 +6,10 @@
     @GUI::HorizontalSplitter {
         @GUI::Widget {
             name: "csv_options"
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::GroupBox {
                     title: "Delimiter"
@@ -43,7 +43,7 @@
 
                     @GUI::Widget {
                         fixed_height: 25
-                        layout: @GUI::HorizontalBoxLayout
+                        layout: @GUI::HorizontalBoxLayout {}
 
                         @GUI::RadioButton {
                             name: "delimiter_other_radio"
@@ -78,7 +78,7 @@
 
                     @GUI::Widget {
                         fixed_height: 25
-                        layout: @GUI::HorizontalBoxLayout
+                        layout: @GUI::HorizontalBoxLayout {}
 
                         @GUI::RadioButton {
                             name: "quote_other_radio"
@@ -92,11 +92,11 @@
                         }
                     }
 
-                    @GUI::Widget
+                    @GUI::Widget {}
 
                     @GUI::Widget {
                         fixed_height: 25
-                        layout: @GUI::HorizontalBoxLayout
+                        layout: @GUI::HorizontalBoxLayout {}
 
                         @GUI::Label {
                             text: "Escape by "
@@ -109,7 +109,7 @@
                         }
                     }
 
-                    @GUI::Widget
+                    @GUI::Widget {}
                 }
             }
 
@@ -121,7 +121,7 @@
                 }
 
                 @GUI::Widget {
-                    layout: @GUI::HorizontalBoxLayout
+                    layout: @GUI::HorizontalBoxLayout {}
 
                     @GUI::CheckBox {
                         name: "trim_leading_field_spaces_check_box"
@@ -151,6 +151,7 @@
 
             @GUI::StackWidget {
                 name: "data_preview_widget"
+
                 @GUI::TableView {
                     name: "data_preview_table_view"
                 }

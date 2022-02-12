@@ -35,11 +35,11 @@
         layout: @GUI::VerticalBoxLayout {
             margins: [14, 14, 4]
         }
-
         title: "Screen settings"
+
         @GUI::Widget {
             shrink_to_fit: true
-            layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
                 text: "Resolution:"
@@ -65,7 +65,7 @@
 
         @GUI::Widget {
             shrink_to_fit: true
-            layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
                 text: "Display scale:"

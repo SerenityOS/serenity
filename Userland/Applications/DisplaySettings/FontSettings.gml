@@ -20,7 +20,7 @@
         @GUI::Frame {
             background_role: "Base"
             fill_with_background_color: true
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::Label {
                 name: "default_font_label"
@@ -49,7 +49,7 @@
         @GUI::Frame {
             background_role: "Base"
             fill_with_background_color: true
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::Label {
                 name: "fixed_width_font_label"
@@ -63,5 +63,5 @@
         }
     }
 
-    @GUI::Widget
+    @GUI::Widget {}
 }
