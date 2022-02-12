@@ -6,6 +6,8 @@
 
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <ctype.h>
 #include <signal.h>
 #include <stdio.h>
@@ -19,12 +21,13 @@ static void print_usage_and_exit()
     exit(1);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio proc", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+
+    TRY(Core::System::pledge("stdio proc"));
+
+    int argc = arguments.argc;
+    char** argv = arguments.argv;
 
     if (argc == 2 && !strcmp(argv[1], "-l")) {
         for (size_t i = 0; i < NSIG; ++i) {
