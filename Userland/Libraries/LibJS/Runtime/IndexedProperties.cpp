@@ -35,8 +35,13 @@ void SimpleIndexedPropertyStorage::grow_storage_if_needed()
 {
     if (m_array_size <= m_packed_elements.size())
         return;
-    // Grow storage by 25% at a time.
-    m_packed_elements.resize(m_array_size + (m_array_size / 4));
+
+    if (m_array_size <= m_packed_elements.capacity()) {
+        m_packed_elements.resize_and_keep_capacity(m_array_size);
+    } else {
+        // When the array is actually full grow storage by 25% at a time.
+        m_packed_elements.resize_and_keep_capacity(m_array_size + (m_array_size / 4));
+    }
 }
 
 void SimpleIndexedPropertyStorage::put(u32 index, Value value, PropertyAttributes attributes)
@@ -73,7 +78,7 @@ ValueAndAttributes SimpleIndexedPropertyStorage::take_last()
 bool SimpleIndexedPropertyStorage::set_array_like_size(size_t new_size)
 {
     m_array_size = new_size;
-    m_packed_elements.resize(new_size);
+    m_packed_elements.resize_and_keep_capacity(new_size);
     return true;
 }
 
