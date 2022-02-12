@@ -221,7 +221,15 @@ public:
             pid_t parent_tid {};
         };
 
-        Variant<std::nullptr_t, SampleData, MallocData, FreeData, SignpostData, MmapData, MunmapData, ProcessCreateData, ProcessExecData, ThreadCreateData> data { nullptr };
+        struct ReadData {
+            int fd;
+            size_t size;
+            String path;
+            size_t start_timestamp;
+            bool success;
+        };
+
+        Variant<std::nullptr_t, SampleData, MallocData, FreeData, SignpostData, MmapData, MunmapData, ProcessCreateData, ProcessExecData, ThreadCreateData, ReadData> data { nullptr };
     };
 
     Vector<Event> const& events() const { return m_events; }
