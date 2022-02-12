@@ -105,6 +105,7 @@ jobs:
       - script: |
           set -e
           ./Meta/check-markdown.sh
+          ./Meta/lint-gml-format.sh
           git ls-files '*.ipc' | xargs ./Meta/Lagom/Build/Tools/IPCMagicLinter/IPCMagicLinter
         displayName: 'Run lints that require Lagom'
         workingDirectory: $(Build.SourcesDirectory)/
