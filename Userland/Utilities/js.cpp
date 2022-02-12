@@ -1024,7 +1024,13 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             script_or_module->parse_node().dump(0);
 
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
-            auto executable = JS::Bytecode::Generator::generate(script_or_module->parse_node());
+            auto executable_result = JS::Bytecode::Generator::generate(script_or_module->parse_node());
+            if (executable_result.is_error()) {
+                result = vm->throw_completion<JS::InternalError>(interpreter.global_object(), executable_result.error().to_string());
+                return ReturnEarly::No;
+            }
+
+            auto executable = executable_result.release_value();
             executable->name = source_name;
             if (s_opt_bytecode) {
                 auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();

@@ -579,7 +579,11 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
     Optional<Value> eval_result;
 
     if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
-        auto executable = JS::Bytecode::Generator::generate(program);
+        auto executable_result = JS::Bytecode::Generator::generate(program);
+        if (executable_result.is_error())
+            return vm.throw_completion<InternalError>(bytecode_interpreter->global_object(), ErrorType::NotImplemented, executable_result.error().to_string());
+
+        auto executable = executable_result.release_value();
         executable->name = "eval"sv;
         if (JS::Bytecode::g_dump_bytecode)
             executable->dump();
