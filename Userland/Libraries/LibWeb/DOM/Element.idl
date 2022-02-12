@@ -49,6 +49,7 @@ interface Element : Node {
     [SameObject] readonly attribute HTMLCollection children;
 
     DOMRect getBoundingClientRect();
+    DOMRectList getClientRects();
 
     readonly attribute long clientTop;
     readonly attribute long clientLeft;
