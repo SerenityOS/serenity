@@ -67,7 +67,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     if (!m_manually_entered_frames.is_empty() && m_manually_entered_frames.last()) {
         m_register_windows.append(make<RegisterWindow>(m_register_windows.last()));
     } else {
-        m_register_windows.append(make<RegisterWindow>());
+        m_register_windows.append(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<Environment*>(vm().heap()), MarkedVector<Environment*>(vm().heap())));
     }
 
     registers().resize(executable.number_of_registers);
@@ -150,7 +150,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
 
     // NOTE: The return value from a called function is put into $0 in the caller context.
     if (!m_register_windows.is_empty())
-        m_register_windows.last()[0] = return_value;
+        m_register_windows.last().registers[0] = return_value;
 
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
     // in which case this is a no-op.

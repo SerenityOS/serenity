@@ -24,6 +24,11 @@ namespace JS::Bytecode {
 
 class Generator {
 public:
+    enum class SurroundingScopeKind {
+        Global,
+        Function,
+        Block,
+    };
     static CodeGenerationErrorOr<NonnullOwnPtr<Executable>> generate(ASTNode const&, FunctionKind = FunctionKind::Normal);
 
     Register allocate_register();
@@ -117,6 +122,55 @@ public:
     bool is_in_generator_function() const { return m_enclosing_function_kind == FunctionKind::Generator; }
     bool is_in_async_function() const { return m_enclosing_function_kind == FunctionKind::Async; }
 
+    enum class BindingMode {
+        Lexical,
+        Var,
+        Global,
+    };
+    struct LexicalScope {
+        SurroundingScopeKind kind;
+        BindingMode mode;
+        HashTable<IdentifierTableIndex> known_bindings;
+    };
+
+    void register_binding(IdentifierTableIndex identifier, BindingMode mode = BindingMode::Lexical)
+    {
+        m_variable_scopes.last_matching([&](auto& x) { return x.mode == BindingMode::Global || x.mode == mode; })->known_bindings.set(identifier);
+    }
+    bool has_binding(IdentifierTableIndex identifier, Optional<BindingMode> const& specific_binding_mode = {})
+    {
+        for (auto index = m_variable_scopes.size(); index > 0; --index) {
+            auto& scope = m_variable_scopes[index - 1];
+
+            if (scope.mode != BindingMode::Global && specific_binding_mode.value_or(scope.mode) != scope.mode)
+                continue;
+
+            if (scope.known_bindings.contains(identifier))
+                return true;
+        }
+        return false;
+    }
+    void begin_variable_scope(BindingMode mode = BindingMode::Lexical, SurroundingScopeKind kind = SurroundingScopeKind::Block)
+    {
+        m_variable_scopes.append({ kind, mode, {} });
+        if (mode != BindingMode::Global) {
+            emit<Bytecode::Op::CreateEnvironment>(
+                mode == BindingMode::Lexical
+                    ? Bytecode::Op::EnvironmentMode::Lexical
+                    : Bytecode::Op::EnvironmentMode::Var);
+        }
+    }
+    void end_variable_scope()
+    {
+        auto mode = m_variable_scopes.take_last().mode;
+        if (mode != BindingMode::Global && !m_current_basic_block->is_terminated()) {
+            emit<Bytecode::Op::LeaveEnvironment>(
+                mode == BindingMode::Lexical
+                    ? Bytecode::Op::EnvironmentMode::Lexical
+                    : Bytecode::Op::EnvironmentMode::Var);
+        }
+    }
+
 private:
     Generator();
     ~Generator();
@@ -134,6 +188,7 @@ private:
     FunctionKind m_enclosing_function_kind { FunctionKind::Normal };
     Vector<Label> m_continuable_scopes;
     Vector<Label> m_breakable_scopes;
+    Vector<LexicalScope> m_variable_scopes;
 };
 
 }

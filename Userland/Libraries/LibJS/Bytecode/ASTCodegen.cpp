@@ -28,28 +28,262 @@ Bytecode::CodeGenerationErrorOr<void> ASTNode::generate_bytecode(Bytecode::Gener
 
 Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
-    // FIXME: This is an ad-hoc fix but should be done as the spec says in
-    //        {Global, Block, Function, Eval}DeclarationInstantiation.
-    for (auto& function : m_functions_hoistable_with_annexB_extension) {
-        generator.emit<Bytecode::Op::NewFunction>(function);
-        generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(function.name()));
+    Optional<Bytecode::CodeGenerationError> maybe_error;
+    size_t pushed_scope_count = 0;
+    auto const failing_completion = Completion(Completion::Type::Throw, {}, {});
+
+    if (is<BlockStatement>(*this) || is<SwitchStatement>(*this)) {
+        // Perform the steps of BlockDeclarationInstantiation.
+        if (has_lexical_declarations()) {
+            generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
+            pushed_scope_count++;
+        }
+
+        (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
+            auto is_constant_declaration = declaration.is_constant_declaration();
+            declaration.for_each_bound_name([&](auto const& name) {
+                auto index = generator.intern_identifier(name);
+                if (is_constant_declaration || !generator.has_binding(index)) {
+                    generator.register_binding(index);
+                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_constant_declaration);
+                }
+            });
+
+            if (is<FunctionDeclaration>(declaration)) {
+                auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
+                auto const& name = function_declaration.name();
+                auto index = generator.intern_identifier(name);
+                generator.emit<Bytecode::Op::NewFunction>(function_declaration);
+                generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize);
+            }
+
+            return {};
+        });
+    } else if (is<Program>(*this)) {
+        // Perform the steps of GlobalDeclarationInstantiation.
+        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Global, Bytecode::Generator::SurroundingScopeKind::Global);
+        pushed_scope_count++;
+
+        // 1. Let lexNames be the LexicallyDeclaredNames of script.
+        // 2. Let varNames be the VarDeclaredNames of script.
+        // 3. For each element name of lexNames, do
+        (void)for_each_lexically_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
+            auto identifier = generator.intern_identifier(name);
+            // a. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
+            // b. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
+            if (generator.has_binding(identifier)) {
+                // FIXME: Throw an actual SyntaxError instance.
+                generator.emit<Bytecode::Op::NewString>(generator.intern_string(String::formatted("SyntaxError: toplevel variable already declared: {}", name)));
+                generator.emit<Bytecode::Op::Throw>();
+                return {};
+            }
+
+            // FIXME: c. If hasRestrictedGlobalProperty is true, throw a SyntaxError exception.
+            //        d. If hasRestrictedGlobal is true, throw a SyntaxError exception.
+            return {};
+        });
+
+        // 4. For each element name of varNames, do
+        (void)for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
+            auto identifier = generator.intern_identifier(name);
+            // a. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
+            if (generator.has_binding(identifier)) {
+                // FIXME: Throw an actual SyntaxError instance.
+                generator.emit<Bytecode::Op::NewString>(generator.intern_string(String::formatted("SyntaxError: toplevel variable already declared: {}", name)));
+                generator.emit<Bytecode::Op::Throw>();
+            }
+            return {};
+        });
+
+        // 5. Let varDeclarations be the VarScopedDeclarations of script.
+        // 6. Let functionsToInitialize be a new empty List.
+        Vector<FunctionDeclaration const&> functions_to_initialize;
+
+        // 7. Let declaredFunctionNames be a new empty List.
+        HashTable<FlyString> declared_function_names;
+
+        // 8. For each element d of varDeclarations, in reverse List order, do
+        (void)for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) -> ThrowCompletionOr<void> {
+            // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
+            // i. Assert: d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
+            // Note: This is checked in for_each_var_function_declaration_in_reverse_order.
+            // ii. NOTE: If there are multiple function declarations for the same name, the last declaration is used.
+            // iii. Let fn be the sole element of the BoundNames of d.
+
+            // iv. If fn is not an element of declaredFunctionNames, then
+            if (declared_function_names.set(function.name()) != AK::HashSetResult::InsertedNewEntry)
+                return {};
+
+            // FIXME: 1. Let fnDefinable be ? env.CanDeclareGlobalFunction(fn).
+            // FIXME: 2. If fnDefinable is false, throw a TypeError exception.
+
+            // 3. Append fn to declaredFunctionNames.
+            // Note: Already done in step iv. above.
+
+            // 4. Insert d as the first element of functionsToInitialize.
+            functions_to_initialize.prepend(function);
+            return {};
+        });
+
+        // 9. Let declaredVarNames be a new empty List.
+        HashTable<FlyString> declared_var_names;
+
+        // 10. For each element d of varDeclarations, do
+        (void)for_each_var_scoped_variable_declaration([&](Declaration const& declaration) {
+            // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
+            // Note: This is done in for_each_var_scoped_variable_declaration.
+
+            // i. For each String vn of the BoundNames of d, do
+            return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
+                // 1. If vn is not an element of declaredFunctionNames, then
+                if (declared_function_names.contains(name))
+                    return {};
+
+                // FIXME: a. Let vnDefinable be ? env.CanDeclareGlobalVar(vn).
+                // FIXME: b. If vnDefinable is false, throw a TypeError exception.
+
+                // c. If vn is not an element of declaredVarNames, then
+                // i. Append vn to declaredVarNames.
+                declared_var_names.set(name);
+                return {};
+            });
+        });
+
+        // 11. NOTE: No abnormal terminations occur after this algorithm step if the global object is an ordinary object. However, if the global object is a Proxy exotic object it may exhibit behaviours that cause abnormal terminations in some of the following steps.
+        // 12. NOTE: Annex B.3.2.2 adds additional steps at this point.
+
+        // 12. Let strict be IsStrict of script.
+        // 13. If strict is false, then
+        if (!verify_cast<Program>(*this).is_strict_mode()) {
+            // a. Let declaredFunctionOrVarNames be the list-concatenation of declaredFunctionNames and declaredVarNames.
+            // b. For each FunctionDeclaration f that is directly contained in the StatementList of a Block, CaseClause, or DefaultClause Contained within script, do
+            (void)for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
+                // i. Let F be StringValue of the BindingIdentifier of f.
+                auto& function_name = function_declaration.name();
+
+                // ii. If replacing the FunctionDeclaration f with a VariableStatement that has F as a BindingIdentifier would not produce any Early Errors for script, then
+                // Note: This step is already performed during parsing and for_each_function_hoistable_with_annexB_extension so this always passes here.
+
+                // 1. If env.HasLexicalDeclaration(F) is false, then
+                auto index = generator.intern_identifier(function_name);
+                if (generator.has_binding(index, Bytecode::Generator::BindingMode::Lexical))
+                    return;
+
+                // FIXME: a. Let fnDefinable be ? env.CanDeclareGlobalVar(F).
+                // b. If fnDefinable is true, then
+                // i. NOTE: A var binding for F is only instantiated here if it is neither a VarDeclaredName nor the name of another FunctionDeclaration.
+                // ii. If declaredFunctionOrVarNames does not contain F, then
+                if (!declared_function_names.contains(function_name) && !declared_var_names.contains(function_name)) {
+                    // i. Perform ? env.CreateGlobalVarBinding(F, false).
+                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Var, false);
+
+                    // ii. Append F to declaredFunctionOrVarNames.
+                    declared_function_names.set(function_name);
+                }
+
+                // iii. When the FunctionDeclaration f is evaluated, perform the following steps in place of the FunctionDeclaration Evaluation algorithm provided in 15.2.6:
+                //     i. Let genv be the running execution context's VariableEnvironment.
+                //     ii. Let benv be the running execution context's LexicalEnvironment.
+                //     iii. Let fobj be ! benv.GetBindingValue(F, false).
+                //     iv. Perform ? genv.SetMutableBinding(F, fobj, false).
+                //     v. Return NormalCompletion(empty).
+                function_declaration.set_should_do_additional_annexB_steps();
+            });
+        }
+
+        // 15. For each element d of lexDeclarations, do
+        (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
+            // a. NOTE: Lexically declared names are only instantiated here but not initialized.
+            // b. For each element dn of the BoundNames of d, do
+            return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
+                auto identifier = generator.intern_identifier(name);
+                // i. If IsConstantDeclaration of d is true, then
+                generator.register_binding(identifier);
+                if (declaration.is_constant_declaration()) {
+                    // 1. Perform ? env.CreateImmutableBinding(dn, true).
+                    generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
+                } else {
+                    // ii. Else,
+                    // 1. Perform ? env.CreateMutableBinding(dn, false).
+                    generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
+                }
+
+                return {};
+            });
+        });
+
+        // 16. For each Parse Node f of functionsToInitialize, do
+        for (auto& function_declaration : functions_to_initialize) {
+            // FIXME: Do this more correctly.
+            // a. Let fn be the sole element of the BoundNames of f.
+            // b. Let fo be InstantiateFunctionObject of f with arguments env and privateEnv.
+            generator.emit<Bytecode::Op::NewFunction>(function_declaration);
+
+            // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
+            auto const& name = function_declaration.name();
+            auto index = generator.intern_identifier(name);
+            if (!generator.has_binding(index)) {
+                generator.register_binding(index, Bytecode::Generator::BindingMode::Var);
+                generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, false);
+            }
+            generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize);
+        }
+
+        // 17. For each String vn of declaredVarNames, do
+        // a. Perform ? env.CreateGlobalVarBinding(vn, false).
+        for (auto& var_name : declared_var_names)
+            generator.register_binding(generator.intern_identifier(var_name), Bytecode::Generator::BindingMode::Var);
+    } else {
+        // Perform the steps of FunctionDeclarationInstantiation.
+        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Var, Bytecode::Generator::SurroundingScopeKind::Function);
+        pushed_scope_count++;
+        if (has_lexical_declarations()) {
+            generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Function);
+            pushed_scope_count++;
+        }
+
+        // FIXME: Implement this boi correctly.
+        (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
+            auto is_constant_declaration = declaration.is_constant_declaration();
+            declaration.for_each_bound_name([&](auto const& name) {
+                auto index = generator.intern_identifier(name);
+                if (is_constant_declaration || !generator.has_binding(index)) {
+                    generator.register_binding(index);
+                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_constant_declaration);
+                }
+            });
+
+            if (is<FunctionDeclaration>(declaration)) {
+                auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
+                if (auto result = function_declaration.generate_bytecode(generator); result.is_error()) {
+                    maybe_error = result.release_error();
+                    // To make `for_each_lexically_scoped_declaration` happy.
+                    return failing_completion;
+                }
+                auto const& name = function_declaration.name();
+                auto index = generator.intern_identifier(name);
+                if (!generator.has_binding(index)) {
+                    generator.register_binding(index);
+                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, false);
+                }
+                generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::InitializeOrSet);
+            }
+
+            return {};
+        });
     }
 
-    HashTable<FlyString> functions_initialized;
-    for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) {
-        if (functions_initialized.set(function.name()) != AK::HashSetResult::InsertedNewEntry)
-            return;
+    if (maybe_error.has_value())
+        return maybe_error.release_value();
 
-        generator.emit<Bytecode::Op::NewFunction>(function);
-        generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(function.name()));
-    });
-
-    // FIXME: Register lexical and variable scope declarations
     for (auto& child : children()) {
         TRY(child.generate_bytecode(generator));
         if (generator.is_current_block_terminated())
             break;
     }
+
+    for (size_t i = 0; i < pushed_scope_count; ++i)
+        generator.end_variable_scope();
 
     return {};
 }
@@ -609,8 +843,13 @@ Bytecode::CodeGenerationErrorOr<void> MemberExpression::generate_bytecode(Byteco
     return generator.emit_load_from_reference(*this);
 }
 
-Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
+Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
+    if (m_is_hoisted) {
+        auto index = generator.intern_identifier(name());
+        generator.emit<Bytecode::Op::GetVariable>(index);
+        generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Var);
+    }
     return {};
 }
 

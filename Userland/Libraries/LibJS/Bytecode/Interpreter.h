@@ -18,7 +18,11 @@
 
 namespace JS::Bytecode {
 
-using RegisterWindow = Vector<Value>;
+struct RegisterWindow {
+    MarkedVector<Value> registers;
+    MarkedVector<Environment*> saved_lexical_environments;
+    MarkedVector<Environment*> saved_variable_environments;
+};
 
 class Interpreter {
 public:
@@ -47,6 +51,9 @@ public:
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
     [[nodiscard]] RegisterWindow snapshot_frame() const { return m_register_windows.last(); }
+
+    auto& saved_lexical_environment_stack() { return m_register_windows.last().saved_lexical_environments; }
+    auto& saved_variable_environment_stack() { return m_register_windows.last().saved_variable_environments; }
 
     void enter_frame(RegisterWindow const& frame)
     {
@@ -82,7 +89,7 @@ public:
     VM::InterpreterExecutionScope ast_interpreter_scope();
 
 private:
-    RegisterWindow& registers() { return m_register_windows.last(); }
+    MarkedVector<Value>& registers() { return m_register_windows.last().registers; }
 
     static AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
 

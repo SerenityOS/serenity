@@ -196,15 +196,21 @@ ThrowCompletionOr<bool> DeclarativeEnvironment::delete_binding(GlobalObject&, Fl
     return true;
 }
 
-void DeclarativeEnvironment::initialize_or_set_mutable_binding(Badge<ScopeNode>, GlobalObject& global_object, FlyString const& name, Value value)
+ThrowCompletionOr<void> DeclarativeEnvironment::initialize_or_set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value)
 {
     auto it = m_names.find(name);
     VERIFY(it != m_names.end());
     auto& binding = m_bindings[it->value];
     if (!binding.initialized)
-        MUST(initialize_binding(global_object, name, value));
+        TRY(initialize_binding(global_object, name, value));
     else
-        MUST(set_mutable_binding(global_object, name, value, false));
+        TRY(set_mutable_binding(global_object, name, value, false));
+    return {};
+}
+
+void DeclarativeEnvironment::initialize_or_set_mutable_binding(Badge<ScopeNode>, GlobalObject& global_object, FlyString const& name, Value value)
+{
+    MUST(initialize_or_set_mutable_binding(global_object, name, value));
 }
 
 Vector<String> DeclarativeEnvironment::bindings() const
