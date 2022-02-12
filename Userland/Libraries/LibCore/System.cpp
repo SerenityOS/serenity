@@ -155,6 +155,12 @@ ErrorOr<void> disown(pid_t pid)
     int rc = ::disown(pid);
     HANDLE_SYSCALL_RETURN_VALUE("disown", rc, {});
 }
+
+ErrorOr<void> profiling_enable(pid_t pid, u64 event_mask)
+{
+    int rc = ::profiling_enable(pid, event_mask);
+    HANDLE_SYSCALL_RETURN_VALUE("profiling_enable", rc, {});
+}
 #endif
 
 #ifndef AK_OS_BSD_GENERIC
