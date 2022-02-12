@@ -40,6 +40,12 @@ pushd "$DIR/Tarballs"
     else
         echo "Skipped extracting qemu"
     fi
+
+    pushd "$QEMU_VERSION"
+        patch -p1 < "$DIR/Patches/qemu-cf-protection-none.patch" > /dev/null
+        md5sum "$DIR/Patches/qemu-cf-protection-none.patch" > .patch.applied
+    popd
+
 popd
 
 mkdir -p "$PREFIX"
