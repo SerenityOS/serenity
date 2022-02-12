@@ -35,6 +35,10 @@ static int memfd_create(const char* name, unsigned int flags)
 }
 #endif
 
+#if defined(__APPLE__)
+#    include <sys/mman.h>
+#endif
+
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
     if ((rc) < 0) {                                                  \
         return Error::from_syscall(syscall_name, rc);                \
@@ -268,6 +272,33 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
     if (fd < 0)
         return Error::from_errno(errno);
     if (::ftruncate(fd, size) < 0) {
+        auto saved_errno = errno;
+        TRY(close(fd));
+        return Error::from_errno(saved_errno);
+    }
+#elif defined(__APPLE__)
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    auto name = String::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
+    fd = shm_open(name.characters(), O_RDWR | O_CREAT | options, 0600);
+
+    if (shm_unlink(name.characters()) == -1) {
+        auto saved_errno = errno;
+        TRY(close(fd));
+        return Error::from_errno(saved_errno);
+    }
+
+    if (fd < 0)
+        return Error::from_errno(errno);
+
+    if (::ftruncate(fd, size) < 0) {
+        auto saved_errno = errno;
+        TRY(close(fd));
+        return Error::from_errno(saved_errno);
+    }
+
+    void* addr = ::mmap(NULL, size, PROT_WRITE, MAP_SHARED, fd, 0);
+    if (addr == MAP_FAILED) {
         auto saved_errno = errno;
         TRY(close(fd));
         return Error::from_errno(saved_errno);
