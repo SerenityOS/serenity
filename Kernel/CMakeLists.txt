@@ -104,7 +104,6 @@ set(KERNEL_SOURCES
     Storage/ATA/ATAPIDiscDevice.cpp
     Storage/ATA/ATAPort.cpp
     Storage/Partition/DiskPartition.cpp
-    Storage/Partition/DiskPartitionMetadata.cpp
     Storage/Partition/EBRPartitionTable.cpp
     Storage/Partition/GUIDPartitionTable.cpp
     Storage/Partition/MBRPartitionTable.cpp
@@ -405,6 +404,10 @@ set(CRYPTO_SOURCES
     ../Userland/Libraries/LibCrypto/Hash/SHA2.cpp
 )
 
+set(PARTITION_SOURCES
+    ../Userland/Libraries/LibPartition/DiskPartitionMetadata.cpp
+)
+
 set(SOURCES
     ${AK_SOURCES}
     )
@@ -416,6 +419,7 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
         ${ELF_SOURCES}
         ${VT_SOURCES}
         ${CRYPTO_SOURCES}
+        ${PARTITION_SOURCES}
     )
 else()
     set(RPI_SOURCES

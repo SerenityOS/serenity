@@ -9,7 +9,7 @@
 #include <AK/RefPtr.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Storage/Partition/DiskPartitionMetadata.h>
+#include <LibPartition/DiskPartitionMetadata.h>
 
 namespace Kernel {
 
@@ -17,7 +17,7 @@ class DiskPartition final : public BlockDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<DiskPartition> create(BlockDevice&, unsigned, DiskPartitionMetadata);
+    static NonnullRefPtr<DiskPartition> create(BlockDevice&, unsigned, Partition::DiskPartitionMetadata);
     virtual ~DiskPartition();
 
     virtual void start_request(AsyncBlockDeviceRequest&) override;
@@ -28,14 +28,14 @@ public:
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
     virtual bool can_write(OpenFileDescription const&, u64) const override;
 
-    DiskPartitionMetadata const& metadata() const;
+    Partition::DiskPartitionMetadata const& metadata() const;
 
 private:
-    DiskPartition(BlockDevice&, unsigned, DiskPartitionMetadata);
+    DiskPartition(BlockDevice&, unsigned, Partition::DiskPartitionMetadata);
     virtual StringView class_name() const override;
 
     WeakPtr<BlockDevice> m_device;
-    DiskPartitionMetadata m_metadata;
+    Partition::DiskPartitionMetadata m_metadata;
 };
 
 }
