@@ -30,6 +30,8 @@ ErrorOr<bool> format_file(StringView path, bool inplace)
     }
     auto formatted_gml = formatted_gml_or_error.release_value();
     if (inplace && !read_from_stdin) {
+        if (formatted_gml == contents)
+            return true;
         if (!file->seek(0) || !file->truncate(0)) {
             warnln("Could not truncate {}: {}", path, file->error_string());
             return false;
