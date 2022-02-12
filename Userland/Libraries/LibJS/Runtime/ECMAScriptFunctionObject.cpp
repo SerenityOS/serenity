@@ -542,14 +542,16 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     if (!scope_body)
         return {};
 
-    scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
-        declaration.for_each_bound_name([&](auto const& name) {
-            if (declaration.is_constant_declaration())
-                MUST(lex_environment->create_immutable_binding(global_object(), name, true));
-            else
-                MUST(lex_environment->create_mutable_binding(global_object(), name, false));
+    if (!Bytecode::Interpreter::current()) {
+        scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
+            declaration.for_each_bound_name([&](auto const& name) {
+                if (declaration.is_constant_declaration())
+                    MUST(lex_environment->create_immutable_binding(global_object(), name, true));
+                else
+                    MUST(lex_environment->create_mutable_binding(global_object(), name, false));
+            });
         });
-    });
+    }
 
     auto* private_environment = callee_context.private_environment;
     for (auto& declaration : functions_to_initialize) {

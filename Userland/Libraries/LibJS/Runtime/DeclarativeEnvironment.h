@@ -31,6 +31,7 @@ public:
     virtual ThrowCompletionOr<bool> delete_binding(GlobalObject&, FlyString const& name) override;
 
     void initialize_or_set_mutable_binding(Badge<ScopeNode>, GlobalObject& global_object, FlyString const& name, Value value);
+    ThrowCompletionOr<void> initialize_or_set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value);
 
     // This is not a method defined in the spec! Do not use this in any LibJS (or other spec related) code.
     [[nodiscard]] Vector<String> bindings() const;
