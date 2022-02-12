@@ -43,6 +43,8 @@
 #include <LibWeb/Bindings/DOMParserConstructor.h>
 #include <LibWeb/Bindings/DOMParserPrototype.h>
 #include <LibWeb/Bindings/DOMRectConstructor.h>
+#include <LibWeb/Bindings/DOMRectListConstructor.h>
+#include <LibWeb/Bindings/DOMRectListPrototype.h>
 #include <LibWeb/Bindings/DOMRectPrototype.h>
 #include <LibWeb/Bindings/DOMRectReadOnlyConstructor.h>
 #include <LibWeb/Bindings/DOMRectReadOnlyPrototype.h>
@@ -338,6 +340,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(DOMImplementation)         \
     ADD_WINDOW_OBJECT_INTERFACE(DOMParser)                 \
     ADD_WINDOW_OBJECT_INTERFACE(DOMRect)                   \
+    ADD_WINDOW_OBJECT_INTERFACE(DOMRectList)               \
     ADD_WINDOW_OBJECT_INTERFACE(DOMRectReadOnly)           \
     ADD_WINDOW_OBJECT_INTERFACE(DOMStringMap)              \
     ADD_WINDOW_OBJECT_INTERFACE(Element)                   \

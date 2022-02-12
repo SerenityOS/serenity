@@ -94,6 +94,7 @@ set(SOURCES
     Dump.cpp
     Encoding/TextEncoder.cpp
     FontCache.cpp
+    Geometry/DOMRectList.cpp
     HTML/AttributeNames.cpp
     HTML/BrowsingContext.cpp
     HTML/BrowsingContextContainer.cpp
@@ -418,6 +419,7 @@ libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(Encoding/TextEncoder)
 libweb_js_wrapper(Geometry/DOMRect)
+libweb_js_wrapper(Geometry/DOMRectList)
 libweb_js_wrapper(Geometry/DOMRectReadOnly)
 libweb_js_wrapper(HTML/CanvasGradient)
 libweb_js_wrapper(HTML/CanvasRenderingContext2D)
