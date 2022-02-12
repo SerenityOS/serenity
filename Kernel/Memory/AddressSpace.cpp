@@ -146,16 +146,15 @@ ErrorOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_re
 
     auto new_region = TRY(Region::try_create_user_accessible(
         range, source_region.vmobject(), offset_in_vmobject, move(region_name), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared()));
-    auto* region = TRY(add_region(move(new_region)));
-    region->set_syscall_region(source_region.is_syscall_region());
-    region->set_mmap(source_region.is_mmap());
-    region->set_stack(source_region.is_stack());
+    new_region->set_syscall_region(source_region.is_syscall_region());
+    new_region->set_mmap(source_region.is_mmap());
+    new_region->set_stack(source_region.is_stack());
     size_t page_offset_in_source_region = (offset_in_vmobject - source_region.offset_in_vmobject()) / PAGE_SIZE;
-    for (size_t i = 0; i < region->page_count(); ++i) {
+    for (size_t i = 0; i < new_region->page_count(); ++i) {
         if (source_region.should_cow(page_offset_in_source_region + i))
-            region->set_should_cow(i, true);
+            TRY(new_region->set_should_cow(i, true));
     }
-    return region;
+    return add_region(move(new_region));
 }
 
 ErrorOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, StringView name, int prot, AllocationStrategy strategy)
@@ -191,16 +190,15 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const&
     if (!name.is_null())
         region_name = TRY(KString::try_create(name));
     auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), offset_in_vmobject, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
-    auto* added_region = TRY(add_region(move(region)));
     if (prot == PROT_NONE) {
         // For PROT_NONE mappings, we don't have to set up any page table mappings.
         // We do still need to attach the region to the page_directory though.
         SpinlockLocker mm_locker(s_mm_lock);
-        added_region->set_page_directory(page_directory());
+        region->set_page_directory(page_directory());
     } else {
-        TRY(added_region->map(page_directory(), ShouldFlushTLB::No));
+        TRY(region->map(page_directory(), ShouldFlushTLB::No));
     }
-    return added_region;
+    return add_region(move(region));
 }
 
 void AddressSpace::deallocate_region(Region& region)

@@ -37,7 +37,7 @@ public:
     float content_width() const { return m_content_size.width(); }
     float content_height() const { return m_content_size.height(); }
 
-    Gfx::FloatRect padded_rect() const
+    Gfx::FloatRect absolute_padding_box_rect() const
     {
         auto absolute_rect = this->absolute_rect();
         Gfx::FloatRect rect;
@@ -48,27 +48,15 @@ public:
         return rect;
     }
 
-    Gfx::FloatRect bordered_rect() const
+    Gfx::FloatRect absolute_border_box_rect() const
     {
-        auto padded_rect = this->padded_rect();
+        auto padded_rect = this->absolute_padding_box_rect();
         Gfx::FloatRect rect;
         rect.set_x(padded_rect.x() - box_model().border.left);
         rect.set_width(padded_rect.width() + box_model().border.left + box_model().border.right);
         rect.set_y(padded_rect.y() - box_model().border.top);
         rect.set_height(padded_rect.height() + box_model().border.top + box_model().border.bottom);
         return rect;
-    }
-
-    float margin_box_width() const
-    {
-        auto margin_box = box_model().margin_box();
-        return content_width() + margin_box.left + margin_box.right;
-    }
-
-    float margin_box_height() const
-    {
-        auto margin_box = box_model().margin_box();
-        return content_height() + margin_box.top + margin_box.bottom;
     }
 
     float border_box_width() const
@@ -86,17 +74,6 @@ public:
     Gfx::FloatRect content_box_as_relative_rect() const
     {
         return { m_offset, m_content_size };
-    }
-
-    Gfx::FloatRect border_box_as_relative_rect() const
-    {
-        auto rect = content_box_as_relative_rect();
-        auto border_box = box_model().border_box();
-        rect.set_x(rect.x() - border_box.left);
-        rect.set_width(rect.width() + border_box.left + border_box.right);
-        rect.set_y(rect.y() - border_box.top);
-        rect.set_height(rect.height() + border_box.top + border_box.bottom);
-        return rect;
     }
 
     Gfx::FloatRect margin_box_as_relative_rect() const

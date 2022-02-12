@@ -16,7 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
     auto app = TRY(GUI::Application::try_create(arguments));
-    Config::pledge_domains("Browser");
+    Config::pledge_domain("Browser");
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/home", "r"));

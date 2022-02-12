@@ -235,8 +235,8 @@ set(SOURCES
     Layout/ReplacedBox.cpp
     Layout/SVGBox.cpp
     Layout/SVGFormattingContext.cpp
+    Layout/SVGGeometryBox.cpp
     Layout/SVGGraphicsBox.cpp
-    Layout/SVGPathBox.cpp
     Layout/SVGSVGBox.cpp
     Layout/TableBox.cpp
     Layout/TableCellBox.cpp
@@ -265,11 +265,18 @@ set(SOURCES
     RequestIdleCallback/IdleDeadline.cpp
     ResizeObserver/ResizeObserver.cpp
     SVG/AttributeNames.cpp
+    SVG/AttributeParser.cpp
     SVG/SVGElement.cpp
     SVG/SVGGElement.cpp
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp
     SVG/SVGPathElement.cpp
+    SVG/SVGCircleElement.cpp
+    SVG/SVGEllipseElement.cpp
+    SVG/SVGLineElement.cpp
+    SVG/SVGPolygonElement.cpp
+    SVG/SVGPolylineElement.cpp
+    SVG/SVGRectElement.cpp
     SVG/SVGSVGElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp
@@ -511,7 +518,13 @@ libweb_js_wrapper(ResizeObserver/ResizeObserver)
 libweb_js_wrapper(SVG/SVGElement)
 libweb_js_wrapper(SVG/SVGGeometryElement)
 libweb_js_wrapper(SVG/SVGGraphicsElement)
+libweb_js_wrapper(SVG/SVGCircleElement)
+libweb_js_wrapper(SVG/SVGEllipseElement)
+libweb_js_wrapper(SVG/SVGLineElement)
 libweb_js_wrapper(SVG/SVGPathElement)
+libweb_js_wrapper(SVG/SVGPolygonElement)
+libweb_js_wrapper(SVG/SVGPolylineElement)
+libweb_js_wrapper(SVG/SVGRectElement)
 libweb_js_wrapper(SVG/SVGSVGElement)
 libweb_js_wrapper(Selection/Selection)
 libweb_js_wrapper(UIEvents/FocusEvent)

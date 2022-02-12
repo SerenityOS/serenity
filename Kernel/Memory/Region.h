@@ -167,7 +167,7 @@ public:
     [[nodiscard]] size_t amount_dirty() const;
 
     [[nodiscard]] bool should_cow(size_t page_index) const;
-    void set_should_cow(size_t page_index, bool);
+    ErrorOr<void> set_should_cow(size_t page_index, bool);
 
     [[nodiscard]] size_t cow_pages() const;
 
@@ -187,6 +187,8 @@ public:
     void unmap_with_locks_held(ShouldDeallocateVirtualRange, ShouldFlushTLB, SpinlockLocker<RecursiveSpinlock>& pd_locker, SpinlockLocker<RecursiveSpinlock>& mm_locker);
 
     void remap();
+
+    [[nodiscard]] bool is_mapped() const { return m_page_directory != nullptr; }
 
     void clear_to_zero();
 

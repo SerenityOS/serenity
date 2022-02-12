@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = GUI::Application::construct(arguments);
 
-    Config::pledge_domains("Mail");
+    Config::pledge_domain("Mail");
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc", "r"));

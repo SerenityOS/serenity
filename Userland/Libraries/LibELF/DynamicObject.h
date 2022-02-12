@@ -272,6 +272,7 @@ public:
 
     RelocationSection relocation_section() const;
     RelocationSection plt_relocation_section() const;
+    Section relr_relocation_section() const;
 
     bool should_process_origin() const { return m_dt_flags & DF_ORIGIN; }
     bool requires_symbolic_symbol_resolution() const { return m_dt_flags & DF_SYMBOLIC; }
@@ -311,6 +312,9 @@ public:
 
     template<VoidFunction<Symbol&> F>
     void for_each_symbol(F) const;
+
+    template<typename F>
+    void for_each_relr_relocation(F) const;
 
     struct SymbolLookupResult {
         FlatPtr value { 0 };
@@ -374,6 +378,9 @@ private:
     size_t m_size_of_relocation_table { 0 };
     bool m_addend_used { false };
     FlatPtr m_relocation_table_offset { 0 };
+    size_t m_size_of_relr_relocations_entry { 0 };
+    size_t m_size_of_relr_relocation_table { 0 };
+    FlatPtr m_relr_relocation_table_offset { 0 };
     bool m_is_elf_dynamic { false };
 
     // DT_FLAGS
@@ -410,6 +417,35 @@ inline void DynamicObject::RelocationSection::for_each_relocation(F func) const
         func(reloc);
         return IterationDecision::Continue;
     });
+}
+
+template<typename F>
+inline void DynamicObject::for_each_relr_relocation(F f) const
+{
+    auto section = relr_relocation_section();
+    if (section.entry_count() == 0)
+        return;
+
+    VERIFY(section.entry_size() == sizeof(FlatPtr));
+    VERIFY(section.size() >= section.entry_size() * section.entry_count());
+
+    auto* entries = reinterpret_cast<ElfW(Relr)*>(section.address().get());
+    auto base = base_address().get();
+    FlatPtr patch_addr = 0;
+    for (unsigned i = 0; i < section.entry_count(); ++i) {
+        if ((entries[i] & 1u) == 0) {
+            patch_addr = base + entries[i];
+            f(patch_addr);
+            patch_addr += sizeof(FlatPtr);
+        } else {
+            unsigned j = 0;
+            for (auto bitmap = entries[i]; (bitmap >>= 1u) != 0; ++j)
+                if (bitmap & 1u)
+                    f(patch_addr + j * sizeof(FlatPtr));
+
+            patch_addr += (8 * sizeof(FlatPtr) - 1) * sizeof(FlatPtr);
+        }
+    }
 }
 
 template<VoidFunction<DynamicObject::Symbol&> F>

@@ -178,11 +178,12 @@ bool Region::should_cow(size_t page_index) const
     return static_cast<AnonymousVMObject const&>(vmobject()).should_cow(first_page_index() + page_index, m_shared);
 }
 
-void Region::set_should_cow(size_t page_index, bool cow)
+ErrorOr<void> Region::set_should_cow(size_t page_index, bool cow)
 {
     VERIFY(!m_shared);
     if (vmobject().is_anonymous())
-        static_cast<AnonymousVMObject&>(vmobject()).set_should_cow(first_page_index() + page_index, cow);
+        TRY(static_cast<AnonymousVMObject&>(vmobject()).set_should_cow(first_page_index() + page_index, cow));
+    return {};
 }
 
 bool Region::map_individual_page_impl(size_t page_index)

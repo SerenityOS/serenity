@@ -244,10 +244,16 @@ class ResizeObserver;
 }
 
 namespace Web::SVG {
+class SVGCircleElement;
 class SVGElement;
+class SVGEllipseElement;
 class SVGGeometryElement;
 class SVGGraphicsElement;
+class SVGLineElement;
 class SVGPathElement;
+class SVGPolygonElement;
+class SVGPolylineElement;
+class SVGRectElement;
 class SVGSVGElement;
 }
 
@@ -449,10 +455,16 @@ class StyleSheetListWrapper;
 class StyleSheetWrapper;
 class SubmitEventWrapper;
 class SubtleCryptoWrapper;
+class SVGCircleElementWrapper;
 class SVGElementWrapper;
+class SVGEllipseElementWrapper;
 class SVGGeometryElementWrapper;
 class SVGGraphicsElementWrapper;
+class SVGLineElementWrapper;
 class SVGPathElementWrapper;
+class SVGPolygonElementWrapper;
+class SVGPolylineElementWrapper;
+class SVGRectElementWrapper;
 class SVGSVGElementWrapper;
 class TextEncoderWrapper;
 class TextMetricsWrapper;

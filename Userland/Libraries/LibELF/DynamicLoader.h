@@ -130,6 +130,7 @@ private:
         ResolveLater = 2,
     };
     RelocationResult do_relocation(const DynamicObject::Relocation&, ShouldInitializeWeak should_initialize_weak);
+    void do_relr_relocations();
     size_t calculate_tls_size() const;
     ssize_t negative_offset_from_tls_block_end(ssize_t tls_offset, size_t value_of_symbol) const;
 

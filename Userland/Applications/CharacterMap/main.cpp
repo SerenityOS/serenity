@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    Config::pledge_domains("CharacterMap");
+    Config::pledge_domain("CharacterMap");
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/CharacterMap.md") }));
     TRY(Desktop::Launcher::seal_allowlist());

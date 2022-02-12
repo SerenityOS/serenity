@@ -56,7 +56,6 @@ public:
 
     // https://www.w3.org/TR/css-cascade/#origin
     enum class CascadeOrigin {
-        Any, // FIXME: This is not part of the spec. Get rid of it.
         Author,
         User,
         UserAgent,
@@ -64,7 +63,7 @@ public:
         Transition,
     };
 
-    Vector<MatchingRule> collect_matching_rules(DOM::Element const&, CascadeOrigin = CascadeOrigin::Any) const;
+    Vector<MatchingRule> collect_matching_rules(DOM::Element const&, CascadeOrigin) const;
 
     void invalidate_rule_cache();
 

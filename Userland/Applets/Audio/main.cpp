@@ -235,7 +235,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    Config::pledge_domains("AudioApplet");
+    Config::pledge_domain("AudioApplet");
     TRY(Core::System::unveil("/tmp/portal/audio", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
