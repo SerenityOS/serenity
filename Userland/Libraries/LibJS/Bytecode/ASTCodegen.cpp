@@ -1337,10 +1337,17 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_bytecode(Bytecod
     return {};
 }
 
-void ClassDeclaration::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ClassDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit<Bytecode::Op::NewClass>(m_class_expression);
-    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(m_class_expression.ptr()->name()));
+    TRY(m_class_expression->generate_bytecode(generator));
+    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(m_class_expression.ptr()->name()), Bytecode::Op::SetVariable::InitializationMode::Initialize);
+    return {};
+}
+
+Bytecode::CodeGenerationErrorOr<void> ClassExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    generator.emit<Bytecode::Op::NewClass>(*this);
+    return {};
 }
 
 Bytecode::CodeGenerationErrorOr<void> ThisExpression::generate_bytecode(Bytecode::Generator& generator) const
