@@ -71,6 +71,7 @@ public:
 
     void open_coredump(String const& coredump_path);
     void for_each_open_file(Function<void(ProjectFile const&)>);
+    bool semantic_syntax_highlighting_is_enabled() const;
 
 private:
     static String get_full_path_of_serenity_source(const String& file);
@@ -217,6 +218,7 @@ private:
     RefPtr<GUI::Action> m_run_action;
     RefPtr<GUI::Action> m_locations_history_back_action;
     RefPtr<GUI::Action> m_locations_history_forward_action;
+    RefPtr<GUI::Action> m_toggle_semantic_highlighting_action;
 
     RefPtr<Gfx::Font> read_editor_font_from_config();
     void change_editor_font(RefPtr<Gfx::Font>);
