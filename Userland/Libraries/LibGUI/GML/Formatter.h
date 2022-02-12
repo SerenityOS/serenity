@@ -13,12 +13,9 @@
 
 namespace GUI::GML {
 
-inline String format_gml(StringView string)
+inline ErrorOr<String> format_gml(StringView string)
 {
-    auto ast = parse_gml(string);
-    if (ast.is_error())
-        return {};
-    return ast.value()->to_string();
+    return TRY(parse_gml(string))->to_string();
 }
 
 }

@@ -23,11 +23,12 @@ ErrorOr<bool> format_file(StringView path, bool inplace)
         file = TRY(Core::File::open(path, open_mode));
     }
     auto contents = file->read_all();
-    auto formatted_gml = GUI::GML::format_gml(contents);
-    if (formatted_gml.is_null()) {
-        warnln("Failed to parse GML!");
+    auto formatted_gml_or_error = GUI::GML::format_gml(contents);
+    if (formatted_gml_or_error.is_error()) {
+        warnln("Failed to parse GML: {}", formatted_gml_or_error.error());
         return false;
     }
+    auto formatted_gml = formatted_gml_or_error.release_value();
     if (inplace && !read_from_stdin) {
         if (!file->seek(0) || !file->truncate(0)) {
             warnln("Could not truncate {}: {}", path, file->error_string());
