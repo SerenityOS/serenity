@@ -173,4 +173,9 @@ void for_each_open_file(Function<void(ProjectFile const&)> func)
     s_hack_studio_widget->for_each_open_file(move(func));
 }
 
+bool semantic_syntax_highlighting_is_enabled()
+{
+    return s_hack_studio_widget->semantic_syntax_highlighting_is_enabled();
+}
+
 }
