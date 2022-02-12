@@ -32,8 +32,8 @@ void ShadowRealm::visit_edges(Visitor& visitor)
     visitor.visit(&m_shadow_realm);
 }
 
-// 3.1.2 CopyNameAndLength ( F: a function object, Target: a function object, prefix: a String, optional argCount: a Number, ), https://tc39.es/proposal-shadowrealm/#sec-copynameandlength
-ThrowCompletionOr<void> copy_name_and_length(GlobalObject& global_object, FunctionObject& function, FunctionObject& target, StringView prefix, Optional<unsigned> arg_count)
+// 3.1.2 CopyNameAndLength ( F: a function object, Target: a function object, optional prefix: a String, optional argCount: a Number, ), https://tc39.es/proposal-shadowrealm/#sec-copynameandlength
+ThrowCompletionOr<void> copy_name_and_length(GlobalObject& global_object, FunctionObject& function, FunctionObject& target, Optional<StringView> prefix, Optional<unsigned> arg_count)
 {
     auto& vm = global_object.vm();
 
@@ -87,7 +87,7 @@ ThrowCompletionOr<void> copy_name_and_length(GlobalObject& global_object, Functi
         target_name = js_string(vm, String::empty());
 
     // 8. Perform ! SetFunctionName(F, targetName, prefix).
-    function.set_function_name({ target_name.as_string().string() }, prefix);
+    function.set_function_name({ target_name.as_string().string() }, move(prefix));
 
     return {};
 }
