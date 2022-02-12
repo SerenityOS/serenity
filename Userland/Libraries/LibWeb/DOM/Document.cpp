@@ -1006,7 +1006,7 @@ String Document::cookie(Cookie::Source source)
     return {};
 }
 
-void Document::set_cookie(String cookie_string, Cookie::Source source)
+void Document::set_cookie(String const& cookie_string, Cookie::Source source)
 {
     auto cookie = Cookie::parse_cookie(cookie_string);
     if (!cookie.has_value())
