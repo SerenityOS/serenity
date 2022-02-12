@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AllOf.h>
-#include <Kernel/Storage/Partition/DiskPartitionMetadata.h>
+#include <LibPartition/DiskPartitionMetadata.h>
 
-namespace Kernel {
+namespace Partition {
 
 DiskPartitionMetadata::PartitionType::PartitionType(u8 partition_type)
 {

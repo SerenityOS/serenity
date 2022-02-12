@@ -12,7 +12,7 @@ PartitionTable::PartitionTable(StorageDevice const& device)
 {
 }
 
-Optional<DiskPartitionMetadata> PartitionTable::partition(unsigned index)
+Optional<Partition::DiskPartitionMetadata> PartitionTable::partition(unsigned index)
 {
     if (index > partitions_count())
         return {};
