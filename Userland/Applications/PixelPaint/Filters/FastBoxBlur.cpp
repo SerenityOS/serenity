@@ -54,6 +54,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         radius_slider.set_value(m_radius);
         radius_slider.on_change = [&](int value) {
             m_radius = value;
+            update_preview();
         };
 
         auto& gaussian_container = m_settings_widget->add<GUI::Widget>();
@@ -66,6 +67,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         gaussian_checkbox.set_tooltip("A real gaussian blur can be approximated by running the box blur multiple times with different weights.");
         gaussian_checkbox.on_checked = [this](bool checked) {
             m_approximate_gauss = checked;
+            update_preview();
         };
     }
 

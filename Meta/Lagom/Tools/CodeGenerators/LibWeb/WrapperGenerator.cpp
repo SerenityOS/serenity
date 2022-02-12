@@ -2295,6 +2295,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
 #include <LibWeb/Bindings/DOMImplementationWrapper.h>
+#include <LibWeb/Bindings/DOMRectListWrapper.h>
 #include <LibWeb/Bindings/DOMRectWrapper.h>
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
@@ -3462,6 +3463,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
 #include <LibWeb/Bindings/DOMImplementationWrapper.h>
+#include <LibWeb/Bindings/DOMRectListWrapper.h>
 #include <LibWeb/Bindings/DOMRectWrapper.h>
 #include <LibWeb/Bindings/DOMStringMapWrapper.h>
 #include <LibWeb/Bindings/DOMTokenListWrapper.h>

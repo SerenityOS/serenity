@@ -141,14 +141,17 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
             auto container_width = CSS::Length::make_px(containing_block().content_width());
             inline_block.set_content_width(inline_block.computed_values().width().resolved(box, container_width).resolved_or_zero(inline_block).to_px(inline_block));
         }
-        (void)layout_inside(inline_block, layout_mode);
+        auto independent_formatting_context = layout_inside(inline_block, layout_mode);
 
         if (inline_block.computed_values().height().is_length() && inline_block.computed_values().height().length().is_undefined_or_auto()) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
+            BlockFormattingContext::compute_height(inline_block);
         } else {
             auto container_height = CSS::Length::make_px(containing_block().content_height());
             inline_block.set_content_height(inline_block.computed_values().height().resolved(box, container_height).resolved_or_zero(inline_block).to_px(inline_block));
         }
+
+        independent_formatting_context->parent_context_did_dimension_child_root_box();
         return;
     }
 

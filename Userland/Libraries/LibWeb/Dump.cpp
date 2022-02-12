@@ -562,14 +562,14 @@ void dump_style_rule(StringBuilder& builder, CSS::CSSStyleRule const& rule, int 
     for (auto& property : style_declaration.properties()) {
         indent(builder, indent_levels);
         builder.appendff("    {}: '{}'", CSS::string_from_property_id(property.property_id), property.value->to_string());
-        if (property.important)
+        if (property.important == CSS::Important::Yes)
             builder.append(" \033[31;1m!important\033[0m");
         builder.append('\n');
     }
     for (auto& property : style_declaration.custom_properties()) {
         indent(builder, indent_levels);
         builder.appendff("    {}: '{}'", property.key, property.value.value->to_string());
-        if (property.value.important)
+        if (property.value.important == CSS::Important::Yes)
             builder.append(" \033[31;1m!important\033[0m");
         builder.append('\n');
     }

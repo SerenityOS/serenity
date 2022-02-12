@@ -33,7 +33,7 @@ private:
     ExecutionContext m_execution_context; // [[ExecutionContext]]
 };
 
-ThrowCompletionOr<void> copy_name_and_length(GlobalObject&, FunctionObject& function, FunctionObject& target, StringView prefix, Optional<unsigned> arg_count = {});
+ThrowCompletionOr<void> copy_name_and_length(GlobalObject&, FunctionObject& function, FunctionObject& target, Optional<StringView> prefix = {}, Optional<unsigned> arg_count = {});
 ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject&, StringView source_text, Realm& caller_realm, Realm& eval_realm);
 ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject&, String specifier_string, String export_name_string, Realm& caller_realm, Realm& eval_realm, ExecutionContext& eval_context);
 ThrowCompletionOr<Value> get_wrapped_value(GlobalObject&, Realm& caller_realm, Value);

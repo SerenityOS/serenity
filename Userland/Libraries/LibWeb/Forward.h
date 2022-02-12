@@ -118,6 +118,7 @@ class TextEncoder;
 
 namespace Web::Geometry {
 class DOMRect;
+class DOMRectList;
 class DOMRectReadOnly;
 }
 
@@ -231,6 +232,10 @@ namespace Web::IntersectionObserver {
 class IntersectionObserver;
 }
 
+namespace Web::MimeSniff {
+class MimeType;
+}
+
 namespace Web::NavigationTiming {
 class PerformanceTiming;
 }
@@ -341,6 +346,7 @@ class DocumentWrapper;
 class DOMExceptionWrapper;
 class DOMImplementationWrapper;
 class DOMParserWrapper;
+class DOMRectListWrapper;
 class DOMRectReadOnlyWrapper;
 class DOMRectWrapper;
 class DOMStringMapWrapper;

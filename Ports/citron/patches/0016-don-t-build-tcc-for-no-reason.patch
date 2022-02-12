@@ -1,0 +1,38 @@
+From 5883d528ce21d7780ee2bd364ee9f29d0f0a6b73 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 11 Feb 2022 17:27:59 +0330
+Subject: [PATCH 16/18] don't build tcc for no reason
+
+---
+ makefile | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/makefile b/makefile
+index 9c74e16..aad2844 100644
+--- a/makefile
++++ b/makefile
+@@ -51,10 +51,12 @@ OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
+ 	   importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o \
+ 	   promise.o symbol_cxx.o world.o
+ EXTRAOBJS =
++TCC_STATICS =
+ 
+ ifneq ($(findstring withInjectNative=1,$(CFLAGS)),)
+ 	OBJS += inject.o libtcc1.a libtcc.a
+ 	CFLAGS += -DwithCTypesNative=1
++	TCC_STATICS = build_tcc_statics
+ endif
+ 
+ ifneq ($(findstring withCTypesNative=1,$(CFLAGS)),)
+@@ -83,7 +85,7 @@ ctrconfig:
+ $(BUILDDIR):
+ 	mkdir -p $@
+ 
+-$(BUILDDIR)/ctr: build_tcc_statics $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
++$(BUILDDIR)/ctr: $(TCC_STATICS) $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
+ 	$(CXX) $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) $(LIBS) $(LEXTRACF) -o $@
+ 
+ ctr: $(BUILDDIR)/ctr
+-- 
+2.34.1
+

@@ -13,8 +13,13 @@
 
 namespace Web::CSS {
 
+enum class Important {
+    No,
+    Yes,
+};
+
 struct StyleProperty {
-    bool important { false };
+    Important important { Important::No };
     CSS::PropertyID property_id;
     NonnullRefPtr<StyleValue> value;
     String custom_name {};

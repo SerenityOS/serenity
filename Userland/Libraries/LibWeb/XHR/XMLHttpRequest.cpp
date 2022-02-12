@@ -1,12 +1,15 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/DOMException.h>
@@ -16,6 +19,7 @@
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/Fetch/AbstractOperations.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -52,11 +56,218 @@ void XMLHttpRequest::fire_progress_event(const String& event_name, u64 transmitt
     dispatch_event(ProgressEvent::create(event_name, event_init));
 }
 
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetext
 String XMLHttpRequest::response_text() const
 {
-    if (m_response_object.is_empty())
+    // FIXME: 1. If this’s response type is not the empty string or "text", then throw an "InvalidStateError" DOMException.
+
+    // 2. If this’s state is not loading or done, then return the empty string.
+    if (m_ready_state != ReadyState::Loading && m_ready_state != ReadyState::Done)
+        return String::empty();
+
+    return get_text_response();
+}
+
+// https://xhr.spec.whatwg.org/#text-response
+String XMLHttpRequest::get_text_response() const
+{
+    // FIXME: 1. If xhr’s response’s body is null, then return the empty string.
+
+    // 2. Let charset be the result of get a final encoding for xhr.
+    auto charset = get_final_encoding();
+
+    // FIXME: 3. If xhr’s response type is the empty string, charset is null, and the result of get a final MIME type for xhr is an XML MIME type,
+    //           then use the rules set forth in the XML specifications to determine the encoding. Let charset be the determined encoding. [XML] [XML-NAMES]
+
+    // 4. If charset is null, then set charset to UTF-8.
+    if (!charset.has_value())
+        charset = "UTF-8";
+
+    // 5. Return the result of running decode on xhr’s received bytes using fallback encoding charset.
+    auto* decoder = TextCodec::decoder_for(charset.value());
+
+    // If we don't support the decoder yet, let's crash instead of attempting to return something, as the result would be incorrect and create obscure bugs.
+    VERIFY(decoder);
+
+    return TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, m_response_object);
+}
+
+// https://xhr.spec.whatwg.org/#response-mime-type
+MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
+{
+    // 1. Let mimeType be the result of extracting a MIME type from xhr’s response’s header list.
+    auto mime_type = extract_mime_type(m_response_headers);
+
+    // 2. If mimeType is failure, then set mimeType to text/xml.
+    if (!mime_type.has_value())
+        return MimeSniff::MimeType("text"sv, "xml"sv);
+
+    // 3. Return mimeType.
+    return mime_type.release_value();
+}
+
+// https://xhr.spec.whatwg.org/#final-charset
+Optional<String> XMLHttpRequest::get_final_encoding() const
+{
+    // 1. Let label be null.
+    Optional<String> label;
+
+    // 2. Let responseMIME be the result of get a response MIME type for xhr.
+    auto response_mime = get_response_mime_type();
+
+    // 3. If responseMIME’s parameters["charset"] exists, then set label to it.
+    auto response_mime_charset_it = response_mime.parameters().find("charset"sv);
+    if (response_mime_charset_it != response_mime.parameters().end())
+        label = response_mime_charset_it->value;
+
+    // 4. If xhr’s override MIME type’s parameters["charset"] exists, then set label to it.
+    if (m_override_mime_type.has_value()) {
+        auto override_mime_charset_it = m_override_mime_type->parameters().find("charset"sv);
+        if (override_mime_charset_it != m_override_mime_type->parameters().end())
+            label = override_mime_charset_it->value;
+    }
+
+    // 5. If label is null, then return null.
+    if (!label.has_value())
         return {};
-    return String::copy(m_response_object);
+
+    // 6. Let encoding be the result of getting an encoding from label.
+    auto encoding = TextCodec::get_standardized_encoding(label.value());
+
+    // 7. If encoding is failure, then return null.
+    // 8. Return encoding.
+    return encoding;
+}
+
+// https://fetch.spec.whatwg.org/#concept-header-list-get-decode-split
+// FIXME: This is not only used by XHR, it is also used for multiple things in Fetch.
+Optional<Vector<String>> XMLHttpRequest::get_decode_and_split(String const& header_name, HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const
+{
+    // 1. Let initialValue be the result of getting name from list.
+    auto initial_value_iterator = header_list.find(header_name);
+
+    // 2. If initialValue is null, then return null.
+    if (initial_value_iterator == header_list.end())
+        return {};
+
+    auto& initial_value = initial_value_iterator->value;
+
+    // FIXME: 3. Let input be the result of isomorphic decoding initialValue.
+    // NOTE: We don't store raw byte sequences in the header list as per the spec, so we can't do this step.
+    //       The spec no longer uses initialValue after this step. For our purposes, treat any reference to `input` in the spec comments to initial_value.
+
+    // 4. Let position be a position variable for input, initially pointing at the start of input.
+    GenericLexer lexer(initial_value);
+
+    // 5. Let values be a list of strings, initially empty.
+    Vector<String> values;
+
+    // 6. Let value be the empty string.
+    StringBuilder value;
+
+    // 7. While position is not past the end of input:
+    while (!lexer.is_eof()) {
+        // 1. Append the result of collecting a sequence of code points that are not U+0022 (") or U+002C (,) from input, given position, to value.
+        auto value_part = lexer.consume_until([](char ch) {
+            return ch == '"' || ch == ',';
+        });
+        value.append(value_part);
+
+        // 2. If position is not past the end of input, then:
+        if (!lexer.is_eof()) {
+            // 1. If the code point at position within input is U+0022 ("), then:
+            if (lexer.peek() == '"') {
+                // 1. Append the result of collecting an HTTP quoted string from input, given position, to value.
+                auto quoted_value_part = Fetch::collect_an_http_quoted_string(lexer, Fetch::HttpQuotedStringExtractValue::No);
+                value.append(quoted_value_part);
+
+                // 2. If position is not past the end of input, then continue.
+                if (!lexer.is_eof())
+                    continue;
+            }
+
+            // 2. Otherwise:
+            else {
+                // 1. Assert: the code point at position within input is U+002C (,).
+                VERIFY(lexer.peek() == ',');
+
+                // 2. Advance position by 1.
+                lexer.ignore(1);
+            }
+        }
+
+        // 3. Remove all HTTP tab or space from the start and end of value.
+        // https://fetch.spec.whatwg.org/#http-tab-or-space
+        // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.
+        auto trimmed_value = value.to_string().trim("\t ", TrimMode::Both);
+
+        // 4. Append value to values.
+        values.append(move(trimmed_value));
+
+        // 5. Set value to the empty string.
+        value.clear();
+    }
+
+    // 8. Return values.
+    return values;
+}
+
+// https://fetch.spec.whatwg.org/#concept-header-extract-mime-type
+// FIXME: This is not only used by XHR, it is also used for multiple things in Fetch.
+Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const
+{
+    // 1. Let charset be null.
+    Optional<String> charset;
+
+    // 2. Let essence be null.
+    Optional<String> essence;
+
+    // 3. Let mimeType be null.
+    Optional<MimeSniff::MimeType> mime_type;
+
+    // 4. Let values be the result of getting, decoding, and splitting `Content-Type` from headers.
+    auto potentially_values = get_decode_and_split("Content-Type"sv, header_list);
+
+    // 5. If values is null, then return failure.
+    if (!potentially_values.has_value())
+        return {};
+
+    auto values = potentially_values.release_value();
+
+    // 6. For each value of values:
+    for (auto& value : values) {
+        // 1. Let temporaryMimeType be the result of parsing value.
+        auto temporary_mime_type = MimeSniff::MimeType::from_string(value);
+
+        // 2. If temporaryMimeType is failure or its essence is "*/*", then continue.
+        if (!temporary_mime_type.has_value() || temporary_mime_type->essence() == "*/*"sv)
+            continue;
+
+        // 3. Set mimeType to temporaryMimeType.
+        mime_type = temporary_mime_type;
+
+        // 4. If mimeType’s essence is not essence, then:
+        if (mime_type->essence() != essence) {
+            // 1. Set charset to null.
+            charset = {};
+
+            // 2. If mimeType’s parameters["charset"] exists, then set charset to mimeType’s parameters["charset"].
+            auto charset_it = mime_type->parameters().find("charset"sv);
+            if (charset_it != mime_type->parameters().end())
+                charset = charset_it->value;
+
+            // 3. Set essence to mimeType’s essence.
+            essence = mime_type->essence();
+        } else {
+            // 5. Otherwise, if mimeType’s parameters["charset"] does not exist, and charset is non-null, set mimeType’s parameters["charset"] to charset.
+            if (!mime_type->parameters().contains("charset"sv) && charset.has_value())
+                mime_type->set_parameter("charset"sv, charset.value());
+        }
+    }
+
+    // 7. If mimeType is null, then return failure.
+    // 8. Return mimeType.
+    return mime_type;
 }
 
 // https://fetch.spec.whatwg.org/#forbidden-header-name
@@ -289,6 +500,23 @@ String XMLHttpRequest::get_all_response_headers() const
         builder.append("\r\n");
     }
     return builder.to_string();
+}
+
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-overridemimetype
+DOM::ExceptionOr<void> XMLHttpRequest::override_mime_type(String const& mime)
+{
+    // 1. If this’s state is loading or done, then throw an "InvalidStateError" DOMException.
+    if (m_ready_state == ReadyState::Loading || m_ready_state == ReadyState::Done)
+        return DOM::InvalidStateError::create("Cannot override MIME type when state is Loading or Done.");
+
+    // 2. Set this’s override MIME type to the result of parsing mime.
+    m_override_mime_type = MimeSniff::MimeType::from_string(mime);
+
+    // 3. If this’s override MIME type is failure, then set this’s override MIME type to application/octet-stream.
+    if (!m_override_mime_type.has_value())
+        m_override_mime_type = MimeSniff::MimeType("application"sv, "octet-stream"sv);
+
+    return {};
 }
 
 }

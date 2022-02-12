@@ -1611,7 +1611,7 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
             if (bang_index.has_value()) {
                 declaration.m_values.remove(important_index.value());
                 declaration.m_values.remove(bang_index.value());
-                declaration.m_important = true;
+                declaration.m_important = Important::Yes;
             }
         }
     }
@@ -1934,8 +1934,10 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 
             auto media_query_tokens = TokenStream { rule->prelude() };
             auto media_query_list = parse_a_media_query_list(media_query_tokens);
+            if (media_query_list.is_empty() || !rule->block())
+                return {};
 
-            auto child_tokens = TokenStream { rule->block().values() };
+            auto child_tokens = TokenStream { rule->block()->values() };
             auto parser_rules = consume_a_list_of_rules(child_tokens, false);
             NonnullRefPtrVector<CSSRule> child_rules;
             for (auto& raw_rule : parser_rules) {
@@ -1980,7 +1982,9 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
                 return {};
             }
 
-            auto child_tokens = TokenStream { rule->block().values() };
+            if (!rule->block())
+                return {};
+            auto child_tokens = TokenStream { rule->block()->values() };
             auto parser_rules = consume_a_list_of_rules(child_tokens, false);
             NonnullRefPtrVector<CSSRule> child_rules;
             for (auto& raw_rule : parser_rules) {

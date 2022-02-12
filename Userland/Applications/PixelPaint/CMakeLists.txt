@@ -17,6 +17,7 @@ set(SOURCES
     FilterGallery.cpp
     FilterGalleryGML.h
     FilterModel.cpp
+    FilterPreviewWidget.cpp
     Filters/Bloom.cpp
     Filters/BoxBlur3.cpp
     Filters/BoxBlur5.cpp
@@ -30,6 +31,7 @@ set(SOURCES
     Filters/LaplaceDiagonal.cpp
     Filters/Sepia.cpp
     Filters/Sharpen.cpp
+    IconBag.cpp
     Image.cpp
     ImageEditor.cpp
     Layer.cpp

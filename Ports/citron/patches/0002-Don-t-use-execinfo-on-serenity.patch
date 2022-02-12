@@ -1,0 +1,41 @@
+From 9041ece3381c69e9dbcc3c4b695e2fdad294f96b Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 11 Feb 2022 16:12:15 +0330
+Subject: [PATCH 02/18] Don't use execinfo on serenity
+
+---
+ src/memory.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/memory.c b/src/memory.c
+index cf30afe..f221e06 100644
+--- a/src/memory.c
++++ b/src/memory.c
+@@ -1,6 +1,8 @@
+ #include "citron.h"
+ #include <ctype.h>
++#ifndef __serenity__
+ #include <execinfo.h>
++#endif
+ #include <math.h>
+ #include <stdarg.h>
+ #include <stdint.h>
+@@ -39,6 +41,7 @@ void sttrace_print(void* ptr)
+ {
+     if (likely(ptr))
+         return;
++#ifndef __serenity__
+     printf("MEMORY ALLOC %p\n", ptr);
+     void* array[99999];
+     size_t size;
+@@ -52,6 +55,7 @@ void sttrace_print(void* ptr)
+         printf("%s\n", strings[i]);
+ 
+     free(strings);
++#endif
+ }
+ 
+ /**
+-- 
+2.34.1
+

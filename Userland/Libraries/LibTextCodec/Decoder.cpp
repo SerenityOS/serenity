@@ -20,6 +20,7 @@ CyrillicDecoder s_cyrillic_decoder;
 Koi8RDecoder s_koi8r_decoder;
 Latin9Decoder s_latin9_decoder;
 TurkishDecoder s_turkish_decoder;
+XUserDefinedDecoder s_x_user_defined_decoder;
 }
 
 Decoder* decoder_for(const String& a_encoding)
@@ -44,6 +45,8 @@ Decoder* decoder_for(const String& a_encoding)
             return &s_latin9_decoder;
         if (encoding.value().equals_ignoring_case("windows-1254"))
             return &s_turkish_decoder;
+        if (encoding.value().equals_ignoring_case("x-user-defined"))
+            return &s_x_user_defined_decoder;
     }
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
     return nullptr;
@@ -139,6 +142,65 @@ Optional<String> get_standardized_encoding(const String& encoding)
 
     dbgln("TextCodec: Unrecognized encoding: {}", encoding);
     return {};
+}
+
+// https://encoding.spec.whatwg.org/#bom-sniff
+Decoder* bom_sniff_to_decoder(StringView input)
+{
+    // 1. Let BOM be the result of peeking 3 bytes from ioQueue, converted to a byte sequence.
+    // 2. For each of the rows in the table below, starting with the first one and going down,
+    //    if BOM starts with the bytes given in the first column, then return the encoding given
+    //    in the cell in the second column of that row. Otherwise, return null.
+
+    // Byte Order Mark | Encoding
+    // --------------------------
+    // 0xEF 0xBB 0xBF  | UTF-8
+    // 0xFE 0xFF       | UTF-16BE
+    // 0xFF 0xFE       | UTF-16LE
+
+    auto bytes = input.bytes();
+    if (bytes.size() < 2)
+        return nullptr;
+
+    auto first_byte = bytes[0];
+
+    switch (first_byte) {
+    case 0xEF: // UTF-8
+        if (bytes.size() < 3)
+            return nullptr;
+        return bytes[1] == 0xBB && bytes[2] == 0xBF ? &s_utf8_decoder : nullptr;
+    case 0xFE: // UTF-16BE
+        return bytes[1] == 0xFF ? &s_utf16be_decoder : nullptr;
+    case 0xFF: // UTF-16LE
+        // FIXME: There is currently no UTF-16LE decoder.
+        TODO();
+    }
+
+    return nullptr;
+}
+
+// https://encoding.spec.whatwg.org/#decode
+String convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(Decoder& fallback_decoder, StringView input)
+{
+    Decoder* actual_decoder = &fallback_decoder;
+
+    // 1. Let BOMEncoding be the result of BOM sniffing ioQueue.
+    // 2. If BOMEncoding is non-null:
+    if (auto* unicode_decoder = bom_sniff_to_decoder(input); unicode_decoder) {
+        // 1. Set encoding to BOMEncoding.
+        actual_decoder = unicode_decoder;
+
+        // 2. Read three bytes from ioQueue, if BOMEncoding is UTF-8; otherwise read two bytes. (Do nothing with those bytes.)
+        // FIXME: I imagine this will be pretty slow for large inputs, as it's regenerating the input without the first 2/3 bytes.
+        input = input.substring_view(unicode_decoder == &s_utf8_decoder ? 3 : 2);
+    }
+
+    VERIFY(actual_decoder);
+
+    // FIXME: 3. Process a queue with an instance of encoding’s decoder, ioQueue, output, and "replacement".
+    //        This isn't the exact same as the spec, especially the error mode of "replacement", which we don't have the concept of yet.
+    // 4. Return output.
+    return actual_decoder->to_utf8(input);
 }
 
 String Decoder::to_utf8(StringView input)
@@ -405,6 +467,28 @@ void TurkishDecoder::process(StringView input, Function<void(u32)> on_code_point
     for (auto ch : input) {
         on_code_point(convert_turkish_to_utf8(ch));
     }
+}
+
+// https://encoding.spec.whatwg.org/#x-user-defined-decoder
+void XUserDefinedDecoder::process(StringView input, Function<void(u32)> on_code_point)
+{
+    auto convert_x_user_defined_to_utf8 = [](u8 ch) -> u32 {
+        // 2. If byte is an ASCII byte, return a code point whose value is byte.
+        // https://infra.spec.whatwg.org/#ascii-byte
+        // An ASCII byte is a byte in the range 0x00 (NUL) to 0x7F (DEL), inclusive.
+        // NOTE: This doesn't check for ch >= 0x00, as that would always be true due to being unsigned.
+        if (ch <= 0x7f)
+            return ch;
+
+        // 3. Return a code point whose value is 0xF780 + byte − 0x80.
+        return 0xF780 + ch - 0x80;
+    };
+
+    for (auto ch : input) {
+        on_code_point(convert_x_user_defined_to_utf8(ch));
+    }
+
+    // 1. If byte is end-of-queue, return finished.
 }
 
 }

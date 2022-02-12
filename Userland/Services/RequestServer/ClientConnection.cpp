@@ -126,7 +126,7 @@ void ClientConnection::ensure_connection(URL const& url, ::RequestServer::CacheL
     }
 
     struct {
-        URL const& m_url;
+        URL m_url;
         void start(Core::Stream::Socket& socket)
         {
             auto is_connected = socket.is_open();

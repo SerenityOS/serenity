@@ -1,0 +1,36 @@
+From 909199b4839bd8c9377f150eed8557635e137d91 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 11 Feb 2022 17:25:23 +0330
+Subject: [PATCH 15/18] Make boehm gc optional
+
+---
+ makefile | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/makefile b/makefile
+index 9b9a02c..9c74e16 100644
+--- a/makefile
++++ b/makefile
+@@ -14,6 +14,7 @@ INCLUDE_DIR ?= /usr/local/include/Citron
+ enable_inject ?= false
+ enable_ctypes ?= true
+ enable_inline_asm ?= false
++enable_boehm_gc ?= false
+ 
+ CFLAGS += -Wall -Wextra -Wno-unused-parameter\
+ 		  -D withTermios -D CTR_STD_EXTENSION_PATH=\"$(DATADIR)\"
+@@ -35,9 +36,9 @@ ifneq ($(strip $(WITH_ICU)),)
+ 	LEXTRACF += -L/usr/lib -licui18n -licuuc -licudata
+ endif
+ 
+-ifeq ($(strip $(WITHOUT_BOEHM_GC)),)
++ifeq ($(enable_boehm_gc),true)
+ 	fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
+-	CFLAGS += "-D withBoehmGC"
++	CFLAGS += -D withBoehmGC
+ 	LEXTRACF += $(fv)
+ endif
+ 
+-- 
+2.34.1
+

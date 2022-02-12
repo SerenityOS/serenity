@@ -36,6 +36,7 @@ private:
     Optional<String> find_cmake_file_for(StringView file_path) const;
     String generate_cmake_file_content() const;
     ErrorOr<void> update_active_file(StringView active_file);
+    String build_directory() const;
 
     struct LibraryInfo {
         String path;
@@ -50,7 +51,6 @@ private:
     String m_project_root;
     NonnullRefPtr<TerminalWrapper> m_terminal;
     IsSerenityRepo m_is_serenity { IsSerenityRepo::No };
-    OwnPtr<Core::TempFile> m_build_directory;
     String m_serenity_component_cmake_file;
     String m_serenity_component_name;
 };
