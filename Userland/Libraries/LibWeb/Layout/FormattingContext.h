@@ -43,6 +43,8 @@ public:
 
     OwnPtr<FormattingContext> create_independent_formatting_context_if_needed(Box& child_box);
 
+    virtual void parent_context_did_dimension_child_root_box() { }
+
 protected:
     FormattingContext(Type, Box&, FormattingContext* parent = nullptr);
 
