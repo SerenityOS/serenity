@@ -541,6 +541,9 @@ void WebSocket::send_frame(WebSocket::OpCode op_code, ReadonlyBytes payload, boo
         u8 masking_key[4];
         fill_with_random(masking_key, 4);
         m_impl->send(ReadonlyBytes(masking_key, 4));
+        // don't try to send empty payload
+        if (payload.size() == 0)
+            return;
         // Mask the payload
         auto buffer_result = ByteBuffer::create_uninitialized(payload.size());
         if (!buffer_result.is_error()) {
@@ -550,7 +553,7 @@ void WebSocket::send_frame(WebSocket::OpCode op_code, ReadonlyBytes payload, boo
             }
             m_impl->send(masked_payload);
         }
-    } else {
+    } else if (payload.size() > 0) {
         m_impl->send(payload);
     }
 }
