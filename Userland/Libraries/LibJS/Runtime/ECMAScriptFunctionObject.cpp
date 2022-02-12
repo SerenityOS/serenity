@@ -767,7 +767,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         // FIXME: pass something to evaluate default arguments with
         TRY(function_declaration_instantiation(nullptr));
         if (!m_bytecode_executable) {
-            m_bytecode_executable = Bytecode::Generator::generate(m_ecmascript_code, m_kind);
+            auto executable_result = JS::Bytecode::Generator::generate(m_ecmascript_code, m_kind);
+            if (executable_result.is_error())
+                return vm.throw_completion<InternalError>(bytecode_interpreter->global_object(), ErrorType::NotImplemented, executable_result.error().to_string());
+
+            m_bytecode_executable = executable_result.release_value();
             m_bytecode_executable->name = m_name;
             auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
             passes.perform(*m_bytecode_executable);

@@ -10,6 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibJS/Bytecode/BasicBlock.h>
+#include <LibJS/Bytecode/CodeGenerationError.h>
 #include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/Label.h>
@@ -23,7 +24,7 @@ namespace JS::Bytecode {
 
 class Generator {
 public:
-    static NonnullOwnPtr<Executable> generate(ASTNode const&, FunctionKind = FunctionKind::Normal);
+    static CodeGenerationErrorOr<NonnullOwnPtr<Executable>> generate(ASTNode const&, FunctionKind = FunctionKind::Normal);
 
     Register allocate_register();
 
@@ -71,8 +72,8 @@ public:
         return *static_cast<OpType*>(slot);
     }
 
-    void emit_load_from_reference(JS::ASTNode const&);
-    void emit_store_to_reference(JS::ASTNode const&);
+    CodeGenerationErrorOr<void> emit_load_from_reference(JS::ASTNode const&);
+    CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&);
 
     void begin_continuable_scope(Label continue_target);
     void end_continuable_scope();
