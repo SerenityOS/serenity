@@ -32,7 +32,7 @@
 
         @GUI::Widget {
             shrink_to_fit: true
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::Button {
                 name: "wallpaper_open_button"

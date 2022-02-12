@@ -16,9 +16,9 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
-
+        layout: @GUI::HorizontalBoxLayout {}
         shrink_to_fit: true
+
         @GUI::Label {
             name: "line_and_col_label"
             text: "Line: 1, Col: 0"

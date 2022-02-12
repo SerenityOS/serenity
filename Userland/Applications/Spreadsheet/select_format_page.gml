@@ -12,7 +12,7 @@
 
     @GUI::Widget {
         fixed_height: 25
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
             text: "Type: "
@@ -25,5 +25,5 @@
         }
     }
 
-    @GUI::Widget
+    @GUI::Widget {}
 }

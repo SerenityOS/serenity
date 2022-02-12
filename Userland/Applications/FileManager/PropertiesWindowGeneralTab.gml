@@ -22,7 +22,7 @@
         }
     }
 
-    @GUI::HorizontalSeparator
+    @GUI::HorizontalSeparator {}
 
     @GUI::Widget {
         fixed_height: 14
@@ -177,7 +177,7 @@
         }
     }
 
-    @GUI::HorizontalSeparator
+    @GUI::HorizontalSeparator {}
 
     @GUI::Widget {
         fixed_height: 14

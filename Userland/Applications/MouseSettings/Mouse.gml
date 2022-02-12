@@ -101,7 +101,7 @@
                 fixed_width: 100
             }
 
-            @GUI::Widget
+            @GUI::Widget {}
         }
     }
 

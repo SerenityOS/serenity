@@ -8,9 +8,9 @@
         layout: @GUI::VerticalBoxLayout {
             margins: [14, 14, 4]
         }
-
         title: "Workspaces"
         shrink_to_fit: true
+
         @GUI::Widget {
             fixed_height: 32
             layout: @GUI::HorizontalBoxLayout {
@@ -44,7 +44,7 @@
 
         @GUI::Widget {
             fixed_height: 76
-            layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
                 fixed_height: 32

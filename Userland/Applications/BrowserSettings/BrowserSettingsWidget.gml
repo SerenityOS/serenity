@@ -112,8 +112,8 @@
             layout: @GUI::HorizontalBoxLayout {
                 spacing: 16
             }
-
             name: "search_engine_combobox_group"
+
             @GUI::Widget {
                 fixed_width: 32
             }
@@ -133,8 +133,8 @@
             layout: @GUI::HorizontalBoxLayout {
                 spacing: 16
             }
-
             name: "custom_search_engine_group"
+
             @GUI::Widget {
                 fixed_width: 32
             }

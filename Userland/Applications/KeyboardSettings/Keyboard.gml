@@ -15,7 +15,7 @@
 
         @GUI::Widget {
             fixed_width: 32
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::Label {
                 fixed_width: 32
@@ -62,7 +62,7 @@
 
         @GUI::Widget {
             fixed_width: 32
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::Label {
                 fixed_width: 32

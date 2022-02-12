@@ -9,9 +9,9 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
-
+        layout: @GUI::HorizontalBoxLayout {}
         fixed_height: 22
+
         @GUI::Label {
             text: "Value to find"
             fixed_width: 80
@@ -24,15 +24,14 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::VerticalBoxLayout
-
+        layout: @GUI::VerticalBoxLayout {}
         name: "radio_container"
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
-
+        layout: @GUI::HorizontalBoxLayout {}
         fixed_height: 22
+
         @GUI::Button {
             name: "find_button"
             text: "Find"

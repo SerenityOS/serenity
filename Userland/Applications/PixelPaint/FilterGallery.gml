@@ -1,7 +1,7 @@
 @GUI::Frame {
-    layout: @GUI::VerticalBoxLayout
-
+    layout: @GUI::VerticalBoxLayout {}
     fill_with_background_color: true
+
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
             margins: [4]
@@ -22,7 +22,6 @@
                 layout: @GUI::VerticalBoxLayout {
                     margins: [4]
                 }
-
             }
 
             @GUI::GroupBox {
@@ -44,7 +43,7 @@
             margins: [4]
         }
 
-        @GUI::Widget
+        @GUI::Widget {}
 
         @GUI::Button {
             name: "apply_button"

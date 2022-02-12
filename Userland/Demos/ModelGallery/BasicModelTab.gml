@@ -16,9 +16,9 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
-
+        layout: @GUI::HorizontalBoxLayout {}
         fixed_height: 30
+
         @GUI::TextBox {
             name: "new_item_name"
             placeholder: "Enter some text to be added..."
