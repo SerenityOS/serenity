@@ -64,7 +64,7 @@ ErrorOr<void> ProjectBuilder::run(StringView active_file)
 ErrorOr<void> ProjectBuilder::run_serenity_component()
 {
     auto relative_path_to_dir = LexicalPath::relative_path(LexicalPath::dirname(m_serenity_component_cmake_file), m_project_root);
-    m_terminal->run_command(LexicalPath::join(relative_path_to_dir, m_serenity_component_name).string(), LexicalPath::join(m_build_directory->path(), "Build").string());
+    m_terminal->run_command(LexicalPath::join(relative_path_to_dir, m_serenity_component_name).string(), build_directory());
     return {};
 }
 
@@ -80,9 +80,6 @@ ErrorOr<void> ProjectBuilder::update_active_file(StringView active_file)
     if (m_serenity_component_cmake_file == cmake_file.value())
         return {};
 
-    if (!m_serenity_component_cmake_file.is_null())
-        m_build_directory.clear();
-
     m_serenity_component_cmake_file = cmake_file.value();
     m_serenity_component_name = TRY(component_name(m_serenity_component_cmake_file));
 
@@ -92,7 +89,7 @@ ErrorOr<void> ProjectBuilder::update_active_file(StringView active_file)
 
 ErrorOr<void> ProjectBuilder::build_serenity_component()
 {
-    m_terminal->run_command(String::formatted("make {}", m_serenity_component_name), LexicalPath::join(m_build_directory->path(), "Build"sv).string(), TerminalWrapper::WaitForExit::Yes);
+    m_terminal->run_command(String::formatted("make {}", m_serenity_component_name), build_directory(), TerminalWrapper::WaitForExit::Yes);
     if (m_terminal->child_exit_status() == 0)
         return {};
     return Error::from_string_literal("Make failed"sv);
@@ -112,19 +109,23 @@ ErrorOr<String> ProjectBuilder::component_name(StringView cmake_file_path)
 
 ErrorOr<void> ProjectBuilder::initialize_build_directory()
 {
-    m_build_directory = Core::TempFile::create(Core::TempFile::Type::Directory);
-    if (mkdir(LexicalPath::join(m_build_directory->path(), "Build").string().characters(), 0700)) {
-        return Error::from_errno(errno);
+    if (!Core::File::exists(build_directory())) {
+        if (mkdir(LexicalPath::join(build_directory()).string().characters(), 0700)) {
+            return Error::from_errno(errno);
+        }
     }
 
-    auto cmake_file_path = LexicalPath::join(m_build_directory->path(), "CMakeLists.txt").string();
+    auto cmake_file_path = LexicalPath::join(build_directory(), "CMakeLists.txt").string();
+    if (Core::File::exists(cmake_file_path))
+        MUST(Core::File::remove(cmake_file_path, Core::File::RecursionMode::Disallowed, false));
+
     auto cmake_file = TRY(Core::File::open(cmake_file_path, Core::OpenMode::WriteOnly));
     cmake_file->write(generate_cmake_file_content());
 
     m_terminal->run_command(String::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"
                                               " -DENABLE_UNICODE_DATABASE_DOWNLOAD=OFF",
                                 m_project_root, cmake_file_path),
-        LexicalPath::join(m_build_directory->path(), "Build"sv).string(), TerminalWrapper::WaitForExit::Yes);
+        build_directory(), TerminalWrapper::WaitForExit::Yes);
 
     if (m_terminal->child_exit_status() == 0)
         return {};
@@ -243,6 +244,11 @@ ErrorOr<void> ProjectBuilder::verify_cmake_is_installed()
     if (!res.is_error() && res.value().exit_code == 0)
         return {};
     return Error::from_string_literal("CMake port is not installed"sv);
+}
+
+String ProjectBuilder::build_directory() const
+{
+    return LexicalPath::join(m_project_root, "Build"sv).string();
 }
 
 }
