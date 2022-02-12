@@ -45,6 +45,7 @@ ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data);
 ErrorOr<void> disown(pid_t pid);
 ErrorOr<void> profiling_enable(pid_t, u64 event_mask);
 ErrorOr<void> profiling_disable(pid_t);
+ErrorOr<void> profiling_free_buffer(pid_t);
 #endif
 
 #ifndef AK_OS_BSD_GENERIC

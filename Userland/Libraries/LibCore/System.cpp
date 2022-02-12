@@ -167,6 +167,12 @@ ErrorOr<void> profiling_disable(pid_t pid)
     int rc = ::profiling_disable(pid);
     HANDLE_SYSCALL_RETURN_VALUE("profiling_disable", rc, {});
 }
+
+ErrorOr<void> profiling_free_buffer(pid_t pid)
+{
+    int rc = ::profiling_free_buffer(pid);
+    HANDLE_SYSCALL_RETURN_VALUE("profiling_free_buffer", rc, {});
+}
 #endif
 
 #ifndef AK_OS_BSD_GENERIC
