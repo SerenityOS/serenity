@@ -369,6 +369,15 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             if (it != current_processes.end())
                 it->value->handle_thread_exit(event.tid, event.serial);
             continue;
+        } else if (type_string == "read"sv) {
+            const auto string_index = perf_event.get("filename_index"sv).to_number<FlatPtr>();
+            event.data = Event::ReadData {
+                .fd = perf_event.get("fd"sv).to_number<int>(),
+                .size = perf_event.get("size"sv).to_number<size_t>(),
+                .path = profile_strings.get(string_index).value(),
+                .start_timestamp = perf_event.get("start_timestamp"sv).to_number<size_t>(),
+                .success = perf_event.get("success"sv).to_bool()
+            };
         } else {
             dbgln("Unknown event type '{}'", type_string);
             VERIFY_NOT_REACHED();

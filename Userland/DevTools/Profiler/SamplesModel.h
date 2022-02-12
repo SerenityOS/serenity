@@ -27,6 +27,7 @@ public:
         ExecutableName,
         LostSamples,
         InnermostStackFrame,
+        Path,
         __Count
     };
 
