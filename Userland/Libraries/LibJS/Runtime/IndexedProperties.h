@@ -72,6 +72,7 @@ private:
 class GenericIndexedPropertyStorage final : public IndexedPropertyStorage {
 public:
     explicit GenericIndexedPropertyStorage(SimpleIndexedPropertyStorage&&);
+    explicit GenericIndexedPropertyStorage();
 
     virtual bool has_index(u32 index) const override;
     virtual Optional<ValueAndAttributes> get(u32 index) const override;
@@ -116,11 +117,12 @@ public:
     IndexedProperties() = default;
 
     explicit IndexedProperties(Vector<Value> values)
-        : m_storage(make<SimpleIndexedPropertyStorage>(move(values)))
     {
+        if (!values.is_empty())
+            m_storage = make<SimpleIndexedPropertyStorage>(move(values));
     }
 
-    bool has_index(u32 index) const { return m_storage->has_index(index); }
+    bool has_index(u32 index) const { return m_storage ? m_storage->has_index(index) : false; }
     Optional<ValueAndAttributes> get(u32 index) const;
     void put(u32 index, Value value, PropertyAttributes attributes = default_attributes);
     void remove(u32 index);
@@ -131,7 +133,7 @@ public:
     IndexedPropertyIterator end() const { return IndexedPropertyIterator(*this, array_like_size(), false); };
 
     bool is_empty() const { return array_like_size() == 0; }
-    size_t array_like_size() const { return m_storage->array_like_size(); }
+    size_t array_like_size() const { return m_storage ? m_storage->array_like_size() : 0; }
     bool set_array_like_size(size_t);
 
     size_t real_size() const;
@@ -141,6 +143,8 @@ public:
     template<typename Callback>
     void for_each_value(Callback callback)
     {
+        if (!m_storage)
+            return;
         if (m_storage->is_simple_storage()) {
             for (auto& value : static_cast<SimpleIndexedPropertyStorage&>(*m_storage).elements())
                 callback(value);
@@ -152,8 +156,9 @@ public:
 
 private:
     void switch_to_generic_storage();
+    void ensure_storage();
 
-    NonnullOwnPtr<IndexedPropertyStorage> m_storage { make<SimpleIndexedPropertyStorage>() };
+    OwnPtr<IndexedPropertyStorage> m_storage;
 };
 
 }
