@@ -543,7 +543,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     return {};
 }
 
-void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, bool important, HashMap<String, StyleProperty const*> const& custom_properties) const
+void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important, HashMap<String, StyleProperty const*> const& custom_properties) const
 {
     for (auto const& match : matching_rules) {
         for (auto const& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
@@ -607,12 +607,12 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     // Then we apply the declarations from the matched rules in cascade order:
 
     // Normal user agent declarations
-    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, false, custom_properties);
+    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::No, custom_properties);
 
     // FIXME: Normal user declarations
 
     // Normal author declarations
-    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, false, custom_properties);
+    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No, custom_properties);
 
     // Author presentational hints (NOTE: The spec doesn't say exactly how to prioritize these.)
     element.apply_presentational_hints(style);
@@ -620,12 +620,12 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     // FIXME: Animation declarations [css-animations-1]
 
     // Important author declarations
-    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, true, custom_properties);
+    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::Yes, custom_properties);
 
     // FIXME: Important user declarations
 
     // Important user agent declarations
-    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, true, custom_properties);
+    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::Yes, custom_properties);
 
     // FIXME: Transition declarations [css-transitions-1]
 }

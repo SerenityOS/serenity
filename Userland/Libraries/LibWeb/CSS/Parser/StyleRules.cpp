@@ -171,7 +171,7 @@ String StyleDeclarationRule::to_string() const
     builder.append(": ");
     append_with_to_string(builder, " ", m_values);
 
-    if (m_important)
+    if (m_important == Important::Yes)
         builder.append(" !important");
 
     return builder.to_string();

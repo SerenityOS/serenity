@@ -1611,7 +1611,7 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
             if (bang_index.has_value()) {
                 declaration.m_values.remove(important_index.value());
                 declaration.m_values.remove(bang_index.value());
-                declaration.m_important = true;
+                declaration.m_important = Important::Yes;
             }
         }
     }

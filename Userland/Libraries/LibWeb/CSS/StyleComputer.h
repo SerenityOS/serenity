@@ -88,7 +88,7 @@ private:
         Vector<MatchingRule> author_rules;
     };
 
-    void cascade_declarations(StyleProperties&, DOM::Element&, Vector<MatchingRule> const&, CascadeOrigin, bool important, HashMap<String, StyleProperty const*> const&) const;
+    void cascade_declarations(StyleProperties&, DOM::Element&, Vector<MatchingRule> const&, CascadeOrigin, Important important, HashMap<String, StyleProperty const*> const&) const;
 
     void build_rule_cache();
     void build_rule_cache_if_needed() const;
