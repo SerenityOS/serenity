@@ -257,17 +257,20 @@ void FrameLoader::resource_did_load()
 {
     auto url = resource()->url();
 
-    // FIXME: Also check HTTP status code before redirecting
-    auto location = resource()->response_headers().get("Location");
-    if (location.has_value()) {
-        if (m_redirects_count > maximum_redirects_allowed) {
-            m_redirects_count = 0;
-            load_error_page(url, "Too many redirects");
+    // For 3xx (Redirection) responses, the Location value refers to the preferred target resource for automatically redirecting the request.
+    auto status_code = resource()->status_code();
+    if (status_code.has_value() && *status_code >= 300 && *status_code <= 399) {
+        auto location = resource()->response_headers().get("Location");
+        if (location.has_value()) {
+            if (m_redirects_count > maximum_redirects_allowed) {
+                m_redirects_count = 0;
+                load_error_page(url, "Too many redirects");
+                return;
+            }
+            m_redirects_count++;
+            load(url.complete_url(location.value()), FrameLoader::Type::Navigation);
             return;
         }
-        m_redirects_count++;
-        load(url.complete_url(location.value()), FrameLoader::Type::Navigation);
-        return;
     }
     m_redirects_count = 0;
 
