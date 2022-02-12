@@ -16,7 +16,7 @@
 
 namespace Web::Bindings::IDL {
 
-bool is_an_array_index(JS::GlobalObject&, JS::PropertyKey const&);
+bool is_an_array_index(JS::PropertyKey const&);
 Optional<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source);
 
 // https://webidl.spec.whatwg.org/#call-user-object-operation-return

@@ -39,8 +39,9 @@ bool validate_and_apply_property_descriptor(Object*, PropertyKey const&, bool ex
 ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
 Object* create_unmapped_arguments_object(GlobalObject&, Span<Value> arguments);
 Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Span<Value> arguments, Environment&);
-Value canonical_numeric_index_string(GlobalObject&, PropertyKey const&);
+Optional<u32> canonical_numeric_index_string(PropertyKey const&);
 ThrowCompletionOr<String> get_substitution(GlobalObject&, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement);
+double string_to_number(const PrimitiveString&);
 
 enum class CallerMode {
     Strict,

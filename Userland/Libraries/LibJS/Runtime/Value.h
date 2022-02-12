@@ -55,6 +55,7 @@ public:
     bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_null() const { return m_type == Type::Null; }
     bool is_number() const { return m_type == Type::Int32 || m_type == Type::Double; }
+    bool is_int32() const { return m_type == Type::Int32; }
     bool is_string() const { return m_type == Type::String; }
     bool is_object() const { return m_type == Type::Object; }
     bool is_boolean() const { return m_type == Type::Boolean; }

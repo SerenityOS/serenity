@@ -2501,7 +2501,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
             if (interface.supports_indexed_properties()) {
                 // ...and P is an array index, then:
                 get_own_property_generator.append(R"~~~(
-    if (IDL::is_an_array_index(global_object, property_name)) {
+    if (IDL::is_an_array_index(property_name)) {
         // 1. Let index be the result of calling ToUint32(P).
         u32 index = property_name.as_number();
 
@@ -2776,7 +2776,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& pr
             if (interface.indexed_property_setter.has_value()) {
                 // ...and P is an array index, then:
                 scoped_generator.append(R"~~~(
-        if (IDL::is_an_array_index(global_object, property_name)) {
+        if (IDL::is_an_array_index(property_name)) {
             // 1. Invoke the indexed property setter on O with P and V.
             TRY(invoke_indexed_property_setter(global_object, impl(), property_name, value));
 
@@ -2821,14 +2821,14 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& pr
 JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::PropertyKey const& property_name, JS::PropertyDescriptor const& property_descriptor)
 {
     [[maybe_unused]] auto& vm = this->vm();
-    auto& global_object = this->global_object();
+    [[maybe_unused]] auto& global_object = this->global_object();
 )~~~");
 
         // 1. If O supports indexed properties...
         if (interface.supports_indexed_properties()) {
             // ...and P is an array index, then:
             scoped_generator.append(R"~~~(
-    if (IDL::is_an_array_index(global_object, property_name)) {
+    if (IDL::is_an_array_index(property_name)) {
         // 1. If the result of calling IsDataDescriptor(Desc) is false, then return false.
         if (!property_descriptor.is_data_descriptor())
             return false;
@@ -2940,14 +2940,14 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
         scoped_generator.append(R"~~~(
 JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyKey const& property_name)
 {
-    auto& global_object = this->global_object();
+    [[maybe_unused]] auto& global_object = this->global_object();
 )~~~");
 
         // 1. If O supports indexed properties...
         if (interface.supports_indexed_properties()) {
             // ...and P is an array index, then:
             scoped_generator.append(R"~~~(
-    if (IDL::is_an_array_index(global_object, property_name)) {
+    if (IDL::is_an_array_index(property_name)) {
         // 1. Let index be the result of calling ToUint32(P).
         u32 index = property_name.as_number();
 
