@@ -21,6 +21,6 @@ $ profile [-p PID] [-a] [-e] [-d] [-f] [-w] [-c command] [-t event_type]
 * `-c command`: Command
 * `-t event_type`: Enable tracking specific event type
 
-Event type can be one of: sample, context_switch, page_fault, syscall, kmalloc and kfree.
+Event type can be one of: sample, context_switch, page_fault, syscall, read, kmalloc and kfree.
 
 <!-- Auto-generated through ArgsParser -->

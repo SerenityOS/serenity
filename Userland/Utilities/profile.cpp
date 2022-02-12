@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 
     auto print_types = [] {
         outln();
-        outln("Event type can be one of: sample, context_switch, page_fault, syscall, kmalloc and kfree.");
+        outln("Event type can be one of: sample, context_switch, page_fault, syscall, read, kmalloc and kfree.");
     };
 
     if (!args_parser.parse(argc, argv, Core::ArgsParser::FailureBehavior::PrintUsage)) {
