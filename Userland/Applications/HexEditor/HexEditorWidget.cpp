@@ -233,13 +233,13 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
         }
     }));
     edit_menu.add_separator();
-    edit_menu.add_action(GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hex.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard();
     }));
     edit_menu.add_action(GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_text_to_clipboard();
     }));
-    edit_menu.add_action(GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/c.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard_as_c_code();
     }));
     edit_menu.add_separator();
