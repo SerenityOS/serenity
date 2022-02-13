@@ -135,6 +135,7 @@ set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 configure_file(../../AK/Debug.h.in AK/Debug.h @ONLY)
 
+include_directories(./Libraries/)
 include_directories(../../)
 include_directories(../../Userland/)
 include_directories(../../Userland/Libraries/)
@@ -467,6 +468,36 @@ if (BUILD_LAGOM)
     lagom_lib(Wasm wasm
         SOURCES ${LIBWASM_SOURCES}
     )
+
+    # LibGUI
+    find_package(SDL2)
+    if(${SDL2_FOUND})
+        file(GLOB LIBGUI_LAGOM_SOURCES CONFIGURE_DEPENDS "./Libraries/LibGUI/*.cpp")
+        file(GLOB LIBGUI_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/*.cpp")
+
+        # Re-impl in `Libraries/LibGUI`
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/Clipboard.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/Desktop.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/WindowManagerServerConnection.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/WindowServerConnection.*")
+
+        # FIXME: Let's exclude a bunch of things to get something building :^)
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/ColorInput.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/DisplayLink.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/Notification.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/MouseTracker.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/FileSystemModel.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/PasswordInputDialog.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/ScreenLayout.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/SettingsWindow.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/ProcessChooser.*")
+        list(FILTER LIBGUI_SOURCES EXCLUDE REGEX "../../Userland/Libraries/LibGUI/(.*)Picker(.*).*")
+
+        lagom_lib(GUI gui
+            SOURCES ${SDL2_INCLUDE_DIRS} ${LIBGUI_LAGOM_SOURCES} ${LIBGUI_SOURCES}
+            LIBS SDL2::SDL2 LagomELF LagomGfx LagomGML LagomRegex
+        )
+    endif()
 
     # x86
     # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
