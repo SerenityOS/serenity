@@ -1,7 +1,7 @@
 @GUI::Frame {
-    layout: @GUI::VerticalBoxLayout
-
+    layout: @GUI::VerticalBoxLayout {}
     fill_with_background_color: true
+
     @GUI::Toolbar {
         @GUI::TextBox {
             name: "search_input"

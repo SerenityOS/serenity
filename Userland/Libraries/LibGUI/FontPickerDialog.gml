@@ -5,10 +5,10 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Widget {
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::Label {
                 text: "Family:"
@@ -23,7 +23,7 @@
 
         @GUI::Widget {
             fixed_width: 100
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::Label {
                 text: "Style:"
@@ -38,7 +38,7 @@
 
         @GUI::Widget {
             fixed_width: 80
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::Label {
                 text: "Size:"
@@ -57,10 +57,10 @@
     }
 
     @GUI::GroupBox {
-        layout: @GUI::VerticalBoxLayout
-
+        layout: @GUI::VerticalBoxLayout {}
         title: "Sample text"
         fixed_height: 80
+
         @GUI::Label {
             name: "sample_text_label"
             text: "The quick brown fox jumps over the lazy dog."
@@ -69,9 +69,9 @@
 
     @GUI::Widget {
         fixed_height: 22
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
-        @GUI::Widget
+        @GUI::Widget {}
 
         @GUI::Button {
             name: "ok_button"

@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/AnyOf.h>
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
@@ -227,7 +228,8 @@ RefPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StylePropert
         if (display.is_flow_inside())
             return adopt_ref(*new Layout::InlineNode(document(), *this, move(style)));
 
-        TODO();
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Support display: {}", display.to_string());
+        return adopt_ref(*new Layout::InlineNode(document(), *this, move(style)));
     }
 
     if (display.is_flow_inside() || display.is_flow_root_inside() || display.is_flex_inside())

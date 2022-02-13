@@ -22,7 +22,7 @@
 
     @GUI::Widget {
         fixed_height: 18
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
             text: "Executable path:"
@@ -38,7 +38,7 @@
 
     @GUI::Widget {
         fixed_height: 18
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
             text: "Coredump path:"
@@ -54,7 +54,7 @@
 
     @GUI::Widget {
         fixed_height: 18
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
             text: "Arguments:"
@@ -80,7 +80,7 @@
 
     @GUI::Widget {
         fixed_height: 32
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Button {
             name: "debug_button"
@@ -89,7 +89,7 @@
         }
 
         // HACK: We need something like Layout::add_spacer() in GML! :^)
-        @GUI::Widget
+        @GUI::Widget {}
 
         @GUI::Button {
             name: "close_button"

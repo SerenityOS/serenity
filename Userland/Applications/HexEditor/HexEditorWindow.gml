@@ -7,6 +7,7 @@
 
     @GUI::ToolbarContainer {
         name: "toolbar_container"
+
         @GUI::Toolbar {
             name: "toolbar"
         }
@@ -20,7 +21,7 @@
         @GUI::Widget {
             name: "search_results_container"
             visible: false
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::TableView {
                 name: "search_results"

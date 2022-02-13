@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/String.h>
 
 namespace Web::CSS {
 
@@ -14,6 +15,8 @@ class Display {
 public:
     Display() = default;
     ~Display() = default;
+
+    String to_string() const;
 
     bool operator==(Display const& other) const
     {

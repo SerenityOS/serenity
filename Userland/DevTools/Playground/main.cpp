@@ -215,13 +215,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto edit_menu = TRY(window->try_add_menu("&Edit"));
     TRY(edit_menu->try_add_action(GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
-        auto formatted_gml = GUI::GML::format_gml(editor->text());
-        if (!formatted_gml.is_null()) {
-            editor->set_text(formatted_gml);
+        auto formatted_gml_or_error = GUI::GML::format_gml(editor->text());
+        if (!formatted_gml_or_error.is_error()) {
+            editor->set_text(formatted_gml_or_error.release_value());
         } else {
             GUI::MessageBox::show(
                 window,
-                "GML could not be formatted, please check the debug console for parsing errors.",
+                String::formatted("GML could not be formatted: {}", formatted_gml_or_error.error()),
                 "Error",
                 GUI::MessageBox::Type::Error);
         }
