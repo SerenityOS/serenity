@@ -25,7 +25,9 @@
 #define EXPECT_NO_EXCEPTION(executable)                                 \
     auto executable = MUST(JS::Bytecode::Generator::generate(program)); \
     auto result = bytecode_interpreter.run(*executable);                \
-    EXPECT(!result.is_error());
+    EXPECT(!result.is_error());                                         \
+    if (result.is_error())                                              \
+        dbgln("Error: {}", MUST(result.throw_completion().value()->to_string(bytecode_interpreter.global_object())));
 
 #define EXPECT_NO_EXCEPTION_WITH_OPTIMIZATIONS(executable)                  \
     auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();      \
@@ -33,11 +35,13 @@
                                                                             \
     auto result_with_optimizations = bytecode_interpreter.run(*executable); \
                                                                             \
-    EXPECT(!result_with_optimizations.is_error());
+    EXPECT(!result_with_optimizations.is_error());                          \
+    if (result_with_optimizations.is_error())                               \
+        dbgln("Error: {}", MUST(result_with_optimizations.throw_completion().value()->to_string(bytecode_interpreter.global_object())));
 
-#define EXPECT_NO_EXCEPTION_ALL(source) \
-    SETUP_AND_PARSE(source)             \
-    EXPECT_NO_EXCEPTION(executable)     \
+#define EXPECT_NO_EXCEPTION_ALL(source)           \
+    SETUP_AND_PARSE("(() => {\n" source "\n})()") \
+    EXPECT_NO_EXCEPTION(executable)               \
     EXPECT_NO_EXCEPTION_WITH_OPTIMIZATIONS(executable)
 
 TEST_CASE(empty_program)
