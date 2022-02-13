@@ -724,9 +724,9 @@ public:
 
     class ProcessProcFSTraits : public ProcFSExposedComponent {
     public:
-        static ErrorOr<NonnullRefPtr<ProcessProcFSTraits>> try_create(Badge<Process>, Process& process)
+        static ErrorOr<NonnullRefPtr<ProcessProcFSTraits>> try_create(Badge<Process>, WeakPtr<Process> process)
         {
-            return adopt_nonnull_ref_or_enomem(new (nothrow) ProcessProcFSTraits(process));
+            return adopt_nonnull_ref_or_enomem(new (nothrow) ProcessProcFSTraits(move(process)));
         }
 
         virtual InodeIndex component_index() const override;
@@ -738,8 +738,8 @@ public:
         virtual GroupID owner_group() const override;
 
     private:
-        explicit ProcessProcFSTraits(Process& process)
-            : m_process(process.make_weak_ptr())
+        explicit ProcessProcFSTraits(WeakPtr<Process> process)
+            : m_process(move(process))
         {
         }
 

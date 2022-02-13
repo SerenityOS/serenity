@@ -53,7 +53,7 @@ public:
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr(const U& object)
-        : m_link(object.template make_weak_ptr<U>().take_link())
+        : m_link(object.template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link())
     {
     }
 
@@ -61,7 +61,7 @@ public:
     WeakPtr(const U* object)
     {
         if (object)
-            m_link = object->template make_weak_ptr<U>().take_link();
+            m_link = object->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
     }
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
@@ -69,7 +69,7 @@ public:
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
-                m_link = obj->template make_weak_ptr<U>().take_link();
+                m_link = obj->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
         });
     }
 
@@ -78,14 +78,14 @@ public:
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
-                m_link = obj->template make_weak_ptr<U>().take_link();
+                m_link = obj->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
         });
     }
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const U& object)
     {
-        m_link = object.template make_weak_ptr<U>().take_link();
+        m_link = object.template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
         return *this;
     }
 
@@ -93,7 +93,7 @@ public:
     WeakPtr& operator=(const U* object)
     {
         if (object)
-            m_link = object->template make_weak_ptr<U>().take_link();
+            m_link = object->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
         else
             m_link = nullptr;
         return *this;
@@ -104,7 +104,7 @@ public:
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
-                m_link = obj->template make_weak_ptr<U>().take_link();
+                m_link = obj->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
             else
                 m_link = nullptr;
         });
@@ -116,7 +116,7 @@ public:
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
-                m_link = obj->template make_weak_ptr<U>().take_link();
+                m_link = obj->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
             else
                 m_link = nullptr;
         });

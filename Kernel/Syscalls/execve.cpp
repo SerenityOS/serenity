@@ -404,10 +404,10 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         load_base_address,
         elf_image.entry().offset(load_offset).get(),
         executable_size,
-        AK::make_weak_ptr_if_nonnull(master_tls_region),
+        TRY(AK::try_make_weak_ptr_if_nonnull(master_tls_region)),
         master_tls_size,
         master_tls_alignment,
-        stack_region->make_weak_ptr()
+        TRY(stack_region->try_make_weak_ptr())
     };
 }
 
