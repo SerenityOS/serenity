@@ -32,6 +32,8 @@ private:
     RefPtr<GUI::Button> m_copy_output_button;
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::Window> m_find_window;
+    RefPtr<GUI::ListView> m_unicode_block_listview;
+    RefPtr<GUI::Model> m_unicode_block_model;
 
     RefPtr<GUI::Action> m_choose_font_action;
     RefPtr<GUI::Action> m_copy_selection_action;
@@ -39,4 +41,7 @@ private:
     RefPtr<GUI::Action> m_next_glyph_action;
     RefPtr<GUI::Action> m_go_to_glyph_action;
     RefPtr<GUI::Action> m_find_glyphs_action;
+
+    Vector<String> m_unicode_block_list;
+    Unicode::CodePointRange m_range { 0x0000, 0x10FFFF };
 };
