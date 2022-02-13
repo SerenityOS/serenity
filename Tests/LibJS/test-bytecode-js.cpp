@@ -22,10 +22,12 @@
     auto const& program = script->parse_node();                                 \
     JS::Bytecode::Interpreter bytecode_interpreter(ast_interpreter->global_object(), ast_interpreter->realm());
 
-#define EXPECT_NO_EXCEPTION(executable)                           \
-    auto executable = JS::Bytecode::Generator::generate(program); \
-    auto result = bytecode_interpreter.run(*executable);          \
-    EXPECT(!result.is_error());
+#define EXPECT_NO_EXCEPTION(executable)                                 \
+    auto executable = MUST(JS::Bytecode::Generator::generate(program)); \
+    auto result = bytecode_interpreter.run(*executable);                \
+    EXPECT(!result.is_error());                                         \
+    if (result.is_error())                                              \
+        dbgln("Error: {}", MUST(result.throw_completion().value()->to_string(bytecode_interpreter.global_object())));
 
 #define EXPECT_NO_EXCEPTION_WITH_OPTIMIZATIONS(executable)                  \
     auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();      \
@@ -33,11 +35,13 @@
                                                                             \
     auto result_with_optimizations = bytecode_interpreter.run(*executable); \
                                                                             \
-    EXPECT(!result_with_optimizations.is_error());
+    EXPECT(!result_with_optimizations.is_error());                          \
+    if (result_with_optimizations.is_error())                               \
+        dbgln("Error: {}", MUST(result_with_optimizations.throw_completion().value()->to_string(bytecode_interpreter.global_object())));
 
-#define EXPECT_NO_EXCEPTION_ALL(source) \
-    SETUP_AND_PARSE(source)             \
-    EXPECT_NO_EXCEPTION(executable)     \
+#define EXPECT_NO_EXCEPTION_ALL(source)           \
+    SETUP_AND_PARSE("(() => {\n" source "\n})()") \
+    EXPECT_NO_EXCEPTION(executable)               \
     EXPECT_NO_EXCEPTION_WITH_OPTIMIZATIONS(executable)
 
 TEST_CASE(empty_program)
@@ -54,7 +58,7 @@ TEST_CASE(if_statement_fail)
 {
     SETUP_AND_PARSE("if (true) throw new Exception('failed');");
 
-    auto executable = JS::Bytecode::Generator::generate(program);
+    auto executable = MUST(JS::Bytecode::Generator::generate(program));
     auto result = bytecode_interpreter.run(*executable);
     EXPECT(result.is_error());
 }
@@ -112,7 +116,7 @@ TEST_CASE(loading_multiple_files)
         auto test_file_script = test_file_script_or_error.release_value();
         auto const& test_file_program = test_file_script->parse_node();
 
-        auto executable = JS::Bytecode::Generator::generate(test_file_program);
+        auto executable = MUST(JS::Bytecode::Generator::generate(test_file_program));
         auto result = bytecode_interpreter.run(*executable);
         EXPECT(!result.is_error());
     }

@@ -97,7 +97,7 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
     VERIFY(!m_generating_function->bytecode_executable()->basic_blocks.find_if([next_block](auto& block) { return block == next_block; }).is_end());
 
     // Restore the snapshot registers
-    bytecode_interpreter->enter_frame(m_frame);
+    bytecode_interpreter->enter_frame(*m_frame);
 
     // Temporarily switch to the captured execution context
     TRY(vm.push_execution_context(m_execution_context, global_object));

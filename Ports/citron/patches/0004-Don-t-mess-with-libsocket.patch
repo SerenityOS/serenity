@@ -1,14 +1,14 @@
-From e4f3c3f40517f72440f575d2ea09aa9a8c3245fe Mon Sep 17 00:00:00 2001
+From 3f73149c75a5755c2b45334abe682dd4b970144b Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 11 Feb 2022 16:46:16 +0330
-Subject: [PATCH 10/18] Don't mess with libsocket
+Subject: [PATCH 4/9] Don't mess with libsocket
 
 ---
- makefile | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+ makefile | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
 diff --git a/makefile b/makefile
-index 681859d..7c0fbff 100644
+index ded4d5a..b262cd0 100644
 --- a/makefile
 +++ b/makefile
 @@ -2,7 +2,6 @@ DEBUG_VERSION := 1603
@@ -17,30 +17,18 @@ index 681859d..7c0fbff 100644
  new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(location))
 -LIBSOCKETDIR = src/lib/libsocket
  BUILDDIR ?= build
- BINDIR ?= /usr/local/bin
- DATADIR ?= /usr/share/Citron
-@@ -48,7 +47,7 @@ LEXTRACF += $(LDFLAGS) -flto -lstdc++
+ DESTDIR ?= /
+ BINDIR ?= $(DESTDIR)/usr/local/bin
+@@ -57,7 +56,7 @@ LEXTRACF += $(LDFLAGS) -flto -lstdc++
  OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
  	   lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o \
  	   importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o \
 -	   promise.o symbol_cxx.o world.o libsocket.so
 +	   promise.o symbol_cxx.o world.o
  EXTRAOBJS =
+ TCC_STATICS = 
  
- ifneq ($(findstring withInjectNative=1,$(CFLAGS)),)
-@@ -74,10 +73,7 @@ COBJS := $(foreach obj,$(COBJS),$(BUILDDIR)/$(obj))
- EXTRAOBJS := $(foreach obj,$(EXTRAOBJS),$(BUILDDIR)/$(obj))
- 
- all: CFLAGS += -O3 -fpic
--all: remove_libsocket_build cxx ctr ctrconfig
--
--remove_libsocket_build:
--	@ rm -rf src/lib/libsocket/libsocket/build/
-+all: cxx ctr ctrconfig
- 
- ctrconfig:
- 	$(CC) src/ctrconfig.c -o $(BUILDDIR)/ctrconfig
-@@ -120,7 +116,6 @@ debug: cxx ctr
+@@ -131,7 +130,6 @@ debug: cxx ctr
  
  clean:
  	rm -rf $(BUILDDIR)
@@ -48,7 +36,7 @@ index 681859d..7c0fbff 100644
  	$(MAKE) -C src/lib/tcc clean
  
  cxx:
-@@ -135,10 +130,6 @@ build_tcc_statics:
+@@ -146,10 +144,6 @@ build_tcc_statics:
  $(BUILDDIR)/%.a: src/lib/tcc/%.a
  	cp $< $@
  

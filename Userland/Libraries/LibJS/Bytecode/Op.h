@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueTraits.h>
 
 namespace JS::Bytecode::Op {
 
@@ -281,11 +282,34 @@ private:
     Register m_lhs;
 };
 
-class SetVariable final : public Instruction {
+enum class EnvironmentMode {
+    Lexical,
+    Var,
+};
+
+class CreateEnvironment final : public Instruction {
 public:
-    explicit SetVariable(IdentifierTableIndex identifier)
-        : Instruction(Type::SetVariable)
+    explicit CreateEnvironment(EnvironmentMode mode)
+        : Instruction(Type::CreateEnvironment)
+        , m_mode(mode)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    EnvironmentMode m_mode { EnvironmentMode::Lexical };
+};
+
+class CreateVariable final : public Instruction {
+public:
+    explicit CreateVariable(IdentifierTableIndex identifier, EnvironmentMode mode, bool is_immutable)
+        : Instruction(Type::CreateVariable)
         , m_identifier(identifier)
+        , m_mode(mode)
+        , m_is_immutable(is_immutable)
     {
     }
 
@@ -295,6 +319,33 @@ public:
 
 private:
     IdentifierTableIndex m_identifier;
+    EnvironmentMode m_mode;
+    bool m_is_immutable { false };
+};
+
+class SetVariable final : public Instruction {
+public:
+    enum class InitializationMode {
+        Initialize,
+        Set,
+        InitializeOrSet,
+    };
+    explicit SetVariable(IdentifierTableIndex identifier, InitializationMode initialization_mode = InitializationMode::Set, EnvironmentMode mode = EnvironmentMode::Lexical)
+        : Instruction(Type::SetVariable)
+        , m_identifier(identifier)
+        , m_mode(mode)
+        , m_initialization_mode(initialization_mode)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    IdentifierTableIndex m_identifier;
+    EnvironmentMode m_mode;
+    InitializationMode m_initialization_mode { InitializationMode::Set };
 };
 
 class GetVariable final : public Instruction {
@@ -596,6 +647,22 @@ private:
     Label m_entry_point;
     Optional<Label> m_handler_target;
     Optional<Label> m_finalizer_target;
+};
+
+class LeaveEnvironment final : public Instruction {
+public:
+    LeaveEnvironment(EnvironmentMode mode)
+        : Instruction(Type::LeaveEnvironment)
+        , m_mode(mode)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    EnvironmentMode m_mode { EnvironmentMode::Lexical };
 };
 
 class LeaveUnwindContext final : public Instruction {

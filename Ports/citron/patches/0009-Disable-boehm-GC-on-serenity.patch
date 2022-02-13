@@ -1,0 +1,26 @@
+From adb932228a5b24159d98c53c51281cfae238b57b Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Sun, 13 Feb 2022 17:04:46 +0330
+Subject: [PATCH 9/9] Disable boehm GC on serenity
+
+Serenity doesn't have a bdwgc port, so disable it here.
+---
+ makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/makefile b/makefile
+index d1ce70d..307bf1c 100644
+--- a/makefile
++++ b/makefile
+@@ -15,7 +15,7 @@ INCLUDE_DIR ?= $(DESTDIR)/usr/local/include/Citron
+ enable_inject ?= false
+ enable_ctypes ?= true
+ enable_inline_asm ?= false
+-enable_boehm_gc ?= true
++enable_boehm_gc ?= false
+ use_libbsd ?= false
+ 
+ CFLAGS += -Wall -Wextra -Wno-unused-parameter\
+-- 
+2.34.1
+

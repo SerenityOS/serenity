@@ -1,7 +1,7 @@
-From 499ffaffb70ee9e58014eadf903063fa4d5c79b2 Mon Sep 17 00:00:00 2001
+From 88242bebd8381deef7598470ed74c23dbffaacb4 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 11 Feb 2022 18:29:07 +0330
-Subject: [PATCH 18/18] Disable GC on serenity
+Subject: [PATCH 7/9] Disable GC on serenity
 
 ---
  src/memory.c | 4 ++++

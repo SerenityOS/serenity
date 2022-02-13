@@ -20,6 +20,8 @@
     O(ConcatString)                  \
     O(ContinuePendingUnwind)         \
     O(CopyObjectExcludingProperties) \
+    O(CreateEnvironment)             \
+    O(CreateVariable)                \
     O(Decrement)                     \
     O(Div)                           \
     O(EnterUnwindContext)            \
@@ -42,6 +44,7 @@
     O(JumpConditional)               \
     O(JumpNullish)                   \
     O(JumpUndefined)                 \
+    O(LeaveEnvironment)              \
     O(LeaveUnwindContext)            \
     O(LeftShift)                     \
     O(LessThan)                      \

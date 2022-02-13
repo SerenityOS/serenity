@@ -18,7 +18,6 @@
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/BigInt.h>
-#include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <math.h>
 
@@ -433,27 +432,6 @@ bool same_value_non_numeric(Value lhs, Value rhs);
 ThrowCompletionOr<TriState> is_less_than(GlobalObject&, bool left_first, Value lhs, Value rhs);
 
 inline bool Value::operator==(Value const& value) const { return same_value(*this, value); }
-
-struct ValueTraits : public Traits<Value> {
-    static unsigned hash(Value value)
-    {
-        VERIFY(!value.is_empty());
-        if (value.is_string())
-            return value.as_string().string().hash();
-
-        if (value.is_bigint())
-            return value.as_bigint().big_integer().hash();
-
-        if (value.is_negative_zero())
-            value = Value(0);
-
-        return u64_hash(value.encoded()); // FIXME: Is this the best way to hash pointers, doubles & ints?
-    }
-    static bool equals(const Value a, const Value b)
-    {
-        return same_value_zero(a, b);
-    }
-};
 
 }
 

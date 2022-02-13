@@ -210,6 +210,15 @@ public:
             [](FlyString const& identifier) { return identifier.view(); },
             [](Empty) -> StringView { VERIFY_NOT_REACHED(); });
     }
+
+    FlyString flystring_value() const
+    {
+        return m_value.visit(
+            [](StringView view) -> FlyString { return view; },
+            [](FlyString const& identifier) -> FlyString { return identifier; },
+            [](Empty) -> FlyString { VERIFY_NOT_REACHED(); });
+    }
+
     StringView filename() const { return m_filename; }
     size_t line_number() const { return m_line_number; }
     size_t line_column() const { return m_line_column; }

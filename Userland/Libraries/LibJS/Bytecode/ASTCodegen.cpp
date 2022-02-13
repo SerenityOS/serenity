@@ -18,54 +18,293 @@
 
 namespace JS {
 
-void ASTNode::generate_bytecode(Bytecode::Generator&) const
+Bytecode::CodeGenerationErrorOr<void> ASTNode::generate_bytecode(Bytecode::Generator&) const
 {
-    dbgln("Missing generate_bytecode() in {}", class_name());
-    TODO();
+    return Bytecode::CodeGenerationError {
+        this,
+        "Missing generate_bytecode()"sv,
+    };
 }
 
-void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
-    // FIXME: This is an ad-hoc fix but should be done as the spec says in
-    //        {Global, Block, Function, Eval}DeclarationInstantiation.
-    for (auto& function : m_functions_hoistable_with_annexB_extension) {
-        generator.emit<Bytecode::Op::NewFunction>(function);
-        generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(function.name()));
+    Optional<Bytecode::CodeGenerationError> maybe_error;
+    size_t pushed_scope_count = 0;
+    auto const failing_completion = Completion(Completion::Type::Throw, {}, {});
+
+    if (is<BlockStatement>(*this) || is<SwitchStatement>(*this)) {
+        // Perform the steps of BlockDeclarationInstantiation.
+        if (has_lexical_declarations()) {
+            generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
+            pushed_scope_count++;
+        }
+
+        (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
+            auto is_constant_declaration = declaration.is_constant_declaration();
+            declaration.for_each_bound_name([&](auto const& name) {
+                auto index = generator.intern_identifier(name);
+                if (is_constant_declaration || !generator.has_binding(index)) {
+                    generator.register_binding(index);
+                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_constant_declaration);
+                }
+            });
+
+            if (is<FunctionDeclaration>(declaration)) {
+                auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
+                auto const& name = function_declaration.name();
+                auto index = generator.intern_identifier(name);
+                generator.emit<Bytecode::Op::NewFunction>(function_declaration);
+                generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize);
+            }
+
+            return {};
+        });
+    } else if (is<Program>(*this)) {
+        // Perform the steps of GlobalDeclarationInstantiation.
+        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Global, Bytecode::Generator::SurroundingScopeKind::Global);
+        pushed_scope_count++;
+
+        // 1. Let lexNames be the LexicallyDeclaredNames of script.
+        // 2. Let varNames be the VarDeclaredNames of script.
+        // 3. For each element name of lexNames, do
+        (void)for_each_lexically_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
+            auto identifier = generator.intern_identifier(name);
+            // a. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
+            // b. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
+            if (generator.has_binding(identifier)) {
+                // FIXME: Throw an actual SyntaxError instance.
+                generator.emit<Bytecode::Op::NewString>(generator.intern_string(String::formatted("SyntaxError: toplevel variable already declared: {}", name)));
+                generator.emit<Bytecode::Op::Throw>();
+                return {};
+            }
+
+            // FIXME: c. If hasRestrictedGlobalProperty is true, throw a SyntaxError exception.
+            //        d. If hasRestrictedGlobal is true, throw a SyntaxError exception.
+            return {};
+        });
+
+        // 4. For each element name of varNames, do
+        (void)for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
+            auto identifier = generator.intern_identifier(name);
+            // a. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
+            if (generator.has_binding(identifier)) {
+                // FIXME: Throw an actual SyntaxError instance.
+                generator.emit<Bytecode::Op::NewString>(generator.intern_string(String::formatted("SyntaxError: toplevel variable already declared: {}", name)));
+                generator.emit<Bytecode::Op::Throw>();
+            }
+            return {};
+        });
+
+        // 5. Let varDeclarations be the VarScopedDeclarations of script.
+        // 6. Let functionsToInitialize be a new empty List.
+        Vector<FunctionDeclaration const&> functions_to_initialize;
+
+        // 7. Let declaredFunctionNames be a new empty List.
+        HashTable<FlyString> declared_function_names;
+
+        // 8. For each element d of varDeclarations, in reverse List order, do
+        (void)for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) -> ThrowCompletionOr<void> {
+            // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
+            // i. Assert: d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
+            // Note: This is checked in for_each_var_function_declaration_in_reverse_order.
+            // ii. NOTE: If there are multiple function declarations for the same name, the last declaration is used.
+            // iii. Let fn be the sole element of the BoundNames of d.
+
+            // iv. If fn is not an element of declaredFunctionNames, then
+            if (declared_function_names.set(function.name()) != AK::HashSetResult::InsertedNewEntry)
+                return {};
+
+            // FIXME: 1. Let fnDefinable be ? env.CanDeclareGlobalFunction(fn).
+            // FIXME: 2. If fnDefinable is false, throw a TypeError exception.
+
+            // 3. Append fn to declaredFunctionNames.
+            // Note: Already done in step iv. above.
+
+            // 4. Insert d as the first element of functionsToInitialize.
+            functions_to_initialize.prepend(function);
+            return {};
+        });
+
+        // 9. Let declaredVarNames be a new empty List.
+        HashTable<FlyString> declared_var_names;
+
+        // 10. For each element d of varDeclarations, do
+        (void)for_each_var_scoped_variable_declaration([&](Declaration const& declaration) {
+            // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
+            // Note: This is done in for_each_var_scoped_variable_declaration.
+
+            // i. For each String vn of the BoundNames of d, do
+            return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
+                // 1. If vn is not an element of declaredFunctionNames, then
+                if (declared_function_names.contains(name))
+                    return {};
+
+                // FIXME: a. Let vnDefinable be ? env.CanDeclareGlobalVar(vn).
+                // FIXME: b. If vnDefinable is false, throw a TypeError exception.
+
+                // c. If vn is not an element of declaredVarNames, then
+                // i. Append vn to declaredVarNames.
+                declared_var_names.set(name);
+                return {};
+            });
+        });
+
+        // 11. NOTE: No abnormal terminations occur after this algorithm step if the global object is an ordinary object. However, if the global object is a Proxy exotic object it may exhibit behaviours that cause abnormal terminations in some of the following steps.
+        // 12. NOTE: Annex B.3.2.2 adds additional steps at this point.
+
+        // 12. Let strict be IsStrict of script.
+        // 13. If strict is false, then
+        if (!verify_cast<Program>(*this).is_strict_mode()) {
+            // a. Let declaredFunctionOrVarNames be the list-concatenation of declaredFunctionNames and declaredVarNames.
+            // b. For each FunctionDeclaration f that is directly contained in the StatementList of a Block, CaseClause, or DefaultClause Contained within script, do
+            (void)for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
+                // i. Let F be StringValue of the BindingIdentifier of f.
+                auto& function_name = function_declaration.name();
+
+                // ii. If replacing the FunctionDeclaration f with a VariableStatement that has F as a BindingIdentifier would not produce any Early Errors for script, then
+                // Note: This step is already performed during parsing and for_each_function_hoistable_with_annexB_extension so this always passes here.
+
+                // 1. If env.HasLexicalDeclaration(F) is false, then
+                auto index = generator.intern_identifier(function_name);
+                if (generator.has_binding(index, Bytecode::Generator::BindingMode::Lexical))
+                    return;
+
+                // FIXME: a. Let fnDefinable be ? env.CanDeclareGlobalVar(F).
+                // b. If fnDefinable is true, then
+                // i. NOTE: A var binding for F is only instantiated here if it is neither a VarDeclaredName nor the name of another FunctionDeclaration.
+                // ii. If declaredFunctionOrVarNames does not contain F, then
+                if (!declared_function_names.contains(function_name) && !declared_var_names.contains(function_name)) {
+                    // i. Perform ? env.CreateGlobalVarBinding(F, false).
+                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Var, false);
+
+                    // ii. Append F to declaredFunctionOrVarNames.
+                    declared_function_names.set(function_name);
+                }
+
+                // iii. When the FunctionDeclaration f is evaluated, perform the following steps in place of the FunctionDeclaration Evaluation algorithm provided in 15.2.6:
+                //     i. Let genv be the running execution context's VariableEnvironment.
+                //     ii. Let benv be the running execution context's LexicalEnvironment.
+                //     iii. Let fobj be ! benv.GetBindingValue(F, false).
+                //     iv. Perform ? genv.SetMutableBinding(F, fobj, false).
+                //     v. Return NormalCompletion(empty).
+                function_declaration.set_should_do_additional_annexB_steps();
+            });
+        }
+
+        // 15. For each element d of lexDeclarations, do
+        (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
+            // a. NOTE: Lexically declared names are only instantiated here but not initialized.
+            // b. For each element dn of the BoundNames of d, do
+            return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
+                auto identifier = generator.intern_identifier(name);
+                // i. If IsConstantDeclaration of d is true, then
+                generator.register_binding(identifier);
+                if (declaration.is_constant_declaration()) {
+                    // 1. Perform ? env.CreateImmutableBinding(dn, true).
+                    generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
+                } else {
+                    // ii. Else,
+                    // 1. Perform ? env.CreateMutableBinding(dn, false).
+                    generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
+                }
+
+                return {};
+            });
+        });
+
+        // 16. For each Parse Node f of functionsToInitialize, do
+        for (auto& function_declaration : functions_to_initialize) {
+            // FIXME: Do this more correctly.
+            // a. Let fn be the sole element of the BoundNames of f.
+            // b. Let fo be InstantiateFunctionObject of f with arguments env and privateEnv.
+            generator.emit<Bytecode::Op::NewFunction>(function_declaration);
+
+            // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
+            auto const& name = function_declaration.name();
+            auto index = generator.intern_identifier(name);
+            if (!generator.has_binding(index)) {
+                generator.register_binding(index, Bytecode::Generator::BindingMode::Var);
+                generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, false);
+            }
+            generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize);
+        }
+
+        // 17. For each String vn of declaredVarNames, do
+        // a. Perform ? env.CreateGlobalVarBinding(vn, false).
+        for (auto& var_name : declared_var_names)
+            generator.register_binding(generator.intern_identifier(var_name), Bytecode::Generator::BindingMode::Var);
+    } else {
+        // Perform the steps of FunctionDeclarationInstantiation.
+        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Var, Bytecode::Generator::SurroundingScopeKind::Function);
+        pushed_scope_count++;
+        if (has_lexical_declarations()) {
+            generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Function);
+            pushed_scope_count++;
+        }
+
+        // FIXME: Implement this boi correctly.
+        (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
+            auto is_constant_declaration = declaration.is_constant_declaration();
+            declaration.for_each_bound_name([&](auto const& name) {
+                auto index = generator.intern_identifier(name);
+                if (is_constant_declaration || !generator.has_binding(index)) {
+                    generator.register_binding(index);
+                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_constant_declaration);
+                }
+            });
+
+            if (is<FunctionDeclaration>(declaration)) {
+                auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
+                if (auto result = function_declaration.generate_bytecode(generator); result.is_error()) {
+                    maybe_error = result.release_error();
+                    // To make `for_each_lexically_scoped_declaration` happy.
+                    return failing_completion;
+                }
+                auto const& name = function_declaration.name();
+                auto index = generator.intern_identifier(name);
+                if (!generator.has_binding(index)) {
+                    generator.register_binding(index);
+                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, false);
+                }
+                generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::InitializeOrSet);
+            }
+
+            return {};
+        });
     }
 
-    HashTable<FlyString> functions_initialized;
-    for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) {
-        if (functions_initialized.set(function.name()) != AK::HashSetResult::InsertedNewEntry)
-            return;
+    if (maybe_error.has_value())
+        return maybe_error.release_value();
 
-        generator.emit<Bytecode::Op::NewFunction>(function);
-        generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(function.name()));
-    });
-
-    // FIXME: Register lexical and variable scope declarations
     for (auto& child : children()) {
-        child.generate_bytecode(generator);
+        TRY(child.generate_bytecode(generator));
         if (generator.is_current_block_terminated())
             break;
     }
+
+    for (size_t i = 0; i < pushed_scope_count; ++i)
+        generator.end_variable_scope();
+
+    return {};
 }
 
-void EmptyStatement::generate_bytecode(Bytecode::Generator&) const
+Bytecode::CodeGenerationErrorOr<void> EmptyStatement::generate_bytecode(Bytecode::Generator&) const
 {
+    return {};
 }
 
-void ExpressionStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ExpressionStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    m_expression->generate_bytecode(generator);
+    return m_expression->generate_bytecode(generator);
 }
 
-void BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    m_lhs->generate_bytecode(generator);
+    TRY(m_lhs->generate_bytecode(generator));
     auto lhs_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(lhs_reg);
 
-    m_rhs->generate_bytecode(generator);
+    TRY(m_rhs->generate_bytecode(generator));
 
     switch (m_op) {
     case BinaryOp::Addition:
@@ -137,11 +376,12 @@ void BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
     default:
         VERIFY_NOT_REACHED();
     }
+    return {};
 }
 
-void LogicalExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> LogicalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    m_lhs->generate_bytecode(generator);
+    TRY(m_lhs->generate_bytecode(generator));
 
     // lhs
     // jump op (true) end (false) rhs
@@ -173,18 +413,19 @@ void LogicalExpression::generate_bytecode(Bytecode::Generator& generator) const
     }
 
     generator.switch_to_basic_block(rhs_block);
-    m_rhs->generate_bytecode(generator);
+    TRY(m_rhs->generate_bytecode(generator));
 
     generator.emit<Bytecode::Op::Jump>().set_targets(
         Bytecode::Label { end_block },
         {});
 
     generator.switch_to_basic_block(end_block);
+    return {};
 }
 
-void UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    m_lhs->generate_bytecode(generator);
+    TRY(m_lhs->generate_bytecode(generator));
 
     switch (m_op) {
     case UnaryOp::BitwiseNot:
@@ -206,59 +447,70 @@ void UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
         generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
         break;
     default:
-        TODO();
+        return Bytecode::CodeGenerationError {
+            this,
+            "Unimplemented operation"sv,
+        };
     }
+
+    return {};
 }
 
-void NumericLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> NumericLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::LoadImmediate>(m_value);
+    return {};
 }
 
-void BooleanLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> BooleanLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::LoadImmediate>(Value(m_value));
+    return {};
 }
 
-void NullLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> NullLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::LoadImmediate>(js_null());
+    return {};
 }
 
-void BigIntLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> BigIntLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::NewBigInt>(Crypto::SignedBigInteger::from_base(10, m_value.substring(0, m_value.length() - 1)));
+    return {};
 }
 
-void StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::NewString>(generator.intern_string(m_value));
+    return {};
 }
 
-void RegExpLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> RegExpLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto source_index = generator.intern_string(m_pattern);
     auto flags_index = generator.intern_string(m_flags);
     generator.emit<Bytecode::Op::NewRegExp>(source_index, flags_index);
+    return {};
 }
 
-void Identifier::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> Identifier::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::GetVariable>(generator.intern_identifier(m_string));
+    return {};
 }
 
-void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     // FIXME: Implement this for BindingPatterns too.
     auto& lhs = m_lhs.get<NonnullRefPtr<Expression>>();
 
     if (m_op == AssignmentOp::Assignment) {
-        m_rhs->generate_bytecode(generator);
-        generator.emit_store_to_reference(lhs);
-        return;
+        TRY(m_rhs->generate_bytecode(generator));
+        return generator.emit_store_to_reference(lhs);
     }
 
-    generator.emit_load_from_reference(lhs);
+    TRY(generator.emit_load_from_reference(lhs));
 
     Bytecode::BasicBlock* rhs_block_ptr { nullptr };
     Bytecode::BasicBlock* end_block_ptr { nullptr };
@@ -294,7 +546,7 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
     // if the logical assignment condition fails.
     auto lhs_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(lhs_reg);
-    m_rhs->generate_bytecode(generator);
+    TRY(m_rhs->generate_bytecode(generator));
 
     switch (m_op) {
     case AssignmentOp::AdditionAssignment:
@@ -338,10 +590,13 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
     case AssignmentOp::NullishAssignment:
         break; // These are handled above.
     default:
-        TODO();
+        return Bytecode::CodeGenerationError {
+            this,
+            "Unimplemented operation"sv,
+        };
     }
 
-    generator.emit_store_to_reference(lhs);
+    TRY(generator.emit_store_to_reference(lhs));
 
     if (end_block_ptr) {
         generator.emit<Bytecode::Op::Jump>().set_targets(
@@ -350,9 +605,11 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
 
         generator.switch_to_basic_block(*end_block_ptr);
     }
+
+    return {};
 }
 
-void WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     // test
     // jump if_false (true) end (false) body
@@ -374,7 +631,7 @@ void WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
         {});
 
     generator.switch_to_basic_block(test_block);
-    m_test->generate_bytecode(generator);
+    TRY(m_test->generate_bytecode(generator));
     generator.emit<Bytecode::Op::JumpConditional>().set_targets(
         Bytecode::Label { body_block },
         Bytecode::Label { end_block });
@@ -382,7 +639,7 @@ void WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
     generator.switch_to_basic_block(body_block);
     generator.begin_continuable_scope(Bytecode::Label { test_block });
     generator.begin_breakable_scope(Bytecode::Label { end_block });
-    m_body->generate_bytecode(generator);
+    TRY(m_body->generate_bytecode(generator));
     if (!generator.is_current_block_terminated()) {
         generator.emit<Bytecode::Op::Jump>().set_targets(
             Bytecode::Label { test_block },
@@ -392,9 +649,11 @@ void WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
         generator.switch_to_basic_block(end_block);
         generator.emit<Bytecode::Op::Load>(result_reg);
     }
+
+    return {};
 }
 
-void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     // jump always (true) body
     // test
@@ -417,7 +676,7 @@ void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
         {});
 
     generator.switch_to_basic_block(test_block);
-    m_test->generate_bytecode(generator);
+    TRY(m_test->generate_bytecode(generator));
     generator.emit<Bytecode::Op::JumpConditional>().set_targets(
         Bytecode::Label { body_block },
         Bytecode::Label { end_block });
@@ -425,7 +684,7 @@ void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
     generator.switch_to_basic_block(body_block);
     generator.begin_continuable_scope(Bytecode::Label { test_block });
     generator.begin_breakable_scope(Bytecode::Label { end_block });
-    m_body->generate_bytecode(generator);
+    TRY(m_body->generate_bytecode(generator));
     if (!generator.is_current_block_terminated()) {
         generator.emit<Bytecode::Op::Jump>().set_targets(
             Bytecode::Label { test_block },
@@ -435,9 +694,11 @@ void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
         generator.switch_to_basic_block(end_block);
         generator.emit<Bytecode::Op::Load>(result_reg);
     }
+
+    return {};
 }
 
-void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     // init
     // jump always (true) test
@@ -459,7 +720,7 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
     auto& end_block = generator.make_block();
 
     if (m_init)
-        m_init->generate_bytecode(generator);
+        TRY(m_init->generate_bytecode(generator));
 
     body_block_ptr = &generator.make_block();
 
@@ -483,7 +744,7 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
 
     if (m_test) {
         generator.switch_to_basic_block(*test_block_ptr);
-        m_test->generate_bytecode(generator);
+        TRY(m_test->generate_bytecode(generator));
         generator.emit<Bytecode::Op::JumpConditional>().set_targets(
             Bytecode::Label { *body_block_ptr },
             Bytecode::Label { end_block });
@@ -492,7 +753,7 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
     generator.switch_to_basic_block(*body_block_ptr);
     generator.begin_continuable_scope(Bytecode::Label { *update_block_ptr });
     generator.begin_breakable_scope(Bytecode::Label { end_block });
-    m_body->generate_bytecode(generator);
+    TRY(m_body->generate_bytecode(generator));
     generator.end_continuable_scope();
 
     if (!generator.is_current_block_terminated()) {
@@ -502,7 +763,7 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
                 {});
 
             generator.switch_to_basic_block(*update_block_ptr);
-            m_update->generate_bytecode(generator);
+            TRY(m_update->generate_bytecode(generator));
         }
 
         generator.emit<Bytecode::Op::Jump>().set_targets(
@@ -513,50 +774,58 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
         generator.switch_to_basic_block(end_block);
         generator.emit<Bytecode::Op::Load>(result_reg);
     }
+
+    return {};
 }
 
-void ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::NewObject>();
     if (m_properties.is_empty())
-        return;
+        return {};
 
     auto object_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(object_reg);
 
     for (auto& property : m_properties) {
         if (property.type() != ObjectProperty::Type::KeyValue)
-            TODO();
+            return Bytecode::CodeGenerationError {
+                this,
+                "Unimplemented property kind"sv,
+            };
 
         if (is<StringLiteral>(property.key())) {
             auto& string_literal = static_cast<StringLiteral const&>(property.key());
             Bytecode::IdentifierTableIndex key_name = generator.intern_identifier(string_literal.value());
 
-            property.value().generate_bytecode(generator);
+            TRY(property.value().generate_bytecode(generator));
             generator.emit<Bytecode::Op::PutById>(object_reg, key_name);
         } else {
-            property.key().generate_bytecode(generator);
+            TRY(property.key().generate_bytecode(generator));
             auto property_reg = generator.allocate_register();
             generator.emit<Bytecode::Op::Store>(property_reg);
 
-            property.value().generate_bytecode(generator);
+            TRY(property.value().generate_bytecode(generator));
             generator.emit<Bytecode::Op::PutByValue>(object_reg, property_reg);
         }
     }
 
     generator.emit<Bytecode::Op::Load>(object_reg);
+    return {};
 }
 
-void ArrayExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ArrayExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     Vector<Bytecode::Register> element_regs;
     for (auto& element : m_elements) {
         if (element) {
-            element->generate_bytecode(generator);
+            TRY(element->generate_bytecode(generator));
 
             if (is<SpreadExpression>(*element)) {
-                TODO();
-                continue;
+                return Bytecode::CodeGenerationError {
+                    this,
+                    "Unimplemented element kind: SpreadExpression"sv,
+                };
             }
         } else {
             generator.emit<Bytecode::Op::LoadImmediate>(Value {});
@@ -566,25 +835,33 @@ void ArrayExpression::generate_bytecode(Bytecode::Generator& generator) const
         element_regs.append(element_reg);
     }
     generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(element_regs.size(), element_regs);
+    return {};
 }
 
-void MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit_load_from_reference(*this);
+    return generator.emit_load_from_reference(*this);
 }
 
-void FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
+Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
+    if (m_is_hoisted) {
+        auto index = generator.intern_identifier(name());
+        generator.emit<Bytecode::Op::GetVariable>(index);
+        generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Var);
+    }
+    return {};
 }
 
-void FunctionExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::NewFunction>(*this);
+    return {};
 }
 
-static void generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value_reg);
+static Bytecode::CodeGenerationErrorOr<void> generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode, Bytecode::Register const& value_reg);
 
-static void generate_object_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value_reg)
+static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::Register const& value_reg)
 {
     Vector<Bytecode::Register> excluded_property_names;
     auto has_rest = false;
@@ -601,9 +878,9 @@ static void generate_object_binding_pattern_bytecode(Bytecode::Generator& genera
             auto interned_identifier = generator.intern_identifier(identifier);
 
             generator.emit_with_extra_register_slots<Bytecode::Op::CopyObjectExcludingProperties>(excluded_property_names.size(), value_reg, excluded_property_names);
-            generator.emit<Bytecode::Op::SetVariable>(interned_identifier);
+            generator.emit<Bytecode::Op::SetVariable>(interned_identifier, initialization_mode);
 
-            return;
+            return {};
         }
 
         Bytecode::StringTableIndex name_index;
@@ -623,7 +900,7 @@ static void generate_object_binding_pattern_bytecode(Bytecode::Generator& genera
             generator.emit<Bytecode::Op::GetById>(generator.intern_identifier(identifier));
         } else {
             auto expression = name.get<NonnullRefPtr<Expression>>();
-            expression->generate_bytecode(generator);
+            TRY(expression->generate_bytecode(generator));
 
             if (has_rest) {
                 auto excluded_name_reg = generator.allocate_register();
@@ -643,7 +920,7 @@ static void generate_object_binding_pattern_bytecode(Bytecode::Generator& genera
                 Bytecode::Label { if_not_undefined_block });
 
             generator.switch_to_basic_block(if_undefined_block);
-            initializer->generate_bytecode(generator);
+            TRY(initializer->generate_bytecode(generator));
             generator.emit<Bytecode::Op::Jump>().set_targets(
                 Bytecode::Label { if_not_undefined_block },
                 {});
@@ -655,23 +932,27 @@ static void generate_object_binding_pattern_bytecode(Bytecode::Generator& genera
             auto& binding_pattern = *alias.get<NonnullRefPtr<BindingPattern>>();
             auto nested_value_reg = generator.allocate_register();
             generator.emit<Bytecode::Op::Store>(nested_value_reg);
-            generate_binding_pattern_bytecode(generator, binding_pattern, nested_value_reg);
+            TRY(generate_binding_pattern_bytecode(generator, binding_pattern, initialization_mode, nested_value_reg));
         } else if (alias.has<Empty>()) {
             if (name.has<NonnullRefPtr<Expression>>()) {
                 // This needs some sort of SetVariableByValue opcode, as it's a runtime binding
-                TODO();
+                return Bytecode::CodeGenerationError {
+                    name.get<NonnullRefPtr<Expression>>().ptr(),
+                    "Unimplemented name/alias pair: Empty/Expression"sv,
+                };
             }
 
             auto& identifier = alias.get<NonnullRefPtr<Identifier>>()->string();
-            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(identifier));
+            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(identifier), initialization_mode);
         } else {
             auto& identifier = alias.get<NonnullRefPtr<Identifier>>()->string();
-            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(identifier));
+            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(identifier), initialization_mode);
         }
     }
+    return {};
 }
 
-static void generate_array_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value_reg)
+static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::Register const& value_reg)
 {
     /*
      * Consider the following destructuring assignment:
@@ -705,22 +986,27 @@ static void generate_array_binding_pattern_bytecode(Bytecode::Generator& generat
     auto temp_iterator_result_reg = generator.allocate_register();
 
     auto assign_accumulator_to_alias = [&](auto& alias) {
-        alias.visit(
-            [&](Empty) {
+        return alias.visit(
+            [&](Empty) -> Bytecode::CodeGenerationErrorOr<void> {
                 // This element is an elision
+                return {};
             },
-            [&](NonnullRefPtr<Identifier> const& identifier) {
+            [&](NonnullRefPtr<Identifier> const& identifier) -> Bytecode::CodeGenerationErrorOr<void> {
                 auto interned_index = generator.intern_identifier(identifier->string());
-                generator.emit<Bytecode::Op::SetVariable>(interned_index);
+                generator.emit<Bytecode::Op::SetVariable>(interned_index, initialization_mode);
+                return {};
             },
-            [&](NonnullRefPtr<BindingPattern> const& pattern) {
+            [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
                 // Store the accumulator value in a permanent register
                 auto target_reg = generator.allocate_register();
                 generator.emit<Bytecode::Op::Store>(target_reg);
-                generate_binding_pattern_bytecode(generator, pattern, target_reg);
+                return generate_binding_pattern_bytecode(generator, pattern, initialization_mode, target_reg);
             },
-            [&](NonnullRefPtr<MemberExpression> const&) {
-                TODO();
+            [&](NonnullRefPtr<MemberExpression> const& expr) -> Bytecode::CodeGenerationErrorOr<void> {
+                return Bytecode::CodeGenerationError {
+                    expr.ptr(),
+                    "Unimplemented alias mode: MemberExpression"sv,
+                };
             });
     };
 
@@ -758,9 +1044,7 @@ static void generate_array_binding_pattern_bytecode(Bytecode::Generator& generat
                 generator.switch_to_basic_block(continuation_block);
             }
 
-            assign_accumulator_to_alias(alias);
-
-            return;
+            return assign_accumulator_to_alias(alias);
         }
 
         // In the first iteration of the loop, a few things are true which can save
@@ -818,41 +1102,48 @@ static void generate_array_binding_pattern_bytecode(Bytecode::Generator& generat
         // pattern if necessary.
         generator.switch_to_basic_block(create_binding_block);
 
-        assign_accumulator_to_alias(alias);
+        TRY(assign_accumulator_to_alias(alias));
 
         first = false;
     }
+
+    return {};
 }
 
-static void generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value_reg)
+static Bytecode::CodeGenerationErrorOr<void> generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::Register const& value_reg)
 {
-    if (pattern.kind == BindingPattern::Kind::Object) {
-        generate_object_binding_pattern_bytecode(generator, pattern, value_reg);
-    } else {
-        generate_array_binding_pattern_bytecode(generator, pattern, value_reg);
-    }
-};
+    if (pattern.kind == BindingPattern::Kind::Object)
+        return generate_object_binding_pattern_bytecode(generator, pattern, initialization_mode, value_reg);
 
-void VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) const
+    return generate_array_binding_pattern_bytecode(generator, pattern, initialization_mode, value_reg);
+}
+
+Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
     for (auto& declarator : m_declarations) {
         if (declarator.init())
-            declarator.init()->generate_bytecode(generator);
+            TRY(declarator.init()->generate_bytecode(generator));
         else
             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-        declarator.target().visit(
-            [&](NonnullRefPtr<Identifier> const& id) {
-                generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()));
+
+        auto initialization_mode = is_lexical_declaration() ? Bytecode::Op::SetVariable::InitializationMode::Initialize : Bytecode::Op::SetVariable::InitializationMode::Set;
+
+        TRY(declarator.target().visit(
+            [&](NonnullRefPtr<Identifier> const& id) -> Bytecode::CodeGenerationErrorOr<void> {
+                generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode);
+                return {};
             },
-            [&](NonnullRefPtr<BindingPattern> const& pattern) {
+            [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
                 auto value_register = generator.allocate_register();
                 generator.emit<Bytecode::Op::Store>(value_register);
-                generate_binding_pattern_bytecode(generator, pattern, value_register);
-            });
+                return generate_binding_pattern_bytecode(generator, pattern, initialization_mode, value_register);
+            }));
     }
+
+    return {};
 }
 
-void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto callee_reg = generator.allocate_register();
     auto this_reg = generator.allocate_register();
@@ -860,35 +1151,41 @@ void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
     generator.emit<Bytecode::Op::Store>(this_reg);
 
     if (is<NewExpression>(this)) {
-        m_callee->generate_bytecode(generator);
+        TRY(m_callee->generate_bytecode(generator));
         generator.emit<Bytecode::Op::Store>(callee_reg);
     } else if (is<SuperExpression>(*m_callee)) {
-        TODO();
+        return Bytecode::CodeGenerationError {
+            this,
+            "Unimplemented callee kind: SuperExpression"sv,
+        };
     } else if (is<MemberExpression>(*m_callee)) {
         auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
         if (is<SuperExpression>(member_expression.object())) {
-            TODO();
-        } else {
-            member_expression.object().generate_bytecode(generator);
-            generator.emit<Bytecode::Op::Store>(this_reg);
-            if (member_expression.is_computed()) {
-                member_expression.property().generate_bytecode(generator);
-                generator.emit<Bytecode::Op::GetByValue>(this_reg);
-            } else {
-                auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
-                generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
-            }
-            generator.emit<Bytecode::Op::Store>(callee_reg);
+            return Bytecode::CodeGenerationError {
+                this,
+                "Unimplemented callee kind: MemberExpression on SuperExpression"sv,
+            };
         }
+
+        TRY(member_expression.object().generate_bytecode(generator));
+        generator.emit<Bytecode::Op::Store>(this_reg);
+        if (member_expression.is_computed()) {
+            TRY(member_expression.property().generate_bytecode(generator));
+            generator.emit<Bytecode::Op::GetByValue>(this_reg);
+        } else {
+            auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
+            generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+        }
+        generator.emit<Bytecode::Op::Store>(callee_reg);
     } else {
         // FIXME: this = global object in sloppy mode.
-        m_callee->generate_bytecode(generator);
+        TRY(m_callee->generate_bytecode(generator));
         generator.emit<Bytecode::Op::Store>(callee_reg);
     }
 
     Vector<Bytecode::Register> argument_registers;
     for (auto& arg : m_arguments) {
-        arg.value->generate_bytecode(generator);
+        TRY(arg.value->generate_bytecode(generator));
         auto arg_reg = generator.allocate_register();
         generator.emit<Bytecode::Op::Store>(arg_reg);
         argument_registers.append(arg_reg);
@@ -902,35 +1199,43 @@ void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
     }
 
     generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_registers.size(), call_type, callee_reg, this_reg, argument_registers);
+    return {};
 }
 
-void ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     if (m_argument)
-        m_argument->generate_bytecode(generator);
+        TRY(m_argument->generate_bytecode(generator));
 
     if (generator.is_in_generator_or_async_function())
         generator.emit<Bytecode::Op::Yield>(nullptr);
     else
         generator.emit<Bytecode::Op::Return>();
+
+    return {};
 }
 
-void YieldExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     VERIFY(generator.is_in_generator_function());
 
-    if (m_is_yield_from)
-        TODO();
+    if (m_is_yield_from) {
+        return Bytecode::CodeGenerationError {
+            this,
+            "Unimplemented form: `yield*`"sv,
+        };
+    }
 
     if (m_argument)
-        m_argument->generate_bytecode(generator);
+        TRY(m_argument->generate_bytecode(generator));
 
     auto& continuation_block = generator.make_block();
     generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
     generator.switch_to_basic_block(continuation_block);
+    return {};
 }
 
-void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> IfStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     // test
     // jump if_true (true) true (false) false
@@ -943,7 +1248,7 @@ void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
     auto& true_block = generator.make_block();
     auto& false_block = generator.make_block();
 
-    m_predicate->generate_bytecode(generator);
+    TRY(m_predicate->generate_bytecode(generator));
     generator.emit<Bytecode::Op::JumpConditional>().set_targets(
         Bytecode::Label { true_block },
         Bytecode::Label { false_block });
@@ -952,7 +1257,7 @@ void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
 
     generator.switch_to_basic_block(true_block);
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-    m_consequent->generate_bytecode(generator);
+    TRY(m_consequent->generate_bytecode(generator));
     if (!generator.is_current_block_terminated())
         true_block_jump = &generator.emit<Bytecode::Op::Jump>();
 
@@ -961,7 +1266,7 @@ void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
 
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     if (m_alternate)
-        m_alternate->generate_bytecode(generator);
+        TRY(m_alternate->generate_bytecode(generator));
     if (!generator.is_current_block_terminated())
         generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { end_block }, {});
 
@@ -969,20 +1274,23 @@ void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
         true_block_jump->set_targets(Bytecode::Label { end_block }, {});
 
     generator.switch_to_basic_block(end_block);
+    return {};
 }
 
-void ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::Jump>().set_targets(
         generator.nearest_continuable_scope(),
         {});
+    return {};
 }
 
-void DebuggerStatement::generate_bytecode(Bytecode::Generator&) const
+Bytecode::CodeGenerationErrorOr<void> DebuggerStatement::generate_bytecode(Bytecode::Generator&) const
 {
+    return {};
 }
 
-void ConditionalExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ConditionalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     // test
     // jump if_true (true) true (false) false
@@ -996,38 +1304,41 @@ void ConditionalExpression::generate_bytecode(Bytecode::Generator& generator) co
     auto& false_block = generator.make_block();
     auto& end_block = generator.make_block();
 
-    m_test->generate_bytecode(generator);
+    TRY(m_test->generate_bytecode(generator));
     generator.emit<Bytecode::Op::JumpConditional>().set_targets(
         Bytecode::Label { true_block },
         Bytecode::Label { false_block });
 
     generator.switch_to_basic_block(true_block);
-    m_consequent->generate_bytecode(generator);
+    TRY(m_consequent->generate_bytecode(generator));
     generator.emit<Bytecode::Op::Jump>().set_targets(
         Bytecode::Label { end_block },
         {});
 
     generator.switch_to_basic_block(false_block);
-    m_alternate->generate_bytecode(generator);
+    TRY(m_alternate->generate_bytecode(generator));
     generator.emit<Bytecode::Op::Jump>().set_targets(
         Bytecode::Label { end_block },
         {});
 
     generator.switch_to_basic_block(end_block);
+    return {};
 }
 
-void SequenceExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> SequenceExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     for (auto& expression : m_expressions)
-        expression.generate_bytecode(generator);
+        TRY(expression.generate_bytecode(generator));
+
+    return {};
 }
 
-void TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto string_reg = generator.allocate_register();
 
     for (size_t i = 0; i < m_expressions.size(); i++) {
-        m_expressions[i].generate_bytecode(generator);
+        TRY(m_expressions[i].generate_bytecode(generator));
         if (i == 0) {
             generator.emit<Bytecode::Op::Store>(string_reg);
         } else {
@@ -1036,11 +1347,12 @@ void TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
     }
 
     generator.emit<Bytecode::Op::Load>(string_reg);
+    return {};
 }
 
-void TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
-    m_tag->generate_bytecode(generator);
+    TRY(m_tag->generate_bytecode(generator));
     auto tag_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(tag_reg);
 
@@ -1050,7 +1362,7 @@ void TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) co
         if (i % 2 != 0)
             continue;
 
-        expressions[i].generate_bytecode(generator);
+        TRY(expressions[i].generate_bytecode(generator));
         auto string_reg = generator.allocate_register();
         generator.emit<Bytecode::Op::Store>(string_reg);
         string_regs.append(string_reg);
@@ -1066,7 +1378,7 @@ void TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) co
         if (i % 2 == 0)
             continue;
 
-        expressions[i].generate_bytecode(generator);
+        TRY(expressions[i].generate_bytecode(generator));
         auto string_reg = generator.allocate_register();
         generator.emit<Bytecode::Op::Store>(string_reg);
         argument_regs.append(string_reg);
@@ -1074,7 +1386,7 @@ void TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) co
 
     Vector<Bytecode::Register> raw_string_regs;
     for (auto& raw_string : m_template_literal->raw_strings()) {
-        raw_string.generate_bytecode(generator);
+        TRY(raw_string.generate_bytecode(generator));
         auto raw_string_reg = generator.allocate_register();
         generator.emit<Bytecode::Op::Store>(raw_string_reg);
         raw_string_regs.append(raw_string_reg);
@@ -1092,11 +1404,12 @@ void TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) co
     generator.emit<Bytecode::Op::Store>(this_reg);
 
     generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_regs.size(), Bytecode::Op::Call::CallType::Call, tag_reg, this_reg, move(argument_regs));
+    return {};
 }
 
-void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit_load_from_reference(*m_argument);
+    TRY(generator.emit_load_from_reference(*m_argument));
 
     Optional<Bytecode::Register> previous_value_for_postfix_reg;
     if (!m_prefixed) {
@@ -1109,26 +1422,29 @@ void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
     else
         generator.emit<Bytecode::Op::Decrement>();
 
-    generator.emit_store_to_reference(*m_argument);
+    TRY(generator.emit_store_to_reference(*m_argument));
 
     if (!m_prefixed)
         generator.emit<Bytecode::Op::Load>(*previous_value_for_postfix_reg);
+    return {};
 }
 
-void ThrowStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ThrowStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    m_argument->generate_bytecode(generator);
+    TRY(m_argument->generate_bytecode(generator));
     generator.emit<Bytecode::Op::Throw>();
+    return {};
 }
 
-void BreakStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> BreakStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::Jump>().set_targets(
         generator.nearest_breakable_scope(),
         {});
+    return {};
 }
 
-void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto& saved_block = generator.current_block();
 
@@ -1140,7 +1456,7 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
     if (m_finalizer) {
         auto& finalizer_block = generator.make_block();
         generator.switch_to_basic_block(finalizer_block);
-        m_finalizer->generate_bytecode(generator);
+        TRY(m_finalizer->generate_bytecode(generator));
         if (!generator.is_current_block_terminated()) {
             next_block = &generator.make_block();
             auto next_target = Bytecode::Label { *next_block };
@@ -1152,21 +1468,23 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
     if (m_handler) {
         auto& handler_block = generator.make_block();
         generator.switch_to_basic_block(handler_block);
-        if (!m_finalizer)
-            generator.emit<Bytecode::Op::LeaveUnwindContext>();
-        m_handler->parameter().visit(
-            [&](FlyString const& parameter) {
+        TRY(m_handler->parameter().visit(
+            [&](FlyString const& parameter) -> Bytecode::CodeGenerationErrorOr<void> {
                 if (!parameter.is_empty()) {
                     // FIXME: We need a separate DeclarativeEnvironment here
                     generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(parameter));
                 }
+                return {};
             },
-            [&](NonnullRefPtr<BindingPattern> const&) {
+            [&](NonnullRefPtr<BindingPattern> const&) -> Bytecode::CodeGenerationErrorOr<void> {
                 // FIXME: Implement this path when the above DeclarativeEnvironment issue is dealt with.
-                TODO();
-            });
+                return Bytecode::CodeGenerationError {
+                    this,
+                    "Unimplemented catch argument: BindingPattern"sv,
+                };
+            }));
 
-        m_handler->body().generate_bytecode(generator);
+        TRY(m_handler->body().generate_bytecode(generator));
         handler_target = Bytecode::Label { handler_block };
         if (!generator.is_current_block_terminated()) {
             if (m_finalizer) {
@@ -1186,7 +1504,7 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
     generator.emit<Bytecode::Op::EnterUnwindContext>(Bytecode::Label { target_block }, handler_target, finalizer_target);
 
     generator.switch_to_basic_block(target_block);
-    m_block->generate_bytecode(generator);
+    TRY(m_block->generate_bytecode(generator));
     if (!generator.is_current_block_terminated()) {
         if (m_finalizer) {
             generator.emit<Bytecode::Op::Jump>(finalizer_target);
@@ -1198,12 +1516,13 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
     }
 
     generator.switch_to_basic_block(next_block ? *next_block : saved_block);
+    return {};
 }
 
-void SwitchStatement::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto discriminant_reg = generator.allocate_register();
-    m_discriminant->generate_bytecode(generator);
+    TRY(m_discriminant->generate_bytecode(generator));
     generator.emit<Bytecode::Op::Store>(discriminant_reg);
     Vector<Bytecode::BasicBlock&> case_blocks;
     Bytecode::BasicBlock* default_block { nullptr };
@@ -1213,7 +1532,7 @@ void SwitchStatement::generate_bytecode(Bytecode::Generator& generator) const
         auto& case_block = generator.make_block();
         if (switch_case.test()) {
             generator.switch_to_basic_block(*next_test_block);
-            switch_case.test()->generate_bytecode(generator);
+            TRY(switch_case.test()->generate_bytecode(generator));
             generator.emit<Bytecode::Op::StrictlyEquals>(discriminant_reg);
             next_test_block = &generator.make_block();
             generator.emit<Bytecode::Op::JumpConditional>().set_targets(Bytecode::Label { case_block }, Bytecode::Label { *next_test_block });
@@ -1238,7 +1557,7 @@ void SwitchStatement::generate_bytecode(Bytecode::Generator& generator) const
 
         generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
         for (auto& statement : switch_case.children()) {
-            statement.generate_bytecode(generator);
+            TRY(statement.generate_bytecode(generator));
         }
         if (!generator.is_current_block_terminated()) {
             auto next_block = current_block;
@@ -1254,29 +1573,39 @@ void SwitchStatement::generate_bytecode(Bytecode::Generator& generator) const
     generator.end_breakable_scope();
 
     generator.switch_to_basic_block(end_block);
+    return {};
 }
 
-void ClassDeclaration::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ClassDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit<Bytecode::Op::NewClass>(m_class_expression);
-    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(m_class_expression.ptr()->name()));
+    TRY(m_class_expression->generate_bytecode(generator));
+    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(m_class_expression.ptr()->name()), Bytecode::Op::SetVariable::InitializationMode::Initialize);
+    return {};
 }
 
-void ThisExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> ClassExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    generator.emit<Bytecode::Op::NewClass>(*this);
+    return {};
+}
+
+Bytecode::CodeGenerationErrorOr<void> ThisExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::ResolveThisBinding>();
+    return {};
 }
 
-void AwaitExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     VERIFY(generator.is_in_async_function());
 
     // Transform `await expr` to `yield expr`
-    m_argument->generate_bytecode(generator);
+    TRY(m_argument->generate_bytecode(generator));
 
     auto& continuation_block = generator.make_block();
     generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
     generator.switch_to_basic_block(continuation_block);
+    return {};
 }
 
 }
