@@ -229,7 +229,7 @@ struct Formatter<WeakPtr<T>> : Formatter<const T*> {
 };
 
 template<typename T>
-WeakPtr<T> try_make_weak_ptr(const T* ptr)
+WeakPtr<T> make_weak_ptr_if_nonnull(const T* ptr)
 {
     if (ptr) {
         return ptr->template make_weak_ptr<T>();
