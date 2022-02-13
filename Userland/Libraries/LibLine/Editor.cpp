@@ -23,6 +23,7 @@
 #include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -222,6 +223,14 @@ void Editor::get_terminal_size()
         m_num_columns = 80;
         m_num_lines = 25;
     } else {
+        if (ws.ws_col == 0 || ws.ws_row == 0) {
+            // LLDB uses ttys which "work" and then gives us a zero sized
+            // terminal which is far from useful
+            if (int fd = open("/dev/tty", O_RDONLY); fd != -1) {
+                ioctl(fd, TIOCGWINSZ, &ws);
+                close (fd);
+            }
+        }
         m_num_columns = ws.ws_col;
         m_num_lines = ws.ws_row;
     }
