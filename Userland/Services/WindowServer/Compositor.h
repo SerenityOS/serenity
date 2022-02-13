@@ -105,8 +105,8 @@ public:
 
     bool set_wallpaper_mode(const String& mode);
 
-    bool set_wallpaper(const String& path, Function<void(bool)>&& callback);
-    String wallpaper_path() const { return m_wallpaper_path; }
+    bool set_wallpaper(RefPtr<Gfx::Bitmap>);
+    RefPtr<Gfx::Bitmap> wallpaper_bitmap() const { return m_wallpaper; }
 
     void invalidate_cursor(bool = false);
     Gfx::IntRect current_cursor_rect() const;
@@ -227,7 +227,6 @@ private:
     Gfx::DisjointRectSet m_opaque_wallpaper_rects;
     Gfx::DisjointRectSet m_transparent_wallpaper_rects;
 
-    String m_wallpaper_path { "" };
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
     RefPtr<Gfx::Bitmap> m_wallpaper;
 
