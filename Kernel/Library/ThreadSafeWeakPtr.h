@@ -237,12 +237,6 @@ ErrorOr<WeakPtr<T>> try_make_weak_ptr_if_nonnull(T const* ptr)
     return WeakPtr<T> {};
 }
 
-template<typename T>
-WeakPtr<T> make_weak_ptr_if_nonnull(T const* ptr)
-{
-    return MUST(try_make_weak_ptr_if_nonnull(ptr));
-}
-
 }
 
 using AK::WeakPtr;
