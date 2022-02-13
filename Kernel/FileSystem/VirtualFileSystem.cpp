@@ -363,6 +363,8 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
     }
 
     RefPtr<Custody> parent_custody;
+    // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
+    //        e.g. when the error is EACCESS or similar.
     auto result = resolve_path_without_veil(path, base, &parent_custody);
     if (!result.is_error())
         return EEXIST;
@@ -828,6 +830,8 @@ ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView p
 
 ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
+    // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
+    //        e.g. when the error is EACCESS or similar.
     auto custody = TRY(resolve_path_without_veil(path, base, out_parent, options, symlink_recursion_level));
     if (auto result = validate_path_against_process_veil(*custody, options); result.is_error()) {
         if (out_parent)
