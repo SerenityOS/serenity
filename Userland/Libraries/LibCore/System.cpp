@@ -766,6 +766,21 @@ ErrorOr<void> chdir(StringView path)
 #endif
 }
 
+ErrorOr<void> rmdir(StringView path)
+{
+    if (path.is_null())
+        return Error::from_errno(EFAULT);
+#ifdef __serenity__
+    int rc = syscall(SC_rmdir, path.characters_without_null_termination(), path.length());
+    HANDLE_SYSCALL_RETURN_VALUE("rmdir"sv, rc, {});
+#else
+    String path_string = path;
+    if (::rmdir(path_string.characters()) < 0)
+        return Error::from_syscall("rmdir"sv, -errno);
+    return {};
+#endif
+}
+
 ErrorOr<pid_t> fork()
 {
     pid_t pid = ::fork();
