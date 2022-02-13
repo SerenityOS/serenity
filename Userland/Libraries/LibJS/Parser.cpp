@@ -1692,7 +1692,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 property_key = parse_property_key();
             } else {
                 property_key = create_ast_node<StringLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, identifier.value());
-                property_value = create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, identifier.value());
+                property_value = create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, identifier.flystring_value());
             }
         } else {
             property_key = parse_property_key();
@@ -2076,7 +2076,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
             expected("IdentifierName");
         }
 
-        return create_ast_node<MemberExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(lhs), create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, consume().value()));
+        return create_ast_node<MemberExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(lhs), create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, consume().flystring_value()));
     case TokenType::BracketOpen: {
         consume(TokenType::BracketOpen);
         auto expression = create_ast_node<MemberExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(lhs), parse_expression(0), true);
@@ -2246,7 +2246,7 @@ NonnullRefPtr<Identifier> Parser::parse_identifier()
         syntax_error("'arguments' is not allowed in class field initializer");
     return create_ast_node<Identifier>(
         { m_state.current_token.filename(), identifier_start, position() },
-        token.value());
+        token.flystring_value());
 }
 
 Vector<CallExpression::Argument> Parser::parse_arguments()
@@ -2726,7 +2726,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates all
                 } else {
                     name = create_ast_node<Identifier>(
                         { m_state.current_token.filename(), rule_start.position(), position() },
-                        consume().value());
+                        consume().flystring_value());
                 }
             } else if (match(TokenType::BracketOpen)) {
                 consume();
@@ -2764,7 +2764,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates all
                 } else if (match_identifier_name()) {
                     alias = create_ast_node<Identifier>(
                         { m_state.current_token.filename(), rule_start.position(), position() },
-                        consume().value());
+                        consume().flystring_value());
 
                 } else {
                     expected("identifier or binding pattern");
@@ -2800,7 +2800,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates all
                 alias = pattern.release_nonnull();
             } else if (match_identifier_name()) {
                 // BindingElement must always have an Empty name field
-                auto identifier_name = consume_identifier().value();
+                auto identifier_name = consume_identifier().flystring_value();
                 alias = create_ast_node<Identifier>(
                     { m_state.current_token.filename(), rule_start.position(), position() },
                     identifier_name);
@@ -2886,7 +2886,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
         Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, Empty> target {};
         if (match_identifier()) {
             auto identifier_start = push_start();
-            auto name = consume_identifier().value();
+            auto name = consume_identifier().flystring_value();
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
                 name);
@@ -2908,14 +2908,14 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
 
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
-                consume().value());
+                consume().flystring_value());
         } else if (!m_state.await_expression_is_valid && match(TokenType::Async)) {
             if (m_program_type == Program::Type::Module)
                 syntax_error("Identifier must not be a reserved word in modules ('async')");
 
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
-                consume().value());
+                consume().flystring_value());
         }
 
         if (target.has<Empty>()) {
@@ -3076,7 +3076,7 @@ NonnullRefPtr<OptionalChain> Parser::parse_optional_chain(NonnullRefPtr<Expressi
                     auto start = position();
                     auto identifier = consume();
                     chain.append(OptionalChain::MemberReference {
-                        create_ast_node<Identifier>({ m_state.current_token.filename(), start, position() }, identifier.value()),
+                        create_ast_node<Identifier>({ m_state.current_token.filename(), start, position() }, identifier.flystring_value()),
                         OptionalChain::Mode::Optional,
                     });
                 } else {
@@ -3099,7 +3099,7 @@ NonnullRefPtr<OptionalChain> Parser::parse_optional_chain(NonnullRefPtr<Expressi
                 auto start = position();
                 auto identifier = consume();
                 chain.append(OptionalChain::MemberReference {
-                    create_ast_node<Identifier>({ m_state.current_token.filename(), start, position() }, identifier.value()),
+                    create_ast_node<Identifier>({ m_state.current_token.filename(), start, position() }, identifier.flystring_value()),
                     OptionalChain::Mode::NotOptional,
                 });
             } else {
