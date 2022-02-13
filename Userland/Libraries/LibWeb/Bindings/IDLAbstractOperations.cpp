@@ -37,7 +37,6 @@ bool is_an_array_index(JS::PropertyKey const& property_name)
         return false;
     }
 
-
     // 8. Return true.
     return true;
 }

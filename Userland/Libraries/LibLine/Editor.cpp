@@ -228,7 +228,7 @@ void Editor::get_terminal_size()
             // terminal which is far from useful
             if (int fd = open("/dev/tty", O_RDONLY); fd != -1) {
                 ioctl(fd, TIOCGWINSZ, &ws);
-                close (fd);
+                close(fd);
             }
         }
         m_num_columns = ws.ws_col;
