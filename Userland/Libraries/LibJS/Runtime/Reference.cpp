@@ -65,10 +65,15 @@ ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
     if (is_property_reference()) {
         auto* base_obj = TRY(m_base_value.to_object(global_object));
 
-        if (is_private_reference())
+        if (is_private_reference()) {
+            // FIXME: We need to be able to specify the receiver for this
+            // if we want to use it in error messages in future
+            // as things currently stand this does the "wrong thing" but
+            // the error is unobservable
             return base_obj->private_get(m_private_name);
+        }
 
-        return base_obj->get(m_name);
+        return base_obj->internal_get(m_name, m_base_value);
     }
 
     VERIFY(m_base_type == BaseType::Environment);
