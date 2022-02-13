@@ -130,10 +130,11 @@ ErrorOr<void> Inode::decrement_link_count()
     return ENOTIMPL;
 }
 
-void Inode::set_shared_vmobject(Memory::SharedInodeVMObject& vmobject)
+ErrorOr<void> Inode::set_shared_vmobject(Memory::SharedInodeVMObject& vmobject)
 {
     MutexLocker locker(m_inode_lock);
-    m_shared_vmobject = vmobject;
+    m_shared_vmobject = TRY(vmobject.try_make_weak_ptr<Memory::SharedInodeVMObject>());
+    return {};
 }
 
 RefPtr<LocalSocket> Inode::bound_socket() const
