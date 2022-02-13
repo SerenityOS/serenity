@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Zachary Penn <zack@sysdevs.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/String.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibMain/Main.h>
 #include <ctype.h>
 #include <signal.h>
 #include <stdio.h>
@@ -34,37 +36,37 @@ static int kill_all(const String& process_name, const unsigned signum)
     return 0;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     unsigned signum = SIGTERM;
     int name_argi = 1;
 
-    if (argc != 2 && argc != 3)
+    if (arguments.argc != 2 && arguments.argc != 3)
         print_usage_and_exit();
 
-    if (argc == 3) {
+    if (arguments.argc == 3) {
         name_argi = 2;
 
-        if (argv[1][0] != '-')
+        if (arguments.argv[1][0] != '-')
             print_usage_and_exit();
 
         Optional<unsigned> number;
 
-        if (isalpha(argv[1][1])) {
-            int value = getsignalbyname(&argv[1][1]);
+        if (isalpha(arguments.argv[1][1])) {
+            int value = getsignalbyname(&arguments.argv[1][1]);
             if (value >= 0 && value < NSIG)
                 number = value;
         }
 
         if (!number.has_value())
-            number = String(&argv[1][1]).to_uint();
+            number = String(&arguments.argv[1][1]).to_uint();
 
         if (!number.has_value()) {
-            warnln("'{}' is not a valid signal name or number", &argv[1][1]);
+            warnln("'{}' is not a valid signal name or number", &arguments.argv[1][1]);
             return 2;
         }
         signum = number.value();
     }
 
-    return kill_all(argv[name_argi], signum);
+    return kill_all(arguments.argv[name_argi], signum);
 }
