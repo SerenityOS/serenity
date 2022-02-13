@@ -190,7 +190,7 @@ public:
     ScopePusher* parent_scope() { return m_parent_scope; }
     ScopePusher const* parent_scope() const { return m_parent_scope; }
 
-    [[nodiscard]] bool has_declaration(StringView name) const
+    [[nodiscard]] bool has_declaration(FlyString const& name) const
     {
         return m_lexical_names.contains(name) || m_var_names.contains(name) || !m_functions_to_hoist.find_if([&name](auto& function) { return function->name() == name; }).is_end();
     }
