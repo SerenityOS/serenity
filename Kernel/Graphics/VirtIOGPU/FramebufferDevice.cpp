@@ -108,7 +108,7 @@ ErrorOr<void> FramebufferDevice::flush_head_buffer(size_t)
 }
 ErrorOr<void> FramebufferDevice::flush_rectangle(size_t buffer_index, FBRect const& rect)
 {
-    SpinlockLocker locker(adapter()->operation_lock());
+    MutexLocker locker(adapter()->operation_lock());
     Protocol::Rect dirty_rect {
         .x = rect.x,
         .y = rect.y,
@@ -165,7 +165,7 @@ FramebufferDevice::~FramebufferDevice()
 
 ErrorOr<void> FramebufferDevice::create_framebuffer()
 {
-    SpinlockLocker locker(adapter()->operation_lock());
+    MutexLocker locker(adapter()->operation_lock());
     // First delete any existing framebuffers to free the memory first
     m_framebuffer = nullptr;
     m_framebuffer_sink_vmobject = nullptr;
@@ -255,7 +255,7 @@ void FramebufferDevice::flush_displayed_image(Protocol::Rect const& dirty_rect, 
 void FramebufferDevice::set_buffer(int buffer_index)
 {
     auto& buffer = buffer_index == 0 ? m_main_buffer : m_back_buffer;
-    SpinlockLocker locker(adapter()->operation_lock());
+    MutexLocker locker(adapter()->operation_lock());
     if (&buffer == m_current_buffer)
         return;
     m_current_buffer = &buffer;
