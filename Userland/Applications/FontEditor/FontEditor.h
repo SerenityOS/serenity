@@ -35,7 +35,10 @@ public:
     void initialize_menubar(GUI::Window&);
 
     bool is_showing_font_metadata() { return m_font_metadata; }
-    void set_show_font_metadata(bool b);
+    void set_show_font_metadata(bool);
+
+    bool is_showing_unicode_blocks() { return m_unicode_blocks; }
+    void set_show_unicode_blocks(bool);
 
     Function<void()> on_initialize;
 
@@ -87,6 +90,7 @@ private:
 
     RefPtr<GUI::Action> m_open_preview_action;
     RefPtr<GUI::Action> m_show_metadata_action;
+    RefPtr<GUI::Action> m_show_unicode_blocks_action;
 
     GUI::ActionGroup m_glyph_editor_scale_actions;
     RefPtr<GUI::Action> m_scale_five_action;
@@ -119,9 +123,14 @@ private:
     RefPtr<GUI::TextBox> m_family_textbox;
     RefPtr<GUI::CheckBox> m_fixed_width_checkbox;
     RefPtr<GUI::GroupBox> m_font_metadata_groupbox;
+    RefPtr<GUI::ListView> m_unicode_block_listview;
+    RefPtr<GUI::Model> m_unicode_block_model;
 
     String m_path;
     Vector<String> m_font_weight_list;
     Vector<String> m_font_slope_list;
+    Vector<String> m_unicode_block_list;
     bool m_font_metadata { true };
+    bool m_unicode_blocks { true };
+    Unicode::CodePointRange m_range { 0x0000, 0x10FFFF };
 };

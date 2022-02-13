@@ -9,6 +9,7 @@
 #include "GlyphEditorWidget.h"
 #include "NewFontDialog.h"
 #include <AK/StringBuilder.h>
+#include <AK/StringUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
@@ -24,6 +25,7 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -39,7 +41,6 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/TextDirection.h>
 #include <LibUnicode/CharacterTypes.h>
-#include <stdlib.h>
 
 static constexpr int s_pangram_count = 8;
 static char const* pangrams[s_pangram_count] = {
@@ -132,6 +133,7 @@ FontEditorWidget::FontEditorWidget()
     m_baseline_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("baseline_spinbox");
     m_fixed_width_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("fixed_width_checkbox");
     m_font_metadata_groupbox = *find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
+    m_unicode_block_listview = *find_descendant_of_type_named<GUI::ListView>("unicode_block_listview");
 
     m_glyph_editor_widget = m_glyph_editor_container->add<GlyphEditorWidget>();
     m_glyph_map_widget = glyph_map_container.add<GUI::GlyphMapWidget>();
@@ -210,11 +212,19 @@ FontEditorWidget::FontEditorWidget()
     });
     m_show_metadata_action->set_checked(true);
     m_show_metadata_action->set_status_tip("Show or hide metadata about the current font");
+    m_show_unicode_blocks_action = GUI::Action::create_checkable("&Unicode Blocks", { Mod_Ctrl, Key_U }, [&](auto& action) {
+        set_show_unicode_blocks(action.is_checked());
+    });
+    m_show_unicode_blocks_action->set_checked(true);
+    m_show_unicode_blocks_action->set_status_tip("Show or hide the Unicode block list");
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         String input;
-        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to Glyph") == GUI::InputBox::ExecOK && !input.is_empty()) {
-            int code_point = strtoul(&input[0], nullptr, 16);
-            code_point = clamp(code_point, 0x0000, 0x10FFFF);
+        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecOK && !input.is_empty()) {
+            auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
+            if (!maybe_code_point.has_value())
+                return;
+            auto code_point = maybe_code_point.value();
+            code_point = clamp(code_point, m_range.first, m_range.last);
             m_glyph_map_widget->set_focus(true);
             m_glyph_map_widget->set_active_glyph(code_point);
             m_glyph_map_widget->scroll_to_glyph(code_point);
@@ -424,6 +434,25 @@ FontEditorWidget::FontEditorWidget()
         did_modify_font();
     };
 
+    auto unicode_blocks = Unicode::block_display_names();
+    m_unicode_block_listview->on_activation = [this, unicode_blocks](auto& index) {
+        if (index.row() > 0)
+            m_range = unicode_blocks[index.row() - 1].code_point_range;
+        else
+            m_range = { 0x0000, 0x10FFFF };
+        m_glyph_map_widget->set_active_range(m_range);
+    };
+
+    m_unicode_block_list.append("Show All");
+    for (auto& block : unicode_blocks)
+        m_unicode_block_list.append(block.display_name);
+
+    m_unicode_block_model = GUI::ItemListModel<String>::create(m_unicode_block_list);
+    m_unicode_block_listview->set_model(*m_unicode_block_model);
+    m_unicode_block_listview->set_activates_on_selection(true);
+    m_unicode_block_listview->horizontal_scrollbar().set_visible(false);
+    m_unicode_block_listview->set_cursor(m_unicode_block_model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
+
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
         auto text = action.status_tip();
         if (text.is_empty())
@@ -543,6 +572,7 @@ void FontEditorWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_action(*m_open_preview_action);
     view_menu.add_separator();
     view_menu.add_action(*m_show_metadata_action);
+    view_menu.add_action(*m_show_unicode_blocks_action);
     view_menu.add_separator();
     auto& scale_menu = view_menu.add_submenu("&Scale");
     scale_menu.add_action(*m_scale_five_action);
@@ -577,6 +607,14 @@ void FontEditorWidget::set_show_font_metadata(bool show)
         return;
     m_font_metadata = show;
     m_font_metadata_groupbox->set_visible(m_font_metadata);
+}
+
+void FontEditorWidget::set_show_unicode_blocks(bool show)
+{
+    if (m_unicode_blocks == show)
+        return;
+    m_unicode_blocks = show;
+    m_unicode_block_listview->set_visible(m_unicode_blocks);
 }
 
 bool FontEditorWidget::open_file(String const& path)
