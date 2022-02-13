@@ -110,7 +110,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
             auto* child_region = TRY(child->address_space().add_region(move(region_clone)));
 
             if (region == m_master_tls_region.unsafe_ptr())
-                child->m_master_tls_region = child_region;
+                child->m_master_tls_region = TRY(child_region->try_make_weak_ptr());
         }
     }
 
