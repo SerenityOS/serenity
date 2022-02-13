@@ -24,6 +24,7 @@ constexpr static Array<int, 7>
     rsa_md5_encryption_oid { 1, 2, 840, 113549, 1, 1, 4 },
     rsa_sha1_encryption_oid { 1, 2, 840, 113549, 1, 1, 5 },
     rsa_sha256_encryption_oid { 1, 2, 840, 113549, 1, 1, 11 },
+    rsa_sha384_encryption_oid { 1, 2, 840, 113549, 1, 1, 12 },
     rsa_sha512_encryption_oid { 1, 2, 840, 113549, 1, 1, 13 };
 
 constexpr static Array<int, 4>
@@ -151,6 +152,8 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
             field = CertificateKeyAlgorithm ::RSA_SHA1;
         else if (identifier == rsa_sha256_encryption_oid)
             field = CertificateKeyAlgorithm ::RSA_SHA256;
+        else if (identifier == rsa_sha384_encryption_oid)
+            field = CertificateKeyAlgorithm ::RSA_SHA384;
         else if (identifier == rsa_sha512_encryption_oid)
             field = CertificateKeyAlgorithm ::RSA_SHA512;
         else
