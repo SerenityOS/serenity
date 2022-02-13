@@ -5,16 +5,13 @@
  */
 
 #include <AK/Format.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <AK/String.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    char* tty = ttyname(0);
-    if (!tty) {
-        perror("Error");
-        return 1;
-    }
+    auto tty = TRY(Core::System::ttyname(0));
     outln("{}", tty);
     return 0;
 }
