@@ -680,6 +680,14 @@ ErrorOr<bool> isatty(int fd)
     return rc == 1;
 }
 
+ErrorOr<StringView> ttyname(int fd)
+{
+    char* res = ::ttyname(fd);
+    if (!res)
+        return Error::from_syscall("ttyname"sv, -errno);
+    return res;
+}
+
 ErrorOr<void> symlink(StringView target, StringView link_path)
 {
 #ifdef __serenity__
