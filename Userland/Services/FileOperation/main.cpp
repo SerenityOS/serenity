@@ -7,9 +7,13 @@
 
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
+#include <AK/String.h>
+#include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <sched.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -28,16 +32,16 @@ struct WorkItem {
     off_t size;
 };
 
-static int perform_copy(Vector<StringView> const& sources, String const& destination);
-static int perform_move(Vector<StringView> const& sources, String const& destination);
-static int perform_delete(Vector<StringView> const& sources);
-static int execute_work_items(Vector<WorkItem> const& items);
-static void report_error(String message);
-static void report_warning(String message);
+static void report_warning(StringView message);
+static void report_error(StringView message);
+static ErrorOr<int> perform_copy(Vector<StringView> const& sources, String const& destination);
+static ErrorOr<int> perform_move(Vector<StringView> const& sources, String const& destination);
+static ErrorOr<int> perform_delete(Vector<StringView> const& sources);
+static ErrorOr<int> execute_work_items(Vector<WorkItem> const& items);
 static ErrorOr<NonnullRefPtr<Core::File>> open_destination_file(String const& destination);
 static String deduplicate_destination_file_name(String const& destination);
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     String operation;
     Vector<StringView> paths;
@@ -45,46 +49,38 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(operation, "Operation: either 'Copy', 'Move' or 'Delete'", "operation", Core::ArgsParser::Required::Yes);
     args_parser.add_positional_argument(paths, "Source paths, followed by a destination if applicable", "paths", Core::ArgsParser::Required::Yes);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (operation == "Delete")
         return perform_delete(paths);
 
     String destination = paths.take_last();
-    if (paths.is_empty()) {
-        report_warning("At least one source and destination are required");
-        return 1;
-    }
+    if (paths.is_empty())
+        return Error::from_string_literal("At least one source and destination are required");
 
     if (operation == "Copy")
         return perform_copy(paths, destination);
     if (operation == "Move")
         return perform_move(paths, destination);
 
-    report_warning(String::formatted("Unknown operation '{}'", operation));
-    return 0;
+    // FIXME: Return the formatted string directly. There is no way to do this right now without the temporary going out of scope and being destroyed.
+    report_error(String::formatted("Unknown operation '{}'", operation));
+    return Error::from_string_literal("Unknown operation");
 }
 
-static void report_error(String message)
-{
-    outln("ERROR {}", message);
-}
-
-static void report_warning(String message)
+static void report_warning(StringView message)
 {
     outln("WARN {}", message);
 }
 
-static bool collect_copy_work_items(String const& source, String const& destination, Vector<WorkItem>& items)
+static void report_error(StringView message)
 {
-    struct stat st = {};
-    if (lstat(source.characters(), &st) < 0) {
-        auto original_errno = errno;
-        report_error(String::formatted("stat: {}", strerror(original_errno)));
-        return false;
-    }
+    outln("ERROR {}", message);
+}
 
-    if (!S_ISDIR(st.st_mode)) {
+static ErrorOr<int> collect_copy_work_items(String const& source, String const& destination, Vector<WorkItem>& items)
+{
+    if (auto const st = TRY(Core::System::lstat(source)); !S_ISDIR(st.st_mode)) {
         // It's a file.
         items.append(WorkItem {
             .type = WorkItem::Type::CopyFile,
@@ -92,7 +88,7 @@ static bool collect_copy_work_items(String const& source, String const& destinat
             .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
             .size = st.st_size,
         });
-        return true;
+        return 0;
     }
 
     // It's a directory.
@@ -106,39 +102,29 @@ static bool collect_copy_work_items(String const& source, String const& destinat
     Core::DirIterator dt(source, Core::DirIterator::SkipParentAndBaseDir);
     while (dt.has_next()) {
         auto name = dt.next_path();
-        if (!collect_copy_work_items(
-                LexicalPath::join(source, name).string(),
-                LexicalPath::join(destination, LexicalPath::basename(source)).string(),
-                items)) {
-            return false;
-        }
+        TRY(collect_copy_work_items(
+            LexicalPath::join(source, name).string(),
+            LexicalPath::join(destination, LexicalPath::basename(source)).string(),
+            items));
     }
 
-    return true;
+    return 0;
 }
 
-int perform_copy(Vector<StringView> const& sources, String const& destination)
+ErrorOr<int> perform_copy(Vector<StringView> const& sources, String const& destination)
 {
     Vector<WorkItem> items;
 
     for (auto& source : sources) {
-        if (!collect_copy_work_items(source, destination, items))
-            return 1;
+        TRY(collect_copy_work_items(source, destination, items));
     }
 
     return execute_work_items(items);
 }
 
-static bool collect_move_work_items(String const& source, String const& destination, Vector<WorkItem>& items)
+static ErrorOr<int> collect_move_work_items(String const& source, String const& destination, Vector<WorkItem>& items)
 {
-    struct stat st = {};
-    if (lstat(source.characters(), &st) < 0) {
-        auto original_errno = errno;
-        report_error(String::formatted("stat: {}", strerror(original_errno)));
-        return false;
-    }
-
-    if (!S_ISDIR(st.st_mode)) {
+    if (auto const st = TRY(Core::System::lstat(source)); !S_ISDIR(st.st_mode)) {
         // It's a file.
         items.append(WorkItem {
             .type = WorkItem::Type::MoveFile,
@@ -146,7 +132,7 @@ static bool collect_move_work_items(String const& source, String const& destinat
             .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
             .size = st.st_size,
         });
-        return true;
+        return 0;
     }
 
     // It's a directory.
@@ -160,12 +146,10 @@ static bool collect_move_work_items(String const& source, String const& destinat
     Core::DirIterator dt(source, Core::DirIterator::SkipParentAndBaseDir);
     while (dt.has_next()) {
         auto name = dt.next_path();
-        if (!collect_move_work_items(
-                LexicalPath::join(source, name).string(),
-                LexicalPath::join(destination, LexicalPath::basename(source)).string(),
-                items)) {
-            return false;
-        }
+        TRY(collect_move_work_items(
+            LexicalPath::join(source, name).string(),
+            LexicalPath::join(destination, LexicalPath::basename(source)).string(),
+            items));
     }
 
     items.append(WorkItem {
@@ -175,31 +159,23 @@ static bool collect_move_work_items(String const& source, String const& destinat
         .size = 0,
     });
 
-    return true;
+    return 0;
 }
 
-int perform_move(Vector<StringView> const& sources, String const& destination)
+ErrorOr<int> perform_move(Vector<StringView> const& sources, String const& destination)
 {
     Vector<WorkItem> items;
 
     for (auto& source : sources) {
-        if (!collect_move_work_items(source, destination, items))
-            return 1;
+        TRY(collect_move_work_items(source, destination, items));
     }
 
     return execute_work_items(items);
 }
 
-static bool collect_delete_work_items(String const& source, Vector<WorkItem>& items)
+static ErrorOr<int> collect_delete_work_items(String const& source, Vector<WorkItem>& items)
 {
-    struct stat st = {};
-    if (lstat(source.characters(), &st) < 0) {
-        auto original_errno = errno;
-        report_error(String::formatted("stat: {}", strerror(original_errno)));
-        return false;
-    }
-
-    if (!S_ISDIR(st.st_mode)) {
+    if (auto const st = TRY(Core::System::lstat(source)); !S_ISDIR(st.st_mode)) {
         // It's a file.
         items.append(WorkItem {
             .type = WorkItem::Type::DeleteFile,
@@ -207,15 +183,14 @@ static bool collect_delete_work_items(String const& source, Vector<WorkItem>& it
             .destination = {},
             .size = st.st_size,
         });
-        return true;
+        return 0;
     }
 
     // It's a directory.
     Core::DirIterator dt(source, Core::DirIterator::SkipParentAndBaseDir);
     while (dt.has_next()) {
         auto name = dt.next_path();
-        if (!collect_delete_work_items(LexicalPath::join(source, name).string(), items))
-            return false;
+        TRY(collect_delete_work_items(LexicalPath::join(source, name).string(), items));
     }
 
     items.append(WorkItem {
@@ -225,22 +200,21 @@ static bool collect_delete_work_items(String const& source, Vector<WorkItem>& it
         .size = 0,
     });
 
-    return true;
+    return 0;
 }
 
-int perform_delete(Vector<StringView> const& sources)
+ErrorOr<int> perform_delete(Vector<StringView> const& sources)
 {
     Vector<WorkItem> items;
 
     for (auto& source : sources) {
-        if (!collect_delete_work_items(source, items))
-            return 1;
+        TRY(collect_delete_work_items(source, items));
     }
 
     return execute_work_items(items);
 }
 
-int execute_work_items(Vector<WorkItem> const& items)
+ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
 {
     off_t total_work_bytes = 0;
     for (auto& item : items)
@@ -255,29 +229,20 @@ int execute_work_items(Vector<WorkItem> const& items)
             outln("PROGRESS {} {} {} {} {} {} {}", i, items.size(), executed_work_bytes, total_work_bytes, item_done, item.size, item.source);
         };
 
-        auto copy_file = [&](String const& source, String const& destination) {
-            auto source_file_or_error = Core::File::open(source, Core::OpenMode::ReadOnly);
-            if (source_file_or_error.is_error()) {
-                report_warning(String::formatted("Failed to open {} for reading: {}", source, source_file_or_error.error()));
-                return false;
-            }
+        auto copy_file = [&](String const& source, String const& destination) -> ErrorOr<int> {
+            auto source_file = TRY(Core::File::open(source, Core::OpenMode::ReadOnly));
             // FIXME: When the file already exists, let the user choose the next action instead of renaming it by default.
-            auto destination_file_or_error = open_destination_file(destination);
-            if (destination_file_or_error.is_error()) {
-                report_warning(String::formatted("Failed to open {} for write: {}", destination, destination_file_or_error.error()));
-                return false;
-            }
-            auto& source_file = *source_file_or_error.value();
-            auto& destination_file = *destination_file_or_error.value();
+            auto destination_file = TRY(open_destination_file(destination));
 
             while (true) {
                 print_progress();
-                auto buffer = source_file.read(65536);
+                auto buffer = source_file->read(65536);
                 if (buffer.is_empty())
                     break;
-                if (!destination_file.write(buffer)) {
-                    report_warning(String::formatted("Failed to write to destination file: {}", destination_file.error_string()));
-                    return false;
+                if (auto result = destination_file->write(buffer); !result) {
+                    // FIXME: Return the formatted string directly. There is no way to do this right now without the temporary going out of scope and being destroyed.
+                    report_warning(String::formatted("Failed to write to destination file: {}", destination_file->error_string()));
+                    return result;
                 }
                 item_done += buffer.size();
                 executed_work_bytes += buffer.size();
@@ -288,7 +253,7 @@ int execute_work_items(Vector<WorkItem> const& items)
                 sched_yield();
             }
             print_progress();
-            return true;
+            return 0;
         };
 
         switch (item.type) {
@@ -296,27 +261,18 @@ int execute_work_items(Vector<WorkItem> const& items)
         case WorkItem::Type::CreateDirectory: {
             outln("MKDIR {}", item.destination);
             // FIXME: Support deduplication like open_destination_file() when the directory already exists.
-            if (mkdir(item.destination.characters(), 0755) < 0 && errno != EEXIST) {
-                auto original_errno = errno;
-                report_error(String::formatted("mkdir: {}", strerror(original_errno)));
-                return 1;
-            }
+            if (mkdir(item.destination.characters(), 0755) < 0 && errno != EEXIST)
+                return Error::from_syscall("mkdir", -errno);
             break;
         }
 
         case WorkItem::Type::DeleteDirectory: {
-            if (rmdir(item.source.characters()) < 0) {
-                auto original_errno = errno;
-                report_error(String::formatted("rmdir: {}", strerror(original_errno)));
-                return 1;
-            }
+            TRY(Core::System::rmdir(item.source));
             break;
         }
 
         case WorkItem::Type::CopyFile: {
-            if (!copy_file(item.source, item.destination))
-                return 1;
-
+            TRY(copy_file(item.source, item.destination));
             break;
         }
 
@@ -337,19 +293,14 @@ int execute_work_items(Vector<WorkItem> const& items)
                 }
 
                 if (original_errno != EXDEV) {
+                    // FIXME: Return the formatted string directly. There is no way to do this right now without the temporary going out of scope and being destroyed.
                     report_warning(String::formatted("Failed to move {}: {}", item.source, strerror(original_errno)));
-                    return 1;
+                    return Error::from_errno(original_errno);
                 }
 
                 // EXDEV means we have to copy the file data and then remove the original
-                if (!copy_file(item.source, item.destination))
-                    return 1;
-
-                if (unlink(item.source.characters()) < 0) {
-                    auto original_errno = errno;
-                    report_error(String::formatted("unlink: {}", strerror(original_errno)));
-                    return 1;
-                }
+                TRY(copy_file(item.source, item.destination));
+                TRY(Core::System::unlink(item.source));
                 break;
             }
 
@@ -357,11 +308,7 @@ int execute_work_items(Vector<WorkItem> const& items)
         }
 
         case WorkItem::Type::DeleteFile: {
-            if (unlink(item.source.characters()) < 0) {
-                auto original_errno = errno;
-                report_error(String::formatted("unlink: {}", strerror(original_errno)));
-                return 1;
-            }
+            TRY(Core::System::unlink(item.source));
 
             item_done += item.size;
             executed_work_bytes += item.size;
