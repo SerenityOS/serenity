@@ -168,7 +168,8 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
 
 #undef DIGIT
 
-    // Home means to the beginning of the line.
+    // | and Home means to the beginning of the line.
+    case KeyCode::Key_Pipe:
     case KeyCode::Key_Home:
         m_unit = Unit::Character;
         m_amount = START_OF_LINE;
