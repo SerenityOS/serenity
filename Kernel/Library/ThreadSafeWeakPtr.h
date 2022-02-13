@@ -138,17 +138,6 @@ public:
         return ref;
     }
 
-#ifndef KERNEL
-    // A lot of user mode code is single-threaded. But for kernel mode code
-    // this is generally not true as everything is multi-threaded. So make
-    // these shortcuts and aliases only available to non-kernel code.
-    T* ptr() const { return unsafe_ptr(); }
-    T* operator->() { return unsafe_ptr(); }
-    const T* operator->() const { return unsafe_ptr(); }
-    operator const T*() const { return unsafe_ptr(); }
-    operator T*() { return unsafe_ptr(); }
-#endif
-
     [[nodiscard]] T* unsafe_ptr() const
     {
         T* ptr = nullptr;
@@ -219,12 +208,8 @@ template<typename T>
 struct Formatter<WeakPtr<T>> : Formatter<const T*> {
     ErrorOr<void> format(FormatBuilder& builder, WeakPtr<T> const& value)
     {
-#ifdef KERNEL
         auto ref = value.strong_ref();
         return Formatter<const T*>::format(builder, ref.ptr());
-#else
-        return Formatter<const T*>::format(builder, value.ptr());
-#endif
     }
 };
 
