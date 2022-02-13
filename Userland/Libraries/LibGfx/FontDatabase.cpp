@@ -25,6 +25,7 @@ static RefPtr<Font> s_default_font;
 static String s_default_font_query;
 static RefPtr<Font> s_fixed_width_font;
 static String s_fixed_width_font_query;
+static String s_default_fonts_lookup_path = "/res/fonts";
 
 void FontDatabase::set_default_font_query(String query)
 {
@@ -37,6 +38,18 @@ void FontDatabase::set_default_font_query(String query)
 String FontDatabase::default_font_query()
 {
     return s_default_font_query;
+}
+
+void FontDatabase::set_default_fonts_lookup_path(String path)
+{
+    if (s_default_fonts_lookup_path == path)
+        return;
+    s_default_fonts_lookup_path = move(path);
+}
+
+String FontDatabase::default_fonts_lookup_path()
+{
+    return s_default_fonts_lookup_path;
 }
 
 Font& FontDatabase::default_font()
@@ -80,7 +93,7 @@ struct FontDatabase::Private {
 FontDatabase::FontDatabase()
     : m_private(make<Private>())
 {
-    Core::DirIterator dir_iterator("/res/fonts", Core::DirIterator::SkipDots);
+    Core::DirIterator dir_iterator(s_default_fonts_lookup_path, Core::DirIterator::SkipDots);
     if (dir_iterator.has_error()) {
         warnln("DirIterator: {}", dir_iterator.error_string());
         exit(1);
