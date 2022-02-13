@@ -9,6 +9,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,7 +51,7 @@ static void spawn_command(const Vector<const char*>& command, const ByteBuffer& 
         perror("wait");
 }
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool print_type = false;
     bool no_newline = false;
@@ -63,9 +64,9 @@ int main(int argc, char* argv[])
     args_parser.add_option(no_newline, "Do not append a newline", "no-newline", 'n');
     args_parser.add_option(watch, "Run a command when clipboard data changes", "watch", 'w');
     args_parser.add_positional_argument(watch_command, "Command to run in watch mode", "command", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
     auto& clipboard = GUI::Clipboard::the();
 
