@@ -66,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Character Map");
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->resize(400, 400);
+    window->resize(600, 400);
 
     auto character_map_widget = TRY(window->try_set_main_widget<CharacterMapWidget>());
     character_map_widget->initialize_menubar(*window);

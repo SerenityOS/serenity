@@ -17,7 +17,9 @@
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
@@ -33,6 +35,7 @@ CharacterMapWidget::CharacterMapWidget()
     m_output_box = find_descendant_of_type_named<GUI::TextBox>("output_box");
     m_copy_output_button = find_descendant_of_type_named<GUI::Button>("copy_output_button");
     m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    m_unicode_block_listview = find_descendant_of_type_named<GUI::ListView>("unicode_block_listview");
 
     m_choose_font_action = GUI::Action::create("Choose Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         auto font_picker = GUI::FontPicker::construct(window(), &font(), false);
@@ -71,7 +74,8 @@ CharacterMapWidget::CharacterMapWidget()
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())
                 return;
-            auto code_point = clamp(maybe_code_point.value(), 0x0000, 0x10FFFF);
+            auto code_point = maybe_code_point.value();
+            code_point = clamp(code_point, m_range.first, m_range.last);
             m_glyph_map->set_focus(true);
             m_glyph_map->set_active_glyph(code_point);
             m_glyph_map->scroll_to_glyph(code_point);
@@ -119,6 +123,25 @@ CharacterMapWidget::CharacterMapWidget()
     m_copy_output_button->on_click = [&](auto) {
         GUI::Clipboard::the().set_plain_text(m_output_box->text());
     };
+
+    auto unicode_blocks = Unicode::block_display_names();
+    m_unicode_block_listview->on_activation = [this, unicode_blocks](auto& index) {
+        if (index.row() > 0)
+            m_range = unicode_blocks[index.row() - 1].code_point_range;
+        else
+            m_range = { 0x0000, 0x10FFFF };
+        m_glyph_map->set_active_range(m_range);
+    };
+
+    m_unicode_block_list.append("Show All");
+    for (auto& block : unicode_blocks)
+        m_unicode_block_list.append(block.display_name);
+
+    m_unicode_block_model = GUI::ItemListModel<String>::create(m_unicode_block_list);
+    m_unicode_block_listview->set_model(*m_unicode_block_model);
+    m_unicode_block_listview->set_activates_on_selection(true);
+    m_unicode_block_listview->horizontal_scrollbar().set_visible(false);
+    m_unicode_block_listview->set_cursor(m_unicode_block_model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
 
     did_change_font();
     update_statusbar();
