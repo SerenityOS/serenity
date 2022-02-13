@@ -1,57 +1,57 @@
 String.prototype[5] = "five";
 String.prototype.foo = "foo";
-var last_set_this_value = null;
+var lastSetThisValue = null;
 class TerribleClass {
-    get #private_strict() {
+    get #privateStrict() {
         "use strict";
-        last_set_this_value = this;
+        lastSetThisValue = this;
     }
-    get #private_non_strict() {
-        last_set_this_value = this;
+    get #privateNonStrict() {
+        lastSetThisValue = this;
     }
     get 10() {
         "use strict";
-        return this.#private_strict;
+        return this.#privateStrict;
     }
     get 11() {
-        return this.#private_non_strict;
+        return this.#privateNonStrict;
     }
     set 12(v) {
         "use strict";
-        return this.#private_strict;
+        return this.#privateStrict;
     }
     set 13(v) {
-        return this.#private_non_strict;
+        return this.#privateNonStrict;
     }
-    get strict_get_private() {
+    get strictGetPrivate() {
         "use strict";
-        return this.#private_strict;
+        return this.#privateStrict;
     }
-    get non_strict_get_private() {
-        return this.#private_non_strict;
+    get nonStrictGetPrivate() {
+        return this.#privateNonStrict;
     }
-    set strict_set_private(v) {
+    set strictSetPrivate(v) {
         "use strict";
-        this.#private_strict;
+        this.#privateStrict;
     }
-    set non_strict_set_private(v) {
-        this.#private_non_strict;
+    set nonStrictSetPrivate(v) {
+        this.#privateNonStrict;
     }
 }
 String.prototype.__proto__ = {
-    get non_strict_this() {
+    get nonStrictThis() {
         return this;
     },
-    get strict_this() {
+    get strictThis() {
         "use strict";
         return this;
     },
-    set set_non_strict_this(v) {
-        last_set_this_value = this;
+    set setNonStrictThis(v) {
+        lastSetThisValue = this;
     },
-    set set_strict_this(v) {
+    set setStrictThis(v) {
         "use strict";
-        last_set_this_value = this;
+        lastSetThisValue = this;
     },
     get 6() {
         "use strict";
@@ -62,10 +62,10 @@ String.prototype.__proto__ = {
     },
     set 8(v) {
         "use strict";
-        last_set_this_value = this;
+        lastSetThisValue = this;
     },
     set 9(v) {
-        last_set_this_value = this;
+        lastSetThisValue = this;
     },
 };
 String.prototype.__proto__.__proto__ = new TerribleClass();
@@ -85,31 +85,31 @@ test("primitive string: numeric indexing", () => {
     expect("foo"[7] !== "foo"[7]).toBeTrue();
     expect("foo"[7] !== String.prototype).toBeTrue();
     "foo"[8] = "test";
-    expect(typeof last_set_this_value).toBe("string");
-    expect(last_set_this_value).toBe("foo");
-    last_set_this_value = null;
+    expect(typeof lastSetThisValue).toBe("string");
+    expect(lastSetThisValue).toBe("foo");
+    lastSetThisValue = null;
     "foo"[9] = "test";
-    expect(typeof last_set_this_value).toBe("object");
-    expect(last_set_this_value instanceof String).toBeTrue();
-    expect(last_set_this_value !== String.prototype);
-    let old_this_value = last_set_this_value;
-    last_set_this_value = null;
+    expect(typeof lastSetThisValue).toBe("object");
+    expect(lastSetThisValue instanceof String).toBeTrue();
+    expect(lastSetThisValue !== String.prototype);
+    let oldThisValue = lastSetThisValue;
+    lastSetThisValue = null;
     "foo"[9] = "test";
-    expect(last_set_this_value !== old_this_value).toBeTrue();
-    last_set_this_value = null;
+    expect(lastSetThisValue !== oldThisValue).toBeTrue();
+    lastSetThisValue = null;
 
     expect(() => "foo"[10]).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
     expect(() => "foo"[11]).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
     expect(() => ("foo"[12] = "wat")).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
     expect(() => ("foo"[13] = "wat")).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
 });
 test("primitive string: string property indexing", () => {
     expect(""["0"]).toBeUndefined();
@@ -131,31 +131,31 @@ test("primitive string: string property indexing", () => {
     expect(""["length"]).toBe(0);
     expect("foo"["length"]).toBe(3);
     "foo"["8"] = "test";
-    expect(typeof last_set_this_value).toBe("string");
-    expect(last_set_this_value).toBe("foo");
-    last_set_this_value = null;
+    expect(typeof lastSetThisValue).toBe("string");
+    expect(lastSetThisValue).toBe("foo");
+    lastSetThisValue = null;
     "foo"["9"] = "test";
-    expect(typeof last_set_this_value).toBe("object");
-    expect(last_set_this_value instanceof String).toBeTrue();
-    expect(last_set_this_value !== String.prototype);
-    let old_this_value = last_set_this_value;
-    last_set_this_value = null;
+    expect(typeof lastSetThisValue).toBe("object");
+    expect(lastSetThisValue instanceof String).toBeTrue();
+    expect(lastSetThisValue !== String.prototype);
+    let oldThisValue = lastSetThisValue;
+    lastSetThisValue = null;
     "foo"["9"] = "test";
-    expect(last_set_this_value !== old_this_value).toBeTrue();
-    last_set_this_value = null;
+    expect(lastSetThisValue !== oldThisValue).toBeTrue();
+    lastSetThisValue = null;
 
     expect(() => "foo"["10"]).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
     expect(() => "foo"["11"]).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
     expect(() => ("foo"["12"] = "wat")).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
     expect(() => ("foo"["13"] = "wat")).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
 });
 
 test("primitive string: string property name access", () => {
@@ -163,39 +163,39 @@ test("primitive string: string property name access", () => {
     expect("foo".length).toBe(3);
     expect("foo".bar).toBeUndefined();
     expect("foo".foo).toBe("foo");
-    expect(typeof "foo".strict_this).toBe("string");
-    expect("foo".strict_this).toBe("foo");
-    expect(typeof "foo".non_strict_this).toBe("object");
-    expect("foo".non_strict_this !== "foo".non_strict_this).toBeTrue();
-    expect("foo".non_strict_this !== String.prototype).toBeTrue();
-    expect("foo".non_strict_this instanceof String).toBeTrue();
+    expect(typeof "foo".strictThis).toBe("string");
+    expect("foo".strictThis).toBe("foo");
+    expect(typeof "foo".nonStrictThis).toBe("object");
+    expect("foo".nonStrictThis !== "foo".nonStrictThis).toBeTrue();
+    expect("foo".nonStrictThis !== String.prototype).toBeTrue();
+    expect("foo".nonStrictThis instanceof String).toBeTrue();
     let str = new String("foo");
-    str.set_strict_this = "test";
-    expect(typeof last_set_this_value).toBe("object");
-    expect(last_set_this_value).toBe(str);
-    last_set_this_value = null;
-    str.set_non_strict_this = "test";
-    expect(typeof last_set_this_value).toBe("object");
-    expect(last_set_this_value instanceof String).toBeTrue();
-    expect(last_set_this_value).toBe(str);
-    let old_this_value = last_set_this_value;
-    last_set_this_value = null;
-    str.set_non_strict_this = "test";
-    expect(last_set_this_value === old_this_value).toBeTrue();
-    last_set_this_value = null;
+    str.setStrictThis = "test";
+    expect(typeof lastSetThisValue).toBe("object");
+    expect(lastSetThisValue).toBe(str);
+    lastSetThisValue = null;
+    str.setNonStrictThis = "test";
+    expect(typeof lastSetThisValue).toBe("object");
+    expect(lastSetThisValue instanceof String).toBeTrue();
+    expect(lastSetThisValue).toBe(str);
+    let oldThisValue = lastSetThisValue;
+    lastSetThisValue = null;
+    str.setNonStrictThis = "test";
+    expect(lastSetThisValue === oldThisValue).toBeTrue();
+    lastSetThisValue = null;
 
-    expect(() => "foo".strict_get_private).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
-    expect(() => "foo".non_strict_get_private).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
-    expect(() => ("foo".strict_set_private = "wat")).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
-    expect(() => ("foo".non_strict_set_private = "wat")).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    expect(() => "foo".strictGetPrivate).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
+    expect(() => "foo".nonStrictGetPrivate).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
+    expect(() => ("foo".strictSetPrivate = "wat")).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
+    expect(() => ("foo".nonStrictSetPrivate = "wat")).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
 });
 
 test("string object: string numeric indexing", () => {
@@ -214,18 +214,18 @@ test("string object: string numeric indexing", () => {
     expect(str[7]).toBe(str);
     expect(str[7] !== String.prototope).toBeTrue();
     str["8"] = "test";
-    expect(typeof last_set_this_value).toBe("object");
-    expect(last_set_this_value).toBe(str);
-    last_set_this_value = null;
+    expect(typeof lastSetThisValue).toBe("object");
+    expect(lastSetThisValue).toBe(str);
+    lastSetThisValue = null;
     str["9"] = "test";
-    expect(typeof last_set_this_value).toBe("object");
-    expect(last_set_this_value instanceof String).toBeTrue();
-    expect(last_set_this_value).toBe(str);
-    let old_this_value = last_set_this_value;
-    last_set_this_value = null;
+    expect(typeof lastSetThisValue).toBe("object");
+    expect(lastSetThisValue instanceof String).toBeTrue();
+    expect(lastSetThisValue).toBe(str);
+    let oldThisValue = lastSetThisValue;
+    lastSetThisValue = null;
     str["9"] = "test";
-    expect(last_set_this_value === old_this_value).toBeTrue();
-    last_set_this_value = null;
+    expect(lastSetThisValue === oldThisValue).toBeTrue();
+    lastSetThisValue = null;
 });
 test("string object: string property indexing", () => {
     expect(new String("")["0"]).toBeUndefined();
@@ -242,59 +242,59 @@ test("string object: string property indexing", () => {
     expect(str["7"] instanceof String).toBeTrue();
     expect(str["7"]).toBe(str);
     expect(str["7"] !== String.prototope).toBeTrue();
-    str["set_strict_this"] = "test";
-    expect(typeof last_set_this_value).toBe("object");
-    expect(last_set_this_value).toBe(str);
-    last_set_this_value = null;
-    str["set_non_strict_this"] = "test";
-    expect(typeof last_set_this_value).toBe("object");
-    expect(last_set_this_value instanceof String).toBeTrue();
-    expect(last_set_this_value).toBe(str);
-    let old_this_value = last_set_this_value;
-    last_set_this_value = null;
-    str["set_non_strict_this"] = "test";
-    expect(last_set_this_value === old_this_value).toBeTrue();
-    last_set_this_value = null;
+    str["setStrictThis"] = "test";
+    expect(typeof lastSetThisValue).toBe("object");
+    expect(lastSetThisValue).toBe(str);
+    lastSetThisValue = null;
+    str["setNonStrictThis"] = "test";
+    expect(typeof lastSetThisValue).toBe("object");
+    expect(lastSetThisValue instanceof String).toBeTrue();
+    expect(lastSetThisValue).toBe(str);
+    let oldThisValue = lastSetThisValue;
+    lastSetThisValue = null;
+    str["setNonStrictThis"] = "test";
+    expect(lastSetThisValue === oldThisValue).toBeTrue();
+    lastSetThisValue = null;
 
-    expect(() => str.strict_get_private).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
-    expect(() => str.non_strict_get_private).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
-    expect(() => (str.strict_set_private = "wat")).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
-    expect(() => (str.non_strict_set_private = "wat")).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    expect(() => str.strictGetPrivate).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
+    expect(() => str.nonStrictGetPrivate).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
+    expect(() => (str.strictSetPrivate = "wat")).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
+    expect(() => (str.nonStrictSetPrivate = "wat")).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
 });
 test("string object: string property name access", () => {
     expect(new String("").length).toBe(0);
     expect(new String("foo").length).toBe(3);
     expect(new String("foo").bar).toBeUndefined();
     expect(new String("foo").foo).toBe("foo");
-    expect(typeof new String("foo").strict_this).toBe("object");
+    expect(typeof new String("foo").strictThis).toBe("object");
     let str = new String("foo");
-    expect(str.strict_this).toBe(str);
-    expect(typeof str.non_strict_this).toBe("object");
-    expect(str.non_strict_this === str.non_strict_this).toBeTrue();
-    expect(str.non_strict_this !== String.prototype).toBeTrue();
-    expect(str.non_strict_this instanceof String).toBeTrue();
-    expect(new String("foo").non_strict_this !== new String("foo").non_strict_this).toBeTrue();
-    expect(new String("foo").strict_this !== new String("foo").strict_this).toBeTrue();
+    expect(str.strictThis).toBe(str);
+    expect(typeof str.nonStrictThis).toBe("object");
+    expect(str.nonStrictThis === str.nonStrictThis).toBeTrue();
+    expect(str.nonStrictThis !== String.prototype).toBeTrue();
+    expect(str.nonStrictThis instanceof String).toBeTrue();
+    expect(new String("foo").nonStrictThis !== new String("foo").nonStrictThis).toBeTrue();
+    expect(new String("foo").strictThis !== new String("foo").strictThis).toBeTrue();
 
-    last_set_this_value = null;
-    expect(() => str.strict_get_private).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
-    expect(() => str.non_strict_get_private).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
-    expect(() => (str.strict_set_private = "wat")).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
-    expect(() => (str.non_strict_set_private = "wat")).toThrow();
-    expect(last_set_this_value).toBeNull();
-    last_set_this_value = null;
+    lastSetThisValue = null;
+    expect(() => str.strictGetPrivate).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
+    expect(() => str.nonStrictGetPrivate).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
+    expect(() => (str.strictSetPrivate = "wat")).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
+    expect(() => (str.nonStrictSetPrivate = "wat")).toThrow();
+    expect(lastSetThisValue).toBeNull();
+    lastSetThisValue = null;
 });
