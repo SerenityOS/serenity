@@ -2726,15 +2726,13 @@ bool HTMLTokenizer::consumed_as_part_of_an_attribute() const
 
 void HTMLTokenizer::restore_to(Utf8CodePointIterator const& new_iterator)
 {
-    if (new_iterator != m_prev_utf8_iterator) {
-        auto diff = m_prev_utf8_iterator - new_iterator;
-        if (diff > 0) {
-            for (ssize_t i = 0; i < diff; ++i)
-                m_source_positions.take_last();
-        } else {
-            // Going forwards...?
-            TODO();
-        }
+    auto diff = m_utf8_iterator - new_iterator;
+    if (diff > 0) {
+        for (ssize_t i = 0; i < diff; ++i)
+            m_source_positions.take_last();
+    } else {
+        // Going forwards...?
+        TODO();
     }
     m_utf8_iterator = new_iterator;
 }
