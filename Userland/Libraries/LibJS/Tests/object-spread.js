@@ -115,3 +115,60 @@ test("respects custom Symbol.iterator method", () => {
     let a = [...o];
     expect(a).toEqual([1, 2, 3]);
 });
+
+test("object with numeric indices", () => {
+    const obj = { 0: 0, 1: 1, foo: "bar" };
+    const result = { ...obj };
+    expect(result).toHaveProperty("0", 0);
+    expect(result).toHaveProperty("1", 1);
+    expect(result).toHaveProperty("foo", "bar");
+});
+
+describe("modification of spreadable objects during spread", () => {
+    test("spreading object", () => {
+        const object = {
+            0: 0,
+            2: 2,
+            9999: 9999,
+            bar: 44,
+            get 3() {
+                object[4] = 4;
+                object[5000] = 5000;
+                return 3;
+            },
+        };
+
+        const result = { ...object };
+        expect(Object.getOwnPropertyNames(result)).toHaveLength(5);
+        expect(Object.getOwnPropertyNames(result)).not.toContain("4");
+        expect(Object.getOwnPropertyNames(result)).toContain("bar");
+    });
+
+    test("spreading array", () => {
+        const array = [0];
+        array[2] = 2;
+        array[999] = 999;
+        Object.defineProperty(array, 3, {
+            get() {
+                array[4] = 4;
+                array[1000] = 1000;
+                return 3;
+            },
+            enumerable: true,
+        });
+
+        const objectResult = { ...array };
+        expect(Object.getOwnPropertyNames(objectResult)).toHaveLength(4);
+        expect(Object.getOwnPropertyNames(objectResult)).not.toContain("4");
+
+        const arrayResult = [...array];
+        expect(arrayResult).toHaveLength(1001);
+        expect(arrayResult).toHaveProperty("0", 0);
+        expect(arrayResult).toHaveProperty("2", 2);
+        expect(arrayResult).toHaveProperty("3", 3);
+        // Yes the in flight added items need to be here in this case! (since it uses an iterator)
+        expect(arrayResult).toHaveProperty("4", 4);
+        expect(arrayResult).toHaveProperty("999", 999);
+        expect(arrayResult).toHaveProperty("1000", 1000);
+    });
+});
