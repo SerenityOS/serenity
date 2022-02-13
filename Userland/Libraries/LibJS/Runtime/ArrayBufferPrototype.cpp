@@ -127,12 +127,22 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 // 25.1.5.1 get ArrayBuffer.prototype.byteLength, https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
     auto* array_buffer_object = TRY(typed_this_value(global_object));
+
+    // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
     // FIXME: Check for shared buffer
+
+    // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
     if (array_buffer_object->is_detached())
         return Value(0);
 
-    return Value(array_buffer_object->byte_length());
+    // 5. Let length be O.[[ArrayBufferByteLength]].
+    auto length = array_buffer_object->byte_length();
+
+    // 6. Return 𝔽(length).
+    return Value(length);
 }
 
 }
