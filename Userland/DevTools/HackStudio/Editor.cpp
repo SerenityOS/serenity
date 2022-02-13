@@ -733,6 +733,8 @@ void Editor::set_debug_mode(bool enabled)
 
 void Editor::on_token_info_timer_tick()
 {
+    if (!semantic_syntax_highlighting_is_enabled())
+        return;
     if (!m_language_client || !m_language_client->is_active_client())
         return;
 

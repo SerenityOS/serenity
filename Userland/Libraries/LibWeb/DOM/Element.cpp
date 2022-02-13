@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/AnyOf.h>
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
@@ -20,6 +21,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOMParsing/InnerHTML.h>
 #include <LibWeb/Geometry/DOMRect.h>
+#include <LibWeb/Geometry/DOMRectList.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
@@ -226,7 +228,8 @@ RefPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StylePropert
         if (display.is_flow_inside())
             return adopt_ref(*new Layout::InlineNode(document(), *this, move(style)));
 
-        TODO();
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Support display: {}", display.to_string());
+        return adopt_ref(*new Layout::InlineNode(document(), *this, move(style)));
     }
 
     if (display.is_flow_inside() || display.is_flow_root_inside() || display.is_flex_inside())
@@ -445,6 +448,30 @@ NonnullRefPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
 
     auto& box = static_cast<Layout::Box const&>(*layout_node());
     return Geometry::DOMRect::create(box.absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
+NonnullRefPtr<Geometry::DOMRectList> Element::get_client_rects() const
+{
+    NonnullRefPtrVector<Geometry::DOMRect> rects;
+
+    // 1. If the element on which it was invoked does not have an associated layout box return an empty DOMRectList object and stop this algorithm.
+    if (!layout_node() || !layout_node()->is_box())
+        return Geometry::DOMRectList::create(move(rects));
+
+    // FIXME: 2. If the element has an associated SVG layout box return a DOMRectList object containing a single DOMRect object that describes
+    // the bounding box of the element as defined by the SVG specification, applying the transforms that apply to the element and its ancestors.
+
+    // FIXME: 3. Return a DOMRectList object containing DOMRect objects in content order, one for each box fragment,
+    // describing its border area (including those with a height or width of zero) with the following constraints:
+    // - Apply the transforms that apply to the element and its ancestors.
+    // - If the element on which the method was invoked has a computed value for the display property of table
+    // or inline-table include both the table box and the caption box, if any, but not the anonymous container box.
+    // - Replace each anonymous block box with its child box(es) and repeat this until no anonymous block boxes are left in the final list.
+
+    auto bounding_rect = get_bounding_client_rect();
+    rects.append(bounding_rect);
+    return Geometry::DOMRectList::create(move(rects));
 }
 
 int Element::client_top() const

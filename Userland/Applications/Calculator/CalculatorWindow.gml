@@ -2,10 +2,10 @@
     fixed_width: 250
     fixed_height: 215
     fill_with_background_color: true
-    layout: @GUI::VerticalBoxLayout
+    layout: @GUI::VerticalBoxLayout {}
 
     @GUI::Widget {
-        layout: @GUI::VerticalBoxLayout
+        layout: @GUI::VerticalBoxLayout {}
 
         @GUI::HorizontalSeparator {
             fixed_height: 2
@@ -22,7 +22,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Label {
                     name: "label"
@@ -60,7 +60,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Button {
                     name: "mem_clear_button"
@@ -115,7 +115,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Button {
                     name: "mem_recall_button"
@@ -170,7 +170,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Button {
                     name: "mem_save_button"
@@ -225,7 +225,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Button {
                     name: "mem_add_button"

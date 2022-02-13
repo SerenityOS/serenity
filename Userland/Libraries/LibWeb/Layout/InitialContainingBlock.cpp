@@ -23,9 +23,6 @@ InitialContainingBlock::~InitialContainingBlock()
 
 void InitialContainingBlock::build_stacking_context_tree()
 {
-    if (stacking_context())
-        return;
-
     set_stacking_context(make<StackingContext>(*this, nullptr));
 
     for_each_in_inclusive_subtree_of_type<Box>([&](Box& box) {

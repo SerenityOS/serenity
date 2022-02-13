@@ -529,6 +529,15 @@ struct Formatter<struct stat> : StandardFormatter {
 };
 }
 
+static void format_chdir(FormattedSyscallBuilder& builder, char const* path_p, size_t length)
+{
+    auto buf = copy_from_process(path_p, length);
+    if (buf.is_error())
+        builder.add_arguments(buf.error());
+    else
+        builder.add_arguments(StringView { buf.value().data(), buf.value().size() });
+}
+
 static void format_fstat(FormattedSyscallBuilder& builder, int fd, struct stat* buf_p)
 {
     auto buf = copy_from_process(buf_p);
@@ -710,6 +719,10 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
     case SC_fstat:
         format_fstat(builder, (int)arg1, (struct stat*)arg2);
         result_type = Ssize;
+        break;
+    case SC_chdir:
+        format_chdir(builder, (char const*)arg1, (size_t)arg2);
+        result_type = Int;
         break;
     case SC_get_process_name:
         format_get_process_name(builder, (char*)arg1, (size_t)arg2);

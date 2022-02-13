@@ -6,17 +6,17 @@
 
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
-#include <LibWeb/Layout/SVGPathBox.h>
+#include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 
 namespace Web::Layout {
 
-SVGPathBox::SVGPathBox(DOM::Document& document, SVG::SVGPathElement& element, NonnullRefPtr<CSS::StyleProperties> properties)
+SVGGeometryBox::SVGGeometryBox(DOM::Document& document, SVG::SVGGeometryElement& element, NonnullRefPtr<CSS::StyleProperties> properties)
     : SVGGraphicsBox(document, element, properties)
 {
 }
 
-void SVGPathBox::paint(PaintContext& context, PaintPhase phase)
+void SVGGeometryBox::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
         return;
@@ -26,8 +26,8 @@ void SVGPathBox::paint(PaintContext& context, PaintPhase phase)
     if (phase != PaintPhase::Foreground)
         return;
 
-    auto& path_element = dom_node();
-    auto& path = path_element.get_path();
+    auto& geometry_element = dom_node();
+    auto& path = geometry_element.get_path();
 
     Gfx::AntiAliasingPainter painter { context.painter() };
     auto& svg_context = context.svg_context();
@@ -35,7 +35,7 @@ void SVGPathBox::paint(PaintContext& context, PaintPhase phase)
     auto offset = absolute_position();
     painter.translate(offset);
 
-    if (auto fill_color = path_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0) {
+    if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0) {
         // We need to fill the path before applying the stroke, however the filled
         // path must be closed, whereas the stroke path may not necessary be closed.
         // Copy the path and close it for filling, but use the previous path for stroke
@@ -49,11 +49,11 @@ void SVGPathBox::paint(PaintContext& context, PaintPhase phase)
             Gfx::Painter::WindingRule::EvenOdd);
     }
 
-    if (auto stroke_color = path_element.stroke_color().value_or(svg_context.stroke_color()); stroke_color.alpha() > 0) {
+    if (auto stroke_color = geometry_element.stroke_color().value_or(svg_context.stroke_color()); stroke_color.alpha() > 0) {
         painter.stroke_path(
             path,
             stroke_color,
-            path_element.stroke_width().value_or(svg_context.stroke_width()));
+            geometry_element.stroke_width().value_or(svg_context.stroke_width()));
     }
 
     painter.translate(-offset);

@@ -1166,7 +1166,9 @@ void HackStudioWidget::create_project_menu(GUI::Window& window)
     new_submenu.add_action(*m_new_plain_file_action);
     new_submenu.add_separator();
     new_submenu.add_action(*m_new_directory_action);
-    project_menu.add_action(create_toggle_syntax_highlighting_mode_action());
+
+    m_toggle_semantic_highlighting_action = create_toggle_syntax_highlighting_mode_action();
+    project_menu.add_action(*m_toggle_semantic_highlighting_action);
 }
 
 void HackStudioWidget::create_edit_menu(GUI::Window& window)
@@ -1534,6 +1536,11 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_toggle_syntax_highlighting_m
     });
 
     return action;
+}
+
+bool HackStudioWidget::semantic_syntax_highlighting_is_enabled() const
+{
+    return m_toggle_semantic_highlighting_action->is_checked();
 }
 
 }

@@ -616,7 +616,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box& box)
     auto specified_width = box.computed_values().width().resolved(box, width_of_containing_block).resolved_or_auto(box);
 
     compute_width_for_absolutely_positioned_element(box);
-    (void)layout_inside(box, LayoutMode::Default);
+    auto independent_formatting_context = layout_inside(box, LayoutMode::Default);
     compute_height_for_absolutely_positioned_element(box);
 
     box_model.margin.left = box.computed_values().margin().left.resolved(box, width_of_containing_block).resolved_or_auto(box).to_px(box);
@@ -676,6 +676,9 @@ void FormattingContext::layout_absolutely_positioned_element(Box& box)
     }
 
     box.set_offset(used_offset);
+
+    if (independent_formatting_context)
+        independent_formatting_context->parent_context_did_dimension_child_root_box();
 }
 
 void FormattingContext::compute_height_for_absolutely_positioned_replaced_element(ReplacedBox& box)

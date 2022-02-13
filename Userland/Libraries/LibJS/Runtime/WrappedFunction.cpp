@@ -24,8 +24,8 @@ ThrowCompletionOr<WrappedFunction*> WrappedFunction::create(GlobalObject& global
     auto& prototype = *caller_realm.global_object().function_prototype();
     auto* wrapped = global_object.heap().allocate<WrappedFunction>(global_object, caller_realm, target, prototype);
 
-    // 7. Let result be CopyNameAndLength(wrapped, Target, "wrapped").
-    auto result = copy_name_and_length(global_object, *wrapped, target, "wrapped"sv);
+    // 7. Let result be CopyNameAndLength(wrapped, Target).
+    auto result = copy_name_and_length(global_object, *wrapped, target);
 
     // 8. If result is an Abrupt Completion, throw a TypeError exception.
     if (result.is_throw_completion())

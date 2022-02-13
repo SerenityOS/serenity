@@ -34,11 +34,11 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::VerticalBoxLayout
+        layout: @GUI::VerticalBoxLayout {}
 
         @GUI::Widget {
             shrink_to_fit: true
-            layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::TextBox {
                 name: "location_textbox"
@@ -55,11 +55,11 @@
 
         @GUI::Widget {
             shrink_to_fit: true
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::Widget {
                 fixed_height: 22
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::TextBox {
                     name: "filename_textbox"
@@ -78,9 +78,9 @@
 
             @GUI::Widget {
                 fixed_height: 22
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
-                @GUI::Widget
+                @GUI::Widget {}
 
                 @GUI::Button {
                     name: "cancel_button"

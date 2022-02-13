@@ -38,11 +38,11 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
-
+        layout: @GUI::HorizontalBoxLayout {}
         fixed_height: 22
+
         // HACK: using an empty widget as a spacer
-        @GUI::Widget
+        @GUI::Widget {}
 
         @GUI::Button {
             name: "ok_button"

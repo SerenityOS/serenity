@@ -405,6 +405,8 @@ void Document::update_layout()
     if (!browsing_context())
         return;
 
+    auto viewport_rect = browsing_context()->viewport_rect();
+
     update_style();
 
     if (!m_layout_root) {
@@ -413,6 +415,9 @@ void Document::update_layout()
     }
 
     Layout::BlockFormattingContext root_formatting_context(*m_layout_root, nullptr);
+    m_layout_root->build_stacking_context_tree();
+    m_layout_root->set_content_size(viewport_rect.size().to_type<float>());
+
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
 
     m_layout_root->set_needs_display();
@@ -1006,7 +1011,7 @@ String Document::cookie(Cookie::Source source)
     return {};
 }
 
-void Document::set_cookie(String cookie_string, Cookie::Source source)
+void Document::set_cookie(String const& cookie_string, Cookie::Source source)
 {
     auto cookie = Cookie::parse_cookie(cookie_string);
     if (!cookie.has_value())

@@ -8,6 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 
 namespace Web::CSS {
@@ -24,7 +25,7 @@ public:
 private:
     String m_name;
     Vector<StyleComponentValueRule> m_values;
-    bool m_important { false };
+    Important m_important { Important::No };
 };
 
 }

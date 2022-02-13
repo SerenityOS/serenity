@@ -46,7 +46,7 @@ void BlockContainer::paint(PaintContext& context, PaintPhase phase)
     if (should_clip_overflow()) {
         context.painter().save();
         // FIXME: Handle overflow-x and overflow-y being different values.
-        context.painter().add_clip_rect(enclosing_int_rect(padded_rect()));
+        context.painter().add_clip_rect(enclosing_int_rect(absolute_padding_box_rect()));
         context.painter().translate(-m_scroll_offset.to_type<int>());
     }
 

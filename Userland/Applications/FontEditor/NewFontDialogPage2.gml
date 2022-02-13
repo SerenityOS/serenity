@@ -4,7 +4,7 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::GroupBox {
             title: "Metadata"
@@ -14,7 +14,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Label {
                     fixed_width: 80
@@ -29,7 +29,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Label {
                     fixed_width: 80
@@ -44,7 +44,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Label {
                     fixed_width: 80
@@ -59,7 +59,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Label {
                     fixed_width: 80
@@ -78,7 +78,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Label {
                     fixed_width: 80
@@ -95,7 +95,7 @@
 
             @GUI::Widget {
                 fixed_height: 22
-                layout: @GUI::HorizontalBoxLayout
+                layout: @GUI::HorizontalBoxLayout {}
 
                 @GUI::Widget {
                     fixed_width: 80
@@ -110,19 +110,18 @@
         }
 
         @GUI::Widget {
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
-            @GUI::Widget
+            @GUI::Widget {}
 
             @GUI::Widget {
                 name: "glyph_editor_container"
                 layout: @GUI::VerticalBoxLayout {
                     margins: [5, 0, 0]
                 }
-
             }
 
-            @GUI::Widget
+            @GUI::Widget {}
         }
     }
 }

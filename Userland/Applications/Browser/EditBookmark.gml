@@ -8,7 +8,7 @@
 
     @GUI::Widget {
         fixed_height: 24
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
             text: "Title:"
@@ -23,7 +23,7 @@
 
     @GUI::Widget {
         fixed_height: 24
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
             text: "URL:"
@@ -38,9 +38,9 @@
 
     @GUI::Widget {
         fixed_height: 24
-        layout: @GUI::HorizontalBoxLayout
+        layout: @GUI::HorizontalBoxLayout {}
 
-        @GUI::Widget
+        @GUI::Widget {}
 
         @GUI::Button {
             name: "ok_button"

@@ -21,7 +21,7 @@
                 tooltip: "Opacity Slider"
             }
 
-            @GUI::VerticalSeparator
+            @GUI::VerticalSeparator {}
 
             @GUI::ValueSlider {
                 name: "opacity_value_slider"
@@ -32,7 +32,7 @@
             }
         }
 
-        @GUI::HorizontalSeparator
+        @GUI::HorizontalSeparator {}
 
         @GUI::Frame {
             shape: "Panel"
@@ -56,7 +56,7 @@
             margins: [0, 8]
         }
 
-        @GUI::Widget
+        @GUI::Widget {}
 
         @GUI::Scrollbar {
             name: "enabled_scrollbar"
@@ -67,11 +67,11 @@
             value: 50
         }
 
-        @GUI::Widget
+        @GUI::Widget {}
 
-        @GUI::HorizontalSeparator
+        @GUI::HorizontalSeparator {}
 
-        @GUI::Widget
+        @GUI::Widget {}
 
         @GUI::Scrollbar {
             name: "disabled_scrollbar"
@@ -79,7 +79,7 @@
             fixed_width: -1
         }
 
-        @GUI::Widget
+        @GUI::Widget {}
     }
 
     @GUI::GroupBox {
@@ -101,7 +101,7 @@
             tooltip: "Fixed"
         }
 
-        @GUI::VerticalSeparator
+        @GUI::VerticalSeparator {}
 
         @GUI::VerticalSlider {
             enabled: false
@@ -111,7 +111,7 @@
             value: 5
         }
 
-        @GUI::VerticalSeparator
+        @GUI::VerticalSeparator {}
 
         @GUI::VerticalProgressbar {
             name: "vertical_progressbar_right"
@@ -134,7 +134,7 @@
         }
 
         @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::HorizontalSlider {
                 name: "horizontal_slider_left"
@@ -144,7 +144,7 @@
                 value: 0
             }
 
-            @GUI::VerticalSeparator
+            @GUI::VerticalSeparator {}
 
             @GUI::HorizontalSlider {
                 enabled: false
@@ -153,7 +153,7 @@
                 value: 5
             }
 
-            @GUI::VerticalSeparator
+            @GUI::VerticalSeparator {}
 
             @GUI::HorizontalSlider {
                 name: "horizontal_slider_right"
@@ -164,7 +164,7 @@
             }
         }
 
-        @GUI::HorizontalSeparator
+        @GUI::HorizontalSeparator {}
 
         @GUI::HorizontalProgressbar {
             name: "horizontal_progressbar"

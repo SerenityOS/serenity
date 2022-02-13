@@ -36,14 +36,14 @@ UNMAP_AFTER_INIT bool I8042Controller::check_existence(Badge<HIDManagement>)
     {
         SpinlockLocker lock(m_lock);
         // Note: Perform controller self-test before touching the controller
-        // Try to probe the controller for 5 times and give up if nothing
+        // Try to probe the controller for 10 times and give up if nothing
         // responded.
-        for (int attempt = 0; attempt < 5; attempt++) {
+        for (int attempt = 0; attempt < 10; attempt++) {
             do_write(I8042Port::Command, I8042Command::TestPS2Controller);
             if (do_read(I8042Port::Buffer) == I8042Response::ControllerTestPassed)
                 return true;
-            // Note: Wait 50 microseconds in case the controller couldn't respond
-            IO::delay(50);
+            // Note: Wait 500 microseconds in case the controller couldn't respond
+            IO::delay(500);
         }
         dbgln("I8042: Trying to probe for existence of controller failed");
         return false;
@@ -268,17 +268,17 @@ ErrorOr<void> I8042Controller::prepare_for_input(HIDDevice::Type device)
 {
     VERIFY(m_lock.is_locked());
     u8 const second_port_flag = device == HIDDevice::Type::Keyboard ? 0 : I8042StatusFlag::SecondPS2PortOutputBuffer;
-    for (int attempt = 0; attempt < 5; attempt++) {
+    for (int attempt = 0; attempt < 50; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::OutputBuffer)) {
-            IO::delay(100);
+            IO::delay(1000);
             continue;
         }
         if (device == HIDDevice::Type::Unknown)
             return {};
         if ((status & I8042StatusFlag::SecondPS2PortOutputBuffer) == second_port_flag)
             return {};
-        IO::delay(100);
+        IO::delay(1000);
     }
     return Error::from_errno(EBUSY);
 }
@@ -286,11 +286,11 @@ ErrorOr<void> I8042Controller::prepare_for_input(HIDDevice::Type device)
 ErrorOr<void> I8042Controller::prepare_for_output()
 {
     VERIFY(m_lock.is_locked());
-    for (int attempt = 0; attempt < 5; attempt++) {
+    for (int attempt = 0; attempt < 50; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::InputBuffer))
             return {};
-        IO::delay(100);
+        IO::delay(1000);
     }
     return Error::from_errno(EBUSY);
 }

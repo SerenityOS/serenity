@@ -29,11 +29,13 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     auto apply_button = main_widget.find_descendant_of_type_named<GUI::Button>("apply_button");
     auto cancel_button = main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     m_config_widget = main_widget.find_descendant_of_type_named<GUI::Widget>("config_widget");
+    m_preview_widget = main_widget.find_descendant_of_type_named<FilterPreviewWidget>("preview_widget");
 
     VERIFY(m_filter_tree);
     VERIFY(apply_button);
     VERIFY(cancel_button);
     VERIFY(m_config_widget);
+    VERIFY(m_preview_widget);
 
     auto filter_model = FilterModel::create(editor);
     m_filter_tree->set_model(filter_model);
@@ -41,19 +43,29 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
 
     m_filter_tree->on_selection_change = [this]() {
         auto selected_index = m_filter_tree->selection().first();
-        if (!selected_index.is_valid())
+        if (!selected_index.is_valid()) {
+            m_preview_widget->clear_filter();
             return;
+        }
 
         auto selected_filter = static_cast<const FilterModel::FilterInfo*>(selected_index.internal_data());
-        if (selected_filter->type != FilterModel::FilterInfo::Type::Filter)
+        if (selected_filter->type != FilterModel::FilterInfo::Type::Filter) {
+            m_preview_widget->clear_filter();
             return;
+        }
 
         m_selected_filter = selected_filter->filter;
+        m_selected_filter->on_settings_change = [&]() {
+            m_preview_widget->set_filter(m_selected_filter);
+        };
+        m_preview_widget->set_filter(m_selected_filter);
 
         m_selected_filter_config_widget = m_selected_filter->get_settings_widget();
         m_config_widget->remove_all_children();
         m_config_widget->add_child(*m_selected_filter_config_widget);
     };
+
+    m_preview_widget->set_bitmap(editor->active_layer()->bitmap().clone().release_value());
 
     apply_button->on_click = [this](auto) {
         if (!m_selected_filter) {

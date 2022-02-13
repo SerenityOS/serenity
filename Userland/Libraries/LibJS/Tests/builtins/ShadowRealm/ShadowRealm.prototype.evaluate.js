@@ -46,8 +46,8 @@ describe("normal behavior", () => {
         expect(typeof wrappedFunction).toBe("function");
         expect(Object.getPrototypeOf(wrappedFunction)).toBe(Function.prototype);
 
-        expect(shadowRealm.evaluate("(function () {})").name).toBe("wrapped ");
-        expect(shadowRealm.evaluate("(function foo() {})").name).toBe("wrapped foo");
+        expect(shadowRealm.evaluate("(function () {})").name).toBe("");
+        expect(shadowRealm.evaluate("(function foo() {})").name).toBe("foo");
         expect(shadowRealm.evaluate("(function () {})")).toHaveLength(0);
         expect(shadowRealm.evaluate("(function (foo, bar) {})")).toHaveLength(2);
         expect(

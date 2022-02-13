@@ -11,8 +11,14 @@
 namespace Web::SVG::TagNames {
 
 #define ENUMERATE_SVG_GRAPHICS_TAGS \
+    __ENUMERATE_SVG_TAG(circle)     \
+    __ENUMERATE_SVG_TAG(ellipse)    \
     __ENUMERATE_SVG_TAG(g)          \
+    __ENUMERATE_SVG_TAG(line)       \
     __ENUMERATE_SVG_TAG(path)       \
+    __ENUMERATE_SVG_TAG(polygon)    \
+    __ENUMERATE_SVG_TAG(polyline)   \
+    __ENUMERATE_SVG_TAG(rect)       \
     __ENUMERATE_SVG_TAG(svg)
 
 #define ENUMERATE_SVG_TAGS             \

@@ -7,6 +7,7 @@
 
     @GUI::ToolbarContainer {
         name: "toolbar_container"
+
         @GUI::Toolbar {
             name: "toolbar"
         }
@@ -19,6 +20,7 @@
 
         @GUI::ToolbarContainer {
             name: "toolbar_container"
+
             @PixelPaint::ToolboxWidget {
                 name: "toolbox"
             }
@@ -41,7 +43,7 @@
         @GUI::Widget {
             fill_with_background_color: true
             fixed_width: 200
-            layout: @GUI::VerticalBoxLayout
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::GroupBox {
                 title: "Layers"

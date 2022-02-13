@@ -56,7 +56,7 @@ public:
     virtual ~Document() override;
 
     String cookie(Cookie::Source = Cookie::Source::NonHttp);
-    void set_cookie(String, Cookie::Source = Cookie::Source::NonHttp);
+    void set_cookie(String const&, Cookie::Source = Cookie::Source::NonHttp);
 
     String referrer() const;
 

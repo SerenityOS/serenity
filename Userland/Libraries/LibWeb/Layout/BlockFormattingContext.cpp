@@ -32,38 +32,25 @@ bool BlockFormattingContext::is_initial() const
     return is<InitialContainingBlock>(root());
 }
 
-void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
+void BlockFormattingContext::run(Box&, LayoutMode layout_mode)
 {
     if (is_initial()) {
         layout_initial_containing_block(layout_mode);
         return;
     }
 
-    // FIXME: BFC currently computes the width+height of the target box.
-    //        This is necessary to be able to place absolutely positioned descendants.
-    //        The same work is also done by the parent BFC for each of its blocks..
+    if (root().children_are_inline())
+        layout_inline_children(root(), layout_mode);
+    else
+        layout_block_level_children(root(), layout_mode);
+}
 
-    if (layout_mode == LayoutMode::Default)
-        compute_width(box);
+void BlockFormattingContext::parent_context_did_dimension_child_root_box()
+{
+    for (auto& box : m_absolutely_positioned_boxes)
+        layout_absolutely_positioned_element(box);
 
-    if (box.children_are_inline()) {
-        layout_inline_children(verify_cast<BlockContainer>(box), layout_mode);
-    } else {
-        layout_block_level_children(verify_cast<BlockContainer>(box), layout_mode);
-    }
-
-    if (layout_mode == LayoutMode::Default) {
-        compute_height(box);
-
-        box.for_each_child_of_type<Box>([&](auto& child_box) {
-            if (child_box.is_absolutely_positioned()) {
-                layout_absolutely_positioned_element(child_box);
-            }
-            return IterationDecision::Continue;
-        });
-    }
-
-    apply_transformations_to_children(box);
+    apply_transformations_to_children(root());
 }
 
 void BlockFormattingContext::apply_transformations_to_children(Box& box)
@@ -384,18 +371,24 @@ void BlockFormattingContext::compute_position(Box& box)
 
 void BlockFormattingContext::layout_inline_children(BlockContainer& block_container, LayoutMode layout_mode)
 {
+    VERIFY(block_container.children_are_inline());
+
     InlineFormattingContext context(block_container, *this);
     context.run(block_container, layout_mode);
 }
 
 void BlockFormattingContext::layout_block_level_children(BlockContainer& block_container, LayoutMode layout_mode)
 {
+    VERIFY(!block_container.children_are_inline());
+
     float content_height = 0;
     float content_width = 0;
 
     block_container.for_each_child_of_type<Box>([&](Box& child_box) {
-        if (child_box.is_absolutely_positioned())
+        if (child_box.is_absolutely_positioned()) {
+            m_absolutely_positioned_boxes.append(child_box);
             return IterationDecision::Continue;
+        }
 
         // NOTE: ListItemMarkerBoxes are placed by their corresponding ListItemBox.
         if (is<ListItemMarkerBox>(child_box))
@@ -410,7 +403,15 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
         if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
             place_block_level_element_in_normal_flow_vertically(child_box, block_container);
 
-        (void)layout_inside(child_box, layout_mode);
+        OwnPtr<FormattingContext> independent_formatting_context;
+        if (child_box.can_have_children()) {
+            independent_formatting_context = create_independent_formatting_context_if_needed(child_box);
+            if (independent_formatting_context)
+                independent_formatting_context->run(child_box, layout_mode);
+            else
+                layout_block_level_children(verify_cast<BlockContainer>(child_box), layout_mode);
+        }
+
         compute_height(child_box);
 
         if (child_box.computed_values().position() == CSS::Position::Relative)
@@ -426,6 +427,10 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
 
         content_height = max(content_height, child_box.effective_offset().y() + child_box.content_height() + child_box.box_model().margin_box().bottom);
         content_width = max(content_width, child_box.content_width());
+
+        if (independent_formatting_context)
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
+
         return IterationDecision::Continue;
     });
 
@@ -532,10 +537,6 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     auto viewport_rect = root().browsing_context().viewport_rect();
 
     auto& icb = verify_cast<Layout::InitialContainingBlock>(root());
-    icb.build_stacking_context_tree();
-
-    icb.set_content_width(viewport_rect.width());
-    icb.set_content_height(viewport_rect.height());
 
     VERIFY(!icb.children_are_inline());
     layout_block_level_children(root(), layout_mode);
@@ -544,7 +545,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     float bottom_edge = 0;
     float right_edge = 0;
     icb.for_each_in_subtree_of_type<Box>([&](Box& child) {
-        auto child_rect = child.bordered_rect();
+        auto child_rect = child.absolute_border_box_rect();
         bottom_edge = max(bottom_edge, child_rect.bottom());
         right_edge = max(right_edge, child_rect.right());
         return IterationDecision::Continue;

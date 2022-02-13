@@ -87,7 +87,7 @@ bool PropertyOwningCSSStyleDeclaration::set_property(PropertyID property_id, Str
     }
 
     m_properties.append(CSS::StyleProperty {
-        .important = false,
+        .important = Important::No,
         .property_id = property_id,
         .value = new_value.release_nonnull(),
     });
@@ -125,7 +125,7 @@ void CSSStyleDeclaration::set_css_text(StringView)
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-declaration
-static String serialize_a_css_declaration(CSS::PropertyID property, String value, bool important)
+static String serialize_a_css_declaration(CSS::PropertyID property, String value, Important important)
 {
     StringBuilder builder;
 
@@ -140,7 +140,7 @@ static String serialize_a_css_declaration(CSS::PropertyID property, String value
     builder.append(value);
 
     // 5. If the important flag is set, append " !important" (U+0020 U+0021 U+0069 U+006D U+0070 U+006F U+0072 U+0074 U+0061 U+006E U+0074) to s.
-    if (important)
+    if (important == Important::Yes)
         builder.append(" !important"sv);
 
     // 6. Append ";" (U+003B) to s.

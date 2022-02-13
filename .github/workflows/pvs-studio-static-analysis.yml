@@ -101,11 +101,14 @@ jobs:
       # - We are the system headers: V677 Custom declaration of a standard '<example>' type. The declaration from system header files should be used instead.
       # - We have no choice: V1061 Extending the 'std' namespace may result in undefined behavior.
       # - TRY(..) macro breaks this rule: V530 The return value of function 'release_value' is required to be utilized.
-      # - False positives: V1047 Lifetime of the lambda is greater than lifetime of the local variable captured by reference.
+      # - False positives: 
+      #     V1047 Lifetime of the lambda is greater than lifetime of the local variable captured by reference.
+      #     V1076 Code contains invisible characters that may alter its logic.
+      #
       - name: Filter PVS Log
         working-directory: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
         run: |
-          pvs-studio-analyzer suppress -v677 -v1061 -v530 -v1047 project.plog
+          pvs-studio-analyzer suppress -v677 -v1061 -v530 -v1047 -v1076 project.plog
           pvs-studio-analyzer filter-suppressed project.plog
 
       - name: Print PVS Log

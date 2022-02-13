@@ -14,6 +14,7 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/MimeSniff/MimeType.h>
 #include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
 
 namespace Web::XHR {
@@ -62,6 +63,8 @@ public:
     Bindings::CallbackType* onreadystatechange();
     void set_onreadystatechange(Optional<Bindings::CallbackType>);
 
+    DOM::ExceptionOr<void> override_mime_type(String const& mime);
+
 private:
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
@@ -70,6 +73,14 @@ private:
     void set_ready_state(ReadyState);
     void set_status(unsigned status) { m_status = status; }
     void fire_progress_event(const String&, u64, u64);
+
+    MimeSniff::MimeType get_response_mime_type() const;
+    Optional<String> get_final_encoding() const;
+
+    String get_text_response() const;
+
+    Optional<Vector<String>> get_decode_and_split(String const& header_name, HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const;
+    Optional<MimeSniff::MimeType> extract_mime_type(HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const;
 
     explicit XMLHttpRequest(DOM::Window&);
 
@@ -91,6 +102,9 @@ private:
     bool m_timed_out { false };
 
     ByteBuffer m_response_object;
+
+    // https://xhr.spec.whatwg.org/#override-mime-type
+    Optional<MimeSniff::MimeType> m_override_mime_type;
 };
 
 }

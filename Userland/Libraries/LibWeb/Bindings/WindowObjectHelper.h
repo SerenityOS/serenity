@@ -43,6 +43,8 @@
 #include <LibWeb/Bindings/DOMParserConstructor.h>
 #include <LibWeb/Bindings/DOMParserPrototype.h>
 #include <LibWeb/Bindings/DOMRectConstructor.h>
+#include <LibWeb/Bindings/DOMRectListConstructor.h>
+#include <LibWeb/Bindings/DOMRectListPrototype.h>
 #include <LibWeb/Bindings/DOMRectPrototype.h>
 #include <LibWeb/Bindings/DOMRectReadOnlyConstructor.h>
 #include <LibWeb/Bindings/DOMRectReadOnlyPrototype.h>
@@ -247,14 +249,26 @@
 #include <LibWeb/Bindings/RangePrototype.h>
 #include <LibWeb/Bindings/ResizeObserverConstructor.h>
 #include <LibWeb/Bindings/ResizeObserverPrototype.h>
+#include <LibWeb/Bindings/SVGCircleElementConstructor.h>
+#include <LibWeb/Bindings/SVGCircleElementPrototype.h>
 #include <LibWeb/Bindings/SVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGElementPrototype.h>
+#include <LibWeb/Bindings/SVGEllipseElementConstructor.h>
+#include <LibWeb/Bindings/SVGEllipseElementPrototype.h>
 #include <LibWeb/Bindings/SVGGeometryElementConstructor.h>
 #include <LibWeb/Bindings/SVGGeometryElementPrototype.h>
 #include <LibWeb/Bindings/SVGGraphicsElementConstructor.h>
 #include <LibWeb/Bindings/SVGGraphicsElementPrototype.h>
+#include <LibWeb/Bindings/SVGLineElementConstructor.h>
+#include <LibWeb/Bindings/SVGLineElementPrototype.h>
 #include <LibWeb/Bindings/SVGPathElementConstructor.h>
 #include <LibWeb/Bindings/SVGPathElementPrototype.h>
+#include <LibWeb/Bindings/SVGPolygonElementConstructor.h>
+#include <LibWeb/Bindings/SVGPolygonElementPrototype.h>
+#include <LibWeb/Bindings/SVGPolylineElementConstructor.h>
+#include <LibWeb/Bindings/SVGPolylineElementPrototype.h>
+#include <LibWeb/Bindings/SVGRectElementConstructor.h>
+#include <LibWeb/Bindings/SVGRectElementPrototype.h>
 #include <LibWeb/Bindings/SVGSVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGSVGElementPrototype.h>
 #include <LibWeb/Bindings/ScreenConstructor.h>
@@ -326,6 +340,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(DOMImplementation)         \
     ADD_WINDOW_OBJECT_INTERFACE(DOMParser)                 \
     ADD_WINDOW_OBJECT_INTERFACE(DOMRect)                   \
+    ADD_WINDOW_OBJECT_INTERFACE(DOMRectList)               \
     ADD_WINDOW_OBJECT_INTERFACE(DOMRectReadOnly)           \
     ADD_WINDOW_OBJECT_INTERFACE(DOMStringMap)              \
     ADD_WINDOW_OBJECT_INTERFACE(Element)                   \
@@ -432,9 +447,15 @@
     ADD_WINDOW_OBJECT_INTERFACE(SubmitEvent)               \
     ADD_WINDOW_OBJECT_INTERFACE(SubtleCrypto)              \
     ADD_WINDOW_OBJECT_INTERFACE(SVGElement)                \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGCircleElement)          \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGEllipseElement)         \
     ADD_WINDOW_OBJECT_INTERFACE(SVGGeometryElement)        \
     ADD_WINDOW_OBJECT_INTERFACE(SVGGraphicsElement)        \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGLineElement)            \
     ADD_WINDOW_OBJECT_INTERFACE(SVGPathElement)            \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGPolygonElement)         \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGPolylineElement)        \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGRectElement)            \
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)             \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                      \
     ADD_WINDOW_OBJECT_INTERFACE(TextEncoder)               \

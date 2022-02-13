@@ -1,0 +1,34 @@
+From 2f0a2a9ead96f9e5e345d6ae0dd7e5181208c406 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 11 Feb 2022 16:52:51 +0330
+Subject: [PATCH 13/18] Disable openmp
+
+---
+ makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/makefile b/makefile
+index 16c2c89..0d7d7f0 100644
+--- a/makefile
++++ b/makefile
+@@ -82,7 +82,7 @@ $(BUILDDIR):
+ 	mkdir -p $@
+ 
+ $(BUILDDIR)/ctr: build_tcc_statics $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
+-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) -lm -ldl -lbsd -lpcre -lffi -lpthread $(LEXTRACF) -o $@
++	$(CXX) $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) -lm -ldl -lbsd -lpcre -lffi -lpthread $(LEXTRACF) -o $@
+ 
+ ctr: $(BUILDDIR)/ctr
+ 
+@@ -131,7 +131,7 @@ $(BUILDDIR)/%.a: src/lib/tcc/%.a
+ 	cp $< $@
+ 
+ $(BUILDDIR)/%.o: src/%.c
+-	$(CC) -fopenmp $(CFLAGS) -c $< -o $@
++	$(CC) $(CFLAGS) -c $< -o $@
+ 
+ $(BUILDDIR)/%.o: src/%.cpp
+ 	$(CXX) -g $(CFLAGS) -c $< $(CXXFLAGS) -o $@
+-- 
+2.34.1
+

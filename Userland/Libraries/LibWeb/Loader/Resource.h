@@ -49,6 +49,8 @@ public:
 
     const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers() const { return m_response_headers; }
 
+    [[nodiscard]] Optional<u32> status_code() const { return m_status_code; }
+
     void register_client(Badge<ResourceClient>, ResourceClient&);
     void unregister_client(Badge<ResourceClient>, ResourceClient&);
 

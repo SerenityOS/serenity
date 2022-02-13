@@ -153,8 +153,9 @@ public:
 class Object : public ValueNode {
 public:
     Object() = default;
-    Object(String name, NonnullRefPtrVector<Node> children)
-        : m_children(move(children))
+    Object(String name, NonnullRefPtrVector<Node> properties, NonnullRefPtrVector<Node> sub_objects)
+        : m_properties(move(properties))
+        , m_sub_objects(move(sub_objects))
         , m_name(move(name))
     {
     }
@@ -163,18 +164,24 @@ public:
 
     StringView name() const { return m_name; }
     void set_name(String name) { m_name = move(name); }
-    NonnullRefPtrVector<Node> children() const { return m_children; }
 
-    ErrorOr<void> add_child(NonnullRefPtr<Node> child)
+    ErrorOr<void> add_sub_object_child(NonnullRefPtr<Node> child)
     {
-        return m_children.try_append(move(child));
+        VERIFY(is<Object>(child.ptr()) || is<Comment>(child.ptr()));
+        return m_sub_objects.try_append(move(child));
+    }
+
+    ErrorOr<void> add_property_child(NonnullRefPtr<Node> child)
+    {
+        VERIFY(is<KeyValuePair>(child.ptr()) || is<Comment>(child.ptr()));
+        return m_properties.try_append(move(child));
     }
 
     // Does not return key-value pair `layout: ...`!
     template<typename Callback>
     void for_each_property(Callback callback)
     {
-        for (auto const& child : m_children) {
+        for (auto const& child : m_properties) {
             if (is<KeyValuePair>(child)) {
                 auto const& property = static_cast<KeyValuePair const&>(child);
                 if (property.key() != "layout" && is<JsonValueNode>(property.value().ptr()))
@@ -186,7 +193,7 @@ public:
     template<typename Callback>
     void for_each_child_object(Callback callback)
     {
-        for (NonnullRefPtr<Node> child : m_children) {
+        for (NonnullRefPtr<Node> child : m_sub_objects) {
             // doesn't capture layout as intended, as that's behind a kv-pair
             if (is<Object>(child.ptr())) {
                 auto object = static_ptr_cast<Object>(child);
@@ -199,7 +206,7 @@ public:
     template<IteratorFunction<NonnullRefPtr<Object>> Callback>
     void for_each_child_object_interruptible(Callback callback)
     {
-        for (NonnullRefPtr<Node> child : m_children) {
+        for (NonnullRefPtr<Node> child : m_sub_objects) {
             // doesn't capture layout as intended, as that's behind a kv-pair
             if (is<Object>(child.ptr())) {
                 auto object = static_ptr_cast<Object>(child);
@@ -211,7 +218,7 @@ public:
 
     RefPtr<Object> layout_object() const
     {
-        for (NonnullRefPtr<Node> child : m_children) {
+        for (NonnullRefPtr<Node> child : m_properties) {
             if (is<KeyValuePair>(child.ptr())) {
                 auto property = static_ptr_cast<KeyValuePair>(child);
                 if (property->key() == "layout") {
@@ -225,7 +232,7 @@ public:
 
     RefPtr<ValueNode> get_property(StringView property_name)
     {
-        for (NonnullRefPtr<Node> child : m_children) {
+        for (NonnullRefPtr<Node> child : m_properties) {
             if (is<KeyValuePair>(child.ptr())) {
                 auto property = static_ptr_cast<KeyValuePair>(child);
                 if (property->key() == property_name)
@@ -241,28 +248,37 @@ public:
             indent(builder, indentation);
         builder.append('@');
         builder.append(m_name);
+        builder.append(" {");
+        if (!m_properties.is_empty() || !m_sub_objects.is_empty()) {
+            builder.append('\n');
 
-        if (!m_children.is_empty()) {
-            builder.append(" {\n");
+            for (auto const& property : m_properties)
+                property.format(builder, indentation + 1, false);
+
+            if (!m_properties.is_empty() && !m_sub_objects.is_empty())
+                builder.append('\n');
 
             // This loop is necessary as we need to know what the last child is.
-            for (size_t i = 0; i < m_children.size(); ++i) {
-                auto const& child = m_children[i];
+            for (size_t i = 0; i < m_sub_objects.size(); ++i) {
+                auto const& child = m_sub_objects[i];
                 child.format(builder, indentation + 1, false);
 
-                if (is<Object>(child) && i != m_children.size() - 1)
+                if (is<Object>(child) && i != m_sub_objects.size() - 1)
                     builder.append('\n');
             }
 
             indent(builder, indentation);
-            builder.append('}');
         }
-        builder.append('\n');
+        builder.append('}');
+        if (!is_inline)
+            builder.append('\n');
     }
 
 private:
-    // Any node contained in the object body, i.e. properties, comments and subobjects.
-    NonnullRefPtrVector<Node> m_children;
+    // Properties and comments
+    NonnullRefPtrVector<Node> m_properties;
+    // Sub objects and comments
+    NonnullRefPtrVector<Node> m_sub_objects;
     String m_name {};
 };
 

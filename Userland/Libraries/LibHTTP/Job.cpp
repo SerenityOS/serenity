@@ -243,8 +243,8 @@ void Job::on_socket_connected()
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
             auto parts = line.split_view(' ');
-            if (parts.size() < 3) {
-                dbgln("Job: Expected 3-part HTTP status, got '{}'", line);
+            if (parts.size() < 2) {
+                dbgln("Job: Expected 2-part or 3-part HTTP status line, got '{}'", line);
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto code = parts[1].to_uint();
@@ -316,12 +316,6 @@ void Job::on_socket_connected()
                 if (m_code == 204)
                     return finish_up();
 
-                can_read_line = m_socket->can_read_line();
-                if (can_read_line.is_error())
-                    return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-
-                if (!can_read_line.value())
-                    return;
                 break;
             }
             auto parts = line.split_view(':');
@@ -385,12 +379,6 @@ void Job::on_socket_connected()
             }
         }
         VERIFY(m_state == State::InBody);
-
-        auto can_read_without_blocking = m_socket->can_read_without_blocking();
-        if (can_read_without_blocking.is_error())
-            return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-        if (!can_read_without_blocking.value())
-            return;
 
         while (true) {
             auto can_read_without_blocking = m_socket->can_read_without_blocking();

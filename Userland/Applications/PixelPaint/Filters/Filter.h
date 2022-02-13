@@ -27,9 +27,12 @@ public:
     Filter(ImageEditor* editor)
         : m_editor(editor) {};
 
+    Function<void(void)> on_settings_change;
+
 protected:
     ImageEditor* m_editor { nullptr };
     RefPtr<GUI::Widget> m_settings_widget { nullptr };
+    void update_preview();
 };
 
 }

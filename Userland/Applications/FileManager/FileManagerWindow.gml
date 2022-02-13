@@ -6,6 +6,7 @@
 
     @GUI::ToolbarContainer {
         name: "toolbar_container"
+
         @GUI::Toolbar {
             name: "main_toolbar"
         }
@@ -13,6 +14,7 @@
         @GUI::Toolbar {
             name: "location_toolbar"
             visible: false
+
             @GUI::Label {
                 text: "Location: "
                 autosize: true
@@ -26,6 +28,7 @@
 
         @GUI::Toolbar {
             name: "breadcrumb_toolbar"
+
             @GUI::Label {
                 text: "Location: "
                 autosize: true
@@ -40,6 +43,7 @@
     @GUI::HorizontalSplitter {
         name: "splitter"
         first_resizee_minimum_size: 80
+
         @GUI::TreeView {
             name: "tree_view"
             fixed_width: 175
@@ -48,6 +52,7 @@
 
     @GUI::Statusbar {
         name: "statusbar"
+
         @GUI::Progressbar {
             name: "progressbar"
             text: "Generating thumbnails: "

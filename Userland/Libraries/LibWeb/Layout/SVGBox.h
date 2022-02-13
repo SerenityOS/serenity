@@ -18,6 +18,7 @@ public:
     virtual ~SVGBox() override = default;
 
     SVG::SVGElement& dom_node() { return verify_cast<SVG::SVGElement>(*Box::dom_node()); }
+    SVG::SVGElement const& dom_node() const { return verify_cast<SVG::SVGElement>(*Box::dom_node()); }
 
     virtual void before_children_paint(PaintContext& context, PaintPhase phase) override;
     virtual void after_children_paint(PaintContext& context, PaintPhase phase) override;

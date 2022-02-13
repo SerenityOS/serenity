@@ -44,7 +44,7 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         margin_rect.set_height(content_height() + margin_box.top + margin_box.bottom);
 
         context.painter().draw_rect(enclosing_int_rect(margin_rect), Color::Yellow);
-        context.painter().draw_rect(enclosing_int_rect(padded_rect()), Color::Cyan);
+        context.painter().draw_rect(enclosing_int_rect(absolute_padding_box_rect()), Color::Cyan);
         context.painter().draw_rect(enclosing_int_rect(content_rect), Color::Magenta);
     }
 
@@ -61,7 +61,7 @@ void Box::paint_border(PaintContext& context)
         .bottom = computed_values().border_bottom(),
         .left = computed_values().border_left(),
     };
-    Painting::paint_all_borders(context, bordered_rect(), normalized_border_radius_data(), borders_data);
+    Painting::paint_all_borders(context, absolute_border_box_rect(), normalized_border_radius_data(), borders_data);
 }
 
 void Box::paint_background(PaintContext& context)
@@ -85,13 +85,13 @@ void Box::paint_background(PaintContext& context)
             background_color = document().background_color(context.palette());
         }
     } else {
-        background_rect = enclosing_int_rect(padded_rect());
+        background_rect = enclosing_int_rect(absolute_padding_box_rect());
     }
 
     // HACK: If the Box has a border, use the bordered_rect to paint the background.
     //       This way if we have a border-radius there will be no gap between the filling and actual border.
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
-        background_rect = enclosing_int_rect(bordered_rect());
+        background_rect = enclosing_int_rect(absolute_border_box_rect());
 
     Painting::paint_background(context, *this, background_rect, background_color, background_layers, normalized_border_radius_data());
 }
@@ -113,12 +113,12 @@ void Box::paint_box_shadow(PaintContext& context)
             static_cast<int>(layer.spread_distance.resolved_or_zero(*this).to_px(*this)),
             layer.placement == CSS::BoxShadowPlacement::Outer ? Painting::BoxShadowPlacement::Outer : Painting::BoxShadowPlacement::Inner);
     }
-    Painting::paint_box_shadow(context, enclosing_int_rect(bordered_rect()), resolved_box_shadow_data);
+    Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);
 }
 
 Painting::BorderRadiusData Box::normalized_border_radius_data()
 {
-    return Painting::normalized_border_radius_data(*this, bordered_rect(),
+    return Painting::normalized_border_radius_data(*this, absolute_border_box_rect(),
         computed_values().border_top_left_radius(),
         computed_values().border_top_right_radius(),
         computed_values().border_bottom_right_radius(),
@@ -235,7 +235,7 @@ void Box::before_children_paint(PaintContext& context, PaintPhase phase)
     // FIXME: Support more overflow variations.
     if (computed_values().overflow_x() == CSS::Overflow::Hidden && computed_values().overflow_y() == CSS::Overflow::Hidden) {
         context.painter().save();
-        context.painter().add_clip_rect(enclosing_int_rect(bordered_rect()));
+        context.painter().add_clip_rect(enclosing_int_rect(absolute_border_box_rect()));
     }
 }
 

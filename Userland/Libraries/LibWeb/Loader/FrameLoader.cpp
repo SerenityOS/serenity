@@ -11,6 +11,7 @@
 #include <LibGemini/Document.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
@@ -253,21 +254,47 @@ void FrameLoader::load_favicon(RefPtr<Gfx::Bitmap> bitmap)
     }
 }
 
+void FrameLoader::store_response_cookies(AK::URL const& url, String const& cookies)
+{
+    auto* page = browsing_context().page();
+    if (!page)
+        return;
+
+    auto set_cookie_json_value = MUST(JsonValue::from_string(cookies));
+    VERIFY(set_cookie_json_value.type() == JsonValue::Type::Array);
+
+    for (const auto& set_cookie_entry : set_cookie_json_value.as_array().values()) {
+        VERIFY(set_cookie_entry.type() == JsonValue::Type::String);
+
+        auto cookie = Cookie::parse_cookie(set_cookie_entry.as_string());
+        if (!cookie.has_value())
+            continue;
+
+        page->client().page_did_set_cookie(url, cookie.value(), Cookie::Source::Http); // FIXME: Determine cookie source correctly
+    }
+}
+
 void FrameLoader::resource_did_load()
 {
     auto url = resource()->url();
 
-    // FIXME: Also check HTTP status code before redirecting
-    auto location = resource()->response_headers().get("Location");
-    if (location.has_value()) {
-        if (m_redirects_count > maximum_redirects_allowed) {
-            m_redirects_count = 0;
-            load_error_page(url, "Too many redirects");
+    if (auto set_cookie = resource()->response_headers().get("Set-Cookie"); set_cookie.has_value())
+        store_response_cookies(url, *set_cookie);
+
+    // For 3xx (Redirection) responses, the Location value refers to the preferred target resource for automatically redirecting the request.
+    auto status_code = resource()->status_code();
+    if (status_code.has_value() && *status_code >= 300 && *status_code <= 399) {
+        auto location = resource()->response_headers().get("Location");
+        if (location.has_value()) {
+            if (m_redirects_count > maximum_redirects_allowed) {
+                m_redirects_count = 0;
+                load_error_page(url, "Too many redirects");
+                return;
+            }
+            m_redirects_count++;
+            load(url.complete_url(location.value()), FrameLoader::Type::Navigation);
             return;
         }
-        m_redirects_count++;
-        load(url.complete_url(location.value()), FrameLoader::Type::Navigation);
-        return;
     }
     m_redirects_count = 0;
 
@@ -292,16 +319,6 @@ void FrameLoader::resource_did_load()
     if (!parse_document(*document, resource()->encoded_data())) {
         load_error_page(url, "Failed to parse content.");
         return;
-    }
-
-    auto set_cookie = resource()->response_headers().get("Set-Cookie");
-    if (set_cookie.has_value()) {
-        auto set_cookie_json_value = MUST(JsonValue::from_string(set_cookie.value()));
-        VERIFY(set_cookie_json_value.type() == JsonValue::Type::Array);
-        for (const auto& set_cookie_entry : set_cookie_json_value.as_array().values()) {
-            VERIFY(set_cookie_entry.type() == JsonValue::Type::String);
-            document->set_cookie(set_cookie_entry.as_string(), Cookie::Source::Http);
-        }
     }
 
     if (!url.fragment().is_empty())

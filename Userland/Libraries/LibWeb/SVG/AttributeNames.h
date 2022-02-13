@@ -19,6 +19,8 @@ namespace Web::SVG::AttributeNames {
     E(clipPathUnits)                \
     E(contentScriptType)            \
     E(contentStyleType)             \
+    E(cx)                           \
+    E(cy)                           \
     E(diffuseConstant)              \
     E(edgeMode)                     \
     E(filterUnits)                  \
@@ -43,17 +45,21 @@ namespace Web::SVG::AttributeNames {
     E(patternContentUnits)          \
     E(patternTransform)             \
     E(patternUnits)                 \
+    E(points)                       \
     E(pointsAtX)                    \
     E(pointsAtY)                    \
     E(pointsAtZ)                    \
     E(preserveAlpha)                \
     E(preserveAspectRatio)          \
     E(primitiveUnits)               \
+    E(r)                            \
     E(refX)                         \
     E(refY)                         \
     E(repeatCount)                  \
     E(repeatDur)                    \
     E(requiredExtensions)           \
+    E(rx)                           \
+    E(ry)                           \
     E(requiredFeatures)             \
     E(specularConstant)             \
     E(specularExponent)             \
@@ -72,8 +78,12 @@ namespace Web::SVG::AttributeNames {
     E(viewTarget)                   \
     E(width)                        \
     E(x)                            \
+    E(x1)                           \
+    E(x2)                           \
     E(xChannelSelector)             \
     E(y)                            \
+    E(y1)                           \
+    E(y2)                           \
     E(yChannelSelector)             \
     E(zoomAndPan)
 

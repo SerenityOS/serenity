@@ -11,8 +11,7 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::VerticalBoxLayout
-
+        layout: @GUI::VerticalBoxLayout {}
         name: "icon_view_container"
     }
 
@@ -26,9 +25,9 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
-
+        layout: @GUI::HorizontalBoxLayout {}
         max_height: 24
+
         @GUI::Label {
             text: "Name:"
             text_alignment: "CenterLeft"
@@ -41,9 +40,9 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
-
+        layout: @GUI::HorizontalBoxLayout {}
         max_height: 24
+
         @GUI::Label {
             text: "Create in:"
             text_alignment: "CenterLeft"
@@ -63,9 +62,9 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
-
+        layout: @GUI::HorizontalBoxLayout {}
         max_height: 24
+
         @GUI::Label {
             text: "Full path:"
             text_alignment: "CenterLeft"
@@ -84,10 +83,10 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout
-
+        layout: @GUI::HorizontalBoxLayout {}
         max_height: 24
-        @GUI::Widget
+
+        @GUI::Widget {}
 
         @GUI::Button {
             name: "ok_button"

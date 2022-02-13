@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Guide.h"
+#include "IconBag.h"
 #include "Image.h"
 #include "ImageEditor.h"
 #include "Layer.h"
@@ -26,6 +27,8 @@
 #include <LibGUI/Widget.h>
 
 namespace PixelPaint {
+
+extern IconBag g_icon_bag;
 
 class MainWidget : public GUI::Widget {
     C_OBJECT(MainWidget);
