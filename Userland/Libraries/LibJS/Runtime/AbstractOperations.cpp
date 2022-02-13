@@ -1031,7 +1031,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
 }
 
 // 7.1.21 CanonicalNumericIndexString ( argument ), https://tc39.es/ecma262/#sec-canonicalnumericindexstring
-Optional<u32> canonical_numeric_index_string(PropertyKey const& property_key)
+Value canonical_numeric_index_string(GlobalObject& global_object, PropertyKey const& property_key)
 {
     // NOTE: If the property name is a number type (An implementation-defined optimized
     // property key type), it can be treated as a string property that has already been
@@ -1039,11 +1039,25 @@ Optional<u32> canonical_numeric_index_string(PropertyKey const& property_key)
 
     VERIFY(property_key.is_string() || property_key.is_number());
 
-    // If property_key is a string containing a canonical numeric index
-    // the act of calling is_number() will return true
     if (property_key.is_number())
-        return property_key.as_number();
-    return {};
+        return Value(property_key.as_number());
+
+    // 1. Assert: Type(argument) is String.
+    auto argument = Value(js_string(global_object.vm(), property_key.as_string()));
+
+    // 2. If argument is "-0", return -0𝔽.
+    if (argument.as_string().string() == "-0")
+        return Value(-0.0);
+
+    // 3. Let n be ! ToNumber(argument).
+    auto n = MUST(argument.to_number(global_object));
+
+    // 4. If SameValue(! ToString(n), argument) is false, return undefined.
+    if (!same_value(MUST(n.to_primitive_string(global_object)), argument))
+        return js_undefined();
+
+    // 5. Return n.
+    return n;
 }
 
 // 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution
