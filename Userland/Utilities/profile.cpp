@@ -1,15 +1,17 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Zachary Penn <zack@sysdevs.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibMain/Main.h>
 #include <serenity.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
@@ -60,13 +62,13 @@ int main(int argc, char** argv)
         outln("Event type can be one of: sample, context_switch, page_fault, syscall, kmalloc and kfree.");
     };
 
-    if (!args_parser.parse(argc, argv, Core::ArgsParser::FailureBehavior::PrintUsage)) {
+    if (!args_parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)) {
         print_types();
         exit(0);
     }
 
     if (!pid_argument && !cmd_argument && !all_processes) {
-        args_parser.print_usage(stdout, argv[0]);
+        args_parser.print_usage(stdout, arguments.argv[0]);
         print_types();
         return 0;
     }
