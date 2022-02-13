@@ -506,14 +506,20 @@ ErrorOr<int> run_in_desktop_mode()
     struct BackgroundWallpaperListener : Config::Listener {
         virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override
         {
-            if (domain == "WindowManager" && group == "Background" && key == "Wallpaper")
-                GUI::Desktop::the().set_wallpaper(value, false);
+            if (domain == "WindowManager" && group == "Background" && key == "Wallpaper") {
+                auto wallpaper_bitmap_or_error = Gfx::Bitmap::try_load_from_file(value);
+                if (wallpaper_bitmap_or_error.is_error())
+                    dbgln("Failed to load wallpaper bitmap from path: {}", wallpaper_bitmap_or_error.error());
+                else
+                    GUI::Desktop::the().set_wallpaper(wallpaper_bitmap_or_error.release_value(), {});
+            }
         }
     } wallpaper_listener;
 
     auto selected_wallpaper = Config::read_string("WindowManager", "Background", "Wallpaper", "");
     if (!selected_wallpaper.is_empty()) {
-        GUI::Desktop::the().set_wallpaper(selected_wallpaper, false);
+        auto wallpaper_bitmap = TRY(Gfx::Bitmap::try_load_from_file(selected_wallpaper));
+        GUI::Desktop::the().set_wallpaper(wallpaper_bitmap, {});
     }
 
     window->show();

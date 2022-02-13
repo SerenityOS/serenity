@@ -140,9 +140,7 @@ void BackgroundSettingsWidget::load_current_settings()
 
 void BackgroundSettingsWidget::apply_settings()
 {
-    if (GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper()))
-        Config::write_string("WindowManager", "Background", "Wallpaper", m_monitor_widget->wallpaper());
-    else
+    if (!GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper_bitmap(), m_monitor_widget->wallpaper()))
         GUI::MessageBox::show_error(window(), String::formatted("Unable to load file {} as wallpaper", m_monitor_widget->wallpaper()));
 
     GUI::Desktop::the().set_background_color(m_color_input->text());

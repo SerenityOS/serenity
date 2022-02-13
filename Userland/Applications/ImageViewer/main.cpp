@@ -169,8 +169,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png")),
         [&](auto&) {
-            auto could_set_wallpaper = GUI::Desktop::the().set_wallpaper(widget->path());
-            if (!could_set_wallpaper) {
+            if (!GUI::Desktop::the().set_wallpaper(widget->bitmap(), widget->path())) {
                 GUI::MessageBox::show(window,
                     String::formatted("set_wallpaper({}) failed", widget->path()),
                     "Could not set wallpaper",

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, James Puleo <james@jame.xyz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,7 +31,7 @@ static int handle_show_all()
 
 static int handle_show_current()
 {
-    outln("{}", GUI::Desktop::the().wallpaper());
+    outln("{}", GUI::Desktop::the().wallpaper_path());
     return 0;
 }
 
@@ -40,7 +41,7 @@ static int handle_set_pape(const String& name)
     builder.append("/res/wallpapers/");
     builder.append(name);
     String path = builder.to_string();
-    if (!GUI::Desktop::the().set_wallpaper(path)) {
+    if (!GUI::Desktop::the().set_wallpaper(MUST(Gfx::Bitmap::try_load_from_file(path)), path)) {
         warnln("pape: Failed to set wallpaper {}", path);
         return 1;
     }
@@ -58,13 +59,13 @@ static int handle_set_random()
     while (di.has_next()) {
         wallpapers.append(di.next_full_path());
     }
-    wallpapers.remove_all_matching([](const String& wallpaper) { return wallpaper == GUI::Desktop::the().wallpaper(); });
+    wallpapers.remove_all_matching([](const String& wallpaper) { return wallpaper == GUI::Desktop::the().wallpaper_path(); });
     if (wallpapers.is_empty()) {
         warnln("pape: No wallpapers found");
         return 1;
     }
     auto& wallpaper = wallpapers.at(get_random_uniform(wallpapers.size()));
-    if (!GUI::Desktop::the().set_wallpaper(wallpaper)) {
+    if (!GUI::Desktop::the().set_wallpaper(MUST(Gfx::Bitmap::try_load_from_file(wallpaper)), wallpaper)) {
         warnln("pape: Failed to set wallpaper {}", wallpaper);
         return 1;
     }

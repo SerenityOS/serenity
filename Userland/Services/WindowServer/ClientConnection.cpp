@@ -292,11 +292,10 @@ void ClientConnection::set_window_opacity(i32 window_id, float opacity)
     it->value->set_opacity(opacity);
 }
 
-void ClientConnection::set_wallpaper(String const& path)
+void ClientConnection::set_wallpaper(Gfx::ShareableBitmap const& bitmap)
 {
-    Compositor::the().set_wallpaper(path, [&](bool success) {
-        async_set_wallpaper_finished(success);
-    });
+    Compositor::the().set_wallpaper(bitmap.bitmap());
+    async_set_wallpaper_finished(true);
 }
 
 void ClientConnection::set_background_color(String const& background_color)
@@ -311,7 +310,7 @@ void ClientConnection::set_wallpaper_mode(String const& mode)
 
 Messages::WindowServer::GetWallpaperResponse ClientConnection::get_wallpaper()
 {
-    return Compositor::the().wallpaper_path();
+    return Compositor::the().wallpaper_bitmap()->to_shareable_bitmap();
 }
 
 Messages::WindowServer::SetScreenLayoutResponse ClientConnection::set_screen_layout(ScreenLayout const& screen_layout, bool save)
