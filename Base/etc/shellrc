@@ -26,6 +26,7 @@ alias ws=WebServer
 alias sl=Solitaire
 alias ue=UserspaceEmulator
 alias fe=FontEditor
+alias ss=Spreadsheet
 
 alias rgrep="grep -r"
 alias egrep="grep -E"
