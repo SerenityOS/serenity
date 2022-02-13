@@ -952,6 +952,14 @@ ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2])
     return {};
 }
 
+ErrorOr<Array<int, 2>> pipe()
+{
+    Array<int, 2> fds;
+    if (::pipe(fds.data()) < 0)
+        return Error::from_syscall("pipe"sv, -errno);
+    return fds;
+}
+
 ErrorOr<Array<int, 2>> pipe2([[maybe_unused]] int flags)
 {
     Array<int, 2> fds;

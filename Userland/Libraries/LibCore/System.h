@@ -118,6 +118,7 @@ ErrorOr<void> rename(StringView old_path, StringView new_path);
 ErrorOr<void> unlink(StringView path);
 ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
 ErrorOr<struct utsname> uname();
+ErrorOr<Array<int, 2>> pipe();
 ErrorOr<Array<int, 2>> pipe2(int flags);
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta);
 
