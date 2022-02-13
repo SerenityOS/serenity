@@ -2987,28 +2987,10 @@ Completion ObjectExpression::execute(Interpreter& interpreter, GlobalObject& glo
     for (auto& property : m_properties) {
         auto key = TRY(property.key().execute(interpreter, global_object)).release_value();
 
+        // PropertyDefinition : ... AssignmentExpression
         if (property.type() == ObjectProperty::Type::Spread) {
-            if (key.is_object() && is<Array>(key.as_object())) {
-                auto& array_to_spread = static_cast<Array&>(key.as_object());
-                for (auto& entry : array_to_spread.indexed_properties()) {
-                    auto value = TRY(array_to_spread.get(entry.index()));
-                    object->indexed_properties().put(entry.index(), value);
-                }
-            } else if (key.is_object()) {
-                auto& obj_to_spread = key.as_object();
-
-                for (auto& it : obj_to_spread.shape().property_table_ordered()) {
-                    if (it.value.attributes.is_enumerable()) {
-                        auto value = TRY(obj_to_spread.get(it.key));
-                        object->define_direct_property(it.key, value, JS::default_attributes);
-                    }
-                }
-            } else if (key.is_string()) {
-                auto& str_to_spread = key.as_string().string();
-
-                for (size_t i = 0; i < str_to_spread.length(); i++)
-                    object->define_direct_property(i, js_string(interpreter.heap(), str_to_spread.substring(i, 1)), JS::default_attributes);
-            }
+            // 4. Return ? CopyDataProperties(object, fromValue, excludedNames).
+            TRY(object->copy_data_properties(key, {}, global_object));
             continue;
         }
 
