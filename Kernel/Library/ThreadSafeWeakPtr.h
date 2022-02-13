@@ -177,7 +177,7 @@ private:
 
 template<typename T>
 template<typename U>
-inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
+inline ErrorOr<WeakPtr<U>> Weakable<T>::try_make_weak_ptr() const
 {
     if constexpr (IsBaseOf<RefCountedBase, T>) {
         // Checking m_being_destroyed isn't sufficient when dealing with
@@ -187,18 +187,18 @@ inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
         // that we prevent the destructor and revoke_weak_ptrs from being
         // triggered until we're done.
         if (!static_cast<const T*>(this)->try_ref())
-            return {};
+            return WeakPtr<U> {};
     } else {
         // For non-RefCounted types this means a weak reference can be
         // obtained until the ~Weakable destructor is invoked!
         if (m_being_destroyed.load(AK::MemoryOrder::memory_order_acquire))
-            return {};
+            return WeakPtr<U> {};
     }
     if (!m_link) {
         // There is a small chance that we create a new WeakLink and throw
         // it away because another thread beat us to it. But the window is
         // pretty small and the overhead isn't terrible.
-        m_link.assign_if_null(adopt_ref(*new WeakLink(const_cast<T&>(static_cast<const T&>(*this)))));
+        m_link.assign_if_null(TRY(adopt_nonnull_ref_or_enomem(new (nothrow) WeakLink(const_cast<T&>(static_cast<const T&>(*this))))));
     }
 
     WeakPtr<U> weak_ptr(m_link);
@@ -209,7 +209,7 @@ inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
             // We just dropped the last reference, which should have called
             // revoke_weak_ptrs, which should have invalidated our weak_ptr
             VERIFY(!weak_ptr.strong_ref());
-            return {};
+            return WeakPtr<U> {};
         }
     }
     return weak_ptr;
@@ -229,12 +229,18 @@ struct Formatter<WeakPtr<T>> : Formatter<const T*> {
 };
 
 template<typename T>
-WeakPtr<T> make_weak_ptr_if_nonnull(const T* ptr)
+ErrorOr<WeakPtr<T>> try_make_weak_ptr_if_nonnull(T const* ptr)
 {
     if (ptr) {
-        return ptr->template make_weak_ptr<T>();
+        return ptr->template try_make_weak_ptr<T>();
     }
-    return {};
+    return WeakPtr<T> {};
+}
+
+template<typename T>
+WeakPtr<T> make_weak_ptr_if_nonnull(T const* ptr)
+{
+    return MUST(try_make_weak_ptr_if_nonnull(ptr));
 }
 
 }
