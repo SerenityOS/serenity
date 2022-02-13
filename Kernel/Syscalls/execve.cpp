@@ -58,13 +58,10 @@ static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, N
     total_arguments_size += sizeof(char*) * (arguments.size() + 1);
     total_environment_size += sizeof(char*) * (environment.size() + 1);
 
-    constexpr size_t max_arguments_size = Thread::default_userspace_stack_size / 8;
-    constexpr size_t max_environment_size = Thread::default_userspace_stack_size / 8;
-
-    if (total_arguments_size > max_arguments_size)
+    if (total_arguments_size > Process::max_arguments_size)
         return false;
 
-    if (total_environment_size > max_environment_size)
+    if (total_environment_size > Process::max_environment_size)
         return false;
 
     // FIXME: This doesn't account for the size of the auxiliary vector

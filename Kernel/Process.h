@@ -434,6 +434,8 @@ public:
     Custody* executable() { return m_executable.ptr(); }
     const Custody* executable() const { return m_executable.ptr(); }
 
+    static constexpr size_t max_arguments_size = Thread::default_userspace_stack_size / 8;
+    static constexpr size_t max_environment_size = Thread::default_userspace_stack_size / 8;
     NonnullOwnPtrVector<KString> const& arguments() const { return m_arguments; };
     NonnullOwnPtrVector<KString> const& environment() const { return m_environment; };
 
