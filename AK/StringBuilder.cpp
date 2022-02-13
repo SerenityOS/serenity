@@ -49,7 +49,7 @@ ErrorOr<void> StringBuilder::try_append(StringView string)
 ErrorOr<void> StringBuilder::try_append(char ch)
 {
     TRY(will_append(1));
-    TRY(m_buffer.try_append(&ch, 1));
+    TRY(m_buffer.try_append(ch));
     return {};
 }
 
