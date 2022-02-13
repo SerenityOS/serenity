@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2021, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2022, Zachary Penn <zack@sysdevs.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
