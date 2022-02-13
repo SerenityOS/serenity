@@ -19,6 +19,8 @@
 
 namespace Kernel::Graphics::VirtIOGPU {
 
+class GPU3DDevice;
+
 #define VIRTIO_GPU_F_VIRGL (1 << 0)
 #define VIRTIO_GPU_F_EDID (1 << 1)
 
@@ -47,6 +49,7 @@ public:
     virtual bool vga_compatible() const override { return false; }
 
     virtual void initialize() override;
+    void initialize_3d_device();
 
     ErrorOr<ByteBuffer> get_edid(size_t output_port_index) const override;
 
@@ -109,8 +112,15 @@ private:
     u32 get_pending_events();
     void clear_pending_events(u32 event_bitmask);
 
+    // 3D Command stuff
+    ContextID create_context();
+    void attach_resource_to_context(ResourceID resource_id, ContextID context_id);
+    void submit_command_buffer(ContextID, Function<size_t(Bytes)> buffer_writer);
+    Protocol::TextureFormat get_framebuffer_format() const { return Protocol::TextureFormat::VIRTIO_GPU_FORMAT_B8G8R8X8_UNORM; }
+
     auto& operation_lock() { return m_operation_lock; }
     ResourceID allocate_resource_id();
+    ContextID allocate_context_id();
 
     PhysicalAddress start_of_scratch_space() const { return m_scratch_space->physical_page(0)->paddr(); }
     AK::BinaryBufferWriter create_scratchspace_writer()
@@ -123,6 +133,7 @@ private:
     void query_display_information();
     void query_display_edid(Optional<ScanoutID>);
     ResourceID create_2d_resource(Protocol::Rect rect);
+    ResourceID create_3d_resource(Protocol::Resource3DSpecification const& resource_3d_specification);
     void delete_resource(ResourceID resource_id);
     void ensure_backing_storage(ResourceID resource_id, Memory::Region const& region, size_t buffer_offset, size_t buffer_length);
     void detach_backing_storage(ResourceID resource_id);
@@ -138,10 +149,15 @@ private:
 
     VirtIO::Configuration const* m_device_configuration { nullptr };
     ResourceID m_resource_id_counter { 0 };
+    ContextID m_context_id_counter { 0 };
+    RefPtr<GPU3DDevice> m_3d_device;
+    bool m_has_virgl_support { false };
 
     // Synchronous commands
     WaitQueue m_outstanding_request;
-    Spinlock m_operation_lock;
+    Mutex m_operation_lock;
     OwnPtr<Memory::Region> m_scratch_space;
+
+    friend class Kernel::Graphics::VirtIOGPU::GPU3DDevice;
 };
 }
