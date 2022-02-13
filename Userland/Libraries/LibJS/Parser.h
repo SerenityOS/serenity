@@ -216,7 +216,7 @@ private:
 
     Token next_token(size_t steps = 1) const;
 
-    void check_identifier_name_for_assignment_validity(StringView, bool force_strict = false);
+    void check_identifier_name_for_assignment_validity(FlyString const&, bool force_strict = false);
 
     bool try_parse_arrow_function_expression_failed_at_position(const Position&) const;
     void set_try_parse_arrow_function_expression_failed_at_position(const Position&, bool);
