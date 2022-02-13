@@ -124,7 +124,7 @@ ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
             base_obj = TRY(m_base_value.to_object(global_object));
 
         // c. Return ? baseObj.[[Get]](V.[[ReferencedName]], GetThisValue(V)).
-        return base_obj->internal_get(m_name, m_base_value);
+        return base_obj->internal_get(m_name, get_this_value());
     }
 
     // 5. Else,
