@@ -1079,6 +1079,14 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             case (KeyCode::Key_PageDown):
                 move_page_down();
                 return true;
+            case (KeyCode::Key_Dollar): {
+                move_to_logical_line_end();
+                return true;
+            }
+            case (KeyCode::Key_Pipe): {
+                move_to_logical_line_beginning();
+                return true;
+            }
             default:
                 break;
             }
