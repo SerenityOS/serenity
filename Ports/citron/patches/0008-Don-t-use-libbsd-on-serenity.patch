@@ -1,0 +1,27 @@
+From 6e802d3d52c160ca31bc9f7d1b9bb875569e3417 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Sun, 13 Feb 2022 17:03:21 +0330
+Subject: [PATCH 8/9] Don't use libbsd on serenity
+
+arc4random exists on serenity, there's no need to pull libbsd in for
+functionality that already exists.
+---
+ makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/makefile b/makefile
+index d916511..d1ce70d 100644
+--- a/makefile
++++ b/makefile
+@@ -16,7 +16,7 @@ enable_inject ?= false
+ enable_ctypes ?= true
+ enable_inline_asm ?= false
+ enable_boehm_gc ?= true
+-use_libbsd ?= true
++use_libbsd ?= false
+ 
+ CFLAGS += -Wall -Wextra -Wno-unused-parameter\
+ 		  -D withTermios -D CTR_STD_EXTENSION_PATH=\"$(DATADIR)\"
+-- 
+2.34.1
+
