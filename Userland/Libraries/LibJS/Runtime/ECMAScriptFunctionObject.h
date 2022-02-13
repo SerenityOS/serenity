@@ -134,4 +134,7 @@ private:
     FunctionKind m_kind : 3 { FunctionKind::Normal };
 };
 
+template<>
+inline bool Object::fast_is<ECMAScriptFunctionObject>() const { return is_ecmascript_function_object(); }
+
 }
