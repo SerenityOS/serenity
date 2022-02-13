@@ -1356,7 +1356,6 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1388,7 +1387,6 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1419,7 +1417,6 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1447,7 +1444,6 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1468,7 +1464,6 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
