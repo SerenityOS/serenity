@@ -776,6 +776,10 @@ void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
             m_active_href_id = {};
             update();
         }
+
+        if (m_triple_click_timer.is_valid())
+            m_triple_click_timer.reset();
+
         set_auto_scroll_direction(AutoScrollDirection::None);
     }
 }
@@ -809,7 +813,6 @@ void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
         else if (m_rectangle_selection)
             m_rectangle_selection = false;
 
-        m_triple_click_timer.reset();
         update_copy_action();
         update();
     }
