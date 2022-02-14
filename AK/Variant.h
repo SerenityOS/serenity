@@ -129,13 +129,13 @@ struct VariantConstructTag {
 
 template<typename T, typename Base>
 struct VariantConstructors {
-    ALWAYS_INLINE VariantConstructors(T&& t)
+    ALWAYS_INLINE VariantConstructors(T&& t) requires(requires { T(move(t)); })
     {
         internal_cast().clear_without_destruction();
         internal_cast().set(move(t), VariantNoClearTag {});
     }
 
-    ALWAYS_INLINE VariantConstructors(const T& t)
+    ALWAYS_INLINE VariantConstructors(const T& t) requires(requires { T(t); })
     {
         internal_cast().clear_without_destruction();
         internal_cast().set(t, VariantNoClearTag {});
@@ -336,7 +336,7 @@ public:
     using Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>::MergeAndDeduplicatePacks;
 
     template<typename T, typename StrippedT = RemoveCVReference<T>>
-    void set(T&& t) requires(can_contain<StrippedT>())
+    void set(T&& t) requires(can_contain<StrippedT>() && requires { StrippedT(forward<T>(t)); })
     {
         constexpr auto new_index = index_of<StrippedT>();
         Helper::delete_(m_index, m_data);
@@ -345,7 +345,7 @@ public:
     }
 
     template<typename T, typename StrippedT = RemoveCVReference<T>>
-    void set(T&& t, Detail::VariantNoClearTag) requires(can_contain<StrippedT>())
+    void set(T&& t, Detail::VariantNoClearTag) requires(can_contain<StrippedT>() && requires { StrippedT(forward<T>(t)); })
     {
         constexpr auto new_index = index_of<StrippedT>();
         new (m_data) StrippedT(forward<T>(t));
