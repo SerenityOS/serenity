@@ -48,7 +48,7 @@ bool BrowsingContextContainer::may_access_from_origin(const Origin& origin) cons
         if (!page->is_same_origin_policy_enabled())
             return true;
     }
-    return origin.is_same(content_origin());
+    return origin.is_same_origin(content_origin());
 }
 
 const DOM::Document* BrowsingContextContainer::content_document() const
