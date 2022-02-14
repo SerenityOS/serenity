@@ -39,6 +39,7 @@ public:
     void add_action(NonnullRefPtr<Action>);
     void add_separator();
     Menu& add_submenu(String name);
+    void remove_all_actions();
 
     void popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action = nullptr);
     void dismiss();
