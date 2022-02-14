@@ -105,6 +105,16 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
 
 void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_mode)
 {
+    auto width_of_containing_block = CSS::Length::make_px(containing_block().content_width());
+    auto& box_model = box.box_model();
+
+    box_model.margin.left = box.computed_values().margin().left.resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
+    box_model.border.left = box.computed_values().border_left().width;
+    box_model.padding.left = box.computed_values().padding().left.resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
+    box_model.margin.right = box.computed_values().margin().right.resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
+    box_model.border.right = box.computed_values().border_right().width;
+    box_model.padding.right = box.computed_values().padding().right.resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
+
     if (is<ReplacedBox>(box)) {
         auto& replaced = verify_cast<ReplacedBox>(box);
         replaced.set_content_width(compute_width_for_replaced_element(replaced));
@@ -117,23 +127,14 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
 
         if (inline_block.computed_values().width().is_length() && inline_block.computed_values().width().length().is_undefined_or_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);
-            auto width_of_containing_block = CSS::Length::make_px(containing_block().content_width());
-
-            auto margin_left = inline_block.computed_values().margin().left.resolved(box, width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
-            auto border_left_width = inline_block.computed_values().border_left().width;
-            auto padding_left = inline_block.computed_values().padding().left.resolved(box, width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
-
-            auto margin_right = inline_block.computed_values().margin().right.resolved(box, width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
-            auto border_right_width = inline_block.computed_values().border_right().width;
-            auto padding_right = inline_block.computed_values().padding().right.resolved(box, width_of_containing_block).resolved_or_zero(inline_block).to_px(inline_block);
 
             auto available_width = containing_block().content_width()
-                - margin_left
-                - border_left_width
-                - padding_left
-                - padding_right
-                - border_right_width
-                - margin_right;
+                - box_model.margin.left
+                - box_model.border.left
+                - box_model.padding.left
+                - box_model.padding.right
+                - box_model.border.right
+                - box_model.margin.right;
 
             auto width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
             inline_block.set_content_width(width);
