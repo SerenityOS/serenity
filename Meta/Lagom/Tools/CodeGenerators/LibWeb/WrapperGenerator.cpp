@@ -3894,13 +3894,6 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
     auto* impl = TRY(impl_from(vm, global_object));
 )~~~");
 
-        if (attribute.extended_attributes.contains("ReturnNullIfCrossOrigin")) {
-            attribute_generator.append(R"~~~(
-    if (!impl->may_access_from_origin(static_cast<WindowObject&>(global_object).origin()))
-        return JS::js_null();
-)~~~");
-        }
-
         if (attribute.extended_attributes.contains("Reflect")) {
             if (attribute.type->name != "boolean") {
                 attribute_generator.append(R"~~~(
