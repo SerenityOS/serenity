@@ -17,6 +17,9 @@
 #ifdef __serenity__
 #    include <serenity.h>
 #endif
+#ifdef __FreeBSD__
+#    include <sys/ucred.h>
+#endif
 
 namespace Core::Stream {
 
