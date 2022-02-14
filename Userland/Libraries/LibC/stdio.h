@@ -43,6 +43,7 @@ int fsetpos(FILE*, const fpos_t*);
 long ftell(FILE*);
 off_t ftello(FILE*);
 char* fgets(char* buffer, int size, FILE*);
+char* fgets_unlocked(char* buffer, int size, FILE*);
 int fputc(int ch, FILE*);
 int fileno(FILE*);
 int fgetc(FILE*);

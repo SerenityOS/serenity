@@ -607,6 +607,13 @@ char* fgets(char* buffer, int size, FILE* stream)
     return ok ? buffer : nullptr;
 }
 
+char* fgets_unlocked(char* buffer, int size, FILE* stream)
+{
+    VERIFY(stream);
+    bool ok = stream->gets(reinterpret_cast<u8*>(buffer), size);
+    return ok ? buffer : nullptr;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fgetc.html
 int fgetc(FILE* stream)
 {
