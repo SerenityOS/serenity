@@ -486,6 +486,14 @@ function isOdd(value) {
     return ! isEven(value)
 }
 
+function ln(x) {
+    return Math.log(x)
+}
+
+function log(x, base) {
+    return ln(x) / ln(base)
+}
+
 abs.__documentation = JSON.stringify({
     name: "abs",
     argc: 1,
@@ -517,6 +525,20 @@ isOdd.__documentation = JSON.stringify({
         'isOdd("A1")': "Checks whether the value of A1 is odd.",
         'isOdd(5)': "Returns true."
     }
+})
+
+ln.__documentation = JSON.stringify({
+    name: "ln",
+    argc: 1,
+    argnames: ["x"],
+    doc: "Returns the natural logarithm (base `e`) of a number `x`."
+})
+
+log.__documentation = JSON.stringify({
+    name: "log",
+    argc: 2,
+    argnames: ["x", "base"],
+    doc: "Returns the logarithm (base `base`) of a number `x`."
 })
 
 // Cheat the system and add documentation
