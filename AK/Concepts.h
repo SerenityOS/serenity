@@ -33,6 +33,9 @@ concept Enum = IsEnum<T>;
 template<typename T, typename U>
 concept SameAs = IsSame<T, U>;
 
+template<typename T, template<typename...> typename S>
+concept SpecializationOf = IsSpecializationOf<T, S>;
+
 template<typename T>
 concept AnyString = Detail::IsConstructible<StringView, T>;
 
@@ -112,5 +115,6 @@ using AK::Concepts::IteratorFunction;
 using AK::Concepts::IteratorPairWith;
 using AK::Concepts::SameAs;
 using AK::Concepts::Signed;
+using AK::Concepts::SpecializationOf;
 using AK::Concepts::Unsigned;
 using AK::Concepts::VoidFunction;
