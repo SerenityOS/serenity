@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,6 +42,8 @@ public:
 
     void focus();
 
+    void click();
+
 protected:
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
@@ -60,6 +62,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/interaction.html#locked-for-focus
     bool m_locked_for_focus { false };
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#click-in-progress-flag
+    bool m_click_in_progress { false };
 };
 
 }

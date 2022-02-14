@@ -389,4 +389,24 @@ void HTMLElement::focus()
     // 5. Unmark the element as locked for focus.
     m_locked_for_focus = false;
 }
+
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-click
+void HTMLElement::click()
+{
+    // FIXME: 1. If this element is a form control that is disabled, then return.
+
+    // 2. If this element's click in progress flag is set, then return.
+    if (m_click_in_progress)
+        return;
+
+    // 3. Set this element's click in progress flag.
+    m_click_in_progress = true;
+
+    // FIXME: 4. Fire a synthetic pointer event named click at this element, with the not trusted flag set.
+    dispatch_event(DOM::Event::create("click"));
+
+    // 5. Unset this element's click in progress flag.
+    m_click_in_progress = false;
+}
+
 }
