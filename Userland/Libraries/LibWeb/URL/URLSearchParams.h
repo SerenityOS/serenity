@@ -30,7 +30,7 @@ public:
         return adopt_ref(*new URLSearchParams(move(list)));
     }
 
-    static DOM::ExceptionOr<NonnullRefPtr<URLSearchParams>> create_with_global_object(Bindings::WindowObject&, Variant<Vector<Vector<String>>, String> const& init);
+    static DOM::ExceptionOr<NonnullRefPtr<URLSearchParams>> create_with_global_object(Bindings::WindowObject&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init);
 
     void append(String const& name, String const& value);
     void delete_(String const& name);
