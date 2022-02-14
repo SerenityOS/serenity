@@ -478,6 +478,14 @@ function abs(value) {
     return Math.abs(value)
 }
 
+function isEven(value) {
+    return value % 2 === 0
+}
+
+function isOdd(value) {
+    return ! isEven(value)
+}
+
 abs.__documentation = JSON.stringify({
     name: "abs",
     argc: 1,
@@ -486,6 +494,28 @@ abs.__documentation = JSON.stringify({
     examples: {
         'abs("A1")': "Absolute value of A1",
         'abs(-1)': "Returns +1",
+    }
+})
+
+isEven.__documentation = JSON.stringify({
+    name: "isEven",
+    argc: 1,
+    argnames: ["value"],
+    doc: "Checks whether the provided value is even.",
+    examples: {
+        'isEven("A1")': "Checks whether the value of A1 is even.",
+        'isEven(5)': "Returns false."
+    }
+})
+
+isOdd.__documentation = JSON.stringify({
+    name: "isOdd",
+    argc: 1,
+    argnames: ["value"],
+    doc: "Checks whether the provided value is odd.",
+    examples: {
+        'isOdd("A1")': "Checks whether the value of A1 is odd.",
+        'isOdd(5)': "Returns true."
     }
 })
 
