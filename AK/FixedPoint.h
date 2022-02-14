@@ -179,6 +179,16 @@ public:
     {
         return create_raw(m_value / other);
     }
+    template<Integral I>
+    constexpr This operator>>(I other) const
+    {
+        return create_raw(m_value >> other);
+    }
+    template<Integral I>
+    constexpr This operator<<(I other) const
+    {
+        return create_raw(m_value << other);
+    }
 
     This& operator+=(This const& other)
     {
@@ -237,6 +247,18 @@ public:
     This& operator/=(I other)
     {
         m_value /= other;
+        return *this;
+    }
+    template<Integral I>
+    This& operator>>=(I other)
+    {
+        m_value >>= other;
+        return *this;
+    }
+    template<Integral I>
+    This& operator<<=(I other)
+    {
+        m_value <<= other;
         return *this;
     }
 
