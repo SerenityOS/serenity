@@ -384,10 +384,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     TRY(Core::System::mount(-1, "/sys", "sys", 0));
     TRY(Core::System::mount(-1, "/dev", "dev", 0));
 
-    // FIXME: Find out why on creating the /dev/audio directory we must do chmod it too
-    // instead of one syscall.
     TRY(Core::System::mkdir("/dev/audio", 0755));
-    TRY(Core::System::chmod("/dev/audio", 0755));
 
     TRY(Core::System::symlink("/proc/self/fd/0", "/dev/stdin"));
     TRY(Core::System::symlink("/proc/self/fd/1", "/dev/stdout"));
