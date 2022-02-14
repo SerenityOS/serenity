@@ -166,7 +166,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 {
     containing_block().line_boxes().clear();
 
-    InlineLevelIterator iterator(containing_block(), layout_mode);
+    InlineLevelIterator iterator(*this, containing_block(), layout_mode);
     LineBuilder line_builder(*this);
 
     for (;;) {
@@ -185,18 +185,19 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             break;
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
-            dimension_box_on_line(box, layout_mode);
-            line_builder.break_if_needed(layout_mode, box.content_width(), item.should_force_break);
-            line_builder.append_box(box);
+            line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break);
+            line_builder.append_box(box, item.border_start + item.padding_start, item.padding_end + item.border_end);
             break;
         }
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
-            line_builder.break_if_needed(layout_mode, item.width, item.should_force_break);
+            line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break);
             line_builder.append_text_chunk(
                 text_node,
                 item.offset_in_node,
                 item.length_in_node,
+                item.border_start + item.padding_start,
+                item.padding_end + item.border_end,
                 item.width,
                 text_node.font().glyph_height());
             break;
