@@ -94,6 +94,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(save_to_file);
     JS_DECLARE_NATIVE_FUNCTION(load_json);
     JS_DECLARE_NATIVE_FUNCTION(last_value_getter);
+    JS_DECLARE_NATIVE_FUNCTION(print);
 };
 
 class ScriptObject final : public JS::GlobalObject {
@@ -107,6 +108,7 @@ public:
 private:
     JS_DECLARE_NATIVE_FUNCTION(load_file);
     JS_DECLARE_NATIVE_FUNCTION(load_json);
+    JS_DECLARE_NATIVE_FUNCTION(print);
 };
 
 static bool s_dump_ast = false;
@@ -1171,6 +1173,7 @@ void ReplObject::initialize_global_object()
     define_native_function("load", load_file, 1, attr);
     define_native_function("save", save_to_file, 1, attr);
     define_native_function("loadJSON", load_json, 1, attr);
+    define_native_function("print", print, 1, attr);
 
     define_native_accessor(
         "_",
@@ -1230,6 +1233,12 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_json)
     return load_json_impl(vm, global_object);
 }
 
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::print)
+{
+    ::print(vm.argument(0));
+    return JS::js_undefined();
+}
+
 void ScriptObject::initialize_global_object()
 {
     Base::initialize_global_object();
@@ -1237,6 +1246,7 @@ void ScriptObject::initialize_global_object()
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function("load", load_file, 1, attr);
     define_native_function("loadJSON", load_json, 1, attr);
+    define_native_function("print", print, 1, attr);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_file)
@@ -1247,6 +1257,12 @@ JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_file)
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_json)
 {
     return load_json_impl(vm, global_object);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)
+{
+    ::print(vm.argument(0));
+    return JS::js_undefined();
 }
 
 static void repl(JS::Interpreter& interpreter)
