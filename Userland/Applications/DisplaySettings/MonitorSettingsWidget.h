@@ -48,6 +48,7 @@ private:
     Vector<String> m_screens;
     Vector<Optional<EDID::Parser>> m_screen_edids;
     Vector<Gfx::IntSize> m_resolutions;
+    Vector<String> m_resolution_strings;
 
     RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;
     RefPtr<GUI::ComboBox> m_screen_combo;
