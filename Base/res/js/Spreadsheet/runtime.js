@@ -150,7 +150,7 @@ class Range {
         }
 
         for (const range of ranges) {
-            for (let row = range.rowStart; row < range.rowEnd; row += this.rowStep) {
+            for (let row = range.rowStart; row <= range.rowEnd; row += this.rowStep) {
                 callback(range.column + row);
             }
         }
@@ -627,8 +627,8 @@ sum.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the sum of the values in `cells`",
     examples: {
-        'sum(range("A0", "C4"))':
-            "Calculate the sum of the values in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
+        'sum(range("A0", "C3"))':
+            "Calculate the sum of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 
@@ -649,8 +649,8 @@ count.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Counts the number of cells in the given range",
     examples: {
-        'count(range("A0", "C4"))':
-            "Count the number of cells in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
+        'count(range("A0", "C3"))':
+            "Count the number of cells in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 
@@ -660,8 +660,8 @@ countIf.__documentation = JSON.stringify({
     argnames: ["condition", "cell names"],
     doc: "Counts cells the value of which evaluates to true when passed to `condition`",
     examples: {
-        'countIf(x => x instanceof Number, range("A1", "C4"))':
-            "Count the number of cells which have numbers within A1:C4",
+        'countIf(x => x instanceof Number, range("A1", "C3"))':
+            "Count the number of cells which have numbers within A1:C3",
     },
 });
 
@@ -671,8 +671,8 @@ average.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the average of the values in `cells`",
     examples: {
-        'average(range("A0", "C4"))':
-            "Calculate the average of the values in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
+        'average(range("A0", "C3"))':
+            "Calculate the average of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 
@@ -693,8 +693,8 @@ median.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the median of the numeric values in the given range of cells",
     examples: {
-        'median(range("A0", "C4"))':
-            "Calculate the median of the values in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
+        'median(range("A0", "C3"))':
+            "Calculate the median of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 
@@ -704,8 +704,8 @@ variance.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the variance of the numeric values in the given range of cells",
     examples: {
-        'variance(range("A0", "C4"))':
-            "Calculate the variance of the values in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
+        'variance(range("A0", "C3"))':
+            "Calculate the variance of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
     example_data: {
         simple: {
@@ -715,7 +715,7 @@ variance.__documentation = JSON.stringify({
             cells: {
                 E0: {
                     kind: "Formula",
-                    source: "stddev(R`A0:C4`)",
+                    source: "stddev(R`A0:C3`)",
                     value: "5.329165",
                     type: "Numeric",
                     type_metadata: {
@@ -724,7 +724,7 @@ variance.__documentation = JSON.stringify({
                 },
                 E1: {
                     kind: "Formula",
-                    source: "variance(R`A0:C4`)",
+                    source: "variance(R`A0:C3`)",
                     value: "28.39999999",
                     type: "Numeric",
                     type_metadata: {
@@ -733,7 +733,7 @@ variance.__documentation = JSON.stringify({
                 },
                 E2: {
                     kind: "Formula",
-                    source: "median(R`A0:C4`)",
+                    source: "median(R`A0:C3`)",
                     value: "1",
                     type: "Numeric",
                     type_metadata: {
@@ -742,7 +742,7 @@ variance.__documentation = JSON.stringify({
                 },
                 E3: {
                     kind: "Formula",
-                    source: "average(R`A0:C4`)",
+                    source: "average(R`A0:C3`)",
                     value: "1.1999999",
                     type: "Numeric",
                     type_metadata: {
@@ -751,7 +751,7 @@ variance.__documentation = JSON.stringify({
                 },
                 E4: {
                     kind: "Formula",
-                    source: "mode(R`A0:C4`)",
+                    source: "mode(R`A0:C3`)",
                     value: "1",
                     type: "Numeric",
                     type_metadata: {
@@ -760,7 +760,7 @@ variance.__documentation = JSON.stringify({
                 },
                 E5: {
                     kind: "Formula",
-                    source: "count(R`A0:C4`)",
+                    source: "count(R`A0:C3`)",
                     value: "12",
                     type: "Numeric",
                     type_metadata: {
@@ -769,7 +769,7 @@ variance.__documentation = JSON.stringify({
                 },
                 E6: {
                     kind: "Formula",
-                    source: "sum(R`A0:C4`)",
+                    source: "sum(R`A0:C3`)",
                     value: "18",
                     type: "Numeric",
                     type_metadata: {
@@ -820,8 +820,8 @@ stddev.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the standard deviation of the numeric values in the given range of cells",
     examples: {
-        'stddev(range("A0", "C4"))':
-            "Calculate the standard deviation of the values in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
+        'stddev(range("A0", "C3"))':
+            "Calculate the standard deviation of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 
