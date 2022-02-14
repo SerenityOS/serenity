@@ -331,10 +331,14 @@ private:
 
 class MemoryInstance {
 public:
-    explicit MemoryInstance(MemoryType const& type)
-        : m_type(type)
+    static ErrorOr<MemoryInstance> create(MemoryType const& type)
     {
-        grow(m_type.limits().min() * Constants::page_size);
+        MemoryInstance instance { type };
+
+        if (!instance.grow(type.limits().min() * Constants::page_size))
+            return Error::from_string_literal("Failed to grow to requested size");
+
+        return { move(instance) };
     }
 
     auto& type() const { return m_type; }
@@ -364,6 +368,11 @@ public:
     }
 
 private:
+    explicit MemoryInstance(MemoryType const& type)
+        : m_type(type)
+    {
+    }
+
     MemoryType const& m_type;
     size_t m_size { 0 };
     ByteBuffer m_data;
