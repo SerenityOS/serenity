@@ -152,16 +152,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         struct timeval tv_send;
         gettimeofday(&tv_send, nullptr);
 
+        if (count && total_pings == count)
+            closing_statistics();
+        else
+            total_pings++;
+
         rc = sendto(fd, ping_packet.data(), ping_packet.size(), 0, (const struct sockaddr*)&peer_address, sizeof(sockaddr_in));
         if (rc < 0) {
             perror("sendto");
             return 1;
         }
-
-        if (count && total_pings == count)
-            closing_statistics();
-        else
-            total_pings++;
 
         for (;;) {
             auto pong_packet_result = ByteBuffer::create_uninitialized(
