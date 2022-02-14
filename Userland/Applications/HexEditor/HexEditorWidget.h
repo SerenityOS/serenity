@@ -62,6 +62,4 @@ private:
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
     RefPtr<GUI::TableView> m_search_results;
     RefPtr<GUI::Widget> m_search_results_container;
-
-    bool m_document_dirty { false };
 };
