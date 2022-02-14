@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 class CanonicalIndex {
 public:
     enum class Type {
