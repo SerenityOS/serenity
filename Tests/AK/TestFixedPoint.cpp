@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/FixedPoint.h>
+#include <AK/NumericLimits.h>
 
 using Type = FixedPoint<4>;
 
@@ -71,6 +72,18 @@ TEST_CASE(rounding)
     EXPECT_EQ(Type(-1.5).lfloor(), -2);
     EXPECT_EQ(Type(-1.5).lceil(), -1);
     EXPECT_EQ(Type(-1.5).ltrunk(), -1);
+}
+
+TEST_CASE(logarithm)
+{
+    EXPECT_EQ(Type(0).log2().raw(), NumericLimits<int>::min());
+    EXPECT_EQ(Type(1).log2(), Type(0));
+    EXPECT_EQ(Type(2).log2(), Type(1));
+    EXPECT_EQ(Type(8).log2(), Type(3));
+    EXPECT_EQ(Type(0.5).log2(), Type(-1));
+
+    EXPECT_EQ(Type(22.627416997969520780827019587355).log2(), Type(4.4375));
+    EXPECT_EQ(Type(3088).log2(), Type(11.592457037268080419637304576833));
 }
 
 TEST_CASE(comparison)
