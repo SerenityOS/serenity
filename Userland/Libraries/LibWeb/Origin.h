@@ -42,6 +42,30 @@ public:
             && port() == other.port();
     }
 
+    // https://html.spec.whatwg.org/multipage/origin.html#same-origin-domain
+    bool is_same_origin_domain(Origin const& other) const
+    {
+        // 1. If A and B are the same opaque origin, then return true.
+        if (is_opaque() && other.is_opaque())
+            return true;
+
+        // 2. If A and B are both tuple origins, run these substeps:
+        if (!is_opaque() && !other.is_opaque()) {
+            // 1. If A and B's schemes are identical, and their domains are identical and non-null, then return true.
+            // FIXME: Check domains once supported.
+            if (protocol() == other.protocol())
+                return true;
+
+            // 2. Otherwise, if A and B are same origin and their domains are identical and null, then return true.
+            // FIXME: Check domains once supported.
+            if (is_same_origin(other))
+                return true;
+        }
+
+        // 3. Return false.
+        return false;
+    }
+
     bool operator==(Origin const& other) const { return is_same_origin(other); }
     bool operator!=(Origin const& other) const { return !is_same_origin(other); }
 
