@@ -168,6 +168,31 @@ public:
         return total;
     }
 
+    bool try_purge()
+    {
+        bool did_purge = false;
+
+        // Note: We cannot remove children from the list when using a structured loop,
+        //       Because we need to advance the iterator before we delete the underlying
+        //       value, so we have to iterate manually
+
+        auto block = m_usable_blocks.begin();
+        while (block != m_usable_blocks.end()) {
+            if (block->allocated_bytes() != 0) {
+                ++block;
+                continue;
+            }
+            auto& block_to_remove = *block;
+            ++block;
+            block_to_remove.list_node.remove();
+            block_to_remove.~KmallocSlabBlock();
+            kfree_aligned(&block_to_remove);
+
+            did_purge = true;
+        }
+        return did_purge;
+    }
+
 private:
     size_t m_slab_size { 0 };
 
@@ -203,6 +228,22 @@ struct KmallocGlobalData {
         for (auto& subheap : subheaps) {
             if (auto* ptr = subheap.allocator.allocate(size))
                 return ptr;
+        }
+
+        // NOTE: This size calculation is a mirror of kmalloc_aligned(KmallocSlabBlock)
+        if (size <= KmallocSlabBlock::block_size * 2 + sizeof(ptrdiff_t) + sizeof(size_t)) {
+            // FIXME: We should propagate a freed pointer, to find the specific subheap it belonged to
+            //        This would save us iterating over them in the next step and remove a recursion
+            bool did_purge = false;
+            for (auto& slabheap : slabheaps) {
+                if (slabheap.try_purge()) {
+                    dbgln_if(KMALLOC_DEBUG, "Kmalloc purged block(s) from slabheap of size {} to avoid expansion", slabheap.slab_size());
+                    did_purge = true;
+                    break;
+                }
+            }
+            if (did_purge)
+                return allocate(size);
         }
 
         if (!try_expand(size)) {
