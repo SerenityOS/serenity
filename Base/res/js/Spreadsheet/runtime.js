@@ -474,6 +474,21 @@ function reflookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, 
     );
 }
 
+function abs(value) {
+    return Math.abs(value)
+}
+
+abs.__documentation = JSON.stringify({
+    name: "abs",
+    argc: 1,
+    argnames: ["value"],
+    doc: "Returns the absolute value of a number.",
+    examples: {
+        'abs("A1")': "Absolute value of A1",
+        'abs(-1)': "Returns +1",
+    }
+})
+
 // Cheat the system and add documentation
 range.__documentation = JSON.stringify({
     name: "range",
