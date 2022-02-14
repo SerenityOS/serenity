@@ -214,6 +214,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
 
     auto edit_menu = TRY(window->try_add_menu("&Edit"));
+    TRY(edit_menu->try_add_action(editor->undo_action()));
+    TRY(edit_menu->try_add_action(editor->redo_action()));
+    TRY(edit_menu->try_add_separator());
+    TRY(edit_menu->try_add_action(editor->cut_action()));
+    TRY(edit_menu->try_add_action(editor->copy_action()));
+    TRY(edit_menu->try_add_action(editor->paste_action()));
+    TRY(edit_menu->try_add_separator());
+    TRY(edit_menu->try_add_action(editor->select_all_action()));
+    TRY(edit_menu->try_add_action(editor->go_to_line_action()));
+    TRY(edit_menu->try_add_separator());
+
     TRY(edit_menu->try_add_action(GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
         auto formatted_gml_or_error = GUI::GML::format_gml(editor->text());
         if (!formatted_gml_or_error.is_error()) {
