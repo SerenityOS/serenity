@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,25 +36,28 @@ void BrowsingContextContainer::inserted()
     }
 }
 
-Origin BrowsingContextContainer::content_origin() const
-{
-    if (!m_nested_browsing_context || !m_nested_browsing_context->active_document())
-        return {};
-    return m_nested_browsing_context->active_document()->origin();
-}
-
-bool BrowsingContextContainer::may_access_from_origin(const Origin& origin) const
-{
-    if (auto* page = document().page()) {
-        if (!page->is_same_origin_policy_enabled())
-            return true;
-    }
-    return origin.is_same_origin(content_origin());
-}
-
+// https://html.spec.whatwg.org/multipage/browsers.html#concept-bcc-content-document
 const DOM::Document* BrowsingContextContainer::content_document() const
 {
-    return m_nested_browsing_context ? m_nested_browsing_context->active_document() : nullptr;
+    // 1. If container's nested browsing context is null, then return null.
+    if (m_nested_browsing_context == nullptr)
+        return nullptr;
+
+    // 2. Let context be container's nested browsing context.
+    auto const& context = *m_nested_browsing_context;
+
+    // 3. Let document be context's active document.
+    auto const* document = context.active_document();
+
+    VERIFY(document);
+    VERIFY(m_document);
+
+    // 4. If document's origin and container's node document's origin are not same origin-domain, then return null.
+    if (!document->origin().is_same_origin_domain(m_document->origin()))
+        return nullptr;
+
+    // 5. Return document.
+    return document;
 }
 
 }

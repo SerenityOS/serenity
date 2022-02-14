@@ -20,9 +20,6 @@ public:
 
     const DOM::Document* content_document() const;
 
-    Origin content_origin() const;
-    bool may_access_from_origin(const Origin&) const;
-
     virtual void inserted() override;
 
 protected:
