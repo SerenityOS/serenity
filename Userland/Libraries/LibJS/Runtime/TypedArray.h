@@ -74,31 +74,28 @@ private:
 };
 
 // 10.4.5.9 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
-inline bool is_valid_integer_index(TypedArrayBase const& typed_array, Value property_index)
+inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalIndex property_index)
 {
+    // 1. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return false.
     if (typed_array.viewed_array_buffer()->is_detached())
         return false;
 
-    // TODO: This can be optimized by skipping the following 3 out of 4 checks if property_index
-    //  came from a number-type PropertyKey instead of a canonicalized string-type PropertyKey
-
-    // If ! IsIntegralNumber(index) is false, return false.
-    if (!property_index.is_integral_number())
-        return false;
-    // If index is -0𝔽, return false.
-    if (property_index.is_negative_zero())
+    // 2. If ! IsIntegralNumber(index) is false, return false.
+    // 3. If index is -0𝔽, return false.
+    if (!property_index.is_index())
         return false;
 
-    // If ℝ(index) < 0 or ℝ(index) ≥ O.[[ArrayLength]], return false.
-    if (property_index.as_double() < 0 || property_index.as_double() >= typed_array.array_length())
+    // 4. If ℝ(index) < 0 or ℝ(index) ≥ O.[[ArrayLength]], return false.
+    if (property_index.as_index() >= typed_array.array_length())
         return false;
 
+    // 5. Return true.
     return true;
 }
 
 // 10.4.5.10 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
 template<typename T>
-inline Value integer_indexed_element_get(TypedArrayBase const& typed_array, Value property_index)
+inline Value integer_indexed_element_get(TypedArrayBase const& typed_array, CanonicalIndex property_index)
 {
     // 1. Assert: O is an Integer-Indexed exotic object.
 
@@ -112,7 +109,7 @@ inline Value integer_indexed_element_get(TypedArrayBase const& typed_array, Valu
     // 4. Let arrayTypeName be the String value of O.[[TypedArrayName]].
     // 5. Let elementSize be the Element Size value specified in Table 64 for arrayTypeName.
     // 6. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-    Checked<size_t> indexed_position = (i64)property_index.as_double();
+    Checked<size_t> indexed_position = property_index.as_index();
     indexed_position *= typed_array.element_size();
     indexed_position += offset;
     // FIXME: Not exactly sure what we should do when overflow occurs.
@@ -130,7 +127,7 @@ inline Value integer_indexed_element_get(TypedArrayBase const& typed_array, Valu
 // 10.4.5.11 IntegerIndexedElementSet ( O, index, value ), https://tc39.es/ecma262/#sec-integerindexedelementset
 // NOTE: In error cases, the function will return as if it succeeded.
 template<typename T>
-inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed_array, Value property_index, Value value)
+inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed_array, CanonicalIndex property_index, Value value)
 {
     VERIFY(!value.is_empty());
     auto& global_object = typed_array.global_object();
@@ -157,7 +154,7 @@ inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed
     // b. Let arrayTypeName be the String value of O.[[TypedArrayName]].
     // c. Let elementSize be the Element Size value specified in Table 64 for arrayTypeName.
     // d. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-    Checked<size_t> indexed_position = (i64)property_index.as_double();
+    Checked<size_t> indexed_position = property_index.as_index();
     indexed_position *= typed_array.element_size();
     indexed_position += offset;
     // FIXME: Not exactly sure what we should do when overflow occurs.
@@ -198,7 +195,7 @@ public:
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
+            auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Let value be ! IntegerIndexedElementGet(O, numericIndex).
@@ -238,7 +235,7 @@ public:
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
+            auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, return ! IsValidIntegerIndex(O, numericIndex).
             if (!numeric_index.is_undefined())
                 return is_valid_integer_index(*this, numeric_index);
@@ -264,7 +261,7 @@ public:
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
+            auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
@@ -315,7 +312,7 @@ public:
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
+            auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Return ! IntegerIndexedElementGet(O, numericIndex).
@@ -343,7 +340,7 @@ public:
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
+            auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
@@ -373,7 +370,7 @@ public:
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            auto numeric_index = canonical_numeric_index_string(global_object(), property_key);
+            auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return true; else return false.
