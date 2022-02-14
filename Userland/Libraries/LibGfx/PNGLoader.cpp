@@ -9,16 +9,10 @@
 #include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/PNGLoader.h>
-#include <fcntl.h>
-#include <stdio.h>
 #include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #ifdef __serenity__
 #    include <LibCompress/Deflate.h>
-#    include <serenity.h>
 #endif
 
 namespace Gfx {
