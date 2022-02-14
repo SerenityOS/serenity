@@ -834,6 +834,8 @@ static bool process_PLTE(ReadonlyBytes data, PNGLoadingContext& context)
 static bool process_tRNS(ReadonlyBytes data, PNGLoadingContext& context)
 {
     switch (context.color_type) {
+    case 0:
+    case 2:
     case 3:
         context.palette_transparency_data.append(data.data(), data.size());
         break;
