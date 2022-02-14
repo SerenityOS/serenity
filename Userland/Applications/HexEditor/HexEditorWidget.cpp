@@ -54,10 +54,7 @@ HexEditorWidget::HexEditorWidget()
     };
 
     m_editor->on_change = [this] {
-        bool was_dirty = m_document_dirty;
-        m_document_dirty = true;
-        if (!was_dirty)
-            update_title();
+        window()->set_modified(true);
     };
 
     m_search_results->set_activates_on_selection(true);
@@ -75,13 +72,12 @@ HexEditorWidget::HexEditorWidget()
         if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:", "New file size") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto file_size = value.to_int();
             if (file_size.has_value() && file_size.value() > 0) {
-                m_document_dirty = false;
+                window()->set_modified(false);
                 if (!m_editor->open_new_file(file_size.value())) {
                     GUI::MessageBox::show(window(), "Entered file size is too large.", "Error", GUI::MessageBox::Type::Error);
                     return;
                 }
                 set_path({});
-                update_title();
             } else {
                 GUI::MessageBox::show(window(), "Invalid file size entered.", "Error", GUI::MessageBox::Type::Error);
             }
@@ -93,11 +89,11 @@ HexEditorWidget::HexEditorWidget()
         if (response.is_error())
             return;
 
-        if (m_document_dirty) {
+        if (window()->is_modified()) {
             auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
-            if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && m_document_dirty)
+            if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && window()->is_modified())
                 return;
         }
 
@@ -111,9 +107,8 @@ HexEditorWidget::HexEditorWidget()
         if (!m_editor->save()) {
             GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
         } else {
-            m_document_dirty = false;
+            window()->set_modified(false);
             m_editor->update();
-            update_title();
         }
         return;
     });
@@ -128,7 +123,7 @@ HexEditorWidget::HexEditorWidget()
             return;
         }
 
-        m_document_dirty = false;
+        window()->set_modified(false);
         set_path(file->filename());
         dbgln("Wrote document to {}", file->filename());
     });
@@ -326,22 +321,20 @@ void HexEditorWidget::update_title()
         builder.append("Untitled");
     else
         builder.append(m_path);
-    if (m_document_dirty)
-        builder.append(" (*)");
-    builder.append(" - Hex Editor");
+    builder.append("[*] - Hex Editor");
     window()->set_title(builder.to_string());
 }
 
 void HexEditorWidget::open_file(NonnullRefPtr<Core::File> file)
 {
-    m_document_dirty = false;
+    window()->set_modified(false);
     m_editor->open_file(file);
     set_path(file->filename());
 }
 
 bool HexEditorWidget::request_close()
 {
-    if (!m_document_dirty)
+    if (!window()->is_modified())
         return true;
 
     auto result = GUI::MessageBox::show(window(), "The file has been modified. Save before closing?", "Save changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
@@ -349,7 +342,7 @@ bool HexEditorWidget::request_close()
         return false;
     if (result == GUI::MessageBox::ExecYes) {
         m_save_action->activate();
-        return m_document_dirty == false;
+        return !window()->is_modified();
     }
     return true;
 }
