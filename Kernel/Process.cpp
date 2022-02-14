@@ -218,17 +218,18 @@ void Process::unprotect_data()
 ErrorOr<NonnullRefPtr<Process>> Process::try_create(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
     auto space = TRY(Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr));
-    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty)));
+    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty, UnveilNode { "/"sv, UnveilMetadata(TRY(KString::try_create("/"sv))) })));
     TRY(process->attach_resources(move(space), first_thread, fork_parent));
     return process;
 }
 
-Process::Process(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty)
+Process::Process(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree)
     : m_name(move(name))
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
     , m_cwd(move(cwd))
     , m_tty(tty)
+    , m_unveiled_paths(move(unveil_tree))
     , m_wait_blocker_set(*this)
 {
     // Ensure that we protect the process data when exiting the constructor.

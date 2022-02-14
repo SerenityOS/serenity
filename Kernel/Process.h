@@ -521,7 +521,7 @@ private:
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 
-    Process(NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty);
+    Process(NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree);
     static ErrorOr<NonnullRefPtr<Process>> try_create(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     ErrorOr<void> attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, RefPtr<Thread>& first_thread, Process* fork_parent);
     static ProcessID allocate_pid();
@@ -800,7 +800,7 @@ private:
     RefPtr<Timer> m_alarm_timer;
 
     VeilState m_veil_state { VeilState::None };
-    UnveilNode m_unveiled_paths { "/", { .full_path = "/" } };
+    UnveilNode m_unveiled_paths;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 

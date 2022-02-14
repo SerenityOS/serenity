@@ -525,7 +525,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
-    m_unveiled_paths.set_metadata({ "/", UnveilAccess::None, false });
+    m_unveiled_paths.set_metadata({ TRY(KString::try_create("/"sv)), UnveilAccess::None, false });
 
     for (auto& property : m_coredump_properties)
         property = {};
