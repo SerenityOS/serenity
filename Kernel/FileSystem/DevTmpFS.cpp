@@ -258,6 +258,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView na
     if (metadata.is_directory()) {
         auto name_kstring = TRY(KString::try_create(name));
         auto new_directory_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSDirectoryInode(fs(), move(name_kstring))));
+        TRY(new_directory_inode->chmod(mode));
         m_nodes.append(*new_directory_inode);
         return new_directory_inode;
     }
