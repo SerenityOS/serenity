@@ -12,8 +12,14 @@
 
 namespace Web::HTML {
 
+// https://html.spec.whatwg.org/multipage/parsing.html#stack-of-open-elements
 class StackOfOpenElements {
 public:
+    // Initially, the stack of open elements is empty.
+    // The stack grows downwards; the topmost node on the stack is the first one added to the stack,
+    // and the bottommost node of the stack is the most recently added node in the stack
+    // (notwithstanding when the stack is manipulated in a random access fashion as part of the handling for misnested tags).
+
     StackOfOpenElements() { }
     ~StackOfOpenElements();
 
