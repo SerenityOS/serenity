@@ -192,6 +192,18 @@ void ClientConnection::update_menu_item(i32 menu_id, i32 identifier, [[maybe_unu
         menu_item->set_checked(checked);
 }
 
+void ClientConnection::remove_menu_item(i32 menu_id, i32 identifier)
+{
+    auto it = m_menus.find(menu_id);
+    if (it == m_menus.end()) {
+        did_misbehave("RemoveMenuItem: Bad menu ID");
+        return;
+    }
+    auto& menu = *(*it).value;
+    if (!menu.remove_item_with_identifier(identifier))
+        did_misbehave("RemoveMenuItem: Bad menu item identifier");
+}
+
 void ClientConnection::flash_menubar_menu(i32 window_id, i32 menu_id)
 {
     auto itw = m_windows.find(window_id);

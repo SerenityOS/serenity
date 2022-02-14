@@ -24,6 +24,7 @@ endpoint WindowServer
     add_menu_separator(i32 menu_id) =|
 
     update_menu_item(i32 menu_id, i32 identifier, i32 submenu_id, [UTF8] String text, bool enabled, bool checkable, bool checked, bool is_default, [UTF8] String shortcut) =|
+    remove_menu_item(i32 menu_id, i32 identifier) =|
     flash_menubar_menu(i32 window_id, i32 menu_id) =|
 
     create_window(
