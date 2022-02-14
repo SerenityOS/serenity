@@ -5,11 +5,13 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <serenity.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
@@ -48,6 +50,8 @@ int main(int argc, char** argv)
                 event_mask |= PERF_EVENT_PAGE_FAULT;
             else if (event_type == "syscall")
                 event_mask |= PERF_EVENT_SYSCALL;
+            else if (event_type == "read")
+                event_mask |= PERF_EVENT_READ;
             else {
                 warnln("Unknown event type '{}' specified.", event_type);
                 exit(1);
@@ -57,16 +61,16 @@ int main(int argc, char** argv)
 
     auto print_types = [] {
         outln();
-        outln("Event type can be one of: sample, context_switch, page_fault, syscall, kmalloc and kfree.");
+        outln("Event type can be one of: sample, context_switch, page_fault, syscall, read, kmalloc and kfree.");
     };
 
-    if (!args_parser.parse(argc, argv, Core::ArgsParser::FailureBehavior::PrintUsage)) {
+    if (!args_parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)) {
         print_types();
         exit(0);
     }
 
     if (!pid_argument && !cmd_argument && !all_processes) {
-        args_parser.print_usage(stdout, argv[0]);
+        args_parser.print_usage(stdout, arguments.argv[0]);
         print_types();
         return 0;
     }
@@ -83,10 +87,7 @@ int main(int argc, char** argv)
         pid_t pid = all_processes ? -1 : atoi(pid_argument);
 
         if (wait || enable) {
-            if (profiling_enable(pid, event_mask) < 0) {
-                perror("profiling_enable");
-                return 1;
-            }
+            TRY(Core::System::profiling_enable(pid, event_mask));
 
             if (!wait)
                 return 0;
@@ -97,17 +98,11 @@ int main(int argc, char** argv)
             (void)getchar();
         }
 
-        if (wait || disable) {
-            if (profiling_disable(pid) < 0) {
-                perror("profiling_disable");
-                return 1;
-            }
-        }
+        if (wait || disable)
+            TRY(Core::System::profiling_disable(pid));
 
-        if (free && profiling_free_buffer(pid) < 0) {
-            perror("profiling_disable");
-            return 1;
-        }
+        if (free)
+            TRY(Core::System::profiling_free_buffer(pid));
 
         return 0;
     }
@@ -121,7 +116,7 @@ int main(int argc, char** argv)
     cmd_argv.append(nullptr);
 
     dbgln("Enabling profiling for PID {}", getpid());
-    profiling_enable(getpid(), event_mask);
+    TRY(Core::System::profiling_enable(getpid(), event_mask));
     if (execvp(cmd_argv[0], const_cast<char**>(cmd_argv.data())) < 0) {
         perror("execv");
         return 1;

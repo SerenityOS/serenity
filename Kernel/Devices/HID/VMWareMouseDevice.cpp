@@ -49,8 +49,8 @@ void VMWareMouseDevice::irq_handle_byte_read(u8)
             SpinlockLocker lock(m_queue_lock);
             m_queue.enqueue(mouse_packet);
         }
-        evaluate_block_conditions();
     }
+    evaluate_block_conditions();
 }
 
 VMWareMouseDevice::VMWareMouseDevice(const I8042Controller& ps2_controller)

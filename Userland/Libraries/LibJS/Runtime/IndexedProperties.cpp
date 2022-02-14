@@ -77,6 +77,10 @@ bool SimpleIndexedPropertyStorage::set_array_like_size(size_t new_size)
     return true;
 }
 
+GenericIndexedPropertyStorage::GenericIndexedPropertyStorage()
+{
+}
+
 GenericIndexedPropertyStorage::GenericIndexedPropertyStorage(SimpleIndexedPropertyStorage&& storage)
 {
     m_array_size = storage.array_like_size();
@@ -216,11 +220,14 @@ void IndexedPropertyIterator::skip_empty_indices()
 
 Optional<ValueAndAttributes> IndexedProperties::get(u32 index) const
 {
+    if (!m_storage)
+        return {};
     return m_storage->get(index);
 }
 
 void IndexedProperties::put(u32 index, Value value, PropertyAttributes attributes)
 {
+    ensure_storage();
     if (m_storage->is_simple_storage() && (attributes != default_attributes || index > (array_like_size() + SPARSE_ARRAY_HOLE_THRESHOLD))) {
         switch_to_generic_storage();
     }
@@ -230,12 +237,14 @@ void IndexedProperties::put(u32 index, Value value, PropertyAttributes attribute
 
 void IndexedProperties::remove(u32 index)
 {
+    VERIFY(m_storage);
     VERIFY(m_storage->has_index(index));
     m_storage->remove(index);
 }
 
 bool IndexedProperties::set_array_like_size(size_t new_size)
 {
+    ensure_storage();
     auto current_array_like_size = array_like_size();
 
     // We can't use simple storage for lengths that don't fit in an i32.
@@ -252,6 +261,8 @@ bool IndexedProperties::set_array_like_size(size_t new_size)
 
 size_t IndexedProperties::real_size() const
 {
+    if (!m_storage)
+        return 0;
     if (m_storage->is_simple_storage()) {
         auto& packed_elements = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage).elements();
         size_t size = 0;
@@ -266,6 +277,8 @@ size_t IndexedProperties::real_size() const
 
 Vector<u32> IndexedProperties::indices() const
 {
+    if (!m_storage)
+        return {};
     if (m_storage->is_simple_storage()) {
         const auto& storage = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage);
         const auto& elements = storage.elements();
@@ -285,8 +298,18 @@ Vector<u32> IndexedProperties::indices() const
 
 void IndexedProperties::switch_to_generic_storage()
 {
+    if (!m_storage) {
+        m_storage = make<GenericIndexedPropertyStorage>();
+        return;
+    }
     auto& storage = static_cast<SimpleIndexedPropertyStorage&>(*m_storage);
     m_storage = make<GenericIndexedPropertyStorage>(move(storage));
+}
+
+void IndexedProperties::ensure_storage()
+{
+    if (!m_storage)
+        m_storage = make<SimpleIndexedPropertyStorage>();
 }
 
 }

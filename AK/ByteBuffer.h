@@ -192,7 +192,7 @@ public:
         return MUST(get_bytes_for_writing(length));
     }
 
-    void append(char byte)
+    void append(u8 byte)
     {
         MUST(try_append(byte));
     }
@@ -204,9 +204,14 @@ public:
 
     void append(void const* data, size_t data_size) { append({ data, data_size }); }
 
-    ErrorOr<void> try_append(char byte)
+    ErrorOr<void> try_append(u8 byte)
     {
-        return try_append(&byte, 1);
+        auto old_size = size();
+        auto new_size = old_size + 1;
+        VERIFY(new_size > old_size);
+        TRY(try_resize(new_size));
+        data()[old_size] = byte;
+        return {};
     }
 
     ErrorOr<void> try_append(ReadonlyBytes bytes)

@@ -5,10 +5,11 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/HashTable.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
-#include <LibCore/UDPSocket.h>
 #include <LibMain/Main.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -54,14 +55,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         Core::EventLoop loop;
-        auto socket = TRY(Core::UDPSocket::try_create());
+        auto socket = TRY(Core::Stream::UDPSocket::connect(target, port));
 
-        socket->on_connected = [&]() {
-            if (verbose)
-                warnln("connected to {}:{}", target, port);
-        };
-
-        socket->connect(target, port);
+        if (verbose)
+            warnln("connected to {}:{}", target, port);
 
         Array<u8, 1024> buffer;
         for (;;) {
@@ -69,14 +66,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto nread = TRY(Core::System::read(STDIN_FILENO, buffer_span));
             buffer_span = buffer_span.trim(nread);
 
-            socket->send({ buffer_span.data(), static_cast<size_t>(nread) });
+            TRY(socket->write({ buffer_span.data(), static_cast<size_t>(nread) }));
         }
     }
 
-    int fd;
+    int fd = -1;
+    int listen_fd = -1;
 
     if (should_listen) {
-        int listen_fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM, 0));
+        listen_fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM, 0));
 
         sockaddr_in sa {};
         sa.sin_family = AF_INET;
@@ -102,13 +100,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (verbose)
             warnln("waiting for a connection on {}:{}", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
 
-        len = sizeof(sin);
-        TRY(Core::System::accept(listen_fd, (struct sockaddr*)&sin, &len));
-
-        if (verbose)
-            warnln("got connection from {}:{}", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
-
-        TRY(Core::System::close(listen_fd));
     } else {
         fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM, 0));
 
@@ -139,12 +130,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             warnln("connected!");
     }
 
+    HashTable<int> connected_clients;
+
     bool stdin_closed = false;
     bool fd_closed = false;
+    bool listen_fd_closed = false;
 
     fd_set readfds, writefds, exceptfds;
 
-    while (!stdin_closed || !fd_closed) {
+    while (!stdin_closed || !fd_closed || !listen_fd_closed) {
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
         FD_ZERO(&exceptfds);
@@ -156,10 +150,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             FD_SET(STDIN_FILENO, &exceptfds);
             highest_fd = max(highest_fd, STDIN_FILENO);
         }
-        if (!fd_closed) {
+        if (!fd_closed && fd) {
             FD_SET(fd, &readfds);
             FD_SET(fd, &exceptfds);
             highest_fd = max(highest_fd, fd);
+        }
+
+        if (!listen_fd_closed && listen_fd) {
+            FD_SET(listen_fd, &readfds);
+            FD_SET(listen_fd, &exceptfds);
+            highest_fd = max(highest_fd, listen_fd);
+        }
+
+        bool has_clients = (should_listen && !connected_clients.is_empty());
+        if (has_clients) {
+            for (auto const& client_fd : connected_clients) {
+                FD_SET(client_fd, &readfds);
+                FD_SET(client_fd, &exceptfds);
+                highest_fd = max(highest_fd, client_fd);
+            }
         }
 
         int ready = select(highest_fd + 1, &readfds, &writefds, &exceptfds, nullptr);
@@ -183,11 +192,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (verbose)
                     warnln("stdin closed");
                 if (should_close) {
-                    TRY(Core::System::close(fd));
-                    fd_closed = true;
+                    if (should_listen) {
+                        TRY(Core::System::close(listen_fd));
+                        listen_fd_closed = true;
+                    } else {
+                        TRY(Core::System::close(fd));
+                        fd_closed = true;
+                    }
                 }
             } else {
-                TRY(Core::System::write(fd, buffer_span));
+                if (should_listen && has_clients) {
+                    for (auto const& client_fd : connected_clients)
+                        TRY(Core::System::write(client_fd, buffer_span));
+                } else {
+                    TRY(Core::System::write(fd, buffer_span));
+                }
             }
         }
 
@@ -206,6 +225,44 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     warnln("remote closed");
             } else {
                 TRY(Core::System::write(STDOUT_FILENO, buffer_span));
+            }
+        }
+
+        if (!listen_fd_closed && FD_ISSET(listen_fd, &readfds)) {
+            char client_str[INET_ADDRSTRLEN];
+            sockaddr_in client;
+            socklen_t clientlen = sizeof(client);
+
+            int new_client = TRY(Core::System::accept(listen_fd, (struct sockaddr*)&client, &clientlen));
+            connected_clients.set(new_client);
+
+            if (verbose)
+                warnln("got connection from {}:{}", inet_ntop(client.sin_family, &client.sin_addr, client_str, sizeof(client_str) - 1), ntohs(client.sin_port));
+        }
+
+        if (has_clients) {
+            for (auto const client_fd : connected_clients) {
+                if (FD_ISSET(client_fd, &readfds)) {
+                    Array<u8, 1024> buffer;
+                    Bytes buffer_span = buffer.span();
+                    auto nread = TRY(Core::System::read(client_fd, buffer_span));
+                    buffer_span = buffer_span.trim(nread);
+
+                    if (nread == 0) {
+                        if (verbose) {
+                            struct sockaddr_in client;
+                            socklen_t clientlen = sizeof(client);
+                            TRY(Core::System::getpeername(client_fd, (struct sockaddr*)&client, &clientlen));
+                            warnln("remote connection closed {}:{}", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+                        }
+                        connected_clients.remove(client_fd);
+                        close(client_fd);
+                        FD_CLR(client_fd, &readfds);
+                        FD_CLR(client_fd, &exceptfds);
+                    } else {
+                        TRY(Core::System::write(STDOUT_FILENO, buffer_span));
+                    }
+                }
             }
         }
     }

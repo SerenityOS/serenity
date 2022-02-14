@@ -13,8 +13,7 @@
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/Devices/Audio/AC97.h>
-#include <Kernel/Devices/Audio/SB16.h>
+#include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Devices/DeviceControlDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FullDevice.h>
@@ -339,8 +338,7 @@ void init_stage2(void*)
     (void)RandomDevice::must_create().leak_ref();
     PTYMultiplexer::initialize();
 
-    (void)SB16::try_detect_and_create();
-    AC97::detect();
+    AudioManagement::the().initialize();
 
     StorageManagement::the().initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());
     if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {

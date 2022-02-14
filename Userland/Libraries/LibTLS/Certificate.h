@@ -23,6 +23,7 @@ enum class CertificateKeyAlgorithm {
     RSA_MD5 = 0x04,
     RSA_SHA1 = 0x05,
     RSA_SHA256 = 0x0b,
+    RSA_SHA384 = 0x0c,
     RSA_SHA512 = 0x0d,
 };
 

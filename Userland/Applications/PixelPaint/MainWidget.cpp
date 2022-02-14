@@ -191,7 +191,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     file_menu.add_separator();
 
-    m_close_image_action = GUI::Action::create("&Close Image", { Mod_Ctrl, Key_W }, [&](auto&) {
+    m_close_image_action = GUI::Action::create("&Close Image", { Mod_Ctrl, Key_W }, g_icon_bag.close_image, [&](auto&) {
         auto* active_widget = m_tab_widget->active_widget();
         VERIFY(active_widget);
         m_tab_widget->on_tab_close_click(*active_widget);
@@ -305,7 +305,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->set_secondary_color(Color::White);
         }));
     m_edit_menu->add_action(GUI::Action::create(
-        "&Load Color Palette", [&](auto&) {
+        "&Load Color Palette", g_icon_bag.load_color_palette, [&](auto&) {
             auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Load Color Palette");
             if (response.is_error())
                 return;
@@ -319,7 +319,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             m_palette_widget->display_color_list(result.value());
         }));
     m_edit_menu->add_action(GUI::Action::create(
-        "Sa&ve Color Palette", [&](auto&) {
+        "Sa&ve Color Palette", g_icon_bag.save_color_palette, [&](auto&) {
             auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "palette");
             if (response.is_error())
                 return;
@@ -352,7 +352,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         });
 
     m_add_guide_action = GUI::Action::create(
-        "&Add Guide", [&](auto&) {
+        "&Add Guide", g_icon_bag.add_guide, [&](auto&) {
             auto dialog = PixelPaint::EditGuideDialog::construct(&window);
             if (dialog->exec() != GUI::Dialog::ExecOK)
                 return;
@@ -378,7 +378,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_action(*m_zoom_out_action);
     m_view_menu->add_action(*m_reset_zoom_action);
     m_view_menu->add_action(GUI::Action::create(
-        "&Fit Image To View", [&](auto&) {
+        "Fit Image To &View", [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->fit_image_to_view();
@@ -388,7 +388,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_action(*m_show_guides_action);
 
     m_view_menu->add_action(GUI::Action::create(
-        "&Clear Guides", [&](auto&) {
+        "&Clear Guides", g_icon_bag.clear_guides, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->clear_guides();
@@ -462,7 +462,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_image_menu->add_separator();
     m_image_menu->add_action(GUI::Action::create(
-        "&Crop To Selection", [&](auto&) {
+        "&Crop To Selection", g_icon_bag.crop, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             // FIXME: disable this action if there is no selection
@@ -584,7 +584,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
 
     m_layer_menu->add_action(GUI::Action::create(
-        "&Merge Visible", { Mod_Ctrl, Key_M }, [&](auto&) {
+        "&Merge Visible", { Mod_Ctrl, Key_M }, g_icon_bag.merge_visible, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().merge_visible_layers();
@@ -658,7 +658,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 editor->fit_image_to_view(ImageEditor::FitType::Height);
                 return;
             case s_zoom_level_fit_image:
-                editor->fit_image_to_view(ImageEditor::FitType::Image);
+                editor->fit_image_to_view(ImageEditor::FitType::Both);
                 return;
             }
         }

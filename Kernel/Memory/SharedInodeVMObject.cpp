@@ -18,7 +18,7 @@ ErrorOr<NonnullRefPtr<SharedInodeVMObject>> SharedInodeVMObject::try_create_with
     auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
     auto dirty_pages = TRY(Bitmap::try_create(new_physical_pages.size(), false));
     auto vmobject = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SharedInodeVMObject(inode, move(new_physical_pages), move(dirty_pages))));
-    vmobject->inode().set_shared_vmobject(*vmobject);
+    TRY(vmobject->inode().set_shared_vmobject(*vmobject));
     return vmobject;
 }
 

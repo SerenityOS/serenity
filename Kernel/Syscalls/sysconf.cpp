@@ -33,6 +33,8 @@ ErrorOr<FlatPtr> Process::sys$sysconf(int name)
         return TimeManagement::the().ticks_per_second();
     case _SC_SYMLOOP_MAX:
         return Kernel::VirtualFileSystem::symlink_recursion_limit;
+    case _SC_ARG_MAX:
+        return Process::max_arguments_size;
     default:
         return EINVAL;
     }

@@ -35,6 +35,10 @@ static int memfd_create(const char* name, unsigned int flags)
 }
 #endif
 
+#if defined(__APPLE__)
+#    include <sys/mman.h>
+#endif
+
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
     if ((rc) < 0) {                                                  \
         return Error::from_syscall(syscall_name, rc);                \
@@ -155,6 +159,24 @@ ErrorOr<void> disown(pid_t pid)
     int rc = ::disown(pid);
     HANDLE_SYSCALL_RETURN_VALUE("disown", rc, {});
 }
+
+ErrorOr<void> profiling_enable(pid_t pid, u64 event_mask)
+{
+    int rc = ::profiling_enable(pid, event_mask);
+    HANDLE_SYSCALL_RETURN_VALUE("profiling_enable", rc, {});
+}
+
+ErrorOr<void> profiling_disable(pid_t pid)
+{
+    int rc = ::profiling_disable(pid);
+    HANDLE_SYSCALL_RETURN_VALUE("profiling_disable", rc, {});
+}
+
+ErrorOr<void> profiling_free_buffer(pid_t pid)
+{
+    int rc = ::profiling_free_buffer(pid);
+    HANDLE_SYSCALL_RETURN_VALUE("profiling_free_buffer", rc, {});
+}
 #endif
 
 #ifndef AK_OS_BSD_GENERIC
@@ -268,6 +290,33 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
     if (fd < 0)
         return Error::from_errno(errno);
     if (::ftruncate(fd, size) < 0) {
+        auto saved_errno = errno;
+        TRY(close(fd));
+        return Error::from_errno(saved_errno);
+    }
+#elif defined(__APPLE__)
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    auto name = String::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
+    fd = shm_open(name.characters(), O_RDWR | O_CREAT | options, 0600);
+
+    if (shm_unlink(name.characters()) == -1) {
+        auto saved_errno = errno;
+        TRY(close(fd));
+        return Error::from_errno(saved_errno);
+    }
+
+    if (fd < 0)
+        return Error::from_errno(errno);
+
+    if (::ftruncate(fd, size) < 0) {
+        auto saved_errno = errno;
+        TRY(close(fd));
+        return Error::from_errno(saved_errno);
+    }
+
+    void* addr = ::mmap(NULL, size, PROT_WRITE, MAP_SHARED, fd, 0);
+    if (addr == MAP_FAILED) {
         auto saved_errno = errno;
         TRY(close(fd));
         return Error::from_errno(saved_errno);
@@ -477,6 +526,13 @@ ErrorOr<void> fchmod(int fd, mode_t mode)
 {
     if (::fchmod(fd, mode) < 0)
         return Error::from_syscall("fchmod"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> fchown(int fd, uid_t uid, gid_t gid)
+{
+    if (::fchown(fd, uid, gid) < 0)
+        return Error::from_syscall("fchown"sv, -errno);
     return {};
 }
 

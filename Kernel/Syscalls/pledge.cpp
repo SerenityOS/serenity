@@ -28,18 +28,18 @@ ErrorOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*>
     }
 
     auto parse_pledge = [&](auto pledge_spec, u32& mask) {
-        auto parts = pledge_spec.split_view(' ');
-        for (auto& part : parts) {
+        auto found_invalid_pledge = true;
+        pledge_spec.for_each_split_view(' ', false, [&mask, &found_invalid_pledge](auto const& part) {
 #define __ENUMERATE_PLEDGE_PROMISE(x)   \
     if (part == StringView { #x }) {    \
         mask |= (1u << (u32)Pledge::x); \
-        continue;                       \
+        return;                         \
     }
             ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
-            return false;
-        }
-        return true;
+            found_invalid_pledge = false;
+        });
+        return found_invalid_pledge;
     };
 
     u32 new_promises = 0;

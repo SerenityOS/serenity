@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         window->set_title(String::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_string(), (int)(scale * 100)));
 
-        if (scale == 100 && !widget->scaled_for_first_image()) {
+        if (!widget->scaled_for_first_image()) {
             widget->set_scaled_for_first_image(true);
             widget->resize_window();
         }
@@ -215,6 +215,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         window);
 
+    auto fit_image_to_view_action = GUI::Action::create(
+        "Fit Image To &View", [&](auto&) {
+            widget->fit_content_to_view();
+        });
+
     auto zoom_out_action = GUI::CommonActions::make_zoom_out_action(
         [&](auto&) {
             widget->set_scale(widget->scale() / 1.44f);
@@ -301,6 +306,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(zoom_in_action));
     TRY(view_menu->try_add_action(reset_zoom_action));
+    TRY(view_menu->try_add_action(fit_image_to_view_action));
     TRY(view_menu->try_add_action(zoom_out_action));
     TRY(view_menu->try_add_separator());
 

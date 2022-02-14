@@ -35,7 +35,7 @@ struct DuOption {
 };
 
 static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option, int& max_depth);
-static ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int max_depth);
+static ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int max_depth, bool inside_dir = false);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -118,7 +118,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     return {};
 }
 
-ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int max_depth)
+ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int max_depth, bool inside_dir)
 {
     struct stat path_stat = TRY(Core::System::lstat(path.characters()));
     off_t directory_size = 0;
@@ -132,7 +132,7 @@ ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, 
 
         while (di.has_next()) {
             const auto child_path = di.next_full_path();
-            directory_size += TRY(print_space_usage(child_path, du_option, max_depth));
+            directory_size += TRY(print_space_usage(child_path, du_option, max_depth, true));
         }
     }
 
@@ -148,7 +148,7 @@ ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, 
         size = path_stat.st_blocks * block_size;
     }
 
-    if (!du_option.all && !is_directory)
+    if (inside_dir && !du_option.all && !is_directory)
         return size;
 
     if (is_directory)

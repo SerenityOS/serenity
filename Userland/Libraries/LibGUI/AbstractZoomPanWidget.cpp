@@ -180,4 +180,29 @@ void AbstractZoomPanWidget::set_scale_bounds(float min_scale, float max_scale)
     m_max_scale = max_scale;
 }
 
+void AbstractZoomPanWidget::fit_content_to_rect(Gfx::IntRect const& viewport_rect, FitType type)
+{
+    const float border_ratio = 0.95f;
+    auto image_size = m_original_rect.size();
+    auto height_ratio = floorf(border_ratio * viewport_rect.height()) / (float)image_size.height();
+    auto width_ratio = floorf(border_ratio * viewport_rect.width()) / (float)image_size.width();
+
+    float new_scale = 1.0f;
+    switch (type) {
+    case FitType::Width:
+        new_scale = width_ratio;
+        break;
+    case FitType::Height:
+        new_scale = height_ratio;
+        break;
+    case FitType::Both:
+        new_scale = min(height_ratio, width_ratio);
+        break;
+    }
+
+    auto const& offset = rect().center() - viewport_rect.center();
+    set_origin(Gfx::FloatPoint(offset.x(), offset.y()));
+    set_scale(new_scale);
+}
+
 }

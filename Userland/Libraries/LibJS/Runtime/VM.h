@@ -55,6 +55,8 @@ public:
         InterpreterExecutionScope(Interpreter&);
         ~InterpreterExecutionScope();
 
+        Interpreter& interpreter() { return m_interpreter; }
+
     private:
         Interpreter& m_interpreter;
     };

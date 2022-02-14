@@ -27,7 +27,6 @@ set(SOURCES
     ProcessStatisticsReader.cpp
     Property.cpp
     SecretString.cpp
-    Socket.cpp
     Stream.cpp
     StandardPaths.cpp
     System.cpp
@@ -36,7 +35,6 @@ set(SOURCES
     TempFile.cpp
     Timer.cpp
     UDPServer.cpp
-    UDPSocket.cpp
     Version.cpp
 )
 

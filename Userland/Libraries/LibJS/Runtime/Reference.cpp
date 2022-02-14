@@ -17,30 +17,55 @@ ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value 
 {
     auto& vm = global_object.vm();
 
+    // 1. ReturnIfAbrupt(V).
+    // 2. ReturnIfAbrupt(W).
+
+    // 3. If V is not a Reference Record, throw a ReferenceError exception.
     if (!is_valid_reference())
         return vm.throw_completion<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);
 
+    // 4. If IsUnresolvableReference(V) is true, then
     if (is_unresolvable()) {
+        // a. If V.[[Strict]] is true, throw a ReferenceError exception.
         if (m_strict)
             return throw_reference_error(global_object);
+
+        // b. Let globalObj be GetGlobalObject().
+        // c. Return ? Set(globalObj, V.[[ReferencedName]], W, false).
         TRY(global_object.set(m_name, value, Object::ShouldThrowExceptions::No));
         return {};
     }
 
+    // 5. If IsPropertyReference(V) is true, then
     if (is_property_reference()) {
+        // a. Let baseObj be ? ToObject(V.[[Base]]).
         auto* base_obj = TRY(m_base_value.to_object(global_object));
 
-        if (is_private_reference())
+        // b. If IsPrivateReference(V) is true, then
+        if (is_private_reference()) {
+            // i. Return ? PrivateSet(baseObj, V.[[ReferencedName]], W).
             return base_obj->private_set(m_private_name, value);
+        }
 
+        // c. Let succeeded be ? baseObj.[[Set]](V.[[ReferencedName]], W, GetThisValue(V)).
         auto succeeded = TRY(base_obj->internal_set(m_name, value, get_this_value()));
+
+        // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
         if (!succeeded && m_strict)
             return vm.throw_completion<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
+
+        // e. Return.
         return {};
     }
 
+    // 6. Else,
+    // a. Let base be V.[[Base]].
+
+    // b. Assert: base is an Environment Record.
     VERIFY(m_base_type == BaseType::Environment);
     VERIFY(m_base_environment);
+
+    // c. Return ? base.SetMutableBinding(V.[[ReferencedName]], W, V.[[Strict]]) (see 9.1).
     if (m_environment_coordinate.has_value())
         return static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(global_object, m_environment_coordinate->index, value, m_strict);
     else
@@ -59,21 +84,57 @@ Completion Reference::throw_reference_error(GlobalObject& global_object) const
 // 6.2.4.5 GetValue ( V ), https://tc39.es/ecma262/#sec-getvalue
 ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
 {
+    // 1. ReturnIfAbrupt(V).
+    // 2. If V is not a Reference Record, return V.
+
+    // 3. If IsUnresolvableReference(V) is true, throw a ReferenceError exception.
     if (!is_valid_reference() || is_unresolvable())
         return throw_reference_error(global_object);
 
+    // 4. If IsPropertyReference(V) is true, then
     if (is_property_reference()) {
-        auto* base_obj = TRY(m_base_value.to_object(global_object));
+        // a. Let baseObj be ? ToObject(V.[[Base]]).
+        // NOTE: Deferred as an optimization; we might not actually need to create an object.
 
-        if (is_private_reference())
+        // b. If IsPrivateReference(V) is true, then
+        if (is_private_reference()) {
+            // FIXME: We need to be able to specify the receiver for this
+            // if we want to use it in error messages in future
+            // as things currently stand this does the "wrong thing" but
+            // the error is unobservable
+
+            auto* base_obj = TRY(m_base_value.to_object(global_object));
+
+            // i. Return ? PrivateGet(baseObj, V.[[ReferencedName]]).
             return base_obj->private_get(m_private_name);
+        }
 
-        return base_obj->get(m_name);
+        // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
+        Object* base_obj = nullptr;
+        if (m_base_value.is_string()) {
+            auto string_value = m_base_value.as_string().get(global_object, m_name);
+            if (string_value.has_value())
+                return *string_value;
+            base_obj = global_object.string_prototype();
+        } else if (m_base_value.is_number())
+            base_obj = global_object.number_prototype();
+        else if (m_base_value.is_boolean())
+            base_obj = global_object.boolean_prototype();
+        else
+            base_obj = TRY(m_base_value.to_object(global_object));
+
+        // c. Return ? baseObj.[[Get]](V.[[ReferencedName]], GetThisValue(V)).
+        return base_obj->internal_get(m_name, get_this_value());
     }
 
-    VERIFY(m_base_type == BaseType::Environment);
+    // 5. Else,
+    // a. Let base be V.[[Base]].
 
+    // b. Assert: base is an Environment Record.
+    VERIFY(m_base_type == BaseType::Environment);
     VERIFY(m_base_environment);
+
+    // c. Return ? base.GetBindingValue(V.[[ReferencedName]], V.[[Strict]]) (see 9.1).
     if (m_environment_coordinate.has_value())
         return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(global_object, m_environment_coordinate->index, m_strict);
     return m_base_environment->get_binding_value(global_object, m_name.as_string(), m_strict);
@@ -172,9 +233,17 @@ String Reference::to_string() const
 // 6.2.4.9 MakePrivateReference ( baseValue, privateIdentifier ), https://tc39.es/ecma262/#sec-makeprivatereference
 Reference make_private_reference(VM& vm, Value base_value, FlyString const& private_identifier)
 {
+    // 1. Let privEnv be the running execution context's PrivateEnvironment.
     auto* private_environment = vm.running_execution_context().private_environment;
+
+    // 2. Assert: privEnv is not null.
     VERIFY(private_environment);
-    return Reference { base_value, private_environment->resolve_private_identifier(private_identifier) };
+
+    // 3. Let privateName be ! ResolvePrivateIdentifier(privEnv, privateIdentifier).
+    auto private_name = private_environment->resolve_private_identifier(private_identifier);
+
+    // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: privateName, [[Strict]]: true, [[ThisValue]]: empty }.
+    return Reference { base_value, private_name };
 }
 
 }

@@ -22,7 +22,7 @@ PerformanceEventBuffer::PerformanceEventBuffer(NonnullOwnPtr<KBuffer> buffer)
 {
 }
 
-NEVER_INLINE ErrorOr<void> PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, StringView arg3, Thread* current_thread)
+NEVER_INLINE ErrorOr<void> PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, StringView arg3, Thread* current_thread, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> arg6)
 {
     FlatPtr base_pointer;
 #if ARCH(I386)
@@ -32,7 +32,7 @@ NEVER_INLINE ErrorOr<void> PerformanceEventBuffer::append(int type, FlatPtr arg1
     asm volatile("movq %%rbp, %%rax"
                  : "=a"(base_pointer));
 #endif
-    return append_with_ip_and_bp(current_thread->pid(), current_thread->tid(), 0, base_pointer, type, 0, arg1, arg2, arg3);
+    return append_with_ip_and_bp(current_thread->pid(), current_thread->tid(), 0, base_pointer, type, 0, arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(FlatPtr bp, FlatPtr ip)
@@ -73,13 +73,13 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
 }
 
 ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid, const RegisterState& regs,
-    int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3)
+    int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> arg6)
 {
-    return append_with_ip_and_bp(pid, tid, regs.ip(), regs.bp(), type, lost_samples, arg1, arg2, arg3);
+    return append_with_ip_and_bp(pid, tid, regs.ip(), regs.bp(), type, lost_samples, arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid,
-    FlatPtr ip, FlatPtr bp, int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3)
+    FlatPtr ip, FlatPtr bp, int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> arg6)
 {
     if (count() >= capacity())
         return ENOBUFS;
@@ -164,6 +164,13 @@ ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, Threa
     case PERF_EVENT_SIGNPOST:
         event.data.signpost.arg1 = arg1;
         event.data.signpost.arg2 = arg2;
+        break;
+    case PERF_EVENT_READ:
+        event.data.read.fd = arg1;
+        event.data.read.size = arg2;
+        event.data.read.filename_index = arg4;
+        event.data.read.start_timestamp = arg5;
+        event.data.read.success = !arg6.is_error();
         break;
     default:
         return EINVAL;
@@ -277,6 +284,14 @@ ErrorOr<void> PerformanceEventBuffer::to_json_impl(Serializer& object) const
             event_object.add("type"sv, "signpost"sv);
             event_object.add("arg1"sv, event.data.signpost.arg1);
             event_object.add("arg2"sv, event.data.signpost.arg2);
+            break;
+        case PERF_EVENT_READ:
+            event_object.add("type", "read");
+            event_object.add("fd", event.data.read.fd);
+            event_object.add("size"sv, event.data.read.size);
+            event_object.add("filename_index"sv, event.data.read.filename_index);
+            event_object.add("start_timestamp"sv, event.data.read.start_timestamp);
+            event_object.add("success"sv, event.data.read.success);
             break;
         }
         event_object.add("pid", event.pid);

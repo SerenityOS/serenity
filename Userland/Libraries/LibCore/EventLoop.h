@@ -34,6 +34,11 @@ public:
         Yes,
     };
 
+    enum class ShouldWake {
+        No,
+        Yes
+    };
+
     explicit EventLoop(MakeInspectable = MakeInspectable::No);
     ~EventLoop();
     static void initialize_wake_pipes();
@@ -51,7 +56,7 @@ public:
 
     void spin_until(Function<bool()>);
 
-    void post_event(Object& receiver, NonnullOwnPtr<Event>&&);
+    void post_event(Object& receiver, NonnullOwnPtr<Event>&&, ShouldWake = ShouldWake::No);
 
     template<typename Callback>
     static decltype(auto) with_main_locked(Callback callback)
@@ -79,7 +84,8 @@ public:
         m_queued_events.extend(move(other.m_queued_events));
     }
 
-    static void wake();
+    static void wake_current();
+    void wake();
 
     static int register_signal(int signo, Function<void(int)> handler);
     static void unregister_signal(int handler_id);
@@ -125,6 +131,9 @@ private:
 
     static thread_local int s_wake_pipe_fds[2];
     static thread_local bool s_wake_pipe_initialized;
+
+    // The wake pipe of this event loop needs to be accessible from other threads.
+    int (*m_wake_pipe_fds)[2];
 
     struct Private;
     NonnullOwnPtr<Private> m_private;

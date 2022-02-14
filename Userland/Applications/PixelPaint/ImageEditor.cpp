@@ -529,28 +529,7 @@ void ImageEditor::fit_image_to_view(FitType type)
         };
     }
 
-    const float border_ratio = 0.95f;
-    auto image_size = image().size();
-    auto height_ratio = floorf(border_ratio * viewport_rect.height()) / (float)image_size.height();
-    auto width_ratio = floorf(border_ratio * viewport_rect.width()) / (float)image_size.width();
-
-    float new_scale = 1.0f;
-    switch (type) {
-    case FitType::Width:
-        new_scale = width_ratio;
-        break;
-    case FitType::Height:
-        new_scale = height_ratio;
-        break;
-    case FitType::Image:
-        new_scale = min(height_ratio, width_ratio);
-        break;
-    }
-
-    float offset = m_show_rulers ? -m_ruler_thickness / (scale() * 2.0f) : 0.0f;
-
-    set_origin(Gfx::FloatPoint(offset, offset));
-    set_scale(new_scale);
+    fit_content_to_rect(viewport_rect, type);
 }
 
 void ImageEditor::image_did_change(Gfx::IntRect const& modified_image_rect)

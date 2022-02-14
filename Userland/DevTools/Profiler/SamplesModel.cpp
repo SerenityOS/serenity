@@ -48,6 +48,8 @@ String SamplesModel::column_name(int column) const
         return "Lost Samples";
     case Column::InnermostStackFrame:
         return "Innermost Frame";
+    case Column::Path:
+        return "Path";
     default:
         VERIFY_NOT_REACHED();
     }
@@ -89,6 +91,13 @@ GUI::Variant SamplesModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         if (index.column() == Column::InnermostStackFrame) {
             return event.frames.last().symbol;
         }
+
+        if (index.column() == Column::Path) {
+            if (!event.data.has<Profile::Event::ReadData>())
+                return "";
+            return event.data.get<Profile::Event::ReadData>().path;
+        }
+
         return {};
     }
     return {};

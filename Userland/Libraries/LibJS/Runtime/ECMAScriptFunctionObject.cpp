@@ -542,14 +542,16 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     if (!scope_body)
         return {};
 
-    scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
-        declaration.for_each_bound_name([&](auto const& name) {
-            if (declaration.is_constant_declaration())
-                MUST(lex_environment->create_immutable_binding(global_object(), name, true));
-            else
-                MUST(lex_environment->create_mutable_binding(global_object(), name, false));
+    if (!Bytecode::Interpreter::current()) {
+        scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
+            declaration.for_each_bound_name([&](auto const& name) {
+                if (declaration.is_constant_declaration())
+                    MUST(lex_environment->create_immutable_binding(global_object(), name, true));
+                else
+                    MUST(lex_environment->create_mutable_binding(global_object(), name, false));
+            });
         });
-    });
+    }
 
     auto* private_environment = callee_context.private_environment;
     for (auto& declaration : functions_to_initialize) {
@@ -767,7 +769,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         // FIXME: pass something to evaluate default arguments with
         TRY(function_declaration_instantiation(nullptr));
         if (!m_bytecode_executable) {
-            m_bytecode_executable = Bytecode::Generator::generate(m_ecmascript_code, m_kind);
+            auto executable_result = JS::Bytecode::Generator::generate(m_ecmascript_code, m_kind);
+            if (executable_result.is_error())
+                return vm.throw_completion<InternalError>(bytecode_interpreter->global_object(), ErrorType::NotImplemented, executable_result.error().to_string());
+
+            m_bytecode_executable = executable_result.release_value();
             m_bytecode_executable->name = m_name;
             auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
             passes.perform(*m_bytecode_executable);

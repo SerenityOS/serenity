@@ -105,8 +105,15 @@ private:
     class Link;
 
 public:
+#ifndef KERNEL
     template<typename U = T>
-    WeakPtr<U> make_weak_ptr() const;
+    WeakPtr<U> make_weak_ptr() const
+    {
+        return MUST(try_make_weak_ptr<U>());
+    }
+#endif
+    template<typename U = T>
+    ErrorOr<WeakPtr<U>> try_make_weak_ptr() const;
 
 protected:
     Weakable() = default;

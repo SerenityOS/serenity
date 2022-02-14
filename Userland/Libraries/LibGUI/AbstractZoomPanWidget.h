@@ -54,6 +54,17 @@ public:
 
     Function<void(float)> on_scale_change;
 
+    enum class FitType {
+        Width,
+        Height,
+        Both
+    };
+    void fit_content_to_rect(Gfx::IntRect const& rect, FitType = FitType::Both);
+    void fit_content_to_view(FitType fit_type = FitType::Both)
+    {
+        fit_content_to_rect(rect(), fit_type);
+    }
+
 private:
     Gfx::IntRect m_original_rect;
     Gfx::IntRect m_content_rect;

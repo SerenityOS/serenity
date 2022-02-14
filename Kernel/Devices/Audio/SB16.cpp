@@ -62,8 +62,6 @@ void SB16::set_sample_rate(uint16_t hz)
 
 UNMAP_AFTER_INIT SB16::SB16()
     : IRQHandler(SB16_DEFAULT_IRQ)
-    // FIXME: We can't change version numbers later, i.e. after the sound card is initialized.
-    , CharacterDevice(42, 42)
 {
     initialize();
 }
@@ -72,7 +70,7 @@ UNMAP_AFTER_INIT SB16::~SB16()
 {
 }
 
-UNMAP_AFTER_INIT RefPtr<SB16> SB16::try_detect_and_create()
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<SB16>> SB16::try_detect_and_create()
 {
     IO::out8(0x226, 1);
     IO::delay(32);
@@ -80,13 +78,8 @@ UNMAP_AFTER_INIT RefPtr<SB16> SB16::try_detect_and_create()
 
     auto data = dsp_read();
     if (data != 0xaa)
-        return {};
-    auto device_or_error = DeviceManagement::try_create_device<SB16>();
-    if (device_or_error.is_error())
-        return {};
-    auto device = device_or_error.release_value();
-    DeviceManagement::the().attach_audio_device(device);
-    return device;
+        return Error::from_errno(ENODEV);
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SB16());
 }
 
 UNMAP_AFTER_INIT void SB16::initialize()
@@ -113,27 +106,6 @@ UNMAP_AFTER_INIT void SB16::initialize()
     dmesgln("SB16: IRQ {}", get_irq_line());
 
     set_sample_rate(m_sample_rate);
-}
-
-ErrorOr<void> SB16::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
-{
-    switch (request) {
-    case SOUNDCARD_IOCTL_GET_SAMPLE_RATE: {
-        auto output = static_ptr_cast<u16*>(arg);
-        return copy_to_user(output, &m_sample_rate);
-    }
-    case SOUNDCARD_IOCTL_SET_SAMPLE_RATE: {
-        auto sample_rate_input = static_cast<u32>(arg.ptr());
-        if (sample_rate_input == 0 || sample_rate_input > 44100)
-            return ENOTSUP;
-        auto sample_rate_value = static_cast<u16>(sample_rate_input);
-        if (m_sample_rate != sample_rate_value)
-            set_sample_rate(sample_rate_value);
-        return {};
-    }
-    default:
-        return EINVAL;
-    }
 }
 
 void SB16::set_irq_register(u8 irq_number)
@@ -182,16 +154,6 @@ void SB16::set_irq_line(u8 irq_number)
         return;
     set_irq_register(irq_number);
     change_irq_number(irq_number);
-}
-
-bool SB16::can_read(OpenFileDescription const&, u64) const
-{
-    return false;
-}
-
-ErrorOr<size_t> SB16::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
-{
-    return 0;
 }
 
 void SB16::dma_start(uint32_t length)
@@ -249,17 +211,48 @@ void SB16::wait_for_irq()
     disable_irq();
 }
 
-ErrorOr<size_t> SB16::write(OpenFileDescription&, u64, UserOrKernelBuffer const& data, size_t length)
+RefPtr<AudioChannel> SB16::audio_channel(u32 index) const
 {
+    if (index == 0)
+        return m_audio_channel;
+    return {};
+}
+void SB16::detect_hardware_audio_channels(Badge<AudioManagement>)
+{
+    m_audio_channel = AudioChannel::must_create(*this, 0);
+}
+
+ErrorOr<void> SB16::set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate)
+{
+    if (channel_index != 0)
+        return Error::from_errno(ENODEV);
+    if (samples_per_second_rate == 0 || samples_per_second_rate > 44100)
+        return Error::from_errno(ENOTSUP);
+    auto sample_rate_value = static_cast<u16>(samples_per_second_rate);
+    if (m_sample_rate != sample_rate_value)
+        set_sample_rate(sample_rate_value);
+    return {};
+}
+
+ErrorOr<u32> SB16::get_pcm_output_sample_rate(size_t channel_index)
+{
+    if (channel_index != 0)
+        return Error::from_errno(ENODEV);
+    return m_sample_rate;
+}
+
+ErrorOr<size_t> SB16::write(size_t channel_index, UserOrKernelBuffer const& data, size_t length)
+{
+    if (channel_index != 0)
+        return Error::from_errno(ENODEV);
+
     if (!m_dma_region) {
         m_dma_region = TRY(MM.allocate_dma_buffer_page("SB16 DMA buffer", Memory::Region::Access::Write));
     }
 
     dbgln_if(SB16_DEBUG, "SB16: Writing buffer of {} bytes", length);
 
-    VERIFY(length <= PAGE_SIZE);
-    int const BLOCK_SIZE = 32 * 1024;
-    if (length > BLOCK_SIZE) {
+    if (length > PAGE_SIZE) {
         return ENOSPC;
     }
 

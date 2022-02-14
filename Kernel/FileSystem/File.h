@@ -128,7 +128,7 @@ protected:
             // If called from an IRQ handler we need to delay evaluation
             // and unblocking of waiting threads. Note that this File
             // instance may be deleted until the deferred call is executed!
-            Processor::deferred_call_queue([self = make_weak_ptr()]() {
+            Processor::deferred_call_queue([self = try_make_weak_ptr().release_value_but_fixme_should_propagate_errors()]() {
                 if (auto file = self.strong_ref())
                     file->do_evaluate_block_conditions();
             });

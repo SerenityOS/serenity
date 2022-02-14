@@ -16,24 +16,27 @@ DNSServer::DNSServer(Object* parent)
 {
     bind(IPv4Address(), 53);
     on_ready_to_receive = [this]() {
-        handle_client();
+        auto result = handle_client();
+        if (result.is_error()) {
+            dbgln("DNSServer: Failed to handle client: {}", result.error());
+        }
     };
 }
 
-void DNSServer::handle_client()
+ErrorOr<void> DNSServer::handle_client()
 {
     sockaddr_in client_address;
     auto buffer = receive(1024, client_address);
     auto optional_request = DNSPacket::from_raw_packet(buffer.data(), buffer.size());
     if (!optional_request.has_value()) {
         dbgln("Got an invalid DNS packet");
-        return;
+        return {};
     }
     auto& request = optional_request.value();
 
     if (!request.is_query()) {
         dbgln("It's not a request");
-        return;
+        return {};
     }
 
     LookupServer& lookup_server = LookupServer::the();
@@ -46,7 +49,7 @@ void DNSServer::handle_client()
         if (question.class_code() != DNSRecordClass::IN)
             continue;
         response.add_question(question);
-        auto answers = lookup_server.lookup(question.name(), question.record_type());
+        auto answers = TRY(lookup_server.lookup(question.name(), question.record_type()));
         for (auto& answer : answers) {
             response.add_answer(answer);
         }
@@ -59,8 +62,8 @@ void DNSServer::handle_client()
 
     buffer = response.to_byte_buffer();
 
-    // FIXME: We should be handling errors here.
-    [[maybe_unused]] auto result = send(buffer, client_address);
+    TRY(send(buffer, client_address));
+    return {};
 }
 
 }

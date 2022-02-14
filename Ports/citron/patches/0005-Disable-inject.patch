@@ -1,7 +1,7 @@
-From fc4aa62143b0b40fdff6beb224827121e8994378 Mon Sep 17 00:00:00 2001
+From 345758e53e21b23c716c2efccdaccf5434f16f0e Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 11 Feb 2022 16:49:59 +0330
-Subject: [PATCH 11/18] Disable inject
+Subject: [PATCH 5/9] Disable inject
 
 tcc requires ucontext.
 ---
@@ -9,10 +9,10 @@ tcc requires ucontext.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/makefile b/makefile
-index 7c0fbff..16c2c89 100644
+index b262cd0..2e05795 100644
 --- a/makefile
 +++ b/makefile
-@@ -11,7 +11,7 @@ INCLUDE_DIR ?= /usr/local/include/Citron
+@@ -12,7 +12,7 @@ INCLUDE_DIR ?= $(DESTDIR)/usr/local/include/Citron
  
  .PHONY: all ctrconfig libctr ctr install cxx
  
@@ -20,7 +20,7 @@ index 7c0fbff..16c2c89 100644
 +enable_inject ?= false
  enable_ctypes ?= true
  enable_inline_asm ?= false
- 
+ enable_boehm_gc ?= true
 -- 
 2.34.1
 

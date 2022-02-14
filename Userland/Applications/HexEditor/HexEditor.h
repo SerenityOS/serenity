@@ -41,7 +41,7 @@ public:
     bool save();
 
     void select_all();
-    bool has_selection() const { return !((m_selection_end < m_selection_start) || m_document->size()); }
+    bool has_selection() const { return m_selection_start < m_selection_end && m_document->size() > 0; }
     size_t selection_size();
     size_t selection_start_offset() const { return m_selection_start; }
     bool copy_selected_text_to_clipboard();

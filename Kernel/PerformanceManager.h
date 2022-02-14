@@ -127,6 +127,40 @@ public:
         }
     }
 
+    inline static void add_read_event(Thread& thread, int fd, size_t size, const OpenFileDescription& file_description, u64 start_timestamp, ErrorOr<FlatPtr> result)
+    {
+        if (thread.is_profiling_suppressed())
+            return;
+
+        auto* event_buffer = thread.process().current_perf_events_buffer();
+        if (event_buffer == nullptr)
+            return;
+
+        size_t filepath_string_index;
+
+        if (auto path = file_description.original_absolute_path(); !path.is_error()) {
+            auto registered_result = event_buffer->register_string(move(path.value()));
+            if (registered_result.is_error())
+                return;
+            filepath_string_index = registered_result.value();
+        } else if (auto pseudo_path = file_description.pseudo_path(); !pseudo_path.is_error()) {
+            auto registered_result = event_buffer->register_string(move(pseudo_path.value()));
+            if (registered_result.is_error())
+                return;
+            filepath_string_index = registered_result.value();
+        } else {
+            auto invalid_path_string = KString::try_create("<INVALID_FILE_PATH>"); // TODO: Performance, unecessary allocations.
+            if (invalid_path_string.is_error())
+                return;
+            auto registered_result = event_buffer->register_string(move(invalid_path_string.value()));
+            if (registered_result.is_error())
+                return;
+            filepath_string_index = registered_result.value();
+        }
+
+        [[maybe_unused]] auto rc = event_buffer->append(PERF_EVENT_READ, fd, size, 0, &thread, filepath_string_index, start_timestamp, result); // wrong arguments
+    }
+
     inline static void timer_tick(RegisterState const& regs)
     {
         static Time last_wakeup;

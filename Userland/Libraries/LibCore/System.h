@@ -43,6 +43,9 @@ ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int fl
 ErrorOr<void> umount(StringView mount_point);
 ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data);
 ErrorOr<void> disown(pid_t pid);
+ErrorOr<void> profiling_enable(pid_t, u64 event_mask);
+ErrorOr<void> profiling_disable(pid_t);
+ErrorOr<void> profiling_free_buffer(pid_t);
 #endif
 
 #ifndef AK_OS_BSD_GENERIC
@@ -111,6 +114,7 @@ ErrorOr<void> chdir(StringView path);
 ErrorOr<pid_t> fork();
 ErrorOr<int> mkstemp(Span<char> pattern);
 ErrorOr<void> fchmod(int fd, mode_t mode);
+ErrorOr<void> fchown(int fd, uid_t, gid_t);
 ErrorOr<void> rename(StringView old_path, StringView new_path);
 ErrorOr<void> unlink(StringView path);
 ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);

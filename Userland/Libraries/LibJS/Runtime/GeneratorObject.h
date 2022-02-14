@@ -29,7 +29,7 @@ private:
     ExecutionContext m_execution_context;
     ECMAScriptFunctionObject* m_generating_function { nullptr };
     Value m_previous_value;
-    Bytecode::RegisterWindow m_frame;
+    Optional<Bytecode::RegisterWindow> m_frame;
     bool m_done { false };
 };
 

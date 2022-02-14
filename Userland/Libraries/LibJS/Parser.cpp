@@ -190,7 +190,7 @@ public:
     ScopePusher* parent_scope() { return m_parent_scope; }
     ScopePusher const* parent_scope() const { return m_parent_scope; }
 
-    [[nodiscard]] bool has_declaration(StringView name) const
+    [[nodiscard]] bool has_declaration(FlyString const& name) const
     {
         return m_lexical_names.contains(name) || m_var_names.contains(name) || !m_functions_to_hoist.find_if([&name](auto& function) { return function->name() == name; }).is_end();
     }
@@ -1029,8 +1029,8 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
     RefPtr<FunctionExpression> constructor;
     HashTable<FlyString> found_private_names;
 
-    String class_name = expect_class_name || match_identifier() || match(TokenType::Yield) || match(TokenType::Await)
-        ? consume_identifier_reference().value().to_string()
+    FlyString class_name = expect_class_name || match_identifier() || match(TokenType::Yield) || match(TokenType::Await)
+        ? consume_identifier_reference().flystring_value()
         : "";
 
     check_identifier_name_for_assignment_validity(class_name, true);
@@ -1692,7 +1692,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 property_key = parse_property_key();
             } else {
                 property_key = create_ast_node<StringLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, identifier.value());
-                property_value = create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, identifier.value());
+                property_value = create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, identifier.flystring_value());
             }
         } else {
             property_key = parse_property_key();
@@ -2076,7 +2076,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
             expected("IdentifierName");
         }
 
-        return create_ast_node<MemberExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(lhs), create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, consume().value()));
+        return create_ast_node<MemberExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(lhs), create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, consume().flystring_value()));
     case TokenType::BracketOpen: {
         consume(TokenType::BracketOpen);
         auto expression = create_ast_node<MemberExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(lhs), parse_expression(0), true);
@@ -2229,7 +2229,7 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
     if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs) && !is<CallExpression>(*lhs)) {
         syntax_error("Invalid left-hand side in assignment");
     } else if (m_state.strict_mode && is<Identifier>(*lhs)) {
-        auto name = static_cast<const Identifier&>(*lhs).string();
+        auto const& name = static_cast<Identifier const&>(*lhs).string();
         check_identifier_name_for_assignment_validity(name);
     } else if (m_state.strict_mode && is<CallExpression>(*lhs)) {
         syntax_error("Cannot assign to function call");
@@ -2246,7 +2246,7 @@ NonnullRefPtr<Identifier> Parser::parse_identifier()
         syntax_error("'arguments' is not allowed in class field initializer");
     return create_ast_node<Identifier>(
         { m_state.current_token.filename(), identifier_start, position() },
-        token.value());
+        token.flystring_value());
 }
 
 Vector<CallExpression::Argument> Parser::parse_arguments()
@@ -2501,7 +2501,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options, Op
         function_kind = FunctionKind::Async;
     else
         function_kind = FunctionKind::Normal;
-    String name;
+    FlyString name;
     if (parse_options & FunctionNodeParseOptions::CheckForFunctionAndName) {
         if (function_kind == FunctionKind::Normal && match(TokenType::Async) && !next_token().trivia_contains_line_terminator()) {
             function_kind = FunctionKind::Async;
@@ -2516,9 +2516,9 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options, Op
         }
 
         if (FunctionNodeType::must_have_name() || match_identifier())
-            name = consume_identifier().value();
+            name = consume_identifier().flystring_value();
         else if (is_function_expression && (match(TokenType::Yield) || match(TokenType::Await)))
-            name = consume().value();
+            name = consume().flystring_value();
 
         check_identifier_name_for_assignment_validity(name);
 
@@ -2581,7 +2581,7 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
             return pattern.release_nonnull();
 
         auto token = consume_identifier();
-        auto parameter_name = token.value();
+        auto parameter_name = token.flystring_value();
 
         check_identifier_name_for_assignment_validity(parameter_name);
 
@@ -2661,7 +2661,7 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
     return parameters;
 }
 
-static constexpr AK::Array<StringView, 36> s_reserved_words = { "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with" };
+static AK::Array<FlyString, 36> s_reserved_words = { "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with" };
 
 RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates allow_duplicates, Parser::AllowMemberExpressions allow_member_expressions)
 {
@@ -2726,7 +2726,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates all
                 } else {
                     name = create_ast_node<Identifier>(
                         { m_state.current_token.filename(), rule_start.position(), position() },
-                        consume().value());
+                        consume().flystring_value());
                 }
             } else if (match(TokenType::BracketOpen)) {
                 consume();
@@ -2764,7 +2764,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates all
                 } else if (match_identifier_name()) {
                     alias = create_ast_node<Identifier>(
                         { m_state.current_token.filename(), rule_start.position(), position() },
-                        consume().value());
+                        consume().flystring_value());
 
                 } else {
                     expected("identifier or binding pattern");
@@ -2800,7 +2800,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates all
                 alias = pattern.release_nonnull();
             } else if (match_identifier_name()) {
                 // BindingElement must always have an Empty name field
-                auto identifier_name = consume_identifier().value();
+                auto identifier_name = consume_identifier().flystring_value();
                 alias = create_ast_node<Identifier>(
                     { m_state.current_token.filename(), rule_start.position(), position() },
                     identifier_name);
@@ -2886,7 +2886,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
         Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, Empty> target {};
         if (match_identifier()) {
             auto identifier_start = push_start();
-            auto name = consume_identifier().value();
+            auto name = consume_identifier().flystring_value();
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
                 name);
@@ -2908,14 +2908,14 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
 
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
-                consume().value());
+                consume().flystring_value());
         } else if (!m_state.await_expression_is_valid && match(TokenType::Async)) {
             if (m_program_type == Program::Type::Module)
                 syntax_error("Identifier must not be a reserved word in modules ('async')");
 
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
-                consume().value());
+                consume().flystring_value());
         }
 
         if (target.has<Empty>()) {
@@ -3076,7 +3076,7 @@ NonnullRefPtr<OptionalChain> Parser::parse_optional_chain(NonnullRefPtr<Expressi
                     auto start = position();
                     auto identifier = consume();
                     chain.append(OptionalChain::MemberReference {
-                        create_ast_node<Identifier>({ m_state.current_token.filename(), start, position() }, identifier.value()),
+                        create_ast_node<Identifier>({ m_state.current_token.filename(), start, position() }, identifier.flystring_value()),
                         OptionalChain::Mode::Optional,
                     });
                 } else {
@@ -3099,7 +3099,7 @@ NonnullRefPtr<OptionalChain> Parser::parse_optional_chain(NonnullRefPtr<Expressi
                 auto start = position();
                 auto identifier = consume();
                 chain.append(OptionalChain::MemberReference {
-                    create_ast_node<Identifier>({ m_state.current_token.filename(), start, position() }, identifier.value()),
+                    create_ast_node<Identifier>({ m_state.current_token.filename(), start, position() }, identifier.flystring_value()),
                     OptionalChain::Mode::NotOptional,
                 });
             } else {
@@ -3959,7 +3959,7 @@ void Parser::discard_saved_state()
     m_saved_state.take_last();
 }
 
-void Parser::check_identifier_name_for_assignment_validity(StringView name, bool force_strict)
+void Parser::check_identifier_name_for_assignment_validity(FlyString const& name, bool force_strict)
 {
     // FIXME: this is now called from multiple places maybe the error message should be dynamic?
     if (any_of(s_reserved_words, [&](auto& value) { return name == value; })) {
@@ -4141,13 +4141,13 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
                 // ImportSpecifier :  ImportedBinding
                 auto require_as = !match_imported_binding();
                 auto name_position = position();
-                auto name = consume().value();
+                auto name = consume().flystring_value();
 
                 if (match_as()) {
                     consume(TokenType::Identifier);
 
                     auto alias_position = position();
-                    auto alias = consume_identifier().value();
+                    auto alias = consume_identifier().flystring_value();
                     check_identifier_name_for_assignment_validity(alias);
 
                     entries_with_location.append({ { name, alias }, alias_position });
@@ -4168,7 +4168,7 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
                 consume(TokenType::Identifier);
 
                 auto alias_position = position();
-                auto alias = consume_identifier().value();
+                auto alias = consume_identifier().flystring_value();
                 check_identifier_name_for_assignment_validity(alias);
 
                 entries_with_location.append({ { move(name), alias }, alias_position });

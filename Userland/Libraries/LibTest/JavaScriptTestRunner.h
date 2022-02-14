@@ -346,7 +346,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
     auto test_script = result.release_value();
 
     if (g_run_bytecode) {
-        auto executable = JS::Bytecode::Generator::generate(test_script->parse_node());
+        auto executable = MUST(JS::Bytecode::Generator::generate(test_script->parse_node()));
         executable->name = test_path;
         if (JS::Bytecode::g_dump_bytecode)
             executable->dump();
@@ -362,12 +362,15 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
     if (file_script.is_error())
         return { test_path, file_script.error() };
     if (g_run_bytecode) {
-        auto executable = JS::Bytecode::Generator::generate(file_script.value()->parse_node());
-        executable->name = test_path;
-        if (JS::Bytecode::g_dump_bytecode)
-            executable->dump();
-        JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
-        (void)bytecode_interpreter.run(*executable);
+        auto executable_result = JS::Bytecode::Generator::generate(file_script.value()->parse_node());
+        if (!executable_result.is_error()) {
+            auto executable = executable_result.release_value();
+            executable->name = test_path;
+            if (JS::Bytecode::g_dump_bytecode)
+                executable->dump();
+            JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
+            (void)bytecode_interpreter.run(*executable);
+        }
     } else {
         g_vm->push_execution_context(global_execution_context, interpreter->global_object());
         (void)interpreter->run(file_script.value());

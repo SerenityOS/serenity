@@ -260,12 +260,63 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
     return {};
 }
 
+ThrowCompletionOr<void> CreateEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto make_and_swap_envs = [&](auto*& old_environment) {
+        Environment* environment = new_declarative_environment(*old_environment);
+        swap(old_environment, environment);
+        return environment;
+    };
+    if (m_mode == EnvironmentMode::Lexical)
+        interpreter.saved_lexical_environment_stack().append(make_and_swap_envs(interpreter.vm().running_execution_context().lexical_environment));
+    else if (m_mode == EnvironmentMode::Var)
+        interpreter.saved_variable_environment_stack().append(make_and_swap_envs(interpreter.vm().running_execution_context().variable_environment));
+    return {};
+}
+
+ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const& name = interpreter.current_executable().get_identifier(m_identifier);
+
+    if (m_mode == EnvironmentMode::Lexical) {
+        // Note: This is papering over an issue where "FunctionDeclarationInstantiation" creates these bindings for us.
+        //       Instead of crashing in there, we'll just raise an exception here.
+        if (TRY(vm.lexical_environment()->has_binding(name)))
+            return vm.throw_completion<InternalError>(interpreter.global_object(), String::formatted("Lexical environment already has binding '{}'", name));
+
+        if (m_is_immutable)
+            vm.lexical_environment()->create_immutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+        else
+            vm.lexical_environment()->create_mutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+    } else {
+        if (m_is_immutable)
+            vm.variable_environment()->create_immutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+        else
+            vm.variable_environment()->create_mutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+    }
+    return {};
+}
+
 ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto reference = TRY(vm.resolve_binding(interpreter.current_executable().get_identifier(m_identifier)));
-
-    TRY(reference.put_value(interpreter.global_object(), interpreter.accumulator()));
+    auto const& name = interpreter.current_executable().get_identifier(m_identifier);
+    auto environment = m_mode == EnvironmentMode::Lexical ? vm.running_execution_context().lexical_environment : vm.running_execution_context().variable_environment;
+    auto reference = TRY(vm.resolve_binding(name, environment));
+    switch (m_initialization_mode) {
+    case InitializationMode::Initialize:
+        TRY(reference.initialize_referenced_binding(interpreter.global_object(), interpreter.accumulator()));
+        break;
+    case InitializationMode::Set:
+        TRY(reference.put_value(interpreter.global_object(), interpreter.accumulator()));
+        break;
+    case InitializationMode::InitializeOrSet:
+        VERIFY(reference.is_environment_reference());
+        VERIFY(reference.base_environment().is_declarative_environment());
+        TRY(static_cast<DeclarativeEnvironment&>(reference.base_environment()).initialize_or_set_mutable_binding(interpreter.global_object(), name, interpreter.accumulator()));
+        break;
+    }
     return {};
 }
 
@@ -440,6 +491,15 @@ void FinishUnwind::replace_references_impl(BasicBlock const& from, BasicBlock co
         m_next_target = Label { to };
 }
 
+ThrowCompletionOr<void> LeaveEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    if (m_mode == EnvironmentMode::Lexical)
+        interpreter.vm().running_execution_context().lexical_environment = interpreter.saved_lexical_environment_stack().take_last();
+    if (m_mode == EnvironmentMode::Var)
+        interpreter.vm().running_execution_context().variable_environment = interpreter.saved_variable_environment_stack().take_last();
+    return {};
+}
+
 ThrowCompletionOr<void> LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.leave_unwind_context();
@@ -536,10 +596,14 @@ ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter&
     return {};
 }
 
-ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter&) const
+ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    (void)m_class_expression;
-    TODO();
+    auto name = m_class_expression.name();
+    auto scope = interpreter.ast_interpreter_scope();
+    auto& ast_interpreter = scope.interpreter();
+    auto class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, interpreter.global_object(), name, name.is_null() ? "" : name));
+    interpreter.accumulator() = class_object;
+    return {};
 }
 
 String Load::to_string_impl(Bytecode::Executable const&) const
@@ -624,9 +688,27 @@ String GetVariable::to_string_impl(Bytecode::Executable const& executable) const
     return String::formatted("GetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
+String CreateEnvironment::to_string_impl(Bytecode::Executable const&) const
+{
+    auto mode_string = m_mode == EnvironmentMode::Lexical
+        ? "Lexical"
+        : "Variable";
+    return String::formatted("CreateEnvironment mode:{}", mode_string);
+}
+
+String CreateVariable::to_string_impl(Bytecode::Executable const& executable) const
+{
+    auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
+    return String::formatted("CreateVariable env:{} immutable:{} {} ({})", mode_string, m_is_immutable, m_identifier, executable.identifier_table->get(m_identifier));
+}
+
 String SetVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("SetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+    auto initialization_mode_name = m_initialization_mode == InitializationMode ::Initialize ? "Initialize"
+        : m_initialization_mode == InitializationMode::Set                                   ? "Set"
+                                                                                             : "InitializeOrSet";
+    auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
+    return String::formatted("SetVariable env:{} init:{} {} ({})", mode_string, initialization_mode_name, m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 String PutById::to_string_impl(Bytecode::Executable const& executable) const
@@ -723,6 +805,14 @@ String EnterUnwindContext::to_string_impl(Bytecode::Executable const&) const
 String FinishUnwind::to_string_impl(const Bytecode::Executable&) const
 {
     return String::formatted("FinishUnwind next:{}", m_next_target);
+}
+
+String LeaveEnvironment::to_string_impl(Bytecode::Executable const&) const
+{
+    auto mode_string = m_mode == EnvironmentMode::Lexical
+        ? "Lexical"
+        : "Variable";
+    return String::formatted("LeaveEnvironment env:{}", mode_string);
 }
 
 String LeaveUnwindContext::to_string_impl(Bytecode::Executable const&) const

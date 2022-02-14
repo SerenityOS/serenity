@@ -23,7 +23,7 @@ Generator::~Generator()
 {
 }
 
-NonnullOwnPtr<Executable> Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
+CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
 {
     Generator generator;
     generator.switch_to_basic_block(generator.make_block());
@@ -34,7 +34,7 @@ NonnullOwnPtr<Executable> Generator::generate(ASTNode const& node, FunctionKind 
         generator.emit<Bytecode::Op::Yield>(Label { start_block });
         generator.switch_to_basic_block(start_block);
     }
-    node.generate_bytecode(generator);
+    TRY(node.generate_bytecode(generator));
     if (generator.is_in_generator_or_async_function()) {
         // Terminate all unterminated blocks with yield return
         for (auto& block : generator.m_root_basic_blocks) {
@@ -99,38 +99,43 @@ void Generator::end_breakable_scope()
     m_breakable_scopes.take_last();
 }
 
-void Generator::emit_load_from_reference(JS::ASTNode const& node)
+CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode const& node)
 {
     if (is<Identifier>(node)) {
         auto& identifier = static_cast<Identifier const&>(node);
         emit<Bytecode::Op::GetVariable>(intern_identifier(identifier.string()));
-        return;
+        return {};
     }
     if (is<MemberExpression>(node)) {
         auto& expression = static_cast<MemberExpression const&>(node);
-        expression.object().generate_bytecode(*this);
+        TRY(expression.object().generate_bytecode(*this));
 
         auto object_reg = allocate_register();
         emit<Bytecode::Op::Store>(object_reg);
 
         if (expression.is_computed()) {
-            expression.property().generate_bytecode(*this);
+            TRY(expression.property().generate_bytecode(*this));
             emit<Bytecode::Op::GetByValue>(object_reg);
-        } else {
+        } else if (expression.property().is_identifier()) {
             auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
             emit<Bytecode::Op::GetById>(identifier_table_ref);
+        } else {
+            return CodeGenerationError {
+                &expression,
+                "Unimplemented non-computed member expression"sv
+            };
         }
-        return;
+        return {};
     }
     VERIFY_NOT_REACHED();
 }
 
-void Generator::emit_store_to_reference(JS::ASTNode const& node)
+CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const& node)
 {
     if (is<Identifier>(node)) {
         auto& identifier = static_cast<Identifier const&>(node);
         emit<Bytecode::Op::SetVariable>(intern_identifier(identifier.string()));
-        return;
+        return {};
     }
     if (is<MemberExpression>(node)) {
         // NOTE: The value is in the accumulator, so we have to store that away first.
@@ -138,25 +143,36 @@ void Generator::emit_store_to_reference(JS::ASTNode const& node)
         emit<Bytecode::Op::Store>(value_reg);
 
         auto& expression = static_cast<MemberExpression const&>(node);
-        expression.object().generate_bytecode(*this);
+        TRY(expression.object().generate_bytecode(*this));
 
         auto object_reg = allocate_register();
         emit<Bytecode::Op::Store>(object_reg);
 
         if (expression.is_computed()) {
-            expression.property().generate_bytecode(*this);
+            TRY(expression.property().generate_bytecode(*this));
             auto property_reg = allocate_register();
             emit<Bytecode::Op::Store>(property_reg);
             emit<Bytecode::Op::Load>(value_reg);
             emit<Bytecode::Op::PutByValue>(object_reg, property_reg);
-        } else {
+        } else if (expression.property().is_identifier()) {
             emit<Bytecode::Op::Load>(value_reg);
             auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
             emit<Bytecode::Op::PutById>(object_reg, identifier_table_ref);
+        } else {
+            return CodeGenerationError {
+                &expression,
+                "Unimplemented non-computed member expression"sv
+            };
         }
-        return;
+        return {};
     }
+
     VERIFY_NOT_REACHED();
+}
+
+String CodeGenerationError::to_string()
+{
+    return String::formatted("CodeGenerationError in {}: {}", failing_node ? failing_node->class_name() : "<unknown node>", reason_literal);
 }
 
 }

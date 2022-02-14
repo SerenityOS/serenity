@@ -674,7 +674,7 @@ void WindowManager::start_window_move(Window& window, Gfx::IntPoint const& origi
     m_move_window->set_default_positioned(false);
     m_move_origin = origin;
     m_move_window_origin = window.position();
-    m_move_window_cursor_position = window.is_tiled() || window.is_maximized() ? to_floating_cursor_position(m_mouse_down_origin) : m_mouse_down_origin;
+    m_move_window_cursor_position = window.is_tiled() ? to_floating_cursor_position(m_mouse_down_origin) : m_mouse_down_origin;
     m_geometry_overlay = Compositor::the().create_overlay<WindowGeometryOverlay>(window);
     m_geometry_overlay->set_enabled(true);
     window.invalidate(true, true);
@@ -741,7 +741,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
 
         dbgln_if(MOVE_DEBUG, "[WM] Finish moving Window({})", m_move_window);
 
-        if (!m_move_window->is_tiled() && !m_move_window->is_maximized())
+        if (!m_move_window->is_tiled())
             m_move_window->set_floating_rect(m_move_window->rect());
 
         m_move_window->invalidate(true, true);
@@ -787,22 +787,22 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
             auto event_location_relative_to_screen = event.position().translated(-cursor_screen.rect().location());
             if (is_resizable && event_location_relative_to_screen.x() <= tiling_deadzone) {
                 if (event_location_relative_to_screen.y() <= tiling_deadzone + desktop_relative_to_screen.top())
-                    m_move_window->set_tiled(&cursor_screen, WindowTileType::TopLeft);
+                    m_move_window->set_tiled(WindowTileType::TopLeft);
                 else if (event_location_relative_to_screen.y() >= desktop_relative_to_screen.height() - tiling_deadzone)
-                    m_move_window->set_tiled(&cursor_screen, WindowTileType::BottomLeft);
+                    m_move_window->set_tiled(WindowTileType::BottomLeft);
                 else
-                    m_move_window->set_tiled(&cursor_screen, WindowTileType::Left);
+                    m_move_window->set_tiled(WindowTileType::Left);
             } else if (is_resizable && event_location_relative_to_screen.x() >= cursor_screen.width() - tiling_deadzone) {
                 if (event_location_relative_to_screen.y() <= tiling_deadzone + desktop.top())
-                    m_move_window->set_tiled(&cursor_screen, WindowTileType::TopRight);
+                    m_move_window->set_tiled(WindowTileType::TopRight);
                 else if (event_location_relative_to_screen.y() >= desktop_relative_to_screen.height() - tiling_deadzone)
-                    m_move_window->set_tiled(&cursor_screen, WindowTileType::BottomRight);
+                    m_move_window->set_tiled(WindowTileType::BottomRight);
                 else
-                    m_move_window->set_tiled(&cursor_screen, WindowTileType::Right);
+                    m_move_window->set_tiled(WindowTileType::Right);
             } else if (is_resizable && event_location_relative_to_screen.y() <= secondary_deadzone + desktop_relative_to_screen.top()) {
-                m_move_window->set_tiled(&cursor_screen, WindowTileType::Top);
+                m_move_window->set_tiled(WindowTileType::Top);
             } else if (is_resizable && event_location_relative_to_screen.y() >= desktop_relative_to_screen.bottom() - secondary_deadzone) {
-                m_move_window->set_tiled(&cursor_screen, WindowTileType::Bottom);
+                m_move_window->set_tiled(WindowTileType::Bottom);
             } else if (!m_move_window->is_tiled()) {
                 Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
@@ -864,7 +864,7 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
             auto desktop_rect = this->desktop_rect(cursor_screen);
             if (event.y() >= desktop_rect.bottom() - vertical_maximize_deadzone + 1 || event.y() <= desktop_rect.top() + vertical_maximize_deadzone - 1) {
                 dbgln_if(RESIZE_DEBUG, "Should tile as VerticallyMaximized");
-                m_resize_window->set_tiled(&cursor_screen, WindowTileType::VerticallyMaximized);
+                m_resize_window->set_tiled(WindowTileType::VerticallyMaximized);
                 m_resize_window = nullptr;
                 m_geometry_overlay = nullptr;
                 m_resizing_mouse_button = MouseButton::None;
@@ -876,7 +876,7 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
     if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
         dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
 
-        if (!m_resize_window->is_tiled() && !m_resize_window->is_maximized())
+        if (!m_resize_window->is_tiled())
             m_resize_window->set_floating_rect(m_resize_window->rect());
 
         Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect()));
@@ -1692,7 +1692,7 @@ void WindowManager::process_key_event(KeyEvent& event)
                 }
                 if (active_input_window->is_maximized())
                     maximize_windows(*active_input_window, false);
-                active_input_window->set_tiled(nullptr, WindowTileType::Left);
+                active_input_window->set_tiled(WindowTileType::Left);
                 return;
             }
             if (event.key() == Key_Right) {
@@ -1702,7 +1702,7 @@ void WindowManager::process_key_event(KeyEvent& event)
                 }
                 if (active_input_window->is_maximized())
                     maximize_windows(*active_input_window, false);
-                active_input_window->set_tiled(nullptr, WindowTileType::Right);
+                active_input_window->set_tiled(WindowTileType::Right);
                 return;
             }
         }
@@ -1717,7 +1717,7 @@ void WindowManager::process_key_event(KeyEvent& event)
                 }
                 if (active_input_window->is_maximized())
                     maximize_windows(*active_input_window, false);
-                active_input_window->set_tiled(nullptr, WindowTileType::HorizontallyMaximized);
+                active_input_window->set_tiled(WindowTileType::HorizontallyMaximized);
                 return;
             }
             if (event.key() == Key_Up || event.key() == Key_Down) {
@@ -1727,7 +1727,7 @@ void WindowManager::process_key_event(KeyEvent& event)
                 }
                 if (active_input_window->is_maximized())
                     maximize_windows(*active_input_window, false);
-                active_input_window->set_tiled(nullptr, WindowTileType::VerticallyMaximized);
+                active_input_window->set_tiled(WindowTileType::VerticallyMaximized);
                 return;
             }
         }
@@ -1960,14 +1960,12 @@ ResizeDirection WindowManager::resize_direction_of_window(Window const& window)
     return m_resize_direction;
 }
 
-Gfx::IntRect WindowManager::maximized_window_rect(Window const& window, bool relative_to_window_screen) const
+Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, WindowTileType tile_type, bool relative_to_window_screen) const
 {
+    VERIFY(tile_type != WindowTileType::None);
+
     auto& screen = Screen::closest_to_rect(window.frame().rect());
     Gfx::IntRect rect = screen.rect();
-
-    // Subtract window title bar (leaving the border)
-    rect.set_y(rect.y() + window.frame().titlebar_rect().height() + window.frame().menubar_rect().height());
-    rect.set_height(rect.height() - window.frame().titlebar_rect().height() - window.frame().menubar_rect().height());
 
     if (screen.is_main_screen()) {
         // Subtract taskbar window height if present
@@ -1977,9 +1975,56 @@ Gfx::IntRect WindowManager::maximized_window_rect(Window const& window, bool rel
         });
     }
 
-    constexpr int tasteful_space_above_maximized_window = 1;
-    rect.set_y(rect.y() + tasteful_space_above_maximized_window);
-    rect.set_height(rect.height() - tasteful_space_above_maximized_window);
+    if (tile_type == WindowTileType::Maximized) {
+        auto border_thickness = palette().window_border_thickness();
+        rect.inflate(border_thickness * 2, border_thickness * 2);
+    }
+
+    if (tile_type == WindowTileType::Left
+        || tile_type == WindowTileType::TopLeft
+        || tile_type == WindowTileType::BottomLeft) {
+        rect.set_width(rect.width() / 2);
+    }
+
+    if (tile_type == WindowTileType::Right
+        || tile_type == WindowTileType::TopRight
+        || tile_type == WindowTileType::BottomRight) {
+        rect.set_width(rect.width() / 2);
+        rect.set_x(rect.width());
+    }
+
+    if (tile_type == WindowTileType::Top
+        || tile_type == WindowTileType::TopLeft
+        || tile_type == WindowTileType::TopRight) {
+        rect.set_height(rect.height() / 2);
+    }
+
+    if (tile_type == WindowTileType::Bottom
+        || tile_type == WindowTileType::BottomLeft
+        || tile_type == WindowTileType::BottomRight) {
+        auto half_screen_reminder = rect.height() % 2;
+        rect.set_height(rect.height() / 2 + half_screen_reminder);
+        rect.set_y(rect.height() - half_screen_reminder);
+    }
+
+    Gfx::IntRect window_rect = window.rect();
+    Gfx::IntRect window_frame_rect = window.frame().rect();
+
+    if (tile_type == WindowTileType::VerticallyMaximized) {
+        rect.set_x(window_rect.x());
+        rect.set_width(window_rect.width());
+    } else {
+        rect.set_x(rect.x() + window_rect.x() - window_frame_rect.x());
+        rect.set_width(rect.width() - window_frame_rect.width() + window_rect.width());
+    }
+
+    if (tile_type == WindowTileType::HorizontallyMaximized) {
+        rect.set_y(window_rect.y());
+        rect.set_height(window_rect.height());
+    } else {
+        rect.set_y(rect.y() + window_rect.y() - window_frame_rect.y());
+        rect.set_height(rect.height() - window_frame_rect.height() + window_rect.height());
+    }
 
     if (relative_to_window_screen)
         rect.translate_by(-screen.rect().location());

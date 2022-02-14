@@ -689,7 +689,8 @@ void Editor::keydown_event(GUI::KeyEvent& event)
 
 void Editor::handle_function_parameters_hint_request()
 {
-    VERIFY(m_language_client);
+    if (!m_language_client)
+        return;
 
     m_language_client->on_function_parameters_hint_result = [this](Vector<String> const& params, size_t argument_index) {
         dbgln("on_function_parameters_hint_result");

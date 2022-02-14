@@ -51,6 +51,7 @@ enum class WindowTileType {
     BottomRight,
     VerticallyMaximized,
     HorizontallyMaximized,
+    Maximized,
 };
 
 enum class WindowMenuAction {
@@ -107,7 +108,7 @@ public:
     bool is_resizable() const { return m_resizable && !m_fullscreen; }
     void set_resizable(bool);
 
-    bool is_maximized() const { return m_maximized; }
+    bool is_maximized() const { return m_tile_type == WindowTileType::Maximized; }
     void set_maximized(bool, Optional<Gfx::IntPoint> fixed_point = {});
 
     bool is_always_on_top() const { return m_always_on_top; }
@@ -118,7 +119,7 @@ public:
 
     WindowTileType tile_type() const { return m_tile_type; }
     bool is_tiled() const { return m_tile_type != WindowTileType::None; }
-    void set_tiled(Screen*, WindowTileType);
+    void set_tiled(WindowTileType);
     WindowTileType tile_type_based_on_rect(Gfx::IntRect const&) const;
     void check_untile_due_to_resize(Gfx::IntRect const&);
     bool set_untiled(Optional<Gfx::IntPoint> fixed_point = {});
@@ -291,7 +292,6 @@ public:
 
     void start_launch_animation(Gfx::IntRect const&);
 
-    Gfx::IntRect tiled_rect(Screen*, WindowTileType) const;
     void recalculate_rect();
 
     IntrusiveListNode<Window> m_list_node;
@@ -423,7 +423,6 @@ private:
     bool m_resizable { false };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     WindowMinimizedState m_minimized_state { WindowMinimizedState::None };
-    bool m_maximized { false };
     bool m_fullscreen { false };
     bool m_accessory { false };
     bool m_destroyed { false };

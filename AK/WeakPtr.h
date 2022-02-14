@@ -151,10 +151,10 @@ private:
 
 template<typename T>
 template<typename U>
-inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
+inline ErrorOr<WeakPtr<U>> Weakable<T>::try_make_weak_ptr() const
 {
     if (!m_link)
-        m_link = adopt_ref(*new WeakLink(const_cast<T&>(static_cast<T const&>(*this))));
+        m_link = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) WeakLink(const_cast<T&>(static_cast<T const&>(*this)))));
 
     return WeakPtr<U>(m_link);
 }
@@ -168,12 +168,18 @@ struct Formatter<WeakPtr<T>> : Formatter<const T*> {
 };
 
 template<typename T>
-WeakPtr<T> try_make_weak_ptr(const T* ptr)
+ErrorOr<WeakPtr<T>> try_make_weak_ptr_if_nonnull(T const* ptr)
 {
     if (ptr) {
-        return ptr->template make_weak_ptr<T>();
+        return ptr->template try_make_weak_ptr<T>();
     }
-    return {};
+    return WeakPtr<T> {};
+}
+
+template<typename T>
+WeakPtr<T> make_weak_ptr_if_nonnull(T const* ptr)
+{
+    return MUST(try_make_weak_ptr_if_nonnull(ptr));
 }
 
 }

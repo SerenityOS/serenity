@@ -88,7 +88,7 @@ public:
     void notify_progress_changed(Window&);
     void notify_modified_changed(Window&);
 
-    Gfx::IntRect maximized_window_rect(Window const&, bool relative_to_window_screen = false) const;
+    Gfx::IntRect tiled_window_rect(Window const&, WindowTileType tile_type = WindowTileType::Maximized, bool relative_to_window_screen = false) const;
 
     ClientConnection const* dnd_client() const { return m_dnd_client.ptr(); }
     Core::MimeData const& dnd_mime_data() const { return *m_dnd_mime_data; }
