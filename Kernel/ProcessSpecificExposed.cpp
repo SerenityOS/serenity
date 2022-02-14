@@ -145,9 +145,9 @@ ErrorOr<void> Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
 ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
 {
     JsonArraySerializer array { builder };
-    for (auto const& unveiled_path : unveiled_paths()) {
+    TRY(unveiled_paths().for_each_node_in_tree_order([&](auto const& unveiled_path) {
         if (!unveiled_path.was_explicitly_unveiled())
-            continue;
+            return;
         auto obj = array.add_object();
         obj.add("path", unveiled_path.path());
         StringBuilder permissions_builder;
@@ -162,7 +162,7 @@ ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
         if (unveiled_path.permissions() & UnveilAccess::Browse)
             permissions_builder.append('b');
         obj.add("permissions", permissions_builder.string_view());
-    }
+    }));
     array.finish();
     return {};
 }
