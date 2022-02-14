@@ -66,7 +66,9 @@ Vector<QueryParam> url_decode(StringView input)
     return output;
 }
 
-DOM::ExceptionOr<NonnullRefPtr<URLSearchParams>> URLSearchParams::create_with_global_object(Bindings::WindowObject&, Variant<Vector<Vector<String>>, String> const& init)
+// https://url.spec.whatwg.org/#dom-urlsearchparams-urlsearchparams
+// https://url.spec.whatwg.org/#urlsearchparams-initialize
+DOM::ExceptionOr<NonnullRefPtr<URLSearchParams>> URLSearchParams::create_with_global_object(Bindings::WindowObject&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init)
 {
     // 1. If init is a string and starts with U+003F (?), then remove the first code point from init.
     // NOTE: We do this when we know that it's a string on step 3 of initialization.
@@ -94,8 +96,18 @@ DOM::ExceptionOr<NonnullRefPtr<URLSearchParams>> URLSearchParams::create_with_gl
         return URLSearchParams::create(move(list));
     }
 
-    // TODO
     // 2. Otherwise, if init is a record, then for each name → value of init, append a new name-value pair whose name is name and value is value, to query’s list.
+    if (init.has<OrderedHashMap<String, String>>()) {
+        auto const& init_record = init.get<OrderedHashMap<String, String>>();
+
+        Vector<QueryParam> list;
+        list.ensure_capacity(init_record.size());
+
+        for (auto const& pair : init_record)
+            list.append(QueryParam { .name = pair.key, .value = pair.value });
+
+        return URLSearchParams::create(move(list));
+    }
 
     // 3. Otherwise:
     // a. Assert: init is a string.
