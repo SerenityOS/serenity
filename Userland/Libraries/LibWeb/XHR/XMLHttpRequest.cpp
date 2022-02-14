@@ -394,7 +394,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
     if (auto* page = m_window->page())
         should_enforce_same_origin_policy = page->is_same_origin_policy_enabled();
 
-    if (should_enforce_same_origin_policy && !m_window->associated_document().origin().is_same(request_url_origin)) {
+    if (should_enforce_same_origin_policy && !m_window->associated_document().origin().is_same_origin(request_url_origin)) {
         dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->associated_document().url(), request_url);
         set_ready_state(ReadyState::Done);
         dispatch_event(DOM::Event::create(HTML::EventNames::error));

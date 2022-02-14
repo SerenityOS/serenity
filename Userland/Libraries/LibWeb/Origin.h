@@ -28,15 +28,22 @@ public:
     const String& host() const { return m_host; }
     u16 port() const { return m_port; }
 
-    bool is_same(const Origin& other) const
+    // https://html.spec.whatwg.org/multipage/origin.html#same-origin
+    bool is_same_origin(Origin const& other) const
     {
+        // 1. If A and B are the same opaque origin, then return true.
+        if (is_opaque() && other.is_opaque())
+            return true;
+
+        // 2. If A and B are both tuple origins and their schemes, hosts, and port are identical, then return true.
+        // 3. Return false.
         return protocol() == other.protocol()
             && host() == other.host()
             && port() == other.port();
     }
 
-    bool operator==(Origin const& other) const { return is_same(other); }
-    bool operator!=(Origin const& other) const { return !is_same(other); }
+    bool operator==(Origin const& other) const { return is_same_origin(other); }
+    bool operator!=(Origin const& other) const { return !is_same_origin(other); }
 
 private:
     String m_protocol;
