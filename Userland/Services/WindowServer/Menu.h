@@ -97,6 +97,7 @@ public:
     const Gfx::Font& font() const;
 
     MenuItem* item_with_identifier(unsigned);
+    bool remove_item_with_identifier(unsigned);
     void redraw();
     void redraw(MenuItem const&);
 

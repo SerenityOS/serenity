@@ -562,6 +562,11 @@ MenuItem* Menu::item_with_identifier(unsigned identifier)
     return nullptr;
 }
 
+bool Menu::remove_item_with_identifier(unsigned identifier)
+{
+    return m_items.remove_first_matching([&](auto& item) { return item->identifier() == identifier; });
+}
+
 int Menu::item_index_at(const Gfx::IntPoint& position)
 {
     int i = 0;
