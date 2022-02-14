@@ -85,11 +85,11 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
-        if (response.is_error())
+        if (!request_close())
             return;
 
-        if (!request_close())
+        auto response = FileSystemAccessClient::Client::the().try_open_file(window(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
+        if (response.is_error())
             return;
 
         open_file(response.value());
