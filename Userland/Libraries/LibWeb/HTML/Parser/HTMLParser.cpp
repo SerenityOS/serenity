@@ -551,7 +551,7 @@ HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_ins
             adjusted_insertion_location = { last_table.element->parent_node(), last_table.element };
         } else {
             // 6. Let previous element be the element immediately above last table in the stack of open elements.
-            auto previous_element = m_stack_of_open_elements.element_before(*last_table.element);
+            auto previous_element = m_stack_of_open_elements.element_immediately_above(*last_table.element);
 
             // 7. Let adjusted insertion location be inside previous element, after its last child (if any).
             adjusted_insertion_location = { previous_element, nullptr };

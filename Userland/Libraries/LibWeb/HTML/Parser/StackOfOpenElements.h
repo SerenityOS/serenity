@@ -50,7 +50,7 @@ public:
         ssize_t index;
     };
     LastElementResult last_element_with_tag_name(const FlyString&);
-    DOM::Element* element_before(const DOM::Element&);
+    DOM::Element* element_immediately_above(DOM::Element const&);
 
 private:
     bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;

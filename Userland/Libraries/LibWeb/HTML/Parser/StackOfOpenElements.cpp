@@ -123,7 +123,7 @@ StackOfOpenElements::LastElementResult StackOfOpenElements::last_element_with_ta
     return { nullptr, -1 };
 }
 
-DOM::Element* StackOfOpenElements::element_before(const DOM::Element& target)
+DOM::Element* StackOfOpenElements::element_immediately_above(DOM::Element const& target)
 {
     bool found_target = false;
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
