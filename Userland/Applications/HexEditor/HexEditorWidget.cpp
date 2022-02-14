@@ -89,13 +89,8 @@ HexEditorWidget::HexEditorWidget()
         if (response.is_error())
             return;
 
-        if (window()->is_modified()) {
-            auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
-            if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
-                m_save_action->activate();
-            if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && window()->is_modified())
-                return;
-        }
+        if (!request_close())
+            return;
 
         open_file(response.value());
     });
@@ -337,14 +332,12 @@ bool HexEditorWidget::request_close()
     if (!window()->is_modified())
         return true;
 
-    auto result = GUI::MessageBox::show(window(), "The file has been modified. Save before closing?", "Save changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
-    if (result == GUI::MessageBox::ExecCancel)
-        return false;
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path);
     if (result == GUI::MessageBox::ExecYes) {
         m_save_action->activate();
         return !window()->is_modified();
     }
-    return true;
+    return result == GUI::MessageBox::ExecNo;
 }
 
 void HexEditorWidget::set_search_results_visible(bool visible)
