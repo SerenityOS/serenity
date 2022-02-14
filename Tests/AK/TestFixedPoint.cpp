@@ -73,6 +73,31 @@ TEST_CASE(rounding)
     EXPECT_EQ(Type(-1.5).ltrunk(), -1);
 }
 
+TEST_CASE(comparison)
+{
+    EXPECT(Type(0) < 1);
+    EXPECT(Type(0) <= 1);
+    EXPECT(Type(0) <= 0);
+    EXPECT(Type(-10) <= -10);
+
+    EXPECT(Type(4.25) > 4);
+    EXPECT(Type(4.25) >= 4);
+    EXPECT(Type(4.25) <= 5);
+    EXPECT(Type(4.25) < 5);
+    EXPECT(Type(1.5) > 1);
+
+    EXPECT(!(FixedPoint<4, u8>(2) > 128));
+    EXPECT(!(FixedPoint<4, u8>(2) >= 128));
+
+    EXPECT(Type(-6.25) < -6);
+    EXPECT(Type(-6.25) <= -6);
+    EXPECT(Type(-6.75) > -7);
+    EXPECT(Type(-6.75) >= -7);
+
+    EXPECT(Type(17) == 17);
+    EXPECT(Type(-8) != -9);
+}
+
 TEST_CASE(cast)
 {
     FixedPoint<16, u32> downcast_value1(FixedPoint<32, u64>(123.4567));

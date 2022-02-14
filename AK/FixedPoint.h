@@ -261,42 +261,22 @@ public:
     template<Integral I>
     bool operator>(I other) const
     {
-        if (m_value > 0)
-            return (m_value >> precision) > other || (m_value >> precision == other && (m_value & radix_mask));
-        if (other > 0)
-            return false;
-
-        return (m_value >> precision) > other || !(m_value >> precision == other && (m_value & radix_mask));
+        return !(*this <= other);
     }
     template<Integral I>
     bool operator>=(I other) const
     {
-        if (m_value > 0)
-            return (m_value >> precision) >= other || (m_value >> precision == other && (m_value & radix_mask));
-        if (other > 0)
-            return false;
-
-        return (m_value >> precision) >= other || !(m_value >> precision == other && (m_value & radix_mask));
+        return !(*this < other);
     }
     template<Integral I>
     bool operator<(I other) const
     {
-        if (m_value > 0)
-            return (m_value >> precision) < other || !(m_value >> precision == other && (m_value & radix_mask));
-        if (other > 0)
-            return true;
-
-        return (m_value >> precision) < other || (m_value >> precision == other && (m_value & radix_mask));
+        return (m_value >> precision) < other || m_value < (other << precision);
     }
     template<Integral I>
     bool operator<=(I other) const
     {
-        if (m_value > 0)
-            return (m_value >> precision) <= other || !(m_value >> precision == other && (m_value & radix_mask));
-        if (other > 0)
-            return true;
-
-        return (m_value >> precision) <= other || (m_value >> precision == other && (m_value & radix_mask));
+        return *this < other || *this == other;
     }
 
     // Casting from a float should be faster than casting to a float
