@@ -421,8 +421,7 @@ bool SpreadsheetWidget::request_close()
     if (!m_workbook->dirty())
         return true;
 
-    auto result = GUI::MessageBox::show(window(), "The spreadsheet has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
-
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), current_filename());
     if (result == GUI::MessageBox::ExecYes) {
         if (current_filename().is_empty()) {
             String name = "workbook";
