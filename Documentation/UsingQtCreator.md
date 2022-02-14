@@ -19,6 +19,7 @@ First, make sure you have a working toolchain and can build and run SerenityOS. 
 
 ```
 .
+Userland/
 Userland/Services/
 Userland/Libraries/
 Userland/Libraries/LibC/
