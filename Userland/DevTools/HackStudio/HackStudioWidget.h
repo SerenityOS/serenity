@@ -73,7 +73,11 @@ public:
     void for_each_open_file(Function<void(ProjectFile const&)>);
     bool semantic_syntax_highlighting_is_enabled() const;
 
+    static Vector<String> read_recent_projects();
+
 private:
+    static constexpr size_t recent_projects_history_size = 15;
+
     static String get_full_path_of_serenity_source(const String& file);
     String get_absolute_path(String const&) const;
     Vector<String> selected_file_paths() const;
@@ -128,6 +132,7 @@ private:
     void create_toolbar(GUI::Widget& parent);
     void create_action_tab(GUI::Widget& parent);
     void create_file_menu(GUI::Window&);
+    void update_recent_projects_submenu();
     void create_project_menu(GUI::Window&);
     void create_edit_menu(GUI::Window&);
     void create_build_menu(GUI::Window&);
@@ -193,6 +198,7 @@ private:
     RefPtr<DisassemblyWidget> m_disassembly_widget;
     RefPtr<Threading::Thread> m_debugger_thread;
     RefPtr<EditorWrapper> m_current_editor_in_execution;
+    RefPtr<GUI::Menu> m_recent_projects_submenu { nullptr };
 
     NonnullRefPtrVector<GUI::Action> m_new_file_actions;
     RefPtr<GUI::Action> m_new_plain_file_action;
