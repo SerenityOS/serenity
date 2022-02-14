@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +21,8 @@ public:
     {
     }
 
-    bool is_null() const { return m_protocol.is_null() && m_host.is_null() && !m_port; }
+    // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque
+    bool is_opaque() const { return m_protocol.is_null() && m_host.is_null() && m_port == 0; }
 
     const String& protocol() const { return m_protocol; }
     const String& host() const { return m_host; }
