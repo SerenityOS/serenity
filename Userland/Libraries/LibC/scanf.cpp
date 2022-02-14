@@ -555,61 +555,61 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
         case ConversionSpecifier::Decimal:
             if (!ReadElement<int, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Integer:
             if (!ReadElement<int, ReadKind::Infer> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Octal:
             if (!ReadElement<unsigned, ReadKind::Octal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Unsigned:
             if (!ReadElement<unsigned, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Hex:
             if (!ReadElement<unsigned, ReadKind::Hex> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Floating:
             if (!ReadElement<float, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::String:
             if (!ReadElement<char*, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::UseScanList:
             if (!ReadElement<char*, ReadKind::Normal> { scanlist, invert_scanlist }(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Character:
             if (!ReadElement<char, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Pointer:
             if (!ReadElement<void*, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::OutputNumberOfBytes: {
