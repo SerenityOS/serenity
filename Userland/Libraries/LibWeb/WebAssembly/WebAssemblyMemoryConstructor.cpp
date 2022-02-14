@@ -35,19 +35,22 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyMemoryConstructor::construct(Funct
     auto initial_value = TRY(descriptor->get("initial"));
     auto maximum_value = TRY(descriptor->get("maximum"));
 
-    if (initial_value.is_empty())
+    if (!initial_value.is_number())
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Number");
 
-    auto initial = TRY(initial_value.to_u32(global_object));
+    u32 initial = TRY(initial_value.to_u32(global_object));
 
     Optional<u32> maximum;
 
-    if (!maximum_value.is_empty())
+    if (!maximum_value.is_undefined())
         maximum = TRY(maximum_value.to_u32(global_object));
 
     auto address = WebAssemblyObject::s_abstract_machine.store().allocate(Wasm::MemoryType { Wasm::Limits { initial, maximum } });
     if (!address.has_value())
         return vm.throw_completion<JS::TypeError>(global_object, "Wasm Memory allocation failed");
+
+    if (!WebAssemblyObject::s_abstract_machine.store().get(*address)->grow(initial))
+        return vm.throw_completion<JS::TypeError>(global_object, String::formatted("Wasm Memory grow failed: {}", initial));
 
     return vm.heap().allocate<WebAssemblyMemoryObject>(global_object, global_object, *address);
 }
