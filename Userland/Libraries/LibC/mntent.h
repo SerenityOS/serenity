@@ -24,20 +24,22 @@ struct mntent {
 };
 
 #define MNTTYPE_IGNORE "ignore"
-#define MNTTYPE_NFS    "nfs"
-#define MNTTYPE_SWAP   "swap"
+#define MNTTYPE_NFS "nfs"
+#define MNTTYPE_SWAP "swap"
 
+// FIXME: Implement filesystem specific opts
 #define MNTOPT_DEFAULTS "defaults"
-#define MNTOPT_RO       "ro"
-#define MNTOPT_RW       "rw"
-#define MNTOPT_SUID     "suid"
-#define MNTOPT_NOSUID   "nosuid"
-#define MNTOPT_NOAUTO   "noauto"
+#define MNTOPT_RO "ro"
+#define MNTOPT_RW "rw"
+#define MNTOPT_SUID "suid"
+#define MNTOPT_NOSUID "nosuid"
+#define MNTOPT_NOAUTO "noauto"
 
 struct mntent* getmntent(FILE* stream);
 FILE* setmntent(char const* filename, char const* type);
 int addmntent(FILE* __restrict__ stream, const struct mntent* __restrict__ mnt);
 int endmntent(FILE* streamp);
+char* hasmntopt(const struct mntent* mntbuf, const char* opt);
 struct mntent* getmntent_r(FILE* streamp, struct mntent* mntbuf, char* buf, int buflen);
 
 __END_DECLS
