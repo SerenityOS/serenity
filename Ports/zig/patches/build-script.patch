@@ -1,0 +1,87 @@
+From 9cbeeef52f9eb561101459266adca11684ee2804 Mon Sep 17 00:00:00 2001
+From: sin-ack <sin-ack@users.noreply.github.com>
+Date: Sun, 13 Feb 2022 13:30:28 +0300
+Subject: [PATCH] build: Add SerenityOS-specific switches and steps
+
+---
+ build | 32 ++++++++++++++++++--------------
+ 1 file changed, 18 insertions(+), 14 deletions(-)
+
+diff --git a/build b/build
+index 9eb463fe7..16d6c188b 100755
+--- a/build
++++ b/build
+@@ -11,15 +11,7 @@ ZIG_VERSION="0.9.0"
+ 
+ TARGET_OS_AND_ABI=${TARGET#*-} # Example: linux-gnu
+ 
+-# Here we map the OS from the target triple to the value that CMake expects.
+-TARGET_OS_CMAKE=${TARGET_OS_AND_ABI%-*} # Example: linux
+-case $TARGET_OS_CMAKE in
+-  macos) TARGET_OS_CMAKE="Darwin";;
+-  freebsd) TARGET_OS_CMAKE="FreeBSD";;
+-  windows) TARGET_OS_CMAKE="Windows";;
+-  linux) TARGET_OS_CMAKE="Linux";;
+-  native) TARGET_OS_CMAKE="";;
+-esac
++TARGET_OS_CMAKE=SerenityOS
+ 
+ # First build the libraries for Zig to link against, as well as native `llvm-tblgen`.
+ mkdir -p "$ROOTDIR/out/build-llvm-host"
+@@ -50,13 +42,17 @@ cmake "$ROOTDIR/zig" \
+   -DCMAKE_INSTALL_PREFIX="$ROOTDIR/out/host" \
+   -DCMAKE_PREFIX_PATH="$ROOTDIR/out/host" \
+   -DCMAKE_BUILD_TYPE=Release \
+-  -DZIG_VERSION="$ZIG_VERSION"
++  -DZIG_VERSION="$ZIG_VERSION" \
++  -DZIG_SERENITY_BUILD=ON
+ make "$JOBS" install
+ 
+ # Now we have Zig as a cross compiler.
+ ZIG="$ROOTDIR/out/host/bin/zig"
+-export CC="$ZIG cc -fno-sanitize=all -target $TARGET -mcpu=$MCPU"
+-export CXX="$ZIG c++ -fno-sanitize=all -target $TARGET -mcpu=$MCPU"
++COMMON_CFLAGS="-fno-sanitize=all -target $TARGET -mcpu=$MCPU --sysroot=$SERENITY_BUILD_DIR/Root -lc++ -lm -fpie"
++export CC="$ZIG cc $COMMON_CFLAGS"
++export CXX="$ZIG c++ $COMMON_CFLAGS"
++export ZIG_LIBC="$ROOTDIR/libc_installation.txt"
++export CMAKE_TOOLCHAIN_FILE="$ROOTDIR/CMakeToolchain.txt"
+ 
+ # First cross compile zlib for the target, as we need the LLVM linked into
+ # the finaly zig binary to have zlib support enabled.
+@@ -106,7 +102,8 @@ cmake "$ROOTDIR/llvm" \
+   -DCLANG_ENABLE_ARCMT=ON \
+   -DLLVM_BUILD_STATIC=ON \
+   -DLIBCLANG_BUILD_STATIC=ON \
+-  -DLLVM_DEFAULT_TARGET_TRIPLE="$TARGET"
++  -DLLVM_DEFAULT_TARGET_TRIPLE="$TARGET" \
++  -DCMAKE_FIND_ROOT_PATH="$ROOTDIR/out/$TARGET-$MCPU"
+ cd "$ROOTDIR/out/build-llvm-$TARGET-$MCPU/tools/lld"
+ make "$JOBS" install
+ cd "$ROOTDIR/out/build-llvm-$TARGET-$MCPU/tools/clang/lib"
+@@ -116,6 +113,10 @@ make "$JOBS" install
+ cd "$ROOTDIR/out/build-llvm-$TARGET-$MCPU"
+ make "$JOBS" install-llvm-headers install-clang-headers install-LLVMSupport install-LLVMDemangle
+ 
++# We generate constants from the Serenity libc headers so we can use them during the build.
++cd "$ROOTDIR"
++$ZIG run ../scripts/generate-serenity-constants.zig -isystem "$SERENITY_BUILD_DIR/Root/usr/include" -D__serenity__ > "$ROOTDIR/zig/lib/std/c/serenity-constants.zig"
++
+ # Finally, we can cross compile Zig itself, with Zig.
+ mkdir -p "$ROOTDIR/out/build-zig-$TARGET-$MCPU"
+ cd "$ROOTDIR/out/build-zig-$TARGET-$MCPU"
+@@ -132,7 +133,10 @@ cmake "$ROOTDIR/zig" \
+   -DZIG_EXECUTABLE="$ZIG" \
+   -DZIG_VERSION="$ZIG_VERSION" \
+   -DZIG_USE_LLVM_CONFIG=OFF \
+-  -DZIG_STATIC_ZLIB=ON
++  -DZIG_STATIC_ZLIB=ON \
++  -DCMAKE_FIND_ROOT_PATH="$ROOTDIR/out/$TARGET-$MCPU" \
++  -DZIG_SINGLE_THREADED=ON \
++  -DZIG_SERENITY_BUILD=ON
+ unset CC
+ unset CXX
+ make "$JOBS" install
+-- 
+2.34.1
+
