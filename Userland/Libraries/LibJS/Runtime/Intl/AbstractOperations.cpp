@@ -427,7 +427,7 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
         // b. Assert: Type(foundLocaleData) is Record.
         // c. Let keyLocaleData be foundLocaleData.[[<key>]].
         // d. Assert: Type(keyLocaleData) is List.
-        auto key_locale_data = Unicode::get_locale_key_mapping_list(found_locale, key);
+        auto key_locale_data = Unicode::get_keywords_for_locale(found_locale, key);
 
         // e. Let value be keyLocaleData[0].
         // f. Assert: Type(value) is either String or Null.
