@@ -1145,6 +1145,7 @@ ErrorOr<IterationDecision> Parser::for_each_display_descriptor(Function<Iteratio
     return result;
 }
 
+#ifndef KERNEL
 String Parser::display_product_name() const
 {
     String product_name;
@@ -1190,6 +1191,7 @@ String Parser::display_product_serial_number() const
     }
     return product_name;
 }
+#endif
 
 auto Parser::supported_resolutions() const -> ErrorOr<Vector<SupportedResolution>>
 {
