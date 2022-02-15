@@ -480,6 +480,12 @@ ErrorOr<void> Parser::parse()
         }
     }
 
+    u16 packed_id = read_be(&raw_edid().vendor.manufacturer_id);
+    m_legacy_manufacturer_id[0] = (char)((u16)'A' + ((packed_id >> 10) & 0x1f) - 1);
+    m_legacy_manufacturer_id[1] = (char)((u16)'A' + ((packed_id >> 5) & 0x1f) - 1);
+    m_legacy_manufacturer_id[2] = (char)((u16)'A' + (packed_id & 0x1f) - 1);
+    m_legacy_manufacturer_id[3] = '\0';
+
     return {};
 }
 
@@ -555,16 +561,9 @@ StringView Parser::version() const
 #endif
 }
 
-String Parser::legacy_manufacturer_id() const
+StringView Parser::legacy_manufacturer_id() const
 {
-    u16 packed_id = read_be(&raw_edid().vendor.manufacturer_id);
-    char id[4] = {
-        (char)((u16)'A' + ((packed_id >> 10) & 0x1f) - 1),
-        (char)((u16)'A' + ((packed_id >> 5) & 0x1f) - 1),
-        (char)((u16)'A' + (packed_id & 0x1f) - 1),
-        '\0'
-    };
-    return id;
+    return m_legacy_manufacturer_id;
 }
 
 #ifndef KERNEL

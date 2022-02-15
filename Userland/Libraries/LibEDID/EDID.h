@@ -88,7 +88,7 @@ public:
     static ErrorOr<Parser> from_framebuffer_device(String const&, size_t);
 #endif
 
-    String legacy_manufacturer_id() const;
+    StringView legacy_manufacturer_id() const;
 #ifndef KERNEL
     String manufacturer_name() const;
 #endif
@@ -453,6 +453,7 @@ private:
 #else
     String m_version;
 #endif
+    char m_legacy_manufacturer_id[4] {};
 };
 
 }
