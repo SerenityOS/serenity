@@ -287,7 +287,8 @@
     M(BadArgCountOne, "{}() needs one argument")                                                                                        \
     M(BadArgCountAtLeastOne, "{}() needs at least one argument")                                                                        \
     M(BadArgCountMany, "{}() needs {} arguments")                                                                                       \
-    M(NotEnoughMemoryToAllocate, "Not enough memory to allocate {} bytes")
+    M(NotEnoughMemoryToAllocate, "Not enough memory to allocate {} bytes")                                                              \
+    M(InvalidEnumerationValue, "Invalid value '{}' for enumeration type '{}'")
 
 namespace JS {
 

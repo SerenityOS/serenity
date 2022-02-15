@@ -33,6 +33,33 @@ static String make_input_acceptable_cpp(String const& input)
     return input.replace("-", "_");
 }
 
+static String convert_enumeration_value_to_cpp_enum_member(String const& value, HashTable<String>& names_already_seen)
+{
+    StringBuilder builder;
+    GenericLexer lexer { value };
+
+    while (!lexer.is_eof()) {
+        lexer.ignore_while([](auto c) { return isspace(c) || c == '-' || c == '_'; });
+        auto word = lexer.consume_while([](auto c) { return isalnum(c); });
+        if (!word.is_empty()) {
+            builder.append(word.to_titlecase_string());
+        } else {
+            auto non_alnum_string = lexer.consume_while([](auto c) { return !isalnum(c); });
+            if (!non_alnum_string.is_empty())
+                builder.append("_");
+        }
+    }
+
+    if (builder.is_empty())
+        builder.append("Empty");
+
+    while (names_already_seen.contains(builder.string_view()))
+        builder.append('_');
+
+    names_already_seen.set(builder.string_view());
+    return builder.build();
+}
+
 [[noreturn]] static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)
 {
     // FIXME: Spaghetti code ahead.
@@ -291,6 +318,15 @@ struct Dictionary {
     Vector<DictionaryMember> members;
 };
 
+struct Enumeration {
+    HashTable<String> values;
+    HashMap<String, String> translated_cpp_names;
+    String first_member;
+    bool is_original_definition { true };
+};
+
+struct Interface;
+
 struct ParameterizedType : public Type {
     ParameterizedType() = default;
 
@@ -304,7 +340,7 @@ struct ParameterizedType : public Type {
 
     NonnullRefPtrVector<Type> parameters;
 
-    void generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, HashMap<String, Dictionary> const& dictionaries, size_t recursion_depth) const;
+    void generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, IDL::Interface const&, size_t recursion_depth) const;
 };
 
 struct Interface {
@@ -334,6 +370,7 @@ struct Interface {
     Optional<Function> named_property_deleter;
 
     HashMap<String, Dictionary> dictionaries;
+    HashMap<String, Enumeration> enumerations;
 
     // Added for convenience after parsing
     String wrapper_class;
@@ -760,6 +797,141 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
         }
     };
 
+    auto parse_non_interface_entities = [&](bool allow_interface) {
+        auto parse_dictionary = [&] {
+            assert_string("dictionary");
+            consume_whitespace();
+
+            Dictionary dictionary {};
+
+            auto name = lexer.consume_until([](auto ch) { return isspace(ch); });
+            consume_whitespace();
+
+            if (lexer.consume_specific(':')) {
+                consume_whitespace();
+                dictionary.parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
+                consume_whitespace();
+            }
+            assert_specific('{');
+
+            for (;;) {
+                consume_whitespace();
+
+                if (lexer.consume_specific('}')) {
+                    consume_whitespace();
+                    assert_specific(';');
+                    break;
+                }
+
+                bool required = false;
+                HashMap<String, String> extended_attributes;
+
+                if (lexer.consume_specific("required")) {
+                    required = true;
+                    consume_whitespace();
+                    if (lexer.consume_specific('['))
+                        extended_attributes = parse_extended_attributes();
+                }
+
+                auto type = parse_type();
+                consume_whitespace();
+
+                auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
+                consume_whitespace();
+
+                Optional<StringView> default_value;
+
+                if (lexer.consume_specific('=')) {
+                    VERIFY(!required);
+                    consume_whitespace();
+                    default_value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
+                    consume_whitespace();
+                }
+
+                assert_specific(';');
+
+                DictionaryMember member {
+                    required,
+                    move(type),
+                    name,
+                    move(extended_attributes),
+                    Optional<String>(move(default_value)),
+                };
+                dictionary.members.append(move(member));
+            }
+
+            // dictionary members need to be evaluated in lexicographical order
+            quick_sort(dictionary.members, [&](auto& one, auto& two) {
+                return one.name < two.name;
+            });
+
+            interface->dictionaries.set(name, move(dictionary));
+            consume_whitespace();
+        };
+
+        auto parse_enumeration = [&] {
+            assert_string("enum");
+            consume_whitespace();
+
+            Enumeration enumeration {};
+
+            auto name = lexer.consume_until([](auto ch) { return isspace(ch); });
+            consume_whitespace();
+
+            assert_specific('{');
+
+            bool first = true;
+            for (; !lexer.is_eof();) {
+                consume_whitespace();
+                if (lexer.next_is('}'))
+                    break;
+                if (!first) {
+                    assert_specific(',');
+                    consume_whitespace();
+                }
+
+                assert_specific('"');
+                auto string = lexer.consume_until('"');
+                assert_specific('"');
+                consume_whitespace();
+
+                if (enumeration.values.contains(string))
+                    report_parsing_error(String::formatted("Enumeration {} contains duplicate member '{}'", name, string), filename, input, lexer.tell());
+                else
+                    enumeration.values.set(string);
+
+                if (first)
+                    enumeration.first_member = move(string);
+
+                first = false;
+            }
+
+            consume_whitespace();
+            assert_specific('}');
+            assert_specific(';');
+
+            HashTable<String> names_already_seen;
+            for (auto& entry : enumeration.values)
+                enumeration.translated_cpp_names.set(entry, convert_enumeration_value_to_cpp_enum_member(entry, names_already_seen));
+
+            interface->enumerations.set(name, move(enumeration));
+            consume_whitespace();
+        };
+
+        while (!lexer.is_eof()) {
+            if (lexer.next_is("dictionary"))
+                parse_dictionary();
+            else if (lexer.next_is("enum"))
+                parse_enumeration();
+            else if ((allow_interface && !lexer.next_is("interface")) || !allow_interface)
+                report_parsing_error("expected 'enum' or 'dictionary'", filename, input, lexer.tell());
+            else
+                break;
+        }
+    };
+
+    parse_non_interface_entities(true);
+
     if (lexer.consume_specific("interface")) {
         consume_whitespace();
         interface->name = lexer.consume_until([](auto ch) { return isspace(ch); });
@@ -839,80 +1011,18 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
         consume_whitespace();
     }
 
-    while (!lexer.is_eof()) {
-        assert_string("dictionary");
-        consume_whitespace();
+    parse_non_interface_entities(false);
 
-        Dictionary dictionary {};
-
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch); });
-        consume_whitespace();
-
-        if (lexer.consume_specific(':')) {
-            consume_whitespace();
-            dictionary.parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
-            consume_whitespace();
-        }
-        assert_specific('{');
-
-        for (;;) {
-            consume_whitespace();
-
-            if (lexer.consume_specific('}')) {
-                consume_whitespace();
-                assert_specific(';');
-                break;
-            }
-
-            bool required = false;
-            HashMap<String, String> extended_attributes;
-
-            if (lexer.consume_specific("required")) {
-                required = true;
-                consume_whitespace();
-                if (lexer.consume_specific('['))
-                    extended_attributes = parse_extended_attributes();
-            }
-
-            auto type = parse_type();
-            consume_whitespace();
-
-            auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
-            consume_whitespace();
-
-            Optional<StringView> default_value;
-
-            if (lexer.consume_specific('=')) {
-                VERIFY(!required);
-                consume_whitespace();
-                default_value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
-                consume_whitespace();
-            }
-
-            assert_specific(';');
-
-            DictionaryMember member {
-                required,
-                move(type),
-                name,
-                move(extended_attributes),
-                Optional<String>(move(default_value)),
-            };
-            dictionary.members.append(move(member));
-        }
-
-        // dictionary members need to be evaluated in lexicographical order
-        quick_sort(dictionary.members, [&](auto& one, auto& two) {
-            return one.name < two.name;
-        });
-
-        interface->dictionaries.set(name, move(dictionary));
-        consume_whitespace();
-    }
-
-    for (auto& import : imports) { // FIXME: Instead of copying every imported dictionary into the current interface, query imports directly
+    for (auto& import : imports) {
+        // FIXME: Instead of copying every imported entity into the current interface, query imports directly
         for (auto& dictionary : import.dictionaries)
             interface->dictionaries.set(dictionary.key, dictionary.value);
+
+        for (auto& enumeration : import.enumerations) {
+            auto enumeration_copy = enumeration.value;
+            enumeration_copy.is_original_definition = false;
+            interface->enumerations.set(enumeration.key, move(enumeration_copy));
+        }
     }
 
     return interface;
@@ -1187,7 +1297,7 @@ static bool should_emit_wrapper_factory(IDL::Interface const& interface)
 }
 
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0)
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, IDL::Interface const& interface, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0, bool used_as_argument = false)
 {
     auto scoped_generator = generator.fork();
     auto acceptable_cpp_name = make_input_acceptable_cpp(cpp_name);
@@ -1426,7 +1536,35 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 }
             }
         }
-    } else if (dictionaries.contains(parameter.type->name)) {
+    } else if (interface.enumerations.contains(parameter.type->name)) {
+        auto enum_generator = scoped_generator.fork();
+        auto& enumeration = interface.enumerations.find(parameter.type->name)->value;
+        enum_generator.set("enum.default.cpp_value", *enumeration.translated_cpp_names.get(optional_default_value.value_or(enumeration.first_member)));
+        enum_generator.set("js_name.as_string", String::formatted("{}{}_string", enum_generator.get("js_name"), enum_generator.get("js_suffix")));
+        enum_generator.append(R"~~~(
+    @parameter.type.name@ @cpp_name@ { @parameter.type.name@::@enum.default.cpp_value@ };
+    auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_string(global_object));
+)~~~");
+        auto first = true;
+        for (auto& it : enumeration.translated_cpp_names) {
+            enum_generator.set("enum.alt.name", it.key);
+            enum_generator.set("enum.alt.value", it.value);
+            enum_generator.set("else", first ? "" : "else ");
+            first = false;
+
+            enum_generator.append(R"~~~(
+    @else@if (@js_name.as_string@ == "@enum.alt.name@"sv)
+        @cpp_name@ = @parameter.type.name@::@enum.alt.value@;
+)~~~");
+        }
+
+        if (used_as_argument) {
+            enum_generator.append(R"~~~(
+    @else@
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::InvalidEnumerationValue, @js_name.as_string@, "@parameter.type.name@");
+)~~~");
+        }
+    } else if (interface.dictionaries.contains(parameter.type->name)) {
         if (optional_default_value.has_value() && optional_default_value != "{}")
             TODO();
         auto dictionary_generator = scoped_generator.fork();
@@ -1436,7 +1574,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
     @parameter.type.name@ @cpp_name@ {};
 )~~~");
-        auto* current_dictionary = &dictionaries.find(parameter.type->name)->value;
+        auto* current_dictionary = &interface.dictionaries.find(parameter.type->name)->value;
         while (true) {
             for (auto& member : current_dictionary->members) {
                 dictionary_generator.set("member_key", member.name);
@@ -1459,15 +1597,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
                 auto member_value_name = String::formatted("{}_value", member_js_name);
                 dictionary_generator.set("member_value_name", member_value_name);
-                generate_to_cpp(dictionary_generator, member, member_js_name, "", member_value_name, dictionaries, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
+                generate_to_cpp(dictionary_generator, member, member_js_name, "", member_value_name, interface, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
                 dictionary_generator.append(R"~~~(
     @cpp_name@.@member_name@ = @member_value_name@;
 )~~~");
             }
             if (current_dictionary->parent_name.is_null())
                 break;
-            VERIFY(dictionaries.contains(current_dictionary->parent_name));
-            current_dictionary = &dictionaries.find(current_dictionary->parent_name)->value;
+            VERIFY(interface.dictionaries.contains(current_dictionary->parent_name));
+            current_dictionary = &interface.dictionaries.find(current_dictionary->parent_name)->value;
         }
     } else if (parameter.type->name == "sequence") {
         // https://webidl.spec.whatwg.org/#es-sequence
@@ -1491,7 +1629,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotIterable, @js_name@@js_suffix@.to_string_without_side_effects());
 )~~~");
 
-        parameterized_type.generate_sequence_from_iterable(sequence_generator, acceptable_cpp_name, String::formatted("{}{}", js_name, js_suffix), String::formatted("iterator_method{}", recursion_depth), dictionaries, recursion_depth + 1);
+        parameterized_type.generate_sequence_from_iterable(sequence_generator, acceptable_cpp_name, String::formatted("{}{}", js_name, js_suffix), String::formatted("iterator_method{}", recursion_depth), interface, recursion_depth + 1);
     } else if (parameter.type->name == "record") {
         // https://webidl.spec.whatwg.org/#es-record
 
@@ -1547,7 +1685,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
 
         IDL::Parameter key_parameter { .type = parameterized_type.parameters[0], .name = acceptable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
-        generate_to_cpp(record_generator, key_parameter, "key", String::number(recursion_depth), String::formatted("typed_key{}", recursion_depth), dictionaries, false, false, {}, false, recursion_depth + 1);
+        generate_to_cpp(record_generator, key_parameter, "key", String::number(recursion_depth), String::formatted("typed_key{}", recursion_depth), interface, false, false, {}, false, recursion_depth + 1);
 
         record_generator.append(R"~~~(
         auto value@recursion_depth@ = TRY(@js_name@@js_suffix@_object.get(property_key@recursion_depth@));
@@ -1555,7 +1693,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         // FIXME: Record value types should be TypeWithExtendedAttributes, which would allow us to get [LegacyNullToEmptyString] here.
         IDL::Parameter value_parameter { .type = parameterized_type.parameters[1], .name = acceptable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
-        generate_to_cpp(record_generator, value_parameter, "value", String::number(recursion_depth), String::formatted("typed_value{}", recursion_depth), dictionaries, false, false, {}, false, recursion_depth + 1);
+        generate_to_cpp(record_generator, value_parameter, "value", String::number(recursion_depth), String::formatted("typed_value{}", recursion_depth), interface, false, false, {}, false, recursion_depth + 1);
 
         record_generator.append(R"~~~(
         @cpp_name@.set(typed_key@recursion_depth@, typed_value@recursion_depth@);
@@ -1597,7 +1735,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         auto types = union_type.flattened_member_types();
 
         bool contains_dictionary_type = false;
-        for (auto& dictionary : dictionaries) {
+        for (auto& dictionary : interface.dictionaries) {
             for (auto& type : types) {
                 if (type.name == dictionary.key) {
                     contains_dictionary_type = true;
@@ -1711,7 +1849,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (method) {
 )~~~");
 
-            sequence_type->generate_sequence_from_iterable(union_generator, acceptable_cpp_name, String::formatted("{}{}", js_name, js_suffix), "method", dictionaries, recursion_depth + 1);
+            sequence_type->generate_sequence_from_iterable(union_generator, acceptable_cpp_name, String::formatted("{}{}", js_name, js_suffix), "method", interface, recursion_depth + 1);
 
             union_generator.append(R"~~~(
 
@@ -1739,7 +1877,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         if (record_type) {
             IDL::Parameter record_parameter { .type = *record_type, .name = acceptable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
-            generate_to_cpp(union_generator, record_parameter, js_name, js_suffix, "record_union_type"sv, dictionaries, false, false, {}, false, recursion_depth + 1);
+            generate_to_cpp(union_generator, record_parameter, js_name, js_suffix, "record_union_type"sv, interface, false, false, {}, false, recursion_depth + 1);
 
             union_generator.append(R"~~~(
         return record_union_type;
@@ -1794,7 +1932,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // NOTE: generate_to_cpp doesn't use the parameter name.
             // NOTE: generate_to_cpp will use to_{u32,etc.} which uses to_number internally and will thus use TRY, but it cannot throw as we know we are dealing with a number.
             IDL::Parameter parameter { .type = *numeric_type, .name = String::empty(), .optional_default_value = {}, .extended_attributes = {} };
-            generate_to_cpp(union_generator, parameter, js_name, js_suffix, String::formatted("{}{}_number", js_name, js_suffix), dictionaries, false, false, {}, false, recursion_depth + 1);
+            generate_to_cpp(union_generator, parameter, js_name, js_suffix, String::formatted("{}{}_number", js_name, js_suffix), interface, false, false, {}, false, recursion_depth + 1);
 
             union_generator.append(R"~~~(
             return @js_name@@js_suffix@_number;
@@ -1859,7 +1997,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // NOTE: generate_to_cpp doesn't use the parameter name.
             // NOTE: generate_to_cpp will use to_{u32,etc.} which uses to_number internally and will thus use TRY, but it cannot throw as we know we are dealing with a number.
             IDL::Parameter parameter { .type = *numeric_type, .name = String::empty(), .optional_default_value = {}, .extended_attributes = {} };
-            generate_to_cpp(union_numeric_type_generator, parameter, "x", String::empty(), "x_number", dictionaries, false, false, {}, false, recursion_depth + 1);
+            generate_to_cpp(union_numeric_type_generator, parameter, "x", String::empty(), "x_number", interface, false, false, {}, false, recursion_depth + 1);
 
             union_numeric_type_generator.append(R"~~~(
         return x_number;
@@ -1870,7 +2008,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // NOTE: generate_to_cpp doesn't use the parameter name.
             // NOTE: generate_to_cpp will use to_{u32,etc.} which uses to_number internally and will thus use TRY, but it cannot throw as we know we are dealing with a number.
             IDL::Parameter parameter { .type = *numeric_type, .name = String::empty(), .optional_default_value = {}, .extended_attributes = {} };
-            generate_to_cpp(union_generator, parameter, js_name, js_suffix, String::formatted("{}{}_number", js_name, js_suffix), dictionaries, false, false, {}, false, recursion_depth + 1);
+            generate_to_cpp(union_generator, parameter, js_name, js_suffix, String::formatted("{}{}_number", js_name, js_suffix), interface, false, false, {}, false, recursion_depth + 1);
 
             union_generator.append(R"~~~(
         return @js_name@@js_suffix@_number;
@@ -1960,7 +2098,7 @@ static void generate_argument_count_check(SourceGenerator& generator, FunctionTy
 )~~~");
 }
 
-static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, HashMap<String, IDL::Dictionary> const& dictionaries)
+static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, IDL::Interface const& interface)
 {
     auto arguments_generator = generator.fork();
 
@@ -1977,7 +2115,7 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
         }
 
         bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), dictionaries, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic);
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), interface, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic, 0, true);
         ++argument_index;
     }
 
@@ -1985,7 +2123,7 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
 }
 
 // https://webidl.spec.whatwg.org/#create-sequence-from-iterable
-void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, size_t recursion_depth) const
+void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, IDL::Interface const& interface, size_t recursion_depth) const
 {
     auto sequence_generator = generator.fork();
     sequence_generator.set("cpp_name", cpp_name);
@@ -2031,7 +2169,7 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
 
     // FIXME: Sequences types should be TypeWithExtendedAttributes, which would allow us to get [LegacyNullToEmptyString] here.
     IDL::Parameter parameter { .type = parameters.first(), .name = iterable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
-    generate_to_cpp(sequence_generator, parameter, "next_item", String::number(recursion_depth), String::formatted("sequence_item{}", recursion_depth), dictionaries, false, false, {}, false, recursion_depth);
+    generate_to_cpp(sequence_generator, parameter, "next_item", String::number(recursion_depth), String::formatted("sequence_item{}", recursion_depth), interface, false, false, {}, false, recursion_depth);
 
     sequence_generator.append(R"~~~(
         @cpp_name@.append(sequence_item@recursion_depth@);
@@ -2044,7 +2182,7 @@ enum class WrappingReference {
     Yes,
 };
 
-static void generate_wrap_statement(SourceGenerator& generator, String const& value, IDL::Type const& type, StringView result_expression, WrappingReference wrapping_reference = WrappingReference::No, size_t recursion_depth = 0)
+static void generate_wrap_statement(SourceGenerator& generator, String const& value, IDL::Type const& type, IDL::Interface const& interface, StringView result_expression, WrappingReference wrapping_reference = WrappingReference::No, size_t recursion_depth = 0)
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("value", value);
@@ -2090,7 +2228,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         auto& element@recursion_depth@ = @value@.at(i@recursion_depth@);
 )~~~");
 
-        generate_wrap_statement(scoped_generator, String::formatted("element{}", recursion_depth), sequence_generic_type.parameters.first(), String::formatted("auto wrapped_element{} =", recursion_depth), WrappingReference::Yes, recursion_depth + 1);
+        generate_wrap_statement(scoped_generator, String::formatted("element{}", recursion_depth), sequence_generic_type.parameters.first(), interface, String::formatted("auto wrapped_element{} =", recursion_depth), WrappingReference::Yes, recursion_depth + 1);
 
         scoped_generator.append(R"~~~(
         auto property_index@recursion_depth@ = JS::PropertyKey { i@recursion_depth@ };
@@ -2124,6 +2262,10 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 )~~~");
     } else if (is<IDL::UnionType>(type)) {
         TODO();
+    } else if (interface.enumerations.contains(type.name)) {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::js_string(global_object.heap(), Bindings::idl_enum_to_string(@value@));
+)~~~");
     } else {
         if (wrapping_reference == WrappingReference::No) {
             scoped_generator.append(R"~~~(
@@ -2148,22 +2290,22 @@ enum class StaticFunction {
     Yes,
 };
 
-static void generate_return_statement(SourceGenerator& generator, IDL::Type const& return_type)
+static void generate_return_statement(SourceGenerator& generator, IDL::Type const& return_type, IDL::Interface const& interface)
 {
-    return generate_wrap_statement(generator, "retval", return_type, "return"sv);
+    return generate_wrap_statement(generator, "retval", return_type, interface, "return"sv);
 }
 
-static void generate_variable_statement(SourceGenerator& generator, String const& variable_name, IDL::Type const& value_type, String const& value_name)
+static void generate_variable_statement(SourceGenerator& generator, String const& variable_name, IDL::Type const& value_type, String const& value_name, IDL::Interface const& interface)
 {
     auto variable_generator = generator.fork();
     variable_generator.set("variable_name", variable_name);
     variable_generator.append(R"~~~(
     JS::Value @variable_name@;
 )~~~");
-    return generate_wrap_statement(generator, value_name, value_type, String::formatted("{} = ", variable_name));
+    return generate_wrap_statement(generator, value_name, value_type, interface, String::formatted("{} = ", variable_name));
 }
 
-static void generate_function(SourceGenerator& generator, IDL::Function const& function, StaticFunction is_static_function, String const& class_name, String const& interface_fully_qualified_name, HashMap<String, IDL::Dictionary> const& dictionaries)
+static void generate_function(SourceGenerator& generator, IDL::Function const& function, StaticFunction is_static_function, String const& class_name, String const& interface_fully_qualified_name, IDL::Interface const& interface)
 {
     auto function_generator = generator.fork();
     function_generator.set("class_name", class_name);
@@ -2192,7 +2334,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     generate_argument_count_check(generator, function);
 
     StringBuilder arguments_builder;
-    generate_arguments(generator, function.parameters, arguments_builder, dictionaries);
+    generate_arguments(generator, function.parameters, arguments_builder, interface);
     function_generator.set(".arguments", arguments_builder.string_view());
 
     if (is_static_function == StaticFunction::No) {
@@ -2205,7 +2347,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 )~~~");
     }
 
-    generate_return_statement(generator, *function.return_type);
+    generate_return_statement(generator, *function.return_type, interface);
 
     function_generator.append(R"~~~(
 }
@@ -2350,6 +2492,38 @@ private:
     generator.append(R"~~~(
 };
 )~~~");
+
+    for (auto& it : interface.enumerations) {
+        auto enum_generator = generator.fork();
+        enum_generator.set("enum.type.name", it.key);
+        enum_generator.append(R"~~~(
+enum class @enum.type.name@ {
+)~~~");
+        for (auto& entry : it.value.translated_cpp_names) {
+            enum_generator.set("enum.entry", entry.value);
+            enum_generator.append(R"~~~(
+    @enum.entry@,
+)~~~");
+        }
+
+        enum_generator.append(R"~~~(
+};
+inline String idl_enum_to_string(@enum.type.name@ value) {
+    switch(value) {
+)~~~");
+        for (auto& entry : it.value.translated_cpp_names) {
+            enum_generator.set("enum.entry", entry.value);
+            enum_generator.set("enum.string", entry.key);
+            enum_generator.append(R"~~~(
+    case @enum.type.name@::@enum.entry@: return "@enum.string@";
+)~~~");
+        }
+        enum_generator.append(R"~~~(
+    default: return "<unknown>";
+    };
+}
+)~~~");
+    }
 
     if (should_emit_wrapper_factory(interface)) {
         generator.append(R"~~~(
@@ -2503,10 +2677,10 @@ static JS::Value wrap_for_legacy_platform_object_get_own_property(JS::GlobalObje
 )~~~");
 
         if (interface.named_property_getter.has_value()) {
-            generate_return_statement(scoped_generator, *interface.named_property_getter->return_type);
+            generate_return_statement(scoped_generator, *interface.named_property_getter->return_type, interface);
         } else {
             VERIFY(interface.indexed_property_getter.has_value());
-            generate_return_statement(scoped_generator, *interface.indexed_property_getter->return_type);
+            generate_return_statement(scoped_generator, *interface.indexed_property_getter->return_type, interface);
         }
 
         scoped_generator.append(R"~~~(
@@ -2765,7 +2939,7 @@ static JS::ThrowCompletionOr<void> invoke_named_property_setter(JS::GlobalObject
 
             // 4. Let value be the result of converting V to an IDL value of type T.
             // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
-            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries);
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface);
 
             // 5. If operation was defined without an identifier, then:
             if (interface.named_property_setter->name.is_empty()) {
@@ -2816,7 +2990,7 @@ static JS::ThrowCompletionOr<void> invoke_indexed_property_setter(JS::GlobalObje
 
             // 5. Let value be the result of converting V to an IDL value of type T.
             // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
-            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries);
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface);
 
             // 6. If operation was defined without an identifier, then:
             if (interface.indexed_property_setter->name.is_empty()) {
@@ -3371,7 +3545,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
             generate_argument_count_check(generator, constructor);
 
             StringBuilder arguments_builder;
-            generate_arguments(generator, constructor.parameters, arguments_builder, interface.dictionaries);
+            generate_arguments(generator, constructor.parameters, arguments_builder, interface);
             generator.set(".constructor_arguments", arguments_builder.string_view());
 
             generator.append(R"~~~(
@@ -3433,7 +3607,7 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
 
     // Implementation: Static Functions
     for (auto& function : interface.static_functions) {
-        generate_function(generator, function, StaticFunction::Yes, interface.constructor_class, interface.fully_qualified_name, interface.dictionaries);
+        generate_function(generator, function, StaticFunction::Yes, interface.constructor_class, interface.fully_qualified_name, interface);
     }
 
     generator.append(R"~~~(
@@ -3910,7 +4084,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
 )~~~");
         }
 
-        generate_return_statement(generator, *attribute.type);
+        generate_return_statement(generator, *attribute.type, interface);
 
         attribute_generator.append(R"~~~(
 }
@@ -3925,7 +4099,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
     auto value = vm.argument(0);
 )~~~");
 
-            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface.dictionaries, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
+            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type->name != "boolean") {
@@ -3955,7 +4129,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
 
     // Implementation: Functions
     for (auto& function : interface.functions) {
-        generate_function(generator, function, StaticFunction::No, interface.prototype_class, interface.fully_qualified_name, interface.dictionaries);
+        generate_function(generator, function, StaticFunction::No, interface.prototype_class, interface.fully_qualified_name, interface);
     }
 
     if (interface.has_stringifier) {
@@ -4007,8 +4181,8 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
     auto this_value = vm.this_value(global_object);
     TRY(impl->for_each([&](auto key, auto value) -> JS::ThrowCompletionOr<void> {
 )~~~");
-        generate_variable_statement(iterator_generator, "wrapped_key", interface.pair_iterator_types->get<0>(), "key");
-        generate_variable_statement(iterator_generator, "wrapped_value", interface.pair_iterator_types->get<1>(), "value");
+        generate_variable_statement(iterator_generator, "wrapped_key", interface.pair_iterator_types->get<0>(), "key", interface);
+        generate_variable_statement(iterator_generator, "wrapped_value", interface.pair_iterator_types->get<1>(), "value", interface);
         iterator_generator.append(R"~~~(
         TRY(call(global_object, callback.as_function(), vm.argument(1), wrapped_value, wrapped_key, this_value));
         return {};
