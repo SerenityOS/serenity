@@ -569,10 +569,6 @@ struct UnicodeLocaleData {
     Vector<String> time_zones { "UTC"sv };
 
     Vector<String> calendars;
-    Vector<Alias> calendar_aliases {
-        // FIXME: Aliases should come from BCP47. See: https://unicode-org.atlassian.net/browse/CLDR-15158
-        { "gregorian"sv, "gregory"sv },
-    };
 };
 
 static Optional<Unicode::DayPeriod> day_period_from_string(StringView day_period)
@@ -1633,7 +1629,7 @@ static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& 
 namespace Unicode {
 )~~~");
 
-    generate_enum(generator, format_identifier, "Calendar"sv, {}, locale_data.calendars, locale_data.calendar_aliases);
+    generate_enum(generator, format_identifier, "Calendar"sv, {}, locale_data.calendars);
     generate_enum(generator, format_identifier, "HourCycleRegion"sv, {}, locale_data.hour_cycle_regions);
 
     generator.append(R"~~~(
@@ -1672,6 +1668,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/UnicodeDateTimeFormat.h>
+#include <LibUnicode/UnicodeLocale.h>
 
 namespace Unicode {
 )~~~");
@@ -1929,10 +1926,26 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
     };
 
-    append_from_string("Calendar"sv, "calendar"sv, locale_data.calendars, locale_data.calendar_aliases);
     append_from_string("HourCycleRegion"sv, "hour_cycle_region"sv, locale_data.hour_cycle_regions);
 
     generator.append(R"~~~(
+static Optional<Calendar> keyword_to_calendar(KeywordCalendar keyword)
+{
+    switch (keyword) {)~~~");
+
+    for (auto const& calendar : locale_data.calendars) {
+        generator.set("name"sv, format_identifier({}, calendar));
+        generator.append(R"~~~(
+    case KeywordCalendar::@name@:
+        return Calendar::@name@;)~~~");
+    }
+
+    generator.append(R"~~~(
+    default:
+        return {};
+    }
+}
+
 Vector<HourCycle> get_regional_hour_cycles(StringView region)
 {
     auto region_value = hour_cycle_region_from_string(region);
@@ -1959,9 +1972,13 @@ static CalendarData const* find_calendar_data(StringView locale, StringView cale
     if (!locale_value.has_value())
         return nullptr;
 
-    auto calendar_value = calendar_from_string(calendar);
+    auto calendar_keyword = keyword_ca_from_string(calendar);
+    if (!calendar_keyword.has_value())
+        return {};
+
+    auto calendar_value = keyword_to_calendar(*calendar_keyword);
     if (!calendar_value.has_value())
-        return nullptr;
+        return {};
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
     size_t calendar_index = to_underlying(*calendar_value);
