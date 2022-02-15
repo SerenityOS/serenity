@@ -53,7 +53,9 @@ public:
         FixedPoint<16, u32> horizontal_frequency_khz() const;
         FixedPoint<16, u32> vertical_frequency_hz() const;
         u32 refresh_rate_hz() const;
+#ifndef KERNEL
         String name() const;
+#endif
     };
 
     static MonitorTiming const* find_timing_by_dmt_id(u8);
