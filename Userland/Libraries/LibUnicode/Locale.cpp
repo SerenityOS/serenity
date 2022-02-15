@@ -766,6 +766,8 @@ StringView style_to_string(Style style)
     }
 }
 
+Span<StringView const> __attribute__((weak)) get_available_calendars() { return {}; }
+Span<StringView const> __attribute__((weak)) get_available_number_systems() { return {}; }
 Optional<Locale> __attribute__((weak)) locale_from_string(StringView) { return {}; }
 Optional<Language> __attribute__((weak)) language_from_string(StringView) { return {}; }
 Optional<Territory> __attribute__((weak)) territory_from_string(StringView) { return {}; }

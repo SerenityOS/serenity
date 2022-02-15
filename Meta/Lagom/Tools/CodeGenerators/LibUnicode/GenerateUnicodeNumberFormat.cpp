@@ -865,8 +865,6 @@ struct Unit {
 };
 )~~~");
 
-    generate_available_values(generator, "get_available_number_systems"sv, locale_data.number_systems);
-
     locale_data.unique_formats.generate(generator, "NumberFormatImpl"sv, "s_number_formats"sv, 10);
     locale_data.unique_format_lists.generate(generator, s_number_format_index_type, "s_number_format_lists"sv);
     locale_data.unique_symbols.generate(generator, s_string_index_type, "s_numeric_symbol_lists"sv);
