@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jagger De Leo <jcdl@fastmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,7 +33,7 @@ struct Coordinate {
 class Starfield final : public GUI::Widget {
     C_OBJECT(Starfield)
 public:
-    virtual ~Starfield() override;
+    virtual ~Starfield() override = default;
     ErrorOr<void> create_stars(int, int, int);
 
     void set_speed(unsigned speed) { m_speed = speed; }
@@ -72,10 +73,6 @@ ErrorOr<void> Starfield::create_stars(int width, int height, int stars)
     }
     draw();
     return {};
-}
-
-Starfield::~Starfield()
-{
 }
 
 void Starfield::mousemove_event(GUI::MouseEvent&)

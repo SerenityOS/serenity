@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -61,7 +62,7 @@ class Fire : public GUI::Frame {
     C_OBJECT(Fire);
 
 public:
-    virtual ~Fire() override;
+    virtual ~Fire() override = default;
     void set_stat_label(RefPtr<GUI::Label> l) { stats = l; };
 
 private:
@@ -108,10 +109,6 @@ Fire::Fire()
 
     /* Set off initital paint event */
     // update();
-}
-
-Fire::~Fire()
-{
 }
 
 void Fire::paint_event(GUI::PaintEvent& event)
