@@ -9,7 +9,6 @@
 #include <AK/MemoryStream.h>
 #include <AK/Types.h>
 #include <LibCrypto/Authentication/GHash.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
 namespace {
 

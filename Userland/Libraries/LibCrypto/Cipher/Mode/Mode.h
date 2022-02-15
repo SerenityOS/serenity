@@ -35,8 +35,14 @@ public:
             return ByteBuffer::create_uninitialized(input_size + T::block_size() - remainder);
     }
 
+#ifndef KERNEL
     virtual String class_name() const = 0;
-    T& cipher() { return m_cipher; }
+#endif
+
+    T& cipher()
+    {
+        return m_cipher;
+    }
 
 protected:
     virtual void prune_padding(Bytes& data)

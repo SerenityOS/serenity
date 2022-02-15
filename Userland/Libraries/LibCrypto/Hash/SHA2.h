@@ -6,9 +6,12 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCrypto/Hash/HashFunction.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace Crypto {
 namespace Hash {
@@ -97,10 +100,12 @@ public:
     inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
     inline static DigestType hash(StringView buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
 
+#ifndef KERNEL
     virtual String class_name() const override
     {
         return String::formatted("SHA{}", DigestSize * 8);
     }
+#endif
 
     inline virtual void reset() override
     {
@@ -147,10 +152,12 @@ public:
     inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
     inline static DigestType hash(StringView buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
 
+#ifndef KERNEL
     virtual String class_name() const override
     {
         return String::formatted("SHA{}", DigestSize * 8);
     }
+#endif
 
     inline virtual void reset() override
     {
@@ -197,10 +204,12 @@ public:
     inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
     inline static DigestType hash(StringView buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
 
+#ifndef KERNEL
     virtual String class_name() const override
     {
         return String::formatted("SHA{}", DigestSize * 8);
     }
+#endif
 
     inline virtual void reset() override
     {

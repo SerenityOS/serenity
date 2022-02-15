@@ -6,9 +6,12 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/HashFunction.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace Crypto {
 namespace Hash {
@@ -53,7 +56,12 @@ public:
     virtual DigestType digest() override;
     virtual DigestType peek() override;
 
-    virtual String class_name() const override { return "MD5"; }
+#ifndef KERNEL
+    virtual String class_name() const override
+    {
+        return "MD5";
+    }
+#endif
 
     inline static DigestType hash(const u8* data, size_t length)
     {

@@ -111,7 +111,9 @@ public:
     virtual void encrypt_block(const BlockType& in, BlockType& out) = 0;
     virtual void decrypt_block(const BlockType& in, BlockType& out) = 0;
 
+#ifndef KERNEL
     virtual String class_name() const = 0;
+#endif
 
 protected:
     virtual ~Cipher() = default;

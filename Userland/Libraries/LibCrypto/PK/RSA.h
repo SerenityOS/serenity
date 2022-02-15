@@ -160,9 +160,17 @@ public:
     virtual void sign(ReadonlyBytes in, Bytes& out) override;
     virtual void verify(ReadonlyBytes in, Bytes& out) override;
 
-    virtual String class_name() const override { return "RSA"; }
+#ifndef KERNEL
+    virtual String class_name() const override
+    {
+        return "RSA";
+    }
+#endif
 
-    virtual size_t output_size() const override { return m_public_key.length(); }
+    virtual size_t output_size() const override
+    {
+        return m_public_key.length();
+    }
 
     void import_public_key(ReadonlyBytes, bool pem = true);
     void import_private_key(ReadonlyBytes, bool pem = true);
@@ -204,8 +212,16 @@ public:
     virtual void sign(ReadonlyBytes, Bytes&) override;
     virtual void verify(ReadonlyBytes, Bytes&) override;
 
-    virtual String class_name() const override { return "RSA_PKCS1-EME"; }
-    virtual size_t output_size() const override { return m_public_key.length(); }
+#ifndef KERNEL
+    virtual String class_name() const override
+    {
+        return "RSA_PKCS1-EME";
+    }
+#endif
+    virtual size_t output_size() const override
+    {
+        return m_public_key.length();
+    }
 };
 }
 }
