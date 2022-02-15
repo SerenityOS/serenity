@@ -6,8 +6,11 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <LibCrypto/Hash/HashFunction.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace Crypto {
 namespace Hash {
@@ -49,10 +52,13 @@ public:
     inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
     inline static DigestType hash(StringView buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
 
+#ifndef KERNEL
     virtual String class_name() const override
     {
         return "SHA1";
     }
+#endif
+
     inline virtual void reset() override
     {
         m_data_length = 0;

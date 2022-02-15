@@ -119,7 +119,12 @@ public:
     virtual void encrypt_block(const BlockType& in, BlockType& out) override;
     virtual void decrypt_block(const BlockType& in, BlockType& out) override;
 
-    virtual String class_name() const override { return "AES"; }
+#ifndef KERNEL
+    virtual String class_name() const override
+    {
+        return "AES";
+    }
+#endif
 
 protected:
     AESCipherKey m_key;

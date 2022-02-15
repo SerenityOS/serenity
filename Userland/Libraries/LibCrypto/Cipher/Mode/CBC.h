@@ -6,10 +6,13 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibCrypto/Cipher/Mode/Mode.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace Crypto {
 namespace Cipher {
@@ -26,6 +29,7 @@ public:
     {
     }
 
+#ifndef KERNEL
     virtual String class_name() const override
     {
         StringBuilder builder;
@@ -33,8 +37,12 @@ public:
         builder.append("_CBC");
         return builder.build();
     }
+#endif
 
-    virtual size_t IV_length() const override { return IVSizeInBits / 8; }
+    virtual size_t IV_length() const override
+    {
+        return IVSizeInBits / 8;
+    }
 
     virtual void encrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}, Bytes* ivec_out = nullptr) override
     {
