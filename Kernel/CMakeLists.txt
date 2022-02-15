@@ -268,7 +268,6 @@ set(KERNEL_SOURCES
     Syscalls/sysconf.cpp
     Syscalls/thread.cpp
     Syscalls/times.cpp
-    Syscalls/ttyname.cpp
     Syscalls/umask.cpp
     Syscalls/uname.cpp
     Syscalls/unlink.cpp

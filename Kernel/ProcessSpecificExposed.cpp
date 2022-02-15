@@ -294,11 +294,4 @@ ErrorOr<void> Process::procfs_get_binary_link(KBufferBuilder& builder) const
     return builder.append(TRY(custody->try_serialize_absolute_path())->view());
 }
 
-ErrorOr<void> Process::procfs_get_tty_link(KBufferBuilder& builder) const
-{
-    if (m_tty.is_null())
-        return Error::from_errno(ENOENT);
-    return builder.append(m_tty->tty_name().view());
-}
-
 }

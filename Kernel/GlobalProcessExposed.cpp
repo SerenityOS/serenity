@@ -498,7 +498,6 @@ private:
             TRY(process_object.add("nfds", process.fds().with_shared([](auto& fds) { return fds.open_count(); })));
             TRY(process_object.add("name", process.name()));
             TRY(process_object.add("executable", process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv));
-            TRY(process_object.add("tty", process.tty() ? process.tty()->tty_name().view() : "notty"sv));
             TRY(process_object.add("amount_virtual", process.address_space().amount_virtual()));
             TRY(process_object.add("amount_resident", process.address_space().amount_resident()));
             TRY(process_object.add("amount_dirty_private", process.address_space().amount_dirty_private()));

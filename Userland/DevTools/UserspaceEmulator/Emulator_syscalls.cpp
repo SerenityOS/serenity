@@ -184,8 +184,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$profiling_disable(arg1);
     case SC_profiling_enable:
         return virt$profiling_enable(arg1);
-    case SC_ptsname:
-        return virt$ptsname(arg1, arg2, arg3);
     case SC_purge:
         return virt$purge(arg1);
     case SC_read:
@@ -249,8 +247,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return 0;
     case SC_sysconf:
         return virt$sysconf(arg1);
-    case SC_ttyname:
-        return virt$ttyname(arg1, arg2, arg3);
     case SC_umask:
         return virt$umask(arg1);
     case SC_uname:
@@ -1454,19 +1450,6 @@ int Emulator::virt$setpgid(pid_t pid, pid_t pgid)
     return syscall(SC_setpgid, pid, pgid);
 }
 
-int Emulator::virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size)
-{
-    auto buffer_result = ByteBuffer::create_zeroed(buffer_size);
-    if (buffer_result.is_error())
-        return -ENOMEM;
-    auto& host_buffer = buffer_result.value();
-    int rc = syscall(SC_ttyname, fd, host_buffer.data(), host_buffer.size());
-    if (rc < 0)
-        return rc;
-    mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
-    return rc;
-}
-
 int Emulator::virt$getcwd(FlatPtr buffer, size_t buffer_size)
 {
     auto buffer_result = ByteBuffer::create_zeroed(buffer_size);
@@ -1640,12 +1623,6 @@ u32 Emulator::virt$allocate_tls(FlatPtr initial_data, size_t size)
     mmu().add_region(move(tcb_region));
     mmu().set_tls_region(move(tls_region));
     return tls_base;
-}
-
-int Emulator::virt$ptsname(int fd, FlatPtr buffer, size_t buffer_size)
-{
-    auto pts = mmu().copy_buffer_from_vm(buffer, buffer_size);
-    return syscall(SC_ptsname, fd, pts.data(), pts.size());
 }
 
 int Emulator::virt$beep()

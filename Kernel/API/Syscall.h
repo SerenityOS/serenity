@@ -134,7 +134,6 @@ enum class NeedsBigProcessLock {
     S(profiling_enable, NeedsBigProcessLock::Yes)           \
     S(profiling_free_buffer, NeedsBigProcessLock::Yes)      \
     S(ptrace, NeedsBigProcessLock::Yes)                     \
-    S(ptsname, NeedsBigProcessLock::Yes)                    \
     S(purge, NeedsBigProcessLock::Yes)                      \
     S(read, NeedsBigProcessLock::Yes)                       \
     S(pread, NeedsBigProcessLock::Yes)                      \
@@ -181,7 +180,6 @@ enum class NeedsBigProcessLock {
     S(sync, NeedsBigProcessLock::No)                        \
     S(sysconf, NeedsBigProcessLock::No)                     \
     S(times, NeedsBigProcessLock::Yes)                      \
-    S(ttyname, NeedsBigProcessLock::Yes)                    \
     S(umask, NeedsBigProcessLock::Yes)                      \
     S(umount, NeedsBigProcessLock::Yes)                     \
     S(uname, NeedsBigProcessLock::No)                       \

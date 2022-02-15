@@ -214,7 +214,6 @@ private:
     int virt$poll(FlatPtr);
     int virt$profiling_disable(pid_t);
     int virt$profiling_enable(pid_t);
-    int virt$ptsname(int fd, FlatPtr buffer, size_t buffer_size);
     int virt$purge(int mode);
     u32 virt$read(int, FlatPtr, ssize_t);
     int virt$readlink(FlatPtr);
@@ -246,7 +245,6 @@ private:
     int virt$symlink(FlatPtr address);
     void virt$sync();
     u32 virt$sysconf(u32 name);
-    int virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size);
     mode_t virt$umask(mode_t);
     int virt$uname(FlatPtr params_addr);
     int virt$unlink(FlatPtr path, size_t path_length);

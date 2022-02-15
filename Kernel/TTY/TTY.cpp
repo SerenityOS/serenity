@@ -183,22 +183,18 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 
     if (should_generate_signals()) {
         if (ch == m_termios.c_cc[VINFO]) {
-            dbgln("{}: VINFO pressed!", tty_name());
             generate_signal(SIGINFO);
             return;
         }
         if (ch == m_termios.c_cc[VINTR]) {
-            dbgln("{}: VINTR pressed!", tty_name());
             generate_signal(SIGINT);
             return;
         }
         if (ch == m_termios.c_cc[VQUIT]) {
-            dbgln("{}: VQUIT pressed!", tty_name());
             generate_signal(SIGQUIT);
             return;
         }
         if (ch == m_termios.c_cc[VSUSP]) {
-            dbgln("{}: VSUSP pressed!", tty_name());
             generate_signal(SIGTSTP);
             if (auto original_process_parent = m_original_process_parent.strong_ref()) {
                 [[maybe_unused]] auto rc = original_process_parent->send_signal(SIGCHLD, nullptr);
@@ -361,10 +357,10 @@ void TTY::generate_signal(int signal)
         return;
     if (should_flush_on_signal())
         flush_input();
-    dbgln_if(TTY_DEBUG, "{}: Send signal {} to everyone in pgrp {}", tty_name(), signal, pgid().value());
+    dbgln_if(TTY_DEBUG, "Send signal {} to everyone in pgrp {}", signal, pgid().value());
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
-        dbgln_if(TTY_DEBUG, "{}: Send signal {} to {}", tty_name(), signal, process);
+        dbgln_if(TTY_DEBUG, "Send signal {} to {}", signal, process);
         // FIXME: Should this error be propagated somehow?
         [[maybe_unused]] auto rc = process.send_signal(signal, nullptr);
     });
@@ -382,8 +378,7 @@ ErrorOr<void> TTY::set_termios(const termios& t)
     ErrorOr<void> rc;
     m_termios = t;
 
-    dbgln_if(TTY_DEBUG, "{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}, OPOST={}, ONLCR={}",
-        tty_name(),
+    dbgln_if(TTY_DEBUG, "set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}, OPOST={}, ONLCR={}",
         should_echo_input(),
         should_generate_signals(),
         in_canonical_mode(),
@@ -569,11 +564,6 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
         return {};
     }
     return EINVAL;
-}
-
-ErrorOr<NonnullOwnPtr<KString>> TTY::pseudo_path(const OpenFileDescription&) const
-{
-    return tty_name().try_clone();
 }
 
 void TTY::set_size(unsigned short columns, unsigned short rows)

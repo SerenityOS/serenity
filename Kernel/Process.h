@@ -326,8 +326,6 @@ public:
     ErrorOr<FlatPtr> sys$sethostname(Userspace<const char*>, size_t);
     ErrorOr<FlatPtr> sys$uname(Userspace<utsname*>);
     ErrorOr<FlatPtr> sys$readlink(Userspace<const Syscall::SC_readlink_params*>);
-    ErrorOr<FlatPtr> sys$ttyname(int fd, Userspace<char*>, size_t);
-    ErrorOr<FlatPtr> sys$ptsname(int fd, Userspace<char*>, size_t);
     ErrorOr<FlatPtr> sys$fork(RegisterState&);
     ErrorOr<FlatPtr> sys$execve(Userspace<const Syscall::SC_execve_params*>);
     ErrorOr<FlatPtr> sys$dup2(int old_fd, int new_fd);
@@ -589,7 +587,6 @@ public:
     ErrorOr<size_t> procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_file_descriptions_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
     ErrorOr<NonnullRefPtr<Inode>> lookup_file_descriptions_directory(const ProcFS&, StringView name) const;
-    ErrorOr<void> procfs_get_tty_link(KBufferBuilder& builder) const;
 
 private:
     inline PerformanceEventBuffer* current_perf_events_buffer()
