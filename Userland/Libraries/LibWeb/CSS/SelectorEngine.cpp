@@ -12,6 +12,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/HTML/HTMLInputElement.h>
 
 namespace Web::SelectorEngine {
 
@@ -105,9 +106,7 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
         if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
             return false;
-        if (!element.has_attribute("checked"))
-            return false;
-        return true;
+        return static_cast<HTML::HTMLInputElement const&>(element).checked();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Not:
         for (auto& selector : pseudo_class.not_selector) {
             if (matches(selector, element))
