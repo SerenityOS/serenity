@@ -26,11 +26,8 @@ Vector<NumberFormat> __attribute__((weak)) get_unit_formats(StringView, StringVi
 
 Optional<StringView> get_default_number_system(StringView locale)
 {
-    if (auto systems = get_locale_key_mapping(locale, "nu"sv); systems.has_value()) {
-        auto index = systems->find(',');
-        return index.has_value() ? systems->substring_view(0, *index) : *systems;
-    }
-
+    if (auto systems = get_keywords_for_locale(locale, "nu"sv); !systems.is_empty())
+        return systems[0];
     return {};
 }
 

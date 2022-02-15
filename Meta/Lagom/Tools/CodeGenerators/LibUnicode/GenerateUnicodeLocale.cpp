@@ -172,7 +172,10 @@ struct Locale {
     DateFieldListIndexType long_date_fields { 0 };
     DateFieldListIndexType short_date_fields { 0 };
     DateFieldListIndexType narrow_date_fields { 0 };
-    KeywordListIndexType keywords { 0 };
+    KeywordListIndexType calendar_keywords { 0 };
+    KeywordListIndexType collation_case_keywords { 0 };
+    KeywordListIndexType collation_numeric_keywords { 0 };
+    KeywordListIndexType number_system_keywords { 0 };
     ListPatternListIndexType list_patterns { 0 };
 };
 
@@ -202,12 +205,6 @@ struct UnicodeLocaleData {
     Vector<String> scripts;
     Vector<String> variants;
     Vector<String> currencies;
-    Vector<String> calendars;
-    Vector<Alias> calendar_aliases {
-        // FIXME: Aliases should come from BCP47. See: https://unicode-org.atlassian.net/browse/CLDR-15158
-        { "ethiopic-amete-alem"sv, "ethioaa"sv },
-        { "gregorian"sv, "gregory"sv },
-    };
     Vector<String> date_fields;
     Vector<Alias> date_field_aliases {
         // ECMA-402 and the CLDR refer to some date fields with different names. Defining these aliases
@@ -216,7 +213,11 @@ struct UnicodeLocaleData {
         { "week"sv, "weekOfYear"sv },
         { "zone"sv, "timeZoneName"sv },
     };
-    Vector<String> keywords { "ca"sv, "kf"sv, "kn"sv, "nu"sv }; // FIXME: These should be parsed from BCP47. https://unicode-org.atlassian.net/browse/CLDR-15158
+
+    HashMap<String, Vector<String>> keywords;
+    HashMap<String, Vector<Alias>> keyword_aliases;
+    HashMap<String, String> keyword_names;
+
     Vector<String> list_pattern_types;
     HashMap<String, StringIndexType> language_aliases;
     HashMap<String, StringIndexType> territory_aliases;
@@ -373,6 +374,56 @@ static ErrorOr<void> preprocess_languages(String locale_path, UnicodeLocaleData&
     });
 
     return {};
+}
+
+static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, UnicodeLocaleData& locale_data)
+{
+    constexpr auto desired_keywords = Array { "ca"sv, "kf"sv, "kn"sv, "nu"sv };
+    auto keywords = TRY(read_json_file(bcp47_path));
+
+    auto const& keyword_object = keywords.as_object().get("keyword"sv);
+    auto const& unicode_object = keyword_object.as_object().get("u"sv);
+    if (unicode_object.is_null())
+        return {};
+
+    unicode_object.as_object().for_each_member([&](auto const& key, auto const& value) {
+        if (!desired_keywords.span().contains_slow(key))
+            return;
+
+        auto const& name = value.as_object().get("_alias");
+        locale_data.keyword_names.set(key, name.as_string());
+
+        auto& keywords = locale_data.keywords.ensure(key);
+
+        value.as_object().for_each_member([&](auto const& keyword, auto const& properties) {
+            if (!properties.is_object())
+                return;
+
+            if (auto const& preferred = properties.as_object().get("_preferred"sv); preferred.is_string()) {
+                locale_data.keyword_aliases.ensure(key).append({ preferred.as_string(), keyword });
+                return;
+            }
+
+            if (auto const& alias = properties.as_object().get("_alias"sv); alias.is_string())
+                locale_data.keyword_aliases.ensure(key).append({ keyword, alias.as_string() });
+            keywords.append(keyword);
+        });
+    });
+
+    return {};
+}
+
+static Optional<String> find_keyword_alias(StringView key, StringView calendar, UnicodeLocaleData& locale_data)
+{
+    auto it = locale_data.keyword_aliases.find(key);
+    if (it == locale_data.keyword_aliases.end())
+        return {};
+
+    auto alias = it->value.find_if([&](auto const& alias) { return calendar == alias.alias; });
+    if (alias == it->value.end())
+        return {};
+
+    return alias->name;
 }
 
 static ErrorOr<void> parse_locale_languages(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
@@ -558,17 +609,19 @@ static ErrorOr<void> parse_locale_calendars(String locale_path, UnicodeLocaleDat
     auto const& types_object = locale_display_names_object.as_object().get("types"sv);
     auto const& calendar_object = types_object.as_object().get("calendar"sv);
 
-    calendar_object.as_object().for_each_member([&](auto const& key, auto const&) {
-        if (!locale_data.calendars.contains_slow(key))
-            locale_data.calendars.append(key);
-    });
+    auto const& supported_calendars = locale_data.keywords.find("ca"sv)->value;
 
     CalendarList calendars;
-    calendars.resize(locale_data.calendars.size());
+    calendars.resize(supported_calendars.size());
 
     calendar_object.as_object().for_each_member([&](auto const& key, auto const& calendar) {
-        auto index = locale_data.calendars.find_first_index(key).value();
-        calendars[index] = locale_data.unique_strings.ensure(calendar.as_string());
+        auto index = supported_calendars.find_first_index(key);
+        if (!index.has_value()) {
+            auto alias = find_keyword_alias("ca"sv, key, locale_data);
+            index = supported_calendars.find_first_index(*alias);
+        }
+
+        calendars[*index] = locale_data.unique_strings.ensure(calendar.as_string());
     });
 
     locale.calendars = locale_data.unique_calendar_lists.ensure(move(calendars));
@@ -631,10 +684,8 @@ static ErrorOr<void> parse_locale_date_fields(String dates_path, UnicodeLocaleDa
     return {};
 }
 
-static ErrorOr<void> parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData& locale_data, KeywordList& keywords)
+static ErrorOr<void> parse_number_system_keywords(String locale_numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
-    static constexpr StringView key = "nu"sv;
-
     LexicalPath numbers_path(move(locale_numbers_path));
     numbers_path = numbers_path.append("numbers.json"sv);
 
@@ -645,39 +696,37 @@ static ErrorOr<void> parse_numeric_keywords(String locale_numbers_path, UnicodeL
     auto const& default_numbering_system_object = locale_numbers_object.as_object().get("defaultNumberingSystem"sv);
     auto const& other_numbering_systems_object = locale_numbers_object.as_object().get("otherNumberingSystems"sv);
 
-    Vector<String> keyword_values {};
-    keyword_values.append(default_numbering_system_object.as_string());
+    KeywordList keywords {};
+
+    auto append_numbering_system = [&](String system_name) {
+        if (auto system_alias = find_keyword_alias("nu"sv, system_name, locale_data); system_alias.has_value())
+            system_name = system_alias.release_value();
+
+        auto index = locale_data.unique_strings.ensure(move(system_name));
+        if (!keywords.contains_slow(index))
+            keywords.append(move(index));
+    };
+
+    append_numbering_system(default_numbering_system_object.as_string());
 
     other_numbering_systems_object.as_object().for_each_member([&](auto const&, JsonValue const& value) {
-        auto keyword_value = value.as_string();
-        if (!keyword_values.contains_slow(keyword_value))
-            keyword_values.append(move(keyword_value));
+        append_numbering_system(value.as_string());
     });
 
     locale_numbers_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         if (!key.starts_with("defaultNumberingSystem-alt-"sv))
             return;
-
-        auto keyword_value = value.as_string();
-        if (!keyword_values.contains_slow(keyword_value))
-            keyword_values.append(move(keyword_value));
+        append_numbering_system(value.as_string());
     });
 
-    StringBuilder builder;
-    builder.join(',', keyword_values);
-
-    auto index = locale_data.keywords.find_first_index(key).value();
-    keywords[index] = locale_data.unique_strings.ensure(builder.build());
-
+    locale.number_system_keywords = locale_data.unique_keyword_lists.ensure(move(keywords));
     return {};
 }
 
-static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLocaleData& locale_data, KeywordList& keywords)
+static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
-    static constexpr StringView key = "ca"sv;
-
     auto calendars_iterator = TRY(path_to_dir_iterator(locale_dates_path, {}));
-    Vector<String> keyword_values {};
+    KeywordList keywords {};
 
     while (calendars_iterator.has_next()) {
         auto locale_calendars_path = TRY(next_path_from_dir_iterator(calendars_iterator));
@@ -692,39 +741,51 @@ static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLo
         auto const& dates_object = locale_object.as_object().get("dates"sv);
         auto const& calendars_object = dates_object.as_object().get("calendars"sv);
 
-        calendars_object.as_object().for_each_member([&](auto const& calendar_name, JsonValue const&) {
+        calendars_object.as_object().for_each_member([&](auto calendar_name, JsonValue const&) {
             // The generic calendar is not a supported Unicode calendar key, so skip it:
             // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/calendar#unicode_calendar_keys
             if (calendar_name == "generic"sv)
                 return;
 
-            // FIXME: Similar to the calendar aliases defined in GenerateUnicodeDateTimeFormat, this
-            //        should be parsed from BCP47. https://unicode-org.atlassian.net/browse/CLDR-15158
-            if (calendar_name == "gregorian"sv)
-                keyword_values.append("gregory"sv);
-            else
-                keyword_values.append(calendar_name);
+            if (auto calendar_alias = find_keyword_alias("ca"sv, calendar_name, locale_data); calendar_alias.has_value())
+                calendar_name = calendar_alias.release_value();
+
+            keywords.append(locale_data.unique_strings.ensure(calendar_name));
         });
     }
 
-    StringBuilder builder;
-    builder.join(',', keyword_values);
-
-    auto index = locale_data.keywords.find_first_index(key).value();
-    keywords[index] = locale_data.unique_strings.ensure(builder.build());
-
+    locale.calendar_keywords = locale_data.unique_keyword_lists.ensure(move(keywords));
     return {};
 }
 
-static void fill_in_bcp47_keywords(UnicodeLocaleData& locale_data, KeywordList& keywords)
+static void fill_in_collation_keywords(UnicodeLocaleData& locale_data, Locale& locale)
 {
-    // FIXME: These should be parsed from BCP47. They are only available in this XML file:
-    //        https://github.com/unicode-org/cldr/blob/main/common/bcp47/collation.xml
-    auto kf_index = locale_data.keywords.find_first_index("kf"sv).value();
-    keywords[kf_index] = locale_data.unique_strings.ensure("upper,lower,false"sv);
+    // FIXME: If collation data becomes available in the CLDR, parse per-locale ordering from there.
+    auto create_list_with_default_first = [&](auto key, auto default_value) {
+        auto& values = locale_data.keywords.find(key)->value;
 
-    auto kn_index = locale_data.keywords.find_first_index("kn"sv).value();
-    keywords[kn_index] = locale_data.unique_strings.ensure("true,false"sv);
+        quick_sort(values, [&](auto const& lhs, auto const& rhs) {
+            if (lhs == default_value)
+                return true;
+            if (rhs == default_value)
+                return false;
+            return lhs < rhs;
+        });
+
+        KeywordList keywords;
+        keywords.ensure_capacity(values.size());
+
+        for (auto const& value : values)
+            keywords.append(locale_data.unique_strings.ensure(value));
+
+        return locale_data.unique_keyword_lists.ensure(move(keywords));
+    };
+
+    static auto kf_index = create_list_with_default_first("kf"sv, "upper"sv);
+    static auto kn_index = create_list_with_default_first("kn"sv, "true"sv);
+
+    locale.collation_case_keywords = kf_index;
+    locale.collation_numeric_keywords = kn_index;
 }
 
 static ErrorOr<void> parse_default_content_locales(String core_path, UnicodeLocaleData& locale_data)
@@ -801,8 +862,9 @@ static ErrorOr<void> define_aliases_without_scripts(UnicodeLocaleData& locale_da
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String core_path, String locale_names_path, String misc_path, String numbers_path, String dates_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_all_locales(String bcp47_path, String core_path, String locale_names_path, String misc_path, String numbers_path, String dates_path, UnicodeLocaleData& locale_data)
 {
+    auto bcp47_iterator = TRY(path_to_dir_iterator(move(bcp47_path), "bcp47"sv));
     auto identity_iterator = TRY(path_to_dir_iterator(locale_names_path));
     auto preprocess_iterator = TRY(path_to_dir_iterator(locale_names_path));
     auto locale_names_iterator = TRY(path_to_dir_iterator(move(locale_names_path)));
@@ -847,14 +909,10 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
     quick_sort(locale_data.territories);
     quick_sort(locale_data.scripts);
 
-    HashMap<String, KeywordList> keywords;
-    auto ensure_keyword_list = [&](auto const& language) -> KeywordList& {
-        return keywords.ensure(language, [&]() {
-            KeywordList keywords;
-            keywords.resize(locale_data.keywords.size());
-            return keywords;
-        });
-    };
+    while (bcp47_iterator.has_next()) {
+        auto bcp47_path = TRY(next_path_from_dir_iterator(bcp47_iterator));
+        TRY(parse_unicode_extension_keywords(move(bcp47_path), locale_data));
+    }
 
     while (locale_names_iterator.has_next()) {
         auto locale_path = TRY(next_path_from_dir_iterator(locale_names_iterator));
@@ -882,10 +940,8 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
 
         auto& locale = locale_data.locales.ensure(language);
         TRY(parse_locale_currencies(numbers_path, locale_data, locale));
-
-        auto& keywords = ensure_keyword_list(language);
-        TRY(parse_numeric_keywords(numbers_path, locale_data, keywords));
-        fill_in_bcp47_keywords(locale_data, keywords);
+        TRY(parse_number_system_keywords(numbers_path, locale_data, locale));
+        fill_in_collation_keywords(locale_data, locale);
     }
 
     while (dates_iterator.has_next()) {
@@ -894,18 +950,11 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
 
         auto& locale = locale_data.locales.ensure(language);
         TRY(parse_locale_date_fields(dates_path, locale_data, locale));
-
-        auto& keywords = ensure_keyword_list(language);
-        TRY(parse_calendar_keywords(dates_path, locale_data, keywords));
+        TRY(parse_calendar_keywords(dates_path, locale_data, locale));
     }
 
     TRY(parse_default_content_locales(move(core_path), locale_data));
     TRY(define_aliases_without_scripts(locale_data));
-
-    for (auto& list : keywords) {
-        auto& locale = locale_data.locales.find(list.key)->value;
-        locale.keywords = locale_data.unique_keyword_lists.ensure(move(list.value));
-    }
 
     return {};
 }
@@ -924,16 +973,27 @@ namespace Unicode {
 )~~~");
 
     auto locales = locale_data.locales.keys();
+    auto keywords = locale_data.keywords.keys();
+
     generate_enum(generator, format_identifier, "Locale"sv, "None"sv, locales, locale_data.locale_aliases);
     generate_enum(generator, format_identifier, "Language"sv, {}, locale_data.languages);
     generate_enum(generator, format_identifier, "Territory"sv, {}, locale_data.territories);
     generate_enum(generator, format_identifier, "ScriptTag"sv, {}, locale_data.scripts);
     generate_enum(generator, format_identifier, "Currency"sv, {}, locale_data.currencies);
-    generate_enum(generator, format_identifier, "CalendarName"sv, {}, locale_data.calendars, locale_data.calendar_aliases);
     generate_enum(generator, format_identifier, "DateField"sv, {}, locale_data.date_fields, locale_data.date_field_aliases);
-    generate_enum(generator, format_identifier, "Key"sv, {}, locale_data.keywords);
     generate_enum(generator, format_identifier, "Variant"sv, {}, locale_data.variants);
     generate_enum(generator, format_identifier, "ListPatternType"sv, {}, locale_data.list_pattern_types);
+    generate_enum(generator, format_identifier, "Key"sv, {}, keywords);
+
+    for (auto& keyword : locale_data.keywords) {
+        auto const& keyword_name = locale_data.keyword_names.find(keyword.key)->value;
+        auto enum_name = String::formatted("Keyword{}", format_identifier({}, keyword_name));
+
+        if (auto aliases = locale_data.keyword_aliases.find(keyword.key); aliases != locale_data.keyword_aliases.end())
+            generate_enum(generator, format_identifier, enum_name, {}, keyword.value, aliases->value);
+        else
+            generate_enum(generator, format_identifier, enum_name, {}, keyword.value);
+    }
 
     generator.append(R"~~~(
 }
@@ -960,6 +1020,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibUnicode/CurrencyCode.h>
+#include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/UnicodeLocale.h>
 
@@ -1062,7 +1123,10 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     append_mapping(locales, locale_data.locales, s_date_field_list_index_type, "s_long_date_fields"sv, [&](auto const& locale) { return locale.long_date_fields; });
     append_mapping(locales, locale_data.locales, s_date_field_list_index_type, "s_short_date_fields"sv, [&](auto const& locale) { return locale.short_date_fields; });
     append_mapping(locales, locale_data.locales, s_date_field_list_index_type, "s_narrow_date_fields"sv, [&](auto const& locale) { return locale.narrow_date_fields; });
-    append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_keywords"sv, [&](auto const& locale) { return locale.keywords; });
+    append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_calendar_keywords"sv, [&](auto const& locale) { return locale.calendar_keywords; });
+    append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_collation_case_keywords"sv, [&](auto const& locale) { return locale.collation_case_keywords; });
+    append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_collation_numeric_keywords"sv, [&](auto const& locale) { return locale.collation_numeric_keywords; });
+    append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_number_system_keywords"sv, [&](auto const& locale) { return locale.number_system_keywords; });
     append_mapping(locales, locale_data.locales, s_list_pattern_list_index_type, "s_locale_list_patterns"sv, [&](auto const& locale) { return locale.list_patterns; });
 
     generator.append(R"~~~(
@@ -1325,16 +1389,25 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     append_mapping_search("narrow_currency"sv, "currency"sv, "s_narrow_currencies"sv, "s_currency_lists"sv);
     append_mapping_search("numeric_currency"sv, "currency"sv, "s_numeric_currencies"sv, "s_currency_lists"sv);
 
-    append_from_string("CalendarName"sv, "calendar_name"sv, locale_data.calendars, locale_data.calendar_aliases);
-    append_mapping_search("calendar"sv, "calendar_name"sv, "s_calendars"sv, "s_calendar_lists"sv);
-
     append_from_string("DateField"sv, "date_field"sv, locale_data.date_fields, locale_data.date_field_aliases);
     append_mapping_search("long_date_field"sv, "date_field"sv, "s_long_date_fields"sv, "s_date_field_lists"sv);
     append_mapping_search("short_date_field"sv, "date_field"sv, "s_short_date_fields"sv, "s_date_field_lists"sv);
     append_mapping_search("narrow_date_field"sv, "date_field"sv, "s_narrow_date_fields"sv, "s_date_field_lists"sv);
 
-    append_from_string("Key"sv, "key"sv, locale_data.keywords);
-    append_mapping_search("key"sv, "key"sv, "s_keywords"sv, "s_keyword_lists"sv);
+    append_from_string("Key"sv, "key"sv, locale_data.keywords.keys());
+
+    for (auto const& keyword : locale_data.keywords) {
+        auto const& keyword_name = locale_data.keyword_names.find(keyword.key)->value;
+        auto enum_name = String::formatted("Keyword{}", format_identifier({}, keyword_name));
+        auto enum_snake = String::formatted("keyword_{}", keyword.key);
+
+        if (auto aliases = locale_data.keyword_aliases.find(keyword.key); aliases != locale_data.keyword_aliases.end())
+            append_from_string(enum_name, enum_snake, keyword.value, aliases->value);
+        else
+            append_from_string(enum_name, enum_snake, keyword.value);
+    }
+
+    append_mapping_search("calendar"sv, "keyword_ca"sv, "s_calendars"sv, "s_calendar_lists"sv);
 
     append_alias_search("variant"sv, locale_data.variant_aliases);
     append_alias_search("subdivision"sv, locale_data.subdivision_aliases);
@@ -1342,6 +1415,62 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     append_from_string("ListPatternType"sv, "list_pattern_type"sv, locale_data.list_pattern_types);
 
     generator.append(R"~~~(
+Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
+{
+    // Hour cycle keywords are region-based rather than locale-based, so they need to be handled specially.
+    // FIXME: Calendar keywords are also region-based, and will need to be handled here when we support non-Gregorian calendars:
+    //        https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-core/supplemental/calendarPreferenceData.json
+    if (key == "hc"sv) {
+        auto hour_cycles = get_locale_hour_cycles(locale);
+
+        Vector<StringView> values;
+        values.ensure_capacity(hour_cycles.size());
+
+        for (auto hour_cycle : hour_cycles)
+            values.unchecked_append(hour_cycle_to_string(hour_cycle));
+
+        return values;
+    }
+
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return {};
+
+    auto key_value = key_from_string(key);
+    if (!key_value.has_value())
+        return {};
+
+    auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+    size_t keywords_index = 0;
+
+    switch (*key_value) {
+    case Key::Ca:
+        keywords_index = s_calendar_keywords.at(locale_index);
+        break;
+    case Key::Kf:
+        keywords_index = s_collation_case_keywords.at(locale_index);
+        break;
+    case Key::Kn:
+        keywords_index = s_collation_numeric_keywords.at(locale_index);
+        break;
+    case Key::Nu:
+        keywords_index = s_number_system_keywords.at(locale_index);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    auto keyword_indices = s_keyword_lists.at(keywords_index);
+
+    Vector<StringView> keywords;
+    keywords.ensure_capacity(keyword_indices.size());
+
+    for (auto keyword : keyword_indices)
+        keywords.unchecked_append(s_string_list[keyword]);
+
+    return keywords;
+}
+
 Optional<DisplayPattern> get_locale_display_patterns(StringView locale)
 {
     auto locale_value = locale_from_string(locale);
@@ -1484,7 +1613,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
 
     UnicodeLocaleData locale_data;
-    TRY(parse_all_locales(core_path, locale_names_path, misc_path, numbers_path, dates_path, locale_data));
+    TRY(parse_all_locales(bcp47_path, core_path, locale_names_path, misc_path, numbers_path, dates_path, locale_data));
 
     TRY(generate_unicode_locale_header(*generated_header_file, locale_data));
     TRY(generate_unicode_locale_implementation(*generated_implementation_file, locale_data));
