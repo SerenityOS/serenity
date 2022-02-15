@@ -4080,7 +4080,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
             }
         } else {
             attribute_generator.append(R"~~~(
-    auto retval = impl->@attribute.cpp_getter_name@();
+    auto retval = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->@attribute.cpp_getter_name@(); }));
 )~~~");
         }
 
