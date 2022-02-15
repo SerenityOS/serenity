@@ -462,6 +462,12 @@ ErrorOr<void> Parser::parse()
     if (major_version != 1 || m_revision > 4)
         return Error::from_string_literal("Unsupported Parser version"sv);
 
+#ifdef KERNEL
+    m_version = TRY(Kernel::KString::formatted("1.{}", (int)m_revision));
+#else
+    m_version = String::formatted("1.{}", (int)m_revision);
+#endif
+
     u8 checksum = 0x0;
     for (size_t i = 0; i < sizeof(Definitions::EDID); i++)
         checksum += m_bytes[i];
@@ -540,9 +546,13 @@ ErrorOr<IterationDecision> Parser::for_each_extension_block(Function<IterationDe
     return IterationDecision::Continue;
 }
 
-String Parser::version() const
+StringView Parser::version() const
 {
-    return String::formatted("1.{}", (int)m_revision);
+#ifdef KERNEL
+    return m_version->view();
+#else
+    return m_version;
+#endif
 }
 
 String Parser::legacy_manufacturer_id() const

@@ -6,16 +6,22 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/ByteReader.h>
 #include <AK/Endian.h>
 #include <AK/Error.h>
 #include <AK/FixedPoint.h>
 #include <AK/Forward.h>
 #include <AK/Span.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibEDID/DMT.h>
 #include <LibEDID/VIC.h>
+
+#ifdef KERNEL
+#    include <Kernel/KString.h>
+#else
+#    include <AK/String.h>
+#endif
 
 namespace EDID {
 
@@ -415,7 +421,7 @@ public:
 
     bool operator==(Parser const& other) const;
 
-    String version() const;
+    StringView version() const;
 
     auto bytes() const { return m_bytes; }
 
@@ -442,6 +448,11 @@ private:
     ByteBuffer m_bytes_buffer;
     ReadonlyBytes m_bytes;
     u8 m_revision { 0 };
+#ifdef KERNEL
+    OwnPtr<Kernel::KString> m_version;
+#else
+    String m_version;
+#endif
 };
 
 }
