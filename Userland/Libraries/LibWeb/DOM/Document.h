@@ -13,6 +13,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/URL.h>
+#include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
@@ -242,6 +243,9 @@ public:
     void removed_last_ref();
 
     Window& window() { return *m_window; }
+
+    void write(Vector<String> const& strings);
+    void writeln(Vector<String> const& strings);
 
     Window* default_view() { return m_window; }
 
