@@ -92,7 +92,24 @@ void HTMLInputElement::run_activation_behavior()
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
 void HTMLInputElement::run_input_activation_behavior()
 {
-    dispatch_event(DOM::Event::create(EventNames::change));
+    if (type().equals_ignoring_case("checkbox")) {
+        // 1. If the element is not connected, then return.
+        if (!is_connected())
+            return;
+
+        // 2. Fire an event named input at the element with the bubbles and composed attributes initialized to true.
+        auto input_event = DOM::Event::create(HTML::EventNames::input);
+        input_event->set_bubbles(true);
+        input_event->set_composed(true);
+        dispatch_event(move(input_event));
+
+        // 3. Fire an event named change at the element with the bubbles attribute initialized to true.
+        auto change_event = DOM::Event::create(HTML::EventNames::change);
+        change_event->set_bubbles(true);
+        dispatch_event(move(change_event));
+    } else {
+        dispatch_event(DOM::Event::create(EventNames::change));
+    }
 }
 
 bool HTMLInputElement::enabled() const
