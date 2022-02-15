@@ -222,12 +222,6 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uu
 
     auto partition_uuid = UUID(m_boot_argument.substring_view(partition_uuid_prefix.length()), UUID::Endianness::Mixed);
 
-    if (partition_uuid.to_string().length() != 36) {
-        // FIXME: It would be helpful to output the specified and detected UUIDs in this case,
-        //        but we never actually enter this path - if the length doesn't match, the UUID
-        //        constructor above crashes with a VERIFY in convert_string_view_to_uuid().
-        PANIC("StorageManagement: Specified partition UUID is not valid");
-    }
     for (auto& storage_device : m_storage_devices) {
         for (auto& partition : storage_device.partitions()) {
             if (partition.metadata().unique_guid().is_zero())
