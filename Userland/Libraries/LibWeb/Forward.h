@@ -472,6 +472,7 @@ class SVGPolygonElementWrapper;
 class SVGPolylineElementWrapper;
 class SVGRectElementWrapper;
 class SVGSVGElementWrapper;
+class TextDecoderWrapper;
 class TextEncoderWrapper;
 class TextMetricsWrapper;
 class TextWrapper;
