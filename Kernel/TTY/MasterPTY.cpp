@@ -125,9 +125,17 @@ ErrorOr<void> MasterPTY::ioctl(OpenFileDescription& description, unsigned reques
     TRY(Process::current().require_promise(Pledge::tty));
     if (!m_slave)
         return EIO;
-    if (request == TIOCSWINSZ || request == TIOCGPGRP)
+    switch (request) {
+    case TIOCGPTN: {
+        int master_pty_index = index();
+        return copy_to_user(static_ptr_cast<int*>(arg), &master_pty_index);
+    }
+    case TIOCSWINSZ:
+    case TIOCGPGRP:
         return m_slave->ioctl(description, request, arg);
-    return EINVAL;
+    default:
+        return EINVAL;
+    }
 }
 
 ErrorOr<NonnullOwnPtr<KString>> MasterPTY::pseudo_path(const OpenFileDescription&) const
