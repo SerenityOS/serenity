@@ -248,9 +248,8 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         if (button == GUI::MouseButton::Primary) {
             if (href.starts_with("javascript:")) {
                 document->run_javascript(href.substring_view(11, href.length() - 11));
-            } else if (href.starts_with('#')) {
-                auto anchor = href.substring_view(1, href.length() - 1);
-                m_browsing_context.scroll_to_anchor(anchor);
+            } else if (!url.fragment().is_null() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
+                m_browsing_context.scroll_to_anchor(url.fragment());
             } else {
                 document->set_active_element(link);
                 if (m_browsing_context.is_top_level()) {
