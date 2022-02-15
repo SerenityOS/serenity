@@ -45,7 +45,8 @@ private:
             auto obj = array.add_object();
             obj.add("name", adapter.name());
             obj.add("class_name", adapter.class_name());
-            obj.add("mac_address", adapter.mac_address().to_string());
+            auto mac_address = adapter.mac_address().to_string().release_value_but_fixme_should_propagate_errors();
+            obj.add("mac_address", mac_address->view());
             if (!adapter.ipv4_address().is_zero()) {
                 auto ipv4_address = adapter.ipv4_address().to_string().release_value_but_fixme_should_propagate_errors();
                 obj.add("ipv4_address", ipv4_address->view());
@@ -81,7 +82,8 @@ private:
         JsonArraySerializer array { builder };
         arp_table().for_each([&](const auto& it) {
             auto obj = array.add_object();
-            obj.add("mac_address", it.value.to_string());
+            auto mac_address = it.value.to_string().release_value_but_fixme_should_propagate_errors();
+            obj.add("mac_address", mac_address->view());
             auto ip_address = it.key.to_string().release_value_but_fixme_should_propagate_errors();
             obj.add("ip_address", ip_address->view());
         });

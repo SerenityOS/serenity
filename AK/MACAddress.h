@@ -9,9 +9,14 @@
 #include <AK/AllOf.h>
 #include <AK/Array.h>
 #include <AK/Assertions.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+
+#ifdef KERNEL
+#    include <Kernel/KString.h>
+#else
+#    include <AK/String.h>
+#endif
 
 class [[gnu::packed]] MACAddress {
     static constexpr size_t s_mac_address_length = 6u;
@@ -53,10 +58,17 @@ public:
         return true;
     }
 
+#ifdef KERNEL
+    ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const
+    {
+        return Kernel::KString::formatted("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
+    }
+#else
     String to_string() const
     {
         return String::formatted("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
     }
+#endif
 
     static Optional<MACAddress> from_string(StringView string)
     {
