@@ -50,6 +50,7 @@ public:
     Gfx::IntSize const& size() const { return m_size; }
     void set_size(Gfx::IntSize const&);
 
+    void set_needs_display();
     void set_needs_display(Gfx::IntRect const&);
 
     Gfx::IntPoint const& viewport_scroll_offset() const { return m_viewport_scroll_offset; }

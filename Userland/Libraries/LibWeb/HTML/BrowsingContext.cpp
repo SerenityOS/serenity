@@ -128,6 +128,11 @@ void BrowsingContext::set_viewport_scroll_offset(Gfx::IntPoint const& offset)
         client->browsing_context_did_set_viewport_rect(viewport_rect());
 }
 
+void BrowsingContext::set_needs_display()
+{
+    set_needs_display(viewport_rect());
+}
+
 void BrowsingContext::set_needs_display(Gfx::IntRect const& rect)
 {
     if (!viewport_rect().intersects(rect))

@@ -420,7 +420,7 @@ void Document::update_layout()
 
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
 
-    m_layout_root->set_needs_display();
+    browsing_context()->set_needs_display();
 
     if (browsing_context()->is_top_level()) {
         if (auto* page = this->page())
