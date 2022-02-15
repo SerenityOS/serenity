@@ -84,6 +84,4 @@
 
 #define TZNAME_MAX 64
 
-#ifdef __USE_POSIX
-#    include <bits/posix1_lim.h>
-#endif
+#include <bits/posix1_lim.h>
