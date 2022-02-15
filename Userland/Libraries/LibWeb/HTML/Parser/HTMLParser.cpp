@@ -1112,8 +1112,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
     }
 
     // FIXME: Implement the rest of the AAA :^)
-
-    TODO();
+    return AdoptionAgencyAlgorithmOutcome::DoNothing;
 }
 
 bool HTMLParser::is_special_tag(const FlyString& tag_name, const FlyString& namespace_)
