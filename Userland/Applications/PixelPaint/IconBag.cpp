@@ -36,6 +36,8 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.active_layer_down = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/active-layer-down.png"));
     icon_bag.delete_layer = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"));
     icon_bag.merge_visible = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/merge-visible.png"));
+    icon_bag.merge_active_layer_up = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/merge-active-layer-up.png"));
+    icon_bag.merge_active_layer_down = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/merge-active-layer-down.png"));
     icon_bag.filter = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/filter.png"));
 
     return icon_bag;
