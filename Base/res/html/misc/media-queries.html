@@ -96,6 +96,20 @@
                 border: 1px solid black;
             }
         }
+
+        @media (width >= 80em) {
+            .em {
+                background-color: lime;
+                border: 1px solid black;
+            }
+        }
+
+        @media (width < 100vh) {
+            .viewport {
+                background-color: lime;
+                border: 1px solid black;
+            }
+        }
     </style>
 </head>
 <body>
@@ -134,6 +148,14 @@
     </p>
     <p class="color-2">
         This should be green, with a black border and black text, if we detected the <code>color</code> feature and a deeply nested query: <code>(color) or ((color) and ((color) or (color) or (not (color))))</code>.
+    </p>
+
+    <h2>Relative lengths</h2>
+    <p class="em">
+        This should be green, with a black border and black text, if the window is wider than 80em.
+    </p>
+    <p class="viewport">
+        This should be green, with a black border and black text, if the window is taller than it is wide.
     </p>
 
     <script>
