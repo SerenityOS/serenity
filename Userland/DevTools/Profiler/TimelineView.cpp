@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,10 +17,6 @@ TimelineView::TimelineView(Profile& profile)
 {
     set_layout<GUI::VerticalBoxLayout>();
     set_shrink_to_fit(true);
-}
-
-TimelineView::~TimelineView()
-{
 }
 
 u64 TimelineView::timestamp_at_x(int x) const

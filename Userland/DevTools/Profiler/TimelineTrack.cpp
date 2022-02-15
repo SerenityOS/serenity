@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,10 +24,6 @@ TimelineTrack::TimelineTrack(TimelineView const& view, Profile const& profile, P
     set_fixed_height(40);
     set_scale(view.scale());
     set_frame_thickness(1);
-}
-
-TimelineTrack::~TimelineTrack()
-{
 }
 
 void TimelineTrack::set_scale(float scale)

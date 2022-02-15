@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +18,7 @@ class TimelineView final : public GUI::Widget {
     C_OBJECT(TimelineView);
 
 public:
-    virtual ~TimelineView() override;
+    virtual ~TimelineView() override = default;
 
     Function<void()> on_selection_change;
     Function<void()> on_scale_change;

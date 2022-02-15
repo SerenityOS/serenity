@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,10 +13,6 @@ namespace Profiler {
 
 SignpostsModel::SignpostsModel(Profile& profile)
     : m_profile(profile)
-{
-}
-
-SignpostsModel::~SignpostsModel()
 {
 }
 

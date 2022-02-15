@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +19,7 @@ class ClientConnection;
 class CodeComprehensionEngine {
 public:
     CodeComprehensionEngine(const FileDB& filedb, bool store_all_declarations = false);
-    virtual ~CodeComprehensionEngine();
+    virtual ~CodeComprehensionEngine() = default;
 
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) = 0;
 

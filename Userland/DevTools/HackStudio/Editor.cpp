@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2018-2021, the SerenityOS developers.
+ * Copyright (c) 2018-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -77,10 +77,6 @@ Editor::Editor()
     add_custom_context_menu_action(*m_move_execution_to_line_action);
 
     set_gutter_visible(true);
-}
-
-Editor::~Editor()
-{
 }
 
 ErrorOr<void> Editor::initialize_documentation_tooltip()

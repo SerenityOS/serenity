@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nick Vella <nick@nxk.io>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -99,10 +100,6 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
         if (path.has_value())
             m_create_in_input->set_text(path.value().view());
     };
-}
-
-NewProjectDialog::~NewProjectDialog()
-{
 }
 
 RefPtr<ProjectTemplate> NewProjectDialog::selected_template()

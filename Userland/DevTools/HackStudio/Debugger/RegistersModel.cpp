@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -91,10 +92,6 @@ RegistersModel::RegistersModel(const PtraceRegisters& current_regs, const Ptrace
     m_registers.append({ "es", current_regs.es, current_regs.es != previous_regs.es });
     m_registers.append({ "fs", current_regs.fs, current_regs.fs != previous_regs.fs });
     m_registers.append({ "gs", current_regs.gs, current_regs.gs != previous_regs.gs });
-}
-
-RegistersModel::~RegistersModel()
-{
 }
 
 int RegistersModel::row_count(const GUI::ModelIndex&) const

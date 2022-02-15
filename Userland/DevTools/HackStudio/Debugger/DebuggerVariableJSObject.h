@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Matthew Olsson <matthewcolsson@gmail.com>
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +22,7 @@ public:
     static DebuggerVariableJSObject* create(DebuggerGlobalJSObject&, const Debug::DebugInfo::VariableInfo& variable_info);
 
     DebuggerVariableJSObject(const Debug::DebugInfo::VariableInfo& variable_info, JS::Object& prototype);
-    virtual ~DebuggerVariableJSObject() override;
+    virtual ~DebuggerVariableJSObject() override = default;
 
     virtual const char* class_name() const override { return m_variable_info.type_name.characters(); }
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -201,10 +202,6 @@ TerminalWrapper::TerminalWrapper(bool user_spawned)
 
     if (user_spawned)
         run_command("Shell");
-}
-
-TerminalWrapper::~TerminalWrapper()
-{
 }
 
 int TerminalWrapper::child_exit_status() const

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Nick Vella <nick@nxk.io>
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,10 +41,6 @@ ProjectTemplatesModel::ProjectTemplatesModel()
     }
 
     rescan_templates();
-}
-
-ProjectTemplatesModel::~ProjectTemplatesModel()
-{
 }
 
 int ProjectTemplatesModel::row_count(const GUI::ModelIndex&) const
