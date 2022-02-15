@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -61,14 +61,37 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::Sty
     return layout_node;
 }
 
-void HTMLInputElement::set_checked(bool checked)
+void HTMLInputElement::set_checked(bool checked, ChangeSource change_source, ShouldRunActivationBehavior should_run_activation_behavior)
 {
     if (m_checked == checked)
         return;
+
+    // The dirty checkedness flag must be initially set to false when the element is created,
+    // and must be set to true whenever the user interacts with the control in a way that changes the checkedness.
+    if (change_source == ChangeSource::User)
+        m_dirty_checkedness = true;
+
     m_checked = checked;
     if (layout_node())
         layout_node()->set_needs_display();
 
+    if (should_run_activation_behavior == ShouldRunActivationBehavior::Yes)
+        run_activation_behavior();
+}
+
+void HTMLInputElement::run_activation_behavior()
+{
+    // The activation behavior for input elements are these steps:
+
+    // FIXME: 1. If this element is not mutable and is not in the Checkbox state and is not in the Radio state, then return.
+
+    // 2. Run this element's input activation behavior, if any, and do nothing otherwise.
+    run_input_activation_behavior();
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
+void HTMLInputElement::run_input_activation_behavior()
+{
     dispatch_event(DOM::Event::create(EventNames::change));
 }
 
@@ -137,6 +160,28 @@ void HTMLInputElement::removed_from(DOM::Node* old_parent)
 {
     HTMLElement::removed_from(old_parent);
     set_form(nullptr);
+}
+
+void HTMLInputElement::parse_attribute(FlyString const& name, String const& value)
+{
+    FormAssociatedElement::parse_attribute(name, value);
+    if (name == HTML::AttributeNames::checked) {
+        // When the checked content attribute is added, if the control does not have dirty checkedness,
+        // the user agent must set the checkedness of the element to true
+        if (!m_dirty_checkedness)
+            set_checked(true, ChangeSource::Programmatic, ShouldRunActivationBehavior::No);
+    }
+}
+
+void HTMLInputElement::did_remove_attribute(FlyString const& name)
+{
+    FormAssociatedElement::did_remove_attribute(name);
+    if (name == HTML::AttributeNames::checked) {
+        // When the checked content attribute is removed, if the control does not have dirty checkedness,
+        // the user agent must set the checkedness of the element to false.
+        if (!m_dirty_checkedness)
+            set_checked(false, ChangeSource::Programmatic, ShouldRunActivationBehavior::No);
+    }
 }
 
 }
