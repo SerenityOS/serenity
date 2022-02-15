@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,8 +10,10 @@
 #include <AK/SourceLocation.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/Parser/Entities.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
 #include <LibWeb/HTML/Parser/HTMLTokenizer.h>
+#include <LibWeb/Namespace.h>
 #include <string.h>
 
 namespace Web::HTML {
@@ -394,7 +397,15 @@ _StartOfFunction:
                     SWITCH_TO(DOCTYPE);
                 }
                 if (consume_next_if_match("[CDATA[")) {
-                    TODO();
+                    // We keep the parser optional so that syntax highlighting can be lexer-only.
+                    // The parser registers itself with the lexer it creates.
+                    if (m_parser != nullptr && m_parser->adjusted_current_node().namespace_() != Namespace::HTML) {
+                        SWITCH_TO(CDATASection);
+                    } else {
+                        create_new_token(HTMLToken::Type::Comment);
+                        m_current_builder.append("[CDATA[");
+                        SWITCH_TO_WITH_UNCLEAN_BUILDER(BogusComment);
+                    }
                 }
                 ANYTHING_ELSE
                 {
