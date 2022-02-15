@@ -117,22 +117,22 @@ public:
     void calculate_checksum();
 
 private:
-    char m_filename[100];
-    char m_mode[8];
-    char m_uid[8];
-    char m_gid[8];
-    char m_size[12];
-    char m_timestamp[12];
-    char m_checksum[8]; // an uninitialized header's checksum is filled with spaces
-    char m_type_flag;
-    char m_link_name[100];
-    char m_magic[6];
-    char m_version[2];
-    char m_owner_name[32];
-    char m_group_name[32];
-    char m_major[8];
-    char m_minor[8];
-    char m_prefix[155]; // zero out the prefix for archiving
+    char m_filename[100] { 0 };
+    char m_mode[8] { 0 };
+    char m_uid[8] { 0 };
+    char m_gid[8] { 0 };
+    char m_size[12] { 0 };
+    char m_timestamp[12] { 0 };
+    char m_checksum[8] { 0 }; // an uninitialized header's checksum is filled with spaces
+    char m_type_flag { 0 };
+    char m_link_name[100] { 0 };
+    char m_magic[6] { 0 };
+    char m_version[2] { 0 };
+    char m_owner_name[32] { 0 };
+    char m_group_name[32] { 0 };
+    char m_major[8] { 0 };
+    char m_minor[8] { 0 };
+    char m_prefix[155] { 0 }; // zero out the prefix for archiving
 };
 
 }
