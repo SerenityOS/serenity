@@ -10,6 +10,7 @@
 #include <mntent.h>
 #include <regex.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifndef ARRAY_SIZE
@@ -87,15 +88,15 @@ FILE* setmntent(char const* filename, char const* type)
 
 int addmntent(FILE* __restrict__ stream, const struct mntent* __restrict__ mnt)
 {
-    size_t file_offset = ftell(stream);
+    auto file_offset = ftell(stream);
     fseek(stream, 0L, SEEK_END);
     char buffer[STRING_BUF_SIZE];
-    int ret = snprintf(buffer, STRING_BUF_SIZE, "%s \t%s \t%s \t%s \t%d \t%d\n", mnt->mnt_fsname, mnt->mnt_dir,
+    long written = (long)snprintf(buffer, STRING_BUF_SIZE, "%s \t%s \t%s \t%s \t%d \t%d\n", mnt->mnt_fsname, mnt->mnt_dir,
         mnt->mnt_type, mnt->mnt_opts, mnt->mnt_freq, mnt->mnt_passno);
-    size_t str_size = strlen(buffer);
-    if (ret < 0 || ret >= STRING_BUF_SIZE)
+    auto str_size = strlen(buffer);
+    if (written < 0 || written >= STRING_BUF_SIZE)
         return 1;
-    size_t written = fwrite(buffer, str_size, 1, stream);
+    written = fwrite(buffer, str_size, 1, stream);
     fseek(stream, file_offset, SEEK_SET);
     return 0;
 }
@@ -109,7 +110,7 @@ int endmntent(FILE* streamp)
 
 char* hasmntopt(const struct mntent* mntbuf, const char* opt)
 {
-    // Shouldn't we check for correctness of mnt_opts flags we check for?
+    // Shouldn't we check if opt is a valid flag?
     auto opt_pos = strcspn(mntbuf->mnt_opts, opt);
     if (opt_pos == strlen(mntbuf->mnt_opts))
         return nullptr;
@@ -118,7 +119,7 @@ char* hasmntopt(const struct mntent* mntbuf, const char* opt)
 
 struct mntent* getmntent_r(FILE* streamp, struct mntent* mntbuf, char* buf, int buflen)
 {
-    regex_t regex;
+    regex_t expr;
     regmatch_t pmatch[NMATCH];
     memset(mntbuf, 0, sizeof(struct mntent));
     flockfile(streamp);
@@ -136,14 +137,14 @@ struct mntent* getmntent_r(FILE* streamp, struct mntent* mntbuf, char* buf, int 
         if (comment_or_blank(buf, line_len))
             continue;
 
-        if (regcomp(&regex, g_regex_pattern, REG_EXTENDED | REG_NEWLINE) != 0)
+        if (regcomp(&expr, g_regex_pattern, REG_EXTENDED | REG_NEWLINE) != 0)
             return nullptr;
 
-        if (regexec(&regex, buf, NMATCH, pmatch, 0) != 0) [[unlikely]]
+        if (regexec(&expr, buf, NMATCH, pmatch, 0) != 0) [[unlikely]]
             continue;
 
         for (size_t i = 0; i < ARRAY_SIZE(g_indices_index); i++) {
-            int ret;
+            int written;
             auto* substr_ptr = buf + pmatch[g_indices_index[i]].rm_so;
             buf[pmatch[g_indices_index[i]].rm_eo] = '\0';
             if (i == MntEntries::mnt_freq && strcmp(substr_ptr, "") == 0)
@@ -163,13 +164,13 @@ struct mntent* getmntent_r(FILE* streamp, struct mntent* mntbuf, char* buf, int 
                 mntbuf->mnt_opts = substr_ptr;
                 break;
             case (MntEntries::mnt_freq):
-                ret = sscanf(buf + pmatch[g_indices_index[i]].rm_so, "%u", &mntbuf->mnt_freq);
-                if (ret != 1)
+                written = sscanf(substr_ptr, "%u", &mntbuf->mnt_freq);
+                if (written != 1)
                     goto exit;
                 break;
             case (MntEntries::mnt_passno):
-                ret = sscanf(buf + pmatch[g_indices_index[i]].rm_so, "%u", &mntbuf->mnt_passno);
-                if (ret != 1)
+                written = sscanf(substr_ptr, "%u", &mntbuf->mnt_passno);
+                if (written != 1)
                     goto exit;
                 break;
             }
@@ -178,7 +179,7 @@ struct mntent* getmntent_r(FILE* streamp, struct mntent* mntbuf, char* buf, int 
     }
 
 exit:
-    regfree(&regex);
+    regfree(&expr);
     funlockfile(streamp);
     return mntbuf;
 }
