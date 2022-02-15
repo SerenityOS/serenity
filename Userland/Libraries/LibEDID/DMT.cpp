@@ -4,8 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
 #include <LibEDID/DMT.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace EDID {
 
@@ -116,12 +119,14 @@ u32 DMT::MonitorTiming::refresh_rate_hz() const
     return vertical_frequency_hz().ltrunk();
 }
 
+#ifndef KERNEL
 String DMT::MonitorTiming::name() const
 {
     if (scan_type == ScanType::Interlaced)
         return String::formatted("{} x {} @ {}Hz (Interlaced)", horizontal_pixels, vertical_lines, refresh_rate_hz());
     return String::formatted("{} x {} @ {}Hz", horizontal_pixels, vertical_lines, refresh_rate_hz());
 }
+#endif
 
 auto DMT::find_timing_by_dmt_id(u8 dmt_id) -> MonitorTiming const*
 {
