@@ -50,12 +50,15 @@ public:
 
     ReadyState ready_state() const { return m_ready_state; };
     unsigned status() const { return m_status; };
-    String response_text() const;
+    DOM::ExceptionOr<String> response_text() const;
+    DOM::ExceptionOr<JS::Value> response();
+    Bindings::XMLHttpRequestResponseType response_type() const { return m_response_type; }
 
     DOM::ExceptionOr<void> open(const String& method, const String& url);
     DOM::ExceptionOr<void> send(String body);
 
     DOM::ExceptionOr<void> set_request_header(const String& header, const String& value);
+    void set_response_type(Bindings::XMLHttpRequestResponseType type) { m_response_type = type; }
 
     String get_response_header(const String& name) { return m_response_headers.get(name).value_or({}); }
     String get_all_response_headers() const;
@@ -76,6 +79,7 @@ private:
 
     MimeSniff::MimeType get_response_mime_type() const;
     Optional<String> get_final_encoding() const;
+    MimeSniff::MimeType get_final_mime_type() const;
 
     String get_text_response() const;
 
@@ -93,6 +97,8 @@ private:
     String m_method;
     AK::URL m_url;
 
+    Bindings::XMLHttpRequestResponseType m_response_type;
+
     HashMap<String, String, CaseInsensitiveStringTraits> m_request_headers;
     HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
 
@@ -101,7 +107,12 @@ private:
     bool m_upload_listener { false };
     bool m_timed_out { false };
 
-    ByteBuffer m_response_object;
+    ByteBuffer m_received_bytes;
+
+    enum class Failure {
+        /// ????
+    };
+    Variant<JS::Handle<JS::Value>, Failure, Empty> m_response_object;
 
     // https://xhr.spec.whatwg.org/#override-mime-type
     Optional<MimeSniff::MimeType> m_override_mime_type;

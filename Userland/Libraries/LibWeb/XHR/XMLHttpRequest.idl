@@ -1,3 +1,12 @@
+enum XMLHttpRequestResponseType {
+  "",
+  "arraybuffer",
+  "blob",
+  "document",
+  "json",
+  "text"
+};
+
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
     constructor();
@@ -11,6 +20,8 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
     readonly attribute unsigned short readyState;
     readonly attribute unsigned short status;
     readonly attribute DOMString responseText;
+    readonly attribute any response;
+    attribute XMLHttpRequestResponseType responseType;
 
     undefined open(DOMString method, DOMString url);
     undefined setRequestHeader(DOMString name, DOMString value);

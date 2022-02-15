@@ -496,4 +496,5 @@ class XMLHttpRequestConstructor;
 class XMLHttpRequestEventTargetWrapper;
 class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
+enum class XMLHttpRequestResponseType;
 }
