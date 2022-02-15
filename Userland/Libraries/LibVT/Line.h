@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/AnyOf.h>
 #include <AK/Noncopyable.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibVT/Attribute.h>
 #include <LibVT/Position.h>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <LibC/elf.h>
 #include <limits.h>
 
