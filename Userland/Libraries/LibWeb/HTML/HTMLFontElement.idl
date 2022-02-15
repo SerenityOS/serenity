@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLFontElement : HTMLElement {
 
     [LegacyNullToEmptyString, Reflect] attribute DOMString color;

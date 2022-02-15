@@ -1,3 +1,6 @@
+#import <HTML/HTMLElement.idl>
+#import <HTML/HTMLFormElement.idl>
+
 interface HTMLInputElement : HTMLElement {
 
     readonly attribute HTMLFormElement? form;

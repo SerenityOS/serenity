@@ -1,3 +1,6 @@
+#import <CSS/CSSRule.idl>
+#import <CSS/CSSStyleDeclaration.idl>
+
 interface CSSStyleRule : CSSRule {
 
     attribute CSSOMString selectorText;

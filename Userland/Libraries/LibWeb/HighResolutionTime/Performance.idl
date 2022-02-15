@@ -1,3 +1,6 @@
+#import <DOM/EventTarget.idl>
+#import <NavigationTiming/PerformanceTiming.idl>
+
 interface Performance : EventTarget {
     double now();
     readonly attribute double timeOrigin;

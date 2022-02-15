@@ -1,3 +1,5 @@
+#import <SVG/SVGGeometryElement.idl>
+
 [Exposed=Window]
 interface SVGEllipseElement : SVGGeometryElement {
     // [SameObject] readonly attribute SVGAnimatedLength cx;

@@ -1,3 +1,5 @@
+#import <DOM/Element.idl>
+
 [Exposed=Window, LegacyUnenumerableNamedProperties]
 interface HTMLCollection {
 

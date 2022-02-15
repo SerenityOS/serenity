@@ -1,3 +1,6 @@
+#import <DOM/DocumentFragment.idl>
+#import <HTML/HTMLElement.idl>
+
 interface HTMLTemplateElement : HTMLElement {
 
     readonly attribute DocumentFragment content;

@@ -1,3 +1,5 @@
+#import <DOM/DocumentFragment.idl>
+
 interface ShadowRoot : DocumentFragment {
 
     readonly attribute DOMString mode;

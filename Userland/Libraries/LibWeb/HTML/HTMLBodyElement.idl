@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLBodyElement : HTMLElement {
 
     [LegacyNullToEmptyString, Reflect] attribute DOMString text;

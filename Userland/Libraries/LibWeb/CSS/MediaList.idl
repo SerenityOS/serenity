@@ -1,5 +1,5 @@
 interface MediaList {
-    stringifier attribute [LegacyNullToEmptyString] CSSOMString mediaText;
+    [LegacyNullToEmptyString] stringifier attribute CSSOMString mediaText;
     readonly attribute unsigned long length;
     getter CSSOMString? item(unsigned long index);
     undefined appendMedium(CSSOMString medium);

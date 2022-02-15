@@ -1,3 +1,6 @@
+#import <CSS/CSSRule.idl>
+#import <CSS/CSSRuleList.idl>
+
 interface CSSStyleSheet : StyleSheet {
     // readonly attribute CSSRule? ownerRule;
     [SameObject] readonly attribute CSSRuleList cssRules;

@@ -1,3 +1,6 @@
+#import <DOM/Element.idl>
+#import <HTML/DOMStringMap.idl>
+
 interface SVGElement : Element {
     // FIXME: This should come from a HTMLOrSVGElement mixin
     [SameObject] readonly attribute DOMStringMap dataset;

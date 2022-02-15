@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLButtonElement : HTMLElement {
 
     [Reflect=formnovalidate] attribute boolean formNoValidate;

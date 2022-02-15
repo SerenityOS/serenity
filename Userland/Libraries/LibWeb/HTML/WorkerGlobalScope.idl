@@ -1,3 +1,7 @@
+#import <DOM/EventTarget.idl>
+#import <HTML/WorkerLocation.idl>
+#import <HTML/WorkerNavigator.idl>
+
 [Exposed=Worker]
 interface WorkerGlobalScope : EventTarget {
     readonly attribute WorkerGlobalScope self;

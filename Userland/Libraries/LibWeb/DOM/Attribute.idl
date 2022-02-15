@@ -1,3 +1,6 @@
+#import <DOM/Node.idl>
+#import <DOM/Element.idl>
+
 [Exposed=Window]
 interface Attribute : Node {
     readonly attribute DOMString? namespaceURI;

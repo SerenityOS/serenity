@@ -1,3 +1,6 @@
+#import <DOM/Element.idl>
+#import <DOM/Node.idl>
+
 interface CharacterData : Node {
 
     [LegacyNullToEmptyString] attribute DOMString data;

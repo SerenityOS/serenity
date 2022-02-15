@@ -1,3 +1,5 @@
+#import <DOM/EventTarget.idl>
+
 interface XMLHttpRequestEventTarget : EventTarget {
 
     attribute EventHandler onloadstart;

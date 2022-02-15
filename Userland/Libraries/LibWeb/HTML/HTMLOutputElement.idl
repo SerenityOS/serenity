@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLOutputElement : HTMLElement {
 
     readonly attribute DOMString type;

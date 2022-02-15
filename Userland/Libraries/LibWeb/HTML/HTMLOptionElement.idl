@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLOptionElement : HTMLElement {
 
     [Reflect] attribute boolean disabled;
