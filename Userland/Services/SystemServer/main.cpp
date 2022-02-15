@@ -315,6 +315,10 @@ static void populate_devtmpfs_devices_based_on_devctl()
                     create_devtmpfs_char_device("/dev/ptmx", 0666, 5, 2);
                     break;
                 }
+                case 0: {
+                    create_devtmpfs_char_device("/dev/tty", 0666, 5, 0);
+                    break;
+                }
                 default:
                     warnln("Unknown character device {}:{}", major_number, minor_number);
                 }
@@ -393,7 +397,6 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     TRY(Core::System::symlink("/proc/self/fd/0", "/dev/stdin"));
     TRY(Core::System::symlink("/proc/self/fd/1", "/dev/stdout"));
     TRY(Core::System::symlink("/proc/self/fd/2", "/dev/stderr"));
-    TRY(Core::System::symlink("/proc/self/tty", "/dev/tty"));
 
     populate_devtmpfs();
 
