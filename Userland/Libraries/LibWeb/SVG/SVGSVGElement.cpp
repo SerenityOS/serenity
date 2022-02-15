@@ -5,6 +5,7 @@
  */
 
 #include <LibGfx/Painter.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -24,14 +25,21 @@ RefPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::StyleP
     return adopt_ref(*new Layout::SVGSVGBox(document(), *this, move(style)));
 }
 
-unsigned SVGSVGElement::width() const
+void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
-    return attribute(HTML::AttributeNames::width).to_uint().value_or(300);
-}
+    // Width defaults to 100%
+    if (auto width_value = parse_html_length(document(), attribute("width"))) {
+        style.set_property(CSS::PropertyID::Width, width_value.release_nonnull());
+    } else {
+        style.set_property(CSS::PropertyID::Width, CSS::PercentageStyleValue::create(CSS::Percentage { 100 }));
+    }
 
-unsigned SVGSVGElement::height() const
-{
-    return attribute(HTML::AttributeNames::height).to_uint().value_or(150);
+    // Height defaults to 100%
+    if (auto height_value = parse_html_length(document(), attribute("height"))) {
+        style.set_property(CSS::PropertyID::Height, height_value.release_nonnull());
+    } else {
+        style.set_property(CSS::PropertyID::Height, CSS::PercentageStyleValue::create(CSS::Percentage { 100 }));
+    }
 }
 
 void SVGSVGElement::parse_attribute(FlyString const& name, String const& value)
