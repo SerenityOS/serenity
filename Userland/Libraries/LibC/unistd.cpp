@@ -4,12 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <alloca.h>
 #include <assert.h>
 #include <bits/pthread_integration.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -22,6 +24,8 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/select.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <syscall.h>
 #include <termios.h>
@@ -398,11 +402,72 @@ ssize_t pwrite(int fd, const void* buf, size_t count, off_t offset)
     return nwritten;
 }
 
+// Note: Be sure to send to directory_name parameter a directory name ended with trailing slash.
+static int ttyname_r_for_directory(const char* directory_name, dev_t device_mode, ino_t inode_number, char* buffer, size_t size)
+{
+    DIR* dirstream = opendir(directory_name);
+    if (!dirstream) {
+        return -1;
+    }
+
+    auto close_dir_stream_on_exit = ScopeGuard([dirstream] {
+        closedir(dirstream);
+    });
+
+    struct dirent* entry = nullptr;
+    char* name_path = nullptr;
+
+    // FIXME: Use LibCore DirIterator here instead
+    while ((entry = readdir(dirstream)) != nullptr) {
+        if (((ino_t)entry->d_ino == inode_number)
+            && strcmp(entry->d_name, "stdin")
+            && strcmp(entry->d_name, "stdout")
+            && strcmp(entry->d_name, "stderr")) {
+
+            size_t name_length = strlen(directory_name) + strlen(entry->d_name) + 1;
+
+            if (name_length > size) {
+                errno = ERANGE;
+                return -1;
+            }
+
+            name_path = (char*)malloc(name_length);
+            memset(name_path, 0, name_length);
+            memcpy(name_path, directory_name, strlen(directory_name));
+            memcpy(&name_path[strlen(directory_name)], entry->d_name, strlen(entry->d_name));
+            struct stat st;
+            if (lstat(name_path, &st) < 0) {
+                free(name_path);
+                continue;
+            }
+
+            if (device_mode == st.st_rdev) {
+                memset(buffer, 0, name_length);
+                memcpy(buffer, name_path, name_length);
+                free(name_path);
+                return 0;
+            }
+        }
+    }
+    free(name_path);
+    return -1;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/ttyname_r.html
 int ttyname_r(int fd, char* buffer, size_t size)
 {
-    int rc = syscall(SC_ttyname, fd, buffer, size);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    struct stat stat;
+    if (fstat(fd, &stat) < 0)
+        return -1;
+    dev_t major_minor_numbers = stat.st_rdev;
+    ino_t inode_number = stat.st_ino;
+    if (ttyname_r_for_directory("/dev/", major_minor_numbers, inode_number, buffer, size) < 0) {
+        if (ttyname_r_for_directory("/dev/pts/", major_minor_numbers, inode_number, buffer, size) < 0) {
+            errno = ENOTTY;
+            return -1;
+        }
+    }
+    return 0;
 }
 
 static char ttyname_buf[32];

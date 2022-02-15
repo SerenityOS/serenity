@@ -24,8 +24,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/internals.h>
+#include <sys/ioctl.h>
+#include <sys/ioctl_numbers.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <sys/wait.h>
 #include <syscall.h>
 #include <unistd.h>
@@ -724,8 +727,39 @@ char* ptsname(int fd)
 
 int ptsname_r(int fd, char* buffer, size_t size)
 {
-    int rc = syscall(SC_ptsname, fd, buffer, size);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    struct stat stat;
+    if (fstat(fd, &stat) < 0)
+        return -1;
+
+    StringBuilder devpts_path_builder;
+    devpts_path_builder.append("/dev/pts/"sv);
+
+    int master_pty_index = 0;
+    // Note: When the user opens a PTY from /dev/ptmx with posix_openpt(), the open file descriptor
+    // points to /dev/ptmx, (major number is 5 and minor number is 2), but internally
+    // in the kernel, it points to a new MasterPTY device. When we do ioctl with TIOCGPTN option
+    // on the open file descriptor, it actually asks the MasterPTY what is the assigned index
+    // of it when the PTYMultiplexer created it.
+    if (ioctl(fd, TIOCGPTN, &master_pty_index) < 0)
+        return -1;
+
+    if (master_pty_index < 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    devpts_path_builder.appendff("{:d}", master_pty_index);
+    if (devpts_path_builder.length() > size) {
+        errno = ERANGE;
+        return -1;
+    }
+    memset(buffer, 0, devpts_path_builder.length() + 1);
+    auto full_devpts_path_string = devpts_path_builder.build();
+    if (!full_devpts_path_string.copy_characters_to_buffer(buffer, size)) {
+        errno = ERANGE;
+        return -1;
+    }
+    return 0;
 }
 
 static unsigned long s_next_rand = 1;
