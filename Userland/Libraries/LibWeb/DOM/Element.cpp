@@ -161,6 +161,8 @@ void Element::remove_attribute(const FlyString& name)
 {
     m_attributes->remove_attribute(name);
 
+    did_remove_attribute(name);
+
     // FIXME: Invalidate less.
     document().invalidate_style();
 }

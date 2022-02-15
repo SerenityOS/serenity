@@ -83,6 +83,7 @@ public:
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
     virtual void parse_attribute(const FlyString& name, const String& value);
+    virtual void did_remove_attribute(FlyString const&) { }
 
     void recompute_style();
 
