@@ -76,6 +76,22 @@ UUID::UUID(StringView uuid_string_view, Endianness endianness)
     VERIFY_NOT_REACHED();
 }
 
+#ifdef KERNEL
+ErrorOr<NonnullOwnPtr<Kernel::KString>> UUID::to_string() const
+{
+    StringBuilder builder(36);
+    TRY(builder.try_append(encode_hex(m_uuid_buffer.span().trim(4)).view()));
+    TRY(builder.try_append('-'));
+    TRY(builder.try_append(encode_hex(m_uuid_buffer.span().slice(4).trim(2)).view()));
+    TRY(builder.try_append('-'));
+    TRY(builder.try_append(encode_hex(m_uuid_buffer.span().slice(6).trim(2)).view()));
+    TRY(builder.try_append('-'));
+    TRY(builder.try_append(encode_hex(m_uuid_buffer.span().slice(8).trim(2)).view()));
+    TRY(builder.try_append('-'));
+    TRY(builder.try_append(encode_hex(m_uuid_buffer.span().slice(10).trim(6)).view()));
+    return Kernel::KString::try_create(builder.string_view());
+}
+#else
 String UUID::to_string() const
 {
     StringBuilder builder(36);
@@ -90,6 +106,7 @@ String UUID::to_string() const
     builder.append(encode_hex(m_uuid_buffer.span().slice(10).trim(6)).view());
     return builder.to_string();
 }
+#endif
 
 bool UUID::operator==(const UUID& other) const
 {

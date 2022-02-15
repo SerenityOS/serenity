@@ -11,6 +11,12 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
+#ifdef KERNEL
+#    include <Kernel/KString.h>
+#else
+#    include <AK/String.h>
+#endif
+
 namespace AK {
 
 class UUID {
@@ -32,7 +38,11 @@ public:
     bool operator<(const UUID&) const = delete;
     bool operator>(const UUID&) const = delete;
 
+#ifdef KERNEL
+    ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const;
+#else
     String to_string() const;
+#endif
     bool is_zero() const;
 
 private:
