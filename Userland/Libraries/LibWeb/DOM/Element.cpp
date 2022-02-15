@@ -358,6 +358,32 @@ DOM::ExceptionOr<bool> Element::matches(StringView selectors) const
     return false;
 }
 
+// https://dom.spec.whatwg.org/#dom-element-closest
+DOM::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) const
+{
+    auto maybe_selectors = parse_selector(CSS::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
+    if (!maybe_selectors.has_value())
+        return DOM::SyntaxError::create("Failed to parse selector");
+
+    auto matches_selectors = [](CSS::SelectorList const& selector_list, Element const* element) {
+        for (auto& selector : selector_list) {
+            if (!SelectorEngine::matches(selector, *element))
+                return false;
+        }
+        return true;
+    };
+
+    auto const selector_list = maybe_selectors.release_value();
+    for (auto* element = this; element; element = element->parent_element()) {
+        if (!matches_selectors(selector_list, element))
+            continue;
+
+        return element;
+    }
+
+    return nullptr;
+}
+
 ExceptionOr<void> Element::set_inner_html(String const& markup)
 {
     auto result = DOMParsing::inner_html_setter(*this, markup);
