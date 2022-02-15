@@ -975,7 +975,9 @@ void Terminal::DSR(Parameters params)
         emit_string("\033[0n"); // Terminal status OK!
     } else if (params.size() == 1 && params[0] == 6) {
         // Cursor position query
-        emit_string(String::formatted("\e[{};{}R", cursor_row() + 1, cursor_column() + 1));
+        StringBuilder builder;
+        MUST(builder.try_appendff("\e[{};{}R", cursor_row() + 1, cursor_column() + 1)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
+        emit_string(builder.string_view());
     } else {
         dbgln("Unknown DSR");
     }
@@ -1344,16 +1346,20 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 
     auto emit_final_with_modifier = [this, modifier_mask](char final) {
         char escape_character = m_cursor_keys_mode == CursorKeysMode::Application ? 'O' : '[';
+        StringBuilder builder;
         if (modifier_mask)
-            emit_string(String::formatted("\e{}1;{}{:c}", escape_character, modifier_mask + 1, final));
+            MUST(builder.try_appendff("\e{}1;{}{:c}", escape_character, modifier_mask + 1, final)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
         else
-            emit_string(String::formatted("\e{}{:c}", escape_character, final));
+            MUST(builder.try_appendff("\e{}{:c}", escape_character, final)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
+        emit_string(builder.string_view());
     };
     auto emit_tilde_with_modifier = [this, modifier_mask](unsigned num) {
+        StringBuilder builder;
         if (modifier_mask)
-            emit_string(String::formatted("\e[{};{}~", num, modifier_mask + 1));
+            MUST(builder.try_appendff("\e[{};{}~", num, modifier_mask + 1)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
         else
-            emit_string(String::formatted("\e[{}~", num));
+            MUST(builder.try_appendff("\e[{}~", num)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
+        emit_string(builder.string_view());
     };
 
     switch (key) {
