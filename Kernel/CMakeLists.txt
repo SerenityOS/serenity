@@ -62,6 +62,7 @@ set(KERNEL_SOURCES
     Devices/PCISerialDevice.cpp
     Devices/PCSpeaker.cpp
     Devices/RandomDevice.cpp
+    Devices/SelfTTYDevice.cpp
     Devices/SerialDevice.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
