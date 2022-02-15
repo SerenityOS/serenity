@@ -403,6 +403,10 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
         if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
             place_block_level_element_in_normal_flow_vertically(child_box, block_container);
 
+        if (child_box.has_definite_height()) {
+            compute_height(child_box);
+        }
+
         OwnPtr<FormattingContext> independent_formatting_context;
         if (child_box.can_have_children()) {
             independent_formatting_context = create_independent_formatting_context_if_needed(child_box);

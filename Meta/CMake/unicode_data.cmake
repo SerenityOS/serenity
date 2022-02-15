@@ -42,6 +42,9 @@ set(SCRIPTS_PATH "${UCD_PATH}/Scripts.txt")
 set(SCRIPT_EXTENSIONS_URL "https://www.unicode.org/Public/${UCD_VERSION}/ucd/ScriptExtensions.txt")
 set(SCRIPT_EXTENSIONS_PATH "${UCD_PATH}/ScriptExtensions.txt")
 
+set(BLOCKS_URL "https://www.unicode.org/Public/${UCD_VERSION}/ucd/Blocks.txt")
+set(BLOCKS_PATH "${UCD_PATH}/Blocks.txt")
+
 set(EMOJI_DATA_URL "https://www.unicode.org/Public/${UCD_VERSION}/ucd/emoji/emoji-data.txt")
 set(EMOJI_DATA_PATH "${UCD_PATH}/emoji-data.txt")
 
@@ -103,6 +106,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     download_file("${NAME_ALIAS_URL}" "${NAME_ALIAS_PATH}")
     download_file("${SCRIPTS_URL}" "${SCRIPTS_PATH}")
     download_file("${SCRIPT_EXTENSIONS_URL}" "${SCRIPT_EXTENSIONS_PATH}")
+    download_file("${BLOCKS_URL}" "${BLOCKS_PATH}")
     download_file("${EMOJI_DATA_URL}" "${EMOJI_DATA_PATH}")
     download_file("${NORM_PROPS_URL}" "${NORM_PROPS_PATH}")
     download_file("${GRAPHEME_BREAK_PROP_URL}" "${GRAPHEME_BREAK_PROP_PATH}")
@@ -160,7 +164,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "${UNICODE_META_TARGET_PREFIX}"
         "${UNICODE_DATA_HEADER}"
         "${UNICODE_DATA_IMPLEMENTATION}"
-        arguments -u "${UNICODE_DATA_PATH}" -s "${SPECIAL_CASING_PATH}" -g "${DERIVED_GENERAL_CATEGORY_PATH}" -p "${PROP_LIST_PATH}" -d "${DERIVED_CORE_PROP_PATH}" -b "${DERIVED_BINARY_PROP_PATH}" -a "${PROP_ALIAS_PATH}" -v "${PROP_VALUE_ALIAS_PATH}" -r "${SCRIPTS_PATH}" -x "${SCRIPT_EXTENSIONS_PATH}" -e "${EMOJI_DATA_PATH}" -m "${NAME_ALIAS_PATH}" -n "${NORM_PROPS_PATH}" -f "${GRAPHEME_BREAK_PROP_PATH}" -w "${WORD_BREAK_PROP_PATH}" -i "${SENTENCE_BREAK_PROP_PATH}"
+        arguments -u "${UNICODE_DATA_PATH}" -s "${SPECIAL_CASING_PATH}" -g "${DERIVED_GENERAL_CATEGORY_PATH}" -p "${PROP_LIST_PATH}" -d "${DERIVED_CORE_PROP_PATH}" -b "${DERIVED_BINARY_PROP_PATH}" -a "${PROP_ALIAS_PATH}" -v "${PROP_VALUE_ALIAS_PATH}" -r "${SCRIPTS_PATH}" -x "${SCRIPT_EXTENSIONS_PATH}" -k "${BLOCKS_PATH}" -e "${EMOJI_DATA_PATH}" -m "${NAME_ALIAS_PATH}" -n "${NORM_PROPS_PATH}" -f "${GRAPHEME_BREAK_PROP_PATH}" -w "${WORD_BREAK_PROP_PATH}" -i "${SENTENCE_BREAK_PROP_PATH}"
     )
     invoke_generator(
         "UnicodeDateTimeFormat"

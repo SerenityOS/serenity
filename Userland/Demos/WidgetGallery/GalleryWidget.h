@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +19,7 @@
 class GalleryWidget final : public GUI::Widget {
     C_OBJECT(GalleryWidget)
 public:
-    virtual ~GalleryWidget() override;
+    virtual ~GalleryWidget() override = default;
 
 private:
     GalleryWidget();

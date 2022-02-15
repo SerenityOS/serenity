@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2020, Peter Elliott <pelliott@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <LibArchive/TarStream.h>
 #include <string.h>
 
@@ -103,8 +105,8 @@ void TarInputStream::advance()
 
 bool TarInputStream::valid() const
 {
-    auto& header_magic = header().magic();
-    auto& header_version = header().version();
+    auto const header_magic = header().magic();
+    auto const header_version = header().version();
 
     if (!((header_magic == gnu_magic && header_version == gnu_version)
             || (header_magic == ustar_magic && header_version == ustar_version)
@@ -129,8 +131,7 @@ TarOutputStream::TarOutputStream(OutputStream& stream)
 void TarOutputStream::add_directory(const String& path, mode_t mode)
 {
     VERIFY(!m_finished);
-    TarFileHeader header;
-    memset(&header, 0, sizeof(header));
+    TarFileHeader header {};
     header.set_size(0);
     header.set_filename(String::formatted("{}/", path)); // Old tar implementations assume directory names end with a /
     header.set_type_flag(TarFileType::Directory);
@@ -146,8 +147,7 @@ void TarOutputStream::add_directory(const String& path, mode_t mode)
 void TarOutputStream::add_file(const String& path, mode_t mode, ReadonlyBytes bytes)
 {
     VERIFY(!m_finished);
-    TarFileHeader header;
-    memset(&header, 0, sizeof(header));
+    TarFileHeader header {};
     header.set_size(bytes.size());
     header.set_filename(path);
     header.set_type_flag(TarFileType::NormalFile);
@@ -155,22 +155,22 @@ void TarOutputStream::add_file(const String& path, mode_t mode, ReadonlyBytes by
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     header.calculate_checksum();
-    VERIFY(m_stream.write_or_error(Bytes { &header, sizeof(header) }));
-    u8 padding[block_size] = { 0 };
-    VERIFY(m_stream.write_or_error(Bytes { &padding, block_size - sizeof(header) }));
+    VERIFY(m_stream.write_or_error(ReadonlyBytes { &header, sizeof(header) }));
+    constexpr Array<u8, block_size> padding { 0 };
+    VERIFY(m_stream.write_or_error(ReadonlyBytes { &padding, block_size - sizeof(header) }));
     size_t n_written = 0;
     while (n_written < bytes.size()) {
         n_written += m_stream.write(bytes.slice(n_written, min(bytes.size() - n_written, block_size)));
     }
-    VERIFY(m_stream.write_or_error(Bytes { &padding, block_size - (n_written % block_size) }));
+    VERIFY(m_stream.write_or_error(ReadonlyBytes { &padding, block_size - (n_written % block_size) }));
 }
 
 void TarOutputStream::finish()
 {
     VERIFY(!m_finished);
-    u8 padding[block_size] = { 0 };
-    m_stream.write_or_error(Bytes { &padding, block_size }); // 2 empty records that are used to signify the end of the archive
-    m_stream.write_or_error(Bytes { &padding, block_size });
+    constexpr Array<u8, block_size> padding { 0 };
+    m_stream.write_or_error(ReadonlyBytes { &padding, block_size }); // 2 empty records that are used to signify the end of the archive
+    m_stream.write_or_error(ReadonlyBytes { &padding, block_size });
     m_finished = true;
 }
 

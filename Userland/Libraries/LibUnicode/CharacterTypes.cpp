@@ -23,9 +23,11 @@
 namespace Unicode {
 
 Optional<String> __attribute__((weak)) code_point_display_name(u32) { return {}; }
+Optional<StringView> __attribute__((weak)) code_point_block_display_name(u32) { return {}; }
 Optional<StringView> __attribute__((weak)) code_point_abbreviation(u32) { return {}; }
 u32 __attribute__((weak)) canonical_combining_class(u32) { return {}; }
 Span<SpecialCasing const* const> __attribute__((weak)) special_case_mapping(u32) { return {}; }
+Span<BlockName const> __attribute__((weak)) block_display_names() { return {}; }
 
 #if ENABLE_UNICODE_DATA
 
@@ -353,6 +355,9 @@ bool is_ecma262_property([[maybe_unused]] Property property)
 Optional<Script> __attribute__((weak)) script_from_string(StringView) { return {}; }
 bool __attribute__((weak)) code_point_has_script(u32, Script) { return {}; }
 bool __attribute__((weak)) code_point_has_script_extension(u32, Script) { return {}; }
+
+Optional<Block> __attribute__((weak)) block_from_string(StringView) { return {}; }
+bool __attribute__((weak)) code_point_has_block(u32, Block) { return {}; }
 
 bool __attribute__((weak)) code_point_has_grapheme_break_property(u32, GraphemeBreakProperty) { return {}; }
 bool __attribute__((weak)) code_point_has_word_break_property(u32, WordBreakProperty) { return {}; }

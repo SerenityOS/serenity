@@ -2,3 +2,6 @@
 Name=Hex Editor
 Executable=/bin/HexEditor
 Category=Development
+
+[Launcher]
+FileTypes=font

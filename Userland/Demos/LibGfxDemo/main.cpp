@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,7 +27,7 @@ const int HEIGHT = 600;
 class Canvas final : public GUI::Widget {
     C_OBJECT(Canvas)
 public:
-    virtual ~Canvas() override;
+    virtual ~Canvas() override = default;
 
 private:
     Canvas();
@@ -40,10 +41,6 @@ Canvas::Canvas()
 {
     m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }).release_value_but_fixme_should_propagate_errors();
     draw();
-}
-
-Canvas::~Canvas()
-{
 }
 
 void Canvas::paint_event(GUI::PaintEvent& event)

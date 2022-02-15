@@ -46,6 +46,26 @@ void MonitorSettingsWidget::create_resolution_list()
     m_resolutions.append({ 2560, 1080 });
     m_resolutions.append({ 2560, 1440 });
     m_resolutions.append({ 3440, 1440 });
+
+    for (auto resolution : m_resolutions) {
+        // Use Euclid's Algorithm to calculate greatest common factor
+        i32 a = resolution.width();
+        i32 b = resolution.height();
+        i32 gcf = 0;
+        for (;;) {
+            i32 r = a % b;
+            if (r == 0) {
+                gcf = b;
+                break;
+            }
+            a = b;
+            b = r;
+        }
+
+        i32 aspect_width = resolution.width() / gcf;
+        i32 aspect_height = resolution.height() / gcf;
+        m_resolution_strings.append(String::formatted("{}x{} ({}:{})", resolution.width(), resolution.height(), aspect_width, aspect_height));
+    }
 }
 
 void MonitorSettingsWidget::create_frame()
@@ -64,7 +84,7 @@ void MonitorSettingsWidget::create_frame()
 
     m_resolution_combo = *find_descendant_of_type_named<GUI::ComboBox>("resolution_combo");
     m_resolution_combo->set_only_allow_values_from_model(true);
-    m_resolution_combo->set_model(*GUI::ItemListModel<Gfx::IntSize>::create(m_resolutions));
+    m_resolution_combo->set_model(*GUI::ItemListModel<String>::create(m_resolution_strings));
     m_resolution_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         auto& selected_screen = m_screen_layout.screens[m_selected_screen_index];
         selected_screen.resolution = m_resolutions.at(index.row());

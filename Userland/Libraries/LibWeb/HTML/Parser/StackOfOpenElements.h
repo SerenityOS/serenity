@@ -12,8 +12,14 @@
 
 namespace Web::HTML {
 
+// https://html.spec.whatwg.org/multipage/parsing.html#stack-of-open-elements
 class StackOfOpenElements {
 public:
+    // Initially, the stack of open elements is empty.
+    // The stack grows downwards; the topmost node on the stack is the first one added to the stack,
+    // and the bottommost node of the stack is the most recently added node in the stack
+    // (notwithstanding when the stack is manipulated in a random access fashion as part of the handling for misnested tags).
+
     StackOfOpenElements() { }
     ~StackOfOpenElements();
 
@@ -50,7 +56,7 @@ public:
         ssize_t index;
     };
     LastElementResult last_element_with_tag_name(const FlyString&);
-    DOM::Element* element_before(const DOM::Element&);
+    DOM::Element* element_immediately_above(DOM::Element const&);
 
 private:
     bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;

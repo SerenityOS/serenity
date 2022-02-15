@@ -19,7 +19,7 @@ static void update_intermediate_node_permissions(UnveilNode& root_node, UnveilAc
         auto& node = static_cast<UnveilNode&>(*entry.value);
         if (node.was_explicitly_unveiled())
             continue;
-        node.set_metadata({ node.path(), new_permissions, node.was_explicitly_unveiled() });
+        node.metadata_value().permissions = new_permissions;
         update_intermediate_node_permissions(node, new_permissions);
     }
 }
@@ -109,19 +109,20 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*>
         if (matching_node.permissions() != new_permissions)
             update_intermediate_node_permissions(matching_node, (UnveilAccess)new_permissions);
 
-        matching_node.set_metadata({ matching_node.path(), (UnveilAccess)new_permissions, true });
+        matching_node.metadata_value().explicitly_unveiled = true;
+        matching_node.metadata_value().permissions = (UnveilAccess)new_permissions;
         m_veil_state = VeilState::Dropped;
         return 0;
     }
 
-    matching_node.insert(
+    TRY(matching_node.insert(
         it,
         path_parts.end(),
-        { new_unveiled_path->view(), (UnveilAccess)new_permissions, true },
-        [](auto& parent, auto& it) -> Optional<UnveilMetadata> {
-            auto path = String::formatted("{}/{}", parent.path(), *it);
-            return UnveilMetadata { path, parent.permissions(), false };
-        });
+        { new_unveiled_path.release_nonnull(), (UnveilAccess)new_permissions, true },
+        [](auto& parent, auto& it) -> ErrorOr<Optional<UnveilMetadata>> {
+            auto path = TRY(KString::formatted("{}/{}", parent.path(), *it));
+            return UnveilMetadata(move(path), parent.permissions(), false);
+        }));
 
     VERIFY(m_veil_state != VeilState::Locked);
     m_veil_state = VeilState::Dropped;

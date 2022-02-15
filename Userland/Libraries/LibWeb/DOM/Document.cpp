@@ -147,6 +147,18 @@ void Document::removed_last_ref()
     delete this;
 }
 
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
+void Document::write(Vector<String> const& strings)
+{
+    dbgln("TODO: document.write({})", strings);
+}
+
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
+void Document::writeln(Vector<String> const& strings)
+{
+    dbgln("TODO: document.writeln({})", strings);
+}
+
 Origin Document::origin() const
 {
     if (!m_url.is_valid())
@@ -420,7 +432,7 @@ void Document::update_layout()
 
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
 
-    m_layout_root->set_needs_display();
+    browsing_context()->set_needs_display();
 
     if (browsing_context()->is_top_level()) {
         if (auto* page = this->page())

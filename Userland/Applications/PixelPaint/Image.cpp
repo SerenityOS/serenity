@@ -369,6 +369,23 @@ void Image::merge_visible_layers()
     }
 }
 
+void Image::merge_active_layer_up(Layer& layer)
+{
+    if (m_layers.size() < 2)
+        return;
+    size_t layer_index = this->index_of(layer);
+    if ((layer_index + 1) == m_layers.size()) {
+        dbgln("Cannot merge layer up: layer is already at the top");
+        return; // FIXME: Notify user of error properly.
+    }
+
+    auto& layer_above = m_layers.at(layer_index + 1);
+    GUI::Painter painter(layer_above.bitmap());
+    painter.draw_scaled_bitmap(rect(), layer.bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
+    remove_layer(layer);
+    select_layer(&layer_above);
+}
+
 void Image::merge_active_layer_down(Layer& layer)
 {
     if (m_layers.size() < 2)

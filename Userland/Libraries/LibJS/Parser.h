@@ -97,7 +97,7 @@ public:
     NonnullRefPtr<WhileStatement> parse_while_statement();
     NonnullRefPtr<WithStatement> parse_with_statement();
     NonnullRefPtr<DebuggerStatement> parse_debugger_statement();
-    NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test);
+    NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test, Vector<TokenType> const&);
     NonnullRefPtr<OptionalChain> parse_optional_chain(NonnullRefPtr<Expression> base);
     NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, const Vector<TokenType>& forbidden = {});
     PrimaryExpressionParseResult parse_primary_expression();
@@ -107,7 +107,7 @@ public:
     NonnullRefPtr<ArrayExpression> parse_array_expression();
     NonnullRefPtr<StringLiteral> parse_string_literal(const Token& token, bool in_template_literal = false);
     NonnullRefPtr<TemplateLiteral> parse_template_literal(bool is_tagged);
-    NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
+    NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right, Vector<TokenType> const& forbidden = {});
     NonnullRefPtr<Expression> parse_call_expression(NonnullRefPtr<Expression>);
     NonnullRefPtr<NewExpression> parse_new_expression();
     NonnullRefPtr<ClassDeclaration> parse_class_declaration();
@@ -115,7 +115,7 @@ public:
     NonnullRefPtr<YieldExpression> parse_yield_expression();
     NonnullRefPtr<AwaitExpression> parse_await_expression();
     NonnullRefPtr<Expression> parse_property_key();
-    NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity);
+    NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity, Vector<TokenType> const& forbidden = {});
     NonnullRefPtr<Identifier> parse_identifier();
     NonnullRefPtr<ImportStatement> parse_import_statement(Program& program);
     NonnullRefPtr<ExportStatement> parse_export_statement(Program& program);

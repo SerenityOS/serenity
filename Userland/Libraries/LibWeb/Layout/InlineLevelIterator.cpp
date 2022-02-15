@@ -137,6 +137,11 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
         return item;
     }
 
+    if (m_current_node->is_positioned()) {
+        skip_to_next();
+        return next(available_width);
+    }
+
     if (is<Layout::BreakNode>(*m_current_node)) {
         skip_to_next();
         return Item {

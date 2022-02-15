@@ -10,6 +10,7 @@
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/TextRange.h>
 #include <LibGfx/BitmapFont.h>
+#include <LibUnicode/CharacterTypes.h>
 
 namespace GUI {
 
@@ -50,6 +51,7 @@ public:
         No
     };
 
+    void set_active_range(Unicode::CodePointRange);
     void set_active_glyph(int, ShouldResetSelection = ShouldResetSelection::Yes);
     void clear_selection() { m_selection.set_size(0); }
     void scroll_to_glyph(int);
@@ -89,6 +91,7 @@ private:
     int m_active_glyph { 0 };
     int m_visible_glyphs { 0 };
     bool m_in_drag_select { false };
+    Unicode::CodePointRange m_active_range { 0x0000, 0x10FFFF };
 };
 
 }

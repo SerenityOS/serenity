@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,7 +32,7 @@ static bool flag_hide_window_frame = false;
 class Cube final : public GUI::Widget {
     C_OBJECT(Cube)
 public:
-    virtual ~Cube() override;
+    virtual ~Cube() override = default;
     void set_stat_label(RefPtr<GUI::Label> l) { m_stats = l; };
     void set_show_window_frame(bool);
     bool show_window_frame() const { return m_show_window_frame; }
@@ -70,10 +71,6 @@ Cube::Cube()
 
     stop_timer();
     start_timer(20);
-}
-
-Cube::~Cube()
-{
 }
 
 void Cube::paint_event(GUI::PaintEvent& event)

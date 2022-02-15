@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "LibJS/Runtime/Value.h"
 #include <AK/CharacterTypes.h>
 #include <AK/Utf16View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -12,6 +11,7 @@
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 

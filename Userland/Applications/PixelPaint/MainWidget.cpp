@@ -592,7 +592,18 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
 
     m_layer_menu->add_action(GUI::Action::create(
-        "M&erge Active Layer Down", { Mod_Ctrl, Key_E }, [&](auto&) {
+        "Merge &Active Layer Up", g_icon_bag.merge_active_layer_up, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+            editor->image().merge_active_layer_up(*active_layer);
+            editor->did_complete_action();
+        }));
+
+    m_layer_menu->add_action(GUI::Action::create(
+        "M&erge Active Layer Down", { Mod_Ctrl, Key_E }, g_icon_bag.merge_active_layer_down, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto active_layer = editor->active_layer();

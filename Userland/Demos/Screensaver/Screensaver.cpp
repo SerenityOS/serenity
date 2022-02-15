@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +20,7 @@
 class Screensaver final : public GUI::Widget {
     C_OBJECT(Screensaver)
 public:
-    virtual ~Screensaver() override;
+    virtual ~Screensaver() override = default;
 
 private:
     Screensaver(int width = 64, int height = 48, int interval = 10000);
@@ -42,10 +42,6 @@ Screensaver::Screensaver(int width, int height, int interval)
     stop_timer();
     start_timer(interval);
     draw();
-}
-
-Screensaver::~Screensaver()
-{
 }
 
 void Screensaver::mousemove_event(GUI::MouseEvent& event)

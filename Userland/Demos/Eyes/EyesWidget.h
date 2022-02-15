@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ class EyesWidget final : public GUI::Widget
     C_OBJECT(EyesWidget)
 
 public:
-    virtual ~EyesWidget();
+    virtual ~EyesWidget() override = default;
 
 private:
     EyesWidget(int num_eyes, int full_rows, int extra)

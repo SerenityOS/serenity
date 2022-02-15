@@ -88,6 +88,11 @@ struct CodePointData {
     Vector<u32> special_casing_indices;
 };
 
+struct BlockName {
+    CodePointRange code_point_range;
+    String name;
+};
+
 struct UnicodeData {
     u32 code_points_with_non_zero_combining_class { 0 };
 
@@ -125,6 +130,12 @@ struct UnicodeData {
     Vector<Alias> script_aliases;
     PropList script_extensions;
 
+    PropList block_list {
+        { "No_Block"sv, {} },
+    };
+    Vector<Alias> block_aliases;
+    Vector<BlockName> block_display_names;
+
     // FIXME: We are not yet doing anything with this data. It will be needed for String.prototype.normalize.
     NormalizationProps normalization_props;
 
@@ -132,6 +143,24 @@ struct UnicodeData {
     PropList word_break_props;
     PropList sentence_break_props;
 };
+
+static String sanitize_entry(String const& entry)
+{
+    auto sanitized = entry.replace("-", "_", true);
+    sanitized = sanitized.replace(" ", "_", true);
+
+    StringBuilder builder;
+    bool next_is_upper = true;
+    for (auto ch : sanitized) {
+        if (next_is_upper)
+            builder.append_code_point(to_ascii_uppercase(ch));
+        else
+            builder.append_code_point(ch);
+        next_is_upper = ch == '_';
+    }
+
+    return builder.to_string();
+}
 
 static Vector<u32> parse_code_point_list(StringView list)
 {
@@ -230,7 +259,7 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
     return {};
 }
 
-static ErrorOr<void> parse_prop_list(Core::Stream::BufferedFile& file, PropList& prop_list, bool multi_value_property = false)
+static ErrorOr<void> parse_prop_list(Core::Stream::BufferedFile& file, PropList& prop_list, bool multi_value_property = false, bool sanitize_property = false)
 {
     Array<u8, 1024> buffer;
 
@@ -255,8 +284,8 @@ static ErrorOr<void> parse_prop_list(Core::Stream::BufferedFile& file, PropList&
         else
             properties = { segments[1].trim_whitespace() };
 
-        for (auto const& property : properties) {
-            auto& code_points = prop_list.ensure(property.trim_whitespace());
+        for (auto& property : properties) {
+            auto& code_points = prop_list.ensure(sanitize_property ? sanitize_entry(property).trim_whitespace().view() : property.trim_whitespace());
             code_points.append(code_point_range);
         }
     }
@@ -340,7 +369,7 @@ static ErrorOr<void> parse_name_aliases(Core::Stream::BufferedFile& file, Unicod
     return {};
 }
 
-static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true)
+static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
 {
     TRY(file.seek(0, Core::Stream::SeekMode::SetPosition));
     Array<u8, 1024> buffer;
@@ -376,11 +405,11 @@ static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, St
         VERIFY((segments.size() == 3) || (segments.size() == 4));
         auto value = primary_value_is_first ? segments[1].trim_whitespace() : segments[2].trim_whitespace();
         auto alias = primary_value_is_first ? segments[2].trim_whitespace() : segments[1].trim_whitespace();
-        append_alias(alias, value);
+        append_alias(sanitize_alias ? sanitize_entry(alias).view() : alias, value);
 
         if (segments.size() == 4) {
             alias = segments[3].trim_whitespace();
-            append_alias(alias, value);
+            append_alias(sanitize_alias ? sanitize_entry(alias).view() : alias, value);
         }
     }
 
@@ -483,6 +512,28 @@ static void add_canonical_code_point_name(CodePointRange range, StringView name,
     }
 
     unicode_data.code_point_display_names.append({ range, name });
+}
+
+static ErrorOr<void> parse_block_display_names(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
+{
+    Array<u8, 1024> buffer;
+    while (TRY(file.can_read_line())) {
+        auto nread = TRY(file.read_line(buffer));
+        StringView line { buffer.data(), nread };
+        if (line.is_empty() || line.starts_with('#'))
+            continue;
+
+        auto segments = line.split_view(';', true);
+        VERIFY(segments.size() == 2);
+
+        auto code_point_range = parse_code_point_range(segments[0].trim_whitespace());
+        auto display_name = segments[1].trim_whitespace();
+        unicode_data.block_display_names.append({ code_point_range, display_name });
+    }
+
+    TRY(file.seek(0, Core::Stream::SeekMode::SetPosition));
+
+    return {};
 }
 
 static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
@@ -591,9 +642,10 @@ static ErrorOr<void> generate_unicode_data_header(Core::Stream::BufferedFile& fi
 
         generator.set("name", name);
         generator.set("underlying", String::formatted("{}UnderlyingType", name));
+        generator.set("type", ((values.size() + !default_.is_empty()) < 256) ? "u8"sv : "u16"sv);
 
         generator.append(R"~~~(
-using @underlying@ = u8;
+using @underlying@ = @type@;
 
 enum class @name@ : @underlying@ {)~~~");
 
@@ -635,6 +687,7 @@ namespace Unicode {
     generate_enum("GeneralCategory"sv, {}, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
     generate_enum("Property"sv, {}, unicode_data.prop_list.keys(), unicode_data.prop_aliases);
     generate_enum("Script"sv, {}, unicode_data.script_list.keys(), unicode_data.script_aliases);
+    generate_enum("Block"sv, {}, unicode_data.block_list.keys(), unicode_data.block_aliases);
     generate_enum("GraphemeBreakProperty"sv, {}, unicode_data.grapheme_break_props.keys());
     generate_enum("WordBreakProperty"sv, {}, unicode_data.word_break_props.keys());
     generate_enum("SentenceBreakProperty"sv, {}, unicode_data.sentence_break_props.keys());
@@ -813,11 +866,6 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
     append_code_point_mappings("abbreviation"sv, "CodePointAbbreviation"sv, unicode_data.code_point_abbreviations.size(), [](auto const& data) { return data.abbreviation; });
 
     generator.append(R"~~~(
-struct CodePointRange {
-    u32 first { 0 };
-    u32 last { 0 };
-};
-
 struct CodePointRangeComparator {
     constexpr int operator()(u32 code_point, CodePointRange const& range)
     {
@@ -885,9 +933,48 @@ static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
     append_prop_list("s_properties"sv, "s_property_{}"sv, unicode_data.prop_list);
     append_prop_list("s_scripts"sv, "s_script_{}"sv, unicode_data.script_list);
     append_prop_list("s_script_extensions"sv, "s_script_extension_{}"sv, unicode_data.script_extensions);
+    append_prop_list("s_blocks"sv, "s_block_{}"sv, unicode_data.block_list);
     append_prop_list("s_grapheme_break_properties"sv, "s_grapheme_break_property_{}"sv, unicode_data.grapheme_break_props);
     append_prop_list("s_word_break_properties"sv, "s_word_break_property_{}"sv, unicode_data.word_break_props);
     append_prop_list("s_sentence_break_properties"sv, "s_sentence_break_property_{}"sv, unicode_data.sentence_break_props);
+
+    generator.append(R"~~~(
+struct BlockNameComparator : public CodePointRangeComparator {
+    constexpr int operator()(u32 code_point, BlockName const& name)
+    {
+        return CodePointRangeComparator::operator()(code_point, name.code_point_range);
+    }
+};
+)~~~");
+
+    generator.set("block_display_names_size", String::number(unicode_data.block_display_names.size()));
+    generator.append(R"~~~(
+static constexpr Array<BlockName, @block_display_names_size@> s_block_display_names { {
+)~~~");
+    for (auto const& block_name : unicode_data.block_display_names) {
+        generator.set("first", String::formatted("{:#x}", block_name.code_point_range.first));
+        generator.set("last", String::formatted("{:#x}", block_name.code_point_range.last));
+        generator.set("name", block_name.name);
+        generator.append(R"~~~(    { { @first@, @last@ }, "@name@"sv },
+)~~~");
+    }
+    generator.append(R"~~~(} };
+)~~~");
+
+    generator.append(R"~~~(
+Optional<StringView> code_point_block_display_name(u32 code_point)
+{
+    if (auto const* entry = binary_search(s_block_display_names, code_point, nullptr, BlockNameComparator {}))
+        return entry->display_name;
+
+    return {};
+}
+
+Span<BlockName const> block_display_names()
+{
+    return s_block_display_names;
+}
+)~~~");
 
     generator.append(R"~~~(
 struct CodePointName {
@@ -1005,6 +1092,9 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
     append_prop_search("Script"sv, "script"sv, "s_scripts"sv);
     append_prop_search("Script"sv, "script_extension"sv, "s_script_extensions"sv);
     append_from_string("Script"sv, "script"sv, unicode_data.script_list, unicode_data.script_aliases);
+
+    append_prop_search("Block"sv, "block"sv, "s_blocks"sv);
+    append_from_string("Block"sv, "block"sv, unicode_data.block_list, unicode_data.block_aliases);
 
     append_prop_search("GraphemeBreakProperty"sv, "grapheme_break_property"sv, "s_grapheme_break_properties"sv);
     append_prop_search("WordBreakProperty"sv, "word_break_property"sv, "s_word_break_properties"sv);
@@ -1158,6 +1248,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView name_alias_path;
     StringView scripts_path;
     StringView script_extensions_path;
+    StringView blocks_path;
     StringView emoji_data_path;
     StringView normalization_path;
     StringView grapheme_break_path;
@@ -1178,6 +1269,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(name_alias_path, "Path to NameAliases.txt file", "name-alias-path", 'm', "name-alias-path");
     args_parser.add_option(scripts_path, "Path to Scripts.txt file", "scripts-path", 'r', "scripts-path");
     args_parser.add_option(script_extensions_path, "Path to ScriptExtensions.txt file", "script-extensions-path", 'x', "script-extensions-path");
+    args_parser.add_option(blocks_path, "Path to Blocks.txt file", "blocks-path", 'k', "blocks-path");
     args_parser.add_option(emoji_data_path, "Path to emoji-data.txt file", "emoji-data-path", 'e', "emoji-data-path");
     args_parser.add_option(normalization_path, "Path to DerivedNormalizationProps.txt file", "normalization-path", 'n', "normalization-path");
     args_parser.add_option(grapheme_break_path, "Path to GraphemeBreakProperty.txt file", "grapheme-break-path", 'f', "grapheme-break-path");
@@ -1198,6 +1290,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto name_alias_file = TRY(open_file(name_alias_path, Core::Stream::OpenMode::Read));
     auto scripts_file = TRY(open_file(scripts_path, Core::Stream::OpenMode::Read));
     auto script_extensions_file = TRY(open_file(script_extensions_path, Core::Stream::OpenMode::Read));
+    auto blocks_file = TRY(open_file(blocks_path, Core::Stream::OpenMode::Read));
     auto emoji_data_file = TRY(open_file(emoji_data_path, Core::Stream::OpenMode::Read));
     auto normalization_file = TRY(open_file(normalization_path, Core::Stream::OpenMode::Read));
     auto grapheme_break_file = TRY(open_file(grapheme_break_path, Core::Stream::OpenMode::Read));
@@ -1215,6 +1308,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(parse_alias_list(*prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases));
     TRY(parse_prop_list(*scripts_file, unicode_data.script_list));
     TRY(parse_prop_list(*script_extensions_file, unicode_data.script_extensions, true));
+    TRY(parse_block_display_names(*blocks_file, unicode_data));
+    TRY(parse_prop_list(*blocks_file, unicode_data.block_list, false, true));
     TRY(parse_name_aliases(*name_alias_file, unicode_data));
     TRY(parse_prop_list(*grapheme_break_file, unicode_data.grapheme_break_props));
     TRY(parse_prop_list(*word_break_file, unicode_data.word_break_props));
@@ -1224,6 +1319,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(parse_unicode_data(*unicode_data_file, unicode_data));
     TRY(parse_value_alias_list(*prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases));
     TRY(parse_value_alias_list(*prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false));
+    TRY(parse_value_alias_list(*prop_value_alias_file, "blk"sv, unicode_data.block_list.keys(), unicode_data.block_aliases, false, true));
     normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases);
 
     TRY(generate_unicode_data_header(*generated_header_file, unicode_data));

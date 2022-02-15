@@ -81,6 +81,7 @@ void GlyphMapWidget::set_active_glyph(int glyph, ShouldResetSelection should_res
 
 Gfx::IntRect GlyphMapWidget::get_outer_rect(int glyph) const
 {
+    glyph -= m_active_range.first;
     int row = glyph / columns();
     int column = glyph % columns();
     return Gfx::IntRect {
@@ -110,8 +111,10 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
 
     int scroll_steps = vertical_scrollbar().value() / vertical_scrollbar().step();
     int first_visible_glyph = scroll_steps * columns();
+    int range_offset = m_active_range.first;
+    int last_glyph = m_active_range.last + 1;
 
-    for (int glyph = first_visible_glyph; glyph <= first_visible_glyph + m_visible_glyphs && glyph < m_glyph_count; ++glyph) {
+    for (int glyph = first_visible_glyph + range_offset; glyph <= first_visible_glyph + m_visible_glyphs + range_offset && glyph < last_glyph; ++glyph) {
         Gfx::IntRect outer_rect = get_outer_rect(glyph);
         Gfx::IntRect inner_rect(
             outer_rect.x() + m_horizontal_spacing / 2,
@@ -141,8 +144,8 @@ Optional<int> GlyphMapWidget::glyph_at_position(Gfx::IntPoint position) const
     auto map_position = position - map_offset;
     auto col = (map_position.x() - 1) / ((font().max_glyph_width() + m_horizontal_spacing));
     auto row = (map_position.y() - 1) / ((font().glyph_height() + m_vertical_spacing));
-    auto glyph = row * columns() + col;
-    if (row >= 0 && row < rows() && col >= 0 && col < columns() && glyph < m_glyph_count)
+    auto glyph = row * columns() + col + m_active_range.first;
+    if (row >= 0 && row < rows() && col >= 0 && col < columns() && glyph < m_glyph_count + m_active_range.first)
         return glyph;
 
     return {};
@@ -208,13 +211,15 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
 {
     Frame::keydown_event(event);
 
+    int range_offset = m_active_range.first;
+
     if (!event.ctrl() && !event.shift()) {
         m_selection.set_size(1);
         m_selection.set_start(m_active_glyph);
     }
 
     if (event.key() == KeyCode::Key_Up) {
-        if (m_selection.start() >= m_columns) {
+        if (m_selection.start() - range_offset >= m_columns) {
             if (event.shift())
                 m_selection.resize_by(-m_columns);
             else
@@ -225,7 +230,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         }
     }
     if (event.key() == KeyCode::Key_Down) {
-        if (m_selection.start() < m_glyph_count - m_columns) {
+        if (m_selection.start() < m_glyph_count + range_offset - m_columns) {
             if (event.shift())
                 m_selection.resize_by(m_columns);
             else
@@ -236,7 +241,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         }
     }
     if (event.key() == KeyCode::Key_Left) {
-        if (m_selection.start() > 0) {
+        if (m_selection.start() > range_offset) {
             if (event.shift())
                 m_selection.resize_by(-1);
             else
@@ -247,7 +252,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         }
     }
     if (event.key() == KeyCode::Key_Right) {
-        if (m_selection.start() < m_glyph_count - 1) {
+        if (m_selection.start() < m_glyph_count + range_offset - 1) {
             if (event.shift())
                 m_selection.resize_by(1);
             else
@@ -260,24 +265,24 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
 
     // FIXME: Support selection for these.
     if (event.ctrl() && event.key() == KeyCode::Key_Home) {
-        set_active_glyph(0);
+        set_active_glyph(m_active_range.first);
         scroll_to_glyph(m_active_glyph);
         return;
     }
     if (event.ctrl() && event.key() == KeyCode::Key_End) {
-        set_active_glyph(m_glyph_count - 1);
+        set_active_glyph(m_active_range.last);
         scroll_to_glyph(m_active_glyph);
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
-        set_active_glyph(m_active_glyph / m_columns * m_columns);
+        auto start_of_row = (m_active_glyph - range_offset) / m_columns * m_columns;
+        set_active_glyph(start_of_row + range_offset);
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_End) {
-        int new_selection = m_active_glyph / m_columns * m_columns + (m_columns - 1);
-        int max = m_glyph_count - 1;
-        new_selection = clamp(new_selection, 0, max);
-        set_active_glyph(new_selection);
+        auto end_of_row = (m_active_glyph - range_offset) / m_columns * m_columns + (m_columns - 1);
+        end_of_row = clamp(end_of_row + range_offset, m_active_range.first, m_active_range.last);
+        set_active_glyph(end_of_row);
         return;
     }
 }
@@ -290,6 +295,7 @@ void GlyphMapWidget::did_change_font()
 
 void GlyphMapWidget::scroll_to_glyph(int glyph)
 {
+    glyph -= m_active_range.first;
     int row = glyph / columns();
     int column = glyph % columns();
     auto scroll_rect = Gfx::IntRect {
@@ -304,11 +310,13 @@ void GlyphMapWidget::scroll_to_glyph(int glyph)
 void GlyphMapWidget::select_previous_existing_glyph()
 {
     bool search_wrapped = false;
+    int first_glyph = m_active_range.first;
+    int last_glyph = m_active_range.last;
     for (int i = active_glyph() - 1;; --i) {
-        if (i < 0 && !search_wrapped) {
-            i = 0x10FFFF;
+        if (i < first_glyph && !search_wrapped) {
+            i = last_glyph;
             search_wrapped = true;
-        } else if (i < 0 && search_wrapped) {
+        } else if (i < first_glyph && search_wrapped) {
             break;
         }
         if (font().contains_glyph(i)) {
@@ -323,11 +331,13 @@ void GlyphMapWidget::select_previous_existing_glyph()
 void GlyphMapWidget::select_next_existing_glyph()
 {
     bool search_wrapped = false;
+    int first_glyph = m_active_range.first;
+    int last_glyph = m_active_range.last;
     for (int i = active_glyph() + 1;; ++i) {
-        if (i > 0x10FFFF && !search_wrapped) {
-            i = 0;
+        if (i > last_glyph && !search_wrapped) {
+            i = first_glyph;
             search_wrapped = true;
-        } else if (i > 0x10FFFF && search_wrapped) {
+        } else if (i > last_glyph && search_wrapped) {
             break;
         }
         if (font().contains_glyph(i)) {
@@ -353,6 +363,17 @@ void GlyphMapWidget::recalculate_content_size()
     set_content_size({ content_width, content_height });
 
     scroll_to_glyph(m_active_glyph);
+}
+
+void GlyphMapWidget::set_active_range(Unicode::CodePointRange range)
+{
+    if (m_active_range.first == range.first && m_active_range.last == range.last)
+        return;
+    m_active_range = range;
+    m_glyph_count = range.last - range.first + 1;
+    set_active_glyph(range.first);
+    recalculate_content_size();
+    update();
 }
 
 }

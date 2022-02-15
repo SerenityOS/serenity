@@ -16,6 +16,9 @@ interface Document : Node {
 
     readonly attribute Window? defaultView;
 
+    undefined write(DOMString... text);
+    undefined writeln(DOMString... text);
+
     attribute DOMString cookie;
 
     readonly attribute USVString referrer;

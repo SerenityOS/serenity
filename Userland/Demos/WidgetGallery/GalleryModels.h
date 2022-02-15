@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@
 class MouseCursorModel final : public GUI::Model {
 public:
     static NonnullRefPtr<MouseCursorModel> create() { return adopt_ref(*new MouseCursorModel); }
-    virtual ~MouseCursorModel() override { }
+    virtual ~MouseCursorModel() override = default;
 
     enum Column {
         Bitmap,
@@ -86,7 +86,7 @@ public:
     }
 
 private:
-    MouseCursorModel() { }
+    MouseCursorModel() = default;
 
     struct Cursor {
         RefPtr<Gfx::Bitmap> bitmap;
@@ -101,7 +101,7 @@ private:
 class FileIconsModel final : public GUI::Model {
 public:
     static NonnullRefPtr<FileIconsModel> create() { return adopt_ref(*new FileIconsModel); }
-    virtual ~FileIconsModel() override { }
+    virtual ~FileIconsModel() override = default;
 
     enum Column {
         BigIcon,
@@ -189,7 +189,7 @@ public:
     }
 
 private:
-    FileIconsModel() { }
+    FileIconsModel() = default;
 
     struct IconSet {
         RefPtr<Gfx::Bitmap> big_icon;
