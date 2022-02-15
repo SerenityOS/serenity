@@ -145,6 +145,9 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID&);
 String const& default_locale();
 bool is_locale_available(StringView locale);
 
+Span<StringView const> get_available_calendars();
+Span<StringView const> get_available_number_systems();
+
 Style style_from_string(StringView style);
 StringView style_to_string(Style style);
 

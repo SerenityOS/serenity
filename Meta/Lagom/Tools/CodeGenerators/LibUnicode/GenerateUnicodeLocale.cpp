@@ -1054,6 +1054,8 @@ struct Patterns {
 };
 )~~~");
 
+    generate_available_values(generator, "get_available_calendars"sv, locale_data.keywords.find("ca"sv)->value, locale_data.keyword_aliases.find("ca"sv)->value);
+    generate_available_values(generator, "get_available_number_systems"sv, locale_data.keywords.find("nu"sv)->value, locale_data.keyword_aliases.find("nu"sv)->value);
     generate_available_values(generator, "get_available_currencies"sv, locale_data.currencies);
 
     locale_data.unique_display_patterns.generate(generator, "DisplayPatternImpl"sv, "s_display_patterns"sv, 30);

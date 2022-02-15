@@ -1855,8 +1855,6 @@ struct DayPeriodData {
 };
 )~~~");
 
-    generate_available_values(generator, "get_available_calendars"sv, locale_data.calendars, locale_data.calendar_aliases);
-
     locale_data.unique_formats.generate(generator, "CalendarFormatImpl"sv, "s_calendar_formats"sv, 10);
     locale_data.unique_symbol_lists.generate(generator, s_string_index_type, "s_symbol_lists"sv);
     locale_data.unique_calendar_symbols.generate(generator, "CalendarSymbols"sv, "s_calendar_symbols"sv, 10);
