@@ -334,19 +334,14 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
 endif()
 
 set(AK_SOURCES
-    ../AK/FlyString.cpp
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
-    ../AK/String.cpp
     ../AK/StringBuilder.cpp
-    ../AK/StringImpl.cpp
     ../AK/StringUtils.cpp
     ../AK/StringView.cpp
     ../AK/Time.cpp
     ../AK/Format.cpp
     ../AK/UUID.cpp
-    ../AK/Utf8View.cpp
-    ../AK/Utf16View.cpp
 )
 
 set(EDID_SOURCES
