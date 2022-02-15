@@ -7,10 +7,17 @@
 #pragma once
 
 #include <AK/Endian.h>
+#include <AK/Format.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+
+#ifdef KERNEL
+#    include <AK/Error.h>
+#    include <Kernel/KString.h>
+#else
+#    include <AK/String.h>
+#endif
 
 namespace AK {
 
@@ -48,6 +55,16 @@ public:
         return octet(SubnetClass(i));
     }
 
+#ifdef KERNEL
+    ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const
+    {
+        return Kernel::KString::formatted("{}.{}.{}.{}",
+            octet(SubnetClass::A),
+            octet(SubnetClass::B),
+            octet(SubnetClass::C),
+            octet(SubnetClass::D));
+    }
+#else
     String to_string() const
     {
         return String::formatted("{}.{}.{}.{}",
@@ -65,6 +82,7 @@ public:
             octet(SubnetClass::B),
             octet(SubnetClass::A));
     }
+#endif
 
     static Optional<IPv4Address> from_string(StringView string)
     {
@@ -131,6 +149,15 @@ struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
     static constexpr unsigned hash(const IPv4Address& address) { return int_hash(address.to_u32()); }
 };
 
+#ifdef KERNEL
+template<>
+struct Formatter<IPv4Address> : Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>> {
+    ErrorOr<void> format(FormatBuilder& builder, IPv4Address value)
+    {
+        return Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>>::format(builder, value.to_string());
+    }
+};
+#else
 template<>
 struct Formatter<IPv4Address> : Formatter<String> {
     ErrorOr<void> format(FormatBuilder& builder, IPv4Address value)
@@ -138,6 +165,7 @@ struct Formatter<IPv4Address> : Formatter<String> {
         return Formatter<String>::format(builder, value.to_string());
     }
 };
+#endif
 
 }
 
