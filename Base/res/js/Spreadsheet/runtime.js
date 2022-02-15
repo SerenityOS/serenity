@@ -57,6 +57,52 @@ class Position {
         );
     }
 
+    range_up() {
+        if (this.row === 0) throw new Error(`No cells above this cell`);
+        const up_one = this.up(1);
+        let current_point = up_one;
+        for (
+            let point = current_point.up(1);
+            current_point.row !== 0 && point.value() !== "";
+            point = current_point.up(1)
+        )
+            current_point = point;
+        return range(current_point.name, up_one.name);
+    }
+
+    range_down() {
+        let down_one = this.down(1);
+        let current_point = down_one;
+        for (let point = current_point.down(1); point.value() !== ""; point = current_point.down(1))
+            current_point = point;
+        return range(current_point.name, down_one.name);
+    }
+
+    range_left() {
+        if (this.column === "A") throw new Error(`No cells to the left of this cell`);
+        const left_one = this.left(1);
+        let current_point = left_one;
+        for (
+            let point = current_point.left(1);
+            current_point.column !== "A" && point.value() !== "";
+            point = current_point.left(1)
+        )
+            current_point = point;
+        return range(current_point.name, left_one.name);
+    }
+
+    range_right() {
+        let right_one = this.right(1);
+        let current_point = right_one;
+        for (
+            let point = current_point.right(1);
+            point.value() !== "";
+            point = current_point.right(1)
+        )
+            current_point = point;
+        return range(current_point.name, right_one.name);
+    }
+
     with_column(value) {
         return new Position(value, this.row, this.sheet);
     }
@@ -852,10 +898,15 @@ here.__documentation = JSON.stringify({
     doc:
         "Returns an object representing the current cell's position, see `Position` below.\n\n" +
         "## Position\na `Position` is an object representing a given cell position in a given sheet.\n" +
-        "### Methods:\n- `up(count = 1)`: goes up count cells, or returns the top position if at the top\n" +
+        "### Methods:\n" +
+        "- `up(count = 1)`: goes up count cells, or returns the top position if at the top\n" +
         "- `down(count = 1)`: goes down count cells\n" +
         "- `left(count = 1)`: Goes left count cells, or returns the leftmost position if the edge\n" +
         "- `right(count = 1)`: Goes right count cells.\n" +
+        "- `range_up()`: make a range from the cell above this cell, upward, until there is a cell with no number in it.\n" +
+        "- `range_down()`: make a range from the cell below this cell, downward, until there is a cell with no number in it.\n" +
+        "- `range_left()`: make a range from the cell to the left of this cell, going left, until there is a cell with no number in it.\n" +
+        "- `range_right()`: make a range from the cell to the right of this cell, going right, until there is a cell with no number in it.\n" +
         "- `with_row(row)`: Returns a Position with its column being this object's, and its row being the provided the value.\n" +
         "- `with_column(column)`: Similar to `with_row()`, but changes the column instead.\n" +
         "- `in_sheet(the_sheet)`: Returns a Position with the same column and row as this one, but with its sheet being `the_sheet`.\n" +
