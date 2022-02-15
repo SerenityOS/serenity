@@ -63,6 +63,7 @@ public:
     RefPtr<DOMTokenList> const& class_list();
 
     DOM::ExceptionOr<bool> matches(StringView selectors) const;
+    DOM::ExceptionOr<DOM::Element const*> closest(StringView selectors) const;
 
     int client_top() const;
     int client_left() const;

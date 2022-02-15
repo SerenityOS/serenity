@@ -25,6 +25,7 @@ interface Element : Node {
     [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
 
     boolean matches(DOMString selectors);
+    Element? closest(DOMString selectors);
 
     // legacy alias of .matches
     [ImplementedAs=matches] boolean webkitMatchesSelector(DOMString selectors);
