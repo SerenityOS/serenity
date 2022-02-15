@@ -90,7 +90,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         m_workbook->add_sheet("Sheet 1");
 
     m_tab_context_menu = GUI::Menu::construct();
-    m_rename_action = GUI::Action::create("Rename...", [this](auto&) {
+    m_rename_action = GUI::Action::create("Rename...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/rename.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         VERIFY(m_tab_context_menu_sheet_view);
 
         auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
@@ -104,7 +104,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         }
     });
     m_tab_context_menu->add_action(*m_rename_action);
-    m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", [this](auto&) {
+    m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         String name;
         if (GUI::InputBox::show(window(), name, "Name for new sheet", "Create sheet") == GUI::Dialog::ExecOK) {
             NonnullRefPtrVector<Sheet> new_sheets;
@@ -204,7 +204,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         window());
 
     m_functions_help_action = GUI::Action::create(
-        "&Functions Help", [&](auto&) {
+        "&Functions Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             if (auto* worksheet_ptr = current_worksheet_if_available()) {
                 auto docs = worksheet_ptr->gather_documentation();
                 auto help_window = Spreadsheet::HelpWindow::the(window());
