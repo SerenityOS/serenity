@@ -164,7 +164,7 @@ void BrowsingContext::scroll_to_anchor(String const& fragment)
         }
     }
 
-    active_document()->update_layout();
+    active_document()->force_layout();
 
     if (!element || !element->layout_node())
         return;
