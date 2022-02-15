@@ -23,6 +23,7 @@
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
+#include <Kernel/Devices/SelfTTYDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
@@ -348,6 +349,7 @@ void init_stage2(void*)
     (void)ZeroDevice::must_create().leak_ref();
     (void)FullDevice::must_create().leak_ref();
     (void)RandomDevice::must_create().leak_ref();
+    (void)SelfTTYDevice::must_create().leak_ref();
     PTYMultiplexer::initialize();
 
     AudioManagement::the().initialize();
