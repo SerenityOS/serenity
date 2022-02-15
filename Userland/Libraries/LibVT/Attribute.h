@@ -7,10 +7,13 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibVT/Color.h>
 #include <LibVT/XtermColors.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace VT {
 
