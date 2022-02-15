@@ -14,7 +14,6 @@
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Random.h>
-#include <LibKeyboard/CharacterMap.h>
 
 namespace Kernel {
 
