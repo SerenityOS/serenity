@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nick Vella <nick@nxk.io>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,7 +30,7 @@ public:
         __Count
     };
 
-    virtual ~ProjectTemplatesModel() override;
+    virtual ~ProjectTemplatesModel() override = default;
 
     RefPtr<ProjectTemplate> template_for_index(const GUI::ModelIndex& index);
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +18,7 @@ using GitFileActionCallback = Function<void(String const& file)>;
 class GitFilesView : public GUI::ListView {
     C_OBJECT(GitFilesView)
 public:
-    virtual ~GitFilesView() override;
+    virtual ~GitFilesView() override = default;
 
 protected:
     GitFilesView(GitFileActionCallback, NonnullRefPtr<Gfx::Bitmap> action_icon);

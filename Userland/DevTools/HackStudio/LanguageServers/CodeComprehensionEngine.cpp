@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,9 +15,6 @@ CodeComprehensionEngine::CodeComprehensionEngine(const FileDB& filedb, bool shou
 {
 }
 
-CodeComprehensionEngine::~CodeComprehensionEngine()
-{
-}
 void CodeComprehensionEngine::set_declarations_of_document(const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
 {
     // Callback may not be configured if we're running tests

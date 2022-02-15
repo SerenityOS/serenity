@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@ namespace HackStudio {
 class DiffViewer final : public GUI::AbstractScrollableWidget {
     C_OBJECT(DiffViewer)
 public:
-    virtual ~DiffViewer() override;
+    virtual ~DiffViewer() override = default;
 
     void set_content(const String& original, const String& diff);
 

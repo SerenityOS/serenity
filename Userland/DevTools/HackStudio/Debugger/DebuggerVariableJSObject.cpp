@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Matthew Olsson <matthewcolsson@gmail.com>
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,10 +23,6 @@ DebuggerVariableJSObject* DebuggerVariableJSObject::create(DebuggerGlobalJSObjec
 DebuggerVariableJSObject::DebuggerVariableJSObject(const Debug::DebugInfo::VariableInfo& variable_info, JS::Object& prototype)
     : JS::Object(prototype)
     , m_variable_info(variable_info)
-{
-}
-
-DebuggerVariableJSObject::~DebuggerVariableJSObject()
 {
 }
 

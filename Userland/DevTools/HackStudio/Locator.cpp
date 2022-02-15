@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -155,10 +156,6 @@ Locator::Locator(Core::Object* parent)
     m_suggestion_view->on_activation = [this](auto& index) {
         open_suggestion(index);
     };
-}
-
-Locator::~Locator()
-{
 }
 
 void Locator::open_suggestion(const GUI::ModelIndex& index)

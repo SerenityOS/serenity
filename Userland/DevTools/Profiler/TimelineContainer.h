@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,7 @@ class TimelineContainer : public GUI::AbstractScrollableWidget {
     C_OBJECT(TimelineContainer);
 
 public:
-    virtual ~TimelineContainer();
+    virtual ~TimelineContainer() override = default;
 
 protected:
     virtual void did_scroll() override;

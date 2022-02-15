@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,10 +19,6 @@ ClientConnection::ClientConnection(NonnullOwnPtr<Core::Stream::LocalSocket> sock
     : IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket), 1)
 {
     s_connections.set(1, *this);
-}
-
-ClientConnection::~ClientConnection()
-{
 }
 
 void ClientConnection::die()

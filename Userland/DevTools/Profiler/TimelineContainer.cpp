@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,10 +30,6 @@ TimelineContainer::TimelineContainer(GUI::Widget& header_container, TimelineView
         update_widget_sizes();
         update_widget_positions();
     };
-}
-
-TimelineContainer::~TimelineContainer()
-{
 }
 
 void TimelineContainer::did_scroll()

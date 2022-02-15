@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -65,10 +66,6 @@ DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, con
 
         offset_into_symbol += insn.value().length();
     }
-}
-
-DisassemblyModel::~DisassemblyModel()
-{
 }
 
 int DisassemblyModel::row_count(const GUI::ModelIndex&) const

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,10 +26,6 @@ TimelineHeader::TimelineHeader(Profile& profile, Process const& process)
 
     m_icon = GUI::FileIconProvider::icon_for_executable(m_process.executable).bitmap_for_size(32);
     m_text = String::formatted("{} ({})", LexicalPath::basename(m_process.executable), m_process.pid);
-}
-
-TimelineHeader::~TimelineHeader()
-{
 }
 
 void TimelineHeader::paint_event(GUI::PaintEvent& event)
