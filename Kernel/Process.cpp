@@ -218,7 +218,8 @@ void Process::unprotect_data()
 ErrorOr<NonnullRefPtr<Process>> Process::try_create(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
     auto space = TRY(Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr));
-    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty, UnveilNode { "/"sv, UnveilMetadata(TRY(KString::try_create("/"sv))) })));
+    auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
+    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty, move(unveil_tree))));
     TRY(process->attach_resources(move(space), first_thread, fork_parent));
     return process;
 }

@@ -12,7 +12,6 @@
 #include <AK/CircularQueue.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/String.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/Forward.h>

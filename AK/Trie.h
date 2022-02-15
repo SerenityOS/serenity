@@ -81,9 +81,13 @@ public:
     {
         auto it = m_children.find(value);
         if (it == m_children.end()) {
-            auto node = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Trie(value, move(metadata))));
+            OwnPtr<Trie> node;
+            if constexpr (requires { { value->try_clone() } -> SpecializationOf<ErrorOr>; })
+                node = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Trie(TRY(value->try_clone()), move(metadata))));
+            else
+                node = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Trie(value, move(metadata))));
             auto& node_ref = *node;
-            TRY(m_children.try_set(move(value), move(node)));
+            TRY(m_children.try_set(move(value), node.release_nonnull()));
             return &static_cast<BaseType&>(node_ref);
         }
 
@@ -105,8 +109,12 @@ public:
             else
                 return provide_missing_metadata(forward<Ts>(args)...);
         };
-        for (; it != end; ++it)
-            last_root_node = static_cast<Trie*>(TRY(last_root_node->ensure_child(*it, TRY(invoke_provide_missing_metadata(static_cast<BaseType&>(*last_root_node), it)))));
+        for (; it != end; ++it) {
+            if constexpr (requires { { ValueType::ElementType::try_create(*it) } -> SpecializationOf<ErrorOr>; })
+                last_root_node = static_cast<Trie*>(TRY(last_root_node->ensure_child(TRY(ValueType::ElementType::try_create(*it)), TRY(invoke_provide_missing_metadata(static_cast<BaseType&>(*last_root_node), it)))));
+            else
+                last_root_node = static_cast<Trie*>(TRY(last_root_node->ensure_child(*it, TRY(invoke_provide_missing_metadata(static_cast<BaseType&>(*last_root_node), it)))));
+        }
         last_root_node->set_metadata(move(metadata));
         return static_cast<BaseType*>(last_root_node);
     }
@@ -115,8 +123,12 @@ public:
     ErrorOr<BaseType*> insert(It& it, const It& end) requires(IsNullPointer<MetadataType>)
     {
         Trie* last_root_node = &traverse_until_last_accessible_node(it, end);
-        for (; it != end; ++it)
-            last_root_node = static_cast<Trie*>(TRY(last_root_node->ensure_child(*it, {})));
+        for (; it != end; ++it) {
+            if constexpr (requires { { ValueType::ElementType::try_create(*it) } -> SpecializationOf<ErrorOr>; })
+                last_root_node = static_cast<Trie*>(TRY(last_root_node->ensure_child(TRY(ValueType::ElementType::try_create(*it)), {})));
+            else
+                last_root_node = static_cast<Trie*>(TRY(last_root_node->ensure_child(*it, {})));
+        }
         return static_cast<BaseType*>(last_root_node);
     }
 
@@ -173,6 +185,14 @@ public:
 
     [[nodiscard]] bool is_empty() const { return m_children.is_empty(); }
     void clear() { m_children.clear(); }
+
+    ErrorOr<BaseType> deep_copy() requires(requires(ValueType value) { { value->try_clone() } -> SpecializationOf<ErrorOr>; })
+    {
+        Trie root(TRY(m_value->try_clone()), TRY(copy_metadata(m_metadata)));
+        for (auto& it : m_children)
+            TRY(root.m_children.try_set(TRY(it.key->try_clone()), TRY(adopt_nonnull_own_or_enomem(new (nothrow) Trie(TRY(it.value->deep_copy()))))));
+        return static_cast<BaseType&&>(move(root));
+    }
 
     ErrorOr<BaseType> deep_copy()
     {

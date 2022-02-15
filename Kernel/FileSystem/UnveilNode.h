@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Trie.h>
+#include <Kernel/KString.h>
 
 namespace Kernel {
 
@@ -49,8 +49,8 @@ struct UnveilMetadata {
     }
 };
 
-struct UnveilNode final : public Trie<String, UnveilMetadata, Traits<String>, UnveilNode> {
-    using Trie<String, UnveilMetadata, Traits<String>, UnveilNode>::Trie;
+struct UnveilNode final : public Trie<NonnullOwnPtr<KString>, UnveilMetadata, Traits<NonnullOwnPtr<KString>>, UnveilNode> {
+    using Trie<NonnullOwnPtr<KString>, UnveilMetadata, Traits<NonnullOwnPtr<KString>>, UnveilNode>::Trie;
 
     bool was_explicitly_unveiled() const { return this->metadata_value().explicitly_unveiled; }
     UnveilAccess permissions() const { return this->metadata_value().permissions; }
