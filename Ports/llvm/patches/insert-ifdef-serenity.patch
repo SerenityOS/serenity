@@ -60,19 +60,6 @@ index be59bb023..ff8931308 100644
  }
  #endif
  
-@@ -534,10 +534,10 @@ llvm::sys::writeFileWithEncoding(StringRef FileName, StringRef Contents,
- 
- bool llvm::sys::commandLineFitsWithinSystemLimits(StringRef Program,
-                                                   ArrayRef<StringRef> Args) {
--  static long ArgMax = sysconf(_SC_ARG_MAX);
-+  static long ArgMax = 4096;
-   // POSIX requires that _POSIX_ARG_MAX is 4096, which is the lowest possible
-   // value for ARG_MAX on a POSIX compliant system.
--  static long ArgMin = _POSIX_ARG_MAX;
-+  static long ArgMin = 4096;
- 
-   // This the same baseline used by xargs.
-   long EffectiveArgMax = 128 * 1024;
 diff --git a/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp b/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp
 index 7f197a50c..03bf029db 100644
 --- a/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp
