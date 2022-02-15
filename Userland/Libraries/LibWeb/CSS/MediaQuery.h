@@ -135,7 +135,7 @@ private:
     {
     }
 
-    static bool compare(MediaFeatureValue left, Comparison comparison, MediaFeatureValue right);
+    static bool compare(DOM::Window const& window, MediaFeatureValue left, Comparison comparison, MediaFeatureValue right);
 
     struct Range {
         MediaFeatureValue left_value;
