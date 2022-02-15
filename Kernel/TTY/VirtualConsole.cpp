@@ -104,9 +104,7 @@ void VirtualConsole::set_graphical(bool graphical)
 
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
 {
-    auto pts_name = MUST(KString::formatted("/dev/tty/{}", index));
-
-    auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index, move(pts_name));
+    auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index);
     // FIXME: Find a way to propagate errors
     VERIFY(!virtual_console_or_error.is_error());
     return virtual_console_or_error.release_value();
@@ -176,10 +174,9 @@ void VirtualConsole::refresh_after_resolution_change()
     flush_dirty_lines();
 }
 
-UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index, NonnullOwnPtr<KString> tty_name)
+UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
     : TTY(4, index)
     , m_index(index)
-    , m_tty_name(move(tty_name))
     , m_console_impl(*this)
 {
     initialize();

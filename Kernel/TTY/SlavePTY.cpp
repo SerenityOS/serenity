@@ -36,11 +36,10 @@ bool SlavePTY::unref() const
     return did_hit_zero;
 }
 
-SlavePTY::SlavePTY(MasterPTY& master, unsigned index, NonnullOwnPtr<KString> tty_name)
+SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     : TTY(201, index)
     , m_master(master)
     , m_index(index)
-    , m_tty_name(move(tty_name))
 {
     auto& process = Process::current();
     set_uid(process.uid());
@@ -53,11 +52,6 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index, NonnullOwnPtr<KString> tty
 SlavePTY::~SlavePTY()
 {
     dbgln_if(SLAVEPTY_DEBUG, "~SlavePTY({})", m_index);
-}
-
-KString const& SlavePTY::tty_name() const
-{
-    return *m_tty_name;
 }
 
 void SlavePTY::echo(u8 ch)

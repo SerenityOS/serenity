@@ -18,23 +18,19 @@ namespace Kernel {
 
 ErrorOr<NonnullRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
 {
-    auto pts_name = TRY(KString::formatted("/dev/pts/{}", index));
-    auto tty_name = TRY(pts_name->try_clone());
-
     auto buffer = TRY(DoubleBuffer::try_create());
-    auto master_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MasterPTY(index, move(buffer), move(pts_name))));
-    auto slave_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, index, move(tty_name))));
+    auto master_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MasterPTY(index, move(buffer))));
+    auto slave_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, index)));
     master_pty->m_slave = slave_pty;
     master_pty->after_inserting();
     slave_pty->after_inserting();
     return master_pty;
 }
 
-MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer, NonnullOwnPtr<KString> pts_name)
+MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer)
     : CharacterDevice(200, index)
     , m_index(index)
     , m_buffer(move(buffer))
-    , m_pts_name(move(pts_name))
 {
     auto& process = Process::current();
     set_uid(process.uid());
@@ -50,11 +46,6 @@ MasterPTY::~MasterPTY()
 {
     dbgln_if(MASTERPTY_DEBUG, "~MasterPTY({})", m_index);
     PTYMultiplexer::the().notify_master_destroyed({}, m_index);
-}
-
-KString const& MasterPTY::pts_name() const
-{
-    return *m_pts_name;
 }
 
 ErrorOr<size_t> MasterPTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
@@ -140,7 +131,7 @@ ErrorOr<void> MasterPTY::ioctl(OpenFileDescription& description, unsigned reques
 
 ErrorOr<NonnullOwnPtr<KString>> MasterPTY::pseudo_path(const OpenFileDescription&) const
 {
-    return KString::formatted("ptm:{}", m_pts_name);
+    return KString::formatted("ptm:{}", m_index);
 }
 
 }

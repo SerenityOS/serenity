@@ -26,9 +26,6 @@ public:
     virtual bool can_read(const OpenFileDescription&, u64) const override;
     virtual bool can_write(const OpenFileDescription&, u64) const override;
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override final;
-    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
-
-    virtual KString const& tty_name() const = 0;
 
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }
