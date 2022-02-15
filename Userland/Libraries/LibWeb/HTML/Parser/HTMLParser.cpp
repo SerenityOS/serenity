@@ -130,6 +130,7 @@ HTMLParser::HTMLParser(DOM::Document& document, StringView input, const String& 
     : m_tokenizer(input, encoding)
     , m_document(document)
 {
+    m_tokenizer.set_parser({}, *this);
     m_document->set_should_invalidate_styles_on_attribute_changes(false);
     auto standardized_encoding = TextCodec::get_standardized_encoding(encoding);
     VERIFY(standardized_encoding.has_value());

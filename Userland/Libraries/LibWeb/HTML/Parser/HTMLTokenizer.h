@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -110,6 +111,8 @@ public:
 
     Optional<HTMLToken> next_token();
 
+    void set_parser(Badge<HTMLParser>, HTMLParser& parser) { m_parser = &parser; }
+
     void switch_to(Badge<HTMLParser>, State new_state);
     void switch_to(State new_state)
     {
@@ -150,6 +153,8 @@ private:
 
     void restore_to(Utf8CodePointIterator const& new_iterator);
     HTMLToken::Position nth_last_position(size_t n = 0);
+
+    HTMLParser* m_parser { nullptr };
 
     State m_state { State::Data };
     State m_return_state { State::Data };
