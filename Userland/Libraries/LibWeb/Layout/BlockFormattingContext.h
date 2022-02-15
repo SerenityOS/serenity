@@ -37,6 +37,8 @@ public:
 
     static void compute_height(Box&);
 
+    void add_absolutely_positioned_box(Box& box) { m_absolutely_positioned_boxes.append(box); }
+
 protected:
     void compute_position(Box&);
 

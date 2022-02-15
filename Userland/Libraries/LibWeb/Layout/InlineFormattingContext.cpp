@@ -78,7 +78,7 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
     containing_block().for_each_child([&](auto& child) {
         VERIFY(child.is_inline());
         if (is<Box>(child) && child.is_absolutely_positioned()) {
-            layout_absolutely_positioned_element(verify_cast<Box>(child));
+            parent().add_absolutely_positioned_box(static_cast<Box&>(child));
             return;
         }
     });
