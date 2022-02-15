@@ -33,8 +33,10 @@ void HTMLLinkElement::inserted()
         auto url = document().parse_url(href());
         dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Loading import URL: {}", url);
         auto request = LoadRequest::create_for_url_on_page(url, document().page());
-        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+        // NOTE: Mark this element as delaying the document load event *before* calling set_resource()
+        //       as it may trigger a synchronous resource_did_load() callback.
         m_document_load_event_delayer.emplace(document());
+        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
     }
 
     if (m_relationship & Relationship::Preload) {
