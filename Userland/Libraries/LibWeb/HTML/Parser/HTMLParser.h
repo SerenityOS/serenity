@@ -100,7 +100,6 @@ private:
 
     void generate_implied_end_tags(const FlyString& exception = {});
     void generate_all_implied_end_tags_thoroughly();
-    bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
     NonnullRefPtr<DOM::Element> create_element_for(const HTMLToken&, const FlyString& namespace_);
 
     struct AdjustedInsertionLocation {
