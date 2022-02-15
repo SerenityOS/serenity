@@ -16,7 +16,6 @@
 
 namespace Unicode {
 
-Optional<NumberSystem> __attribute__((weak)) number_system_from_string(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_number_system_symbol(StringView, StringView, NumericSymbol) { return {}; }
 Optional<NumberGroupings> __attribute__((weak)) get_number_system_groupings(StringView, StringView) { return {}; }
 Optional<NumberFormat> __attribute__((weak)) get_standard_number_system_format(StringView, StringView, StandardNumberFormatType) { return {}; }
