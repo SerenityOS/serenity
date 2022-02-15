@@ -1,3 +1,11 @@
+#import <DOM/DOMTokenList.idl>
+#import <DOM/NamedNodeMap.idl>
+#import <DOM/Node.idl>
+#import <DOM/NodeList.idl>
+#import <Geometry/DOMRect.idl>
+#import <Geometry/DOMRectList.idl>
+#import <CSS/CSSStyleDeclaration.idl>
+
 interface Element : Node {
     readonly attribute DOMString? namespaceURI;
     readonly attribute DOMString? prefix;

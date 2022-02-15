@@ -1,3 +1,5 @@
+#import <HTML/DOMStringMap.idl>
+
 interface HTMLElement : Element {
 
     [Reflect] attribute DOMString title;

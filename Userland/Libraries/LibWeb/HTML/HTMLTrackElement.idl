@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLTrackElement : HTMLElement {
 
     [Reflect] attribute DOMString src;

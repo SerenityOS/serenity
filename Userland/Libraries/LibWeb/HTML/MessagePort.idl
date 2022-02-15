@@ -1,3 +1,5 @@
+#import <DOM/EventTarget.idl>
+
 interface MessagePort : EventTarget {
 
     undefined postMessage(any message);

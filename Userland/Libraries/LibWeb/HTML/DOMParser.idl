@@ -1,3 +1,5 @@
+#import <DOM/Document.idl>
+
 interface DOMParser {
     constructor();
 

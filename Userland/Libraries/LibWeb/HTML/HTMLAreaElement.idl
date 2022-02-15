@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLAreaElement : HTMLElement {
 
     [Reflect=nohref] attribute boolean noHref;

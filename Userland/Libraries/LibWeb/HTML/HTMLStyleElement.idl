@@ -1,3 +1,6 @@
+#import <CSS/CSSStyleSheet.idl>
+#import <HTML/HTMLElement.idl>
+
 interface HTMLStyleElement : HTMLElement {
 
     [Reflect] attribute DOMString media;

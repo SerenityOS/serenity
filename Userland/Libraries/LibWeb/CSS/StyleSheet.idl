@@ -1,3 +1,7 @@
+#import <CSS/CSSStyleSheet.idl>
+#import <CSS/MediaList.idl>
+#import <DOM/Element.idl>
+
 interface StyleSheet {
 
     readonly attribute Element? ownerNode;

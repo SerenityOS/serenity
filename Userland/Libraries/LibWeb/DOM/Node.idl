@@ -1,3 +1,7 @@
+#import <DOM/Document.idl>
+#import <DOM/Element.idl>
+#import <DOM/EventTarget.idl>
+
 interface Node : EventTarget {
 
     readonly attribute unsigned short nodeType;

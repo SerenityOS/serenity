@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLEmbedElement : HTMLElement {
 
     [Reflect] attribute DOMString src;

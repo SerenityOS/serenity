@@ -1,3 +1,9 @@
+#import <HTML/HTMLElement.idl>
+#import <HTML/HTMLTableCaptionElement.idl>
+#import <HTML/HTMLTableRowElement.idl>
+#import <HTML/HTMLTableSectionElement.idl>
+#import <DOM/HTMLCollection.idl>
+
 interface HTMLTableElement : HTMLElement {
 
     attribute HTMLTableCaptionElement? caption;

@@ -1,6 +1,8 @@
+#import <CSS/CSSRule.idl>
+#import <CSS/CSSRuleList.idl>
+
 interface CSSGroupingRule : CSSRule {
     [SameObject] readonly attribute CSSRuleList cssRules;
     unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
     undefined deleteRule(unsigned long index);
 };
-

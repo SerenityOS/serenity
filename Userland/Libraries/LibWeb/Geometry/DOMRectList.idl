@@ -1,3 +1,5 @@
+#import <Geometry/DOMRect.idl>
+
 [Exposed=Window]
 interface DOMRectList {
     getter DOMRect? item(unsigned long index);

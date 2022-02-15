@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLFormElement : HTMLElement {
 
     [Reflect] attribute DOMString name;

@@ -1,3 +1,6 @@
+#import <DOM/Element.idl>
+#import <DOM/Node.idl>
+
 [Exposed=(Window)]
 interface IntersectionObserver {
     // FIXME: Should be: IntersectionObserverCallback

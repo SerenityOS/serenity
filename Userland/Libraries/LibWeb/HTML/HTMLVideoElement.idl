@@ -1,3 +1,5 @@
+#import <HTML/HTMLMediaElement.idl>
+
 interface HTMLVideoElement : HTMLMediaElement {
 
     [Reflect] attribute DOMString poster;

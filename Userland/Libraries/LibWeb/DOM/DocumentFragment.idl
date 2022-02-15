@@ -1,3 +1,8 @@
+#import <DOM/Element.idl>
+#import <DOM/HTMLCollection.idl>
+#import <DOM/Node.idl>
+#import <DOM/NodeList.idl>
+
 interface DocumentFragment : Node {
 
     constructor();
