@@ -364,8 +364,10 @@ public:
     ErrorOr<IterationDecision> for_each_detailed_timing(Function<IterationDecision(DetailedTiming const&, unsigned)>) const;
     Optional<DetailedTiming> detailed_timing(size_t) const;
 
+#ifndef KERNEL
     String display_product_name() const;
     String display_product_serial_number() const;
+#endif
 
     ErrorOr<IterationDecision> for_each_short_video_descriptor(Function<IterationDecision(unsigned, bool, VIC::Details const&)>) const;
 
