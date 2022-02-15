@@ -93,6 +93,7 @@ set(SOURCES
     DOMParsing/InnerHTML.cpp
     DOMTreeModel.cpp
     Dump.cpp
+    Encoding/TextDecoder.cpp
     Encoding/TextEncoder.cpp
     Fetch/AbstractOperations.cpp
     FontCache.cpp
@@ -420,6 +421,7 @@ libweb_js_wrapper(DOM/ProcessingInstruction)
 libweb_js_wrapper(DOM/Range)
 libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/Text)
+libweb_js_wrapper(Encoding/TextDecoder)
 libweb_js_wrapper(Encoding/TextEncoder)
 libweb_js_wrapper(Geometry/DOMRect)
 libweb_js_wrapper(Geometry/DOMRectList)

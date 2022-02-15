@@ -288,6 +288,8 @@
 #include <LibWeb/Bindings/SubtleCryptoConstructor.h>
 #include <LibWeb/Bindings/SubtleCryptoPrototype.h>
 #include <LibWeb/Bindings/TextConstructor.h>
+#include <LibWeb/Bindings/TextDecoderConstructor.h>
+#include <LibWeb/Bindings/TextDecoderPrototype.h>
 #include <LibWeb/Bindings/TextEncoderConstructor.h>
 #include <LibWeb/Bindings/TextEncoderPrototype.h>
 #include <LibWeb/Bindings/TextMetricsConstructor.h>
@@ -458,6 +460,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGRectElement)            \
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)             \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                      \
+    ADD_WINDOW_OBJECT_INTERFACE(TextDecoder)               \
     ADD_WINDOW_OBJECT_INTERFACE(TextEncoder)               \
     ADD_WINDOW_OBJECT_INTERFACE(TextMetrics)               \
     ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                   \

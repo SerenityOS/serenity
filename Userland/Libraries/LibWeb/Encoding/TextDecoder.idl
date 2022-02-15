@@ -1,0 +1,13 @@
+[Exposed=(Window,Worker)]
+interface TextDecoder {
+    // FIXME: 'optional TextDecoderOptions options = {}'
+    constructor(optional DOMString label = "utf-8");
+
+    // FIXME: [AllowShared] on the first parameter.
+    // FIXME: 'optional TextDecodeOptions options = {}'
+    USVString decode(optional BufferSource input);
+
+    readonly attribute DOMString encoding;
+    readonly attribute boolean fatal;
+    readonly attribute boolean ignoreBOM;
+};
