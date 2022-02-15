@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -114,5 +115,12 @@ int mkdirat(int dirfd, char const* pathname, mode_t mode)
     }
     int rc = syscall(SC_mkdir, dirfd, pathname, strlen(pathname), mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/futimens.html
+int futimens(int, struct timespec const[2])
+{
+    dbgln("FIXME: futimens: stub!");
+    return -1;
 }
 }
