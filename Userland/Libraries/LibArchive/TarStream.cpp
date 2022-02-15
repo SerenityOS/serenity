@@ -103,8 +103,8 @@ void TarInputStream::advance()
 
 bool TarInputStream::valid() const
 {
-    auto& header_magic = header().magic();
-    auto& header_version = header().version();
+    auto const header_magic = header().magic();
+    auto const header_version = header().version();
 
     if (!((header_magic == gnu_magic && header_version == gnu_version)
             || (header_magic == ustar_magic && header_version == ustar_version)
