@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,6 +57,9 @@ public:
 
     Bindings::CallbackType* event_handler_attribute(FlyString const& name);
     void set_event_handler_attribute(FlyString const& name, Optional<Bindings::CallbackType>);
+
+    // https://dom.spec.whatwg.org/#eventtarget-activation-behavior
+    virtual void run_activation_behavior() { }
 
 protected:
     EventTarget();
