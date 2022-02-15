@@ -2,13 +2,17 @@
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
+#include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
@@ -34,6 +38,7 @@ namespace Web::XHR {
 XMLHttpRequest::XMLHttpRequest(DOM::Window& window)
     : XMLHttpRequestEventTarget()
     , m_window(window)
+    , m_response_type(Bindings::XMLHttpRequestResponseType::Empty)
 {
 }
 
@@ -57,15 +62,91 @@ void XMLHttpRequest::fire_progress_event(const String& event_name, u64 transmitt
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetext
-String XMLHttpRequest::response_text() const
+DOM::ExceptionOr<String> XMLHttpRequest::response_text() const
 {
-    // FIXME: 1. If this’s response type is not the empty string or "text", then throw an "InvalidStateError" DOMException.
+    // 1. If this’s response type is not the empty string or "text", then throw an "InvalidStateError" DOMException.
+    if (m_response_type != Bindings::XMLHttpRequestResponseType::Empty && m_response_type != Bindings::XMLHttpRequestResponseType::Text)
+        return DOM::InvalidStateError::create("XHR responseText can only be used for responseType \"\" or \"text\"");
 
     // 2. If this’s state is not loading or done, then return the empty string.
     if (m_ready_state != ReadyState::Loading && m_ready_state != ReadyState::Done)
         return String::empty();
 
     return get_text_response();
+}
+
+// https://xhr.spec.whatwg.org/#response
+DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
+{
+    auto& global_object = wrapper()->global_object();
+
+    // 1. If this’s response type is the empty string or "text", then:
+    if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty || m_response_type == Bindings::XMLHttpRequestResponseType::Text) {
+        // 1. If this’s state is not loading or done, then return the empty string.
+        if (m_ready_state != ReadyState::Loading && m_ready_state != ReadyState::Done)
+            return JS::Value(JS::js_string(global_object.heap(), ""));
+
+        // 2. Return the result of getting a text response for this.
+        return JS::Value(JS::js_string(global_object.heap(), get_text_response()));
+    }
+    // 2. If this’s state is not done, then return null.
+    if (m_ready_state != ReadyState::Done)
+        return JS::js_null();
+
+    // 3. If this’s response object is failure, then return null.
+    if (m_response_object.has<Failure>())
+        return JS::js_null();
+
+    // 4. If this’s response object is non-null, then return it.
+    if (!m_response_object.has<Empty>())
+        return m_response_object.get<JS::Handle<JS::Value>>().value();
+
+    // 5. If this’s response type is "arraybuffer",
+    if (m_response_type == Bindings::XMLHttpRequestResponseType::Arraybuffer) {
+        // then set this’s response object to a new ArrayBuffer object representing this’s received bytes. If this throws an exception, then set this’s response object to failure and return null.
+        auto buffer_result = JS::ArrayBuffer::create(global_object, m_received_bytes.size());
+        if (buffer_result.is_error()) {
+            m_response_object = Failure();
+            return JS::js_null();
+        }
+
+        auto buffer = buffer_result.release_value();
+        buffer->buffer().overwrite(0, m_received_bytes.data(), m_received_bytes.size());
+        m_response_object = JS::make_handle(JS::Value(buffer));
+    }
+    // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
+    else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
+        // FIXME: Implement this once we have 'Blob'.
+        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "XHR Blob type not implemented" };
+    }
+    // 7. Otherwise, if this’s response type is "document", set a document response for this.
+    else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
+        // FIXME: Implement this.
+        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "XHR Document type not implemented" };
+    }
+    // 8. Otherwise:
+    else {
+        // 1. Assert: this’s response type is "json".
+        // Note: Automatically done by the layers above us.
+
+        // 2. If this’s response’s body is null, then return null.
+        // FIXME: Implement this once we have 'Response'.
+        if (m_received_bytes.is_empty())
+            return JS::Value(JS::js_null());
+
+        // 3. Let jsonObject be the result of running parse JSON from bytes on this’s received bytes. If that threw an exception, then return null.
+        TextCodec::UTF8Decoder decoder;
+
+        auto json_object_result = JS::call(global_object, global_object.json_parse_function(), JS::js_undefined(), JS::js_string(global_object.heap(), decoder.to_utf8({ m_received_bytes.data(), m_received_bytes.size() })));
+        if (json_object_result.is_error())
+            return JS::Value(JS::js_null());
+
+        // 4. Set this’s response object to jsonObject.
+        m_response_object = JS::make_handle(json_object_result.release_value());
+    }
+
+    // 9. Return this’s response object.
+    return m_response_object.get<JS::Handle<JS::Value>>().value();
 }
 
 // https://xhr.spec.whatwg.org/#text-response
@@ -76,8 +157,18 @@ String XMLHttpRequest::get_text_response() const
     // 2. Let charset be the result of get a final encoding for xhr.
     auto charset = get_final_encoding();
 
-    // FIXME: 3. If xhr’s response type is the empty string, charset is null, and the result of get a final MIME type for xhr is an XML MIME type,
-    //           then use the rules set forth in the XML specifications to determine the encoding. Let charset be the determined encoding. [XML] [XML-NAMES]
+    auto is_xml_mime_type = [](MimeSniff::MimeType const& mime_type) {
+        // An XML MIME type is any MIME type whose subtype ends in "+xml" or whose essence is "text/xml" or "application/xml". [RFC7303]
+        if (mime_type.essence().is_one_of("text/xml"sv, "application/xml"sv))
+            return true;
+
+        return mime_type.subtype().ends_with("+xml");
+    };
+
+    // 3. If xhr’s response type is the empty string, charset is null, and the result of get a final MIME type for xhr is an XML MIME type,
+    if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty && !charset.has_value() && is_xml_mime_type(get_final_mime_type())) {
+        // FIXME: then use the rules set forth in the XML specifications to determine the encoding. Let charset be the determined encoding. [XML] [XML-NAMES]
+    }
 
     // 4. If charset is null, then set charset to UTF-8.
     if (!charset.has_value())
@@ -89,7 +180,18 @@ String XMLHttpRequest::get_text_response() const
     // If we don't support the decoder yet, let's crash instead of attempting to return something, as the result would be incorrect and create obscure bugs.
     VERIFY(decoder);
 
-    return TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, m_response_object);
+    return TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, m_received_bytes);
+}
+
+// https://xhr.spec.whatwg.org/#final-mime-type
+MimeSniff::MimeType XMLHttpRequest::get_final_mime_type() const
+{
+    // 1. If xhr’s override MIME type is null, return the result of get a response MIME type for xhr.
+    if (!m_override_mime_type.has_value())
+        return get_response_mime_type();
+
+    // 2. Return xhr’s override MIME type.
+    return *m_override_mime_type;
 }
 
 // https://xhr.spec.whatwg.org/#response-mime-type
@@ -441,7 +543,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
                 u64 length = response_data.size();
 
                 if (!xhr.m_synchronous) {
-                    xhr.m_response_object = response_data;
+                    xhr.m_received_bytes = response_data;
                     xhr.fire_progress_event(EventNames::progress, transmitted, length);
                 }
 
@@ -518,5 +620,4 @@ DOM::ExceptionOr<void> XMLHttpRequest::override_mime_type(String const& mime)
 
     return {};
 }
-
 }
