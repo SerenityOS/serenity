@@ -147,6 +147,18 @@ void Document::removed_last_ref()
     delete this;
 }
 
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
+void Document::write(Vector<String> const& strings)
+{
+    dbgln("TODO: document.write({})", strings);
+}
+
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
+void Document::writeln(Vector<String> const& strings)
+{
+    dbgln("TODO: document.writeln({})", strings);
+}
+
 Origin Document::origin() const
 {
     if (!m_url.is_valid())
