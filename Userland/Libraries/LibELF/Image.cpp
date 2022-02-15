@@ -251,7 +251,7 @@ Optional<Image::RelocationSection> Image::Section::relocations() const
     builder.append(".rel"sv);
     builder.append(name());
 
-    auto relocation_section = m_image.lookup_section(builder.to_string());
+    auto relocation_section = m_image.lookup_section(builder.string_view());
     if (!relocation_section.has_value())
         return {};
 
