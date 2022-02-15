@@ -13,4 +13,6 @@ __BEGIN_DECLS
 ssize_t writev(int fd, const struct iovec*, int iov_count);
 ssize_t readv(int fd, const struct iovec*, int iov_count);
 
+ssize_t pwritev(int fd, const struct iovec*, int iov_count, off_t offset);
+
 __END_DECLS
