@@ -1441,8 +1441,7 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 
     StringBuilder sb;
     sb.append_code_point(code_point);
-
-    emit_string(sb.to_string());
+    emit_string(sb.string_view());
 }
 
 void Terminal::unimplemented_control_code(u8 code)
