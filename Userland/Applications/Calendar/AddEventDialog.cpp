@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -84,18 +85,6 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     };
 
     event_title_textbox.set_focus(true);
-}
-
-AddEventDialog::~AddEventDialog()
-{
-}
-
-AddEventDialog::MonthListModel::MonthListModel()
-{
-}
-
-AddEventDialog::MonthListModel::~MonthListModel()
-{
 }
 
 int AddEventDialog::MonthListModel::row_count(const GUI::ModelIndex&) const

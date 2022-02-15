@@ -91,7 +91,7 @@ endpoint WindowServer
     popup_menu(i32 menu_id, Gfx::IntPoint screen_position) =|
     dismiss_menu(i32 menu_id) =|
 
-    set_wallpaper(String path) =|
+    set_wallpaper(Gfx::ShareableBitmap wallpaper_bitmap) =|
 
     set_background_color(String background_color) =|
     set_wallpaper_mode(String mode) =|
@@ -106,7 +106,7 @@ endpoint WindowServer
 
     set_window_icon_bitmap(i32 window_id, Gfx::ShareableBitmap icon) =|
 
-    get_wallpaper() => (String path)
+    get_wallpaper() => (Gfx::ShareableBitmap wallpaper_bitmap)
     set_window_cursor(i32 window_id, i32 cursor_type) =|
     set_window_custom_cursor(i32 window_id, Gfx::ShareableBitmap cursor) =|
 
@@ -146,7 +146,7 @@ endpoint WindowServer
     get_double_click_speed() => (int speed)
 
     set_buttons_switched(bool switched) =|
-    get_buttons_switched() => (bool switched) 
+    get_buttons_switched() => (bool switched)
 
     get_desktop_display_scale(u32 screen_index) => (int desktop_display_scale)
 

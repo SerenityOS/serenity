@@ -958,6 +958,21 @@ TEST_CASE(optimizer_char_class_lut)
         EXPECT_EQ(re.match("1635488940000"sv).success, false);
 }
 
+TEST_CASE(optimizer_alternation)
+{
+    Array tests {
+        // Pattern, Subject, Expected length
+        Tuple { "a|"sv, "a"sv, 1u },
+    };
+
+    for (auto& test : tests) {
+        Regex<ECMA262> re(test.get<0>());
+        auto result = re.match(test.get<1>());
+        EXPECT(result.success);
+        EXPECT_EQ(result.matches.first().view.length(), test.get<2>());
+    }
+}
+
 TEST_CASE(posix_basic_dollar_is_end_anchor)
 {
     // Ensure that a dollar sign at the end only matches the end of the line.

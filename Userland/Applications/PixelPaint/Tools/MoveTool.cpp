@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,14 +14,6 @@
 #include <LibGUI/Window.h>
 
 namespace PixelPaint {
-
-MoveTool::MoveTool()
-{
-}
-
-MoveTool::~MoveTool()
-{
-}
 
 void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
 {

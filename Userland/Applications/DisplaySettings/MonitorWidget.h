@@ -15,10 +15,12 @@ class MonitorWidget final : public GUI::Widget {
 
 public:
     bool set_wallpaper(String path);
-    String wallpaper();
+    StringView wallpaper() const;
 
     void set_wallpaper_mode(String mode);
-    String wallpaper_mode();
+    StringView wallpaper_mode() const;
+
+    RefPtr<Gfx::Bitmap> wallpaper_bitmap() const { return m_wallpaper_bitmap; }
 
     void set_desktop_resolution(Gfx::IntSize resolution);
     Gfx::IntSize desktop_resolution();

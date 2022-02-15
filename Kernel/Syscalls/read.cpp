@@ -6,6 +6,7 @@
 
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -73,6 +74,20 @@ ErrorOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, 
 
 ErrorOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
 {
+    const auto start_timestamp = TimeManagement::the().uptime_ms();
+    const auto result = read_impl(fd, buffer, size);
+
+    if (Thread::current()->is_profiling_suppressed())
+        return result;
+
+    auto description = TRY(open_readable_file_description(fds(), fd));
+    PerformanceManager::add_read_event(*Thread::current(), fd, size, description, start_timestamp, result);
+
+    return result;
+}
+
+ErrorOr<FlatPtr> Process::read_impl(int fd, Userspace<u8*> buffer, size_t size)
+{
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));
     if (size == 0)
@@ -81,6 +96,7 @@ ErrorOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
         return EINVAL;
     dbgln_if(IO_DEBUG, "sys$read({}, {}, {})", fd, buffer.ptr(), size);
     auto description = TRY(open_readable_file_description(fds(), fd));
+
     TRY(check_blocked_read(description));
     auto user_buffer = TRY(UserOrKernelBuffer::for_user_buffer(buffer, size));
     return TRY(description->read(user_buffer, size));

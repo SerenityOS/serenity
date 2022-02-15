@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,10 +14,6 @@ MailboxTreeModel::MailboxTreeModel(AccountHolder const& account_holder)
     m_mail_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-mail.png").release_value_but_fixme_should_propagate_errors());
     m_folder_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-folder.png").release_value_but_fixme_should_propagate_errors());
     m_account_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/home-directory.png").release_value_but_fixme_should_propagate_errors());
-}
-
-MailboxTreeModel::~MailboxTreeModel()
-{
 }
 
 GUI::ModelIndex MailboxTreeModel::index(int row, int column, GUI::ModelIndex const& parent) const

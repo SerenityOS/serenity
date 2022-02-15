@@ -18,7 +18,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 
 // Some code points are excluded from UnicodeData.txt, and instead are part of a "range" of code
 // points, as indicated by the "name" field. For example:
@@ -163,17 +163,21 @@ static CodePointRange parse_code_point_range(StringView list)
     return code_point_range;
 }
 
-static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
 {
-    while (file.can_read_line()) {
-        auto line = file.read_line();
+    Array<u8, 1024> buffer;
+
+    while (TRY(file.can_read_line())) {
+        auto nread = TRY(file.read_line(buffer));
+        StringView line { buffer.data(), nread };
+
         if (line.is_empty() || line.starts_with('#'))
             continue;
 
         if (auto index = line.find('#'); index.has_value())
-            line = line.substring(0, *index);
+            line = line.substring_view(0, *index);
 
-        auto segments = line.split(';', true);
+        auto segments = line.split_view(';', true);
         VERIFY(segments.size() == 5 || segments.size() == 6);
 
         SpecialCasing casing {};
@@ -183,16 +187,16 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
         casing.uppercase_mapping = parse_code_point_list(segments[3]);
 
         if (auto condition = segments[4].trim_whitespace(); !condition.is_empty()) {
-            auto conditions = condition.split(' ', true);
+            auto conditions = condition.split_view(' ', true);
             VERIFY(conditions.size() == 1 || conditions.size() == 2);
 
             if (conditions.size() == 2) {
-                casing.locale = move(conditions[0]);
-                casing.condition = move(conditions[1]);
+                casing.locale = conditions[0];
+                casing.condition = conditions[1];
             } else if (all_of(conditions[0], is_ascii_lower_alpha)) {
-                casing.locale = move(conditions[0]);
+                casing.locale = conditions[0];
             } else {
-                casing.condition = move(conditions[0]);
+                casing.condition = conditions[0];
             }
 
             if (!casing.locale.is_empty())
@@ -222,17 +226,23 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
 
     for (u32 i = 0; i < unicode_data.special_casing.size(); ++i)
         unicode_data.special_casing[i].index = i;
+
+    return {};
 }
 
-static void parse_prop_list(Core::File& file, PropList& prop_list, bool multi_value_property = false)
+static ErrorOr<void> parse_prop_list(Core::Stream::BufferedFile& file, PropList& prop_list, bool multi_value_property = false)
 {
-    while (file.can_read_line()) {
-        auto line = file.read_line();
+    Array<u8, 1024> buffer;
+
+    while (TRY(file.can_read_line())) {
+        auto nread = TRY(file.read_line(buffer));
+        StringView line { buffer.data(), nread };
+
         if (line.is_empty() || line.starts_with('#'))
             continue;
 
         if (auto index = line.find('#'); index.has_value())
-            line = line.substring(0, *index);
+            line = line.substring_view(0, *index);
 
         auto segments = line.split_view(';', true);
         VERIFY(segments.size() == 2);
@@ -250,11 +260,14 @@ static void parse_prop_list(Core::File& file, PropList& prop_list, bool multi_va
             code_points.append(code_point_range);
         }
     }
+
+    return {};
 }
 
-static void parse_alias_list(Core::File& file, PropList const& prop_list, Vector<Alias>& prop_aliases)
+static ErrorOr<void> parse_alias_list(Core::Stream::BufferedFile& file, PropList const& prop_list, Vector<Alias>& prop_aliases)
 {
     String current_property;
+    Array<u8, 1024> buffer;
 
     auto append_alias = [&](auto alias, auto property) {
         // Note: The alias files contain lines such as "Hyphen = Hyphen", which we should just skip.
@@ -268,11 +281,13 @@ static void parse_alias_list(Core::File& file, PropList const& prop_list, Vector
         prop_aliases.append({ property, alias });
     };
 
-    while (file.can_read_line()) {
-        auto line = file.read_line();
+    while (TRY(file.can_read_line())) {
+        auto nread = TRY(file.read_line(buffer));
+        StringView line { buffer.data(), nread };
+
         if (line.is_empty() || line.starts_with('#')) {
             if (line.ends_with("Properties"sv))
-                current_property = line.substring(2);
+                current_property = line.substring_view(2);
             continue;
         }
 
@@ -292,12 +307,18 @@ static void parse_alias_list(Core::File& file, PropList const& prop_list, Vector
             append_alias(alias, property);
         }
     }
+
+    return {};
 }
 
-static void parse_name_aliases(Core::File& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_name_aliases(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
 {
-    while (file.can_read_line()) {
-        auto line = file.read_line();
+    Array<u8, 1024> buffer;
+
+    while (TRY(file.can_read_line())) {
+        auto nread = TRY(file.read_line(buffer));
+        StringView line { buffer.data(), nread };
+
         if (line.is_empty() || line.starts_with('#'))
             continue;
 
@@ -315,11 +336,14 @@ static void parse_name_aliases(Core::File& file, UnicodeData& unicode_data)
                 unicode_data.code_point_display_name_aliases.set(*code_point, alias);
         }
     }
+
+    return {};
 }
 
-static void parse_value_alias_list(Core::File& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true)
+static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true)
 {
-    VERIFY(file.seek(0));
+    TRY(file.seek(0, Core::Stream::SeekMode::SetPosition));
+    Array<u8, 1024> buffer;
 
     auto append_alias = [&](auto alias, auto value) {
         // Note: The value alias file contains lines such as "Ahom = Ahom", which we should just skip.
@@ -333,13 +357,15 @@ static void parse_value_alias_list(Core::File& file, StringView desired_category
         prop_aliases.append({ value, alias });
     };
 
-    while (file.can_read_line()) {
-        auto line = file.read_line();
+    while (TRY(file.can_read_line())) {
+        auto nread = TRY(file.read_line(buffer));
+        StringView line { buffer.data(), nread };
+
         if (line.is_empty() || line.starts_with('#'))
             continue;
 
         if (auto index = line.find('#'); index.has_value())
-            line = line.substring(0, *index);
+            line = line.substring_view(0, *index);
 
         auto segments = line.split_view(';', true);
         auto category = segments[0].trim_whitespace();
@@ -357,17 +383,23 @@ static void parse_value_alias_list(Core::File& file, StringView desired_category
             append_alias(alias, value);
         }
     }
+
+    return {};
 }
 
-static void parse_normalization_props(Core::File& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_normalization_props(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
 {
-    while (file.can_read_line()) {
-        auto line = file.read_line();
+    Array<u8, 1024> buffer;
+
+    while (TRY(file.can_read_line())) {
+        auto nread = TRY(file.read_line(buffer));
+        StringView line { buffer.data(), nread };
+
         if (line.is_empty() || line.starts_with('#'))
             continue;
 
         if (auto index = line.find('#'); index.has_value())
-            line = line.substring(0, *index);
+            line = line.substring_view(0, *index);
 
         auto segments = line.split_view(';', true);
         VERIFY((segments.size() == 2) || (segments.size() == 3));
@@ -395,6 +427,8 @@ static void parse_normalization_props(Core::File& file, UnicodeData& unicode_dat
         auto& prop_list = unicode_data.prop_list.ensure(property);
         prop_list.append(move(code_point_range));
     }
+
+    return {};
 }
 
 static void add_canonical_code_point_name(CodePointRange range, StringView name, UnicodeData& unicode_data)
@@ -451,7 +485,7 @@ static void add_canonical_code_point_name(CodePointRange range, StringView name,
     unicode_data.code_point_display_names.append({ range, name });
 }
 
-static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
 {
     Optional<u32> code_point_range_start;
 
@@ -459,26 +493,30 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
     Optional<u32> assigned_code_point_range_start = 0;
     u32 previous_code_point = 0;
 
-    while (file.can_read_line()) {
-        auto line = file.read_line();
+    Array<u8, 1024> buffer;
+
+    while (TRY(file.can_read_line())) {
+        auto nread = TRY(file.read_line(buffer));
+        StringView line { buffer.data(), nread };
+
         if (line.is_empty())
             continue;
 
-        auto segments = line.split(';', true);
+        auto segments = line.split_view(';', true);
         VERIFY(segments.size() == 15);
 
         CodePointData data {};
         data.code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
-        data.name = move(segments[1]);
+        data.name = segments[1];
         data.canonical_combining_class = AK::StringUtils::convert_to_uint<u8>(segments[3]).value();
-        data.bidi_class = move(segments[4]);
-        data.decomposition_type = move(segments[5]);
+        data.bidi_class = segments[4];
+        data.decomposition_type = segments[5];
         data.numeric_value_decimal = AK::StringUtils::convert_to_int<i8>(segments[6]);
         data.numeric_value_digit = AK::StringUtils::convert_to_int<i8>(segments[7]);
         data.numeric_value_numeric = AK::StringUtils::convert_to_int<i8>(segments[8]);
         data.bidi_mirrored = segments[9] == "Y"sv;
-        data.unicode_1_name = move(segments[10]);
-        data.iso_comment = move(segments[11]);
+        data.unicode_1_name = segments[10];
+        data.iso_comment = segments[11];
         data.simple_uppercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[12]);
         data.simple_lowercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[13]);
         data.simple_titlecase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[14]);
@@ -537,9 +575,11 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 
         unicode_data.code_point_data.append(move(data));
     }
+
+    return {};
 }
 
-static void generate_unicode_data_header(Core::File& file, UnicodeData& unicode_data)
+static ErrorOr<void> generate_unicode_data_header(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -619,10 +659,11 @@ struct SpecialCasing {
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
 
-static void generate_unicode_data_implementation(Core::File& file, UnicodeData const& unicode_data)
+static ErrorOr<void> generate_unicode_data_implementation(Core::Stream::BufferedFile& file, UnicodeData const& unicode_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -973,7 +1014,8 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
 
 static Vector<u32> flatten_code_point_ranges(Vector<CodePointRange> const& code_points)
@@ -1143,58 +1185,49 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(sentence_break_path, "Path to SentenceBreakProperty.txt file", "sentence-break-path", 'i', "sentence-break-path");
     args_parser.parse(arguments);
 
-    auto open_file = [&](StringView path, Core::OpenMode mode = Core::OpenMode::ReadOnly) -> ErrorOr<NonnullRefPtr<Core::File>> {
-        if (path.is_empty()) {
-            args_parser.print_usage(stderr, arguments.argv[0]);
-            return Error::from_string_literal("Must provide all command line options"sv);
-        }
-
-        return Core::File::open(path, mode);
-    };
-
-    auto generated_header_file = TRY(open_file(generated_header_path, Core::OpenMode::ReadWrite));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::OpenMode::ReadWrite));
-    auto unicode_data_file = TRY(open_file(unicode_data_path));
-    auto derived_general_category_file = TRY(open_file(derived_general_category_path));
-    auto special_casing_file = TRY(open_file(special_casing_path));
-    auto prop_list_file = TRY(open_file(prop_list_path));
-    auto derived_core_prop_file = TRY(open_file(derived_core_prop_path));
-    auto derived_binary_prop_file = TRY(open_file(derived_binary_prop_path));
-    auto prop_alias_file = TRY(open_file(prop_alias_path));
-    auto prop_value_alias_file = TRY(open_file(prop_value_alias_path));
-    auto name_alias_file = TRY(open_file(name_alias_path));
-    auto scripts_file = TRY(open_file(scripts_path));
-    auto script_extensions_file = TRY(open_file(script_extensions_path));
-    auto emoji_data_file = TRY(open_file(emoji_data_path));
-    auto normalization_file = TRY(open_file(normalization_path));
-    auto grapheme_break_file = TRY(open_file(grapheme_break_path));
-    auto word_break_file = TRY(open_file(word_break_path));
-    auto sentence_break_file = TRY(open_file(sentence_break_path));
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
+    auto unicode_data_file = TRY(open_file(unicode_data_path, Core::Stream::OpenMode::Read));
+    auto derived_general_category_file = TRY(open_file(derived_general_category_path, Core::Stream::OpenMode::Read));
+    auto special_casing_file = TRY(open_file(special_casing_path, Core::Stream::OpenMode::Read));
+    auto prop_list_file = TRY(open_file(prop_list_path, Core::Stream::OpenMode::Read));
+    auto derived_core_prop_file = TRY(open_file(derived_core_prop_path, Core::Stream::OpenMode::Read));
+    auto derived_binary_prop_file = TRY(open_file(derived_binary_prop_path, Core::Stream::OpenMode::Read));
+    auto prop_alias_file = TRY(open_file(prop_alias_path, Core::Stream::OpenMode::Read));
+    auto prop_value_alias_file = TRY(open_file(prop_value_alias_path, Core::Stream::OpenMode::Read));
+    auto name_alias_file = TRY(open_file(name_alias_path, Core::Stream::OpenMode::Read));
+    auto scripts_file = TRY(open_file(scripts_path, Core::Stream::OpenMode::Read));
+    auto script_extensions_file = TRY(open_file(script_extensions_path, Core::Stream::OpenMode::Read));
+    auto emoji_data_file = TRY(open_file(emoji_data_path, Core::Stream::OpenMode::Read));
+    auto normalization_file = TRY(open_file(normalization_path, Core::Stream::OpenMode::Read));
+    auto grapheme_break_file = TRY(open_file(grapheme_break_path, Core::Stream::OpenMode::Read));
+    auto word_break_file = TRY(open_file(word_break_path, Core::Stream::OpenMode::Read));
+    auto sentence_break_file = TRY(open_file(sentence_break_path, Core::Stream::OpenMode::Read));
 
     UnicodeData unicode_data {};
-    parse_special_casing(special_casing_file, unicode_data);
-    parse_prop_list(derived_general_category_file, unicode_data.general_categories);
-    parse_prop_list(prop_list_file, unicode_data.prop_list);
-    parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
-    parse_prop_list(derived_binary_prop_file, unicode_data.prop_list);
-    parse_prop_list(emoji_data_file, unicode_data.prop_list);
-    parse_normalization_props(normalization_file, unicode_data);
-    parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
-    parse_prop_list(scripts_file, unicode_data.script_list);
-    parse_prop_list(script_extensions_file, unicode_data.script_extensions, true);
-    parse_name_aliases(name_alias_file, unicode_data);
-    parse_prop_list(grapheme_break_file, unicode_data.grapheme_break_props);
-    parse_prop_list(word_break_file, unicode_data.word_break_props);
-    parse_prop_list(sentence_break_file, unicode_data.sentence_break_props);
+    TRY(parse_special_casing(*special_casing_file, unicode_data));
+    TRY(parse_prop_list(*derived_general_category_file, unicode_data.general_categories));
+    TRY(parse_prop_list(*prop_list_file, unicode_data.prop_list));
+    TRY(parse_prop_list(*derived_core_prop_file, unicode_data.prop_list));
+    TRY(parse_prop_list(*derived_binary_prop_file, unicode_data.prop_list));
+    TRY(parse_prop_list(*emoji_data_file, unicode_data.prop_list));
+    TRY(parse_normalization_props(*normalization_file, unicode_data));
+    TRY(parse_alias_list(*prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases));
+    TRY(parse_prop_list(*scripts_file, unicode_data.script_list));
+    TRY(parse_prop_list(*script_extensions_file, unicode_data.script_extensions, true));
+    TRY(parse_name_aliases(*name_alias_file, unicode_data));
+    TRY(parse_prop_list(*grapheme_break_file, unicode_data.grapheme_break_props));
+    TRY(parse_prop_list(*word_break_file, unicode_data.word_break_props));
+    TRY(parse_prop_list(*sentence_break_file, unicode_data.sentence_break_props));
 
     populate_general_category_unions(unicode_data.general_categories);
-    parse_unicode_data(unicode_data_file, unicode_data);
-    parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
-    parse_value_alias_list(prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false);
+    TRY(parse_unicode_data(*unicode_data_file, unicode_data));
+    TRY(parse_value_alias_list(*prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases));
+    TRY(parse_value_alias_list(*prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false));
     normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases);
 
-    generate_unicode_data_header(generated_header_file, unicode_data);
-    generate_unicode_data_implementation(generated_implementation_file, unicode_data);
+    TRY(generate_unicode_data_header(*generated_header_file, unicode_data));
+    TRY(generate_unicode_data_implementation(*generated_implementation_file, unicode_data));
 
     return 0;
 }

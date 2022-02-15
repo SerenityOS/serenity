@@ -2,6 +2,7 @@
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Glenford Williams <gw_dev@outlook.com>
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -102,10 +103,6 @@ CalculatorWidget::CalculatorWidget()
         m_keypad.set_value(res);
         update_display();
     };
-}
-
-CalculatorWidget::~CalculatorWidget()
-{
 }
 
 void CalculatorWidget::add_operation_button(GUI::Button& button, Calculator::Operation operation)

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,8 +15,8 @@
 
 class WavefrontOBJLoader final : public MeshLoader {
 public:
-    WavefrontOBJLoader() { }
-    ~WavefrontOBJLoader() override { }
+    WavefrontOBJLoader() = default;
+    ~WavefrontOBJLoader() override = default;
 
     RefPtr<Mesh> load(Core::File& file) override;
 };

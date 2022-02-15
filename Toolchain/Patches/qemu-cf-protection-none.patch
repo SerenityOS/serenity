@@ -1,0 +1,37 @@
+Subject: [PATCH] build: fix build failure with gcc 11.2 by disabling -fcf-protection
+Date: Tue,  8 Feb 2022 13:19:37 -0800	[thread overview]
+Message-ID: <20220208211937.79580-1-vineetg@rivosinc.com> (raw)
+
+When doing RV qemu builds with host gcc 11.2, ran into following build failure
+
+| cc -MMD -MP -MT linuxboot_dma.o -MF ./linuxboot_dma.d -O2 -g -march=i486 -Wall \
+|   -Wstrict-prototypes -Wredundant-decls -Wundef -Wwrite-strings -Wmissing-prototypes \
+|   -Wold-style-declaration -Wold-style-definition -Wtype-limits -Wformat-security \
+|   -Wformat-y2k -Winit-self -Wignored-qualifiers -Wempty-body -Wnested-externs \
+|   -Wendif-labels -Wexpansion-to-defined -Wimplicit-fallthrough=2 -Wno-missing-include-dirs \
+|   -Wno-shift-negative-value -Wno-psabi -fno-pie -ffreestanding -IQEMU/include \
+|   -fno-stack-protector   -m16   -Wa,-32 \
+|   -c QEMU/pc-bios/optionrom/linuxboot_dma.c -o linuxboot_dma.o
+|cc1: error: ‘-fcf-protection’ is not compatible with this target
+
+Signed-off-by: Vineet Gupta <vineetg@rivosinc.com>
+---
+This might be a crude fix to the problem
+---
+ pc-bios/optionrom/Makefile | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/pc-bios/optionrom/Makefile b/pc-bios/optionrom/Makefile
+index 5d55d25acca2..8f843ee803c1 100644
+--- a/pc-bios/optionrom/Makefile
++++ b/pc-bios/optionrom/Makefile
+@@ -22,6 +22,9 @@  override CFLAGS += $(CFLAGS_NOPIE) -ffreestanding -I$(TOPSRC_DIR)/include
+ override CFLAGS += $(call cc-option, -fno-stack-protector)
+ override CFLAGS += $(call cc-option, -m16)
+ 
++# issue with gcc 11.2
++override CFLAGS += $(call cc-option, -fcf-protection=none)
++
+ ifeq ($(filter -m16, $(CFLAGS)),)
+ # Attempt to work around compilers that lack -m16 (GCC <= 4.8, clang <= ??)
+ # On GCC we add -fno-toplevel-reorder to keep the order of asm blocks with

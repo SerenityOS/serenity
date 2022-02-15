@@ -24,9 +24,9 @@
 #include <time.h>
 #include <unistd.h>
 
-static int total_pings;
+static uint32_t total_pings;
 static int successful_pings;
-static int count;
+static uint32_t count;
 static uint32_t total_ms;
 static int min_ms;
 static int max_ms;
@@ -66,6 +66,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count");
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
     args_parser.parse(arguments);
+
+    if (count < 1 || count > UINT32_MAX) {
+        warnln("invalid count argument: '{}': out of range: 1 <= value <= {}", count, UINT32_MAX);
+        return 1;
+    }
 
     if (payload_size < 0) {
         // Use the default.
@@ -152,16 +157,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         struct timeval tv_send;
         gettimeofday(&tv_send, nullptr);
 
+        if (count && total_pings == count)
+            closing_statistics();
+        else
+            total_pings++;
+
         rc = sendto(fd, ping_packet.data(), ping_packet.size(), 0, (const struct sockaddr*)&peer_address, sizeof(sockaddr_in));
         if (rc < 0) {
             perror("sendto");
             return 1;
         }
-
-        if (count && total_pings == count)
-            closing_statistics();
-        else
-            total_pings++;
 
         for (;;) {
             auto pong_packet_result = ByteBuffer::create_uninitialized(

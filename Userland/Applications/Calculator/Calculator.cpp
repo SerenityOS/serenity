@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,14 +9,6 @@
 #include "KeypadValue.h"
 #include <AK/Assertions.h>
 #include <AK/Math.h>
-
-Calculator::Calculator()
-{
-}
-
-Calculator::~Calculator()
-{
-}
 
 KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argument)
 {

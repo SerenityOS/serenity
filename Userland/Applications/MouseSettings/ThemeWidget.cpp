@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -136,8 +136,4 @@ void ThemeWidget::apply_settings()
 void ThemeWidget::reset_default_values()
 {
     m_theme_name_box->set_text("Default");
-}
-
-ThemeWidget::~ThemeWidget()
-{
 }

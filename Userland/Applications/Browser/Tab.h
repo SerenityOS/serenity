@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,7 +33,7 @@ class Tab final : public GUI::Widget {
     friend class BrowserWindow;
 
 public:
-    virtual ~Tab() override;
+    virtual ~Tab() override = default;
 
     URL url() const;
 

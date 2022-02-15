@@ -29,6 +29,7 @@ The `Meta/serenity.sh` script provides an abstraction over the build targets whi
 following build targets cannot be accessed through the script and have to be used directly by changing the current
 directory to `Build/i686` and then running `ninja <target>`:
 
+- `ninja limine-image`: Builds a disk image (`limine_disk_image`) with Limine
 - `ninja grub-image`: Builds a disk image (`grub_disk_image`) with GRUB
 - `ninja extlinux-image`: Builds a disk image (`extlinux_disk_image`) with extlinux
 - `ninja check-style`: Runs the same linters the CI does to verify project style on changed files

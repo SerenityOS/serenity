@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ class KeyboardMapperWidget final : public GUI::Widget {
     C_OBJECT(KeyboardMapperWidget)
 
 public:
-    virtual ~KeyboardMapperWidget() override;
+    virtual ~KeyboardMapperWidget() override = default;
 
     void create_frame();
     ErrorOr<void> load_map_from_file(const String&);

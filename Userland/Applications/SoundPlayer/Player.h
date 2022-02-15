@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Cesar Torres <shortanemoia@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,7 +31,7 @@ public:
     };
 
     explicit Player(Audio::ClientConnection& audio_client_connection);
-    virtual ~Player() { }
+    virtual ~Player() = default;
 
     void play_file_path(String const& path);
     bool is_playlist(String const& path);

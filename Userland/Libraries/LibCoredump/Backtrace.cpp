@@ -17,11 +17,9 @@
 
 namespace Coredump {
 
-ELFObjectInfo const* Backtrace::object_info_for_region(MemoryRegionInfo const& region)
+ELFObjectInfo const* Backtrace::object_info_for_region(Reader const& coredump, MemoryRegionInfo const& region)
 {
-    String path = region.object_name();
-    if (!path.starts_with('/') && Core::File::looks_like_shared_library(path))
-        path = LexicalPath::join("/usr/lib", path).string();
+    String path = coredump.resolve_object_path(region.object_name());
 
     auto maybe_ptr = m_debug_info_cache.get(path);
     if (maybe_ptr.has_value())
@@ -116,7 +114,7 @@ void Backtrace::add_entry(const Reader& coredump, FlatPtr ip)
     // the PT_LOAD header for the .text segment isn't the first one
     // in the object file.
     auto region = coredump.first_region_for_object(object_name);
-    auto object_info = object_info_for_region(*region);
+    auto object_info = object_info_for_region(coredump, *region);
     if (!object_info) {
         m_entries.append({ ip, object_name, {}, {} });
         return;

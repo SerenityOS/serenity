@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,7 +23,7 @@ class MainWidget;
 class KnobsWidget final : public GUI::Frame {
     C_OBJECT(KnobsWidget)
 public:
-    virtual ~KnobsWidget() override;
+    virtual ~KnobsWidget() override = default;
 
     void update_knobs();
     void cycle_waveform();

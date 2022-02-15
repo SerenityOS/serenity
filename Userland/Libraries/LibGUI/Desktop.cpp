@@ -5,6 +5,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/TemporaryChange.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <string.h>
@@ -53,22 +54,30 @@ void Desktop::set_wallpaper_mode(StringView mode)
     WindowServerConnection::the().async_set_wallpaper_mode(mode);
 }
 
-bool Desktop::set_wallpaper(StringView path, bool save_config)
+String Desktop::wallpaper_path() const
 {
-    WindowServerConnection::the().async_set_wallpaper(path);
+    return Config::read_string("WindowManager", "Background", "Wallpaper");
+}
+
+RefPtr<Gfx::Bitmap> Desktop::wallpaper_bitmap() const
+{
+    return WindowServerConnection::the().get_wallpaper().bitmap();
+}
+
+bool Desktop::set_wallpaper(RefPtr<Gfx::Bitmap> wallpaper_bitmap, Optional<String> path)
+{
+    if (m_is_setting_desktop_wallpaper)
+        return false;
+
+    TemporaryChange is_setting_desktop_wallpaper_change(m_is_setting_desktop_wallpaper, true);
+    WindowServerConnection::the().async_set_wallpaper(wallpaper_bitmap ? wallpaper_bitmap->to_shareable_bitmap() : Gfx::ShareableBitmap {});
     auto ret_val = WindowServerConnection::the().wait_for_specific_message<Messages::WindowClient::SetWallpaperFinished>()->success();
 
-    if (ret_val && save_config) {
-        dbgln("Saving wallpaper path '{}' to ConfigServer", path);
-        Config::write_string("WindowManager", "Background", "Wallpaper", path);
+    if (ret_val && path.has_value()) {
+        dbgln("Saving wallpaper path '{}' to ConfigServer", *path);
+        Config::write_string("WindowManager", "Background", "Wallpaper", *path);
     }
 
     return ret_val;
 }
-
-String Desktop::wallpaper() const
-{
-    return WindowServerConnection::the().get_wallpaper();
-}
-
 }

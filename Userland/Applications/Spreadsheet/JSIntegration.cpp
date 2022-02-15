@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -94,10 +94,6 @@ Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView so
 
 SheetGlobalObject::SheetGlobalObject(Sheet& sheet)
     : m_sheet(sheet)
-{
-}
-
-SheetGlobalObject::~SheetGlobalObject()
 {
 }
 
@@ -359,10 +355,6 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_column_bound)
 WorkbookObject::WorkbookObject(Workbook& workbook, JS::GlobalObject& global_object)
     : JS::Object(*JS::Object::create(global_object, global_object.object_prototype()))
     , m_workbook(workbook)
-{
-}
-
-WorkbookObject::~WorkbookObject()
 {
 }
 

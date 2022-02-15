@@ -11,6 +11,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/MarkedVector.h>
+#include <LibJS/Runtime/CanonicalIndex.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrivateEnvironment.h>
@@ -39,7 +40,12 @@ bool validate_and_apply_property_descriptor(Object*, PropertyKey const&, bool ex
 ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
 Object* create_unmapped_arguments_object(GlobalObject&, Span<Value> arguments);
 Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Span<Value> arguments, Environment&);
-Value canonical_numeric_index_string(GlobalObject&, PropertyKey const&);
+
+enum class CanonicalIndexMode {
+    DetectNumericRoundtrip,
+    IgnoreNumericRoundtrip,
+};
+CanonicalIndex canonical_numeric_index_string(PropertyKey const&, CanonicalIndexMode needs_numeric);
 ThrowCompletionOr<String> get_substitution(GlobalObject&, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement);
 
 enum class CallerMode {

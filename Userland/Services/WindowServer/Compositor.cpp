@@ -805,26 +805,14 @@ bool Compositor::set_wallpaper_mode(const String& mode)
     return ret_val;
 }
 
-bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callback)
+bool Compositor::set_wallpaper(RefPtr<Gfx::Bitmap> bitmap)
 {
-    (void)Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
-        [path](auto&) {
-            return Gfx::Bitmap::try_load_from_file(path);
-        },
+    if (!bitmap)
+        m_wallpaper = nullptr;
+    else
+        m_wallpaper = bitmap;
+    invalidate_screen();
 
-        [this, path, callback = move(callback)](ErrorOr<NonnullRefPtr<Gfx::Bitmap>> bitmap) {
-            if (bitmap.is_error() && !path.is_empty()) {
-                callback(false);
-                return;
-            }
-            m_wallpaper_path = path;
-            if (bitmap.is_error())
-                m_wallpaper = nullptr;
-            else
-                m_wallpaper = bitmap.release_value();
-            invalidate_screen();
-            callback(true);
-        });
     return true;
 }
 

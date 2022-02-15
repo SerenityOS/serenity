@@ -15,13 +15,15 @@ steps:
 
   - ${{ if eq(parameters.os, 'Linux') }}:
     - script: |
-        sudo apt-get purge -y clang-11 gcc-10
+        sudo apt-get purge -y clang-11 clang-12 gcc-10
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main'
         sudo apt-get update
-        sudo apt-get install ccache gcc-11 g++-11 libstdc++-11-dev ninja-build unzip
+        sudo apt-get install ccache gcc-11 g++-11 clang-13 libstdc++-11-dev ninja-build unzip
 
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-13 100
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-13 100
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
 

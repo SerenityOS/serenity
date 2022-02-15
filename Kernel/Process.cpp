@@ -266,7 +266,8 @@ ErrorOr<void> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& pr
         first_thread->detach();
     }
 
-    m_procfs_traits = TRY(ProcessProcFSTraits::try_create({}, *this));
+    auto weak_ptr = TRY(this->try_make_weak_ptr());
+    m_procfs_traits = TRY(ProcessProcFSTraits::try_create({}, move(weak_ptr)));
     return {};
 }
 

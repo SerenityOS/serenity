@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Hunter Salyer <thefalsehonesty@gmail.com>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -66,10 +67,6 @@ ConsoleWidget::ConsoleWidget()
     clear_button.on_click = [this](auto) {
         clear_output();
     };
-}
-
-ConsoleWidget::~ConsoleWidget()
-{
 }
 
 void ConsoleWidget::request_console_messages()

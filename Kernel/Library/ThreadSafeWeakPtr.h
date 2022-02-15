@@ -53,7 +53,7 @@ public:
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr(const U& object)
-        : m_link(object.template make_weak_ptr<U>().take_link())
+        : m_link(object.template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link())
     {
     }
 
@@ -61,7 +61,7 @@ public:
     WeakPtr(const U* object)
     {
         if (object)
-            m_link = object->template make_weak_ptr<U>().take_link();
+            m_link = object->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
     }
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
@@ -69,7 +69,7 @@ public:
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
-                m_link = obj->template make_weak_ptr<U>().take_link();
+                m_link = obj->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
         });
     }
 
@@ -78,14 +78,14 @@ public:
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
-                m_link = obj->template make_weak_ptr<U>().take_link();
+                m_link = obj->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
         });
     }
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const U& object)
     {
-        m_link = object.template make_weak_ptr<U>().take_link();
+        m_link = object.template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
         return *this;
     }
 
@@ -93,7 +93,7 @@ public:
     WeakPtr& operator=(const U* object)
     {
         if (object)
-            m_link = object->template make_weak_ptr<U>().take_link();
+            m_link = object->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
         else
             m_link = nullptr;
         return *this;
@@ -104,7 +104,7 @@ public:
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
-                m_link = obj->template make_weak_ptr<U>().take_link();
+                m_link = obj->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
             else
                 m_link = nullptr;
         });
@@ -116,7 +116,7 @@ public:
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
-                m_link = obj->template make_weak_ptr<U>().take_link();
+                m_link = obj->template try_make_weak_ptr<U>().release_value_but_fixme_should_propagate_errors().take_link();
             else
                 m_link = nullptr;
         });
@@ -137,17 +137,6 @@ public:
         });
         return ref;
     }
-
-#ifndef KERNEL
-    // A lot of user mode code is single-threaded. But for kernel mode code
-    // this is generally not true as everything is multi-threaded. So make
-    // these shortcuts and aliases only available to non-kernel code.
-    T* ptr() const { return unsafe_ptr(); }
-    T* operator->() { return unsafe_ptr(); }
-    const T* operator->() const { return unsafe_ptr(); }
-    operator const T*() const { return unsafe_ptr(); }
-    operator T*() { return unsafe_ptr(); }
-#endif
 
     [[nodiscard]] T* unsafe_ptr() const
     {
@@ -177,7 +166,7 @@ private:
 
 template<typename T>
 template<typename U>
-inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
+inline ErrorOr<WeakPtr<U>> Weakable<T>::try_make_weak_ptr() const
 {
     if constexpr (IsBaseOf<RefCountedBase, T>) {
         // Checking m_being_destroyed isn't sufficient when dealing with
@@ -187,18 +176,18 @@ inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
         // that we prevent the destructor and revoke_weak_ptrs from being
         // triggered until we're done.
         if (!static_cast<const T*>(this)->try_ref())
-            return {};
+            return WeakPtr<U> {};
     } else {
         // For non-RefCounted types this means a weak reference can be
         // obtained until the ~Weakable destructor is invoked!
         if (m_being_destroyed.load(AK::MemoryOrder::memory_order_acquire))
-            return {};
+            return WeakPtr<U> {};
     }
     if (!m_link) {
         // There is a small chance that we create a new WeakLink and throw
         // it away because another thread beat us to it. But the window is
         // pretty small and the overhead isn't terrible.
-        m_link.assign_if_null(adopt_ref(*new WeakLink(const_cast<T&>(static_cast<const T&>(*this)))));
+        m_link.assign_if_null(TRY(adopt_nonnull_ref_or_enomem(new (nothrow) WeakLink(const_cast<T&>(static_cast<const T&>(*this))))));
     }
 
     WeakPtr<U> weak_ptr(m_link);
@@ -209,7 +198,7 @@ inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
             // We just dropped the last reference, which should have called
             // revoke_weak_ptrs, which should have invalidated our weak_ptr
             VERIFY(!weak_ptr.strong_ref());
-            return {};
+            return WeakPtr<U> {};
         }
     }
     return weak_ptr;
@@ -219,22 +208,18 @@ template<typename T>
 struct Formatter<WeakPtr<T>> : Formatter<const T*> {
     ErrorOr<void> format(FormatBuilder& builder, WeakPtr<T> const& value)
     {
-#ifdef KERNEL
         auto ref = value.strong_ref();
         return Formatter<const T*>::format(builder, ref.ptr());
-#else
-        return Formatter<const T*>::format(builder, value.ptr());
-#endif
     }
 };
 
 template<typename T>
-WeakPtr<T> try_make_weak_ptr(const T* ptr)
+ErrorOr<WeakPtr<T>> try_make_weak_ptr_if_nonnull(T const* ptr)
 {
     if (ptr) {
-        return ptr->template make_weak_ptr<T>();
+        return ptr->template try_make_weak_ptr<T>();
     }
-    return {};
+    return WeakPtr<T> {};
 }
 
 }

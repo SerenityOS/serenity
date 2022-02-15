@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Thomas Keppler <winfr34k@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,10 +44,6 @@ FontSettingsWidget::FontSettingsWidget()
             update_label_with_font(*m_fixed_width_font_label, *font_picker->font());
         }
     };
-}
-
-FontSettingsWidget::~FontSettingsWidget()
-{
 }
 
 static void update_label_with_font(GUI::Label& label, Gfx::Font const& font)

@@ -100,6 +100,23 @@ static void chmod_wrapper(const char* path, mode_t mode)
     }
 }
 
+static void chown_all_matching_device_nodes_under_specific_directory(StringView directory, group* group)
+{
+    VERIFY(group);
+    struct stat cur_file_stat;
+
+    Core::DirIterator di(directory, Core::DirIterator::SkipParentAndBaseDir);
+    if (di.has_error())
+        VERIFY_NOT_REACHED();
+    while (di.has_next()) {
+        auto entry_name = di.next_full_path();
+        auto rc = stat(entry_name.characters(), &cur_file_stat);
+        if (rc < 0)
+            continue;
+        chown_wrapper(entry_name.characters(), 0, group->gr_gid);
+    }
+}
+
 static void chown_all_matching_device_nodes(group* group, unsigned major_number)
 {
     VERIFY(group);
@@ -186,16 +203,10 @@ static void populate_devtmpfs_devices_based_on_devctl()
         auto minor_number = event.minor_number;
         bool is_block_device = (event.is_block_device == 1);
         switch (major_number) {
-        case 42: {
+        case 116: {
             if (!is_block_device) {
-                switch (minor_number) {
-                case 42: {
-                    create_devtmpfs_char_device("/dev/audio", 0220, 42, 42);
-                    break;
-                }
-                default:
-                    warnln("Unknown character device {}:{}", major_number, minor_number);
-                }
+                create_devtmpfs_char_device(String::formatted("/dev/audio/{}", minor_number), 0220, 116, minor_number);
+                break;
             }
             break;
         }
@@ -373,6 +384,8 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     TRY(Core::System::mount(-1, "/sys", "sys", 0));
     TRY(Core::System::mount(-1, "/dev", "dev", 0));
 
+    TRY(Core::System::mkdir("/dev/audio", 0755));
+
     TRY(Core::System::symlink("/proc/self/fd/0", "/dev/stdin"));
     TRY(Core::System::symlink("/proc/self/fd/1", "/dev/stdout"));
     TRY(Core::System::symlink("/proc/self/fd/2", "/dev/stderr"));
@@ -405,6 +418,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     auto audio_group = getgrnam("audio");
     VERIFY(audio_group);
     chown_wrapper("/dev/audio", 0, audio_group->gr_gid);
+    chown_all_matching_device_nodes_under_specific_directory("/dev/audio", audio_group);
 
     // Note: We open the /dev/null device and set file descriptors 0, 1, 2 to it
     // because otherwise these file descriptors won't have a custody, making

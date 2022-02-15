@@ -15,18 +15,18 @@
 
 namespace Web::Layout {
 
-void LineBox::add_fragment(Node& layout_node, int start, int length, float width, float height, LineBoxFragment::Type fragment_type)
+void LineBox::add_fragment(Node& layout_node, int start, int length, float leading_size, float trailing_size, float content_width, float content_height, LineBoxFragment::Type fragment_type)
 {
     bool text_align_is_justify = layout_node.computed_values().text_align() == CSS::TextAlign::Justify;
     if (!text_align_is_justify && !m_fragments.is_empty() && &m_fragments.last().layout_node() == &layout_node) {
         // The fragment we're adding is from the last Layout::Node on the line.
         // Expand the last fragment instead of adding a new one with the same Layout::Node.
         m_fragments.last().m_length = (start - m_fragments.last().m_start) + length;
-        m_fragments.last().set_width(m_fragments.last().width() + width);
+        m_fragments.last().set_width(m_fragments.last().width() + content_width);
     } else {
-        m_fragments.append(make<LineBoxFragment>(layout_node, start, length, Gfx::FloatPoint(m_width, 0.0f), Gfx::FloatSize(width, height), fragment_type));
+        m_fragments.append(make<LineBoxFragment>(layout_node, start, length, Gfx::FloatPoint(m_width + leading_size, 0.0f), Gfx::FloatSize(content_width, content_height), fragment_type));
     }
-    m_width += width;
+    m_width += content_width + leading_size + trailing_size;
 
     if (is<Box>(layout_node))
         verify_cast<Box>(layout_node).set_containing_line_box_fragment(m_fragments.last());

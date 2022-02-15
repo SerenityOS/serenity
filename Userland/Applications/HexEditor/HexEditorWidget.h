@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +22,7 @@ class HexEditor;
 class HexEditorWidget final : public GUI::Widget {
     C_OBJECT(HexEditorWidget)
 public:
-    virtual ~HexEditorWidget() override;
+    virtual ~HexEditorWidget() override = default;
     void open_file(NonnullRefPtr<Core::File>);
     void initialize_menubar(GUI::Window&);
     bool request_close();

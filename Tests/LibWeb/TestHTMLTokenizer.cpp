@@ -206,5 +206,5 @@ TEST_CASE(regression)
     auto file_contents = file.value()->read_all();
     auto tokens = run_tokenizer(file_contents);
     u32 hash = hash_tokens(tokens);
-    EXPECT_EQ(hash, 2203864459u);
+    EXPECT_EQ(hash, 3215459107u);
 }

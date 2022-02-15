@@ -12,7 +12,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibTimeZone/TimeZone.h>
 
 namespace {
@@ -312,11 +312,15 @@ static void parse_rule(StringView rule_line, TimeZoneData& time_zone_data)
 static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& time_zone_data)
 {
     // For reference, the man page for `zic` has the best documentation of the TZDB file format.
-    auto file = TRY(Core::File::open(time_zone_path, Core::OpenMode::ReadOnly));
+    auto file = TRY(open_file(time_zone_path, Core::Stream::OpenMode::Read));
+    Array<u8, 1024> buffer {};
+
     Vector<TimeZoneOffset>* last_parsed_zone = nullptr;
 
-    while (file->can_read_line()) {
-        auto line = file->read_line();
+    while (TRY(file->can_read_line())) {
+        auto nread = TRY(file->read_line(buffer));
+        StringView line { buffer.data(), nread };
+
         if (line.is_empty() || line.trim_whitespace(TrimMode::Left).starts_with('#'))
             continue;
 
@@ -338,7 +342,7 @@ static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& t
     return {};
 }
 
-static void parse_time_zone_coordinates(Core::File& file, TimeZoneData& time_zone_data)
+static ErrorOr<void> parse_time_zone_coordinates(Core::Stream::BufferedFile& file, TimeZoneData& time_zone_data)
 {
     auto parse_coordinate = [](auto coordinate) {
         VERIFY(coordinate.substring_view(0, 1).is_one_of("+"sv, "-"sv));
@@ -369,8 +373,12 @@ static void parse_time_zone_coordinates(Core::File& file, TimeZoneData& time_zon
         return parsed;
     };
 
-    while (file.can_read_line()) {
-        auto line = file.read_line();
+    Array<u8, 1024> buffer {};
+
+    while (TRY(file.can_read_line())) {
+        auto nread = TRY(file.read_line(buffer));
+        StringView line { buffer.data(), nread };
+
         if (line.is_empty() || line.trim_whitespace(TrimMode::Left).starts_with('#'))
             continue;
 
@@ -386,6 +394,8 @@ static void parse_time_zone_coordinates(Core::File& file, TimeZoneData& time_zon
 
         time_zone_data.time_zone_coordinates.set(zone, { latitude, longitude });
     }
+
+    return {};
 }
 
 static void set_dst_rule_indices(TimeZoneData& time_zone_data)
@@ -426,7 +436,7 @@ static String format_identifier(StringView owner, String identifier)
     return identifier;
 }
 
-static void generate_time_zone_data_header(Core::File& file, TimeZoneData& time_zone_data)
+static ErrorOr<void> generate_time_zone_data_header(Core::Stream::BufferedFile& file, TimeZoneData& time_zone_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -446,10 +456,11 @@ namespace TimeZone {
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
 
-static void generate_time_zone_data_implementation(Core::File& file, TimeZoneData& time_zone_data)
+static ErrorOr<void> generate_time_zone_data_implementation(Core::Stream::BufferedFile& file, TimeZoneData& time_zone_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -729,7 +740,8 @@ Optional<Location> get_time_zone_location(TimeZone time_zone)
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -746,27 +758,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(time_zone_paths, "Paths to the time zone database files", "time-zone-paths");
     args_parser.parse(arguments);
 
-    auto open_file = [&](StringView path, Core::OpenMode mode = Core::OpenMode::ReadWrite) -> ErrorOr<NonnullRefPtr<Core::File>> {
-        if (path.is_empty()) {
-            args_parser.print_usage(stderr, arguments.argv[0]);
-            return Error::from_string_literal("Must provide all command line options"sv);
-        }
-
-        return Core::File::open(path, mode);
-    };
-
-    auto generated_header_file = TRY(open_file(generated_header_path));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path));
-    auto time_zone_coordinates_file = TRY(open_file(time_zone_coordinates_path, Core::OpenMode::ReadOnly));
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
+    auto time_zone_coordinates_file = TRY(open_file(time_zone_coordinates_path, Core::Stream::OpenMode::Read));
 
     TimeZoneData time_zone_data {};
     for (auto time_zone_path : time_zone_paths)
         TRY(parse_time_zones(time_zone_path, time_zone_data));
 
-    parse_time_zone_coordinates(time_zone_coordinates_file, time_zone_data);
+    TRY(parse_time_zone_coordinates(*time_zone_coordinates_file, time_zone_data));
 
-    generate_time_zone_data_header(generated_header_file, time_zone_data);
-    generate_time_zone_data_implementation(generated_implementation_file, time_zone_data);
+    TRY(generate_time_zone_data_header(*generated_header_file, time_zone_data));
+    TRY(generate_time_zone_data_implementation(*generated_implementation_file, time_zone_data));
 
     return 0;
 }

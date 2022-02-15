@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,10 +25,6 @@ PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ClientConnection> connecti
     };
     m_timer->stop();
     m_device_sample_rate = connection->get_sample_rate();
-}
-
-PlaybackManager::~PlaybackManager()
-{
 }
 
 void PlaybackManager::set_loader(NonnullRefPtr<Audio::Loader>&& loader)

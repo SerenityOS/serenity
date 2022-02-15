@@ -849,7 +849,7 @@ void HackStudioWidget::initialize_debugger()
                 m_disassembly_widget->update_state(*Debugger::the().session(), regs);
                 HackStudioWidget::reveal_action_tab(*m_debug_info_widget);
             });
-            Core::EventLoop::wake();
+            Core::EventLoop::wake_current();
 
             return Debugger::HasControlPassedToUser::Yes;
         },
@@ -859,7 +859,7 @@ void HackStudioWidget::initialize_debugger()
                 if (m_current_editor_in_execution)
                     m_current_editor_in_execution->editor().clear_execution_position();
             });
-            Core::EventLoop::wake();
+            Core::EventLoop::wake_current();
         },
         [this]() {
             deferred_invoke([this] {
@@ -879,7 +879,7 @@ void HackStudioWidget::initialize_debugger()
                 HackStudioWidget::hide_action_tabs();
                 GUI::MessageBox::show(window(), "Program Exited", "Debugger", GUI::MessageBox::Type::Information);
             });
-            Core::EventLoop::wake();
+            Core::EventLoop::wake_current();
         });
 }
 

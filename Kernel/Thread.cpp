@@ -359,7 +359,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
             unblock();
     };
     if (Processor::current_in_irq() != 0) {
-        Processor::deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
+        Processor::deferred_call_queue([do_unblock = move(do_unblock), self = try_make_weak_ptr().release_value_but_fixme_should_propagate_errors()]() {
             if (auto this_thread = self.strong_ref())
                 do_unblock();
         });

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +9,7 @@
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {
@@ -40,9 +41,10 @@ void StackingContext::paint_descendants(PaintContext& context, Node& box, Stacki
     box.for_each_child([&](auto& child) {
         if (child.establishes_stacking_context())
             return;
+        bool child_is_inline_or_replaced = child.is_inline() || is<ReplacedBox>(child);
         switch (phase) {
         case StackingContextPaintPhase::BackgroundAndBorders:
-            if (!child.is_floating() && !child.is_positioned()) {
+            if (!child_is_inline_or_replaced && !child.is_floating() && !child.is_positioned()) {
                 child.paint(context, PaintPhase::Background);
                 child.paint(context, PaintPhase::Border);
                 paint_descendants(context, child, phase);
@@ -51,6 +53,16 @@ void StackingContext::paint_descendants(PaintContext& context, Node& box, Stacki
         case StackingContextPaintPhase::Floats:
             if (!child.is_positioned()) {
                 if (child.is_floating()) {
+                    child.paint(context, PaintPhase::Background);
+                    child.paint(context, PaintPhase::Border);
+                    paint_descendants(context, child, StackingContextPaintPhase::BackgroundAndBorders);
+                }
+                paint_descendants(context, child, phase);
+            }
+            break;
+        case StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced:
+            if (!child.is_positioned()) {
+                if (child_is_inline_or_replaced) {
                     child.paint(context, PaintPhase::Background);
                     child.paint(context, PaintPhase::Border);
                     paint_descendants(context, child, StackingContextPaintPhase::BackgroundAndBorders);
@@ -94,6 +106,7 @@ void StackingContext::paint_internal(PaintContext& context)
     // Draw the non-positioned floats (step 5)
     paint_descendants(context, m_box, StackingContextPaintPhase::Floats);
     // Draw inline content, replaced content, etc. (steps 6, 7)
+    paint_descendants(context, m_box, StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
     m_box.paint(context, PaintPhase::Foreground);
     paint_descendants(context, m_box, StackingContextPaintPhase::Foreground);
     // Draw other positioned descendants (steps 8, 9)

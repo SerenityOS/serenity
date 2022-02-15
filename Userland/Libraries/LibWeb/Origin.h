@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,21 +21,53 @@ public:
     {
     }
 
-    bool is_null() const { return m_protocol.is_null() && m_host.is_null() && !m_port; }
+    // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque
+    bool is_opaque() const { return m_protocol.is_null() && m_host.is_null() && m_port == 0; }
 
     const String& protocol() const { return m_protocol; }
     const String& host() const { return m_host; }
     u16 port() const { return m_port; }
 
-    bool is_same(const Origin& other) const
+    // https://html.spec.whatwg.org/multipage/origin.html#same-origin
+    bool is_same_origin(Origin const& other) const
     {
+        // 1. If A and B are the same opaque origin, then return true.
+        if (is_opaque() && other.is_opaque())
+            return true;
+
+        // 2. If A and B are both tuple origins and their schemes, hosts, and port are identical, then return true.
+        // 3. Return false.
         return protocol() == other.protocol()
             && host() == other.host()
             && port() == other.port();
     }
 
-    bool operator==(Origin const& other) const { return is_same(other); }
-    bool operator!=(Origin const& other) const { return !is_same(other); }
+    // https://html.spec.whatwg.org/multipage/origin.html#same-origin-domain
+    bool is_same_origin_domain(Origin const& other) const
+    {
+        // 1. If A and B are the same opaque origin, then return true.
+        if (is_opaque() && other.is_opaque())
+            return true;
+
+        // 2. If A and B are both tuple origins, run these substeps:
+        if (!is_opaque() && !other.is_opaque()) {
+            // 1. If A and B's schemes are identical, and their domains are identical and non-null, then return true.
+            // FIXME: Check domains once supported.
+            if (protocol() == other.protocol())
+                return true;
+
+            // 2. Otherwise, if A and B are same origin and their domains are identical and null, then return true.
+            // FIXME: Check domains once supported.
+            if (is_same_origin(other))
+                return true;
+        }
+
+        // 3. Return false.
+        return false;
+    }
+
+    bool operator==(Origin const& other) const { return is_same_origin(other); }
+    bool operator!=(Origin const& other) const { return !is_same_origin(other); }
 
 private:
     String m_protocol;

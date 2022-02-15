@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@ class CharacterSearchWidget final : public GUI::Widget {
     C_OBJECT(CharacterSearchWidget);
 
 public:
-    virtual ~CharacterSearchWidget() override;
+    virtual ~CharacterSearchWidget() override = default;
 
     Function<void(u32)> on_character_selected;
 

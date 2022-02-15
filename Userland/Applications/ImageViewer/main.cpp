@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         window->set_title(String::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_string(), (int)(scale * 100)));
 
-        if (scale == 100 && !widget->scaled_for_first_image()) {
+        if (!widget->scaled_for_first_image()) {
             widget->set_scaled_for_first_image(true);
             widget->resize_window();
         }
@@ -169,8 +169,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png")),
         [&](auto&) {
-            auto could_set_wallpaper = GUI::Desktop::the().set_wallpaper(widget->path());
-            if (!could_set_wallpaper) {
+            if (!GUI::Desktop::the().set_wallpaper(widget->bitmap(), widget->path())) {
                 GUI::MessageBox::show(window,
                     String::formatted("set_wallpaper({}) failed", widget->path()),
                     "Could not set wallpaper",
@@ -214,6 +213,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             widget->set_scale(1.f);
         },
         window);
+
+    auto fit_image_to_view_action = GUI::Action::create(
+        "Fit Image To &View", [&](auto&) {
+            widget->fit_content_to_view();
+        });
 
     auto zoom_out_action = GUI::CommonActions::make_zoom_out_action(
         [&](auto&) {
@@ -301,6 +305,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(zoom_in_action));
     TRY(view_menu->try_add_action(reset_zoom_action));
+    TRY(view_menu->try_add_action(fit_image_to_view_action));
     TRY(view_menu->try_add_action(zoom_out_action));
     TRY(view_menu->try_add_separator());
 

@@ -273,3 +273,89 @@ test("TypedArray is abstract", () => {
         new TypedArray();
     }).toThrowWithMessage(TypeError, "Abstract class TypedArray cannot be constructed directly");
 });
+
+TYPED_ARRAYS.forEach(T => {
+    test(`all numeric indices are valid on ${T.name}`, () => {
+        const newTypedArray = new Float32Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
+        expect(newTypedArray).toHaveLength(10);
+
+        function PoisonError() {}
+
+        const poisonedObject = {
+            valueOf() {
+                throw new PoisonError();
+            },
+            extraValue: 4,
+        };
+
+        // valueOf should only be called if the string is a valid numeric index
+        expect(() => (newTypedArray["0"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray["-0"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray["Infinity"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray["-Infinity"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray["NaN"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray["1"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray["1.1"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray["0.3"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray["-1"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray["-1.1"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray["-0.3"] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[0] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[-0] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[Infinity] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[-Infinity] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[NaN] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[1] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[1.1] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[0.3] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[-1] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[-1.1] = poisonedObject)).toThrow(PoisonError);
+        expect(() => (newTypedArray[-0.3] = poisonedObject)).toThrow(PoisonError);
+
+        function expectValueSet(property) {
+            newTypedArray[property] = poisonedObject;
+            expect(newTypedArray).toHaveLength(10);
+            expect(newTypedArray[property].extraValue).toBe(4);
+            expect(delete newTypedArray[property]).toBeTrue();
+        }
+
+        expectValueSet("a");
+        expectValueSet(" 1");
+        expectValueSet("a");
+        expectValueSet("a");
+        expectValueSet(" 1");
+        expectValueSet("+Infinity");
+        expectValueSet("00");
+        expectValueSet("01");
+        expectValueSet("-01");
+        expectValueSet("-");
+        expectValueSet(".");
+        expectValueSet("-.");
+        expectValueSet("1e");
+        expectValueSet("1e");
+        expectValueSet("1e0");
+        expectValueSet("5.");
+        expectValueSet(".5");
+        expectValueSet("-.5");
+        expectValueSet("1e1");
+        expectValueSet("1e+1");
+        expectValueSet("0.0000001"); // ToString = "1e-7"
+
+        // Things that can round trip as numbers get consumed
+        function expectValueNotSet(property) {
+            expect(() => {
+                newTypedArray[property] = poisonedObject;
+            }).toThrow(PoisonError);
+            expect(newTypedArray[property]).toBeUndefined();
+            expect(delete newTypedArray[property]).toBeTrue();
+        }
+        expectValueNotSet("-2");
+        expectValueNotSet(1.5);
+        expectValueNotSet("-0");
+        expectValueNotSet(-1.5);
+        expectValueNotSet("-Infinity");
+        expectValueNotSet("Infinity");
+        expectValueNotSet("NaN");
+        expectValueNotSet("1e-10");
+    });
+});

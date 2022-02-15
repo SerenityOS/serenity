@@ -158,16 +158,65 @@ public:
     template<typename Callback>
     void for_each_child_in_paint_order(Callback callback) const
     {
+        // Element traversal using the order defined in https://www.w3.org/TR/CSS2/zindex.html#painting-order.
+        // Note: Some steps are skipped because they are not relevant to node traversal.
+
+        // 3. Stacking contexts formed by positioned descendants with negative z-indices (excluding 0) in z-index order
+        //    (most negative first) then tree order.
+        // FIXME: This does not retrieve elements in the z-index order.
+        for_each_child([&](auto& child) {
+            if (!child.is_positioned() || !is<Box>(child))
+                return;
+
+            auto& box_child = verify_cast<Box>(child);
+            auto* stacking_context = box_child.stacking_context();
+            if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() < 0)
+                callback(child);
+        });
+
+        // 4. For all its in-flow, non-positioned, block-level descendants in tree order: If the element is a block, list-item,
+        //    or other block equivalent:
         for_each_child([&](auto& child) {
             if (is<Box>(child) && verify_cast<Box>(child).stacking_context())
                 return;
             if (!child.is_positioned())
                 callback(child);
         });
+
+        // 5. All non-positioned floating descendants, in tree order. For each one of these, treat the element as if it created
+        //    a new stacking context, but any positioned descendants and descendants which actually create a new stacking context
+        //    should be considered part of the parent stacking context, not this new one.
         for_each_child([&](auto& child) {
             if (is<Box>(child) && verify_cast<Box>(child).stacking_context())
                 return;
             if (child.is_positioned())
+                callback(child);
+        });
+
+        // 8. All positioned descendants with 'z-index: auto' or 'z-index: 0', in tree order. For those with 'z-index: auto', treat
+        //    the element as if it created a new stacking context, but any positioned descendants and descendants which actually
+        //    create a new stacking context should be considered part of the parent stacking context, not this new one. For those
+        //    with 'z-index: 0', treat the stacking context generated atomically.
+        for_each_child([&](auto& child) {
+            if (!child.is_positioned() || !is<Box>(child))
+                return;
+
+            auto& box_child = verify_cast<Box>(child);
+            auto* stacking_context = box_child.stacking_context();
+            if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() == 0)
+                callback(child);
+        });
+
+        // 9. Stacking contexts formed by positioned descendants with z-indices greater than or equal to 1 in z-index order
+        //    (smallest first) then tree order.
+        // FIXME: This does not retrieve elements in the z-index order.
+        for_each_child([&](auto& child) {
+            if (!child.is_positioned() || !is<Box>(child))
+                return;
+
+            auto& box_child = verify_cast<Box>(child);
+            auto* stacking_context = box_child.stacking_context();
+            if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() > 0)
                 callback(child);
         });
     }

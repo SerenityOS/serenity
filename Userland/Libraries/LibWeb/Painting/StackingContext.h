@@ -21,6 +21,7 @@ public:
     enum class StackingContextPaintPhase {
         BackgroundAndBorders,
         Floats,
+        BackgroundAndBordersForInlineLevelAndReplaced,
         Foreground,
         FocusAndOverlay,
     };

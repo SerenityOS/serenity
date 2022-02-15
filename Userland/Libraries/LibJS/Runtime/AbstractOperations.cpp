@@ -1031,7 +1031,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
 }
 
 // 7.1.21 CanonicalNumericIndexString ( argument ), https://tc39.es/ecma262/#sec-canonicalnumericindexstring
-Value canonical_numeric_index_string(GlobalObject& global_object, PropertyKey const& property_key)
+CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, CanonicalIndexMode mode)
 {
     // NOTE: If the property name is a number type (An implementation-defined optimized
     // property key type), it can be treated as a string property that has already been
@@ -1040,24 +1040,56 @@ Value canonical_numeric_index_string(GlobalObject& global_object, PropertyKey co
     VERIFY(property_key.is_string() || property_key.is_number());
 
     if (property_key.is_number())
-        return Value(property_key.as_number());
+        return CanonicalIndex(CanonicalIndex::Type::Index, property_key.as_number());
+
+    if (mode != CanonicalIndexMode::DetectNumericRoundtrip)
+        return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
     // 1. Assert: Type(argument) is String.
-    auto argument = Value(js_string(global_object.vm(), property_key.as_string()));
+    auto& argument = property_key.as_string();
 
-    // 2. If argument is "-0", return -0𝔽.
-    if (argument.as_string().string() == "-0")
-        return Value(-0.0);
+    // Handle trivial cases without a full round trip test
+    // We do not need to check for argument == "0" at this point because we
+    // already covered it with the is_number() == true path.
+    if (argument.is_empty())
+        return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
+    u32 current_index = 0;
+    if (argument.characters()[current_index] == '-') {
+        current_index++;
+        if (current_index == argument.length())
+            return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
+    }
+    if (argument.characters()[current_index] == '0') {
+        current_index++;
+        if (current_index == argument.length())
+            return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
+        if (argument.characters()[current_index] != '.')
+            return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
+        current_index++;
+        if (current_index == argument.length())
+            return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
+    }
+
+    // Short circuit a few common cases
+    if (argument == "Infinity" || argument == "-Infinity" || argument == "NaN")
+        return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
+
+    // Short circuit any string that doesn't start with digits
+    if (char first_non_zero = argument.characters()[current_index]; first_non_zero < '0' || first_non_zero > '9')
+        return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
     // 3. Let n be ! ToNumber(argument).
-    auto n = MUST(argument.to_number(global_object));
+    char* endptr;
+    auto n = Value(strtod(argument.characters(), &endptr));
+    if (endptr != argument.characters() + argument.length())
+        return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
     // 4. If SameValue(! ToString(n), argument) is false, return undefined.
-    if (!same_value(MUST(n.to_primitive_string(global_object)), argument))
-        return js_undefined();
+    if (n.to_string_without_side_effects() != argument)
+        return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
     // 5. Return n.
-    return n;
+    return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
 }
 
 // 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution

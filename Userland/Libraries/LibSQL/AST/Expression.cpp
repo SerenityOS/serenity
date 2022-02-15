@@ -12,11 +12,6 @@ namespace SQL::AST {
 
 static const String s_posix_basic_metacharacters = ".^$*[]+\\";
 
-ResultOr<Value> Expression::evaluate(ExecutionContext&) const
-{
-    return Value::null();
-}
-
 ResultOr<Value> NumericLiteral::evaluate(ExecutionContext&) const
 {
     Value ret(SQLType::Float);

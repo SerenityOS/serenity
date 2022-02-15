@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@
 
 class PagemapPaintingDelegate final : public GUI::TableCellPaintingDelegate {
 public:
-    virtual ~PagemapPaintingDelegate() override { }
+    virtual ~PagemapPaintingDelegate() override = default;
 
     virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Gfx::Palette&, const GUI::ModelIndex& index) override
     {
@@ -105,10 +106,6 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
 
     m_table_view->set_key_column_and_sort_order(0, GUI::SortOrder::Ascending);
     m_timer = add<Core::Timer>(1000, [this] { refresh(); });
-}
-
-ProcessMemoryMapWidget::~ProcessMemoryMapWidget()
-{
 }
 
 void ProcessMemoryMapWidget::set_pid(pid_t pid)

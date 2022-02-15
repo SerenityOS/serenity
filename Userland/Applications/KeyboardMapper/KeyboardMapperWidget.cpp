@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
  * Copyright (c) 2021, Rasmus Nylander <RasmusNylander.SerenityOS@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,10 +19,6 @@
 KeyboardMapperWidget::KeyboardMapperWidget()
 {
     create_frame();
-}
-
-KeyboardMapperWidget::~KeyboardMapperWidget()
-{
 }
 
 void KeyboardMapperWidget::create_frame()

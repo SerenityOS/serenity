@@ -523,7 +523,7 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, 
     auto range = TRY(address_space().try_allocate_range({}, size));
     auto* region = TRY(address_space().allocate_region(range, "Master TLS"sv, PROT_READ | PROT_WRITE));
 
-    m_master_tls_region = region->make_weak_ptr();
+    m_master_tls_region = TRY(region->try_make_weak_ptr());
     m_master_tls_size = size;
     m_master_tls_alignment = PAGE_SIZE;
 

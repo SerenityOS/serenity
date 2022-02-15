@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +23,7 @@ protected:
 };
 
 struct TreeMap : public RefCounted<TreeMap> {
-    virtual ~TreeMap() { }
+    virtual ~TreeMap() = default;
     virtual const TreeMapNode& root() const = 0;
 };
 
@@ -31,7 +31,7 @@ class TreeMapWidget final : public GUI::Frame {
     C_OBJECT(TreeMapWidget)
 
 public:
-    virtual ~TreeMapWidget() override;
+    virtual ~TreeMapWidget() override = default;
     Function<void()> on_path_change;
     Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
     size_t path_size() const;
@@ -41,7 +41,7 @@ public:
     void set_tree(RefPtr<TreeMap> tree);
 
 private:
-    TreeMapWidget();
+    TreeMapWidget() = default;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void doubleclick_event(GUI::MouseEvent&) override;
@@ -67,7 +67,7 @@ private:
 
     RefPtr<TreeMap> m_tree;
     Vector<int> m_path;
-    size_t m_viewpoint;
+    size_t m_viewpoint { 0 };
     const void* m_selected_node_cache;
 };
 

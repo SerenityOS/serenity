@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -63,10 +64,6 @@ LayerPropertiesWidget::LayerPropertiesWidget()
         if (m_layer)
             m_layer->set_visible(checked);
     };
-}
-
-LayerPropertiesWidget::~LayerPropertiesWidget()
-{
 }
 
 void LayerPropertiesWidget::set_layer(Layer* layer)

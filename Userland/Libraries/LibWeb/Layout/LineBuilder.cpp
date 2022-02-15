@@ -39,16 +39,16 @@ void LineBuilder::begin_new_line(bool increment_y)
     m_last_line_needs_update = true;
 }
 
-void LineBuilder::append_box(Box& box)
+void LineBuilder::append_box(Box& box, float leading_size, float trailing_size)
 {
-    m_context.containing_block().ensure_last_line_box().add_fragment(box, 0, 0, box.content_width(), box.content_height());
+    m_context.containing_block().ensure_last_line_box().add_fragment(box, 0, 0, leading_size, trailing_size, box.content_width(), box.content_height());
     m_max_height_on_current_line = max(m_max_height_on_current_line, box.content_height());
 }
 
-void LineBuilder::append_text_chunk(TextNode& text_node, size_t offset_in_node, size_t length_in_node, float width, float height)
+void LineBuilder::append_text_chunk(TextNode& text_node, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float content_width, float content_height)
 {
-    m_context.containing_block().ensure_last_line_box().add_fragment(text_node, offset_in_node, length_in_node, width, height);
-    m_max_height_on_current_line = max(m_max_height_on_current_line, height);
+    m_context.containing_block().ensure_last_line_box().add_fragment(text_node, offset_in_node, length_in_node, leading_size, trailing_size, content_width, content_height);
+    m_max_height_on_current_line = max(m_max_height_on_current_line, content_height);
 }
 
 bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width, bool should_force_break)

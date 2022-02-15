@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +22,7 @@ class PreviewWidget final : public GUI::Frame {
     C_OBJECT(PreviewWidget);
 
 public:
-    virtual ~PreviewWidget() override;
+    virtual ~PreviewWidget() override = default;
 
     const Gfx::Palette& preview_palette() const { return m_preview_palette; }
     void set_preview_palette(const Gfx::Palette&);

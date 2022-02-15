@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +22,7 @@ class BrowserWindow final : public GUI::Window {
     C_OBJECT(BrowserWindow);
 
 public:
-    virtual ~BrowserWindow() override;
+    virtual ~BrowserWindow() override = default;
 
     GUI::TabWidget& tab_widget();
     Tab& active_tab();

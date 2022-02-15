@@ -1,7 +1,6 @@
 interface URLSearchParams {
 
-  // FIXME: the real type of init is (sequence<sequence<USVString>> or record<USVString, USVString> or USVString)
-  constructor(optional (sequence<sequence<USVString>> or USVString) init = "");
+  constructor(optional (sequence<sequence<USVString>> or record<USVString, USVString> or USVString) init = "");
 
   undefined append(USVString name, USVString value);
   undefined delete(USVString name);

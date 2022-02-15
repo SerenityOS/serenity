@@ -65,16 +65,14 @@ Optional<Value> PrimitiveString::get(GlobalObject& global_object, PropertyKey co
             return Value(static_cast<double>(length));
         }
     }
-    auto index = canonical_numeric_index_string(global_object, property_key);
-    if (index.type() != JS::Value::Type::Int32)
-        return {};
-    if (index.as_i32() < 0)
+    auto index = canonical_numeric_index_string(property_key, CanonicalIndexMode::IgnoreNumericRoundtrip);
+    if (!index.is_index())
         return {};
     auto str = utf16_string_view();
     auto length = str.length_in_code_units();
-    if (static_cast<i32>(length) <= index.as_i32())
+    if (length <= index.as_index())
         return {};
-    return js_string(vm(), str.substring_view(index.as_i32(), 1));
+    return js_string(vm(), str.substring_view(index.as_index(), 1));
 }
 
 PrimitiveString* js_string(Heap& heap, Utf16View const& view)

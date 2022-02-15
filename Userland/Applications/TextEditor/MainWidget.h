@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +24,7 @@ class MainWidget final : public GUI::Widget {
     C_OBJECT(MainWidget);
 
 public:
-    virtual ~MainWidget() override;
+    virtual ~MainWidget() override = default;
     bool read_file(Core::File&);
     void open_nonexistent_file(String const& path);
     bool request_close();

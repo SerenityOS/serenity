@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
  * Copyright (c) 2021, JJ Roberts-White <computerfido@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +24,7 @@ class PlayerWidget;
 class MainWidget final : public GUI::Widget {
     C_OBJECT(MainWidget)
 public:
-    virtual ~MainWidget() override;
+    virtual ~MainWidget() override = default;
 
     void add_track_actions(GUI::Menu&);
 

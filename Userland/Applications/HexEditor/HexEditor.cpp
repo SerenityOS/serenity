@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "HexEditor.h"
+#include "AK/Format.h"
 #include "SearchResultsModel.h"
 #include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
@@ -44,10 +46,6 @@ HexEditor::HexEditor()
         update();
     };
     m_blink_timer->start();
-}
-
-HexEditor::~HexEditor()
-{
 }
 
 void HexEditor::set_readonly(bool readonly)
@@ -157,7 +155,7 @@ bool HexEditor::copy_selected_hex_to_clipboard()
         return false;
 
     StringBuilder output_string_builder;
-    for (size_t i = m_selection_start; i <= m_selection_end; i++)
+    for (size_t i = m_selection_start; i < m_selection_end; i++)
         output_string_builder.appendff("{:02X} ", m_document->get(i).value);
 
     GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
@@ -170,7 +168,7 @@ bool HexEditor::copy_selected_text_to_clipboard()
         return false;
 
     StringBuilder output_string_builder;
-    for (size_t i = m_selection_start; i <= m_selection_end; i++)
+    for (size_t i = m_selection_start; i < m_selection_end; i++)
         output_string_builder.append(isprint(m_document->get(i).value) ? m_document->get(i).value : '.');
 
     GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
@@ -183,9 +181,9 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
         return false;
 
     StringBuilder output_string_builder;
-    output_string_builder.appendff("unsigned char raw_data[{}] = {{\n", (m_selection_end - m_selection_start) + 1);
+    output_string_builder.appendff("unsigned char raw_data[{}] = {{\n", m_selection_end - m_selection_start);
     output_string_builder.append("    ");
-    for (size_t i = m_selection_start, j = 1; i <= m_selection_end; i++, j++) {
+    for (size_t i = m_selection_start, j = 1; i < m_selection_end; i++, j++) {
         output_string_builder.appendff("{:#02X}", m_document->get(i).value);
         if (i != m_selection_end)
             output_string_builder.append(", ");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +14,7 @@
 class MouseWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT(MouseWidget)
 public:
-    virtual ~MouseWidget() override;
+    virtual ~MouseWidget() override = default;
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;

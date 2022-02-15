@@ -13,7 +13,7 @@ namespace Core {
 ChildEvent::ChildEvent(Type type, Object& child, Object* insertion_before_child)
     : Core::Event(type)
     , m_child(child.make_weak_ptr())
-    , m_insertion_before_child(AK::try_make_weak_ptr(insertion_before_child))
+    , m_insertion_before_child(AK::make_weak_ptr_if_nonnull(insertion_before_child))
 {
 }
 

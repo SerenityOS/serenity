@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
  * Copyright (c) 2021, JJ Roberts-White <computerfido@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,10 +13,6 @@
 TrackManager::TrackManager()
 {
     add_track();
-}
-
-TrackManager::~TrackManager()
-{
 }
 
 void TrackManager::time_forward(int amount)

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, William McPherson <willmcpherson2@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,10 +16,6 @@
 
 WaveEditor::WaveEditor(TrackManager& track_manager)
     : m_track_manager(track_manager)
-{
-}
-
-WaveEditor::~WaveEditor()
 {
 }
 
@@ -99,8 +96,4 @@ SamplerWidget::SamplerWidget(TrackManager& track_manager)
 
     m_wave_editor = add<WaveEditor>(m_track_manager);
     m_wave_editor->set_fixed_height(100);
-}
-
-SamplerWidget::~SamplerWidget()
-{
 }

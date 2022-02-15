@@ -655,7 +655,7 @@ void Painter::draw_bitmap(IntPoint const& p, GlyphBitmap const& bitmap, Color co
         for (int row = first_row; row <= last_row; ++row) {
             for (int j = 0; j <= (last_column - first_column); ++j) {
                 if (bitmap.bit_at(j + first_column, row))
-                    dst[j] = color.value();
+                    dst[j] = Color::from_rgba(dst[j]).blend(color).value();
             }
             dst += dst_skip;
         }
@@ -664,8 +664,10 @@ void Painter::draw_bitmap(IntPoint const& p, GlyphBitmap const& bitmap, Color co
             for (int j = 0; j <= (last_column - first_column); ++j) {
                 if (bitmap.bit_at((j + first_column), row)) {
                     for (int iy = 0; iy < scale; ++iy)
-                        for (int ix = 0; ix < scale; ++ix)
-                            dst[j * scale + ix + iy * dst_skip] = color.value();
+                        for (int ix = 0; ix < scale; ++ix) {
+                            auto pixel_index = j * scale + ix + iy * dst_skip;
+                            dst[pixel_index] = Color::from_rgba(dst[pixel_index]).blend(color).value();
+                        }
                 }
             }
             dst += dst_skip * scale;

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,7 +29,7 @@ public:
         Text
     };
 
-    virtual ~HexEditor() override;
+    virtual ~HexEditor() override = default;
 
     bool is_readonly() const { return m_readonly; }
     void set_readonly(bool);
@@ -41,7 +42,7 @@ public:
     bool save();
 
     void select_all();
-    bool has_selection() const { return !((m_selection_end < m_selection_start) || m_document->size()); }
+    bool has_selection() const { return m_selection_start < m_selection_end && m_document->size() > 0; }
     size_t selection_size();
     size_t selection_start_offset() const { return m_selection_start; }
     bool copy_selected_text_to_clipboard();

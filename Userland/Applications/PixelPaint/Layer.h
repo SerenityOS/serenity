@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,7 +30,7 @@ public:
     static ErrorOr<NonnullRefPtr<Layer>> try_create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
     static ErrorOr<NonnullRefPtr<Layer>> try_create_snapshot(Image&, Layer const&);
 
-    ~Layer() { }
+    ~Layer() = default;
 
     Gfx::IntPoint const& location() const { return m_location; }
     void set_location(Gfx::IntPoint const& location) { m_location = location; }

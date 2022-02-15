@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,7 +30,7 @@ public:
 
     virtual JS::ThrowCompletionOr<String> display(Cell&, const CellTypeMetadata&) const = 0;
     virtual JS::ThrowCompletionOr<JS::Value> js_value(Cell&, const CellTypeMetadata&) const = 0;
-    virtual ~CellType() { }
+    virtual ~CellType() = default;
 
     const String& name() const { return m_name; }
 

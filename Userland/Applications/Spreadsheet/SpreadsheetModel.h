@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +14,7 @@ namespace Spreadsheet {
 class SheetModel final : public GUI::Model {
 public:
     static NonnullRefPtr<SheetModel> create(Sheet& sheet) { return adopt_ref(*new SheetModel(sheet)); }
-    virtual ~SheetModel() override;
+    virtual ~SheetModel() override = default;
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_sheet->row_count(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_sheet->column_count(); }

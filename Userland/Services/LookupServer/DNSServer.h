@@ -16,7 +16,7 @@ class DNSServer : public Core::UDPServer {
 private:
     explicit DNSServer(Object* parent = nullptr);
 
-    void handle_client();
+    ErrorOr<void> handle_client();
 };
 
 }

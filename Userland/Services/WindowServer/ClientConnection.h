@@ -123,7 +123,7 @@ private:
     virtual void set_fullscreen(i32, bool) override;
     virtual void set_frameless(i32, bool) override;
     virtual void set_forced_shadow(i32, bool) override;
-    virtual void set_wallpaper(String const&) override;
+    virtual void set_wallpaper(Gfx::ShareableBitmap const&) override;
     virtual void set_background_color(String const&) override;
     virtual void set_wallpaper_mode(String const&) override;
     virtual Messages::WindowServer::GetWallpaperResponse get_wallpaper() override;

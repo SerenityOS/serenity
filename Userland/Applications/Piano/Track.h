@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
  * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,7 +27,7 @@ class Track {
 
 public:
     explicit Track(const u32& time);
-    ~Track();
+    ~Track() = default;
 
     const Vector<Audio::Sample>& recorded_sample() const { return m_recorded_sample; }
     const SinglyLinkedList<RollNote>& roll_notes(int note) const { return m_roll_notes[note]; }

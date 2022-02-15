@@ -434,6 +434,8 @@ public:
     Custody* executable() { return m_executable.ptr(); }
     const Custody* executable() const { return m_executable.ptr(); }
 
+    static constexpr size_t max_arguments_size = Thread::default_userspace_stack_size / 8;
+    static constexpr size_t max_environment_size = Thread::default_userspace_stack_size / 8;
     NonnullOwnPtrVector<KString> const& arguments() const { return m_arguments; };
     NonnullOwnPtrVector<KString> const& environment() const { return m_environment; };
 
@@ -553,6 +555,8 @@ private:
     void clear_futex_queues_on_exec();
 
     ErrorOr<void> remap_range_as_stack(FlatPtr address, size_t size);
+
+    ErrorOr<FlatPtr> read_impl(int fd, Userspace<u8*> buffer, size_t size);
 
 public:
     NonnullRefPtr<ProcessProcFSTraits> procfs_traits() const { return *m_procfs_traits; }
@@ -722,9 +726,9 @@ public:
 
     class ProcessProcFSTraits : public ProcFSExposedComponent {
     public:
-        static ErrorOr<NonnullRefPtr<ProcessProcFSTraits>> try_create(Badge<Process>, Process& process)
+        static ErrorOr<NonnullRefPtr<ProcessProcFSTraits>> try_create(Badge<Process>, WeakPtr<Process> process)
         {
-            return adopt_nonnull_ref_or_enomem(new (nothrow) ProcessProcFSTraits(process));
+            return adopt_nonnull_ref_or_enomem(new (nothrow) ProcessProcFSTraits(move(process)));
         }
 
         virtual InodeIndex component_index() const override;
@@ -736,8 +740,8 @@ public:
         virtual GroupID owner_group() const override;
 
     private:
-        explicit ProcessProcFSTraits(Process& process)
-            : m_process(process.make_weak_ptr())
+        explicit ProcessProcFSTraits(WeakPtr<Process> process)
+            : m_process(move(process))
         {
         }
 

@@ -159,7 +159,7 @@ public:
     [[nodiscard]] String to_string() const;
     [[nodiscard]] Optional<int> to_int() const;
     [[nodiscard]] Optional<double> to_double() const;
-    [[nodiscard]] static Optional<bool> to_bool() { return {}; }
+    [[nodiscard]] Optional<bool> to_bool() const;
     [[nodiscard]] static bool to_vector(Vector<Value>&) { return false; }
     void assign(Value const&);
     void assign_string(String const&);
@@ -250,6 +250,7 @@ public:
     [[nodiscard]] size_t length() const;
     [[nodiscard]] bool can_cast(Value const&) const;
     [[nodiscard]] int compare(Value const& other) const;
+    [[nodiscard]] Optional<bool> to_bool() const;
 
     virtual bool validate_before_assignment(Vector<Value> const&) override;
     virtual bool validate(BaseTypeImpl const&) override;

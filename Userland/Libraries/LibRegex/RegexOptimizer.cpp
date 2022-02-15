@@ -450,17 +450,17 @@ void Optimizer::append_alternation(ByteCode& target, ByteCode&& left, ByteCode&&
         if (left_is_empty && right_is_empty)
             return;
 
-        // ForkJump right (+ left.size() + 2 + right.size())
-        // (left)
-        // Jump end (+ right.size())
+        // ForkJump left (+ 2 + right.size())
         // (right)
+        // Jump end (+ left.size())
+        // (left)
         // LABEL end
         target.append(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
-        target.append(left.size() + 2 + right.size());
-        target.extend(move(left));
-        target.append(static_cast<ByteCodeValueType>(OpCodeId::Jump));
-        target.append(right.size());
+        target.append(2 + right.size());
         target.extend(move(right));
+        target.append(static_cast<ByteCodeValueType>(OpCodeId::Jump));
+        target.append(left.size());
+        target.extend(move(left));
         return;
     }
 

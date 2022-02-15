@@ -382,7 +382,7 @@ _StartOfFunction:
                 DONT_CONSUME_NEXT_INPUT_CHARACTER;
                 if (consume_next_if_match("--")) {
                     create_new_token(HTMLToken::Type::Comment);
-                    m_current_token.set_start_position({}, nth_last_position(4));
+                    m_current_token.set_start_position({}, nth_last_position(3));
                     SWITCH_TO(CommentStart);
                 }
                 if (consume_next_if_match("DOCTYPE", CaseSensitivity::CaseInsensitive)) {
@@ -1356,7 +1356,6 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1388,7 +1387,6 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1419,7 +1417,6 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1447,7 +1444,6 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1468,7 +1464,6 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.set_comment(consume_current_builder());
-                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE

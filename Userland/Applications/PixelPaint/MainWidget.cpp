@@ -378,7 +378,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_action(*m_zoom_out_action);
     m_view_menu->add_action(*m_reset_zoom_action);
     m_view_menu->add_action(GUI::Action::create(
-        "&Fit Image To View", [&](auto&) {
+        "Fit Image To &View", [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->fit_image_to_view();
@@ -658,7 +658,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 editor->fit_image_to_view(ImageEditor::FitType::Height);
                 return;
             case s_zoom_level_fit_image:
-                editor->fit_image_to_view(ImageEditor::FitType::Image);
+                editor->fit_image_to_view(ImageEditor::FitType::Both);
                 return;
             }
         }

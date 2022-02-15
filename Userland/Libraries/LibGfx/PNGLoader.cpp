@@ -9,16 +9,10 @@
 #include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/PNGLoader.h>
-#include <fcntl.h>
-#include <stdio.h>
 #include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #ifdef __serenity__
 #    include <LibCompress/Deflate.h>
-#    include <serenity.h>
 #endif
 
 namespace Gfx {
@@ -60,6 +54,8 @@ struct [[gnu::packed]] Triplet {
     T r;
     T g;
     T b;
+
+    bool operator==(Triplet const& other) const = default;
 };
 
 template<typename T>
@@ -319,6 +315,24 @@ ALWAYS_INLINE static void unpack_triplets_without_alpha(PNGLoadingContext& conte
     }
 }
 
+template<typename T>
+ALWAYS_INLINE static void unpack_triplets_with_transparency_value(PNGLoadingContext& context, Triplet<T> transparency_value)
+{
+    for (int y = 0; y < context.height; ++y) {
+        auto* triplets = reinterpret_cast<const Triplet<T>*>(context.scanlines[y].data.data());
+        for (int i = 0; i < context.width; ++i) {
+            auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+            pixel.r = triplets[i].r;
+            pixel.g = triplets[i].g;
+            pixel.b = triplets[i].b;
+            if (triplets[i] == transparency_value)
+                pixel.a = 0x00;
+            else
+                pixel.a = 0xff;
+        }
+    }
+}
+
 NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
 {
     // First unpack the scanlines to RGBA:
@@ -358,12 +372,24 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
         }
         break;
     case 2:
-        if (context.bit_depth == 8) {
-            unpack_triplets_without_alpha<u8>(context);
-        } else if (context.bit_depth == 16) {
-            unpack_triplets_without_alpha<u16>(context);
+        if (context.palette_transparency_data.size() == 6) {
+            if (context.bit_depth == 8) {
+                unpack_triplets_with_transparency_value<u8>(context, Triplet<u8> { context.palette_transparency_data[0], context.palette_transparency_data[2], context.palette_transparency_data[4] });
+            } else if (context.bit_depth == 16) {
+                u16 tr = context.palette_transparency_data[0] | context.palette_transparency_data[1] << 8;
+                u16 tg = context.palette_transparency_data[2] | context.palette_transparency_data[3] << 8;
+                u16 tb = context.palette_transparency_data[4] | context.palette_transparency_data[5] << 8;
+                unpack_triplets_with_transparency_value<u16>(context, Triplet<u16> { tr, tg, tb });
+            } else {
+                VERIFY_NOT_REACHED();
+            }
         } else {
-            VERIFY_NOT_REACHED();
+            if (context.bit_depth == 8)
+                unpack_triplets_without_alpha<u8>(context);
+            else if (context.bit_depth == 16)
+                unpack_triplets_without_alpha<u16>(context);
+            else
+                VERIFY_NOT_REACHED();
         }
         break;
     case 6:
@@ -840,6 +866,8 @@ static bool process_PLTE(ReadonlyBytes data, PNGLoadingContext& context)
 static bool process_tRNS(ReadonlyBytes data, PNGLoadingContext& context)
 {
     switch (context.color_type) {
+    case 0:
+    case 2:
     case 3:
         context.palette_transparency_data.append(data.data(), data.size());
         break;

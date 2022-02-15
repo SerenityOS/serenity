@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -202,10 +203,6 @@ HexEditorWidget::HexEditorWidget()
     m_editor->set_focus(true);
 }
 
-HexEditorWidget::~HexEditorWidget()
-{
-}
-
 void HexEditorWidget::initialize_menubar(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File");
@@ -233,13 +230,13 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
         }
     }));
     edit_menu.add_separator();
-    edit_menu.add_action(GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hex.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard();
     }));
     edit_menu.add_action(GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_text_to_clipboard();
     }));
-    edit_menu.add_action(GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/c.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard_as_c_code();
     }));
     edit_menu.add_separator();

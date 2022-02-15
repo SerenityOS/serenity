@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,14 +10,6 @@
 #include "KeypadValue.h"
 #include <AK/IntegralMath.h>
 #include <AK/StringBuilder.h>
-
-Keypad::Keypad()
-{
-}
-
-Keypad::~Keypad()
-{
-}
 
 void Keypad::type_digit(int digit)
 {

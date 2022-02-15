@@ -18,14 +18,6 @@
 
 namespace PixelPaint {
 
-BrushTool::BrushTool()
-{
-}
-
-BrushTool::~BrushTool()
-{
-}
-
 void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
     if (!layer)

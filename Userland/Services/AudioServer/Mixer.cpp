@@ -23,7 +23,8 @@ namespace AudioServer {
 u8 Mixer::m_zero_filled_buffer[4096];
 
 Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
-    : m_device(Core::File::construct("/dev/audio", this))
+    // FIXME: Allow AudioServer to use other audio channels as well
+    : m_device(Core::File::construct("/dev/audio/0", this))
     , m_sound_thread(Threading::Thread::construct(
           [this] {
               mix();

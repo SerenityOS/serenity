@@ -82,7 +82,7 @@ public:
 
     void will_be_destroyed();
 
-    void set_shared_vmobject(Memory::SharedInodeVMObject&);
+    ErrorOr<void> set_shared_vmobject(Memory::SharedInodeVMObject&);
     RefPtr<Memory::SharedInodeVMObject> shared_vmobject() const;
 
     static void sync_all();

@@ -7,6 +7,7 @@
 
 #include <unistd.h>
 
+#include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <LibSQL/AST/Parser.h>
 #include <LibSQL/Database.h>
@@ -627,6 +628,130 @@ TEST_CASE(describe_table)
 
     EXPECT_EQ(result[1].row[0].to_string(), "INTCOLUMN");
     EXPECT_EQ(result[1].row[1].to_string(), "int");
+}
+
+TEST_CASE(binary_operator_execution)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+
+    for (auto count = 0; count < 10; ++count) {
+        auto result = execute(database, String::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+        EXPECT_EQ(result.size(), 1u);
+    }
+
+    auto compare_result = [](SQL::ResultSet const& result, Vector<int> const& expected) {
+        EXPECT_EQ(result.command(), SQL::SQLCommand::Select);
+        EXPECT_EQ(result.size(), expected.size());
+
+        Vector<int> result_values;
+        result_values.ensure_capacity(result.size());
+
+        for (size_t i = 0; i < result.size(); ++i) {
+            auto const& result_row = result.at(i).row;
+            EXPECT_EQ(result_row.size(), 1u);
+
+            auto result_column = result_row[0].to_int();
+            result_values.append(result_column.value());
+        }
+
+        quick_sort(result_values);
+        EXPECT_EQ(result_values, expected);
+    };
+
+    auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn + 1) < 5);");
+    compare_result(result, { 0, 1, 2, 3 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn + 1) <= 5);");
+    compare_result(result, { 0, 1, 2, 3, 4 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn - 1) > 4);");
+    compare_result(result, { 6, 7, 8, 9 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn - 1) >= 4);");
+    compare_result(result, { 5, 6, 7, 8, 9 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn * 2) < 10);");
+    compare_result(result, { 0, 1, 2, 3, 4 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn * 2) <= 10);");
+    compare_result(result, { 0, 1, 2, 3, 4, 5 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn / 3) > 2);");
+    compare_result(result, { 7, 8, 9 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn / 3) >= 2);");
+    compare_result(result, { 6, 7, 8, 9 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn % 2) = 0);");
+    compare_result(result, { 0, 2, 4, 6, 8 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn % 2) = 1);");
+    compare_result(result, { 1, 3, 5, 7, 9 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((1 << IntColumn) <= 32);");
+    compare_result(result, { 0, 1, 2, 3, 4, 5 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((1024 >> IntColumn) >= 32);");
+    compare_result(result, { 0, 1, 2, 3, 4, 5 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn | 1) != IntColumn);");
+    compare_result(result, { 0, 2, 4, 6, 8 });
+
+    result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable WHERE ((IntColumn & 1) = 1);");
+    compare_result(result, { 1, 3, 5, 7, 9 });
+}
+
+TEST_CASE(binary_operator_failure)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+
+    for (auto count = 0; count < 10; ++count) {
+        auto result = execute(database, String::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+        EXPECT_EQ(result.size(), 1u);
+    }
+
+    auto expect_failure = [](auto result, auto op) {
+        EXPECT(result.is_error());
+
+        auto error = result.release_error();
+        EXPECT_EQ(error.error(), SQL::SQLErrorCode::NumericOperatorTypeMismatch);
+
+        auto message = String::formatted("NumericOperatorTypeMismatch: Cannot apply '{}' operator to non-numeric operands", op);
+        EXPECT_EQ(error.error_string(), message);
+    };
+
+    auto result = try_execute(database, "SELECT * FROM TestSchema.TestTable WHERE ((IntColumn + TextColumn) < 5);");
+    expect_failure(move(result), '+');
+
+    result = try_execute(database, "SELECT * FROM TestSchema.TestTable WHERE ((IntColumn - TextColumn) < 5);");
+    expect_failure(move(result), '-');
+
+    result = try_execute(database, "SELECT * FROM TestSchema.TestTable WHERE ((IntColumn * TextColumn) < 5);");
+    expect_failure(move(result), '*');
+
+    result = try_execute(database, "SELECT * FROM TestSchema.TestTable WHERE ((IntColumn / TextColumn) < 5);");
+    expect_failure(move(result), '/');
+
+    result = try_execute(database, "SELECT * FROM TestSchema.TestTable WHERE ((IntColumn % TextColumn) < 5);");
+    expect_failure(move(result), '%');
+
+    result = try_execute(database, "SELECT * FROM TestSchema.TestTable WHERE ((IntColumn << TextColumn) < 5);");
+    expect_failure(move(result), "<<"sv);
+
+    result = try_execute(database, "SELECT * FROM TestSchema.TestTable WHERE ((IntColumn >> TextColumn) < 5);");
+    expect_failure(move(result), ">>"sv);
+
+    result = try_execute(database, "SELECT * FROM TestSchema.TestTable WHERE ((IntColumn | TextColumn) < 5);");
+    expect_failure(move(result), '|');
+
+    result = try_execute(database, "SELECT * FROM TestSchema.TestTable WHERE ((IntColumn & TextColumn) < 5);");
+    expect_failure(move(result), '&');
 }
 
 }

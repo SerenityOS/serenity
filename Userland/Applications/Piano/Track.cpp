@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
  * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,10 +23,6 @@ Track::Track(const u32& time)
     , m_synth(make_ref_counted<LibDSP::Synthesizers::Classic>(m_temporary_transport))
 {
     set_volume(volume_max);
-}
-
-Track::~Track()
-{
 }
 
 void Track::fill_sample(Sample& sample)

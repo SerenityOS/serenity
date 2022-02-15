@@ -305,7 +305,10 @@ struct ExecutionContext {
 
 class Expression : public ASTNode {
 public:
-    virtual ResultOr<Value> evaluate(ExecutionContext&) const;
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const
+    {
+        return Result { SQLCommand::Unknown, SQLErrorCode::NotYetImplemented };
+    }
 };
 
 class ErrorExpression final : public Expression {

@@ -226,6 +226,14 @@ build_target() {
     fi
 }
 
+build_image() {
+    if [ "$SERENITY_RUN" = "limine" ]; then
+        build_target limine-image
+    else
+        build_target image
+    fi
+}
+
 delete_target() {
     [ ! -d "$BUILD_DIR" ] || rm -rf "$BUILD_DIR"
     [ ! -d "$SUPER_BUILD_DIR" ] || rm -rf "$SUPER_BUILD_DIR"
@@ -335,14 +343,14 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             lagom_unsupported
             build_target
             build_target install
-            build_target image
+            build_image
             ;;
         copy-src)
           lagom_unsupported
           build_target
           build_target install
           export SERENITY_COPY_SOURCE=1
-          build_target image
+          build_image
           ;;
         run)
             if [ "$TARGET" = "lagom" ]; then
@@ -351,7 +359,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             else
                 build_target
                 build_target install
-                build_target image
+                build_image
                 if [ -n "${CMD_ARGS[0]}" ]; then
                     export SERENITY_KERNEL_CMDLINE="${CMD_ARGS[0]}"
                 fi
@@ -367,7 +375,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             else
                 build_target
                 build_target install
-                build_target image
+                build_image
                 tmux new-session "$ARG0" __tmux_cmd "$TARGET" run "${CMD_ARGS[@]}" \; set-option -t 0 mouse on \; split-window "$ARG0" __tmux_cmd "$TARGET" gdb "${CMD_ARGS[@]}" \;
             fi
             ;;
@@ -377,7 +385,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
                 run_tests "${CMD_ARGS[0]}"
             else
                 build_target install
-                build_target image
+                build_image
                 # In contrast to CI, we don't set 'panic=shutdown' here,
                 # in case the user wants to inspect qemu some more.
                 export SERENITY_KERNEL_CMDLINE="fbdev=off system_mode=self-test"

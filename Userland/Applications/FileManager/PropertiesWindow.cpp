@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -160,10 +161,6 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
     m_apply_button->set_enabled(false);
 
     update();
-}
-
-PropertiesWindow::~PropertiesWindow()
-{
 }
 
 void PropertiesWindow::update()
