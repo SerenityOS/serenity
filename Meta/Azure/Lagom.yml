@@ -5,6 +5,7 @@ parameters:
 
 jobs:
   - job: 'Lagom_${{ parameters.os }}_${{ parameters.fuzzer }}'
+    timeoutInMinutes: 0 # Setting to 0 means the maximum allowed timeout is used.
 
     variables:
     - name: SERENITY_CCACHE_DIR
