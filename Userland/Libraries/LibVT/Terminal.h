@@ -9,7 +9,6 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibVT/CharacterSet.h>
@@ -17,6 +16,7 @@
 #include <LibVT/Position.h>
 
 #ifndef KERNEL
+#    include <AK/String.h>
 #    include <LibVT/Attribute.h>
 #    include <LibVT/Line.h>
 #else
@@ -435,8 +435,13 @@ protected:
     Attribute m_current_attribute;
     Attribute m_saved_attribute;
 
+#ifdef KERNEL
+    OwnPtr<Kernel::KString> m_current_window_title;
+    NonnullOwnPtrVector<Kernel::KString> m_title_stack;
+#else
     String m_current_window_title;
     Vector<String> m_title_stack;
+#endif
 
 #ifndef KERNEL
     u32 m_next_href_id { 0 };

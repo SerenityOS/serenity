@@ -383,7 +383,11 @@ void Terminal::XTERM_WM(Parameters params)
             return;
         }
         dbgln_if(TERMINAL_DEBUG, "Title stack push: {}", m_current_window_title);
-        [[maybe_unused]] auto rc = m_title_stack.try_append(move(m_current_window_title));
+#ifdef KERNEL
+        (void)m_title_stack.try_append(m_current_window_title.release_nonnull()); // FIXME: Propagate Error
+#else
+        (void)m_title_stack.try_append(move(m_current_window_title));
+#endif
         break;
     }
     case 23: {
@@ -395,7 +399,11 @@ void Terminal::XTERM_WM(Parameters params)
         }
         m_current_window_title = m_title_stack.take_last();
         dbgln_if(TERMINAL_DEBUG, "Title stack pop: {}", m_current_window_title);
+#ifdef KERNEL
+        m_client.set_window_title(m_current_window_title->view());
+#else
         m_client.set_window_title(m_current_window_title);
+#endif
         break;
     }
     default:
@@ -1280,8 +1288,13 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
         } else {
             // FIXME: the split breaks titles containing semicolons.
             // Should we expose the raw OSC string from the parser? Or join by semicolon?
+#ifdef KERNEL
+            m_current_window_title = Kernel::KString::try_create(stringview_ify(1)).release_value_but_fixme_should_propagate_errors();
+            m_client.set_window_title(m_current_window_title->view());
+#else
             m_current_window_title = stringview_ify(1).to_string();
             m_client.set_window_title(m_current_window_title);
+#endif
         }
         break;
     case 8:
