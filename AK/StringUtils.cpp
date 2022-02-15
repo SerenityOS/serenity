@@ -9,11 +9,14 @@
 #include <AK/MemMem.h>
 #include <AK/Memory.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace AK {
 
@@ -415,6 +418,7 @@ Optional<size_t> find_any_of(StringView haystack, StringView needles, SearchDire
     return {};
 }
 
+#ifndef KERNEL
 String to_snakecase(StringView str)
 {
     auto should_insert_underscore = [&](auto i, auto current_char) {
@@ -484,6 +488,7 @@ String replace(StringView str, StringView needle, StringView replacement, bool a
     replaced_string.append(str.substring_view(last_position, str.length() - last_position));
     return replaced_string.build();
 }
+#endif
 
 // TODO: Benchmark against KMP (AK/MemMem.h) and switch over if it's faster for short strings too
 size_t count(StringView str, StringView needle)
