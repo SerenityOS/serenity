@@ -45,14 +45,21 @@ public:
     }
 
     StringView(const ByteBuffer&);
+#ifndef KERNEL
     StringView(const String&);
     StringView(const FlyString&);
+#endif
 
     explicit StringView(ByteBuffer&&) = delete;
+#ifndef KERNEL
     explicit StringView(String&&) = delete;
     explicit StringView(FlyString&&) = delete;
+#endif
 
-    [[nodiscard]] constexpr bool is_null() const { return m_characters == nullptr; }
+    [[nodiscard]] constexpr bool is_null() const
+    {
+        return m_characters == nullptr;
+    }
     [[nodiscard]] constexpr bool is_empty() const { return m_length == 0; }
 
     [[nodiscard]] constexpr char const* characters_without_null_termination() const { return m_characters; }
@@ -87,11 +94,16 @@ public:
     [[nodiscard]] StringView trim(StringView characters, TrimMode mode = TrimMode::Both) const { return StringUtils::trim(*this, characters, mode); }
     [[nodiscard]] StringView trim_whitespace(TrimMode mode = TrimMode::Both) const { return StringUtils::trim_whitespace(*this, mode); }
 
+#ifndef KERNEL
     [[nodiscard]] String to_lowercase_string() const;
     [[nodiscard]] String to_uppercase_string() const;
     [[nodiscard]] String to_titlecase_string() const;
+#endif
 
-    [[nodiscard]] Optional<size_t> find(char needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
+    [[nodiscard]] Optional<size_t> find(char needle, size_t start = 0) const
+    {
+        return StringUtils::find(*this, needle, start);
+    }
     [[nodiscard]] Optional<size_t> find(StringView needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
     [[nodiscard]] Optional<size_t> find_last(char needle) const { return StringUtils::find_last(*this, needle); }
     // FIXME: Implement find_last(StringView) for API symmetry.
@@ -202,7 +214,9 @@ public:
         return !(*this == cstring);
     }
 
+#ifndef KERNEL
     bool operator==(const String&) const;
+#endif
 
     [[nodiscard]] constexpr int compare(StringView other) const
     {
@@ -242,12 +256,22 @@ public:
 
     constexpr bool operator>=(StringView other) const { return compare(other) >= 0; }
 
+#ifndef KERNEL
     [[nodiscard]] String to_string() const;
+#endif
 
-    [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
+    [[nodiscard]] bool is_whitespace() const
+    {
+        return StringUtils::is_whitespace(*this);
+    }
 
+#ifndef KERNEL
     [[nodiscard]] String replace(StringView needle, StringView replacement, bool all_occurrences = false) const;
-    [[nodiscard]] size_t count(StringView needle) const { return StringUtils::count(*this, needle); }
+#endif
+    [[nodiscard]] size_t count(StringView needle) const
+    {
+        return StringUtils::count(*this, needle);
+    }
 
     template<typename... Ts>
     [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts&&... strings) const
