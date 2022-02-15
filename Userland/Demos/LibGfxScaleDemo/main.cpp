@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,7 +30,7 @@ const int HEIGHT = 200;
 class Canvas final : public GUI::Widget {
     C_OBJECT(Canvas)
 public:
-    virtual ~Canvas() override;
+    virtual ~Canvas() override = default;
 
 private:
     Canvas();
@@ -60,10 +61,6 @@ Canvas::Canvas()
     draw(painter_2x);
 
     update();
-}
-
-Canvas::~Canvas()
-{
 }
 
 void Canvas::paint_event(GUI::PaintEvent& event)

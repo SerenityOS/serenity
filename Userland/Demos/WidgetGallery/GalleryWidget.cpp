@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -327,8 +327,4 @@ GalleryWidget::GalleryWidget()
     m_icons_tableview->model()->invalidate();
     m_icons_tableview->set_column_width(0, 36);
     m_icons_tableview->set_column_width(1, 20);
-}
-
-GalleryWidget::~GalleryWidget()
-{
 }
