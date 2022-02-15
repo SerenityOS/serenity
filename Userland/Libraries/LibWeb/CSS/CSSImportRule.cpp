@@ -20,8 +20,12 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
 {
     dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Loading import URL: {}", m_url);
     auto request = LoadRequest::create_for_url_on_page(m_url, document.page());
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+
+    // NOTE: Mark this rule as delaying the document load event *before* calling set_resource()
+    //       as it may trigger a synchronous resource_did_load() callback.
     m_document_load_event_delayer.emplace(document);
+
+    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 }
 
 CSSImportRule::~CSSImportRule()
