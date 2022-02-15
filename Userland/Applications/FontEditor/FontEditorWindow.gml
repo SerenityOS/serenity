@@ -59,7 +59,6 @@
             }
 
             @GUI::HorizontalSplitter {
-
                 @GUI::Widget {
                     layout: @GUI::VerticalBoxLayout {}
 
