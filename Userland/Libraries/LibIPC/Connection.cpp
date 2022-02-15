@@ -138,11 +138,8 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
 
         auto nread = maybe_nread.release_value();
         if (nread == 0) {
-            if (bytes.is_empty()) {
-                deferred_invoke([this] { shutdown(); });
-                return Error::from_string_literal("IPC connection EOF"sv);
-            }
-            break;
+            deferred_invoke([this] { shutdown(); });
+            return Error::from_string_literal("IPC connection EOF"sv);
         }
 
         bytes.append(buffer, nread);
