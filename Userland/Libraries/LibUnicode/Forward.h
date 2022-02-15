@@ -11,7 +11,6 @@
 namespace Unicode {
 
 enum class Block : u16;
-enum class Calendar : u8;
 enum class CalendarFormatType : u8;
 enum class CalendarPatternStyle : u8;
 enum class CalendarSymbol : u8;
