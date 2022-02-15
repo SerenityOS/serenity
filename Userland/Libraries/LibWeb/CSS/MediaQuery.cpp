@@ -36,29 +36,6 @@ bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
         [&](double) { return other.is_number(); });
 }
 
-bool MediaFeatureValue::equals(MediaFeatureValue const& other) const
-{
-    if (!is_same_type(other))
-        return false;
-
-    if (is_ident() && other.is_ident())
-        return m_value.get<String>().equals_ignoring_case(other.m_value.get<String>());
-    if (is_length() && other.is_length()) {
-        // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
-        auto& my_length = m_value.get<Length>();
-        auto& other_length = other.m_value.get<Length>();
-        if (!my_length.is_absolute() || !other_length.is_absolute()) {
-            dbgln("TODO: Support relative lengths in media queries!");
-            return false;
-        }
-        return my_length.absolute_length_to_px() == other_length.absolute_length_to_px();
-    }
-    if (is_number() && other.is_number())
-        return m_value.get<double>() == other.m_value.get<double>();
-
-    VERIFY_NOT_REACHED();
-}
-
 String MediaFeature::to_string() const
 {
     auto comparison_string = [](Comparison comparison) -> StringView {
