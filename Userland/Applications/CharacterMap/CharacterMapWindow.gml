@@ -30,10 +30,8 @@
     }
 
     @GUI::HorizontalSplitter {
-
         @GUI::Widget {
-            layout: @GUI::VerticalBoxLayout {
-            }
+            layout: @GUI::VerticalBoxLayout {}
 
             @GUI::GlyphMapWidget {
                 name: "glyph_map"
