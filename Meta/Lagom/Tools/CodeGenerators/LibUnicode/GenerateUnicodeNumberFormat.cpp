@@ -803,6 +803,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/Vector.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
+#include <LibUnicode/UnicodeLocale.h>
 #include <LibUnicode/UnicodeNumberFormat.h>
 
 namespace Unicode {
@@ -911,22 +912,31 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     generate_mapping(generator, locale_data.locales, s_number_system_index_type, "s_locale_number_systems"sv, "s_number_systems_{}", nullptr, [&](auto const& name, auto const& value) { append_map(name, s_number_system_index_type, value.number_systems); });
     generate_mapping(generator, locale_data.locales, s_unit_index_type, "s_locale_units"sv, "s_units_{}", nullptr, [&](auto const& name, auto const& value) { append_map(name, s_unit_index_type, value.units); });
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values) {
-        HashValueMap<String> hashes;
-        hashes.ensure_capacity(values.size());
+    generator.append(R"~~~(
+static Optional<NumberSystem> keyword_to_number_system(KeywordNumbers keyword)
+{
+    switch (keyword) {)~~~");
 
-        for (auto const& value : values)
-            hashes.set(value.hash(), format_identifier(enum_title, value));
-
-        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
-    };
-
-    append_from_string("NumberSystem"sv, "number_system"sv, locale_data.number_systems);
+    for (auto const& number_system : locale_data.number_systems) {
+        generator.set("name"sv, format_identifier({}, number_system));
+        generator.append(R"~~~(
+    case KeywordNumbers::@name@:
+        return NumberSystem::@name@;)~~~");
+    }
 
     generator.append(R"~~~(
+    default:
+        return {};
+    }
+}
+
 Optional<Span<u32 const>> get_digits_for_number_system(StringView system)
 {
-    auto number_system_value = number_system_from_string(system);
+    auto number_system_keyword = keyword_nu_from_string(system);
+    if (!number_system_keyword.has_value())
+        return {};
+
+    auto number_system_value = keyword_to_number_system(*number_system_keyword);
     if (!number_system_value.has_value())
         return {};
 
@@ -940,9 +950,13 @@ static NumberSystemData const* find_number_system(StringView locale, StringView 
     if (!locale_value.has_value())
         return nullptr;
 
-    auto number_system_value = number_system_from_string(system);
+    auto number_system_keyword = keyword_nu_from_string(system);
+    if (!number_system_keyword.has_value())
+        return {};
+
+    auto number_system_value = keyword_to_number_system(*number_system_keyword);
     if (!number_system_value.has_value())
-        return nullptr;
+        return {};
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
     auto number_system_index = to_underlying(*number_system_value);
