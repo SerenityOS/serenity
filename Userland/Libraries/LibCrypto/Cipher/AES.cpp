@@ -24,6 +24,7 @@ constexpr void swap_keys(u32* keys, size_t i, size_t j)
     keys[j] = temp;
 }
 
+#ifndef KERNEL
 String AESCipherBlock::to_string() const
 {
     StringBuilder builder;
@@ -39,6 +40,7 @@ String AESCipherKey::to_string() const
         builder.appendff("{:02x}", m_rd_keys[i]);
     return builder.build();
 }
+#endif
 
 void AESCipherKey::expand_encrypt_key(ReadonlyBytes user_key, size_t bits)
 {
