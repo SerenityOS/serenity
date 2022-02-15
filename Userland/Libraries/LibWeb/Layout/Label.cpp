@@ -31,7 +31,7 @@ void Label::handle_mousedown_on_label(Badge<TextNode>, const Gfx::IntPoint&, uns
     if (button != GUI::MouseButton::Primary)
         return;
 
-    if (auto* control = control_node(); control)
+    if (auto* control = labeled_control(); control)
         control->handle_associated_label_mousedown({});
 
     m_tracking_mouse = true;
@@ -45,7 +45,7 @@ void Label::handle_mouseup_on_label(Badge<TextNode>, const Gfx::IntPoint& positi
     // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protect = *this;
 
-    if (auto* control = control_node(); control) {
+    if (auto* control = labeled_control(); control) {
         bool is_inside_control = enclosing_int_rect(control->absolute_rect()).contains(position);
         bool is_inside_label = enclosing_int_rect(absolute_rect()).contains(position);
 
@@ -61,7 +61,7 @@ void Label::handle_mousemove_on_label(Badge<TextNode>, const Gfx::IntPoint& posi
     if (!m_tracking_mouse)
         return;
 
-    if (auto* control = control_node(); control) {
+    if (auto* control = labeled_control(); control) {
         bool is_inside_control = enclosing_int_rect(control->absolute_rect()).contains(position);
         bool is_inside_label = enclosing_int_rect(absolute_rect()).contains(position);
 
@@ -113,27 +113,36 @@ Label* Label::label_for_control_node(LabelableNode& control)
     return label;
 }
 
-LabelableNode* Label::control_node()
+// https://html.spec.whatwg.org/multipage/forms.html#labeled-control
+LabelableNode* Label::labeled_control()
 {
+    if (!document().layout_node())
+        return nullptr;
+
     LabelableNode* control = nullptr;
 
-    if (!document().layout_node())
+    // The for attribute may be specified to indicate a form control with which the caption is to be associated.
+    // If the attribute is specified, the attribute's value must be the ID of a labelable element in the
+    // same tree as the label element. If the attribute is specified and there is an element in the tree
+    // whose ID is equal to the value of the for attribute, and the first such element in tree order is
+    // a labelable element, then that element is the label element's labeled control.
+    if (auto for_ = dom_node().for_(); !for_.is_null()) {
+        document().layout_node()->for_each_in_inclusive_subtree_of_type<LabelableNode>([&](auto& node) {
+            if (node.dom_node().attribute(HTML::AttributeNames::id) == for_) {
+                control = &node;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
         return control;
+    }
 
-    String for_ = dom_node().for_();
-    if (for_.is_empty())
-        return control;
-
-    document().layout_node()->for_each_in_inclusive_subtree_of_type<LabelableNode>([&](auto& node) {
-        if (node.dom_node().attribute(HTML::AttributeNames::id) == for_) {
-            control = &node;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
+    // If the for attribute is not specified, but the label element has a labelable element descendant,
+    // then the first such descendant in tree order is the label element's labeled control.
+    for_each_in_subtree_of_type<LabelableNode>([&](auto& labelable_node) {
+        control = &labelable_node;
+        return IterationDecision::Break;
     });
-
-    // FIXME: The spec also allows for associating a label with a labelable node by putting the
-    //        labelable node inside the label.
     return control;
 }
 

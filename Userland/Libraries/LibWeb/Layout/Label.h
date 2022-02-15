@@ -30,7 +30,7 @@ private:
     virtual bool is_label() const override { return true; }
 
     static Label* label_for_control_node(LabelableNode&);
-    LabelableNode* control_node();
+    LabelableNode* labeled_control();
 
     bool m_tracking_mouse { false };
 };
