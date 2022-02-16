@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,8 +20,8 @@ class Square {
     AK_MAKE_NONCOPYABLE(Square);
 
 public:
-    Square();
-    ~Square();
+    Square() = default;
+    ~Square() = default;
 
     Field* field { nullptr };
     bool is_swept { false };
@@ -43,7 +44,7 @@ class Field final : public GUI::Frame {
     friend class SquareLabel;
 
 public:
-    virtual ~Field() override;
+    virtual ~Field() override = default;
 
     enum class Difficulty {
         Beginner,

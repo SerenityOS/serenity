@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ryan Wilson <ryan@rdwilson.xyz>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,10 +15,6 @@
 Pattern::Pattern(Vector<String> pattern)
 {
     m_pattern = move(pattern);
-}
-
-Pattern::~Pattern()
-{
 }
 
 void Pattern::set_action(GUI::Action* action)

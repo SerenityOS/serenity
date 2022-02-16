@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,10 +18,6 @@ LevelSelectDialog::LevelSelectDialog(Window* parent_window)
     set_rect(0, 0, 300, 250);
     set_title("Level Select");
     build();
-}
-
-LevelSelectDialog::~LevelSelectDialog()
-{
 }
 
 int LevelSelectDialog::show(int& board_number, Window* parent_window)

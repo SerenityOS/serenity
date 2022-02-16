@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,10 +25,6 @@ SnakeGame::SnakeGame()
 
     m_high_score = Config::read_i32("Snake", "Snake", "HighScore", 0);
     m_high_score_text = String::formatted("Best: {}", m_high_score);
-}
-
-SnakeGame::~SnakeGame()
-{
 }
 
 void SnakeGame::reset()
