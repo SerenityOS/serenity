@@ -28,18 +28,32 @@ int Dialog::exec()
     VERIFY(!m_event_loop);
     m_event_loop = make<Core::EventLoop>();
 
-    auto desktop_rect = Desktop::the().rect();
+    bool has_parent_window = parent() && is<Window>(parent());
+
+    size_t screen_index = Desktop::the().main_screen_index();
+    if (has_parent_window) {
+        screen_index = static_cast<Window*>(parent())->containing_screen_index();
+    }
+    auto screen_rect = Desktop::the().rects()[screen_index];
+
     auto window_rect = rect();
 
-    auto top_align = [](Gfx::Rect<int>& rect) { rect.set_y(32); };
-    auto bottom_align = [this, desktop_rect](Gfx::Rect<int>& rect) { rect.set_y(desktop_rect.height() - Desktop::the().taskbar_height() - height() - 12); };
+    auto top_align = [&](Gfx::Rect<int>& rect) { rect.set_y(screen_rect.y() + 32); };
+    auto bottom_align = [&](Gfx::Rect<int>& rect) {
+        int bottom_aligned_y = screen_rect.y() + screen_rect.height() - height() - 12;
+        if (screen_index == Desktop::the().main_screen_index()) {
+            rect.set_y(bottom_aligned_y - Desktop::the().taskbar_height());
+        } else {
+            rect.set_y(bottom_aligned_y);
+        }
+    };
 
-    auto left_align = [](Gfx::Rect<int>& rect) { rect.set_x(12); };
-    auto right_align = [this, desktop_rect](Gfx::Rect<int>& rect) { rect.set_x(desktop_rect.width() - width() - 12); };
+    auto left_align = [&](Gfx::Rect<int>& rect) { rect.set_x(screen_rect.x() + 12); };
+    auto right_align = [&](Gfx::Rect<int>& rect) { rect.set_x(screen_rect.x() + screen_rect.width() - width() - 12); };
 
     switch (m_screen_position) {
     case CenterWithinParent:
-        if (parent() && is<Window>(parent())) {
+        if (has_parent_window) {
             auto& parent_window = *static_cast<Window*>(parent());
             if (parent_window.is_visible()) {
                 window_rect.center_within(parent_window.rect());
@@ -48,22 +62,22 @@ int Dialog::exec()
         }
         [[fallthrough]]; // Fall back to `Center` if parent window is invalid or not visible
     case Center:
-        window_rect.center_within(desktop_rect);
+        window_rect.center_within(screen_rect);
         break;
     case CenterLeft:
         left_align(window_rect);
-        window_rect.center_vertically_within(desktop_rect);
+        window_rect.center_vertically_within(screen_rect);
         break;
     case CenterRight:
         right_align(window_rect);
-        window_rect.center_vertically_within(desktop_rect);
+        window_rect.center_vertically_within(screen_rect);
         break;
     case TopLeft:
         left_align(window_rect);
         top_align(window_rect);
         break;
     case TopCenter:
-        window_rect.center_horizontally_within(desktop_rect);
+        window_rect.center_horizontally_within(screen_rect);
         top_align(window_rect);
         break;
     case TopRight:
@@ -75,7 +89,7 @@ int Dialog::exec()
         bottom_align(window_rect);
         break;
     case BottomCenter:
-        window_rect.center_horizontally_within(desktop_rect);
+        window_rect.center_horizontally_within(screen_rect);
         bottom_align(window_rect);
         break;
     case BottomRight:
