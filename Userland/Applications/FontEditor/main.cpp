@@ -29,7 +29,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::seal_allowlist());
 
     Config::pledge_domain("FontEditor");
-    Config::monitor_domain("FontEditor");
     TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath"));
 
     char const* path = nullptr;
