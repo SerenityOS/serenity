@@ -198,6 +198,7 @@ static wellknown_devices const wellknown_char_devices[] = {
     { makedev(  1,   1), "mem",       0660 },
     { makedev(  1,   3), "null",      0666 },
     { makedev(  1,   5), "zero",      0666 },
+    { makedev(  1,   8), "random",    0666 },
 };
 // clang-format on
 
@@ -291,10 +292,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
         case 1: {
             if (!is_block_device) {
                 switch (minor_number) {
-                case 8: {
-                    create_devtmpfs_char_device("/dev/random", 0666, 1, 8);
-                    break;
-                }
                 default:
                     warnln("Unknown character device {}:{}", major_number, minor_number);
                     break;
