@@ -116,13 +116,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto buffer = file->read_all();
     auto source = String::copy(buffer);
 
-    outln("{}({})\t\tSerenityOS manual", name, section);
+    const String title("SerenityOS manual");
+
+    int spaces = view_width / 2 - String(name).length() - String(section).length() - title.length() / 2 - 4;
+    if (spaces < 0)
+        spaces = 0;
+    out("{}({})", name, section);
+    while (spaces--)
+        out(" ");
+    outln(title);
 
     auto document = Markdown::Document::parse(source);
     VERIFY(document);
 
     String rendered = document->render_for_terminal(view_width);
-    out("{}", rendered);
+    outln("{}", rendered);
 
     // FIXME: Remove this wait, it shouldn't be necessary but Shell does not
     //        resume properly without it. This wait also breaks <C-z> backgrounding
