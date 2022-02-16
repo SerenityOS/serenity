@@ -681,6 +681,25 @@ void Parser::parse_dictionary(Interface& interface)
     consume_whitespace();
 }
 
+void Parser::parse_interface_mixin(Interface& interface)
+{
+    auto mixin_interface = make<Interface>();
+    mixin_interface->module_own_path = interface.module_own_path;
+    mixin_interface->is_mixin = true;
+
+    assert_string("interface");
+    consume_whitespace();
+    assert_string("mixin");
+    auto offset = lexer.tell();
+
+    parse_interface(*mixin_interface);
+    if (!mixin_interface->parent_name.is_empty())
+        report_parsing_error("Mixin interfaces are not allowed to have inherited parents", filename, input, offset);
+
+    auto name = mixin_interface->name;
+    interface.mixins.set(move(name), move(mixin_interface));
+}
+
 void Parser::parse_non_interface_entities(bool allow_interface, Interface& interface)
 {
     while (!lexer.is_eof()) {
@@ -688,8 +707,22 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
             parse_dictionary(interface);
         } else if (lexer.next_is("enum")) {
             parse_enumeration(interface);
+        } else if (lexer.next_is("interface mixin")) {
+            parse_interface_mixin(interface);
         } else if ((allow_interface && !lexer.next_is("interface")) || !allow_interface) {
-            report_parsing_error("expected 'enum' or 'dictionary'", filename, input, lexer.tell());
+            auto current_offset = lexer.tell();
+            auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+            consume_whitespace();
+            if (lexer.consume_specific("includes")) {
+                consume_whitespace();
+                auto mixin_name = lexer.consume_until([](auto ch) { return is_ascii_space(ch) || ch == ';'; });
+                interface.included_mixins.ensure(name).set(mixin_name);
+                consume_whitespace();
+                assert_specific(';');
+                consume_whitespace();
+            } else {
+                report_parsing_error("expected 'enum' or 'dictionary'", filename, input, current_offset);
+            }
         } else {
             break;
         }
@@ -740,7 +773,36 @@ NonnullOwnPtr<Interface> Parser::parse()
             enumeration_copy.is_original_definition = false;
             interface->enumerations.set(enumeration.key, move(enumeration_copy));
         }
+
+        for (auto& mixin : import.mixins) {
+            if (interface->mixins.contains(mixin.key))
+                report_parsing_error(String::formatted("Mixin '{}' was already defined in {}", mixin.key, mixin.value->module_own_path), filename, input, lexer.tell());
+            interface->mixins.set(mixin.key, move(mixin.value));
+        }
     }
+
+    // Resolve mixins
+    if (auto it = interface->included_mixins.find(interface->name); it != interface->included_mixins.end()) {
+        for (auto& entry : it->value) {
+            auto mixin_it = interface->mixins.find(entry);
+            if (mixin_it == interface->mixins.end())
+                report_parsing_error(String::formatted("Mixin '{}' was never defined", entry), filename, input, lexer.tell());
+
+            auto& mixin = mixin_it->value;
+            interface->attributes.extend(mixin->attributes);
+            interface->constants.extend(mixin->constants);
+            interface->functions.extend(mixin->functions);
+            interface->static_functions.extend(mixin->static_functions);
+            if (interface->has_stringifier && mixin->has_stringifier)
+                report_parsing_error(String::formatted("Both interface '{}' and mixin '{}' have defined stringifier attributes", interface->name, mixin->name), filename, input, lexer.tell());
+
+            if (mixin->has_stringifier) {
+                interface->stringifier_attribute = mixin->stringifier_attribute;
+                interface->has_stringifier = true;
+            }
+        }
+    }
+
     interface->imported_modules = move(imports);
 
     return interface;
