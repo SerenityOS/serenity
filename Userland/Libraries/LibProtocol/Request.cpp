@@ -52,12 +52,12 @@ void Request::stream_into_impl(T& stream)
             if (result.is_error())
                 continue;
             auto nread = result.value();
+            if (nread == 0)
+                break;
             if (!stream.write_or_error({ buf, nread })) {
                 // FIXME: What do we do here?
                 TODO();
             }
-            if (nread == 0)
-                break;
         } while (true);
 
         if (m_internal_stream_data->read_stream->is_eof() && m_internal_stream_data->request_done) {
