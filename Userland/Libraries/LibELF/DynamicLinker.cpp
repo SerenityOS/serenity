@@ -450,17 +450,27 @@ static Result<void*, DlErrorMessage> __dlsym(void* handle, const char* symbol_na
     __pthread_mutex_lock(&s_loader_lock);
     ScopeGuard unlock_guard = [] { __pthread_mutex_unlock(&s_loader_lock); };
 
-    auto object = static_cast<DynamicObject*>(handle);
-    if (!handle) {
-        auto library_name = get_library_name(s_main_program_name);
-        auto global_object = s_global_objects.get(library_name);
-        object = *global_object;
+    if(handle)
+    {
+        auto object = static_cast<DynamicObject*>(handle);
+        auto symbol = object->lookup_symbol(symbol_name);
+        if (symbol.has_value()) {
+            return symbol.value().address.as_ptr();
+        }
     }
-    auto symbol = object->lookup_symbol(symbol_name);
-    if (!symbol.has_value()) {
-        return DlErrorMessage { String::formatted("Symbol {} not found", symbol_name) };
+    else
+    {
+        for (auto& object_name : s_global_objects.keys())
+        {
+            auto object = s_global_objects.get(object_name);
+            auto symbol = (*object)->lookup_symbol(symbol_name);
+            if (symbol.has_value())
+            {
+                return symbol.value().address.as_ptr();
+            }
+        }
     }
-    return symbol.value().address.as_ptr();
+    return DlErrorMessage { String::formatted("Symbol {} not found", symbol_name) };
 }
 
 static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info)
