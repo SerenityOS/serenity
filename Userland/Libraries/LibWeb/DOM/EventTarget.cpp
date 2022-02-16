@@ -46,10 +46,10 @@ EventTarget::~EventTarget()
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-addeventlistener
-void EventTarget::add_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback)
+void EventTarget::add_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, bool use_capture)
 {
     // FIXME: 1. Let capture, passive, once, and signal be the result of flattening more options.
-    bool capture = false;
+    bool capture = use_capture;
     bool passive = false;
     bool once = false;
     RefPtr<AbortSignal> signal = nullptr;
@@ -96,10 +96,10 @@ void EventTarget::add_an_event_listener(NonnullRefPtr<DOMEventListener> listener
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-removeeventlistener
-void EventTarget::remove_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback)
+void EventTarget::remove_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, bool use_capture)
 {
     // FIXME: 1. Let capture be the result of flattening options.
-    bool capture = false;
+    bool capture = use_capture;
 
     // 2. If this’s event listener list contains an event listener whose type is type, callback is callback, and capture is capture,
     //    then remove an event listener with this and that event listener.

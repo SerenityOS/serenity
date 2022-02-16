@@ -30,8 +30,8 @@ public:
 
     virtual bool is_focusable() const { return false; }
 
-    void add_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback);
-    void remove_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback);
+    void add_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, bool use_capture = false);
+    void remove_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, bool use_capture = false);
 
     virtual bool dispatch_event(NonnullRefPtr<Event>);
     ExceptionOr<bool> dispatch_event_binding(NonnullRefPtr<Event>);

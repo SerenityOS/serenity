@@ -1,8 +1,8 @@
 interface EventTarget {
 
     // FIXME: Both of these should take in options
-    undefined addEventListener(DOMString type, EventListener? callback);
-    undefined removeEventListener(DOMString type, EventListener? callback);
+    undefined addEventListener(DOMString type, EventListener? callback, optional boolean useCapture = false);
+    undefined removeEventListener(DOMString type, EventListener? callback, optional boolean useCapture = false);
 
     [ImplementedAs=dispatch_event_binding] boolean dispatchEvent(Event event);
 
