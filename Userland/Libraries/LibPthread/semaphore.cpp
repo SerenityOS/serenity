@@ -94,14 +94,20 @@ int sem_trywait(sem_t* sem)
     u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
     u32 count = value & ~POST_WAKES;
     if (count == 0)
+    {
+        errno = EAGAIN;
         return EAGAIN;
+    }
     // Decrement the count without touching the flag.
     u32 desired = (count - 1) | (value & POST_WAKES);
     bool exchanged = AK::atomic_compare_exchange_strong(&sem->value, value, desired, AK::memory_order_acquire);
     if (exchanged) [[likely]]
         return 0;
     else
+    {
+        errno = EAGAIN;
         return EAGAIN;
+    }
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_wait.html
