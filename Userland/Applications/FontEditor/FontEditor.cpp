@@ -209,16 +209,25 @@ FontEditorWidget::FontEditorWidget()
     });
     m_open_preview_action->set_checked(false);
     m_open_preview_action->set_status_tip("Preview the current font");
+
+    bool show_metadata = Config::read_bool("FontEditor", "Layout", "ShowMetadata", true);
+    set_show_font_metadata(show_metadata);
     m_show_metadata_action = GUI::Action::create_checkable("Font &Metadata", { Mod_Ctrl, Key_M }, [&](auto& action) {
         set_show_font_metadata(action.is_checked());
+        Config::write_bool("FontEditor", "Layout", "ShowMetadata", action.is_checked());
     });
-    m_show_metadata_action->set_checked(true);
+    m_show_metadata_action->set_checked(show_metadata);
     m_show_metadata_action->set_status_tip("Show or hide metadata about the current font");
+
+    bool show_unicode_blocks = Config::read_bool("FontEditor", "Layout", "ShowUnicodeBlocks", true);
+    set_show_unicode_blocks(show_unicode_blocks);
     m_show_unicode_blocks_action = GUI::Action::create_checkable("&Unicode Blocks", { Mod_Ctrl, Key_U }, [&](auto& action) {
         set_show_unicode_blocks(action.is_checked());
+        Config::write_bool("FontEditor", "Layout", "ShowUnicodeBlocks", action.is_checked());
     });
-    m_show_unicode_blocks_action->set_checked(true);
+    m_show_unicode_blocks_action->set_checked(show_unicode_blocks);
     m_show_unicode_blocks_action->set_status_tip("Show or hide the Unicode block list");
+
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         String input;
         if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecOK && !input.is_empty()) {
@@ -638,7 +647,7 @@ void FontEditorWidget::set_show_unicode_blocks(bool show)
     if (m_unicode_blocks == show)
         return;
     m_unicode_blocks = show;
-    m_unicode_block_listview->set_visible(m_unicode_blocks);
+    m_unicode_block_container->set_visible(m_unicode_blocks);
 }
 
 bool FontEditorWidget::open_file(String const& path)
