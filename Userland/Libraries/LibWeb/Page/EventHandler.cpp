@@ -352,6 +352,12 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
                     hovered_node_cursor = Gfx::StandardCursor::IBeam;
                 else
                     hovered_node_cursor = cursor_css_to_gfx(cursor);
+            } else if (node->is_element()) {
+                auto cursor = result.layout_node->computed_values().cursor();
+                if (cursor == CSS::Cursor::Auto)
+                    hovered_node_cursor = Gfx::StandardCursor::Arrow;
+                else
+                    hovered_node_cursor = cursor_css_to_gfx(cursor);
             }
 
             auto offset = compute_mouse_event_offset(position, *result.layout_node);
