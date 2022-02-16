@@ -212,6 +212,7 @@ static wellknown_devices const wellknown_char_devices[] = {
     { makedev( 10,   0), "mouse0",    0660 },
     { makedev( 10, 183), "hwrng",     0660 },
     { makedev( 29,   0), "full",      0660 },
+    { makedev( 85,   0), "keyboard0", 0660 },
 };
 // clang-format on
 
@@ -266,10 +267,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
         case 85: {
             if (!is_block_device) {
                 switch (minor_number) {
-                case 0: {
-                    create_devtmpfs_char_device("/dev/keyboard0", 0660, 85, 0);
-                    break;
-                }
                 default:
                     warnln("Unknown character device {}:{}", major_number, minor_number);
                 }
