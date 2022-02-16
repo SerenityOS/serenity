@@ -203,6 +203,10 @@ static wellknown_devices const wellknown_char_devices[] = {
     { makedev(  4,   1), "tty1",      0620 },
     { makedev(  4,   2), "tty2",      0620 },
     { makedev(  4,   3), "tty3",      0620 },
+    { makedev(  4,  64), "ttyS0",     0620 },
+    { makedev(  4,  65), "ttyS1",     0620 },
+    { makedev(  4,  66), "ttyS2",     0620 },
+    { makedev(  4,  67), "ttyS3",     0666 }, // mode typo ?
 };
 // clang-format on
 
@@ -325,22 +329,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
         case 4: {
             if (!is_block_device) {
                 switch (minor_number) {
-                case 64: {
-                    create_devtmpfs_char_device("/dev/ttyS0", 0620, 4, 64);
-                    break;
-                }
-                case 65: {
-                    create_devtmpfs_char_device("/dev/ttyS1", 0620, 4, 65);
-                    break;
-                }
-                case 66: {
-                    create_devtmpfs_char_device("/dev/ttyS2", 0620, 4, 66);
-                    break;
-                }
-                case 67: {
-                    create_devtmpfs_char_device("/dev/ttyS3", 0666, 4, 67);
-                    break;
-                }
                 default:
                     warnln("Unknown character device {}:{}", major_number, minor_number);
                 }
