@@ -69,31 +69,30 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
     return true;
 }
 
-static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region = nullptr)
+static ErrorOr<void> validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region = nullptr)
 {
     bool make_readable = prot & PROT_READ;
     bool make_writable = prot & PROT_WRITE;
     bool make_executable = prot & PROT_EXEC;
 
     if (map_anonymous && make_executable)
-        return false;
+        return EINVAL;
 
     if (make_writable && make_executable)
-        return false;
+        return EINVAL;
 
     if (map_stack && make_executable)
-        return false;
+        return EINVAL;
 
     if (region) {
         if (make_writable && region->has_been_executable())
-            return false;
+            return EINVAL;
 
-        if (make_executable && region->has_been_writable()) {
-            return should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region);
-        }
+        if (make_executable && region->has_been_writable() && !should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region))
+            return EINVAL;
     }
 
-    return true;
+    return {};
 }
 
 static bool validate_inode_mmap_prot(const Process& process, int prot, const Inode& inode, bool map_shared)
@@ -177,8 +176,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
     if ((map_fixed || map_fixed_noreplace) && map_randomized)
         return EINVAL;
 
-    if (!validate_mmap_prot(prot, map_stack, map_anonymous))
-        return EINVAL;
+    TRY(validate_mmap_prot(prot, map_stack, map_anonymous));
 
     if (map_stack && (!map_private || !map_anonymous))
         return EINVAL;
@@ -270,8 +268,9 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
     if (auto* whole_region = address_space().find_region_from_range(range_to_mprotect)) {
         if (!whole_region->is_mmap())
             return EPERM;
-        if (!validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region))
-            return EINVAL;
+
+        TRY(validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region));
+
         if (whole_region->access() == Memory::prot_to_region_access_flags(prot))
             return 0;
         if (whole_region->vmobject().is_inode()
@@ -290,8 +289,9 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
     if (auto* old_region = address_space().find_region_containing(range_to_mprotect)) {
         if (!old_region->is_mmap())
             return EPERM;
-        if (!validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region))
-            return EINVAL;
+
+        TRY(validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region));
+
         if (old_region->access() == Memory::prot_to_region_access_flags(prot))
             return 0;
         if (old_region->vmobject().is_inode()
@@ -330,8 +330,9 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
         for (const auto* region : regions) {
             if (!region->is_mmap())
                 return EPERM;
-            if (!validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region))
-                return EINVAL;
+
+            TRY(validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region));
+
             if (region->vmobject().is_inode()
                 && !validate_inode_mmap_prot(*this, prot, static_cast<Memory::InodeVMObject const&>(region->vmobject()).inode(), region->is_shared())) {
                 return EACCES;
