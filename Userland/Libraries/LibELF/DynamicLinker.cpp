@@ -458,17 +458,21 @@ static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_na
     __pthread_mutex_lock(&s_loader_lock);
     ScopeGuard unlock_guard = [] { __pthread_mutex_unlock(&s_loader_lock); };
 
-    auto object = static_cast<DynamicObject*>(handle);
-    if (!handle) {
-        auto library_name = get_library_name(s_main_program_name);
-        auto global_object = s_global_objects.get(library_name);
-        object = *global_object;
+    Optional<DynamicObject::SymbolLookupResult> symbol;
+
+    if (handle) {
+        auto object = static_cast<DynamicObject*>(handle);
+        symbol = object->lookup_symbol(symbol_name);
+    } else {
+        // When handle is 0 (RTLD_DEFAULT) we should look up the symbol in all global modules
+        // https://pubs.opengroup.org/onlinepubs/009604499/functions/dlsym.html
+        symbol = DynamicLinker::lookup_global_symbol(symbol_name);
     }
-    auto symbol = object->lookup_symbol(symbol_name);
-    if (!symbol.has_value()) {
-        return DlErrorMessage { String::formatted("Symbol {} not found", symbol_name) };
-    }
-    return symbol.value().address.as_ptr();
+
+    if (symbol.has_value())
+        return symbol.value().address.as_ptr();
+
+    return DlErrorMessage { String::formatted("Symbol {} not found", symbol_name) };
 }
 
 static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info)
