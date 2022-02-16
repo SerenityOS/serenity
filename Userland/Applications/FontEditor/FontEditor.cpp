@@ -803,18 +803,6 @@ void FontEditorWidget::did_resize_glyph_editor()
     m_left_column_container->set_fixed_width(max(m_glyph_editor_widget->preferred_width(), glyph_toolbars_width));
 }
 
-void FontEditorWidget::config_i32_did_change(String const& domain, String const& group, String const& key, i32 value)
-{
-    if (domain == "FontEditor"sv && group == "GlyphEditor"sv && key == "Scale"sv) {
-        set_scale(value);
-    }
-}
-
-void FontEditorWidget::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
-{
-    config_i32_did_change(domain, group, key, value.to_int().value_or(10));
-}
-
 void FontEditorWidget::set_scale(i32 scale)
 {
     m_glyph_editor_widget->set_scale(scale);
