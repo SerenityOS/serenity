@@ -443,6 +443,16 @@ constexpr T pow(T x, T y)
     return exp2<T>(y * log2<T>(x));
 }
 
+template<FloatingPoint T>
+constexpr T fma(T x, T y, T z)
+{
+    CONSTEXPR_STATE(fma, x, y, z);
+
+    // FIXME: This is very naive and does not satisfy the validation and precision requirements
+    //        probably wanted by the callers.
+    return x * y + z;
+}
+
 #undef CONSTEXPR_STATE
 
 }
