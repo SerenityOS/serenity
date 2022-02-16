@@ -2,31 +2,124 @@
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
-#include <AK/GenericLexer.h>
-#include <AK/HashMap.h>
+#include "IDLTypes.h"
 #include <AK/LexicalPath.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/OwnPtr.h>
 #include <AK/Queue.h>
-#include <AK/QuickSort.h>
-#include <AK/SourceGenerator.h>
-#include <AK/StringBuilder.h>
-#include <AK/Tuple.h>
-#include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
-#include <ctype.h>
+
+Vector<StringView> s_header_search_paths;
 
 namespace IDL {
-struct Interface;
+
+static bool is_wrappable_type(Type const& type)
+{
+    if (type.name == "EventTarget")
+        return true;
+    if (type.name == "Node")
+        return true;
+    if (type.name == "Document")
+        return true;
+    if (type.name == "Text")
+        return true;
+    if (type.name == "DocumentType")
+        return true;
+    if (type.name.ends_with("Element"))
+        return true;
+    if (type.name.ends_with("Event"))
+        return true;
+    if (type.name == "ImageData")
+        return true;
+    if (type.name == "Window")
+        return true;
+    if (type.name == "Range")
+        return true;
+    if (type.name == "Selection")
+        return true;
+    if (type.name == "Attribute")
+        return true;
+    if (type.name == "NamedNodeMap")
+        return true;
+    if (type.name == "TextMetrics")
+        return true;
+    return false;
 }
 
-static Vector<StringView> s_header_search_paths;
+static StringView sequence_storage_type_to_cpp_storage_type_name(SequenceStorageType sequence_storage_type)
+{
+    switch (sequence_storage_type) {
+    case SequenceStorageType::Vector:
+        return "Vector"sv;
+    case SequenceStorageType::MarkedVector:
+        return "JS::MarkedVector"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+CppType idl_type_name_to_cpp_type(Type const& type)
+{
+    if (is_wrappable_type(type)) {
+        if (type.nullable)
+            return { .name = String::formatted("RefPtr<{}>", type.name), .sequence_storage_type = SequenceStorageType::Vector };
+
+        return { .name = String::formatted("NonnullRefPtr<{}>", type.name), .sequence_storage_type = SequenceStorageType::Vector };
+    }
+
+    if (type.is_string())
+        return { .name = "String", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "double" && !type.nullable)
+        return { .name = "double", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "boolean" && !type.nullable)
+        return { .name = "bool", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "unsigned long" && !type.nullable)
+        return { .name = "u32", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "unsigned short" && !type.nullable)
+        return { .name = "u16", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "long" && !type.nullable)
+        return { .name = "i32", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "any")
+        return { .name = "JS::Value", .sequence_storage_type = SequenceStorageType::MarkedVector };
+
+    if (type.name == "sequence") {
+        auto& parameterized_type = verify_cast<ParameterizedType>(type);
+        auto& sequence_type = parameterized_type.parameters.first();
+        auto sequence_cpp_type = idl_type_name_to_cpp_type(sequence_type);
+        auto storage_type_name = sequence_storage_type_to_cpp_storage_type_name(sequence_cpp_type.sequence_storage_type);
+
+        if (sequence_cpp_type.sequence_storage_type == SequenceStorageType::MarkedVector)
+            return { .name = storage_type_name, .sequence_storage_type = SequenceStorageType::Vector };
+
+        return { .name = String::formatted("{}<{}>", storage_type_name, sequence_cpp_type.name), .sequence_storage_type = SequenceStorageType::Vector };
+    }
+
+    if (type.name == "record") {
+        auto& parameterized_type = verify_cast<ParameterizedType>(type);
+        auto& record_key_type = parameterized_type.parameters[0];
+        auto& record_value_type = parameterized_type.parameters[1];
+        auto record_key_cpp_type = idl_type_name_to_cpp_type(record_key_type);
+        auto record_value_cpp_type = idl_type_name_to_cpp_type(record_value_type);
+
+        return { .name = String::formatted("OrderedHashMap<{}, {}>", record_key_cpp_type.name, record_value_cpp_type.name), .sequence_storage_type = SequenceStorageType::Vector };
+    }
+
+    if (is<UnionType>(type)) {
+        auto& union_type = verify_cast<UnionType>(type);
+        return { .name = union_type.to_variant(), .sequence_storage_type = SequenceStorageType::Vector };
+    }
+
+    dbgln("Unimplemented type for idl_type_name_to_cpp_type: {}{}", type.name, type.nullable ? "?" : "");
+    TODO();
+}
 
 static String make_input_acceptable_cpp(String const& input)
 {
@@ -38,68 +131,6 @@ static String make_input_acceptable_cpp(String const& input)
     }
 
     return input.replace("-", "_");
-}
-
-static String convert_enumeration_value_to_cpp_enum_member(String const& value, HashTable<String>& names_already_seen)
-{
-    StringBuilder builder;
-    GenericLexer lexer { value };
-
-    while (!lexer.is_eof()) {
-        lexer.ignore_while([](auto c) { return isspace(c) || c == '-' || c == '_'; });
-        auto word = lexer.consume_while([](auto c) { return isalnum(c); });
-        if (!word.is_empty()) {
-            builder.append(word.to_titlecase_string());
-        } else {
-            auto non_alnum_string = lexer.consume_while([](auto c) { return !isalnum(c); });
-            if (!non_alnum_string.is_empty())
-                builder.append("_");
-        }
-    }
-
-    if (builder.is_empty())
-        builder.append("Empty");
-
-    while (names_already_seen.contains(builder.string_view()))
-        builder.append('_');
-
-    names_already_seen.set(builder.string_view());
-    return builder.build();
-}
-
-[[noreturn]] static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)
-{
-    // FIXME: Spaghetti code ahead.
-
-    size_t lineno = 1;
-    size_t colno = 1;
-    size_t start_line = 0;
-    size_t line_length = 0;
-    for (size_t index = 0; index < input.length(); ++index) {
-        if (offset == index)
-            colno = index - start_line + 1;
-
-        if (input[index] == '\n') {
-            if (index >= offset)
-                break;
-
-            start_line = index + 1;
-            line_length = 0;
-            ++lineno;
-        } else {
-            ++line_length;
-        }
-    }
-
-    StringBuilder error_message;
-    error_message.appendff("{}\n", input.substring_view(start_line, line_length));
-    for (size_t i = 0; i < colno - 1; ++i)
-        error_message.append(' ');
-    error_message.append("\033[1;31m^\n");
-    error_message.appendff("{}:{}: error: {}\033[0m\n", filename, lineno, message);
-
-    warnln("{}", error_message.string_view());
-    exit(EXIT_FAILURE);
 }
 
 static void generate_include_for_wrapper(auto& generator, auto& wrapper_name)
@@ -189,1218 +220,6 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
         if (interface->wrapper_class != "Wrapper")
             generate_include_for_wrapper(generator, interface->wrapper_class);
     }
-}
-
-namespace IDL {
-
-template<typename FunctionType>
-static size_t get_function_length(FunctionType& function)
-{
-    size_t length = 0;
-    for (auto& parameter : function.parameters) {
-        if (!parameter.optional && !parameter.variadic)
-            length++;
-    }
-    return length;
-}
-
-enum class SequenceStorageType {
-    Vector,       // Used to safely store non-JS values
-    MarkedVector, // Used to safely store JS::Value and anything that inherits JS::Cell, e.g. JS::Object
-};
-
-struct CppType {
-    String name;
-    SequenceStorageType sequence_storage_type;
-};
-
-struct Type : public RefCounted<Type> {
-    Type() = default;
-
-    Type(String name, bool nullable)
-        : name(move(name))
-        , nullable(nullable)
-    {
-    }
-
-    virtual ~Type() = default;
-
-    String name;
-    bool nullable { false };
-    bool is_string() const { return name.is_one_of("ByteString", "CSSOMString", "DOMString", "USVString"); }
-
-    // https://webidl.spec.whatwg.org/#dfn-integer-type
-    bool is_integer() const { return name.is_one_of("byte", "octet", "short", "unsigned short", "long", "unsigned long", "long long", "unsigned long long"); }
-
-    // https://webidl.spec.whatwg.org/#dfn-numeric-type
-    bool is_numeric() const { return is_integer() || name.is_one_of("float", "unrestricted float", "double", "unrestricted double"); }
-};
-
-static CppType idl_type_name_to_cpp_type(Type const& type);
-
-struct UnionType : public Type {
-    UnionType() = default;
-
-    UnionType(String name, bool nullable, NonnullRefPtrVector<Type> member_types)
-        : Type(move(name), nullable)
-        , member_types(move(member_types))
-    {
-    }
-
-    virtual ~UnionType() override = default;
-
-    NonnullRefPtrVector<Type> member_types;
-
-    // https://webidl.spec.whatwg.org/#dfn-flattened-union-member-types
-    NonnullRefPtrVector<Type> flattened_member_types() const
-    {
-        // 1. Let T be the union type.
-
-        // 2. Initialize S to ∅.
-        NonnullRefPtrVector<Type> types;
-
-        // 3. For each member type U of T:
-        for (auto& type : member_types) {
-            // FIXME: 1. If U is an annotated type, then set U to be the inner type of U.
-
-            // 2. If U is a nullable type, then set U to be the inner type of U. (NOTE: Not necessary as nullable is stored with Type and not as a separate struct)
-
-            // 3. If U is a union type, then add to S the flattened member types of U.
-            if (is<UnionType>(type)) {
-                auto& union_member_type = verify_cast<UnionType>(type);
-                types.extend(union_member_type.flattened_member_types());
-            } else {
-                // 4. Otherwise, U is not a union type. Add U to S.
-                types.append(type);
-            }
-        }
-
-        // 4. Return S.
-        return types;
-    }
-
-    // https://webidl.spec.whatwg.org/#dfn-number-of-nullable-member-types
-    size_t number_of_nullable_member_types() const
-    {
-        // 1. Let T be the union type.
-
-        // 2. Initialize n to 0.
-        size_t num_nullable_member_types = 0;
-
-        // 3. For each member type U of T:
-        for (auto& type : member_types) {
-            // 1. If U is a nullable type, then:
-            if (type.nullable) {
-                // 1. Set n to n + 1.
-                ++num_nullable_member_types;
-
-                // 2. Set U to be the inner type of U. (NOTE: Not necessary as nullable is stored with Type and not as a separate struct)
-            }
-
-            // 2. If U is a union type, then:
-            if (is<UnionType>(type)) {
-                auto& union_member_type = verify_cast<UnionType>(type);
-
-                // 1. Let m be the number of nullable member types of U.
-                // 2. Set n to n + m.
-                num_nullable_member_types += union_member_type.number_of_nullable_member_types();
-            }
-        }
-
-        // 4. Return n.
-        return num_nullable_member_types;
-    }
-
-    // https://webidl.spec.whatwg.org/#dfn-includes-a-nullable-type
-    bool includes_nullable_type() const
-    {
-        // -> the type is a union type and its number of nullable member types is 1.
-        return number_of_nullable_member_types() == 1;
-    }
-
-    // -> https://webidl.spec.whatwg.org/#dfn-includes-undefined
-    bool includes_undefined() const
-    {
-        // -> the type is a union type and one of its member types includes undefined.
-        for (auto& type : member_types) {
-            if (is<UnionType>(type)) {
-                auto& union_type = verify_cast<UnionType>(type);
-                if (union_type.includes_undefined())
-                    return true;
-            }
-
-            if (type.name == "undefined"sv)
-                return true;
-        }
-        return false;
-    }
-
-    String to_variant() const
-    {
-        StringBuilder builder;
-        builder.append("Variant<");
-
-        auto flattened_types = flattened_member_types();
-        for (size_t type_index = 0; type_index < flattened_types.size(); ++type_index) {
-            auto& type = flattened_types.at(type_index);
-
-            if (type_index > 0)
-                builder.append(", ");
-
-            auto cpp_type = idl_type_name_to_cpp_type(type);
-            builder.append(cpp_type.name);
-        }
-
-        if (includes_undefined())
-            builder.append(", Empty");
-
-        builder.append('>');
-        return builder.to_string();
-    }
-};
-
-struct Parameter {
-    NonnullRefPtr<Type> type;
-    String name;
-    bool optional { false };
-    Optional<String> optional_default_value;
-    HashMap<String, String> extended_attributes;
-    bool variadic { false };
-};
-
-struct Function {
-    NonnullRefPtr<Type> return_type;
-    String name;
-    Vector<Parameter> parameters;
-    HashMap<String, String> extended_attributes;
-
-    size_t length() const { return get_function_length(*this); }
-};
-
-struct Constructor {
-    String name;
-    Vector<Parameter> parameters;
-
-    size_t length() const { return get_function_length(*this); }
-};
-
-struct Constant {
-    NonnullRefPtr<Type> type;
-    String name;
-    String value;
-};
-
-struct Attribute {
-    bool readonly { false };
-    NonnullRefPtr<Type> type;
-    String name;
-    HashMap<String, String> extended_attributes;
-
-    // Added for convenience after parsing
-    String getter_callback_name;
-    String setter_callback_name;
-};
-
-struct DictionaryMember {
-    bool required { false };
-    NonnullRefPtr<Type> type;
-    String name;
-    HashMap<String, String> extended_attributes;
-    Optional<String> default_value;
-};
-
-struct Dictionary {
-    String parent_name;
-    Vector<DictionaryMember> members;
-};
-
-struct Enumeration {
-    HashTable<String> values;
-    HashMap<String, String> translated_cpp_names;
-    String first_member;
-    bool is_original_definition { true };
-};
-
-struct Interface;
-
-struct ParameterizedType : public Type {
-    ParameterizedType() = default;
-
-    ParameterizedType(String name, bool nullable, NonnullRefPtrVector<Type> parameters)
-        : Type(move(name), nullable)
-        , parameters(move(parameters))
-    {
-    }
-
-    virtual ~ParameterizedType() override = default;
-
-    NonnullRefPtrVector<Type> parameters;
-
-    void generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, IDL::Interface const&, size_t recursion_depth) const;
-};
-
-struct Interface {
-    String name;
-    String parent_name;
-
-    HashMap<String, String> extended_attributes;
-
-    Vector<Attribute> attributes;
-    Vector<Constant> constants;
-    Vector<Constructor> constructors;
-    Vector<Function> functions;
-    Vector<Function> static_functions;
-    bool has_stringifier { false };
-    Optional<String> stringifier_attribute;
-    bool has_unscopable_member { false };
-
-    Optional<NonnullRefPtr<Type>> value_iterator_type;
-    Optional<Tuple<NonnullRefPtr<Type>, NonnullRefPtr<Type>>> pair_iterator_types;
-
-    Optional<Function> named_property_getter;
-    Optional<Function> named_property_setter;
-
-    Optional<Function> indexed_property_getter;
-    Optional<Function> indexed_property_setter;
-
-    Optional<Function> named_property_deleter;
-
-    HashMap<String, Dictionary> dictionaries;
-    HashMap<String, Enumeration> enumerations;
-
-    // Added for convenience after parsing
-    String wrapper_class;
-    String wrapper_base_class;
-    String fully_qualified_name;
-    String constructor_class;
-    String prototype_class;
-    String prototype_base_class;
-
-    String module_own_path;
-    HashTable<String> imported_paths;
-    NonnullOwnPtrVector<Interface> imported_modules;
-
-    // https://webidl.spec.whatwg.org/#dfn-support-indexed-properties
-    bool supports_indexed_properties() const { return indexed_property_getter.has_value(); }
-
-    // https://webidl.spec.whatwg.org/#dfn-support-named-properties
-    bool supports_named_properties() const { return named_property_getter.has_value(); }
-
-    // https://webidl.spec.whatwg.org/#dfn-legacy-platform-object
-    bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
-};
-
-HashTable<String> s_all_imported_paths;
-static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView input, StringView import_base_path)
-{
-    auto this_module = Core::File::real_path_for(filename);
-    s_all_imported_paths.set(this_module);
-
-    auto interface = make<Interface>();
-    interface->module_own_path = this_module;
-
-    GenericLexer lexer(input);
-
-    auto assert_specific = [&](char ch) {
-        if (!lexer.consume_specific(ch))
-            report_parsing_error(String::formatted("expected '{}'", ch), filename, input, lexer.tell());
-    };
-
-    auto consume_whitespace = [&] {
-        bool consumed = true;
-        while (consumed) {
-            consumed = lexer.consume_while([](char ch) { return isspace(ch); }).length() > 0;
-
-            if (lexer.consume_specific("//")) {
-                lexer.consume_until('\n');
-                lexer.ignore();
-                consumed = true;
-            }
-        }
-    };
-
-    auto assert_string = [&](StringView expected) {
-        if (!lexer.consume_specific(expected))
-            report_parsing_error(String::formatted("expected '{}'", expected), filename, input, lexer.tell());
-    };
-
-    auto parse_extended_attributes = [&] {
-        HashMap<String, String> extended_attributes;
-        for (;;) {
-            consume_whitespace();
-            if (lexer.consume_specific(']'))
-                break;
-            auto name = lexer.consume_until([](auto ch) { return ch == ']' || ch == '=' || ch == ','; });
-            if (lexer.consume_specific('=')) {
-                auto value = lexer.consume_until([](auto ch) { return ch == ']' || ch == ','; });
-                extended_attributes.set(name, value);
-            } else {
-                extended_attributes.set(name, {});
-            }
-            lexer.consume_specific(',');
-        }
-        consume_whitespace();
-        return extended_attributes;
-    };
-
-    auto resolve_import = [&](auto path) -> Optional<NonnullOwnPtr<Interface>> {
-        auto include_path = LexicalPath::join(import_base_path, path).string();
-        if (!Core::File::exists(include_path))
-            report_parsing_error(String::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
-
-        auto real_path = Core::File::real_path_for(include_path);
-        if (s_all_imported_paths.contains(real_path))
-            return {};
-
-        s_all_imported_paths.set(real_path);
-
-        auto file_or_error = Core::File::open(real_path, Core::OpenMode::ReadOnly);
-        if (file_or_error.is_error())
-            report_parsing_error(String::formatted("Failed to open {}: {}", real_path, file_or_error.error()), filename, input, lexer.tell());
-
-        auto data = file_or_error.value()->read_all();
-        return IDL::parse_interface(real_path, data, import_base_path);
-    };
-
-    NonnullOwnPtrVector<Interface> imports;
-    while (lexer.consume_specific("#import")) {
-        consume_whitespace();
-        assert_specific('<');
-        auto path = lexer.consume_until('>');
-        lexer.ignore();
-        auto maybe_interface = resolve_import(path);
-        if (maybe_interface.has_value()) {
-            for (auto& entry : maybe_interface.value()->imported_paths)
-                s_all_imported_paths.set(entry);
-            imports.append(maybe_interface.release_value());
-        }
-        consume_whitespace();
-    }
-    interface->imported_paths = s_all_imported_paths;
-
-    if (lexer.consume_specific('['))
-        interface->extended_attributes = parse_extended_attributes();
-
-    AK::Function<NonnullRefPtr<Type>()> parse_type = [&]() -> NonnullRefPtr<Type> {
-        if (lexer.consume_specific('(')) {
-            NonnullRefPtrVector<Type> union_member_types;
-            union_member_types.append(parse_type());
-            consume_whitespace();
-            assert_string("or");
-            consume_whitespace();
-            union_member_types.append(parse_type());
-            consume_whitespace();
-
-            while (lexer.consume_specific("or")) {
-                consume_whitespace();
-                union_member_types.append(parse_type());
-                consume_whitespace();
-            }
-
-            assert_specific(')');
-
-            bool nullable = lexer.consume_specific('?');
-
-            return adopt_ref(*new UnionType("", nullable, move(union_member_types)));
-        }
-
-        auto consume_name = [&] {
-            return lexer.consume_until([](auto ch) { return !isalnum(ch) && ch != '_'; });
-        };
-        bool unsigned_ = lexer.consume_specific("unsigned");
-        if (unsigned_)
-            consume_whitespace();
-        auto name = consume_name();
-        NonnullRefPtrVector<Type> parameters;
-        bool is_parameterized_type = false;
-        if (lexer.consume_specific('<')) {
-            is_parameterized_type = true;
-            parameters.append(parse_type());
-            while (lexer.consume_specific(',')) {
-                consume_whitespace();
-                parameters.append(parse_type());
-            }
-            lexer.consume_specific('>');
-        }
-        auto nullable = lexer.consume_specific('?');
-        StringBuilder builder;
-        if (unsigned_)
-            builder.append("unsigned ");
-        builder.append(name);
-
-        if (is_parameterized_type)
-            return adopt_ref(*new ParameterizedType(builder.to_string(), nullable, move(parameters)));
-
-        return adopt_ref(*new Type(builder.to_string(), nullable));
-    };
-
-    auto parse_attribute = [&](HashMap<String, String>& extended_attributes) {
-        bool readonly = lexer.consume_specific("readonly");
-        if (readonly)
-            consume_whitespace();
-
-        if (lexer.consume_specific("attribute"))
-            consume_whitespace();
-
-        auto type = parse_type();
-        consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
-        consume_whitespace();
-
-        assert_specific(';');
-
-        auto name_as_string = name.to_string();
-        auto getter_callback_name = String::formatted("{}_getter", name_as_string.to_snakecase());
-        auto setter_callback_name = String::formatted("{}_setter", name_as_string.to_snakecase());
-
-        Attribute attribute {
-            readonly,
-            move(type),
-            move(name_as_string),
-            move(extended_attributes),
-            move(getter_callback_name),
-            move(setter_callback_name),
-        };
-        interface->attributes.append(move(attribute));
-    };
-
-    auto parse_constant = [&] {
-        lexer.consume_specific("const");
-        consume_whitespace();
-
-        auto type = parse_type();
-        consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '='; });
-        consume_whitespace();
-        lexer.consume_specific('=');
-        consume_whitespace();
-        auto value = lexer.consume_while([](auto ch) { return !isspace(ch) && ch != ';'; });
-        consume_whitespace();
-        assert_specific(';');
-
-        Constant constant {
-            move(type),
-            move(name),
-            move(value),
-        };
-        interface->constants.append(move(constant));
-    };
-
-    auto parse_parameters = [&] {
-        consume_whitespace();
-        Vector<Parameter> parameters;
-        for (;;) {
-            if (lexer.next_is(')'))
-                break;
-            HashMap<String, String> extended_attributes;
-            if (lexer.consume_specific('['))
-                extended_attributes = parse_extended_attributes();
-            bool optional = lexer.consume_specific("optional");
-            if (optional)
-                consume_whitespace();
-            auto type = parse_type();
-            bool variadic = lexer.consume_specific("..."sv);
-            consume_whitespace();
-            auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')' || ch == '='; });
-            Parameter parameter = { move(type), move(name), optional, {}, extended_attributes, variadic };
-            consume_whitespace();
-            if (variadic) {
-                // Variadic parameters must be last and do not have default values.
-                parameters.append(move(parameter));
-                break;
-            }
-            if (lexer.next_is(')')) {
-                parameters.append(move(parameter));
-                break;
-            }
-            if (lexer.next_is('=') && optional) {
-                assert_specific('=');
-                consume_whitespace();
-                auto default_value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')'; });
-                parameter.optional_default_value = default_value;
-            }
-            parameters.append(move(parameter));
-            if (lexer.next_is(')'))
-                break;
-            assert_specific(',');
-            consume_whitespace();
-        }
-        return parameters;
-    };
-
-    // https://webidl.spec.whatwg.org/#dfn-special-operation
-    // A special operation is a getter, setter or deleter.
-    enum class IsSpecialOperation {
-        No,
-        Yes,
-    };
-
-    auto parse_function = [&](HashMap<String, String>& extended_attributes, IsSpecialOperation is_special_operation = IsSpecialOperation::No) {
-        bool static_ = false;
-        if (lexer.consume_specific("static")) {
-            static_ = true;
-            consume_whitespace();
-        }
-
-        auto return_type = parse_type();
-        consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '('; });
-        consume_whitespace();
-        assert_specific('(');
-        auto parameters = parse_parameters();
-        assert_specific(')');
-        consume_whitespace();
-        assert_specific(';');
-
-        Function function { move(return_type), name, move(parameters), move(extended_attributes) };
-
-        // "Defining a special operation with an identifier is equivalent to separating the special operation out into its own declaration without an identifier."
-        if (is_special_operation == IsSpecialOperation::No || (is_special_operation == IsSpecialOperation::Yes && !name.is_empty())) {
-            if (!static_)
-                interface->functions.append(function);
-            else
-                interface->static_functions.append(function);
-        }
-
-        return function;
-    };
-
-    auto parse_constructor = [&] {
-        assert_string("constructor");
-        consume_whitespace();
-        assert_specific('(');
-        auto parameters = parse_parameters();
-        assert_specific(')');
-        consume_whitespace();
-        assert_specific(';');
-
-        interface->constructors.append(Constructor { interface->name, move(parameters) });
-    };
-
-    auto parse_stringifier = [&](HashMap<String, String>& extended_attributes) {
-        assert_string("stringifier");
-        consume_whitespace();
-        interface->has_stringifier = true;
-        if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
-            parse_attribute(extended_attributes);
-            interface->stringifier_attribute = interface->attributes.last().name;
-        } else {
-            assert_specific(';');
-        }
-    };
-
-    auto parse_iterable = [&]() {
-        assert_string("iterable");
-        assert_specific('<');
-        auto first_type = parse_type();
-        if (lexer.next_is(',')) {
-            if (interface->supports_indexed_properties())
-                report_parsing_error("Interfaces with a pair iterator must not supported indexed properties.", filename, input, lexer.tell());
-
-            assert_specific(',');
-            consume_whitespace();
-            auto second_type = parse_type();
-            interface->pair_iterator_types = Tuple { move(first_type), move(second_type) };
-        } else {
-            if (!interface->supports_indexed_properties())
-                report_parsing_error("Interfaces with a value iterator must supported indexed properties.", filename, input, lexer.tell());
-
-            interface->value_iterator_type = move(first_type);
-        }
-        assert_specific('>');
-        assert_specific(';');
-    };
-
-    auto parse_getter = [&](HashMap<String, String>& extended_attributes) {
-        assert_string("getter");
-        consume_whitespace();
-        auto function = parse_function(extended_attributes, IsSpecialOperation::Yes);
-
-        if (function.parameters.size() != 1)
-            report_parsing_error(String::formatted("Named/indexed property getters must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
-
-        auto& identifier = function.parameters.first();
-
-        if (identifier.type->nullable)
-            report_parsing_error("identifier's type must not be nullable.", filename, input, lexer.tell());
-
-        if (identifier.optional)
-            report_parsing_error("identifier must not be optional.", filename, input, lexer.tell());
-
-        // FIXME: Disallow variadic functions once they're supported.
-
-        if (identifier.type->name == "DOMString") {
-            if (interface->named_property_getter.has_value())
-                report_parsing_error("An interface can only have one named property getter.", filename, input, lexer.tell());
-
-            interface->named_property_getter = move(function);
-        } else if (identifier.type->name == "unsigned long") {
-            if (interface->indexed_property_getter.has_value())
-                report_parsing_error("An interface can only have one indexed property getter.", filename, input, lexer.tell());
-
-            interface->indexed_property_getter = move(function);
-        } else {
-            report_parsing_error(String::formatted("Named/indexed property getter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name), filename, input, lexer.tell());
-        }
-    };
-
-    auto parse_setter = [&](HashMap<String, String>& extended_attributes) {
-        assert_string("setter");
-        consume_whitespace();
-        auto function = parse_function(extended_attributes, IsSpecialOperation::Yes);
-
-        if (function.parameters.size() != 2)
-            report_parsing_error(String::formatted("Named/indexed property setters must have only 2 parameters, got {} parameter(s).", function.parameters.size()), filename, input, lexer.tell());
-
-        auto& identifier = function.parameters.first();
-
-        if (identifier.type->nullable)
-            report_parsing_error("identifier's type must not be nullable.", filename, input, lexer.tell());
-
-        if (identifier.optional)
-            report_parsing_error("identifier must not be optional.", filename, input, lexer.tell());
-
-        // FIXME: Disallow variadic functions once they're supported.
-
-        if (identifier.type->name == "DOMString") {
-            if (interface->named_property_setter.has_value())
-                report_parsing_error("An interface can only have one named property setter.", filename, input, lexer.tell());
-
-            if (!interface->named_property_getter.has_value())
-                report_parsing_error("A named property setter must be accompanied by a named property getter.", filename, input, lexer.tell());
-
-            interface->named_property_setter = move(function);
-        } else if (identifier.type->name == "unsigned long") {
-            if (interface->indexed_property_setter.has_value())
-                report_parsing_error("An interface can only have one indexed property setter.", filename, input, lexer.tell());
-
-            if (!interface->indexed_property_getter.has_value())
-                report_parsing_error("An indexed property setter must be accompanied by an indexed property getter.", filename, input, lexer.tell());
-
-            interface->indexed_property_setter = move(function);
-        } else {
-            report_parsing_error(String::formatted("Named/indexed property setter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name), filename, input, lexer.tell());
-        }
-    };
-
-    auto parse_deleter = [&](HashMap<String, String>& extended_attributes) {
-        assert_string("deleter");
-        consume_whitespace();
-        auto function = parse_function(extended_attributes, IsSpecialOperation::Yes);
-
-        if (function.parameters.size() != 1)
-            report_parsing_error(String::formatted("Named property deleter must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
-
-        auto& identifier = function.parameters.first();
-
-        if (identifier.type->nullable)
-            report_parsing_error("identifier's type must not be nullable.", filename, input, lexer.tell());
-
-        if (identifier.optional)
-            report_parsing_error("identifier must not be optional.", filename, input, lexer.tell());
-
-        // FIXME: Disallow variadic functions once they're supported.
-
-        if (identifier.type->name == "DOMString") {
-            if (interface->named_property_deleter.has_value())
-                report_parsing_error("An interface can only have one named property deleter.", filename, input, lexer.tell());
-
-            if (!interface->named_property_getter.has_value())
-                report_parsing_error("A named property deleter must be accompanied by a named property getter.", filename, input, lexer.tell());
-
-            interface->named_property_deleter = move(function);
-        } else {
-            report_parsing_error(String::formatted("Named property deleter's identifier's type must be 'DOMString', got '{}'.", identifier.type->name), filename, input, lexer.tell());
-        }
-    };
-
-    auto parse_non_interface_entities = [&](bool allow_interface) {
-        auto parse_dictionary = [&] {
-            assert_string("dictionary");
-            consume_whitespace();
-
-            Dictionary dictionary {};
-
-            auto name = lexer.consume_until([](auto ch) { return isspace(ch); });
-            consume_whitespace();
-
-            if (lexer.consume_specific(':')) {
-                consume_whitespace();
-                dictionary.parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
-                consume_whitespace();
-            }
-            assert_specific('{');
-
-            for (;;) {
-                consume_whitespace();
-
-                if (lexer.consume_specific('}')) {
-                    consume_whitespace();
-                    assert_specific(';');
-                    break;
-                }
-
-                bool required = false;
-                HashMap<String, String> extended_attributes;
-
-                if (lexer.consume_specific("required")) {
-                    required = true;
-                    consume_whitespace();
-                    if (lexer.consume_specific('['))
-                        extended_attributes = parse_extended_attributes();
-                }
-
-                auto type = parse_type();
-                consume_whitespace();
-
-                auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
-                consume_whitespace();
-
-                Optional<StringView> default_value;
-
-                if (lexer.consume_specific('=')) {
-                    VERIFY(!required);
-                    consume_whitespace();
-                    default_value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
-                    consume_whitespace();
-                }
-
-                assert_specific(';');
-
-                DictionaryMember member {
-                    required,
-                    move(type),
-                    name,
-                    move(extended_attributes),
-                    Optional<String>(move(default_value)),
-                };
-                dictionary.members.append(move(member));
-            }
-
-            // dictionary members need to be evaluated in lexicographical order
-            quick_sort(dictionary.members, [&](auto& one, auto& two) {
-                return one.name < two.name;
-            });
-
-            interface->dictionaries.set(name, move(dictionary));
-            consume_whitespace();
-        };
-
-        auto parse_enumeration = [&] {
-            assert_string("enum");
-            consume_whitespace();
-
-            Enumeration enumeration {};
-
-            auto name = lexer.consume_until([](auto ch) { return isspace(ch); });
-            consume_whitespace();
-
-            assert_specific('{');
-
-            bool first = true;
-            for (; !lexer.is_eof();) {
-                consume_whitespace();
-                if (lexer.next_is('}'))
-                    break;
-                if (!first) {
-                    assert_specific(',');
-                    consume_whitespace();
-                }
-
-                assert_specific('"');
-                auto string = lexer.consume_until('"');
-                assert_specific('"');
-                consume_whitespace();
-
-                if (enumeration.values.contains(string))
-                    report_parsing_error(String::formatted("Enumeration {} contains duplicate member '{}'", name, string), filename, input, lexer.tell());
-                else
-                    enumeration.values.set(string);
-
-                if (first)
-                    enumeration.first_member = move(string);
-
-                first = false;
-            }
-
-            consume_whitespace();
-            assert_specific('}');
-            assert_specific(';');
-
-            HashTable<String> names_already_seen;
-            for (auto& entry : enumeration.values)
-                enumeration.translated_cpp_names.set(entry, convert_enumeration_value_to_cpp_enum_member(entry, names_already_seen));
-
-            interface->enumerations.set(name, move(enumeration));
-            consume_whitespace();
-        };
-
-        while (!lexer.is_eof()) {
-            if (lexer.next_is("dictionary"))
-                parse_dictionary();
-            else if (lexer.next_is("enum"))
-                parse_enumeration();
-            else if ((allow_interface && !lexer.next_is("interface")) || !allow_interface)
-                report_parsing_error("expected 'enum' or 'dictionary'", filename, input, lexer.tell());
-            else
-                break;
-        }
-    };
-
-    parse_non_interface_entities(true);
-
-    if (lexer.consume_specific("interface")) {
-        consume_whitespace();
-        interface->name = lexer.consume_until([](auto ch) { return isspace(ch); });
-        consume_whitespace();
-        if (lexer.consume_specific(':')) {
-            consume_whitespace();
-            interface->parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
-            consume_whitespace();
-        }
-        assert_specific('{');
-
-        for (;;) {
-            HashMap<String, String> extended_attributes;
-
-            consume_whitespace();
-
-            if (lexer.consume_specific('}')) {
-                consume_whitespace();
-                assert_specific(';');
-                break;
-            }
-
-            if (lexer.consume_specific('[')) {
-                extended_attributes = parse_extended_attributes();
-                if (!interface->has_unscopable_member && extended_attributes.contains("Unscopable"))
-                    interface->has_unscopable_member = true;
-            }
-
-            if (lexer.next_is("constructor")) {
-                parse_constructor();
-                continue;
-            }
-
-            if (lexer.next_is("const")) {
-                parse_constant();
-                continue;
-            }
-
-            if (lexer.next_is("stringifier")) {
-                parse_stringifier(extended_attributes);
-                continue;
-            }
-
-            if (lexer.next_is("iterable")) {
-                parse_iterable();
-                continue;
-            }
-
-            if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
-                parse_attribute(extended_attributes);
-                continue;
-            }
-
-            if (lexer.next_is("getter")) {
-                parse_getter(extended_attributes);
-                continue;
-            }
-
-            if (lexer.next_is("setter")) {
-                parse_setter(extended_attributes);
-                continue;
-            }
-
-            if (lexer.next_is("deleter")) {
-                parse_deleter(extended_attributes);
-                continue;
-            }
-
-            parse_function(extended_attributes);
-        }
-
-        interface->wrapper_class = String::formatted("{}Wrapper", interface->name);
-        interface->wrapper_base_class = String::formatted("{}Wrapper", interface->parent_name.is_empty() ? String::empty() : interface->parent_name);
-        interface->constructor_class = String::formatted("{}Constructor", interface->name);
-        interface->prototype_class = String::formatted("{}Prototype", interface->name);
-        interface->prototype_base_class = String::formatted("{}Prototype", interface->parent_name.is_empty() ? "Object" : interface->parent_name);
-        consume_whitespace();
-    }
-
-    parse_non_interface_entities(false);
-
-    for (auto& import : imports) {
-        // FIXME: Instead of copying every imported entity into the current interface, query imports directly
-        for (auto& dictionary : import.dictionaries)
-            interface->dictionaries.set(dictionary.key, dictionary.value);
-
-        for (auto& enumeration : import.enumerations) {
-            auto enumeration_copy = enumeration.value;
-            enumeration_copy.is_original_definition = false;
-            interface->enumerations.set(enumeration.key, move(enumeration_copy));
-        }
-    }
-    interface->imported_modules = move(imports);
-
-    return interface;
-}
-
-static bool is_wrappable_type(Type const& type)
-{
-    if (type.name == "EventTarget")
-        return true;
-    if (type.name == "Node")
-        return true;
-    if (type.name == "Document")
-        return true;
-    if (type.name == "Text")
-        return true;
-    if (type.name == "DocumentType")
-        return true;
-    if (type.name.ends_with("Element"))
-        return true;
-    if (type.name.ends_with("Event"))
-        return true;
-    if (type.name == "ImageData")
-        return true;
-    if (type.name == "Window")
-        return true;
-    if (type.name == "Range")
-        return true;
-    if (type.name == "Selection")
-        return true;
-    if (type.name == "Attribute")
-        return true;
-    if (type.name == "NamedNodeMap")
-        return true;
-    if (type.name == "TextMetrics")
-        return true;
-    return false;
-}
-
-static StringView sequence_storage_type_to_cpp_storage_type_name(SequenceStorageType sequence_storage_type)
-{
-    switch (sequence_storage_type) {
-    case SequenceStorageType::Vector:
-        return "Vector"sv;
-    case SequenceStorageType::MarkedVector:
-        return "JS::MarkedVector"sv;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
-static CppType idl_type_name_to_cpp_type(Type const& type)
-{
-    if (is_wrappable_type(type)) {
-        if (type.nullable)
-            return { .name = String::formatted("RefPtr<{}>", type.name), .sequence_storage_type = SequenceStorageType::Vector };
-
-        return { .name = String::formatted("NonnullRefPtr<{}>", type.name), .sequence_storage_type = SequenceStorageType::Vector };
-    }
-
-    if (type.is_string())
-        return { .name = "String", .sequence_storage_type = SequenceStorageType::Vector };
-
-    if (type.name == "double" && !type.nullable)
-        return { .name = "double", .sequence_storage_type = SequenceStorageType::Vector };
-
-    if (type.name == "boolean" && !type.nullable)
-        return { .name = "bool", .sequence_storage_type = SequenceStorageType::Vector };
-
-    if (type.name == "unsigned long" && !type.nullable)
-        return { .name = "u32", .sequence_storage_type = SequenceStorageType::Vector };
-
-    if (type.name == "unsigned short" && !type.nullable)
-        return { .name = "u16", .sequence_storage_type = SequenceStorageType::Vector };
-
-    if (type.name == "long" && !type.nullable)
-        return { .name = "i32", .sequence_storage_type = SequenceStorageType::Vector };
-
-    if (type.name == "any")
-        return { .name = "JS::Value", .sequence_storage_type = SequenceStorageType::MarkedVector };
-
-    if (type.name == "sequence") {
-        auto& parameterized_type = verify_cast<ParameterizedType>(type);
-        auto& sequence_type = parameterized_type.parameters.first();
-        auto sequence_cpp_type = idl_type_name_to_cpp_type(sequence_type);
-        auto storage_type_name = sequence_storage_type_to_cpp_storage_type_name(sequence_cpp_type.sequence_storage_type);
-
-        if (sequence_cpp_type.sequence_storage_type == SequenceStorageType::MarkedVector)
-            return { .name = storage_type_name, .sequence_storage_type = SequenceStorageType::Vector };
-
-        return { .name = String::formatted("{}<{}>", storage_type_name, sequence_cpp_type.name), .sequence_storage_type = SequenceStorageType::Vector };
-    }
-
-    if (type.name == "record") {
-        auto& parameterized_type = verify_cast<ParameterizedType>(type);
-        auto& record_key_type = parameterized_type.parameters[0];
-        auto& record_value_type = parameterized_type.parameters[1];
-        auto record_key_cpp_type = idl_type_name_to_cpp_type(record_key_type);
-        auto record_value_cpp_type = idl_type_name_to_cpp_type(record_value_type);
-
-        return { .name = String::formatted("OrderedHashMap<{}, {}>", record_key_cpp_type.name, record_value_cpp_type.name), .sequence_storage_type = SequenceStorageType::Vector };
-    }
-
-    if (is<UnionType>(type)) {
-        auto& union_type = verify_cast<UnionType>(type);
-        return { .name = union_type.to_variant(), .sequence_storage_type = SequenceStorageType::Vector };
-    }
-
-    dbgln("Unimplemented type for idl_type_name_to_cpp_type: {}{}", type.name, type.nullable ? "?" : "");
-    TODO();
-}
-
-}
-
-static void generate_constructor_header(IDL::Interface const&);
-static void generate_constructor_implementation(IDL::Interface const&);
-static void generate_prototype_header(IDL::Interface const&);
-static void generate_prototype_implementation(IDL::Interface const&);
-static void generate_header(IDL::Interface const&);
-static void generate_implementation(IDL::Interface const&);
-static void generate_iterator_prototype_header(IDL::Interface const&);
-static void generate_iterator_prototype_implementation(IDL::Interface const&);
-static void generate_iterator_header(IDL::Interface const&);
-static void generate_iterator_implementation(IDL::Interface const&);
-
-int main(int argc, char** argv)
-{
-    Core::ArgsParser args_parser;
-    StringView path = nullptr;
-    StringView import_base_path = nullptr;
-    bool header_mode = false;
-    bool implementation_mode = false;
-    bool constructor_header_mode = false;
-    bool constructor_implementation_mode = false;
-    bool prototype_header_mode = false;
-    bool prototype_implementation_mode = false;
-    bool iterator_header_mode = false;
-    bool iterator_implementation_mode = false;
-    bool iterator_prototype_header_mode = false;
-    bool iterator_prototype_implementation_mode = false;
-    args_parser.add_option(header_mode, "Generate the wrapper .h file", "header", 'H');
-    args_parser.add_option(implementation_mode, "Generate the wrapper .cpp file", "implementation", 'I');
-    args_parser.add_option(constructor_header_mode, "Generate the constructor .h file", "constructor-header", 'C');
-    args_parser.add_option(constructor_implementation_mode, "Generate the constructor .cpp file", "constructor-implementation", 'O');
-    args_parser.add_option(prototype_header_mode, "Generate the prototype .h file", "prototype-header", 'P');
-    args_parser.add_option(prototype_implementation_mode, "Generate the prototype .cpp file", "prototype-implementation", 'R');
-    args_parser.add_option(iterator_header_mode, "Generate the iterator wrapper .h file", "iterator-header", 0);
-    args_parser.add_option(iterator_implementation_mode, "Generate the iterator wrapper .cpp file", "iterator-implementation", 0);
-    args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0);
-    args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0);
-    args_parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
-        .help_string = "Add a header search path passed to the compiler",
-        .long_name = "header-include-path",
-        .short_name = 'i',
-        .value_name = "path",
-        .accept_value = [&](char const* s) {
-            s_header_search_paths.append(s);
-            return true;
-        },
-    });
-    args_parser.add_positional_argument(path, "IDL file", "idl-file");
-    args_parser.add_positional_argument(import_base_path, "Import base path", "import-base-path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
-
-    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
-        warnln("Failed to open {}: {}", path, file_or_error.error());
-        return 1;
-    }
-
-    LexicalPath lexical_path(path);
-    auto& namespace_ = lexical_path.parts_view().at(lexical_path.parts_view().size() - 2);
-
-    auto data = file_or_error.value()->read_all();
-
-    if (import_base_path.is_null())
-        import_base_path = lexical_path.dirname();
-
-    auto interface = IDL::parse_interface(path, data, import_base_path);
-
-    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "Encoding", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "IntersectionObserver", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "XHR", "URL")) {
-        StringBuilder builder;
-        builder.append(namespace_);
-        builder.append("::");
-        builder.append(interface->name);
-        interface->fully_qualified_name = builder.to_string();
-    } else {
-        interface->fully_qualified_name = interface->name;
-    }
-
-    if constexpr (WRAPPER_GENERATOR_DEBUG) {
-        dbgln("Attributes:");
-        for (auto& attribute : interface->attributes) {
-            dbgln("  {}{}{} {}",
-                attribute.readonly ? "readonly " : "",
-                attribute.type->name,
-                attribute.type->nullable ? "?" : "",
-                attribute.name);
-        }
-
-        dbgln("Functions:");
-        for (auto& function : interface->functions) {
-            dbgln("  {}{} {}",
-                function.return_type->name,
-                function.return_type->nullable ? "?" : "",
-                function.name);
-            for (auto& parameter : function.parameters) {
-                dbgln("    {}{} {}",
-                    parameter.type->name,
-                    parameter.type->nullable ? "?" : "",
-                    parameter.name);
-            }
-        }
-
-        dbgln("Static Functions:");
-        for (auto& function : interface->static_functions) {
-            dbgln("  static {}{} {}",
-                function.return_type->name,
-                function.return_type->nullable ? "?" : "",
-                function.name);
-            for (auto& parameter : function.parameters) {
-                dbgln("    {}{} {}",
-                    parameter.type->name,
-                    parameter.type->nullable ? "?" : "",
-                    parameter.name);
-            }
-        }
-    }
-
-    if (header_mode)
-        generate_header(*interface);
-
-    if (implementation_mode)
-        generate_implementation(*interface);
-
-    if (constructor_header_mode)
-        generate_constructor_header(*interface);
-
-    if (constructor_implementation_mode)
-        generate_constructor_implementation(*interface);
-
-    if (prototype_header_mode)
-        generate_prototype_header(*interface);
-
-    if (prototype_implementation_mode)
-        generate_prototype_implementation(*interface);
-
-    if (iterator_header_mode)
-        generate_iterator_header(*interface);
-
-    if (iterator_implementation_mode)
-        generate_iterator_implementation(*interface);
-
-    if (iterator_prototype_header_mode)
-        generate_iterator_prototype_header(*interface);
-
-    if (iterator_prototype_implementation_mode)
-        generate_iterator_prototype_implementation(*interface);
-
-    return 0;
 }
 
 static bool should_emit_wrapper_factory(IDL::Interface const& interface)
@@ -2483,7 +1302,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 )~~~");
 }
 
-static void generate_header(IDL::Interface const& interface)
+void generate_header(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -3447,7 +2266,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> @class_name@::internal_own_pr
     outln("{}", generator.as_string_view());
 }
 
-static void generate_constructor_header(IDL::Interface const& interface)
+void generate_constructor_header(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -3682,7 +2501,7 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
     outln("{}", generator.as_string_view());
 }
 
-static void generate_prototype_header(IDL::Interface const& interface)
+void generate_prototype_header(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -4172,7 +2991,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
     outln("{}", generator.as_string_view());
 }
 
-static void generate_iterator_header(IDL::Interface const& interface)
+void generate_iterator_header(IDL::Interface const& interface)
 {
     VERIFY(interface.pair_iterator_types.has_value());
     StringBuilder builder;
@@ -4297,7 +3116,7 @@ void @wrapper_class@::visit_edges(Cell::Visitor& visitor)
     outln("{}", generator.as_string_view());
 }
 
-static void generate_iterator_prototype_header(IDL::Interface const& interface)
+void generate_iterator_prototype_header(IDL::Interface const& interface)
 {
     VERIFY(interface.pair_iterator_types.has_value());
     StringBuilder builder;
@@ -4411,4 +3230,6 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
 )~~~");
 
     outln("{}", generator.as_string_view());
+}
+
 }
