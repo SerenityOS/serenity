@@ -301,6 +301,7 @@ struct ReadElement<char*, ReadKind::Normal> {
 
     bool operator()(LengthModifier length_modifier, GenericLexer& input_lexer, va_list* ap)
     {
+
         // FIXME: Implement wide strings and such.
         if (length_modifier != LengthModifier::Default)
             return false;
@@ -313,6 +314,8 @@ struct ReadElement<char*, ReadKind::Normal> {
         if (str.is_empty())
             return false;
 
+        if(ap == nullptr)
+            return true;
         memcpy(ptr, str.characters_without_null_termination(), str.length());
         ptr[str.length()] = 0;
 
@@ -597,7 +600,7 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
         case ConversionSpecifier::UseScanList:
             if (!ReadElement<char*, ReadKind::Normal> { scanlist, invert_scanlist }(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Character:
