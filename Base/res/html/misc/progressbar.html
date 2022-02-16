@@ -1,0 +1,56 @@
+<html>
+
+<body bgcolor="#408080" text="#ffffff">
+    <input type=button id=button1 value="Set 0%">
+    <br />
+
+    <input type=button id=button2 value="Set 25%">
+    <br />
+
+    <input type=button id=button3 value="Set 50%">
+    <br />
+
+    <input type=button id=button4 value="Set 75%">
+    <br />
+
+    <input type=button id=button5 value="Set 100%">
+    <br />
+
+    <progress id="progress" value="25" max="100"></progress>
+    <div style="display: inline-block;">
+        <pre>Progress bar position: <span id=pos></span></pre>
+    </div>
+
+
+    <script>
+        var progressBar = document.getElementById('progress');
+        document.getElementById('pos').innerHTML = progressBar.position;
+
+        document.getElementById('button1').addEventListener('click', function () {
+            progressBar.value = 0;
+            document.getElementById('pos').innerHTML = progressBar.position;
+        });
+
+        document.getElementById('button2').addEventListener('click', function () {
+            progressBar.value = 25;
+            document.getElementById('pos').innerHTML = progressBar.position;
+        });
+
+        document.getElementById('button3').addEventListener('click', function () {
+            progressBar.value = 50;
+            document.getElementById('pos').innerHTML = progressBar.position;
+        });
+
+        document.getElementById('button4').addEventListener('click', function () {
+            progressBar.value = 75;
+            document.getElementById('pos').innerHTML = progressBar.position;
+        });
+
+        document.getElementById('button5').addEventListener('click', function () {
+            progressBar.value = 100;
+            document.getElementById('pos').innerHTML = progressBar.position;
+        });
+    </script>
+</body>
+
+</html>
