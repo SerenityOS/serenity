@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,8 +16,9 @@ bool Zip::find_end_of_central_directory_offset(ReadonlyBytes buffer, size_t& off
         if (buffer.size() < (sizeof(EndOfCentralDirectory) - sizeof(u8*)) + backwards_offset)
             return false;
 
-        auto signature_offset = (buffer.size() - (sizeof(EndOfCentralDirectory) - sizeof(u8*)) - backwards_offset);
-        if (memcmp(buffer.data() + signature_offset, end_of_central_directory_signature, sizeof(end_of_central_directory_signature)) == 0) {
+        auto const signature_offset = (buffer.size() - (sizeof(EndOfCentralDirectory) - sizeof(u8*)) - backwards_offset);
+        if (auto signature = ReadonlyBytes { buffer.data() + signature_offset, EndOfCentralDirectory::signature.size() };
+            signature == EndOfCentralDirectory::signature) {
             offset = signature_offset;
             return true;
         }
@@ -156,7 +158,7 @@ void ZipOutputStream::finish()
         central_directory_record.internal_attributes = 0;
         central_directory_record.external_attributes = member.is_directory ? zip_directory_external_attribute : 0;
         central_directory_record.local_file_header_offset = file_header_offset; // FIXME: we assume the wrapped output stream was never written to before us
-        file_header_offset += sizeof(local_file_header_signature) + (sizeof(LocalFileHeader) - (sizeof(u8*) * 3)) + member.name.length() + member.compressed_data.size();
+        file_header_offset += sizeof(LocalFileHeader::signature) + (sizeof(LocalFileHeader) - (sizeof(u8*) * 3)) + member.name.length() + member.compressed_data.size();
         central_directory_record.name = (const u8*)(member.name.characters());
         central_directory_record.extra_data = nullptr;
         central_directory_record.comment = nullptr;
