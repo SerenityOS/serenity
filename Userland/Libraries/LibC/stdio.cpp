@@ -1279,6 +1279,16 @@ FILE* tmpfile()
     return fdopen(fd, "rw");
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/open_memstream.html
+FILE* open_memstream(char** bufp, size_t* sizep)
+{
+    (void)bufp;
+    (void)sizep;
+
+    dbgln("FIXME: Implement open_memstream()");
+    TODO();
+}
+
 int __freading(FILE* stream)
 {
     ScopedFileLock lock(stream);

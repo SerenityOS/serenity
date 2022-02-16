@@ -99,5 +99,6 @@ FILE* tmpfile(void);
 char* tmpnam(char*);
 FILE* popen(const char* command, const char* type);
 int pclose(FILE*);
+FILE* open_memstream(char** bufp, size_t* sizep);
 
 __END_DECLS
