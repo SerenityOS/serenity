@@ -209,6 +209,7 @@ static wellknown_devices const wellknown_char_devices[] = {
     { makedev(  4,  67), "ttyS3",     0666 }, // mode typo ?
     { makedev(  5,   1), "console",   0666 },
     { makedev(  5,   2), "ptmx",      0666 },
+    { makedev( 10,   0), "mouse0",    0660 },
 };
 // clang-format on
 
@@ -272,10 +273,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
         case 10: {
             if (!is_block_device) {
                 switch (minor_number) {
-                case 0: {
-                    create_devtmpfs_char_device("/dev/mouse0", 0660, 10, 0);
-                    break;
-                }
                 case 183: {
                     create_devtmpfs_char_device("/dev/hwrng", 0660, 10, 183);
                     break;
