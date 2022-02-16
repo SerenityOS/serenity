@@ -1,0 +1,704 @@
+From 3caa443bfde1562b4f09c5a3636f3277d687cbfc Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Wed, 16 Feb 2022 21:05:55 +0300
+Subject: [PATCH 3/9] Update hotspot native modules to support Serenity
+
+---
+ src/hotspot/os/posix/os_posix.cpp             | 23 +++++++++++-
+ src/hotspot/os/posix/signals_posix.cpp        | 18 +++++++++
+ src/hotspot/share/code/codeHeapState.cpp      |  4 +-
+ src/hotspot/share/compiler/disassembler.cpp   |  2 +-
+ src/hotspot/share/gc/g1/g1FromCardCache.cpp   |  2 +-
+ .../share/gc/shared/blockOffsetTable.cpp      |  2 +-
+ .../share/gc/shared/jvmFlagConstraintsGC.cpp  |  2 +-
+ src/hotspot/share/memory/heap.cpp             |  4 +-
+ .../memory/metaspace/metaspaceCommon.cpp      |  4 +-
+ src/hotspot/share/memory/virtualspace.cpp     |  6 ++-
+ src/hotspot/share/prims/jvmtiExport.cpp       | 14 +++----
+ .../flags/jvmFlagConstraintsRuntime.cpp       |  4 +-
+ src/hotspot/share/runtime/frame.cpp           |  2 +-
+ src/hotspot/share/runtime/os.cpp              | 12 +++++-
+ src/hotspot/share/runtime/os.hpp              |  2 +-
+ src/hotspot/share/runtime/perfMemory.cpp      |  2 +-
+ src/hotspot/share/runtime/semaphore.hpp       |  4 +-
+ .../share/utilities/globalDefinitions.hpp     | 27 ++++++++++++++
+ .../share/utilities/globalDefinitions_gcc.hpp | 10 ++---
+ src/hotspot/share/utilities/ostream.cpp       |  4 +-
+ .../share/utilities/tableStatistics.cpp       | 37 ++++++++++---------
+ 21 files changed, 131 insertions(+), 54 deletions(-)
+
+diff --git a/src/hotspot/os/posix/os_posix.cpp b/src/hotspot/os/posix/os_posix.cpp
+index ae058dd34..200bfc091 100644
+--- a/src/hotspot/os/posix/os_posix.cpp
++++ b/src/hotspot/os/posix/os_posix.cpp
+@@ -65,7 +65,9 @@
+ #include <sys/wait.h>
+ #include <time.h>
+ #include <unistd.h>
++#ifndef SERENITY
+ #include <utmpx.h>
++#endif
+ 
+ #ifdef __APPLE__
+   #include <crt_externs.h>
+@@ -272,7 +274,12 @@ static int util_posix_fallocate(int fd, off_t offset, off_t len) {
+   }
+   return -1;
+ #else
++#ifndef SERENITY
+   return posix_fallocate(fd, offset, len);
++#else
++  // YOLO
++  return 0;
++#endif
+ #endif
+ }
+ 
+@@ -418,6 +425,7 @@ void os::Posix::print_load_average(outputStream* st) {
+ // unfortunately it does not work on macOS and Linux because the utx chain has no entry
+ // for reboot at least on my test machines
+ void os::Posix::print_uptime_info(outputStream* st) {
++#ifndef SERENITY
+   int bootsec = -1;
+   int currsec = time(NULL);
+   struct utmpx* ent;
+@@ -432,6 +440,9 @@ void os::Posix::print_uptime_info(outputStream* st) {
+   if (bootsec != -1) {
+     os::print_dhm(st, "OS uptime:", (long) (currsec-bootsec));
+   }
++#else
++    st->print("OS uptime: not implemented");
++#endif
+ }
+ 
+ static void print_rlimit(outputStream* st, const char* msg,
+@@ -470,7 +481,9 @@ void os::Posix::print_rlimit_info(outputStream* st) {
+ 
+   print_rlimit(st, ", THREADS", RLIMIT_THREADS);
+ #else
++#ifndef SERENITY
+   print_rlimit(st, ", NPROC", RLIMIT_NPROC);
++#endif
+ #endif
+ 
+   print_rlimit(st, ", NOFILE", RLIMIT_NOFILE);
+@@ -638,7 +651,11 @@ void os::dll_unload(void *lib) {
+ }
+ 
+ jlong os::lseek(int fd, jlong offset, int whence) {
++#ifdef SERENITY
++  return (jlong) ::lseek(fd, offset, whence);
++#else
+   return (jlong) BSD_ONLY(::lseek) NOT_BSD(::lseek64)(fd, offset, whence);
++#endif
+ }
+ 
+ int os::fsync(int fd) {
+@@ -646,7 +663,11 @@ int os::fsync(int fd) {
+ }
+ 
+ int os::ftruncate(int fd, jlong length) {
+-   return BSD_ONLY(::ftruncate) NOT_BSD(::ftruncate64)(fd, length);
++#ifdef SERENITY
++  return ftruncate(fd, length);
++#else
++  return BSD_ONLY(::ftruncate) NOT_BSD(::ftruncate64)(fd, length);
++#endif
+ }
+ 
+ const char* os::get_current_directory(char *buf, size_t buflen) {
+diff --git a/src/hotspot/os/posix/signals_posix.cpp b/src/hotspot/os/posix/signals_posix.cpp
+index c2e5d50bb..c728eb522 100644
+--- a/src/hotspot/os/posix/signals_posix.cpp
++++ b/src/hotspot/os/posix/signals_posix.cpp
+@@ -552,6 +552,8 @@ public:
+ #define JVM_HANDLE_XXX_SIGNAL JVM_handle_aix_signal
+ #elif defined(LINUX)
+ #define JVM_HANDLE_XXX_SIGNAL JVM_handle_linux_signal
++#elif defined(SERENITY)
++#define JVM_HANDLE_XXX_SIGNAL JVM_handle_serenity_signal
+ #else
+ #error who are you?
+ #endif
+@@ -913,6 +915,7 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
+   const struct {
+     int sig; int code; const char* s_code; const char* s_desc;
+   } t1 [] = {
++#ifndef SERENITY
+     { SIGILL,  ILL_ILLOPC,   "ILL_ILLOPC",   "Illegal opcode." },
+     { SIGILL,  ILL_ILLOPN,   "ILL_ILLOPN",   "Illegal operand." },
+     { SIGILL,  ILL_ILLADR,   "ILL_ILLADR",   "Illegal addressing mode." },
+@@ -921,6 +924,7 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
+     { SIGILL,  ILL_PRVREG,   "ILL_PRVREG",   "Privileged register." },
+     { SIGILL,  ILL_COPROC,   "ILL_COPROC",   "Coprocessor error." },
+     { SIGILL,  ILL_BADSTK,   "ILL_BADSTK",   "Internal stack error." },
++#endif
+ #if defined(IA64) && defined(LINUX)
+     { SIGILL,  ILL_BADIADDR, "ILL_BADIADDR", "Unimplemented instruction address" },
+     { SIGILL,  ILL_BREAK,    "ILL_BREAK",    "Application Break instruction" },
+@@ -933,8 +937,10 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
+     { SIGFPE,  FPE_FLTRES,   "FPE_FLTRES",   "Floating-point inexact result." },
+     { SIGFPE,  FPE_FLTINV,   "FPE_FLTINV",   "Invalid floating-point operation." },
+     { SIGFPE,  FPE_FLTSUB,   "FPE_FLTSUB",   "Subscript out of range." },
++#ifndef SERENITY
+     { SIGSEGV, SEGV_MAPERR,  "SEGV_MAPERR",  "Address not mapped to object." },
+     { SIGSEGV, SEGV_ACCERR,  "SEGV_ACCERR",  "Invalid permissions for mapped object." },
++#endif
+ #if defined(AIX)
+     // no explanation found what keyerr would be
+     { SIGSEGV, SEGV_KEYERR,  "SEGV_KEYERR",  "key error" },
+@@ -942,11 +948,13 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
+ #if defined(IA64) && !defined(AIX)
+     { SIGSEGV, SEGV_PSTKOVF, "SEGV_PSTKOVF", "Paragraph stack overflow" },
+ #endif
++#ifndef SERENITY
+     { SIGBUS,  BUS_ADRALN,   "BUS_ADRALN",   "Invalid address alignment." },
+     { SIGBUS,  BUS_ADRERR,   "BUS_ADRERR",   "Nonexistent physical address." },
+     { SIGBUS,  BUS_OBJERR,   "BUS_OBJERR",   "Object-specific hardware error." },
+     { SIGTRAP, TRAP_BRKPT,   "TRAP_BRKPT",   "Process breakpoint." },
+     { SIGTRAP, TRAP_TRACE,   "TRAP_TRACE",   "Process trace trap." },
++#endif
+     { SIGCHLD, CLD_EXITED,   "CLD_EXITED",   "Child has exited." },
+     { SIGCHLD, CLD_KILLED,   "CLD_KILLED",   "Child has terminated abnormally and did not create a core file." },
+     { SIGCHLD, CLD_DUMPED,   "CLD_DUMPED",   "Child has terminated abnormally and created a core file." },
+@@ -967,11 +975,17 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
+   const struct {
+     int code; const char* s_code; const char* s_desc;
+   } t2 [] = {
++    { SIGTRAP,      "SIGTRAP",   "SIGTRAP FIXME" },
++    { SIGBUS,       "SIGBUS",   "SIGBUS FIXME" },
++    { SIGILL,       "SIGILL",   "Illegal opcode FIXME." },
++    { SIGSEGV,      "SIGSEGV",  "SIGSEGV FIXME" },
++#ifndef SERENITY
+     { SI_USER,      "SI_USER",     "Signal sent by kill()." },
+     { SI_QUEUE,     "SI_QUEUE",    "Signal sent by the sigqueue()." },
+     { SI_TIMER,     "SI_TIMER",    "Signal generated by expiration of a timer set by timer_settime()." },
+     { SI_ASYNCIO,   "SI_ASYNCIO",  "Signal generated by completion of an asynchronous I/O request." },
+     { SI_MESGQ,     "SI_MESGQ",    "Signal generated by arrival of a message on an empty message queue." },
++#endif
+     // Linux specific
+ #ifdef SI_TKILL
+     { SI_TKILL,     "SI_TKILL",    "Signal sent by tkill (pthread_kill)" },
+@@ -1028,9 +1042,13 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
+ 
+ bool os::signal_sent_by_kill(const void* siginfo) {
+   const siginfo_t* const si = (const siginfo_t*)siginfo;
++#ifdef SERENITY
++  return false;
++#else
+   return si->si_code == SI_USER || si->si_code == SI_QUEUE
+ #ifdef SI_TKILL
+          || si->si_code == SI_TKILL
++#endif
+ #endif
+   ;
+ }
+diff --git a/src/hotspot/share/code/codeHeapState.cpp b/src/hotspot/share/code/codeHeapState.cpp
+index 30948e4f7..4586859f7 100644
+--- a/src/hotspot/share/code/codeHeapState.cpp
++++ b/src/hotspot/share/code/codeHeapState.cpp
+@@ -1142,8 +1142,8 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, size_t granular
+       ast->print_cr("ZombieBlocks     = %8d. These are HeapBlocks which could not be identified as CodeBlobs.", nBlocks_zomb);
+       ast->cr();
+       ast->print_cr("Segment start          = " INTPTR_FORMAT ", used space      = " SIZE_FORMAT_W(8)"k", p2i(low_bound), size/K);
+-      ast->print_cr("Segment end (used)     = " INTPTR_FORMAT ", remaining space = " SIZE_FORMAT_W(8)"k", p2i(low_bound) + size, (res_size - size)/K);
+-      ast->print_cr("Segment end (reserved) = " INTPTR_FORMAT ", reserved space  = " SIZE_FORMAT_W(8)"k", p2i(low_bound) + res_size, res_size/K);
++      ast->print_cr("Segment end (used)     = " SIZE_FORMAT ", remaining space = " SIZE_FORMAT_W(8)"k", p2i(low_bound) + size, (res_size - size)/K);
++      ast->print_cr("Segment end (reserved) = " SIZE_FORMAT ", reserved space  = " SIZE_FORMAT_W(8)"k", p2i(low_bound) + res_size, res_size/K);
+       ast->cr();
+       ast->print_cr("latest allocated compilation id = %d", latest_compilation_id);
+       ast->print_cr("highest observed compilation id = %d", highest_compilation_id);
+diff --git a/src/hotspot/share/compiler/disassembler.cpp b/src/hotspot/share/compiler/disassembler.cpp
+index bd9272a8e..b95bc09e0 100644
+--- a/src/hotspot/share/compiler/disassembler.cpp
++++ b/src/hotspot/share/compiler/disassembler.cpp
+@@ -596,7 +596,7 @@ void decode_env::print_address(address adr) {
+       if (desc != NULL) {
+         st->print("Stub::%s", desc->name());
+         if (desc->begin() != adr) {
+-          st->print(INTX_FORMAT_W(+) " " PTR_FORMAT, adr - desc->begin(), p2i(adr));
++          st->print(SIZE_FORMAT " " PTR_FORMAT, adr - desc->begin(), p2i(adr));
+         } else if (WizardMode) {
+           st->print(" " PTR_FORMAT, p2i(adr));
+         }
+diff --git a/src/hotspot/share/gc/g1/g1FromCardCache.cpp b/src/hotspot/share/gc/g1/g1FromCardCache.cpp
+index 0a566af9d..bc2515ae9 100644
+--- a/src/hotspot/share/gc/g1/g1FromCardCache.cpp
++++ b/src/hotspot/share/gc/g1/g1FromCardCache.cpp
+@@ -73,7 +73,7 @@ void G1FromCardCache::invalidate(uint start_idx, size_t new_num_regions) {
+ void G1FromCardCache::print(outputStream* out) {
+   for (uint i = 0; i < num_par_rem_sets(); i++) {
+     for (uint j = 0; j < _max_reserved_regions; j++) {
+-      out->print_cr("_from_card_cache[%u][%u] = " SIZE_FORMAT ".",
++      out->print_cr("_from_card_cache[%u][%u] = " UINTX_FORMAT ".",
+                     i, j, at(i, j));
+     }
+   }
+diff --git a/src/hotspot/share/gc/shared/blockOffsetTable.cpp b/src/hotspot/share/gc/shared/blockOffsetTable.cpp
+index bea66b65d..6cf736e9f 100644
+--- a/src/hotspot/share/gc/shared/blockOffsetTable.cpp
++++ b/src/hotspot/share/gc/shared/blockOffsetTable.cpp
+@@ -55,7 +55,7 @@ BlockOffsetSharedArray::BlockOffsetSharedArray(MemRegion reserved,
+   _offset_array = (u_char*)_vs.low_boundary();
+   resize(init_word_size);
+   log_trace(gc, bot)("BlockOffsetSharedArray::BlockOffsetSharedArray: ");
+-  log_trace(gc, bot)("   rs.base(): " INTPTR_FORMAT " rs.size(): " INTPTR_FORMAT " rs end(): " INTPTR_FORMAT,
++  log_trace(gc, bot)("   rs.base(): " INTPTR_FORMAT " rs.size(): " SIZE_FORMAT " rs end(): " INTPTR_FORMAT,
+                      p2i(rs.base()), rs.size(), p2i(rs.base() + rs.size()));
+   log_trace(gc, bot)("   _vs.low_boundary(): " INTPTR_FORMAT "  _vs.high_boundary(): " INTPTR_FORMAT,
+                      p2i(_vs.low_boundary()), p2i(_vs.high_boundary()));
+diff --git a/src/hotspot/share/gc/shared/jvmFlagConstraintsGC.cpp b/src/hotspot/share/gc/shared/jvmFlagConstraintsGC.cpp
+index 83f0f8e43..ee53a5049 100644
+--- a/src/hotspot/share/gc/shared/jvmFlagConstraintsGC.cpp
++++ b/src/hotspot/share/gc/shared/jvmFlagConstraintsGC.cpp
+@@ -324,7 +324,7 @@ JVMFlag::Error HeapBaseMinAddressConstraintFunc(size_t value, bool verbose) {
+   if (UseCompressedOops && FLAG_IS_ERGO(MaxHeapSize) && (value > (max_uintx - MaxHeapSize))) {
+     JVMFlag::printError(verbose,
+                         "HeapBaseMinAddress (" SIZE_FORMAT ") or MaxHeapSize (" SIZE_FORMAT ") is too large. "
+-                        "Sum of them must be less than or equal to maximum of size_t (" SIZE_FORMAT ")\n",
++                        "Sum of them must be less than or equal to maximum of size_t (" UINTX_FORMAT ")\n",
+                         value, MaxHeapSize, max_uintx);
+     return JVMFlag::VIOLATES_CONSTRAINT;
+   }
+diff --git a/src/hotspot/share/memory/heap.cpp b/src/hotspot/share/memory/heap.cpp
+index 60e2ad451..729e2fe3d 100644
+--- a/src/hotspot/share/memory/heap.cpp
++++ b/src/hotspot/share/memory/heap.cpp
+@@ -215,6 +215,7 @@ bool CodeHeap::reserve(ReservedSpace rs, size_t committed_size, size_t segment_s
+   os::trace_page_sizes(_name, c_size, rs.size(), page_size,
+                        rs.base(), rs.size());
+   if (!_memory.initialize(rs, c_size)) {
++    printf("Failed _memory.initialize\n");
+     return false;
+   }
+ 
+@@ -229,6 +230,7 @@ bool CodeHeap::reserve(ReservedSpace rs, size_t committed_size, size_t segment_s
+   // reserve space for _segmap
+   ReservedSpace seg_rs(reserved_segments_size);
+   if (!_segmap.initialize(seg_rs, committed_segments_size)) {
++    printf("Failed _segmap.initialize\n");
+     return false;
+   }
+ 
+@@ -813,7 +815,7 @@ void CodeHeap::verify() {
+     //---<  all free block memory must have been invalidated  >---
+     for(FreeBlock* b = _freelist; b != NULL; b = b->link()) {
+       for (char* c = (char*)b + sizeof(FreeBlock); c < (char*)b + segments_to_size(b->length()); c++) {
+-        assert(*c == (char)badCodeHeapNewVal, "FreeBlock@" PTR_FORMAT "(" PTR_FORMAT ") not invalidated @byte %d", p2i(b), b->length(), (int)(c - (char*)b));
++        assert(*c == (char)badCodeHeapNewVal, "FreeBlock@" PTR_FORMAT "(" SIZE_FORMAT ") not invalidated @byte %d", p2i(b), b->length(), (int)(c - (char*)b));
+       }
+     }
+ 
+diff --git a/src/hotspot/share/memory/metaspace/metaspaceCommon.cpp b/src/hotspot/share/memory/metaspace/metaspaceCommon.cpp
+index 96673621b..a32a30764 100644
+--- a/src/hotspot/share/memory/metaspace/metaspaceCommon.cpp
++++ b/src/hotspot/share/memory/metaspace/metaspaceCommon.cpp
+@@ -114,9 +114,9 @@ void print_human_readable_size(outputStream* st, size_t byte_size, size_t scale,
+     }
+   } else {
+     if (scale == 1) {
+-      st->print("%*" PRIuPTR " bytes", width, byte_size);
++      st->print("%*lx bytes", width, byte_size);
+     } else if (scale == BytesPerWord) {
+-      st->print("%*" PRIuPTR " words", width, byte_size / BytesPerWord);
++      st->print("%*lx words", width, byte_size / BytesPerWord);
+     } else {
+       const char* display_unit = display_unit_for_scale(scale);
+       float display_value = (float) byte_size / scale;
+diff --git a/src/hotspot/share/memory/virtualspace.cpp b/src/hotspot/share/memory/virtualspace.cpp
+index f1b1f2d72..dd45286de 100644
+--- a/src/hotspot/share/memory/virtualspace.cpp
++++ b/src/hotspot/share/memory/virtualspace.cpp
+@@ -354,7 +354,7 @@ void ReservedHeapSpace::establish_noaccess_prefix() {
+         fatal("cannot protect protection page");
+       }
+       log_debug(gc, heap, coops)("Protected page at the reserved heap base: "
+-                                 PTR_FORMAT " / " INTX_FORMAT " bytes",
++                                 PTR_FORMAT " / " SIZE_FORMAT " bytes",
+                                  p2i(_base),
+                                  _noaccess_prefix);
+       assert(CompressedOops::use_implicit_null_checks() == true, "not initialized?");
+@@ -672,7 +672,7 @@ bool VirtualSpace::initialize(ReservedSpace rs, size_t committed_size) {
+ }
+ 
+ bool VirtualSpace::initialize_with_granularity(ReservedSpace rs, size_t committed_size, size_t max_commit_granularity) {
+-  if(!rs.is_reserved()) return false;  // allocation failed.
++  if(!rs.is_reserved()) { printf("allocation failed\n"); return false; }  // allocation failed.
+   assert(_low_boundary == NULL, "VirtualSpace already initialized");
+   assert(max_commit_granularity > 0, "Granularity must be non-zero.");
+ 
+@@ -712,6 +712,7 @@ bool VirtualSpace::initialize_with_granularity(ReservedSpace rs, size_t committe
+   // commit to initial size
+   if (committed_size > 0) {
+     if (!expand_by(committed_size)) {
++      printf("expand_by failed\n");
+       return false;
+     }
+   }
+@@ -837,6 +838,7 @@ static bool commit_expanded(char* start, size_t size, size_t alignment, bool pre
+ */
+ bool VirtualSpace::expand_by(size_t bytes, bool pre_touch) {
+   if (uncommitted_size() < bytes) {
++    printf("uncommitted_size < bytes (%lu)\n", bytes);
+     return false;
+   }
+ 
+diff --git a/src/hotspot/share/prims/jvmtiExport.cpp b/src/hotspot/share/prims/jvmtiExport.cpp
+index dd0f1885c..c261bef42 100644
+--- a/src/hotspot/share/prims/jvmtiExport.cpp
++++ b/src/hotspot/share/prims/jvmtiExport.cpp
+@@ -1195,7 +1195,7 @@ void JvmtiExport::post_raw_breakpoint(JavaThread *thread, Method* method, addres
+     if (!ets->breakpoint_posted() && ets->is_enabled(JVMTI_EVENT_BREAKPOINT)) {
+       ThreadState old_os_state = thread->osthread()->get_state();
+       thread->osthread()->set_state(BREAKPOINTED);
+-      EVT_TRACE(JVMTI_EVENT_BREAKPOINT, ("[%s] Evt Breakpoint sent %s.%s @ " INTX_FORMAT,
++      EVT_TRACE(JVMTI_EVENT_BREAKPOINT, ("[%s] Evt Breakpoint sent %s.%s @ " SSIZE_FORMAT,
+                      JvmtiTrace::safe_get_thread_name(thread),
+                      (mh() == NULL) ? "NULL" : mh()->klass_name()->as_C_string(),
+                      (mh() == NULL) ? "NULL" : mh()->name()->as_C_string(),
+@@ -1703,7 +1703,7 @@ void JvmtiExport::post_single_step(JavaThread *thread, Method* method, address l
+   for (JvmtiEnvThreadState* ets = it.first(); ets != NULL; ets = it.next(ets)) {
+     ets->compare_and_set_current_location(mh(), location, JVMTI_EVENT_SINGLE_STEP);
+     if (!ets->single_stepping_posted() && ets->is_enabled(JVMTI_EVENT_SINGLE_STEP)) {
+-      EVT_TRACE(JVMTI_EVENT_SINGLE_STEP, ("[%s] Evt Single Step sent %s.%s @ " INTX_FORMAT,
++      EVT_TRACE(JVMTI_EVENT_SINGLE_STEP, ("[%s] Evt Single Step sent %s.%s @ " SSIZE_FORMAT,
+                     JvmtiTrace::safe_get_thread_name(thread),
+                     (mh() == NULL) ? "NULL" : mh()->klass_name()->as_C_string(),
+                     (mh() == NULL) ? "NULL" : mh()->name()->as_C_string(),
+@@ -1742,7 +1742,7 @@ void JvmtiExport::post_exception_throw(JavaThread *thread, Method* method, addre
+       if (ets->is_enabled(JVMTI_EVENT_EXCEPTION) && (exception != NULL)) {
+ 
+         EVT_TRACE(JVMTI_EVENT_EXCEPTION,
+-                     ("[%s] Evt Exception thrown sent %s.%s @ " INTX_FORMAT,
++                     ("[%s] Evt Exception thrown sent %s.%s @ " SSIZE_FORMAT,
+                       JvmtiTrace::safe_get_thread_name(thread),
+                       (mh() == NULL) ? "NULL" : mh()->klass_name()->as_C_string(),
+                       (mh() == NULL) ? "NULL" : mh()->name()->as_C_string(),
+@@ -1818,7 +1818,7 @@ void JvmtiExport::notice_unwind_due_to_exception(JavaThread *thread, Method* met
+     return;
+   }
+   EVT_TRIG_TRACE(JVMTI_EVENT_EXCEPTION_CATCH,
+-                    ("[%s] Trg unwind_due_to_exception triggered %s.%s @ %s" INTX_FORMAT " - %s",
++                    ("[%s] Trg unwind_due_to_exception triggered %s.%s @ %s" SSIZE_FORMAT " - %s",
+                      JvmtiTrace::safe_get_thread_name(thread),
+                      (mh() == NULL) ? "NULL" : mh()->klass_name()->as_C_string(),
+                      (mh() == NULL) ? "NULL" : mh()->name()->as_C_string(),
+@@ -1855,7 +1855,7 @@ void JvmtiExport::notice_unwind_due_to_exception(JavaThread *thread, Method* met
+       for (JvmtiEnvThreadState* ets = it.first(); ets != NULL; ets = it.next(ets)) {
+         if (ets->is_enabled(JVMTI_EVENT_EXCEPTION_CATCH) && (exception_handle() != NULL)) {
+           EVT_TRACE(JVMTI_EVENT_EXCEPTION_CATCH,
+-                     ("[%s] Evt ExceptionCatch sent %s.%s @ " INTX_FORMAT,
++                     ("[%s] Evt ExceptionCatch sent %s.%s @ " SSIZE_FORMAT,
+                       JvmtiTrace::safe_get_thread_name(thread),
+                       (mh() == NULL) ? "NULL" : mh()->klass_name()->as_C_string(),
+                       (mh() == NULL) ? "NULL" : mh()->name()->as_C_string(),
+@@ -1931,7 +1931,7 @@ void JvmtiExport::post_field_access(JavaThread *thread, Method* method,
+   JvmtiEnvThreadStateIterator it(state);
+   for (JvmtiEnvThreadState* ets = it.first(); ets != NULL; ets = it.next(ets)) {
+     if (ets->is_enabled(JVMTI_EVENT_FIELD_ACCESS)) {
+-      EVT_TRACE(JVMTI_EVENT_FIELD_ACCESS, ("[%s] Evt Field Access event sent %s.%s @ " INTX_FORMAT,
++      EVT_TRACE(JVMTI_EVENT_FIELD_ACCESS, ("[%s] Evt Field Access event sent %s.%s @ " SSIZE_FORMAT,
+                      JvmtiTrace::safe_get_thread_name(thread),
+                      (mh() == NULL) ? "NULL" : mh()->klass_name()->as_C_string(),
+                      (mh() == NULL) ? "NULL" : mh()->name()->as_C_string(),
+@@ -2078,7 +2078,7 @@ void JvmtiExport::post_field_modification(JavaThread *thread, Method* method,
+   for (JvmtiEnvThreadState* ets = it.first(); ets != NULL; ets = it.next(ets)) {
+     if (ets->is_enabled(JVMTI_EVENT_FIELD_MODIFICATION)) {
+       EVT_TRACE(JVMTI_EVENT_FIELD_MODIFICATION,
+-                   ("[%s] Evt Field Modification event sent %s.%s @ " INTX_FORMAT,
++                   ("[%s] Evt Field Modification event sent %s.%s @ " SSIZE_FORMAT,
+                     JvmtiTrace::safe_get_thread_name(thread),
+                     (mh() == NULL) ? "NULL" : mh()->klass_name()->as_C_string(),
+                     (mh() == NULL) ? "NULL" : mh()->name()->as_C_string(),
+diff --git a/src/hotspot/share/runtime/flags/jvmFlagConstraintsRuntime.cpp b/src/hotspot/share/runtime/flags/jvmFlagConstraintsRuntime.cpp
+index 5b09758e0..079961377 100644
+--- a/src/hotspot/share/runtime/flags/jvmFlagConstraintsRuntime.cpp
++++ b/src/hotspot/share/runtime/flags/jvmFlagConstraintsRuntime.cpp
+@@ -154,8 +154,8 @@ JVMFlag::Error NUMAInterleaveGranularityConstraintFunc(size_t value, bool verbos
+ 
+   if (value < min || value > max) {
+     JVMFlag::printError(verbose,
+-                        "size_t NUMAInterleaveGranularity=" UINTX_FORMAT " is outside the allowed range [ " UINTX_FORMAT
+-                        " ... " UINTX_FORMAT " ]\n", value, min, max);
++                        "size_t NUMAInterleaveGranularity=" SIZE_FORMAT " is outside the allowed range [ " SIZE_FORMAT
++                        " ... " SIZE_FORMAT " ]\n", value, min, max);
+     return JVMFlag::VIOLATES_CONSTRAINT;
+   }
+ 
+diff --git a/src/hotspot/share/runtime/frame.cpp b/src/hotspot/share/runtime/frame.cpp
+index 528fb904c..0e15bed35 100644
+--- a/src/hotspot/share/runtime/frame.cpp
++++ b/src/hotspot/share/runtime/frame.cpp
+@@ -625,7 +625,7 @@ void frame::print_on_error(outputStream* st, char* buf, int buflen, bool verbose
+             st->print("@%s", buf);
+           }
+         }
+-        st->print(" (%d bytes) @ " PTR_FORMAT " [" PTR_FORMAT "+" INTPTR_FORMAT "]",
++        st->print(" (%d bytes) @ " PTR_FORMAT " [" PTR_FORMAT "+" SIZE_FORMAT "]",
+                   m->code_size(), p2i(_pc), p2i(_cb->code_begin()), _pc - _cb->code_begin());
+ #if INCLUDE_JVMCI
+         if (cm->is_nmethod()) {
+diff --git a/src/hotspot/share/runtime/os.cpp b/src/hotspot/share/runtime/os.cpp
+index 9b8e667f9..0fb28ed6b 100644
+--- a/src/hotspot/share/runtime/os.cpp
++++ b/src/hotspot/share/runtime/os.cpp
+@@ -155,7 +155,7 @@ char* os::iso8601_time(jlong milliseconds_since_19700101, char* buffer, size_t b
+   // No offset when dealing with UTC
+   time_t UTC_to_local = 0;
+   if (!utc) {
+-#if defined(_ALLBSD_SOURCE) || defined(_GNU_SOURCE)
++#if (defined(_ALLBSD_SOURCE) || defined(_GNU_SOURCE)) && !defined(SERENITY)
+     UTC_to_local = -(time_struct.tm_gmtoff);
+ #elif defined(_WINDOWS)
+     long zone;
+@@ -896,7 +896,12 @@ bool os::print_function_and_library_name(outputStream* st,
+   //  is worse than (raw) C-heap allocation in that case).
+   char* p = buf;
+   if (p == NULL) {
++// #ifndef SERENITY
+     p = (char*)::alloca(O_BUFLEN);
++// #else
++//     char buffer_vla[O_BUFLEN];
++//     p = buffer_vla;
++// #endif
+     buflen = O_BUFLEN;
+   }
+   int offset = 0;
+@@ -1375,7 +1380,6 @@ ssize_t os::read(int fd, void *buf, unsigned int nBytes) {
+ bool os::set_boot_path(char fileSep, char pathSep) {
+   const char* home = Arguments::get_java_home();
+   int home_len = (int)strlen(home);
+-
+   struct stat st;
+ 
+   // modular image if "modules" jimage exists
+@@ -1502,6 +1506,7 @@ size_t os::page_size_for_region_unaligned(size_t region_size, size_t min_pages)
+ }
+ 
+ static const char* errno_to_string (int e, bool short_text) {
++#ifndef SERENITY
+   #define ALL_SHARED_ENUMS(X) \
+     X(E2BIG, "Argument list too long") \
+     X(EACCES, "Permission denied") \
+@@ -1579,6 +1584,9 @@ static const char* errno_to_string (int e, bool short_text) {
+     X(ETXTBSY, "Text file busy") \
+     X(EWOULDBLOCK, "Operation would block") \
+     X(EXDEV, "Cross-device link")
++#else
++  #define ALL_SHARED_ENUMS(X) ENUMERATE_ERRNO_CODES(X)
++#endif
+ 
+   #define DEFINE_ENTRY(e, text) { e, #e, text },
+ 
+diff --git a/src/hotspot/share/runtime/os.hpp b/src/hotspot/share/runtime/os.hpp
+index 7eaaa9db9..50591f707 100644
+--- a/src/hotspot/share/runtime/os.hpp
++++ b/src/hotspot/share/runtime/os.hpp
+@@ -468,7 +468,7 @@ class os: AllStatic {
+   // need special-case handling of the primordial thread if it attaches
+   // to the VM.
+   static bool is_primordial_thread(void)
+-#if defined(_WINDOWS) || defined(BSD)
++#if defined(_WINDOWS) || defined(BSD) || defined(SERENITY)
+     // No way to identify the primordial thread.
+     { return false; }
+ #else
+diff --git a/src/hotspot/share/runtime/perfMemory.cpp b/src/hotspot/share/runtime/perfMemory.cpp
+index 5f4804adc..33c771368 100644
+--- a/src/hotspot/share/runtime/perfMemory.cpp
++++ b/src/hotspot/share/runtime/perfMemory.cpp
+@@ -96,7 +96,7 @@ void PerfMemory::initialize() {
+   size_t capacity = align_up(PerfDataMemorySize,
+                              os::vm_allocation_granularity());
+ 
+-  log_debug(perf, memops)("PerfDataMemorySize = " SIZE_FORMAT ","
++  log_debug(perf, memops)("PerfDataMemorySize = " INTX_FORMAT ","
+                           " os::vm_allocation_granularity = %d,"
+                           " adjusted size = " SIZE_FORMAT,
+                           PerfDataMemorySize,
+diff --git a/src/hotspot/share/runtime/semaphore.hpp b/src/hotspot/share/runtime/semaphore.hpp
+index 0e19c101d..873f8f084 100644
+--- a/src/hotspot/share/runtime/semaphore.hpp
++++ b/src/hotspot/share/runtime/semaphore.hpp
+@@ -28,12 +28,14 @@
+ #include "memory/allocation.hpp"
+ #include "utilities/globalDefinitions.hpp"
+ 
+-#if defined(LINUX) || defined(AIX)
++#if defined(LINUX) || defined(AIX) || defined(SERENITY)
+ # include "semaphore_posix.hpp"
+ #elif defined(BSD)
+ # include "semaphore_bsd.hpp"
+ #elif defined(_WINDOWS)
+ # include "semaphore_windows.hpp"
++//#elif defined(SERENITY)
++//# include "semaphore_serenity.hpp"
+ #else
+ # error "No semaphore implementation provided for this OS"
+ #endif
+diff --git a/src/hotspot/share/utilities/globalDefinitions.hpp b/src/hotspot/share/utilities/globalDefinitions.hpp
+index 082a3272c..f115e4e21 100644
+--- a/src/hotspot/share/utilities/globalDefinitions.hpp
++++ b/src/hotspot/share/utilities/globalDefinitions.hpp
+@@ -130,8 +130,14 @@ class oopDesc;
+ #define INTPTR_FORMAT "0x%016" PRIxPTR
+ #define PTR_FORMAT    "0x%016" PRIxPTR
+ #else   // !_LP64
++
++#ifndef SERENITY
+ #define INTPTR_FORMAT "0x%08"  PRIxPTR
+ #define PTR_FORMAT    "0x%08"  PRIxPTR
++#else
++#define INTPTR_FORMAT "0x%08x"
++#define PTR_FORMAT    "0x%08x"
++#endif
+ #endif  // _LP64
+ 
+ // Format pointers without leading zeros
+@@ -139,12 +145,23 @@ class oopDesc;
+ 
+ #define INTPTR_FORMAT_W(width)   "%" #width PRIxPTR
+ 
++
++#ifndef SERENITY
+ #define SSIZE_FORMAT             "%"   PRIdPTR
+ #define SIZE_FORMAT              "%"   PRIuPTR
+ #define SIZE_FORMAT_HEX          "0x%" PRIxPTR
+ #define SSIZE_FORMAT_W(width)    "%"   #width PRIdPTR
+ #define SIZE_FORMAT_W(width)     "%"   #width PRIuPTR
+ #define SIZE_FORMAT_HEX_W(width) "0x%" #width PRIxPTR
++#else // FIXME: figure out why sizeof(size_t) != sizeof(unsigned int)
++#define SSIZE_FORMAT             "%ld"
++#define SIZE_FORMAT              "%lx"
++#define SIZE_FORMAT_HEX          "0x%lx"
++#define SSIZE_FORMAT_W(width)    "%"   #width "ld"
++#define SIZE_FORMAT_W(width)     "%"   #width "lx"
++#define SIZE_FORMAT_HEX_W(width) "0x%" #width "lx"
++#endif
++
+ 
+ #define INTX_FORMAT           "%" PRIdPTR
+ #define UINTX_FORMAT          "%" PRIuPTR
+@@ -1209,5 +1226,15 @@ template<typename K> bool primitive_equals(const K& k0, const K& k1) {
+   return k0 == k1;
+ }
+ 
++#ifdef SERENITY
++#define MAX(a,b)          ((a)>(b)?(a):(b))
++#define MAX2(a,b)          ((a)>(b)?(a):(b))
++#endif
++
++#ifdef SERENITY
++typedef void ucontext_t;
++
++# define alloca(size)	__builtin_alloca (size)
++#endif
+ 
+ #endif // SHARE_UTILITIES_GLOBALDEFINITIONS_HPP
+diff --git a/src/hotspot/share/utilities/globalDefinitions_gcc.hpp b/src/hotspot/share/utilities/globalDefinitions_gcc.hpp
+index 30cca9ee7..90abf34c4 100644
+--- a/src/hotspot/share/utilities/globalDefinitions_gcc.hpp
++++ b/src/hotspot/share/utilities/globalDefinitions_gcc.hpp
+@@ -48,12 +48,14 @@
+ #include <limits.h>
+ #include <errno.h>
+ 
+-#if defined(LINUX) || defined(_ALLBSD_SOURCE)
++#if defined(LINUX) || defined(_ALLBSD_SOURCE) || defined(SERENITY)
+ #include <inttypes.h>
+ #include <signal.h>
+ #ifndef __OpenBSD__
++#ifndef SERENITY
+ #include <ucontext.h>
+ #endif
++#endif
+ #ifdef __APPLE__
+   #include <AvailabilityMacros.h>
+   #include <mach/mach.h>
+@@ -109,14 +111,8 @@ typedef uint32_t juint;
+ typedef uint64_t julong;
+ 
+ // checking for nanness
+-#if defined(__APPLE__)
+-inline int g_isnan(double f) { return isnan(f); }
+-#elif defined(LINUX) || defined(_ALLBSD_SOURCE)
+ inline int g_isnan(float  f) { return isnan(f); }
+ inline int g_isnan(double f) { return isnan(f); }
+-#else
+-#error "missing platform-specific definition here"
+-#endif
+ 
+ #define CAN_USE_NAN_DEFINE 1
+ 
+diff --git a/src/hotspot/share/utilities/ostream.cpp b/src/hotspot/share/utilities/ostream.cpp
+index 04995064f..b4c55066b 100644
+--- a/src/hotspot/share/utilities/ostream.cpp
++++ b/src/hotspot/share/utilities/ostream.cpp
+@@ -285,7 +285,7 @@ void outputStream::print_data(void* data, size_t len, bool with_ascii) {
+   size_t limit = (len + 16) / 16 * 16;
+   for (size_t i = 0; i < limit; ++i) {
+     if (i % 16 == 0) {
+-      indent().print(INTPTR_FORMAT_W(07) ":", i);
++      indent().print(SIZE_FORMAT_W(07) ":", i);
+     }
+     if (i % 2 == 0) {
+       print(" ");
+@@ -1065,7 +1065,7 @@ bufferedStream::~bufferedStream() {
+ 
+ #ifndef PRODUCT
+ 
+-#if defined(LINUX) || defined(AIX) || defined(_ALLBSD_SOURCE)
++#if defined(LINUX) || defined(AIX) || defined(_ALLBSD_SOURCE) || defined(SERENITY)
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ #include <netinet/in.h>
+diff --git a/src/hotspot/share/utilities/tableStatistics.cpp b/src/hotspot/share/utilities/tableStatistics.cpp
+index 0e05802ff..8351b4332 100644
+--- a/src/hotspot/share/utilities/tableStatistics.cpp
++++ b/src/hotspot/share/utilities/tableStatistics.cpp
+@@ -127,23 +127,24 @@ TableStatistics::TableStatistics(TableRateStatistics& rate_stats, NumberSeq summ
+ TableStatistics::~TableStatistics() { }
+ 
+ void TableStatistics::print(outputStream* st, const char *table_name) {
+-  st->print_cr("%s statistics:", table_name);
+-  st->print_cr("Number of buckets       : %9" PRIuPTR " = %9" PRIuPTR
+-               " bytes, each " SIZE_FORMAT,
+-              _number_of_buckets, _bucket_bytes, _bucket_size);
+-  st->print_cr("Number of entries       : %9" PRIuPTR " = %9" PRIuPTR
+-               " bytes, each " SIZE_FORMAT,
+-               _number_of_entries, _entry_bytes, _entry_size);
+-  if (_literal_bytes != 0) {
+-    float literal_avg = (_number_of_entries <= 0) ? 0 : (_literal_bytes / _number_of_entries);
+-    st->print_cr("Number of literals      : %9" PRIuPTR " = %9" PRIuPTR
+-                 " bytes, avg %7.3f",
+-                 _number_of_entries, _literal_bytes, literal_avg);
+-  }
+-  st->print_cr("Total footprint         : %9s = %9" PRIuPTR " bytes", "", _total_footprint);
+-  st->print_cr("Average bucket size     : %9.3f", _average_bucket_size);
+-  st->print_cr("Variance of bucket size : %9.3f", _variance_of_bucket_size);
+-  st->print_cr("Std. dev. of bucket size: %9.3f", _stddev_of_bucket_size);
+-  st->print_cr("Maximum bucket size     : %9" PRIuPTR, _maximum_bucket_size);
++  // FIXME
++  // st->print_cr("%s statistics:", table_name);
++  // st->print_cr("Number of buckets       : %9" PRIuPTR " = %9" PRIuPTR
++  //              " bytes, each " SIZE_FORMAT,
++  //             _number_of_buckets, _bucket_bytes, _bucket_size);
++  // st->print_cr("Number of entries       : %9" PRIuPTR " = %9" PRIuPTR
++  //              " bytes, each " SIZE_FORMAT,
++  //              _number_of_entries, _entry_bytes, _entry_size);
++  // if (_literal_bytes != 0) {
++  //   float literal_avg = (_number_of_entries <= 0) ? 0 : (_literal_bytes / _number_of_entries);
++  //   st->print_cr("Number of literals      : %9" PRIuPTR " = %9" PRIuPTR
++  //                " bytes, avg %7.3f",
++  //                _number_of_entries, _literal_bytes, literal_avg);
++  // }
++  // st->print_cr("Total footprint         : %9s = %9" PRIuPTR " bytes", "", _total_footprint);
++  // st->print_cr("Average bucket size     : %9.3f", _average_bucket_size);
++  // st->print_cr("Variance of bucket size : %9.3f", _variance_of_bucket_size);
++  // st->print_cr("Std. dev. of bucket size: %9.3f", _stddev_of_bucket_size);
++  // st->print_cr("Maximum bucket size     : %9" PRIuPTR, _maximum_bucket_size);
+ }
+ 
+-- 
+2.25.1
+

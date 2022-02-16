@@ -1,0 +1,718 @@
+From 73bc0b17b859ac4225b558e6c7a58be0d6338d9b Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Wed, 16 Feb 2022 21:06:23 +0300
+Subject: [PATCH 4/9] Update java.base native modules to support Serenity
+
+---
+ .../nio/ch/SocketOptionRegistry.java.template |  23 ++++
+ src/java.base/share/native/libjava/jni_util.c |  14 +-
+ src/java.base/share/native/libjli/jli_util.h  |   3 +
+ .../share/native/libverify/check_code.c       |   2 +-
+ src/java.base/share/native/libzip/zip_util.c  |   2 +-
+ .../sun/nio/fs/UnixConstants.java.template    | 128 ++++++++++++++++++
+ .../native/libjava/ProcessHandleImpl_unix.c   |   2 +-
+ .../unix/native/libjava/TimeZone_md.c         |   4 +-
+ .../unix/native/libjava/io_util_md.c          |   2 +-
+ .../unix/native/libjava/io_util_md.h          |   6 +-
+ src/java.base/unix/native/libjsig/jsig.c      |   4 +
+ .../unix/native/libnet/Inet4AddressImpl.c     |   3 +
+ .../unix/native/libnet/Inet6AddressImpl.c     |   4 +
+ .../unix/native/libnet/NetworkInterface.c     |  11 +-
+ .../unix/native/libnet/net_util_md.h          |   4 +
+ .../unix/native/libnio/MappedMemoryUtils.c    |   7 +
+ .../native/libnio/ch/DatagramDispatcher.c     |   4 +
+ .../unix/native/libnio/ch/FileChannelImpl.c   |   3 +
+ .../native/libnio/ch/FileDispatcherImpl.c     |   7 +-
+ src/java.base/unix/native/libnio/ch/FileKey.c |   2 +-
+ src/java.base/unix/native/libnio/ch/IOUtil.c  |   5 +
+ .../unix/native/libnio/ch/NativeThread.c      |   2 +-
+ src/java.base/unix/native/libnio/ch/Net.c     |   2 +-
+ .../native/libnio/fs/UnixNativeDispatcher.c   |  20 ++-
+ 24 files changed, 242 insertions(+), 22 deletions(-)
+
+diff --git a/src/java.base/share/classes/sun/nio/ch/SocketOptionRegistry.java.template b/src/java.base/share/classes/sun/nio/ch/SocketOptionRegistry.java.template
+index 0672ced15..eeec84047 100644
+--- a/src/java.base/share/classes/sun/nio/ch/SocketOptionRegistry.java.template
++++ b/src/java.base/share/classes/sun/nio/ch/SocketOptionRegistry.java.template
+@@ -50,6 +50,26 @@
+ #endif
+ #endif
+ 
++#ifdef SERENITY
++#define SO_RCVTIMEO 0
++#define SO_SNDTIMEO 1
++#define SO_TYPE 2
++#define SO_ERROR 3
++#define SO_PEERCRED 4
++#define SO_DEBUG 5
++#define SO_REUSEADDR 6
++#define SO_BINDTODEVICE 7
++#define SO_KEEPALIVE 8
++#define SO_TIMESTAMP 9
++#define SO_BROADCAST 10
++#define SO_SNDBUF 11
++#define SO_RCVBUF 12
++#define SO_LINGER 13
++#define SO_ACCEPTCONN 14
++#define SO_DONTROUTE 15
++#define SO_OOBINLINE 16
++#endif
++
+ /* To be able to name the Java constants the same as the C constants without
+    having the preprocessor rewrite those identifiers, add PREFIX_ to all
+    identifiers matching a C constant. The PREFIX_ is filtered out in the
+@@ -125,6 +145,9 @@ class SocketOptionRegistry {
+ 
+ #ifdef AF_INET6
+             // IPPROTO_IPV6 is 41
++#ifdef SERENITY
++#define IPV6_TCLASS 1
++#endif
+             map.put(new RegistryKey(StandardSocketOptions.PREFIX_IP_TOS,
+                 StandardProtocolFamily.INET6), new OptionKey(41, IPV6_TCLASS));
+             map.put(new RegistryKey(StandardSocketOptions.PREFIX_IP_MULTICAST_IF,
+diff --git a/src/java.base/share/native/libjava/jni_util.c b/src/java.base/share/native/libjava/jni_util.c
+index 6ee8a4228..8bffd30b8 100644
+--- a/src/java.base/share/native/libjava/jni_util.c
++++ b/src/java.base/share/native/libjava/jni_util.c
+@@ -462,19 +462,19 @@ static jstring
+ newString646_US(JNIEnv *env, const char *str)
+ {
+     int len = (int)strlen(str);
+-    jchar buf[512] = {0};
+-    jchar *str1;
++    // jchar buf[512] = {0};
++    // jchar *str1 = buf;
+     jstring result;
+     int i;
+ 
+-    if (len > 512) {
+-        str1 = (jchar *)malloc(len * sizeof(jchar));
++    // if (len > 512) {
++        jchar *str1 = (jchar *)malloc(len * sizeof(jchar));
+         if (str1 == 0) {
+             JNU_ThrowOutOfMemoryError(env, 0);
+             return 0;
+         }
+-    } else
+-        str1 = buf;
++    // } else
++        // str1 = buf;
+ 
+     for (i=0; i<len; i++) {
+         unsigned char c = (unsigned char)str[i];
+@@ -485,7 +485,7 @@ newString646_US(JNIEnv *env, const char *str)
+     }
+ 
+     result = (*env)->NewString(env, str1, len);
+-    if (str1 != buf)
++    // if (str1 != buf)
+         free(str1);
+     return result;
+ }
+diff --git a/src/java.base/share/native/libjli/jli_util.h b/src/java.base/share/native/libjli/jli_util.h
+index 3512b1e96..e60f7581f 100644
+--- a/src/java.base/share/native/libjli/jli_util.h
++++ b/src/java.base/share/native/libjli/jli_util.h
+@@ -108,6 +108,9 @@ JLI_CmdToArgs(char *cmdline);
+ #define _LARGFILE64_SOURCE
+ #define JLI_Lseek                       lseek64
+ #endif
++#ifdef SERENITY
++#define JLI_Lseek                       lseek
++#endif
+ #ifdef MACOSX
+ #define JLI_Lseek                       lseek
+ #endif
+diff --git a/src/java.base/share/native/libverify/check_code.c b/src/java.base/share/native/libverify/check_code.c
+index fca549cfc..e193c3fc3 100644
+--- a/src/java.base/share/native/libverify/check_code.c
++++ b/src/java.base/share/native/libverify/check_code.c
+@@ -934,7 +934,7 @@ static void
+ read_all_code(context_type* context, jclass cb, int num_methods,
+               int** lengths_addr, unsigned char*** code_addr)
+ {
+-    int* lengths;
++    int* lengths = NULL;
+     unsigned char** code;
+     int i;
+ 
+diff --git a/src/java.base/share/native/libzip/zip_util.c b/src/java.base/share/native/libzip/zip_util.c
+index fbbd9d850..eef30b9e4 100644
+--- a/src/java.base/share/native/libzip/zip_util.c
++++ b/src/java.base/share/native/libzip/zip_util.c
+@@ -46,7 +46,7 @@
+ #include "zip_util.h"
+ #include <zlib.h>
+ 
+-#ifdef _ALLBSD_SOURCE
++#if defined(_ALLBSD_SOURCE) || defined(SERENITY)
+ #define off64_t off_t
+ #define mmap64 mmap
+ #endif
+diff --git a/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template b/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template
+index d60283d24..970d2c73f 100644
+--- a/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template
++++ b/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template
+@@ -26,11 +26,130 @@
+ @@END_COPYRIGHT@@
+ 
+ #include <stdio.h>
++
++#ifndef SERENITY
+ #include <errno.h>
++#endif
++
+ #include <unistd.h>
+ #include <fcntl.h>
+ #include <sys/stat.h>
+ 
++#ifdef SERENITY
++
++#define EPERM 0
++#define ENOENT 1
++#define ESRCH 2
++#define EINTR 3
++#define EIO 4
++#define ENXIO 5
++#define E2BIG 6
++#define ENOEXEC 7
++#define EBADF 8
++#define ECHILD 9
++#define EAGAIN 10
++#define ENOMEM 11
++#define EACCES 12
++#define EFAULT 13
++#define ENOTBLK 14
++#define EBUSY 15
++#define EEXIST 16
++#define EXDEV 17
++#define ENODEV 18
++#define ENOTDIR 19
++#define EISDIR 20
++#define EINVAL 21
++#define ENFILE 22
++#define EMFILE 23
++#define ENOTTY 24
++#define ETXTBSY 25
++#define EFBIG 26
++#define ENOSPC 27
++#define ESPIPE 28
++#define EROFS 29
++#define EMLINK 30
++#define EPIPE 31
++#define ERANGE 32
++#define ENAMETOOLONG 33
++#define ELOOP 34
++#define EOVERFLOW 35
++#define EOPNOTSUPP 36
++#define ENOSYS 37
++#define ENOTIMPL 38
++#define EAFNOSUPPORT 39
++#define ENOTSOCK 40
++#define EADDRINUSE 41
++#define ENOTEMPTY 42
++#define EDOM 43
++#define ECONNREFUSED 44
++#define EHOSTDOWN 45
++#define EADDRNOTAVAIL 46
++#define EISCONN 47
++#define ECONNABORTED 48
++#define EALREADY 49
++#define ECONNRESET 50
++#define EDESTADDRREQ 51
++#define EHOSTUNREACH 52
++#define EILSEQ 53
++#define EMSGSIZE 54
++#define ENETDOWN 55
++#define ENETUNREACH 56
++#define ENETRESET 57
++#define ENOBUFS 58
++#define ENOLCK 59
++#define ENOMSG 60
++#define ENOPROTOOPT 61
++#define ENOTCONN 62
++#define ESHUTDOWN 63
++#define ETOOMANYREFS 64
++#define EPROTONOSUPPORT 65
++#define ESOCKTNOSUPPORT 66
++#define EDEADLK 67
++#define ETIMEDOUT 68
++#define EPROTOTYPE 69
++#define EINPROGRESS 70
++#define ENOTHREAD 71
++#define EPROTO 72
++#define ENOTSUP 73
++#define EPFNOSUPPORT 74
++#define EDQUOT 75
++#define EDIRINTOSELF 76
++#define ENOTRECOVERABLE 77
++#define ECANCELED 78
++#define EMAXERRNO 79
++
++
++#define EWOULDBLOCK EMAXERRNO //Serenity doesn't define it
++#define ENODATA EMAXERRNO
++
++#define S_IFMT 0170000
++#define S_IFDIR 0040000
++#define S_IFCHR 0020000
++#define S_IFBLK 0060000
++#define S_IFREG 0100000
++#define S_IFIFO 0010000
++#define S_IFLNK 0120000
++#define S_IFSOCK 0140000
++
++#define S_ISUID 04000
++#define S_ISGID 02000
++#define S_ISVTX 01000
++#define S_IRUSR 0400
++#define S_IWUSR 0200
++#define S_IXUSR 0100
++#define S_IREAD S_IRUSR
++#define S_IWRITE S_IWUSR
++#define S_IEXEC S_IXUSR
++#define S_IRGRP 0040
++#define S_IWGRP 0020
++#define S_IXGRP 0010
++#define S_IROTH 0004
++#define S_IWOTH 0002
++#define S_IXOTH 0001
++
++#define S_IRWXU (S_IRUSR | S_IWUSR | S_IXUSR)
++#endif
++
+ /* To be able to name the Java constants the same as the C constants without
+    having the preprocessor rewrite those identifiers, add PREFIX_ to all
+    identifiers matching a C constant. The PREFIX_ is filtered out in the
+@@ -48,11 +167,20 @@ class UnixConstants {
+     static final int PREFIX_O_CREAT = O_CREAT;
+     static final int PREFIX_O_EXCL = O_EXCL;
+     static final int PREFIX_O_TRUNC = O_TRUNC;
++#ifdef SERENITY  // Serenity doesn't have O_SYNC, so we fake it here
++    static final int PREFIX_O_SYNC = 0;
++#else
+     static final int PREFIX_O_SYNC = O_SYNC;
++#endif
++
+ 
+ #ifndef O_DSYNC
+     // At least FreeBSD doesn't define O_DSYNC
++#ifdef SERENITY
++    static final int PREFIX_O_DSYNC = 0;
++#else
+     static final int PREFIX_O_DSYNC = O_SYNC;
++#endif
+ #else
+     static final int PREFIX_O_DSYNC = O_DSYNC;
+ #endif
+diff --git a/src/java.base/unix/native/libjava/ProcessHandleImpl_unix.c b/src/java.base/unix/native/libjava/ProcessHandleImpl_unix.c
+index d53e88764..eddb5f169 100644
+--- a/src/java.base/unix/native/libjava/ProcessHandleImpl_unix.c
++++ b/src/java.base/unix/native/libjava/ProcessHandleImpl_unix.c
+@@ -488,7 +488,7 @@ void unix_getUserInfo(JNIEnv* env, jobject jinfo, uid_t uid) {
+  * The following functions are common on Solaris, Linux and AIX.
+  */
+ 
+-#if defined (__linux__) || defined(_AIX)
++#if defined (__linux__) || defined(_AIX) || defined(SERENITY)
+ 
+ /*
+  * Returns the children of the requested pid and optionally each parent and
+diff --git a/src/java.base/unix/native/libjava/TimeZone_md.c b/src/java.base/unix/native/libjava/TimeZone_md.c
+index 94dfc207f..2a6c3851a 100644
+--- a/src/java.base/unix/native/libjava/TimeZone_md.c
++++ b/src/java.base/unix/native/libjava/TimeZone_md.c
+@@ -53,7 +53,7 @@ static char *isFileIdentical(char* buf, size_t size, char *pathname);
+ #define filegets        fgets
+ #define fileclose       fclose
+ 
+-#if defined(_ALLBSD_SOURCE)
++#if defined(_ALLBSD_SOURCE) || defined(SERENITY)
+ #define stat64 stat
+ #define lstat64 lstat
+ #define fstat64 fstat
+@@ -75,7 +75,7 @@ static const char popularZones[][4] = {"UTC", "GMT"};
+ static const char *ETC_ENVIRONMENT_FILE = "/etc/environment";
+ #endif
+ 
+-#if defined(__linux__) || defined(MACOSX)
++#if defined(__linux__) || defined(MACOSX) || defined(SERENITY)
+ 
+ /*
+  * Returns a pointer to the zone ID portion of the given zoneinfo file
+diff --git a/src/java.base/unix/native/libjava/io_util_md.c b/src/java.base/unix/native/libjava/io_util_md.c
+index e207c57d4..8afabc544 100644
+--- a/src/java.base/unix/native/libjava/io_util_md.c
++++ b/src/java.base/unix/native/libjava/io_util_md.c
+@@ -30,7 +30,7 @@
+ #include <string.h>
+ #include <unistd.h>
+ 
+-#if defined(__linux__) || defined(_ALLBSD_SOURCE) || defined(_AIX)
++#if defined(__linux__) || defined(_ALLBSD_SOURCE) || defined(_AIX) || defined(SERENITY)
+ #include <sys/ioctl.h>
+ #endif
+ 
+diff --git a/src/java.base/unix/native/libjava/io_util_md.h b/src/java.base/unix/native/libjava/io_util_md.h
+index 3dccf64f4..3e9e7d3b0 100644
+--- a/src/java.base/unix/native/libjava/io_util_md.h
++++ b/src/java.base/unix/native/libjava/io_util_md.h
+@@ -66,7 +66,7 @@ FD getFD(JNIEnv *env, jobject cur, jfieldID fid);
+ #define IO_SetLength handleSetLength
+ #define IO_GetLength handleGetLength
+ 
+-#ifdef _ALLBSD_SOURCE
++#if defined(_ALLBSD_SOURCE) || defined(SERENITY)
+ #define open64 open
+ #define fstat64 fstat
+ #define stat64 stat
+@@ -77,6 +77,10 @@ FD getFD(JNIEnv *env, jobject cur, jfieldID fid);
+ #define IO_Lseek lseek64
+ #endif
+ 
++#ifdef SERENITY
++#define statvfs64 statvfs
++#endif
++
+ /*
+  * On Solaris, the handle field is unused
+  */
+diff --git a/src/java.base/unix/native/libjsig/jsig.c b/src/java.base/unix/native/libjsig/jsig.c
+index 1108b2f9c..d891aab93 100644
+--- a/src/java.base/unix/native/libjsig/jsig.c
++++ b/src/java.base/unix/native/libjsig/jsig.c
+@@ -100,6 +100,10 @@ static sa_handler_t call_os_signal(int sig, sa_handler_t disp,
+                                    bool is_sigset) {
+   sa_handler_t res;
+ 
++#ifdef SERENITY
++#define RTLD_NEXT 0 //stub out RTLD_NEXT
++#endif
++
+   if (os_signal == NULL) {
+     // Deprecation warning first time through
+     printf(HOTSPOT_VM_DISTRO " VM warning: the use of signal() and sigset() "
+diff --git a/src/java.base/unix/native/libnet/Inet4AddressImpl.c b/src/java.base/unix/native/libnet/Inet4AddressImpl.c
+index b165be7ce..be14e35de 100644
+--- a/src/java.base/unix/native/libnet/Inet4AddressImpl.c
++++ b/src/java.base/unix/native/libnet/Inet4AddressImpl.c
+@@ -335,6 +335,7 @@ static jboolean
+ ping4(JNIEnv *env, jint fd, SOCKETADDRESS *sa, SOCKETADDRESS *netif,
+       jint timeout, jint ttl)
+ {
++#ifndef SERENITY
+     jint n, size = 60 * 1024, hlen, tmout2, seq = 1;
+     socklen_t len;
+     unsigned char sendbuf[1500], recvbuf[1500];
+@@ -438,6 +439,8 @@ ping4(JNIEnv *env, jint fd, SOCKETADDRESS *sa, SOCKETADDRESS *netif,
+         timeout -= 1000;
+     } while (timeout > 0);
+     close(fd);
++#endif
++    //FIXME
+     return JNI_FALSE;
+ }
+ 
+diff --git a/src/java.base/unix/native/libnet/Inet6AddressImpl.c b/src/java.base/unix/native/libnet/Inet6AddressImpl.c
+index 058f3d3a7..61460fda8 100644
+--- a/src/java.base/unix/native/libnet/Inet6AddressImpl.c
++++ b/src/java.base/unix/native/libnet/Inet6AddressImpl.c
+@@ -29,7 +29,9 @@
+ #include <sys/time.h>
+ #include <sys/types.h>
+ #include <netinet/in.h>
++#ifndef SERENITY
+ #include <netinet/icmp6.h>
++#endif
+ 
+ #if defined(_ALLBSD_SOURCE)
+ #include <ifaddrs.h>
+@@ -539,6 +541,7 @@ static jboolean
+ ping6(JNIEnv *env, jint fd, SOCKETADDRESS *sa, SOCKETADDRESS *netif,
+       jint timeout, jint ttl)
+ {
++#ifndef SERENITY
+     jint n, size = 60 * 1024, tmout2, seq = 1;
+     socklen_t len;
+     unsigned char sendbuf[1500], recvbuf[1500];
+@@ -643,6 +646,7 @@ ping6(JNIEnv *env, jint fd, SOCKETADDRESS *sa, SOCKETADDRESS *netif,
+         timeout -= 1000;
+     } while (timeout > 0);
+     close(fd);
++#endif
+     return JNI_FALSE;
+ }
+ 
+diff --git a/src/java.base/unix/native/libnet/NetworkInterface.c b/src/java.base/unix/native/libnet/NetworkInterface.c
+index 990bc1bcc..514d1af37 100644
+--- a/src/java.base/unix/native/libnet/NetworkInterface.c
++++ b/src/java.base/unix/native/libnet/NetworkInterface.c
+@@ -43,6 +43,10 @@
+ #include <ifaddrs.h>
+ #endif
+ 
++#if defined(SERENITY)
++#include <ifaddrs.h>
++#endif
++
+ #include "net_util.h"
+ 
+ #include "java_net_InetAddress.h"
+@@ -1664,7 +1668,7 @@ static int getFlags(int sock, const char *ifname, int *flags) {
+ #endif /* _AIX */
+ 
+ /** BSD **/
+-#if defined(_ALLBSD_SOURCE)
++#if defined(_ALLBSD_SOURCE) || defined(SERENITY)
+ 
+ /*
+  * Opens a socket for further ioctl calls. Tries AF_INET socket first and
+@@ -1803,6 +1807,7 @@ static int getMacAddress
+   (JNIEnv *env, const char *ifname, const struct in_addr *addr,
+    unsigned char *buf)
+ {
++#ifndef SERENITY //FIXME
+     struct ifaddrs *ifa0, *ifa;
+     struct sockaddr *saddr;
+     int i;
+@@ -1827,7 +1832,7 @@ static int getMacAddress
+         }
+         freeifaddrs(ifa0);
+     }
+-
++#endif
+     return -1;
+ }
+ 
+@@ -1848,7 +1853,7 @@ static int getMTU(JNIEnv *env, int sock, const char *ifname) {
+ static int getFlags(int sock, const char *ifname, int *flags) {
+     struct ifreq if2;
+     memset((char *)&if2, 0, sizeof(if2));
+-    strncpy(if2.ifr_name, ifname, sizeof(if2.ifr_name) - 1);
++    memcpy(if2.ifr_name, ifname, sizeof(if2.ifr_name) - 1);
+ 
+     if (ioctl(sock, SIOCGIFFLAGS, (char *)&if2) < 0) {
+         return -1;
+diff --git a/src/java.base/unix/native/libnet/net_util_md.h b/src/java.base/unix/native/libnet/net_util_md.h
+index 68835987b..f99b11207 100644
+--- a/src/java.base/unix/native/libnet/net_util_md.h
++++ b/src/java.base/unix/native/libnet/net_util_md.h
+@@ -30,6 +30,10 @@
+ #include <poll.h>
+ #include <sys/socket.h>
+ 
++#ifdef SERENITY
++#include <netinet/in.h>
++#endif
++
+ /************************************************************************
+  * Macros and constants
+  */
+diff --git a/src/java.base/unix/native/libnio/MappedMemoryUtils.c b/src/java.base/unix/native/libnio/MappedMemoryUtils.c
+index e90acd286..850518095 100644
+--- a/src/java.base/unix/native/libnio/MappedMemoryUtils.c
++++ b/src/java.base/unix/native/libnio/MappedMemoryUtils.c
+@@ -58,6 +58,7 @@ JNIEXPORT jboolean JNICALL
+ Java_java_nio_MappedMemoryUtils_isLoaded0(JNIEnv *env, jobject obj, jlong address,
+                                          jlong len, jlong numPages)
+ {
++#ifndef SERENITY
+     jboolean loaded = JNI_TRUE;
+     int result = 0;
+     long i = 0;
+@@ -100,6 +101,9 @@ Java_java_nio_MappedMemoryUtils_isLoaded0(JNIEnv *env, jobject obj, jlong addres
+     }
+     free(vec);
+     return loaded;
++#else
++    return JNI_FALSE; //FIXME
++#endif
+ }
+ 
+ 
+@@ -108,6 +112,9 @@ Java_java_nio_MappedMemoryUtils_load0(JNIEnv *env, jobject obj, jlong address,
+                                      jlong len)
+ {
+     char *a = (char *)jlong_to_ptr(address);
++#ifdef SERENITY
++#define MADV_WILLNEED MADV_NORMAL
++#endif
+     int result = madvise((caddr_t)a, (size_t)len, MADV_WILLNEED);
+     if (result == -1) {
+         JNU_ThrowIOExceptionWithLastError(env, "madvise failed");
+diff --git a/src/java.base/unix/native/libnio/ch/DatagramDispatcher.c b/src/java.base/unix/native/libnio/ch/DatagramDispatcher.c
+index 3979b3417..bf22951d6 100644
+--- a/src/java.base/unix/native/libnio/ch/DatagramDispatcher.c
++++ b/src/java.base/unix/native/libnio/ch/DatagramDispatcher.c
+@@ -37,6 +37,10 @@
+ #include "nio_util.h"
+ #include "sun_nio_ch_DatagramDispatcher.h"
+ 
++#ifndef IOV_MAX
++#define IOV_MAX 1024
++#endif
++
+ JNIEXPORT jint JNICALL
+ Java_sun_nio_ch_DatagramDispatcher_read0(JNIEnv *env, jclass clazz,
+                                          jobject fdo, jlong address, jint len)
+diff --git a/src/java.base/unix/native/libnio/ch/FileChannelImpl.c b/src/java.base/unix/native/libnio/ch/FileChannelImpl.c
+index e0debb09f..aafba703f 100644
+--- a/src/java.base/unix/native/libnio/ch/FileChannelImpl.c
++++ b/src/java.base/unix/native/libnio/ch/FileChannelImpl.c
+@@ -39,6 +39,9 @@
+ #include <sys/uio.h>
+ #define lseek64 lseek
+ #define mmap64 mmap
++#elif defined(SERENITY)
++#define lseek64 lseek
++#define mmap64 mmap
+ #endif
+ 
+ #include "jni.h"
+diff --git a/src/java.base/unix/native/libnio/ch/FileDispatcherImpl.c b/src/java.base/unix/native/libnio/ch/FileDispatcherImpl.c
+index 882146127..ba4c155d8 100644
+--- a/src/java.base/unix/native/libnio/ch/FileDispatcherImpl.c
++++ b/src/java.base/unix/native/libnio/ch/FileDispatcherImpl.c
+@@ -40,7 +40,7 @@
+ #include <sys/ioctl.h>
+ #endif
+ 
+-#if defined(_ALLBSD_SOURCE)
++#if defined(_ALLBSD_SOURCE) || defined(SERENITY)
+ #define lseek64 lseek
+ #define stat64 stat
+ #define flock64 flock
+@@ -54,6 +54,11 @@
+ #define fdatasync fsync
+ #endif
+ 
++#ifdef SERENITY
++#define statvfs64 statvfs
++#define fstatvfs64 fstatvfs
++#endif
++
+ #include "jni.h"
+ #include "jni_util.h"
+ #include "jvm.h"
+diff --git a/src/java.base/unix/native/libnio/ch/FileKey.c b/src/java.base/unix/native/libnio/ch/FileKey.c
+index bdb42a632..a433cdf01 100644
+--- a/src/java.base/unix/native/libnio/ch/FileKey.c
++++ b/src/java.base/unix/native/libnio/ch/FileKey.c
+@@ -30,7 +30,7 @@
+ #include "nio_util.h"
+ #include "sun_nio_ch_FileKey.h"
+ 
+-#ifdef _ALLBSD_SOURCE
++#if defined(_ALLBSD_SOURCE) || defined(SERENITY)
+ #define stat64 stat
+ 
+ #define fstat64 fstat
+diff --git a/src/java.base/unix/native/libnio/ch/IOUtil.c b/src/java.base/unix/native/libnio/ch/IOUtil.c
+index 930137ce0..029cf50da 100644
+--- a/src/java.base/unix/native/libnio/ch/IOUtil.c
++++ b/src/java.base/unix/native/libnio/ch/IOUtil.c
+@@ -167,10 +167,15 @@ Java_sun_nio_ch_IOUtil_fdLimit(JNIEnv *env, jclass this)
+ JNIEXPORT jint JNICALL
+ Java_sun_nio_ch_IOUtil_iovMax(JNIEnv *env, jclass this)
+ {
++    #ifndef SERENITY
+     jlong iov_max = sysconf(_SC_IOV_MAX);
+     if (iov_max == -1)
+         iov_max = 16;
++    
+     return (jint)iov_max;
++    #else
++    return (jint)1024;
++    #endif
+ }
+ 
+ /* Declared in nio_util.h for use elsewhere in NIO */
+diff --git a/src/java.base/unix/native/libnio/ch/NativeThread.c b/src/java.base/unix/native/libnio/ch/NativeThread.c
+index 92dcb9e56..4bf09d03b 100644
+--- a/src/java.base/unix/native/libnio/ch/NativeThread.c
++++ b/src/java.base/unix/native/libnio/ch/NativeThread.c
+@@ -40,7 +40,7 @@
+ #elif defined(_AIX)
+   /* Also defined in net/aix_close.c */
+   #define INTERRUPT_SIGNAL (SIGRTMAX - 1)
+-#elif defined(_ALLBSD_SOURCE)
++#elif defined(_ALLBSD_SOURCE) || defined(SERENITY)
+   /* Also defined in net/bsd_close.c */
+   #define INTERRUPT_SIGNAL SIGIO
+ #else
+diff --git a/src/java.base/unix/native/libnio/ch/Net.c b/src/java.base/unix/native/libnio/ch/Net.c
+index 42a07359d..ca1401861 100644
+--- a/src/java.base/unix/native/libnio/ch/Net.c
++++ b/src/java.base/unix/native/libnio/ch/Net.c
+@@ -701,7 +701,7 @@ JNIEXPORT jint JNICALL
+ Java_sun_nio_ch_Net_blockOrUnblock6(JNIEnv *env, jobject this, jboolean block, jobject fdo,
+                                     jbyteArray group, jint index, jbyteArray source)
+ {
+-#ifdef __APPLE__
++#if defined(__APPLE__) || defined(SERENITY)
+     /* no IPv6 exclude-mode filtering for now */
+     return IOS_UNAVAILABLE;
+ #else
+diff --git a/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c b/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c
+index 9df8be1e6..866762450 100644
+--- a/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c
++++ b/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c
+@@ -57,7 +57,7 @@
+ #include <string.h>
+ #endif
+ 
+-#ifdef _ALLBSD_SOURCE
++#if defined(_ALLBSD_SOURCE) || defined(SERENITY)
+ #include <string.h>
+ 
+ #define stat64 stat
+@@ -1114,6 +1114,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_getgrgid(JNIEnv* env, jclass this, jint gid
+     int retry;
+ 
+     /* initial size of buffer for group record */
++#ifndef SERENITY
+     buflen = (int)sysconf(_SC_GETGR_R_SIZE_MAX);
+     if (buflen == -1)
+         buflen = ENT_BUF_SIZE;
+@@ -1156,6 +1157,16 @@ Java_sun_nio_fs_UnixNativeDispatcher_getgrgid(JNIEnv* env, jclass this, jint gid
+ 
+     } while (retry);
+ 
++#else
++    // FIXME: this leaks memory
++    struct group * g = getgrgid(gid);
++    jsize len = strlen(g->gr_name);
++    result = (*env)->NewByteArray(env, len);
++    if (result != NULL) {
++        (*env)->SetByteArrayRegion(env, result, 0, len, (jbyte*)(g->gr_name));
++    }
++#endif
++
+     return result;
+ }
+ 
+@@ -1204,6 +1215,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_getgrnam0(JNIEnv* env, jclass this,
+     jlong nameAddress)
+ {
+     jint gid = -1;
++#ifndef SERENITY
+     int buflen, retry;
+ 
+     /* initial size of buffer for group record */
+@@ -1248,6 +1260,12 @@ Java_sun_nio_fs_UnixNativeDispatcher_getgrnam0(JNIEnv* env, jclass this,
+         free(grbuf);
+ 
+     } while (retry);
++#else
++    // FIXME: this leaks memory
++    const char* name = (const char*)jlong_to_ptr(nameAddress);
++    struct group * g = getgrnam(name);
++    gid = g->gr_gid;
++#endif
+ 
+     return gid;
+ }
+-- 
+2.25.1
+

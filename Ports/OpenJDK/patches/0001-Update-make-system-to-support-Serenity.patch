@@ -1,0 +1,142 @@
+From c792eecc5a95268fe2ece6ccbe7ed75fb919cb4a Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Wed, 16 Feb 2022 21:04:18 +0300
+Subject: [PATCH 1/9] Update make system to support Serenity
+
+---
+ make/autoconf/build-aux/autoconf-config.sub |  5 ++++-
+ make/autoconf/flags-cflags.m4               |  3 +++
+ make/autoconf/flags-ldflags.m4              |  7 +++++++
+ make/autoconf/platform.m4                   |  4 ++++
+ make/autoconf/toolchain.m4                  |  1 +
+ make/common/modules/LauncherCommon.gmk      |  3 +++
+ make/hotspot/lib/JvmMapfile.gmk             | 12 ++++++++++++
+ 7 files changed, 34 insertions(+), 1 deletion(-)
+
+diff --git a/make/autoconf/build-aux/autoconf-config.sub b/make/autoconf/build-aux/autoconf-config.sub
+index 1aab2b303..15c624905 100644
+--- a/make/autoconf/build-aux/autoconf-config.sub
++++ b/make/autoconf/build-aux/autoconf-config.sub
+@@ -148,7 +148,7 @@ maybe_os=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\2/'`
+ case $maybe_os in
+   nto-qnx* | linux-gnu* | linux-dietlibc | linux-newlib* | linux-uclibc* | \
+   uclinux-uclibc* | uclinux-gnu* | kfreebsd*-gnu* | knetbsd*-gnu* | netbsd*-gnu* | \
+-  storm-chaos* | os2-emx* | rtmk-nova*)
++  storm-chaos* | os2-emx* | rtmk-nova* )
+     os=-$maybe_os
+     basic_machine=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`
+     ;;
+@@ -1414,6 +1414,9 @@ case $os in
+ 	-zvmoe)
+ 		os=-zvmoe
+ 		;;
++	-serenity)
++		os=-serenity
++		;;
+ 	-none)
+ 		;;
+ 	*)
+diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
+index 5eed1138f..6f74cf191 100644
+--- a/make/autoconf/flags-cflags.m4
++++ b/make/autoconf/flags-cflags.m4
+@@ -382,6 +382,9 @@ AC_DEFUN([FLAGS_SETUP_CFLAGS_HELPER],
+     CFLAGS_OS_DEF_JVM="-DAIX"
+   elif test "x$OPENJDK_TARGET_OS" = xbsd; then
+     CFLAGS_OS_DEF_JDK="-D_ALLBSD_SOURCE"
++  elif test "x$OPENJDK_TARGET_OS" = xserenity; then
++    CFLAGS_OS_DEF_JDK="-DSERENITY -fno-stack-protector"
++    CFLAGS_OS_DEF_JVM="-DSERENITY -fno-stack-protector"
+   elif test "x$OPENJDK_TARGET_OS" = xwindows; then
+     CFLAGS_OS_DEF_JVM="-D_WINDOWS -DWIN32 -D_JNI_IMPLEMENTATION_"
+   fi
+diff --git a/make/autoconf/flags-ldflags.m4 b/make/autoconf/flags-ldflags.m4
+index 23bb33e87..fc3d5ccf4 100644
+--- a/make/autoconf/flags-ldflags.m4
++++ b/make/autoconf/flags-ldflags.m4
+@@ -110,6 +110,13 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
+     fi
+   fi
+ 
++  if test "x$TOOLCHAIN_TYPE" = xclang || test "x$TOOLCHAIN_TYPE" = xgcc; then
++    if test "x$OPENJDK_TARGET_OS" = xserenity; then
++      OS_LDFLAGS_JVM_ONLY="$OS_LDFLAGS_JVM_ONLY -ldl -lpthread"
++      OS_LDFLAGS="$OS_LDFLAGS -ldl -lpthread"
++    fi
++  fi
++
+   # Setup debug level-dependent LDFLAGS
+   if test "x$TOOLCHAIN_TYPE" = xgcc; then
+     if test "x$OPENJDK_TARGET_OS" = xlinux; then
+diff --git a/make/autoconf/platform.m4 b/make/autoconf/platform.m4
+index 2dd13d0d5..6f69e037b 100644
+--- a/make/autoconf/platform.m4
++++ b/make/autoconf/platform.m4
+@@ -214,6 +214,10 @@ AC_DEFUN([PLATFORM_EXTRACT_VARS_FROM_OS],
+       VAR_OS=aix
+       VAR_OS_TYPE=unix
+       ;;
++    *serenity*)
++      VAR_OS=serenity
++      VAR_OS_TYPE=unix
++      ;;
+     *)
+       AC_MSG_ERROR([unsupported operating system $1])
+       ;;
+diff --git a/make/autoconf/toolchain.m4 b/make/autoconf/toolchain.m4
+index 788958880..e34b45b31 100644
+--- a/make/autoconf/toolchain.m4
++++ b/make/autoconf/toolchain.m4
+@@ -42,6 +42,7 @@ VALID_TOOLCHAINS_linux="gcc clang"
+ VALID_TOOLCHAINS_macosx="gcc clang"
+ VALID_TOOLCHAINS_aix="xlc"
+ VALID_TOOLCHAINS_windows="microsoft"
++VALID_TOOLCHAINS_serenity="gcc"
+ 
+ # Toolchain descriptions
+ TOOLCHAIN_DESCRIPTION_clang="clang/LLVM"
+diff --git a/make/common/modules/LauncherCommon.gmk b/make/common/modules/LauncherCommon.gmk
+index 7ad0375e2..873887b72 100644
+--- a/make/common/modules/LauncherCommon.gmk
++++ b/make/common/modules/LauncherCommon.gmk
+@@ -157,11 +157,14 @@ define SetupBuildLauncherBody
+           $$($1_LDFLAGS), \
+       LDFLAGS_linux := $$(call SET_EXECUTABLE_ORIGIN,/../lib) \
+           -L$(call FindLibDirForModule, java.base), \
++      LDFLAGS_serenity := $$(call SET_EXECUTABLE_ORIGIN,/../lib) \
++          -L$(call FindLibDirForModule, java.base), \
+       LDFLAGS_macosx := $$(call SET_EXECUTABLE_ORIGIN,/../lib) \
+           -L$(call FindLibDirForModule, java.base), \
+       LDFLAGS_aix := -L$(SUPPORT_OUTPUTDIR)/native/java.base, \
+       LIBS := $(JDKEXE_LIBS) $$($1_LIBS), \
+       LIBS_linux := -ljli -lpthread $(LIBDL), \
++      LIBS_serenity := -ljli -lpthread -lgcc_s $(LIBDL), \
+       LIBS_macosx := -ljli -framework Cocoa -framework Security \
+           -framework ApplicationServices, \
+       LIBS_aix := -ljli_static, \
+diff --git a/make/hotspot/lib/JvmMapfile.gmk b/make/hotspot/lib/JvmMapfile.gmk
+index 5cba93178..752727d0d 100644
+--- a/make/hotspot/lib/JvmMapfile.gmk
++++ b/make/hotspot/lib/JvmMapfile.gmk
+@@ -64,6 +64,18 @@ ifeq ($(call isTargetOs, linux), true)
+         if ($$3 ~ /$(FILTER_SYMBOLS_PATTERN)/) print $$3; \
+       }'
+ 
++else ifeq ($(call isTargetOs, serenity), true)
++  DUMP_SYMBOLS_CMD := $(NM) --defined-only *.o
++  ifneq ($(FILTER_SYMBOLS_PATTERN), )
++    FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)|
++  endif
++  FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)^_ZTV|^gHotSpotVM|^UseSharedSpaces$$
++  FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)|^_ZN9Arguments17SharedArchivePathE$$
++  FILTER_SYMBOLS_AWK_SCRIPT := \
++      '{ \
++        if ($$3 ~ /$(FILTER_SYMBOLS_PATTERN)/) print $$3; \
++      }'
++
+ else ifeq ($(call isTargetOs, macosx), true)
+   # nm on macosx prints out "warning: nm: no name list" to stderr for
+   # files without symbols. Hide this, even at the expense of hiding real errors.
+-- 
+2.25.1
+

@@ -1,0 +1,25 @@
+From 5bfafd31780256770a0e44767dbe001559d5e230 Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <sultanovts@yandex.ru>
+Date: Tue, 15 Feb 2022 11:06:09 +0300
+Subject: [PATCH 6/9] Use O_RDONLY instead of 0 in open() call
+
+---
+ src/hotspot/share/classfile/classLoader.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/hotspot/share/classfile/classLoader.cpp b/src/hotspot/share/classfile/classLoader.cpp
+index 724ecfcd5..814050c1a 100644
+--- a/src/hotspot/share/classfile/classLoader.cpp
++++ b/src/hotspot/share/classfile/classLoader.cpp
+@@ -249,7 +249,7 @@ ClassFileStream* ClassPathDirEntry::open_stream(JavaThread* current, const char*
+   struct stat st;
+   if (os::stat(path, &st) == 0) {
+     // found file, open it
+-    int file_handle = os::open(path, 0, 0);
++    int file_handle = os::open(path, O_RDONLY, 0);
+     if (file_handle != -1) {
+       // read contents into resource array
+       u1* buffer = NEW_RESOURCE_ARRAY(u1, st.st_size);
+-- 
+2.25.1
+

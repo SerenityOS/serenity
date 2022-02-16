@@ -1,0 +1,184 @@
+From 604931ace6629e553a0b577b70095c2bb3efa179 Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <sultanovts@yandex.ru>
+Date: Tue, 15 Feb 2022 11:05:34 +0300
+Subject: [PATCH 5/9] Fix errno defines
+
+---
+ .../sun/nio/fs/UnixConstants.java.template    | 161 +++++++++---------
+ 1 file changed, 81 insertions(+), 80 deletions(-)
+
+diff --git a/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template b/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template
+index 970d2c73f..6ec3fd3a2 100644
+--- a/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template
++++ b/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template
+@@ -37,86 +37,87 @@
+ 
+ #ifdef SERENITY
+ 
+-#define EPERM 0
+-#define ENOENT 1
+-#define ESRCH 2
+-#define EINTR 3
+-#define EIO 4
+-#define ENXIO 5
+-#define E2BIG 6
+-#define ENOEXEC 7
+-#define EBADF 8
+-#define ECHILD 9
+-#define EAGAIN 10
+-#define ENOMEM 11
+-#define EACCES 12
+-#define EFAULT 13
+-#define ENOTBLK 14
+-#define EBUSY 15
+-#define EEXIST 16
+-#define EXDEV 17
+-#define ENODEV 18
+-#define ENOTDIR 19
+-#define EISDIR 20
+-#define EINVAL 21
+-#define ENFILE 22
+-#define EMFILE 23
+-#define ENOTTY 24
+-#define ETXTBSY 25
+-#define EFBIG 26
+-#define ENOSPC 27
+-#define ESPIPE 28
+-#define EROFS 29
+-#define EMLINK 30
+-#define EPIPE 31
+-#define ERANGE 32
+-#define ENAMETOOLONG 33
+-#define ELOOP 34
+-#define EOVERFLOW 35
+-#define EOPNOTSUPP 36
+-#define ENOSYS 37
+-#define ENOTIMPL 38
+-#define EAFNOSUPPORT 39
+-#define ENOTSOCK 40
+-#define EADDRINUSE 41
+-#define ENOTEMPTY 42
+-#define EDOM 43
+-#define ECONNREFUSED 44
+-#define EHOSTDOWN 45
+-#define EADDRNOTAVAIL 46
+-#define EISCONN 47
+-#define ECONNABORTED 48
+-#define EALREADY 49
+-#define ECONNRESET 50
+-#define EDESTADDRREQ 51
+-#define EHOSTUNREACH 52
+-#define EILSEQ 53
+-#define EMSGSIZE 54
+-#define ENETDOWN 55
+-#define ENETUNREACH 56
+-#define ENETRESET 57
+-#define ENOBUFS 58
+-#define ENOLCK 59
+-#define ENOMSG 60
+-#define ENOPROTOOPT 61
+-#define ENOTCONN 62
+-#define ESHUTDOWN 63
+-#define ETOOMANYREFS 64
+-#define EPROTONOSUPPORT 65
+-#define ESOCKTNOSUPPORT 66
+-#define EDEADLK 67
+-#define ETIMEDOUT 68
+-#define EPROTOTYPE 69
+-#define EINPROGRESS 70
+-#define ENOTHREAD 71
+-#define EPROTO 72
+-#define ENOTSUP 73
+-#define EPFNOSUPPORT 74
+-#define EDQUOT 75
+-#define EDIRINTOSELF 76
+-#define ENOTRECOVERABLE 77
+-#define ECANCELED 78
+-#define EMAXERRNO 79
++#define ESUCCESS 0
++#define EPERM 1
++#define ENOENT 2
++#define ESRCH 3
++#define EINTR 4
++#define EIO 5
++#define ENXIO 6
++#define E2BIG 7
++#define ENOEXEC 8
++#define EBADF 9
++#define ECHILD 10
++#define EAGAIN 12
++#define ENOMEM 12
++#define EACCES 13
++#define EFAULT 14
++#define ENOTBLK 15
++#define EBUSY 16
++#define EEXIST 17
++#define EXDEV 18
++#define ENODEV 19
++#define ENOTDIR 20
++#define EISDIR 21
++#define EINVAL 22
++#define ENFILE 23
++#define EMFILE 24
++#define ENOTTY 25
++#define ETXTBSY 26
++#define EFBIG 27
++#define ENOSPC 28
++#define ESPIPE 29
++#define EROFS 30
++#define EMLINK 31
++#define EPIPE 32
++#define ERANGE 33
++#define ENAMETOOLONG 34
++#define ELOOP 35
++#define EOVERFLOW 36
++#define EOPNOTSUPP 37
++#define ENOSYS 38
++#define ENOTIMPL 39
++#define EAFNOSUPPORT 40
++#define ENOTSOCK 41
++#define EADDRINUSE 42
++#define ENOTEMPTY 43
++#define EDOM 44
++#define ECONNREFUSED 45
++#define EHOSTDOWN 46
++#define EADDRNOTAVAIL 47
++#define EISCONN 48
++#define ECONNABORTED 49
++#define EALREADY 50
++#define ECONNRESET 51
++#define EDESTADDRREQ 52
++#define EHOSTUNREACH 53
++#define EILSEQ 54
++#define EMSGSIZE 55
++#define ENETDOWN 56
++#define ENETUNREACH 57
++#define ENETRESET 58
++#define ENOBUFS 59
++#define ENOLCK 60
++#define ENOMSG 61
++#define ENOPROTOOPT 62
++#define ENOTCONN 63
++#define ESHUTDOWN 64
++#define ETOOMANYREFS 65
++#define EPROTONOSUPPORT 66
++#define ESOCKTNOSUPPORT 67
++#define EDEADLK 68
++#define ETIMEDOUT 69
++#define EPROTOTYPE 70
++#define EINPROGRESS 71
++#define ENOTHREAD 72
++#define EPROTO 73
++#define ENOTSUP 74
++#define EPFNOSUPPORT 75
++#define EDQUOT 76
++#define EDIRINTOSELF 77
++#define ENOTRECOVERABLE 78
++#define ECANCELED 79
++#define EMAXERRNO 80
+ 
+ 
+ #define EWOULDBLOCK EMAXERRNO //Serenity doesn't define it
+-- 
+2.25.1
+

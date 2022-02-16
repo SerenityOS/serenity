@@ -1,0 +1,25 @@
+From 1594c8333d04a1b20514061e01dc27c5c3fa0b3f Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <sultanovts@yandex.ru>
+Date: Tue, 15 Feb 2022 11:09:41 +0300
+Subject: [PATCH 7/9] Ignore maybe-uninitialized warning
+
+---
+ make/autoconf/flags-cflags.m4 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
+index 6f74cf191..1bba2e822 100644
+--- a/make/autoconf/flags-cflags.m4
++++ b/make/autoconf/flags-cflags.m4
+@@ -154,7 +154,7 @@ AC_DEFUN([FLAGS_SETUP_WARNINGS],
+       WARNINGS_ENABLE_ALL_CFLAGS="-Wall -Wextra -Wformat=2 $WARNINGS_ENABLE_ADDITIONAL"
+       WARNINGS_ENABLE_ALL_CXXFLAGS="$WARNINGS_ENABLE_ALL_CFLAGS $WARNINGS_ENABLE_ADDITIONAL_CXX"
+ 
+-      DISABLED_WARNINGS="unused-parameter unused"
++      DISABLED_WARNINGS="unused-parameter unused maybe-uninitialized"
+       ;;
+ 
+     clang)
+-- 
+2.25.1
+
