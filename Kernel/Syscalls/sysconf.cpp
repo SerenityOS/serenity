@@ -29,6 +29,10 @@ ErrorOr<FlatPtr> Process::sys$sysconf(int name)
         auto memory_info = MM.get_system_memory_info();
         return memory_info.user_physical_pages + memory_info.super_physical_pages;
     }
+    case _SC_AVPHYS_PAGES: {
+        auto memory_info = MM.get_system_memory_info();
+        return memory_info.user_physical_pages - memory_info.user_physical_pages_used;
+    }
     case _SC_HOST_NAME_MAX:
         return HOST_NAME_MAX;
     case _SC_TTY_NAME_MAX:
