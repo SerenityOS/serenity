@@ -1,0 +1,25 @@
+From fdf906791e37a1c6c739e8bf4aaadbb0c815697a Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:03:10 +0300
+Subject: [PATCH 09/24] silencing int casting
+
+---
+ tools/ippeveps.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/ippeveps.c b/tools/ippeveps.c
+index 52e14ee..47403cb 100644
+--- a/tools/ippeveps.c
++++ b/tools/ippeveps.c
+@@ -628,7 +628,7 @@ jpeg_to_ps(const char    *filename,	/* I - Filename */
+ 	bufend += bytes;
+       }
+ 
+-      length = (size_t)((bufptr[1] << 8) | bufptr[2]);
++      length = (ssize_t)((bufptr[1] << 8) | bufptr[2]);
+ 
+       if ((*bufptr >= 0xc0 && *bufptr <= 0xc3) || (*bufptr >= 0xc5 && *bufptr <= 0xc7) || (*bufptr >= 0xc9 && *bufptr <= 0xcb) || (*bufptr >= 0xcd && *bufptr <= 0xcf))
+       {
+-- 
+2.25.1
+

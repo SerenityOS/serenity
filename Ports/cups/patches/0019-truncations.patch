@@ -1,0 +1,75 @@
+From bffcf1b5e9ee67f96cfa874ac0f93a4c93b8be6a Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:19:53 +0300
+Subject: [PATCH 19/24] truncations
+
+---
+ scheduler/ipp.c      | 8 ++++----
+ scheduler/printers.c | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/scheduler/ipp.c b/scheduler/ipp.c
+index da1f782..dc5f2f3 100644
+--- a/scheduler/ipp.c
++++ b/scheduler/ipp.c
+@@ -2019,7 +2019,7 @@ add_job_subscriptions(
+ 	  return;
+ 	}
+ 
+-        snprintf(notifier, sizeof(notifier), "%s/notifier/%s", ServerBin, scheme);
++        snprintf(notifier, sizeof(notifier), "%s/notifier/%s", ServerBin, scheme) < 0 ? abort() : (void)0;
+         if (access(notifier, X_OK) || stat(notifier, &info) || !S_ISREG(info.st_mode))
+ 	{
+           send_ipp_status(con, IPP_NOT_POSSIBLE,
+@@ -2401,7 +2401,7 @@ add_printer(cupsd_client_t  *con,	/* I - Client connection */
+       * See if the backend exists and is executable...
+       */
+ 
+-      snprintf(srcfile, sizeof(srcfile), "%s/backend/%s", ServerBin, scheme);
++      snprintf(srcfile, sizeof(srcfile), "%s/backend/%s", ServerBin, scheme) < 0 ? abort() : (void)0;
+       if (access(srcfile, X_OK))
+       {
+        /*
+@@ -5743,7 +5743,7 @@ create_subscriptions(
+ 	}
+ 
+         snprintf(notifier, sizeof(notifier), "%s/notifier/%s", ServerBin,
+-	         scheme);
++	         scheme) < 0 ? abort() : (void)0;
+         if (access(notifier, X_OK) || !strcmp(scheme, ".") || !strcmp(scheme, ".."))
+ 	{
+           send_ipp_status(con, IPP_NOT_POSSIBLE,
+@@ -7054,7 +7054,7 @@ get_ppd(cupsd_client_t  *con,		/* I - Client connection */
+ 
+     snprintf(command, sizeof(command), "%s/daemon/cups-driverd", ServerBin);
+     url_encode_string(ppd_name, oppd_name, sizeof(oppd_name));
+-    snprintf(options, sizeof(options), "get+%d+%s", ippGetRequestId(con->request), oppd_name);
++    snprintf(options, sizeof(options), "get+%d+%s", ippGetRequestId(con->request), oppd_name) < 0 ? abort() : (void)0;
+ 
+     if (cupsdSendCommand(con, command, options, 0))
+     {
+diff --git a/scheduler/printers.c b/scheduler/printers.c
+index e341bdb..dff5444 100644
+--- a/scheduler/printers.c
++++ b/scheduler/printers.c
+@@ -1033,7 +1033,7 @@ cupsdLoadAllPrinters(void)
+ 	    */
+ 
+ 	    p->state = IPP_PRINTER_STOPPED;
+-	    snprintf(p->state_message, sizeof(p->state_message), "Backend %s does not exist!", line);
++	    snprintf(p->state_message, sizeof(p->state_message), "Backend %s does not exist!", line) < 0 ? abort() : (void)0;
+ 	  }
+         }
+ 
+@@ -3542,7 +3542,7 @@ add_printer_filter(
+     if (program[0] == '/')
+       strlcpy(filename, program, sizeof(filename));
+     else
+-      snprintf(filename, sizeof(filename), "%s/filter/%s", ServerBin, program);
++      snprintf(filename, sizeof(filename), "%s/filter/%s", ServerBin, program) < 0 ? abort() : (void)0;
+ 
+     _cupsFileCheck(filename, _CUPS_FILE_CHECK_PROGRAM, !RunUser,
+                    cupsdLogFCMessage, p);
+-- 
+2.25.1
+

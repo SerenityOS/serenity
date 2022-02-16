@@ -1,0 +1,33 @@
+From 4dd492acd9d544a14046a9fc8f5a99eea39fed1f Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:22:42 +0300
+Subject: [PATCH 20/24] Replace O_NDELAY with O_NONBLOCK
+
+---
+ scheduler/cupsfilter.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/scheduler/cupsfilter.c b/scheduler/cupsfilter.c
+index fa914d2..9d65860 100644
+--- a/scheduler/cupsfilter.c
++++ b/scheduler/cupsfilter.c
+@@ -879,14 +879,14 @@ exec_filter(const char *filter,		/* I - Filter to execute */
+       dup2(fd, 3);
+       close(fd);
+     }
+-    fcntl(3, F_SETFL, O_NDELAY);
++    fcntl(3, F_SETFL, O_NONBLOCK);
+ 
+     if ((fd = open("/dev/null", O_RDWR)) > 4)
+     {
+       dup2(fd, 4);
+       close(fd);
+     }
+-    fcntl(4, F_SETFL, O_NDELAY);
++    fcntl(4, F_SETFL, O_NONBLOCK);
+ 
+    /*
+     * Execute command...
+-- 
+2.25.1
+

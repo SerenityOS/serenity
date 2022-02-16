@@ -1,0 +1,45 @@
+From b0d92cdedec9ee769489c128cfc773eb5b0c5780 Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:27:49 +0300
+Subject: [PATCH 23/24] Removing nice() call
+
+---
+ scheduler/cups-exec.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/scheduler/cups-exec.c b/scheduler/cups-exec.c
+index bd50fba..96d375a 100644
+--- a/scheduler/cups-exec.c
++++ b/scheduler/cups-exec.c
+@@ -48,7 +48,7 @@ main(int  argc,				/* I - Number of command-line args */
+   const char	*opt;			/* Current option character */
+   uid_t		uid = getuid();		/* UID */
+   gid_t		gid = getgid();		/* GID */
+-  int		niceval = 0;		/* Nice value */
++  //int		niceval = 0;		/* Nice value */
+ #ifdef HAVE_SANDBOX_H
+   char		*sandbox_error = NULL;	/* Sandbox error, if any */
+ #endif /* HAVE_SANDBOX_H */
+@@ -79,7 +79,7 @@ main(int  argc,				/* I - Number of command-line args */
+               if (i >= argc)
+                 usage();
+ 
+-              niceval = atoi(argv[i]);
++              //niceval = atoi(argv[i]);
+               break;
+ 
+           case 'u' : /* -g gid */
+@@ -121,8 +121,8 @@ main(int  argc,				/* I - Number of command-line args */
+   * Change UID, GID, and nice value...
+   */
+ 
+-  if (uid)
+-    nice(niceval);
++  // if (uid)
++  //   nice(niceval);
+ 
+   if (!getuid())
+   {
+-- 
+2.25.1
+

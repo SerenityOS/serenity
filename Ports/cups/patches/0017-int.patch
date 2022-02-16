@@ -1,0 +1,25 @@
+From 93a98930e1911d6de7393546f37436ec8d88bb5a Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:17:32 +0300
+Subject: [PATCH 17/24] int
+
+---
+ scheduler/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scheduler/main.c b/scheduler/main.c
+index d5fdf97..d01bf01 100644
+--- a/scheduler/main.c
++++ b/scheduler/main.c
+@@ -535,7 +535,7 @@ main(int  argc,				/* I - Number of command-line args */
+     MaxFDs = 16384;
+   else
+ #endif /* RLIM_INFINITY */
+-    MaxFDs = limit.rlim_max;
++    MaxFDs = (int)limit.rlim_max;
+ 
+   limit.rlim_cur = (rlim_t)MaxFDs;
+ 
+-- 
+2.25.1
+

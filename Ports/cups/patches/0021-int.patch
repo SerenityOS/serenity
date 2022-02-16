@@ -1,0 +1,87 @@
+From 599aa89e970cd5cca2dfe3bb7198205df4aaf382 Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:25:13 +0300
+Subject: [PATCH 21/24] int
+
+---
+ scheduler/cups-driverd.cxx | 12 ++++++------
+ scheduler/cupsfilter.c     |  4 ++--
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/scheduler/cups-driverd.cxx b/scheduler/cups-driverd.cxx
+index 85516eb..e72d90a 100644
+--- a/scheduler/cups-driverd.cxx
++++ b/scheduler/cups-driverd.cxx
+@@ -702,9 +702,9 @@ compare_inodes(struct stat *a,		/* I - First inode */
+                struct stat *b)		/* I - Second inode */
+ {
+   if (a->st_dev != b->st_dev)
+-    return (a->st_dev - b->st_dev);
++    return (int)(a->st_dev - b->st_dev);
+   else
+-    return (a->st_ino - b->st_ino);
++    return (int)(a->st_ino - b->st_ino);
+ }
+ 
+ 
+@@ -1132,7 +1132,7 @@ list_ppds(int        request_id,	/* I - Request ID */
+   {
+     char	newname[1024];		/* New filename */
+ 
+-    snprintf(newname, sizeof(newname), "%s.%d", filename, (int)getpid());
++    snprintf(newname, sizeof(newname), "%s.%d", filename, (int)getpid()) < 0 ? abort() : (void)0;
+ 
+     if ((fp = cupsFileOpen(newname, "w")) != NULL)
+     {
+@@ -1832,7 +1832,7 @@ load_drivers(cups_array_t *include,	/* I - Drivers to include */
+     * Run the driver with no arguments and collect the output...
+     */
+ 
+-    snprintf(filename, sizeof(filename), "%s/%s", drivers, dent->filename);
++    snprintf(filename, sizeof(filename), "%s/%s", drivers, dent->filename) < 0 ? abort() : (void)0;
+ 
+     if (_cupsFileCheck(filename, _CUPS_FILE_CHECK_PROGRAM, !geteuid(),
+                        _cupsFileCheckFilter, NULL))
+@@ -2439,7 +2439,7 @@ load_ppds(const char *d,		/* I - Actual directory */
+     snprintf(filename, sizeof(filename), "%s/%s", d, dent->filename);
+ 
+     if (p[0])
+-      snprintf(name, sizeof(name), "%s/%s", p, dent->filename);
++      snprintf(name, sizeof(name), "%s/%s", p, dent->filename) < 0 ? abort() : (void)0;
+     else
+       strlcpy(name, dent->filename, sizeof(name));
+ 
+@@ -2611,7 +2611,7 @@ load_ppds_dat(char   *filename,		/* I - Filename buffer */
+         ppdsync == PPD_SYNC &&
+         !stat(filename, &fileinfo) &&
+ 	(((size_t)fileinfo.st_size - sizeof(ppdsync)) % sizeof(ppd_rec_t)) == 0 &&
+-	(num_ppds = ((size_t)fileinfo.st_size - sizeof(ppdsync)) / sizeof(ppd_rec_t)) > 0)
++	(num_ppds = (int)(((size_t)fileinfo.st_size - sizeof(ppdsync)) / sizeof(ppd_rec_t))) > 0)
+     {
+      /*
+       * We have a ppds.dat file, so read it!
+diff --git a/scheduler/cupsfilter.c b/scheduler/cupsfilter.c
+index 9d65860..1e511fe 100644
+--- a/scheduler/cupsfilter.c
++++ b/scheduler/cupsfilter.c
+@@ -556,7 +556,7 @@ add_printer_filter(
+   if (sscanf(filter, "%15[^/]/%255s%*[ \t]%15[^/]/%255s%d%*[ \t]%1023[^\n]",
+              super, type, dsuper, dtype, &cost, program) == 6)
+   {
+-    snprintf(dest, sizeof(dest), "%s/%s/%s", filtertype->type, dsuper, dtype);
++    snprintf(dest, sizeof(dest), "%s/%s/%s", filtertype->type, dsuper, dtype) < 0 ? abort() : (void)0;
+ 
+     if ((desttype = mimeType(mime, "printer", dest)) == NULL)
+       desttype = mimeAddType(mime, "printer", dest);
+@@ -607,7 +607,7 @@ add_printer_filter(
+     if (program[0] == '/')
+       strlcpy(filename, program, sizeof(filename));
+     else
+-      snprintf(filename, sizeof(filename), "%s/filter/%s", ServerBin, program);
++      snprintf(filename, sizeof(filename), "%s/filter/%s", ServerBin, program) < 0 ? abort() : (void)0;
+ 
+     if (_cupsFileCheck(filename, _CUPS_FILE_CHECK_PROGRAM, !geteuid(), check_cb,
+                        (void *)command))
+-- 
+2.25.1
+

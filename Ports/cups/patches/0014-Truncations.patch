@@ -1,0 +1,31 @@
+From 8dc63ea6bbf21b131752e2ff3d46331837350fbd Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:08:52 +0300
+Subject: [PATCH 14/24] Truncations
+
+---
+ backend/snmp.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/backend/snmp.c b/backend/snmp.c
+index dbe3bba..9f70716 100644
+--- a/backend/snmp.c
++++ b/backend/snmp.c
+@@ -503,11 +503,11 @@ fix_make_model(
+     strlcpy(make_model + 3, mmptr, (size_t)make_model_size - 3);
+   }
+   else if (!_cups_strncasecmp(old_make_model, "deskjet", 7))
+-    snprintf(make_model, (size_t)make_model_size, "HP DeskJet%s", old_make_model + 7);
++    snprintf(make_model, (size_t)make_model_size, "HP DeskJet%s", old_make_model + 7) < 0 ? abort() : (void)0;
+   else if (!_cups_strncasecmp(old_make_model, "officejet", 9))
+-    snprintf(make_model, (size_t)make_model_size, "HP OfficeJet%s", old_make_model + 9);
++    snprintf(make_model, (size_t)make_model_size, "HP OfficeJet%s", old_make_model + 9) < 0 ? abort() : (void)0;
+   else if (!_cups_strncasecmp(old_make_model, "stylus_pro_", 11))
+-    snprintf(make_model, (size_t)make_model_size, "EPSON Stylus Pro %s", old_make_model + 11);
++    snprintf(make_model, (size_t)make_model_size, "EPSON Stylus Pro %s", old_make_model + 11) < 0 ? abort() : (void)0;
+   else
+     strlcpy(make_model, old_make_model, (size_t)make_model_size);
+ 
+-- 
+2.25.1
+

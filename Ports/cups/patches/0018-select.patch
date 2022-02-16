@@ -1,0 +1,25 @@
+From 61dda6338c2b334aef385b7d132701f15bcae6e3 Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:18:10 +0300
+Subject: [PATCH 18/24] select
+
+---
+ scheduler/ipp.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/scheduler/ipp.c b/scheduler/ipp.c
+index 2fe3bf2..da1f782 100644
+--- a/scheduler/ipp.c
++++ b/scheduler/ipp.c
+@@ -18,6 +18,8 @@
+ #include "cupsd.h"
+ #include <cups/ppd-private.h>
+ 
++#include <sys/select.h>
++
+ #ifdef __APPLE__
+ #  ifdef HAVE_MEMBERSHIP_H
+ #    include <membership.h>
+-- 
+2.25.1
+

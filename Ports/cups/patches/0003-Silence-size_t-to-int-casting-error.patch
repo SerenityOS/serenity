@@ -1,0 +1,25 @@
+From 34f4c83feb2f94cd4be6299739b6e25c94d0be14 Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 19:49:30 +0300
+Subject: [PATCH 03/24] Silence size_t to int casting error
+
+---
+ cups/hash.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cups/hash.c b/cups/hash.c
+index 4fbb443..a84e87d 100644
+--- a/cups/hash.c
++++ b/cups/hash.c
+@@ -263,7 +263,7 @@ cupsHashData(const char    *algorithm,	/* I - Algorithm name */
+       goto too_small;
+ 
+     _cupsMD5Init(&state);
+-    _cupsMD5Append(&state, data, datalen);
++    _cupsMD5Append(&state, data, (int)datalen);
+     _cupsMD5Finish(&state, hash);
+ 
+     return (16);
+-- 
+2.25.1
+

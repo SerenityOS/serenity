@@ -1,0 +1,27 @@
+From 0898d1043be2b41dce96706707dedacb5f17198d Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:25:47 +0300
+Subject: [PATCH 22/24] O_NDLEAY
+
+---
+ scheduler/cups-exec.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/scheduler/cups-exec.c b/scheduler/cups-exec.c
+index 674de0a..bd50fba 100644
+--- a/scheduler/cups-exec.c
++++ b/scheduler/cups-exec.c
+@@ -114,8 +114,8 @@ main(int  argc,				/* I - Number of command-line args */
+   * Make sure side and back channel FDs are non-blocking...
+   */
+ 
+-  fcntl(3, F_SETFL, O_NDELAY);
+-  fcntl(4, F_SETFL, O_NDELAY);
++  fcntl(3, F_SETFL, O_NONBLOCK);
++  fcntl(4, F_SETFL, O_NONBLOCK);
+ 
+  /*
+   * Change UID, GID, and nice value...
+-- 
+2.25.1
+

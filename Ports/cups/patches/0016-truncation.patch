@@ -1,0 +1,319 @@
+From b6f72057992c785fd418dfe5e013b569b9b9f7d3 Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:16:21 +0300
+Subject: [PATCH 16/24] truncation
+
+---
+ cgi-bin/admin.c      | 12 ++++++------
+ cgi-bin/classes.c    |  4 ++--
+ cgi-bin/ipp-var.c    |  8 ++++----
+ cgi-bin/printers.c   |  4 ++--
+ notifier/mailto.c    |  2 +-
+ notifier/rss.c       |  4 ++--
+ ppdc/ppdc-source.cxx |  6 +++---
+ ppdc/ppdc.cxx        |  4 ++--
+ scheduler/client.c   | 22 +++++++++++-----------
+ scheduler/type.c     |  2 +-
+ 10 files changed, 34 insertions(+), 34 deletions(-)
+
+diff --git a/cgi-bin/admin.c b/cgi-bin/admin.c
+index f087809..8ca6df8 100644
+--- a/cgi-bin/admin.c
++++ b/cgi-bin/admin.c
+@@ -589,7 +589,7 @@ do_am_class(http_t *http,		/* I - HTTP connection */
+ 
+     cgiFormEncode(uri, name, sizeof(uri));
+     snprintf(refresh, sizeof(refresh), "5;URL=/admin/?OP=redirect&URL=/classes/%s",
+-             uri);
++             uri) < 0 ? abort() : (void)0;
+     cgiSetVariable("refresh_page", refresh);
+ 
+     cgiStartHTML(title);
+@@ -1204,7 +1204,7 @@ do_am_printer(http_t *http,		/* I - HTTP connection */
+       cgiFormEncode(uri, name, sizeof(uri));
+ 
+       snprintf(refresh, sizeof(refresh),
+-	       "5;/admin/?OP=redirect&URL=/printers/%s", uri);
++	       "5;/admin/?OP=redirect&URL=/printers/%s", uri) < 0 ? abort() : (void)0;
+ 
+       cgiSetVariable("refresh_page", refresh);
+ 
+@@ -2506,7 +2506,7 @@ do_set_allowed_users(http_t *http)	/* I - HTTP connection */
+       cgiRewriteURL(uri, url, sizeof(url), NULL);
+       cgiFormEncode(uri, url, sizeof(uri));
+       snprintf(refresh, sizeof(refresh), "5;URL=/admin/?OP=redirect&URL=%s",
+-               uri);
++               uri) < 0 ? abort() : (void)0;
+       cgiSetVariable("refresh_page", refresh);
+ 
+       cgiStartHTML(cgiText(_("Set Allowed Users")));
+@@ -2592,7 +2592,7 @@ do_set_default(http_t *http)		/* I - HTTP connection */
+ 
+     cgiRewriteURL(uri, url, sizeof(url), NULL);
+     cgiFormEncode(uri, url, sizeof(uri));
+-    snprintf(refresh, sizeof(refresh), "5;URL=/admin/?OP=redirect&URL=%s", uri);
++    snprintf(refresh, sizeof(refresh), "5;URL=/admin/?OP=redirect&URL=%s", uri) < 0 ? abort() : (void)0;
+     cgiSetVariable("refresh_page", refresh);
+ 
+     cgiStartHTML(title);
+@@ -3324,7 +3324,7 @@ do_set_options(http_t *http,		/* I - HTTP connection */
+ 
+       cgiFormEncode(uri, printer, sizeof(uri));
+       snprintf(refresh, sizeof(refresh), "5;URL=/admin/?OP=redirect&URL=/%s/%s",
+-	       is_class ? "classes" : "printers", uri);
++	       is_class ? "classes" : "printers", uri) < 0 ? abort() : (void)0;
+       cgiSetVariable("refresh_page", refresh);
+ 
+       cgiStartHTML(title);
+@@ -3424,7 +3424,7 @@ do_set_sharing(http_t *http)		/* I - HTTP connection */
+ 
+     cgiRewriteURL(uri, url, sizeof(url), NULL);
+     cgiFormEncode(uri, url, sizeof(uri));
+-    snprintf(refresh, sizeof(refresh), "5;URL=/admin/?OP=redirect&URL=%s", uri);
++    snprintf(refresh, sizeof(refresh), "5;URL=/admin/?OP=redirect&URL=%s", uri) < 0 ? abort() : (void)0;
+     cgiSetVariable("refresh_page", refresh);
+ 
+     cgiStartHTML(cgiText(_("Set Publishing")));
+diff --git a/cgi-bin/classes.c b/cgi-bin/classes.c
+index 78ef08e..bef6534 100644
+--- a/cgi-bin/classes.c
++++ b/cgi-bin/classes.c
+@@ -257,7 +257,7 @@ do_class_op(http_t      *http,		/* I - HTTP connection */
+ 
+     cgiRewriteURL(uri, url, sizeof(url), NULL);
+     cgiFormEncode(uri, url, sizeof(uri));
+-    snprintf(refresh, sizeof(refresh), "5;URL=%s", uri);
++    snprintf(refresh, sizeof(refresh), "5;URL=%s", uri) < 0 ? abort() : (void)0;
+     cgiSetVariable("refresh_page", refresh);
+ 
+     cgiStartHTML(title);
+@@ -486,7 +486,7 @@ show_class(http_t     *http,		/* I - Connection to server */
+       */
+ 
+       cgiFormEncode(uri, pclass, sizeof(uri));
+-      snprintf(refresh, sizeof(refresh), "10;URL=/classes/%s", uri);
++      snprintf(refresh, sizeof(refresh), "10;URL=/classes/%s", uri) < 0 ? abort() : (void)0;
+       cgiSetVariable("refresh_page", refresh);
+     }
+ 
+diff --git a/cgi-bin/ipp-var.c b/cgi-bin/ipp-var.c
+index 8c5a561..0aeef84 100644
+--- a/cgi-bin/ipp-var.c
++++ b/cgi-bin/ipp-var.c
+@@ -487,7 +487,7 @@ cgiMoveJobs(http_t     *http,		/* I - Connection to server */
+       if (path)
+       {
+         cgiFormEncode(uri, path, sizeof(uri));
+-        snprintf(refresh, sizeof(refresh), "2;URL=%s", uri);
++        snprintf(refresh, sizeof(refresh), "2;URL=%s", uri) < 0 ? abort() : (void)0;
+ 	cgiSetVariable("refresh_page", refresh);
+       }
+     }
+@@ -665,7 +665,7 @@ cgiPrintCommand(http_t     *http,	/* I - Connection to server */
+   snprintf(resource, sizeof(resource), "/printers/%s", dest);
+ 
+   cgiFormEncode(uri, resource, sizeof(uri));
+-  snprintf(refresh, sizeof(refresh), "5;URL=%s", uri);
++  snprintf(refresh, sizeof(refresh), "5;URL=%s", uri) < 0 ? abort() : (void)0;
+   cgiSetVariable("refresh_page", refresh);
+ 
+   cgiStartHTML(title);
+@@ -762,7 +762,7 @@ cgiPrintTestPage(http_t     *http,	/* I - Connection to server */
+     */
+ 
+     cgiFormEncode(uri, resource, sizeof(uri));
+-    snprintf(refresh, sizeof(refresh), "2;URL=%s", uri);
++    snprintf(refresh, sizeof(refresh), "2;URL=%s", uri) < 0 ? abort() : (void)0;
+     cgiSetVariable("refresh_page", refresh);
+   }
+   else if (cupsLastError() == IPP_NOT_AUTHORIZED)
+@@ -1112,7 +1112,7 @@ cgiSetIPPObjectVars(
+ 	  * Link to local feed...
+ 	  */
+ 
+-	  snprintf(uri, sizeof(uri), "/rss%s", resource);
++	  snprintf(uri, sizeof(uri), "/rss%s", resource) < 0 ? abort() : (void)0;
+           strlcpy(name, resource + 1, sizeof(name));
+ 	}
+       }
+diff --git a/cgi-bin/printers.c b/cgi-bin/printers.c
+index bbc153e..1721699 100644
+--- a/cgi-bin/printers.c
++++ b/cgi-bin/printers.c
+@@ -266,7 +266,7 @@ do_printer_op(http_t      *http,	/* I - HTTP connection */
+ 
+     cgiRewriteURL(uri, url, sizeof(url), NULL);
+     cgiFormEncode(uri, url, sizeof(uri));
+-    snprintf(refresh, sizeof(refresh), "5;URL=%s", uri);
++    snprintf(refresh, sizeof(refresh), "5;URL=%s", uri) < 0 ? abort() : (void)0;
+     cgiSetVariable("refresh_page", refresh);
+ 
+     cgiStartHTML(title);
+@@ -506,7 +506,7 @@ show_printer(http_t     *http,		/* I - Connection to server */
+       */
+ 
+       cgiFormEncode(uri, printer, sizeof(uri));
+-      snprintf(refresh, sizeof(refresh), "10;URL=/printers/%s", uri);
++      snprintf(refresh, sizeof(refresh), "10;URL=/printers/%s", uri) < 0 ? abort() : (void)0;
+       cgiSetVariable("refresh_page", refresh);
+     }
+ 
+diff --git a/notifier/mailto.c b/notifier/mailto.c
+index 9325855..6e74886 100644
+--- a/notifier/mailto.c
++++ b/notifier/mailto.c
+@@ -237,7 +237,7 @@ email_message(const char *to,		/* I - Recipient of message */
+       char	spec[1024];		/* Host:service spec */
+ 
+ 
+-      snprintf(spec, sizeof(spec), "%s:smtp", mailtoSMTPServer);
++      snprintf(spec, sizeof(spec), "%s:smtp", mailtoSMTPServer) < 0 ? abort() : (void)0;
+       fp = cupsFileOpen(spec, "s");
+     }
+ 
+diff --git a/notifier/rss.c b/notifier/rss.c
+index 44d368c..cdd2dd4 100644
+--- a/notifier/rss.c
++++ b/notifier/rss.c
+@@ -205,8 +205,8 @@ main(int  argc,				/* I - Number of command-line arguments */
+     if ((server_port = getenv("SERVER_PORT")) == NULL)
+       server_port = "631";
+ 
+-    snprintf(filename, sizeof(filename), "%s/rss%s", cachedir, resource);
+-    snprintf(newname, sizeof(newname), "%s.N", filename);
++    snprintf(filename, sizeof(filename), "%s/rss%s", cachedir, resource) < 0 ? abort() : (void)0;
++    snprintf(newname, sizeof(newname), "%s.N", filename) < 0 ? abort() : (void)0;
+ 
+     httpAssembleURIf(HTTP_URI_CODING_ALL, baseurl, sizeof(baseurl), "http",
+                      NULL, server_name, atoi(server_port), "/rss%s", resource);
+diff --git a/ppdc/ppdc-source.cxx b/ppdc/ppdc-source.cxx
+index b28c472..57bbe70 100644
+--- a/ppdc/ppdc-source.cxx
++++ b/ppdc/ppdc-source.cxx
+@@ -1120,16 +1120,16 @@ ppdcSource::get_generic(ppdcFile   *fp,	// I - File to read
+     if (tattr)
+       snprintf(command, sizeof(command),
+                "<</%s(%s)/%s %d>>setpagedevice",
+-               tattr, name, nattr, val);
++               tattr, name, nattr, val) < 0 ? abort() : (void)0;
+     else
+       snprintf(command, sizeof(command),
+                "<</%s %d>>setpagedevice",
+-               nattr, val);
++               nattr, val) < 0 ? abort() : (void)0;
+   }
+   else
+     snprintf(command, sizeof(command),
+              "<</%s(%s)>>setpagedevice",
+-             tattr, name);
++             tattr, name) < 0 ? abort() : (void)0;
+ 
+   return (new ppdcChoice(name, text, command));
+ }
+diff --git a/ppdc/ppdc.cxx b/ppdc/ppdc.cxx
+index 5411b5e..8b14936 100644
+--- a/ppdc/ppdc.cxx
++++ b/ppdc/ppdc.cxx
+@@ -345,9 +345,9 @@ main(int  argc,				// I - Number of command-line arguments
+ 
+ 	// Open the PPD file for writing...
+ 	if (comp)
+-	  snprintf(filename, sizeof(filename), "%s/%s.gz", outdir, pcfilename);
++	  snprintf(filename, sizeof(filename), "%s/%s.gz", outdir, pcfilename) < 0 ? abort() : (void)0;
+ 	else
+-	  snprintf(filename, sizeof(filename), "%s/%s", outdir, pcfilename);
++	  snprintf(filename, sizeof(filename), "%s/%s", outdir, pcfilename) < 0 ? abort() : (void)0;
+ 
+         if (cupsArrayFind(filenames, filename))
+ 	  _cupsLangPrintf(stderr,
+diff --git a/scheduler/client.c b/scheduler/client.c
+index c2ee8f1..f331160 100644
+--- a/scheduler/client.c
++++ b/scheduler/client.c
+@@ -1994,9 +1994,9 @@ cupsdSendError(cupsd_client_t *con,	/* I - Connection */
+     {
+       text = urltext;
+ 
+-      snprintf(urltext, sizeof(urltext), _cupsLangString(con->language, _("You must access this page using the URL https://%s:%d%s.")), con->servername, con->serverport, con->uri);
++      snprintf(urltext, sizeof(urltext), _cupsLangString(con->language, _("You must access this page using the URL https://%s:%d%s.")), con->servername, con->serverport, con->uri) < 0 ? abort() : (void)0;
+ 
+-      snprintf(redirect, sizeof(redirect), "<META HTTP-EQUIV=\"Refresh\" CONTENT=\"3;URL=https://%s:%d%s\">\n", con->servername, con->serverport, con->uri);
++      snprintf(redirect, sizeof(redirect), "<META HTTP-EQUIV=\"Refresh\" CONTENT=\"3;URL=https://%s:%d%s\">\n", con->servername, con->serverport, con->uri) < 0 ? abort() : (void)0;
+     }
+     else if (code == HTTP_STATUS_CUPS_WEBIF_DISABLED)
+       text = _cupsLangString(con->language,
+@@ -2843,8 +2843,8 @@ get_file(cupsd_client_t *con,		/* I  - Client connection */
+   }
+   else if (con->language)
+   {
+-    snprintf(language, sizeof(language), "/%s", con->language->language);
+-    snprintf(filename, len, "%s%s%s", DocumentRoot, language, con->uri);
++    snprintf(language, sizeof(language), "/%s", con->language->language) < 0 ? abort() : (void)0;
++    snprintf(filename, len, "%s%s%s", DocumentRoot, language, con->uri) < 0 ? abort() : (void)0;
+   }
+   else
+     snprintf(filename, len, "%s%s", DocumentRoot, con->uri);
+@@ -2870,7 +2870,7 @@ get_file(cupsd_client_t *con,		/* I  - Client connection */
+     */
+ 
+     language[3] = '\0';
+-    snprintf(filename, len, "%s%s%s", DocumentRoot, language, con->uri);
++    snprintf(filename, len, "%s%s%s", DocumentRoot, language, con->uri) < 0 ? abort() : (void)0;
+ 
+     if ((ptr = strchr(filename, '?')) != NULL)
+       *ptr = '\0';
+@@ -2947,7 +2947,7 @@ get_file(cupsd_client_t *con,		/* I  - Client connection */
+       * Look for the index file...
+       */
+ 
+-      snprintf(filename, len, "%s%s%s", DocumentRoot, language, con->uri);
++      snprintf(filename, len, "%s%s%s", DocumentRoot, language, con->uri) < 0 ? abort() : (void)0;
+ 
+       if ((ptr = strchr(filename, '?')) != NULL)
+ 	*ptr = '\0';
+@@ -3267,7 +3267,7 @@ pipe_command(cupsd_client_t *con,	/* I - Client connection */
+ 
+     commch   = *commptr;
+     *commptr = '\0';
+-    snprintf(path_info, sizeof(path_info), "PATH_INFO=%s", argbuf);
++    snprintf(path_info, sizeof(path_info), "PATH_INFO=%s", argbuf) < 0 ? abort() : (void)0;
+     *commptr = commch;
+   }
+   else
+@@ -3377,16 +3377,16 @@ pipe_command(cupsd_client_t *con,	/* I - Client connection */
+                  sizeof(remote_addr) - 12);
+ 
+   snprintf(remote_host, sizeof(remote_host), "REMOTE_HOST=%s",
+-           httpGetHostname(con->http, NULL, 0));
++           httpGetHostname(con->http, NULL, 0)) < 0 ? abort() : (void)0;
+ 
+-  snprintf(script_name, sizeof(script_name), "SCRIPT_NAME=%s", con->uri);
++  snprintf(script_name, sizeof(script_name), "SCRIPT_NAME=%s", con->uri) < 0 ? abort() : (void)0;
+   if ((uriptr = strchr(script_name, '?')) != NULL)
+     *uriptr = '\0';
+ 
+   snprintf(script_filename, sizeof(script_filename), "SCRIPT_FILENAME=%s%s",
+-           DocumentRoot, script_name + 12);
++           DocumentRoot, script_name + 12) < 0 ? abort() : (void)0;
+ 
+-  snprintf(server_port, sizeof(server_port), "SERVER_PORT=%d", con->serverport);
++  snprintf(server_port, sizeof(server_port), "SERVER_PORT=%d", con->serverport) < 0 ? abort() : (void)0;
+ 
+   if (httpGetField(con->http, HTTP_FIELD_HOST)[0])
+   {
+diff --git a/scheduler/type.c b/scheduler/type.c
+index f547b83..1bd38ef 100644
+--- a/scheduler/type.c
++++ b/scheduler/type.c
+@@ -448,7 +448,7 @@ mimeAddTypeRule(mime_type_t *mt,	/* I - Type to add to */
+         * This is just a filename match on the extension...
+ 	*/
+ 
+-	snprintf(value[0], sizeof(value[0]), "*.%s", name);
++	snprintf(value[0], sizeof(value[0]), "*.%s", name) < 0 ? abort() : (void)0;
+ 	length[0]  = (int)strlen(value[0]);
+ 	op         = MIME_MAGIC_MATCH;
+ 	num_values = 1;
+-- 
+2.25.1
+

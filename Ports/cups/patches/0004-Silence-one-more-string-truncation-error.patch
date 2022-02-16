@@ -1,0 +1,25 @@
+From a4fbef0226e1c8c04d0f5f3e7643594ea69c2f1f Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 19:50:31 +0300
+Subject: [PATCH 04/24] Silence one more string truncation error
+
+---
+ cups/http.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cups/http.c b/cups/http.c
+index 8d69ce3..2d4b18d 100644
+--- a/cups/http.c
++++ b/cups/http.c
+@@ -3637,7 +3637,7 @@ http_add_field(http_t       *http,	/* I - HTTP connection */
+       char	combined[HTTP_MAX_VALUE];
+ 					/* Combined value string */
+ 
+-      snprintf(combined, sizeof(combined), "%s, %s", http->_fields[field], value);
++      snprintf(combined, sizeof(combined), "%s, %s", http->_fields[field], value) < 0 ? abort() : (void)0;
+       value = combined;
+     }
+ 
+-- 
+2.25.1
+

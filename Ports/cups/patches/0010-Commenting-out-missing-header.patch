@@ -1,0 +1,25 @@
+From d50581e6b9ff18ef21afd87b543d35159f8954ae Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:04:20 +0300
+Subject: [PATCH 10/24] Commenting out missing header
+
+---
+ tools/ippeveprinter.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/ippeveprinter.c b/tools/ippeveprinter.c
+index 41954a5..68a9235 100644
+--- a/tools/ippeveprinter.c
++++ b/tools/ippeveprinter.c
+@@ -38,7 +38,7 @@ typedef ULONG nfds_t;
+ #else
+ extern char **environ;
+ 
+-#  include <sys/fcntl.h>
++//#  include <sys/fcntl.h>
+ #  include <sys/wait.h>
+ #  include <poll.h>
+ #endif /* _WIN32 */
+-- 
+2.25.1
+

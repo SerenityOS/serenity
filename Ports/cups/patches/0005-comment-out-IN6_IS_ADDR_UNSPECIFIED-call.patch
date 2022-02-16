@@ -1,0 +1,28 @@
+From 47e5b89438414a07f77db29f3d222f93e90d8d72 Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 19:52:28 +0300
+Subject: [PATCH 05/24] comment out IN6_IS_ADDR_UNSPECIFIED call
+
+---
+ cups/http-addr.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/cups/http-addr.c b/cups/http-addr.c
+index 86749c8..248283a 100644
+--- a/cups/http-addr.c
++++ b/cups/http-addr.c
+@@ -39,9 +39,9 @@ httpAddrAny(const http_addr_t *addr)	/* I - Address to check */
+     return (0);
+ 
+ #ifdef AF_INET6
+-  if (addr->addr.sa_family == AF_INET6 &&
++  /*if (addr->addr.sa_family == AF_INET6 &&
+       IN6_IS_ADDR_UNSPECIFIED(&(addr->ipv6.sin6_addr)))
+-    return (1);
++    return (1);*/ // We don't implement the IN6_IS_ADDR_UNSPECIFIED macro
+ #endif /* AF_INET6 */
+ 
+   if (addr->addr.sa_family == AF_INET &&
+-- 
+2.25.1
+

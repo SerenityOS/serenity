@@ -1,0 +1,24 @@
+From e80dccf9539f19b5fa6774b8399a54fcb71c86bf Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:09:31 +0300
+Subject: [PATCH 15/24] select
+
+---
+ backend/socket.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/backend/socket.c b/backend/socket.c
+index 68379e9..32d54c3 100644
+--- a/backend/socket.c
++++ b/backend/socket.c
+@@ -27,6 +27,7 @@
+ #  include <netinet/in.h>
+ #  include <arpa/inet.h>
+ #  include <netdb.h>
++#  include <sys/select.h>
+ #endif /* _WIN32 */
+ 
+ 
+-- 
+2.25.1
+

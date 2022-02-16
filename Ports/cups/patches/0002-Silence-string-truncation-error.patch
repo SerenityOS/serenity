@@ -1,0 +1,53 @@
+From dfd4c1806be60758cef10fa1173b74fe6c5c6ded Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 19:48:31 +0300
+Subject: [PATCH 02/24] Silence string truncation error
+
+---
+ cups/dest.c | 6 +++---
+ cups/dir.c  | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/cups/dest.c b/cups/dest.c
+index cde987a..7c499a5 100644
+--- a/cups/dest.c
++++ b/cups/dest.c
+@@ -1272,19 +1272,19 @@ cupsGetDestWithURI(const char *name,	/* I - Desired printer name or @code NULL@
+     }
+     else if (!strncmp(resource, "/classes/", 9))
+     {
+-      snprintf(temp, sizeof(temp), "%s @ %s", resource + 9, hostname);
++      snprintf(temp, sizeof(temp), "%s @ %s", resource + 9, hostname) < 0 ? abort() : (void)0;
+       name = resource + 9;
+       info = temp;
+     }
+     else if (!strncmp(resource, "/printers/", 10))
+     {
+-      snprintf(temp, sizeof(temp), "%s @ %s", resource + 10, hostname);
++      snprintf(temp, sizeof(temp), "%s @ %s", resource + 10, hostname) < 0 ? abort() : (void)0;
+       name = resource + 10;
+       info = temp;
+     }
+     else if (!strncmp(resource, "/ipp/print/", 11))
+     {
+-      snprintf(temp, sizeof(temp), "%s @ %s", resource + 11, hostname);
++      snprintf(temp, sizeof(temp), "%s @ %s", resource + 11, hostname) < 0 ? abort() : (void)0;
+       name = resource + 11;
+       info = temp;
+     }
+diff --git a/cups/dir.c b/cups/dir.c
+index 184aa7c..fe0d702 100644
+--- a/cups/dir.c
++++ b/cups/dir.c
+@@ -376,7 +376,7 @@ cupsDirRead(cups_dir_t *dp)		/* I - Directory pointer */
+ 
+     strlcpy(dp->entry.filename, entry->d_name, sizeof(dp->entry.filename));
+ 
+-    snprintf(filename, sizeof(filename), "%s/%s", dp->directory, entry->d_name);
++    snprintf(filename, sizeof(filename), "%s/%s", dp->directory, entry->d_name) < 0 ? abort() : (void)0;
+ 
+     if (stat(filename, &(dp->entry.fileinfo)))
+     {
+-- 
+2.25.1
+

@@ -1,0 +1,97 @@
+From 8bc1440c948fc7ff3e673a3f4367007fe91cfd0b Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 20:29:36 +0300
+Subject: [PATCH 24/24] truncations
+
+---
+ systemv/cupstestppd.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/systemv/cupstestppd.c b/systemv/cupstestppd.c
+index b94cae9..d47be96 100644
+--- a/systemv/cupstestppd.c
++++ b/systemv/cupstestppd.c
+@@ -2404,7 +2404,7 @@ check_filters(ppd_file_t *ppd,		/* I - PPD file */
+     if (strcmp(program, "-"))
+     {
+       if (program[0] == '/')
+-	snprintf(pathprog, sizeof(pathprog), "%s%s", root, program);
++	snprintf(pathprog, sizeof(pathprog), "%s%s", root, program) < 0 ? abort() : (void)0;
+       else
+       {
+ 	if ((ptr = getenv("CUPS_SERVERBIN")) == NULL)
+@@ -2412,10 +2412,10 @@ check_filters(ppd_file_t *ppd,		/* I - PPD file */
+ 
+ 	if (*ptr == '/' || !*root)
+ 	  snprintf(pathprog, sizeof(pathprog), "%s%s/filter/%s", root, ptr,
+-		   program);
++		   program) < 0 ? abort() : (void)0;
+ 	else
+ 	  snprintf(pathprog, sizeof(pathprog), "%s/%s/filter/%s", root, ptr,
+-		   program);
++		   program) < 0 ? abort() : (void)0;
+       }
+ 
+       if (stat(pathprog, &fileinfo))
+@@ -2540,10 +2540,10 @@ check_filters(ppd_file_t *ppd,		/* I - PPD file */
+ 
+ 	if (*ptr == '/' || !*root)
+ 	  snprintf(pathprog, sizeof(pathprog), "%s%s/filter/%s", root, ptr,
+-		   program);
++		   program) < 0 ? abort() : (void)0;
+ 	else
+ 	  snprintf(pathprog, sizeof(pathprog), "%s/%s/filter/%s", root, ptr,
+-		   program);
++		   program) < 0 ? abort() : (void)0;
+       }
+ 
+       if (stat(pathprog, &fileinfo))
+@@ -2626,10 +2626,10 @@ check_filters(ppd_file_t *ppd,		/* I - PPD file */
+ 
+ 	if (*ptr == '/' || !*root)
+ 	  snprintf(pathprog, sizeof(pathprog), "%s%s/filter/%s", root, ptr,
+-		   program);
++		   program) < 0 ? abort() : (void)0;
+ 	else
+ 	  snprintf(pathprog, sizeof(pathprog), "%s/%s/filter/%s", root, ptr,
+-		   program);
++		   program) < 0 ? abort() : (void)0;
+       }
+ 
+       if (stat(pathprog, &fileinfo))
+@@ -3508,9 +3508,9 @@ check_translations(ppd_file_t *ppd,	/* I - PPD file */
+ 	}
+ 
+ 	snprintf(keyword, sizeof(keyword), "%s.%s", language,
+-		 option->keyword);
++		 option->keyword) < 0 ? abort() : (void)0;
+ 	snprintf(llkeyword, sizeof(llkeyword), "%s.%s", ll,
+-		 option->keyword);
++		 option->keyword) < 0 ? abort() : (void)0;
+ 
+ 	for (j = 0; j < option->num_choices; j ++)
+ 	{
+@@ -3535,7 +3535,7 @@ check_translations(ppd_file_t *ppd,	/* I - PPD file */
+ 					     option->keyword)) != NULL)
+ 	  {
+ 	    snprintf(ckeyword, sizeof(ckeyword), "%s.Custom%s",
+-		     language, option->keyword);
++		     language, option->keyword) < 0 ? abort() : (void)0;
+ 
+ 	    if ((attr = ppdFindAttr(ppd, ckeyword, "True")) != NULL &&
+ 		!valid_utf8(attr->text))
+@@ -3563,9 +3563,9 @@ check_translations(ppd_file_t *ppd,	/* I - PPD file */
+ 		   cparam = (ppd_cparam_t *)cupsArrayNext(coption->params))
+ 	      {
+ 		snprintf(ckeyword, sizeof(ckeyword), "%s.ParamCustom%s",
+-			 language, option->keyword);
++			 language, option->keyword) < 0 ? abort() : (void)0;
+ 		snprintf(cllkeyword, sizeof(cllkeyword), "%s.ParamCustom%s",
+-			 ll, option->keyword);
++			 ll, option->keyword) < 0 ? abort() : (void)0;
+ 
+ 		if ((attr = ppdFindAttr(ppd, ckeyword,
+ 					cparam->name)) == NULL &&
+-- 
+2.25.1
+

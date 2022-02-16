@@ -1,0 +1,162 @@
+From d79f2f414729ee88a5deb965188f77b41ef20d8a Mon Sep 17 00:00:00 2001
+From: Timur Sultanov <SultanovTS@yandex.ru>
+Date: Sun, 6 Feb 2022 19:59:49 +0300
+Subject: [PATCH 08/24] More truncation silencing
+
+---
+ cups/ppd-emit.c     |  2 +-
+ cups/ppd-localize.c |  2 +-
+ cups/ppd-page.c     | 12 ++++++------
+ cups/ppd.c          | 14 +++++++-------
+ 4 files changed, 15 insertions(+), 15 deletions(-)
+
+diff --git a/cups/ppd-emit.c b/cups/ppd-emit.c
+index 8bffb2b..ca8150a 100644
+--- a/cups/ppd-emit.c
++++ b/cups/ppd-emit.c
+@@ -496,7 +496,7 @@ ppdEmitJCL(ppd_file_t *ppd,		/* I - PPD file record */
+     if (!user)
+       user = "anonymous";
+ 
+-    snprintf(displaymsg, sizeof(displaymsg), "%d %s %s", job_id, user, temp);
++    snprintf(displaymsg, sizeof(displaymsg), "%d %s %s", job_id, user, temp) < 0 ? abort() : (void)0;
+ 
+    /*
+     * Send PJL JOB and PJL RDYMSG commands before we enter PostScript mode...
+diff --git a/cups/ppd-localize.c b/cups/ppd-localize.c
+index ea84915..ec2875f 100644
+--- a/cups/ppd-localize.c
++++ b/cups/ppd-localize.c
+@@ -115,7 +115,7 @@ ppdLocalize(ppd_file_t *ppd)		/* I - PPD file */
+ 	 cparam;
+ 	 cparam = (ppd_cparam_t *)cupsArrayNext(coption->params))
+     {
+-      snprintf(ckeyword, sizeof(ckeyword), "ParamCustom%s", coption->keyword);
++      snprintf(ckeyword, sizeof(ckeyword), "ParamCustom%s", coption->keyword) < 0 ? abort() : (void)0;
+ 
+       if ((locattr = _ppdLocalizedAttr(ppd, ckeyword, cparam->name,
+                                        ll_CC)) != NULL)
+diff --git a/cups/ppd-page.c b/cups/ppd-page.c
+index 1f5860a..564eb3c 100644
+--- a/cups/ppd-page.c
++++ b/cups/ppd-page.c
+@@ -249,7 +249,7 @@ ppdPageSizeLimits(ppd_file_t *ppd,	/* I - PPD file record */
+     if (qualifier3)
+     {
+       snprintf(spec, sizeof(spec), ".%s.%s", qualifier2->choice,
+-	       qualifier3->choice);
++	       qualifier3->choice) < 0 ? abort() : (void)0;
+       attr = ppdFindAttr(ppd, "cupsMinSize", spec);
+     }
+     else
+@@ -257,13 +257,13 @@ ppdPageSizeLimits(ppd_file_t *ppd,	/* I - PPD file record */
+ 
+     if (!attr)
+     {
+-      snprintf(spec, sizeof(spec), ".%s.", qualifier2->choice);
++      snprintf(spec, sizeof(spec), ".%s.", qualifier2->choice) < 0 ? abort() : (void)0;
+       attr = ppdFindAttr(ppd, "cupsMinSize", spec);
+     }
+ 
+     if (!attr && qualifier3)
+     {
+-      snprintf(spec, sizeof(spec), "..%s", qualifier3->choice);
++      snprintf(spec, sizeof(spec), "..%s", qualifier3->choice) < 0 ? abort() : (void)0;
+       attr = ppdFindAttr(ppd, "cupsMinSize", spec);
+     }
+ 
+@@ -298,7 +298,7 @@ ppdPageSizeLimits(ppd_file_t *ppd,	/* I - PPD file record */
+     if (qualifier3)
+     {
+       snprintf(spec, sizeof(spec), ".%s.%s", qualifier2->choice,
+-	       qualifier3->choice);
++	       qualifier3->choice) < 0 ? abort() : (void)0;
+       attr = ppdFindAttr(ppd, "cupsMaxSize", spec);
+     }
+     else
+@@ -306,13 +306,13 @@ ppdPageSizeLimits(ppd_file_t *ppd,	/* I - PPD file record */
+ 
+     if (!attr)
+     {
+-      snprintf(spec, sizeof(spec), ".%s.", qualifier2->choice);
++      snprintf(spec, sizeof(spec), ".%s.", qualifier2->choice) < 0 ? abort() : (void)0;
+       attr = ppdFindAttr(ppd, "cupsMaxSize", spec);
+     }
+ 
+     if (!attr && qualifier3)
+     {
+-      snprintf(spec, sizeof(spec), "..%s", qualifier3->choice);
++      snprintf(spec, sizeof(spec), "..%s", qualifier3->choice) < 0 ? abort() : (void)0;
+       attr = ppdFindAttr(ppd, "cupsMaxSize", spec);
+     }
+ 
+diff --git a/cups/ppd.c b/cups/ppd.c
+index 199cf03..7013c76 100644
+--- a/cups/ppd.c
++++ b/cups/ppd.c
+@@ -545,7 +545,7 @@ _ppdOpen(
+     if ((lang = cupsLangDefault()) == NULL)
+       return (NULL);
+ 
+-    snprintf(ll_CC, sizeof(ll_CC), "%s.", lang->language);
++    snprintf(ll_CC, sizeof(ll_CC), "%s.", lang->language) < 0 ? abort() : (void)0;
+ 
+    /*
+     * <rdar://problem/22130168>
+@@ -1364,7 +1364,7 @@ _ppdOpen(
+       if (!_cups_strcasecmp(name, "PageRegion"))
+         strlcpy(custom_name, "CustomPageSize", sizeof(custom_name));
+       else
+-        snprintf(custom_name, sizeof(custom_name), "Custom%s", name);
++        snprintf(custom_name, sizeof(custom_name), "Custom%s", name) < 0 ? abort() : (void)0;
+ 
+       if ((custom_attr = ppdFindAttr(ppd, custom_name, "True")) != NULL)
+       {
+@@ -1468,7 +1468,7 @@ _ppdOpen(
+       * attribute...
+       */
+ 
+-      snprintf(custom_name, sizeof(custom_name), "Custom%s", name);
++      snprintf(custom_name, sizeof(custom_name), "Custom%s", name) < 0 ? abort() : (void)0;
+ 
+       if ((custom_attr = ppdFindAttr(ppd, custom_name, "True")) != NULL)
+       {
+@@ -1874,7 +1874,7 @@ _ppdOpen(
+       if (!_cups_strcasecmp(name, "custom") || !_cups_strncasecmp(name, "custom.", 7))
+       {
+         char cname[PPD_MAX_NAME];	/* Rewrite with a leading underscore */
+-        snprintf(cname, sizeof(cname), "_%s", name);
++        snprintf(cname, sizeof(cname), "_%s", name) < 0 ? abort() : (void)0;
+         strlcpy(name, cname, sizeof(name));
+       }
+ 
+@@ -1903,7 +1903,7 @@ _ppdOpen(
+       if (!_cups_strcasecmp(name, "custom") || !_cups_strncasecmp(name, "custom.", 7))
+       {
+         char cname[PPD_MAX_NAME];	/* Rewrite with a leading underscore */
+-        snprintf(cname, sizeof(cname), "_%s", name);
++        snprintf(cname, sizeof(cname), "_%s", name) < 0 ? abort() : (void)0;
+         strlcpy(name, cname, sizeof(name));
+       }
+ 
+@@ -1939,7 +1939,7 @@ _ppdOpen(
+       if (!_cups_strcasecmp(name, "custom") || !_cups_strncasecmp(name, "custom.", 7))
+       {
+         char cname[PPD_MAX_NAME];	/* Rewrite with a leading underscore */
+-        snprintf(cname, sizeof(cname), "_%s", name);
++        snprintf(cname, sizeof(cname), "_%s", name) < 0 ? abort() : (void)0;
+         strlcpy(name, cname, sizeof(name));
+       }
+ 
+@@ -3433,7 +3433,7 @@ ppd_update_filters(ppd_file_t     *ppd,	/* I - PPD file */
+     */
+ 
+     snprintf(buffer, sizeof(buffer), "%s/%s %d %s", srcsuper, srctype, cost,
+-             program);
++             program) < 0 ? abort() : (void)0;
+     DEBUG_printf(("5ppd_update_filters: Adding \"%s\".", buffer));
+ 
+    /*
+-- 
+2.25.1
+
