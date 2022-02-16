@@ -380,6 +380,19 @@ long double nanl(const char* s) NOEXCEPT
     {                                                                \
         return AK::name<float>(arg1, arg2);                          \
     }
+#define MAKE_AK_BACKED3(name)                                                          \
+    long double name##l(long double arg1, long double arg2, long double arg3) NOEXCEPT \
+    {                                                                                  \
+        return AK::name<long double>(arg1, arg2, arg3);                                \
+    }                                                                                  \
+    double name(double arg1, double arg2, double arg3) NOEXCEPT                        \
+    {                                                                                  \
+        return AK::name<double>(arg1, arg2, arg3);                                     \
+    }                                                                                  \
+    float name##f(float arg1, float arg2, float arg3) NOEXCEPT                         \
+    {                                                                                  \
+        return AK::name<float>(arg1, arg2, arg3);                                      \
+    }
 
 MAKE_AK_BACKED1(sin);
 MAKE_AK_BACKED1(cos);
@@ -407,6 +420,8 @@ MAKE_AK_BACKED2(hypot);
 MAKE_AK_BACKED2(fmod);
 MAKE_AK_BACKED2(pow);
 MAKE_AK_BACKED2(remainder);
+
+MAKE_AK_BACKED3(fma);
 
 long double truncl(long double x) NOEXCEPT
 {
