@@ -196,6 +196,7 @@ struct wellknown_devices {
 // clang-format off
 static wellknown_devices const wellknown_char_devices[] = {
     { makedev(  1,   1), "mem",       0660 },
+    { makedev(  1,   3), "null",      0666 },
 };
 // clang-format on
 
@@ -291,10 +292,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
                 switch (minor_number) {
                 case 5: {
                     create_devtmpfs_char_device("/dev/zero", 0666, 1, 5);
-                    break;
-                }
-                case 3: {
-                    create_devtmpfs_char_device("/dev/null", 0666, 1, 3);
                     break;
                 }
                 case 8: {
