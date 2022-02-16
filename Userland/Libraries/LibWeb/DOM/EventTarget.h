@@ -11,6 +11,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibWeb/DOM/DOMEventListener.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -29,10 +30,8 @@ public:
 
     virtual bool is_focusable() const { return false; }
 
-    void add_event_listener(const FlyString& event_name, RefPtr<EventListener>);
-    void remove_event_listener(const FlyString& event_name, RefPtr<EventListener>);
-
-    void remove_from_event_listener_list(NonnullRefPtr<EventListener>);
+    void add_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback);
+    void remove_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback);
 
     virtual bool dispatch_event(NonnullRefPtr<Event>);
     ExceptionOr<bool> dispatch_event_binding(NonnullRefPtr<Event>);
@@ -41,13 +40,12 @@ public:
 
     virtual EventTarget* get_parent(const Event&) { return nullptr; }
 
-    struct EventListenerRegistration {
-        FlyString event_name;
-        NonnullRefPtr<EventListener> listener;
-    };
+    void add_an_event_listener(NonnullRefPtr<DOMEventListener>);
+    void remove_an_event_listener(DOMEventListener&);
+    void remove_from_event_listener_list(DOMEventListener&);
 
-    Vector<EventListenerRegistration>& listeners() { return m_listeners; }
-    const Vector<EventListenerRegistration>& listeners() const { return m_listeners; }
+    auto& event_listener_list() { return m_event_listener_list; }
+    auto const& event_listener_list() const { return m_event_listener_list; }
 
     Function<void(const Event&)> activation_behavior;
 
@@ -70,7 +68,7 @@ protected:
     void element_event_handler_attribute_changed(FlyString const& local_name, String const& value);
 
 private:
-    Vector<EventListenerRegistration> m_listeners;
+    Vector<NonnullRefPtr<DOMEventListener>> m_event_listener_list;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-map
     // Spec Note: The order of the entries of event handler map could be arbitrary. It is not observable through any algorithms that operate on the map.

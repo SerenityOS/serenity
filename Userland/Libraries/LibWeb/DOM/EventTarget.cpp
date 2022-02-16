@@ -19,11 +19,12 @@
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
-#include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/ErrorEvent.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -44,38 +45,87 @@ EventTarget::~EventTarget()
 {
 }
 
-// https://dom.spec.whatwg.org/#add-an-event-listener
-void EventTarget::add_event_listener(const FlyString& event_name, RefPtr<EventListener> listener)
+// https://dom.spec.whatwg.org/#dom-eventtarget-addeventlistener
+void EventTarget::add_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback)
 {
-    if (listener.is_null())
+    // FIXME: 1. Let capture, passive, once, and signal be the result of flattening more options.
+    bool capture = false;
+    bool passive = false;
+    bool once = false;
+    RefPtr<AbortSignal> signal = nullptr;
+
+    // 2. Add an event listener with this and an event listener whose type is type, callback is callback, capture is capture, passive is passive,
+    //    once is once, and signal is signal.
+    auto event_listener = adopt_ref(*new DOMEventListener);
+    event_listener->type = type;
+    event_listener->callback = move(callback);
+    event_listener->signal = move(signal);
+    event_listener->capture = capture;
+    event_listener->passive = passive;
+    event_listener->once = once;
+    add_an_event_listener(move(event_listener));
+}
+
+// https://dom.spec.whatwg.org/#add-an-event-listener
+void EventTarget::add_an_event_listener(NonnullRefPtr<DOMEventListener> listener)
+{
+    // FIXME: 1. If eventTarget is a ServiceWorkerGlobalScope object, its service worker’s script resource’s has ever been evaluated flag is set,
+    //           and listener’s type matches the type attribute value of any of the service worker events, then report a warning to the console
+    //           that this might not give the expected results. [SERVICE-WORKERS]
+
+    // 2. If listener’s signal is not null and is aborted, then return.
+    if (listener->signal && listener->signal->aborted())
         return;
-    auto existing_listener = m_listeners.first_matching([&](auto& entry) {
-        return entry.listener->type() == event_name && entry.listener->callback().callback.cell() == listener->callback().callback.cell() && entry.listener->capture() == listener->capture();
+
+    // 3. If listener’s callback is null, then return.
+    if (listener->callback.is_null())
+        return;
+
+    // 4. If eventTarget’s event listener list does not contain an event listener whose type is listener’s type, callback is listener’s callback,
+    //    and capture is listener’s capture, then append listener to eventTarget’s event listener list.
+    auto it = m_event_listener_list.find_if([&](auto& entry) {
+        return entry->type == listener->type
+            && entry->callback->callback().callback.cell() == listener->callback->callback().callback.cell()
+            && entry->capture == listener->capture;
     });
-    if (existing_listener.has_value())
-        return;
-    listener->set_type(event_name);
-    m_listeners.append({ event_name, listener.release_nonnull() });
+    if (it == m_event_listener_list.end())
+        m_event_listener_list.append(listener);
+
+    // FIXME: 5. If listener’s signal is not null, then add the following abort steps to it:
+    // FIXME:    1. Remove an event listener with eventTarget and listener.
+}
+
+// https://dom.spec.whatwg.org/#dom-eventtarget-removeeventlistener
+void EventTarget::remove_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback)
+{
+    // FIXME: 1. Let capture be the result of flattening options.
+    bool capture = false;
+
+    // 2. If this’s event listener list contains an event listener whose type is type, callback is callback, and capture is capture,
+    //    then remove an event listener with this and that event listener.
+    auto it = m_event_listener_list.find_if([&](auto& entry) {
+        return entry->type == type
+            && entry->callback->callback().callback.cell() == callback->callback().callback.cell()
+            && entry->capture == capture;
+    });
+    if (it != m_event_listener_list.end())
+        remove_an_event_listener(*it);
 }
 
 // https://dom.spec.whatwg.org/#remove-an-event-listener
-void EventTarget::remove_event_listener(const FlyString& event_name, RefPtr<EventListener> listener)
+void EventTarget::remove_an_event_listener(DOMEventListener& listener)
 {
-    if (listener.is_null())
-        return;
-    m_listeners.remove_first_matching([&](auto& entry) {
-        auto matches = entry.event_name == event_name && entry.listener->callback().callback.cell() == listener->callback().callback.cell() && entry.listener->capture() == listener->capture();
-        if (matches)
-            entry.listener->set_removed(true);
-        return matches;
-    });
+    // FIXME: 1. If eventTarget is a ServiceWorkerGlobalScope object and its service worker’s set of event types to handle contains type,
+    //           then report a warning to the console that this might not give the expected results. [SERVICE-WORKERS]
+
+    // 2. Set listener’s removed to true and remove listener from eventTarget’s event listener list.
+    listener.removed = true;
+    m_event_listener_list.remove_first_matching([&](auto& entry) { return entry.ptr() == &listener; });
 }
 
-void EventTarget::remove_from_event_listener_list(NonnullRefPtr<EventListener> listener)
+void EventTarget::remove_from_event_listener_list(DOMEventListener& listener)
 {
-    m_listeners.remove_first_matching([&](auto& entry) {
-        return entry.listener->type() == listener->type() && &entry.listener->callback() == &listener->callback() && entry.listener->capture() == listener->capture();
-    });
+    m_event_listener_list.remove_first_matching([&](auto& entry) { return entry.ptr() == &listener; });
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
@@ -433,11 +483,12 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     Bindings::CallbackType callback { JS::make_handle(static_cast<JS::Object*>(callback_function)), verify_cast<HTML::EnvironmentSettingsObject>(*global_object->associated_realm()->host_defined()) };
 
     // 5. Let listener be a new event listener whose type is the event handler event type corresponding to eventHandler and callback is callback.
-    auto listener = adopt_ref(*new EventListener(move(callback)));
+    auto listener = adopt_ref(*new DOMEventListener);
+    listener->type = name;
+    listener->callback = adopt_ref(*new IDLEventListener(move(callback)));
 
     // 6. Add an event listener with eventTarget and listener.
-    // FIXME: Make add_event_listener follow the spec more tightly. (Namely, don't allow taking a name and having a separate bindings version)
-    add_event_listener(name, listener);
+    add_an_event_listener(listener);
 
     // 7. Set eventHandler's listener to listener.
     event_handler.listener = listener;
@@ -460,8 +511,7 @@ void EventTarget::deactivate_event_handler(FlyString const& name)
 
     // 5. If listener is not null, then remove an event listener with eventTarget and listener.
     if (event_handler.listener) {
-        // FIXME: Make remove_event_listener follow the spec more tightly. (Namely, don't allow taking a name and having a separate bindings version)
-        remove_event_listener(name, event_handler.listener);
+        remove_an_event_listener(*event_handler.listener);
     }
 
     // 6. Set eventHandler's listener to null.

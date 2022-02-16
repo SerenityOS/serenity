@@ -1496,13 +1496,13 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         if (parameter.type->nullable) {
             scoped_generator.append(R"~~~(
-    RefPtr<EventListener> @cpp_name@;
+    RefPtr<IDLEventListener> @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish()) {
         if (!@js_name@@js_suffix@.is_object())
             return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
         CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
-        @cpp_name@ = adopt_ref(*new EventListener(move(callback_type)));
+        @cpp_name@ = adopt_ref(*new IDLEventListener(move(callback_type)));
     }
 )~~~");
         } else {
@@ -1511,7 +1511,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
     CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
-    auto @cpp_name@ = adopt_ref(*new EventListener(move(callback_type)));
+    auto @cpp_name@ = adopt_ref(*new IDLEventListener(move(callback_type)));
 )~~~");
         }
     } else if (IDL::is_wrappable_type(*parameter.type)) {
@@ -3793,6 +3793,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Origin.h>

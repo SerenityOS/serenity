@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,11 +14,12 @@
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
-#include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Window.h>
@@ -50,37 +51,37 @@ static EventTarget* retarget(EventTarget* left, EventTarget* right)
 }
 
 // https://dom.spec.whatwg.org/#concept-event-listener-inner-invoke
-bool EventDispatcher::inner_invoke(Event& event, Vector<EventTarget::EventListenerRegistration>& listeners, Event::Phase phase, bool invocation_target_in_shadow_tree)
+bool EventDispatcher::inner_invoke(Event& event, Vector<NonnullRefPtr<DOM::DOMEventListener>>& listeners, Event::Phase phase, bool invocation_target_in_shadow_tree)
 {
     // 1. Let found be false.
     bool found = false;
 
     // 2. For each listener in listeners, whose removed is false:
     for (auto& listener : listeners) {
-        if (listener.listener->removed())
+        if (listener->removed)
             continue;
 
         // 1. If event’s type attribute value is not listener’s type, then continue.
-        if (event.type() != listener.listener->type())
+        if (event.type() != listener->type)
             continue;
 
         // 2. Set found to true.
         found = true;
 
         // 3. If phase is "capturing" and listener’s capture is false, then continue.
-        if (phase == Event::Phase::CapturingPhase && !listener.listener->capture())
+        if (phase == Event::Phase::CapturingPhase && !listener->capture)
             continue;
 
         // 4. If phase is "bubbling" and listener’s capture is true, then continue.
-        if (phase == Event::Phase::BubblingPhase && listener.listener->capture())
+        if (phase == Event::Phase::BubblingPhase && listener->capture)
             continue;
 
         // 5. If listener’s once is true, then remove listener from event’s currentTarget attribute value’s event listener list.
-        if (listener.listener->once())
-            event.current_target()->remove_from_event_listener_list(listener.listener);
+        if (listener->once)
+            event.current_target()->remove_from_event_listener_list(listener);
 
         // 6. Let global be listener callback’s associated Realm’s global object.
-        auto& callback = listener.listener->callback();
+        auto& callback = listener->callback->callback();
         auto& global = callback.callback.cell()->global_object();
 
         // 7. Let currentEvent be undefined.
@@ -100,7 +101,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<EventTarget::EventListen
         }
 
         // 9. If listener’s passive is true, then set event’s in passive listener flag.
-        if (listener.listener->passive())
+        if (listener->passive)
             event.set_in_passive_listener(true);
 
         // 10. Call a user object’s operation with listener’s callback, "handleEvent", « event », and event’s currentTarget attribute value. If this throws an exception, then:
@@ -155,7 +156,7 @@ void EventDispatcher::invoke(Event::PathEntry& struct_, Event& event, Event::Pha
     event.set_current_target(struct_.invocation_target);
 
     // NOTE: This is an intentional copy. Any event listeners added after this point will not be invoked.
-    auto listeners = event.current_target()->listeners();
+    auto listeners = event.current_target()->event_listener_list();
     bool invocation_target_in_shadow_tree = struct_.invocation_target_in_shadow_tree;
 
     bool found = inner_invoke(event, listeners, phase, invocation_target_in_shadow_tree);
