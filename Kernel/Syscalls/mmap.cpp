@@ -76,7 +76,7 @@ ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_ano
     bool make_executable = prot & PROT_EXEC;
 
     if (map_anonymous && make_executable)
-        return EINVAL;
+        TRY(require_promise(Pledge::jit));
 
     if (make_writable && make_executable)
         return EINVAL;
@@ -86,10 +86,10 @@ ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_ano
 
     if (region) {
         if (make_writable && region->has_been_executable())
-            return EINVAL;
+            TRY(require_promise(Pledge::jit));
 
         if (make_executable && region->has_been_writable() && !should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region))
-            return EINVAL;
+            TRY(require_promise(Pledge::jit));
     }
 
     return {};
