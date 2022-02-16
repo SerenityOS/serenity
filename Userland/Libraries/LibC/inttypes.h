@@ -14,7 +14,11 @@ __BEGIN_DECLS
 #define PRId8 "d"
 #define PRId16 "d"
 #define PRId32 "d"
-#define PRId64 "lld"
+#ifndef __x86_64__
+#    define PRId64 "lld"
+#else
+#    define PRId64 "ld"
+#endif
 #define PRIi8 "d"
 #define PRIi16 "d"
 #define PRIi32 "d"
@@ -59,7 +63,11 @@ __BEGIN_DECLS
 #    define PRIxPTR "lx"
 #endif
 
-#define __PRI64_PREFIX "ll"
+#ifndef __x86_64__
+#    define __PRI64_PREFIX "ll"
+#else
+#    define __PRI64_PREFIX "l"
+#endif
 #define __PRIPTR_PREFIX
 
 #define PRIdPTR __PRIPTR_PREFIX "d"
