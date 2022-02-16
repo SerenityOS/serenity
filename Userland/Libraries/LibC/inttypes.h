@@ -67,6 +67,7 @@ __BEGIN_DECLS
 #define PRIXPTR __PRIPTR_PREFIX "X"
 
 #define PRIdMAX __PRI64_PREFIX "d"
+#define PRIiMAX __PRI64_PREFIX "d"
 #define PRIoMAX __PRI64_PREFIX "o"
 #define PRIuMAX __PRI64_PREFIX "u"
 
