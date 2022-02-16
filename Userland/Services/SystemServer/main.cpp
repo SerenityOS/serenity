@@ -187,6 +187,18 @@ static void populate_devtmpfs_char_devices_based_on_sysfs()
     }
 }
 
+struct wellknown_devices {
+    dev_t device_id;
+    const char* name;
+    mode_t mode;
+};
+
+// clang-format off
+static wellknown_devices const wellknown_char_devices[] = {
+    { makedev(  1,   1), "mem",       0660 },
+};
+// clang-format on
+
 static void populate_devtmpfs_devices_based_on_devctl()
 {
     auto f = Core::File::construct("/dev/devctl");
@@ -201,7 +213,19 @@ static void populate_devtmpfs_devices_based_on_devctl()
             continue;
         auto major_number = event.major_number;
         auto minor_number = event.minor_number;
+        auto device_id = makedev(major_number, minor_number);
         bool is_block_device = (event.is_block_device == 1);
+
+        if (!is_block_device) {
+            auto const devs = Span<wellknown_devices const>(wellknown_char_devices, array_size(wellknown_char_devices));
+            auto dev = AK::find_if(devs.begin(), devs.end(), [&](auto const& dev) { return dev.device_id == device_id; });
+            if (dev != devs.end()) {
+                dbgln("Found char dev: {}", dev->name);
+                create_devtmpfs_char_device(String::formatted("/dev/{}", dev->name), dev->mode, major_number, minor_number);
+                continue;
+            }
+        }
+
         switch (major_number) {
         case 116: {
             if (!is_block_device) {
@@ -267,10 +291,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
                 switch (minor_number) {
                 case 5: {
                     create_devtmpfs_char_device("/dev/zero", 0666, 1, 5);
-                    break;
-                }
-                case 1: {
-                    create_devtmpfs_char_device("/dev/mem", 0660, 1, 1);
                     break;
                 }
                 case 3: {
