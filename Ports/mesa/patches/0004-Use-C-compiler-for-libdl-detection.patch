@@ -1,0 +1,25 @@
+From f5436e73a04037584483cc4d7f57150117b9db88 Mon Sep 17 00:00:00 2001
+From: Sviatoslav Peleshko <speles@mail.ua>
+Date: Tue, 15 Feb 2022 20:14:08 +0200
+Subject: [PATCH 4/4] Use C++ compiler for libdl detection
+
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index 9c87442..895a26b 100644
+--- a/meson.build
++++ b/meson.build
+@@ -1480,7 +1480,7 @@ ld_args_build_id = cc.get_supported_link_arguments('-Wl,--build-id=sha1')
+ # check for dl support
+ dep_dl = null_dep
+ if not cc.has_function('dlopen')
+-  dep_dl = cc.find_library('dl', required : host_machine.system() != 'windows')
++  dep_dl = cpp.find_library('dl', required : host_machine.system() != 'windows')
+ endif
+ if cc.has_function('dladdr', dependencies : dep_dl)
+   # This is really only required for megadrivers
+-- 
+2.34.1
+

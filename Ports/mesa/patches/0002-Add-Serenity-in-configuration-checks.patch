@@ -1,0 +1,181 @@
+From bd9af0b45adbcc161a2b84b3c8ab4a275517adf7 Mon Sep 17 00:00:00 2001
+From: Sviatoslav Peleshko <speles@mail.ua>
+Date: Tue, 15 Feb 2022 20:13:24 +0200
+Subject: [PATCH 2/4] Add Serenity in configuration checks
+
+---
+ include/c11/threads_posix.h               | 2 +-
+ include/c99_alloca.h                      | 2 +-
+ meson.build                               | 6 ++++--
+ src/gallium/drivers/llvmpipe/lp_texture.c | 4 ++--
+ src/util/os_misc.c                        | 4 ++--
+ src/util/u_thread.h                       | 6 +++---
+ src/vulkan/runtime/vk_image.c             | 6 +++---
+ 7 files changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/include/c11/threads_posix.h b/include/c11/threads_posix.h
+index 802526a..2d1fc52 100644
+--- a/include/c11/threads_posix.h
++++ b/include/c11/threads_posix.h
+@@ -43,7 +43,7 @@ Configuration macro:
+     Use pthread_mutex_timedlock() for `mtx_timedlock()'
+     Otherwise use mtx_trylock() + *busy loop* emulation.
+ */
+-#if !defined(__CYGWIN__) && !defined(__APPLE__) && !defined(__NetBSD__)
++#if !defined(__CYGWIN__) && !defined(__APPLE__) && !defined(__NetBSD__) && !defined(__serenity__)
+ #define EMULATED_THREADS_USE_NATIVE_TIMEDLOCK
+ #endif
+ 
+diff --git a/include/c99_alloca.h b/include/c99_alloca.h
+index 5a3b8c1..aade99d 100644
+--- a/include/c99_alloca.h
++++ b/include/c99_alloca.h
+@@ -35,7 +35,7 @@
+ 
+ #  define alloca _alloca
+ 
+-#elif defined(__sun) || defined(__CYGWIN__)
++#elif defined(__sun) || defined(__CYGWIN__) || defined(__serenity__)
+ 
+ #  include <alloca.h>
+ 
+diff --git a/meson.build b/meson.build
+index 82bba74..0324d66 100644
+--- a/meson.build
++++ b/meson.build
+@@ -344,6 +344,8 @@ if with_glx == 'auto'
+     with_glx = 'dri'
+   elif with_platform_haiku
+     with_glx = 'disabled'
++  elif with_platform_serenity
++    with_glx = 'disabled'
+   elif host_machine.system() == 'windows'
+     with_glx = 'disabled'
+   elif with_gallium
+@@ -455,7 +457,7 @@ if _egl == 'auto'
+     with_shared_glapi
+   )
+ elif _egl == 'enabled'
+-  if not with_dri and not with_platform_haiku and not with_platform_windows
++  if not with_dri and not with_platform_haiku and not with_platform_windows and not with_platform_serenity
+     error('EGL requires dri, haiku, or windows')
+   elif not with_shared_glapi
+     error('EGL requires shared-glapi')
+@@ -1411,7 +1413,7 @@ endif
+ # This means that this check will succeed, but then compilation will later
+ # fail. MSVC doesn't have this function at all, so only check for it on
+ # non-windows platforms.
+-if host_machine.system() != 'windows'
++if (host_machine.system() != 'windows') and (host_machine.system() != 'serenity')
+   if cc.has_function('posix_memalign')
+     pre_args += '-DHAVE_POSIX_MEMALIGN'
+   endif
+diff --git a/src/gallium/drivers/llvmpipe/lp_texture.c b/src/gallium/drivers/llvmpipe/lp_texture.c
+index 8555b9e..8bf55e1 100644
+--- a/src/gallium/drivers/llvmpipe/lp_texture.c
++++ b/src/gallium/drivers/llvmpipe/lp_texture.c
+@@ -54,7 +54,7 @@
+ #include "frontend/sw_winsys.h"
+ #include "git_sha1.h"
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(__serenity__)
+ #include "drm-uapi/drm_fourcc.h"
+ #endif
+ 
+@@ -1082,7 +1082,7 @@ llvmpipe_resource_get_param(struct pipe_screen *screen,
+    case PIPE_RESOURCE_PARAM_LAYER_STRIDE:
+       *value = lpr->img_stride[level];
+       return true;
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(__serenity__)
+    case PIPE_RESOURCE_PARAM_MODIFIER:
+       *value = DRM_FORMAT_MOD_INVALID;
+       return true;
+diff --git a/src/util/os_misc.c b/src/util/os_misc.c
+index 31f1c55..0f85036 100644
+--- a/src/util/os_misc.c
++++ b/src/util/os_misc.c
+@@ -57,7 +57,7 @@
+ #  include <unistd.h>
+ #  include <log/log.h>
+ #  include <cutils/properties.h>
+-#elif DETECT_OS_LINUX || DETECT_OS_CYGWIN || DETECT_OS_SOLARIS || DETECT_OS_HURD
++#elif DETECT_OS_LINUX || DETECT_OS_CYGWIN || DETECT_OS_SOLARIS || DETECT_OS_HURD || DETECT_OS_SERENITY
+ #  include <unistd.h>
+ #elif DETECT_OS_OPENBSD || DETECT_OS_FREEBSD
+ #  include <sys/resource.h>
+@@ -223,7 +223,7 @@ os_get_option(const char *name)
+ bool
+ os_get_total_physical_memory(uint64_t *size)
+ {
+-#if DETECT_OS_LINUX || DETECT_OS_CYGWIN || DETECT_OS_SOLARIS || DETECT_OS_HURD
++#if DETECT_OS_LINUX || DETECT_OS_CYGWIN || DETECT_OS_SOLARIS || DETECT_OS_HURD || DETECT_OS_SERENITY
+    const long phys_pages = sysconf(_SC_PHYS_PAGES);
+    const long page_size = sysconf(_SC_PAGE_SIZE);
+ 
+diff --git a/src/util/u_thread.h b/src/util/u_thread.h
+index a421545..09ae08f 100644
+--- a/src/util/u_thread.h
++++ b/src/util/u_thread.h
+@@ -125,7 +125,7 @@ static inline thrd_t u_thread_create(int (*routine)(void *), void *param)
+ static inline void u_thread_setname( const char *name )
+ {
+ #if defined(HAVE_PTHREAD)
+-#if DETECT_OS_LINUX || DETECT_OS_CYGWIN || DETECT_OS_SOLARIS
++#if DETECT_OS_LINUX || DETECT_OS_CYGWIN || DETECT_OS_SOLARIS || DETECT_OS_SERENITY
+    int ret = pthread_setname_np(pthread_self(), name);
+    if (ret == ERANGE) {
+       char buf[16];
+@@ -238,7 +238,7 @@ util_set_current_thread_affinity(const uint32_t *mask,
+ static inline int64_t
+ util_thread_get_time_nano(thrd_t thread)
+ {
+-#if defined(HAVE_PTHREAD) && !defined(__APPLE__) && !defined(__HAIKU__)
++#if defined(HAVE_PTHREAD) && !defined(__APPLE__) && !defined(__HAIKU__) && !defined(__serenity__)
+    struct timespec ts;
+    clockid_t cid;
+ 
+@@ -278,7 +278,7 @@ static inline bool u_thread_is_self(thrd_t thread)
+  * util_barrier
+  */
+ 
+-#if defined(HAVE_PTHREAD) && !defined(__APPLE__) && !defined(__HAIKU__)
++#if defined(HAVE_PTHREAD) && !defined(__APPLE__) && !defined(__HAIKU__) && !defined(__serenity__)
+ 
+ typedef pthread_barrier_t util_barrier;
+ 
+diff --git a/src/vulkan/runtime/vk_image.c b/src/vulkan/runtime/vk_image.c
+index 2dccaf4..9be72ca 100644
+--- a/src/vulkan/runtime/vk_image.c
++++ b/src/vulkan/runtime/vk_image.c
+@@ -25,7 +25,7 @@
+ 
+ #include <vulkan/vulkan_android.h>
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(__serenity__)
+ #include <drm-uapi/drm_fourcc.h>
+ #endif
+ 
+@@ -105,7 +105,7 @@ vk_image_init(struct vk_device *device,
+       vk_find_struct_const(pCreateInfo->pNext, WSI_IMAGE_CREATE_INFO_MESA);
+    image->wsi_legacy_scanout = wsi_info && wsi_info->scanout;
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(__serenity__)
+    image->drm_format_mod = ((1ULL << 56) - 1) /* DRM_FORMAT_MOD_INVALID */;
+ #endif
+ 
+@@ -154,7 +154,7 @@ vk_image_destroy(struct vk_device *device,
+    vk_object_free(device, alloc, image);
+ }
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(__serenity__)
+ VKAPI_ATTR VkResult VKAPI_CALL
+ vk_common_GetImageDrmFormatModifierPropertiesEXT(UNUSED VkDevice device,
+                                                  VkImage _image,
+-- 
+2.34.1
+

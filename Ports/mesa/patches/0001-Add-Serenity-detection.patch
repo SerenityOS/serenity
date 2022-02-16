@@ -1,0 +1,50 @@
+From 4b8ab8cff0be4dc8279c62edfb860db0bdd880b5 Mon Sep 17 00:00:00 2001
+From: Sviatoslav Peleshko <speles@mail.ua>
+Date: Tue, 15 Feb 2022 20:12:25 +0200
+Subject: [PATCH 1/4] Add Serenity detection
+
+---
+ meson.build          | 3 +++
+ src/util/detect_os.h | 5 +++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/meson.build b/meson.build
+index 961ca8e..82bba74 100644
+--- a/meson.build
++++ b/meson.build
+@@ -319,6 +319,8 @@ if _platforms.contains('auto')
+     _platforms = ['x11']
+   elif ['haiku'].contains(host_machine.system())
+     _platforms = ['haiku']
++  elif host_machine.system() == 'serenity'
++    _platforms = ['serenity']
+   elif host_machine.system() == 'windows'
+     _platforms = ['windows']
+   else
+@@ -331,6 +333,7 @@ with_platform_android = _platforms.contains('android')
+ with_platform_x11 = _platforms.contains('x11')
+ with_platform_wayland = _platforms.contains('wayland')
+ with_platform_haiku = _platforms.contains('haiku')
++with_platform_serenity = _platforms.contains('serenity')
+ with_platform_windows = _platforms.contains('windows')
+ 
+ with_glx = get_option('glx')
+diff --git a/src/util/detect_os.h b/src/util/detect_os.h
+index 6506948..2eda1d5 100644
+--- a/src/util/detect_os.h
++++ b/src/util/detect_os.h
+@@ -76,6 +76,11 @@
+ #define DETECT_OS_UNIX 1
+ #endif
+ 
++#if defined(__serenity__)
++#define DETECT_OS_SERENITY 1
++#define DETECT_OS_UNIX 1
++#endif
++
+ #if defined(__CYGWIN__)
+ #define DETECT_OS_CYGWIN 1
+ #define DETECT_OS_UNIX 1
+-- 
+2.34.1
+

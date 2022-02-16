@@ -1,0 +1,207 @@
+From 54efdfdaafa0de8c7d928f73cbd16bfc28e255cb Mon Sep 17 00:00:00 2001
+From: Sviatoslav Peleshko <speles@mail.ua>
+Date: Thu, 17 Feb 2022 11:10:45 +0200
+Subject: [PATCH] Expose LibGL interface from libOSMesa
+
+---
+ src/gallium/targets/osmesa/LibGLInterface.cpp | 92 +++++++++++++++++++
+ src/gallium/targets/osmesa/LibGLInterface.h   | 31 +++++++
+ src/gallium/targets/osmesa/meson.build        |  7 +-
+ src/gallium/targets/osmesa/osmesa.def         |  3 +
+ src/gallium/targets/osmesa/osmesa.sym         |  3 +
+ 5 files changed, 134 insertions(+), 2 deletions(-)
+ create mode 100644 src/gallium/targets/osmesa/LibGLInterface.cpp
+ create mode 100644 src/gallium/targets/osmesa/LibGLInterface.h
+
+diff --git a/src/gallium/targets/osmesa/LibGLInterface.cpp b/src/gallium/targets/osmesa/LibGLInterface.cpp
+new file mode 100644
+index 0000000..8508dd2
+--- /dev/null
++++ b/src/gallium/targets/osmesa/LibGLInterface.cpp
+@@ -0,0 +1,92 @@
++/*
++ * Copyright (c) 2022, Sviatoslav Peleshko <speles@mail.ua>
++ *
++ * SPDX-License-Identifier: BSD-2-Clause
++ */
++
++#include "LibGLInterface.h"
++#include "GL/osmesa.h"
++#include <AK/OwnPtr.h>
++#include <AK/String.h>
++#include <LibGfx/Bitmap.h>
++
++#define GL_DEBUG 0
++
++namespace GL {
++
++__attribute__((visibility("hidden"))) GL::GLContext* g_gl_context;
++
++GLContext::GLContext(Gfx::Bitmap& frontbuffer)
++    : m_frontbuffer(frontbuffer)
++{
++    GLenum context_format;
++    switch (frontbuffer.format()) {
++    case Gfx::BitmapFormat::BGRx8888:
++    case Gfx::BitmapFormat::BGRA8888:
++        context_format = OSMESA_BGRA;
++        break;
++    case Gfx::BitmapFormat::RGBA8888:
++        context_format = OSMESA_RGBA;
++        break;
++    default:
++        VERIFY_NOT_REACHED();
++    }
++
++    m_mesa_context = OSMesaCreateContext(context_format, NULL);
++    if (!m_mesa_context) {
++        dbgln("OSMesaCreateContext failed!");
++        VERIFY_NOT_REACHED();
++    }
++}
++
++GLContext::~GLContext()
++{
++    dbgln_if(GL_DEBUG, "OSMesaLibGL::GLContext::~GLContext() {:p}", this);
++    if (g_gl_context == this)
++        make_context_current(nullptr);
++}
++
++void GLContext::activate()
++{
++    if (GL_TRUE != OSMesaMakeCurrent(m_mesa_context, m_frontbuffer->scanline_u8(0), GL_UNSIGNED_BYTE, m_frontbuffer->width(), m_frontbuffer->height())) {
++        dbgln("OSMesaMakeCurrent failed");
++        VERIFY_NOT_REACHED();
++    }
++
++    OSMesaPixelStore(OSMESA_Y_UP, 0);
++}
++
++void GLContext::present()
++{
++    glFinish();
++}
++
++NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)
++{
++    NonnullOwnPtr<GLContext> context = make<GLContext>(bitmap);
++
++    dbgln_if(GL_DEBUG, "OSMesaLibGL::GL::create_context({}) -> {:p}", bitmap.size(), context.ptr());
++
++    if (!g_gl_context)
++        make_context_current(context);
++
++    return context;
++}
++
++void make_context_current(GLContext* context)
++{
++    if (g_gl_context == context)
++        return;
++
++    dbgln_if(GL_DEBUG, "OSMesaLibGL::GL::make_context_current({:p})", context);
++    g_gl_context = context;
++
++    if (context)
++        context->activate();
++}
++
++void present_context(GLContext* context)
++{
++    context->present();
++}
++}
+diff --git a/src/gallium/targets/osmesa/LibGLInterface.h b/src/gallium/targets/osmesa/LibGLInterface.h
+new file mode 100644
+index 0000000..94adee5
+--- /dev/null
++++ b/src/gallium/targets/osmesa/LibGLInterface.h
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (c) 2022, Sviatoslav Peleshko <speles@mail.ua>
++ *
++ * SPDX-License-Identifier: BSD-2-Clause
++ */
++
++#pragma once
++
++#include "GL/osmesa.h"
++#include <AK/OwnPtr.h>
++#include <LibGfx/Bitmap.h>
++
++namespace GL {
++
++class GLContext {
++public:
++    GLContext(Gfx::Bitmap& frontbuffer);
++    virtual ~GLContext();
++
++    void activate();
++    void present();
++
++private:
++    NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
++    OSMesaContext m_mesa_context;
++};
++
++GLAPI NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap);
++GLAPI void make_context_current(GLContext* context);
++GLAPI void present_context(GLContext* context);
++}
+\ No newline at end of file
+diff --git a/src/gallium/targets/osmesa/meson.build b/src/gallium/targets/osmesa/meson.build
+index 38fcaca..051bc08 100644
+--- a/src/gallium/targets/osmesa/meson.build
++++ b/src/gallium/targets/osmesa/meson.build
+@@ -38,10 +38,13 @@ else
+   osmesa_def = 'osmesa.def'
+ endif
+ 
++dep_libgfx = cpp.find_library('gfx')
++
+ libosmesa = shared_library(
+   osmesa_lib_name,
+-  'target.c',
++  'target.c', 'LibGLInterface.cpp',
+   gnu_symbol_visibility : 'hidden',
++  cpp_args : [ '-std=c++20' ],
+   link_args : [ld_args_gc_sections, osmesa_link_args],
+   vs_module_defs : osmesa_def,
+   include_directories : [
+@@ -54,7 +57,7 @@ libosmesa = shared_library(
+     libmesa, libgallium, libws_null, osmesa_link_with,
+   ],
+   dependencies : [
+-    dep_ws2_32, dep_selinux, dep_thread, dep_clock, dep_unwind, driver_swrast
++    dep_ws2_32, dep_selinux, dep_thread, dep_clock, dep_unwind, driver_swrast, dep_libgfx
+   ],
+   name_prefix : host_machine.system() == 'windows' ? '' : 'lib',  # otherwise mingw will create libosmesa.dll
+   soversion : host_machine.system() == 'windows' ? '' : '8',
+diff --git a/src/gallium/targets/osmesa/osmesa.def b/src/gallium/targets/osmesa/osmesa.def
+index f6d09b8..85fd0d5 100644
+--- a/src/gallium/targets/osmesa/osmesa.def
++++ b/src/gallium/targets/osmesa/osmesa.def
+@@ -352,3 +352,6 @@ EXPORTS
+ 	glVertex4sv
+ 	glVertexPointer
+ 	glViewport
++	_ZN2GL14create_contextERN3Gfx6BitmapE
++	_ZN2GL15present_contextEPNS_9GLContextE
++	_ZN2GL20make_context_currentEPNS_9GLContextE
+diff --git a/src/gallium/targets/osmesa/osmesa.sym b/src/gallium/targets/osmesa/osmesa.sym
+index 59beab3..6e2ce57 100644
+--- a/src/gallium/targets/osmesa/osmesa.sym
++++ b/src/gallium/targets/osmesa/osmesa.sym
+@@ -13,6 +13,9 @@
+ 		OSMesaMakeCurrent;
+ 		OSMesaPixelStore;
+ 		OSMesaPostprocess;
++		_ZN2GL14create_contextERN3Gfx6BitmapE;
++		_ZN2GL15present_contextEPNS_9GLContextE;
++		_ZN2GL20make_context_currentEPNS_9GLContextE;
+ 		gl*;
+ 		mgl*;
+ 	local:
+-- 
+2.35.1
+

@@ -1,0 +1,164 @@
+#!/bin/bash
+
+# FIXME: Real llvm-config can't run on the build machine because it was built for Serenity.
+#        Meanwhile, despite meson supporting CMake-based llvm detection, I wasn't able to make it work.
+#        And that's how this hack of a script was born.
+
+MESA_PORT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+
+BUILD_DIR="${SERENITY_BUILD_DIR}/Root"
+
+LLVM_PORT_MAJOR_VERSION=13
+LLVM_PORT_FULL_VERSION="${LLVM_PORT_MAJOR_VERSION}.0.0"
+LLVM_PORT_DIR="${MESA_PORT_DIR}/../llvm"
+LLVM_PORT_BUILD_DIR="${LLVM_PORT_DIR}/llvm-build"
+LLVM_PORT_SRC_DIR="${LLVM_PORT_DIR}/llvm-project-llvmorg-${LLVM_PORT_FULL_VERSION}/llvm"
+
+PRINT_SYSTEM_LIBS=no
+PRINT_LIBS=no
+PRINT_LIB_NAMES=no
+PRINT_LIB_FILES=no
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    --version)        # Print LLVM version.
+        echo "${LLVM_PORT_FULL_VERSION}"
+        shift
+    ;;
+    --prefix)         # Print the installation prefix.
+        echo "${LLVM_PORT_BUILD_DIR}"
+        shift
+    ;;
+    --src-root)       # Print the source root LLVM was built from.
+        echo "${LLVM_PORT_SRC_DIR}"
+        shift
+    ;;
+    --obj-root)       # Print the object root used to build LLVM.
+        echo "${LLVM_PORT_BUILD_DIR}"
+        shift
+    ;;
+    --bindir)         # Directory containing LLVM executables.
+        echo "${LLVM_PORT_BUILD_DIR}/bin"
+        shift
+    ;;
+    --includedir)     # Directory containing LLVM headers.
+        echo "${BUILD_DIR}/usr/local/include"
+        shift
+    ;;
+    --libdir)         # Directory containing LLVM libraries.
+        echo "${BUILD_DIR}/usr/local/lib"
+        shift
+    ;;
+    --cmakedir)       # Directory containing LLVM cmake modules.
+        echo "${BUILD_DIR}/lib/cmake/llvm"
+        shift
+    ;;
+    --cppflags)       # C preprocessor flags for files that include LLVM headers.
+        echo "-I${LLVM_PORT_SRC_DIR}/include -I${BUILD_DIR}/usr/local/include"
+        shift
+    ;;
+    --cflags)         # C compiler flags for files that include LLVM headers.
+        echo "-I${LLVM_PORT_SRC_DIR}/include -I${BUILD_DIR}/usr/local/include"
+        shift
+    ;;
+    --cxxflags)       # C++ compiler flags for files that include LLVM headers.
+        echo "-I${LLVM_PORT_SRC_DIR}/include -I${BUILD_DIR}/usr/local/include"
+        shift
+    ;;
+    --ldflags)        # Print Linker flags.
+        echo "-L${BUILD_DIR}/usr/local/lib"
+        shift
+    ;;
+    --system-libs)    # System Libraries needed to link against LLVM components.
+        # USES ARGS
+        PRINT_SYSTEM_LIBS=yes
+        shift
+    ;;
+    --libs)           # Libraries needed to link against LLVM components.
+        # USES ARGS
+        PRINT_LIBS=yes
+        echo "-lLLVM-${LLVM_PORT_MAJOR_VERSION}"
+        shift
+    ;;
+    --libnames)       # Bare library names for in-tree builds.
+        # USES ARGS
+        PRINT_LIB_NAMES=yes
+        shift
+    ;;
+    --libfiles)       # Fully qualified library filenames for makefile depends.
+        # USES ARGS
+        PRINT_LIB_FILES=yes
+        shift
+    ;;
+    --components)     # List of all possible components.
+        echo "aarch64 aarch64asmparser aarch64codegen aarch64desc aarch64disassembler aarch64info aarch64utils aggressiveinstcombine all all-targets amdgpu amdgpuasmparser amdgpucodegen amdgpudesc amdgpudisassembler amdgpuinfo amdgpuutils analysis arm armasmparser armcodegen armdesc armdisassembler arminfo armutils asmparser asmprinter avr avrasmparser avrcodegen avrdesc avrdisassembler avrinfo binaryformat bitreader bitstreamreader bitwriter bpf bpfasmparser bpfcodegen bpfdesc bpfdisassembler bpfinfo cfguard codegen core coroutines coverage debuginfocodeview debuginfodwarf debuginfogsym debuginfomsf debuginfopdb demangle dlltooldriver dwarflinker dwp engine executionengine extensions filecheck frontendopenacc frontendopenmp fuzzmutate globalisel hexagon hexagonasmparser hexagoncodegen hexagondesc hexagondisassembler hexagoninfo instcombine instrumentation interfacestub interpreter ipo irreader jitlink lanai lanaiasmparser lanaicodegen lanaidesc lanaidisassembler lanaiinfo libdriver lineeditor linker lto mc mca mcdisassembler mcjit mcparser mips mipsasmparser mipscodegen mipsdesc mipsdisassembler mipsinfo mirparser msp430 msp430asmparser msp430codegen msp430desc msp430disassembler msp430info native nativecodegen nvptx nvptxcodegen nvptxdesc nvptxinfo objcarcopts object objectyaml option orcjit orcshared orctargetprocess passes powerpc powerpcasmparser powerpccodegen powerpcdesc powerpcdisassembler powerpcinfo profiledata remarks riscv riscvasmparser riscvcodegen riscvdesc riscvdisassembler riscvinfo runtimedyld scalaropts selectiondag sparc sparcasmparser sparccodegen sparcdesc sparcdisassembler sparcinfo support symbolize systemz systemzasmparser systemzcodegen systemzdesc systemzdisassembler systemzinfo tablegen target textapi transformutils vectorize webassembly webassemblyasmparser webassemblycodegen webassemblydesc webassemblydisassembler webassemblyinfo webassemblyutils windowsmanifest x86 x86asmparser x86codegen x86desc x86disassembler x86info xcore xcorecodegen xcoredesc xcoredisassembler xcoreinfo xray"
+        shift
+    ;;
+    --targets-built)  # List of all targets currently built.
+        echo "X86"
+        shift
+    ;;
+    --host-target)    # Target triple used to configure LLVM.
+        echo "$SERENITY_ARCH-pc-serenity"
+        shift
+    ;;
+    --build-mode)     # Print build mode of LLVM tree (e.g. Debug or Release).
+        echo "Debug"
+        shift
+    ;;
+    --assertion-mode) # Print assertion mode of LLVM tree (ON or OFF).
+        echo "ON"
+        shift
+    ;;
+    --build-system)   # Print the build system used to build LLVM (always cmake).
+        echo "cmake"
+        shift
+    ;;
+    --has-rtti)       # Print whether or not LLVM was built with rtti (YES or NO).
+        echo "YES"
+        shift
+    ;;
+    --shared-mode)    # Print how the provided components can be collectively linked (`shared` or `static`).
+        echo "shared"
+        shift
+    ;;
+    --link-shared)    # Link the components as shared libraries.
+        # TODO
+        shift
+    ;;
+    --link-static)    # Link the component libraries statically.
+        # TODO
+        shift
+    ;;
+    --ignore-libllvm) # Ignore libLLVM and link component libraries instead.
+        # TODO
+        shift
+    ;;
+    -*)
+        echo "Unknown option $1"
+        exit 1
+    ;;
+    *)
+        COMPONENT_ARGS+=("$1")
+        shift
+    ;;
+    esac
+done
+
+
+for i in "${COMPONENT_ARGS[@]}" ; do
+    if [ $PRINT_SYSTEM_LIBS = "yes" ] ; then
+        echo "-lLLVM-${LLVM_PORT_MAJOR_VERSION}"
+    fi
+    if [ $PRINT_LIBS = "yes" ] ; then
+        echo "-lLLVM-${LLVM_PORT_MAJOR_VERSION}"
+    fi
+    if [ $PRINT_LIB_NAMES = "yes" ] ; then
+        :
+    fi
+    if [ $PRINT_LIB_FILES = "yes" ] ; then
+        :
+    fi
+done
+
+exit 0

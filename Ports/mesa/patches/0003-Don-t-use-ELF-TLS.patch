@@ -1,0 +1,31 @@
+From 0552cbcd2aab3cd5970aa760df2da326197e42a3 Mon Sep 17 00:00:00 2001
+From: Sviatoslav Peleshko <speles@mail.ua>
+Date: Tue, 15 Feb 2022 20:13:46 +0200
+Subject: [PATCH 3/4] Don't use ELF TLS
+
+---
+ meson.build | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 0324d66..9c87442 100644
+--- a/meson.build
++++ b/meson.build
+@@ -495,8 +495,12 @@ foreach platform : _platforms
+   pre_args += '-DHAVE_@0@_PLATFORM'.format(platform.to_upper())
+ endforeach
+ 
+-use_elf_tls = true
+-pre_args += '-DUSE_ELF_TLS'
++if with_platform_serenity
++  use_elf_tls = false
++else
++  use_elf_tls = true
++  pre_args += '-DUSE_ELF_TLS'
++endif
+ 
+ if with_platform_android and get_option('platform-sdk-version') >= 29
+   # By default the NDK compiler, at least, emits emutls references instead of
+-- 
+2.34.1
+
