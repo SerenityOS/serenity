@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StringBuilder.h>
@@ -14,6 +15,8 @@
 #include <LibJS/Lexer.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/SourceRange.h>
+#include <LibJS/Token.h>
+#include <initializer_list>
 #include <stdio.h>
 
 namespace JS {
@@ -84,6 +87,33 @@ public:
         Yes
     };
 
+    struct ForbiddenTokens {
+        ForbiddenTokens(std::initializer_list<TokenType> const& forbidden);
+        ForbiddenTokens merge(ForbiddenTokens other) const;
+        bool allows(TokenType token) const;
+        ForbiddenTokens forbid(std::initializer_list<TokenType> const& forbidden) const;
+
+    private:
+        void forbid_tokens(std::initializer_list<TokenType> const& forbidden);
+        bool m_forbid_in_token : 1 { false };
+        bool m_forbid_logical_tokens : 1 { false };
+        bool m_forbid_coalesce_token : 1 { false };
+        bool m_forbid_paren_open : 1 { false };
+        bool m_forbid_question_mark_period : 1 { false };
+        bool m_forbid_equals : 1 { false };
+    };
+
+    struct ExpressionResult {
+        template<typename T>
+        ExpressionResult(NonnullRefPtr<T> expression, ForbiddenTokens forbidden = {})
+            : expression(expression)
+            , forbidden(forbidden)
+        {
+        }
+        NonnullRefPtr<Expression> expression;
+        ForbiddenTokens forbidden;
+    };
+
     NonnullRefPtr<Statement> parse_for_in_of_statement(NonnullRefPtr<ASTNode> lhs, IsForAwaitLoop is_await);
     NonnullRefPtr<IfStatement> parse_if_statement();
     NonnullRefPtr<ThrowStatement> parse_throw_statement();
@@ -97,9 +127,9 @@ public:
     NonnullRefPtr<WhileStatement> parse_while_statement();
     NonnullRefPtr<WithStatement> parse_with_statement();
     NonnullRefPtr<DebuggerStatement> parse_debugger_statement();
-    NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test, Vector<TokenType> const&);
+    NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test, ForbiddenTokens);
     NonnullRefPtr<OptionalChain> parse_optional_chain(NonnullRefPtr<Expression> base);
-    NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, const Vector<TokenType>& forbidden = {});
+    NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, ForbiddenTokens forbidden = {});
     PrimaryExpressionParseResult parse_primary_expression();
     NonnullRefPtr<Expression> parse_unary_prefixed_expression();
     NonnullRefPtr<RegExpLiteral> parse_regexp_literal();
@@ -107,7 +137,7 @@ public:
     NonnullRefPtr<ArrayExpression> parse_array_expression();
     NonnullRefPtr<StringLiteral> parse_string_literal(const Token& token, bool in_template_literal = false);
     NonnullRefPtr<TemplateLiteral> parse_template_literal(bool is_tagged);
-    NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right, Vector<TokenType> const& forbidden = {});
+    ExpressionResult parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right, ForbiddenTokens forbidden = {});
     NonnullRefPtr<Expression> parse_call_expression(NonnullRefPtr<Expression>);
     NonnullRefPtr<NewExpression> parse_new_expression();
     NonnullRefPtr<ClassDeclaration> parse_class_declaration();
@@ -115,7 +145,7 @@ public:
     NonnullRefPtr<YieldExpression> parse_yield_expression();
     NonnullRefPtr<AwaitExpression> parse_await_expression();
     NonnullRefPtr<Expression> parse_property_key();
-    NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity, Vector<TokenType> const& forbidden = {});
+    NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity, ForbiddenTokens forbidden = {});
     NonnullRefPtr<Identifier> parse_identifier();
     NonnullRefPtr<ImportStatement> parse_import_statement(Program& program);
     NonnullRefPtr<ExportStatement> parse_export_statement(Program& program);
@@ -186,7 +216,7 @@ private:
     Associativity operator_associativity(TokenType) const;
     bool match_expression() const;
     bool match_unary_prefixed_expression() const;
-    bool match_secondary_expression(const Vector<TokenType>& forbidden = {}) const;
+    bool match_secondary_expression(ForbiddenTokens forbidden = {}) const;
     bool match_statement() const;
     bool match_export_or_import() const;
     bool match_assert_clause() const;
