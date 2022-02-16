@@ -61,6 +61,9 @@ public:
     ModelSelection const& selection() const { return m_selection; }
     virtual void select_all() { }
 
+    void activate(ModelIndex const&);
+    void activate_selected();
+
     bool is_editable() const { return m_editable; }
     void set_editable(bool editable) { m_editable = editable; }
 
@@ -160,8 +163,6 @@ protected:
 
     virtual void did_scroll() override;
     void set_hovered_index(ModelIndex const&);
-    void activate(ModelIndex const&);
-    void activate_selected();
     void update_edit_widget_position();
 
     void stop_highlighted_search_timer();
