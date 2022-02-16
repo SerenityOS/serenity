@@ -264,15 +264,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
             }
             break;
         }
-        case 85: {
-            if (!is_block_device) {
-                switch (minor_number) {
-                default:
-                    warnln("Unknown character device {}:{}", major_number, minor_number);
-                }
-            }
-            break;
-        }
         case 30: {
             if (is_block_device) {
                 create_devtmpfs_block_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
