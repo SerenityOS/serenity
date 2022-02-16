@@ -24,6 +24,7 @@
 #include <LibGUI/WindowManagerServerConnection.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Rect.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -274,6 +275,21 @@ void Window::set_rect(const Gfx::IntRect& a_rect)
         m_front_store = nullptr;
     if (m_main_widget)
         m_main_widget->resize(window_rect.size());
+}
+
+size_t Window::containing_screen_index() const
+{
+    auto window_rect = rect();
+    auto screen_rects = Desktop::the().rects();
+
+    size_t screen_with_largest_intersection_index = 0;
+    for (size_t i = 1; i < screen_rects.size(); i++) {
+        if (Gfx::IntRect::intersection(screen_rects[i], window_rect).size().area()
+            > Gfx::IntRect::intersection(screen_rects[screen_with_largest_intersection_index], window_rect).size().area())
+            screen_with_largest_intersection_index = i;
+    }
+
+    return screen_with_largest_intersection_index;
 }
 
 Gfx::IntSize Window::minimum_size() const
