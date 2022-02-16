@@ -12,7 +12,6 @@ namespace Web::Layout {
 SVGBox::SVGBox(DOM::Document& document, SVG::SVGElement& element, NonnullRefPtr<CSS::StyleProperties> style)
     : BlockContainer(document, &element, move(style))
 {
-    set_inline(true);
 }
 
 void SVGBox::before_children_paint(PaintContext& context, PaintPhase phase)
