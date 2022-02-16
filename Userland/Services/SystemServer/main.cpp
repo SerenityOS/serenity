@@ -199,6 +199,10 @@ static wellknown_devices const wellknown_char_devices[] = {
     { makedev(  1,   3), "null",      0666 },
     { makedev(  1,   5), "zero",      0666 },
     { makedev(  1,   8), "random",    0666 },
+    { makedev(  4,   0), "tty0",      0620 },
+    { makedev(  4,   1), "tty1",      0620 },
+    { makedev(  4,   2), "tty2",      0620 },
+    { makedev(  4,   3), "tty3",      0620 },
 };
 // clang-format on
 
@@ -321,22 +325,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
         case 4: {
             if (!is_block_device) {
                 switch (minor_number) {
-                case 0: {
-                    create_devtmpfs_char_device("/dev/tty0", 0620, 4, 0);
-                    break;
-                }
-                case 1: {
-                    create_devtmpfs_char_device("/dev/tty1", 0620, 4, 1);
-                    break;
-                }
-                case 2: {
-                    create_devtmpfs_char_device("/dev/tty2", 0620, 4, 2);
-                    break;
-                }
-                case 3: {
-                    create_devtmpfs_char_device("/dev/tty3", 0620, 4, 3);
-                    break;
-                }
                 case 64: {
                     create_devtmpfs_char_device("/dev/ttyS0", 0620, 4, 64);
                     break;
