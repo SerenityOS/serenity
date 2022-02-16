@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -91,10 +92,6 @@ Game::Game()
 
     reset();
 };
-
-Game::~Game()
-{
-}
 
 void Game::reset()
 {

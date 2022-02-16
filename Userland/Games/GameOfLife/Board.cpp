@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andres Crucitti <dasc495@gmail.com>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,10 +13,6 @@
 Board::Board(size_t rows, size_t columns)
 {
     resize(rows, columns);
-}
-
-Board::~Board()
-{
 }
 
 void Board::run_generation()

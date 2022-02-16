@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -153,10 +154,6 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
 
         set_single_chording(single_chording);
     }
-}
-
-Field::~Field()
-{
 }
 
 void Field::set_face(Face face)
@@ -528,14 +525,6 @@ void Field::set_single_chording(bool enabled)
 {
     m_single_chording = enabled;
     Config::write_bool("Minesweeper", "Game", "SingleChording", m_single_chording);
-}
-
-Square::Square()
-{
-}
-
-Square::~Square()
-{
 }
 
 template<typename Callback>

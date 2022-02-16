@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Pedro Pereira <pmh.pereira@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +21,7 @@ public:
 
 private:
     CustomGameDialog(GUI::Window* parent_window);
-    virtual ~CustomGameDialog() override;
+    virtual ~CustomGameDialog() override = default;
 
     void set_max_mines();
 

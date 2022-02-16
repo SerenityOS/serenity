@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ryan Wilson <ryan@rdwilson.xyz>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,10 +12,9 @@
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
 
-class Pattern {
+class Pattern final {
 public:
     Pattern(Vector<String>);
-    virtual ~Pattern();
     Vector<String> pattern() { return m_pattern; };
     GUI::Action* action() { return m_action; }
     void set_action(GUI::Action*);

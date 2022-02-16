@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +19,7 @@ public:
     static const int game_width = 480;
     static const int game_height = 500;
 
-    virtual ~Game() override;
+    virtual ~Game() override = default;
 
     void set_paused(bool paused);
 

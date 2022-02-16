@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,10 +25,6 @@ Game::Game()
     set_paused(false);
     start_timer(16);
     reset();
-}
-
-Game::~Game()
-{
 }
 
 void Game::reset_paddle()
