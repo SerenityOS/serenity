@@ -22,7 +22,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<AudioChannel> AudioChannel::must_create(AudioCont
 }
 
 AudioChannel::AudioChannel(AudioController const& controller, size_t channel_index)
-    : CharacterDevice(encoded_device(AudioManagement::the().audio_type_major_number(), AudioManagement::the().generate_storage_minor_number()))
+    : CharacterDevice(AudioManagement::the().generate_audio_device_id())
     , m_controller(controller)
     , m_channel_index(channel_index)
 {
