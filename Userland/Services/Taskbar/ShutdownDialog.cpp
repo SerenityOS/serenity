@@ -40,7 +40,7 @@ Vector<char const*> ShutdownDialog::show()
 }
 
 ShutdownDialog::ShutdownDialog()
-    : Dialog(nullptr)
+    : Dialog(nullptr, ScreenPosition::Center)
 {
     auto& widget = set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
@@ -109,7 +109,6 @@ ShutdownDialog::ShutdownDialog()
     };
 
     resize(413, 235);
-    center_on_screen();
     set_resizable(false);
     set_title("Exit SerenityOS");
     set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/power.png").release_value_but_fixme_should_propagate_errors());
