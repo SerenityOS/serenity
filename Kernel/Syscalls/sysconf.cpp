@@ -22,6 +22,7 @@ ErrorOr<FlatPtr> Process::sys$sysconf(int name)
     case _SC_OPEN_MAX:
         return OpenFileDescriptions::max_open();
     case _SC_PAGESIZE:
+    case _SC_PAGE_SIZE:
         return PAGE_SIZE;
     case _SC_HOST_NAME_MAX:
         return HOST_NAME_MAX;
