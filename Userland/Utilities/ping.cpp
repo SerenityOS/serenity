@@ -26,7 +26,7 @@
 
 static uint32_t total_pings;
 static int successful_pings;
-static uint32_t count;
+static Optional<size_t> count;
 static uint32_t total_ms;
 static int min_ms;
 static int max_ms;
@@ -67,8 +67,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
     args_parser.parse(arguments);
 
-    if (count < 1 || count > UINT32_MAX) {
-        warnln("invalid count argument: '{}': out of range: 1 <= value <= {}", count, UINT32_MAX);
+    if (count.has_value() && (count.value() < 1 || count.value() > UINT32_MAX)) {
+        warnln("invalid count argument: '{}': out of range: 1 <= value <= {}", count.value(), UINT32_MAX);
         return 1;
     }
 
@@ -157,7 +157,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         struct timeval tv_send;
         gettimeofday(&tv_send, nullptr);
 
-        if (count && total_pings == count)
+        if (count.has_value() && total_pings == count.value())
             closing_statistics();
         else
             total_pings++;
