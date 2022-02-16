@@ -2149,7 +2149,7 @@ Optional<Parser::Dimension> Parser::parse_dimension(StyleComponentValueRule cons
     if (component_value.is(Token::Type::Dimension)) {
         float numeric_value = component_value.token().dimension_value();
         auto unit_string = component_value.token().dimension_unit();
-        Optional<Length::Type> length_type = Length::Type::Undefined;
+        Optional<Length::Type> length_type;
 
         if (unit_string.equals_ignoring_case("px"sv)) {
             length_type = Length::Type::Px;
