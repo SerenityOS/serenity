@@ -362,9 +362,11 @@ function(libweb_js_wrapper class)
     foreach(iter RANGE "${bindings_end}")
         list(GET BINDINGS_SOURCES ${iter} bindings_src)
         list(GET BINDINGS_TYPES ${iter} bindings_type)
+        get_property(include_paths DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+        list(TRANSFORM include_paths PREPEND -i)
         add_custom_command(
             OUTPUT "${bindings_src}"
-            COMMAND "$<TARGET_FILE:Lagom::WrapperGenerator>" "--${bindings_type}" "${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl" "${CMAKE_CURRENT_SOURCE_DIR}/" > "${bindings_src}.tmp"
+            COMMAND "$<TARGET_FILE:Lagom::WrapperGenerator>" "--${bindings_type}" ${include_paths} "${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl" "${CMAKE_CURRENT_SOURCE_DIR}/" > "${bindings_src}.tmp"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${bindings_src}.tmp" "${bindings_src}"
             COMMAND "${CMAKE_COMMAND}" -E remove "${bindings_src}.tmp"
             VERBATIM

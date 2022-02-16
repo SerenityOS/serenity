@@ -13,6 +13,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <AK/Queue.h>
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
@@ -20,6 +21,12 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <ctype.h>
+
+namespace IDL {
+struct Interface;
+}
+
+static Vector<StringView> s_header_search_paths;
 
 static String make_input_acceptable_cpp(String const& input)
 {
@@ -93,6 +100,95 @@ static String convert_enumeration_value_to_cpp_enum_member(String const& value, 
 
     warnln("{}", error_message.string_view());
     exit(EXIT_FAILURE);
+}
+
+static void generate_include_for_wrapper(auto& generator, auto& wrapper_name)
+{
+    auto wrapper_generator = generator.fork();
+    wrapper_generator.set("wrapper_class", wrapper_name);
+    // FIXME: These may or may not exist, because REASONS.
+    wrapper_generator.append(R"~~~(
+#if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
+#   include <LibWeb/Bindings/@wrapper_class@.h>
+#endif
+#if __has_include(<LibWeb/Bindings/@wrapper_class@Factory.h>)
+#   include <LibWeb/Bindings/@wrapper_class@Factory.h>
+#endif
+)~~~");
+}
+
+static void generate_include_for_iterator(auto& generator, auto& iterator_path, auto& iterator_name)
+{
+    auto iterator_generator = generator.fork();
+    iterator_generator.set("iterator_class.path", iterator_path);
+    iterator_generator.set("iterator_class.name", iterator_name);
+    // FIXME: These may or may not exist, because REASONS.
+    iterator_generator.append(R"~~~(
+//#if __has_include(<LibWeb/@iterator_class.path@.h>)
+#   include <LibWeb/@iterator_class.path@.h>
+//#endif
+#if __has_include(<LibWeb/@iterator_class.path@Factory.h>)
+#   include <LibWeb/@iterator_class.path@Factory.h>
+#endif
+#if __has_include(<LibWeb/Bindings/@iterator_class.name@Wrapper.h>)
+#   include <LibWeb/Bindings/@iterator_class.name@Wrapper.h>
+#endif
+#if __has_include(<LibWeb/Bindings/@iterator_class.name@WrapperFactory.h>)
+#   include <LibWeb/Bindings/@iterator_class.name@WrapperFactory.h>
+#endif
+)~~~");
+}
+
+static void generate_include_for(auto& generator, auto& path)
+{
+    auto forked_generator = generator.fork();
+    auto path_string = path;
+    for (auto& search_path : s_header_search_paths) {
+        if (!path.starts_with(search_path))
+            continue;
+        auto relative_path = LexicalPath::relative_path(path, search_path);
+        if (relative_path.length() < path_string.length())
+            path_string = relative_path;
+    }
+
+    LexicalPath include_path { path_string };
+    forked_generator.set("include.path", String::formatted("{}/{}.h", include_path.dirname(), include_path.title()));
+    forked_generator.append(R"~~~(
+#include <@include.path@>
+)~~~");
+}
+
+static void emit_includes_for_all_imports(auto& interface, auto& generator, bool is_header, bool is_iterator = false)
+{
+    Queue<RemoveCVReference<decltype(interface)> const*> interfaces;
+    HashTable<String> paths_imported;
+    if (is_header)
+        paths_imported.set(interface.module_own_path);
+
+    interfaces.enqueue(&interface);
+
+    while (!interfaces.is_empty()) {
+        auto interface = interfaces.dequeue();
+        if (paths_imported.contains(interface->module_own_path))
+            continue;
+
+        paths_imported.set(interface->module_own_path);
+        for (auto& imported_interface : interface->imported_modules) {
+            if (!paths_imported.contains(imported_interface.module_own_path))
+                interfaces.enqueue(&imported_interface);
+        }
+
+        generate_include_for(generator, interface->module_own_path);
+
+        if (is_iterator) {
+            auto iterator_name = String::formatted("{}Iterator", interface->name);
+            auto iterator_path = String::formatted("{}Iterator", interface->fully_qualified_name.replace("::", "/"));
+            generate_include_for_iterator(generator, iterator_path, iterator_name);
+        }
+
+        if (interface->wrapper_class != "Wrapper")
+            generate_include_for_wrapper(generator, interface->wrapper_class);
+    }
 }
 
 namespace IDL {
@@ -380,6 +476,10 @@ struct Interface {
     String prototype_class;
     String prototype_base_class;
 
+    String module_own_path;
+    HashTable<String> imported_paths;
+    NonnullOwnPtrVector<Interface> imported_modules;
+
     // https://webidl.spec.whatwg.org/#dfn-support-indexed-properties
     bool supports_indexed_properties() const { return indexed_property_getter.has_value(); }
 
@@ -390,9 +490,14 @@ struct Interface {
     bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
 };
 
+HashTable<String> s_all_imported_paths;
 static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView input, StringView import_base_path)
 {
+    auto this_module = Core::File::real_path_for(filename);
+    s_all_imported_paths.set(this_module);
+
     auto interface = make<Interface>();
+    interface->module_own_path = this_module;
 
     GenericLexer lexer(input);
 
@@ -438,17 +543,23 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
         return extended_attributes;
     };
 
-    auto resolve_import = [&](auto path) {
+    auto resolve_import = [&](auto path) -> Optional<NonnullOwnPtr<Interface>> {
         auto include_path = LexicalPath::join(import_base_path, path).string();
         if (!Core::File::exists(include_path))
             report_parsing_error(String::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
 
-        auto file_or_error = Core::File::open(include_path, Core::OpenMode::ReadOnly);
+        auto real_path = Core::File::real_path_for(include_path);
+        if (s_all_imported_paths.contains(real_path))
+            return {};
+
+        s_all_imported_paths.set(real_path);
+
+        auto file_or_error = Core::File::open(real_path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error())
-            report_parsing_error(String::formatted("Failed to open {}: {}", include_path, file_or_error.error()), filename, input, lexer.tell());
+            report_parsing_error(String::formatted("Failed to open {}: {}", real_path, file_or_error.error()), filename, input, lexer.tell());
 
         auto data = file_or_error.value()->read_all();
-        return IDL::parse_interface(include_path, data, import_base_path);
+        return IDL::parse_interface(real_path, data, import_base_path);
     };
 
     NonnullOwnPtrVector<Interface> imports;
@@ -457,9 +568,15 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
         assert_specific('<');
         auto path = lexer.consume_until('>');
         lexer.ignore();
-        imports.append(resolve_import(path));
+        auto maybe_interface = resolve_import(path);
+        if (maybe_interface.has_value()) {
+            for (auto& entry : maybe_interface.value()->imported_paths)
+                s_all_imported_paths.set(entry);
+            imports.append(maybe_interface.release_value());
+        }
         consume_whitespace();
     }
+    interface->imported_paths = s_all_imported_paths;
 
     if (lexer.consume_specific('['))
         interface->extended_attributes = parse_extended_attributes();
@@ -1024,6 +1141,7 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
             interface->enumerations.set(enumeration.key, move(enumeration_copy));
         }
     }
+    interface->imported_modules = move(imports);
 
     return interface;
 }
@@ -1172,6 +1290,17 @@ int main(int argc, char** argv)
     args_parser.add_option(iterator_implementation_mode, "Generate the iterator wrapper .cpp file", "iterator-implementation", 0);
     args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0);
     args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0);
+    args_parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Add a header search path passed to the compiler",
+        .long_name = "header-include-path",
+        .short_name = 'i',
+        .value_name = "path",
+        .accept_value = [&](char const* s) {
+            s_header_search_paths.append(s);
+            return true;
+        },
+    });
     args_parser.add_positional_argument(path, "IDL file", "idl-file");
     args_parser.add_positional_argument(import_base_path, "Import base path", "import-base-path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
@@ -2359,58 +2488,24 @@ static void generate_header(IDL::Interface const& interface)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.append(R"~~~(
+#pragma once
+
+#include <LibWeb/Bindings/Wrapper.h>
+)~~~");
+
+    for (auto& path : interface.imported_paths)
+        generate_include_for(generator, path);
+
+    emit_includes_for_all_imports(interface, generator, true);
     generator.set("name", interface.name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("wrapper_base_class", interface.wrapper_base_class);
     generator.set("wrapper_class", interface.wrapper_class);
     generator.set("wrapper_class:snakecase", interface.wrapper_class.to_snakecase());
 
-    generator.append(R"~~~(
-#pragma once
-
-#include <LibWeb/Bindings/Wrapper.h>
-
-// FIXME: This is very strange.
-#if __has_include(<LibWeb/Crypto/@name@.h>)
-#    include <LibWeb/Crypto/@name@.h>
-#elif __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/Encoding/@name@.h>)
-#    include <LibWeb/Encoding/@name@.h>
-#elif __has_include(<LibWeb/Geometry/@name@.h>)
-#    include <LibWeb/Geometry/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
-#    include <LibWeb/RequestIdleCallback/@name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#elif __has_include(<LibWeb/URL/@name@.h>)
-#    include <LibWeb/URL/@name@.h>
-#endif
-)~~~");
-
-    if (interface.wrapper_base_class != "Wrapper") {
-        generator.append(R"~~~(
-#include <LibWeb/Bindings/@wrapper_base_class@.h>
-)~~~");
-    }
+    if (interface.wrapper_base_class != "Wrapper")
+        generate_include_for_wrapper(generator, interface.wrapper_base_class);
 
     generator.append(R"~~~(
 namespace Web::Bindings {
@@ -2559,44 +2654,14 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
-#include <LibWeb/Bindings/AttributeWrapper.h>
-#include <LibWeb/Bindings/CSSRuleListWrapper.h>
-#include <LibWeb/Bindings/CSSRuleWrapper.h>
-#include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
-#include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
-#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
-#include <LibWeb/Bindings/CommentWrapper.h>
-#include <LibWeb/Bindings/DOMImplementationWrapper.h>
-#include <LibWeb/Bindings/DOMRectListWrapper.h>
-#include <LibWeb/Bindings/DOMRectWrapper.h>
-#include <LibWeb/Bindings/DocumentFragmentWrapper.h>
-#include <LibWeb/Bindings/DocumentTypeWrapper.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
-#include <LibWeb/Bindings/HTMLCollectionWrapper.h>
-#include <LibWeb/Bindings/HTMLFormElementWrapper.h>
-#include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
-#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
-#include <LibWeb/Bindings/HTMLTableCaptionElementWrapper.h>
-#include <LibWeb/Bindings/HTMLTableSectionElementWrapper.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
-#include <LibWeb/Bindings/ImageDataWrapper.h>
-#include <LibWeb/Bindings/MessagePortWrapper.h>
-#include <LibWeb/Bindings/NamedNodeMapWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/TextMetricsWrapper.h>
-#include <LibWeb/Bindings/TextWrapper.h>
+#include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/IntersectionObserver/IntersectionObserver.h>
-#include <LibWeb/Origin.h>
-#include <LibWeb/ResizeObserver/ResizeObserver.h>
+)~~~");
 
+    emit_includes_for_all_imports(interface, generator, false);
+
+    generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
@@ -3708,9 +3773,6 @@ void generate_prototype_implementation(IDL::Interface const& interface)
     if (interface.pair_iterator_types.has_value()) {
         generator.set("iterator_name", String::formatted("{}Iterator", interface.name));
         generator.set("iterator_wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
-        generator.append(R"~~~(
-#include <LibWeb/Bindings/@iterator_wrapper_class@.h>
-)~~~");
     }
 
     generator.append(R"~~~(
@@ -3722,134 +3784,29 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
-#include <LibWeb/Bindings/AbortSignalWrapper.h>
-#include <LibWeb/Bindings/AttributeWrapper.h>
-#include <LibWeb/Bindings/CSSRuleListWrapper.h>
-#include <LibWeb/Bindings/CSSRuleWrapper.h>
-#include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
-#include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
-#include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
-#include <LibWeb/Bindings/CanvasGradientWrapper.h>
-#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
-#include <LibWeb/Bindings/CommentWrapper.h>
-#include <LibWeb/Bindings/DOMImplementationWrapper.h>
-#include <LibWeb/Bindings/DOMRectListWrapper.h>
-#include <LibWeb/Bindings/DOMRectWrapper.h>
-#include <LibWeb/Bindings/DOMStringMapWrapper.h>
-#include <LibWeb/Bindings/DOMTokenListWrapper.h>
-#include <LibWeb/Bindings/DocumentFragmentWrapper.h>
-#include <LibWeb/Bindings/DocumentTypeWrapper.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
-#include <LibWeb/Bindings/HTMLCollectionWrapper.h>
-#include <LibWeb/Bindings/HTMLFormElementWrapper.h>
-#include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
-#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
-#include <LibWeb/Bindings/HTMLTableCaptionElementWrapper.h>
-#include <LibWeb/Bindings/HTMLTableSectionElementWrapper.h>
-#include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
-#include <LibWeb/Bindings/MessagePortWrapper.h>
-#include <LibWeb/Bindings/NamedNodeMapWrapper.h>
-#include <LibWeb/Bindings/NodeListWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/PerformanceTimingWrapper.h>
-#include <LibWeb/Bindings/RangeWrapper.h>
-#include <LibWeb/Bindings/StyleSheetListWrapper.h>
-#include <LibWeb/Bindings/SubtleCryptoWrapper.h>
-#include <LibWeb/Bindings/TextMetricsWrapper.h>
-#include <LibWeb/Bindings/TextWrapper.h>
-#include <LibWeb/Bindings/URLSearchParamsWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/Bindings/WorkerLocationWrapper.h>
-#include <LibWeb/Bindings/WorkerNavigatorWrapper.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/DOM/Range.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>
-#include <LibWeb/HTML/EventHandler.h>
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/NavigationTiming/PerformanceTiming.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Origin.h>
 
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
 #    include <LibWeb/Bindings/@prototype_base_class@.h>
 #endif
-#if __has_include(<LibWeb/Crypto/@name@.h>)
-#    include <LibWeb/Crypto/@name@.h>
-#elif __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/Encoding/@name@.h>)
-#    include <LibWeb/Encoding/@name@.h>
-#elif __has_include(<LibWeb/Geometry/@name@.h>)
-#    include <LibWeb/Geometry/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
-#    include <LibWeb/RequestIdleCallback/@name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#elif __has_include(<LibWeb/URL/@name@.h>)
-#    include <LibWeb/URL/@name@.h>
-#endif
 
 )~~~");
 
-    if (interface.pair_iterator_types.has_value()) {
-        generator.append(R"~~~(
-#if __has_include(<LibWeb/CSS/@iterator_name@.h>)
-#    include <LibWeb/CSS/@iterator_name@.h>
-#elif __has_include(<LibWeb/DOM/@iterator_name@.h>)
-#    include <LibWeb/DOM/@iterator_name@.h>
-#elif __has_include(<LibWeb/Geometry/@iterator_name@.h>)
-#    include <LibWeb/Geometry/@iterator_name@.h>
-#elif __has_include(<LibWeb/HTML/@iterator_name@.h>)
-#    include <LibWeb/HTML/@iterator_name@.h>
-#elif __has_include(<LibWeb/UIEvents/@iterator_name@.h>)
-#    include <LibWeb/UIEvents/@iterator_name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@iterator_name@.h>)
-#    include <LibWeb/HighResolutionTime/@iterator_name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@iterator_name@.h>)
-#    include <LibWeb/NavigationTiming/@iterator_name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@iterator_name@.h>)
-#    include <LibWeb/RequestIdleCallback/@iterator_name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@iterator_name@.h>)
-#    include <LibWeb/SVG/@iterator_name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/XHR/@iterator_name@.h>)
-#    include <LibWeb/XHR/@iterator_name@.h>
-#elif __has_include(<LibWeb/URL/@iterator_name@.h>)
-#    include <LibWeb/URL/@iterator_name@.h>
-#endif
-)~~~");
-    }
+    for (auto& path : interface.imported_paths)
+        generate_include_for(generator, path);
+
+    emit_includes_for_all_imports(interface, generator, false, interface.pair_iterator_types.has_value());
 
     generator.append(R"~~~(
 
@@ -4229,41 +4186,6 @@ static void generate_iterator_header(IDL::Interface const& interface)
 
 #include <LibWeb/Bindings/Wrapper.h>
 
-// FIXME: This is very strange.
-#if __has_include(<LibWeb/Crypto/@name@.h>)
-#    include <LibWeb/Crypto/@name@.h>
-#elif __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/Encoding/@name@.h>)
-#    include <LibWeb/Encoding/@name@.h>
-#elif __has_include(<LibWeb/Geometry/@name@.h>)
-#    include <LibWeb/Geometry/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
-#    include <LibWeb/RequestIdleCallback/@name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#elif __has_include(<LibWeb/URL/@name@.h>)
-#    include <LibWeb/URL/@name@.h>
-#endif
-
 namespace Web::Bindings {
 
 class @wrapper_class@ : public Wrapper {
@@ -4315,6 +4237,15 @@ void generate_iterator_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/WindowObject.h>
+
+)~~~");
+
+    for (auto& path : interface.imported_paths)
+        generate_include_for(generator, path);
+
+    emit_includes_for_all_imports(interface, generator, false, true);
+
+    generator.append(R"~~~(
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
@@ -4407,6 +4338,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
     generator.set("prototype_class", String::formatted("{}IteratorPrototype", interface.name));
     generator.set("wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
     generator.set("fully_qualified_name", String::formatted("{}Iterator", interface.fully_qualified_name));
+    generator.set("possible_include_path", String::formatted("{}Iterator", interface.name.replace("::", "/")));
 
     generator.append(R"~~~(
 #include <AK/Function.h>
@@ -4416,44 +4348,17 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
-#include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/WindowObject.h>
 
-#if __has_include(<LibWeb/Crypto/@name@.h>)
-#    include <LibWeb/Crypto/@name@.h>
-#elif __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/Encoding/@name@.h>)
-#    include <LibWeb/Encoding/@name@.h>
-#elif __has_include(<LibWeb/Geometry/@name@.h>)
-#    include <LibWeb/Geometry/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
-#    include <LibWeb/RequestIdleCallback/@name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#elif __has_include(<LibWeb/URL/@name@.h>)
-#    include <LibWeb/URL/@name@.h>
+#if __has_include(<LibWeb/@possible_include_path@.h>)
+#    include <LibWeb/@possible_include_path@.h>
 #endif
+)~~~");
 
+    emit_includes_for_all_imports(interface, generator, false, true);
+
+    generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
