@@ -19,7 +19,7 @@ void SVGSVGBox::before_children_paint(PaintContext& context, PaintPhase phase)
         return;
 
     if (!context.has_svg_context())
-        context.set_svg_context(SVGContext());
+        context.set_svg_context(SVGContext(absolute_rect()));
 
     SVGGraphicsBox::before_children_paint(context, phase);
 }
