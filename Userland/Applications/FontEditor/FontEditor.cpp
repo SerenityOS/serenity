@@ -134,6 +134,8 @@ FontEditorWidget::FontEditorWidget()
     m_fixed_width_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("fixed_width_checkbox");
     m_font_metadata_groupbox = *find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
     m_unicode_block_listview = *find_descendant_of_type_named<GUI::ListView>("unicode_block_listview");
+    m_search_textbox = *find_descendant_of_type_named<GUI::TextBox>("search_textbox");
+    m_unicode_block_container = *find_descendant_of_type_named<GUI::Widget>("unicode_block_container");
 
     m_glyph_editor_widget = m_glyph_editor_container->add<GlyphEditorWidget>();
     m_glyph_map_widget = glyph_map_container.add<GUI::GlyphMapWidget>();
@@ -435,23 +437,45 @@ FontEditorWidget::FontEditorWidget()
     };
 
     auto unicode_blocks = Unicode::block_display_names();
-    m_unicode_block_listview->on_activation = [this, unicode_blocks](auto& index) {
-        if (index.row() > 0)
-            m_range = unicode_blocks[index.row() - 1].code_point_range;
-        else
-            m_range = { 0x0000, 0x10FFFF };
-        m_glyph_map_widget->set_active_range(m_range);
-    };
-
     m_unicode_block_list.append("Show All");
     for (auto& block : unicode_blocks)
         m_unicode_block_list.append(block.display_name);
 
     m_unicode_block_model = GUI::ItemListModel<String>::create(m_unicode_block_list);
-    m_unicode_block_listview->set_model(*m_unicode_block_model);
+    m_filter_model = MUST(GUI::FilteringProxyModel::create(*m_unicode_block_model));
+    m_filter_model->set_filter_term("");
+
+    m_unicode_block_listview->on_activation = [this, unicode_blocks](auto& index) {
+        auto mapped_index = m_filter_model->map(index);
+        if (mapped_index.row() > 0)
+            m_range = unicode_blocks[mapped_index.row() - 1].code_point_range;
+        else
+            m_range = { 0x0000, 0x10FFFF };
+        m_glyph_map_widget->set_active_range(m_range);
+    };
+    m_unicode_block_listview->set_model(*m_filter_model);
     m_unicode_block_listview->set_activates_on_selection(true);
     m_unicode_block_listview->horizontal_scrollbar().set_visible(false);
     m_unicode_block_listview->set_cursor(m_unicode_block_model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
+
+    m_search_textbox->on_return_pressed = [this] {
+        if (!m_unicode_block_listview->selection().is_empty())
+            m_unicode_block_listview->activate_selected();
+    };
+
+    m_search_textbox->on_down_pressed = [this] {
+        m_unicode_block_listview->move_cursor(GUI::AbstractView::CursorMovement::Down, GUI::AbstractView::SelectionUpdate::Set);
+    };
+
+    m_search_textbox->on_up_pressed = [this] {
+        m_unicode_block_listview->move_cursor(GUI::AbstractView::CursorMovement::Up, GUI::AbstractView::SelectionUpdate::Set);
+    };
+
+    m_search_textbox->on_change = [this] {
+        m_filter_model->set_filter_term(m_search_textbox->text());
+        if (m_filter_model->row_count() != 0)
+            m_unicode_block_listview->set_cursor(m_filter_model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
+    };
 
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
         auto text = action.status_tip();
