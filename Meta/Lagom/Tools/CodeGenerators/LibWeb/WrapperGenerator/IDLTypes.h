@@ -271,6 +271,8 @@ struct Interface {
     String name;
     String parent_name;
 
+    bool is_mixin { false };
+
     HashMap<String, String> extended_attributes;
 
     Vector<Attribute> attributes;
@@ -295,6 +297,7 @@ struct Interface {
 
     HashMap<String, Dictionary> dictionaries;
     HashMap<String, Enumeration> enumerations;
+    HashMap<String, NonnullOwnPtr<Interface>> mixins;
 
     // Added for convenience after parsing
     String wrapper_class;
@@ -303,6 +306,7 @@ struct Interface {
     String constructor_class;
     String prototype_class;
     String prototype_base_class;
+    HashMap<String, HashTable<String>> included_mixins;
 
     String module_own_path;
     HashTable<String> imported_paths;

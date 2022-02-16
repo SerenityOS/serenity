@@ -38,6 +38,7 @@ private:
     void parse_interface(Interface&);
     void parse_non_interface_entities(bool allow_interface, Interface&);
     void parse_enumeration(Interface&);
+    void parse_interface_mixin(Interface&);
     void parse_dictionary(Interface&);
     void parse_constructor(Interface&);
     void parse_getter(HashMap<String, String>& extended_attributes, Interface&);
