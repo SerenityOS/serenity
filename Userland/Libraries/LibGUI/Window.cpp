@@ -311,7 +311,7 @@ void Window::set_minimum_size(const Gfx::IntSize& size)
 
 void Window::center_on_screen()
 {
-    set_rect(rect().centered_within(Desktop::the().rect()));
+    set_rect(rect().centered_within(Desktop::the().rects()[containing_screen_index()]));
 }
 
 void Window::center_within(const Window& other)
