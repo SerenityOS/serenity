@@ -30,6 +30,7 @@ String Paragraph::render_to_html(bool tight) const
 String Paragraph::render_for_terminal(size_t) const
 {
     StringBuilder builder;
+    builder.append("  ");
     builder.append(m_text.render_for_terminal());
     builder.append("\n\n");
     return builder.build();

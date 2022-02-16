@@ -63,6 +63,8 @@ String Table::render_for_terminal(size_t view_width) const
         builder.append("\n");
     }
 
+    builder.append("\n");
+
     return builder.to_string();
 }
 
