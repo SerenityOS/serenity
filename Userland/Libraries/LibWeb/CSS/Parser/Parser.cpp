@@ -1124,6 +1124,9 @@ OwnPtr<MediaCondition> Parser::parse_media_in_parens(TokenStream<StyleComponentV
     }
 
     // `<general-enclosed>`
+    // FIXME: We should only be taking this branch if the grammar doesn't match the above options.
+    //        Currently we take it if the above fail to parse, which is different.
+    //        eg, `@media (min-width: 76yaks)` is valid grammar, but does not parse because `yaks` isn't a unit.
     if (auto maybe_general_enclosed = parse_general_enclosed(tokens); maybe_general_enclosed.has_value())
         return MediaCondition::from_general_enclosed(maybe_general_enclosed.release_value());
 
