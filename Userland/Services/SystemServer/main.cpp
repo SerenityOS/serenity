@@ -271,15 +271,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
             }
             break;
         }
-        case 10: {
-            if (!is_block_device) {
-                switch (minor_number) {
-                default:
-                    warnln("Unknown character device {}:{}", major_number, minor_number);
-                }
-            }
-            break;
-        }
         case 85: {
             if (!is_block_device) {
                 switch (minor_number) {
