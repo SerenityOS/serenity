@@ -49,8 +49,11 @@ String CodeBlock::render_for_terminal(size_t) const
 {
     StringBuilder builder;
 
-    builder.append(m_code);
-    builder.append("\n\n");
+    for (auto line : m_code.split('\n')) {
+        builder.append("  ");
+        builder.append(line);
+        builder.append("\n");
+    }
 
     return builder.build();
 }

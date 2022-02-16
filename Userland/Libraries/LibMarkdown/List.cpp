@@ -45,12 +45,11 @@ String List::render_for_terminal(size_t) const
     for (auto& item : m_items) {
         builder.append("  ");
         if (m_is_ordered)
-            builder.appendff("{}. ", ++i);
+            builder.appendff("{}.", ++i);
         else
-            builder.append("* ");
+            builder.append("*");
         builder.append(item->render_for_terminal());
     }
-    builder.append("\n");
 
     return builder.build();
 }
