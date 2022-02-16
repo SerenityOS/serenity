@@ -89,28 +89,35 @@ bool Label::is_associated_label_hovered(LabelableNode& control)
     return false;
 }
 
+// https://html.spec.whatwg.org/multipage/forms.html#labeled-control
 Label* Label::label_for_control_node(LabelableNode& control)
 {
-    Label* label = nullptr;
-
     if (!control.document().layout_node())
-        return label;
+        return nullptr;
 
-    String id = control.dom_node().attribute(HTML::AttributeNames::id);
-    if (id.is_empty())
-        return label;
+    // The for attribute may be specified to indicate a form control with which the caption is to be associated.
+    // If the attribute is specified, the attribute's value must be the ID of a labelable element in the
+    // same tree as the label element. If the attribute is specified and there is an element in the tree
+    // whose ID is equal to the value of the for attribute, and the first such element in tree order is
+    // a labelable element, then that element is the label element's labeled control.
+    if (auto id = control.dom_node().attribute(HTML::AttributeNames::id); !id.is_empty()) {
+        Label* label = nullptr;
 
-    control.document().layout_node()->for_each_in_inclusive_subtree_of_type<Label>([&](auto& node) {
-        if (node.dom_node().for_() == id) {
-            label = &node;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
+        control.document().layout_node()->for_each_in_inclusive_subtree_of_type<Label>([&](auto& node) {
+            if (node.dom_node().for_() == id) {
+                label = &node;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
 
-    // FIXME: The spec also allows for associating a label with a labelable node by putting the
-    //        labelable node inside the label.
-    return label;
+        if (label)
+            return label;
+    }
+
+    // If the for attribute is not specified, but the label element has a labelable element descendant,
+    // then the first such descendant in tree order is the label element's labeled control.
+    return control.first_ancestor_of_type<Label>();
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#labeled-control
