@@ -221,8 +221,14 @@ public:
 private:
     static bool find_end_of_central_directory_offset(ReadonlyBytes, size_t& offset);
 
-    u16 member_count { 0 };
-    size_t members_start_offset { 0 };
+    Zip(u16 member_count, size_t members_start_offset, ReadonlyBytes input_data)
+        : m_member_count { member_count }
+        , m_members_start_offset { members_start_offset }
+        , m_input_data { input_data }
+    {
+    }
+    u16 m_member_count { 0 };
+    size_t m_members_start_offset { 0 };
     ReadonlyBytes m_input_data;
 };
 
