@@ -255,11 +255,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
                 create_devtmpfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
                 break;
             }
-
-            switch (minor_number) {
-            default:
-                warnln("Unknown character device {}:{}", major_number, minor_number);
-            }
             break;
         }
         case 229: {
