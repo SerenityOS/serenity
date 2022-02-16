@@ -35,6 +35,8 @@ public:
     Function<void()> on_animate;
 
 private:
+    void load_without_resetting_redirect_counter(AK::URL const&);
+
     // ^ImageResourceClient
     virtual void resource_did_load() override;
     virtual void resource_did_fail() override;
@@ -57,6 +59,7 @@ private:
     size_t m_loops_completed { 0 };
     LoadingState m_loading_state { LoadingState::Loading };
     NonnullRefPtr<Core::Timer> m_timer;
+    size_t m_redirects_count { 0 };
 };
 
 }
