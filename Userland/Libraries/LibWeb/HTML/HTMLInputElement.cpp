@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Adam Hodgen <ant1441@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -229,11 +230,18 @@ void HTMLInputElement::did_remove_attribute(FlyString const& name)
 
 String HTMLInputElement::type() const
 {
-    // FIXME: This should only reflect known values.
     auto value = attribute(HTML::AttributeNames::type);
-    if (value.is_null())
-        return "text";
-    return value;
+
+#define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword) \
+    if (value.equals_ignoring_case(#keyword))          \
+        return #keyword;
+    ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
+#undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
+
+    // The missing value default and the invalid value default are the Text state.
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
+    return "text";
 }
 
 void HTMLInputElement::set_type(String const& type)
