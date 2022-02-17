@@ -160,6 +160,18 @@ bool FrameLoader::load(LoadRequest& request, Type type)
             page->client().page_did_start_loading(url);
     }
 
+    // https://fetch.spec.whatwg.org/#concept-fetch
+    // Step 12: If request’s header list does not contain `Accept`, then:
+    //          1. Let value be `*/*`. (NOTE: Not necessary as we're about to override it)
+    //          2. A user agent should set value to the first matching statement, if any, switching on request’s destination:
+    //              -> "document"
+    //              -> "frame"
+    //              -> "iframe"
+    //                   `text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8`
+    // FIXME: This should be case-insensitive.
+    if (!request.headers().contains("Accept"))
+        request.set_header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 
     if (type == Type::IFrame)
