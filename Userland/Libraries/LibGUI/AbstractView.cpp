@@ -613,6 +613,7 @@ void AbstractView::keydown_event(KeyEvent& event)
                 m_highlighted_search = sb.to_string();
                 highlight_search(index);
                 start_highlighted_search_timer();
+                set_cursor(index, SelectionUpdate::None, true);
             }
 
             event.accept();
