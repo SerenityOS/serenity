@@ -28,6 +28,24 @@ void JsonArrayModel::invalidate()
     did_update();
 }
 
+void JsonArrayModel::update()
+{
+    auto file = Core::File::construct(m_json_path);
+    if (!file->open(Core::OpenMode::ReadOnly)) {
+        dbgln("Unable to open {}", file->filename());
+        m_array.clear();
+        did_update();
+        return;
+    }
+
+    auto json = JsonValue::from_string(file->read_all()).release_value_but_fixme_should_propagate_errors();
+
+    VERIFY(json.is_array());
+    m_array = json.as_array();
+
+    did_update(GUI::Model::UpdateFlag::DontInvalidateIndices);
+}
+
 bool JsonArrayModel::store()
 {
     auto file = Core::File::construct(m_json_path);
