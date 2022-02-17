@@ -221,7 +221,7 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     if (!m_mesh.is_null())
         m_mesh->draw(m_texture_scale);
 
-    m_context->present();
+    GL::present_context(m_context);
 
     if ((m_cycles % 30) == 0) {
         auto render_time = m_accumulated_time / 30.0;
