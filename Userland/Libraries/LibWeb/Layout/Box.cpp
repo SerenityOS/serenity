@@ -46,6 +46,16 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         context.painter().draw_rect(enclosing_int_rect(margin_rect), Color::Yellow);
         context.painter().draw_rect(enclosing_int_rect(absolute_padding_box_rect()), Color::Cyan);
         context.painter().draw_rect(enclosing_int_rect(content_rect), Color::Magenta);
+
+        auto size_text_rect = absolute_rect();
+        auto size_text = String::formatted("{}x{}", content_rect.width(), content_rect.height());
+        size_text_rect.set_y(content_rect.y() + content_rect.height());
+        size_text_rect.set_top(size_text_rect.top());
+        size_text_rect.set_width((float)context.painter().font().width(size_text));
+        size_text_rect.set_height(context.painter().font().glyph_height());
+
+        context.painter().fill_rect(enclosing_int_rect(size_text_rect), Color::Cyan);
+        context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text);
     }
 
     if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && verify_cast<DOM::Element>(*dom_node()).is_focused()) {
