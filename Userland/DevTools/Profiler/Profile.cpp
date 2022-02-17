@@ -36,6 +36,7 @@ static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
 Profile::Profile(Vector<Process> processes, Vector<Event> events)
     : m_processes(move(processes))
     , m_events(move(events))
+    , m_file_event_nodes(FileEventNode::create(""))
 {
     for (size_t i = 0; i < m_events.size(); ++i) {
         if (m_events[i].data.has<Event::SignpostData>())
@@ -48,6 +49,7 @@ Profile::Profile(Vector<Process> processes, Vector<Event> events)
     m_model = ProfileModel::create(*this);
     m_samples_model = SamplesModel::create(*this);
     m_signposts_model = SignpostsModel::create(*this);
+    m_file_event_model = FileEventModel::create(*this);
 
     rebuild_tree();
 }
@@ -101,6 +103,7 @@ void Profile::rebuild_tree()
 
     m_filtered_event_indices.clear();
     m_filtered_signpost_indices.clear();
+    m_file_event_nodes->children().clear();
 
     for (size_t event_index = 0; event_index < m_events.size(); ++event_index) {
         auto& event = m_events.at(event_index);
@@ -204,6 +207,21 @@ void Profile::rebuild_tree()
                     }
                 }
             }
+        }
+
+        if (event.data.has<Event::ReadData>()) {
+            auto const& read_event = event.data.get<Event::ReadData>();
+            auto& event_node = m_file_event_nodes->find_or_create_node(read_event.path);
+
+            event_node.for_each_parent_node([&](FileEventNode& node) {
+                node.increment_count();
+
+                // Fixme: Currently events record 'timestamp' and 'start_timestamp' in ms resolution,
+                //        which results in most durations equal to zero. Increasing the resolution should
+                //        make the information more accurate.
+                auto const duration = event.timestamp - read_event.start_timestamp;
+                node.add_to_duration(duration);
+            });
         }
     }
 
@@ -579,6 +597,11 @@ void Profile::set_source_index(GUI::ModelIndex const& index)
 GUI::Model* Profile::source_model()
 {
     return m_source_model;
+}
+
+GUI::Model* Profile::file_event_model()
+{
+    return m_file_event_model;
 }
 
 ProfileNode::ProfileNode(Process const& process)
