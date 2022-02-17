@@ -45,6 +45,7 @@ void dump_backtrace(PrintToScreen) { }
 
 // KString.cpp
 ErrorOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t, char*&) { return ENOMEM; }
+ErrorOr<NonnullOwnPtr<KString>> KString::try_create(StringView) { return ENOMEM; }
 void KString::operator delete(void*) { }
 
 // SafeMem.h
