@@ -162,12 +162,15 @@ void InspectorWidget::load_style_json(String specified_values_json, String compu
 {
     m_selection_specified_values_json = specified_values_json;
     m_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_specified_values_json.value().view()));
+    m_style_table_view->set_searchable(true);
 
     m_selection_computed_values_json = computed_values_json;
     m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_computed_values_json.value().view()));
+    m_computed_style_table_view->set_searchable(true);
 
     m_selection_custom_properties_json = custom_properties_json;
     m_custom_properties_table_view->set_model(Web::StylePropertiesModel::create(m_selection_custom_properties_json.value().view()));
+    m_custom_properties_table_view->set_searchable(true);
 }
 
 void InspectorWidget::update_node_box_model(Optional<String> node_box_sizing_json)

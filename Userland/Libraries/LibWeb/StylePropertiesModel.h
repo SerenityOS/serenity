@@ -33,6 +33,8 @@ public:
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
     virtual String column_name(int) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
+    virtual bool is_searchable() const override { return true; }
+    virtual Vector<GUI::ModelIndex> matches(StringView, unsigned flags, GUI::ModelIndex const&) override;
 
 private:
     explicit StylePropertiesModel(JsonObject);
