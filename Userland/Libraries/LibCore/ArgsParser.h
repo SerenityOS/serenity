@@ -78,6 +78,7 @@ public:
     void add_option(unsigned& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
     void add_option(double& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
     void add_option(Optional<double>& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
+    void add_option(Optional<size_t>& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
 
     void add_positional_argument(Arg&&);
     void add_positional_argument(const char*& value, const char* help_string, const char* name, Required required = Required::Yes);
