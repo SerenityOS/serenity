@@ -103,34 +103,42 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
     }
 }
 
-void CSSRuleList::evaluate_media_queries(DOM::Window const& window)
+bool CSSRuleList::evaluate_media_queries(DOM::Window const& window)
 {
+    bool any_media_queries_changed_match_state = false;
+
     for (auto& rule : m_rules) {
         switch (rule.type()) {
         case CSSRule::Type::Style:
             break;
         case CSSRule::Type::Import: {
             auto& import_rule = verify_cast<CSSImportRule>(rule);
-            if (import_rule.has_import_result())
-                import_rule.loaded_style_sheet()->evaluate_media_queries(window);
+            if (import_rule.has_import_result() && import_rule.loaded_style_sheet()->evaluate_media_queries(window))
+                any_media_queries_changed_match_state = true;
             break;
         }
         case CSSRule::Type::Media: {
             auto& media_rule = verify_cast<CSSMediaRule>(rule);
-            if (media_rule.evaluate(window))
-                media_rule.css_rules().evaluate_media_queries(window);
+            bool did_match = media_rule.condition_matches();
+            bool now_matches = media_rule.evaluate(window);
+            if (did_match != now_matches)
+                any_media_queries_changed_match_state = true;
+            if (now_matches && media_rule.css_rules().evaluate_media_queries(window))
+                any_media_queries_changed_match_state = true;
             break;
         }
         case CSSRule::Type::Supports: {
             auto& supports_rule = verify_cast<CSSSupportsRule>(rule);
-            if (supports_rule.condition_matches())
-                supports_rule.css_rules().evaluate_media_queries(window);
+            if (supports_rule.condition_matches() && supports_rule.css_rules().evaluate_media_queries(window))
+                any_media_queries_changed_match_state = true;
             break;
         }
         case CSSRule::Type::__Count:
             VERIFY_NOT_REACHED();
         }
     }
+
+    return any_media_queries_changed_match_state;
 }
 
 }
