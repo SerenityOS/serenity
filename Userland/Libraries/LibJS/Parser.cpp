@@ -3492,7 +3492,7 @@ NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode
                     has_annexB_for_in_init_extension = true;
             }
         }
-    } else if (!lhs->is_identifier() && !is<MemberExpression>(*lhs)) {
+    } else if (!lhs->is_identifier() && !is<MemberExpression>(*lhs) && !is<CallExpression>(*lhs)) {
         bool valid = false;
         if (is<ObjectExpression>(*lhs) || is<ArrayExpression>(*lhs)) {
             auto synthesized_binding_pattern = synthesize_binding_pattern(static_cast<Expression const&>(*lhs));

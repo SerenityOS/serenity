@@ -865,7 +865,7 @@ struct ForInOfHeadState {
                     VERIFY(declaration.declarations().first().target().has<NonnullRefPtr<Identifier>>());
                     lhs_reference = TRY(declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->to_reference(interpreter, global_object));
                 } else {
-                    VERIFY(is<Identifier>(*expression_lhs) || is<MemberExpression>(*expression_lhs));
+                    VERIFY(is<Identifier>(*expression_lhs) || is<MemberExpression>(*expression_lhs) || is<CallExpression>(*expression_lhs));
                     auto& expression = static_cast<Expression const&>(*expression_lhs);
                     lhs_reference = TRY(expression.to_reference(interpreter, global_object));
                 }
