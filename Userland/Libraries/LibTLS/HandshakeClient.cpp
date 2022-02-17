@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, Michiel Visser <opensource@webmichiel.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 #include <AK/Random.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibCrypto/Curves/X25519.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
@@ -292,6 +294,51 @@ void TLSv12::build_dhe_rsa_pre_master_secret(PacketBuilder& builder)
     builder.append(dh_Yc_bytes);
 }
 
+void TLSv12::build_ecdhe_rsa_pre_master_secret(PacketBuilder& builder)
+{
+    size_t const key_size = named_curve_key_size(NamedCurve::x25519) / 8;
+    u8 generator_point[key_size] { 9 };
+    ReadonlyBytes generator_point_bytes { generator_point, key_size };
+
+    // Create a random private key
+    u8 private_key[key_size];
+    fill_with_random(private_key, key_size);
+    ReadonlyBytes private_key_bytes { private_key, key_size };
+
+    // Calculate the public key by multiplying the private key with 9
+    auto public_key_result = Crypto::Curves::X25519::compute_coordinate(private_key_bytes, generator_point_bytes);
+    if (public_key_result.is_error()) {
+        dbgln("Failed to build ECDHE_RSA premaster secret: not enough memory");
+        return;
+    }
+    auto public_key = public_key_result.release_value();
+
+    // Calculate the pre master secret by multiplying the client private key and the server public key
+    ReadonlyBytes server_public_key_bytes = m_context.server_diffie_hellman_params.p;
+    auto pre_master_secret_result = Crypto::Curves::X25519::compute_coordinate(private_key_bytes, server_public_key_bytes);
+    if (pre_master_secret_result.is_error()) {
+        dbgln("Failed to build ECDHE_RSA premaster secret: not enough memory");
+        return;
+    }
+    m_context.premaster_key = pre_master_secret_result.release_value();
+
+    if constexpr (TLS_DEBUG) {
+        dbgln("Build ECDHE_RSA pre master secret");
+        dbgln("client private key: {:hex-dump}", private_key_bytes);
+        dbgln("client public key:  {:hex-dump}", (ReadonlyBytes)public_key);
+        dbgln("premaster key:      {:hex-dump}", (ReadonlyBytes)m_context.premaster_key);
+    }
+
+    if (!compute_master_secret_from_pre_master_secret(48)) {
+        dbgln("oh noes we could not derive a master key :(");
+        return;
+    }
+
+    builder.append_u24(key_size + 1);
+    builder.append((u8)key_size);
+    builder.append(public_key);
+}
+
 ByteBuffer TLSv12::build_certificate()
 {
     PacketBuilder builder { MessageType::Handshake, m_context.options.version };
@@ -371,6 +418,8 @@ ByteBuffer TLSv12::build_client_key_exchange()
         TODO();
         break;
     case KeyExchangeAlgorithm::ECDHE_RSA:
+        build_ecdhe_rsa_pre_master_secret(builder);
+        break;
     case KeyExchangeAlgorithm::ECDH_ECDSA:
     case KeyExchangeAlgorithm::ECDH_RSA:
     case KeyExchangeAlgorithm::ECDHE_ECDSA:
