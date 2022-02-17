@@ -35,3 +35,18 @@ test("exponentiation that produces NaN", () => {
     expect(2 ** "foo").toBeNaN();
     expect("foo" ** 2).toBeNaN();
 });
+
+test("exponentiation with infinities", () => {
+    expect((-1) ** Infinity).toBeNaN();
+    expect(0 ** Infinity).toBe(0);
+    expect(1 ** Infinity).toBeNaN();
+    expect((-1) ** -Infinity).toBeNaN();
+    expect(0 ** -Infinity).toBe(Infinity);
+    expect(1 ** -Infinity).toBeNaN();
+    expect(Infinity ** -1).toBe(0);
+    expect(Infinity ** 0).toBe(1);
+    expect(Infinity ** 1).toBe(Infinity);
+    expect((-Infinity) ** -1).toBe(-0);
+    expect((-Infinity) ** 0).toBe(1);
+    expect((-Infinity) ** 1).toBe(-Infinity);
+});
