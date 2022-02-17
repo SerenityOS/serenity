@@ -20,7 +20,9 @@ public:
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    String type() const { return attribute(HTML::AttributeNames::type); }
+    String type() const;
+    void set_type(String const&);
+
     String default_value() const { return attribute(HTML::AttributeNames::value); }
     String name() const { return attribute(HTML::AttributeNames::name); }
 

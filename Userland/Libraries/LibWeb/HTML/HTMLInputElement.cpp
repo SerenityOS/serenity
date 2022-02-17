@@ -219,4 +219,18 @@ void HTMLInputElement::did_remove_attribute(FlyString const& name)
     }
 }
 
+String HTMLInputElement::type() const
+{
+    // FIXME: This should only reflect known values.
+    auto value = attribute(HTML::AttributeNames::type);
+    if (value.is_null())
+        return "text";
+    return value;
+}
+
+void HTMLInputElement::set_type(String const& type)
+{
+    set_attribute(HTML::AttributeNames::type, type);
+}
+
 }
