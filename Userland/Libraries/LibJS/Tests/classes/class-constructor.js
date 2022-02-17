@@ -65,3 +65,10 @@ test("implicit constructor", () => {
 
     expect(new A()).toBeInstanceOf(A);
 });
+
+test("can call constructor without parentheses", () => {
+    class A {}
+
+    // prettier-ignore
+    expect(new A).toBeInstanceOf(A);
+});

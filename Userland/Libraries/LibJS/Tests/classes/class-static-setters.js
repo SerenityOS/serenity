@@ -110,3 +110,17 @@ describe("errors", () => {
     }`).not.toEval();
     });
 });
+
+test("static setter named 'async'", () => {
+    let called = false;
+    class A {
+        static set async(value) {
+            called = true;
+            expect(value).toBe("value set on static setter named async");
+        }
+    }
+
+    expect("async" in A).toBeTrue();
+    A.async = "value set on static setter named async";
+    expect(called).toBeTrue();
+});
