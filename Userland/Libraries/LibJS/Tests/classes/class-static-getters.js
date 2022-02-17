@@ -85,3 +85,14 @@ describe("errors", () => {
     }`).not.toEval();
     });
 });
+
+test("static getter named 'async'", () => {
+    class A {
+        static get async() {
+            return "static getter named async";
+        }
+    }
+
+    expect("async" in A).toBeTrue();
+    expect(A.async).toBe("static getter named async");
+});
