@@ -152,11 +152,13 @@ String HTMLInputElement::value() const
 
 void HTMLInputElement::set_value(String value)
 {
+    auto sanitised_value = value_sanitization_algorithm(move(value));
+
     if (m_text_node) {
-        m_text_node->set_data(move(value));
+        m_text_node->set_data(sanitised_value);
         return;
     }
-    set_attribute(HTML::AttributeNames::value, move(value));
+    set_attribute(HTML::AttributeNames::value, sanitised_value);
 }
 
 void HTMLInputElement::create_shadow_tree_if_needed()
@@ -232,8 +234,8 @@ String HTMLInputElement::type() const
 {
     auto value = attribute(HTML::AttributeNames::type);
 
-#define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword) \
-    if (value.equals_ignoring_case(#keyword))          \
+#define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, _) \
+    if (value.equals_ignoring_case(#keyword))             \
         return #keyword;
     ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
 #undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
@@ -244,9 +246,60 @@ String HTMLInputElement::type() const
     return "text";
 }
 
+HTMLInputElement::TypeAttributeState HTMLInputElement::type_state() const
+{
+    auto value = attribute(HTML::AttributeNames::type);
+
+#define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, state) \
+    if (value.equals_ignoring_case(#keyword))                 \
+        return HTMLInputElement::TypeAttributeState::state;
+    ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
+#undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
+
+    // The missing value default and the invalid value default are the Text state.
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
+    return HTMLInputElement::TypeAttributeState::Text;
+}
+
 void HTMLInputElement::set_type(String const& type)
 {
     set_attribute(HTML::AttributeNames::type, type);
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
+String HTMLInputElement::value_sanitization_algorithm(String value) const
+{
+    if (type_state() == HTMLInputElement::TypeAttributeState::Text || type_state() == HTMLInputElement::TypeAttributeState::Search || type_state() == HTMLInputElement::TypeAttributeState::Telephone || type_state() == HTMLInputElement::TypeAttributeState::Password) {
+        // Strip newlines from the value.
+        if (value.contains('\r') || value.contains('\n')) {
+            StringBuilder builder;
+            for (auto c : value) {
+                if (!(c == '\r' || c == '\n'))
+                    builder.append(c);
+            }
+            return builder.to_string();
+        }
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::URL) {
+        // Strip newlines from the value, then strip leading and trailing ASCII whitespace from the value.
+        if (value.contains('\r') || value.contains('\n')) {
+            StringBuilder builder;
+            for (auto c : value) {
+                if (!(c == '\r' || c == '\n'))
+                    builder.append(c);
+            }
+            return builder.to_string().trim_whitespace();
+        }
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::Number) {
+        // If the value of the element is not a valid floating-point number, then set it to the empty string instead.
+        char* end_ptr;
+        auto val = strtod(value.characters(), &end_ptr);
+        if (!isfinite(val) || *end_ptr)
+            return "";
+    }
+
+    // FIXME: Implement remaining value sanitation algorithms
+    return value;
 }
 
 }
