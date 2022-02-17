@@ -7,6 +7,7 @@
 #pragma once
 
 #include "DisassemblyModel.h"
+#include "FilesystemEventModel.h"
 #include "Process.h"
 #include "Profile.h"
 #include "ProfileModel.h"
@@ -149,6 +150,7 @@ public:
     GUI::Model& signposts_model();
     GUI::Model* disassembly_model();
     GUI::Model* source_model();
+    GUI::Model* file_event_model();
 
     Process const* find_process(pid_t pid, EventSerialNumber serial) const
     {
@@ -235,6 +237,7 @@ public:
     Vector<Event> const& events() const { return m_events; }
     Vector<size_t> const& filtered_event_indices() const { return m_filtered_event_indices; }
     Vector<size_t> const& filtered_signpost_indices() const { return m_filtered_signpost_indices; }
+    NonnullRefPtr<FileEventNode> const& file_event_nodes() { return m_file_event_nodes; }
 
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
     u64 first_timestamp() const { return m_first_timestamp; }
@@ -293,6 +296,7 @@ private:
     RefPtr<SignpostsModel> m_signposts_model;
     RefPtr<DisassemblyModel> m_disassembly_model;
     RefPtr<SourceModel> m_source_model;
+    RefPtr<FileEventModel> m_file_event_model;
 
     GUI::ModelIndex m_disassembly_index;
     GUI::ModelIndex m_source_index;
@@ -312,6 +316,8 @@ private:
     u64 m_timestamp_filter_range_end { 0 };
 
     Vector<ProcessFilter> m_process_filters;
+
+    NonnullRefPtr<FileEventNode> m_file_event_nodes;
 
     bool m_inverted { false };
     bool m_show_top_functions { false };
