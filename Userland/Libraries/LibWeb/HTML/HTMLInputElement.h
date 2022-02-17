@@ -42,6 +42,8 @@ public:
 
     void did_click_button(Badge<Layout::ButtonBox>);
 
+    void did_edit_text_node(Badge<BrowsingContext>);
+
     virtual bool is_focusable() const override;
 
     virtual void parse_attribute(FlyString const&, String const&) override;

@@ -112,6 +112,23 @@ void HTMLInputElement::run_input_activation_behavior()
     }
 }
 
+void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
+{
+    // NOTE: This is a bit ad-hoc, but basically implements part of "4.10.5.5 Common event behaviors"
+    //       https://html.spec.whatwg.org/multipage/input.html#common-input-element-events
+    queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
+        auto input_event = DOM::Event::create(HTML::EventNames::input);
+        input_event->set_bubbles(true);
+        input_event->set_composed(true);
+        dispatch_event(move(input_event));
+
+        // FIXME: This should only fire when the input is "committed", whatever that means.
+        auto change_event = DOM::Event::create(HTML::EventNames::change);
+        change_event->set_bubbles(true);
+        dispatch_event(move(change_event));
+    });
+}
+
 bool HTMLInputElement::enabled() const
 {
     return !has_attribute(HTML::AttributeNames::disabled);
@@ -147,6 +164,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     element->set_attribute(HTML::AttributeNames::style, "white-space: pre");
     m_text_node = adopt_ref(*new DOM::Text(document(), initial_value));
     m_text_node->set_always_editable(true);
+    m_text_node->set_owner_input_element({}, *this);
     element->append_child(*m_text_node);
     shadow_root->append_child(move(element));
     set_shadow_root(move(shadow_root));
