@@ -34,7 +34,7 @@ void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
     // FIXME: This should be a PointerEvent.
     dispatch_event(DOM::Event::create(EventNames::click));
 
-    if (type().equals_ignoring_case("submit")) {
+    if (type() == "submit") {
         if (auto* form = first_ancestor_of_type<HTMLFormElement>()) {
             form->submit_form(this);
         }
@@ -55,7 +55,7 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::Sty
     if (type() == "hidden")
         return nullptr;
 
-    if (type().equals_ignoring_case("submit") || type().equals_ignoring_case("button"))
+    if (type() == "submit" || type() == "button" || type() == "reset")
         return adopt_ref(*new Layout::ButtonBox(document(), *this, move(style)));
 
     if (type() == "checkbox")
@@ -101,7 +101,7 @@ void HTMLInputElement::run_activation_behavior()
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
 void HTMLInputElement::run_input_activation_behavior()
 {
-    if (type().equals_ignoring_case("checkbox")) {
+    if (type() == "checkbox") {
         // 1. If the element is not connected, then return.
         if (!is_connected())
             return;

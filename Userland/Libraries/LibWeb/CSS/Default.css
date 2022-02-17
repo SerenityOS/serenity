@@ -211,10 +211,21 @@ ol ol ul {
 }
 
 /* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
-input[type=text] {
+input {
     border: 1px solid black;
     min-width: 80px;
     min-height: 16px;
+    width: 120px;
+    cursor: text;
+    overflow: hidden;
+}
+
+input[type=submit], input[type=button], input[type=reset], input[type=checkbox], input[type=radio] {
+    border: none;
+    min-width: unset;
+    min-height: unset;
+    width: unset;
+    cursor: unset;
 }
 
 option {
