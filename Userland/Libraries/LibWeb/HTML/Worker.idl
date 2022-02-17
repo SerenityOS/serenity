@@ -1,0 +1,16 @@
+[Exposed=(Window)]
+interface Worker : EventTarget {
+    constructor(DOMString scriptURL, optional WorkerOptions options = {});
+
+    undefined terminate();
+    undefined postMessage(any message, optional any transfer);
+
+    attribute EventHandler onmessage;
+    attribute EventHandler onmessageerror;
+};
+
+dictionary WorkerOptions {
+    USVString type = "classic";
+    USVString credentials = "same-origin";
+    DOMString name = "";
+};

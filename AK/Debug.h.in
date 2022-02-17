@@ -470,6 +470,10 @@
 #cmakedefine01 WEBSERVER_DEBUG
 #endif
 
+#ifndef WEB_WORKER_DEBUG
+#cmakedefine01 WEB_WORKER_DEBUG
+#endif
+
 #ifndef WINDOWMANAGER_DEBUG
 #cmakedefine01 WINDOWMANAGER_DEBUG
 #endif

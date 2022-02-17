@@ -43,7 +43,7 @@ public:
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
     // https://html.spec.whatwg.org/multipage/web-messaging.html#entangle
-    void entangle_with(Badge<MessageChannel>, MessagePort&);
+    void entangle_with(MessagePort&);
 
     // https://html.spec.whatwg.org/multipage/web-messaging.html#dom-messageport-postmessage
     void post_message(JS::Value);
