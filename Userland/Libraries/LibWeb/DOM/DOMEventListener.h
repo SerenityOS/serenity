@@ -13,7 +13,8 @@ namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#concept-event-listener
 // NOTE: The spec calls this "event listener", and it's *importantly* not the same as "EventListener"
-struct DOMEventListener : RefCounted<DOMEventListener> {
+class DOMEventListener : RefCounted<DOMEventListener> {
+public:
     DOMEventListener();
     ~DOMEventListener();
 
