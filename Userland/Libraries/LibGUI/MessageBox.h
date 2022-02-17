@@ -35,6 +35,8 @@ public:
     static int show_error(Window* parent_window, StringView text);
     static int ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp = {});
 
+    void set_text(String text);
+
 private:
     explicit MessageBox(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
 
