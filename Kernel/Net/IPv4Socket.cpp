@@ -609,6 +609,8 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
 {
     TRY(Process::current().require_promise(Pledge::inet));
 
+    MutexLocker locker(mutex());
+
     auto ioctl_route = [request, arg]() -> ErrorOr<void> {
         auto user_route = static_ptr_cast<rtentry*>(arg);
         rtentry route;
