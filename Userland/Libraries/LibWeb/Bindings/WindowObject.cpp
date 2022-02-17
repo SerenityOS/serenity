@@ -113,6 +113,7 @@ void WindowObject::initialize_global_object()
     define_direct_property("CSS", heap().allocate<CSSNamespace>(*this, *this), 0);
 
     define_native_accessor("localStorage", local_storage_getter, {}, attr);
+    define_native_accessor("origin", origin_getter, {}, attr);
 
     // Legacy
     define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
@@ -648,6 +649,17 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_y_getter)
 {
     auto* impl = TRY(impl_from(vm, global_object));
     return JS::Value(impl->screen_y());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::origin_getter)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    auto origin = impl->associated_document().origin();
+    String result = "null";
+    if (!origin.host().is_empty()) {
+        result = String::formatted("{}://{}", origin.protocol(), origin.host());
+    }
+    return JS::js_string(vm, result);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::local_storage_getter)
