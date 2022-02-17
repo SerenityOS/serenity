@@ -51,6 +51,7 @@ public:
     virtual String column_name(int column) const override { return m_fields[column].column_name; }
     virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const override;
     virtual void invalidate() override;
+    virtual void update();
 
     const String& json_path() const { return m_json_path; }
     void set_json_path(const String& json_path);

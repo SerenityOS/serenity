@@ -114,7 +114,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
 
 void NetworkStatisticsWidget::update_models()
 {
-    m_adapter_model->invalidate();
-    m_tcp_socket_model->invalidate();
-    m_udp_socket_model->invalidate();
+    m_adapter_model->update();
+    m_tcp_socket_model->update();
+    m_udp_socket_model->update();
 }
