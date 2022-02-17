@@ -41,6 +41,14 @@ void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
     }
 }
 
+void HTMLInputElement::did_click_checkbox(Badge<Layout::CheckBox>)
+{
+    // FIXME: This should be a PointerEvent.
+    auto click_event = DOM::Event::create(EventNames::click);
+    click_event->set_bubbles(true);
+    dispatch_event(move(click_event));
+}
+
 RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
     if (type() == "hidden")

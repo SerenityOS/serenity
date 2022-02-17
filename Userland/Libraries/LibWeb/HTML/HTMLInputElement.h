@@ -43,6 +43,7 @@ public:
     bool enabled() const;
 
     void did_click_button(Badge<Layout::ButtonBox>);
+    void did_click_checkbox(Badge<Layout::CheckBox>);
 
     void did_edit_text_node(Badge<BrowsingContext>);
 

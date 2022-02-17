@@ -62,8 +62,10 @@ void CheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position
     if (!is_inside_node_or_label)
         is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
 
-    if (is_inside_node_or_label)
+    if (is_inside_node_or_label) {
+        dom_node().did_click_checkbox({});
         dom_node().set_checked(!dom_node().checked(), HTML::HTMLInputElement::ChangeSource::User);
+    }
 
     m_being_pressed = false;
     m_tracking_mouse = false;
@@ -103,6 +105,7 @@ void CheckBox::handle_associated_label_mouseup(Badge<Label>)
     // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protect = *this;
 
+    dom_node().did_click_checkbox({});
     dom_node().set_checked(!dom_node().checked(), HTML::HTMLInputElement::ChangeSource::User);
     m_being_pressed = false;
 }
