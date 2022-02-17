@@ -10,7 +10,7 @@ SerenityOS structures audio into three groups of responsibilities: Audio drivers
 
 ### AudioServer
 
-AudioServer is responsible for handling userland audio clients and talking to the hardware. For this reason, no userland application should ever need to write to `/dev/audio` directly, except for special cases in which AudioServer is not present.
+AudioServer is responsible for handling userland audio clients and talking to the hardware. For this reason, no userland application should ever need to write to a device in `/dev/audio` directly, except for special cases in which AudioServer is not present.
 
 As with all system servers, AudioServer provides an IPC interface on `/tmp/portal/audio`. For specifics on how to talk to AudioServer, the IPC interface specifications are the best source of information. Audio clients send audio buffers with the standard audio format (see [audio](help://man/4/audio)) to the server. They can then query the state of these buffers, pause buffer playback or clear the playing buffers. For controlling mixer functionality, clients have the ability to obtain and change their own volume, or the main volume and mute state.
 
