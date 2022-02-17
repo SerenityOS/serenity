@@ -551,6 +551,8 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Link;
             } else if (pseudo_name.equals_ignoring_case("only-child")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::OnlyChild;
+            } else if (pseudo_name.equals_ignoring_case("only-of-type")) {
+                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::OnlyOfType;
             } else if (pseudo_name.equals_ignoring_case("root")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Root;
             } else if (pseudo_name.equals_ignoring_case("visited")) {

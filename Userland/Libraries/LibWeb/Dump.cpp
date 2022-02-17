@@ -382,6 +382,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::LastOfType:
                     pseudo_class_description = "LastOfType";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
+                    pseudo_class_description = "OnlyOfType";
+                    break;
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild:
                     pseudo_class_description = "NthChild";
                     break;

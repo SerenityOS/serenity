@@ -57,6 +57,7 @@ public:
                 Root,
                 FirstOfType,
                 LastOfType,
+                OnlyOfType,
                 NthChild,
                 NthLastChild,
                 Disabled,
