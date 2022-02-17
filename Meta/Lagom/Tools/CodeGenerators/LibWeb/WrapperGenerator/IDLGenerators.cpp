@@ -1408,6 +1408,8 @@ private:
 )~~~");
 
     for (auto& it : interface.enumerations) {
+        if (!it.value.is_original_definition)
+            continue;
         auto enum_generator = generator.fork();
         enum_generator.set("enum.type.name", it.key);
         enum_generator.append(R"~~~(
