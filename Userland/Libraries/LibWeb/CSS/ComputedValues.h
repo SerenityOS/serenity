@@ -108,12 +108,12 @@ public:
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     Vector<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
-    CSS::LengthPercentage const& width() const { return m_noninherited.width; }
-    CSS::LengthPercentage const& min_width() const { return m_noninherited.min_width; }
-    CSS::LengthPercentage const& max_width() const { return m_noninherited.max_width; }
-    CSS::LengthPercentage const& height() const { return m_noninherited.height; }
-    CSS::LengthPercentage const& min_height() const { return m_noninherited.min_height; }
-    CSS::LengthPercentage const& max_height() const { return m_noninherited.max_height; }
+    Optional<CSS::LengthPercentage> const& width() const { return m_noninherited.width; }
+    Optional<CSS::LengthPercentage> const& min_width() const { return m_noninherited.min_width; }
+    Optional<CSS::LengthPercentage> const& max_width() const { return m_noninherited.max_width; }
+    Optional<CSS::LengthPercentage> const& height() const { return m_noninherited.height; }
+    Optional<CSS::LengthPercentage> const& min_height() const { return m_noninherited.min_height; }
+    Optional<CSS::LengthPercentage> const& max_height() const { return m_noninherited.max_height; }
 
     const CSS::LengthBox& offset() const { return m_noninherited.offset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
@@ -174,12 +174,12 @@ protected:
         CSS::TextDecorationLine text_decoration_line { InitialValues::text_decoration_line() };
         CSS::TextDecorationStyle text_decoration_style { InitialValues::text_decoration_style() };
         CSS::Position position { InitialValues::position() };
-        CSS::LengthPercentage width { Length::make_auto() };
-        CSS::LengthPercentage min_width { Length::make_auto() };
-        CSS::LengthPercentage max_width { Length::make_auto() };
-        CSS::LengthPercentage height { Length::make_auto() };
-        CSS::LengthPercentage min_height { Length::make_auto() };
-        CSS::LengthPercentage max_height { Length::make_auto() };
+        Optional<CSS::LengthPercentage> width;
+        Optional<CSS::LengthPercentage> min_width;
+        Optional<CSS::LengthPercentage> max_width;
+        Optional<CSS::LengthPercentage> height;
+        Optional<CSS::LengthPercentage> min_height;
+        Optional<CSS::LengthPercentage> max_height;
         CSS::LengthBox offset;
         CSS::LengthBox margin;
         CSS::LengthBox padding;
