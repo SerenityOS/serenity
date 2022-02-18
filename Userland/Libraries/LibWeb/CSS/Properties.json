@@ -748,6 +748,14 @@
       "unitless-length"
     ]
   },
+  "image-rendering": {
+    "inherited": true,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto",
+      "pixelated"
+    ]
+  },
   "justify-content": {
     "inherited": false,
     "initial": "flex-start",

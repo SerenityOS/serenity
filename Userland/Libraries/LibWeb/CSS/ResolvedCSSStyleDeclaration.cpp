@@ -358,6 +358,17 @@ static CSS::ValueID to_css_value_id(CSS::FlexWrap value)
     VERIFY_NOT_REACHED();
 }
 
+static CSS::ValueID to_css_value_id(CSS::ImageRendering value)
+{
+    switch (value) {
+    case ImageRendering::Auto:
+        return CSS::ValueID::Auto;
+    case ImageRendering::Pixelated:
+        return CSS::ValueID::Pixelated;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 static CSS::ValueID to_css_value_id(CSS::JustifyContent value)
 {
     switch (value) {
@@ -515,6 +526,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return NumericStyleValue::create_float(layout_node.computed_values().flex_shrink());
     case CSS::PropertyID::Opacity:
         return NumericStyleValue::create_float(layout_node.computed_values().opacity());
+    case CSS::PropertyID::ImageRendering:
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().image_rendering()));
     case CSS::PropertyID::JustifyContent:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().justify_content()));
     case CSS::PropertyID::BoxShadow: {

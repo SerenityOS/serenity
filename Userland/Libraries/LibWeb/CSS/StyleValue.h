@@ -140,6 +140,11 @@ enum class Float {
     Right,
 };
 
+enum class ImageRendering {
+    Auto,
+    Pixelated
+};
+
 enum class JustifyContent {
     FlexStart,
     FlexEnd,
