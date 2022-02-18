@@ -60,10 +60,11 @@ void Request::stream_into_impl(T& stream)
             }
         } while (true);
 
-        if (m_internal_stream_data->read_stream->is_eof() && m_internal_stream_data->request_done) {
+        if (m_internal_stream_data->read_stream->is_eof())
             m_internal_stream_data->read_notifier->close();
+
+        if (m_internal_stream_data->request_done)
             m_internal_stream_data->on_finish();
-        }
     };
 }
 
