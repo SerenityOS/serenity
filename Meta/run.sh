@@ -201,7 +201,7 @@ fi
 
 # Check if SERENITY_NVME_ENABLE is unset
 if [ -z ${SERENITY_NVME_ENABLE+x} ]; then
-    SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk"
+    SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk,id=disk"
 else
     if [ "$SERENITY_NVME_ENABLE" -eq 1 ]; then
         SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk,if=none,id=disk"
@@ -209,7 +209,7 @@ else
         SERENITY_BOOT_DRIVE="$SERENITY_BOOT_DRIVE -device nvme,serial=deadbeef,drive=disk,bus=bridge4"
         SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE root=/dev/nvme0n1"
     else
-        SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk"
+        SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk,id=disk"
     fi
 fi
 
@@ -286,6 +286,21 @@ $SERENITY_EXTRA_QEMU_ARGS
 -chardev stdio,id=stdout,mux=on
 -device isa-debugcon,chardev=stdout
 $SERENITY_BOOT_DRIVE
+"
+
+[ -z "$SERENITY_COMMON_QEMU_MICROVM_ARGS" ] && SERENITY_COMMON_QEMU_MICROVM_ARGS="
+$SERENITY_EXTRA_QEMU_ARGS
+-m $SERENITY_RAM_SIZE
+-machine microvm,pit=on,rtc=on,pic=on
+-cpu qemu64
+-d guest_errors
+-chardev stdio,id=stdout,mux=on
+-device isa-debugcon,chardev=stdout
+-device isa-cirrus-vga
+-device isa-ide
+$SERENITY_BOOT_DRIVE
+-device i8042 
+-device ide-hd,drive=disk
 "
 
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
@@ -389,6 +404,17 @@ elif [ "$SERENITY_RUN" = "isapc" ]; then
     echo "Starting SerenityOS with QEMU ISA-PC machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ISA_PC_ARGS \
+        $SERENITY_VIRT_TECH_ARG \
+        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
+        -device ne2k_isa,netdev=breh \
+        -kernel Kernel/Prekernel/Prekernel \
+        -initrd Kernel/Kernel \
+        -append "${SERENITY_KERNEL_CMDLINE}"
+elif [ "$SERENITY_RUN" = "microvm" ]; then
+    # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
+    echo "Starting SerenityOS with QEMU MicroVM machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
+    "$SERENITY_QEMU_BIN" \
+        $SERENITY_COMMON_QEMU_MICROVM_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device ne2k_isa,netdev=breh \
