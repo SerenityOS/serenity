@@ -473,7 +473,8 @@ ssize_t TLSv12::handle_handshake_payload(ReadonlyBytes vbuffer)
                 write_packet(packet);
                 break;
             }
-            case Error::NotUnderstood: {
+            case Error::NotUnderstood:
+            case Error::OutOfMemory: {
                 auto packet = build_alert(true, (u8)AlertDescription::InternalError);
                 write_packet(packet);
                 break;
