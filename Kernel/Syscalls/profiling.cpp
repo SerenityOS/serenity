@@ -16,10 +16,14 @@ bool g_profiling_all_threads;
 PerformanceEventBuffer* g_global_perf_events;
 u64 g_profiling_event_mask;
 
-ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
+// NOTE: event_mask needs to be passed as a pointer as u64
+//       does not fit into a register on 32bit architectures.
+ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, Userspace<u64 const*> userspace_event_mask)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_no_promises());
+
+    const auto event_mask = TRY(copy_typed_from_user(userspace_event_mask));
 
     if (pid == -1) {
         if (!is_superuser())
