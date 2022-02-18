@@ -1,6 +1,5 @@
 @GUI::Frame {
     fill_with_background_color: true
-
     layout: @GUI::VerticalBoxLayout {
         margins: [10]
         spacing: 5
@@ -13,7 +12,6 @@
 
     @GUI::GroupBox {
         title: "Domain list"
-
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
         }
@@ -24,12 +22,9 @@
 
         @GUI::Widget {
             fixed_height: 32
+            layout: @GUI::HorizontalBoxLayout {}
 
-            layout: @GUI::HorizontalBoxLayout {
-            }
-
-            @GUI::Widget {
-            }
+            @GUI::Widget {}
 
             @GUI::Button {
                 name: "add_new_domain_button"
