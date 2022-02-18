@@ -20,7 +20,7 @@ public:
     NonnullRefPtr<HTML::DOMStringMap> dataset() const { return m_dataset; }
 
 protected:
-    SVGElement(DOM::Document&, QualifiedName);
+    SVGElement(DOM::Document&, DOM::QualifiedName);
 
     NonnullRefPtr<HTML::DOMStringMap> m_dataset;
 };

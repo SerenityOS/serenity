@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-HTMLHeadElement::HTMLHeadElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLHeadElement::HTMLHeadElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

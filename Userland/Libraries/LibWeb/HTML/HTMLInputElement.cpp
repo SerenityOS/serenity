@@ -20,7 +20,7 @@
 
 namespace Web::HTML {
 
-HTMLInputElement::HTMLInputElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : FormAssociatedElement(document, move(qualified_name))
 {
 }

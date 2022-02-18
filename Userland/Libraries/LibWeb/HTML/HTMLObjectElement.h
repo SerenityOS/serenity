@@ -17,7 +17,7 @@ class HTMLObjectElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLObjectElementWrapper;
 
-    HTMLObjectElement(DOM::Document&, QualifiedName);
+    HTMLObjectElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLObjectElement() override;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;

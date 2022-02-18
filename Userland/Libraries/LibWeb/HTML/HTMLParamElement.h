@@ -14,7 +14,7 @@ class HTMLParamElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLParamElementWrapper;
 
-    HTMLParamElement(DOM::Document&, QualifiedName);
+    HTMLParamElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLParamElement() override;
 };
 

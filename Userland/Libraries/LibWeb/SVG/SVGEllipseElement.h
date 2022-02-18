@@ -14,7 +14,7 @@ class SVGEllipseElement final : public SVGGeometryElement {
 public:
     using WrapperType = Bindings::SVGEllipseElementWrapper;
 
-    SVGEllipseElement(DOM::Document&, QualifiedName);
+    SVGEllipseElement(DOM::Document&, DOM::QualifiedName);
     virtual ~SVGEllipseElement() override = default;
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;

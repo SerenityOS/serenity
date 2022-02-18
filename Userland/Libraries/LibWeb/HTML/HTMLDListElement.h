@@ -14,7 +14,7 @@ class HTMLDListElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLDListElementWrapper;
 
-    HTMLDListElement(DOM::Document&, QualifiedName);
+    HTMLDListElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLDListElement() override;
 };
 

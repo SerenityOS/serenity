@@ -14,7 +14,7 @@ class HTMLTitleElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTitleElementWrapper;
 
-    HTMLTitleElement(DOM::Document&, QualifiedName);
+    HTMLTitleElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTitleElement() override;
 
 private:

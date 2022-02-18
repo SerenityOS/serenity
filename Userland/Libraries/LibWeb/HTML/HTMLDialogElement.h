@@ -14,7 +14,7 @@ class HTMLDialogElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLDialogElementWrapper;
 
-    HTMLDialogElement(DOM::Document&, QualifiedName);
+    HTMLDialogElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLDialogElement() override;
 };
 

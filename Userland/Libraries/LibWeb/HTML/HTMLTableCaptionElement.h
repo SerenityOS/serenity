@@ -14,7 +14,7 @@ class HTMLTableCaptionElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableCaptionElementWrapper;
 
-    HTMLTableCaptionElement(DOM::Document&, QualifiedName);
+    HTMLTableCaptionElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTableCaptionElement() override;
 };
 

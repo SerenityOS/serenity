@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-HTMLMarqueeElement::HTMLMarqueeElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLMarqueeElement::HTMLMarqueeElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

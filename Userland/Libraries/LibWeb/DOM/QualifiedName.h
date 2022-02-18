@@ -8,7 +8,7 @@
 
 #include <AK/FlyString.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class QualifiedName {
 public:

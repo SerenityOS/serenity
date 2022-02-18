@@ -32,7 +32,7 @@ class Element
 public:
     using WrapperType = Bindings::ElementWrapper;
 
-    Element(Document&, QualifiedName);
+    Element(Document&, DOM::QualifiedName);
     virtual ~Element() override;
 
     const String& qualified_name() const { return m_qualified_name.as_string(); }

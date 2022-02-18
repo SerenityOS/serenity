@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-HTMLAudioElement::HTMLAudioElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLAudioElement::HTMLAudioElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLMediaElement(document, move(qualified_name))
 {
 }

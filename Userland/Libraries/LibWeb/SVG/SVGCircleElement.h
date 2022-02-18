@@ -14,7 +14,7 @@ class SVGCircleElement final : public SVGGeometryElement {
 public:
     using WrapperType = Bindings::SVGCircleElementWrapper;
 
-    SVGCircleElement(DOM::Document&, QualifiedName);
+    SVGCircleElement(DOM::Document&, DOM::QualifiedName);
     virtual ~SVGCircleElement() override = default;
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;

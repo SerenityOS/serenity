@@ -14,7 +14,7 @@ class HTMLBaseElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLBaseElementWrapper;
 
-    HTMLBaseElement(DOM::Document&, QualifiedName);
+    HTMLBaseElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLBaseElement() override;
 };
 

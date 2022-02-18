@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

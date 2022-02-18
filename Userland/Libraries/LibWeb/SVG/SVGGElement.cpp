@@ -11,7 +11,7 @@
 
 namespace Web::SVG {
 
-SVGGElement::SVGGElement(DOM::Document& document, QualifiedName qualified_name)
+SVGGElement::SVGGElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, move(qualified_name))
 {
 }

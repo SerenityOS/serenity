@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-HTMLOutputElement::HTMLOutputElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLOutputElement::HTMLOutputElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : FormAssociatedElement(document, move(qualified_name))
 {
 }

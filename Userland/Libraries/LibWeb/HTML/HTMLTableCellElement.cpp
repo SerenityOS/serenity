@@ -9,7 +9,7 @@
 
 namespace Web::HTML {
 
-HTMLTableCellElement::HTMLTableCellElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLTableCellElement::HTMLTableCellElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

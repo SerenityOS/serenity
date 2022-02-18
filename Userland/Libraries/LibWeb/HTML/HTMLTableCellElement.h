@@ -14,7 +14,7 @@ class HTMLTableCellElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableCellElementWrapper;
 
-    HTMLTableCellElement(DOM::Document&, QualifiedName);
+    HTMLTableCellElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTableCellElement() override;
 
 private:

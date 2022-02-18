@@ -15,7 +15,7 @@ class HTMLStyleElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLStyleElementWrapper;
 
-    HTMLStyleElement(DOM::Document&, QualifiedName);
+    HTMLStyleElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLStyleElement() override;
 
     virtual void children_changed() override;

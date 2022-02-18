@@ -14,7 +14,7 @@ class SVGPolygonElement final : public SVGGeometryElement {
 public:
     using WrapperType = Bindings::SVGPolygonElementWrapper;
 
-    SVGPolygonElement(DOM::Document&, QualifiedName);
+    SVGPolygonElement(DOM::Document&, DOM::QualifiedName);
     virtual ~SVGPolygonElement() override = default;
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;

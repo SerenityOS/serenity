@@ -20,7 +20,7 @@ public:
     virtual Gfx::Path& get_path() = 0;
 
 protected:
-    SVGGeometryElement(DOM::Document& document, QualifiedName qualified_name);
+    SVGGeometryElement(DOM::Document& document, DOM::QualifiedName qualified_name);
 };
 
 }

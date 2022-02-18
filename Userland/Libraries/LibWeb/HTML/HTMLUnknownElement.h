@@ -14,7 +14,7 @@ class HTMLUnknownElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLUnknownElementWrapper;
 
-    HTMLUnknownElement(DOM::Document&, QualifiedName);
+    HTMLUnknownElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLUnknownElement() override;
 };
 

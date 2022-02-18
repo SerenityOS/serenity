@@ -14,7 +14,7 @@ class HTMLProgressElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLProgressElementWrapper;
 
-    HTMLProgressElement(DOM::Document&, QualifiedName);
+    HTMLProgressElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLProgressElement() override;
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;

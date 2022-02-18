@@ -15,7 +15,7 @@ class SVGRectElement final : public SVGGeometryElement {
 public:
     using WrapperType = Bindings::SVGRectElementWrapper;
 
-    SVGRectElement(DOM::Document&, QualifiedName);
+    SVGRectElement(DOM::Document&, DOM::QualifiedName);
     virtual ~SVGRectElement() override = default;
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;

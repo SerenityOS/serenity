@@ -14,7 +14,7 @@ class HTMLFontElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLFontElementWrapper;
 
-    HTMLFontElement(DOM::Document&, QualifiedName);
+    HTMLFontElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLFontElement() override;
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;

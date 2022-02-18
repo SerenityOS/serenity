@@ -14,7 +14,7 @@ class HTMLDetailsElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLDetailsElementWrapper;
 
-    HTMLDetailsElement(DOM::Document&, QualifiedName);
+    HTMLDetailsElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLDetailsElement() override;
 };
 

@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-HTMLMediaElement::HTMLMediaElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLMediaElement::HTMLMediaElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }
