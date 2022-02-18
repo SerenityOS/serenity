@@ -414,8 +414,8 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
     auto margin_right = CSS::Length::make_auto();
     const auto border_left = computed_values.border_left().width;
     const auto border_right = computed_values.border_right().width;
-    const auto padding_left = computed_values.padding().left.resolved(box, width_of_containing_block).resolved(box);
-    const auto padding_right = computed_values.padding().right.resolved(box, width_of_containing_block).resolved(box);
+    const auto padding_left = computed_values.padding().left.resolved(box, width_of_containing_block).to_px(box);
+    const auto padding_right = computed_values.padding().right.resolved(box, width_of_containing_block).to_px(box);
 
     auto try_compute_width = [&](const auto& a_width) {
         margin_left = computed_values.margin().left.resolved(box, width_of_containing_block).resolved(box);
@@ -426,15 +426,15 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         auto width = a_width;
 
         auto solve_for_left = [&] {
-            return CSS::Length(containing_block.content_width() - margin_left.to_px(box) - border_left - padding_left.to_px(box) - width.to_px(box) - padding_right.to_px(box) - border_right - margin_right.to_px(box) - right.to_px(box), CSS::Length::Type::Px);
+            return CSS::Length(containing_block.content_width() - margin_left.to_px(box) - border_left - padding_left - width.to_px(box) - padding_right - border_right - margin_right.to_px(box) - right.to_px(box), CSS::Length::Type::Px);
         };
 
         auto solve_for_width = [&] {
-            return CSS::Length(containing_block.content_width() - left.to_px(box) - margin_left.to_px(box) - border_left - padding_left.to_px(box) - padding_right.to_px(box) - border_right - margin_right.to_px(box) - right.to_px(box), CSS::Length::Type::Px);
+            return CSS::Length(containing_block.content_width() - left.to_px(box) - margin_left.to_px(box) - border_left - padding_left - padding_right - border_right - margin_right.to_px(box) - right.to_px(box), CSS::Length::Type::Px);
         };
 
         auto solve_for_right = [&] {
-            return CSS::Length(containing_block.content_width() - left.to_px(box) - margin_left.to_px(box) - border_left - padding_left.to_px(box) - width.to_px(box) - padding_right.to_px(box) - border_right - margin_right.to_px(box), CSS::Length::Type::Px);
+            return CSS::Length(containing_block.content_width() - left.to_px(box) - margin_left.to_px(box) - border_left - padding_left - width.to_px(box) - padding_right - border_right - margin_right.to_px(box), CSS::Length::Type::Px);
         };
 
         // If all three of 'left', 'width', and 'right' are 'auto':
@@ -540,8 +540,8 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
     box.box_model().margin.right = margin_right.to_px(box);
     box.box_model().border.left = border_left;
     box.box_model().border.right = border_right;
-    box.box_model().padding.left = padding_left.to_px(box);
-    box.box_model().padding.right = padding_right.to_px(box);
+    box.box_model().padding.left = padding_left;
+    box.box_model().padding.right = padding_right;
 }
 
 void FormattingContext::compute_width_for_absolutely_positioned_replaced_element(ReplacedBox& box)
