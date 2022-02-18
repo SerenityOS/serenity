@@ -406,7 +406,7 @@ public:
 
     virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
     virtual CSS::ValueID to_identifier() const { return ValueID::Invalid; }
-    virtual Length to_length() const { return {}; }
+    virtual Length to_length() const { VERIFY_NOT_REACHED(); }
     virtual float to_number() const { return 0; }
     virtual float to_integer() const { return 0; }
     virtual String to_string() const = 0;
