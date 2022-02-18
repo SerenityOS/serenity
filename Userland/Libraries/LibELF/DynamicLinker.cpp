@@ -127,7 +127,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String c
     search_paths.append("/usr/local/lib"sv);
 
     for (auto const& search_path : search_paths) {
-        LexicalPath library_path(search_path);
+        LexicalPath library_path(search_path.replace("$ORIGIN"sv, LexicalPath::dirname(s_main_program_name)));
         int fd = open(library_path.append(name).string().characters(), O_RDONLY);
 
         if (fd < 0)
