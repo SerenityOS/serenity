@@ -80,6 +80,8 @@ public:
     static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);
     void copy_initial_tls_data_into(ByteBuffer& buffer) const;
 
+    DynamicObject const& dynamic_object() const;
+
 private:
     DynamicLoader(int fd, String filename, void* file_data, size_t file_size);
 
@@ -106,8 +108,6 @@ private:
     private:
         ElfW(Phdr) m_program_header; // Explicitly a copy of the PHDR in the image
     };
-
-    const DynamicObject& dynamic_object() const;
 
     // Stage 1
     void load_program_headers();
