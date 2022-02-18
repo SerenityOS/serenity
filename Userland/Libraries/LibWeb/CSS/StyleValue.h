@@ -691,21 +691,23 @@ public:
         float value;
     };
 
+    using PercentageBasis = Variant<Empty, Length>;
+
     class CalculationResult {
     public:
         CalculationResult(Variant<Number, Length, Percentage> value)
             : m_value(move(value))
         {
         }
-        void add(CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
-        void subtract(CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
+        void add(CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
+        void subtract(CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
         void multiply_by(CalculationResult const& other, Layout::Node const*);
         void divide_by(CalculationResult const& other, Layout::Node const*);
 
         Variant<Number, Length, Percentage> const& value() const { return m_value; }
 
     private:
-        void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
+        void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
         Variant<Number, Length, Percentage> m_value;
     };
 
@@ -722,14 +724,14 @@ public:
         Variant<Number, NonnullOwnPtr<CalcNumberSum>> value;
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcValue {
         Variant<Number, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     // This represents that: https://www.w3.org/TR/css-values-3/#calc-syntax
@@ -743,7 +745,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcNumberSum {
@@ -756,7 +758,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcProduct {
@@ -765,7 +767,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcSumPartWithOperator {
@@ -778,7 +780,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcProductPartWithOperator {
@@ -787,7 +789,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcNumberProduct {
@@ -796,7 +798,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcNumberProductPartWithOperator {
@@ -805,7 +807,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcNumberSumPartWithOperator {
@@ -818,7 +820,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     static NonnullRefPtr<CalculatedStyleValue> create(NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)

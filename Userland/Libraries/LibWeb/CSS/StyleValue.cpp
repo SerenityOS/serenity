@@ -278,17 +278,17 @@ String BoxShadowStyleValue::to_string() const
     return builder.to_string();
 }
 
-void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)
+void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
 }
 
-void CalculatedStyleValue::CalculationResult::subtract(CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)
+void CalculatedStyleValue::CalculationResult::subtract(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Subtract, other, layout_node, percentage_basis);
 }
 
-void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const* layout_node, Length const& percentage_basis)
+void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     // We know from validation when resolving the type, that "both sides have the same type, or that one side is a <number> and the other is an <integer>".
     // Though, having the same type may mean that one side is a <dimension> and the other a <percentage>.
@@ -318,9 +318,9 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
                 else
                     m_value = Length::make_px(this_px - other_px);
             } else {
-                VERIFY(!percentage_basis.is_undefined());
+                VERIFY(percentage_basis.has<Length>());
 
-                auto other_px = percentage_basis.percentage_of(other.m_value.get<Percentage>()).to_px(*layout_node);
+                auto other_px = percentage_basis.get<Length>().percentage_of(other.m_value.get<Percentage>()).to_px(*layout_node);
                 if (op == SumOperation::Add)
                     m_value = Length::make_px(this_px + other_px);
                 else
@@ -712,7 +712,7 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberVal
         [](NonnullOwnPtr<CalcNumberSum> const& sum) { return sum->resolved_type(); });
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberValue::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberValue::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value.visit(
         [&](Number const& number) -> CalculatedStyleValue::CalculationResult {
@@ -723,7 +723,7 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberValue::r
         });
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value.visit(
         [&](Number const& number) -> CalculatedStyleValue::CalculationResult {
@@ -740,7 +740,7 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve
         });
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSum::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSum::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     auto value = first_calc_product->resolve(layout_node, percentage_basis);
 
@@ -758,7 +758,7 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSum::resolve(L
     return value;
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSum::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSum::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     auto value = first_calc_number_product->resolve(layout_node, percentage_basis);
 
@@ -776,7 +776,7 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSum::res
     return value;
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     auto value = first_calc_value.resolve(layout_node, percentage_basis);
 
@@ -799,7 +799,7 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resol
     return value;
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProduct::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProduct::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     auto value = first_calc_number_value.resolve(layout_node, percentage_basis);
 
@@ -817,7 +817,7 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProduct:
     return value;
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProductPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProductPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value.visit(
         [&](CalcValue const& calc_value) {
@@ -828,17 +828,17 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProductPartWit
         });
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSumPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value->resolve(layout_node, percentage_basis);
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value.resolve(layout_node, percentage_basis);
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, Length const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value->resolve(layout_node, percentage_basis);
 }
