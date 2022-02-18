@@ -295,15 +295,15 @@ ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
 
     auto curve_type = buffer[3];
     if (curve_type != (u8)ECCurveType::NamedCurve)
-        return (i8)Error::FeatureNotSupported;
+        return (i8)Error::NotUnderstood;
 
     auto curve = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(4)));
     if (curve != (u16)NamedCurve::x25519)
-        return (i8)Error::FeatureNotSupported;
+        return (i8)Error::NotUnderstood;
 
     auto server_public_key_length = buffer[6];
     if (server_public_key_length != x25519_key_size_bytes)
-        return (i8)Error::FeatureNotSupported;
+        return (i8)Error::NotUnderstood;
 
     auto server_public_key = buffer.slice(7, server_public_key_length);
     auto server_public_key_copy_result = ByteBuffer::copy(server_public_key);
