@@ -86,6 +86,8 @@ public:
             return 0;
         if (is_relative())
             return relative_length_to_px(viewport_rect, font_metrics, root_font_size);
+        if (is_calculated())
+            VERIFY_NOT_REACHED(); // We can't resolve a calculated length from here. :^(
         return absolute_length_to_px();
     }
 
