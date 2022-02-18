@@ -2996,12 +2996,12 @@ void SoftwareGLContext::sync_device_sampler_config()
             config.mipmap_filter = SoftGPU::MipMapFilter::Nearest;
             break;
         case GL_LINEAR_MIPMAP_NEAREST:
-            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
-            config.mipmap_filter = SoftGPU::MipMapFilter::Linear;
-            break;
-        case GL_NEAREST_MIPMAP_LINEAR:
             config.texture_min_filter = SoftGPU::TextureFilter::Linear;
             config.mipmap_filter = SoftGPU::MipMapFilter::Nearest;
+            break;
+        case GL_NEAREST_MIPMAP_LINEAR:
+            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
+            config.mipmap_filter = SoftGPU::MipMapFilter::Linear;
             break;
         case GL_LINEAR_MIPMAP_LINEAR:
             config.texture_min_filter = SoftGPU::TextureFilter::Linear;
