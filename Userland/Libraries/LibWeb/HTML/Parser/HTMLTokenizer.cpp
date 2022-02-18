@@ -187,9 +187,25 @@ Optional<u32> HTMLTokenizer::next_code_point()
 {
     if (m_utf8_iterator == m_utf8_view.end())
         return {};
-    skip(1);
-    dbgln_if(TOKENIZER_TRACE_DEBUG, "(Tokenizer) Next code_point: {}", (char)*m_prev_utf8_iterator);
-    return *m_prev_utf8_iterator;
+
+    u32 code_point;
+    // https://html.spec.whatwg.org/multipage/parsing.html#preprocessing-the-input-stream:tokenization
+    // https://infra.spec.whatwg.org/#normalize-newlines
+    if (peek_code_point(0).value_or(0) == '\r' && peek_code_point(1).value_or(0) == '\n') {
+        // replace every U+000D CR U+000A LF code point pair with a single U+000A LF code point,
+        skip(2);
+        code_point = '\n';
+    } else if (peek_code_point(0).value_or(0) == '\r') {
+        // replace every remaining U+000D CR code point with a U+000A LF code point.
+        skip(1);
+        code_point = '\n';
+    } else {
+        skip(1);
+        code_point = *m_prev_utf8_iterator;
+    }
+
+    dbgln_if(TOKENIZER_TRACE_DEBUG, "(Tokenizer) Next code_point: {}", code_point);
+    return code_point;
 }
 
 void HTMLTokenizer::skip(size_t count)
