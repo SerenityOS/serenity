@@ -111,6 +111,9 @@ public:
     String text_content() const;
     void set_text_content(String const&);
 
+    String node_value() const;
+    void set_node_value(String const&);
+
     Document& document() { return *m_document; }
     const Document& document() const { return *m_document; }
 
