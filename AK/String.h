@@ -127,12 +127,18 @@ public:
 #ifndef KERNEL
     [[nodiscard]] String trim(StringView characters, TrimMode mode = TrimMode::Both) const
     {
-        return StringUtils::trim(view(), characters, mode);
+        auto trimmed_view = StringUtils::trim(view(), characters, mode);
+        if (view() == trimmed_view)
+            return *this;
+        return trimmed_view;
     }
 
     [[nodiscard]] String trim_whitespace(TrimMode mode = TrimMode::Both) const
     {
-        return StringUtils::trim_whitespace(view(), mode);
+        auto trimmed_view = StringUtils::trim_whitespace(view(), mode);
+        if (view() == trimmed_view)
+            return *this;
+        return trimmed_view;
     }
 #endif
 
