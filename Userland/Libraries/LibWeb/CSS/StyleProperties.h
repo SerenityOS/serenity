@@ -41,6 +41,7 @@ public:
 
     Length length_or_fallback(CSS::PropertyID, Length const& fallback) const;
     LengthPercentage length_percentage_or_fallback(CSS::PropertyID, LengthPercentage const& fallback) const;
+    Optional<LengthPercentage> length_percentage(CSS::PropertyID) const;
     LengthBox length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id, const CSS::Length& default_value) const;
     Color color_or_fallback(CSS::PropertyID, Layout::NodeWithStyle const&, Color fallback) const;
     Optional<CSS::TextAlign> text_align() const;

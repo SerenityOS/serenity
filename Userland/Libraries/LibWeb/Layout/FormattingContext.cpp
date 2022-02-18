@@ -157,10 +157,10 @@ static Gfx::FloatSize solve_replaced_size_constraint(float w, float h, const Rep
     auto width_of_containing_block = CSS::Length::make_px(containing_block.content_width());
     auto height_of_containing_block = CSS::Length::make_px(containing_block.content_height());
 
-    auto specified_min_width = box.computed_values().min_width().resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
-    auto specified_max_width = box.computed_values().max_width().resolved(box, width_of_containing_block).resolved(CSS::Length::make_px(w), box).to_px(box);
-    auto specified_min_height = box.computed_values().min_height().resolved(box, height_of_containing_block).resolved_or_auto(box).to_px(box);
-    auto specified_max_height = box.computed_values().max_height().resolved(box, height_of_containing_block).resolved(CSS::Length::make_px(h), box).to_px(box);
+    auto specified_min_width = box.computed_values().min_width().has_value() ? box.computed_values().min_width()->resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box) : 0;
+    auto specified_max_width = box.computed_values().max_width().has_value() ? box.computed_values().max_width()->resolved(box, width_of_containing_block).resolved(CSS::Length::make_px(w), box).to_px(box) : w;
+    auto specified_min_height = box.computed_values().min_height().has_value() ? box.computed_values().min_height()->resolved(box, height_of_containing_block).resolved_or_auto(box).to_px(box) : 0;
+    auto specified_max_height = box.computed_values().max_height().has_value() ? box.computed_values().max_height()->resolved(box, height_of_containing_block).resolved(CSS::Length::make_px(h), box).to_px(box) : h;
 
     auto min_width = min(specified_min_width, specified_max_width);
     auto max_width = max(specified_min_width, specified_max_width);
@@ -252,7 +252,7 @@ float FormattingContext::tentative_width_for_replaced_element(ReplacedBox const&
 {
     auto& containing_block = *box.containing_block();
     auto height_of_containing_block = CSS::Length::make_px(containing_block.content_height());
-    auto computed_height = box.computed_values().height().resolved(box, height_of_containing_block).resolved_or_auto(box);
+    auto computed_height = box.computed_values().height().has_value() ? box.computed_values().height()->resolved(box, height_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
 
     float used_width = computed_width.to_px(box);
 
@@ -323,14 +323,14 @@ float FormattingContext::compute_width_for_replaced_element(const ReplacedBox& b
     if (margin_right.is_auto())
         margin_right = zero_value;
 
-    auto specified_width = box.computed_values().width().resolved(box, width_of_containing_block).resolved_or_auto(box);
+    auto specified_width = box.computed_values().width().has_value() ? box.computed_values().width()->resolved(box, width_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = tentative_width_for_replaced_element(box, specified_width);
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    auto specified_max_width = box.computed_values().max_width().resolved(box, width_of_containing_block).resolved_or_auto(box);
+    auto specified_max_width = box.computed_values().max_width().has_value() ? box.computed_values().max_width()->resolved(box, width_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
     if (!specified_max_width.is_auto()) {
         if (used_width > specified_max_width.to_px(box)) {
             used_width = tentative_width_for_replaced_element(box, specified_max_width);
@@ -339,7 +339,7 @@ float FormattingContext::compute_width_for_replaced_element(const ReplacedBox& b
 
     // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
     //    but this time using the value of 'min-width' as the computed value for 'width'.
-    auto specified_min_width = box.computed_values().min_width().resolved(box, width_of_containing_block).resolved_or_auto(box);
+    auto specified_min_width = box.computed_values().min_width().has_value() ? box.computed_values().min_width()->resolved(box, width_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
     if (!specified_min_width.is_auto()) {
         if (used_width < specified_min_width.to_px(box)) {
             used_width = tentative_width_for_replaced_element(box, specified_min_width);
@@ -355,7 +355,7 @@ float FormattingContext::tentative_height_for_replaced_element(ReplacedBox const
 {
     auto& containing_block = *box.containing_block();
     auto width_of_containing_block = CSS::Length::make_px(containing_block.content_width());
-    auto computed_width = box.computed_values().width().resolved(box, width_of_containing_block).resolved_or_auto(box);
+    auto computed_width = box.computed_values().width().has_value() ? box.computed_values().width()->resolved(box, width_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has
     // an intrinsic height, then that intrinsic height is the used value of 'height'.
@@ -389,8 +389,8 @@ float FormattingContext::compute_height_for_replaced_element(const ReplacedBox& 
     auto& containing_block = *box.containing_block();
     auto width_of_containing_block = CSS::Length::make_px(containing_block.content_width());
     auto height_of_containing_block = CSS::Length::make_px(containing_block.content_height());
-    auto specified_width = box.computed_values().width().resolved(box, width_of_containing_block).resolved_or_auto(box);
-    auto specified_height = box.computed_values().height().resolved(box, height_of_containing_block).resolved_or_auto(box);
+    auto specified_width = box.computed_values().width().has_value() ? box.computed_values().width()->resolved(box, width_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
+    auto specified_height = box.computed_values().height().has_value() ? box.computed_values().height()->resolved(box, height_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
 
     float used_height = tentative_height_for_replaced_element(box, specified_height);
 
@@ -511,14 +511,14 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         return width;
     };
 
-    auto specified_width = computed_values.width().resolved(box, width_of_containing_block).resolved_or_auto(box);
+    auto specified_width = computed_values.width().has_value() ? computed_values.width()->resolved(box, width_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = try_compute_width(specified_width);
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    auto specified_max_width = computed_values.max_width().resolved(box, width_of_containing_block).resolved_or_auto(box);
+    auto specified_max_width = computed_values.max_width().has_value() ? computed_values.max_width()->resolved(box, width_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
     if (!specified_max_width.is_auto()) {
         if (used_width.to_px(box) > specified_max_width.to_px(box)) {
             used_width = try_compute_width(specified_max_width);
@@ -527,7 +527,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
     // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
     //    but this time using the value of 'min-width' as the computed value for 'width'.
-    auto specified_min_width = computed_values.min_width().resolved(box, width_of_containing_block).resolved_or_auto(box);
+    auto specified_min_width = computed_values.min_width().has_value() ? computed_values.min_width()->resolved(box, width_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
     if (!specified_min_width.is_auto()) {
         if (used_width.to_px(box) < specified_min_width.to_px(box)) {
             used_width = try_compute_width(specified_min_width);
@@ -561,16 +561,17 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
     CSS::Length specified_top = computed_values.offset().top.resolved(box, height_of_containing_block).resolved_or_auto(box);
     CSS::Length specified_bottom = computed_values.offset().bottom.resolved(box, height_of_containing_block).resolved_or_auto(box);
-    CSS::Length specified_height;
+    CSS::Length specified_height = CSS::Length::make_auto();
 
-    if (computed_values.height().is_percentage() && !(containing_block.computed_values().height().is_length() && containing_block.computed_values().height().length().is_absolute())) {
-        specified_height = CSS::Length::make_auto();
+    if (computed_values.height().has_value() && computed_values.height()->is_percentage()
+        && !(containing_block.computed_values().height().has_value() && containing_block.computed_values().height()->is_length() && containing_block.computed_values().height()->length().is_absolute())) {
+        // specified_height is already auto
     } else {
-        specified_height = computed_values.height().resolved(box, height_of_containing_block).resolved_or_auto(box);
+        specified_height = computed_values.height().has_value() ? computed_values.height()->resolved(box, height_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
     }
 
-    auto specified_max_height = computed_values.max_height().resolved(box, height_of_containing_block).resolved_or_auto(box);
-    auto specified_min_height = computed_values.min_height().resolved(box, height_of_containing_block).resolved_or_auto(box);
+    auto specified_max_height = computed_values.max_height().has_value() ? computed_values.max_height()->resolved(box, height_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
+    auto specified_min_height = computed_values.min_height().has_value() ? computed_values.min_height()->resolved(box, height_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
 
     box.box_model().margin.top = computed_values.margin().top.resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
     box.box_model().margin.bottom = computed_values.margin().bottom.resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
@@ -613,7 +614,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box& box)
     auto height_of_containing_block = CSS::Length::make_px(containing_block.content_height());
     auto& box_model = box.box_model();
 
-    auto specified_width = box.computed_values().width().resolved(box, width_of_containing_block).resolved_or_auto(box);
+    auto specified_width = box.computed_values().width().has_value() ? box.computed_values().width()->resolved(box, width_of_containing_block).resolved_or_auto(box) : CSS::Length::make_auto();
 
     compute_width_for_absolutely_positioned_element(box);
     auto independent_formatting_context = layout_inside(box, LayoutMode::Default);

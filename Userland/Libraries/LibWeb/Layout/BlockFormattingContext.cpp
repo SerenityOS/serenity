@@ -195,14 +195,14 @@ void BlockFormattingContext::compute_width(Box& box)
         return width;
     };
 
-    auto specified_width = computed_values.width().resolved(box, width_of_containing_block_as_length).resolved_or_auto(box);
+    auto specified_width = computed_values.width().has_value() ? computed_values.width()->resolved(box, width_of_containing_block_as_length).resolved_or_auto(box) : CSS::Length::make_auto();
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = try_compute_width(specified_width);
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    auto specified_max_width = computed_values.max_width().resolved(box, width_of_containing_block_as_length).resolved_or_auto(box);
+    auto specified_max_width = computed_values.max_width().has_value() ? computed_values.max_width()->resolved(box, width_of_containing_block_as_length).resolved_or_auto(box) : CSS::Length::make_auto();
     if (!specified_max_width.is_auto()) {
         if (used_width.to_px(box) > specified_max_width.to_px(box)) {
             used_width = try_compute_width(specified_max_width);
@@ -211,7 +211,7 @@ void BlockFormattingContext::compute_width(Box& box)
 
     // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
     //    but this time using the value of 'min-width' as the computed value for 'width'.
-    auto specified_min_width = computed_values.min_width().resolved(box, width_of_containing_block_as_length).resolved_or_auto(box);
+    auto specified_min_width = computed_values.min_width().has_value() ? computed_values.min_width()->resolved(box, width_of_containing_block_as_length).resolved_or_auto(box) : CSS::Length::make_auto();
     if (!specified_min_width.is_auto()) {
         if (used_width.to_px(box) < specified_min_width.to_px(box)) {
             used_width = try_compute_width(specified_min_width);
@@ -246,7 +246,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box& box)
     if (margin_right.is_auto())
         margin_right = zero_value;
 
-    auto width = computed_values.width().resolved(box, width_of_containing_block_as_length).resolved_or_auto(box);
+    auto width = computed_values.width().has_value() ? computed_values.width()->resolved(box, width_of_containing_block_as_length).resolved_or_auto(box) : CSS::Length::make_auto();
 
     // If 'width' is computed as 'auto', the used value is the "shrink-to-fit" width.
     if (width.is_auto()) {
@@ -285,8 +285,8 @@ float BlockFormattingContext::compute_theoretical_height(Box const& box)
     auto& containing_block = *box.containing_block();
     auto containing_block_height = CSS::Length::make_px(containing_block.content_height());
 
-    auto is_absolute = [](CSS::LengthPercentage const& length_percentage) {
-        return length_percentage.is_length() && length_percentage.length().is_absolute();
+    auto is_absolute = [](Optional<CSS::LengthPercentage> const& length_percentage) {
+        return length_percentage.has_value() && length_percentage->is_length() && length_percentage->length().is_absolute();
     };
 
     // Then work out what the height is, based on box type and CSS properties.
@@ -294,21 +294,22 @@ float BlockFormattingContext::compute_theoretical_height(Box const& box)
     if (is<ReplacedBox>(box)) {
         height = compute_height_for_replaced_element(verify_cast<ReplacedBox>(box));
     } else {
-        if ((box.computed_values().height().is_length() && box.computed_values().height().length().is_undefined_or_auto())
-            || (computed_values.height().is_percentage() && !is_absolute(containing_block.computed_values().height()))) {
+        if (!box.computed_values().height().has_value()
+            || (box.computed_values().height()->is_length() && box.computed_values().height()->length().is_undefined_or_auto())
+            || (computed_values.height().has_value() && computed_values.height()->is_percentage() && !is_absolute(containing_block.computed_values().height()))) {
             height = compute_auto_height_for_block_level_element(box, ConsiderFloats::No);
         } else {
-            height = computed_values.height().resolved(box, containing_block_height).resolved_or_auto(box).to_px(box);
+            height = computed_values.height().has_value() ? computed_values.height()->resolved(box, containing_block_height).resolved_or_auto(box).to_px(box) : 0;
         }
     }
 
-    auto specified_max_height = computed_values.max_height().resolved(box, containing_block_height).resolved_or_auto(box);
+    auto specified_max_height = computed_values.max_height().has_value() ? computed_values.max_height()->resolved(box, containing_block_height).resolved_or_auto(box) : CSS::Length::make_auto();
     if (!specified_max_height.is_auto()
-        && !(computed_values.max_height().is_percentage() && !is_absolute(containing_block.computed_values().height())))
+        && !(computed_values.max_height().has_value() && computed_values.max_height()->is_percentage() && !is_absolute(containing_block.computed_values().height())))
         height = min(height, specified_max_height.to_px(box));
-    auto specified_min_height = computed_values.min_height().resolved(box, containing_block_height).resolved_or_auto(box);
+    auto specified_min_height = computed_values.min_height().has_value() ? computed_values.min_height()->resolved(box, containing_block_height).resolved_or_auto(box) : CSS::Length::make_auto();
     if (!specified_min_height.is_auto()
-        && !(computed_values.min_height().is_percentage() && !is_absolute(containing_block.computed_values().height())))
+        && !(computed_values.min_height().has_value() && computed_values.min_height()->is_percentage() && !is_absolute(containing_block.computed_values().height())))
         height = max(height, specified_min_height.to_px(box));
     return height;
 }
@@ -439,7 +440,8 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
     });
 
     if (layout_mode != LayoutMode::Default) {
-        if (block_container.computed_values().width().is_length() && block_container.computed_values().width().length().is_undefined_or_auto())
+        auto& width = block_container.computed_values().width();
+        if (!width.has_value() || (width->is_length() && width->length().is_undefined_or_auto()))
             block_container.set_content_width(content_width);
     }
 }

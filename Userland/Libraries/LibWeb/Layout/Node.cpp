@@ -430,15 +430,21 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     if (auto width = specified_style.property(CSS::PropertyID::Width); width.has_value() && !width.value()->has_auto())
         m_has_definite_width = true;
-    computed_values.set_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::Width, CSS::Length {}));
-    computed_values.set_min_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::MinWidth, CSS::Length {}));
-    computed_values.set_max_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::MaxWidth, CSS::Length {}));
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::Width); maybe_length_percentage.has_value())
+        computed_values.set_width(maybe_length_percentage.release_value());
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MinWidth); maybe_length_percentage.has_value())
+        computed_values.set_min_width(maybe_length_percentage.release_value());
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MaxWidth); maybe_length_percentage.has_value())
+        computed_values.set_max_width(maybe_length_percentage.release_value());
 
     if (auto height = specified_style.property(CSS::PropertyID::Height); height.has_value() && !height.value()->has_auto())
         m_has_definite_height = true;
-    computed_values.set_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::Height, CSS::Length {}));
-    computed_values.set_min_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::MinHeight, CSS::Length {}));
-    computed_values.set_max_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::MaxHeight, CSS::Length {}));
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::Height); maybe_length_percentage.has_value())
+        computed_values.set_height(maybe_length_percentage.release_value());
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MinHeight); maybe_length_percentage.has_value())
+        computed_values.set_min_height(maybe_length_percentage.release_value());
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MaxHeight); maybe_length_percentage.has_value())
+        computed_values.set_max_height(maybe_length_percentage.release_value());
 
     computed_values.set_offset(specified_style.length_box(CSS::PropertyID::Left, CSS::PropertyID::Top, CSS::PropertyID::Right, CSS::PropertyID::Bottom, CSS::Length::make_auto()));
     computed_values.set_margin(specified_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom, CSS::Length::make_px(0)));
@@ -457,7 +463,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         if (border.line_style == CSS::LineStyle::None)
             border.width = 0;
         else
-            border.width = specified_style.length_or_fallback(width_property, {}).resolved_or_zero(*this).to_px(*this);
+            border.width = specified_style.length_or_fallback(width_property, CSS::Length::make_px(0)).resolved_or_zero(*this).to_px(*this);
     };
 
     do_border_style(computed_values.border_left(), CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftStyle);
