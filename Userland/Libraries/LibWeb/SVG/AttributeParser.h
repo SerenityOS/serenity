@@ -69,7 +69,7 @@ private:
     void parse_whitespace(bool must_match_once = false);
     void parse_comma_whitespace();
     float parse_fractional_constant();
-    float parse_number();
+    float parse_number(bool with_sign);
     float parse_flag();
     // -1 if negative, +1 otherwise
     int parse_sign();

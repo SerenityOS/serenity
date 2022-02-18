@@ -230,7 +230,8 @@ void AttributeParser::parse_elliptical_arc()
 
 float AttributeParser::parse_length()
 {
-    return parse_sign() * parse_number();
+    // https://www.w3.org/TR/SVG11/types.html#DataTypeLength
+    return parse_number(true);
 }
 
 float AttributeParser::parse_coordinate()
@@ -302,13 +303,13 @@ Vector<float> AttributeParser::parse_coordinate_pair_triplet()
 Vector<float> AttributeParser::parse_elliptical_arg_argument()
 {
     Vector<float> numbers;
-    numbers.append(parse_number());
+    numbers.append(parse_number(false));
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    numbers.append(parse_number());
+    numbers.append(parse_number(false));
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    numbers.append(parse_number());
+    numbers.append(parse_number(true));
     parse_comma_whitespace();
     numbers.append(parse_flag());
     if (match_comma_whitespace())
@@ -368,8 +369,13 @@ float AttributeParser::parse_fractional_constant()
     return builder.to_string().to_int().value();
 }
 
-float AttributeParser::parse_number()
+// https://www.w3.org/TR/SVG11/types.html#DataTypeNumber
+float AttributeParser::parse_number(bool with_sign)
 {
+    auto sign = 1;
+    if (with_sign) {
+        sign = parse_sign();
+    }
     auto number = parse_fractional_constant();
 
     if (!match('e') && !match('E'))
@@ -399,7 +405,7 @@ float AttributeParser::parse_number()
         }
     }
 
-    return number;
+    return sign * number;
 }
 
 float AttributeParser::parse_flag()
