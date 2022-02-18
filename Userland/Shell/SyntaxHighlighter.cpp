@@ -130,6 +130,8 @@ private:
             m_is_first_in_command = false;
         } else if (node->text().starts_with("-")) {
             span.attributes.color = m_palette.syntax_preprocessor_statement();
+        } else {
+            span.attributes.color = m_palette.base_text();
         }
     }
     virtual void visit(const AST::CastToCommand* node) override
