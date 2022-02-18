@@ -28,7 +28,7 @@ class WebSocketClient;
 class WebSocket;
 }
 
-namespace Web::HTML {
+namespace Web::WebSockets {
 
 class WebSocketClientManager : public Core::Object {
     C_OBJECT_ABSTRACT(WebSocketClientManager)

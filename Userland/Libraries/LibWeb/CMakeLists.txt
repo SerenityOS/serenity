@@ -205,7 +205,6 @@ set(SOURCES
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/TextMetrics.cpp
-    HTML/WebSocket.cpp
     HTML/Worker.cpp
     HTML/WorkerDebugConsoleClient.cpp
     HTML/WorkerGlobalScope.cpp
@@ -310,6 +309,7 @@ set(SOURCES
     WebAssembly/WebAssemblyTableObject.cpp
     WebAssembly/WebAssemblyTablePrototype.cpp
     WebContentClient.cpp
+    WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp
     XHR/XMLHttpRequestEventTarget.cpp
@@ -519,7 +519,6 @@ libweb_js_wrapper(HTML/PromiseRejectionEvent)
 libweb_js_wrapper(HTML/Storage)
 libweb_js_wrapper(HTML/SubmitEvent)
 libweb_js_wrapper(HTML/TextMetrics)
-libweb_js_wrapper(HTML/WebSocket)
 libweb_js_wrapper(HTML/Worker)
 libweb_js_wrapper(HTML/WorkerGlobalScope)
 libweb_js_wrapper(HTML/WorkerLocation)
@@ -547,6 +546,7 @@ libweb_js_wrapper(UIEvents/MouseEvent)
 libweb_js_wrapper(UIEvents/UIEvent)
 libweb_js_wrapper(URL/URL)
 libweb_js_wrapper(URL/URLSearchParams ITERABLE)
+libweb_js_wrapper(WebSockets/WebSocket)
 libweb_js_wrapper(XHR/ProgressEvent)
 libweb_js_wrapper(XHR/XMLHttpRequest)
 libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)

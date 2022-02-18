@@ -219,7 +219,6 @@ class WorkerDebugConsoleClient;
 class Storage;
 class SubmitEvent;
 class TextMetrics;
-class WebSocket;
 class WindowEnvironmentSettingsObject;
 class Worker;
 class WorkerEnvironmentSettingsObject;
@@ -268,6 +267,10 @@ class SVGSVGElement;
 
 namespace Web::Selection {
 class Selection;
+}
+
+namespace Web::WebSockets {
+class WebSocket;
 }
 
 namespace Web::Layout {
