@@ -210,6 +210,10 @@ static void populate_devtmpfs_devices_based_on_devctl()
             }
             break;
         }
+        case 28: {
+            create_devtmpfs_block_device(String::formatted("/dev/gpu{}", minor_number), 0666, 28, minor_number);
+            break;
+        }
         case 29: {
             if (is_block_device) {
                 create_devtmpfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
