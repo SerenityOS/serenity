@@ -1483,7 +1483,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_builder.append('-');
+                    m_current_builder.append("--");
                     RECONSUME_IN(Comment);
                 }
             }
