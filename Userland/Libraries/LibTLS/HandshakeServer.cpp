@@ -225,8 +225,7 @@ ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes buffer)
         TODO();
         break;
     case KeyExchangeAlgorithm::DHE_RSA:
-        handle_dhe_rsa_server_key_exchange(buffer);
-        break;
+        return handle_dhe_rsa_server_key_exchange(buffer);
     case KeyExchangeAlgorithm::DH_anon:
         dbgln("Server key exchange for DH_anon is not implemented");
         TODO();
@@ -255,7 +254,7 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     auto p_result = ByteBuffer::copy(dh_p);
     if (p_result.is_error()) {
         dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
-        return 0;
+        return (i8)Error::OutOfMemory;
     }
     m_context.server_diffie_hellman_params.p = p_result.release_value();
 
@@ -264,7 +263,7 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     auto g_result = ByteBuffer::copy(dh_g);
     if (g_result.is_error()) {
         dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
-        return 0;
+        return (i8)Error::OutOfMemory;
     }
     m_context.server_diffie_hellman_params.g = g_result.release_value();
 
@@ -273,7 +272,7 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     auto Ys_result = ByteBuffer::copy(dh_Ys);
     if (Ys_result.is_error()) {
         dbgln("dhe_rsa_server_key_exchange failed: Not enough memory");
-        return 0;
+        return (i8)Error::OutOfMemory;
     }
     m_context.server_diffie_hellman_params.Ys = Ys_result.release_value();
 
@@ -310,7 +309,7 @@ ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     auto server_public_key_copy_result = ByteBuffer::copy(server_public_key);
     if (server_public_key_copy_result.is_error()) {
         dbgln("ecdhe_rsa_server_key_exchange failed: Not enough memory");
-        return 0;
+        return (i8)Error::OutOfMemory;
     }
     m_context.server_diffie_hellman_params.p = server_public_key_copy_result.release_value();
 

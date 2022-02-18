@@ -109,6 +109,7 @@ enum class Error : i8 {
     DecryptionFailed = -20,
     NeedMoreData = -21,
     TimedOut = -22,
+    OutOfMemory = -23,
 };
 
 enum class AlertLevel : u8 {
