@@ -112,6 +112,7 @@ public:
     }
 
     size_t size() const { return m_size; }
+    bool is_empty() const { return m_size == 0; }
     T* data() { return m_elements; }
     T const* data() const { return m_elements; }
 
