@@ -107,10 +107,10 @@ void Box::paint_box_shadow(PaintContext& context)
     for (auto const& layer : box_shadow_data) {
         resolved_box_shadow_data.empend(
             layer.color,
-            static_cast<int>(layer.offset_x.resolved(*this).to_px(*this)),
-            static_cast<int>(layer.offset_y.resolved(*this).to_px(*this)),
-            static_cast<int>(layer.blur_radius.resolved(*this).to_px(*this)),
-            static_cast<int>(layer.spread_distance.resolved(*this).to_px(*this)),
+            static_cast<int>(layer.offset_x.to_px(*this)),
+            static_cast<int>(layer.offset_y.to_px(*this)),
+            static_cast<int>(layer.blur_radius.to_px(*this)),
+            static_cast<int>(layer.spread_distance.to_px(*this)),
             layer.placement == CSS::BoxShadowPlacement::Outer ? Painting::BoxShadowPlacement::Outer : Painting::BoxShadowPlacement::Inner);
     }
     Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);

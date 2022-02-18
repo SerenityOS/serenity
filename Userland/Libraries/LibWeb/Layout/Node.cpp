@@ -463,7 +463,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         if (border.line_style == CSS::LineStyle::None)
             border.width = 0;
         else
-            border.width = specified_style.length_or_fallback(width_property, CSS::Length::make_px(0)).resolved(*this).to_px(*this);
+            border.width = specified_style.length_or_fallback(width_property, CSS::Length::make_px(0)).to_px(*this);
     };
 
     do_border_style(computed_values.border_left(), CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftStyle);
