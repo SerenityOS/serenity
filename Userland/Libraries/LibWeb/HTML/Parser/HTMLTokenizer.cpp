@@ -231,7 +231,7 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
 {
     {
         auto last_position = m_source_positions.last();
-        m_source_positions.clear();
+        m_source_positions.clear_with_capacity();
         m_source_positions.append(move(last_position));
     }
 _StartOfFunction:
