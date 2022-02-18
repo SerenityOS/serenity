@@ -18,6 +18,11 @@ if [ -z "$SERENITY_KERNEL_DEBUGGER" ]; then
     fi
 fi
 
+toolchain_suffix=
+if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
+    toolchain_suffix="clang"
+fi
+
 # The QEMU -s option (enabled by default in ./run) sets up a debugger
 # remote on localhost:1234. So point our debugger there, and inform
 # the debugger which binary to load symbols, etc from.
@@ -45,10 +50,10 @@ fi
 
 
 exec $SERENITY_KERNEL_DEBUGGER \
-    -ex "file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/Kernel/Prekernel/$prekernel_image" \
+    -ex "file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}$toolchain_suffix/Kernel/Prekernel/$prekernel_image" \
     -ex "set confirm off" \
-    -ex "directory $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/" \
-    -ex "add-symbol-file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/Kernel/Kernel -o $kernel_base" \
+    -ex "directory $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}$toolchain_suffix/" \
+    -ex "add-symbol-file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}$toolchain_suffix/Kernel/Kernel -o $kernel_base" \
     -ex "set confirm on" \
     -ex "set arch $gdb_arch" \
     -ex "set print frame-arguments none" \
