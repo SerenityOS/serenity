@@ -532,6 +532,7 @@ void DirectoryView::handle_selection_change()
     bool can_modify = can_modify_current_selection();
     m_delete_action->set_enabled(can_modify);
     m_force_delete_action->set_enabled(can_modify);
+    m_rename_action->set_enabled(can_modify);
 
     if (on_selection_change)
         on_selection_change(current_view());
