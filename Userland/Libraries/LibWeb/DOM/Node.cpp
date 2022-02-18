@@ -145,6 +145,32 @@ void Node::set_text_content(String const& content)
     set_needs_style_update(true);
 }
 
+// https://dom.spec.whatwg.org/#dom-node-nodevalue
+String Node::node_value() const
+{
+    if (is<Attribute>(this)) {
+        return verify_cast<Attribute>(this)->value();
+    }
+    if (is<CharacterData>(this)) {
+        return verify_cast<CharacterData>(this)->data();
+    }
+
+    return {};
+}
+
+// https://dom.spec.whatwg.org/#ref-for-dom-node-nodevalue%E2%91%A0
+void Node::set_node_value(const String& value)
+{
+
+    if (is<Attribute>(this)) {
+        verify_cast<Attribute>(this)->set_value(value);
+    } else if (is<CharacterData>(this)) {
+        verify_cast<CharacterData>(this)->set_data(value);
+    }
+
+    // Otherwise: Do nothing.
+}
+
 void Node::invalidate_style()
 {
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
