@@ -203,6 +203,14 @@ ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest con
         }
     } while (true);
 
+    auto keep_alive = false;
+    if (auto it = request.headers().find_if([](auto& header) { return header.name.equals_ignoring_case("Connection"); }); !it.is_end()) {
+        if (it->value.trim_whitespace().equals_ignoring_case("keep-alive"))
+            keep_alive = true;
+    }
+    if (!keep_alive)
+        m_socket->close();
+
     return {};
 }
 
