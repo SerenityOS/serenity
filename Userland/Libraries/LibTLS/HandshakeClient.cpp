@@ -11,6 +11,7 @@
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/Curves/X25519.h>
+#include <LibCrypto/Curves/X448.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
@@ -294,19 +295,68 @@ void TLSv12::build_dhe_rsa_pre_master_secret(PacketBuilder& builder)
     builder.append(dh_Yc_bytes);
 }
 
+ErrorOr<ByteBuffer> TLSv12::named_curve_multiply(NamedCurve curve, ReadonlyBytes a, ReadonlyBytes b)
+{
+    switch (curve) {
+    case NamedCurve::x25519:
+        return Crypto::Curves::X25519::compute_coordinate(a, b);
+    case NamedCurve::x448:
+        return Crypto::Curves::X448::compute_coordinate(a, b);
+    default:
+        dbgln("No known handler for multiplying curve {}", static_cast<u16>(curve));
+        TODO();
+    }
+}
+
+ErrorOr<ByteBuffer> TLSv12::named_curve_generator_point(NamedCurve curve)
+{
+    auto key_size = named_curve_key_size(curve) / 8;
+
+    auto generator_point_data_result = ByteBuffer::create_zeroed(key_size);
+    if (generator_point_data_result.is_error()) {
+        dbgln("Failed to generate curve multiplication point: not enough memory");
+        return AK::Error::from_string_literal("Failed to generate curve multiplication point: not enough memory");
+    }
+    auto generator_point_data = generator_point_data_result.release_value();
+
+    switch (curve) {
+    case NamedCurve::x25519:
+        ByteReader::store(generator_point_data.offset_pointer(0), 9);
+        break;
+    case NamedCurve::x448:
+        ByteReader::store(generator_point_data.offset_pointer(0), 5);
+        break;
+    default:
+        dbgln("No known handler for generator point of curve {}", static_cast<u16>(curve));
+        TODO();
+    }
+
+    return generator_point_data;
+}
+
 void TLSv12::build_ecdhe_rsa_pre_master_secret(PacketBuilder& builder)
 {
-    size_t const key_size = named_curve_key_size(NamedCurve::x25519) / 8;
-    u8 generator_point[key_size] { 9 };
-    ReadonlyBytes generator_point_bytes { generator_point, key_size };
+    size_t const key_size = named_curve_key_size(m_context.server_curve_choice) / 8;
+    auto generator_point_result = named_curve_generator_point(m_context.server_curve_choice);
+    if (generator_point_result.is_error()) {
+        dbgln("Failed to build ECDHE_RSA premaster secret: not enough memory");
+        return;
+    }
+    auto generator_point = generator_point_result.release_value();
+    ReadonlyBytes generator_point_bytes = generator_point;
 
     // Create a random private key
-    u8 private_key[key_size];
-    fill_with_random(private_key, key_size);
-    ReadonlyBytes private_key_bytes { private_key, key_size };
+    auto private_key_result = ByteBuffer::create_uninitialized(key_size);
+    if (private_key_result.is_error()) {
+        dbgln("Failed to build ECDHE_RSA premaster secret: not enough memory");
+        return;
+    }
+    auto private_key = private_key_result.release_value();
+    fill_with_random(private_key.data(), key_size);
+    ReadonlyBytes private_key_bytes = private_key;
 
-    // Calculate the public key by multiplying the private key with 9
-    auto public_key_result = Crypto::Curves::X25519::compute_coordinate(private_key_bytes, generator_point_bytes);
+    // Calculate the public key by multiplying the private key with the generator point
+    auto public_key_result = named_curve_multiply(m_context.server_curve_choice, private_key_bytes, generator_point_bytes);
     if (public_key_result.is_error()) {
         dbgln("Failed to build ECDHE_RSA premaster secret: not enough memory");
         return;
@@ -315,7 +365,7 @@ void TLSv12::build_ecdhe_rsa_pre_master_secret(PacketBuilder& builder)
 
     // Calculate the pre master secret by multiplying the client private key and the server public key
     ReadonlyBytes server_public_key_bytes = m_context.server_diffie_hellman_params.p;
-    auto pre_master_secret_result = Crypto::Curves::X25519::compute_coordinate(private_key_bytes, server_public_key_bytes);
+    auto pre_master_secret_result = named_curve_multiply(m_context.server_curve_choice, private_key_bytes, server_public_key_bytes);
     if (pre_master_secret_result.is_error()) {
         dbgln("Failed to build ECDHE_RSA premaster secret: not enough memory");
         return;
