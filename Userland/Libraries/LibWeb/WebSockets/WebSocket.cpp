@@ -23,10 +23,10 @@
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/MessageEvent.h>
-#include <LibWeb/HTML/WebSocket.h>
 #include <LibWeb/Origin.h>
+#include <LibWeb/WebSockets/WebSocket.h>
 
-namespace Web::HTML {
+namespace Web::WebSockets {
 
 WebSocketClientManager& WebSocketClientManager::the()
 {
@@ -52,7 +52,7 @@ RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(const AK::URL& url)
     return m_websocket_client->connect(url);
 }
 
-// https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
+// https://websockets.spec.whatwg.org/#the-websocket-interface
 DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(Bindings::WindowObject& window, const String& url)
 {
     AK::URL url_record(url);
@@ -103,7 +103,7 @@ WebSocket::~WebSocket()
 {
 }
 
-// https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
+// https://websockets.spec.whatwg.org/#the-websocket-interface
 WebSocket::ReadyState WebSocket::ready_state() const
 {
     if (!m_websocket)
@@ -122,27 +122,27 @@ WebSocket::ReadyState WebSocket::ready_state() const
     return WebSocket::ReadyState::Closed;
 }
 
-// https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
+// https://websockets.spec.whatwg.org/#the-websocket-interface
 String WebSocket::extensions() const
 {
     if (!m_websocket)
         return String::empty();
-    // https://html.spec.whatwg.org/multipage/web-sockets.html#feedback-from-the-protocol
+    // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
     // FIXME: Change the extensions attribute's value to the extensions in use, if it is not the null value.
     return String::empty();
 }
 
-// https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
+// https://websockets.spec.whatwg.org/#the-websocket-interface
 String WebSocket::protocol() const
 {
     if (!m_websocket)
         return String::empty();
-    // https://html.spec.whatwg.org/multipage/web-sockets.html#feedback-from-the-protocol
+    // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
     // FIXME: Change the protocol attribute's value to the subprotocol in use, if it is not the null value.
     return String::empty();
 }
 
-// https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
+// https://websockets.spec.whatwg.org/#the-websocket-interface
 DOM::ExceptionOr<void> WebSocket::close(u16 code, const String& reason)
 {
     // HACK : we should have an Optional<u16>
@@ -162,7 +162,7 @@ DOM::ExceptionOr<void> WebSocket::close(u16 code, const String& reason)
     return {};
 }
 
-// https://html.spec.whatwg.org/multipage/web-sockets.html#the-websocket-interface
+// https://websockets.spec.whatwg.org/#the-websocket-interface
 DOM::ExceptionOr<void> WebSocket::send(const String& data)
 {
     auto state = ready_state();
@@ -176,44 +176,44 @@ DOM::ExceptionOr<void> WebSocket::send(const String& data)
     return {};
 }
 
-// https://html.spec.whatwg.org/multipage/web-sockets.html#feedback-from-the-protocol
+// https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 void WebSocket::on_open()
 {
     // 1. Change the readyState attribute's value to OPEN (1).
     // 2. Change the extensions attribute's value to the extensions in use, if it is not the null value. [WSP]
     // 3. Change the protocol attribute's value to the subprotocol in use, if it is not the null value. [WSP]
-    dispatch_event(DOM::Event::create(EventNames::open));
+    dispatch_event(DOM::Event::create(HTML::EventNames::open));
 }
 
-// https://html.spec.whatwg.org/multipage/web-sockets.html#feedback-from-the-protocol
+// https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 void WebSocket::on_error()
 {
-    dispatch_event(DOM::Event::create(EventNames::error));
+    dispatch_event(DOM::Event::create(HTML::EventNames::error));
 }
 
-// https://html.spec.whatwg.org/multipage/web-sockets.html#feedback-from-the-protocol
+// https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 void WebSocket::on_close(u16 code, String reason, bool was_clean)
 {
     // 1. Change the readyState attribute's value to CLOSED. This is handled by the Protocol's WebSocket
     // 2. If [needed], fire an event named error at the WebSocket object. This is handled by the Protocol's WebSocket
-    CloseEventInit event_init {};
+    HTML::CloseEventInit event_init {};
     event_init.was_clean = was_clean;
     event_init.code = code;
     event_init.reason = move(reason);
-    dispatch_event(CloseEvent::create(EventNames::close, event_init));
+    dispatch_event(HTML::CloseEvent::create(HTML::EventNames::close, event_init));
 }
 
-// https://html.spec.whatwg.org/multipage/web-sockets.html#feedback-from-the-protocol
+// https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 void WebSocket::on_message(ByteBuffer message, bool is_text)
 {
     if (m_websocket->ready_state() != Protocol::WebSocket::ReadyState::Open)
         return;
     if (is_text) {
         auto text_message = String(ReadonlyBytes(message));
-        MessageEventInit event_init;
+        HTML::MessageEventInit event_init;
         event_init.data = JS::js_string(wrapper()->vm(), text_message);
         event_init.origin = url();
-        dispatch_event(MessageEvent::create(EventNames::message, event_init));
+        dispatch_event(HTML::MessageEvent::create(HTML::EventNames::message, event_init));
         return;
     }
 
@@ -223,10 +223,10 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
     } else if (m_binary_type == "arraybuffer") {
         // type indicates that the data is Binary and binaryType is "arraybuffer"
         auto& global_object = wrapper()->global_object();
-        MessageEventInit event_init;
+        HTML::MessageEventInit event_init;
         event_init.data = JS::ArrayBuffer::create(global_object, message);
         event_init.origin = url();
-        dispatch_event(MessageEvent::create(EventNames::message, event_init));
+        dispatch_event(HTML::MessageEvent::create(HTML::EventNames::message, event_init));
         return;
     }
 
