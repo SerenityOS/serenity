@@ -77,10 +77,10 @@ struct FlexBasisData {
 
 struct BoxShadowData {
     Color color {};
-    CSS::Length offset_x {};
-    CSS::Length offset_y {};
-    CSS::Length blur_radius {};
-    CSS::Length spread_distance {};
+    CSS::Length offset_x { Length::make_px(0) };
+    CSS::Length offset_y { Length::make_px(0) };
+    CSS::Length blur_radius { Length::make_px(0) };
+    CSS::Length spread_distance { Length::make_px(0) };
     CSS::BoxShadowPlacement placement { CSS::BoxShadowPlacement::Outer };
 };
 
