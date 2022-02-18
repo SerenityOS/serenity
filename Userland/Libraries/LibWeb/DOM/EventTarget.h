@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/FlyString.h>
-#include <AK/Function.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
@@ -50,8 +49,8 @@ public:
     Function<void(const Event&)> activation_behavior;
 
     // NOTE: These only exist for checkbox and radio input elements.
-    Function<void()> legacy_pre_activation_behavior;
-    Function<void()> legacy_cancelled_activation_behavior;
+    virtual void legacy_pre_activation_behavior() { }
+    virtual void legacy_cancelled_activation_behavior() { }
 
     Bindings::CallbackType* event_handler_attribute(FlyString const& name);
     void set_event_handler_attribute(FlyString const& name, Optional<Bindings::CallbackType>);

@@ -283,7 +283,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
             }
         }
 
-        if (activation_target && activation_target->legacy_pre_activation_behavior)
+        if (activation_target)
             activation_target->legacy_pre_activation_behavior();
 
         for (ssize_t i = event->path().size() - 1; i >= 0; --i) {
@@ -329,8 +329,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
             // NOTE: Since activation_target is set, it will have activation behavior.
             activation_target->activation_behavior(event);
         } else {
-            if (activation_target->legacy_cancelled_activation_behavior)
-                activation_target->legacy_cancelled_activation_behavior();
+            activation_target->legacy_cancelled_activation_behavior();
         }
     }
 
