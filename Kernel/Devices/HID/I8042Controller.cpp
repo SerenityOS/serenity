@@ -268,7 +268,7 @@ ErrorOr<void> I8042Controller::prepare_for_input(HIDDevice::Type device)
 {
     VERIFY(m_lock.is_locked());
     u8 const second_port_flag = device == HIDDevice::Type::Keyboard ? 0 : I8042StatusFlag::SecondPS2PortOutputBuffer;
-    for (int attempt = 0; attempt < 50; attempt++) {
+    for (int attempt = 0; attempt < 250; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::OutputBuffer)) {
             IO::delay(1000);
@@ -286,7 +286,7 @@ ErrorOr<void> I8042Controller::prepare_for_input(HIDDevice::Type device)
 ErrorOr<void> I8042Controller::prepare_for_output()
 {
     VERIFY(m_lock.is_locked());
-    for (int attempt = 0; attempt < 50; attempt++) {
+    for (int attempt = 0; attempt < 250; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::InputBuffer))
             return {};
