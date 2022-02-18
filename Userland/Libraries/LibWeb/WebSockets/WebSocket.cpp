@@ -52,7 +52,7 @@ RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(const AK::URL& url)
     return m_websocket_client->connect(url);
 }
 
-// https://websockets.spec.whatwg.org/#the-websocket-interface
+// https://websockets.spec.whatwg.org/#dom-websocket-websocket
 DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(Bindings::WindowObject& window, const String& url)
 {
     AK::URL url_record(url);
@@ -103,7 +103,7 @@ WebSocket::~WebSocket()
 {
 }
 
-// https://websockets.spec.whatwg.org/#the-websocket-interface
+// https://websockets.spec.whatwg.org/#dom-websocket-readystate
 WebSocket::ReadyState WebSocket::ready_state() const
 {
     if (!m_websocket)
@@ -122,7 +122,7 @@ WebSocket::ReadyState WebSocket::ready_state() const
     return WebSocket::ReadyState::Closed;
 }
 
-// https://websockets.spec.whatwg.org/#the-websocket-interface
+// https://websockets.spec.whatwg.org/#dom-websocket-extensions
 String WebSocket::extensions() const
 {
     if (!m_websocket)
@@ -132,7 +132,7 @@ String WebSocket::extensions() const
     return String::empty();
 }
 
-// https://websockets.spec.whatwg.org/#the-websocket-interface
+// https://websockets.spec.whatwg.org/#dom-websocket-protocol
 String WebSocket::protocol() const
 {
     if (!m_websocket)
@@ -142,7 +142,7 @@ String WebSocket::protocol() const
     return String::empty();
 }
 
-// https://websockets.spec.whatwg.org/#the-websocket-interface
+// https://websockets.spec.whatwg.org/#dom-websocket-close
 DOM::ExceptionOr<void> WebSocket::close(u16 code, const String& reason)
 {
     // HACK : we should have an Optional<u16>
@@ -162,7 +162,7 @@ DOM::ExceptionOr<void> WebSocket::close(u16 code, const String& reason)
     return {};
 }
 
-// https://websockets.spec.whatwg.org/#the-websocket-interface
+// https://websockets.spec.whatwg.org/#dom-websocket-send
 DOM::ExceptionOr<void> WebSocket::send(const String& data)
 {
     auto state = ready_state();
