@@ -310,7 +310,7 @@ float FlexFormattingContext::calculated_main_size(Box const& box) const
 bool FlexFormattingContext::is_cross_auto(Box const& box) const
 {
     auto& cross_length = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
-    return cross_length.has_value() && cross_length->length().is_auto();
+    return cross_length.has_value() && cross_length->is_length() && cross_length->length().is_auto();
 }
 
 bool FlexFormattingContext::is_main_axis_margin_first_auto(Box const& box) const
