@@ -185,6 +185,7 @@ cmd_with_target() {
     BUILD_DIR="$SERENITY_SOURCE_DIR/Build/$TARGET$TARGET_TOOLCHAIN"
     if [ "$TARGET" != "lagom" ]; then
         export SERENITY_ARCH="$TARGET"
+        export SERENITY_TOOLCHAIN="$TOOLCHAIN_TYPE"
         if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
             TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/clang"
         else
@@ -376,7 +377,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
                 build_target
                 build_target install
                 build_image
-                tmux new-session "$ARG0" __tmux_cmd "$TARGET" run "${CMD_ARGS[@]}" \; set-option -t 0 mouse on \; split-window "$ARG0" __tmux_cmd "$TARGET" gdb "${CMD_ARGS[@]}" \;
+                tmux new-session "$ARG0" __tmux_cmd "$TARGET" "$TOOLCHAIN_TYPE" run "${CMD_ARGS[@]}" \; set-option -t 0 mouse on \; split-window "$ARG0" __tmux_cmd "$TARGET" "$TOOLCHAIN_TYPE" gdb "${CMD_ARGS[@]}" \;
             fi
             ;;
         test)
