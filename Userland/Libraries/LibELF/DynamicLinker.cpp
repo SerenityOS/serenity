@@ -101,7 +101,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
     return loader;
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const String& name)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& name, DynamicObject const& parent_object)
 {
     if (name.contains("/"sv)) {
         int fd = open(name.characters(), O_RDONLY);
@@ -110,25 +110,29 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
         return map_library(name, fd);
     }
 
-    // Scan the LD_LIBRARY_PATH environment variable if applicable
-    if (s_ld_library_path != nullptr) {
-        for (const auto& search_path : s_ld_library_path.split_view(':')) {
-            LexicalPath library_path(search_path);
-            int fd = open(library_path.append(name).string().characters(), O_RDONLY);
-            if (fd < 0)
-                continue;
-            return map_library(name, fd);
-        }
-    }
+    Vector<StringView> search_paths;
 
-    // Now check the default paths.
-    // TODO: Do we want to also look for libs in other paths too?
-    const char* search_paths[] = { "/usr/lib/{}", "/usr/local/lib/{}" };
-    for (auto& search_path : search_paths) {
-        auto path = String::formatted(search_path, name);
-        int fd = open(path.characters(), O_RDONLY);
+    // Search RPATH values indicated by the ELF (only if RUNPATH is not present).
+    if (parent_object.runpath().is_empty())
+        search_paths.extend(parent_object.rpath().split_view(':'));
+
+    // Scan the LD_LIBRARY_PATH environment variable if applicable.
+    search_paths.extend(s_ld_library_path.split_view(':'));
+
+    // Search RUNPATH values indicated by the ELF.
+    search_paths.extend(parent_object.runpath().split_view(':'));
+
+    // Last are the default search paths.
+    search_paths.append("/usr/lib"sv);
+    search_paths.append("/usr/local/lib"sv);
+
+    for (auto const& search_path : search_paths) {
+        LexicalPath library_path(search_path);
+        int fd = open(library_path.append(name).string().characters(), O_RDONLY);
+
         if (fd < 0)
             continue;
+
         return map_library(name, fd);
     }
 
@@ -152,12 +156,14 @@ static Result<void, DlErrorMessage> map_dependencies(const String& name)
 {
     dbgln_if(DYNAMIC_LOAD_DEBUG, "mapping dependencies for: {}", name);
 
+    auto const& parent_object = (*s_loaders.get(name))->dynamic_object();
+
     for (const auto& needed_name : get_dependencies(name)) {
         dbgln_if(DYNAMIC_LOAD_DEBUG, "needed library: {}", needed_name.characters());
         String library_name = get_library_name(needed_name);
 
         if (!s_loaders.contains(library_name) && !s_global_objects.contains(library_name)) {
-            auto result1 = map_library(needed_name);
+            auto result1 = map_library(needed_name, parent_object);
             if (result1.is_error()) {
                 return result1.error();
             }
@@ -415,7 +421,9 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
 
     VERIFY(!library_name.is_empty());
 
-    auto result1 = map_library(filename);
+    auto const& parent_object = **s_global_objects.get(get_library_name(s_main_program_name));
+
+    auto result1 = map_library(filename, parent_object);
     if (result1.is_error()) {
         return result1.error();
     }
