@@ -7,6 +7,8 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
+#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ImageBox.h>
 
@@ -91,7 +93,9 @@ void ImageBox::paint(PaintContext& context, PaintPhase phase)
                 alt = image_element.src();
             context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
         } else if (auto bitmap = m_image_loader.bitmap(m_image_loader.current_frame_index())) {
-            context.painter().draw_scaled_bitmap(rounded_int_rect(absolute_rect()), *bitmap, bitmap->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+            // FIXME: Support 'crisp-edges', 'smooth' and 'high-quality'
+            auto scaling_mode = computed_values().image_rendering() == CSS::ImageRendering::Pixelated ? Gfx::Painter::ScalingMode::NearestNeighbor : Gfx::Painter::ScalingMode::BilinearBlend;
+            context.painter().draw_scaled_bitmap(rounded_int_rect(absolute_rect()), *bitmap, bitmap->rect(), 1.0f, scaling_mode);
         }
     }
 }

@@ -396,6 +396,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (cursor.has_value())
         computed_values.set_cursor(cursor.value());
 
+    auto image_rendering = specified_style.image_rendering();
+    if (image_rendering.has_value())
+        computed_values.set_image_rendering(image_rendering.value());
+
     auto pointer_events = specified_style.pointer_events();
     if (pointer_events.has_value())
         computed_values.set_pointer_events(pointer_events.value());

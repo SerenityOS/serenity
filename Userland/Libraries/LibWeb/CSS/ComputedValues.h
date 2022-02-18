@@ -29,6 +29,7 @@ public:
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
+    static CSS::ImageRendering image_rendering() { return CSS::ImageRendering::Auto; }
     static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
     static CSS::AlignItems align_items() { return CSS::AlignItems::Stretch; }
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
@@ -105,6 +106,7 @@ public:
     float flex_shrink() const { return m_noninherited.flex_shrink; }
     CSS::AlignItems align_items() const { return m_noninherited.align_items; }
     float opacity() const { return m_noninherited.opacity; }
+    CSS::ImageRendering image_rendering() const { return m_inherited.image_rendering; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     Vector<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
@@ -155,6 +157,7 @@ protected:
     struct {
         Color color { InitialValues::color() };
         CSS::Cursor cursor { InitialValues::cursor() };
+        CSS::ImageRendering image_rendering { InitialValues::image_rendering() };
         CSS::PointerEvents pointer_events { InitialValues::pointer_events() };
         CSS::TextAlign text_align { InitialValues::text_align() };
         CSS::TextTransform text_transform { InitialValues::text_transform() };
@@ -216,6 +219,7 @@ class MutableComputedValues final : public ComputedValues {
 public:
     void set_color(const Color& color) { m_inherited.color = color; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
+    void set_image_rendering(CSS::ImageRendering value) { m_inherited.image_rendering = value; }
     void set_pointer_events(CSS::PointerEvents value) { m_inherited.pointer_events = value; }
     void set_background_color(const Color& color) { m_noninherited.background_color = color; }
     void set_background_layers(Vector<BackgroundLayerData>&& layers) { m_noninherited.background_layers = move(layers); }

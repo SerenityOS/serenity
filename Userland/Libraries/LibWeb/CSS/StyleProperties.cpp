@@ -269,6 +269,21 @@ float StyleProperties::flex_shrink() const
     return value.value()->to_number();
 }
 
+Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
+{
+    auto value = property(CSS::PropertyID::ImageRendering);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Auto:
+        return CSS::ImageRendering::Auto;
+    case CSS::ValueID::Pixelated:
+        return CSS::ImageRendering::Pixelated;
+    default:
+        return {};
+    }
+}
+
 Optional<CSS::JustifyContent> StyleProperties::justify_content() const
 {
     auto value = property(CSS::PropertyID::JustifyContent);

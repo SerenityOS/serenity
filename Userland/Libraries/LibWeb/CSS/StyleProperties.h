@@ -62,6 +62,7 @@ public:
     float flex_shrink() const;
     Optional<CSS::AlignItems> align_items() const;
     float opacity() const;
+    Optional<CSS::ImageRendering> image_rendering() const;
     Optional<CSS::JustifyContent> justify_content() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
