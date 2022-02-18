@@ -8,8 +8,11 @@
 
 #include <AK/Forward.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace AK {
 
@@ -53,7 +56,9 @@ public:
 #endif
     JsonValue(bool);
     JsonValue(const char*);
+#ifndef KERNEL
     JsonValue(const String&);
+#endif
     JsonValue(StringView);
     JsonValue(const JsonArray&);
     JsonValue(const JsonObject&);
@@ -70,6 +75,7 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
+#ifndef KERNEL
     String as_string_or(String const& alternative) const
     {
         if (is_string())
@@ -83,8 +89,12 @@ public:
             return as_string();
         return serialized<StringBuilder>();
     }
+#endif
 
-    int to_int(int default_value = 0) const { return to_i32(default_value); }
+    int to_int(int default_value = 0) const
+    {
+        return to_i32(default_value);
+    }
     i32 to_i32(i32 default_value = 0) const { return to_number<i32>(default_value); }
     i64 to_i64(i64 default_value = 0) const { return to_number<i64>(default_value); }
 
@@ -138,11 +148,13 @@ public:
         return m_value.as_bool;
     }
 
+#ifndef KERNEL
     String as_string() const
     {
         VERIFY(is_string());
         return *m_value.as_string;
     }
+#endif
 
     const JsonObject& as_object() const
     {
@@ -230,7 +242,9 @@ private:
     Type m_type { Type::Null };
 
     union {
+#ifndef KERNEL
         StringImpl* as_string { nullptr };
+#endif
         JsonArray* as_array;
         JsonObject* as_object;
 #if !defined(KERNEL)
@@ -244,6 +258,7 @@ private:
     } m_value;
 };
 
+#ifndef KERNEL
 template<>
 struct Formatter<JsonValue> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JsonValue const& value)
@@ -251,6 +266,7 @@ struct Formatter<JsonValue> : Formatter<StringView> {
         return Formatter<StringView>::format(builder, value.to_string());
     }
 };
+#endif
 
 }
 

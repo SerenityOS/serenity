@@ -60,4 +60,11 @@ const DOM::Document* BrowsingContextContainer::content_document() const
     return document;
 }
 
+DOM::Document const* BrowsingContextContainer::content_document_without_origin_check() const
+{
+    if (!m_nested_browsing_context)
+        return nullptr;
+    return m_nested_browsing_context->active_document();
+}
+
 }

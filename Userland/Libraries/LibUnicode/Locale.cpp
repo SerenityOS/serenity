@@ -766,15 +766,21 @@ StringView style_to_string(Style style)
     }
 }
 
+Span<StringView const> __attribute__((weak)) get_available_calendars() { return {}; }
+Span<StringView const> __attribute__((weak)) get_available_number_systems() { return {}; }
 Optional<Locale> __attribute__((weak)) locale_from_string(StringView) { return {}; }
 Optional<Language> __attribute__((weak)) language_from_string(StringView) { return {}; }
 Optional<Territory> __attribute__((weak)) territory_from_string(StringView) { return {}; }
 Optional<ScriptTag> __attribute__((weak)) script_tag_from_string(StringView) { return {}; }
 Optional<Currency> __attribute__((weak)) currency_from_string(StringView) { return {}; }
-Optional<CalendarName> __attribute__((weak)) calendar_name_from_string(StringView) { return {}; }
 Optional<DateField> __attribute__((weak)) date_field_from_string(StringView) { return {}; }
-Optional<Key> __attribute__((weak)) key_from_string(StringView) { return {}; }
 Optional<ListPatternType> __attribute__((weak)) list_pattern_type_from_string(StringView) { return {}; }
+Optional<Key> __attribute__((weak)) key_from_string(StringView) { return {}; }
+Optional<KeywordCalendar> __attribute__((weak)) keyword_ca_from_string(StringView) { return {}; }
+Optional<KeywordColCaseFirst> __attribute__((weak)) keyword_kf_from_string(StringView) { return {}; }
+Optional<KeywordColNumeric> __attribute__((weak)) keyword_kn_from_string(StringView) { return {}; }
+Optional<KeywordNumbers> __attribute__((weak)) keyword_nu_from_string(StringView) { return {}; }
+Vector<StringView> __attribute__((weak)) get_keywords_for_locale(StringView, StringView) { return {}; }
 Optional<DisplayPattern> __attribute__((weak)) get_locale_display_patterns(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_language_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_territory_mapping(StringView, StringView) { return {}; }
@@ -787,7 +793,6 @@ Optional<StringView> __attribute__((weak)) get_locale_calendar_mapping(StringVie
 Optional<StringView> __attribute__((weak)) get_locale_long_date_field_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_short_date_field_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_narrow_date_field_mapping(StringView, StringView) { return {}; }
-Optional<StringView> __attribute__((weak)) get_locale_key_mapping(StringView, StringView) { return {}; }
 
 // https://www.unicode.org/reports/tr35/tr35-39/tr35-general.html#Display_Name_Elements
 Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id)
@@ -821,26 +826,6 @@ Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id
         return primary_tag;
 
     return patterns->locale_pattern.replace("{0}"sv, primary_tag).replace("{1}"sv, *secondary_tag);
-}
-
-Vector<StringView> get_locale_key_mapping_list(StringView locale, StringView keyword)
-{
-    if (keyword == "hc"sv) {
-        auto hour_cycles = get_locale_hour_cycles(locale);
-
-        Vector<StringView> values;
-        values.ensure_capacity(hour_cycles.size());
-
-        for (auto hour_cycle : hour_cycles)
-            values.unchecked_append(hour_cycle_to_string(hour_cycle));
-
-        return values;
-    }
-
-    if (auto values = get_locale_key_mapping(locale, keyword); values.has_value())
-        return values->split_view(',');
-
-    return {};
 }
 
 Optional<ListPatterns> __attribute__((weak)) get_locale_list_patterns(StringView, StringView, Style) { return {}; }

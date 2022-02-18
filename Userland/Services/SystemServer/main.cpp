@@ -489,8 +489,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // This takes care of setting up sockets.
     NonnullRefPtrVector<Service> services;
     auto config = (user)
-        ? Core::ConfigFile::open_for_app("SystemServer")
-        : Core::ConfigFile::open_for_system("SystemServer");
+        ? TRY(Core::ConfigFile::open_for_app("SystemServer"))
+        : TRY(Core::ConfigFile::open_for_system("SystemServer"));
     for (auto name : config->groups()) {
         auto service = Service::construct(*config, name);
         if (service->is_enabled())

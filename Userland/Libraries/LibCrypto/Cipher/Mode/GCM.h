@@ -7,12 +7,15 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibCrypto/Authentication/GHash.h>
 #include <LibCrypto/Cipher/Mode/CTR.h>
 #include <LibCrypto/Verification.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace Crypto {
 namespace Cipher {
@@ -40,6 +43,7 @@ public:
         m_ghash = Authentication::GHash(m_auth_key);
     }
 
+#ifndef KERNEL
     virtual String class_name() const override
     {
         StringBuilder builder;
@@ -47,8 +51,12 @@ public:
         builder.append("_GCM");
         return builder.build();
     }
+#endif
 
-    virtual size_t IV_length() const override { return IVSizeInBits / 8; }
+    virtual size_t IV_length() const override
+    {
+        return IVSizeInBits / 8;
+    }
 
     // FIXME: This overload throws away the auth stuff, think up a better way to return more than a single bytebuffer.
     virtual void encrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}, Bytes* = nullptr) override

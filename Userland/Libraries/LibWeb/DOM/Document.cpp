@@ -1161,13 +1161,14 @@ void Document::evaluate_media_queries_and_report_changes()
     }
 
     // Also not in the spec, but this is as good a place as any to evaluate @media rules!
+    bool any_media_queries_changed_match_state = false;
     for (auto& style_sheet : style_sheets().sheets()) {
-        style_sheet.evaluate_media_queries(window());
+        if (style_sheet.evaluate_media_queries(window()))
+            any_media_queries_changed_match_state = true;
     }
 
-    // FIXME: This invalidates too often!
-    //        We should only invalidate when one or more @media rules changes evaluation status.
-    style_computer().invalidate_rule_cache();
+    if (any_media_queries_changed_match_state)
+        style_computer().invalidate_rule_cache();
 }
 
 NonnullRefPtr<DOMImplementation> Document::implementation() const

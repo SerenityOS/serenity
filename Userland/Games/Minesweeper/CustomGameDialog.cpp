@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Pedro Pereira <pmh.pereira@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -73,8 +74,4 @@ CustomGameDialog::CustomGameDialog(Window* parent_window)
     };
 
     set_max_mines();
-}
-
-CustomGameDialog::~CustomGameDialog()
-{
 }

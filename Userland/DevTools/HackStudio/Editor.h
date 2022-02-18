@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Itamar S. <itamar8910@gmail.com>
- * Copyright (c) 2018-2021, the SerenityOS developers.
+ * Copyright (c) 2018-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,7 +26,7 @@ class Editor final : public GUI::TextEditor {
 public:
     static ErrorOr<NonnullRefPtr<Editor>> try_create();
 
-    virtual ~Editor() override;
+    virtual ~Editor() override = default;
 
     Function<void()> on_focus;
     Function<void(String)> on_open;

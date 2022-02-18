@@ -20,8 +20,7 @@ public:
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    unsigned width() const;
-    unsigned height() const;
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     virtual bool requires_svg_container() const override { return false; }
     virtual bool is_svg_container() const override { return true; }

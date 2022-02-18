@@ -16,8 +16,8 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
-#include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/CloseEvent.h>
 #include <LibWeb/HTML/EventHandler.h>

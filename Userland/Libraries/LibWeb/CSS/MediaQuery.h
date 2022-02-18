@@ -60,10 +60,6 @@ public:
         return m_value.get<double>();
     }
 
-    bool operator==(MediaFeatureValue const& other) const { return equals(other); }
-    bool operator!=(MediaFeatureValue const& other) const { return !(*this == other); }
-    bool equals(MediaFeatureValue const& other) const;
-
 private:
     // TODO: Support <ratio> once we have that.
     Variant<String, Length, double> m_value;
@@ -139,7 +135,7 @@ private:
     {
     }
 
-    static bool compare(MediaFeatureValue left, Comparison comparison, MediaFeatureValue right);
+    static bool compare(DOM::Window const& window, MediaFeatureValue left, Comparison comparison, MediaFeatureValue right);
 
     struct Range {
         MediaFeatureValue left_value;

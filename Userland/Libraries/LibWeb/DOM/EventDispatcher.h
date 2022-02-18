@@ -18,7 +18,7 @@ public:
 
 private:
     static void invoke(Event::PathEntry&, Event&, Event::Phase);
-    static bool inner_invoke(Event&, Vector<EventTarget::EventListenerRegistration>&, Event::Phase, bool);
+    static bool inner_invoke(Event&, Vector<NonnullRefPtr<DOM::DOMEventListener>>&, Event::Phase, bool);
 };
 
 }

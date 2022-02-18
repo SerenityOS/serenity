@@ -19,7 +19,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
-#include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/LiveNodeList.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>

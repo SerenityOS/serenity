@@ -271,7 +271,7 @@ bool ScreenLayout::save_config(Core::ConfigFile& config_file, bool sync) const
         config_file.remove_group(group_name);
     }
 
-    if (sync && !config_file.sync())
+    if (sync && config_file.sync().is_error())
         return false;
     return true;
 }

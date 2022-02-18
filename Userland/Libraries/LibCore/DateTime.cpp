@@ -106,7 +106,11 @@ String DateTime::to_string(StringView format) const
     const int format_len = format.length();
 
     auto format_time_zone_offset = [&](bool with_separator) {
+#ifndef __FreeBSD__
         auto offset_seconds = -timezone;
+#else
+        auto offset_seconds = 0;
+#endif
         StringView offset_sign;
 
         if (offset_seconds >= 0) {

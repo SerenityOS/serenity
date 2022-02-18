@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jamie Mansfield <jmansfield@cadixdev.org>
  * Copyright (c) 2022, Jonas Höpner <me@jonashoepner.de>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,10 +28,6 @@ Game::Game()
     for (int i = 0; i < 10; i++) {
         m_stacks.append(adopt_ref(*new CardStack({ 10 + i * (Card::width + 10), 10 }, CardStack::Type::Normal)));
     }
-}
-
-Game::~Game()
-{
 }
 
 void Game::setup(Mode mode)

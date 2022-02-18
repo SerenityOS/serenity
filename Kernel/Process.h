@@ -12,7 +12,6 @@
 #include <AK/IntrusiveListRelaxedConst.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/Userspace.h>
 #include <AK/Variant.h>
 #include <AK/WeakPtr.h>

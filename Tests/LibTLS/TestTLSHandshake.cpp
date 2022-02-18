@@ -45,7 +45,7 @@ Vector<Certificate> load_certificates()
         return certificates;
     }
 
-    auto config = Core::ConfigFile::open(ca_certs_filepath);
+    auto config = Core::ConfigFile::open(ca_certs_filepath).release_value_but_fixme_should_propagate_errors();
     auto now = Core::DateTime::now();
     auto last_year = Core::DateTime::create(now.year() - 1);
     auto next_year = Core::DateTime::create(now.year() + 1);

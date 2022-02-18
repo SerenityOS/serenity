@@ -36,7 +36,7 @@ void FrameBox::paint(PaintContext& context, PaintPhase phase)
     ReplacedBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        auto* hosted_document = dom_node().content_document();
+        auto* hosted_document = dom_node().content_document_without_origin_check();
         if (!hosted_document)
             return;
         auto* hosted_layout_tree = hosted_document->layout_node();

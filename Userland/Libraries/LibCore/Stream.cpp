@@ -17,6 +17,9 @@
 #ifdef __serenity__
 #    include <serenity.h>
 #endif
+#ifdef __FreeBSD__
+#    include <sys/ucred.h>
+#endif
 
 namespace Core::Stream {
 
@@ -213,6 +216,11 @@ ErrorOr<off_t> File::seek(i64 offset, SeekMode mode)
     off_t seek_result = TRY(System::lseek(m_fd, offset, syscall_mode));
     m_last_read_was_eof = false;
     return seek_result;
+}
+
+ErrorOr<void> File::truncate(off_t length)
+{
+    return System::ftruncate(m_fd, length);
 }
 
 ErrorOr<int> Socket::create_fd(SocketDomain domain, SocketType type)

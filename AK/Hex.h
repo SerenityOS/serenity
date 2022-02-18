@@ -8,8 +8,13 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
+
+#ifdef KERNEL
+#    include <Kernel/KString.h>
+#else
+#    include <AK/String.h>
+#endif
 
 namespace AK {
 
@@ -26,7 +31,11 @@ constexpr u8 decode_hex_digit(char digit)
 
 ErrorOr<ByteBuffer> decode_hex(StringView);
 
+#ifdef KERNEL
+ErrorOr<NonnullOwnPtr<Kernel::KString>> encode_hex(ReadonlyBytes);
+#else
 String encode_hex(ReadonlyBytes);
+#endif
 
 }
 

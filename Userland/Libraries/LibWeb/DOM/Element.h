@@ -63,6 +63,7 @@ public:
     RefPtr<DOMTokenList> const& class_list();
 
     DOM::ExceptionOr<bool> matches(StringView selectors) const;
+    DOM::ExceptionOr<DOM::Element const*> closest(StringView selectors) const;
 
     int client_top() const;
     int client_left() const;
@@ -83,6 +84,7 @@ public:
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
     virtual void parse_attribute(const FlyString& name, const String& value);
+    virtual void did_remove_attribute(FlyString const&) { }
 
     void recompute_style();
 

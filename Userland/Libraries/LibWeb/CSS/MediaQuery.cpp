@@ -36,29 +36,6 @@ bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
         [&](double) { return other.is_number(); });
 }
 
-bool MediaFeatureValue::equals(MediaFeatureValue const& other) const
-{
-    if (!is_same_type(other))
-        return false;
-
-    if (is_ident() && other.is_ident())
-        return m_value.get<String>().equals_ignoring_case(other.m_value.get<String>());
-    if (is_length() && other.is_length()) {
-        // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
-        auto& my_length = m_value.get<Length>();
-        auto& other_length = other.m_value.get<Length>();
-        if (!my_length.is_absolute() || !other_length.is_absolute()) {
-            dbgln("TODO: Support relative lengths in media queries!");
-            return false;
-        }
-        return my_length.absolute_length_to_px() == other_length.absolute_length_to_px();
-    }
-    if (is_number() && other.is_number())
-        return m_value.get<double>() == other.m_value.get<double>();
-
-    VERIFY_NOT_REACHED();
-}
-
 String MediaFeature::to_string() const
 {
     auto comparison_string = [](Comparison comparison) -> StringView {
@@ -114,20 +91,20 @@ bool MediaFeature::evaluate(DOM::Window const& window) const
         return false;
 
     case Type::ExactValue:
-        return compare(*m_value, Comparison::Equal, queried_value);
+        return compare(window, *m_value, Comparison::Equal, queried_value);
 
     case Type::MinValue:
-        return compare(queried_value, Comparison::GreaterThanOrEqual, *m_value);
+        return compare(window, queried_value, Comparison::GreaterThanOrEqual, *m_value);
 
     case Type::MaxValue:
-        return compare(queried_value, Comparison::LessThanOrEqual, *m_value);
+        return compare(window, queried_value, Comparison::LessThanOrEqual, *m_value);
 
     case Type::Range:
-        if (!compare(m_range->left_value, m_range->left_comparison, queried_value))
+        if (!compare(window, m_range->left_value, m_range->left_comparison, queried_value))
             return false;
 
         if (m_range->right_comparison.has_value())
-            if (!compare(queried_value, *m_range->right_comparison, *m_range->right_value))
+            if (!compare(window, queried_value, *m_range->right_comparison, *m_range->right_value))
                 return false;
 
         return true;
@@ -136,7 +113,7 @@ bool MediaFeature::evaluate(DOM::Window const& window) const
     VERIFY_NOT_REACHED();
 }
 
-bool MediaFeature::compare(MediaFeatureValue left, Comparison comparison, MediaFeatureValue right)
+bool MediaFeature::compare(DOM::Window const& window, MediaFeatureValue left, Comparison comparison, MediaFeatureValue right)
 {
     if (!left.is_same_type(right))
         return false;
@@ -164,14 +141,25 @@ bool MediaFeature::compare(MediaFeatureValue left, Comparison comparison, MediaF
     }
 
     if (left.is_length()) {
-        // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
-        if (!left.length().is_absolute() || !right.length().is_absolute()) {
-            dbgln("TODO: Support relative lengths in media queries!");
-            return false;
-        }
 
-        auto left_px = left.length().absolute_length_to_px();
-        auto right_px = right.length().absolute_length_to_px();
+        float left_px;
+        float right_px;
+        // Save ourselves some work if neither side is a relative length.
+        if (left.length().is_absolute() && right.length().is_absolute()) {
+            left_px = left.length().absolute_length_to_px();
+            right_px = right.length().absolute_length_to_px();
+        } else {
+            Gfx::IntRect viewport_rect { 0, 0, window.inner_width(), window.inner_height() };
+
+            // FIXME: This isn't right - we want to query the initial-value font, which is the one used
+            //        if no author styles are defined.
+            auto const& font = window.associated_document().root().layout_node()->font();
+            Gfx::FontMetrics const& font_metrics = font.metrics('M');
+            float root_font_size = font.presentation_size();
+
+            left_px = left.length().to_px(viewport_rect, font_metrics, root_font_size);
+            right_px = right.length().to_px(viewport_rect, font_metrics, root_font_size);
+        }
 
         switch (comparison) {
         case Comparison::Equal:

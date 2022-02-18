@@ -357,7 +357,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         update_window_title();
         auto file = response.value();
-        auto theme = Core::ConfigFile::open(file->filename(), file->leak_fd());
+        auto theme = Core::ConfigFile::open(file->filename(), file->leak_fd()).release_value_but_fixme_should_propagate_errors();
         for (auto role : color_roles) {
             theme->write_entry("Colors", to_string(role), preview_widget.preview_palette().color(role).to_string());
         }
@@ -374,7 +374,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             theme->write_entry("Paths", to_string(role), preview_widget.preview_palette().path(role));
         }
 
-        theme->sync();
+        if (auto sync_result = theme->sync(); sync_result.is_error()) {
+            // FIXME: Expose this to the user, since failing to save is important to know about!
+            dbgln("Failed to save theme file: {}", sync_result.error());
+        }
     };
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {

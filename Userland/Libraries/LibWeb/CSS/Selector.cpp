@@ -135,6 +135,7 @@ String Selector::SimpleSelector::serialize() const
         case Selector::SimpleSelector::PseudoClass::Type::Root:
         case Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
         case Selector::SimpleSelector::PseudoClass::Type::LastOfType:
+        case Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
         case Selector::SimpleSelector::PseudoClass::Type::Disabled:
         case Selector::SimpleSelector::PseudoClass::Type::Enabled:
         case Selector::SimpleSelector::PseudoClass::Type::Checked:
@@ -281,6 +282,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "first-of-type"sv;
     case Selector::SimpleSelector::PseudoClass::Type::LastOfType:
         return "last-of-type"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
+        return "only-of-type"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Disabled:
         return "disabled"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Enabled:

@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLDivElement : HTMLElement {
 
     [Reflect] attribute DOMString align;

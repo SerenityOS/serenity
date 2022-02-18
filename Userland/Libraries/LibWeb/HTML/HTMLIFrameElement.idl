@@ -1,3 +1,6 @@
+#import <HTML/HTMLElement.idl>
+#import <DOM/Document.idl>
+
 interface HTMLIFrameElement : HTMLElement {
 
     [Reflect] attribute DOMString src;

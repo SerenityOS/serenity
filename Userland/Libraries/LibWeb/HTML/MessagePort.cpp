@@ -30,7 +30,7 @@ void MessagePort::disentangle()
 }
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#entangle
-void MessagePort::entangle_with(Badge<MessageChannel>, MessagePort& remote_port)
+void MessagePort::entangle_with(MessagePort& remote_port)
 {
     if (m_remote_port == &remote_port)
         return;

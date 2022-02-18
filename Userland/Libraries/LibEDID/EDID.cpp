@@ -462,6 +462,12 @@ ErrorOr<void> Parser::parse()
     if (major_version != 1 || m_revision > 4)
         return Error::from_string_literal("Unsupported Parser version"sv);
 
+#ifdef KERNEL
+    m_version = TRY(Kernel::KString::formatted("1.{}", (int)m_revision));
+#else
+    m_version = String::formatted("1.{}", (int)m_revision);
+#endif
+
     u8 checksum = 0x0;
     for (size_t i = 0; i < sizeof(Definitions::EDID); i++)
         checksum += m_bytes[i];
@@ -473,6 +479,12 @@ ErrorOr<void> Parser::parse()
             dbgln("EDID checksum mismatch, data may be corrupted!");
         }
     }
+
+    u16 packed_id = read_be(&raw_edid().vendor.manufacturer_id);
+    m_legacy_manufacturer_id[0] = (char)((u16)'A' + ((packed_id >> 10) & 0x1f) - 1);
+    m_legacy_manufacturer_id[1] = (char)((u16)'A' + ((packed_id >> 5) & 0x1f) - 1);
+    m_legacy_manufacturer_id[2] = (char)((u16)'A' + (packed_id & 0x1f) - 1);
+    m_legacy_manufacturer_id[3] = '\0';
 
     return {};
 }
@@ -540,21 +552,18 @@ ErrorOr<IterationDecision> Parser::for_each_extension_block(Function<IterationDe
     return IterationDecision::Continue;
 }
 
-String Parser::version() const
+StringView Parser::version() const
 {
-    return String::formatted("1.{}", (int)m_revision);
+#ifdef KERNEL
+    return m_version->view();
+#else
+    return m_version;
+#endif
 }
 
-String Parser::legacy_manufacturer_id() const
+StringView Parser::legacy_manufacturer_id() const
 {
-    u16 packed_id = read_be(&raw_edid().vendor.manufacturer_id);
-    char id[4] = {
-        (char)((u16)'A' + ((packed_id >> 10) & 0x1f) - 1),
-        (char)((u16)'A' + ((packed_id >> 5) & 0x1f) - 1),
-        (char)((u16)'A' + (packed_id & 0x1f) - 1),
-        '\0'
-    };
-    return id;
+    return m_legacy_manufacturer_id;
 }
 
 #ifndef KERNEL
@@ -1136,6 +1145,7 @@ ErrorOr<IterationDecision> Parser::for_each_display_descriptor(Function<Iteratio
     return result;
 }
 
+#ifndef KERNEL
 String Parser::display_product_name() const
 {
     String product_name;
@@ -1181,6 +1191,7 @@ String Parser::display_product_serial_number() const
     }
     return product_name;
 }
+#endif
 
 auto Parser::supported_resolutions() const -> ErrorOr<Vector<SupportedResolution>>
 {

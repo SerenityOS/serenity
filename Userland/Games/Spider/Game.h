@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jamie Mansfield <jmansfield@cadixdev.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,7 +34,7 @@ public:
     static constexpr int width = 10 + 10 * Card::width + 90 + 10;
     static constexpr int height = 480;
 
-    ~Game() override;
+    ~Game() override = default;
 
     Mode mode() const { return m_mode; }
     void setup(Mode);

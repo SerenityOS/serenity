@@ -31,11 +31,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto config = Core::ConfigFile::open(path, value_to_write ? Core::ConfigFile::AllowWriting::Yes : Core::ConfigFile::AllowWriting::No);
+    auto config = TRY(Core::ConfigFile::open(path, value_to_write ? Core::ConfigFile::AllowWriting::Yes : Core::ConfigFile::AllowWriting::No));
 
     if (value_to_write) {
         config->write_entry(group, key, value_to_write);
-        config->sync();
+        TRY(config->sync());
         return 0;
     }
 

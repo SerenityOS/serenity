@@ -11,7 +11,7 @@
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/CallbackType.h>
-#include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/DOMEventListener.h>
 
 namespace Web::HTML {
 
@@ -34,7 +34,7 @@ struct EventHandler {
     Variant<String, Bindings::CallbackType> value;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-listener
-    RefPtr<DOM::EventListener> listener;
+    RefPtr<DOM::DOMEventListener> listener;
 };
 
 }

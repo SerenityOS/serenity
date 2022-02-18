@@ -87,6 +87,8 @@ static String gethostbyname_name_buffer;
 
 hostent* gethostbyname(const char* name)
 {
+    h_errno = 0;
+
     auto ipv4_address = IPv4Address::from_string(name);
 
     if (ipv4_address.has_value()) {
@@ -104,14 +106,18 @@ hostent* gethostbyname(const char* name)
     }
 
     int fd = connect_to_lookup_server();
-    if (fd < 0)
+    if (fd < 0) {
+        h_errno = TRY_AGAIN;
         return nullptr;
+    }
 
     auto close_fd_on_exit = ScopeGuard([fd] {
         close(fd);
     });
 
-    size_t name_length = strlen(name);
+    size_t unsigned_name_length = strlen(name);
+    VERIFY(unsigned_name_length <= NumericLimits<i32>::max());
+    i32 name_length = static_cast<i32>(unsigned_name_length);
 
     struct [[gnu::packed]] {
         u32 message_size;
@@ -122,20 +128,23 @@ hostent* gethostbyname(const char* name)
         (u32)(sizeof(request_header) - sizeof(request_header.message_size) + name_length),
         lookup_server_endpoint_magic,
         1,
-        (i32)name_length,
+        name_length,
     };
-    int nsent = write(fd, &request_header, sizeof(request_header));
-    if (nsent < 0) {
-        perror("write");
+    if (auto nsent = write(fd, &request_header, sizeof(request_header)); nsent < 0) {
+        h_errno = TRY_AGAIN;
+        return nullptr;
+    } else if (nsent != sizeof(request_header)) {
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
-    VERIFY((size_t)nsent == sizeof(request_header));
-    nsent = write(fd, name, name_length);
-    if (nsent < 0) {
-        perror("write");
+
+    if (auto nsent = write(fd, name, name_length); nsent < 0) {
+        h_errno = TRY_AGAIN;
+        return nullptr;
+    } else if (nsent != name_length) {
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
-    VERIFY((size_t)nsent == name_length);
 
     struct [[gnu::packed]] {
         u32 message_size;
@@ -145,37 +154,42 @@ hostent* gethostbyname(const char* name)
         u64 addresses_count;
     } response_header;
 
-    int nrecv = read(fd, &response_header, sizeof(response_header));
-    if (nrecv < 0) {
-        perror("recv");
+    if (auto nreceived = read(fd, &response_header, sizeof(response_header)); nreceived < 0) {
+        h_errno = TRY_AGAIN;
+        return nullptr;
+    } else if (nreceived != sizeof(response_header)) {
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
-    VERIFY((size_t)nrecv == sizeof(response_header));
     if (response_header.endpoint_magic != lookup_server_endpoint_magic || response_header.message_id != 2) {
-        dbgln("Received an unexpected message");
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
     if (response_header.code != 0) {
-        // TODO: return a specific error.
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
-    VERIFY(response_header.addresses_count > 0);
-
+    if (response_header.addresses_count == 0) {
+        h_errno = HOST_NOT_FOUND;
+        return nullptr;
+    }
     i32 response_length;
-    nrecv = read(fd, &response_length, sizeof(response_length));
-    if (nrecv < 0) {
-        perror("recv");
+    if (auto nreceived = read(fd, &response_length, sizeof(response_length)); nreceived < 0) {
+        h_errno = TRY_AGAIN;
+        return nullptr;
+    } else if (nreceived != sizeof(response_length)
+        || response_length != sizeof(__gethostbyname_address)) {
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
-    VERIFY((size_t)nrecv == sizeof(response_length));
-    VERIFY(response_length == sizeof(__gethostbyname_address));
 
-    nrecv = read(fd, &__gethostbyname_address, response_length);
-    if (nrecv < 0) {
-        perror("recv");
+    if (auto nreceived = read(fd, &__gethostbyname_address, response_length); nreceived < 0) {
+        h_errno = TRY_AGAIN;
+        return nullptr;
+    } else if (nreceived != response_length) {
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
-    VERIFY(nrecv == response_length);
 
     gethostbyname_name_buffer = name;
     __gethostbyname_buffer.h_name = const_cast<char*>(gethostbyname_name_buffer.characters());
@@ -193,6 +207,8 @@ static String gethostbyaddr_name_buffer;
 
 hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 {
+    h_errno = 0;
+
     if (type != AF_INET) {
         errno = EAFNOSUPPORT;
         return nullptr;
@@ -204,8 +220,10 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
     }
 
     int fd = connect_to_lookup_server();
-    if (fd < 0)
+    if (fd < 0) {
+        h_errno = TRY_AGAIN;
         return nullptr;
+    }
 
     auto close_fd_on_exit = ScopeGuard([fd] {
         close(fd);
@@ -222,20 +240,22 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         sizeof(request_header) - sizeof(request_header.message_size) + sizeof(in_addr),
         lookup_server_endpoint_magic,
         3,
-        (i32)sizeof(in_addr),
+        sizeof(in_addr),
     };
-    int nsent = write(fd, &request_header, sizeof(request_header));
-    if (nsent < 0) {
-        perror("write");
+    if (auto nsent = write(fd, &request_header, sizeof(request_header)); nsent < 0) {
+        h_errno = TRY_AGAIN;
+        return nullptr;
+    } else if (nsent != sizeof(request_header)) {
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
-    VERIFY((size_t)nsent == sizeof(request_header));
-    nsent = write(fd, &in_addr, sizeof(in_addr));
-    if (nsent < 0) {
-        perror("write");
+    if (auto nsent = write(fd, &in_addr, sizeof(in_addr)); nsent < 0) {
+        h_errno = TRY_AGAIN;
+        return nullptr;
+    } else if (nsent != sizeof(in_addr)) {
+        h_errno = TRY_AGAIN;
         return nullptr;
     }
-    VERIFY((size_t)nsent == sizeof(in_addr));
 
     struct [[gnu::packed]] {
         u32 message_size;
@@ -245,29 +265,30 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         i32 name_length;
     } response_header;
 
-    int nrecv = read(fd, &response_header, sizeof(response_header));
-    if (nrecv < 0) {
-        perror("recv");
+    if (auto nreceived = read(fd, &response_header, sizeof(response_header)); nreceived < 0) {
+        h_errno = TRY_AGAIN;
+        return nullptr;
+    } else if (nreceived != sizeof(response_header)) {
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
-    VERIFY((size_t)nrecv == sizeof(response_header));
-    if (response_header.endpoint_magic != lookup_server_endpoint_magic || response_header.message_id != 4) {
-        dbgln("Received an unexpected message");
-        return nullptr;
-    }
-    if (response_header.code != 0) {
-        // TODO: return a specific error.
+    if (response_header.endpoint_magic != lookup_server_endpoint_magic
+        || response_header.message_id != 4
+        || response_header.code != 0) {
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
 
     char* buffer;
     auto string_impl = StringImpl::create_uninitialized(response_header.name_length, buffer);
-    nrecv = read(fd, buffer, response_header.name_length);
-    if (nrecv < 0) {
-        perror("recv");
+
+    if (auto nreceived = read(fd, buffer, response_header.name_length); nreceived < 0) {
+        h_errno = TRY_AGAIN;
+        return nullptr;
+    } else if (nreceived != response_header.name_length) {
+        h_errno = NO_RECOVERY;
         return nullptr;
     }
-    VERIFY(nrecv == response_header.name_length);
 
     gethostbyaddr_name_buffer = move(string_impl);
     __gethostbyaddr_buffer.h_name = buffer;

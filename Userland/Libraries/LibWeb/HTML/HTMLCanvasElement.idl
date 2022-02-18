@@ -1,3 +1,6 @@
+#import <HTML/CanvasRenderingContext2D.idl>
+#import <HTML/HTMLElement.idl>
+
 interface HTMLCanvasElement : HTMLElement {
 
     CanvasRenderingContext2D? getContext(DOMString contextId);

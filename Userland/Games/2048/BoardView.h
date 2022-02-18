@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@ class BoardView final : public GUI::Frame {
     C_OBJECT(BoardView);
 
 public:
-    virtual ~BoardView() override;
+    virtual ~BoardView() override = default;
     void set_board(Game::Board const* board);
 
     Function<void(Game::Direction)> on_move;

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,7 +23,7 @@ public:
     static constexpr int width = 640;
     static constexpr int height = 480;
 
-    virtual ~Game() override;
+    virtual ~Game() override = default;
 
     void setup(String player_name, int hand_number = 0);
 

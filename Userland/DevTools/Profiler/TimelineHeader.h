@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +18,7 @@ class TimelineHeader final : public GUI::Frame {
     C_OBJECT(TimelineHeader);
 
 public:
-    virtual ~TimelineHeader();
+    virtual ~TimelineHeader() override = default;
 
     Function<void(bool)> on_selection_change;
 

@@ -251,7 +251,7 @@ Optional<Image::RelocationSection> Image::Section::relocations() const
     builder.append(".rel"sv);
     builder.append(name());
 
-    auto relocation_section = m_image.lookup_section(builder.to_string());
+    auto relocation_section = m_image.lookup_section(builder.string_view());
     if (!relocation_section.has_value())
         return {};
 
@@ -381,7 +381,6 @@ Optional<Image::Symbol> Image::find_demangled_function(StringView name) const
     });
     return found;
 }
-#endif
 
 Image::SortedSymbol* Image::find_sorted_symbol(FlatPtr address) const
 {
@@ -428,7 +427,6 @@ NEVER_INLINE void Image::sort_symbols() const
     });
 }
 
-#ifndef KERNEL
 String Image::symbolicate(FlatPtr address, u32* out_offset) const
 {
     auto symbol_count = this->symbol_count();

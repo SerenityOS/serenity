@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLUListElement : HTMLElement {
 
     [Reflect] attribute boolean compact;

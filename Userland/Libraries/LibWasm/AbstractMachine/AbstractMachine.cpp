@@ -43,7 +43,11 @@ Optional<TableAddress> Store::allocate(TableType const& type)
 Optional<MemoryAddress> Store::allocate(MemoryType const& type)
 {
     MemoryAddress address { m_memories.size() };
-    m_memories.empend(MemoryInstance { type });
+    auto instance = MemoryInstance::create(type);
+    if (instance.is_error())
+        return {};
+
+    m_memories.append(instance.release_value());
     return address;
 }
 

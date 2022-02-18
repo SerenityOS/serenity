@@ -1,3 +1,9 @@
+#import <HTML/HTMLCanvasElement.idl>
+#import <HTML/HTMLImageElement.idl>
+#import <HTML/ImageData.idl>
+#import <HTML/TextMetrics.idl>
+#import <HTML/CanvasGradient.idl>
+
 interface CanvasRenderingContext2D {
 
     undefined fillRect(double x, double y, double w, double h);

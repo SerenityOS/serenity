@@ -17,13 +17,13 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio proc exec rpath"));
-    auto keyboard_settings_config = Core::ConfigFile::open_for_app("KeyboardSettings");
+    auto keyboard_settings_config = TRY(Core::ConfigFile::open_for_app("KeyboardSettings"));
 
     TRY(Core::System::unveil("/bin/keymap", "x"));
     TRY(Core::System::unveil("/etc/Keyboard.ini", "r"));
     TRY(Core::System::unveil("/dev/keyboard0", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
-    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini"));
+    auto mapper_config = TRY(Core::ConfigFile::open("/etc/Keyboard.ini"));
     auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
 
     auto keymaps_vector = keymaps.split(',');

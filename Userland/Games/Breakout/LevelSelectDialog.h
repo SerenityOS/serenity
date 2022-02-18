@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,7 +12,7 @@ namespace Breakout {
 class LevelSelectDialog : public GUI::Dialog {
     C_OBJECT(LevelSelectDialog)
 public:
-    virtual ~LevelSelectDialog() override;
+    virtual ~LevelSelectDialog() override = default;
     static int show(int& board_number, Window* parent_window);
     int level() const { return m_level; }
 

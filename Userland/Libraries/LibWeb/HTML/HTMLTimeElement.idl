@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLTimeElement : HTMLElement {
 
     [Reflect=datetime] attribute DOMString dateTime;

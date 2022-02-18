@@ -128,3 +128,9 @@ TEST_CASE(json_parse_empty_string)
     auto value = JsonValue::from_string("");
     EXPECT_EQ(value.value().is_null(), true);
 }
+
+TEST_CASE(json_parse_long_decimals)
+{
+    auto value = JsonValue::from_string("1644452550.6489999294281");
+    EXPECT_EQ(value.value().as_double(), 1644452550.6489999294281);
+}

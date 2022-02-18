@@ -1050,7 +1050,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             }
             if (match(TokenType::BracketOpen) || match(TokenType::Period) || match(TokenType::ParenOpen)) {
                 auto precedence = g_operator_precedence.get(m_state.current_token.type());
-                expression = parse_secondary_expression(move(expression), precedence);
+                expression = parse_secondary_expression(move(expression), precedence).expression;
                 continue;
             }
             break;
@@ -1880,7 +1880,7 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
     return create_ast_node<TemplateLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, expressions);
 }
 
-NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity, const Vector<TokenType>& forbidden)
+NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity, ForbiddenTokens forbidden)
 {
     auto rule_start = push_start();
     auto [expression, should_continue_parsing] = parse_primary_expression();
@@ -1922,7 +1922,9 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
             check_for_invalid_object_property(expression);
 
             Associativity new_associativity = operator_associativity(m_state.current_token.type());
-            expression = parse_secondary_expression(move(expression), new_precedence, new_associativity, forbidden);
+            auto result = parse_secondary_expression(move(expression), new_precedence, new_associativity, forbidden);
+            expression = result.expression;
+            forbidden = forbidden.merge(result.forbidden);
             while (match(TokenType::TemplateLiteralStart) && !is<UpdateExpression>(*expression)) {
                 auto template_literal = parse_template_literal(true);
                 expression = create_ast_node<TaggedTemplateLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(template_literal));
@@ -1965,7 +1967,7 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
     return expression;
 }
 
-NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expression> lhs, int min_precedence, Associativity associativity, Vector<TokenType> const& forbidden)
+Parser::ExpressionResult Parser::parse_secondary_expression(NonnullRefPtr<Expression> lhs, int min_precedence, Associativity associativity, ForbiddenTokens forbidden)
 {
     auto rule_start = push_start();
     switch (m_state.current_token.type()) {
@@ -2110,19 +2112,25 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         }
         consume();
         return create_ast_node<UpdateExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UpdateOp::Decrement, move(lhs));
-    case TokenType::DoubleAmpersand:
+    case TokenType::DoubleAmpersand: {
         consume();
-        return create_ast_node<LogicalExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, LogicalOp::And, move(lhs), parse_expression(min_precedence, associativity, forbidden));
+        auto expression = create_ast_node<LogicalExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, LogicalOp::And, move(lhs), parse_expression(min_precedence, associativity, forbidden.forbid({ TokenType::DoubleQuestionMark })));
+        return { expression, { TokenType::DoubleQuestionMark } };
+    }
     case TokenType::DoubleAmpersandEquals:
         return parse_assignment_expression(AssignmentOp::AndAssignment, move(lhs), min_precedence, associativity, forbidden);
-    case TokenType::DoublePipe:
+    case TokenType::DoublePipe: {
         consume();
-        return create_ast_node<LogicalExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, LogicalOp::Or, move(lhs), parse_expression(min_precedence, associativity, forbidden));
+        auto expression = create_ast_node<LogicalExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, LogicalOp::Or, move(lhs), parse_expression(min_precedence, associativity, forbidden.forbid({ TokenType::DoubleQuestionMark })));
+        return { expression, { TokenType::DoubleQuestionMark } };
+    }
     case TokenType::DoublePipeEquals:
         return parse_assignment_expression(AssignmentOp::OrAssignment, move(lhs), min_precedence, associativity, forbidden);
-    case TokenType::DoubleQuestionMark:
+    case TokenType::DoubleQuestionMark: {
         consume();
-        return create_ast_node<LogicalExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, LogicalOp::NullishCoalescing, move(lhs), parse_expression(min_precedence, associativity, forbidden));
+        auto expression = create_ast_node<LogicalExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, LogicalOp::NullishCoalescing, move(lhs), parse_expression(min_precedence, associativity, forbidden.forbid({ TokenType::DoubleAmpersand, TokenType::DoublePipe })));
+        return { expression, { TokenType::DoubleAmpersand, TokenType::DoublePipe } };
+    }
     case TokenType::DoubleQuestionMarkEquals:
         return parse_assignment_expression(AssignmentOp::NullishAssignment, move(lhs), min_precedence, associativity, forbidden);
     case TokenType::QuestionMark:
@@ -2192,7 +2200,7 @@ RefPtr<BindingPattern> Parser::synthesize_binding_pattern(Expression const& expr
     return result;
 }
 
-NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(AssignmentOp assignment_op, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity associativity, Vector<TokenType> const& forbidden)
+NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(AssignmentOp assignment_op, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity associativity, ForbiddenTokens forbidden)
 {
     auto rule_start = push_start();
     VERIFY(match(TokenType::Equals)
@@ -3026,7 +3034,7 @@ NonnullRefPtr<ContinueStatement> Parser::parse_continue_statement()
     return create_ast_node<ContinueStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, target_label);
 }
 
-NonnullRefPtr<ConditionalExpression> Parser::parse_conditional_expression(NonnullRefPtr<Expression> test, Vector<TokenType> const& forbidden)
+NonnullRefPtr<ConditionalExpression> Parser::parse_conditional_expression(NonnullRefPtr<Expression> test, ForbiddenTokens forbidden)
 {
     auto rule_start = push_start();
     consume(TokenType::QuestionMark);
@@ -3583,10 +3591,10 @@ bool Parser::match_unary_prefixed_expression() const
         || type == TokenType::Delete;
 }
 
-bool Parser::match_secondary_expression(const Vector<TokenType>& forbidden) const
+bool Parser::match_secondary_expression(ForbiddenTokens forbidden) const
 {
     auto type = m_state.current_token.type();
-    if (forbidden.contains_slow(type))
+    if (!forbidden.allows(type))
         return false;
     return type == TokenType::Plus
         || type == TokenType::PlusEquals
@@ -4484,4 +4492,79 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 
     return create_ast_node<ExportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(entries), is_default, move(from_specifier));
 }
+
+Parser::ForbiddenTokens::ForbiddenTokens(std::initializer_list<TokenType> const& forbidden)
+{
+    forbid_tokens(forbidden);
+}
+
+void Parser::ForbiddenTokens::forbid_tokens(std::initializer_list<TokenType> const& forbidden)
+{
+    for (auto token : forbidden) {
+        switch (token) {
+        case TokenType::In:
+            m_forbid_in_token = true;
+            break;
+        case TokenType::DoubleAmpersand:
+        case TokenType::DoublePipe:
+            m_forbid_logical_tokens = true;
+            break;
+        case TokenType::DoubleQuestionMark:
+            m_forbid_coalesce_token = true;
+            break;
+        case TokenType::QuestionMarkPeriod:
+            m_forbid_question_mark_period = true;
+            break;
+        case TokenType::ParenOpen:
+            m_forbid_paren_open = true;
+            break;
+        case TokenType::Equals:
+            m_forbid_equals = true;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+}
+
+bool Parser::ForbiddenTokens::allows(TokenType token) const
+{
+    switch (token) {
+    case TokenType::In:
+        return !m_forbid_in_token;
+    case TokenType::DoubleAmpersand:
+    case TokenType::DoublePipe:
+        return !m_forbid_logical_tokens;
+    case TokenType::DoubleQuestionMark:
+        return !m_forbid_coalesce_token;
+    case TokenType::QuestionMarkPeriod:
+        return !m_forbid_question_mark_period;
+    case TokenType::ParenOpen:
+        return !m_forbid_paren_open;
+    case TokenType::Equals:
+        return !m_forbid_equals;
+    default:
+        return true;
+    }
+}
+
+Parser::ForbiddenTokens Parser::ForbiddenTokens::merge(ForbiddenTokens other) const
+{
+    ForbiddenTokens result = *this;
+    result.m_forbid_in_token |= other.m_forbid_in_token;
+    result.m_forbid_logical_tokens |= other.m_forbid_logical_tokens;
+    result.m_forbid_coalesce_token |= other.m_forbid_coalesce_token;
+    result.m_forbid_paren_open |= other.m_forbid_paren_open;
+    result.m_forbid_question_mark_period |= other.m_forbid_question_mark_period;
+    result.m_forbid_equals |= other.m_forbid_equals;
+    return result;
+}
+
+Parser::ForbiddenTokens Parser::ForbiddenTokens::forbid(std::initializer_list<TokenType> const& forbidden) const
+{
+    ForbiddenTokens result = *this;
+    result.forbid_tokens(forbidden);
+    return result;
+}
+
 }

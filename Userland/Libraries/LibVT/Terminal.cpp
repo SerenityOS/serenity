@@ -383,7 +383,11 @@ void Terminal::XTERM_WM(Parameters params)
             return;
         }
         dbgln_if(TERMINAL_DEBUG, "Title stack push: {}", m_current_window_title);
-        [[maybe_unused]] auto rc = m_title_stack.try_append(move(m_current_window_title));
+#ifdef KERNEL
+        (void)m_title_stack.try_append(m_current_window_title.release_nonnull()); // FIXME: Propagate Error
+#else
+        (void)m_title_stack.try_append(move(m_current_window_title));
+#endif
         break;
     }
     case 23: {
@@ -395,7 +399,11 @@ void Terminal::XTERM_WM(Parameters params)
         }
         m_current_window_title = m_title_stack.take_last();
         dbgln_if(TERMINAL_DEBUG, "Title stack pop: {}", m_current_window_title);
+#ifdef KERNEL
+        m_client.set_window_title(m_current_window_title->view());
+#else
         m_client.set_window_title(m_current_window_title);
+#endif
         break;
     }
     default:
@@ -975,7 +983,9 @@ void Terminal::DSR(Parameters params)
         emit_string("\033[0n"); // Terminal status OK!
     } else if (params.size() == 1 && params[0] == 6) {
         // Cursor position query
-        emit_string(String::formatted("\e[{};{}R", cursor_row() + 1, cursor_column() + 1));
+        StringBuilder builder;
+        MUST(builder.try_appendff("\e[{};{}R", cursor_row() + 1, cursor_column() + 1)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
+        emit_string(builder.string_view());
     } else {
         dbgln("Unknown DSR");
     }
@@ -1278,8 +1288,13 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
         } else {
             // FIXME: the split breaks titles containing semicolons.
             // Should we expose the raw OSC string from the parser? Or join by semicolon?
+#ifdef KERNEL
+            m_current_window_title = Kernel::KString::try_create(stringview_ify(1)).release_value_but_fixme_should_propagate_errors();
+            m_client.set_window_title(m_current_window_title->view());
+#else
             m_current_window_title = stringview_ify(1).to_string();
             m_client.set_window_title(m_current_window_title);
+#endif
         }
         break;
     case 8:
@@ -1344,16 +1359,20 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 
     auto emit_final_with_modifier = [this, modifier_mask](char final) {
         char escape_character = m_cursor_keys_mode == CursorKeysMode::Application ? 'O' : '[';
+        StringBuilder builder;
         if (modifier_mask)
-            emit_string(String::formatted("\e{}1;{}{:c}", escape_character, modifier_mask + 1, final));
+            MUST(builder.try_appendff("\e{}1;{}{:c}", escape_character, modifier_mask + 1, final)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
         else
-            emit_string(String::formatted("\e{}{:c}", escape_character, final));
+            MUST(builder.try_appendff("\e{}{:c}", escape_character, final)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
+        emit_string(builder.string_view());
     };
     auto emit_tilde_with_modifier = [this, modifier_mask](unsigned num) {
+        StringBuilder builder;
         if (modifier_mask)
-            emit_string(String::formatted("\e[{};{}~", num, modifier_mask + 1));
+            MUST(builder.try_appendff("\e[{};{}~", num, modifier_mask + 1)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
         else
-            emit_string(String::formatted("\e[{}~", num));
+            MUST(builder.try_appendff("\e[{}~", num)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
+        emit_string(builder.string_view());
     };
 
     switch (key) {
@@ -1422,8 +1441,7 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 
     StringBuilder sb;
     sb.append_code_point(code_point);
-
-    emit_string(sb.to_string());
+    emit_string(sb.string_view());
 }
 
 void Terminal::unimplemented_control_code(u8 code)

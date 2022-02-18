@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLDetailsElement : HTMLElement {
 
     [Reflect] attribute boolean open;

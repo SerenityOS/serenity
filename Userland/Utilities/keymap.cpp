@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini", Core::ConfigFile::AllowWriting::Yes));
+    auto mapper_config = TRY(Core::ConfigFile::open("/etc/Keyboard.ini", Core::ConfigFile::AllowWriting::Yes));
 
     int rc = 0;
 
@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto keymaps = String::join(',', mappings_vector);
         mapper_config->write_entry("Mapping", "Keymaps", keymaps);
-        mapper_config->sync();
+        TRY(mapper_config->sync());
         rc = set_keymap(mappings_vector.first());
         if (rc != 0) {
             return rc;
@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (keymaps_vector.is_empty()) {
             warnln("No keymaps configured - writing default configurations (en-us)");
             mapper_config->write_entry("Mapping", "Keymaps", "en-us");
-            mapper_config->sync();
+            TRY(mapper_config->sync());
             keymaps_vector.append("en-us");
         }
 

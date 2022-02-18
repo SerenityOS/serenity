@@ -37,14 +37,14 @@ static Core::ConfigFile& ensure_domain_config(String const& domain)
     if (it != s_cache.end())
         return *it->value->config;
 
-    auto config = Core::ConfigFile::open_for_app(domain, Core::ConfigFile::AllowWriting::Yes);
+    auto config = Core::ConfigFile::open_for_app(domain, Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
     // FIXME: Use a single FileWatcher with multiple watches inside.
     auto watcher_or_error = Core::FileWatcher::create(InodeWatcherFlags::Nonblock);
     VERIFY(!watcher_or_error.is_error());
     auto result = watcher_or_error.value()->add_watch(config->filename(), Core::FileWatcherEvent::Type::ContentModified);
     VERIFY(!result.is_error());
     watcher_or_error.value()->on_change = [config, domain](auto&) {
-        auto new_config = Core::ConfigFile::open(config->filename(), Core::ConfigFile::AllowWriting::Yes);
+        auto new_config = Core::ConfigFile::open(config->filename(), Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
         for (auto& group : config->groups()) {
             for (auto& key : config->keys(group)) {
                 if (!new_config->has_key(group, key)) {
@@ -131,7 +131,11 @@ void ClientConnection::sync_dirty_domains_to_disk()
     dbgln("Syncing {} dirty domains to disk", dirty_domains.size());
     for (auto domain : dirty_domains) {
         auto& config = ensure_domain_config(domain);
-        config.sync();
+        if (auto result = config.sync(); result.is_error()) {
+            dbgln("Failed to write config '{}' to disk: {}", domain, result.error());
+            // Put it back in the list since it's still dirty.
+            m_dirty_domains.set(domain);
+        }
     }
 }
 

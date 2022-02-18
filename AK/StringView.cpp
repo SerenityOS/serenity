@@ -7,15 +7,19 @@
 #include <AK/AnyOf.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Find.h>
-#include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/Memory.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
+#ifndef KERNEL
+#    include <AK/FlyString.h>
+#    include <AK/String.h>
+#endif
+
 namespace AK {
 
+#ifndef KERNEL
 StringView::StringView(const String& string)
     : m_characters(string.characters())
     , m_length(string.length())
@@ -27,6 +31,7 @@ StringView::StringView(const FlyString& string)
     , m_length(string.length())
 {
 }
+#endif
 
 StringView::StringView(const ByteBuffer& buffer)
     : m_characters((const char*)buffer.data())
@@ -142,6 +147,7 @@ bool StringView::equals_ignoring_case(StringView other) const
     return StringUtils::equals_ignoring_case(*this, other);
 }
 
+#ifndef KERNEL
 String StringView::to_lowercase_string() const
 {
     return StringImpl::create_lowercased(characters_without_null_termination(), length());
@@ -156,6 +162,7 @@ String StringView::to_titlecase_string() const
 {
     return StringUtils::to_titlecase(*this);
 }
+#endif
 
 StringView StringView::substring_view_starting_from_substring(StringView substring) const
 {
@@ -201,6 +208,7 @@ template Optional<unsigned long long> StringView::to_uint() const;
 template Optional<long> StringView::to_uint() const;
 template Optional<long long> StringView::to_uint() const;
 
+#ifndef KERNEL
 bool StringView::operator==(const String& string) const
 {
     return *this == string.view();
@@ -212,6 +220,7 @@ String StringView::replace(StringView needle, StringView replacement, bool all_o
 {
     return StringUtils::replace(*this, needle, replacement, all_occurrences);
 }
+#endif
 
 Vector<size_t> StringView::find_all(StringView needle) const
 {

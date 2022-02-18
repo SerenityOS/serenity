@@ -114,12 +114,12 @@ void RadioButton::set_checked_within_group()
     if (dom_node().checked())
         return;
 
-    dom_node().set_checked(true);
+    dom_node().set_checked(true, HTML::HTMLInputElement::ChangeSource::User);
     String name = dom_node().name();
 
     document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
         if (element.checked() && (element.layout_node() != this) && (element.name() == name))
-            element.set_checked(false);
+            element.set_checked(false, HTML::HTMLInputElement::ChangeSource::User);
         return IterationDecision::Continue;
     });
 }

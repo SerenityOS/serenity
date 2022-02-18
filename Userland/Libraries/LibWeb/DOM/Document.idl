@@ -1,3 +1,19 @@
+#import <CSS/StyleSheetList.idl>
+#import <DOM/Comment.idl>
+#import <DOM/DOMImplementation.idl>
+#import <DOM/DocumentFragment.idl>
+#import <DOM/DocumentType.idl>
+#import <DOM/Element.idl>
+#import <DOM/Event.idl>
+#import <DOM/HTMLCollection.idl>
+#import <DOM/Node.idl>
+#import <DOM/NodeList.idl>
+#import <DOM/Range.idl>
+#import <DOM/Text.idl>
+#import <HTML/HTMLElement.idl>
+#import <HTML/HTMLHeadElement.idl>
+#import <HTML/HTMLScriptElement.idl>
+
 interface Document : Node {
 
     constructor();

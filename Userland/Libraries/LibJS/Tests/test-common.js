@@ -53,6 +53,9 @@ class ExpectationError extends Error {
 
     const valueToString = value => {
         try {
+            if (value === 0 && 1 / value < 0) {
+                return "-0";
+            }
             return String(value);
         } catch {
             // e.g for objects without a prototype, the above throws.

@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -41,6 +42,12 @@ BrowsingContext::~BrowsingContext()
 void BrowsingContext::did_edit(Badge<EditEventHandler>)
 {
     reset_cursor_blink_cycle();
+
+    if (m_cursor_position.node() && is<DOM::Text>(*m_cursor_position.node())) {
+        auto& text_node = static_cast<DOM::Text&>(*m_cursor_position.node());
+        if (auto* input_element = text_node.owner_input_element())
+            input_element->did_edit_text_node({});
+    }
 }
 
 void BrowsingContext::reset_cursor_blink_cycle()

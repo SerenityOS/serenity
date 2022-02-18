@@ -345,7 +345,7 @@ Singleton<DefaultRootCACertificates> DefaultRootCACertificates::s_the;
 DefaultRootCACertificates::DefaultRootCACertificates()
 {
     // FIXME: This might not be the best format, find a better way to represent CA certificates.
-    auto config = Core::ConfigFile::open_for_system("ca_certs");
+    auto config = Core::ConfigFile::open_for_system("ca_certs").release_value_but_fixme_should_propagate_errors();
     auto now = Core::DateTime::now();
     auto last_year = Core::DateTime::create(now.year() - 1);
     auto next_year = Core::DateTime::create(now.year() + 1);

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +19,7 @@ class Emulator;
 
 class Region {
 public:
-    virtual ~Region() { }
+    virtual ~Region() = default;
 
     const Range& range() const { return m_range; }
 

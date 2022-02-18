@@ -207,34 +207,37 @@ void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_
 
 bool TextNode::wants_mouse_events() const
 {
-    return parent() && is<Label>(parent());
+    return first_ancestor_of_type<Label>();
 }
 
 void TextNode::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
 {
-    if (!parent() || !is<Label>(*parent()))
+    auto* label = first_ancestor_of_type<Label>();
+    if (!label)
         return;
-    verify_cast<Label>(*parent()).handle_mousedown_on_label({}, position, button);
+    label->handle_mousedown_on_label({}, position, button);
     browsing_context().event_handler().set_mouse_event_tracking_layout_node(this);
 }
 
 void TextNode::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
 {
-    if (!parent() || !is<Label>(*parent()))
+    auto* label = first_ancestor_of_type<Label>();
+    if (!label)
         return;
 
     // NOTE: Changing the state of the DOM node may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protect = *this;
 
-    verify_cast<Label>(*parent()).handle_mouseup_on_label({}, position, button);
+    label->handle_mouseup_on_label({}, position, button);
     browsing_context().event_handler().set_mouse_event_tracking_layout_node(nullptr);
 }
 
 void TextNode::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
 {
-    if (!parent() || !is<Label>(*parent()))
+    auto* label = first_ancestor_of_type<Label>();
+    if (!label)
         return;
-    verify_cast<Label>(*parent()).handle_mousemove_on_label({}, position, button);
+    label->handle_mousemove_on_label({}, position, button);
 }
 
 TextNode::ChunkIterator::ChunkIterator(StringView text, LayoutMode layout_mode, bool wrap_lines, bool respect_linebreaks)

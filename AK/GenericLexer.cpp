@@ -7,9 +7,12 @@
 #include <AK/Assertions.h>
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <AK/Utf16View.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#    include <AK/Utf16View.h>
+#endif
 
 namespace AK {
 // Consume a number of characters
@@ -125,6 +128,7 @@ StringView GenericLexer::consume_quoted_string(char escape_char)
     return m_input.substring_view(start, length);
 }
 
+#ifndef KERNEL
 String GenericLexer::consume_and_unescape_string(char escape_char)
 {
     auto view = consume_quoted_string(escape_char);
@@ -206,5 +210,6 @@ auto GenericLexer::decode_single_or_paired_surrogate(bool combine_surrogate_pair
     retreat(6);
     return *high_surrogate;
 }
+#endif
 
 }

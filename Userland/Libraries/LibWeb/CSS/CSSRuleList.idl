@@ -1,3 +1,5 @@
+#import <CSS/CSSRule.idl>
+
 [Exposed=Window]
 interface CSSRuleList {
 

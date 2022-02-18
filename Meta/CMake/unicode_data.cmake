@@ -1,7 +1,11 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
 set(UCD_VERSION 14.0.0)
-set(CLDR_VERSION 40.0.0)
+set(CLDR_VERSION 40.0.0-updated)
+
+# FIXME: When the CLDR is bumped to version 41, we can remove this. A bugfix to the CLDR was released with the same
+#        version number, so the CLDR_VERSION number above is a fake number to force a redownload.
+set(CLDR_REAL_VERSION 40.0.0)
 
 set(UCD_PATH "${CMAKE_BINARY_DIR}/UCD" CACHE PATH "Download location for UCD files")
 set(CLDR_PATH "${CMAKE_BINARY_DIR}/CLDR" CACHE PATH "Download location for CLDR files")
@@ -60,8 +64,11 @@ set(WORD_BREAK_PROP_PATH "${UCD_PATH}/WordBreakProperty.txt")
 set(SENTENCE_BREAK_PROP_URL "https://www.unicode.org/Public/${UCD_VERSION}/ucd/auxiliary/SentenceBreakProperty.txt")
 set(SENTENCE_BREAK_PROP_PATH "${UCD_PATH}/SentenceBreakProperty.txt")
 
-set(CLDR_ZIP_URL "https://github.com/unicode-org/cldr-json/releases/download/${CLDR_VERSION}/cldr-${CLDR_VERSION}-json-modern.zip")
+set(CLDR_ZIP_URL "https://github.com/unicode-org/cldr-json/releases/download/${CLDR_REAL_VERSION}/cldr-${CLDR_REAL_VERSION}-json-modern.zip")
 set(CLDR_ZIP_PATH "${CLDR_PATH}/cldr.zip")
+
+set(CLDR_BCP47_SOURCE cldr-bcp47)
+set(CLDR_BCP47_PATH "${CLDR_PATH}/${CLDR_BCP47_SOURCE}")
 
 set(CLDR_CORE_SOURCE cldr-core)
 set(CLDR_CORE_PATH "${CLDR_PATH}/${CLDR_CORE_SOURCE}")
@@ -114,6 +121,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     download_file("${SENTENCE_BREAK_PROP_URL}" "${SENTENCE_BREAK_PROP_PATH}")
 
     download_file("${CLDR_ZIP_URL}" "${CLDR_ZIP_PATH}")
+    extract_cldr_file("${CLDR_BCP47_SOURCE}" "${CLDR_BCP47_PATH}")
     extract_cldr_file("${CLDR_CORE_SOURCE}" "${CLDR_CORE_PATH}")
     extract_cldr_file("${CLDR_DATES_SOURCE}" "${CLDR_DATES_PATH}")
     extract_cldr_file("${CLDR_LOCALES_SOURCE}" "${CLDR_LOCALES_PATH}")
@@ -182,7 +190,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "${UNICODE_META_TARGET_PREFIX}"
         "${UNICODE_LOCALE_HEADER}"
         "${UNICODE_LOCALE_IMPLEMENTATION}"
-        arguments -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}" -m "${CLDR_MISC_PATH}" -n "${CLDR_NUMBERS_PATH}" -d "${CLDR_DATES_PATH}"
+        arguments -b "${CLDR_BCP47_PATH}" -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}" -m "${CLDR_MISC_PATH}" -n "${CLDR_NUMBERS_PATH}" -d "${CLDR_DATES_PATH}"
     )
     invoke_generator(
         "UnicodeNumberFormat"

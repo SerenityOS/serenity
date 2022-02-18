@@ -121,7 +121,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
     system_menu->add_separator();
 
     // First we construct all the necessary app category submenus.
-    auto category_icons = Core::ConfigFile::open("/res/icons/SystemMenu.ini");
+    auto category_icons = TRY(Core::ConfigFile::open("/res/icons/SystemMenu.ini"));
     HashMap<String, NonnullRefPtr<GUI::Menu>> app_category_menus;
 
     Function<void(String const&)> create_category_menu;

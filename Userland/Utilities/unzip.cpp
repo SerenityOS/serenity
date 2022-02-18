@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/NumberFormat.h>
+#include <AK/StringUtils.h>
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
@@ -78,12 +79,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int map_size_limit = 32 * MiB;
     bool quiet { false };
     String output_directory_path;
+    Vector<StringView> file_filters;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(map_size_limit, "Maximum chunk size to map", "map-size-limit", 0, "size");
     args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'd', "path");
     args_parser.add_option(quiet, "Be less verbose", "quiet", 'q');
     args_parser.add_positional_argument(path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
+    args_parser.add_positional_argument(file_filters, "Files or filters in the archive to extract", "files", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     String zip_file_path { path };
@@ -124,7 +127,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto success = zip_file->for_each_member([&](auto zip_member) {
-        return unpack_zip_member(zip_member, quiet) ? IterationDecision::Continue : IterationDecision::Break;
+        bool keep_file = false;
+
+        if (!file_filters.is_empty()) {
+            for (auto& filter : file_filters) {
+                // Convert underscore wildcards (usual unzip convention) to question marks (as used by StringUtils)
+                auto string_filter = filter.replace("_", "?", true);
+                if (zip_member.name.matches(string_filter, CaseSensitivity::CaseSensitive)) {
+                    keep_file = true;
+                    break;
+                }
+            }
+        } else {
+            keep_file = true;
+        }
+
+        if (keep_file) {
+            if (!unpack_zip_member(zip_member, quiet))
+                return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
     });
 
     return success ? 0 : 1;

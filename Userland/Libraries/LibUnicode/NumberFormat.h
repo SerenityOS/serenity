@@ -66,9 +66,6 @@ enum class NumericSymbol : u8 {
     PlusSign,
 };
 
-Span<StringView const> get_available_number_systems();
-
-Optional<NumberSystem> number_system_from_string(StringView system);
 Optional<StringView> get_default_number_system(StringView locale);
 
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol);

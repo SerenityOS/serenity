@@ -63,6 +63,7 @@ set(SOURCES
     DOM/CharacterData.idl
     DOM/Comment.cpp
     DOM/CustomEvent.cpp
+    DOM/DOMEventListener.cpp
     DOM/DOMImplementation.cpp
     DOM/DOMTokenList.cpp
     DOM/DOMTokenList.idl
@@ -93,6 +94,7 @@ set(SOURCES
     DOMParsing/InnerHTML.cpp
     DOMTreeModel.cpp
     Dump.cpp
+    Encoding/TextDecoder.cpp
     Encoding/TextEncoder.cpp
     Fetch/AbstractOperations.cpp
     FontCache.cpp
@@ -204,6 +206,8 @@ set(SOURCES
     HTML/TagNames.cpp
     HTML/TextMetrics.cpp
     HTML/WebSocket.cpp
+    HTML/Worker.cpp
+    HTML/WorkerDebugConsoleClient.cpp
     HTML/WorkerGlobalScope.cpp
     HTML/WorkerLocation.cpp
     HighResolutionTime/Performance.cpp
@@ -234,6 +238,7 @@ set(SOURCES
     Layout/ListItemBox.cpp
     Layout/ListItemMarkerBox.cpp
     Layout/Node.cpp
+    Layout/Progress.cpp
     Layout/RadioButton.cpp
     Layout/ReplacedBox.cpp
     Layout/SVGBox.cpp
@@ -361,9 +366,11 @@ function(libweb_js_wrapper class)
     foreach(iter RANGE "${bindings_end}")
         list(GET BINDINGS_SOURCES ${iter} bindings_src)
         list(GET BINDINGS_TYPES ${iter} bindings_type)
+        get_property(include_paths DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+        list(TRANSFORM include_paths PREPEND -i)
         add_custom_command(
             OUTPUT "${bindings_src}"
-            COMMAND "$<TARGET_FILE:Lagom::WrapperGenerator>" "--${bindings_type}" "${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl" "${CMAKE_CURRENT_SOURCE_DIR}/" > "${bindings_src}.tmp"
+            COMMAND "$<TARGET_FILE:Lagom::WrapperGenerator>" "--${bindings_type}" ${include_paths} "${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl" "${CMAKE_CURRENT_SOURCE_DIR}/" > "${bindings_src}.tmp"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${bindings_src}.tmp" "${bindings_src}"
             COMMAND "${CMAKE_COMMAND}" -E remove "${bindings_src}.tmp"
             VERBATIM
@@ -420,6 +427,7 @@ libweb_js_wrapper(DOM/ProcessingInstruction)
 libweb_js_wrapper(DOM/Range)
 libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/Text)
+libweb_js_wrapper(Encoding/TextDecoder)
 libweb_js_wrapper(Encoding/TextEncoder)
 libweb_js_wrapper(Geometry/DOMRect)
 libweb_js_wrapper(Geometry/DOMRectList)
@@ -512,6 +520,7 @@ libweb_js_wrapper(HTML/Storage)
 libweb_js_wrapper(HTML/SubmitEvent)
 libweb_js_wrapper(HTML/TextMetrics)
 libweb_js_wrapper(HTML/WebSocket)
+libweb_js_wrapper(HTML/Worker)
 libweb_js_wrapper(HTML/WorkerGlobalScope)
 libweb_js_wrapper(HTML/WorkerLocation)
 libweb_js_wrapper(HTML/WorkerNavigator)

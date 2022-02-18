@@ -260,7 +260,6 @@ private:
 
     enum class ChildScopeKind {
         Block,
-        Loop,
         IfWithoutElse,
         IfWithElse,
         Else,
@@ -270,7 +269,6 @@ private:
         size_t initial_stack_size { 0 };
         struct IfDetails {
             Stack initial_stack;
-            Stack true_branch_stack;
         };
         Variant<IfDetails, Empty> details;
     };

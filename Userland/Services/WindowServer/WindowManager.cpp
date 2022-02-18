@@ -74,7 +74,7 @@ WindowManager::~WindowManager()
 
 void WindowManager::reload_config()
 {
-    m_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes);
+    m_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
 
     unsigned workspace_rows = (unsigned)m_config->read_num_entry("Workspace", "Rows", default_window_stack_rows);
     unsigned workspace_columns = (unsigned)m_config->read_num_entry("Workspace", "Columns", default_window_stack_columns);
@@ -254,7 +254,7 @@ bool WindowManager::apply_workspace_settings(unsigned rows, unsigned columns, bo
     if (save) {
         m_config->write_num_entry("Workspace", "Rows", window_stack_rows());
         m_config->write_num_entry("Workspace", "Columns", window_stack_columns());
-        return m_config->sync();
+        return !m_config->sync().is_error();
     }
     return true;
 }
@@ -264,7 +264,8 @@ void WindowManager::set_acceleration_factor(double factor)
     ScreenInput::the().set_acceleration_factor(factor);
     dbgln("Saving acceleration factor {} to config file at {}", factor, m_config->filename());
     m_config->write_entry("Mouse", "AccelerationFactor", String::formatted("{}", factor));
-    m_config->sync();
+    if (auto result = m_config->sync(); result.is_error())
+        dbgln("Failed to save config file: {}", result.error());
 }
 
 void WindowManager::set_scroll_step_size(unsigned step_size)
@@ -272,7 +273,8 @@ void WindowManager::set_scroll_step_size(unsigned step_size)
     ScreenInput::the().set_scroll_step_size(step_size);
     dbgln("Saving scroll step size {} to config file at {}", step_size, m_config->filename());
     m_config->write_entry("Mouse", "ScrollStepSize", String::number(step_size));
-    m_config->sync();
+    if (auto result = m_config->sync(); result.is_error())
+        dbgln("Failed to save config file: {}", result.error());
 }
 
 void WindowManager::set_double_click_speed(int speed)
@@ -281,7 +283,8 @@ void WindowManager::set_double_click_speed(int speed)
     m_double_click_speed = speed;
     dbgln("Saving double-click speed {} to config file at {}", speed, m_config->filename());
     m_config->write_entry("Input", "DoubleClickSpeed", String::number(speed));
-    m_config->sync();
+    if (auto result = m_config->sync(); result.is_error())
+        dbgln("Failed to save config file: {}", result.error());
 }
 
 int WindowManager::double_click_speed() const
@@ -294,7 +297,8 @@ void WindowManager::set_buttons_switched(bool switched)
     m_buttons_switched = switched;
     dbgln("Saving mouse buttons switched state {} to config file at {}", switched, m_config->filename());
     m_config->write_bool_entry("Mouse", "ButtonsSwitched", switched);
-    m_config->sync();
+    if (auto result = m_config->sync(); result.is_error())
+        dbgln("Failed to save config file: {}", result.error());
 }
 
 bool WindowManager::get_buttons_switched() const
@@ -2080,7 +2084,10 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
     m_config->write_entry("Theme", "Name", theme_name);
     m_config->remove_entry("Background", "Color");
-    m_config->sync();
+    if (auto result = m_config->sync(); result.is_error()) {
+        dbgln("Failed to save config file: {}", result.error());
+        return false;
+    }
     invalidate_after_theme_or_font_change();
     return true;
 }
@@ -2193,9 +2200,15 @@ WindowStack& WindowManager::get_rendering_window_stacks(WindowStack*& transition
     return Compositor::the().get_rendering_window_stacks(transitioning_window_stack);
 }
 
-void WindowManager::apply_cursor_theme(const String& theme_name)
+void WindowManager::apply_cursor_theme(String const& theme_name)
 {
-    auto cursor_theme_config = Core::ConfigFile::open(String::formatted("/res/cursor-themes/{}/{}", theme_name, "Config.ini"));
+    auto theme_path = String::formatted("/res/cursor-themes/{}/{}", theme_name, "Config.ini");
+    auto cursor_theme_config_or_error = Core::ConfigFile::open(theme_path);
+    if (cursor_theme_config_or_error.is_error()) {
+        dbgln("Unable to open cursor theme '{}': {}", theme_path, cursor_theme_config_or_error.error());
+        return;
+    }
+    auto cursor_theme_config = cursor_theme_config_or_error.release_value();
 
     auto* current_cursor = Compositor::the().current_cursor();
     auto reload_cursor = [&](RefPtr<Cursor>& cursor, const String& name) {

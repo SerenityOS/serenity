@@ -1,3 +1,6 @@
+#import <DOM/Node.idl>
+#import <DOM/Range.idl>
+
 [Exposed=Window]
 interface Selection {
 

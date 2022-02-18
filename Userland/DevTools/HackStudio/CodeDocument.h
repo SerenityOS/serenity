@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ namespace HackStudio {
 
 class CodeDocument final : public GUI::TextDocument {
 public:
-    virtual ~CodeDocument() override;
+    virtual ~CodeDocument() override = default;
     static NonnullRefPtr<CodeDocument> create(const String& file_path, Client* client = nullptr);
     static NonnullRefPtr<CodeDocument> create(Client* client = nullptr);
 

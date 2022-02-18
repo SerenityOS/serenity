@@ -793,6 +793,7 @@ void EventLoopTimer::reload(const Time& now)
 
 Optional<Time> EventLoop::get_next_timer_expiration()
 {
+    auto now = Time::now_monotonic_coarse();
     Optional<Time> soonest {};
     for (auto& it : *s_timers) {
         auto& fire_time = it.value->fire_time;
@@ -801,6 +802,10 @@ Optional<Time> EventLoop::get_next_timer_expiration()
             && owner && !owner->is_visible_for_timer_purposes()) {
             continue;
         }
+        // OPTIMIZATION: If we have a timer that needs to fire right away, we can stop looking here.
+        // FIXME: This whole operation could be O(1) with a better data structure.
+        if (fire_time < now)
+            return now;
         if (!soonest.has_value() || fire_time < soonest.value())
             soonest = fire_time;
     }

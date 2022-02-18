@@ -827,23 +827,21 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     if (attribute.href_id != m_hovered_href_id) {
         if (m_active_href_id.is_null() || m_active_href_id == attribute.href_id) {
             m_hovered_href_id = attribute.href_id;
+            m_hovered_href = attribute.href;
+
             auto handlers = Desktop::Launcher::get_handlers_for_url(attribute.href);
             if (!handlers.is_empty()) {
                 auto path = URL(attribute.href).path();
                 auto name = LexicalPath::basename(path);
-                if (path == handlers[0]) {
-                    m_hovered_href = String::formatted("Execute {}", name);
-                } else {
-                    m_hovered_href = String::formatted("Open {} with {}", name, LexicalPath::basename(handlers[0]));
-                }
-            } else {
-                m_hovered_href = attribute.href;
+                if (path == handlers[0])
+                    set_tooltip(String::formatted("Execute {}", name));
+                else
+                    set_tooltip(String::formatted("Open {} with {}", name, LexicalPath::basename(handlers[0])));
             }
         } else {
             m_hovered_href_id = {};
             m_hovered_href = {};
         }
-        set_tooltip(m_hovered_href);
         show_or_hide_tooltip();
         if (!m_hovered_href.is_empty())
             set_override_cursor(Gfx::StandardCursor::Arrow);
@@ -1196,7 +1194,13 @@ void TerminalWidget::set_color_scheme(StringView name)
         "White"
     };
 
-    auto color_config = Core::ConfigFile::open(String::formatted("/res/terminal-colors/{}.ini", name));
+    auto path = String::formatted("/res/terminal-colors/{}.ini", name);
+    auto color_config_or_error = Core::ConfigFile::open(path);
+    if (color_config_or_error.is_error()) {
+        dbgln("Unable to read color scheme file '{}': {}", path, color_config_or_error.error());
+        return;
+    }
+    auto color_config = color_config_or_error.release_value();
 
     m_show_bold_text_as_bright = color_config->read_bool_entry("Options", "ShowBoldTextAsBright", true);
 

@@ -43,7 +43,7 @@ void AppFile::for_each(Function<void(NonnullRefPtr<AppFile>)> callback, StringVi
 }
 
 AppFile::AppFile(StringView path)
-    : m_config(Core::ConfigFile::open(path))
+    : m_config(Core::ConfigFile::open(path).release_value_but_fixme_should_propagate_errors())
     , m_valid(validate())
 {
 }

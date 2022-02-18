@@ -1,3 +1,5 @@
+#import <HTML/HTMLElement.idl>
+
 interface HTMLTextAreaElement : HTMLElement {
 
     [Reflect] attribute DOMString placeholder;

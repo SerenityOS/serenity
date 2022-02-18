@@ -23,6 +23,7 @@ test("basic functionality", () => {
     expect(1 % -0).toBeNaN();
     expect(0 % 5).toBe(0);
     expect(-0 % 5).toBe(-0);
+    expect(-1 % -1).toBe(-0);
 
     // test262 examples
     expect(1 % null).toBeNaN();

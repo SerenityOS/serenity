@@ -1,3 +1,5 @@
+#import <DOM/Node.idl>
+
 [Exposed=Window]
 interface NodeList {
     getter Node? item(unsigned long index);

@@ -2,921 +2,18 @@
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
-#include <AK/GenericLexer.h>
-#include <AK/HashMap.h>
+#include "IDLTypes.h"
 #include <AK/LexicalPath.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/QuickSort.h>
-#include <AK/SourceGenerator.h>
-#include <AK/StringBuilder.h>
-#include <AK/Tuple.h>
-#include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
-#include <ctype.h>
+#include <AK/Queue.h>
 
-static String make_input_acceptable_cpp(String const& input)
-{
-    if (input.is_one_of("class", "template", "for", "default", "char", "namespace", "delete")) {
-        StringBuilder builder;
-        builder.append(input);
-        builder.append('_');
-        return builder.to_string();
-    }
-
-    return input.replace("-", "_");
-}
-
-[[noreturn]] static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)
-{
-    // FIXME: Spaghetti code ahead.
-
-    size_t lineno = 1;
-    size_t colno = 1;
-    size_t start_line = 0;
-    size_t line_length = 0;
-    for (size_t index = 0; index < input.length(); ++index) {
-        if (offset == index)
-            colno = index - start_line + 1;
-
-        if (input[index] == '\n') {
-            if (index >= offset)
-                break;
-
-            start_line = index + 1;
-            line_length = 0;
-            ++lineno;
-        } else {
-            ++line_length;
-        }
-    }
-
-    StringBuilder error_message;
-    error_message.appendff("{}\n", input.substring_view(start_line, line_length));
-    for (size_t i = 0; i < colno - 1; ++i)
-        error_message.append(' ');
-    error_message.append("\033[1;31m^\n");
-    error_message.appendff("{}:{}: error: {}\033[0m\n", filename, lineno, message);
-
-    warnln("{}", error_message.string_view());
-    exit(EXIT_FAILURE);
-}
+Vector<StringView> s_header_search_paths;
 
 namespace IDL {
-
-template<typename FunctionType>
-static size_t get_function_length(FunctionType& function)
-{
-    size_t length = 0;
-    for (auto& parameter : function.parameters) {
-        if (!parameter.optional && !parameter.variadic)
-            length++;
-    }
-    return length;
-}
-
-enum class SequenceStorageType {
-    Vector,       // Used to safely store non-JS values
-    MarkedVector, // Used to safely store JS::Value and anything that inherits JS::Cell, e.g. JS::Object
-};
-
-struct CppType {
-    String name;
-    SequenceStorageType sequence_storage_type;
-};
-
-struct Type : public RefCounted<Type> {
-    Type() = default;
-
-    Type(String name, bool nullable)
-        : name(move(name))
-        , nullable(nullable)
-    {
-    }
-
-    virtual ~Type() = default;
-
-    String name;
-    bool nullable { false };
-    bool is_string() const { return name.is_one_of("ByteString", "CSSOMString", "DOMString", "USVString"); }
-
-    // https://webidl.spec.whatwg.org/#dfn-integer-type
-    bool is_integer() const { return name.is_one_of("byte", "octet", "short", "unsigned short", "long", "unsigned long", "long long", "unsigned long long"); }
-
-    // https://webidl.spec.whatwg.org/#dfn-numeric-type
-    bool is_numeric() const { return is_integer() || name.is_one_of("float", "unrestricted float", "double", "unrestricted double"); }
-};
-
-static CppType idl_type_name_to_cpp_type(Type const& type);
-
-struct UnionType : public Type {
-    UnionType() = default;
-
-    UnionType(String name, bool nullable, NonnullRefPtrVector<Type> member_types)
-        : Type(move(name), nullable)
-        , member_types(move(member_types))
-    {
-    }
-
-    virtual ~UnionType() override = default;
-
-    NonnullRefPtrVector<Type> member_types;
-
-    // https://webidl.spec.whatwg.org/#dfn-flattened-union-member-types
-    NonnullRefPtrVector<Type> flattened_member_types() const
-    {
-        // 1. Let T be the union type.
-
-        // 2. Initialize S to ∅.
-        NonnullRefPtrVector<Type> types;
-
-        // 3. For each member type U of T:
-        for (auto& type : member_types) {
-            // FIXME: 1. If U is an annotated type, then set U to be the inner type of U.
-
-            // 2. If U is a nullable type, then set U to be the inner type of U. (NOTE: Not necessary as nullable is stored with Type and not as a separate struct)
-
-            // 3. If U is a union type, then add to S the flattened member types of U.
-            if (is<UnionType>(type)) {
-                auto& union_member_type = verify_cast<UnionType>(type);
-                types.extend(union_member_type.flattened_member_types());
-            } else {
-                // 4. Otherwise, U is not a union type. Add U to S.
-                types.append(type);
-            }
-        }
-
-        // 4. Return S.
-        return types;
-    }
-
-    // https://webidl.spec.whatwg.org/#dfn-number-of-nullable-member-types
-    size_t number_of_nullable_member_types() const
-    {
-        // 1. Let T be the union type.
-
-        // 2. Initialize n to 0.
-        size_t num_nullable_member_types = 0;
-
-        // 3. For each member type U of T:
-        for (auto& type : member_types) {
-            // 1. If U is a nullable type, then:
-            if (type.nullable) {
-                // 1. Set n to n + 1.
-                ++num_nullable_member_types;
-
-                // 2. Set U to be the inner type of U. (NOTE: Not necessary as nullable is stored with Type and not as a separate struct)
-            }
-
-            // 2. If U is a union type, then:
-            if (is<UnionType>(type)) {
-                auto& union_member_type = verify_cast<UnionType>(type);
-
-                // 1. Let m be the number of nullable member types of U.
-                // 2. Set n to n + m.
-                num_nullable_member_types += union_member_type.number_of_nullable_member_types();
-            }
-        }
-
-        // 4. Return n.
-        return num_nullable_member_types;
-    }
-
-    // https://webidl.spec.whatwg.org/#dfn-includes-a-nullable-type
-    bool includes_nullable_type() const
-    {
-        // -> the type is a union type and its number of nullable member types is 1.
-        return number_of_nullable_member_types() == 1;
-    }
-
-    // -> https://webidl.spec.whatwg.org/#dfn-includes-undefined
-    bool includes_undefined() const
-    {
-        // -> the type is a union type and one of its member types includes undefined.
-        for (auto& type : member_types) {
-            if (is<UnionType>(type)) {
-                auto& union_type = verify_cast<UnionType>(type);
-                if (union_type.includes_undefined())
-                    return true;
-            }
-
-            if (type.name == "undefined"sv)
-                return true;
-        }
-        return false;
-    }
-
-    String to_variant() const
-    {
-        StringBuilder builder;
-        builder.append("Variant<");
-
-        auto flattened_types = flattened_member_types();
-        for (size_t type_index = 0; type_index < flattened_types.size(); ++type_index) {
-            auto& type = flattened_types.at(type_index);
-
-            if (type_index > 0)
-                builder.append(", ");
-
-            auto cpp_type = idl_type_name_to_cpp_type(type);
-            builder.append(cpp_type.name);
-        }
-
-        if (includes_undefined())
-            builder.append(", Empty");
-
-        builder.append('>');
-        return builder.to_string();
-    }
-};
-
-struct Parameter {
-    NonnullRefPtr<Type> type;
-    String name;
-    bool optional { false };
-    Optional<String> optional_default_value;
-    HashMap<String, String> extended_attributes;
-    bool variadic { false };
-};
-
-struct Function {
-    NonnullRefPtr<Type> return_type;
-    String name;
-    Vector<Parameter> parameters;
-    HashMap<String, String> extended_attributes;
-
-    size_t length() const { return get_function_length(*this); }
-};
-
-struct Constructor {
-    String name;
-    Vector<Parameter> parameters;
-
-    size_t length() const { return get_function_length(*this); }
-};
-
-struct Constant {
-    NonnullRefPtr<Type> type;
-    String name;
-    String value;
-};
-
-struct Attribute {
-    bool readonly { false };
-    NonnullRefPtr<Type> type;
-    String name;
-    HashMap<String, String> extended_attributes;
-
-    // Added for convenience after parsing
-    String getter_callback_name;
-    String setter_callback_name;
-};
-
-struct DictionaryMember {
-    bool required { false };
-    NonnullRefPtr<Type> type;
-    String name;
-    HashMap<String, String> extended_attributes;
-    Optional<String> default_value;
-};
-
-struct Dictionary {
-    String parent_name;
-    Vector<DictionaryMember> members;
-};
-
-struct ParameterizedType : public Type {
-    ParameterizedType() = default;
-
-    ParameterizedType(String name, bool nullable, NonnullRefPtrVector<Type> parameters)
-        : Type(move(name), nullable)
-        , parameters(move(parameters))
-    {
-    }
-
-    virtual ~ParameterizedType() override = default;
-
-    NonnullRefPtrVector<Type> parameters;
-
-    void generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, HashMap<String, Dictionary> const& dictionaries, size_t recursion_depth) const;
-};
-
-struct Interface {
-    String name;
-    String parent_name;
-
-    HashMap<String, String> extended_attributes;
-
-    Vector<Attribute> attributes;
-    Vector<Constant> constants;
-    Vector<Constructor> constructors;
-    Vector<Function> functions;
-    Vector<Function> static_functions;
-    bool has_stringifier { false };
-    Optional<String> stringifier_attribute;
-    bool has_unscopable_member { false };
-
-    Optional<NonnullRefPtr<Type>> value_iterator_type;
-    Optional<Tuple<NonnullRefPtr<Type>, NonnullRefPtr<Type>>> pair_iterator_types;
-
-    Optional<Function> named_property_getter;
-    Optional<Function> named_property_setter;
-
-    Optional<Function> indexed_property_getter;
-    Optional<Function> indexed_property_setter;
-
-    Optional<Function> named_property_deleter;
-
-    HashMap<String, Dictionary> dictionaries;
-
-    // Added for convenience after parsing
-    String wrapper_class;
-    String wrapper_base_class;
-    String fully_qualified_name;
-    String constructor_class;
-    String prototype_class;
-    String prototype_base_class;
-
-    // https://webidl.spec.whatwg.org/#dfn-support-indexed-properties
-    bool supports_indexed_properties() const { return indexed_property_getter.has_value(); }
-
-    // https://webidl.spec.whatwg.org/#dfn-support-named-properties
-    bool supports_named_properties() const { return named_property_getter.has_value(); }
-
-    // https://webidl.spec.whatwg.org/#dfn-legacy-platform-object
-    bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
-};
-
-static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView input, StringView import_base_path)
-{
-    auto interface = make<Interface>();
-
-    GenericLexer lexer(input);
-
-    auto assert_specific = [&](char ch) {
-        if (!lexer.consume_specific(ch))
-            report_parsing_error(String::formatted("expected '{}'", ch), filename, input, lexer.tell());
-    };
-
-    auto consume_whitespace = [&] {
-        bool consumed = true;
-        while (consumed) {
-            consumed = lexer.consume_while([](char ch) { return isspace(ch); }).length() > 0;
-
-            if (lexer.consume_specific("//")) {
-                lexer.consume_until('\n');
-                lexer.ignore();
-                consumed = true;
-            }
-        }
-    };
-
-    auto assert_string = [&](StringView expected) {
-        if (!lexer.consume_specific(expected))
-            report_parsing_error(String::formatted("expected '{}'", expected), filename, input, lexer.tell());
-    };
-
-    auto parse_extended_attributes = [&] {
-        HashMap<String, String> extended_attributes;
-        for (;;) {
-            consume_whitespace();
-            if (lexer.consume_specific(']'))
-                break;
-            auto name = lexer.consume_until([](auto ch) { return ch == ']' || ch == '=' || ch == ','; });
-            if (lexer.consume_specific('=')) {
-                auto value = lexer.consume_until([](auto ch) { return ch == ']' || ch == ','; });
-                extended_attributes.set(name, value);
-            } else {
-                extended_attributes.set(name, {});
-            }
-            lexer.consume_specific(',');
-        }
-        consume_whitespace();
-        return extended_attributes;
-    };
-
-    auto resolve_import = [&](auto path) {
-        auto include_path = LexicalPath::join(import_base_path, path).string();
-        if (!Core::File::exists(include_path))
-            report_parsing_error(String::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
-
-        auto file_or_error = Core::File::open(include_path, Core::OpenMode::ReadOnly);
-        if (file_or_error.is_error())
-            report_parsing_error(String::formatted("Failed to open {}: {}", include_path, file_or_error.error()), filename, input, lexer.tell());
-
-        auto data = file_or_error.value()->read_all();
-        return IDL::parse_interface(include_path, data, import_base_path);
-    };
-
-    NonnullOwnPtrVector<Interface> imports;
-    while (lexer.consume_specific("#import")) {
-        consume_whitespace();
-        assert_specific('<');
-        auto path = lexer.consume_until('>');
-        lexer.ignore();
-        imports.append(resolve_import(path));
-        consume_whitespace();
-    }
-
-    if (lexer.consume_specific('['))
-        interface->extended_attributes = parse_extended_attributes();
-
-    AK::Function<NonnullRefPtr<Type>()> parse_type = [&]() -> NonnullRefPtr<Type> {
-        if (lexer.consume_specific('(')) {
-            NonnullRefPtrVector<Type> union_member_types;
-            union_member_types.append(parse_type());
-            consume_whitespace();
-            assert_string("or");
-            consume_whitespace();
-            union_member_types.append(parse_type());
-            consume_whitespace();
-
-            while (lexer.consume_specific("or")) {
-                consume_whitespace();
-                union_member_types.append(parse_type());
-                consume_whitespace();
-            }
-
-            assert_specific(')');
-
-            bool nullable = lexer.consume_specific('?');
-
-            return adopt_ref(*new UnionType("", nullable, move(union_member_types)));
-        }
-
-        auto consume_name = [&] {
-            return lexer.consume_until([](auto ch) { return !isalnum(ch) && ch != '_'; });
-        };
-        bool unsigned_ = lexer.consume_specific("unsigned");
-        if (unsigned_)
-            consume_whitespace();
-        auto name = consume_name();
-        NonnullRefPtrVector<Type> parameters;
-        bool is_parameterized_type = false;
-        if (lexer.consume_specific('<')) {
-            is_parameterized_type = true;
-            parameters.append(parse_type());
-            while (lexer.consume_specific(',')) {
-                consume_whitespace();
-                parameters.append(parse_type());
-            }
-            lexer.consume_specific('>');
-        }
-        auto nullable = lexer.consume_specific('?');
-        StringBuilder builder;
-        if (unsigned_)
-            builder.append("unsigned ");
-        builder.append(name);
-
-        if (is_parameterized_type)
-            return adopt_ref(*new ParameterizedType(builder.to_string(), nullable, move(parameters)));
-
-        return adopt_ref(*new Type(builder.to_string(), nullable));
-    };
-
-    auto parse_attribute = [&](HashMap<String, String>& extended_attributes) {
-        bool readonly = lexer.consume_specific("readonly");
-        if (readonly)
-            consume_whitespace();
-
-        if (lexer.consume_specific("attribute"))
-            consume_whitespace();
-
-        auto type = parse_type();
-        consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
-        consume_whitespace();
-
-        assert_specific(';');
-
-        auto name_as_string = name.to_string();
-        auto getter_callback_name = String::formatted("{}_getter", name_as_string.to_snakecase());
-        auto setter_callback_name = String::formatted("{}_setter", name_as_string.to_snakecase());
-
-        Attribute attribute {
-            readonly,
-            move(type),
-            move(name_as_string),
-            move(extended_attributes),
-            move(getter_callback_name),
-            move(setter_callback_name),
-        };
-        interface->attributes.append(move(attribute));
-    };
-
-    auto parse_constant = [&] {
-        lexer.consume_specific("const");
-        consume_whitespace();
-
-        auto type = parse_type();
-        consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '='; });
-        consume_whitespace();
-        lexer.consume_specific('=');
-        consume_whitespace();
-        auto value = lexer.consume_while([](auto ch) { return !isspace(ch) && ch != ';'; });
-        consume_whitespace();
-        assert_specific(';');
-
-        Constant constant {
-            move(type),
-            move(name),
-            move(value),
-        };
-        interface->constants.append(move(constant));
-    };
-
-    auto parse_parameters = [&] {
-        consume_whitespace();
-        Vector<Parameter> parameters;
-        for (;;) {
-            if (lexer.next_is(')'))
-                break;
-            HashMap<String, String> extended_attributes;
-            if (lexer.consume_specific('['))
-                extended_attributes = parse_extended_attributes();
-            bool optional = lexer.consume_specific("optional");
-            if (optional)
-                consume_whitespace();
-            auto type = parse_type();
-            bool variadic = lexer.consume_specific("..."sv);
-            consume_whitespace();
-            auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')' || ch == '='; });
-            Parameter parameter = { move(type), move(name), optional, {}, extended_attributes, variadic };
-            consume_whitespace();
-            if (variadic) {
-                // Variadic parameters must be last and do not have default values.
-                parameters.append(move(parameter));
-                break;
-            }
-            if (lexer.next_is(')')) {
-                parameters.append(move(parameter));
-                break;
-            }
-            if (lexer.next_is('=') && optional) {
-                assert_specific('=');
-                consume_whitespace();
-                auto default_value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')'; });
-                parameter.optional_default_value = default_value;
-            }
-            parameters.append(move(parameter));
-            if (lexer.next_is(')'))
-                break;
-            assert_specific(',');
-            consume_whitespace();
-        }
-        return parameters;
-    };
-
-    // https://webidl.spec.whatwg.org/#dfn-special-operation
-    // A special operation is a getter, setter or deleter.
-    enum class IsSpecialOperation {
-        No,
-        Yes,
-    };
-
-    auto parse_function = [&](HashMap<String, String>& extended_attributes, IsSpecialOperation is_special_operation = IsSpecialOperation::No) {
-        bool static_ = false;
-        if (lexer.consume_specific("static")) {
-            static_ = true;
-            consume_whitespace();
-        }
-
-        auto return_type = parse_type();
-        consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '('; });
-        consume_whitespace();
-        assert_specific('(');
-        auto parameters = parse_parameters();
-        assert_specific(')');
-        consume_whitespace();
-        assert_specific(';');
-
-        Function function { move(return_type), name, move(parameters), move(extended_attributes) };
-
-        // "Defining a special operation with an identifier is equivalent to separating the special operation out into its own declaration without an identifier."
-        if (is_special_operation == IsSpecialOperation::No || (is_special_operation == IsSpecialOperation::Yes && !name.is_empty())) {
-            if (!static_)
-                interface->functions.append(function);
-            else
-                interface->static_functions.append(function);
-        }
-
-        return function;
-    };
-
-    auto parse_constructor = [&] {
-        assert_string("constructor");
-        consume_whitespace();
-        assert_specific('(');
-        auto parameters = parse_parameters();
-        assert_specific(')');
-        consume_whitespace();
-        assert_specific(';');
-
-        interface->constructors.append(Constructor { interface->name, move(parameters) });
-    };
-
-    auto parse_stringifier = [&](HashMap<String, String>& extended_attributes) {
-        assert_string("stringifier");
-        consume_whitespace();
-        interface->has_stringifier = true;
-        if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
-            parse_attribute(extended_attributes);
-            interface->stringifier_attribute = interface->attributes.last().name;
-        } else {
-            assert_specific(';');
-        }
-    };
-
-    auto parse_iterable = [&]() {
-        assert_string("iterable");
-        assert_specific('<');
-        auto first_type = parse_type();
-        if (lexer.next_is(',')) {
-            if (interface->supports_indexed_properties())
-                report_parsing_error("Interfaces with a pair iterator must not supported indexed properties.", filename, input, lexer.tell());
-
-            assert_specific(',');
-            consume_whitespace();
-            auto second_type = parse_type();
-            interface->pair_iterator_types = Tuple { move(first_type), move(second_type) };
-        } else {
-            if (!interface->supports_indexed_properties())
-                report_parsing_error("Interfaces with a value iterator must supported indexed properties.", filename, input, lexer.tell());
-
-            interface->value_iterator_type = move(first_type);
-        }
-        assert_specific('>');
-        assert_specific(';');
-    };
-
-    auto parse_getter = [&](HashMap<String, String>& extended_attributes) {
-        assert_string("getter");
-        consume_whitespace();
-        auto function = parse_function(extended_attributes, IsSpecialOperation::Yes);
-
-        if (function.parameters.size() != 1)
-            report_parsing_error(String::formatted("Named/indexed property getters must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
-
-        auto& identifier = function.parameters.first();
-
-        if (identifier.type->nullable)
-            report_parsing_error("identifier's type must not be nullable.", filename, input, lexer.tell());
-
-        if (identifier.optional)
-            report_parsing_error("identifier must not be optional.", filename, input, lexer.tell());
-
-        // FIXME: Disallow variadic functions once they're supported.
-
-        if (identifier.type->name == "DOMString") {
-            if (interface->named_property_getter.has_value())
-                report_parsing_error("An interface can only have one named property getter.", filename, input, lexer.tell());
-
-            interface->named_property_getter = move(function);
-        } else if (identifier.type->name == "unsigned long") {
-            if (interface->indexed_property_getter.has_value())
-                report_parsing_error("An interface can only have one indexed property getter.", filename, input, lexer.tell());
-
-            interface->indexed_property_getter = move(function);
-        } else {
-            report_parsing_error(String::formatted("Named/indexed property getter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name), filename, input, lexer.tell());
-        }
-    };
-
-    auto parse_setter = [&](HashMap<String, String>& extended_attributes) {
-        assert_string("setter");
-        consume_whitespace();
-        auto function = parse_function(extended_attributes, IsSpecialOperation::Yes);
-
-        if (function.parameters.size() != 2)
-            report_parsing_error(String::formatted("Named/indexed property setters must have only 2 parameters, got {} parameter(s).", function.parameters.size()), filename, input, lexer.tell());
-
-        auto& identifier = function.parameters.first();
-
-        if (identifier.type->nullable)
-            report_parsing_error("identifier's type must not be nullable.", filename, input, lexer.tell());
-
-        if (identifier.optional)
-            report_parsing_error("identifier must not be optional.", filename, input, lexer.tell());
-
-        // FIXME: Disallow variadic functions once they're supported.
-
-        if (identifier.type->name == "DOMString") {
-            if (interface->named_property_setter.has_value())
-                report_parsing_error("An interface can only have one named property setter.", filename, input, lexer.tell());
-
-            if (!interface->named_property_getter.has_value())
-                report_parsing_error("A named property setter must be accompanied by a named property getter.", filename, input, lexer.tell());
-
-            interface->named_property_setter = move(function);
-        } else if (identifier.type->name == "unsigned long") {
-            if (interface->indexed_property_setter.has_value())
-                report_parsing_error("An interface can only have one indexed property setter.", filename, input, lexer.tell());
-
-            if (!interface->indexed_property_getter.has_value())
-                report_parsing_error("An indexed property setter must be accompanied by an indexed property getter.", filename, input, lexer.tell());
-
-            interface->indexed_property_setter = move(function);
-        } else {
-            report_parsing_error(String::formatted("Named/indexed property setter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name), filename, input, lexer.tell());
-        }
-    };
-
-    auto parse_deleter = [&](HashMap<String, String>& extended_attributes) {
-        assert_string("deleter");
-        consume_whitespace();
-        auto function = parse_function(extended_attributes, IsSpecialOperation::Yes);
-
-        if (function.parameters.size() != 1)
-            report_parsing_error(String::formatted("Named property deleter must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
-
-        auto& identifier = function.parameters.first();
-
-        if (identifier.type->nullable)
-            report_parsing_error("identifier's type must not be nullable.", filename, input, lexer.tell());
-
-        if (identifier.optional)
-            report_parsing_error("identifier must not be optional.", filename, input, lexer.tell());
-
-        // FIXME: Disallow variadic functions once they're supported.
-
-        if (identifier.type->name == "DOMString") {
-            if (interface->named_property_deleter.has_value())
-                report_parsing_error("An interface can only have one named property deleter.", filename, input, lexer.tell());
-
-            if (!interface->named_property_getter.has_value())
-                report_parsing_error("A named property deleter must be accompanied by a named property getter.", filename, input, lexer.tell());
-
-            interface->named_property_deleter = move(function);
-        } else {
-            report_parsing_error(String::formatted("Named property deleter's identifier's type must be 'DOMString', got '{}'.", identifier.type->name), filename, input, lexer.tell());
-        }
-    };
-
-    if (lexer.consume_specific("interface")) {
-        consume_whitespace();
-        interface->name = lexer.consume_until([](auto ch) { return isspace(ch); });
-        consume_whitespace();
-        if (lexer.consume_specific(':')) {
-            consume_whitespace();
-            interface->parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
-            consume_whitespace();
-        }
-        assert_specific('{');
-
-        for (;;) {
-            HashMap<String, String> extended_attributes;
-
-            consume_whitespace();
-
-            if (lexer.consume_specific('}')) {
-                consume_whitespace();
-                assert_specific(';');
-                break;
-            }
-
-            if (lexer.consume_specific('[')) {
-                extended_attributes = parse_extended_attributes();
-                if (!interface->has_unscopable_member && extended_attributes.contains("Unscopable"))
-                    interface->has_unscopable_member = true;
-            }
-
-            if (lexer.next_is("constructor")) {
-                parse_constructor();
-                continue;
-            }
-
-            if (lexer.next_is("const")) {
-                parse_constant();
-                continue;
-            }
-
-            if (lexer.next_is("stringifier")) {
-                parse_stringifier(extended_attributes);
-                continue;
-            }
-
-            if (lexer.next_is("iterable")) {
-                parse_iterable();
-                continue;
-            }
-
-            if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
-                parse_attribute(extended_attributes);
-                continue;
-            }
-
-            if (lexer.next_is("getter")) {
-                parse_getter(extended_attributes);
-                continue;
-            }
-
-            if (lexer.next_is("setter")) {
-                parse_setter(extended_attributes);
-                continue;
-            }
-
-            if (lexer.next_is("deleter")) {
-                parse_deleter(extended_attributes);
-                continue;
-            }
-
-            parse_function(extended_attributes);
-        }
-
-        interface->wrapper_class = String::formatted("{}Wrapper", interface->name);
-        interface->wrapper_base_class = String::formatted("{}Wrapper", interface->parent_name.is_empty() ? String::empty() : interface->parent_name);
-        interface->constructor_class = String::formatted("{}Constructor", interface->name);
-        interface->prototype_class = String::formatted("{}Prototype", interface->name);
-        interface->prototype_base_class = String::formatted("{}Prototype", interface->parent_name.is_empty() ? "Object" : interface->parent_name);
-        consume_whitespace();
-    }
-
-    while (!lexer.is_eof()) {
-        assert_string("dictionary");
-        consume_whitespace();
-
-        Dictionary dictionary {};
-
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch); });
-        consume_whitespace();
-
-        if (lexer.consume_specific(':')) {
-            consume_whitespace();
-            dictionary.parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
-            consume_whitespace();
-        }
-        assert_specific('{');
-
-        for (;;) {
-            consume_whitespace();
-
-            if (lexer.consume_specific('}')) {
-                consume_whitespace();
-                assert_specific(';');
-                break;
-            }
-
-            bool required = false;
-            HashMap<String, String> extended_attributes;
-
-            if (lexer.consume_specific("required")) {
-                required = true;
-                consume_whitespace();
-                if (lexer.consume_specific('['))
-                    extended_attributes = parse_extended_attributes();
-            }
-
-            auto type = parse_type();
-            consume_whitespace();
-
-            auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
-            consume_whitespace();
-
-            Optional<StringView> default_value;
-
-            if (lexer.consume_specific('=')) {
-                VERIFY(!required);
-                consume_whitespace();
-                default_value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
-                consume_whitespace();
-            }
-
-            assert_specific(';');
-
-            DictionaryMember member {
-                required,
-                move(type),
-                name,
-                move(extended_attributes),
-                Optional<String>(move(default_value)),
-            };
-            dictionary.members.append(move(member));
-        }
-
-        // dictionary members need to be evaluated in lexicographical order
-        quick_sort(dictionary.members, [&](auto& one, auto& two) {
-            return one.name < two.name;
-        });
-
-        interface->dictionaries.set(name, move(dictionary));
-        consume_whitespace();
-    }
-
-    for (auto& import : imports) { // FIXME: Instead of copying every imported dictionary into the current interface, query imports directly
-        for (auto& dictionary : import.dictionaries)
-            interface->dictionaries.set(dictionary.key, dictionary.value);
-    }
-
-    return interface;
-}
 
 static bool is_wrappable_type(Type const& type)
 {
@@ -963,7 +60,7 @@ static StringView sequence_storage_type_to_cpp_storage_type_name(SequenceStorage
     }
 }
 
-static CppType idl_type_name_to_cpp_type(Type const& type)
+CppType idl_type_name_to_cpp_type(Type const& type)
 {
     if (is_wrappable_type(type)) {
         if (type.nullable)
@@ -1024,144 +121,105 @@ static CppType idl_type_name_to_cpp_type(Type const& type)
     TODO();
 }
 
+static String make_input_acceptable_cpp(String const& input)
+{
+    if (input.is_one_of("class", "template", "for", "default", "char", "namespace", "delete")) {
+        StringBuilder builder;
+        builder.append(input);
+        builder.append('_');
+        return builder.to_string();
+    }
+
+    return input.replace("-", "_");
 }
 
-static void generate_constructor_header(IDL::Interface const&);
-static void generate_constructor_implementation(IDL::Interface const&);
-static void generate_prototype_header(IDL::Interface const&);
-static void generate_prototype_implementation(IDL::Interface const&);
-static void generate_header(IDL::Interface const&);
-static void generate_implementation(IDL::Interface const&);
-static void generate_iterator_prototype_header(IDL::Interface const&);
-static void generate_iterator_prototype_implementation(IDL::Interface const&);
-static void generate_iterator_header(IDL::Interface const&);
-static void generate_iterator_implementation(IDL::Interface const&);
-
-int main(int argc, char** argv)
+static void generate_include_for_wrapper(auto& generator, auto& wrapper_name)
 {
-    Core::ArgsParser args_parser;
-    StringView path = nullptr;
-    StringView import_base_path = nullptr;
-    bool header_mode = false;
-    bool implementation_mode = false;
-    bool constructor_header_mode = false;
-    bool constructor_implementation_mode = false;
-    bool prototype_header_mode = false;
-    bool prototype_implementation_mode = false;
-    bool iterator_header_mode = false;
-    bool iterator_implementation_mode = false;
-    bool iterator_prototype_header_mode = false;
-    bool iterator_prototype_implementation_mode = false;
-    args_parser.add_option(header_mode, "Generate the wrapper .h file", "header", 'H');
-    args_parser.add_option(implementation_mode, "Generate the wrapper .cpp file", "implementation", 'I');
-    args_parser.add_option(constructor_header_mode, "Generate the constructor .h file", "constructor-header", 'C');
-    args_parser.add_option(constructor_implementation_mode, "Generate the constructor .cpp file", "constructor-implementation", 'O');
-    args_parser.add_option(prototype_header_mode, "Generate the prototype .h file", "prototype-header", 'P');
-    args_parser.add_option(prototype_implementation_mode, "Generate the prototype .cpp file", "prototype-implementation", 'R');
-    args_parser.add_option(iterator_header_mode, "Generate the iterator wrapper .h file", "iterator-header", 0);
-    args_parser.add_option(iterator_implementation_mode, "Generate the iterator wrapper .cpp file", "iterator-implementation", 0);
-    args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0);
-    args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0);
-    args_parser.add_positional_argument(path, "IDL file", "idl-file");
-    args_parser.add_positional_argument(import_base_path, "Import base path", "import-base-path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    auto wrapper_generator = generator.fork();
+    wrapper_generator.set("wrapper_class", wrapper_name);
+    // FIXME: These may or may not exist, because REASONS.
+    wrapper_generator.append(R"~~~(
+#if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
+#   include <LibWeb/Bindings/@wrapper_class@.h>
+#endif
+#if __has_include(<LibWeb/Bindings/@wrapper_class@Factory.h>)
+#   include <LibWeb/Bindings/@wrapper_class@Factory.h>
+#endif
+)~~~");
+}
 
-    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
-        warnln("Failed to open {}: {}", path, file_or_error.error());
-        return 1;
+static void generate_include_for_iterator(auto& generator, auto& iterator_path, auto& iterator_name)
+{
+    auto iterator_generator = generator.fork();
+    iterator_generator.set("iterator_class.path", iterator_path);
+    iterator_generator.set("iterator_class.name", iterator_name);
+    // FIXME: These may or may not exist, because REASONS.
+    iterator_generator.append(R"~~~(
+//#if __has_include(<LibWeb/@iterator_class.path@.h>)
+#   include <LibWeb/@iterator_class.path@.h>
+//#endif
+#if __has_include(<LibWeb/@iterator_class.path@Factory.h>)
+#   include <LibWeb/@iterator_class.path@Factory.h>
+#endif
+#if __has_include(<LibWeb/Bindings/@iterator_class.name@Wrapper.h>)
+#   include <LibWeb/Bindings/@iterator_class.name@Wrapper.h>
+#endif
+#if __has_include(<LibWeb/Bindings/@iterator_class.name@WrapperFactory.h>)
+#   include <LibWeb/Bindings/@iterator_class.name@WrapperFactory.h>
+#endif
+)~~~");
+}
+
+static void generate_include_for(auto& generator, auto& path)
+{
+    auto forked_generator = generator.fork();
+    auto path_string = path;
+    for (auto& search_path : s_header_search_paths) {
+        if (!path.starts_with(search_path))
+            continue;
+        auto relative_path = LexicalPath::relative_path(path, search_path);
+        if (relative_path.length() < path_string.length())
+            path_string = relative_path;
     }
 
-    LexicalPath lexical_path(path);
-    auto& namespace_ = lexical_path.parts_view().at(lexical_path.parts_view().size() - 2);
+    LexicalPath include_path { path_string };
+    forked_generator.set("include.path", String::formatted("{}/{}.h", include_path.dirname(), include_path.title()));
+    forked_generator.append(R"~~~(
+#include <@include.path@>
+)~~~");
+}
 
-    auto data = file_or_error.value()->read_all();
+static void emit_includes_for_all_imports(auto& interface, auto& generator, bool is_header, bool is_iterator = false)
+{
+    Queue<RemoveCVReference<decltype(interface)> const*> interfaces;
+    HashTable<String> paths_imported;
+    if (is_header)
+        paths_imported.set(interface.module_own_path);
 
-    if (import_base_path.is_null())
-        import_base_path = lexical_path.dirname();
+    interfaces.enqueue(&interface);
 
-    auto interface = IDL::parse_interface(path, data, import_base_path);
+    while (!interfaces.is_empty()) {
+        auto interface = interfaces.dequeue();
+        if (paths_imported.contains(interface->module_own_path))
+            continue;
 
-    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "Encoding", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "IntersectionObserver", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "XHR", "URL")) {
-        StringBuilder builder;
-        builder.append(namespace_);
-        builder.append("::");
-        builder.append(interface->name);
-        interface->fully_qualified_name = builder.to_string();
-    } else {
-        interface->fully_qualified_name = interface->name;
+        paths_imported.set(interface->module_own_path);
+        for (auto& imported_interface : interface->imported_modules) {
+            if (!paths_imported.contains(imported_interface.module_own_path))
+                interfaces.enqueue(&imported_interface);
+        }
+
+        generate_include_for(generator, interface->module_own_path);
+
+        if (is_iterator) {
+            auto iterator_name = String::formatted("{}Iterator", interface->name);
+            auto iterator_path = String::formatted("{}Iterator", interface->fully_qualified_name.replace("::", "/"));
+            generate_include_for_iterator(generator, iterator_path, iterator_name);
+        }
+
+        if (interface->wrapper_class != "Wrapper")
+            generate_include_for_wrapper(generator, interface->wrapper_class);
     }
-
-    if constexpr (WRAPPER_GENERATOR_DEBUG) {
-        dbgln("Attributes:");
-        for (auto& attribute : interface->attributes) {
-            dbgln("  {}{}{} {}",
-                attribute.readonly ? "readonly " : "",
-                attribute.type->name,
-                attribute.type->nullable ? "?" : "",
-                attribute.name);
-        }
-
-        dbgln("Functions:");
-        for (auto& function : interface->functions) {
-            dbgln("  {}{} {}",
-                function.return_type->name,
-                function.return_type->nullable ? "?" : "",
-                function.name);
-            for (auto& parameter : function.parameters) {
-                dbgln("    {}{} {}",
-                    parameter.type->name,
-                    parameter.type->nullable ? "?" : "",
-                    parameter.name);
-            }
-        }
-
-        dbgln("Static Functions:");
-        for (auto& function : interface->static_functions) {
-            dbgln("  static {}{} {}",
-                function.return_type->name,
-                function.return_type->nullable ? "?" : "",
-                function.name);
-            for (auto& parameter : function.parameters) {
-                dbgln("    {}{} {}",
-                    parameter.type->name,
-                    parameter.type->nullable ? "?" : "",
-                    parameter.name);
-            }
-        }
-    }
-
-    if (header_mode)
-        generate_header(*interface);
-
-    if (implementation_mode)
-        generate_implementation(*interface);
-
-    if (constructor_header_mode)
-        generate_constructor_header(*interface);
-
-    if (constructor_implementation_mode)
-        generate_constructor_implementation(*interface);
-
-    if (prototype_header_mode)
-        generate_prototype_header(*interface);
-
-    if (prototype_implementation_mode)
-        generate_prototype_implementation(*interface);
-
-    if (iterator_header_mode)
-        generate_iterator_header(*interface);
-
-    if (iterator_implementation_mode)
-        generate_iterator_implementation(*interface);
-
-    if (iterator_prototype_header_mode)
-        generate_iterator_prototype_header(*interface);
-
-    if (iterator_prototype_implementation_mode)
-        generate_iterator_prototype_implementation(*interface);
-
-    return 0;
 }
 
 static bool should_emit_wrapper_factory(IDL::Interface const& interface)
@@ -1187,7 +245,7 @@ static bool should_emit_wrapper_factory(IDL::Interface const& interface)
 }
 
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0)
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, IDL::Interface const& interface, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0, bool used_as_argument = false)
 {
     auto scoped_generator = generator.fork();
     auto acceptable_cpp_name = make_input_acceptable_cpp(cpp_name);
@@ -1257,13 +315,13 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         if (parameter.type->nullable) {
             scoped_generator.append(R"~~~(
-    RefPtr<EventListener> @cpp_name@;
+    RefPtr<IDLEventListener> @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish()) {
         if (!@js_name@@js_suffix@.is_object())
             return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
         CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
-        @cpp_name@ = adopt_ref(*new EventListener(move(callback_type)));
+        @cpp_name@ = adopt_ref(*new IDLEventListener(move(callback_type)));
     }
 )~~~");
         } else {
@@ -1272,7 +330,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
     CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
-    auto @cpp_name@ = adopt_ref(*new EventListener(move(callback_type)));
+    auto @cpp_name@ = adopt_ref(*new IDLEventListener(move(callback_type)));
 )~~~");
         }
     } else if (IDL::is_wrappable_type(*parameter.type)) {
@@ -1426,7 +484,35 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 }
             }
         }
-    } else if (dictionaries.contains(parameter.type->name)) {
+    } else if (interface.enumerations.contains(parameter.type->name)) {
+        auto enum_generator = scoped_generator.fork();
+        auto& enumeration = interface.enumerations.find(parameter.type->name)->value;
+        enum_generator.set("enum.default.cpp_value", *enumeration.translated_cpp_names.get(optional_default_value.value_or(enumeration.first_member)));
+        enum_generator.set("js_name.as_string", String::formatted("{}{}_string", enum_generator.get("js_name"), enum_generator.get("js_suffix")));
+        enum_generator.append(R"~~~(
+    @parameter.type.name@ @cpp_name@ { @parameter.type.name@::@enum.default.cpp_value@ };
+    auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_string(global_object));
+)~~~");
+        auto first = true;
+        for (auto& it : enumeration.translated_cpp_names) {
+            enum_generator.set("enum.alt.name", it.key);
+            enum_generator.set("enum.alt.value", it.value);
+            enum_generator.set("else", first ? "" : "else ");
+            first = false;
+
+            enum_generator.append(R"~~~(
+    @else@if (@js_name.as_string@ == "@enum.alt.name@"sv)
+        @cpp_name@ = @parameter.type.name@::@enum.alt.value@;
+)~~~");
+        }
+
+        if (used_as_argument) {
+            enum_generator.append(R"~~~(
+    @else@
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::InvalidEnumerationValue, @js_name.as_string@, "@parameter.type.name@");
+)~~~");
+        }
+    } else if (interface.dictionaries.contains(parameter.type->name)) {
         if (optional_default_value.has_value() && optional_default_value != "{}")
             TODO();
         auto dictionary_generator = scoped_generator.fork();
@@ -1436,7 +522,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
     @parameter.type.name@ @cpp_name@ {};
 )~~~");
-        auto* current_dictionary = &dictionaries.find(parameter.type->name)->value;
+        auto* current_dictionary = &interface.dictionaries.find(parameter.type->name)->value;
         while (true) {
             for (auto& member : current_dictionary->members) {
                 dictionary_generator.set("member_key", member.name);
@@ -1459,15 +545,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
                 auto member_value_name = String::formatted("{}_value", member_js_name);
                 dictionary_generator.set("member_value_name", member_value_name);
-                generate_to_cpp(dictionary_generator, member, member_js_name, "", member_value_name, dictionaries, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
+                generate_to_cpp(dictionary_generator, member, member_js_name, "", member_value_name, interface, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
                 dictionary_generator.append(R"~~~(
     @cpp_name@.@member_name@ = @member_value_name@;
 )~~~");
             }
             if (current_dictionary->parent_name.is_null())
                 break;
-            VERIFY(dictionaries.contains(current_dictionary->parent_name));
-            current_dictionary = &dictionaries.find(current_dictionary->parent_name)->value;
+            VERIFY(interface.dictionaries.contains(current_dictionary->parent_name));
+            current_dictionary = &interface.dictionaries.find(current_dictionary->parent_name)->value;
         }
     } else if (parameter.type->name == "sequence") {
         // https://webidl.spec.whatwg.org/#es-sequence
@@ -1491,7 +577,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotIterable, @js_name@@js_suffix@.to_string_without_side_effects());
 )~~~");
 
-        parameterized_type.generate_sequence_from_iterable(sequence_generator, acceptable_cpp_name, String::formatted("{}{}", js_name, js_suffix), String::formatted("iterator_method{}", recursion_depth), dictionaries, recursion_depth + 1);
+        parameterized_type.generate_sequence_from_iterable(sequence_generator, acceptable_cpp_name, String::formatted("{}{}", js_name, js_suffix), String::formatted("iterator_method{}", recursion_depth), interface, recursion_depth + 1);
     } else if (parameter.type->name == "record") {
         // https://webidl.spec.whatwg.org/#es-record
 
@@ -1547,7 +633,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
 
         IDL::Parameter key_parameter { .type = parameterized_type.parameters[0], .name = acceptable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
-        generate_to_cpp(record_generator, key_parameter, "key", String::number(recursion_depth), String::formatted("typed_key{}", recursion_depth), dictionaries, false, false, {}, false, recursion_depth + 1);
+        generate_to_cpp(record_generator, key_parameter, "key", String::number(recursion_depth), String::formatted("typed_key{}", recursion_depth), interface, false, false, {}, false, recursion_depth + 1);
 
         record_generator.append(R"~~~(
         auto value@recursion_depth@ = TRY(@js_name@@js_suffix@_object.get(property_key@recursion_depth@));
@@ -1555,7 +641,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         // FIXME: Record value types should be TypeWithExtendedAttributes, which would allow us to get [LegacyNullToEmptyString] here.
         IDL::Parameter value_parameter { .type = parameterized_type.parameters[1], .name = acceptable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
-        generate_to_cpp(record_generator, value_parameter, "value", String::number(recursion_depth), String::formatted("typed_value{}", recursion_depth), dictionaries, false, false, {}, false, recursion_depth + 1);
+        generate_to_cpp(record_generator, value_parameter, "value", String::number(recursion_depth), String::formatted("typed_value{}", recursion_depth), interface, false, false, {}, false, recursion_depth + 1);
 
         record_generator.append(R"~~~(
         @cpp_name@.set(typed_key@recursion_depth@, typed_value@recursion_depth@);
@@ -1597,7 +683,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         auto types = union_type.flattened_member_types();
 
         bool contains_dictionary_type = false;
-        for (auto& dictionary : dictionaries) {
+        for (auto& dictionary : interface.dictionaries) {
             for (auto& type : types) {
                 if (type.name == dictionary.key) {
                     contains_dictionary_type = true;
@@ -1711,7 +797,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (method) {
 )~~~");
 
-            sequence_type->generate_sequence_from_iterable(union_generator, acceptable_cpp_name, String::formatted("{}{}", js_name, js_suffix), "method", dictionaries, recursion_depth + 1);
+            sequence_type->generate_sequence_from_iterable(union_generator, acceptable_cpp_name, String::formatted("{}{}", js_name, js_suffix), "method", interface, recursion_depth + 1);
 
             union_generator.append(R"~~~(
 
@@ -1739,7 +825,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         if (record_type) {
             IDL::Parameter record_parameter { .type = *record_type, .name = acceptable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
-            generate_to_cpp(union_generator, record_parameter, js_name, js_suffix, "record_union_type"sv, dictionaries, false, false, {}, false, recursion_depth + 1);
+            generate_to_cpp(union_generator, record_parameter, js_name, js_suffix, "record_union_type"sv, interface, false, false, {}, false, recursion_depth + 1);
 
             union_generator.append(R"~~~(
         return record_union_type;
@@ -1794,7 +880,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // NOTE: generate_to_cpp doesn't use the parameter name.
             // NOTE: generate_to_cpp will use to_{u32,etc.} which uses to_number internally and will thus use TRY, but it cannot throw as we know we are dealing with a number.
             IDL::Parameter parameter { .type = *numeric_type, .name = String::empty(), .optional_default_value = {}, .extended_attributes = {} };
-            generate_to_cpp(union_generator, parameter, js_name, js_suffix, String::formatted("{}{}_number", js_name, js_suffix), dictionaries, false, false, {}, false, recursion_depth + 1);
+            generate_to_cpp(union_generator, parameter, js_name, js_suffix, String::formatted("{}{}_number", js_name, js_suffix), interface, false, false, {}, false, recursion_depth + 1);
 
             union_generator.append(R"~~~(
             return @js_name@@js_suffix@_number;
@@ -1859,7 +945,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // NOTE: generate_to_cpp doesn't use the parameter name.
             // NOTE: generate_to_cpp will use to_{u32,etc.} which uses to_number internally and will thus use TRY, but it cannot throw as we know we are dealing with a number.
             IDL::Parameter parameter { .type = *numeric_type, .name = String::empty(), .optional_default_value = {}, .extended_attributes = {} };
-            generate_to_cpp(union_numeric_type_generator, parameter, "x", String::empty(), "x_number", dictionaries, false, false, {}, false, recursion_depth + 1);
+            generate_to_cpp(union_numeric_type_generator, parameter, "x", String::empty(), "x_number", interface, false, false, {}, false, recursion_depth + 1);
 
             union_numeric_type_generator.append(R"~~~(
         return x_number;
@@ -1870,7 +956,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // NOTE: generate_to_cpp doesn't use the parameter name.
             // NOTE: generate_to_cpp will use to_{u32,etc.} which uses to_number internally and will thus use TRY, but it cannot throw as we know we are dealing with a number.
             IDL::Parameter parameter { .type = *numeric_type, .name = String::empty(), .optional_default_value = {}, .extended_attributes = {} };
-            generate_to_cpp(union_generator, parameter, js_name, js_suffix, String::formatted("{}{}_number", js_name, js_suffix), dictionaries, false, false, {}, false, recursion_depth + 1);
+            generate_to_cpp(union_generator, parameter, js_name, js_suffix, String::formatted("{}{}_number", js_name, js_suffix), interface, false, false, {}, false, recursion_depth + 1);
 
             union_generator.append(R"~~~(
         return @js_name@@js_suffix@_number;
@@ -1960,7 +1046,7 @@ static void generate_argument_count_check(SourceGenerator& generator, FunctionTy
 )~~~");
 }
 
-static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, HashMap<String, IDL::Dictionary> const& dictionaries)
+static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, IDL::Interface const& interface)
 {
     auto arguments_generator = generator.fork();
 
@@ -1977,7 +1063,7 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
         }
 
         bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), dictionaries, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic);
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), interface, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic, 0, true);
         ++argument_index;
     }
 
@@ -1985,7 +1071,7 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
 }
 
 // https://webidl.spec.whatwg.org/#create-sequence-from-iterable
-void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, size_t recursion_depth) const
+void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, IDL::Interface const& interface, size_t recursion_depth) const
 {
     auto sequence_generator = generator.fork();
     sequence_generator.set("cpp_name", cpp_name);
@@ -2031,7 +1117,7 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
 
     // FIXME: Sequences types should be TypeWithExtendedAttributes, which would allow us to get [LegacyNullToEmptyString] here.
     IDL::Parameter parameter { .type = parameters.first(), .name = iterable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
-    generate_to_cpp(sequence_generator, parameter, "next_item", String::number(recursion_depth), String::formatted("sequence_item{}", recursion_depth), dictionaries, false, false, {}, false, recursion_depth);
+    generate_to_cpp(sequence_generator, parameter, "next_item", String::number(recursion_depth), String::formatted("sequence_item{}", recursion_depth), interface, false, false, {}, false, recursion_depth);
 
     sequence_generator.append(R"~~~(
         @cpp_name@.append(sequence_item@recursion_depth@);
@@ -2044,7 +1130,7 @@ enum class WrappingReference {
     Yes,
 };
 
-static void generate_wrap_statement(SourceGenerator& generator, String const& value, IDL::Type const& type, StringView result_expression, WrappingReference wrapping_reference = WrappingReference::No, size_t recursion_depth = 0)
+static void generate_wrap_statement(SourceGenerator& generator, String const& value, IDL::Type const& type, IDL::Interface const& interface, StringView result_expression, WrappingReference wrapping_reference = WrappingReference::No, size_t recursion_depth = 0)
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("value", value);
@@ -2090,7 +1176,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         auto& element@recursion_depth@ = @value@.at(i@recursion_depth@);
 )~~~");
 
-        generate_wrap_statement(scoped_generator, String::formatted("element{}", recursion_depth), sequence_generic_type.parameters.first(), String::formatted("auto wrapped_element{} =", recursion_depth), WrappingReference::Yes, recursion_depth + 1);
+        generate_wrap_statement(scoped_generator, String::formatted("element{}", recursion_depth), sequence_generic_type.parameters.first(), interface, String::formatted("auto wrapped_element{} =", recursion_depth), WrappingReference::Yes, recursion_depth + 1);
 
         scoped_generator.append(R"~~~(
         auto property_index@recursion_depth@ = JS::PropertyKey { i@recursion_depth@ };
@@ -2124,6 +1210,10 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 )~~~");
     } else if (is<IDL::UnionType>(type)) {
         TODO();
+    } else if (interface.enumerations.contains(type.name)) {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::js_string(global_object.heap(), Bindings::idl_enum_to_string(@value@));
+)~~~");
     } else {
         if (wrapping_reference == WrappingReference::No) {
             scoped_generator.append(R"~~~(
@@ -2148,22 +1238,22 @@ enum class StaticFunction {
     Yes,
 };
 
-static void generate_return_statement(SourceGenerator& generator, IDL::Type const& return_type)
+static void generate_return_statement(SourceGenerator& generator, IDL::Type const& return_type, IDL::Interface const& interface)
 {
-    return generate_wrap_statement(generator, "retval", return_type, "return"sv);
+    return generate_wrap_statement(generator, "retval", return_type, interface, "return"sv);
 }
 
-static void generate_variable_statement(SourceGenerator& generator, String const& variable_name, IDL::Type const& value_type, String const& value_name)
+static void generate_variable_statement(SourceGenerator& generator, String const& variable_name, IDL::Type const& value_type, String const& value_name, IDL::Interface const& interface)
 {
     auto variable_generator = generator.fork();
     variable_generator.set("variable_name", variable_name);
     variable_generator.append(R"~~~(
     JS::Value @variable_name@;
 )~~~");
-    return generate_wrap_statement(generator, value_name, value_type, String::formatted("{} = ", variable_name));
+    return generate_wrap_statement(generator, value_name, value_type, interface, String::formatted("{} = ", variable_name));
 }
 
-static void generate_function(SourceGenerator& generator, IDL::Function const& function, StaticFunction is_static_function, String const& class_name, String const& interface_fully_qualified_name, HashMap<String, IDL::Dictionary> const& dictionaries)
+static void generate_function(SourceGenerator& generator, IDL::Function const& function, StaticFunction is_static_function, String const& class_name, String const& interface_fully_qualified_name, IDL::Interface const& interface)
 {
     auto function_generator = generator.fork();
     function_generator.set("class_name", class_name);
@@ -2192,7 +1282,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     generate_argument_count_check(generator, function);
 
     StringBuilder arguments_builder;
-    generate_arguments(generator, function.parameters, arguments_builder, dictionaries);
+    generate_arguments(generator, function.parameters, arguments_builder, interface);
     function_generator.set(".arguments", arguments_builder.string_view());
 
     if (is_static_function == StaticFunction::No) {
@@ -2205,70 +1295,36 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 )~~~");
     }
 
-    generate_return_statement(generator, *function.return_type);
+    generate_return_statement(generator, *function.return_type, interface);
 
     function_generator.append(R"~~~(
 }
 )~~~");
 }
 
-static void generate_header(IDL::Interface const& interface)
+void generate_header(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.append(R"~~~(
+#pragma once
+
+#include <LibWeb/Bindings/Wrapper.h>
+)~~~");
+
+    for (auto& path : interface.imported_paths)
+        generate_include_for(generator, path);
+
+    emit_includes_for_all_imports(interface, generator, true);
     generator.set("name", interface.name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("wrapper_base_class", interface.wrapper_base_class);
     generator.set("wrapper_class", interface.wrapper_class);
     generator.set("wrapper_class:snakecase", interface.wrapper_class.to_snakecase());
 
-    generator.append(R"~~~(
-#pragma once
-
-#include <LibWeb/Bindings/Wrapper.h>
-
-// FIXME: This is very strange.
-#if __has_include(<LibWeb/Crypto/@name@.h>)
-#    include <LibWeb/Crypto/@name@.h>
-#elif __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/Encoding/@name@.h>)
-#    include <LibWeb/Encoding/@name@.h>
-#elif __has_include(<LibWeb/Geometry/@name@.h>)
-#    include <LibWeb/Geometry/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
-#    include <LibWeb/RequestIdleCallback/@name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#elif __has_include(<LibWeb/URL/@name@.h>)
-#    include <LibWeb/URL/@name@.h>
-#endif
-)~~~");
-
-    if (interface.wrapper_base_class != "Wrapper") {
-        generator.append(R"~~~(
-#include <LibWeb/Bindings/@wrapper_base_class@.h>
-)~~~");
-    }
+    if (interface.wrapper_base_class != "Wrapper")
+        generate_include_for_wrapper(generator, interface.wrapper_base_class);
 
     generator.append(R"~~~(
 namespace Web::Bindings {
@@ -2351,6 +1407,40 @@ private:
 };
 )~~~");
 
+    for (auto& it : interface.enumerations) {
+        if (!it.value.is_original_definition)
+            continue;
+        auto enum_generator = generator.fork();
+        enum_generator.set("enum.type.name", it.key);
+        enum_generator.append(R"~~~(
+enum class @enum.type.name@ {
+)~~~");
+        for (auto& entry : it.value.translated_cpp_names) {
+            enum_generator.set("enum.entry", entry.value);
+            enum_generator.append(R"~~~(
+    @enum.entry@,
+)~~~");
+        }
+
+        enum_generator.append(R"~~~(
+};
+inline String idl_enum_to_string(@enum.type.name@ value) {
+    switch(value) {
+)~~~");
+        for (auto& entry : it.value.translated_cpp_names) {
+            enum_generator.set("enum.entry", entry.value);
+            enum_generator.set("enum.string", entry.key);
+            enum_generator.append(R"~~~(
+    case @enum.type.name@::@enum.entry@: return "@enum.string@";
+)~~~");
+        }
+        enum_generator.append(R"~~~(
+    default: return "<unknown>";
+    };
+}
+)~~~");
+    }
+
     if (should_emit_wrapper_factory(interface)) {
         generator.append(R"~~~(
 @wrapper_class@* wrap(JS::GlobalObject&, @fully_qualified_name@&);
@@ -2385,44 +1475,14 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
-#include <LibWeb/Bindings/AttributeWrapper.h>
-#include <LibWeb/Bindings/CSSRuleListWrapper.h>
-#include <LibWeb/Bindings/CSSRuleWrapper.h>
-#include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
-#include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
-#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
-#include <LibWeb/Bindings/CommentWrapper.h>
-#include <LibWeb/Bindings/DOMImplementationWrapper.h>
-#include <LibWeb/Bindings/DOMRectListWrapper.h>
-#include <LibWeb/Bindings/DOMRectWrapper.h>
-#include <LibWeb/Bindings/DocumentFragmentWrapper.h>
-#include <LibWeb/Bindings/DocumentTypeWrapper.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
-#include <LibWeb/Bindings/HTMLCollectionWrapper.h>
-#include <LibWeb/Bindings/HTMLFormElementWrapper.h>
-#include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
-#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
-#include <LibWeb/Bindings/HTMLTableCaptionElementWrapper.h>
-#include <LibWeb/Bindings/HTMLTableSectionElementWrapper.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
-#include <LibWeb/Bindings/ImageDataWrapper.h>
-#include <LibWeb/Bindings/MessagePortWrapper.h>
-#include <LibWeb/Bindings/NamedNodeMapWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/TextMetricsWrapper.h>
-#include <LibWeb/Bindings/TextWrapper.h>
+#include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/IntersectionObserver/IntersectionObserver.h>
-#include <LibWeb/Origin.h>
-#include <LibWeb/ResizeObserver/ResizeObserver.h>
+)~~~");
 
+    emit_includes_for_all_imports(interface, generator, false);
+
+    generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
@@ -2503,10 +1563,10 @@ static JS::Value wrap_for_legacy_platform_object_get_own_property(JS::GlobalObje
 )~~~");
 
         if (interface.named_property_getter.has_value()) {
-            generate_return_statement(scoped_generator, *interface.named_property_getter->return_type);
+            generate_return_statement(scoped_generator, *interface.named_property_getter->return_type, interface);
         } else {
             VERIFY(interface.indexed_property_getter.has_value());
-            generate_return_statement(scoped_generator, *interface.indexed_property_getter->return_type);
+            generate_return_statement(scoped_generator, *interface.indexed_property_getter->return_type, interface);
         }
 
         scoped_generator.append(R"~~~(
@@ -2765,7 +1825,7 @@ static JS::ThrowCompletionOr<void> invoke_named_property_setter(JS::GlobalObject
 
             // 4. Let value be the result of converting V to an IDL value of type T.
             // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
-            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries);
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface);
 
             // 5. If operation was defined without an identifier, then:
             if (interface.named_property_setter->name.is_empty()) {
@@ -2816,7 +1876,7 @@ static JS::ThrowCompletionOr<void> invoke_indexed_property_setter(JS::GlobalObje
 
             // 5. Let value be the result of converting V to an IDL value of type T.
             // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
-            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries);
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface);
 
             // 6. If operation was defined without an identifier, then:
             if (interface.indexed_property_setter->name.is_empty()) {
@@ -3208,7 +2268,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> @class_name@::internal_own_pr
     outln("{}", generator.as_string_view());
 }
 
-static void generate_constructor_header(IDL::Interface const& interface)
+void generate_constructor_header(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -3371,7 +2431,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
             generate_argument_count_check(generator, constructor);
 
             StringBuilder arguments_builder;
-            generate_arguments(generator, constructor.parameters, arguments_builder, interface.dictionaries);
+            generate_arguments(generator, constructor.parameters, arguments_builder, interface);
             generator.set(".constructor_arguments", arguments_builder.string_view());
 
             generator.append(R"~~~(
@@ -3433,7 +2493,7 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
 
     // Implementation: Static Functions
     for (auto& function : interface.static_functions) {
-        generate_function(generator, function, StaticFunction::Yes, interface.constructor_class, interface.fully_qualified_name, interface.dictionaries);
+        generate_function(generator, function, StaticFunction::Yes, interface.constructor_class, interface.fully_qualified_name, interface);
     }
 
     generator.append(R"~~~(
@@ -3443,7 +2503,7 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
     outln("{}", generator.as_string_view());
 }
 
-static void generate_prototype_header(IDL::Interface const& interface)
+void generate_prototype_header(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -3534,9 +2594,6 @@ void generate_prototype_implementation(IDL::Interface const& interface)
     if (interface.pair_iterator_types.has_value()) {
         generator.set("iterator_name", String::formatted("{}Iterator", interface.name));
         generator.set("iterator_wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
-        generator.append(R"~~~(
-#include <LibWeb/Bindings/@iterator_wrapper_class@.h>
-)~~~");
     }
 
     generator.append(R"~~~(
@@ -3548,134 +2605,35 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
-#include <LibWeb/Bindings/AbortSignalWrapper.h>
-#include <LibWeb/Bindings/AttributeWrapper.h>
-#include <LibWeb/Bindings/CSSRuleListWrapper.h>
-#include <LibWeb/Bindings/CSSRuleWrapper.h>
-#include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
-#include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
-#include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
-#include <LibWeb/Bindings/CanvasGradientWrapper.h>
-#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
-#include <LibWeb/Bindings/CommentWrapper.h>
-#include <LibWeb/Bindings/DOMImplementationWrapper.h>
-#include <LibWeb/Bindings/DOMRectListWrapper.h>
-#include <LibWeb/Bindings/DOMRectWrapper.h>
-#include <LibWeb/Bindings/DOMStringMapWrapper.h>
-#include <LibWeb/Bindings/DOMTokenListWrapper.h>
-#include <LibWeb/Bindings/DocumentFragmentWrapper.h>
-#include <LibWeb/Bindings/DocumentTypeWrapper.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
-#include <LibWeb/Bindings/HTMLCollectionWrapper.h>
-#include <LibWeb/Bindings/HTMLFormElementWrapper.h>
-#include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
-#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
-#include <LibWeb/Bindings/HTMLTableCaptionElementWrapper.h>
-#include <LibWeb/Bindings/HTMLTableSectionElementWrapper.h>
-#include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
-#include <LibWeb/Bindings/MessagePortWrapper.h>
-#include <LibWeb/Bindings/NamedNodeMapWrapper.h>
-#include <LibWeb/Bindings/NodeListWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/PerformanceTimingWrapper.h>
-#include <LibWeb/Bindings/RangeWrapper.h>
-#include <LibWeb/Bindings/StyleSheetListWrapper.h>
-#include <LibWeb/Bindings/SubtleCryptoWrapper.h>
-#include <LibWeb/Bindings/TextMetricsWrapper.h>
-#include <LibWeb/Bindings/TextWrapper.h>
-#include <LibWeb/Bindings/URLSearchParamsWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/WorkerLocationWrapper.h>
 #include <LibWeb/Bindings/WorkerNavigatorWrapper.h>
+#include <LibWeb/Bindings/WorkerWrapper.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Window.h>
-#include <LibWeb/HTML/EventHandler.h>
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/NavigationTiming/PerformanceTiming.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Origin.h>
 
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
 #    include <LibWeb/Bindings/@prototype_base_class@.h>
 #endif
-#if __has_include(<LibWeb/Crypto/@name@.h>)
-#    include <LibWeb/Crypto/@name@.h>
-#elif __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/Encoding/@name@.h>)
-#    include <LibWeb/Encoding/@name@.h>
-#elif __has_include(<LibWeb/Geometry/@name@.h>)
-#    include <LibWeb/Geometry/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
-#    include <LibWeb/RequestIdleCallback/@name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#elif __has_include(<LibWeb/URL/@name@.h>)
-#    include <LibWeb/URL/@name@.h>
-#endif
 
 )~~~");
 
-    if (interface.pair_iterator_types.has_value()) {
-        generator.append(R"~~~(
-#if __has_include(<LibWeb/CSS/@iterator_name@.h>)
-#    include <LibWeb/CSS/@iterator_name@.h>
-#elif __has_include(<LibWeb/DOM/@iterator_name@.h>)
-#    include <LibWeb/DOM/@iterator_name@.h>
-#elif __has_include(<LibWeb/Geometry/@iterator_name@.h>)
-#    include <LibWeb/Geometry/@iterator_name@.h>
-#elif __has_include(<LibWeb/HTML/@iterator_name@.h>)
-#    include <LibWeb/HTML/@iterator_name@.h>
-#elif __has_include(<LibWeb/UIEvents/@iterator_name@.h>)
-#    include <LibWeb/UIEvents/@iterator_name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@iterator_name@.h>)
-#    include <LibWeb/HighResolutionTime/@iterator_name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@iterator_name@.h>)
-#    include <LibWeb/NavigationTiming/@iterator_name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@iterator_name@.h>)
-#    include <LibWeb/RequestIdleCallback/@iterator_name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@iterator_name@.h>)
-#    include <LibWeb/SVG/@iterator_name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/XHR/@iterator_name@.h>)
-#    include <LibWeb/XHR/@iterator_name@.h>
-#elif __has_include(<LibWeb/URL/@iterator_name@.h>)
-#    include <LibWeb/URL/@iterator_name@.h>
-#endif
-)~~~");
-    }
+    for (auto& path : interface.imported_paths)
+        generate_include_for(generator, path);
+
+    emit_includes_for_all_imports(interface, generator, false, interface.pair_iterator_types.has_value());
 
     generator.append(R"~~~(
 
@@ -3906,11 +2864,11 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
             }
         } else {
             attribute_generator.append(R"~~~(
-    auto retval = impl->@attribute.cpp_getter_name@();
+    auto retval = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->@attribute.cpp_getter_name@(); }));
 )~~~");
         }
 
-        generate_return_statement(generator, *attribute.type);
+        generate_return_statement(generator, *attribute.type, interface);
 
         attribute_generator.append(R"~~~(
 }
@@ -3925,7 +2883,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
     auto value = vm.argument(0);
 )~~~");
 
-            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface.dictionaries, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
+            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type->name != "boolean") {
@@ -3955,7 +2913,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
 
     // Implementation: Functions
     for (auto& function : interface.functions) {
-        generate_function(generator, function, StaticFunction::No, interface.prototype_class, interface.fully_qualified_name, interface.dictionaries);
+        generate_function(generator, function, StaticFunction::No, interface.prototype_class, interface.fully_qualified_name, interface);
     }
 
     if (interface.has_stringifier) {
@@ -4007,8 +2965,8 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
     auto this_value = vm.this_value(global_object);
     TRY(impl->for_each([&](auto key, auto value) -> JS::ThrowCompletionOr<void> {
 )~~~");
-        generate_variable_statement(iterator_generator, "wrapped_key", interface.pair_iterator_types->get<0>(), "key");
-        generate_variable_statement(iterator_generator, "wrapped_value", interface.pair_iterator_types->get<1>(), "value");
+        generate_variable_statement(iterator_generator, "wrapped_key", interface.pair_iterator_types->get<0>(), "key", interface);
+        generate_variable_statement(iterator_generator, "wrapped_value", interface.pair_iterator_types->get<1>(), "value", interface);
         iterator_generator.append(R"~~~(
         TRY(call(global_object, callback.as_function(), vm.argument(1), wrapped_value, wrapped_key, this_value));
         return {};
@@ -4040,7 +2998,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
     outln("{}", generator.as_string_view());
 }
 
-static void generate_iterator_header(IDL::Interface const& interface)
+void generate_iterator_header(IDL::Interface const& interface)
 {
     VERIFY(interface.pair_iterator_types.has_value());
     StringBuilder builder;
@@ -4054,41 +3012,6 @@ static void generate_iterator_header(IDL::Interface const& interface)
 #pragma once
 
 #include <LibWeb/Bindings/Wrapper.h>
-
-// FIXME: This is very strange.
-#if __has_include(<LibWeb/Crypto/@name@.h>)
-#    include <LibWeb/Crypto/@name@.h>
-#elif __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/Encoding/@name@.h>)
-#    include <LibWeb/Encoding/@name@.h>
-#elif __has_include(<LibWeb/Geometry/@name@.h>)
-#    include <LibWeb/Geometry/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
-#    include <LibWeb/RequestIdleCallback/@name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#elif __has_include(<LibWeb/URL/@name@.h>)
-#    include <LibWeb/URL/@name@.h>
-#endif
 
 namespace Web::Bindings {
 
@@ -4142,6 +3065,15 @@ void generate_iterator_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/WindowObject.h>
 
+)~~~");
+
+    for (auto& path : interface.imported_paths)
+        generate_include_for(generator, path);
+
+    emit_includes_for_all_imports(interface, generator, false, true);
+
+    generator.append(R"~~~(
+
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
@@ -4191,7 +3123,7 @@ void @wrapper_class@::visit_edges(Cell::Visitor& visitor)
     outln("{}", generator.as_string_view());
 }
 
-static void generate_iterator_prototype_header(IDL::Interface const& interface)
+void generate_iterator_prototype_header(IDL::Interface const& interface)
 {
     VERIFY(interface.pair_iterator_types.has_value());
     StringBuilder builder;
@@ -4233,6 +3165,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
     generator.set("prototype_class", String::formatted("{}IteratorPrototype", interface.name));
     generator.set("wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
     generator.set("fully_qualified_name", String::formatted("{}Iterator", interface.fully_qualified_name));
+    generator.set("possible_include_path", String::formatted("{}Iterator", interface.name.replace("::", "/")));
 
     generator.append(R"~~~(
 #include <AK/Function.h>
@@ -4242,44 +3175,17 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
-#include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/WindowObject.h>
 
-#if __has_include(<LibWeb/Crypto/@name@.h>)
-#    include <LibWeb/Crypto/@name@.h>
-#elif __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/Encoding/@name@.h>)
-#    include <LibWeb/Encoding/@name@.h>
-#elif __has_include(<LibWeb/Geometry/@name@.h>)
-#    include <LibWeb/Geometry/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
-#    include <LibWeb/RequestIdleCallback/@name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#elif __has_include(<LibWeb/URL/@name@.h>)
-#    include <LibWeb/URL/@name@.h>
+#if __has_include(<LibWeb/@possible_include_path@.h>)
+#    include <LibWeb/@possible_include_path@.h>
 #endif
+)~~~");
 
+    emit_includes_for_all_imports(interface, generator, false, true);
+
+    generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
@@ -4331,4 +3237,6 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
 )~~~");
 
     outln("{}", generator.as_string_view());
+}
+
 }

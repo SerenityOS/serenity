@@ -6,12 +6,15 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCrypto/Cipher/Cipher.h>
 #include <LibCrypto/Cipher/Mode/CBC.h>
 #include <LibCrypto/Cipher/Mode/CTR.h>
 #include <LibCrypto/Cipher/Mode/GCM.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace Crypto {
 namespace Cipher {
@@ -44,7 +47,9 @@ public:
             m_data[i] ^= ivec[i];
     }
 
+#ifndef KERNEL
     String to_string() const;
+#endif
 
 private:
     constexpr static size_t data_size() { return sizeof(m_data); }
@@ -57,7 +62,11 @@ struct AESCipherKey : public CipherKey {
     virtual void expand_encrypt_key(ReadonlyBytes user_key, size_t bits) override;
     virtual void expand_decrypt_key(ReadonlyBytes user_key, size_t bits) override;
     static bool is_valid_key_size(size_t bits) { return bits == 128 || bits == 192 || bits == 256; };
+
+#ifndef KERNEL
     String to_string() const;
+#endif
+
     const u32* round_keys() const
     {
         return (const u32*)m_rd_keys;
@@ -110,7 +119,12 @@ public:
     virtual void encrypt_block(const BlockType& in, BlockType& out) override;
     virtual void decrypt_block(const BlockType& in, BlockType& out) override;
 
-    virtual String class_name() const override { return "AES"; }
+#ifndef KERNEL
+    virtual String class_name() const override
+    {
+        return "AES";
+    }
+#endif
 
 protected:
     AESCipherKey m_key;

@@ -7,10 +7,13 @@
 #pragma once
 
 #include <AK/Concepts.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibC/elf.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace ELF {
 
@@ -255,6 +258,7 @@ private:
     unsigned m_symbol_table_section_index { 0 };
     unsigned m_string_table_section_index { 0 };
 
+#ifndef KERNEL
     struct SortedSymbol {
         FlatPtr address;
         StringView name;
@@ -266,6 +270,7 @@ private:
     SortedSymbol* find_sorted_symbol(FlatPtr) const;
 
     mutable Vector<SortedSymbol> m_sorted_symbols;
+#endif
 };
 
 template<IteratorFunction<Image::Section> F>

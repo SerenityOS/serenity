@@ -9,8 +9,8 @@
 #include <LibJS/Parser.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>

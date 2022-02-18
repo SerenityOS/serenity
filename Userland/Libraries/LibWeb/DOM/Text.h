@@ -27,7 +27,12 @@ public:
 
     void set_always_editable(bool b) { m_always_editable = b; }
 
+    void set_owner_input_element(Badge<HTML::HTMLInputElement>, HTML::HTMLInputElement&);
+    HTML::HTMLInputElement* owner_input_element() { return m_owner_input_element; }
+
 private:
+    WeakPtr<HTML::HTMLInputElement> m_owner_input_element;
+
     bool m_always_editable { false };
 };
 

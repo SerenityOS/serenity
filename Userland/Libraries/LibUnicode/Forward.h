@@ -11,10 +11,8 @@
 namespace Unicode {
 
 enum class Block : u16;
-enum class Calendar : u8;
 enum class CalendarFormatType : u8;
 enum class CalendarPatternStyle : u8;
-enum class CalendarName : u8;
 enum class CalendarSymbol : u8;
 enum class CompactNumberFormatType : u8;
 enum class Condition : u8;
@@ -27,12 +25,15 @@ enum class GraphemeBreakProperty : u8;
 enum class HourCycle : u8;
 enum class HourCycleRegion : u8;
 enum class Key : u8;
+enum class KeywordCalendar : u8;
+enum class KeywordColCaseFirst : u8;
+enum class KeywordColNumeric : u8;
+enum class KeywordNumbers : u8;
 enum class Language : u16;
 enum class ListPatternStyle : u8;
 enum class ListPatternType : u8;
 enum class Locale : u16;
 enum class Month : u8;
-enum class NumberSystem : u8;
 enum class NumericSymbol : u8;
 enum class Property : u8;
 enum class Script : u8;

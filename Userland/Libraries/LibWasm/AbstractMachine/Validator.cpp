@@ -2382,19 +2382,27 @@ VALIDATE_INSTRUCTION(structured_end)
     m_context = m_parent_contexts.take_last();
     auto last_block_type = m_entered_blocks.take_last();
 
-    if (last_scope == ChildScopeKind::Block) {
-        auto details = m_block_details.take_last();
-        // FIXME: Validate the returns.
-        return {};
+    switch (last_scope) {
+    case ChildScopeKind::Block:
+    case ChildScopeKind::IfWithoutElse:
+    case ChildScopeKind::Else:
+        m_block_details.take_last();
+        break;
+    case ChildScopeKind::IfWithElse:
+        return Errors::invalid("usage of if without an else clause that appears to have one anyway");
     }
 
-    if (last_scope == ChildScopeKind::Else) {
-        auto details = m_block_details.take_last().details.get<BlockDetails::IfDetails>();
-        if (details.true_branch_stack != stack)
-            return Errors::invalid("stack configuration after if-else", details.true_branch_stack.release_vector(), stack.release_vector());
+    auto& results = last_block_type.results();
+    if (results.size() > stack.size())
+        return Errors::invalid_stack_state();
 
-        return {};
+    for (size_t i = 1; i <= results.size(); ++i) {
+        if (stack.take_last() != results[results.size() - i])
+            return Errors::invalid_stack_state();
     }
+
+    for (auto& result : results)
+        stack.append(result);
 
     return {};
 }
@@ -2408,10 +2416,20 @@ VALIDATE_INSTRUCTION(structured_else)
     if (m_entered_scopes.last() != ChildScopeKind::IfWithElse)
         return Errors::invalid("usage of structured else");
 
+    auto& block_type = m_entered_blocks.last();
+    auto& results = block_type.results();
+
+    if (results.size() > stack.size())
+        return Errors::invalid_stack_state();
+
+    for (size_t i = 1; i <= results.size(); ++i) {
+        if (stack.take_last() != results[results.size() - i])
+            return Errors::invalid_stack_state();
+    }
+
+    auto& details = m_block_details.last().details.get<BlockDetails::IfDetails>();
     m_entered_scopes.last() = ChildScopeKind::Else;
-    auto& if_details = m_block_details.last().details.get<BlockDetails::IfDetails>();
-    if_details.true_branch_stack = exchange(stack, move(if_details.initial_stack));
-    m_context = m_parent_contexts.last();
+    stack = move(details.initial_stack);
     return {};
 }
 
@@ -2473,6 +2491,8 @@ VALIDATE_INSTRUCTION(if_)
     if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I32))
         return Errors::invalid_stack_state();
 
+    auto stack_snapshot = stack;
+
     auto& parameters = block_type.parameters();
     if (stack.size() < parameters.size())
         return Errors::invalid_stack_state();
@@ -2486,7 +2506,7 @@ VALIDATE_INSTRUCTION(if_)
         stack.append(parameter);
 
     m_entered_scopes.append(args.else_ip.has_value() ? ChildScopeKind::IfWithElse : ChildScopeKind::IfWithoutElse);
-    m_block_details.empend(stack.actual_size(), BlockDetails::IfDetails { stack, {} });
+    m_block_details.empend(stack.actual_size(), BlockDetails::IfDetails { move(stack_snapshot) });
     m_parent_contexts.append(m_context);
     m_entered_blocks.append(block_type);
     m_context.labels.prepend(ResultType { block_type.results() });

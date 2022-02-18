@@ -81,6 +81,9 @@ public:
     /// Returns the total size of the stream, or an errno in the case of an
     /// error. May not preserve the original position on the stream on failure.
     virtual ErrorOr<off_t> size();
+    /// Shrinks or extends the stream to the given size. Returns an errno in
+    /// the case of an error.
+    virtual ErrorOr<void> truncate(off_t length) = 0;
 };
 
 /// The Socket class is the base class for all concrete BSD-style socket
@@ -197,6 +200,7 @@ public:
     virtual bool is_open() const override;
     virtual void close() override;
     virtual ErrorOr<off_t> seek(i64 offset, SeekMode) override;
+    virtual ErrorOr<void> truncate(off_t length) override;
 
     virtual ~File() override { close(); }
 
@@ -756,6 +760,10 @@ public:
         auto result = TRY(m_helper.stream().seek(offset, mode));
         m_helper.clear_buffer();
         return result;
+    }
+    virtual ErrorOr<void> truncate(off_t length) override
+    {
+        return m_helper.stream().truncate(length);
     }
 
     ErrorOr<size_t> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }

@@ -6,16 +6,22 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/ByteReader.h>
 #include <AK/Endian.h>
 #include <AK/Error.h>
 #include <AK/FixedPoint.h>
 #include <AK/Forward.h>
 #include <AK/Span.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibEDID/DMT.h>
 #include <LibEDID/VIC.h>
+
+#ifdef KERNEL
+#    include <Kernel/KString.h>
+#else
+#    include <AK/String.h>
+#endif
 
 namespace EDID {
 
@@ -82,7 +88,7 @@ public:
     static ErrorOr<Parser> from_framebuffer_device(String const&, size_t);
 #endif
 
-    String legacy_manufacturer_id() const;
+    StringView legacy_manufacturer_id() const;
 #ifndef KERNEL
     String manufacturer_name() const;
 #endif
@@ -358,8 +364,10 @@ public:
     ErrorOr<IterationDecision> for_each_detailed_timing(Function<IterationDecision(DetailedTiming const&, unsigned)>) const;
     Optional<DetailedTiming> detailed_timing(size_t) const;
 
+#ifndef KERNEL
     String display_product_name() const;
     String display_product_serial_number() const;
+#endif
 
     ErrorOr<IterationDecision> for_each_short_video_descriptor(Function<IterationDecision(unsigned, bool, VIC::Details const&)>) const;
 
@@ -415,7 +423,7 @@ public:
 
     bool operator==(Parser const& other) const;
 
-    String version() const;
+    StringView version() const;
 
     auto bytes() const { return m_bytes; }
 
@@ -442,6 +450,12 @@ private:
     ByteBuffer m_bytes_buffer;
     ReadonlyBytes m_bytes;
     u8 m_revision { 0 };
+#ifdef KERNEL
+    OwnPtr<Kernel::KString> m_version;
+#else
+    String m_version;
+#endif
+    char m_legacy_manufacturer_id[4] {};
 };
 
 }

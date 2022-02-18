@@ -7,9 +7,13 @@
 #pragma once
 
 #include <AK/ByteReader.h>
-#include <AK/String.h>
+#include <AK/Endian.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/HashFunction.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace Crypto {
 namespace Authentication {
@@ -44,7 +48,12 @@ public:
 
     constexpr static size_t digest_size() { return TagType::Size; }
 
-    String class_name() const { return "GHash"; }
+#ifndef KERNEL
+    String class_name() const
+    {
+        return "GHash";
+    }
+#endif
 
     TagType process(ReadonlyBytes aad, ReadonlyBytes cipher);
 

@@ -42,6 +42,8 @@ namespace Web::HTML {
 RefPtr<DOM::Document> parse_html_document(StringView, const AK::URL&, const String& encoding);
 
 class HTMLParser {
+    friend class HTMLTokenizer;
+
 public:
     HTMLParser(DOM::Document&, StringView input, const String& encoding);
     ~HTMLParser();
@@ -100,7 +102,6 @@ private:
 
     void generate_implied_end_tags(const FlyString& exception = {});
     void generate_all_implied_end_tags_thoroughly();
-    bool stack_of_open_elements_has_element_with_tag_name_in_scope(const FlyString& tag_name);
     NonnullRefPtr<DOM::Element> create_element_for(const HTMLToken&, const FlyString& namespace_);
 
     struct AdjustedInsertionLocation {

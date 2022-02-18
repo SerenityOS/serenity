@@ -551,6 +551,8 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Link;
             } else if (pseudo_name.equals_ignoring_case("only-child")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::OnlyChild;
+            } else if (pseudo_name.equals_ignoring_case("only-of-type")) {
+                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::OnlyOfType;
             } else if (pseudo_name.equals_ignoring_case("root")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Root;
             } else if (pseudo_name.equals_ignoring_case("visited")) {
@@ -1124,6 +1126,9 @@ OwnPtr<MediaCondition> Parser::parse_media_in_parens(TokenStream<StyleComponentV
     }
 
     // `<general-enclosed>`
+    // FIXME: We should only be taking this branch if the grammar doesn't match the above options.
+    //        Currently we take it if the above fail to parse, which is different.
+    //        eg, `@media (min-width: 76yaks)` is valid grammar, but does not parse because `yaks` isn't a unit.
     if (auto maybe_general_enclosed = parse_general_enclosed(tokens); maybe_general_enclosed.has_value())
         return MediaCondition::from_general_enclosed(maybe_general_enclosed.release_value());
 
@@ -2149,7 +2154,7 @@ Optional<Parser::Dimension> Parser::parse_dimension(StyleComponentValueRule cons
     if (component_value.is(Token::Type::Dimension)) {
         float numeric_value = component_value.token().dimension_value();
         auto unit_string = component_value.token().dimension_unit();
-        Optional<Length::Type> length_type = Length::Type::Undefined;
+        Optional<Length::Type> length_type;
 
         if (unit_string.equals_ignoring_case("px"sv)) {
             length_type = Length::Type::Px;

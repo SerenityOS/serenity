@@ -19,6 +19,7 @@ public:
     const BrowsingContext* nested_browsing_context() const { return m_nested_browsing_context; }
 
     const DOM::Document* content_document() const;
+    DOM::Document const* content_document_without_origin_check() const;
 
     virtual void inserted() override;
 

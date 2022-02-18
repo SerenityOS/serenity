@@ -19,7 +19,7 @@ MessageChannel::MessageChannel()
     m_port2 = MessagePort::create();
 
     // 3. Entangle this's port 1 and this's port 2.
-    m_port1->entangle_with({}, *m_port2);
+    m_port1->entangle_with(*m_port2);
 }
 
 MessageChannel::~MessageChannel()

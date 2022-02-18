@@ -8,7 +8,6 @@
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
 #include <AK/IntegralMath.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/kstdio.h>
 
@@ -777,7 +776,7 @@ ErrorOr<void> Formatter<wchar_t>::format(FormatBuilder& builder, wchar_t value)
         codepoint.append_code_point(value);
 
         Formatter<StringView> formatter { *this };
-        return formatter.format(builder, codepoint.to_string());
+        return formatter.format(builder, codepoint.string_view());
     }
 }
 ErrorOr<void> Formatter<bool>::format(FormatBuilder& builder, bool value)

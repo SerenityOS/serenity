@@ -533,8 +533,8 @@ Span<StringView const> @name@()
         generator.append(first ? " " : ", ");
         first = false;
 
-        if (auto it = aliases.find_if([&](auto const& alias) { return alias.name == value; }); it != aliases.end())
-            generator.append(String::formatted("\"{}\"sv", it->alias));
+        if (auto it = aliases.find_if([&](auto const& alias) { return alias.alias == value; }); it != aliases.end())
+            generator.append(String::formatted("\"{}\"sv", it->name));
         else
             generator.append(String::formatted("\"{}\"sv", value));
     }

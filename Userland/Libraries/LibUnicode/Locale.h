@@ -145,6 +145,9 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID&);
 String const& default_locale();
 bool is_locale_available(StringView locale);
 
+Span<StringView const> get_available_calendars();
+Span<StringView const> get_available_number_systems();
+
 Style style_from_string(StringView style);
 StringView style_to_string(Style style);
 
@@ -153,10 +156,15 @@ Optional<Language> language_from_string(StringView language);
 Optional<Territory> territory_from_string(StringView territory);
 Optional<ScriptTag> script_tag_from_string(StringView script_tag);
 Optional<Currency> currency_from_string(StringView currency);
-Optional<CalendarName> calendar_name_from_string(StringView calendar);
 Optional<DateField> date_field_from_string(StringView calendar);
-Optional<Key> key_from_string(StringView key);
 Optional<ListPatternType> list_pattern_type_from_string(StringView list_pattern_type);
+
+Optional<Key> key_from_string(StringView key);
+Optional<KeywordCalendar> keyword_ca_from_string(StringView ca);
+Optional<KeywordColCaseFirst> keyword_kf_from_string(StringView kf);
+Optional<KeywordColNumeric> keyword_kn_from_string(StringView kn);
+Optional<KeywordNumbers> keyword_nu_from_string(StringView nu);
+Vector<StringView> get_keywords_for_locale(StringView locale, StringView key);
 
 Optional<DisplayPattern> get_locale_display_patterns(StringView locale);
 Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id);
@@ -172,8 +180,6 @@ Optional<StringView> get_locale_calendar_mapping(StringView locale, StringView c
 Optional<StringView> get_locale_long_date_field_mapping(StringView locale, StringView date_field);
 Optional<StringView> get_locale_short_date_field_mapping(StringView locale, StringView date_field);
 Optional<StringView> get_locale_narrow_date_field_mapping(StringView locale, StringView date_field);
-Optional<StringView> get_locale_key_mapping(StringView locale, StringView keyword);
-Vector<StringView> get_locale_key_mapping_list(StringView locale, StringView keyword);
 
 Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, Style style);
 

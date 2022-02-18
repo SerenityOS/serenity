@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,7 +13,7 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibGfx/Color.h>
 
 namespace Core {
@@ -24,11 +25,11 @@ public:
         No,
     };
 
-    static NonnullRefPtr<ConfigFile> open_for_lib(String const& lib_name, AllowWriting = AllowWriting::No);
-    static NonnullRefPtr<ConfigFile> open_for_app(String const& app_name, AllowWriting = AllowWriting::No);
-    static NonnullRefPtr<ConfigFile> open_for_system(String const& app_name, AllowWriting = AllowWriting::No);
-    static NonnullRefPtr<ConfigFile> open(String const& filename, AllowWriting = AllowWriting::No);
-    static NonnullRefPtr<ConfigFile> open(String const& filename, int fd);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_lib(String const& lib_name, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_app(String const& app_name, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_system(String const& app_name, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(String const& filename, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(String const& filename, int fd);
     ~ConfigFile();
 
     bool has_group(String const&) const;
@@ -52,20 +53,20 @@ public:
 
     bool is_dirty() const { return m_dirty; }
 
-    bool sync();
+    ErrorOr<void> sync();
 
     void remove_group(String const& group);
     void remove_entry(String const& group, String const& key);
 
-    String filename() const { return m_file->filename(); }
+    String const& filename() const { return m_filename; }
 
 private:
-    explicit ConfigFile(String const& filename, AllowWriting);
-    explicit ConfigFile(String const& filename, int fd);
+    ConfigFile(String const& filename, OwnPtr<Stream::BufferedFile> open_file);
 
-    void reparse();
+    ErrorOr<void> reparse();
 
-    NonnullRefPtr<File> m_file;
+    String m_filename;
+    OwnPtr<Stream::BufferedFile> m_file;
     HashMap<String, HashMap<String, String>> m_groups;
     bool m_dirty { false };
 };

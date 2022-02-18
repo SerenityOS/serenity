@@ -1,3 +1,5 @@
+#import <DOM/Document.idl>
+
 interface DOMImplementation {
 
     // FIXME: This is missing "optional DocumentType? doctype = null" at the end.

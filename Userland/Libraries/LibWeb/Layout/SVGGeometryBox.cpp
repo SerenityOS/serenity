@@ -32,7 +32,7 @@ void SVGGeometryBox::paint(PaintContext& context, PaintPhase phase)
     Gfx::AntiAliasingPainter painter { context.painter() };
     auto& svg_context = context.svg_context();
 
-    auto offset = absolute_position();
+    auto offset = svg_context.svg_element_position();
     painter.translate(offset);
 
     if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0) {

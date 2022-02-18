@@ -1,3 +1,5 @@
+#import <DOM/EventTarget.idl>
+
 interface WebSocket : EventTarget {
 
     // FIXME: A second "protocols" argument should be added once supported

@@ -288,6 +288,8 @@
 #include <LibWeb/Bindings/SubtleCryptoConstructor.h>
 #include <LibWeb/Bindings/SubtleCryptoPrototype.h>
 #include <LibWeb/Bindings/TextConstructor.h>
+#include <LibWeb/Bindings/TextDecoderConstructor.h>
+#include <LibWeb/Bindings/TextDecoderPrototype.h>
 #include <LibWeb/Bindings/TextEncoderConstructor.h>
 #include <LibWeb/Bindings/TextEncoderPrototype.h>
 #include <LibWeb/Bindings/TextMetricsConstructor.h>
@@ -301,6 +303,8 @@
 #include <LibWeb/Bindings/URLSearchParamsPrototype.h>
 #include <LibWeb/Bindings/WebSocketConstructor.h>
 #include <LibWeb/Bindings/WebSocketPrototype.h>
+#include <LibWeb/Bindings/WorkerConstructor.h>
+#include <LibWeb/Bindings/WorkerPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestEventTargetConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestEventTargetPrototype.h>
@@ -458,12 +462,14 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGRectElement)            \
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)             \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                      \
+    ADD_WINDOW_OBJECT_INTERFACE(TextDecoder)               \
     ADD_WINDOW_OBJECT_INTERFACE(TextEncoder)               \
     ADD_WINDOW_OBJECT_INTERFACE(TextMetrics)               \
     ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                   \
     ADD_WINDOW_OBJECT_INTERFACE(URLSearchParams)           \
     ADD_WINDOW_OBJECT_INTERFACE(URL)                       \
     ADD_WINDOW_OBJECT_INTERFACE(WebSocket)                 \
+    ADD_WINDOW_OBJECT_INTERFACE(Worker)                    \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)            \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequestEventTarget) \
     ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Image, ImageConstructor, HTMLImageElementPrototype)
