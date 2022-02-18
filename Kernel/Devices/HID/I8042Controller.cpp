@@ -31,7 +31,7 @@ UNMAP_AFTER_INIT I8042Controller::I8042Controller()
 {
 }
 
-UNMAP_AFTER_INIT bool I8042Controller::check_existence(Badge<HIDManagement>)
+UNMAP_AFTER_INIT bool I8042Controller::check_existence_via_probing(Badge<HIDManagement>)
 {
     {
         SpinlockLocker lock(m_lock);
