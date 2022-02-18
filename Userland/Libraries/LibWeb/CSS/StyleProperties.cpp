@@ -36,15 +36,15 @@ NonnullRefPtr<StyleProperties> StyleProperties::clone() const
 
 void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue> value)
 {
-    m_property_values.set(id, move(value));
+    m_property_values[to_underlying(id)] = move(value);
 }
 
 Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID property_id) const
 {
-    auto it = m_property_values.find(property_id);
-    if (it == m_property_values.end())
+    auto value = m_property_values[to_underlying(property_id)];
+    if (!value)
         return {};
-    return it->value;
+    return value.release_nonnull();
 }
 
 Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fallback) const
@@ -390,12 +390,18 @@ bool StyleProperties::operator==(const StyleProperties& other) const
     if (m_property_values.size() != other.m_property_values.size())
         return false;
 
-    for (auto& it : m_property_values) {
-        auto jt = other.m_property_values.find(it.key);
-        if (jt == other.m_property_values.end())
+    for (size_t i = 0; i < m_property_values.size(); ++i) {
+        auto const& my_ptr = m_property_values[i];
+        auto const& other_ptr = m_property_values[i];
+        if (!my_ptr) {
+            if (other_ptr)
+                return false;
+            continue;
+        }
+        if (!other_ptr)
             return false;
-        auto& my_value = *it.value;
-        auto& other_value = *jt->value;
+        auto const& my_value = *my_ptr;
+        auto const& other_value = *other_ptr;
         if (my_value.type() != other_value.type())
             return false;
         if (my_value != other_value)

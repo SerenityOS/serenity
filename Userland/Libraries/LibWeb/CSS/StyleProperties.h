@@ -29,12 +29,14 @@ public:
     template<typename Callback>
     inline void for_each_property(Callback callback) const
     {
-        for (auto& it : m_property_values)
-            callback((CSS::PropertyID)it.key, *it.value);
+        for (size_t i = 0; i < m_property_values.size(); ++i) {
+            if (m_property_values[i])
+                callback((CSS::PropertyID)i, *m_property_values[i]);
+        }
     }
 
-    HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>>& properties() { return m_property_values; }
-    HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>> const& properties() const { return m_property_values; }
+    auto& properties() { return m_property_values; }
+    auto const& properties() const { return m_property_values; }
 
     void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue> value);
     Optional<NonnullRefPtr<StyleValue>> property(CSS::PropertyID) const;
@@ -96,7 +98,7 @@ public:
 private:
     friend class StyleComputer;
 
-    HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>> m_property_values;
+    Array<RefPtr<StyleValue>, to_underlying(CSS::last_property_id) + 1> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
 
     mutable RefPtr<Gfx::Font> m_font;
