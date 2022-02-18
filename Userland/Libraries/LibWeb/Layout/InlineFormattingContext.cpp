@@ -126,7 +126,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
         auto& inline_block = const_cast<BlockContainer&>(verify_cast<BlockContainer>(box));
 
         auto& width_value = inline_block.computed_values().width();
-        if (!width_value.has_value() || (width_value->is_length() && width_value->length().is_undefined_or_auto())) {
+        if (!width_value.has_value() || (width_value->is_length() && width_value->length().is_auto())) {
             auto result = calculate_shrink_to_fit_widths(inline_block);
 
             auto available_width = containing_block().content_width()
@@ -146,7 +146,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
         auto independent_formatting_context = layout_inside(inline_block, layout_mode);
 
         auto& height_value = inline_block.computed_values().height();
-        if (!height_value.has_value() || (height_value->is_length() && height_value->length().is_undefined_or_auto())) {
+        if (!height_value.has_value() || (height_value->is_length() && height_value->length().is_auto())) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
             BlockFormattingContext::compute_height(inline_block);
         } else {

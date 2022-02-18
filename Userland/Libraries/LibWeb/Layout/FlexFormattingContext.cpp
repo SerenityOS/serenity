@@ -29,7 +29,7 @@ static bool is_undefined_or_auto(Optional<CSS::LengthPercentage> const& length_p
 {
     if (!length_percentage.has_value())
         return true;
-    return length_percentage->is_length() && length_percentage->length().is_undefined_or_auto();
+    return length_percentage->is_length() && length_percentage->length().is_auto();
 }
 
 FlexFormattingContext::FlexFormattingContext(Box& flex_container, FormattingContext* parent)
@@ -235,11 +235,12 @@ bool FlexFormattingContext::cross_size_is_absolute_or_resolved_nicely(NodeWithSt
     if (!length_percentage.has_value())
         return false;
 
+    // FIXME: Handle calc here.
     if (length_percentage->is_length()) {
         auto& length = length_percentage->length();
         if (length.is_absolute() || length.is_relative())
             return true;
-        if (length.is_undefined_or_auto())
+        if (length.is_auto())
             return false;
     }
 

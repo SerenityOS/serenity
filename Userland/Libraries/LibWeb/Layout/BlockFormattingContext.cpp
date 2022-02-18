@@ -295,7 +295,7 @@ float BlockFormattingContext::compute_theoretical_height(Box const& box)
         height = compute_height_for_replaced_element(verify_cast<ReplacedBox>(box));
     } else {
         if (!box.computed_values().height().has_value()
-            || (box.computed_values().height()->is_length() && box.computed_values().height()->length().is_undefined_or_auto())
+            || (box.computed_values().height()->is_length() && box.computed_values().height()->length().is_auto())
             || (computed_values.height().has_value() && computed_values.height()->is_percentage() && !is_absolute(containing_block.computed_values().height()))) {
             height = compute_auto_height_for_block_level_element(box, ConsiderFloats::No);
         } else {
@@ -441,7 +441,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
 
     if (layout_mode != LayoutMode::Default) {
         auto& width = block_container.computed_values().width();
-        if (!width.has_value() || (width->is_length() && width->length().is_undefined_or_auto()))
+        if (!width.has_value() || (width->is_length() && width->length().is_auto()))
             block_container.set_content_width(content_width);
     }
 }

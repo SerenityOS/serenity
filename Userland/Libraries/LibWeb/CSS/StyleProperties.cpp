@@ -131,7 +131,7 @@ float StyleProperties::line_height(Layout::Node const& layout_node) const
 
         if (line_height->is_length()) {
             auto line_height_length = line_height->to_length();
-            if (!line_height_length.is_undefined_or_auto())
+            if (!line_height_length.is_auto())
                 return line_height_length.to_px(layout_node);
         }
 

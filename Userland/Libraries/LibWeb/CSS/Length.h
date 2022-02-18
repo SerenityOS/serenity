@@ -15,7 +15,6 @@ namespace Web::CSS {
 class Length {
 public:
     enum class Type {
-        Undefined,
         Calculated,
         Auto,
         Cm,
@@ -37,7 +36,6 @@ public:
 
     // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
     // this file already. To break the cyclic dependency, we must move all method definitions out.
-    Length();
     Length(int value, Type type);
     Length(float value, Type type);
 
@@ -48,8 +46,6 @@ public:
 
     Length resolved(Layout::Node const& layout_node) const;
 
-    bool is_undefined_or_auto() const { return m_type == Type::Undefined || m_type == Type::Auto; }
-    bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_auto() const { return m_type == Type::Auto; }
     bool is_calculated() const { return m_type == Type::Calculated; }
 
@@ -137,7 +133,7 @@ public:
 private:
     const char* unit_name() const;
 
-    Type m_type { Type::Undefined };
+    Type m_type;
     float m_value { 0 };
 
     RefPtr<CalculatedStyleValue> m_calculated_style;

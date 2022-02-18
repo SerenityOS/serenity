@@ -18,7 +18,6 @@
 
 namespace Web::CSS {
 
-Length::Length() = default;
 Length::Length(int value, Type type)
     : m_type(type)
     , m_value(value)
@@ -49,8 +48,8 @@ Length Length::make_calculated(NonnullRefPtr<CalculatedStyleValue> calculated_st
 
 Length Length::percentage_of(Percentage const& percentage) const
 {
-    if (is_undefined_or_auto()) {
-        dbgln("Attempting to get percentage of an undefined or auto length, this seems wrong? But for now we just return the original length.");
+    if (is_auto()) {
+        dbgln("Attempting to get percentage of an auto length, this seems wrong? But for now we just return the original length.");
         return *this;
     }
 
@@ -132,8 +131,6 @@ const char* Length::unit_name() const
         return "rem";
     case Type::Auto:
         return "auto";
-    case Type::Undefined:
-        return "undefined";
     case Type::Vh:
         return "vh";
     case Type::Vw:
