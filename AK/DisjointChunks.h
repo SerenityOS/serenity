@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -195,7 +196,7 @@ public:
     DisjointChunks& operator=(DisjointChunks&&) = default;
     DisjointChunks& operator=(DisjointChunks const&) = default;
 
-    void append(ChunkType&& chunk) { m_chunks.append(chunk); }
+    void append(ChunkType&& chunk) { m_chunks.append(move(chunk)); }
     void extend(DisjointChunks&& chunks) { m_chunks.extend(move(chunks.m_chunks)); }
     void extend(DisjointChunks const& chunks) { m_chunks.extend(chunks.m_chunks); }
 
