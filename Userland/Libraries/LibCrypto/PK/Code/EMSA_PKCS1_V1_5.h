@@ -6,10 +6,7 @@
 
 #pragma once
 
-#include <AK/Array.h>
-#include <AK/Format.h>
-#include <AK/Random.h>
-#include <AK/Vector.h>
+#include <LibCrypto/Hash/HashManager.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibCrypto/Hash/SHA1.h>
 #include <LibCrypto/Hash/SHA2.h>
@@ -114,6 +111,27 @@ inline ReadonlyBytes EMSA_PKCS1_V1_5<Crypto::Hash::SHA512>::hash_function_digest
 {
     // RFC8017 section 9.2 notes 1
     return { "\x30\x51\x30\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x03\x05\x00\x04\x40", 19 };
+}
+
+template<>
+inline ReadonlyBytes EMSA_PKCS1_V1_5<Crypto::Hash::Manager>::hash_function_digest_info()
+{
+    // RFC8017 section 9.2 notes 1
+    switch (hasher().kind()) {
+    case Hash::HashKind::MD5:
+        return { "\x30\x20\x30\x0c\x06\x08\x2a\x86\x48\x86\xf7\x0d\x02\x05\x05\x00\x04\x10", 18 };
+    case Hash::HashKind::SHA1:
+        return { "\x30\x21\x30\x09\x06\x05\x2b\x0e\x03\x02\x1a\x05\x00\x04\x14", 15 };
+    case Hash::HashKind::SHA256:
+        return { "\x30\x31\x30\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04\x20", 19 };
+    case Hash::HashKind::SHA384:
+        return { "\x30\x41\x30\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x02\x05\x00\x04\x30", 19 };
+    case Hash::HashKind::SHA512:
+        return { "\x30\x51\x30\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x03\x05\x00\x04\x40", 19 };
+    case Hash::HashKind::None:
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 }
