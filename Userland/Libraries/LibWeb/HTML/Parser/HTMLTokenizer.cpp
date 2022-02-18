@@ -1617,7 +1617,7 @@ _StartOfFunction:
             {
                 size_t byte_offset = m_utf8_view.byte_offset_of(m_prev_utf8_iterator);
 
-                auto match = HTML::code_points_from_entity(m_decoded_input.substring_view(byte_offset, m_decoded_input.length() - byte_offset - 1));
+                auto match = HTML::code_points_from_entity(m_decoded_input.substring_view(byte_offset, m_decoded_input.length() - byte_offset));
 
                 if (match.has_value()) {
                     skip(match->entity.length() - 1);
