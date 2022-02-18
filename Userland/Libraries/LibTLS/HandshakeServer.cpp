@@ -11,6 +11,7 @@
 
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
+#include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
 
@@ -282,9 +283,9 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
         dbgln("dh_Ys: {:hex-dump}", dh_Ys);
     }
 
-    // FIXME: Validate signature of Diffie-Hellman parameters as defined in RFC 5246 section 7.4.3.
-
-    return 0;
+    auto server_key_info = buffer.slice(3, 6 + dh_p_length + dh_g_length + dh_Ys_length);
+    auto signature = buffer.slice(9 + dh_p_length + dh_g_length + dh_Ys_length);
+    return verify_rsa_server_key_exchange(server_key_info, signature);
 }
 
 ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
@@ -317,9 +318,77 @@ ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
         dbgln("ECDHE server public key: {:hex-dump}", server_public_key);
     }
 
-    // FIXME: Validate signature of Elliptic Curve Diffie-Hellman public key
+    auto server_key_info = buffer.slice(3, 4 + server_public_key_length);
+    auto signature = buffer.slice(7 + server_public_key_length);
+    return verify_rsa_server_key_exchange(server_key_info, signature);
+}
+
+ssize_t TLSv12::verify_rsa_server_key_exchange(ReadonlyBytes server_key_info_buffer, ReadonlyBytes signature_buffer)
+{
+    auto signature_hash = signature_buffer[0];
+    auto signature_algorithm = signature_buffer[1];
+    if (signature_algorithm != (u8)SignatureAlgorithm::RSA) {
+        dbgln("verify_rsa_server_key_exchange failed: Signature algorithm is not RSA, instead {}", signature_algorithm);
+        return (i8)Error::NotUnderstood;
+    }
+
+    auto signature_length = AK::convert_between_host_and_network_endian(ByteReader::load16(signature_buffer.offset_pointer(2)));
+    auto signature = signature_buffer.slice(4, signature_length);
+
+    if (m_context.certificates.is_empty()) {
+        dbgln("verify_rsa_server_key_exchange failed: Attempting to verify signature without certificates");
+        return (i8)Error::NotSafe;
+    }
+    auto certificate_public_key = m_context.certificates.first().public_key;
+    Crypto::PK::RSAPrivateKey dummy_private_key;
+    auto rsa = Crypto::PK::RSA(certificate_public_key, dummy_private_key);
+
+    auto signature_verify_buffer_result = ByteBuffer::create_uninitialized(signature_length);
+    if (signature_verify_buffer_result.is_error()) {
+        dbgln("verify_rsa_server_key_exchange failed: Not enough memory");
+        return (i8)Error::OutOfMemory;
+    }
+    auto signature_verify_buffer = signature_verify_buffer_result.release_value();
+    auto signature_verify_bytes = signature_verify_buffer.bytes();
+    rsa.verify(signature, signature_verify_bytes);
+
+    auto message_result = ByteBuffer::create_uninitialized(64 + server_key_info_buffer.size());
+    if (message_result.is_error()) {
+        dbgln("verify_rsa_server_key_exchange failed: Not enough memory");
+        return (i8)Error::OutOfMemory;
+    }
+    auto message = message_result.release_value();
+    message.overwrite(0, m_context.local_random, 32);
+    message.overwrite(32, m_context.remote_random, 32);
+    message.overwrite(64, server_key_info_buffer.data(), server_key_info_buffer.size());
+
+    Crypto::Hash::HashKind hash_kind;
+    switch ((HashAlgorithm)signature_hash) {
+    case HashAlgorithm::SHA1:
+        hash_kind = Crypto::Hash::HashKind::SHA1;
+        break;
+    case HashAlgorithm::SHA256:
+        hash_kind = Crypto::Hash::HashKind::SHA256;
+        break;
+    case HashAlgorithm::SHA384:
+        hash_kind = Crypto::Hash::HashKind::SHA384;
+        break;
+    case HashAlgorithm::SHA512:
+        hash_kind = Crypto::Hash::HashKind::SHA512;
+        break;
+    default:
+        dbgln("verify_rsa_server_key_exchange failed: Hash algorithm is not SHA1/256/384/512, instead {}", signature_hash);
+        return (i8)Error::NotUnderstood;
+    }
+
+    auto pkcs1 = Crypto::PK::EMSA_PKCS1_V1_5<Crypto::Hash::Manager>(hash_kind);
+    auto verification = pkcs1.verify(message, signature_verify_bytes, signature_length * 8);
+
+    if (verification == Crypto::VerificationConsistency::Inconsistent) {
+        dbgln("verify_rsa_server_key_exchange failed: Verification of signature inconsistent");
+        return (i8)Error::NotSafe;
+    }
 
     return 0;
 }
-
 }

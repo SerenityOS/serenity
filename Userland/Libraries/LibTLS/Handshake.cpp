@@ -489,6 +489,11 @@ ssize_t TLSv12::handle_handshake_payload(ReadonlyBytes vbuffer)
                 write_packet(packet);
                 break;
             }
+            case Error::NotSafe: {
+                auto packet = build_alert(true, (u8)AlertDescription::DecryptError);
+                write_packet(packet);
+                break;
+            }
             case Error::NeedMoreData:
                 // Ignore this, as it's not an "error"
                 dbgln_if(TLS_DEBUG, "More data needed");

@@ -482,6 +482,8 @@ private:
 
     void pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
 
+    ssize_t verify_rsa_server_key_exchange(ReadonlyBytes server_key_info_buffer, ReadonlyBytes signature_buffer);
+
     size_t key_length() const
     {
         switch (m_context.cipher) {
