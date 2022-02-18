@@ -57,25 +57,13 @@ Length Length::percentage_of(Percentage const& percentage) const
     return Length { percentage.as_fraction() * raw_value(), m_type };
 }
 
-Length Length::resolved(Length const& fallback_for_undefined, Layout::Node const& layout_node) const
+Length Length::resolved(Layout::Node const& layout_node) const
 {
-    if (is_undefined())
-        return fallback_for_undefined;
     if (is_calculated())
         return m_calculated_style->resolve_length(layout_node).release_value();
     if (is_relative())
         return make_px(to_px(layout_node));
     return *this;
-}
-
-Length Length::resolved_or_auto(Layout::Node const& layout_node) const
-{
-    return resolved(make_auto(), layout_node);
-}
-
-Length Length::resolved_or_zero(Layout::Node const& layout_node) const
-{
-    return resolved(make_px(0), layout_node);
 }
 
 float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const
