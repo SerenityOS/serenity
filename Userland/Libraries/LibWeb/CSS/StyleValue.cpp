@@ -500,7 +500,6 @@ Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout
 
 Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
 {
-    VERIFY(!percentage_basis.is_undefined());
     auto result = m_expression->resolve(&layout_node, percentage_basis);
 
     return result.value().visit(
