@@ -16,11 +16,11 @@
 #include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/DOM/QualifiedName.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/Layout/Node.h>
-#include <LibWeb/QualifiedName.h>
 
 namespace Web::DOM {
 
