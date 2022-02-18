@@ -72,7 +72,7 @@ public:
                 break;
             }
         }
-        invalidate();
+        did_update(GUI::Model::UpdateFlag::DontInvalidateIndices);
     }
 
 private:
