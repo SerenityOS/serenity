@@ -305,8 +305,8 @@ struct Traits<String> : public GenericTraits<String> {
 };
 
 struct CaseInsensitiveStringTraits : public Traits<String> {
-    static unsigned hash(const String& s) { return s.impl() ? s.to_lowercase().impl()->hash() : 0; }
-    static bool equals(const String& a, const String& b) { return a.to_lowercase() == b.to_lowercase(); }
+    static unsigned hash(String const& s) { return s.impl() ? s.impl()->case_insensitive_hash() : 0; }
+    static bool equals(String const& a, String const& b) { return a.equals_ignoring_case(b); }
 };
 
 bool operator<(const char*, const String&);
