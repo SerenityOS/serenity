@@ -108,12 +108,12 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
     auto width_of_containing_block = CSS::Length::make_px(containing_block().content_width());
     auto& box_model = box.box_model();
 
-    box_model.margin.left = box.computed_values().margin().left.resolved(box, width_of_containing_block).resolved(box).to_px(box);
+    box_model.margin.left = box.computed_values().margin().left.resolved(box, width_of_containing_block).to_px(box);
     box_model.border.left = box.computed_values().border_left().width;
-    box_model.padding.left = box.computed_values().padding().left.resolved(box, width_of_containing_block).resolved(box).to_px(box);
-    box_model.margin.right = box.computed_values().margin().right.resolved(box, width_of_containing_block).resolved(box).to_px(box);
+    box_model.padding.left = box.computed_values().padding().left.resolved(box, width_of_containing_block).to_px(box);
+    box_model.margin.right = box.computed_values().margin().right.resolved(box, width_of_containing_block).to_px(box);
     box_model.border.right = box.computed_values().border_right().width;
-    box_model.padding.right = box.computed_values().padding().right.resolved(box, width_of_containing_block).resolved(box).to_px(box);
+    box_model.padding.right = box.computed_values().padding().right.resolved(box, width_of_containing_block).to_px(box);
 
     if (is<ReplacedBox>(box)) {
         auto& replaced = verify_cast<ReplacedBox>(box);
@@ -141,7 +141,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
             inline_block.set_content_width(width);
         } else {
             auto container_width = CSS::Length::make_px(containing_block().content_width());
-            inline_block.set_content_width(width_value->resolved(box, container_width).resolved(inline_block).to_px(inline_block));
+            inline_block.set_content_width(width_value->resolved(box, container_width).to_px(inline_block));
         }
         auto independent_formatting_context = layout_inside(inline_block, layout_mode);
 
@@ -151,7 +151,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
             BlockFormattingContext::compute_height(inline_block);
         } else {
             auto container_height = CSS::Length::make_px(containing_block().content_height());
-            inline_block.set_content_height(height_value->resolved(box, container_height).resolved(inline_block).to_px(inline_block));
+            inline_block.set_content_height(height_value->resolved(box, container_height).to_px(inline_block));
         }
 
         independent_formatting_context->parent_context_did_dimension_child_root_box();

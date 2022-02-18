@@ -67,7 +67,7 @@ void BlockFormattingContext::apply_transformations_to_children(Box& box)
                         continue;
                     transformation.values.first().visit(
                         [&](CSS::Length& value) {
-                            transform_y_offset += value.resolved(child_box).to_px(child_box);
+                            transform_y_offset += value.to_px(child_box);
                         },
                         [&](float value) {
                             transform_y_offset += value;
@@ -264,7 +264,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box& box)
         width = CSS::Length(min(max(result.preferred_minimum_width, available_width), result.preferred_width), CSS::Length::Type::Px);
     }
 
-    float final_width = width.resolved(box).to_px(box);
+    float final_width = width.to_px(box);
     box.set_content_width(final_width);
     box.box_model().margin.left = margin_left.to_px(box);
     box.box_model().margin.right = margin_right.to_px(box);
@@ -299,7 +299,7 @@ float BlockFormattingContext::compute_theoretical_height(Box const& box)
             || (computed_values.height().has_value() && computed_values.height()->is_percentage() && !is_absolute(containing_block.computed_values().height()))) {
             height = compute_auto_height_for_block_level_element(box, ConsiderFloats::No);
         } else {
-            height = computed_values.height().has_value() ? computed_values.height()->resolved(box, containing_block_height).resolved(box).to_px(box) : 0;
+            height = computed_values.height().has_value() ? computed_values.height()->resolved(box, containing_block_height).to_px(box) : 0;
         }
     }
 
@@ -323,13 +323,13 @@ void BlockFormattingContext::compute_height(Box& box)
     // First, resolve the top/bottom parts of the surrounding box model.
 
     // FIXME: While negative values are generally allowed for margins, for now just ignore those for height calculation
-    box.box_model().margin.top = max(computed_values.margin().top.resolved(box, width_of_containing_block_as_length).resolved(box).to_px(box), 0);
-    box.box_model().margin.bottom = max(computed_values.margin().bottom.resolved(box, width_of_containing_block_as_length).resolved(box).to_px(box), 0);
+    box.box_model().margin.top = max(computed_values.margin().top.resolved(box, width_of_containing_block_as_length).to_px(box), 0);
+    box.box_model().margin.bottom = max(computed_values.margin().bottom.resolved(box, width_of_containing_block_as_length).to_px(box), 0);
 
     box.box_model().border.top = computed_values.border_top().width;
     box.box_model().border.bottom = computed_values.border_bottom().width;
-    box.box_model().padding.top = computed_values.padding().top.resolved(box, width_of_containing_block_as_length).resolved(box).to_px(box);
-    box.box_model().padding.bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block_as_length).resolved(box).to_px(box);
+    box.box_model().padding.top = computed_values.padding().top.resolved(box, width_of_containing_block_as_length).to_px(box);
+    box.box_model().padding.bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block_as_length).to_px(box);
 
     auto height = compute_theoretical_height(box);
     box.set_content_height(height);
