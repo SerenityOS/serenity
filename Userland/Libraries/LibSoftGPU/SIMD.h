@@ -67,4 +67,40 @@ ALWAYS_INLINE static constexpr Vector4<AK::SIMD::i32x4> expand4(Vector4<int> con
     };
 }
 
+ALWAYS_INLINE static AK::SIMD::f32x4 ddx(AK::SIMD::f32x4 v)
+{
+    return AK::SIMD::f32x4 {
+        v[1] - v[0],
+        v[1] - v[0],
+        v[3] - v[2],
+        v[3] - v[2],
+    };
+}
+
+ALWAYS_INLINE static AK::SIMD::f32x4 ddy(AK::SIMD::f32x4 v)
+{
+    return AK::SIMD::f32x4 {
+        v[2] - v[0],
+        v[3] - v[1],
+        v[2] - v[0],
+        v[3] - v[1],
+    };
+}
+
+ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> ddx(Vector2<AK::SIMD::f32x4> const& v)
+{
+    return {
+        ddx(v.x()),
+        ddx(v.y()),
+    };
+}
+
+ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> ddy(Vector2<AK::SIMD::f32x4> const& v)
+{
+    return {
+        ddy(v.x()),
+        ddy(v.y()),
+    };
+}
+
 }
