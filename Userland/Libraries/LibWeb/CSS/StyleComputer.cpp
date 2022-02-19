@@ -860,6 +860,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             monospace = true;
             return find_font("Csilla");
         case ValueID::Serif:
+            return find_font("Roman");
         case ValueID::SansSerif:
         case ValueID::Cursive:
         case ValueID::Fantasy:
