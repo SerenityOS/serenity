@@ -439,7 +439,7 @@ bool EventHandler::focus_previous_element()
 constexpr bool should_ignore_keydown_event(u32 code_point)
 {
     // FIXME: There are probably also keys with non-zero code points that should be filtered out.
-    return code_point == 0;
+    return code_point == 0 || code_point == 27;
 }
 
 bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
