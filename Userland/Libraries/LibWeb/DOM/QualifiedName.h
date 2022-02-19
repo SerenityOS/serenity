@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,38 +13,27 @@ namespace Web::DOM {
 
 class QualifiedName {
 public:
-    QualifiedName(const FlyString& local_name, const FlyString& prefix, const FlyString& namespace_)
-        : m_local_name(local_name)
-        , m_prefix(prefix)
-        , m_namespace(namespace_)
-    {
-        make_internal_string();
-    }
+    QualifiedName(FlyString const& local_name, FlyString const& prefix, FlyString const& namespace_);
 
-    const FlyString& local_name() const { return m_local_name; }
-    const FlyString& prefix() const { return m_prefix; }
-    const FlyString& namespace_() const { return m_namespace; }
+    FlyString const& local_name() const { return m_impl->local_name; }
+    FlyString const& prefix() const { return m_impl->prefix; }
+    FlyString const& namespace_() const { return m_impl->namespace_; }
 
-    const String& as_string() const { return m_as_string; }
+    String const& as_string() const { return m_impl->as_string; }
+
+    struct Impl : public RefCounted<Impl> {
+        Impl(FlyString const& local_name, FlyString const& prefix, FlyString const& namespace_);
+        ~Impl();
+
+        void make_internal_string();
+        FlyString local_name;
+        FlyString prefix;
+        FlyString namespace_;
+        String as_string;
+    };
 
 private:
-    FlyString m_local_name;
-    FlyString m_prefix;
-    FlyString m_namespace;
-    String m_as_string;
-
-    // https://dom.spec.whatwg.org/#concept-attribute-qualified-name
-    // https://dom.spec.whatwg.org/#concept-element-qualified-name
-    void make_internal_string()
-    {
-        // This is possible to do according to the spec: "User agents could have this as an internal slot as an optimization."
-        if (m_prefix.is_null()) {
-            m_as_string = m_local_name;
-            return;
-        }
-
-        m_as_string = String::formatted("{}:{}", m_prefix, m_local_name);
-    }
+    NonnullRefPtr<Impl> m_impl;
 };
 
 }
