@@ -64,6 +64,7 @@ static bool flag_sort_by_timestamp = false;
 static bool flag_reverse_sort = false;
 static bool flag_disable_hyperlinks = false;
 static bool flag_recursive = false;
+static bool flag_force_newline = false;
 
 static size_t terminal_rows = 0;
 static size_t terminal_columns = 0;
@@ -117,6 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
     args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
     args_parser.add_option(flag_recursive, "List subdirectories recursively", "recursive", 'R');
+    args_parser.add_option(flag_force_newline, "List one file per line", nullptr, '1');
     args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -480,7 +482,7 @@ static bool print_names(const char* path, size_t longest_name, const Vector<File
             for (size_t j = nprinted; i != (files.size() - 1) && j < column_width; ++j)
                 printf(" ");
         }
-        if ((printed_on_row + column_width) >= terminal_columns) {
+        if ((printed_on_row + column_width) >= terminal_columns || flag_force_newline) {
             printf("\n");
             printed_on_row = 0;
         }
