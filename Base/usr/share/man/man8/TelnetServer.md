@@ -10,7 +10,8 @@ $ TelnetServer [-p port] [-c command]
 ## Description
 
 TelnetServer is a basic telnet server for Serenity. By default, it
-runs on port 23 and provides a shell upon connection.
+runs on port 23 and provides a shell upon connection. This program
+must be run as root.
 
 ## Options
 
