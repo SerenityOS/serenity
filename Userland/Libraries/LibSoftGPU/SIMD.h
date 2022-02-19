@@ -103,4 +103,25 @@ ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> ddy(Vector2<AK::SIMD::f32x4> const
     };
 }
 
+// Calculates a quadratic approximation of log2, exploiting the fact that IEEE754 floats are represented as mantissa * 2^exponent.
+// See https://stackoverflow.com/questions/9411823/fast-log2float-x-implementation-c
+ALWAYS_INLINE static AK::SIMD::f32x4 log2_approximate(AK::SIMD::f32x4 v)
+{
+    union {
+        AK::SIMD::f32x4 float_val;
+        AK::SIMD::i32x4 int_val;
+    } u { v };
+
+    // Extract just the exponent minus 1, giving a lower integral bound for log2.
+    auto log = AK::SIMD::to_f32x4(((u.int_val >> 23) & 255) - 128);
+
+    // Replace the exponent with 0, giving a value between 1 and 2.
+    u.int_val &= ~(255 << 23);
+    u.int_val |= 127 << 23;
+
+    // Approximate log2 by adding a quadratic function of u to the integral part.
+    log += (-0.34484843f * u.float_val + 2.02466578f) * u.float_val - 0.67487759f;
+    return log;
+}
+
 }
