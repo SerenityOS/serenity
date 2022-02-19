@@ -45,6 +45,8 @@ static bool is_wrappable_type(Type const& type)
         return true;
     if (type.name == "TextMetrics")
         return true;
+    if (type.name == "AbortSignal")
+        return true;
     return false;
 }
 
