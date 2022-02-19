@@ -59,6 +59,8 @@ public:
     SamplerConfig const& config() const { return m_config; }
 
 private:
+    Vector4<AK::SIMD::f32x4> sample_2d_lod(Vector2<AK::SIMD::f32x4> const& uv, AK::SIMD::u32x4 level, TextureFilter) const;
+
     SamplerConfig m_config;
 };
 
