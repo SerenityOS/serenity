@@ -191,7 +191,7 @@ if [ $use_genext2fs = 1 ]; then
     # genext2fs is very slow in generating big images, so I use a smaller image here. size can be updated
     # if it's not enough.
     # not using "-I $INODE_SIZE" since it hangs. Serenity handles whatever default this uses instead.
-    genext2fs -B 4096 -b $((DISK_SIZE_BYTES / 4096)) -d mnt _disk_image || die "try increasing image size (genext2fs -b)"
+    genext2fs -B 4096 -b $((DISK_SIZE_BYTES / 4096)) -N $INODE_COUNT -d mnt _disk_image || die "try increasing image size (genext2fs -b)"
     # if using docker with shared mount, file is created as root, so make it writable for users
     chmod 0666 _disk_image
 fi
