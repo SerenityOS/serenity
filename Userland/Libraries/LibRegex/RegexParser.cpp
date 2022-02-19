@@ -1083,6 +1083,9 @@ bool ECMA262Parser::parse_assertion(ByteCode& stack, [[maybe_unused]] size_t& ma
         if (m_should_use_browser_extended_grammar) {
             if (!unicode) {
                 if (parse_quantifiable_assertion(assertion_stack, match_length_minimum, named)) {
+                    if (!parse_quantifier(assertion_stack, match_length_minimum, unicode, named))
+                        return false;
+
                     stack.extend(move(assertion_stack));
                     return true;
                 }

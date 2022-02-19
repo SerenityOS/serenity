@@ -599,6 +599,7 @@ TEST_CASE(ECMA262_parse)
         { "(?<$$_$$>a)"sv },
         { "(?<ÿ>a)"sv },
         { "(?<𝓑𝓻𝓸𝔀𝓷>a)"sv },
+        { "((?=lg)?[vl]k\\-?\\d{3}) bui| 3\\.[-\\w; ]{10}lg?-([06cv9]{3,4})"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended } // #12373, quantifiable assertions.
     };
 
     for (auto& test : tests) {
