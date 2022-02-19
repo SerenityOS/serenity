@@ -742,6 +742,12 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
         component.vsample_factor = subsample_factors & 0x0F;
 
         if (i == 0) {
+            // If there is only a single component, i.e. grayscale, the macroblocks will not be interleaved, even if
+            // the horizontal or vertical sample factor is larger than 1.
+            if (context.component_count == 1) {
+                component.hsample_factor = 1;
+                component.vsample_factor = 1;
+            }
             // By convention, downsampling is applied only on chroma components. So we should
             //  hope to see the maximum sampling factor in the luma component.
             if (!validate_luma_and_modify_context(component, context)) {
