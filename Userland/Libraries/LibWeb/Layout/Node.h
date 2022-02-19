@@ -74,6 +74,7 @@ public:
     bool is_root_element() const;
 
     String class_name() const;
+    String debug_description() const;
 
     bool has_style() const { return m_has_style; }
 
