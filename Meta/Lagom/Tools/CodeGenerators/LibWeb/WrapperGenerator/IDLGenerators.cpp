@@ -336,23 +336,19 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (IDL::is_wrappable_type(*parameter.type)) {
         if (!parameter.type->nullable) {
             scoped_generator.append(R"~~~(
-    auto @cpp_name@_object = TRY(@js_name@@js_suffix@.to_object(global_object));
-
-    if (!is<@wrapper_name@>(@cpp_name@_object))
+    if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
-    auto& @cpp_name@ = static_cast<@wrapper_name@*>(@cpp_name@_object)->impl();
+    auto& @cpp_name@ = static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
     @parameter.type.name@* @cpp_name@ = nullptr;
     if (!@js_name@@js_suffix@.is_nullish()) {
-        auto @cpp_name@_object = TRY(@js_name@@js_suffix@.to_object(global_object));
-
-        if (!is<@wrapper_name@>(@cpp_name@_object))
+        if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
             return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
-        @cpp_name@ = &static_cast<@wrapper_name@*>(@cpp_name@_object)->impl();
+        @cpp_name@ = &static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
     }
 )~~~");
         }
