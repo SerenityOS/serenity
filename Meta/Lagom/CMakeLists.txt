@@ -41,14 +41,8 @@ endif()
 # FIXME: BUILD_SHARED_LIBS has a default of OFF, as it's intended to be set by the
 #        user when configuring the project. We should instead change libjs-test262
 #        and oss-fuzz to set this option on their end, and enable it by default in
-#        Meta/serenity.sh
-#        This is #9867. We can change the oss-fuzz escape hatch to be a FATAL_ERROR
-#        message instead when implementing it.
+#        Meta/serenity.sh. This is #9867.
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static libraries" ON)
-if (ENABLE_OSS_FUZZ)
-    # Don't use shared libraries on oss-fuzz, for ease of integration with their infrastructure
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries instead of static libraries" FORCE)
-endif()
 
 find_package(Threads REQUIRED)
 
@@ -120,6 +114,12 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-expansion-to-defined)
+    if (ENABLE_FUZZER_SANITIZER)
+        message(FATAL_ERROR
+            "Fuzzer Sanitizer (-fsanitize=fuzzer) is only supported for Fuzzer targets with LLVM. "
+            "Reconfigure CMake with -DCMAKE_C_COMPILER and -DCMAKE_CXX_COMPILER pointing to a clang-based toolchain"
+        )
+    endif()
 endif()
 
 # These are here to support Fuzzili builds further down the directory stack
@@ -168,8 +168,13 @@ function(lagom_lib library fs_name)
     cmake_parse_arguments(LAGOM_LIBRARY "" "" "SOURCES;LIBS" ${ARGN})
     set(target_name "Lagom${library}")
     add_library(${target_name} ${LAGOM_LIBRARY_SOURCES})
-    # alias for parity with exports
-    add_library(Lagom::${library} ALIAS ${target_name})
+
+    # Don't make alias when we're going to import a previous build for Tools
+    # FIXME: Is there a better way to write this?
+    if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
+        # alias for parity with exports
+        add_library(Lagom::${library} ALIAS ${target_name})
+    endif()
 
     set_target_properties(
         ${target_name} PROPERTIES
@@ -247,11 +252,7 @@ endif()
 
 # TimeZone
 # This is needed even if Lagom is not enabled because it is depended upon by code generators.
-if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
-    include(time_zone_data)
-else()
-    set(ENABLE_TIME_ZONE_DATABASE_DOWNLOAD OFF)
-endif()
+include(time_zone_data)
 file(GLOB LIBTIMEZONE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTimeZone/*.cpp")
 lagom_lib(TimeZone timezone
     SOURCES ${LIBTIMEZONE_SOURCES} ${TIME_ZONE_DATA_SOURCES}
@@ -268,7 +269,10 @@ install(
 
 # Code Generators and other host tools
 # We need to make sure not to build code generators for Fuzzer builds, as they already have their own main.cpp
-if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
+# Instead, we import them from a previous install of Lagom. This mandates a two-stage build for fuzzers.
+if (ENABLE_OSS_FUZZ OR ENABLE_FUZZER_SANITIZER)
+    find_package(Lagom REQUIRED)
+else()
     add_subdirectory(Tools)
 endif()
 
@@ -442,12 +446,7 @@ if (BUILD_LAGOM)
     )
 
     # Unicode
-    # Don't include UnicodeData for Fuzzer builds, we didn't build the CodeGenerators
-    if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
-        include(unicode_data)
-    else()
-        set(ENABLE_UNICODE_DATABASE_DOWNLOAD OFF)
-    endif()
+    include(unicode_data)
     file(GLOB LIBUNICODE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibUnicode/*.cpp")
     lagom_lib(Unicode unicode
         SOURCES ${LIBUNICODE_SOURCES} ${UNICODE_DATA_SOURCES}
