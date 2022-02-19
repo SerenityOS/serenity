@@ -956,28 +956,37 @@ bool ECMA262Parser::parse_pattern(ByteCode& stack, size_t& match_length_minimum,
 
 bool ECMA262Parser::parse_disjunction(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
 {
-    ByteCode left_alternative_stack;
-    size_t left_alternative_min_length = 0;
-    auto alt_ok = parse_alternative(left_alternative_stack, left_alternative_min_length, unicode, named);
-    if (!alt_ok)
-        return false;
+    size_t total_match_length_minimum = NumericLimits<size_t>::max();
+    Vector<ByteCode> alternatives;
+    do {
+        ByteCode alternative_stack;
+        size_t alternative_minimum_length = 0;
+        auto alt_ok = parse_alternative(alternative_stack, alternative_minimum_length, unicode, named);
+        if (!alt_ok)
+            return false;
 
-    if (!match(TokenType::Pipe)) {
-        stack.extend(left_alternative_stack);
-        match_length_minimum = left_alternative_min_length;
-        return alt_ok;
+        alternatives.append(move(alternative_stack));
+        total_match_length_minimum = min(alternative_minimum_length, total_match_length_minimum);
+
+        if (!match(TokenType::Pipe))
+            break;
+        consume();
+    } while (true);
+
+    Optional<ByteCode> alternative_stack {};
+    for (auto& alternative : alternatives) {
+        if (alternative_stack.has_value()) {
+            ByteCode target_stack;
+            target_stack.insert_bytecode_alternation(alternative_stack.release_value(), move(alternative));
+            alternative_stack = move(target_stack);
+        } else {
+            alternative_stack = move(alternative);
+        }
     }
 
-    consume();
-    ByteCode right_alternative_stack;
-    size_t right_alternative_min_length = 0;
-    auto continuation_ok = parse_disjunction(right_alternative_stack, right_alternative_min_length, unicode, named);
-    if (!continuation_ok)
-        return false;
-
-    stack.insert_bytecode_alternation(move(left_alternative_stack), move(right_alternative_stack));
-    match_length_minimum = min(left_alternative_min_length, right_alternative_min_length);
-    return continuation_ok;
+    stack.extend(alternative_stack.release_value());
+    match_length_minimum = total_match_length_minimum;
+    return true;
 }
 
 bool ECMA262Parser::parse_alternative(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
