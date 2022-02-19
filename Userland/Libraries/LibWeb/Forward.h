@@ -108,6 +108,8 @@ class Text;
 class Timer;
 class Window;
 enum class QuirksMode;
+struct EventListenerOptions;
+struct AddEventListenerOptions;
 
 template<typename ValueType>
 class ExceptionOr;

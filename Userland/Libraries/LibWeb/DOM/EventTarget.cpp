@@ -45,25 +45,85 @@ EventTarget::~EventTarget()
 {
 }
 
-// https://dom.spec.whatwg.org/#dom-eventtarget-addeventlistener
-void EventTarget::add_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, bool use_capture)
+// https://dom.spec.whatwg.org/#concept-flatten-options
+static bool flatten_event_listener_options(Variant<EventListenerOptions, bool> const& options)
 {
-    // FIXME: 1. Let capture, passive, once, and signal be the result of flattening more options.
-    bool capture = use_capture;
-    bool passive = false;
+    // 1. If options is a boolean, then return options.
+    if (options.has<bool>())
+        return options.get<bool>();
+
+    // 2. Return options["capture"].
+    return options.get<EventListenerOptions>().capture;
+}
+
+static bool flatten_event_listener_options(Variant<AddEventListenerOptions, bool> const& options)
+{
+    // 1. If options is a boolean, then return options.
+    if (options.has<bool>())
+        return options.get<bool>();
+
+    // 2. Return options["capture"].
+    return options.get<AddEventListenerOptions>().capture;
+}
+
+struct FlattenedAddEventListenerOptions {
+    bool capture { false };
+    bool passive { false };
+    bool once { false };
+    RefPtr<AbortSignal> signal;
+};
+
+// https://dom.spec.whatwg.org/#event-flatten-more
+static FlattenedAddEventListenerOptions flatten_add_event_listener_options(Variant<AddEventListenerOptions, bool> const& options)
+{
+    // 1. Let capture be the result of flattening options.
+    bool capture = flatten_event_listener_options(options);
+
+    // 2. Let once and passive be false.
     bool once = false;
-    RefPtr<AbortSignal> signal = nullptr;
+    bool passive = false;
+
+    // 3. Let signal be null.
+    RefPtr<AbortSignal> signal;
+
+    // 4. If options is a dictionary, then:
+    if (options.has<AddEventListenerOptions>()) {
+        auto& add_event_listener_options = options.get<AddEventListenerOptions>();
+
+        // 1. Set passive to options["passive"] and once to options["once"].
+        passive = add_event_listener_options.passive;
+        once = add_event_listener_options.once;
+
+        // 2. If options["signal"] exists, then set signal to options["signal"].
+        if (add_event_listener_options.signal.has_value())
+            signal = add_event_listener_options.signal.value();
+    }
+
+    // 5. Return capture, passive, once, and signal.
+    return FlattenedAddEventListenerOptions { .capture = capture, .passive = passive, .once = once, .signal = signal };
+}
+
+// https://dom.spec.whatwg.org/#dom-eventtarget-addeventlistener
+void EventTarget::add_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, Variant<AddEventListenerOptions, bool> const& options)
+{
+    // 1. Let capture, passive, once, and signal be the result of flattening more options.
+    auto flattened_options = flatten_add_event_listener_options(options);
 
     // 2. Add an event listener with this and an event listener whose type is type, callback is callback, capture is capture, passive is passive,
     //    once is once, and signal is signal.
     auto event_listener = adopt_ref(*new DOMEventListener);
     event_listener->type = type;
     event_listener->callback = move(callback);
-    event_listener->signal = move(signal);
-    event_listener->capture = capture;
-    event_listener->passive = passive;
-    event_listener->once = once;
+    event_listener->signal = move(flattened_options.signal);
+    event_listener->capture = flattened_options.capture;
+    event_listener->passive = flattened_options.passive;
+    event_listener->once = flattened_options.once;
     add_an_event_listener(move(event_listener));
+}
+
+void EventTarget::add_event_listener_without_options(FlyString const& type, RefPtr<IDLEventListener> callback)
+{
+    add_event_listener(type, move(callback), AddEventListenerOptions {});
 }
 
 // https://dom.spec.whatwg.org/#add-an-event-listener
@@ -91,15 +151,20 @@ void EventTarget::add_an_event_listener(NonnullRefPtr<DOMEventListener> listener
     if (it == m_event_listener_list.end())
         m_event_listener_list.append(listener);
 
-    // FIXME: 5. If listener’s signal is not null, then add the following abort steps to it:
-    // FIXME:    1. Remove an event listener with eventTarget and listener.
+    // 5. If listener’s signal is not null, then add the following abort steps to it:
+    if (listener->signal) {
+        listener->signal->add_abort_algorithm([strong_event_target = NonnullRefPtr(*this), listener]() mutable {
+            // 1. Remove an event listener with eventTarget and listener.
+            strong_event_target->remove_an_event_listener(listener);
+        });
+    }
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-removeeventlistener
-void EventTarget::remove_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, bool use_capture)
+void EventTarget::remove_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, Variant<EventListenerOptions, bool> const& options)
 {
-    // FIXME: 1. Let capture be the result of flattening options.
-    bool capture = use_capture;
+    // 1. Let capture be the result of flattening options.
+    bool capture = flatten_event_listener_options(options);
 
     // 2. If this’s event listener list contains an event listener whose type is type, callback is callback, and capture is capture,
     //    then remove an event listener with this and that event listener.
@@ -110,6 +175,11 @@ void EventTarget::remove_event_listener(FlyString const& type, RefPtr<IDLEventLi
     });
     if (it != m_event_listener_list.end())
         remove_an_event_listener(*it);
+}
+
+void EventTarget::remove_event_listener_without_options(FlyString const& type, RefPtr<IDLEventListener> callback)
+{
+    remove_event_listener(type, move(callback), EventListenerOptions {});
 }
 
 // https://dom.spec.whatwg.org/#remove-an-event-listener
