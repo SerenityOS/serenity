@@ -18,8 +18,8 @@
 
 namespace Web::Layout {
 
-BlockFormattingContext::BlockFormattingContext(BlockContainer& root, FormattingContext* parent)
-    : FormattingContext(Type::Block, root, parent)
+BlockFormattingContext::BlockFormattingContext(FormattingState& state, BlockContainer& root, FormattingContext* parent)
+    : FormattingContext(Type::Block, state, root, parent)
 {
 }
 
@@ -382,7 +382,7 @@ void BlockFormattingContext::layout_inline_children(BlockContainer& block_contai
 {
     VERIFY(block_container.children_are_inline());
 
-    InlineFormattingContext context(block_container, *this);
+    InlineFormattingContext context(m_state, block_container, *this);
     context.run(block_container, layout_mode);
 }
 

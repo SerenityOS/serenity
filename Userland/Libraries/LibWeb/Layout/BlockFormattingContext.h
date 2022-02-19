@@ -16,7 +16,7 @@ namespace Web::Layout {
 // https://www.w3.org/TR/css-display/#block-formatting-context
 class BlockFormattingContext : public FormattingContext {
 public:
-    explicit BlockFormattingContext(BlockContainer&, FormattingContext* parent);
+    explicit BlockFormattingContext(FormattingState&, BlockContainer&, FormattingContext* parent);
     ~BlockFormattingContext();
 
     virtual void run(Box&, LayoutMode) override;

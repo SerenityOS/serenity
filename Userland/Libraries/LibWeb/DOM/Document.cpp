@@ -563,7 +563,8 @@ void Document::update_layout()
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
     }
 
-    Layout::BlockFormattingContext root_formatting_context(*m_layout_root, nullptr);
+    Layout::FormattingState root_formatting_state;
+    Layout::BlockFormattingContext root_formatting_context(root_formatting_state, *m_layout_root, nullptr);
     m_layout_root->build_stacking_context_tree();
     m_layout_root->set_content_size(viewport_rect.size().to_type<float>());
 

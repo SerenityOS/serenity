@@ -16,8 +16,8 @@
 
 namespace Web::Layout {
 
-TableFormattingContext::TableFormattingContext(BlockContainer& block_container, FormattingContext* parent)
-    : BlockFormattingContext(block_container, parent)
+TableFormattingContext::TableFormattingContext(FormattingState& state, BlockContainer& block_container, FormattingContext* parent)
+    : BlockFormattingContext(state, block_container, parent)
 {
 }
 

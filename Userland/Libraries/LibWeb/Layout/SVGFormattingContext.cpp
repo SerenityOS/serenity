@@ -11,8 +11,8 @@
 
 namespace Web::Layout {
 
-SVGFormattingContext::SVGFormattingContext(Box& box, FormattingContext* parent)
-    : FormattingContext(Type::SVG, box, parent)
+SVGFormattingContext::SVGFormattingContext(FormattingState& state, Box& box, FormattingContext* parent)
+    : FormattingContext(Type::SVG, state, box, parent)
 {
 }
 

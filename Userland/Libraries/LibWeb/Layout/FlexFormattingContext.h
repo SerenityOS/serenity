@@ -13,7 +13,7 @@ namespace Web::Layout {
 
 class FlexFormattingContext final : public FormattingContext {
 public:
-    FlexFormattingContext(Box& flex_container, FormattingContext* parent);
+    FlexFormattingContext(FormattingState&, Box& flex_container, FormattingContext* parent);
     ~FlexFormattingContext();
 
     virtual bool inhibits_floating() const override { return true; }

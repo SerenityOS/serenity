@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Layout/FormattingState.h>
 
 namespace Web::Layout {
 
@@ -46,7 +47,7 @@ public:
     virtual void parent_context_did_dimension_child_root_box() { }
 
 protected:
-    FormattingContext(Type, Box&, FormattingContext* parent = nullptr);
+    FormattingContext(Type, FormattingState&, Box&, FormattingContext* parent = nullptr);
 
     OwnPtr<FormattingContext> layout_inside(Box&, LayoutMode);
 
@@ -77,6 +78,8 @@ protected:
 
     FormattingContext* m_parent { nullptr };
     Box& m_context_box;
+
+    FormattingState& m_state;
 };
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,10 +19,11 @@
 
 namespace Web::Layout {
 
-FormattingContext::FormattingContext(Type type, Box& context_box, FormattingContext* parent)
+FormattingContext::FormattingContext(Type type, FormattingState& state, Box& context_box, FormattingContext* parent)
     : m_type(type)
     , m_parent(parent)
     , m_context_box(context_box)
+    , m_state(state)
 {
 }
 
@@ -82,20 +83,20 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
     auto child_display = child_box.computed_values().display();
 
     if (is<SVGSVGBox>(child_box))
-        return make<SVGFormattingContext>(child_box, this);
+        return make<SVGFormattingContext>(m_state, child_box, this);
 
     if (child_display.is_flex_inside())
-        return make<FlexFormattingContext>(child_box, this);
+        return make<FlexFormattingContext>(m_state, child_box, this);
 
     if (creates_block_formatting_context(child_box))
-        return make<BlockFormattingContext>(verify_cast<BlockContainer>(child_box), this);
+        return make<BlockFormattingContext>(m_state, verify_cast<BlockContainer>(child_box), this);
 
     if (child_display.is_table_inside())
-        return make<TableFormattingContext>(verify_cast<TableBox>(child_box), this);
+        return make<TableFormattingContext>(m_state, verify_cast<TableBox>(child_box), this);
 
     VERIFY(is_block_formatting_context());
     if (child_box.children_are_inline())
-        return make<InlineFormattingContext>(verify_cast<BlockContainer>(child_box), static_cast<BlockFormattingContext&>(*this));
+        return make<InlineFormattingContext>(m_state, verify_cast<BlockContainer>(child_box), static_cast<BlockFormattingContext&>(*this));
 
     // The child box is a block container that doesn't create its own BFC.
     // It will be formatted by this BFC.

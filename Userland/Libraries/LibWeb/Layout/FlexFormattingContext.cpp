@@ -32,8 +32,8 @@ static bool is_undefined_or_auto(Optional<CSS::LengthPercentage> const& length_p
     return length_percentage->is_length() && length_percentage->length().is_auto();
 }
 
-FlexFormattingContext::FlexFormattingContext(Box& flex_container, FormattingContext* parent)
-    : FormattingContext(Type::Flex, flex_container, parent)
+FlexFormattingContext::FlexFormattingContext(FormattingState& state, Box& flex_container, FormattingContext* parent)
+    : FormattingContext(Type::Flex, state, flex_container, parent)
     , m_flex_direction(flex_container.computed_values().flex_direction())
 {
 }
@@ -471,9 +471,9 @@ float FlexFormattingContext::layout_for_maximum_main_size(Box& box)
 
     if (!main_constrained && box.children_are_inline()) {
         auto& block_container = verify_cast<BlockContainer>(box);
-        BlockFormattingContext bfc(block_container, this);
+        BlockFormattingContext bfc(m_state, block_container, this);
         bfc.run(box, LayoutMode::Default);
-        InlineFormattingContext ifc(block_container, bfc);
+        InlineFormattingContext ifc(m_state, block_container, bfc);
 
         if (is_row_layout()) {
             ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
@@ -821,9 +821,9 @@ float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box& box)
 
     if (!cross_constrained && box.children_are_inline()) {
         auto& block_container = verify_cast<BlockContainer>(box);
-        BlockFormattingContext bfc(block_container, this);
+        BlockFormattingContext bfc(m_state, block_container, this);
         bfc.run(box, LayoutMode::Default);
-        InlineFormattingContext ifc(block_container, bfc);
+        InlineFormattingContext ifc(m_state, block_container, bfc);
         ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
 
         return is_row_layout() ? box.content_height() : box.content_width();
@@ -831,7 +831,7 @@ float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box& box)
     if (is_row_layout())
         return BlockFormattingContext::compute_theoretical_height(box);
 
-    BlockFormattingContext context(verify_cast<BlockContainer>(box), this);
+    BlockFormattingContext context(m_state, verify_cast<BlockContainer>(box), this);
     context.compute_width(box);
     return box.content_width();
 }
