@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -1309,11 +1309,22 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<StyleComp
     // `<supports-decl>`
     if (first_token.is_block() && first_token.block().is_paren()) {
         TokenStream block_tokens { first_token.block().values() };
+        // FIXME: Parsing and then converting back to a string is weird.
         if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
             return Supports::Feature {
-                .declaration = declaration->to_string()
+                Supports::Declaration { declaration->to_string() }
             };
         }
+    }
+    // `<supports-selector-fn>`
+    if (first_token.is_function() && first_token.function().name().equals_ignoring_case("selector"sv)) {
+        // FIXME: Parsing and then converting back to a string is weird.
+        StringBuilder builder;
+        for (auto const& item : first_token.function().values())
+            builder.append(item.to_string());
+        return Supports::Feature {
+            Supports::Selector { builder.to_string() }
+        };
     }
 
     tokens.rewind_to_position(start_position);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -50,10 +50,27 @@ bool Supports::InParens::evaluate() const
         });
 }
 
-bool Supports::Feature::evaluate() const
+bool Supports::Declaration::evaluate() const
 {
     auto style_property = Parser({}, declaration).parse_as_declaration();
     return style_property.has_value();
+}
+
+bool Supports::Selector::evaluate() const
+{
+    auto style_property = Parser({}, selector).parse_as_selector();
+    return style_property.has_value();
+}
+
+bool Supports::Feature::evaluate() const
+{
+    return value.visit(
+        [&](Declaration const& declaration) {
+            return declaration.evaluate();
+        },
+        [&](Selector const& selector) {
+            return selector.evaluate();
+        });
 }
 
 }
