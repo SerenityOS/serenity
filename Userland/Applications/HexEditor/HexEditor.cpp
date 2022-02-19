@@ -432,6 +432,22 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
         return;
     }
 
+    if (event.key() == KeyCode::Key_PageUp) {
+        auto cursor_location_change = min(bytes_per_row() * visible_content_rect().height(), m_position);
+        if (cursor_location_change > 0) {
+            advance_cursor_backwards(cursor_location_change);
+        }
+        return;
+    }
+
+    if (event.key() == KeyCode::Key_PageDown) {
+        auto cursor_location_change = min(bytes_per_row() * visible_content_rect().height(), m_document->size() - m_position);
+        if (cursor_location_change > 0) {
+            advance_cursor_forward(cursor_location_change);
+        }
+        return;
+    }
+
     if (!is_readonly() && !event.ctrl() && !event.alt() && !event.text().is_empty()) {
         if (m_edit_mode == EditMode::Hex) {
             hex_mode_keydown_event(event);
