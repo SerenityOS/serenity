@@ -153,7 +153,10 @@ void SheetModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& valu
         return;
 
     auto& cell = m_sheet->ensure({ (size_t)index.column(), (size_t)index.row() });
+    auto previous_data = cell.data();
     cell.set_data(value.to_string());
+    if (on_cell_data_change)
+        on_cell_data_change(cell, previous_data);
     did_update(UpdateFlag::DontInvalidateIndices);
 }
 

@@ -191,4 +191,21 @@ void Cell::copy_from(const Cell& other)
     m_thrown_value = other.m_thrown_value;
 }
 
+CellUndoCommand::CellUndoCommand(Cell& cell, String const& previous_data)
+    : m_cell(cell)
+    , m_current_data(cell.data())
+    , m_previous_data(previous_data)
+{
+}
+
+void CellUndoCommand::undo()
+{
+    m_cell.set_data(m_previous_data);
+}
+
+void CellUndoCommand::redo()
+{
+    m_cell.set_data(m_current_data);
+}
+
 }

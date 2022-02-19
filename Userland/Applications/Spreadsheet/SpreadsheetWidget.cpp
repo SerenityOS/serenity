@@ -205,6 +205,14 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     },
         window());
 
+    m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
+        undo();
+    });
+
+    m_redo_action = GUI::CommonActions::make_redo_action([&](auto&) {
+        redo();
+    });
+
     m_functions_help_action = GUI::Action::create(
         "&Functions Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             if (auto* worksheet_ptr = current_worksheet_if_available()) {
@@ -227,6 +235,8 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     toolbar.add_action(*m_cut_action);
     toolbar.add_action(*m_copy_action);
     toolbar.add_action(*m_paste_action);
+    toolbar.add_action(*m_undo_action);
+    toolbar.add_action(*m_redo_action);
 }
 
 void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
@@ -251,6 +261,10 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_selected_view->on_selection_dropped = nullptr;
         }
         m_selected_view = &static_cast<SpreadsheetView&>(selected_widget);
+        m_selected_view->model()->on_cell_data_change = [&](auto& cell, auto& previous_data) {
+            undo_stack().push(make<CellUndoCommand>(cell, previous_data));
+            window()->set_modified(true);
+        };
         m_selected_view->on_selection_changed = [&](Vector<Position>&& selection) {
             auto* sheet_ptr = m_selected_view->sheet_if_available();
             // How did this even happen?
@@ -390,11 +404,33 @@ void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source,
     }
 }
 
+void SpreadsheetWidget::undo()
+{
+    if (!m_undo_stack.can_undo())
+        return;
+
+    m_undo_stack.undo();
+    update();
+}
+
+void SpreadsheetWidget::redo()
+{
+    if (!m_undo_stack.can_redo())
+        return;
+
+    m_undo_stack.redo();
+    update();
+}
+
 void SpreadsheetWidget::save(StringView filename)
 {
     auto result = m_workbook->save(filename);
-    if (result.is_error())
+    if (result.is_error()) {
         GUI::MessageBox::show_error(window(), result.error());
+        return;
+    }
+    undo_stack().set_current_unmodified();
+    window()->set_modified(false);
 }
 
 void SpreadsheetWidget::load_file(Core::File& file)
@@ -418,7 +454,7 @@ void SpreadsheetWidget::load_file(Core::File& file)
 
 bool SpreadsheetWidget::request_close()
 {
-    if (!m_workbook->dirty())
+    if (!undo_stack().is_current_modified())
         return true;
 
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), current_filename());
@@ -533,6 +569,9 @@ void SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     file_menu.add_action(*m_quit_action);
 
     auto& edit_menu = window.add_menu("&Edit");
+    edit_menu.add_action(*m_undo_action);
+    edit_menu.add_action(*m_redo_action);
+    edit_menu.add_separator();
     edit_menu.add_action(*m_cut_action);
     edit_menu.add_action(*m_copy_action);
     edit_menu.add_action(*m_paste_action);

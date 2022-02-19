@@ -14,6 +14,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
+#include <LibGUI/Command.h>
 
 namespace Spreadsheet {
 
@@ -118,6 +119,19 @@ private:
 
     Vector<ConditionalFormat> m_conditional_formats;
     Format m_evaluated_formats;
+};
+
+class CellUndoCommand : public GUI::Command {
+public:
+    CellUndoCommand(Cell&, String const&);
+
+    virtual void undo() override;
+    virtual void redo() override;
+
+private:
+    Cell& m_cell;
+    String m_current_data;
+    String m_previous_data;
 };
 
 }
