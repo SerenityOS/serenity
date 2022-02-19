@@ -51,6 +51,8 @@ template<FloatingPoint T>
 constexpr T fmod(T x, T y)
 {
     CONSTEXPR_STATE(fmod, x, y);
+
+#if ARCH(I386) || ARCH(X86_64)
     u16 fpu_status;
     do {
         asm(
@@ -60,11 +62,16 @@ constexpr T fmod(T x, T y)
             : "u"(y));
     } while (fpu_status & 0x400);
     return x;
+#else
+    return __builtin_fmod(x, y);
+#endif
 }
 template<FloatingPoint T>
 constexpr T remainder(T x, T y)
 {
     CONSTEXPR_STATE(remainder, x, y);
+
+#if ARCH(I386) || ARCH(X86_64)
     u16 fpu_status;
     do {
         asm(
@@ -74,6 +81,9 @@ constexpr T remainder(T x, T y)
             : "u"(y));
     } while (fpu_status & 0x400);
     return x;
+#else
+    return __builtin_fmod(x, y);
+#endif
 }
 }
 
@@ -84,11 +94,16 @@ template<FloatingPoint T>
 constexpr T sqrt(T x)
 {
     CONSTEXPR_STATE(sqrt, x);
+
+#if ARCH(I386) || ARCH(X86_64)
     T res;
     asm("fsqrt"
         : "=t"(res)
         : "0"(x));
     return res;
+#else
+    return __builtin_sqrt(x);
+#endif
 }
 
 template<FloatingPoint T>
@@ -136,10 +151,14 @@ constexpr T fabs(T x)
 {
     if (is_constant_evaluated())
         return x < 0 ? -x : x;
+#if ARCH(I386) || ARCH(X86_64)
     asm(
         "fabs"
         : "+t"(x));
     return x;
+#else
+    return __builtin_fabs(x);
+#endif
 }
 
 namespace Trigonometry {
@@ -154,30 +173,42 @@ template<FloatingPoint T>
 constexpr T sin(T angle)
 {
     CONSTEXPR_STATE(sin, angle);
+
+#if ARCH(I386) || ARCH(X86_64)
     T ret;
     asm(
         "fsin"
         : "=t"(ret)
         : "0"(angle));
     return ret;
+#else
+    return __builtin_sin(angle);
+#endif
 }
 
 template<FloatingPoint T>
 constexpr T cos(T angle)
 {
     CONSTEXPR_STATE(cos, angle);
+
+#if ARCH(I386) || ARCH(X86_64)
     T ret;
     asm(
         "fcos"
         : "=t"(ret)
         : "0"(angle));
     return ret;
+#else
+    return __builtin_cos(angle);
+#endif
 }
 
 template<FloatingPoint T>
 constexpr T tan(T angle)
 {
     CONSTEXPR_STATE(tan, angle);
+
+#if ARCH(I386) || ARCH(X86_64)
     double ret, one;
     asm(
         "fptan"
@@ -185,6 +216,9 @@ constexpr T tan(T angle)
         : "0"(angle));
 
     return ret;
+#else
+    return __builtin_tan(angle);
+#endif
 }
 
 template<FloatingPoint T>
@@ -192,6 +226,7 @@ constexpr T atan(T value)
 {
     CONSTEXPR_STATE(atan, value);
 
+#if ARCH(I386) || ARCH(X86_64)
     T ret;
     asm(
         "fld1\n"
@@ -199,6 +234,9 @@ constexpr T atan(T value)
         : "=t"(ret)
         : "0"(value));
     return ret;
+#else
+    return __builtin_atan(value);
+#endif
 }
 
 template<FloatingPoint T>
@@ -244,12 +282,16 @@ constexpr T atan2(T y, T x)
 {
     CONSTEXPR_STATE(atan2, y, x);
 
+#if ARCH(I386) || ARCH(X86_64)
     T ret;
     asm("fpatan"
         : "=t"(ret)
         : "0"(x), "u"(y)
         : "st(1)");
     return ret;
+#else
+    return __builtin_atan2(y, x);
+#endif
 }
 
 }
@@ -270,6 +312,7 @@ constexpr T log(T x)
 {
     CONSTEXPR_STATE(log, x);
 
+#if ARCH(I386) || ARCH(X86_64)
     T ret;
     asm(
         "fldln2\n"
@@ -278,6 +321,9 @@ constexpr T log(T x)
         : "=t"(ret)
         : "0"(x));
     return ret;
+#else
+    return __builtin_log(x);
+#endif
 }
 
 template<FloatingPoint T>
@@ -285,6 +331,7 @@ constexpr T log2(T x)
 {
     CONSTEXPR_STATE(log2, x);
 
+#if ARCH(I386) || ARCH(X86_64)
     T ret;
     asm(
         "fld1\n"
@@ -293,6 +340,9 @@ constexpr T log2(T x)
         : "=t"(ret)
         : "0"(x));
     return ret;
+#else
+    return __builtin_log2(x);
+#endif
 }
 
 template<FloatingPoint T>
@@ -300,6 +350,7 @@ constexpr T log10(T x)
 {
     CONSTEXPR_STATE(log10, x);
 
+#if ARCH(I386) || ARCH(X86_64)
     T ret;
     asm(
         "fldlg2\n"
@@ -308,6 +359,9 @@ constexpr T log10(T x)
         : "=t"(ret)
         : "0"(x));
     return ret;
+#else
+    return __builtin_log10(x);
+#endif
 }
 
 template<FloatingPoint T>
@@ -315,6 +369,7 @@ constexpr T exp(T exponent)
 {
     CONSTEXPR_STATE(exp, exponent);
 
+#if ARCH(I386) || ARCH(X86_64)
     T res;
     asm("fldl2e\n"
         "fmulp\n"
@@ -328,6 +383,9 @@ constexpr T exp(T exponent)
         : "=t"(res)
         : "0"(exponent));
     return res;
+#else
+    return __builtin_exp(exponent);
+#endif
 }
 
 template<FloatingPoint T>
@@ -335,6 +393,7 @@ constexpr T exp2(T exponent)
 {
     CONSTEXPR_STATE(exp2, exponent);
 
+#if ARCH(I386) || ARCH(X86_64)
     T res;
     asm("fld1\n"
         "fld %%st(1)\n"
@@ -346,6 +405,9 @@ constexpr T exp2(T exponent)
         : "=t"(res)
         : "0"(exponent));
     return res;
+#else
+    return __builtin_exp2(exponent);
+#endif
 }
 
 }
