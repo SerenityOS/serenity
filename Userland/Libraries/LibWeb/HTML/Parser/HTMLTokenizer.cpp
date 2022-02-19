@@ -2780,6 +2780,15 @@ void HTMLTokenizer::create_new_token(HTMLToken::Type type)
     m_current_token.set_start_position({}, nth_last_position(offset));
 }
 
+HTMLTokenizer::HTMLTokenizer()
+{
+    m_decoded_input = "";
+    m_utf8_view = Utf8View(m_decoded_input);
+    m_utf8_iterator = m_utf8_view.begin();
+    m_prev_utf8_iterator = m_utf8_view.begin();
+    m_source_positions.empend(0u, 0u);
+}
+
 HTMLTokenizer::HTMLTokenizer(StringView input, String const& encoding)
 {
     auto* decoder = TextCodec::decoder_for(encoding);
@@ -2787,7 +2796,35 @@ HTMLTokenizer::HTMLTokenizer(StringView input, String const& encoding)
     m_decoded_input = decoder->to_utf8(input);
     m_utf8_view = Utf8View(m_decoded_input);
     m_utf8_iterator = m_utf8_view.begin();
+    m_prev_utf8_iterator = m_utf8_view.begin();
     m_source_positions.empend(0u, 0u);
+}
+
+void HTMLTokenizer::insert_input_at_insertion_point(String const& input)
+{
+    auto utf8_iterator_byte_offset = m_utf8_view.byte_offset_of(m_utf8_iterator);
+
+    // FIXME: Implement a InputStream to handle insertion_point and iterators.
+    StringBuilder builder {};
+    builder.append(m_decoded_input.substring(0, m_insertion_point.position));
+    builder.append(input);
+    builder.append(m_decoded_input.substring(m_insertion_point.position));
+    m_decoded_input = builder.build();
+
+    m_utf8_view = Utf8View(m_decoded_input);
+    m_utf8_iterator = m_utf8_view.iterator_at_byte_offset(utf8_iterator_byte_offset);
+
+    m_insertion_point.position += input.length();
+}
+
+void HTMLTokenizer::insert_eof()
+{
+    m_explicit_eof_inserted = true;
+}
+
+bool HTMLTokenizer::is_eof_inserted()
+{
+    return m_explicit_eof_inserted;
 }
 
 void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)

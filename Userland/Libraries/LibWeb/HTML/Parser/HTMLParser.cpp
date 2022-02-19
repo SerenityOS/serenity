@@ -137,17 +137,24 @@ HTMLParser::HTMLParser(DOM::Document& document, StringView input, const String& 
     m_document->set_encoding(standardized_encoding.value());
 }
 
+HTMLParser::HTMLParser(DOM::Document& document)
+    : m_document(document)
+{
+    m_tokenizer.set_parser({}, *this);
+}
+
 HTMLParser::~HTMLParser()
 {
     m_document->set_should_invalidate_styles_on_attribute_changes(true);
 }
 
-void HTMLParser::run(const AK::URL& url)
+void HTMLParser::run()
 {
-    m_document->set_url(url);
-    m_document->set_source(m_tokenizer.source());
-
     for (;;) {
+        // FIXME: Find a better way to say that we come from Document::close() and want to process EOF.
+        if (!m_tokenizer.is_eof_inserted() && m_tokenizer.is_insertion_point_reached())
+            return;
+
         auto optional_token = m_tokenizer.next_token();
         if (!optional_token.has_value())
             break;
@@ -186,7 +193,13 @@ void HTMLParser::run(const AK::URL& url)
     }
 
     flush_character_insertions();
+}
 
+void HTMLParser::run(const AK::URL& url)
+{
+    m_document->set_url(url);
+    m_document->set_source(m_tokenizer.source());
+    run();
     the_end();
 }
 
@@ -197,7 +210,8 @@ void HTMLParser::the_end()
 
     // FIXME: 1. If the active speculative HTML parser is not null, then stop the speculative HTML parser and return.
 
-    // FIXME: 2. Set the insertion point to undefined.
+    // 2. Set the insertion point to undefined.
+    m_tokenizer.undefine_insertion_point();
 
     // 3. Update the current document readiness to "interactive".
     m_document->update_readiness(HTML::DocumentReadyState::Interactive);
@@ -2003,6 +2017,7 @@ void HTMLParser::decrement_script_nesting_level()
     --m_script_nesting_level;
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-incdata
 void HTMLParser::handle_text(HTMLToken& token)
 {
     if (token.is_character()) {
@@ -2025,13 +2040,18 @@ void HTMLParser::handle_text(HTMLToken& token)
         NonnullRefPtr<HTMLScriptElement> script = verify_cast<HTMLScriptElement>(current_node());
         (void)m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;
-        // FIXME: Handle tokenizer insertion point stuff here.
+        // Let the old insertion point have the same value as the current insertion point.
+        m_tokenizer.store_insertion_point();
+        // Let the insertion point be just before the next input character.
+        m_tokenizer.update_insertion_point();
         increment_script_nesting_level();
+        // FIXME: Check if active speculative HTML parser is null.
         script->prepare_script({});
         decrement_script_nesting_level();
         if (script_nesting_level() == 0)
             m_parser_pause_flag = false;
-        // FIXME: Handle tokenizer insertion point stuff here too.
+        // Let the insertion point have the value of the old insertion point.
+        m_tokenizer.restore_insertion_point();
 
         while (document().pending_parsing_blocking_script()) {
             if (script_nesting_level() != 0) {
@@ -2065,7 +2085,8 @@ void HTMLParser::handle_text(HTMLToken& token)
 
                 m_tokenizer.set_blocked(false);
 
-                // FIXME: Handle tokenizer insertion point stuff here too.
+                // Let the insertion point be just before the next input character.
+                m_tokenizer.update_insertion_point();
 
                 VERIFY(script_nesting_level() == 0);
                 increment_script_nesting_level();
@@ -2076,7 +2097,8 @@ void HTMLParser::handle_text(HTMLToken& token)
                 VERIFY(script_nesting_level() == 0);
                 m_parser_pause_flag = false;
 
-                // FIXME: Handle tokenizer insertion point stuff here too.
+                // Let the insertion point be undefined again.
+                m_tokenizer.undefine_insertion_point();
             }
         }
         return;
@@ -2986,8 +3008,26 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
 
     if (token.is_end_tag() && current_node().namespace_() == Namespace::SVG && current_node().tag_name() == SVG::TagNames::script) {
     ScriptEndTag:
+        // Pop the current node off the stack of open elements.
         (void)m_stack_of_open_elements.pop();
+        // Let the old insertion point have the same value as the current insertion point.
+        m_tokenizer.store_insertion_point();
+        // Let the insertion point be just before the next input character.
+        m_tokenizer.update_insertion_point();
+        // Increment the parser's script nesting level by one.
+        increment_script_nesting_level();
+        // Set the parser pause flag to true.
+        m_parser_pause_flag = true;
+        // FIXME: Implement SVG script parsing.
         TODO();
+        // Decrement the parser's script nesting level by one.
+        decrement_script_nesting_level();
+        // If the parser's script nesting level is zero, then set the parser pause flag to false.
+        if (script_nesting_level() == 0)
+            m_parser_pause_flag = false;
+
+        // Let the insertion point have the value of the old insertion point.
+        m_tokenizer.restore_insertion_point();
     }
 
     if (token.is_end_tag()) {

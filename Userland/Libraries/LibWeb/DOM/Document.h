@@ -244,8 +244,11 @@ public:
 
     Window& window() { return *m_window; }
 
-    void write(Vector<String> const& strings);
-    void writeln(Vector<String> const& strings);
+    ExceptionOr<void> write(Vector<String> const& strings);
+    ExceptionOr<void> writeln(Vector<String> const& strings);
+
+    ExceptionOr<Document*> open(String const& = "", String const& = "");
+    ExceptionOr<void> close();
 
     Window* default_view() { return m_window; }
 
@@ -355,6 +358,9 @@ private:
     RefPtr<Core::Timer> m_style_update_timer;
     RefPtr<Core::Timer> m_layout_update_timer;
 
+    OwnPtr<HTML::HTMLParser> m_parser;
+    bool m_active_parser_was_aborted { false };
+
     String m_source;
 
     OwnPtr<JS::Interpreter> m_interpreter;
@@ -385,6 +391,12 @@ private:
 
     u32 m_ignore_destructive_writes_counter { 0 };
 
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#unload-counter
+    u32 m_unload_counter { 0 };
+
+    // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#throw-on-dynamic-markup-insertion-counter
+    u32 m_throw_on_dynamic_markup_insertion_counter { 0 };
+
     // https://html.spec.whatwg.org/multipage/semantics.html#script-blocking-style-sheet-counter
     u32 m_script_blocking_style_sheet_counter { 0 };
 
@@ -403,5 +415,4 @@ private:
 
     bool m_needs_layout { false };
 };
-
 }
