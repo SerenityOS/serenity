@@ -498,7 +498,7 @@ TEST_CASE(posix_extended_nested_capture_group)
     EXPECT_EQ(result.capture_group_matches[0][2].view, "llo"sv);
 }
 
-auto parse_test_case_long_disjunction_chain = String::repeated("a|"sv, 10000);
+auto parse_test_case_long_disjunction_chain = String::repeated("a|"sv, 100000);
 
 TEST_CASE(ECMA262_parse)
 {

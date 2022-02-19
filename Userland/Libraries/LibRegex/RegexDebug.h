@@ -35,9 +35,12 @@ public:
     template<typename T>
     void print_bytecode(Regex<T> const& regex) const
     {
-        MatchState state;
-        auto& bytecode = regex.parser_result.bytecode;
+        print_bytecode(regex.parser_result.bytecode);
+    }
 
+    void print_bytecode(ByteCode const& bytecode) const
+    {
+        MatchState state;
         for (;;) {
             auto& opcode = bytecode.get_opcode(state);
             print_opcode("PrintBytecode", opcode, state);

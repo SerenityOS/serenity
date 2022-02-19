@@ -958,7 +958,7 @@ bool ECMA262Parser::parse_disjunction(ByteCode& stack, size_t& match_length_mini
 {
     size_t total_match_length_minimum = NumericLimits<size_t>::max();
     Vector<ByteCode> alternatives;
-    do {
+    while (true) {
         ByteCode alternative_stack;
         size_t alternative_minimum_length = 0;
         auto alt_ok = parse_alternative(alternative_stack, alternative_minimum_length, unicode, named);
@@ -971,20 +971,9 @@ bool ECMA262Parser::parse_disjunction(ByteCode& stack, size_t& match_length_mini
         if (!match(TokenType::Pipe))
             break;
         consume();
-    } while (true);
-
-    Optional<ByteCode> alternative_stack {};
-    for (auto& alternative : alternatives) {
-        if (alternative_stack.has_value()) {
-            ByteCode target_stack;
-            target_stack.insert_bytecode_alternation(alternative_stack.release_value(), move(alternative));
-            alternative_stack = move(target_stack);
-        } else {
-            alternative_stack = move(alternative);
-        }
     }
 
-    stack.extend(alternative_stack.release_value());
+    Optimizer::append_alternation(stack, alternatives.span());
     match_length_minimum = total_match_length_minimum;
     return true;
 }
