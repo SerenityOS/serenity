@@ -13,7 +13,7 @@
 namespace JS {
 
 AsyncFunctionConstructor::AsyncFunctionConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.AsyncFunction.as_string(), *global_object.function_prototype())
+    : NativeFunction(vm().names.AsyncFunction.as_string(), *global_object.function_constructor())
 {
 }
 
