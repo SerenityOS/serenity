@@ -11,6 +11,7 @@
 #include <AK/TemporaryChange.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibGfx/FontStyleMapping.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
@@ -679,11 +680,13 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     // FIXME: This should be more sophisticated.
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontFamily);
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontSize);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontStyle);
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight);
 
     auto viewport_rect = document().browsing_context()->viewport_rect();
 
     auto font_size = style.property(CSS::PropertyID::FontSize).value();
+    auto font_style = style.property(CSS::PropertyID::FontStyle).value();
     auto font_weight = style.property(CSS::PropertyID::FontWeight).value();
 
     int weight = Gfx::FontWeight::Regular;
@@ -789,20 +792,35 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         }
     }
 
+    int slope = Gfx::name_to_slope("Normal");
+    // FIXME: Implement oblique <angle>
+    if (font_style->is_identifier()) {
+        switch (static_cast<IdentifierStyleValue const&>(*font_style).id()) {
+        case CSS::ValueID::Italic:
+            slope = Gfx::name_to_slope("Italic");
+            break;
+        case CSS::ValueID::Oblique:
+            slope = Gfx::name_to_slope("Oblique");
+            break;
+        case CSS::ValueID::Normal:
+        default:
+            break;
+        }
+    }
+
     // FIXME: Implement the full font-matching algorithm: https://www.w3.org/TR/css-fonts-4/#font-matching-algorithm
 
     // Note: This is modified by the find_font() lambda
     FontSelector font_selector;
     bool monospace = false;
 
-    // FIXME: Implement font slope style. All found fonts are currently hard-coded as regular.
     auto find_font = [&](String const& family) -> RefPtr<Gfx::Font> {
-        font_selector = { family, size, weight, 0 };
+        font_selector = { family, size, weight, slope };
 
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
-        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight, 0))
+        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight, slope))
             return found_font;
 
         return {};
