@@ -291,21 +291,12 @@ void GlobalObject::initialize_global_object()
 #undef __JS_ENUMERATE
 
     // NOTE: These constructors cannot be initialized with add_constructor as they have no global binding.
-    m_generator_function_constructor = heap().allocate<GeneratorFunctionConstructor>(*this, *this);
-    m_async_generator_function_constructor = heap().allocate<AsyncGeneratorFunctionConstructor>(*this, *this);
-    m_async_function_constructor = heap().allocate<AsyncFunctionConstructor>(*this, *this);
-
-    // 27.3.3.1 GeneratorFunction.prototype.constructor, https://tc39.es/ecma262/#sec-generatorfunction.prototype.constructor
-    m_generator_function_prototype->define_direct_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
-
-    // 27.4.3.1 AsyncGeneratorFunction.prototype.constructor, https://tc39.es/ecma262/#sec-asyncgeneratorfunction-prototype-constructor
-    m_async_generator_function_prototype->define_direct_property(vm.names.constructor, m_async_generator_function_constructor, Attribute::Configurable);
+    initialize_constructor(vm.names.GeneratorFunction, m_generator_function_constructor, m_generator_function_prototype, Attribute::Configurable);
+    initialize_constructor(vm.names.AsyncGeneratorFunction, m_async_generator_function_constructor, m_async_generator_function_prototype, Attribute::Configurable);
+    initialize_constructor(vm.names.AsyncFunction, m_async_function_constructor, m_async_function_prototype, Attribute::Configurable);
 
     // 27.5.1.1 Generator.prototype.constructor, https://tc39.es/ecma262/#sec-generator.prototype.constructor
     m_generator_prototype->define_direct_property(vm.names.constructor, m_generator_function_prototype, Attribute::Configurable);
-
-    // 27.7.3.1 AsyncFunction.prototype.constructor, https://tc39.es/ecma262/#sec-async-function-prototype-properties-constructor
-    m_async_function_prototype->define_direct_property(vm.names.constructor, m_async_function_constructor, Attribute::Configurable);
 
     m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
     m_date_constructor_now_function = &m_date_constructor->get_without_side_effects(vm.names.now).as_function();
