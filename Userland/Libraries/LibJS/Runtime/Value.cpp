@@ -31,6 +31,7 @@
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
@@ -476,7 +477,7 @@ ThrowCompletionOr<Value> Value::to_number(GlobalObject& global_object) const
     case Type::Double:
         return *this;
     case Type::String: {
-        auto string = as_string().string().trim_whitespace();
+        String string = Utf8View(as_string().string()).trim(whitespace_characters, AK::TrimMode::Both).as_string();
         if (string.is_empty())
             return Value(0);
         if (string == "Infinity" || string == "+Infinity")
