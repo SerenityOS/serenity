@@ -335,12 +335,24 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
     } else if (IDL::is_wrappable_type(*parameter.type)) {
         if (!parameter.type->nullable) {
-            scoped_generator.append(R"~~~(
+            if (!optional) {
+                scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
     auto& @cpp_name@ = static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
 )~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+    Optional<NonnullRefPtr<@parameter.type.name@>> @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined()) {
+        if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
+            return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
+
+        @cpp_name@ = static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
+    }
+)~~~");
+            }
         } else {
             scoped_generator.append(R"~~~(
     @parameter.type.name@* @cpp_name@ = nullptr;
