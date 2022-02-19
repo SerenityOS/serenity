@@ -937,6 +937,11 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     compute_font(style, nullptr);
     compute_defaulted_values(style, nullptr);
     absolutize_values(style, nullptr);
+    if (auto* browsing_context = m_document.browsing_context()) {
+        auto viewport_rect = browsing_context->viewport_rect();
+        style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect.width())));
+        style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect.height())));
+    }
     return style;
 }
 
