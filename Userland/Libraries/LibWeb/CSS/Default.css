@@ -32,7 +32,9 @@ pre {
     white-space: pre;
 }
 
-code {
+code,
+kbd,
+samp {
     font-family: monospace;
 }
 
