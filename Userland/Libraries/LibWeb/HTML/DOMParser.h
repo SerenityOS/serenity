@@ -30,7 +30,7 @@ public:
 
     virtual ~DOMParser() override;
 
-    NonnullRefPtr<DOM::Document> parse_from_string(String const&, String const&);
+    NonnullRefPtr<DOM::Document> parse_from_string(String const&, Bindings::DOMParserSupportedType type);
 
 private:
     DOMParser();
