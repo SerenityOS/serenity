@@ -302,11 +302,7 @@ void ClassicStylePainter::paint_window_frame(Painter& painter, IntRect const& re
         // FIXME: This will draw "useless" pixels that'll get drawn over by the window contents.
         // preferrably we should just remove the corner pixels from the completely drawn window
         // but I don't know how to do that yet. :^)
-        painter.fill_rect_with_rounded_corners({ rect.x() - border_radius / 2,
-                                                   rect.y() - border_radius / 2,
-                                                   rect.width() + border_radius,
-                                                   rect.height() + border_radius },
-            base_color, border_radius);
+        painter.fill_rect_with_rounded_corners(rect, base_color, border_radius);
         return;
     }
 
