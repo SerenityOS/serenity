@@ -510,6 +510,11 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             }
             return true;
         }
+        if (key == KeyCode::Key_Home) {
+            auto& node = *static_cast<DOM::Text*>(const_cast<DOM::Node*>(m_browsing_context.cursor_position().node()));
+            m_browsing_context.set_cursor_position(DOM::Position { node, 0 });
+            return true;
+        }
         if (!should_ignore_keydown_event(code_point)) {
             m_edit_event_handler->handle_insert(m_browsing_context.cursor_position(), code_point);
             m_browsing_context.increment_cursor_position_offset();
