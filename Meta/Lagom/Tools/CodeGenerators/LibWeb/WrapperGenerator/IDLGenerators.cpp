@@ -671,6 +671,41 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         union_generator.set("union_type", union_type.to_variant(interface));
         union_generator.set("recursion_depth", String::number(recursion_depth));
 
+        // NOTE: This is handled out here as we need the dictionary conversion code for the {} optional default value.
+        // 3. Let types be the flattened member types of the union type.
+        auto types = union_type.flattened_member_types();
+
+        RefPtr<Type> dictionary_type;
+        for (auto& dictionary : interface.dictionaries) {
+            for (auto& type : types) {
+                if (type.name == dictionary.key) {
+                    dictionary_type = type;
+                    break;
+                }
+            }
+
+            if (dictionary_type)
+                break;
+        }
+
+        if (dictionary_type) {
+            auto dictionary_generator = union_generator.fork();
+            dictionary_generator.set("dictionary.type", dictionary_type->name);
+
+            // The lambda must take the JS::Value to convert as a parameter instead of capturing it in order to support union types being variadic.
+            dictionary_generator.append(R"~~~(
+    auto @js_name@@js_suffix@_to_dictionary = [&global_object, &vm](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@dictionary.type@> {
+)~~~");
+
+            IDL::Parameter dictionary_parameter { .type = *dictionary_type, .name = acceptable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
+            generate_to_cpp(dictionary_generator, dictionary_parameter, js_name, js_suffix, "dictionary_union_type"sv, interface, false, false, {}, false, recursion_depth + 1);
+
+            dictionary_generator.append(R"~~~(
+        return dictionary_union_type;
+    };
+)~~~");
+        }
+
         // A lambda is used because Variants without "Empty" can't easily be default initialized.
         // Plus, this would require the user of union types to always accept a Variant with an Empty type.
 
@@ -679,8 +714,17 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // Note that all the other types only throw on a condition.
 
         // The lambda must take the JS::Value to convert as a parameter instead of capturing it in order to support union types being variadic.
+
+        StringBuilder to_variant_captures;
+        to_variant_captures.append("&global_object, &vm"sv);
+
+        if (dictionary_type)
+            to_variant_captures.append(String::formatted(", &{}{}_to_dictionary", js_name, js_suffix));
+
+        union_generator.set("to_variant_captures", to_variant_captures.to_string());
+
         union_generator.append(R"~~~(
-    auto @js_name@@js_suffix@_to_variant = [&global_object, &vm](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@union_type@> {
+    auto @js_name@@js_suffix@_to_variant = [@to_variant_captures@](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@union_type@> {
         // These might be unused.
         (void)global_object;
         (void)vm;
@@ -694,29 +738,16 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
 
-        // 3. Let types be the flattened member types of the union type.
-        auto types = union_type.flattened_member_types();
-
-        bool contains_dictionary_type = false;
-        for (auto& dictionary : interface.dictionaries) {
-            for (auto& type : types) {
-                if (type.name == dictionary.key) {
-                    contains_dictionary_type = true;
-                    break;
-                }
-            }
-
-            if (contains_dictionary_type)
-                break;
-        }
-
         // FIXME: 2. If the union type includes a nullable type and V is null or undefined, then return the IDL value null.
         if (union_type.includes_nullable_type()) {
             TODO();
-        } else if (contains_dictionary_type) {
-            // FIXME: 4. If V is null or undefined, then
-            //              4.1 If types includes a dictionary type, then return the result of converting V to that dictionary type.
-            TODO();
+        } else if (dictionary_type) {
+            // 4. If V is null or undefined, then
+            //    4.1 If types includes a dictionary type, then return the result of converting V to that dictionary type.
+            union_generator.append(R"~~~(
+        if (@js_name@@js_suffix@.is_nullish())
+            return @union_type@ { TRY(@js_name@@js_suffix@_to_dictionary(@js_name@@js_suffix@)) };
+)~~~");
         }
 
         bool includes_object = false;
@@ -754,7 +785,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
                 auto union_platform_object_type_generator = union_generator.fork();
                 union_platform_object_type_generator.set("platform_object_type", String::formatted("{}Wrapper", type.name));
-                auto cpp_type = IDL::idl_type_name_to_cpp_type(type);
+                auto cpp_type = IDL::idl_type_name_to_cpp_type(type, interface);
                 union_platform_object_type_generator.set("refptr_type", cpp_type.name);
 
                 union_platform_object_type_generator.append(R"~~~(
@@ -825,9 +856,12 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         //           1. Let method be ? GetMethod(V, @@iterator).
         //           2. If method is not undefined, return the result of creating a frozen array of that type from V and method.
 
-        // FIXME: 3. If types includes a dictionary type, then return the result of converting V to that dictionary type.
-        if (contains_dictionary_type)
-            TODO();
+        // 3. If types includes a dictionary type, then return the result of converting V to that dictionary type.
+        if (dictionary_type) {
+            union_generator.append(R"~~~(
+        return @union_type@ { TRY(@js_name@@js_suffix@_to_dictionary(@js_name@@js_suffix@)) };
+)~~~");
+        }
 
         // 4. If types includes a record type, then return the result of converting V to that record type.
         RefPtr<IDL::ParameterizedType> record_type;
@@ -874,7 +908,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (includes_boolean) {
             union_generator.append(R"~~~(
         if (@js_name@@js_suffix@.is_boolean())
-            return @js_name@@js_suffix@.as_boolean();
+            return @union_type@ { @js_name@@js_suffix@.as_bool() };
 )~~~");
         }
 
@@ -979,7 +1013,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         } else if (includes_boolean) {
             // 17. If types includes boolean, then return the result of converting V to boolean.
             union_generator.append(R"~~~(
-        return @js_name@@js_suffix@.to_boolean();
+        return @union_type@ { @js_name@@js_suffix@.to_boolean() };
 )~~~");
         } else if (includes_bigint) {
             // 18. If types includes bigint, then return the result of converting V to bigint.
@@ -996,29 +1030,34 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         // Close the lambda and then perform the conversion.
         union_generator.append(R"~~~(
-        };
-
-    )~~~");
+    };
+)~~~");
 
         if (!variadic) {
             if (!optional) {
                 union_generator.append(R"~~~(
-        @union_type@ @cpp_name@ = TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
-    )~~~");
+    @union_type@ @cpp_name@ = TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
             } else {
                 if (!optional_default_value.has_value()) {
                     union_generator.append(R"~~~(
-        Optional<@union_type@> @cpp_name@;
-        if (!@js_name@@js_suffix@.is_undefined())
-            @cpp_name@ = TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
-    )~~~");
+    Optional<@union_type@> @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined())
+        @cpp_name@ = TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
                 } else {
-                    if (optional_default_value != "\"\"")
+                    if (optional_default_value == "\"\"") {
+                        union_generator.append(R"~~~(
+    @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? String::empty() : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
+                    } else if (optional_default_value == "{}") {
+                        VERIFY(dictionary_type);
+                        union_generator.append(R"~~~(
+    @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? TRY(@js_name@@js_suffix@_to_dictionary(@js_name@@js_suffix@)) : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
+                    } else {
                         TODO();
-
-                    union_generator.append(R"~~~(
-        @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? String::empty() : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
-    )~~~");
+                    }
                 }
             }
         } else {
