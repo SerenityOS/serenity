@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/IterationDecision.h"
+#include "LibCore/FileWatcher.h"
 #include <AK/StringBuilder.h>
 #include <Applications/Browser/Browser.h>
 #include <Applications/Browser/BrowserWindow.h>
@@ -28,6 +30,7 @@ namespace Browser {
 String g_search_engine;
 String g_home_url;
 Vector<String> g_content_filters;
+bool g_content_filters_enabled { true };
 IconBag g_icon_bag;
 
 }
@@ -54,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath"));
+    TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath proc exec"));
 
     const char* specified_url = nullptr;
 
@@ -65,6 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = GUI::Application::construct(arguments);
 
     Config::pledge_domain("Browser");
+    Config::monitor_domain("Browser");
 
     // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening
     // the user's downloads directory.
@@ -79,18 +83,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/image", "rw"));
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/tmp/portal/request", "rw"));
+    TRY(Core::System::unveil("/bin/BrowserSettings", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
 
     Browser::g_home_url = Config::read_string("Browser", "Preferences", "Home", "file:///res/html/misc/welcome.html");
     Browser::g_search_engine = Config::read_string("Browser", "Preferences", "SearchEngine", {});
+    Browser::g_content_filters_enabled = Config::read_bool("Browser", "Preferences", "EnableContentFilters");
 
     Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
 
     TRY(load_content_filters());
 
-    URL first_url = Browser::g_home_url;
+    URL first_url = Browser::url_from_user_input(Browser::g_home_url);
     if (specified_url) {
         if (Core::File::exists(specified_url)) {
             first_url = URL::create_with_file_protocol(Core::File::real_path_for(specified_url));
@@ -101,6 +107,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::CookieJar cookie_jar;
     auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
+
+    auto content_filters_watcher = TRY(Core::FileWatcher::create());
+    content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {
+        dbgln("Reloading content filters because config file changed");
+        auto error = load_content_filters();
+        if (error.is_error()) {
+            dbgln("Reloading content filters failed: {}", error.release_error());
+            return;
+        }
+        window->content_filters_changed();
+    };
+    TRY(content_filters_watcher->add_watch(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
 
     app->on_action_enter = [&](GUI::Action& action) {
         if (auto* browser_window = dynamic_cast<Browser::BrowserWindow*>(app->active_window())) {

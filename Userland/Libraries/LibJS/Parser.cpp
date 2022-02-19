@@ -1086,7 +1086,9 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
         if (match(TokenType::Async)) {
             auto lookahead_token = next_token();
-            if (lookahead_token.type() != TokenType::Semicolon && lookahead_token.type() != TokenType::CurlyClose
+            // If async is followed by a Semicolon or CurlyClose it is a field (CurlyClose indicates end of class)
+            // Otherwise if it is followed by a ParenOpen it is a function named async
+            if (lookahead_token.type() != TokenType::Semicolon && lookahead_token.type() != TokenType::CurlyClose && lookahead_token.type() != TokenType::ParenOpen
                 && !lookahead_token.trivia_contains_line_terminator()) {
                 consume();
                 is_async = true;
@@ -3492,7 +3494,7 @@ NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode
                     has_annexB_for_in_init_extension = true;
             }
         }
-    } else if (!lhs->is_identifier() && !is<MemberExpression>(*lhs)) {
+    } else if (!lhs->is_identifier() && !is<MemberExpression>(*lhs) && !is<CallExpression>(*lhs)) {
         bool valid = false;
         if (is<ObjectExpression>(*lhs) || is<ArrayExpression>(*lhs)) {
             auto synthesized_binding_pattern = synthesize_binding_pattern(static_cast<Expression const&>(*lhs));

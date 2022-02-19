@@ -16,6 +16,7 @@
 #include "Tab.h"
 #include <Applications/Browser/BrowserWindowGML.h>
 #include <LibConfig/Client.h>
+#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/Stream.h>
 #include <LibGUI/AboutDialog.h>
@@ -102,7 +103,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     };
 
     m_window_actions.on_create_new_tab = [this] {
-        create_new_tab(Browser::g_home_url, true);
+        create_new_tab(Browser::url_from_user_input(Browser::g_home_url), true);
     };
 
     m_window_actions.on_next_tab = [this] {
@@ -171,7 +172,7 @@ void BrowserWindow::build_menus()
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { active_tab().go_back(); }, this);
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { active_tab().go_forward(); }, this);
-    m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { active_tab().load(g_home_url); }, this);
+    m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { active_tab().load(Browser::url_from_user_input(g_home_url)); }, this);
     m_go_home_action->set_status_tip("Go to home page");
     m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { active_tab().reload(); }, this);
     m_reload_action->set_status_tip("Reload current page");
@@ -273,6 +274,13 @@ void BrowserWindow::build_menus()
         add_color_scheme_action("Light", Web::CSS::PreferredColorScheme::Light);
         add_color_scheme_action("Dark", Web::CSS::PreferredColorScheme::Dark);
     }
+
+    settings_menu.add_separator();
+    auto open_settings_action = GUI::Action::create("&Settings...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
+        [](auto&) {
+            Core::Process::spawn("/bin/BrowserSettings");
+        });
+    settings_menu.add_action(move(open_settings_action));
 
     auto& debug_menu = add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
@@ -524,6 +532,44 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
 
     if (activate)
         m_tab_widget->set_active_widget(&new_tab);
+}
+
+void BrowserWindow::content_filters_changed()
+{
+    tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
+        tab.content_filters_changed();
+        return IterationDecision::Continue;
+    });
+}
+
+void BrowserWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+{
+    if (domain != "Browser" || group != "Preferences")
+        return;
+
+    if (key == "SearchEngine")
+        Browser::g_search_engine = value;
+    else if (key == "Home")
+        Browser::g_home_url = value;
+
+    // TODO: ColorScheme
+}
+
+void BrowserWindow::config_bool_did_change(String const& domain, String const& group, String const& key, bool value)
+{
+    dbgln("{} {} {} {}", domain, group, key, value);
+    if (domain != "Browser" || group != "Preferences")
+        return;
+
+    if (key == "ShowBookmarksBar") {
+        m_window_actions.show_bookmarks_bar_action().set_checked(value);
+        Browser::BookmarksBarWidget::the().set_visible(value);
+    } else if (key == "EnableContentFilters") {
+        Browser::g_content_filters_enabled = value;
+        content_filters_changed();
+    }
+
+    // NOTE: CloseDownloadWidgetOnFinish is read each time in DownloadWindow
 }
 
 }

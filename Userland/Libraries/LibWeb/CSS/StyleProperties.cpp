@@ -65,9 +65,14 @@ Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fal
 
 LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID id, LengthPercentage const& fallback) const
 {
+    return length_percentage(id).value_or(fallback);
+}
+
+Optional<LengthPercentage> StyleProperties::length_percentage(CSS::PropertyID id) const
+{
     auto maybe_value = property(id);
     if (!maybe_value.has_value())
-        return fallback;
+        return {};
     auto& value = maybe_value.value();
 
     if (value->is_calculated())
@@ -79,7 +84,7 @@ LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID 
     if (value->has_length())
         return value->to_length();
 
-    return fallback;
+    return {};
 }
 
 LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id, const CSS::Length& default_value) const
@@ -126,7 +131,7 @@ float StyleProperties::line_height(Layout::Node const& layout_node) const
 
         if (line_height->is_length()) {
             auto line_height_length = line_height->to_length();
-            if (!line_height_length.is_undefined_or_auto())
+            if (!line_height_length.is_auto())
                 return line_height_length.to_px(layout_node);
         }
 

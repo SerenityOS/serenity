@@ -99,7 +99,7 @@ extern HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<TLS::
 void request_did_finish(URL const&, Core::Stream::Socket const*);
 void dump_jobs();
 
-constexpr static size_t MaxConcurrentConnectionsPerURL = 2;
+constexpr static size_t MaxConcurrentConnectionsPerURL = 4;
 constexpr static size_t ConnectionKeepAliveTimeMilliseconds = 10'000;
 
 template<typename T>

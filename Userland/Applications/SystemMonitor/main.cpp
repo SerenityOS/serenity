@@ -406,6 +406,9 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
     window->resize(480, 360);
     window->set_title(String::formatted("PID {} - System Monitor", pid));
 
+    auto app_icon = GUI::Icon::default_icon("app-system-monitor");
+    window->set_icon(app_icon.bitmap_for_size(16));
+
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::VerticalBoxLayout>();

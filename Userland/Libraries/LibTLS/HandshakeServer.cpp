@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, Michiel Visser <opensource@webmichiel.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -171,6 +172,16 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
             print_buffer(buffer.slice(res, extension_length));
             res += extension_length;
             // FIXME: what are we supposed to do here?
+        } else if (extension_type == HandshakeExtension::ECPointFormats) {
+            // RFC8422 section 5.2: A server that selects an ECC cipher suite in response to a ClientHello message
+            // including a Supported Point Formats Extension appends this extension (along with others) to its
+            // ServerHello message, enumerating the point formats it can parse. The Supported Point Formats Extension,
+            // when used, MUST contain the value 0 (uncompressed) as one of the items in the list of point formats.
+            //
+            // The current implementation only supports uncompressed points, and the server is required to support
+            // uncompressed points. Therefore, this extension can be safely ignored as it should always inform us
+            // that the server supports uncompressed points.
+            res += extension_length;
         } else {
             dbgln("Encountered unknown extension {} with length {}", (u16)extension_type, extension_length);
             res += extension_length;
@@ -221,6 +232,7 @@ ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes buffer)
         TODO();
         break;
     case KeyExchangeAlgorithm::ECDHE_RSA:
+        return handle_ecdhe_rsa_server_key_exchange(buffer);
     case KeyExchangeAlgorithm::ECDH_ECDSA:
     case KeyExchangeAlgorithm::ECDH_RSA:
     case KeyExchangeAlgorithm::ECDHE_ECDSA:
@@ -272,6 +284,41 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     }
 
     // FIXME: Validate signature of Diffie-Hellman parameters as defined in RFC 5246 section 7.4.3.
+
+    return 0;
+}
+
+ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
+{
+    auto x25519_key_size_bytes = named_curve_key_size(NamedCurve::x25519) / 8;
+    if (buffer.size() < x25519_key_size_bytes + 7)
+        return (i8)Error::NeedMoreData;
+
+    auto curve_type = buffer[3];
+    if (curve_type != (u8)ECCurveType::NamedCurve)
+        return (i8)Error::FeatureNotSupported;
+
+    auto curve = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(4)));
+    if (curve != (u16)NamedCurve::x25519)
+        return (i8)Error::FeatureNotSupported;
+
+    auto server_public_key_length = buffer[6];
+    if (server_public_key_length != x25519_key_size_bytes)
+        return (i8)Error::FeatureNotSupported;
+
+    auto server_public_key = buffer.slice(7, server_public_key_length);
+    auto server_public_key_copy_result = ByteBuffer::copy(server_public_key);
+    if (server_public_key_copy_result.is_error()) {
+        dbgln("ecdhe_rsa_server_key_exchange failed: Not enough memory");
+        return 0;
+    }
+    m_context.server_diffie_hellman_params.p = server_public_key_copy_result.release_value();
+
+    if constexpr (TLS_DEBUG) {
+        dbgln("ECDHE server public key: {:hex-dump}", server_public_key);
+    }
+
+    // FIXME: Validate signature of Elliptic Curve Diffie-Hellman public key
 
     return 0;
 }

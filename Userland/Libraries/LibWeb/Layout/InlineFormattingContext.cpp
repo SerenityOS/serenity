@@ -108,12 +108,12 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
     auto width_of_containing_block = CSS::Length::make_px(containing_block().content_width());
     auto& box_model = box.box_model();
 
-    box_model.margin.left = box.computed_values().margin().left.resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
+    box_model.margin.left = box.computed_values().margin().left.resolved(box, width_of_containing_block).to_px(box);
     box_model.border.left = box.computed_values().border_left().width;
-    box_model.padding.left = box.computed_values().padding().left.resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
-    box_model.margin.right = box.computed_values().margin().right.resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
+    box_model.padding.left = box.computed_values().padding().left.resolved(box, width_of_containing_block).to_px(box);
+    box_model.margin.right = box.computed_values().margin().right.resolved(box, width_of_containing_block).to_px(box);
     box_model.border.right = box.computed_values().border_right().width;
-    box_model.padding.right = box.computed_values().padding().right.resolved(box, width_of_containing_block).resolved_or_zero(box).to_px(box);
+    box_model.padding.right = box.computed_values().padding().right.resolved(box, width_of_containing_block).to_px(box);
 
     if (is<ReplacedBox>(box)) {
         auto& replaced = verify_cast<ReplacedBox>(box);
@@ -125,7 +125,8 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
     if (box.is_inline_block()) {
         auto& inline_block = const_cast<BlockContainer&>(verify_cast<BlockContainer>(box));
 
-        if (inline_block.computed_values().width().is_length() && inline_block.computed_values().width().length().is_undefined_or_auto()) {
+        auto& width_value = inline_block.computed_values().width();
+        if (!width_value.has_value() || (width_value->is_length() && width_value->length().is_auto())) {
             auto result = calculate_shrink_to_fit_widths(inline_block);
 
             auto available_width = containing_block().content_width()
@@ -140,16 +141,17 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
             inline_block.set_content_width(width);
         } else {
             auto container_width = CSS::Length::make_px(containing_block().content_width());
-            inline_block.set_content_width(inline_block.computed_values().width().resolved(box, container_width).resolved_or_zero(inline_block).to_px(inline_block));
+            inline_block.set_content_width(width_value->resolved(box, container_width).to_px(inline_block));
         }
         auto independent_formatting_context = layout_inside(inline_block, layout_mode);
 
-        if (inline_block.computed_values().height().is_length() && inline_block.computed_values().height().length().is_undefined_or_auto()) {
+        auto& height_value = inline_block.computed_values().height();
+        if (!height_value.has_value() || (height_value->is_length() && height_value->length().is_auto())) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
             BlockFormattingContext::compute_height(inline_block);
         } else {
             auto container_height = CSS::Length::make_px(containing_block().content_height());
-            inline_block.set_content_height(inline_block.computed_values().height().resolved(box, container_height).resolved_or_zero(inline_block).to_px(inline_block));
+            inline_block.set_content_height(height_value->resolved(box, container_height).to_px(inline_block));
         }
 
         independent_formatting_context->parent_context_did_dimension_child_root_box();

@@ -216,53 +216,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
 {
     auto base = TRY(vm.argument(0).to_number(global_object));
     auto exponent = TRY(vm.argument(1).to_number(global_object));
-    if (exponent.is_nan())
-        return js_nan();
-    if (exponent.is_positive_zero() || exponent.is_negative_zero())
-        return Value(1);
-    if (base.is_nan())
-        return js_nan();
-    if (base.is_positive_infinity())
-        return exponent.as_double() > 0 ? js_infinity() : Value(0);
-    if (base.is_negative_infinity()) {
-        auto is_odd_integral_number = exponent.is_integral_number() && (exponent.as_i32() % 2 != 0);
-        if (exponent.as_double() > 0)
-            return is_odd_integral_number ? js_negative_infinity() : js_infinity();
-        else
-            return is_odd_integral_number ? Value(-0.0) : Value(0);
-    }
-    if (base.is_positive_zero())
-        return exponent.as_double() > 0 ? Value(0) : js_infinity();
-    if (base.is_negative_zero()) {
-        auto is_odd_integral_number = exponent.is_integral_number() && (exponent.as_i32() % 2 != 0);
-        if (exponent.as_double() > 0)
-            return is_odd_integral_number ? Value(-0.0) : Value(0);
-        else
-            return is_odd_integral_number ? js_negative_infinity() : js_infinity();
-    }
-    VERIFY(base.is_finite_number() && !base.is_positive_zero() && !base.is_negative_zero());
-    if (exponent.is_positive_infinity()) {
-        auto absolute_base = fabs(base.as_double());
-        if (absolute_base > 1)
-            return js_infinity();
-        else if (absolute_base == 1)
-            return js_nan();
-        else if (absolute_base < 1)
-            return Value(0);
-    }
-    if (exponent.is_negative_infinity()) {
-        auto absolute_base = fabs(base.as_double());
-        if (absolute_base > 1)
-            return Value(0);
-        else if (absolute_base == 1)
-            return js_nan();
-        else if (absolute_base < 1)
-            return js_infinity();
-    }
-    VERIFY(exponent.is_finite_number() && !exponent.is_positive_zero() && !exponent.is_negative_zero());
-    if (base.as_double() < 0 && !exponent.is_integral_number())
-        return js_nan();
-    return Value(::pow(base.as_double(), exponent.as_double()));
+    return JS::exp(global_object, base, exponent);
 }
 
 // 21.3.2.14 Math.exp ( x ), https://tc39.es/ecma262/#sec-math.exp

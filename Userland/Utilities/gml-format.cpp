@@ -43,7 +43,7 @@ ErrorOr<bool> format_file(StringView path, bool inplace)
     } else {
         out("{}", formatted_gml);
     }
-    return true;
+    return formatted_gml == contents;
 }
 
 ErrorOr<int> serenity_main(Main::Arguments args)
@@ -66,14 +66,19 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         TRY(Core::System::pledge("stdio rpath", nullptr));
 #endif
 
-    unsigned exit_code = 0;
-
     if (files.is_empty())
         files.append("-");
+
+    auto formatting_changed = false;
     for (auto& file : files) {
         if (!TRY(format_file(file, inplace)))
-            exit_code = 1;
+            formatting_changed = true;
     }
 
-    return exit_code;
+    if (formatting_changed) {
+        dbgln("Some GML formatting issues were encountered.");
+        return 1;
+    }
+
+    return 0;
 }

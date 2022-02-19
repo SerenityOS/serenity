@@ -28,7 +28,8 @@ int main(int argc, char** argv)
     bool list = false;
     bool verbose = false;
     bool gzip = false;
-    const char* archive_file = nullptr;
+    bool no_auto_compress = false;
+    StringView archive_file;
     const char* directory = nullptr;
     Vector<const char*> paths;
 
@@ -38,6 +39,7 @@ int main(int argc, char** argv)
     args_parser.add_option(list, "List contents", "list", 't');
     args_parser.add_option(verbose, "Print paths", "verbose", 'v');
     args_parser.add_option(gzip, "Compress or decompress file using gzip", "gzip", 'z');
+    args_parser.add_option(no_auto_compress, "Do not use the archive suffix to select the compression algorithm", "no-auto-compress", 0);
     args_parser.add_option(directory, "Directory to extract to/create from", "directory", 'C', "DIRECTORY");
     args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE");
     args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No);
@@ -48,10 +50,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (!no_auto_compress && !archive_file.is_empty()) {
+        if (archive_file.ends_with(".gz"sv) || archive_file.ends_with(".tgz"sv))
+            gzip = true;
+    }
+
     if (list || extract) {
         auto file = Core::File::standard_input();
 
-        if (archive_file) {
+        if (!archive_file.is_empty()) {
             auto maybe_file = Core::File::open(archive_file, Core::OpenMode::ReadOnly);
             if (maybe_file.is_error()) {
                 warnln("Core::File::open: {}", maybe_file.error());
@@ -160,7 +167,7 @@ int main(int argc, char** argv)
 
         auto file = Core::File::standard_output();
 
-        if (archive_file) {
+        if (!archive_file.is_empty()) {
             auto maybe_file = Core::File::open(archive_file, Core::OpenMode::WriteOnly);
             if (maybe_file.is_error()) {
                 warnln("Core::File::open: {}", maybe_file.error());

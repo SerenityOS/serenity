@@ -2,6 +2,7 @@ set(TEST_SOURCES
     TestAES.cpp
     TestBigInteger.cpp
     TestChecksum.cpp
+    TestCurves.cpp
     TestHash.cpp
     TestHMAC.cpp
     TestRSA.cpp

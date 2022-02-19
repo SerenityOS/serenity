@@ -220,14 +220,26 @@ void MonitorSettingsWidget::apply_settings()
         if (result.success()) {
             load_current_settings(); // Refresh
 
-            auto box = GUI::MessageBox::construct(window(), String::formatted("Do you want to keep the new settings? They will be reverted after 10 seconds."),
-                "Apply new screen layout", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+            auto seconds_until_revert = 10;
+
+            auto box_text = [&seconds_until_revert] {
+                return String::formatted("Do you want to keep the new settings? They will be reverted after {} {}.",
+                    seconds_until_revert, seconds_until_revert == 1 ? "second" : "seconds");
+            };
+
+            auto box = GUI::MessageBox::construct(window(), box_text(), "Apply new screen layout",
+                GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
             box->set_icon(window()->icon());
 
             // If after 10 seconds the user doesn't close the message box, just close it.
-            auto timer = Core::Timer::construct(10000, [&] {
-                box->close();
+            auto revert_timer = Core::Timer::create_repeating(1000, [&] {
+                seconds_until_revert -= 1;
+                box->set_text(box_text());
+                if (seconds_until_revert <= 0) {
+                    box->close();
+                }
             });
+            revert_timer->start();
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
             if (box->exec() == GUI::MessageBox::ExecYes) {

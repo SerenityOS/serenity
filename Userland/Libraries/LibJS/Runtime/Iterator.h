@@ -11,7 +11,7 @@
 
 namespace JS {
 
-// Iterator Record
+// 7.4.1 Iterator Records, https://tc39.es/ecma262/#sec-iterator-records
 struct Iterator {
     Object* iterator { nullptr }; // [[Iterator]]
     Value next_method;            // [[NextMethod]]

@@ -55,6 +55,12 @@ int MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path
     return box->exec();
 }
 
+void MessageBox::set_text(String text)
+{
+    m_text = move(text);
+    build();
+}
+
 MessageBox::MessageBox(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
     : Dialog(parent_window)
     , m_text(text)

@@ -81,13 +81,11 @@ static void update_function_name(Value value, FlyString const& name)
         static_cast<ECMAScriptFunctionObject&>(function).set_name(name);
 }
 
-static ThrowCompletionOr<String> get_function_name(GlobalObject& global_object, Value value)
+static ThrowCompletionOr<String> get_function_property_name(PropertyKey key)
 {
-    if (value.is_symbol())
-        return String::formatted("[{}]", value.as_symbol().description());
-    if (value.is_string())
-        return value.as_string().string();
-    return value.to_string(global_object);
+    if (key.is_symbol())
+        return String::formatted("[{}]", key.as_symbol()->description());
+    return key.to_string();
 }
 
 // 14.2.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation
@@ -865,7 +863,7 @@ struct ForInOfHeadState {
                     VERIFY(declaration.declarations().first().target().has<NonnullRefPtr<Identifier>>());
                     lhs_reference = TRY(declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->to_reference(interpreter, global_object));
                 } else {
-                    VERIFY(is<Identifier>(*expression_lhs) || is<MemberExpression>(*expression_lhs));
+                    VERIFY(is<Identifier>(*expression_lhs) || is<MemberExpression>(*expression_lhs) || is<CallExpression>(*expression_lhs));
                     auto& expression = static_cast<Expression const&>(*expression_lhs);
                     lhs_reference = TRY(expression.to_reference(interpreter, global_object));
                 }
@@ -2999,7 +2997,8 @@ Completion ObjectExpression::execute(Interpreter& interpreter, GlobalObject& glo
         if (value.is_function() && property.is_method())
             static_cast<ECMAScriptFunctionObject&>(value.as_function()).set_home_object(object);
 
-        auto name = TRY(get_function_name(global_object, key));
+        auto property_key = TRY(PropertyKey::from_value(global_object, key));
+        auto name = TRY(get_function_property_name(property_key));
         if (property.type() == ObjectProperty::Type::Getter) {
             name = String::formatted("get {}", name);
         } else if (property.type() == ObjectProperty::Type::Setter) {
@@ -3011,14 +3010,14 @@ Completion ObjectExpression::execute(Interpreter& interpreter, GlobalObject& glo
         switch (property.type()) {
         case ObjectProperty::Type::Getter:
             VERIFY(value.is_function());
-            object->define_direct_accessor(TRY(PropertyKey::from_value(global_object, key)), &value.as_function(), nullptr, Attribute::Configurable | Attribute::Enumerable);
+            object->define_direct_accessor(property_key, &value.as_function(), nullptr, Attribute::Configurable | Attribute::Enumerable);
             break;
         case ObjectProperty::Type::Setter:
             VERIFY(value.is_function());
-            object->define_direct_accessor(TRY(PropertyKey::from_value(global_object, key)), nullptr, &value.as_function(), Attribute::Configurable | Attribute::Enumerable);
+            object->define_direct_accessor(property_key, nullptr, &value.as_function(), Attribute::Configurable | Attribute::Enumerable);
             break;
         case ObjectProperty::Type::KeyValue:
-            object->define_direct_property(TRY(PropertyKey::from_value(global_object, key)), value, JS::default_attributes);
+            object->define_direct_property(property_key, value, JS::default_attributes);
             break;
         case ObjectProperty::Type::Spread:
         default:

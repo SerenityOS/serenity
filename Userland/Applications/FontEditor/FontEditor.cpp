@@ -134,6 +134,8 @@ FontEditorWidget::FontEditorWidget()
     m_fixed_width_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("fixed_width_checkbox");
     m_font_metadata_groupbox = *find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
     m_unicode_block_listview = *find_descendant_of_type_named<GUI::ListView>("unicode_block_listview");
+    m_search_textbox = *find_descendant_of_type_named<GUI::TextBox>("search_textbox");
+    m_unicode_block_container = *find_descendant_of_type_named<GUI::Widget>("unicode_block_container");
 
     m_glyph_editor_widget = m_glyph_editor_container->add<GlyphEditorWidget>();
     m_glyph_map_widget = glyph_map_container.add<GUI::GlyphMapWidget>();
@@ -207,16 +209,25 @@ FontEditorWidget::FontEditorWidget()
     });
     m_open_preview_action->set_checked(false);
     m_open_preview_action->set_status_tip("Preview the current font");
+
+    bool show_metadata = Config::read_bool("FontEditor", "Layout", "ShowMetadata", true);
+    set_show_font_metadata(show_metadata);
     m_show_metadata_action = GUI::Action::create_checkable("Font &Metadata", { Mod_Ctrl, Key_M }, [&](auto& action) {
         set_show_font_metadata(action.is_checked());
+        Config::write_bool("FontEditor", "Layout", "ShowMetadata", action.is_checked());
     });
-    m_show_metadata_action->set_checked(true);
+    m_show_metadata_action->set_checked(show_metadata);
     m_show_metadata_action->set_status_tip("Show or hide metadata about the current font");
+
+    bool show_unicode_blocks = Config::read_bool("FontEditor", "Layout", "ShowUnicodeBlocks", true);
+    set_show_unicode_blocks(show_unicode_blocks);
     m_show_unicode_blocks_action = GUI::Action::create_checkable("&Unicode Blocks", { Mod_Ctrl, Key_U }, [&](auto& action) {
         set_show_unicode_blocks(action.is_checked());
+        Config::write_bool("FontEditor", "Layout", "ShowUnicodeBlocks", action.is_checked());
     });
-    m_show_unicode_blocks_action->set_checked(true);
+    m_show_unicode_blocks_action->set_checked(show_unicode_blocks);
     m_show_unicode_blocks_action->set_status_tip("Show or hide the Unicode block list");
+
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         String input;
         if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecOK && !input.is_empty()) {
@@ -435,23 +446,45 @@ FontEditorWidget::FontEditorWidget()
     };
 
     auto unicode_blocks = Unicode::block_display_names();
-    m_unicode_block_listview->on_activation = [this, unicode_blocks](auto& index) {
-        if (index.row() > 0)
-            m_range = unicode_blocks[index.row() - 1].code_point_range;
-        else
-            m_range = { 0x0000, 0x10FFFF };
-        m_glyph_map_widget->set_active_range(m_range);
-    };
-
     m_unicode_block_list.append("Show All");
     for (auto& block : unicode_blocks)
         m_unicode_block_list.append(block.display_name);
 
     m_unicode_block_model = GUI::ItemListModel<String>::create(m_unicode_block_list);
-    m_unicode_block_listview->set_model(*m_unicode_block_model);
+    m_filter_model = MUST(GUI::FilteringProxyModel::create(*m_unicode_block_model));
+    m_filter_model->set_filter_term("");
+
+    m_unicode_block_listview->on_activation = [this, unicode_blocks](auto& index) {
+        auto mapped_index = m_filter_model->map(index);
+        if (mapped_index.row() > 0)
+            m_range = unicode_blocks[mapped_index.row() - 1].code_point_range;
+        else
+            m_range = { 0x0000, 0x10FFFF };
+        m_glyph_map_widget->set_active_range(m_range);
+    };
+    m_unicode_block_listview->set_model(*m_filter_model);
     m_unicode_block_listview->set_activates_on_selection(true);
     m_unicode_block_listview->horizontal_scrollbar().set_visible(false);
     m_unicode_block_listview->set_cursor(m_unicode_block_model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
+
+    m_search_textbox->on_return_pressed = [this] {
+        if (!m_unicode_block_listview->selection().is_empty())
+            m_unicode_block_listview->activate_selected();
+    };
+
+    m_search_textbox->on_down_pressed = [this] {
+        m_unicode_block_listview->move_cursor(GUI::AbstractView::CursorMovement::Down, GUI::AbstractView::SelectionUpdate::Set);
+    };
+
+    m_search_textbox->on_up_pressed = [this] {
+        m_unicode_block_listview->move_cursor(GUI::AbstractView::CursorMovement::Up, GUI::AbstractView::SelectionUpdate::Set);
+    };
+
+    m_search_textbox->on_change = [this] {
+        m_filter_model->set_filter_term(m_search_textbox->text());
+        if (m_filter_model->row_count() != 0)
+            m_unicode_block_listview->set_cursor(m_filter_model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
+    };
 
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
         auto text = action.status_tip();
@@ -614,7 +647,7 @@ void FontEditorWidget::set_show_unicode_blocks(bool show)
     if (m_unicode_blocks == show)
         return;
     m_unicode_blocks = show;
-    m_unicode_block_listview->set_visible(m_unicode_blocks);
+    m_unicode_block_container->set_visible(m_unicode_blocks);
 }
 
 bool FontEditorWidget::open_file(String const& path)
@@ -768,18 +801,6 @@ void FontEditorWidget::did_resize_glyph_editor()
     constexpr int glyph_toolbars_width = button_width * buttons_per_bar + spacing;
     m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
     m_left_column_container->set_fixed_width(max(m_glyph_editor_widget->preferred_width(), glyph_toolbars_width));
-}
-
-void FontEditorWidget::config_i32_did_change(String const& domain, String const& group, String const& key, i32 value)
-{
-    if (domain == "FontEditor"sv && group == "GlyphEditor"sv && key == "Scale"sv) {
-        set_scale(value);
-    }
-}
-
-void FontEditorWidget::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
-{
-    config_i32_did_change(domain, group, key, value.to_int().value_or(10));
 }
 
 void FontEditorWidget::set_scale(i32 scale)

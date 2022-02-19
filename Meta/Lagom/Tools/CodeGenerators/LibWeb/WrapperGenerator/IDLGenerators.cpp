@@ -2370,6 +2370,8 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #    include <LibWeb/SVG/@name@.h>
 #elif __has_include(<LibWeb/Selection/@name@.h>)
 #    include <LibWeb/Selection/@name@.h>
+#elif __has_include(<LibWeb/WebSockets/@name@.h>)
+#    include <LibWeb/WebSockets/@name@.h>
 #elif __has_include(<LibWeb/XHR/@name@.h>)
 #    include <LibWeb/XHR/@name@.h>
 #elif __has_include(<LibWeb/URL/@name@.h>)
@@ -2648,8 +2650,9 @@ using namespace Web::NavigationTiming;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
-using namespace Web::XHR;
 using namespace Web::URL;
+using namespace Web::WebSockets;
+using namespace Web::XHR;
 
 namespace Web::Bindings {
 
