@@ -571,7 +571,8 @@ Gfx::IntRect WindowFrame::unconstrained_render_rect() const
 
 Gfx::DisjointRectSet WindowFrame::opaque_render_rects() const
 {
-    if (has_alpha_channel()) {
+    auto border_radius = WindowManager::the().palette().window_border_radius();
+    if (has_alpha_channel() || border_radius > 0) {
         if (m_window.is_opaque())
             return constrained_render_rect_to_screen(m_window.rect());
         return {};
@@ -585,7 +586,8 @@ Gfx::DisjointRectSet WindowFrame::opaque_render_rects() const
 
 Gfx::DisjointRectSet WindowFrame::transparent_render_rects() const
 {
-    if (has_alpha_channel()) {
+    auto border_radius = WindowManager::the().palette().window_border_radius();
+    if (has_alpha_channel() || border_radius > 0) {
         if (m_window.is_opaque()) {
             Gfx::DisjointRectSet transparent_rects;
             transparent_rects.add_many(render_rect().shatter(m_window.rect()));
