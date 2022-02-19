@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,13 +16,23 @@
 
 namespace Web::CSS {
 
-// https://www.w3.org/TR/css-conditional-3/#at-supports
+// https://www.w3.org/TR/css-conditional-4/#at-supports
 class Supports final : public RefCounted<Supports> {
     friend class Parser;
 
 public:
-    struct Feature {
+    struct Declaration {
         String declaration;
+        bool evaluate() const;
+    };
+
+    struct Selector {
+        String selector;
+        bool evaluate() const;
+    };
+
+    struct Feature {
+        Variant<Declaration, Selector> value;
         bool evaluate() const;
     };
 
