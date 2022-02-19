@@ -190,6 +190,9 @@ MultiScaleBitmaps const* WindowFrame::shadow_bitmap() const
     case WindowType::WindowSwitcher:
         return nullptr;
     default:
+        // FIXME: Support shadow for themes with border radius
+        if (WindowManager::the().palette().window_border_radius() > 0)
+            return nullptr;
         if (auto* highlight_window = WindowManager::the().highlight_window())
             return highlight_window == &m_window ? s_active_window_shadow : s_inactive_window_shadow;
         return m_window.is_active() ? s_active_window_shadow : s_inactive_window_shadow;
