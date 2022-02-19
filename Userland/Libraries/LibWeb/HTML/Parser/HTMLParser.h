@@ -46,10 +46,12 @@ class HTMLParser {
 
 public:
     HTMLParser(DOM::Document&, StringView input, const String& encoding);
+    HTMLParser(DOM::Document&);
     ~HTMLParser();
 
     static NonnullOwnPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, const ByteBuffer& input);
 
+    void run();
     void run(const AK::URL&);
 
     DOM::Document& document();
@@ -66,6 +68,12 @@ public:
     InsertionMode insertion_mode() const { return m_insertion_mode; }
 
     static bool is_special_tag(const FlyString& tag_name, const FlyString& namespace_);
+
+    HTMLTokenizer& tokenizer() { return m_tokenizer; }
+
+    bool aborted() const { return m_aborted; }
+
+    size_t script_nesting_level() const { return m_script_nesting_level; }
 
 private:
     const char* insertion_mode_name() const;
@@ -127,7 +135,6 @@ private:
     void parse_generic_raw_text_element(HTMLToken&);
     void increment_script_nesting_level();
     void decrement_script_nesting_level();
-    size_t script_nesting_level() const { return m_script_nesting_level; }
     void reset_the_insertion_mode_appropriately();
 
     void adjust_mathml_attributes(HTMLToken&);
