@@ -284,7 +284,15 @@ function choose(index, ...args) {
 }
 
 function now() {
-    return new Date();
+    const date = new Date();
+    date.second = () => date.getSeconds();
+    date.minute = () => date.getMinutes();
+    date.hour = () => date.getHours();
+    date.day = () => date.getDate();
+    date.month = () => date.getMonth() + 1; // january is 0 in vanilla js
+    date.year = () => date.getFullYear();
+    date.day_of_week = () => date.getUTCDay() + 1; // sunday is 0 in vanilla js
+    return date;
 }
 
 function repeat(count, str) {
@@ -587,11 +595,27 @@ now.__documentation = JSON.stringify({
     name: "now",
     argc: 0,
     argnames: [],
-    doc: "Returns a Date instance for the current moment",
+    doc:
+        "Returns a Date instance for the current moment" +
+        "## Date\na `Date` is javascript Date object.\n" +
+        "### Methods:\n" +
+        "- `second()`: Number of seconds that have passed this minute, 1 based\n" +
+        "- `minute()`: Number of minutes that have passed this hour, 1 based\n" +
+        "- `hour()`: Number of hours that have passed this day, 1 based\n" +
+        "- `day_of_week()`: Number of days that have passed this week, 1 based\n" +
+        "- `day()`: Number of days that have passed this month, 1 based\n" +
+        "- `month()`: Number of months that have passed this year, 1 based\n" +
+        "- `year()`: Year number\n",
     examples: {
         "now().toString()":
             "Returns a string containing the current date. Ex: 'Tue Sep 21 2021 02:38:10 GMT+0000 (UTC)'",
-        "now().getFullYear()": "Returns the current year. Ex: 2021",
+        "now().second()": "Returns the current year. Ex: 10",
+        "now().minute()": "Returns the current year. Ex: 38",
+        "now().hour()": "Returns the current year. Ex: 2",
+        "now().day_of_week()": "Returns the current year. Ex: 4",
+        "now().day()": "Returns the current year. Ex: 8",
+        "now().month()": "Returns the current year. Ex: 21",
+        "now().year()": "Returns the current year. Ex: 2021",
     },
 });
 
