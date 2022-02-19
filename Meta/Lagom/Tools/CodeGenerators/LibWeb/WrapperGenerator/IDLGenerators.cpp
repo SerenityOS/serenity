@@ -60,7 +60,7 @@ static StringView sequence_storage_type_to_cpp_storage_type_name(SequenceStorage
     }
 }
 
-CppType idl_type_name_to_cpp_type(Type const& type)
+CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 {
     if (is_wrappable_type(type)) {
         if (type.nullable)
@@ -93,7 +93,7 @@ CppType idl_type_name_to_cpp_type(Type const& type)
     if (type.name == "sequence") {
         auto& parameterized_type = verify_cast<ParameterizedType>(type);
         auto& sequence_type = parameterized_type.parameters.first();
-        auto sequence_cpp_type = idl_type_name_to_cpp_type(sequence_type);
+        auto sequence_cpp_type = idl_type_name_to_cpp_type(sequence_type, interface);
         auto storage_type_name = sequence_storage_type_to_cpp_storage_type_name(sequence_cpp_type.sequence_storage_type);
 
         if (sequence_cpp_type.sequence_storage_type == SequenceStorageType::MarkedVector)
@@ -106,15 +106,22 @@ CppType idl_type_name_to_cpp_type(Type const& type)
         auto& parameterized_type = verify_cast<ParameterizedType>(type);
         auto& record_key_type = parameterized_type.parameters[0];
         auto& record_value_type = parameterized_type.parameters[1];
-        auto record_key_cpp_type = idl_type_name_to_cpp_type(record_key_type);
-        auto record_value_cpp_type = idl_type_name_to_cpp_type(record_value_type);
+        auto record_key_cpp_type = idl_type_name_to_cpp_type(record_key_type, interface);
+        auto record_value_cpp_type = idl_type_name_to_cpp_type(record_value_type, interface);
 
         return { .name = String::formatted("OrderedHashMap<{}, {}>", record_key_cpp_type.name, record_value_cpp_type.name), .sequence_storage_type = SequenceStorageType::Vector };
     }
 
     if (is<UnionType>(type)) {
         auto& union_type = verify_cast<UnionType>(type);
-        return { .name = union_type.to_variant(), .sequence_storage_type = SequenceStorageType::Vector };
+        return { .name = union_type.to_variant(interface), .sequence_storage_type = SequenceStorageType::Vector };
+    }
+
+    if (!type.nullable) {
+        for (auto& dictionary : interface.dictionaries) {
+            if (type.name == dictionary.key)
+                return { .name = type.name, .sequence_storage_type = SequenceStorageType::Vector };
+        }
     }
 
     dbgln("Unimplemented type for idl_type_name_to_cpp_type: {}{}", type.name, type.nullable ? "?" : "");
@@ -612,7 +619,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         //       4. Set result[typedKey] to typedValue.
         // 5. Return result.
 
-        auto record_cpp_type = IDL::idl_type_name_to_cpp_type(parameterized_type);
+        auto record_cpp_type = IDL::idl_type_name_to_cpp_type(parameterized_type, interface);
         record_generator.set("record.type", record_cpp_type.name);
 
         // If this is a recursive call to generate_to_cpp, assume that the caller has already handled converting the JS value to an object for us.
@@ -661,7 +668,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         auto union_generator = scoped_generator.fork();
 
         auto& union_type = verify_cast<IDL::UnionType>(*parameter.type);
-        union_generator.set("union_type", union_type.to_variant());
+        union_generator.set("union_type", union_type.to_variant(interface));
         union_generator.set("recursion_depth", String::number(recursion_depth));
 
         // A lambda is used because Variants without "Empty" can't easily be default initialized.
@@ -940,7 +947,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // 4. Return the result of converting x to T.
 
             auto union_numeric_type_generator = union_generator.fork();
-            auto cpp_type = IDL::idl_type_name_to_cpp_type(*numeric_type);
+            auto cpp_type = IDL::idl_type_name_to_cpp_type(*numeric_type, interface);
             union_numeric_type_generator.set("numeric_type", cpp_type.name);
 
             union_numeric_type_generator.append(R"~~~(
@@ -1086,7 +1093,7 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
     sequence_generator.set("iterable_cpp_name", iterable_cpp_name);
     sequence_generator.set("iterator_method_cpp_name", iterator_method_cpp_name);
     sequence_generator.set("recursion_depth", String::number(recursion_depth));
-    auto sequence_cpp_type = idl_type_name_to_cpp_type(parameters.first());
+    auto sequence_cpp_type = idl_type_name_to_cpp_type(parameters.first(), interface);
     sequence_generator.set("sequence.type", sequence_cpp_type.name);
     sequence_generator.set("sequence.storage_type", sequence_storage_type_to_cpp_storage_type_name(sequence_cpp_type.sequence_storage_type));
 

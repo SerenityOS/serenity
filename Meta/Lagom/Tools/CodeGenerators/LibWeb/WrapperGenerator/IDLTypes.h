@@ -64,129 +64,6 @@ struct Type : public RefCounted<Type> {
     bool is_numeric() const { return is_integer() || name.is_one_of("float", "unrestricted float", "double", "unrestricted double"); }
 };
 
-CppType idl_type_name_to_cpp_type(Type const& type);
-
-struct UnionType : public Type {
-    UnionType() = default;
-
-    UnionType(String name, bool nullable, NonnullRefPtrVector<Type> member_types)
-        : Type(move(name), nullable)
-        , member_types(move(member_types))
-    {
-    }
-
-    virtual ~UnionType() override = default;
-
-    NonnullRefPtrVector<Type> member_types;
-
-    // https://webidl.spec.whatwg.org/#dfn-flattened-union-member-types
-    NonnullRefPtrVector<Type> flattened_member_types() const
-    {
-        // 1. Let T be the union type.
-
-        // 2. Initialize S to ∅.
-        NonnullRefPtrVector<Type> types;
-
-        // 3. For each member type U of T:
-        for (auto& type : member_types) {
-            // FIXME: 1. If U is an annotated type, then set U to be the inner type of U.
-
-            // 2. If U is a nullable type, then set U to be the inner type of U. (NOTE: Not necessary as nullable is stored with Type and not as a separate struct)
-
-            // 3. If U is a union type, then add to S the flattened member types of U.
-            if (is<UnionType>(type)) {
-                auto& union_member_type = verify_cast<UnionType>(type);
-                types.extend(union_member_type.flattened_member_types());
-            } else {
-                // 4. Otherwise, U is not a union type. Add U to S.
-                types.append(type);
-            }
-        }
-
-        // 4. Return S.
-        return types;
-    }
-
-    // https://webidl.spec.whatwg.org/#dfn-number-of-nullable-member-types
-    size_t number_of_nullable_member_types() const
-    {
-        // 1. Let T be the union type.
-
-        // 2. Initialize n to 0.
-        size_t num_nullable_member_types = 0;
-
-        // 3. For each member type U of T:
-        for (auto& type : member_types) {
-            // 1. If U is a nullable type, then:
-            if (type.nullable) {
-                // 1. Set n to n + 1.
-                ++num_nullable_member_types;
-
-                // 2. Set U to be the inner type of U. (NOTE: Not necessary as nullable is stored with Type and not as a separate struct)
-            }
-
-            // 2. If U is a union type, then:
-            if (is<UnionType>(type)) {
-                auto& union_member_type = verify_cast<UnionType>(type);
-
-                // 1. Let m be the number of nullable member types of U.
-                // 2. Set n to n + m.
-                num_nullable_member_types += union_member_type.number_of_nullable_member_types();
-            }
-        }
-
-        // 4. Return n.
-        return num_nullable_member_types;
-    }
-
-    // https://webidl.spec.whatwg.org/#dfn-includes-a-nullable-type
-    bool includes_nullable_type() const
-    {
-        // -> the type is a union type and its number of nullable member types is 1.
-        return number_of_nullable_member_types() == 1;
-    }
-
-    // -> https://webidl.spec.whatwg.org/#dfn-includes-undefined
-    bool includes_undefined() const
-    {
-        // -> the type is a union type and one of its member types includes undefined.
-        for (auto& type : member_types) {
-            if (is<UnionType>(type)) {
-                auto& union_type = verify_cast<UnionType>(type);
-                if (union_type.includes_undefined())
-                    return true;
-            }
-
-            if (type.name == "undefined"sv)
-                return true;
-        }
-        return false;
-    }
-
-    String to_variant() const
-    {
-        StringBuilder builder;
-        builder.append("Variant<");
-
-        auto flattened_types = flattened_member_types();
-        for (size_t type_index = 0; type_index < flattened_types.size(); ++type_index) {
-            auto& type = flattened_types.at(type_index);
-
-            if (type_index > 0)
-                builder.append(", ");
-
-            auto cpp_type = idl_type_name_to_cpp_type(type);
-            builder.append(cpp_type.name);
-        }
-
-        if (includes_undefined())
-            builder.append(", Empty");
-
-        builder.append('>');
-        return builder.to_string();
-    }
-};
-
 struct Parameter {
     NonnullRefPtr<Type> type;
     String name;
@@ -320,6 +197,129 @@ struct Interface {
 
     // https://webidl.spec.whatwg.org/#dfn-legacy-platform-object
     bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
+};
+
+CppType idl_type_name_to_cpp_type(Type const& type, IDL::Interface const& interface);
+
+struct UnionType : public Type {
+    UnionType() = default;
+
+    UnionType(String name, bool nullable, NonnullRefPtrVector<Type> member_types)
+        : Type(move(name), nullable)
+        , member_types(move(member_types))
+    {
+    }
+
+    virtual ~UnionType() override = default;
+
+    NonnullRefPtrVector<Type> member_types;
+
+    // https://webidl.spec.whatwg.org/#dfn-flattened-union-member-types
+    NonnullRefPtrVector<Type> flattened_member_types() const
+    {
+        // 1. Let T be the union type.
+
+        // 2. Initialize S to ∅.
+        NonnullRefPtrVector<Type> types;
+
+        // 3. For each member type U of T:
+        for (auto& type : member_types) {
+            // FIXME: 1. If U is an annotated type, then set U to be the inner type of U.
+
+            // 2. If U is a nullable type, then set U to be the inner type of U. (NOTE: Not necessary as nullable is stored with Type and not as a separate struct)
+
+            // 3. If U is a union type, then add to S the flattened member types of U.
+            if (is<UnionType>(type)) {
+                auto& union_member_type = verify_cast<UnionType>(type);
+                types.extend(union_member_type.flattened_member_types());
+            } else {
+                // 4. Otherwise, U is not a union type. Add U to S.
+                types.append(type);
+            }
+        }
+
+        // 4. Return S.
+        return types;
+    }
+
+    // https://webidl.spec.whatwg.org/#dfn-number-of-nullable-member-types
+    size_t number_of_nullable_member_types() const
+    {
+        // 1. Let T be the union type.
+
+        // 2. Initialize n to 0.
+        size_t num_nullable_member_types = 0;
+
+        // 3. For each member type U of T:
+        for (auto& type : member_types) {
+            // 1. If U is a nullable type, then:
+            if (type.nullable) {
+                // 1. Set n to n + 1.
+                ++num_nullable_member_types;
+
+                // 2. Set U to be the inner type of U. (NOTE: Not necessary as nullable is stored with Type and not as a separate struct)
+            }
+
+            // 2. If U is a union type, then:
+            if (is<UnionType>(type)) {
+                auto& union_member_type = verify_cast<UnionType>(type);
+
+                // 1. Let m be the number of nullable member types of U.
+                // 2. Set n to n + m.
+                num_nullable_member_types += union_member_type.number_of_nullable_member_types();
+            }
+        }
+
+        // 4. Return n.
+        return num_nullable_member_types;
+    }
+
+    // https://webidl.spec.whatwg.org/#dfn-includes-a-nullable-type
+    bool includes_nullable_type() const
+    {
+        // -> the type is a union type and its number of nullable member types is 1.
+        return number_of_nullable_member_types() == 1;
+    }
+
+    // -> https://webidl.spec.whatwg.org/#dfn-includes-undefined
+    bool includes_undefined() const
+    {
+        // -> the type is a union type and one of its member types includes undefined.
+        for (auto& type : member_types) {
+            if (is<UnionType>(type)) {
+                auto& union_type = verify_cast<UnionType>(type);
+                if (union_type.includes_undefined())
+                    return true;
+            }
+
+            if (type.name == "undefined"sv)
+                return true;
+        }
+        return false;
+    }
+
+    String to_variant(IDL::Interface const& interface) const
+    {
+        StringBuilder builder;
+        builder.append("Variant<");
+
+        auto flattened_types = flattened_member_types();
+        for (size_t type_index = 0; type_index < flattened_types.size(); ++type_index) {
+            auto& type = flattened_types.at(type_index);
+
+            if (type_index > 0)
+                builder.append(", ");
+
+            auto cpp_type = idl_type_name_to_cpp_type(type, interface);
+            builder.append(cpp_type.name);
+        }
+
+        if (includes_undefined())
+            builder.append(", Empty");
+
+        builder.append('>');
+        return builder.to_string();
+    }
 };
 
 }
