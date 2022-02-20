@@ -242,7 +242,7 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
 {
     ssize_t remaining_samples = static_cast<ssize_t>(m_total_samples - m_loaded_samples);
     if (remaining_samples <= 0)
-        return LegacyBuffer::create_empty();
+        return FixedArray<Sample> {};
 
     // FIXME: samples_to_read is calculated wrong, because when seeking not all samples are loaded.
     size_t samples_to_read = min(max_bytes_to_read_from_input, remaining_samples);
@@ -267,10 +267,8 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
     }
 
     m_loaded_samples += sample_index;
-    auto maybe_buffer = LegacyBuffer::create_with_samples(move(samples));
-    if (maybe_buffer.is_error())
-        return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Couldn't allocate sample buffer" };
-    return maybe_buffer.release_value();
+
+    return samples;
 }
 
 MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)

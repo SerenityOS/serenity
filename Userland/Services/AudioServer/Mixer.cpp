@@ -6,8 +6,8 @@
  */
 
 #include "Mixer.h"
-#include "AK/Format.h"
 #include <AK/Array.h>
+#include <AK/Format.h>
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AudioServer/ConnectionFromClient.h>
@@ -200,9 +200,4 @@ ClientAudioStream::ClientAudioStream(ConnectionFromClient& client)
 {
 }
 
-void ClientAudioStream::enqueue(NonnullRefPtr<Audio::LegacyBuffer>&& buffer)
-{
-    m_remaining_samples += buffer->sample_count();
-    m_queue.enqueue(move(buffer));
-}
 }

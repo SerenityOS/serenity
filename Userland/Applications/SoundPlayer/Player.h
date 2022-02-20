@@ -11,6 +11,7 @@
 #include "Playlist.h"
 #include "PlaylistWidget.h"
 #include <AK/RefPtr.h>
+#include <LibAudio/Sample.h>
 
 class Player {
 public:
@@ -72,7 +73,7 @@ public:
     virtual void volume_changed(double) = 0;
     virtual void mute_changed(bool) = 0;
     virtual void total_samples_changed(int) = 0;
-    virtual void sound_buffer_played(RefPtr<Audio::LegacyBuffer>, [[maybe_unused]] int sample_rate, [[maybe_unused]] int samples_played) = 0;
+    virtual void sound_buffer_played(FixedArray<Audio::Sample> const&, [[maybe_unused]] int sample_rate, [[maybe_unused]] int samples_played) = 0;
 
 protected:
     void done_initializing()

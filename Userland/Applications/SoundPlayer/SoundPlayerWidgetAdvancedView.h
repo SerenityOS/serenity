@@ -11,6 +11,7 @@
 #include "PlaybackManager.h"
 #include "Player.h"
 #include "VisualizationWidget.h"
+#include <AK/FixedArray.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibAudio/ConnectionFromClient.h>
 #include <LibGUI/Splitter.h>
@@ -46,7 +47,7 @@ public:
     virtual void volume_changed(double) override;
     virtual void mute_changed(bool) override;
     virtual void total_samples_changed(int) override;
-    virtual void sound_buffer_played(RefPtr<Audio::LegacyBuffer>, int sample_rate, int samples_played) override;
+    virtual void sound_buffer_played(FixedArray<Audio::Sample> const&, int sample_rate, int samples_played) override;
 
 protected:
     void keydown_event(GUI::KeyEvent&) override;

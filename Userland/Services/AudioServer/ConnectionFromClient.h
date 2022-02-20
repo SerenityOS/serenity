@@ -9,11 +9,9 @@
 #include <AK/HashMap.h>
 #include <AudioServer/AudioClientEndpoint.h>
 #include <AudioServer/AudioServerEndpoint.h>
+#include <LibAudio/Buffer.h>
+#include <LibCore/EventLoop.h>
 #include <LibIPC/ConnectionFromClient.h>
-
-namespace Audio {
-class LegacyBuffer;
-}
 
 namespace AudioServer {
 
@@ -25,7 +23,6 @@ class ConnectionFromClient final : public IPC::ConnectionFromClient<AudioClientE
 public:
     ~ConnectionFromClient() override = default;
 
-    void did_finish_playing_buffer(Badge<ClientAudioStream>, int buffer_id);
     void did_change_client_volume(Badge<ClientAudioStream>, double volume);
     void did_change_main_mix_muted_state(Badge<Mixer>, bool muted);
     void did_change_main_mix_volume(Badge<Mixer>, double volume);
@@ -41,12 +38,10 @@ private:
     virtual void set_main_mix_volume(double) override;
     virtual Messages::AudioServer::GetSelfVolumeResponse get_self_volume() override;
     virtual void set_self_volume(double) override;
-    virtual Messages::AudioServer::EnqueueBufferResponse enqueue_buffer(Core::AnonymousBuffer const&, i32, int) override;
-    virtual Messages::AudioServer::GetRemainingSamplesResponse get_remaining_samples() override;
-    virtual Messages::AudioServer::GetPlayedSamplesResponse get_played_samples() override;
-    virtual void set_paused(bool) override;
-    virtual void clear_buffer(bool) override;
-    virtual Messages::AudioServer::GetPlayingBufferResponse get_playing_buffer() override;
+    virtual void set_buffer(Audio::AudioQueue const&) override;
+    virtual void clear_buffer() override;
+    virtual void start_playback() override;
+    virtual void pause_playback() override;
     virtual Messages::AudioServer::IsMainMixMutedResponse is_main_mix_muted() override;
     virtual void set_main_mix_muted(bool) override;
     virtual Messages::AudioServer::IsSelfMutedResponse is_self_muted() override;

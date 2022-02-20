@@ -51,9 +51,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             auto elapsed = static_cast<u64>(sample_timer.elapsed());
             total_loader_time += static_cast<u64>(elapsed);
             if (!samples.is_error()) {
-                remaining_samples -= samples.value()->sample_count();
-                total_loaded_samples += samples.value()->sample_count();
-                if (samples.value()->sample_count() == 0)
+                remaining_samples -= samples.value().size();
+                total_loaded_samples += samples.value().size();
+                if (samples.value().size() == 0)
                     break;
             } else {
                 warnln("Error while loading audio: {}", samples.error().description);

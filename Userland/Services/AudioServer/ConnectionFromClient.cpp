@@ -34,9 +34,17 @@ void ConnectionFromClient::die()
     s_connections.remove(client_id());
 }
 
-void ConnectionFromClient::did_finish_playing_buffer(Badge<ClientAudioStream>, int buffer_id)
+void ConnectionFromClient::set_buffer(Audio::AudioQueue const& buffer)
 {
-    async_finished_playing_buffer(buffer_id);
+    if (!buffer.is_valid()) {
+        did_misbehave("Received an invalid buffer");
+        return;
+    }
+    if (!m_queue)
+        m_queue = m_mixer.create_queue(*this);
+
+    // This is ugly but we know nobody uses the buffer afterwards anyways.
+    m_queue->set_buffer(make<Audio::AudioQueue>(move(const_cast<Audio::AudioQueue&>(buffer))));
 }
 
 void ConnectionFromClient::did_change_main_mix_muted_state(Badge<Mixer>, bool muted)
@@ -85,55 +93,22 @@ void ConnectionFromClient::set_self_volume(double volume)
         m_queue->set_volume(volume);
 }
 
-Messages::AudioServer::EnqueueBufferResponse ConnectionFromClient::enqueue_buffer(Core::AnonymousBuffer const& buffer, i32 buffer_id, int sample_count)
-{
-    if (!m_queue)
-        m_queue = m_mixer.create_queue(*this);
-
-    if (m_queue->is_full())
-        return false;
-
-    // There's not a big allocation to worry about here.
-    m_queue->enqueue(MUST(Audio::LegacyBuffer::create_with_anonymous_buffer(buffer, buffer_id, sample_count)));
-    return true;
-}
-
-Messages::AudioServer::GetRemainingSamplesResponse ConnectionFromClient::get_remaining_samples()
-{
-    int remaining = 0;
-    if (m_queue)
-        remaining = m_queue->get_remaining_samples();
-
-    return remaining;
-}
-
-Messages::AudioServer::GetPlayedSamplesResponse ConnectionFromClient::get_played_samples()
-{
-    int played = 0;
-    if (m_queue)
-        played = m_queue->get_played_samples();
-
-    return played;
-}
-
-void ConnectionFromClient::set_paused(bool paused)
+void ConnectionFromClient::start_playback()
 {
     if (m_queue)
-        m_queue->set_paused(paused);
+        m_queue->set_paused(false);
 }
 
-void ConnectionFromClient::clear_buffer(bool paused)
+void ConnectionFromClient::pause_playback()
 {
     if (m_queue)
-        m_queue->clear(paused);
+        m_queue->set_paused(true);
 }
 
-Messages::AudioServer::GetPlayingBufferResponse ConnectionFromClient::get_playing_buffer()
+void ConnectionFromClient::clear_buffer()
 {
-    int id = -1;
     if (m_queue)
-        id = m_queue->get_playing_buffer();
-    return id;
+        m_queue->clear();
 }
 
 Messages::AudioServer::IsMainMixMutedResponse ConnectionFromClient::is_main_mix_muted()
