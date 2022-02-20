@@ -6,7 +6,6 @@
  */
 
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionObject.h>
 
