@@ -14,6 +14,11 @@ class Splitter : public Widget {
     C_OBJECT(Splitter);
 
 public:
+    enum class FixedResizee {
+        First,
+        Second
+    };
+
     virtual ~Splitter() override;
 
     int first_resizee_minimum_size() { return m_first_resizee_minimum_size; }
@@ -33,6 +38,9 @@ protected:
 
     virtual void did_layout() override;
 
+    FixedResizee fixed_resizee() const { return m_fixed_resizee; }
+    void set_fixed_resizee(FixedResizee resizee) { m_fixed_resizee = resizee; }
+
 private:
     void override_cursor(bool do_override);
     Gfx::IntRect rect_between_widgets(GUI::Widget const& first_widget, GUI::Widget const& second_widget, bool honor_grabbable_margins) const;
@@ -47,6 +55,7 @@ private:
     Gfx::IntSize m_second_resizee_start_size;
     int m_first_resizee_minimum_size { 0 };
     int m_second_resizee_minimum_size { 0 };
+    FixedResizee m_fixed_resizee { FixedResizee::First };
 
     void recompute_grabbables();
 

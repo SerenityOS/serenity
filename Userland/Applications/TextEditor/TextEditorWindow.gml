@@ -14,6 +14,8 @@
     }
 
     @GUI::HorizontalSplitter {
+        fixed_resizee: "Second"
+
         @GUI::TextEditor {
             name: "editor"
         }
