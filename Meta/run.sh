@@ -268,6 +268,10 @@ if [ "$SERENITY_ARCH" != "aarch64" ]; then
     if "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spice; then
         SERENITY_COMMON_QEMU_ARGS="$SERENITY_COMMON_QEMU_ARGS
         -spice port=5930,agent-mouse=off,disable-ticketing=on
+        "
+    fi
+    if "${SERENITY_QEMU_BIN}" -chardev help | grep -iq 'spice\|vdagent'; then
+        SERENITY_COMMON_QEMU_ARGS="$SERENITY_COMMON_QEMU_ARGS
         -device virtserialport,chardev=vdagent,nr=1
         "
     fi
