@@ -237,28 +237,6 @@ class Range {
     }
 }
 
-function range(start, end, columnStep, rowStep) {
-    columnStep = integer(columnStep ?? 1);
-    rowStep = integer(rowStep ?? 1);
-    if (!(start instanceof Position)) {
-        start = thisSheet.parse_cell_name(start) ?? { column: undefined, row: undefined };
-    }
-
-    let didAssignToEnd = false;
-    if (end !== undefined && !(end instanceof Position)) {
-        didAssignToEnd = true;
-        if (/^[a-zA-Z_]+$/.test(end)) end = { column: end, row: undefined };
-        else end = thisSheet.parse_cell_name(end);
-    } else if (end === undefined) {
-        didAssignToEnd = true;
-        end = start;
-    }
-
-    if (!didAssignToEnd) throw new Error(`Invalid value for range 'end': ${end}`);
-
-    return new Range(start.column, end.column, start.row, end.row, columnStep, rowStep);
-}
-
 function R(fmt, ...args) {
     if (args.length !== 0) throw new TypeError("R`` format must be a literal");
     // done because:
@@ -535,21 +513,6 @@ function reflookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, 
 }
 
 // Cheat the system and add documentation
-range.__documentation = JSON.stringify({
-    name: "range",
-    argc: 2,
-    argnames: ["start", "end", "column step", "row step"],
-    doc:
-        "Generates a list of cell names in a rectangle defined by two " +
-        "_top left_ and _bottom right_ cells `start` and `end`, spaced" +
-        " `column step` columns, and `row step` rows apart. Short form: [`R`](spreadsheet://doc/R)",
-    examples: {
-        'range("A1", "C4")': "Generate a range A1:C4",
-        'range("A1", "C4", 2)': "Generate a range A1:C4, skipping every other column",
-        'range("AA1", "AC4", 2)': "Generate a range AA1:AC4, skipping every other column",
-    },
-});
-
 R.__documentation = JSON.stringify({
     name: "R",
     argc: 1,
@@ -656,7 +619,7 @@ reduce.__documentation = JSON.stringify({
         "Please keep in mind that this function respects the cell type, and can yield non-numeric " +
         "values to the `current value`.",
     examples: {
-        'reduce((acc, x) => acc * x, 1, range("A0", "A5"))':
+        "reduce((acc, x) => acc * x, 1, R`A0:A5`)":
             "Calculate the product of all values in the range A0:A5",
     },
 });
@@ -671,7 +634,7 @@ numericReduce.__documentation = JSON.stringify({
         "accumulator, then the current value, and returning the new accumulator value\n\nThis function, " +
         "unlike [`reduce`](spreadsheet://doc/reduce), casts the values to a number before passing them to the `reduction function`.",
     examples: {
-        'numericReduce((acc, x) => acc * x, 1, range("A0", "A5"))':
+        "numericReduce((acc, x) => acc * x, 1, R`A0:A5`)":
             "Calculate the numeric product of all values in the range A0:A5",
     },
 });
@@ -682,7 +645,7 @@ sum.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the sum of the values in `cells`",
     examples: {
-        'sum(range("A0", "C3"))':
+        "sum(R`A0:C3`)":
             "Calculate the sum of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
@@ -693,7 +656,7 @@ sumIf.__documentation = JSON.stringify({
     argnames: ["condition", "cell names"],
     doc: "Calculates the sum of cells the value of which evaluates to true when passed to `condition`",
     examples: {
-        'sumIf(x => x instanceof Number, range("A1", "C4"))':
+        "sumIf(x => x instanceof Number, R`A1:C4`)":
             "Calculates the sum of all numbers within A1:C4",
     },
 });
@@ -704,7 +667,7 @@ count.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Counts the number of cells in the given range",
     examples: {
-        'count(range("A0", "C3"))':
+        "count(R`A0:C3`)":
             "Count the number of cells in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
@@ -715,7 +678,7 @@ countIf.__documentation = JSON.stringify({
     argnames: ["condition", "cell names"],
     doc: "Counts cells the value of which evaluates to true when passed to `condition`",
     examples: {
-        'countIf(x => x instanceof Number, range("A1", "C3"))':
+        "countIf(x => x instanceof Number, R`A1:C3`)":
             "Count the number of cells which have numbers within A1:C3",
     },
 });
@@ -726,7 +689,7 @@ average.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the average of the values in `cells`",
     examples: {
-        'average(range("A0", "C3"))':
+        "average(R`A0:C3`)":
             "Calculate the average of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
@@ -737,7 +700,7 @@ averageIf.__documentation = JSON.stringify({
     argnames: ["condition", "cell names"],
     doc: "Calculates the average of cells the value of which evaluates to true when passed to `condition`",
     examples: {
-        'averageIf(x => x > 4, range("A1", "C4"))':
+        "averageIf(x => x > 4, R`A1:C4`)":
             "Calculate the sum of all numbers larger then 4 within A1:C4",
     },
 });
@@ -748,7 +711,7 @@ median.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the median of the numeric values in the given range of cells",
     examples: {
-        'median(range("A0", "C3"))':
+        "median(R`A0:C3`)":
             "Calculate the median of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
@@ -759,7 +722,7 @@ variance.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the variance of the numeric values in the given range of cells",
     examples: {
-        'variance(range("A0", "C3"))':
+        "variance(R`A0:C3`)":
             "Calculate the variance of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
     example_data: {
@@ -864,7 +827,7 @@ mode.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the mode of the numeric values in the given range of cells, i.e. the value that appears most often",
     examples: {
-        'mode(range("A2", "A14"))':
+        "mode(R`A2:A14`)":
             "Calculate the mode of the values in A2:A14, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
@@ -875,7 +838,7 @@ stddev.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the standard deviation of the numeric values in the given range of cells",
     examples: {
-        'stddev(range("A0", "C3"))':
+        "stddev(R`A0:C3`)":
             "Calculate the standard deviation of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
