@@ -457,7 +457,7 @@ ThrowCompletionOr<void> CyclicModule::execute_async_module(VM& vm)
     };
 
     // 5. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-    auto* on_fulfilled = NativeFunction::create(global_object, "", move(fulfilled_closure));
+    auto* on_fulfilled = NativeFunction::create(global_object, move(fulfilled_closure), 0, "");
 
     // 6. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
     auto rejected_closure = [&](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
@@ -470,8 +470,8 @@ ThrowCompletionOr<void> CyclicModule::execute_async_module(VM& vm)
         return js_undefined();
     };
 
-    auto* on_rejected = NativeFunction::create(global_object, "", move(rejected_closure));
     // 7. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
+    auto* on_rejected = NativeFunction::create(global_object, move(rejected_closure), 0, "");
 
     VERIFY(is<Promise>(*capability.promise));
 
