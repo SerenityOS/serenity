@@ -91,5 +91,10 @@ StringView Collator::case_first_string() const
         VERIFY_NOT_REACHED();
     }
 }
+void Collator::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_bound_compare);
+}
 
 }
