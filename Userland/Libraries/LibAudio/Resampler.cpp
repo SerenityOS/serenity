@@ -10,7 +10,7 @@
 
 namespace Audio {
 
-ErrorOr<NonnullRefPtr<Buffer>> resample_buffer(ResampleHelper<double>& resampler, Buffer const& to_resample)
+ErrorOr<NonnullRefPtr<LegacyBuffer>> resample_buffer(ResampleHelper<double>& resampler, LegacyBuffer const& to_resample)
 {
     Vector<Sample> resampled;
     resampled.ensure_capacity(to_resample.sample_count() * ceil_div(resampler.source(), resampler.target()));
@@ -22,7 +22,7 @@ ErrorOr<NonnullRefPtr<Buffer>> resample_buffer(ResampleHelper<double>& resampler
             resampled.append(sample);
     }
 
-    return Buffer::create_with_samples(move(resampled));
+    return LegacyBuffer::create_with_samples(move(resampled));
 }
 
 }

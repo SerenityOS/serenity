@@ -12,7 +12,7 @@
 #include <LibIPC/ConnectionFromClient.h>
 
 namespace Audio {
-class Buffer;
+class LegacyBuffer;
 }
 
 namespace AudioServer {

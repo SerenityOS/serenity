@@ -126,7 +126,7 @@ LoaderSamples MP3LoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
             auto maybe_frame = read_next_frame();
             if (maybe_frame.is_error()) {
                 if (m_input_stream->unreliable_eof()) {
-                    return Buffer::create_empty();
+                    return LegacyBuffer::create_empty();
                 }
                 return maybe_frame.release_error();
             }
@@ -156,7 +156,7 @@ LoaderSamples MP3LoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
     }
 
     m_loaded_samples += samples.size();
-    auto maybe_buffer = Buffer::create_with_samples(move(samples));
+    auto maybe_buffer = LegacyBuffer::create_with_samples(move(samples));
     if (maybe_buffer.is_error())
         return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Couldn't allocate sample buffer" };
     return maybe_buffer.release_value();

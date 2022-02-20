@@ -38,7 +38,7 @@ public:
     ~ClientAudioStream() = default;
 
     bool is_full() const { return m_queue.size() >= 3; }
-    void enqueue(NonnullRefPtr<Audio::Buffer>&&);
+    void enqueue(NonnullRefPtr<Audio::LegacyBuffer>&&);
 
     bool get_next_sample(Audio::Sample& sample)
     {
@@ -97,8 +97,8 @@ public:
     void set_muted(bool muted) { m_muted = muted; }
 
 private:
-    RefPtr<Audio::Buffer> m_current;
-    Queue<NonnullRefPtr<Audio::Buffer>> m_queue;
+    RefPtr<Audio::LegacyBuffer> m_current;
+    Queue<NonnullRefPtr<Audio::LegacyBuffer>> m_queue;
     int m_position { 0 };
     int m_remaining_samples { 0 };
     int m_played_samples { 0 };

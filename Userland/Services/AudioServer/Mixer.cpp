@@ -200,7 +200,7 @@ ClientAudioStream::ClientAudioStream(ConnectionFromClient& client)
 {
 }
 
-void ClientAudioStream::enqueue(NonnullRefPtr<Audio::Buffer>&& buffer)
+void ClientAudioStream::enqueue(NonnullRefPtr<Audio::LegacyBuffer>&& buffer)
 {
     m_remaining_samples += buffer->sample_count();
     m_queue.enqueue(move(buffer));

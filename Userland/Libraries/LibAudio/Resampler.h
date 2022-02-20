@@ -84,7 +84,7 @@ private:
     SampleType m_last_sample_r {};
 };
 
-class Buffer;
-ErrorOr<NonnullRefPtr<Buffer>> resample_buffer(ResampleHelper<double>& resampler, Buffer const& to_resample);
+class LegacyBuffer;
+ErrorOr<NonnullRefPtr<LegacyBuffer>> resample_buffer(ResampleHelper<double>& resampler, LegacyBuffer const& to_resample);
 
 }

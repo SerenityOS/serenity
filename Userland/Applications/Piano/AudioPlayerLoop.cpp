@@ -9,8 +9,8 @@
 
 #include "TrackManager.h"
 
-// Converts Piano-internal data to an Audio::Buffer that AudioServer receives
-static NonnullRefPtr<Audio::Buffer> music_samples_to_buffer(Array<Sample, sample_count> samples)
+// Converts Piano-internal data to an Audio::LegacyBuffer that AudioServer receives
+static NonnullRefPtr<Audio::LegacyBuffer> music_samples_to_buffer(Array<Sample, sample_count> samples)
 {
     Vector<Audio::Sample, sample_count> frames;
     frames.ensure_capacity(sample_count);
@@ -19,7 +19,7 @@ static NonnullRefPtr<Audio::Buffer> music_samples_to_buffer(Array<Sample, sample
         frames.unchecked_append(frame);
     }
     // FIXME: Handle OOM better.
-    return MUST(Audio::Buffer::create_with_samples(frames));
+    return MUST(Audio::LegacyBuffer::create_with_samples(frames));
 }
 
 AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_write_wav, Audio::WavWriter& wav_writer)
@@ -42,7 +42,7 @@ AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_writ
 void AudioPlayerLoop::enqueue_audio()
 {
     m_track_manager.fill_buffer(m_buffer);
-    NonnullRefPtr<Audio::Buffer> audio_buffer = music_samples_to_buffer(m_buffer);
+    NonnullRefPtr<Audio::LegacyBuffer> audio_buffer = music_samples_to_buffer(m_buffer);
     // FIXME: Handle OOM better.
     audio_buffer = MUST(Audio::resample_buffer(m_resampler.value(), *audio_buffer));
     m_audio_client->async_enqueue(audio_buffer);
