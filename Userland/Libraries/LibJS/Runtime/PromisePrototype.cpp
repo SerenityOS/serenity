@@ -111,9 +111,9 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto* promise = TRY(promise_resolve(global_object, constructor, result));
 
             // iii. Let returnValue be a new Abstract Closure with no parameters that captures value and performs the following steps when called:
-            auto return_value = [value](auto&, auto&) -> ThrowCompletionOr<Value> {
+            auto return_value = [value_handle = make_handle(value)](auto&, auto&) -> ThrowCompletionOr<Value> {
                 // 1. Return value.
-                return value;
+                return value_handle.value();
             };
 
             // iv. Let valueThunk be ! CreateBuiltinFunction(returnValue, 0, "", « »).
@@ -139,9 +139,9 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto* promise = TRY(promise_resolve(global_object, constructor, result));
 
             // iii. Let throwReason be a new Abstract Closure with no parameters that captures reason and performs the following steps when called:
-            auto throw_reason = [reason](auto&, auto&) -> ThrowCompletionOr<Value> {
+            auto throw_reason = [reason_handle = make_handle(reason)](auto&, auto&) -> ThrowCompletionOr<Value> {
                 // 1. Return ThrowCompletion(reason).
-                return throw_completion(reason);
+                return throw_completion(reason_handle.value());
             };
 
             // iv. Let thrower be ! CreateBuiltinFunction(throwReason, 0, "", « »).
