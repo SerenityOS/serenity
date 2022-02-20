@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2021-2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,58 +37,43 @@ public:
     explicit ClientAudioStream(ConnectionFromClient&);
     ~ClientAudioStream() = default;
 
-    bool is_full() const { return m_queue.size() >= 3; }
-    void enqueue(NonnullRefPtr<Audio::LegacyBuffer>&&);
-
     bool get_next_sample(Audio::Sample& sample)
     {
         if (m_paused)
             return false;
 
-        while (!m_current && !m_queue.is_empty())
-            m_current = m_queue.dequeue();
+        if (m_in_chunk_location >= m_current_audio_chunk.size()) {
+            // FIXME: We should send a did_misbehave to the client if the queue is empty,
+            //        but the lifetimes involved mean that we segfault if we try to do that.
+            auto result = m_buffer->try_dequeue();
+            if (result.is_error()) {
+                if (result.error() == Audio::AudioQueue::QueueStatus::Empty)
+                    dbgln("Audio client can't keep up!");
 
-        if (!m_current)
-            return false;
-
-        sample = m_current->samples()[m_position++];
-        if (m_remaining_samples > 0)
-            --m_remaining_samples;
-        ++m_played_samples;
-
-        if (m_position >= m_current->sample_count()) {
-            m_client->did_finish_playing_buffer({}, m_current->id());
-            m_current = nullptr;
-            m_position = 0;
+                return false;
+            }
+            m_current_audio_chunk = result.release_value();
+            m_in_chunk_location = 0;
         }
+
+        sample = m_current_audio_chunk[m_in_chunk_location++];
+
         return true;
     }
 
     ConnectionFromClient* client() { return m_client.ptr(); }
 
-    void clear(bool paused = false)
+    void set_buffer(OwnPtr<Audio::AudioQueue> buffer) { m_buffer = move(buffer); }
+
+    void clear()
     {
-        m_queue.clear();
-        m_position = 0;
-        m_remaining_samples = 0;
-        m_played_samples = 0;
-        m_current = nullptr;
-        m_paused = paused;
+        ErrorOr<Array<Audio::Sample, Audio::AUDIO_BUFFER_SIZE>, Audio::AudioQueue::QueueStatus> result = Audio::AudioQueue::QueueStatus::Invalid;
+        do {
+            result = m_buffer->try_dequeue();
+        } while (result.is_error() && result.error() != Audio::AudioQueue::QueueStatus::Empty);
     }
 
-    void set_paused(bool paused)
-    {
-        m_paused = paused;
-    }
-
-    int get_remaining_samples() const { return m_remaining_samples; }
-    int get_played_samples() const { return m_played_samples; }
-    int get_playing_buffer() const
-    {
-        if (m_current)
-            return m_current->id();
-        return -1;
-    }
+    void set_paused(bool paused) { m_paused = paused; }
 
     FadingProperty<double>& volume() { return m_volume; }
     double volume() const { return m_volume; }
@@ -97,11 +82,10 @@ public:
     void set_muted(bool muted) { m_muted = muted; }
 
 private:
-    RefPtr<Audio::LegacyBuffer> m_current;
-    Queue<NonnullRefPtr<Audio::LegacyBuffer>> m_queue;
-    int m_position { 0 };
-    int m_remaining_samples { 0 };
-    int m_played_samples { 0 };
+    OwnPtr<Audio::AudioQueue> m_buffer;
+    Array<Audio::Sample, Audio::AUDIO_BUFFER_SIZE> m_current_audio_chunk;
+    size_t m_in_chunk_location;
+
     bool m_paused { false };
     bool m_muted { false };
 

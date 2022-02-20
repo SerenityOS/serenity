@@ -21,7 +21,6 @@
 #include <LibCore/FileStream.h>
 
 namespace Audio {
-class LegacyBuffer;
 
 // defines for handling the WAV header data
 #define WAVE_FORMAT_PCM 0x0001        // PCM

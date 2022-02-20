@@ -7,6 +7,7 @@
 #include "MP3Loader.h"
 #include "MP3HuffmanTables.h"
 #include "MP3Tables.h"
+#include <AK/FixedArray.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 
@@ -115,18 +116,17 @@ MaybeLoaderError MP3LoaderPlugin::seek(int const position)
     return {};
 }
 
-LoaderSamples MP3LoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
+LoaderSamples MP3LoaderPlugin::get_more_samples(size_t max_samples_to_read_from_input)
 {
-    Vector<Sample> samples;
+    FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::try_create(max_samples_to_read_from_input));
 
-    size_t samples_to_read = max_bytes_to_read_from_input;
-    samples.resize(samples_to_read);
+    size_t samples_to_read = max_samples_to_read_from_input;
     while (samples_to_read > 0) {
         if (!m_current_frame.has_value()) {
             auto maybe_frame = read_next_frame();
             if (maybe_frame.is_error()) {
                 if (m_input_stream->unreliable_eof()) {
-                    return LegacyBuffer::create_empty();
+                    return FixedArray<Sample> {};
                 }
                 return maybe_frame.release_error();
             }
@@ -156,10 +156,7 @@ LoaderSamples MP3LoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
     }
 
     m_loaded_samples += samples.size();
-    auto maybe_buffer = LegacyBuffer::create_with_samples(move(samples));
-    if (maybe_buffer.is_error())
-        return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Couldn't allocate sample buffer" };
-    return maybe_buffer.release_value();
+    return samples;
 }
 
 MaybeLoaderError MP3LoaderPlugin::build_seek_table()

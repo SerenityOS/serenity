@@ -22,7 +22,7 @@ namespace Audio {
 
 static constexpr StringView no_plugin_error = "No loader plugin available";
 
-using LoaderSamples = Result<NonnullRefPtr<LegacyBuffer>, LoaderError>;
+using LoaderSamples = Result<FixedArray<Sample>, LoaderError>;
 using MaybeLoaderError = Result<void, LoaderError>;
 
 class LoaderPlugin {
@@ -60,7 +60,7 @@ public:
     static Result<NonnullRefPtr<Loader>, LoaderError> create(StringView path) { return adopt_ref(*new Loader(TRY(try_create(path)))); }
     static Result<NonnullRefPtr<Loader>, LoaderError> create(Bytes& buffer) { return adopt_ref(*new Loader(TRY(try_create(buffer)))); }
 
-    LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) const { return m_plugin->get_more_samples(max_bytes_to_read_from_input); }
+    LoaderSamples get_more_samples(size_t max_samples_to_read_from_input = 128 * KiB) const { return m_plugin->get_more_samples(max_samples_to_read_from_input); }
 
     MaybeLoaderError reset() const { return m_plugin->reset(); }
     MaybeLoaderError seek(int const position) const { return m_plugin->seek(position); }

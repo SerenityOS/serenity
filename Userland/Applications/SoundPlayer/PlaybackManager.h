@@ -7,11 +7,13 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/Queue.h>
 #include <AK/Vector.h>
 #include <LibAudio/Buffer.h>
 #include <LibAudio/ConnectionFromClient.h>
 #include <LibAudio/Loader.h>
+#include <LibAudio/Sample.h>
 #include <LibCore/Timer.h>
 
 class PlaybackManager final {
@@ -32,17 +34,16 @@ public:
     int last_seek() const { return m_last_seek; }
     bool is_paused() const { return m_paused; }
     float total_length() const { return m_total_length; }
-    RefPtr<Audio::LegacyBuffer> current_buffer() const { return m_current_buffer; }
+    FixedArray<Audio::Sample> const& current_buffer() const { return m_current_buffer; }
 
     NonnullRefPtr<Audio::ConnectionFromClient> connection() const { return m_connection; }
 
     Function<void()> on_update;
-    Function<void(Audio::LegacyBuffer&)> on_load_sample_buffer;
     Function<void()> on_finished_playing;
 
 private:
     // Number of buffers we want to always keep enqueued.
-    static constexpr size_t always_enqueued_buffer_count = 2;
+    static constexpr size_t always_enqueued_buffer_count = 5;
 
     void next_buffer();
     void set_paused(bool);
@@ -53,12 +54,11 @@ private:
     float m_total_length { 0 };
     size_t m_device_sample_rate { 44100 };
     size_t m_device_samples_per_buffer { 0 };
-    size_t m_source_buffer_size_bytes { 0 };
+    size_t m_samples_to_load_per_buffer { 0 };
     RefPtr<Audio::Loader> m_loader { nullptr };
     NonnullRefPtr<Audio::ConnectionFromClient> m_connection;
-    RefPtr<Audio::LegacyBuffer> m_current_buffer;
-    Queue<i32, always_enqueued_buffer_count + 1> m_enqueued_buffers;
-    Optional<Audio::ResampleHelper<double>> m_resampler;
+    FixedArray<Audio::Sample> m_current_buffer;
+    Optional<Audio::ResampleHelper<Audio::Sample>> m_resampler;
     RefPtr<Core::Timer> m_timer;
 
     // Controls the GUI update rate. A smaller value makes the visualizations nicer.
