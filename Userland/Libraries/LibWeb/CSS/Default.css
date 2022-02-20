@@ -41,6 +41,11 @@ ins {
     text-decoration: underline;
 }
 
+s,
+del {
+    text-decoration: line-through;
+}
+
 strong,
 b {
     font-weight: bold;
