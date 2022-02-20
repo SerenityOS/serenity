@@ -46,7 +46,7 @@ public:
     virtual void volume_changed(double) override;
     virtual void mute_changed(bool) override;
     virtual void total_samples_changed(int) override;
-    virtual void sound_buffer_played(RefPtr<Audio::Buffer>, int sample_rate, int samples_played) override;
+    virtual void sound_buffer_played(RefPtr<Audio::LegacyBuffer>, int sample_rate, int samples_played) override;
 
 protected:
     void keydown_event(GUI::KeyEvent&) override;

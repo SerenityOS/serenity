@@ -94,7 +94,7 @@ Messages::AudioServer::EnqueueBufferResponse ConnectionFromClient::enqueue_buffe
         return false;
 
     // There's not a big allocation to worry about here.
-    m_queue->enqueue(MUST(Audio::Buffer::create_with_anonymous_buffer(buffer, buffer_id, sample_count)));
+    m_queue->enqueue(MUST(Audio::LegacyBuffer::create_with_anonymous_buffer(buffer, buffer_id, sample_count)));
     return true;
 }
 

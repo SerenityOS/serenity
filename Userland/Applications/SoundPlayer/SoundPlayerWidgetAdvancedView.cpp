@@ -216,7 +216,7 @@ void SoundPlayerWidgetAdvancedView::total_samples_changed(int total_samples)
     m_playback_progress_slider->set_page_step(total_samples / 10);
 }
 
-void SoundPlayerWidgetAdvancedView::sound_buffer_played(RefPtr<Audio::Buffer> buffer, int sample_rate, int samples_played)
+void SoundPlayerWidgetAdvancedView::sound_buffer_played(RefPtr<Audio::LegacyBuffer> buffer, int sample_rate, int samples_played)
 {
     m_visualization->set_buffer(buffer);
     m_visualization->set_samplerate(sample_rate);

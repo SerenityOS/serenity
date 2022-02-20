@@ -21,7 +21,7 @@
 #include <LibCore/FileStream.h>
 
 namespace Audio {
-class Buffer;
+class LegacyBuffer;
 
 // defines for handling the WAV header data
 #define WAVE_FORMAT_PCM 0x0001        // PCM
@@ -30,7 +30,7 @@ class Buffer;
 #define WAVE_FORMAT_MULAW 0x0007      // 8-bit ITU-T G.711 µ-law
 #define WAVE_FORMAT_EXTENSIBLE 0xFFFE // Determined by SubFormat
 
-// Parses a WAV file and produces an Audio::Buffer.
+// Parses a WAV file and produces an Audio::LegacyBuffer.
 class WavLoaderPlugin : public LoaderPlugin {
 public:
     explicit WavLoaderPlugin(StringView path);

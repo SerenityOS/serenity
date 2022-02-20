@@ -53,7 +53,7 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
 
     int remaining_samples = m_total_samples - m_loaded_samples;
     if (remaining_samples <= 0)
-        return Buffer::create_empty();
+        return LegacyBuffer::create_empty();
 
     // One "sample" contains data from all channels.
     // In the Wave spec, this is also called a block.
@@ -78,7 +78,7 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
     if (m_stream->handle_any_error())
         return LoaderError { LoaderError::Category::IO, static_cast<size_t>(m_loaded_samples), "Stream read error" };
 
-    auto buffer = Buffer::from_pcm_data(
+    auto buffer = LegacyBuffer::from_pcm_data(
         sample_data.bytes(),
         m_num_channels,
         m_sample_format);

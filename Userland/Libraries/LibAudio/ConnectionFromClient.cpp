@@ -19,7 +19,7 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSock
 {
 }
 
-void ConnectionFromClient::enqueue(Buffer const& buffer)
+void ConnectionFromClient::enqueue(LegacyBuffer const& buffer)
 {
     for (;;) {
         auto success = enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
@@ -29,12 +29,12 @@ void ConnectionFromClient::enqueue(Buffer const& buffer)
     }
 }
 
-void ConnectionFromClient::async_enqueue(Buffer const& buffer)
+void ConnectionFromClient::async_enqueue(LegacyBuffer const& buffer)
 {
     async_enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
 }
 
-bool ConnectionFromClient::try_enqueue(Buffer const& buffer)
+bool ConnectionFromClient::try_enqueue(LegacyBuffer const& buffer)
 {
     return enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
 }

@@ -12,16 +12,16 @@
 
 namespace Audio {
 
-class Buffer;
+class LegacyBuffer;
 
 class ConnectionFromClient final
     : public IPC::ConnectionToServer<AudioClientEndpoint, AudioServerEndpoint>
     , public AudioClientEndpoint {
     IPC_CLIENT_CONNECTION(ConnectionFromClient, "/tmp/portal/audio")
 public:
-    void enqueue(Buffer const&);
-    bool try_enqueue(Buffer const&);
-    void async_enqueue(Buffer const&);
+    void enqueue(LegacyBuffer const&);
+    bool try_enqueue(LegacyBuffer const&);
+    void async_enqueue(LegacyBuffer const&);
 
     Function<void(i32 buffer_id)> on_finish_playing_buffer;
     Function<void(bool muted)> on_main_mix_muted_state_change;

@@ -18,7 +18,7 @@ class VisualizationWidget : public GUI::Frame {
 public:
     virtual void render(GUI::PaintEvent&, FixedArray<double> const& samples) = 0;
 
-    void set_buffer(RefPtr<Audio::Buffer> buffer)
+    void set_buffer(RefPtr<Audio::LegacyBuffer> buffer)
     {
         if (buffer.is_null())
             return;
