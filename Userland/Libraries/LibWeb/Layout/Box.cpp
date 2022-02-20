@@ -35,6 +35,7 @@ void Box::paint(PaintContext& context, PaintPhase phase)
 
     if (phase == PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
         auto content_rect = absolute_rect();
+        auto padding_box_rect = absolute_padding_box_rect();
 
         auto margin_box = box_model().margin_box();
         Gfx::FloatRect margin_rect;
@@ -44,18 +45,18 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         margin_rect.set_height(content_height() + margin_box.top + margin_box.bottom);
 
         context.painter().draw_rect(enclosing_int_rect(margin_rect), Color::Yellow);
-        context.painter().draw_rect(enclosing_int_rect(absolute_padding_box_rect()), Color::Cyan);
+        context.painter().draw_rect(enclosing_int_rect(padding_box_rect), Color::Cyan);
         context.painter().draw_rect(enclosing_int_rect(content_rect), Color::Magenta);
 
-        auto size_text_rect = absolute_rect();
-        auto size_text = String::formatted("{}x{}", content_rect.width(), content_rect.height());
-        size_text_rect.set_y(content_rect.y() + content_rect.height());
-        size_text_rect.set_top(size_text_rect.top());
-        size_text_rect.set_width((float)context.painter().font().width(size_text));
-        size_text_rect.set_height(context.painter().font().glyph_height());
+        Gfx::FloatRect size_text_rect;
+        auto size_text = String::formatted("{}x{}", padding_box_rect.width(), padding_box_rect.height());
+        size_text_rect.set_y(padding_box_rect.y() + padding_box_rect.height());
+        size_text_rect.set_x(padding_box_rect.x());
+        size_text_rect.set_width((float)context.painter().font().width(size_text) + 4);
+        size_text_rect.set_height(context.painter().font().glyph_height() + 4);
 
         context.painter().fill_rect(enclosing_int_rect(size_text_rect), Color::Cyan);
-        context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text);
+        context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text, Gfx::TextAlignment::Center);
     }
 
     if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && verify_cast<DOM::Element>(*dom_node()).is_focused()) {
