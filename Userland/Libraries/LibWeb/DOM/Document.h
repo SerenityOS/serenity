@@ -294,12 +294,8 @@ public:
     Bindings::LocationObject* location();
 
     size_t number_of_things_delaying_the_load_event() { return m_number_of_things_delaying_the_load_event; }
-    void increment_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>) { ++m_number_of_things_delaying_the_load_event; }
-    void decrement_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>)
-    {
-        VERIFY(m_number_of_things_delaying_the_load_event);
-        --m_number_of_things_delaying_the_load_event;
-    }
+    void increment_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>);
+    void decrement_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>);
 
     bool page_showing() const { return m_page_showing; }
     void set_page_showing(bool value) { m_page_showing = value; }

@@ -256,4 +256,9 @@ void PageHost::page_did_set_cookie(const URL& url, const Web::Cookie::ParsedCook
     m_client.async_did_set_cookie(url, cookie, static_cast<u8>(source));
 }
 
+void PageHost::page_did_update_resource_count(i32 count_waiting)
+{
+    m_client.async_did_update_resource_count(count_waiting);
+}
+
 }

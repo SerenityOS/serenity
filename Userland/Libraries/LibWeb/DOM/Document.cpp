@@ -1496,4 +1496,21 @@ void Document::unregister_node_iterator(Badge<NodeIterator>, NodeIterator& node_
     VERIFY(was_removed);
 }
 
+void Document::increment_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>)
+{
+    ++m_number_of_things_delaying_the_load_event;
+
+    if (auto* page = this->page())
+        page->client().page_did_update_resource_count(m_number_of_things_delaying_the_load_event);
+}
+
+void Document::decrement_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>)
+{
+    VERIFY(m_number_of_things_delaying_the_load_event);
+    --m_number_of_things_delaying_the_load_event;
+
+    if (auto* page = this->page())
+        page->client().page_did_update_resource_count(m_number_of_things_delaying_the_load_event);
+}
+
 }

@@ -60,6 +60,7 @@ private:
     virtual Messages::WebContentClient::DidRequestPromptResponse did_request_prompt(String const&, String const&) override;
     virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(AK::URL const&, u8) override;
     virtual void did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, u8) override;
+    virtual void did_update_resource_count(i32 count_waiting) override;
 
     OutOfProcessWebView& m_view;
 };
