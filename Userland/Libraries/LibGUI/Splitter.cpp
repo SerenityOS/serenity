@@ -145,8 +145,8 @@ Gfx::IntRect Splitter::rect_between_widgets(GUI::Widget const& first_widget, GUI
     auto first_edge = first_widget_rect.last_edge_for_orientation(m_orientation);
     auto second_edge = second_widget_rect.first_edge_for_orientation(m_orientation);
     Gfx::IntRect rect;
-    rect.set_primary_offset_for_orientation(m_orientation, first_edge);
-    rect.set_primary_size_for_orientation(m_orientation, second_edge - first_edge);
+    rect.set_primary_offset_for_orientation(m_orientation, first_edge + 1);
+    rect.set_primary_size_for_orientation(m_orientation, second_edge - first_edge - 1);
     rect.set_secondary_offset_for_orientation(m_orientation, 0);
     rect.set_secondary_size_for_orientation(m_orientation, relative_rect().secondary_size_for_orientation(m_orientation));
     return rect;
