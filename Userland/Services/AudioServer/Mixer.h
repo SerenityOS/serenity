@@ -86,7 +86,7 @@ private:
     Array<Audio::Sample, Audio::AUDIO_BUFFER_SIZE> m_current_audio_chunk;
     size_t m_in_chunk_location;
 
-    bool m_paused { false };
+    bool m_paused { true };
     bool m_muted { false };
 
     WeakPtr<ConnectionFromClient> m_client;
