@@ -88,6 +88,7 @@ public:
     void notify_server_did_change_favicon(const Gfx::Bitmap& favicon);
     String notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Cookie::Source source);
     void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source);
+    void notify_server_did_update_resource_count(i32 count_waiting);
 
 private:
     OutOfProcessWebView();

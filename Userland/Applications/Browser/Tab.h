@@ -8,6 +8,7 @@
 #pragma once
 
 #include "History.h"
+#include <AK/Optional.h>
 #include <AK/URL.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Widget.h>
@@ -91,6 +92,7 @@ private:
     void update_bookmark_button(const String& url);
     void start_download(const URL& url);
     void view_source(const URL& url, const String& source);
+    void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
 
     History m_history;
 
@@ -119,6 +121,9 @@ private:
     String m_title;
     RefPtr<const Gfx::Bitmap> m_icon;
 
+    Optional<URL> m_navigating_url;
+
+    bool m_loaded { false };
     bool m_is_history_navigation { false };
 };
 

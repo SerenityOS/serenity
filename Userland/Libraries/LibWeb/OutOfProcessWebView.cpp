@@ -391,6 +391,12 @@ void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, 
         on_set_cookie(url, cookie, source);
 }
 
+void OutOfProcessWebView::notify_server_did_update_resource_count(i32 count_waiting)
+{
+    if (on_resource_status_change)
+        on_resource_status_change(count_waiting);
+}
+
 void OutOfProcessWebView::did_scroll()
 {
     client().async_set_viewport_rect(visible_content_rect());

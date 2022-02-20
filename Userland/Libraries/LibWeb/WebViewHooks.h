@@ -34,6 +34,7 @@ public:
     Function<void(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)> on_get_js_console_messages;
     Function<String(const AK::URL& url, Cookie::Source source)> on_get_cookie;
     Function<void(const AK::URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source)> on_set_cookie;
+    Function<void(i32 count_waiting)> on_resource_status_change;
 };
 
 }
