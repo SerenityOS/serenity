@@ -58,21 +58,35 @@ void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 // 1.1.2 AllocateArrayBuffer ( constructor, byteLength [, maxByteLength ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-allocatearraybuffer
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_object, FunctionObject& constructor, size_t byte_length, Optional<size_t> max_byte_length)
 {
-    (void)max_byte_length;
-    // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
+    // 1. Let slots be « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] ».
+    // 2. If maxByteLength is present, append [[ArrayBufferMaxByteLength]] to slots.
+
+    // 3. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", slots).
     auto* obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(global_object, constructor, &GlobalObject::array_buffer_prototype, nullptr));
 
-    // 2. Let block be ? CreateByteDataBlock(byteLength).
+    // 4. Let block be ? CreateByteDataBlock(byteLength).
     auto block = ByteBuffer::create_zeroed(byte_length);
     if (block.is_error())
         return global_object.vm().throw_completion<RangeError>(global_object, ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
-    // 3. Set obj.[[ArrayBufferData]] to block.
+    // 5. Set obj.[[ArrayBufferData]] to block.
     obj->set_buffer(block.release_value());
 
-    // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
+    // 6. Set obj.[[ArrayBufferByteLength]] to byteLength.
 
-    // 5. Return obj.
+    // 7. If maxByteLength is present, then
+    if (max_byte_length.has_value()) {
+        // a. Assert: byteLength ≤ maxByteLength.
+        VERIFY(byte_length <= *max_byte_length);
+
+        // b. If it is not possible to create a Data Block block consisting of maxByteLength bytes, throw a RangeError exception.
+        // c. NOTE: Resizable ArrayBuffers are designed to be implementable with in-place growth. Implementations reserve the right to throw if, for example, virtual memory cannot be reserved up front.
+
+        // d. Set obj.[[ArrayBufferMaxByteLength]] to maxByteLength.
+        obj->set_max_byte_length(*max_byte_length);
+    }
+
+    // 8. Return obj.
     return obj;
 }
 

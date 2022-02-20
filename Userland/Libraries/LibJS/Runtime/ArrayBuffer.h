@@ -39,6 +39,7 @@ public:
 
     // Used by allocate_array_buffer() to attach the data block after construction
     void set_buffer(ByteBuffer buffer) { m_buffer = move(buffer); }
+    void set_max_byte_length(size_t max_byte_length) { m_max_byte_length = max_byte_length; }
 
     Value detach_key() const { return m_detach_key; }
     void set_detach_key(Value detach_key) { m_detach_key = detach_key; }
@@ -73,6 +74,7 @@ private:
     // The various detach related members of ArrayBuffer are not used by any ECMA262 functionality,
     // but are required to be available for the use of various harnesses like the Test262 test runner.
     Value m_detach_key;
+    Optional<size_t> m_max_byte_length;
 };
 
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject&, FunctionObject& constructor, size_t byte_length, Optional<size_t> max_byte_length = {});
