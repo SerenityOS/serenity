@@ -9,8 +9,10 @@
 
 namespace Web::Layout {
 
-LineBuilder::LineBuilder(InlineFormattingContext& context)
+LineBuilder::LineBuilder(InlineFormattingContext& context, FormattingState& formatting_state)
     : m_context(context)
+    , m_formatting_state(formatting_state)
+    , m_containing_block_state(formatting_state.ensure(context.containing_block()))
 {
     begin_new_line(false);
 }
@@ -24,7 +26,7 @@ LineBuilder::~LineBuilder()
 void LineBuilder::break_line()
 {
     update_last_line();
-    m_context.containing_block().line_boxes().append(LineBox());
+    m_containing_block_state.line_boxes.append(LineBox());
     begin_new_line(true);
 }
 
@@ -39,15 +41,24 @@ void LineBuilder::begin_new_line(bool increment_y)
     m_last_line_needs_update = true;
 }
 
-void LineBuilder::append_box(Box& box, float leading_size, float trailing_size)
+LineBox& LineBuilder::ensure_last_line_box()
 {
-    m_context.containing_block().ensure_last_line_box().add_fragment(box, 0, 0, leading_size, trailing_size, box.content_width(), box.content_height());
-    m_max_height_on_current_line = max(m_max_height_on_current_line, box.content_height());
+    auto& line_boxes = m_containing_block_state.line_boxes;
+    if (line_boxes.is_empty())
+        line_boxes.append(LineBox {});
+    return line_boxes.last();
 }
 
-void LineBuilder::append_text_chunk(TextNode& text_node, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float content_width, float content_height)
+void LineBuilder::append_box(Box const& box, float leading_size, float trailing_size)
 {
-    m_context.containing_block().ensure_last_line_box().add_fragment(text_node, offset_in_node, length_in_node, leading_size, trailing_size, content_width, content_height);
+    auto const& box_state = m_formatting_state.get(box);
+    ensure_last_line_box().add_fragment(box, 0, 0, leading_size, trailing_size, box_state.content_width, box_state.content_height);
+    m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.content_height);
+}
+
+void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float content_width, float content_height)
+{
+    ensure_last_line_box().add_fragment(text_node, offset_in_node, length_in_node, leading_size, trailing_size, content_width, content_height);
     m_max_height_on_current_line = max(m_max_height_on_current_line, content_height);
 }
 
@@ -59,26 +70,27 @@ bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width, bo
         return true;
     if (layout_mode == LayoutMode::OnlyRequiredLineBreaks)
         return false;
-    auto const& line_boxes = m_context.containing_block().line_boxes();
+    auto const& line_boxes = m_containing_block_state.line_boxes;
     if (line_boxes.is_empty() || line_boxes.last().is_empty())
         return false;
-    auto current_line_width = m_context.containing_block().line_boxes().last().width();
+    auto current_line_width = line_boxes.last().width();
     return (current_line_width + next_item_width) > m_available_width_for_current_line;
 }
 
 void LineBuilder::update_last_line()
 {
     m_last_line_needs_update = false;
+    auto& line_boxes = m_containing_block_state.line_boxes;
 
-    if (m_context.containing_block().line_boxes().is_empty())
+    if (line_boxes.is_empty())
         return;
 
-    auto& line_box = m_context.containing_block().line_boxes().last();
+    auto& line_box = line_boxes.last();
 
     auto text_align = m_context.containing_block().computed_values().text_align();
     float x_offset = m_context.available_space_for_line(m_current_y).left;
 
-    float excess_horizontal_space = m_context.containing_block().content_width() - line_box.width();
+    float excess_horizontal_space = m_containing_block_state.content_width - line_box.width();
 
     switch (text_align) {
     case CSS::TextAlign::Center:
@@ -115,7 +127,7 @@ void LineBuilder::update_last_line()
     for (auto& fragment : line_box.fragments()) {
         float fragment_baseline;
         if (fragment.layout_node().is_box()) {
-            fragment_baseline = static_cast<Box const&>(fragment.layout_node()).content_height();
+            fragment_baseline = m_formatting_state.get(static_cast<Box const&>(fragment.layout_node())).content_height;
         } else {
             float font_baseline = fragment.layout_node().font().baseline();
             fragment_baseline = (max_height / 2.0f) + (font_baseline / 2.0f);
@@ -155,11 +167,10 @@ void LineBuilder::update_last_line()
 void LineBuilder::remove_last_line_if_empty()
 {
     // If there's an empty line box at the bottom, just remove it instead of giving it height.
-    auto& line_boxes = m_context.containing_block().line_boxes();
+    auto& line_boxes = m_containing_block_state.line_boxes;
     if (!line_boxes.is_empty() && line_boxes.last().fragments().is_empty()) {
         line_boxes.take_last();
         m_last_line_needs_update = false;
     }
 }
-
 }

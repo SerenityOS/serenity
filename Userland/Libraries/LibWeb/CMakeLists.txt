@@ -224,6 +224,7 @@ set(SOURCES
     Layout/CheckBox.cpp
     Layout/FlexFormattingContext.cpp
     Layout/FormattingContext.cpp
+    Layout/FormattingState.cpp
     Layout/FrameBox.cpp
     Layout/ImageBox.cpp
     Layout/InitialContainingBlock.cpp

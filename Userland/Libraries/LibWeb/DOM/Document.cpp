@@ -563,12 +563,16 @@ void Document::update_layout()
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
     }
 
-    Layout::FormattingState root_formatting_state;
-    Layout::BlockFormattingContext root_formatting_context(root_formatting_state, *m_layout_root, nullptr);
+    Layout::FormattingState formatting_state;
+    Layout::BlockFormattingContext root_formatting_context(formatting_state, *m_layout_root, nullptr);
     m_layout_root->build_stacking_context_tree();
-    m_layout_root->set_content_size(viewport_rect.size().to_type<float>());
+
+    auto& icb_state = formatting_state.ensure(*m_layout_root);
+    icb_state.content_width = viewport_rect.width();
+    icb_state.content_height = viewport_rect.height();
 
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
+    formatting_state.commit();
 
     browsing_context()->set_needs_display();
 
