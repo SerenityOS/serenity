@@ -1,7 +1,7 @@
 From e87fd74df2c7fcb4b146eb09b5b710a45003999a Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Sat, 19 Feb 2022 19:47:42 -0800
-Subject: [PATCH 3/4] gdb: Add build support for SerenityOS
+Subject: [PATCH 3/6] gdb: Add build support for SerenityOS
 
 ---
  bfd/config.bfd       | 9 +++++++++
