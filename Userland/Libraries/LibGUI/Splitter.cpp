@@ -20,6 +20,9 @@ Splitter::Splitter(Orientation orientation)
 {
     REGISTER_INT_PROPERTY("first_resizee_minimum_size", first_resizee_minimum_size, set_first_resizee_minimum_size);
     REGISTER_INT_PROPERTY("second_resizee_minimum_size", second_resizee_minimum_size, set_second_resizee_minimum_size);
+    REGISTER_ENUM_PROPERTY("fixed_resizee", fixed_resizee, set_fixed_resizee, FixedResizee,
+        { FixedResizee::First, "First" },
+        { FixedResizee::Second, "Second" });
 
     set_background_role(ColorRole::Button);
     set_layout<BoxLayout>(orientation);
@@ -218,11 +221,11 @@ void Splitter::mousemove_event(MouseEvent& event)
     }
 
     if (m_orientation == Orientation::Horizontal) {
-        m_first_resizee->set_fixed_width(new_first_resizee_size.width());
-        m_second_resizee->set_fixed_width(-1);
+        m_first_resizee->set_fixed_width(fixed_resizee() == FixedResizee::First ? new_first_resizee_size.width() : -1);
+        m_second_resizee->set_fixed_width(fixed_resizee() == FixedResizee::Second ? new_second_resizee_size.width() : -1);
     } else {
-        m_first_resizee->set_fixed_height(new_first_resizee_size.height());
-        m_second_resizee->set_fixed_height(-1);
+        m_first_resizee->set_fixed_height(fixed_resizee() == FixedResizee::First ? new_first_resizee_size.height() : -1);
+        m_second_resizee->set_fixed_height(fixed_resizee() == FixedResizee::Second ? new_second_resizee_size.height() : -1);
     }
 
     invalidate_layout();

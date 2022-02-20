@@ -59,6 +59,8 @@
             }
 
             @GUI::HorizontalSplitter {
+                fixed_resizee: "Second"
+
                 @GUI::Widget {
                     layout: @GUI::VerticalBoxLayout {}
 
