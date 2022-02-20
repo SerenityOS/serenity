@@ -10,7 +10,7 @@
 
 namespace Web::SVG {
 
-SVGEllipseElement::SVGEllipseElement(DOM::Document& document, QualifiedName qualified_name)
+SVGEllipseElement::SVGEllipseElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
 }

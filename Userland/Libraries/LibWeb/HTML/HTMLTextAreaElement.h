@@ -14,7 +14,7 @@ class HTMLTextAreaElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLTextAreaElementWrapper;
 
-    HTMLTextAreaElement(DOM::Document&, QualifiedName);
+    HTMLTextAreaElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTextAreaElement() override;
 
     const String& type() const

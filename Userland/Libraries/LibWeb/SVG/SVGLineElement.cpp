@@ -10,7 +10,7 @@
 
 namespace Web::SVG {
 
-SVGLineElement::SVGLineElement(DOM::Document& document, QualifiedName qualified_name)
+SVGLineElement::SVGLineElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
 }

@@ -14,7 +14,7 @@ class HTMLMediaElement : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLMediaElementWrapper;
 
-    HTMLMediaElement(DOM::Document&, QualifiedName);
+    HTMLMediaElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLMediaElement() override;
 };
 

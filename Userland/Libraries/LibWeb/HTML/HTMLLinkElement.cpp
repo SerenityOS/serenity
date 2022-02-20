@@ -16,7 +16,7 @@
 
 namespace Web::HTML {
 
-HTMLLinkElement::HTMLLinkElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLLinkElement::HTMLLinkElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

@@ -18,7 +18,7 @@ class HTMLImageElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLImageElementWrapper;
 
-    HTMLImageElement(DOM::Document&, QualifiedName);
+    HTMLImageElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLImageElement() override;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;

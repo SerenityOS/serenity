@@ -10,7 +10,7 @@
 
 namespace Web::SVG {
 
-SVGPolygonElement::SVGPolygonElement(DOM::Document& document, QualifiedName qualified_name)
+SVGPolygonElement::SVGPolygonElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
 }

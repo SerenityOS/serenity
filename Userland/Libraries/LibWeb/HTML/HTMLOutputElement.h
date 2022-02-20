@@ -14,7 +14,7 @@ class HTMLOutputElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLOutputElementWrapper;
 
-    HTMLOutputElement(DOM::Document&, QualifiedName);
+    HTMLOutputElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLOutputElement() override;
 
     const String& type() const

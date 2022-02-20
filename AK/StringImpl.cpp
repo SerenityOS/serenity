@@ -133,6 +133,11 @@ NonnullRefPtr<StringImpl> StringImpl::to_uppercase() const
     return const_cast<StringImpl&>(*this);
 }
 
+unsigned StringImpl::case_insensitive_hash() const
+{
+    return case_insensitive_string_hash(characters(), length());
+}
+
 void StringImpl::compute_hash() const
 {
     if (!length())

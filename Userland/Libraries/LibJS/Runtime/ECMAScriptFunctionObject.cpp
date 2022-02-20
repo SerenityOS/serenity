@@ -127,7 +127,10 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
             // FIXME: Add the AsyncGeneratorObject and set it as prototype.
             break;
         }
-        define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
+        // 27.7.4 AsyncFunction Instances, https://tc39.es/ecma262/#sec-async-function-instances
+        // AsyncFunction instances do not have a prototype property as they are not constructible.
+        if (m_kind != FunctionKind::Async)
+            define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }
 }
 

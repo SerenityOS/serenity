@@ -10,7 +10,7 @@
 
 namespace Web::HTML {
 
-HTMLProgressElement::HTMLProgressElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLProgressElement::HTMLProgressElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

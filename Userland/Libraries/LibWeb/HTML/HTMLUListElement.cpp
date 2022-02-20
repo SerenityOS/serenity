@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-HTMLUListElement::HTMLUListElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLUListElement::HTMLUListElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

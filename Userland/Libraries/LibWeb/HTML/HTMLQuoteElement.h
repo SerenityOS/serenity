@@ -14,7 +14,7 @@ class HTMLQuoteElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLQuoteElementWrapper;
 
-    HTMLQuoteElement(DOM::Document&, QualifiedName);
+    HTMLQuoteElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLQuoteElement() override;
 };
 

@@ -14,7 +14,7 @@ class SVGPolylineElement final : public SVGGeometryElement {
 public:
     using WrapperType = Bindings::SVGPolylineElementWrapper;
 
-    SVGPolylineElement(DOM::Document&, QualifiedName);
+    SVGPolylineElement(DOM::Document&, DOM::QualifiedName);
     virtual ~SVGPolylineElement() override = default;
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;

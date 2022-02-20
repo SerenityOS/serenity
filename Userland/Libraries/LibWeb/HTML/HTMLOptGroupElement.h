@@ -14,7 +14,7 @@ class HTMLOptGroupElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLOptGroupElementWrapper;
 
-    HTMLOptGroupElement(DOM::Document&, QualifiedName);
+    HTMLOptGroupElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLOptGroupElement() override;
 };
 

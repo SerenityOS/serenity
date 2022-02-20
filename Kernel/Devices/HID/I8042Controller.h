@@ -143,7 +143,7 @@ public:
     RefPtr<KeyboardDevice> keyboard() const;
 
     // Note: This function exists only for the initialization process of the controller
-    bool check_existence(Badge<HIDManagement>);
+    bool check_existence_via_probing(Badge<HIDManagement>);
 
 private:
     I8042Controller();

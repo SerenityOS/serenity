@@ -10,7 +10,7 @@
 
 namespace Web::HTML {
 
-HTMLLabelElement::HTMLLabelElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLLabelElement::HTMLLabelElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

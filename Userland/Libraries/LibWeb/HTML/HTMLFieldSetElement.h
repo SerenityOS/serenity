@@ -14,7 +14,7 @@ class HTMLFieldSetElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLFieldSetElementWrapper;
 
-    HTMLFieldSetElement(DOM::Document&, QualifiedName);
+    HTMLFieldSetElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLFieldSetElement() override;
 
     const String& type() const

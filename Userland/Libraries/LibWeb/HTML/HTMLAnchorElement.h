@@ -17,7 +17,7 @@ class HTMLAnchorElement final
 public:
     using WrapperType = Bindings::HTMLAnchorElementWrapper;
 
-    HTMLAnchorElement(DOM::Document&, QualifiedName);
+    HTMLAnchorElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLAnchorElement() override;
 
     String target() const { return attribute(HTML::AttributeNames::target); }

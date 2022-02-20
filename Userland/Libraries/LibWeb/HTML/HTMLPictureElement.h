@@ -14,7 +14,7 @@ class HTMLPictureElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLPictureElementWrapper;
 
-    HTMLPictureElement(DOM::Document&, QualifiedName);
+    HTMLPictureElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLPictureElement() override;
 };
 

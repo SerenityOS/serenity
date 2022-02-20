@@ -13,7 +13,7 @@
 
 namespace Web::HTML {
 
-HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : BrowsingContextContainer(document, move(qualified_name))
 {
 }

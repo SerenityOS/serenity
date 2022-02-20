@@ -9,7 +9,7 @@
 #include <AK/FlyString.h>
 #include <AK/WeakPtr.h>
 #include <LibWeb/DOM/Node.h>
-#include <LibWeb/QualifiedName.h>
+#include <LibWeb/DOM/QualifiedName.h>
 
 namespace Web::DOM {
 

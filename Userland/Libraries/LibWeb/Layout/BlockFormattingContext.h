@@ -76,6 +76,8 @@ private:
     FloatSideData m_right_floats;
 
     Vector<Box&> m_absolutely_positioned_boxes;
+
+    bool m_was_notified_after_parent_dimensioned_my_root_box { false };
 };
 
 }

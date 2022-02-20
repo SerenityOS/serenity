@@ -140,6 +140,11 @@ enum class Float {
     Right,
 };
 
+enum class ImageRendering {
+    Auto,
+    Pixelated
+};
+
 enum class JustifyContent {
     FlexStart,
     FlexEnd,
@@ -851,10 +856,7 @@ private:
 
 class ColorStyleValue : public StyleValue {
 public:
-    static NonnullRefPtr<ColorStyleValue> create(Color color)
-    {
-        return adopt_ref(*new ColorStyleValue(color));
-    }
+    static NonnullRefPtr<ColorStyleValue> create(Color color);
     virtual ~ColorStyleValue() override { }
 
     Color color() const { return m_color; }
@@ -1096,10 +1098,7 @@ private:
 
 class LengthStyleValue : public StyleValue {
 public:
-    static NonnullRefPtr<LengthStyleValue> create(Length const& length)
-    {
-        return adopt_ref(*new LengthStyleValue(length));
-    }
+    static NonnullRefPtr<LengthStyleValue> create(Length const&);
     virtual ~LengthStyleValue() override { }
 
     Length const& length() const { return m_length; }

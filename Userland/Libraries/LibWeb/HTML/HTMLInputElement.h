@@ -41,7 +41,7 @@ class HTMLInputElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLInputElementWrapper;
 
-    HTMLInputElement(DOM::Document&, QualifiedName);
+    HTMLInputElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLInputElement() override;
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;

@@ -178,6 +178,8 @@ const TestSuite test_suites[] {
     { "%llu", "9223372036854775810", 1, 1, { unsignedlonglongarg0 }, { to_value_t(9223372036854775810ULL) } },
     { "%n", "", 0, 1, { intarg0 }, { to_value_t(0) } },
     { "%d %n", "1 a", 1, 2, { intarg0, intarg1 }, { to_value_t(1), to_value_t(2) } },
+    { "%*d", "  42", 0, 0, {}, {} },
+    { "%d%*1[:/]%d", "24/7", 2, 2, { intarg0, intarg1 }, { to_value_t(24), to_value_t(7) } },
 };
 
 bool g_any_failed = false;

@@ -14,7 +14,7 @@ class HTMLTrackElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTrackElementWrapper;
 
-    HTMLTrackElement(DOM::Document&, QualifiedName);
+    HTMLTrackElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTrackElement() override;
 };
 

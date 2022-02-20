@@ -12,7 +12,7 @@ namespace Web::HTML {
 
 class BrowsingContextContainer : public HTMLElement {
 public:
-    BrowsingContextContainer(DOM::Document&, QualifiedName);
+    BrowsingContextContainer(DOM::Document&, DOM::QualifiedName);
     virtual ~BrowsingContextContainer() override;
 
     BrowsingContext* nested_browsing_context() { return m_nested_browsing_context; }

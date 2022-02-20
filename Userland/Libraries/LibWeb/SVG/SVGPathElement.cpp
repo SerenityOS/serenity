@@ -83,7 +83,7 @@ namespace Web::SVG {
     }
 }
 
-SVGPathElement::SVGPathElement(DOM::Document& document, QualifiedName qualified_name)
+SVGPathElement::SVGPathElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, move(qualified_name))
 {
 }

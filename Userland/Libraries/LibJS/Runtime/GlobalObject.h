@@ -74,7 +74,7 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
     template<typename ConstructorType>
-    void initialize_constructor(PropertyKey const&, ConstructorType*&, Object* prototype);
+    void initialize_constructor(PropertyKey const&, ConstructorType*&, Object* prototype, PropertyAttributes = Attribute::Writable | Attribute::Configurable);
     template<typename ConstructorType>
     void add_constructor(PropertyKey const&, ConstructorType*&, Object* prototype);
 
@@ -143,13 +143,13 @@ private:
 };
 
 template<typename ConstructorType>
-inline void GlobalObject::initialize_constructor(PropertyKey const& property_key, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::initialize_constructor(PropertyKey const& property_key, ConstructorType*& constructor, Object* prototype, PropertyAttributes attributes)
 {
     auto& vm = this->vm();
     constructor = heap().allocate<ConstructorType>(*this, *this);
     constructor->define_direct_property(vm.names.name, js_string(heap(), property_key.as_string()), Attribute::Configurable);
     if (prototype)
-        prototype->define_direct_property(vm.names.constructor, constructor, Attribute::Writable | Attribute::Configurable);
+        prototype->define_direct_property(vm.names.constructor, constructor, attributes);
 }
 
 template<typename ConstructorType>

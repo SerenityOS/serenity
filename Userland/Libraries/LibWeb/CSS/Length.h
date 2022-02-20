@@ -48,6 +48,7 @@ public:
 
     bool is_auto() const { return m_type == Type::Auto; }
     bool is_calculated() const { return m_type == Type::Calculated; }
+    bool is_px() const { return m_type == Type::Px; }
 
     bool is_absolute() const
     {

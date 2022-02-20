@@ -16,7 +16,7 @@ class HTMLCanvasElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLCanvasElementWrapper;
 
-    HTMLCanvasElement(DOM::Document&, QualifiedName);
+    HTMLCanvasElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLCanvasElement() override;
 
     const Gfx::Bitmap* bitmap() const { return m_bitmap; }

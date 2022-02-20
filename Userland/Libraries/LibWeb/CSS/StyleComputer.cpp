@@ -634,32 +634,29 @@ static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, 
 {
     if (!element || !element->parent_element() || !element->parent_element()->specified_css_values())
         return property_initial_value(property_id);
-    auto const& map = element->parent_element()->specified_css_values()->properties();
-    auto it = map.find(property_id);
-    VERIFY(it != map.end());
-    return *it->value;
+    return element->parent_element()->specified_css_values()->property(property_id).release_value();
 };
 
 void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id) const
 {
     // FIXME: If we don't know the correct initial value for a property, we fall back to InitialStyleValue.
 
-    auto it = style.m_property_values.find(property_id);
-    if (it == style.m_property_values.end()) {
+    auto& value_slot = style.m_property_values[to_underlying(property_id)];
+    if (!value_slot) {
         if (is_inherited_property(property_id))
-            style.m_property_values.set(property_id, get_inherit_value(property_id, element));
+            style.m_property_values[to_underlying(property_id)] = get_inherit_value(property_id, element);
         else
-            style.m_property_values.set(property_id, property_initial_value(property_id));
+            style.m_property_values[to_underlying(property_id)] = property_initial_value(property_id);
         return;
     }
 
-    if (it->value->is_initial()) {
-        it->value = property_initial_value(property_id);
+    if (value_slot->is_initial()) {
+        value_slot = property_initial_value(property_id);
         return;
     }
 
-    if (it->value->is_inherit()) {
-        it->value = get_inherit_value(property_id, element);
+    if (value_slot->is_inherit()) {
+        value_slot = get_inherit_value(property_id, element);
         return;
     }
 }
@@ -869,8 +866,10 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
     // FIXME: Get the root element font.
     float root_font_size = 10;
 
-    for (auto& it : style.properties()) {
-        it.value->visit_lengths([&](Length& length) {
+    for (auto& value_slot : style.m_property_values) {
+        if (!value_slot)
+            continue;
+        value_slot->visit_lengths([&](Length& length) {
             if (length.is_absolute() || length.is_relative()) {
                 auto px = length.to_px(viewport_rect, font_metrics, root_font_size);
                 length = Length::make_px(px);

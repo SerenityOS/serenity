@@ -14,7 +14,7 @@ class HTMLParagraphElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLParagraphElementWrapper;
 
-    HTMLParagraphElement(DOM::Document&, QualifiedName);
+    HTMLParagraphElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLParagraphElement() override;
 };
 

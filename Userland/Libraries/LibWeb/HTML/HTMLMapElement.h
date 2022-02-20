@@ -14,7 +14,7 @@ class HTMLMapElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLMapElementWrapper;
 
-    HTMLMapElement(DOM::Document&, QualifiedName);
+    HTMLMapElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLMapElement() override;
 };
 

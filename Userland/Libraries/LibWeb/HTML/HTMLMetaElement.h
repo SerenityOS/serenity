@@ -14,7 +14,7 @@ class HTMLMetaElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLMetaElementWrapper;
 
-    HTMLMetaElement(DOM::Document&, QualifiedName);
+    HTMLMetaElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLMetaElement() override;
 };
 

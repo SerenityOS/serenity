@@ -1193,4 +1193,43 @@ String StyleValueList::to_string() const
     return String::join(separator, m_values);
 }
 
+NonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)
+{
+    if (color.value() == 0) {
+        static auto transparent = adopt_ref(*new ColorStyleValue(color));
+        return transparent;
+    }
+
+    if (color == Color::from_rgb(0x000000)) {
+        static auto black = adopt_ref(*new ColorStyleValue(color));
+        return black;
+    }
+
+    if (color == Color::from_rgb(0xffffff)) {
+        static auto white = adopt_ref(*new ColorStyleValue(color));
+        return white;
+    }
+
+    return adopt_ref(*new ColorStyleValue(color));
+}
+
+NonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length const& length)
+{
+    if (length.is_auto()) {
+        static auto value = adopt_ref(*new LengthStyleValue(CSS::Length::make_auto()));
+        return value;
+    }
+    if (length.is_px()) {
+        if (length.raw_value() == 0) {
+            static auto value = adopt_ref(*new LengthStyleValue(CSS::Length::make_px(0)));
+            return value;
+        }
+        if (length.raw_value() == 1) {
+            static auto value = adopt_ref(*new LengthStyleValue(CSS::Length::make_px(1)));
+            return value;
+        }
+    }
+    return adopt_ref(*new LengthStyleValue(length));
+}
+
 }

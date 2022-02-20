@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,6 +25,12 @@ BlockFormattingContext::BlockFormattingContext(BlockContainer& root, FormattingC
 
 BlockFormattingContext::~BlockFormattingContext()
 {
+    if (!m_was_notified_after_parent_dimensioned_my_root_box) {
+        // HACK: The parent formatting context never notified us after assigning dimensions to our root box.
+        //       Pretend that it did anyway, to make sure absolutely positioned children get laid out.
+        // FIXME: Get rid of this hack once parent contexts behave properly.
+        parent_context_did_dimension_child_root_box();
+    }
 }
 
 bool BlockFormattingContext::is_initial() const
@@ -47,6 +53,8 @@ void BlockFormattingContext::run(Box&, LayoutMode layout_mode)
 
 void BlockFormattingContext::parent_context_did_dimension_child_root_box()
 {
+    m_was_notified_after_parent_dimensioned_my_root_box = true;
+
     for (auto& box : m_absolutely_positioned_boxes)
         layout_absolutely_positioned_element(box);
 

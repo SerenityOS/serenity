@@ -14,7 +14,7 @@ class HTMLModElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLModElementWrapper;
 
-    HTMLModElement(DOM::Document&, QualifiedName);
+    HTMLModElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLModElement() override;
 };
 

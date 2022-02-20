@@ -127,12 +127,18 @@ public:
 #ifndef KERNEL
     [[nodiscard]] String trim(StringView characters, TrimMode mode = TrimMode::Both) const
     {
-        return StringUtils::trim(view(), characters, mode);
+        auto trimmed_view = StringUtils::trim(view(), characters, mode);
+        if (view() == trimmed_view)
+            return *this;
+        return trimmed_view;
     }
 
     [[nodiscard]] String trim_whitespace(TrimMode mode = TrimMode::Both) const
     {
-        return StringUtils::trim_whitespace(view(), mode);
+        auto trimmed_view = StringUtils::trim_whitespace(view(), mode);
+        if (view() == trimmed_view)
+            return *this;
+        return trimmed_view;
     }
 #endif
 
@@ -305,8 +311,8 @@ struct Traits<String> : public GenericTraits<String> {
 };
 
 struct CaseInsensitiveStringTraits : public Traits<String> {
-    static unsigned hash(const String& s) { return s.impl() ? s.to_lowercase().impl()->hash() : 0; }
-    static bool equals(const String& a, const String& b) { return a.to_lowercase() == b.to_lowercase(); }
+    static unsigned hash(String const& s) { return s.impl() ? s.impl()->case_insensitive_hash() : 0; }
+    static bool equals(String const& a, String const& b) { return a.equals_ignoring_case(b); }
 };
 
 bool operator<(const char*, const String&);

@@ -18,7 +18,7 @@ class SVGGraphicsElement : public SVGElement {
 public:
     using WrapperType = Bindings::SVGGraphicsElementWrapper;
 
-    SVGGraphicsElement(DOM::Document&, QualifiedName);
+    SVGGraphicsElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 

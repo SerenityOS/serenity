@@ -10,7 +10,7 @@
 
 namespace Web::SVG {
 
-SVGCircleElement::SVGCircleElement(DOM::Document& document, QualifiedName qualified_name)
+SVGCircleElement::SVGCircleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
 }

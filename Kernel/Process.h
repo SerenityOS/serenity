@@ -390,7 +390,7 @@ public:
     ErrorOr<FlatPtr> sys$getrandom(Userspace<void*>, size_t, unsigned int);
     ErrorOr<FlatPtr> sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*>);
     ErrorOr<FlatPtr> sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*>);
-    ErrorOr<FlatPtr> sys$profiling_enable(pid_t, u64);
+    ErrorOr<FlatPtr> sys$profiling_enable(pid_t, Userspace<u64 const*>);
     ErrorOr<FlatPtr> sys$profiling_disable(pid_t);
     ErrorOr<FlatPtr> sys$profiling_free_buffer(pid_t);
     ErrorOr<FlatPtr> sys$futex(Userspace<const Syscall::SC_futex_params*>);

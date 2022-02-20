@@ -396,6 +396,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (cursor.has_value())
         computed_values.set_cursor(cursor.value());
 
+    auto image_rendering = specified_style.image_rendering();
+    if (image_rendering.has_value())
+        computed_values.set_image_rendering(image_rendering.value());
+
     auto pointer_events = specified_style.pointer_events();
     if (pointer_events.has_value())
         computed_values.set_pointer_events(pointer_events.value());
@@ -521,6 +525,25 @@ bool Node::is_root_element() const
 String Node::class_name() const
 {
     return demangle(typeid(*this).name());
+}
+
+String Node::debug_description() const
+{
+    StringBuilder builder;
+    builder.append(class_name().substring_view(13));
+    if (dom_node()) {
+        builder.appendff("<{}>", dom_node()->node_name());
+        if (dom_node()->is_element()) {
+            auto& element = static_cast<DOM::Element const&>(*dom_node());
+            if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null())
+                builder.appendff("#{}", id);
+            for (auto const& class_name : element.class_names())
+                builder.appendff(".{}", class_name);
+        }
+    } else {
+        builder.append("(anonymous)");
+    }
+    return builder.to_string();
 }
 
 bool Node::is_inline_block() const
