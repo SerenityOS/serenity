@@ -67,7 +67,7 @@ class Position {
             point = current_point.up(1)
         )
             current_point = point;
-        return range(current_point.name, up_one.name);
+        return R(current_point.name + ":" + up_one.name);
     }
 
     range_down() {
@@ -75,7 +75,7 @@ class Position {
         let current_point = down_one;
         for (let point = current_point.down(1); point.value() !== ""; point = current_point.down(1))
             current_point = point;
-        return range(current_point.name, down_one.name);
+        return R(current_point.name + ":" + down_one.name);
     }
 
     range_left() {
@@ -88,7 +88,7 @@ class Position {
             point = current_point.left(1)
         )
             current_point = point;
-        return range(current_point.name, left_one.name);
+        return R(current_point.name + ":" + left_one.name);
     }
 
     range_right() {
@@ -100,7 +100,7 @@ class Position {
             point = current_point.right(1)
         )
             current_point = point;
-        return range(current_point.name, right_one.name);
+        return R(current_point.name + ":" + right_one.name);
     }
 
     with_column(value) {
@@ -232,7 +232,8 @@ class Range {
     }
 
     toString() {
-        return `Range(${this.startingColumnName}, ${this.endingColumnName}, ${this.startingRow}, ${this.endingRow}, ${this.columnStep}, ${this.rowStep})`;
+        const endingRow = this.endingRow ?? "";
+        return `R\`${this.startingColumnName}${this.startingRow}:${this.endingColumnName}${endingRow}:${this.columnStep}:${this.rowStep}\``;
     }
 }
 
@@ -260,19 +261,29 @@ function range(start, end, columnStep, rowStep) {
 
 function R(fmt, ...args) {
     if (args.length !== 0) throw new TypeError("R`` format must be a literal");
-
-    fmt = fmt[0];
-
-    // CellName (: (CellName|ColumnName) (: Integer (: Integer)?)?)?
-    // ColumnName (: ColumnName (: Integer (: Integer)?)?)?
-    let specs = fmt.split(":");
-
-    if (specs.length > 4 || specs.length < 1) throw new SyntaxError(`Invalid range ${fmt}`);
-
-    if (/^[a-zA-Z_]+\d+$/.test(specs[0])) return range(...specs);
-
-    // Otherwise, it has to be a column name.
-    return new Range(specs[0], specs[1], undefined, undefined, specs[2], specs[3]);
+    // done because:
+    // const myFunc = xyz => JSON.stringify(xyz)
+    // myFunc("ABC") => ""ABC""
+    // myFunc`ABC` => "["ABC"]"
+    if (Array.isArray(fmt)) fmt = fmt[0];
+    const parts = fmt.split(":");
+    if (parts.length !== 2 && parts.length !== 4)
+        throw new Error("Invalid Format. Expected Format: R`A0:A1` or R`A0:A2:1:2`");
+    // ColRow:Col(Row)?(:ColStep:RowStep)?
+    const start = thisSheet.parse_cell_name(parts[0]);
+    let end = parts[1];
+    if (/^[a-zA-Z_]+$/.test(endPart)) end = { column: end, row: undefined };
+    else end = thisSheet.parse_cell_name(parts[1]);
+    parts[2] ??= 1;
+    parts[3] ??= 1;
+    return new Range(
+        start.column,
+        end.column,
+        start.row,
+        end.row,
+        integer(parts[2]),
+        integer(parts[3])
+    );
 }
 
 function select(criteria, t, f) {
@@ -544,22 +555,17 @@ R.__documentation = JSON.stringify({
     argc: 1,
     argnames: ["range specifier"],
     doc:
-        "Generates a Range object, denoted by the" +
-        "_range specifier_, which must conform to the following syntax.\n\n" +
-        "```\n" +
-        "RangeSpecifier : RangeBounds RangeStep?\n" +
-        "RangeBounds :\n" +
-        "              CellName (':' CellName)?\n" +
-        "            | ColumnName (':' ColumnName)?\n" +
-        "RangeStep : Integer (':' Integer)?\n" +
-        "```\n",
+        "Generates a Range object, from the given" +
+        "range specifier, which must conform to the syntax shown below",
     examples: {
-        "R`A1:C4`":
-            "Generate a Range representing all cells in a rectangle with the top-left cell A1, and the bottom-right cell C4",
         "R`A`": "Generate a Range representing all the cells in the column A",
         "R`A:C`": "Generate a Range representing all the cells in the columns A through C",
         "R`A:C:2:2`":
             "Generate a Range representing every other cells in every other column in A through C",
+        "R`A1:C4`":
+            "Generate a Range representing all cells in a rectangle with the top-left cell A1, and the bottom-right cell C4",
+        "R`A0:B10:1:2`":
+            "Generate a Range representing all cells in a rectangle with the top-left cell A1, and the bottom-right cell C4, with every column, and skipping every other row",
     },
 });
 
