@@ -997,7 +997,7 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     };
 
     // 2. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-    auto* on_fulfilled = NativeFunction::create(current_realm()->global_object(), "", move(fulfilled_closure));
+    auto* on_fulfilled = NativeFunction::create(current_realm()->global_object(), move(fulfilled_closure), 0, "");
 
     // 3. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures promiseCapability and performs the following steps when called:
     auto rejected_closure = [rejected_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
@@ -1009,7 +1009,7 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     };
 
     // 4. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
-    auto* on_rejected = NativeFunction::create(current_realm()->global_object(), "", move(rejected_closure));
+    auto* on_rejected = NativeFunction::create(current_realm()->global_object(), move(rejected_closure), 0, "");
 
     // 5. Perform ! PerformPromiseThen(innerPromise, onFulfilled, onRejected).
     inner_promise->perform_then(on_fulfilled, on_rejected, {});
