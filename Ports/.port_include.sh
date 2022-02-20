@@ -12,6 +12,7 @@ if [ -z "${HOST_CC:=}" ]; then
     export HOST_RANLIB="${RANLIB:=ranlib}"
     export HOST_PATH="${PATH:=}"
     export HOST_READELF="${READELF:=readelf}"
+    export HOST_OBJCOPY="${OBJCOPY:=objcopy}"
     export HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
     export HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
     export HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
@@ -49,6 +50,7 @@ host_env() {
     export RANLIB="${HOST_RANLIB}"
     export PATH="${HOST_PATH}"
     export READELF="${HOST_READELF}"
+    export OBJCOPY="${HOST_OBJCOPY}"
     export PKG_CONFIG_DIR="${HOST_PKG_CONFIG_DIR}"
     export PKG_CONFIG_SYSROOT_DIR="${HOST_PKG_CONFIG_SYSROOT_DIR}"
     export PKG_CONFIG_LIBDIR="${HOST_PKG_CONFIG_LIBDIR}"
@@ -164,8 +166,8 @@ install_icon() {
             run convert "$icon[0]" -resize $icon_size "app-${icon_size}.png"
         fi
     done
-    run objcopy --add-section serenity_icon_s="app-16x16.png" "${DESTDIR}${launcher}"
-    run objcopy --add-section serenity_icon_m="app-32x32.png" "${DESTDIR}${launcher}"
+    run $OBJCOPY --add-section serenity_icon_s="app-16x16.png" "${DESTDIR}${launcher}"
+    run $OBJCOPY --add-section serenity_icon_m="app-32x32.png" "${DESTDIR}${launcher}"
 }
 
 install_main_launcher() {
