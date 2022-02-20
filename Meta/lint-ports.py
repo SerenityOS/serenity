@@ -51,7 +51,6 @@ PORTS_MISSING_DESCRIPTIONS = {
     'freetype',
     'gawk',
     'gcc',
-    'gdb',
     'genemu',
     'gettext',
     'git',
