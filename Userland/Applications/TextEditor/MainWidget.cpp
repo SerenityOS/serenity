@@ -753,7 +753,6 @@ void MainWidget::set_preview_mode(PreviewMode mode)
         update_markdown_preview();
     } else {
         m_no_preview_action->set_checked(true);
-        m_editor->set_fixed_width(-1);
         set_web_view_visible(false);
     }
 }

@@ -164,6 +164,7 @@ void Splitter::recompute_grabbables()
 
     auto child_widgets = this->child_widgets();
     child_widgets.remove_all_matching([&](auto& widget) { return !widget.is_visible(); });
+    m_last_child_count = child_widgets.size();
 
     if (child_widgets.size() < 2)
         return;
@@ -234,6 +235,27 @@ void Splitter::mousemove_event(MouseEvent& event)
 void Splitter::did_layout()
 {
     recompute_grabbables();
+}
+
+void Splitter::custom_layout()
+{
+    auto child_widgets = this->child_widgets();
+    child_widgets.remove_all_matching([&](auto& widget) { return !widget.is_visible(); });
+
+    if (!child_widgets.size())
+        return;
+
+    if (m_last_child_count > child_widgets.size()) {
+        bool has_child_to_fill_space = false;
+        for (auto& child : child_widgets) {
+            if (child.max_size() == Gfx::IntSize { -1, -1 }) {
+                has_child_to_fill_space = true;
+                break;
+            }
+        }
+        if (!has_child_to_fill_space)
+            child_widgets.last().set_fixed_size({ -1, -1 });
+    }
 }
 
 void Splitter::mouseup_event(MouseEvent& event)

@@ -37,6 +37,7 @@ protected:
     virtual void leave_event(Core::Event&) override;
 
     virtual void did_layout() override;
+    virtual void custom_layout() override;
 
     FixedResizee fixed_resizee() const { return m_fixed_resizee; }
     void set_fixed_resizee(FixedResizee resizee) { m_fixed_resizee = resizee; }
@@ -56,6 +57,7 @@ private:
     int m_first_resizee_minimum_size { 0 };
     int m_second_resizee_minimum_size { 0 };
     FixedResizee m_fixed_resizee { FixedResizee::First };
+    size_t m_last_child_count { 0 };
 
     void recompute_grabbables();
 
