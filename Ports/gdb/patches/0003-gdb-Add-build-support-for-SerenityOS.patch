@@ -1,3 +1,14 @@
+From e87fd74df2c7fcb4b146eb09b5b710a45003999a Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Sat, 19 Feb 2022 19:47:42 -0800
+Subject: [PATCH 3/4] gdb: Add build support for SerenityOS
+
+---
+ bfd/config.bfd       | 9 +++++++++
+ gdbsupport/configure | 2 +-
+ libiberty/configure  | 4 +++-
+ 3 files changed, 13 insertions(+), 2 deletions(-)
+
 diff --git a/bfd/config.bfd b/bfd/config.bfd
 index 30087e3..11dc114 100644
 --- a/bfd/config.bfd
@@ -53,3 +64,6 @@ index fffb91d..defc239 100755
      ;;
  esac
  
+-- 
+2.32.0
+

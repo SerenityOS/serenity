@@ -1,7 +1,7 @@
-From 581bbef892960b1533aa9d9918f5eeee4bff9cce Mon Sep 17 00:00:00 2001
+From 883a25f5ed8fd8f13b8e30aed3a25001839d892c Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Tue, 28 Dec 2021 04:35:47 -0800
-Subject: [PATCH 2/3] serenity: Add basic ptrace based native target for
+Subject: [PATCH 2/4] serenity: Add basic ptrace based native target for
  SerenityOS/i386
 
 ---
@@ -14,10 +14,10 @@ Subject: [PATCH 2/3] serenity: Add basic ptrace based native target for
  gdb/osabi.c              |   1 +
  gdb/osabi.h              |   1 +
  gdb/serenity-nat.c       |  13 +++++
- gdb/serenity-nat.h       |  34 +++++++++++++
+ gdb/serenity-nat.h       |  16 +++++++
  gdb/serenity-tdep.c      |  28 +++++++++++
  gdb/serenity-tdep.h      |  24 ++++++++++
- 12 files changed, 271 insertions(+)
+ 12 files changed, 253 insertions(+)
  create mode 100644 gdb/i386-serenity-nat.c
  create mode 100644 gdb/i386-serenity-tdep.c
  create mode 100644 gdb/i386-serenity-tdep.h
@@ -314,10 +314,10 @@ index 0000000..ff740d4
 \ No newline at end of file
 diff --git a/gdb/serenity-nat.h b/gdb/serenity-nat.h
 new file mode 100644
-index 0000000..ac3cfaa
+index 0000000..dcd24ce
 --- /dev/null
 +++ b/gdb/serenity-nat.h
-@@ -0,0 +1,34 @@
+@@ -0,0 +1,16 @@
 +/* Native-dependent code for SerenityOS.  */
 +
 +#ifndef SERENITYOS_NAT_H
@@ -331,24 +331,6 @@ index 0000000..ac3cfaa
 +
 +class serenity_nat_target : public inf_ptrace_target
 +{
-+#if 0 
-+  /* Override some methods to support threads.  */
-+  std::string pid_to_str (ptid_t) override;
-+  void update_thread_list () override;
-+  ptid_t wait (ptid_t, struct target_waitstatus *, target_wait_flags) override;
-+
-+#ifdef PT_GET_PROCESS_STATE
-+  void follow_fork (bool, bool) override;
-+
-+  int insert_fork_catchpoint (int) override;
-+
-+  int remove_fork_catchpoint (int) override;
-+
-+  void post_startup_inferior (ptid_t) override;
-+
-+  void post_attach (int) override;
-+#endif
-+#endif
 +};
 +
 +#endif /* serenity-nat.h */

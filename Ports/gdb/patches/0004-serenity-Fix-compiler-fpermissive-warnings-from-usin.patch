@@ -1,7 +1,7 @@
-From 7eeba40e3e8e3be17c68164c44e5ccf76b732842 Mon Sep 17 00:00:00 2001
+From 7a5e11d2e9cbe98af96faa4835592686bf261a23 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Tue, 28 Dec 2021 04:39:25 -0800
-Subject: [PATCH] serenity: Fix compiler -fpermissive warnings from using
+Subject: [PATCH 4/4] serenity: Fix compiler -fpermissive warnings from using
  latest GCC
 
 ---
