@@ -1,7 +1,7 @@
 From 883a25f5ed8fd8f13b8e30aed3a25001839d892c Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Tue, 28 Dec 2021 04:35:47 -0800
-Subject: [PATCH 2/4] serenity: Add basic ptrace based native target for
+Subject: [PATCH 2/6] serenity: Add basic ptrace based native target for
  SerenityOS/i386
 
 ---
