@@ -9,7 +9,7 @@ test("basic functionality", () => {
         const aTob = a.localeCompare(b);
         const bToa = b.localeCompare(a);
 
-        expect(aTob).toBe(1);
+        expect(aTob > 0).toBeTrue();
         expect(aTob).toBe(-bToa);
     }
 
@@ -24,7 +24,7 @@ test("basic functionality", () => {
 
     expect("null".localeCompare(null)).toBe(0);
     expect("null".localeCompare(undefined)).not.toBe(0);
-    expect("null".localeCompare()).toBe(-1);
+    expect("null".localeCompare() < 0).toBeTrue();
 
     expect(() => {
         String.prototype.localeCompare.call(undefined, undefined);
@@ -34,6 +34,6 @@ test("basic functionality", () => {
 test("UTF-16", () => {
     var s = "😀😀";
     expect(s.localeCompare("😀😀")).toBe(0);
-    expect(s.localeCompare("\ud83d")).toBe(1);
-    expect(s.localeCompare("😀😀s")).toBe(-1);
+    expect(s.localeCompare("\ud83d") > 0);
+    expect(s.localeCompare("😀😀s") < 0);
 });
