@@ -1025,47 +1025,57 @@ void HTMLParser::handle_after_after_body(HTMLToken& token)
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#reconstruct-the-active-formatting-elements
 void HTMLParser::reconstruct_the_active_formatting_elements()
 {
-    // FIXME: This needs to care about "markers"
-
+    // 1. If there are no entries in the list of active formatting elements, then there is nothing to reconstruct; stop this algorithm.
     if (m_list_of_active_formatting_elements.is_empty())
         return;
 
+    // 2. If the last (most recently added) entry in the list of active formatting elements is a marker, or if it is an element that is in the stack of open elements,
+    //    then there is nothing to reconstruct; stop this algorithm.
     if (m_list_of_active_formatting_elements.entries().last().is_marker())
         return;
 
     if (m_stack_of_open_elements.contains(*m_list_of_active_formatting_elements.entries().last().element))
         return;
 
-    ssize_t index = m_list_of_active_formatting_elements.entries().size() - 1;
-    RefPtr<DOM::Element> entry = m_list_of_active_formatting_elements.entries().at(index).element;
-    VERIFY(entry);
+    // 3. Let entry be the last (most recently added) element in the list of active formatting elements.
+    size_t index = m_list_of_active_formatting_elements.entries().size() - 1;
+
+    // NOTE: Entry will never be null, but must be a pointer instead of a reference to allow rebinding.
+    auto* entry = &m_list_of_active_formatting_elements.entries().at(index);
 
 Rewind:
-    if (index == 0) {
+    // 4. Rewind: If there are no entries before entry in the list of active formatting elements, then jump to the step labeled create.
+    if (index == 0)
         goto Create;
-    }
 
+    // 5. Let entry be the entry one earlier than entry in the list of active formatting elements.
     --index;
-    entry = m_list_of_active_formatting_elements.entries().at(index).element;
-    VERIFY(entry);
+    entry = &m_list_of_active_formatting_elements.entries().at(index);
 
-    if (!m_stack_of_open_elements.contains(*entry))
+    // 6. If entry is neither a marker nor an element that is also in the stack of open elements, go to the step labeled rewind.
+    if (!entry->is_marker() && !m_stack_of_open_elements.contains(*entry->element))
         goto Rewind;
 
 Advance:
+    // 7. Advance: Let entry be the element one later than entry in the list of active formatting elements.
     ++index;
-    entry = m_list_of_active_formatting_elements.entries().at(index).element;
-    VERIFY(entry);
+    entry = &m_list_of_active_formatting_elements.entries().at(index);
 
 Create:
+    // 8. Create: Insert an HTML element for the token for which the element entry was created, to obtain new element.
+    VERIFY(!entry->is_marker());
+
     // FIXME: Hold on to the real token!
-    auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->local_name()));
+    auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->element->local_name()));
 
-    m_list_of_active_formatting_elements.entries().at(index).element = *new_element;
+    // 9. Replace the entry for entry in the list with an entry for new element.
+    m_list_of_active_formatting_elements.entries().at(index).element = new_element;
 
-    if (index != (ssize_t)m_list_of_active_formatting_elements.entries().size() - 1)
+    // 10. If the entry for new element in the list of active formatting elements is not the last entry in the list, return to the step labeled advance.
+    if (index != m_list_of_active_formatting_elements.entries().size() - 1)
         goto Advance;
 }
 
