@@ -21,7 +21,7 @@ install() {
     if command -v convert >/dev/null; then
         run convert "app.ico[0]" app-16x16.png
         run convert "app.ico[1]" app-32x32.png
-        run objcopy --add-section serenity_icon_s="app-16x16.png" "${SERENITY_INSTALL_ROOT}/opt/Super_Mario/uMario"
-        run objcopy --add-section serenity_icon_m="app-32x32.png" "${SERENITY_INSTALL_ROOT}/opt/Super_Mario/uMario"
+        run $OBJCOPY --add-section serenity_icon_s="app-16x16.png" "${SERENITY_INSTALL_ROOT}/opt/Super_Mario/uMario"
+        run $OBJCOPY --add-section serenity_icon_m="app-32x32.png" "${SERENITY_INSTALL_ROOT}/opt/Super_Mario/uMario"
     fi
 }
