@@ -27,7 +27,10 @@ Splitter::Splitter(Orientation orientation)
     set_background_role(ColorRole::Button);
     set_layout<BoxLayout>(orientation);
     set_fill_with_background_color(true);
-    layout()->set_spacing(3);
+    if (m_orientation == Gfx::Orientation::Horizontal)
+        layout()->set_spacing(3);
+    else
+        layout()->set_spacing(4);
 }
 
 Splitter::~Splitter()

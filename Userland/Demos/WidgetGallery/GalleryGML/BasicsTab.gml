@@ -11,7 +11,9 @@
         }
 
         @GUI::HorizontalSplitter {
-            layout: @GUI::HorizontalBoxLayout {}
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 4
+            }
 
             @GUI::Frame {
                 name: "label_frame"
