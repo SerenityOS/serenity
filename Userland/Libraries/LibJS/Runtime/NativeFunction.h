@@ -1,12 +1,15 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/Function.h>
+#include <AK/Optional.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionObject.h>
 
@@ -35,6 +38,9 @@ public:
     virtual bool has_constructor() const override { return false; }
     virtual Realm* realm() const override { return m_realm; }
 
+    Optional<FlyString> const& initial_name() const { return m_initial_name; }
+    void set_initial_name(Badge<FunctionObject>, FlyString initial_name) { m_initial_name = move(initial_name); }
+
 protected:
     NativeFunction(FlyString name, Object& prototype);
     explicit NativeFunction(Object& prototype);
@@ -43,6 +49,7 @@ private:
     virtual bool is_native_function() const final { return true; }
 
     FlyString m_name;
+    Optional<FlyString> m_initial_name; // [[InitialName]]
     Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> m_native_function;
     Realm* m_realm { nullptr };
 };

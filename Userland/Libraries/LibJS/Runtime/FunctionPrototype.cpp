@@ -155,8 +155,12 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     }
 
     // 3. If func is a built-in function object, return an implementation-defined String source code representation of func. The representation must have the syntax of a NativeFunction. Additionally, if func has an [[InitialName]] internal slot and func.[[InitialName]] is a String, the portion of the returned String that would be matched by NativeFunctionAccessor[opt] PropertyName must be the value of func.[[InitialName]].
-    if (is<NativeFunction>(function))
-        return js_string(vm, String::formatted("function {}() {{ [native code] }}", static_cast<NativeFunction&>(function).name()));
+    if (is<NativeFunction>(function)) {
+        // NOTE: once we remove name(), the fallback here can simply be an empty string.
+        auto const& native_function = static_cast<NativeFunction&>(function);
+        auto const name = native_function.initial_name().value_or(native_function.name());
+        return js_string(vm, String::formatted("function {}() {{ [native code] }}", name));
+    }
 
     // 4. If Type(func) is Object and IsCallable(func) is true, return an implementation-defined String source code representation of func. The representation must have the syntax of a NativeFunction.
     // NOTE: ProxyObject, BoundFunction, WrappedFunction
