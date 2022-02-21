@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Base64.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <LibCore/ConfigFile.h>
@@ -345,19 +346,34 @@ Singleton<DefaultRootCACertificates> DefaultRootCACertificates::s_the;
 DefaultRootCACertificates::DefaultRootCACertificates()
 {
     // FIXME: This might not be the best format, find a better way to represent CA certificates.
-    auto config = Core::ConfigFile::open_for_system("ca_certs").release_value_but_fixme_should_propagate_errors();
-    auto now = Core::DateTime::now();
-    auto last_year = Core::DateTime::create(now.year() - 1);
-    auto next_year = Core::DateTime::create(now.year() + 1);
-    for (auto& entity : config->groups()) {
-        Certificate cert;
-        cert.subject.subject = entity;
-        cert.issuer.subject = config->read_entry(entity, "issuer_subject", entity);
-        cert.subject.country = config->read_entry(entity, "country");
-        cert.not_before = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_before", "")).value_or(last_year);
-        cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
-        m_ca_certificates.append(move(cert));
+    auto config_result = Core::ConfigFile::open_for_system("ca_certs");
+    if (config_result.is_error()) {
+        dbgln("Failed to load CA Certificates: {}", config_result.error());
+        return;
     }
+    auto config = config_result.release_value();
+
+    for (auto& entity : config->groups()) {
+        for (auto& subject : config->keys(entity)) {
+            auto certificate_base64 = config->read_entry(entity, subject);
+            auto certificate_data_result = decode_base64(certificate_base64);
+            if (certificate_data_result.is_error()) {
+                dbgln("Skipping CA Certificate {} {}: out of memory", entity, subject);
+                continue;
+            }
+            auto certificate_data = certificate_data_result.release_value();
+            auto certificate_result = Certificate::parse_asn1(certificate_data.bytes());
+            // If the certificate does not parse it is likely using elliptic curve keys/signatures, which are not
+            // supported right now. Currently, ca_certs.ini should only contain certificates with RSA keys/signatures.
+            if (!certificate_result.has_value()) {
+                dbgln("Skipping CA Certificate {} {}: unable to parse", entity, subject);
+                continue;
+            }
+            auto certificate = certificate_result.release_value();
+            m_ca_certificates.append(move(certificate));
+        }
+    }
+
     dbgln("Loaded {} CA Certificates", m_ca_certificates.size());
 }
 }
