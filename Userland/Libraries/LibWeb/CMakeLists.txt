@@ -15,6 +15,7 @@ set(SOURCES
     Bindings/Wrappable.cpp
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp
+    CSS/Angle.cpp
     CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
     CSS/CSSImportRule.cpp

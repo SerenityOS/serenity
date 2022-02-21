@@ -8,6 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/Variant.h>
+#include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Length.h>
 
 namespace Web::CSS {
@@ -80,7 +81,7 @@ public:
         return m_value.template get<Percentage>();
     }
 
-    virtual T resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, [[maybe_unused]] T const& reference_value) const
+    virtual T resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, [[maybe_unused]] Layout::Node const&, [[maybe_unused]] T const& reference_value) const
     {
         VERIFY_NOT_REACHED();
     }
@@ -151,6 +152,14 @@ bool operator==(Percentage const& percentage, PercentageOr<T> const& percentage_
     return percentage == percentage_or;
 }
 
+class AnglePercentage : public PercentageOr<Angle> {
+public:
+    using PercentageOr<Angle>::PercentageOr;
+
+    bool is_angle() const { return is_t(); }
+    Angle const& angle() const { return get_t(); }
+    virtual Angle resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Angle const& reference_value) const override;
+};
 class LengthPercentage : public PercentageOr<Length> {
 public:
     using PercentageOr<Length>::PercentageOr;
@@ -171,6 +180,13 @@ struct AK::Formatter<Web::CSS::Percentage> : Formatter<StringView> {
 };
 
 template<>
+struct AK::Formatter<Web::CSS::AnglePercentage> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::AnglePercentage const& angle_percentage)
+    {
+        return Formatter<StringView>::format(builder, angle_percentage.to_string());
+    }
+};
+
 struct AK::Formatter<Web::CSS::LengthPercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::LengthPercentage const& length_percentage)
     {
