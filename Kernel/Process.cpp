@@ -606,7 +606,7 @@ void Process::finalize()
     {
         // FIXME: PID/TID BUG
         if (auto parent_thread = Thread::from_tid(ppid().value())) {
-            if ((parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
+            if (parent_thread->process().is_user_process() && (parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
                 parent_thread->send_signal(SIGCHLD, this);
         }
     }
