@@ -612,7 +612,6 @@ void BlockFormattingContext::layout_floating_child(Box const& box, BlockContaine
                 fits_on_line = (wanted_x + box_state.content_width + box_state.padding_right + box_state.border_right + box_state.margin_right) <= containing_block_content_width;
             } else {
                 auto previous_left_border_edge = previous_box_state.offset.x()
-                    - previous_box_state.content_width
                     - previous_box_state.padding_left
                     - previous_box_state.border_left
                     - margin_collapsed_with_previous;
