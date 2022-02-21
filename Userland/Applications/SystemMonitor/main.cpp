@@ -124,6 +124,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (auto result = Core::System::unveil("/usr/local/lib", "r"); result.is_error() && result.error().code() != ENOENT)
         return result.release_error();
 
+    // This file is only accesible when running as root
+    if (auto result = Core::System::unveil("/boot/Kernel.debug", "r"); result.is_error() && result.error().code() != EACCES)
+        return result.release_error();
+
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
     TRY(Core::System::unveil("/bin/Inspector", "rx"));
     TRY(Core::System::unveil(nullptr, nullptr));
