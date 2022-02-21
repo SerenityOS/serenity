@@ -90,6 +90,8 @@ public:
     ExceptionOr<NonnullRefPtr<Node>> pre_remove(NonnullRefPtr<Node>);
 
     ExceptionOr<NonnullRefPtr<Node>> append_child(NonnullRefPtr<Node>);
+    ExceptionOr<NonnullRefPtr<Node>> remove_child(NonnullRefPtr<Node>);
+
     void insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool suppress_observers = false);
     void remove(bool suppress_observers = false);
     void remove_all_children(bool suppress_observers = false);

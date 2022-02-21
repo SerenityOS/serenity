@@ -348,6 +348,12 @@ ExceptionOr<NonnullRefPtr<Node>> Node::pre_insert(NonnullRefPtr<Node> node, RefP
     return node;
 }
 
+// https://dom.spec.whatwg.org/#dom-node-removechild
+ExceptionOr<NonnullRefPtr<Node>> Node::remove_child(NonnullRefPtr<Node> child)
+{
+    return pre_remove(child);
+}
+
 // https://dom.spec.whatwg.org/#concept-node-pre-remove
 ExceptionOr<NonnullRefPtr<Node>> Node::pre_remove(NonnullRefPtr<Node> child)
 {
@@ -383,7 +389,7 @@ void Node::remove(bool suppress_observers)
     // FIXME: Let oldPreviousSibling be node’s previous sibling. (Currently unused so not included)
     // FIXME: Let oldNextSibling be node’s next sibling. (Currently unused so not included)
 
-    parent->remove_child(*this);
+    parent->TreeNode::remove_child(*this);
 
     // FIXME: If node is assigned, then run assign slottables for node’s assigned slot.
 
