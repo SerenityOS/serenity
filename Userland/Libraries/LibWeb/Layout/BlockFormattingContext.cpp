@@ -572,22 +572,23 @@ void BlockFormattingContext::layout_floating_child(Box const& box, BlockContaine
     auto float_box = [&](FloatSide side, FloatSideData& side_data) {
         auto first_edge = [&](FormattingState::NodeState const& thing) { return side == FloatSide::Left ? thing.margin_left : thing.margin_right; };
         auto second_edge = [&](FormattingState::NodeState const& thing) { return side == FloatSide::Right ? thing.margin_left : thing.margin_right; };
-        auto first_edge_of_margin_box = [&](FormattingState::NodeState const& thing) { return side == FloatSide::Left ? thing.margin_box_left() : thing.margin_box_right(); };
+        auto edge_of_containing_block = [&] {
+            if (side == FloatSide::Left)
+                return box_state.margin_box_left();
+            return containing_block_content_width - box_state.margin_box_right() - box_state.content_width;
+        };
 
         // Then we float it to the left or right.
-        float x = box_state.offset.x();
 
         auto box_in_root_rect = margin_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
         float y_in_root = box_in_root_rect.y();
 
+        float x = 0;
         float y = box_state.offset.y();
 
         if (side_data.boxes.is_empty()) {
             // This is the first floating box on this side. Go all the way to the edge.
-            if (side == FloatSide::Left)
-                x = box_state.margin_box_left();
-            else
-                x = containing_block_content_width - box_state.margin_box_right() - box_state.content_width;
+            x = edge_of_containing_block();
             side_data.y_offset = 0;
         } else {
             auto& previous_box = side_data.boxes.last();
@@ -625,15 +626,15 @@ void BlockFormattingContext::layout_floating_child(Box const& box, BlockContaine
                     // This box touches another already floating box. Stack after others.
                     x = wanted_x;
                 } else {
-                    // This box does not touch another floating box, go all the way to the first edge.
-                    x = first_edge_of_margin_box(box_state);
+                    // This box does not touch another floating box, go all the way to the edge.
+                    x = edge_of_containing_block();
 
                     // Also, forget all previous boxes floated to this side while since they're no longer relevant.
                     side_data.boxes.clear();
                 }
             } else {
                 // We ran out of horizontal space on this "float line", and need to break.
-                x = first_edge_of_margin_box(box_state);
+                x = edge_of_containing_block();
                 float lowest_border_edge = 0;
                 for (auto const& box : side_data.boxes) {
                     auto const& box_state = m_state.get(box);
