@@ -4306,6 +4306,10 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<S
             return CalculatedStyleValue::CalcValue { dimension.length() };
         if (dimension.is_percentage())
             return CalculatedStyleValue::CalcValue { dimension.percentage() };
+        if (dimension.is_resolution()) {
+            // Resolution is not allowed in calc()
+            return {};
+        }
         VERIFY_NOT_REACHED();
     }
 
