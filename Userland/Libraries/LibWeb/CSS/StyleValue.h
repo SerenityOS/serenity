@@ -29,6 +29,7 @@
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/Resolution.h>
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/ImageResource.h>
@@ -310,6 +311,7 @@ public:
         Overflow,
         Percentage,
         Position,
+        Resolution,
         String,
         TextDecoration,
         Transformation,
@@ -343,6 +345,7 @@ public:
     bool is_overflow() const { return type() == Type::Overflow; }
     bool is_percentage() const { return type() == Type::Percentage; }
     bool is_position() const { return type() == Type::Position; }
+    bool is_resolution() const { return type() == Type::Resolution; }
     bool is_string() const { return type() == Type::String; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
     bool is_transformation() const { return type() == Type::Transformation; }
@@ -375,6 +378,7 @@ public:
     OverflowStyleValue const& as_overflow() const;
     PercentageStyleValue const& as_percentage() const;
     PositionStyleValue const& as_position() const;
+    ResolutionStyleValue const& as_resolution() const;
     StringStyleValue const& as_string() const;
     TextDecorationStyleValue const& as_text_decoration() const;
     TransformationStyleValue const& as_transformation() const;
@@ -405,6 +409,7 @@ public:
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
     PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
+    ResolutionStyleValue& as_resolution() { return const_cast<ResolutionStyleValue&>(const_cast<StyleValue const&>(*this).as_resolution()); }
     StringStyleValue& as_string() { return const_cast<StringStyleValue&>(const_cast<StyleValue const&>(*this).as_string()); }
     TextDecorationStyleValue& as_text_decoration() { return const_cast<TextDecorationStyleValue&>(const_cast<StyleValue const&>(*this).as_text_decoration()); }
     TransformationStyleValue& as_transformation() { return const_cast<TransformationStyleValue&>(const_cast<StyleValue const&>(*this).as_transformation()); }
@@ -1365,6 +1370,35 @@ private:
     LengthPercentage m_offset_x;
     PositionEdge m_edge_y;
     LengthPercentage m_offset_y;
+};
+
+class ResolutionStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<ResolutionStyleValue> create(Resolution resolution)
+    {
+        return adopt_ref(*new ResolutionStyleValue(move(resolution)));
+    }
+    virtual ~ResolutionStyleValue() override { }
+
+    Resolution const& resolution() const { return m_resolution; }
+
+    virtual String to_string() const override { return m_resolution.to_string(); }
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_resolution == static_cast<ResolutionStyleValue const&>(other).m_resolution;
+    }
+
+private:
+    explicit ResolutionStyleValue(Resolution resolution)
+        : StyleValue(Type::Resolution)
+        , m_resolution(move(resolution))
+    {
+    }
+
+    Resolution m_resolution;
 };
 
 class StringStyleValue : public StyleValue {

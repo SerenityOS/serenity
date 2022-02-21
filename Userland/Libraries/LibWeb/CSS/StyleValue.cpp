@@ -165,6 +165,12 @@ PositionStyleValue const& StyleValue::as_position() const
     return static_cast<PositionStyleValue const&>(*this);
 }
 
+ResolutionStyleValue const& StyleValue::as_resolution() const
+{
+    VERIFY(is_resolution());
+    return static_cast<ResolutionStyleValue const&>(*this);
+}
+
 StringStyleValue const& StyleValue::as_string() const
 {
     VERIFY(is_string());
