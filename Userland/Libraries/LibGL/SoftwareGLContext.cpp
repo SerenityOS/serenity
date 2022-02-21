@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1931,20 +1932,10 @@ void SoftwareGLContext::get_floating_point(GLenum pname, T* params)
     };
     switch (pname) {
     case GL_MODELVIEW_MATRIX:
-        if (m_current_matrix_mode == GL_MODELVIEW)
-            flatten_and_assign_matrix(m_model_view_matrix);
-        else if (m_model_view_matrix_stack.is_empty())
-            flatten_and_assign_matrix(FloatMatrix4x4::identity());
-        else
-            flatten_and_assign_matrix(m_model_view_matrix_stack.last());
+        flatten_and_assign_matrix(m_model_view_matrix);
         return;
     case GL_PROJECTION_MATRIX:
-        if (m_current_matrix_mode == GL_PROJECTION)
-            flatten_and_assign_matrix(m_projection_matrix);
-        else if (m_projection_matrix_stack.is_empty())
-            flatten_and_assign_matrix(FloatMatrix4x4::identity());
-        else
-            flatten_and_assign_matrix(m_projection_matrix_stack.last());
+        flatten_and_assign_matrix(m_projection_matrix);
         return;
     }
 
