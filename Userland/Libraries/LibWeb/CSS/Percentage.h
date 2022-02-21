@@ -11,6 +11,7 @@
 #include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
+#include <LibWeb/CSS/Time.h>
 
 namespace Web::CSS {
 
@@ -180,6 +181,15 @@ public:
     virtual Length resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Length const& reference_value) const override;
 };
 
+class TimePercentage : public PercentageOr<Time> {
+public:
+    using PercentageOr<Time>::PercentageOr;
+
+    bool is_time() const { return is_t(); }
+    Time const& time() const { return get_t(); }
+    virtual Time resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Time const& reference_value) const override;
+};
+
 }
 
 template<>
@@ -211,5 +221,13 @@ struct AK::Formatter<Web::CSS::LengthPercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::LengthPercentage const& length_percentage)
     {
         return Formatter<StringView>::format(builder, length_percentage.to_string());
+    }
+};
+
+template<>
+struct AK::Formatter<Web::CSS::TimePercentage> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::TimePercentage const& time_percentage)
+    {
+        return Formatter<StringView>::format(builder, time_percentage.to_string());
     }
 };

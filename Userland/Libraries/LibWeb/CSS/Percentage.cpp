@@ -24,4 +24,9 @@ Length LengthPercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> 
     return calculated->resolve_length_percentage(layout_node, reference_value)->resolved(layout_node, reference_value);
 }
 
+Time TimePercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const& layout_node, Time const& reference_value) const
+{
+    return calculated->resolve_time_percentage(reference_value)->resolved(layout_node, reference_value);
+}
+
 }

@@ -4310,6 +4310,8 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<S
             // Resolution is not allowed in calc()
             return {};
         }
+        if (dimension.is_time())
+            return CalculatedStyleValue::CalcValue { dimension.time() };
         VERIFY_NOT_REACHED();
     }
 
