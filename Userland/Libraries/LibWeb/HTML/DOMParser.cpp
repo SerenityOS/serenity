@@ -34,11 +34,11 @@ NonnullRefPtr<DOM::Document> DOMParser::parse_from_string(String const& string, 
         // 2. Create an HTML parser parser, associated with document.
         // 3. Place string into the input stream for parser. The encoding confidence is irrelevant.
         // FIXME: We don't have the concept of encoding confidence yet.
-        HTMLParser parser(document, string, "UTF-8");
+        auto parser = HTMLParser::create(document, string, "UTF-8");
 
         // 4. Start parser and let it run until it has consumed all the characters just inserted into the input stream.
         // FIXME: This is to match the default URL. Instead, pass in this's relevant global object's associated Document's URL.
-        parser.run("about:blank");
+        parser->run("about:blank");
     } else {
         // -> Otherwise
         // FIXME: 1. Create an XML parser parse, associated with document, and with XML scripting support disabled.

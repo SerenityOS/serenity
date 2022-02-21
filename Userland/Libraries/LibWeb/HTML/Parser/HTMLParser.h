@@ -41,15 +41,15 @@ namespace Web::HTML {
 
 RefPtr<DOM::Document> parse_html_document(StringView, const AK::URL&, const String& encoding);
 
-class HTMLParser {
+class HTMLParser : public RefCounted<HTMLParser> {
     friend class HTMLTokenizer;
 
 public:
-    HTMLParser(DOM::Document&, StringView input, const String& encoding);
-    HTMLParser(DOM::Document&);
     ~HTMLParser();
 
-    static NonnullOwnPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, const ByteBuffer& input);
+    static NonnullRefPtr<HTMLParser> create_for_scripting(DOM::Document&);
+    static NonnullRefPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, ByteBuffer const& input);
+    static NonnullRefPtr<HTMLParser> create(DOM::Document&, StringView input, String const& encoding);
 
     void run();
     void run(const AK::URL&);
@@ -76,6 +76,9 @@ public:
     size_t script_nesting_level() const { return m_script_nesting_level; }
 
 private:
+    HTMLParser(DOM::Document&, StringView input, const String& encoding);
+    HTMLParser(DOM::Document&);
+
     const char* insertion_mode_name() const;
 
     DOM::QuirksMode which_quirks_mode(const HTMLToken&) const;

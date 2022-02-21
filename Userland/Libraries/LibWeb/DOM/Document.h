@@ -313,6 +313,9 @@ public:
 
     bool has_focus() const;
 
+    void set_parser(Badge<HTML::HTMLParser>, HTML::HTMLParser&);
+    void detach_parser(Badge<HTML::HTMLParser>);
+
 private:
     explicit Document(const AK::URL&);
 
@@ -358,7 +361,7 @@ private:
     RefPtr<Core::Timer> m_style_update_timer;
     RefPtr<Core::Timer> m_layout_update_timer;
 
-    OwnPtr<HTML::HTMLParser> m_parser;
+    RefPtr<HTML::HTMLParser> m_parser;
     bool m_active_parser_was_aborted { false };
 
     String m_source;

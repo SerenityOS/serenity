@@ -121,8 +121,8 @@ static bool is_html_integration_point(DOM::Element const& element)
 RefPtr<DOM::Document> parse_html_document(StringView data, const AK::URL& url, const String& encoding)
 {
     auto document = DOM::Document::create(url);
-    HTMLParser parser(document, data, encoding);
-    parser.run(url);
+    auto parser = HTMLParser::create(document, data, encoding);
+    parser->run(url);
     return document;
 }
 
@@ -131,6 +131,7 @@ HTMLParser::HTMLParser(DOM::Document& document, StringView input, const String& 
     , m_document(document)
 {
     m_tokenizer.set_parser({}, *this);
+    m_document->set_parser({}, *this);
     m_document->set_should_invalidate_styles_on_attribute_changes(false);
     auto standardized_encoding = TextCodec::get_standardized_encoding(encoding);
     VERIFY(standardized_encoding.has_value());
@@ -140,6 +141,7 @@ HTMLParser::HTMLParser(DOM::Document& document, StringView input, const String& 
 HTMLParser::HTMLParser(DOM::Document& document)
     : m_document(document)
 {
+    m_document->set_parser({}, *this);
     m_tokenizer.set_parser({}, *this);
 }
 
@@ -201,6 +203,7 @@ void HTMLParser::run(const AK::URL& url)
     m_document->set_source(m_tokenizer.source());
     run();
     the_end();
+    m_document->detach_parser({});
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#the-end
@@ -3180,44 +3183,44 @@ DOM::Document& HTMLParser::document()
 NonnullRefPtrVector<DOM::Node> HTMLParser::parse_html_fragment(DOM::Element& context_element, StringView markup)
 {
     auto temp_document = DOM::Document::create();
-    HTMLParser parser(*temp_document, markup, "utf-8");
-    parser.m_context_element = context_element;
-    parser.m_parsing_fragment = true;
-    parser.document().set_quirks_mode(context_element.document().mode());
+    auto parser = HTMLParser::create(*temp_document, markup, "utf-8");
+    parser->m_context_element = context_element;
+    parser->m_parsing_fragment = true;
+    parser->document().set_quirks_mode(context_element.document().mode());
 
     if (context_element.local_name().is_one_of(HTML::TagNames::title, HTML::TagNames::textarea)) {
-        parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RCDATA);
+        parser->m_tokenizer.switch_to({}, HTMLTokenizer::State::RCDATA);
     } else if (context_element.local_name().is_one_of(HTML::TagNames::style, HTML::TagNames::xmp, HTML::TagNames::iframe, HTML::TagNames::noembed, HTML::TagNames::noframes)) {
-        parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
+        parser->m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
     } else if (context_element.local_name().is_one_of(HTML::TagNames::script)) {
-        parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::ScriptData);
+        parser->m_tokenizer.switch_to({}, HTMLTokenizer::State::ScriptData);
     } else if (context_element.local_name().is_one_of(HTML::TagNames::noscript)) {
         if (context_element.document().is_scripting_enabled())
-            parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
+            parser->m_tokenizer.switch_to({}, HTMLTokenizer::State::RAWTEXT);
     } else if (context_element.local_name().is_one_of(HTML::TagNames::plaintext)) {
-        parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::PLAINTEXT);
+        parser->m_tokenizer.switch_to({}, HTMLTokenizer::State::PLAINTEXT);
     }
 
     auto root = create_element(context_element.document(), HTML::TagNames::html, Namespace::HTML);
-    parser.document().append_child(root);
-    parser.m_stack_of_open_elements.push(root);
+    parser->document().append_child(root);
+    parser->m_stack_of_open_elements.push(root);
 
     if (context_element.local_name() == HTML::TagNames::template_) {
-        parser.m_stack_of_template_insertion_modes.append(InsertionMode::InTemplate);
+        parser->m_stack_of_template_insertion_modes.append(InsertionMode::InTemplate);
     }
 
     // FIXME: Create a start tag token whose name is the local name of context and whose attributes are the attributes of context.
 
-    parser.reset_the_insertion_mode_appropriately();
+    parser->reset_the_insertion_mode_appropriately();
 
     for (auto* form_candidate = &context_element; form_candidate; form_candidate = form_candidate->parent_element()) {
         if (is<HTMLFormElement>(*form_candidate)) {
-            parser.m_form_element = verify_cast<HTMLFormElement>(*form_candidate);
+            parser->m_form_element = verify_cast<HTMLFormElement>(*form_candidate);
             break;
         }
     }
 
-    parser.run(context_element.document().url());
+    parser->run(context_element.document().url());
 
     NonnullRefPtrVector<DOM::Node> children;
     while (RefPtr<DOM::Node> child = root->first_child()) {
@@ -3228,13 +3231,23 @@ NonnullRefPtrVector<DOM::Node> HTMLParser::parse_html_fragment(DOM::Element& con
     return children;
 }
 
-NonnullOwnPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, const ByteBuffer& input)
+NonnullRefPtr<HTMLParser> HTMLParser::create_for_scripting(DOM::Document& document)
+{
+    return adopt_ref(*new HTMLParser(document));
+}
+
+NonnullRefPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, const ByteBuffer& input)
 {
     if (document.has_encoding())
-        return make<HTMLParser>(document, input, document.encoding().value());
+        return adopt_ref(*new HTMLParser(document, input, document.encoding().value()));
     auto encoding = run_encoding_sniffing_algorithm(document, input);
     dbgln("The encoding sniffing algorithm returned encoding '{}'", encoding);
-    return make<HTMLParser>(document, input, encoding);
+    return adopt_ref(*new HTMLParser(document, input, encoding));
+}
+
+NonnullRefPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringView input, String const& encoding)
+{
+    return adopt_ref(*new HTMLParser(document, input, encoding));
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#html-fragment-serialisation-algorithm

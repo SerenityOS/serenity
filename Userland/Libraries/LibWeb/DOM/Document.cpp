@@ -256,7 +256,7 @@ ExceptionOr<Document*> Document::open(String const&, String const&)
     set_quirks_mode(QuirksMode::No);
 
     // 16. Create a new HTML parser and associate it with document. This is a script-created parser (meaning that it can be closed by the document.open() and document.close() methods, and that the tokenizer will wait for an explicit call to document.close() before emitting an end-of-file token). The encoding confidence is irrelevant.
-    m_parser = make<HTML::HTMLParser>(*this);
+    m_parser = HTML::HTMLParser::create_for_scripting(*this);
 
     // 17. Set the insertion point to point at just before the end of the input stream (which at this point will be empty).
     m_parser->tokenizer().update_insertion_point();
@@ -1322,6 +1322,16 @@ bool Document::has_focus() const
 {
     // FIXME: Return whether we actually have focus.
     return true;
+}
+
+void Document::set_parser(Badge<HTML::HTMLParser>, HTML::HTMLParser& parser)
+{
+    m_parser = parser;
+}
+
+void Document::detach_parser(Badge<HTML::HTMLParser>)
+{
+    m_parser = nullptr;
 }
 
 }
