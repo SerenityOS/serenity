@@ -65,13 +65,13 @@ Length Length::resolved(Layout::Node const& layout_node) const
     return *this;
 }
 
-float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const
+float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
 {
     switch (m_type) {
     case Type::Ex:
         return m_value * font_metrics.x_height;
     case Type::Em:
-        return m_value * font_metrics.size;
+        return m_value * font_size;
     case Type::Ch:
         // FIXME: Use layout_node.font().glyph_height() when writing-mode is not horizontal-tb (it has to be implemented first)
         return m_value * (font_metrics.glyph_width + font_metrics.glyph_spacing);
@@ -101,7 +101,7 @@ float Length::to_px(Layout::Node const& layout_node) const
     auto* root_element = layout_node.document().document_element();
     if (!root_element || !root_element->layout_node())
         return 0;
-    return to_px(viewport_rect, layout_node.font().metrics('M'), root_element->layout_node()->font().presentation_size());
+    return to_px(viewport_rect, layout_node.font().metrics('M'), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size());
 }
 
 const char* Length::unit_name() const

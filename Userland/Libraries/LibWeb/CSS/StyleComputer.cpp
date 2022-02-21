@@ -770,7 +770,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
                 if (value->is_length()) {
                     auto length = static_cast<LengthStyleValue const&>(*value).to_length();
                     if (length.is_absolute() || length.is_relative())
-                        parent_font_size = length.to_px(viewport_rect, font_metrics, root_font_size);
+                        parent_font_size = length.to_px(viewport_rect, font_metrics, size, root_font_size);
                 }
             }
             maybe_length = Length::make_px(percentage.as_fraction() * parent_font_size);
@@ -785,7 +785,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             // FIXME: Support font-size: calc(...)
             //        Theoretically we can do this now, but to resolve it we need a layout_node which we might not have. :^(
             if (!maybe_length->is_calculated()) {
-                auto px = maybe_length.value().to_px(viewport_rect, font_metrics, root_font_size);
+                auto px = maybe_length.value().to_px(viewport_rect, font_metrics, size, root_font_size);
                 if (px != 0)
                     size = px;
             }
@@ -874,6 +874,9 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     FontCache::the().set(font_selector, *found_font);
 
+    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(size)));
+    style.set_property(CSS::PropertyID::FontWeight, NumericStyleValue::create_integer(weight));
+
     style.set_computed_font(found_font.release_nonnull());
 }
 
@@ -883,13 +886,16 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
     auto font_metrics = style.computed_font().metrics('M');
     // FIXME: Get the root element font.
     float root_font_size = 10;
+    float font_size = style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
 
     for (auto& value_slot : style.m_property_values) {
         if (!value_slot)
             continue;
         value_slot->visit_lengths([&](Length& length) {
+            if (length.is_px())
+                return;
             if (length.is_absolute() || length.is_relative()) {
-                auto px = length.to_px(viewport_rect, font_metrics, root_font_size);
+                auto px = length.to_px(viewport_rect, font_metrics, font_size, root_font_size);
                 length = Length::make_px(px);
             }
         });
