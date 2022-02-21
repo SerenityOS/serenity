@@ -463,8 +463,25 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
         }
     }
 
-    // Just ignore the rest of the data for now.
     EXIT_SCOPE("Certificate::TBSCertificate");
+
+    // signature_algorithm
+    {
+        if (!parse_algorithm_identifier(certificate.signature_algorithm).has_value())
+            return {};
+    }
+
+    // signature_value
+    {
+        READ_OBJECT_OR_FAIL(BitString, const BitmapView, value, "Certificate");
+        auto signature_data_result = ByteBuffer::copy(value.data(), value.size_in_bytes());
+        if (signature_data_result.is_error()) {
+            dbgln("Certificate::signature_value: out of memory");
+            return {};
+        }
+        certificate.signature_value = signature_data_result.release_value();
+    }
+
     EXIT_SCOPE("Certificate");
 
     dbgln_if(TLS_DEBUG, "Certificate issued for {} by {}", certificate.subject.subject, certificate.issuer.subject);

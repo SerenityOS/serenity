@@ -53,6 +53,8 @@ public:
     ByteBuffer fingerprint {};
     ByteBuffer der {};
     ByteBuffer data {};
+    CertificateKeyAlgorithm signature_algorithm { CertificateKeyAlgorithm::Unsupported };
+    ByteBuffer signature_value {};
 
     static Optional<Certificate> parse_asn1(ReadonlyBytes, bool client_cert = false);
 
