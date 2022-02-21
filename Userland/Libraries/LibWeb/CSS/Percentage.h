@@ -9,6 +9,7 @@
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibWeb/CSS/Angle.h>
+#include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 
 namespace Web::CSS {
@@ -160,6 +161,16 @@ public:
     Angle const& angle() const { return get_t(); }
     virtual Angle resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Angle const& reference_value) const override;
 };
+
+class FrequencyPercentage : public PercentageOr<Frequency> {
+public:
+    using PercentageOr<Frequency>::PercentageOr;
+
+    bool is_frequency() const { return is_t(); }
+    Frequency const& frequency() const { return get_t(); }
+    virtual Frequency resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Frequency const& reference_value) const override;
+};
+
 class LengthPercentage : public PercentageOr<Length> {
 public:
     using PercentageOr<Length>::PercentageOr;
@@ -187,6 +198,15 @@ struct AK::Formatter<Web::CSS::AnglePercentage> : Formatter<StringView> {
     }
 };
 
+template<>
+struct AK::Formatter<Web::CSS::FrequencyPercentage> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::FrequencyPercentage const& frequency_percentage)
+    {
+        return Formatter<StringView>::format(builder, frequency_percentage.to_string());
+    }
+};
+
+template<>
 struct AK::Formatter<Web::CSS::LengthPercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::LengthPercentage const& length_percentage)
     {

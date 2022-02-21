@@ -4300,6 +4300,8 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<S
 
         if (dimension.is_angle())
             return CalculatedStyleValue::CalcValue { dimension.angle() };
+        if (dimension.is_frequency())
+            return CalculatedStyleValue::CalcValue { dimension.frequency() };
         if (dimension.is_length())
             return CalculatedStyleValue::CalcValue { dimension.length() };
         if (dimension.is_percentage())

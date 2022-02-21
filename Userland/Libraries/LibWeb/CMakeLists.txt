@@ -28,6 +28,7 @@ set(SOURCES
     CSS/CSSSupportsRule.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Display.cpp
+    CSS/Frequency.cpp
     CSS/Length.cpp
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
