@@ -48,6 +48,8 @@ Length Length::make_calculated(NonnullRefPtr<CalculatedStyleValue> calculated_st
 
 Length Length::percentage_of(Percentage const& percentage) const
 {
+    VERIFY(!is_calculated());
+
     if (is_auto()) {
         dbgln("Attempting to get percentage of an auto length, this seems wrong? But for now we just return the original length.");
         return *this;
@@ -102,6 +104,15 @@ float Length::to_px(Layout::Node const& layout_node) const
     if (!root_element || !root_element->layout_node())
         return 0;
     return to_px(viewport_rect, layout_node.font().metrics('M'), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size());
+}
+
+String Length::to_string() const
+{
+    if (is_calculated())
+        return m_calculated_style->to_string();
+    if (is_auto())
+        return "auto";
+    return String::formatted("{}{}", m_value, unit_name());
 }
 
 const char* Length::unit_name() const
