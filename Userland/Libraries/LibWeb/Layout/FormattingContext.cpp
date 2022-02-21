@@ -428,7 +428,7 @@ float FormattingContext::compute_height_for_replaced_element(FormattingState con
 void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_element(Box const& box)
 {
     auto& containing_block_state = m_state.get(*box.containing_block());
-    auto& box_state = m_state.ensure(box);
+    auto& box_state = m_state.get_mutable(box);
 
     auto width_of_containing_block = CSS::Length::make_px(containing_block_state.content_width);
     auto& computed_values = box.computed_values();
@@ -574,7 +574,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_replaced_element
     // The used value of 'width' is determined as for inline replaced elements.
     // FIXME: This const_cast is gross.
     const_cast<ReplacedBox&>(box).prepare_for_replaced_layout();
-    m_state.ensure(box).content_width = compute_width_for_replaced_element(m_state, box);
+    m_state.get_mutable(box).content_width = compute_width_for_replaced_element(m_state, box);
 }
 
 void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_element(Box const& box)
@@ -582,7 +582,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     auto& computed_values = box.computed_values();
     auto const& containing_block = *box.containing_block();
     auto const& containing_block_state = m_state.get(containing_block);
-    auto& box_state = m_state.ensure(box);
+    auto& box_state = m_state.get_mutable(box);
     auto width_of_containing_block = CSS::Length::make_px(containing_block_state.content_width);
     auto height_of_containing_block = CSS::Length::make_px(containing_block_state.content_height);
 
@@ -631,7 +631,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
     auto const& containing_block_state = m_state.get(*box.containing_block());
     auto width_of_containing_block = CSS::Length::make_px(containing_block_state.content_width);
     auto height_of_containing_block = CSS::Length::make_px(containing_block_state.content_height);
-    auto& box_state = m_state.ensure(box);
+    auto& box_state = m_state.get_mutable(box);
 
     auto specified_width = box.computed_values().width().has_value() ? box.computed_values().width()->resolved(box, width_of_containing_block).resolved(box) : CSS::Length::make_auto();
 
@@ -705,7 +705,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_replaced_elemen
 {
     // 10.6.5 Absolutely positioned, replaced elements
     // The used value of 'height' is determined as for inline replaced elements.
-    m_state.ensure(box).content_height = compute_height_for_replaced_element(m_state, box);
+    m_state.get_mutable(box).content_height = compute_height_for_replaced_element(m_state, box);
 }
 
 void FormattingContext::compute_position(Box const& box)
@@ -716,7 +716,7 @@ void FormattingContext::compute_position(Box const& box)
     if (box.computed_values().position() != CSS::Position::Relative)
         return;
 
-    auto& box_state = m_state.ensure(box);
+    auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
     float width_of_containing_block = m_state.get(*box.containing_block()).content_width;
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);

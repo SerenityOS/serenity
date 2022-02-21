@@ -12,7 +12,7 @@ namespace Web::Layout {
 LineBuilder::LineBuilder(InlineFormattingContext& context, FormattingState& formatting_state)
     : m_context(context)
     , m_formatting_state(formatting_state)
-    , m_containing_block_state(formatting_state.ensure(context.containing_block()))
+    , m_containing_block_state(formatting_state.get_mutable(context.containing_block()))
 {
     begin_new_line(false);
 }

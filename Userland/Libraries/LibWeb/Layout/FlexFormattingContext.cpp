@@ -34,7 +34,7 @@ static bool is_undefined_or_auto(Optional<CSS::LengthPercentage> const& length_p
 
 FlexFormattingContext::FlexFormattingContext(FormattingState& state, Box const& flex_container, FormattingContext* parent)
     : FormattingContext(Type::Flex, state, flex_container, parent)
-    , m_flex_container_state(m_state.ensure(flex_container))
+    , m_flex_container_state(m_state.get_mutable(flex_container))
     , m_flex_direction(flex_container.computed_values().flex_direction())
 {
 }
@@ -335,41 +335,41 @@ bool FlexFormattingContext::is_main_axis_margin_second_auto(Box const& box) cons
 void FlexFormattingContext::set_main_size(Box const& box, float size)
 {
     if (is_row_layout())
-        m_state.ensure(box).content_width = size;
+        m_state.get_mutable(box).content_width = size;
     else
-        m_state.ensure(box).content_height = size;
+        m_state.get_mutable(box).content_height = size;
 }
 
 void FlexFormattingContext::set_cross_size(Box const& box, float size)
 {
     if (is_row_layout())
-        m_state.ensure(box).content_height = size;
+        m_state.get_mutable(box).content_height = size;
     else
-        m_state.ensure(box).content_width = size;
+        m_state.get_mutable(box).content_width = size;
 }
 
 void FlexFormattingContext::set_offset(Box const& box, float main_offset, float cross_offset)
 {
     if (is_row_layout())
-        m_state.ensure(box).offset = Gfx::FloatPoint { main_offset, cross_offset };
+        m_state.get_mutable(box).offset = Gfx::FloatPoint { main_offset, cross_offset };
     else
-        m_state.ensure(box).offset = Gfx::FloatPoint { cross_offset, main_offset };
+        m_state.get_mutable(box).offset = Gfx::FloatPoint { cross_offset, main_offset };
 }
 
 void FlexFormattingContext::set_main_axis_first_margin(Box const& box, float margin)
 {
     if (is_row_layout())
-        m_state.ensure(box).margin_left = margin;
+        m_state.get_mutable(box).margin_left = margin;
     else
-        m_state.ensure(box).margin_top = margin;
+        m_state.get_mutable(box).margin_top = margin;
 }
 
 void FlexFormattingContext::set_main_axis_second_margin(Box const& box, float margin)
 {
     if (is_row_layout())
-        m_state.ensure(box).margin_right = margin;
+        m_state.get_mutable(box).margin_right = margin;
     else
-        m_state.ensure(box).margin_bottom = margin;
+        m_state.get_mutable(box).margin_bottom = margin;
 }
 
 float FlexFormattingContext::sum_of_margin_padding_border_in_main_axis(Box const& box) const

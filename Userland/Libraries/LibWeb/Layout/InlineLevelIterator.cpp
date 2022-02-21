@@ -30,7 +30,7 @@ void InlineLevelIterator::enter_node_with_box_model_metrics(Layout::NodeWithStyl
 
     // FIXME: It's really weird that *this* is where we assign box model metrics for these layout nodes..
 
-    auto& node_state = m_formatting_state.ensure(node);
+    auto& node_state = m_formatting_state.get_mutable(node);
     auto const& container_state = m_formatting_state.get(m_container);
     auto const& computed_values = node.computed_values();
 
@@ -51,7 +51,7 @@ void InlineLevelIterator::exit_node_with_box_model_metrics()
         m_extra_trailing_metrics = ExtraBoxMetrics {};
 
     auto& node = m_box_model_node_stack.last();
-    auto& node_state = m_formatting_state.ensure(node);
+    auto& node_state = m_formatting_state.get_mutable(node);
     auto const& container_state = m_formatting_state.get(m_container);
     auto const& computed_values = node.computed_values();
 

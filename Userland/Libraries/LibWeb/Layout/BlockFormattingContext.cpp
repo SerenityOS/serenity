@@ -90,7 +90,7 @@ void BlockFormattingContext::apply_transformations_to_children(Box const& box)
             }
         }
 
-        auto& child_box_state = m_state.ensure(child_box);
+        auto& child_box_state = m_state.get_mutable(child_box);
         auto untransformed_offset = child_box_state.offset;
         child_box_state.offset = Gfx::FloatPoint { untransformed_offset.x(), untransformed_offset.y() + transform_y_offset };
     });
@@ -228,7 +228,7 @@ void BlockFormattingContext::compute_width(Box const& box)
         }
     }
 
-    auto& box_state = m_state.ensure(box);
+    auto& box_state = m_state.get_mutable(box);
     box_state.content_width = used_width.to_px(box);
     box_state.margin_left = margin_left.to_px(box);
     box_state.margin_right = margin_right.to_px(box);
@@ -276,7 +276,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box)
         width = CSS::Length(min(max(result.preferred_minimum_width, available_width), result.preferred_width), CSS::Length::Type::Px);
     }
 
-    auto& box_state = m_state.ensure(box);
+    auto& box_state = m_state.get_mutable(box);
     box_state.content_width = width.to_px(box);
     box_state.margin_left = margin_left.to_px(box);
     box_state.margin_right = margin_right.to_px(box);
@@ -288,7 +288,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box)
 
 void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const& box)
 {
-    m_state.ensure(box).content_width = compute_width_for_replaced_element(m_state, box);
+    m_state.get_mutable(box).content_width = compute_width_for_replaced_element(m_state, box);
 }
 
 float BlockFormattingContext::compute_theoretical_height(FormattingState const& state, Box const& box)
@@ -335,7 +335,7 @@ void BlockFormattingContext::compute_height(Box const& box, FormattingState& sta
 
     // First, resolve the top/bottom parts of the surrounding box model.
 
-    auto& box_state = state.ensure(box);
+    auto& box_state = state.get_mutable(box);
 
     // FIXME: While negative values are generally allowed for margins, for now just ignore those for height calculation
     box_state.margin_top = max(computed_values.margin().top.resolved(box, width_of_containing_block_as_length).to_px(box), 0);
@@ -365,7 +365,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     float content_width = 0;
 
     block_container.for_each_child_of_type<Box>([&](Box& child_box) {
-        auto& box_state = m_state.ensure(child_box);
+        auto& box_state = m_state.get_mutable(child_box);
 
         if (child_box.is_absolutely_positioned()) {
             m_absolutely_positioned_boxes.append(child_box);
@@ -421,7 +421,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     if (layout_mode != LayoutMode::Default) {
         auto& width = block_container.computed_values().width();
         if (!width.has_value() || (width->is_length() && width->length().is_auto())) {
-            auto& block_container_state = m_state.ensure(block_container);
+            auto& block_container_state = m_state.get_mutable(block_container);
             block_container_state.content_width = content_width;
         }
     }
@@ -429,7 +429,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
 void BlockFormattingContext::compute_vertical_box_model_metrics(Box const& box, BlockContainer const& containing_block)
 {
-    auto& box_state = m_state.ensure(box);
+    auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
     auto width_of_containing_block = CSS::Length::make_px(m_state.get(containing_block).content_width);
 
@@ -443,7 +443,7 @@ void BlockFormattingContext::compute_vertical_box_model_metrics(Box const& box, 
 
 void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically(Box const& child_box, BlockContainer const& containing_block)
 {
-    auto& box_state = m_state.ensure(child_box);
+    auto& box_state = m_state.get_mutable(child_box);
     auto const& computed_values = child_box.computed_values();
 
     compute_vertical_box_model_metrics(child_box, containing_block);
@@ -510,7 +510,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
 
 void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontally(Box const& child_box, BlockContainer const& containing_block)
 {
-    auto& box_state = m_state.ensure(child_box);
+    auto& box_state = m_state.get_mutable(child_box);
     auto const& containing_block_state = m_state.get(containing_block);
 
     float x = 0;
@@ -528,7 +528,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     auto viewport_rect = root().browsing_context().viewport_rect();
 
     auto& icb = verify_cast<Layout::InitialContainingBlock>(root());
-    auto& icb_state = m_state.ensure(icb);
+    auto& icb_state = m_state.get_mutable(icb);
 
     VERIFY(!icb.children_are_inline());
     layout_block_level_children(root(), layout_mode);
@@ -558,7 +558,7 @@ void BlockFormattingContext::layout_floating_child(Box const& box, BlockContaine
 {
     VERIFY(box.is_floating());
 
-    auto& box_state = m_state.ensure(box);
+    auto& box_state = m_state.get_mutable(box);
     auto containing_block_content_width = m_state.get(containing_block).content_width;
 
     compute_width(box);
@@ -667,8 +667,8 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         return;
 
     auto& marker = *list_item_box.marker();
-    auto& marker_state = m_state.ensure(marker);
-    auto& list_item_state = m_state.ensure(list_item_box);
+    auto& marker_state = m_state.get_mutable(marker);
+    auto& list_item_state = m_state.get_mutable(list_item_box);
 
     int image_width = 0;
     int image_height = 0;

@@ -96,7 +96,7 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
         content_height += max_height;
     }
 
-    auto& containing_block_state = m_state.ensure(containing_block());
+    auto& containing_block_state = m_state.get_mutable(containing_block());
 
     if (layout_mode != LayoutMode::Default) {
         containing_block_state.content_width = max_line_width;
@@ -108,7 +108,7 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
 void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode layout_mode)
 {
     auto width_of_containing_block = CSS::Length::make_px(m_state.get(containing_block()).content_width);
-    auto& box_state = m_state.ensure(box);
+    auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
 
     box_state.margin_left = computed_values.margin().left.resolved(box, width_of_containing_block).to_px(box);
@@ -170,7 +170,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
 
 void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 {
-    auto& containing_block_state = m_state.ensure(containing_block());
+    auto& containing_block_state = m_state.get_mutable(containing_block());
     auto& line_boxes = containing_block_state.line_boxes;
     line_boxes.clear_with_capacity();
 

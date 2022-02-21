@@ -66,16 +66,14 @@ struct FormattingState {
 
     void commit();
 
-    NodeState& ensure(NodeWithStyleAndBoxModelMetrics const& box)
+    NodeState& get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
     {
         return *nodes.ensure(&box, [] { return make<NodeState>(); });
     }
 
     NodeState const& get(NodeWithStyleAndBoxModelMetrics const& box) const
     {
-        if (!nodes.contains(&box))
-            return const_cast<FormattingState&>(*this).ensure(box);
-        return *nodes.get(&box).value();
+        return const_cast<FormattingState&>(*this).get_mutable(box);
     }
 
     HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<NodeState>> nodes;

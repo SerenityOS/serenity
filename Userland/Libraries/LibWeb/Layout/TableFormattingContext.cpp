@@ -27,7 +27,7 @@ TableFormattingContext::~TableFormattingContext()
 
 void TableFormattingContext::run(Box const& box, LayoutMode)
 {
-    auto& box_state = m_state.ensure(box);
+    auto& box_state = m_state.get_mutable(box);
 
     compute_width(box);
 
@@ -35,7 +35,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
     float total_content_height = 0;
 
     box.for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
-        auto& row_group_box_state = m_state.ensure(row_group_box);
+        auto& row_group_box_state = m_state.get_mutable(row_group_box);
 
         compute_width(row_group_box);
         auto column_count = row_group_box.column_count();
@@ -50,7 +50,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
         float content_height = 0;
 
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
-            auto& row_state = m_state.ensure(row);
+            auto& row_state = m_state.get_mutable(row);
             row_state.offset = { 0, content_height };
             layout_row(row, column_widths);
             content_width = max(content_width, row_state.content_width);
@@ -75,12 +75,12 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
 
 void TableFormattingContext::calculate_column_widths(Box const& row, Vector<float>& column_widths)
 {
-    m_state.ensure(row);
+    m_state.get_mutable(row);
     size_t column_index = 0;
     auto* table = row.first_ancestor_of_type<TableBox>();
     bool use_auto_layout = !table || (!table->computed_values().width().has_value() || (table->computed_values().width()->is_length() && table->computed_values().width()->length().is_auto()));
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
-        auto& cell_state = m_state.ensure(cell);
+        auto& cell_state = m_state.get_mutable(cell);
         compute_width(cell);
         if (use_auto_layout) {
             (void)layout_inside(cell, LayoutMode::OnlyRequiredLineBreaks);
@@ -94,7 +94,7 @@ void TableFormattingContext::calculate_column_widths(Box const& row, Vector<floa
 
 void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_widths)
 {
-    auto& row_state = m_state.ensure(row);
+    auto& row_state = m_state.get_mutable(row);
     size_t column_index = 0;
     float tallest_cell_height = 0;
     float content_width = 0;
@@ -102,7 +102,7 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
     bool use_auto_layout = !table || (!table->computed_values().width().has_value() || (table->computed_values().width()->is_length() && table->computed_values().width()->length().is_auto()));
 
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
-        auto& cell_state = m_state.ensure(cell);
+        auto& cell_state = m_state.get_mutable(cell);
         cell_state.offset = row_state.offset.translated(content_width, 0);
 
         // Layout the cell contents a second time, now that we know its final width.
@@ -121,7 +121,7 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
     if (use_auto_layout) {
         row_state.content_width = content_width;
     } else {
-        auto& table_state = m_state.ensure(*table);
+        auto& table_state = m_state.get_mutable(*table);
         row_state.content_width = table_state.content_width;
     }
 

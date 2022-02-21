@@ -32,7 +32,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode)
             auto stroke_width = geometry_box.dom_node().stroke_width().value_or(0);
             bounding_box.inflate(stroke_width, stroke_width);
 
-            auto& geometry_box_state = m_state.ensure(geometry_box);
+            auto& geometry_box_state = m_state.get_mutable(geometry_box);
             geometry_box_state.offset = bounding_box.top_left();
             geometry_box_state.content_width = bounding_box.width();
             geometry_box_state.content_height = bounding_box.height();
