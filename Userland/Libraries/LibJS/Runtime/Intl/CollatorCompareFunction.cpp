@@ -26,6 +26,7 @@ void CollatorCompareFunction::initialize(GlobalObject& global_object)
 {
     auto& vm = global_object.vm();
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
+    define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 }
 
 // 10.3.3.2 CompareStrings ( collator, x, y ), https://tc39.es/ecma402/#sec-collator-comparestrings
