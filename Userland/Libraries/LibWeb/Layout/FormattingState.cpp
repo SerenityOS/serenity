@@ -40,7 +40,7 @@ void FormattingState::commit()
 Gfx::FloatRect margin_box_rect(Box const& box, FormattingState const& state)
 {
     auto const& box_state = state.get(box);
-    auto rect = Gfx::FloatRect { box_state.offset, { box_state.content_width, 0 } };
+    auto rect = Gfx::FloatRect { box_state.offset, { box_state.content_width, box_state.content_height } };
     rect.set_x(rect.x() - box_state.margin_box_left());
     rect.set_width(rect.width() + box_state.margin_box_left() + box_state.margin_box_right());
     rect.set_y(rect.y() - box_state.margin_box_top());
