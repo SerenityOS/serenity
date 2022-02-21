@@ -157,7 +157,7 @@ if [ "$(uname)" = "Darwin" ]; then
     SERENITY_AUDIO_BACKEND="-audiodev coreaudio,id=snd0"
 elif [ "$NATIVE_WINDOWS_QEMU" -eq "1" ]; then
     SERENITY_AUDIO_BACKEND="-audiodev dsound,id=snd0"
-elif "$SERENITY_QEMU_BIN" -audio-help 2>&1 | grep -- "-audiodev id=sdl" >/dev/null; then
+elif "$SERENITY_QEMU_BIN" -help 2>&1 | grep -- "-audiodev sdl" >/dev/null; then
     SERENITY_AUDIO_BACKEND="-audiodev sdl,id=snd0"
 else
     [ -z "$SERENITY_AUDIO_TIMER_PERIOD" ] && SERENITY_AUDIO_TIMER_PERIOD=2000
