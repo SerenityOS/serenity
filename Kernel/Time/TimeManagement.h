@@ -36,7 +36,7 @@ public:
     static bool is_initialized();
     static TimeManagement& the();
 
-    static bool is_valid_clock_id(clockid_t);
+    static ErrorOr<void> validate_clock_id(clockid_t);
     Time current_time(clockid_t) const;
     Time monotonic_time(TimePrecision = TimePrecision::Coarse) const;
     Time monotonic_time_raw() const
