@@ -27,8 +27,7 @@ ErrorOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timesp
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
-    if (!TimeManagement::is_valid_clock_id(clock_id))
-        return EINVAL;
+    TRY(TimeManagement::validate_clock_id(clock_id));
 
     auto ts = TimeManagement::the().current_time(clock_id).to_timespec();
     TRY(copy_to_user(user_ts, &ts));
@@ -75,8 +74,7 @@ ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_
         return EINVAL;
     }
 
-    if (!TimeManagement::is_valid_clock_id(params.clock_id))
-        return EINVAL;
+    TRY(TimeManagement::validate_clock_id(params.clock_id));
 
     bool was_interrupted;
     if (is_absolute) {
