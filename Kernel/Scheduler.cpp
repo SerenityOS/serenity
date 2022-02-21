@@ -304,6 +304,11 @@ void Scheduler::context_switch(Thread* thread)
     // switched from, and thread reflects Thread::current()
     enter_current(*from_thread);
     VERIFY(thread == Thread::current());
+
+    {
+        SpinlockLocker lock(thread->get_lock());
+        thread->dispatch_one_pending_signal();
+    }
 }
 
 void Scheduler::enter_current(Thread& prev_thread)
