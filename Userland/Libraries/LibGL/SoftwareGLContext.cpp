@@ -401,7 +401,7 @@ void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble botto
     if (m_current_matrix_mode == GL_PROJECTION)
         m_projection_matrix = m_projection_matrix * frustum;
     else if (m_current_matrix_mode == GL_MODELVIEW)
-        m_projection_matrix = m_model_view_matrix * frustum;
+        m_model_view_matrix = m_model_view_matrix * frustum;
     else if (m_current_matrix_mode == GL_TEXTURE)
         m_texture_matrix = m_texture_matrix * frustum;
     else
@@ -432,7 +432,7 @@ void SoftwareGLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom,
     if (m_current_matrix_mode == GL_PROJECTION)
         m_projection_matrix = m_projection_matrix * projection;
     else if (m_current_matrix_mode == GL_MODELVIEW)
-        m_projection_matrix = m_model_view_matrix * projection;
+        m_model_view_matrix = m_model_view_matrix * projection;
     else if (m_current_matrix_mode == GL_TEXTURE)
         m_texture_matrix = m_texture_matrix * projection;
     else
