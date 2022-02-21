@@ -9,8 +9,6 @@
 #include "WebContentConsoleClient.h"
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
-#include <LibJS/Parser.h>
-#include <LibJS/Script.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
