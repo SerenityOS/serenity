@@ -707,6 +707,7 @@ void Process::terminate_due_to_signal(u8 signal)
 
 ErrorOr<void> Process::send_signal(u8 signal, Process* sender)
 {
+    VERIFY(is_user_process());
     // Try to send it to the "obvious" main thread:
     auto receiver_thread = Thread::from_tid(pid().value());
     // If the main thread has died, there may still be other threads:

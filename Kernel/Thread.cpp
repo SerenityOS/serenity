@@ -721,6 +721,7 @@ u32 Thread::pending_signals_for_state() const
 void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 {
     VERIFY(signal < 32);
+    VERIFY(process().is_user_process());
     SpinlockLocker scheduler_lock(g_scheduler_lock);
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
