@@ -151,6 +151,25 @@ void Document::removed_last_ref()
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
 ExceptionOr<void> Document::write(Vector<String> const& strings)
 {
+    StringBuilder builder;
+    builder.join(""sv, strings);
+
+    return run_the_document_write_steps(builder.build());
+}
+
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
+ExceptionOr<void> Document::writeln(Vector<String> const& strings)
+{
+    StringBuilder builder;
+    builder.join(""sv, strings);
+    builder.append("\n"sv);
+
+    return run_the_document_write_steps(builder.build());
+}
+
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#document-write-steps
+ExceptionOr<void> Document::run_the_document_write_steps(String input)
+{
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException.
     if (doctype() && doctype()->name() == "xml")
         return DOM::InvalidStateError::create("write() called on XML document.");
@@ -174,28 +193,13 @@ ExceptionOr<void> Document::write(Vector<String> const& strings)
     }
 
     // 5. Insert input into the input stream just before the insertion point.
-    StringBuilder builder;
-    builder.join("", strings);
-    m_parser->tokenizer().insert_input_at_insertion_point(builder.build());
+    m_parser->tokenizer().insert_input_at_insertion_point(input);
 
     // 6. If there is no pending parsing-blocking script, have the HTML parser process input, one code point at a time, processing resulting tokens as they are emitted, and stopping when the tokenizer reaches the insertion point or when the processing of the tokenizer is aborted by the tree construction stage (this can happen if a script end tag token is emitted by the tokenizer).
     if (!pending_parsing_blocking_script())
         m_parser->run();
 
     return {};
-}
-
-// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
-ExceptionOr<void> Document::writeln(Vector<String> const& strings)
-{
-
-    // FIXME: No need to allocate a new vector
-    Vector<String> new_strings;
-    for (auto const& element : strings) {
-        new_strings.append(String::formatted("{}\n", element));
-    }
-
-    return write(strings);
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-open
