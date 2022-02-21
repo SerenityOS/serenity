@@ -112,6 +112,8 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
             (void)layout_inside(cell, LayoutMode::Default);
         }
 
+        BlockFormattingContext::compute_height(cell, m_state);
+
         size_t cell_colspan = cell.colspan();
         for (size_t i = 0; i < cell_colspan; ++i)
             content_width += column_widths[column_index++];
