@@ -280,6 +280,7 @@ void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf bl
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     m_clear_color = { red, green, blue, alpha };
+    m_clear_color.clamp(0.f, 1.f);
 }
 
 void SoftwareGLContext::gl_clear_depth(GLdouble depth)
