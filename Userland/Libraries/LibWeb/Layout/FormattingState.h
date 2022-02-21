@@ -8,8 +8,8 @@
 
 #include <AK/HashMap.h>
 #include <LibGfx/Point.h>
+#include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
-#include <LibWeb/Layout/Node.h>
 
 namespace Web::Layout {
 
@@ -53,6 +53,15 @@ struct FormattingState {
 
         float border_box_width() const { return border_box_left() + content_width + border_box_right(); }
         float border_box_height() const { return border_box_top() + content_height + border_box_bottom(); }
+
+        OwnPtr<Layout::Box::OverflowData> overflow_data;
+
+        Layout::Box::OverflowData& ensure_overflow_data()
+        {
+            if (!overflow_data)
+                overflow_data = make<Layout::Box::OverflowData>();
+            return *overflow_data;
+        }
     };
 
     void commit();

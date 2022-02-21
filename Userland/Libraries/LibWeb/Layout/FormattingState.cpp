@@ -21,11 +21,12 @@ void FormattingState::commit()
         node.box_model().border = { node_state.border_top, node_state.border_right, node_state.border_bottom, node_state.border_left };
         node.box_model().margin = { node_state.margin_top, node_state.margin_right, node_state.margin_bottom, node_state.margin_left };
 
-        // For boxes, transfer relative offset and size.
+        // For boxes, transfer relative offset, size, and overflow data.
         if (is<Layout::Box>(node)) {
             auto& box = static_cast<Layout::Box&>(node);
             box.set_offset(node_state.offset);
             box.set_content_size(node_state.content_width, node_state.content_height);
+            box.set_overflow_data(move(node_state.overflow_data));
         }
 
         // For block containers, transfer line boxes.

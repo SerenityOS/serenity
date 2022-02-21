@@ -528,6 +528,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     auto viewport_rect = root().browsing_context().viewport_rect();
 
     auto& icb = verify_cast<Layout::InitialContainingBlock>(root());
+    auto& icb_state = m_state.ensure(icb);
 
     VERIFY(!icb.children_are_inline());
     layout_block_level_children(root(), layout_mode);
@@ -546,13 +547,10 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 
     if (bottom_edge >= viewport_rect.height() || right_edge >= viewport_rect.width()) {
         // FIXME: Move overflow data to FormattingState!
-        auto& overflow_data = const_cast<InitialContainingBlock&>(icb).ensure_overflow_data();
+        auto& overflow_data = icb_state.ensure_overflow_data();
         overflow_data.scrollable_overflow_rect = viewport_rect.to_type<float>();
         // NOTE: The edges are *within* the rectangle, so we add 1 to get the width and height.
         overflow_data.scrollable_overflow_rect.set_size(right_edge + 1, bottom_edge + 1);
-    } else {
-        // FIXME: Move overflow data to FormattingState!
-        const_cast<InitialContainingBlock&>(icb).clear_overflow_data();
     }
 }
 

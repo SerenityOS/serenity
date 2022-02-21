@@ -113,14 +113,7 @@ public:
         return m_overflow_data->scrollable_overflow_rect;
     }
 
-    OverflowData& ensure_overflow_data()
-    {
-        if (!m_overflow_data)
-            m_overflow_data = make<OverflowData>();
-        return *m_overflow_data;
-    }
-
-    void clear_overflow_data() { m_overflow_data = nullptr; }
+    void set_overflow_data(OwnPtr<OverflowData> data) { m_overflow_data = move(data); }
 
     virtual void before_children_paint(PaintContext&, PaintPhase) override;
     virtual void after_children_paint(PaintContext&, PaintPhase) override;
