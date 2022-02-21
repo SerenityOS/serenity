@@ -267,7 +267,7 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
         m_rasterizer.clear_color(m_clear_color);
 
     if (mask & GL_DEPTH_BUFFER_BIT)
-        m_rasterizer.clear_depth(static_cast<float>(m_clear_depth));
+        m_rasterizer.clear_depth(m_clear_depth);
 
     if (mask & GL_STENCIL_BUFFER_BIT)
         m_rasterizer.clear_stencil(m_clear_stencil);
@@ -288,7 +288,7 @@ void SoftwareGLContext::gl_clear_depth(GLdouble depth)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_clear_depth = depth;
+    m_clear_depth = clamp(static_cast<float>(depth), 0.f, 1.f);
 }
 
 void SoftwareGLContext::gl_clear_stencil(GLint s)
