@@ -3,6 +3,10 @@ describe("correct behavior", () => {
         expect(new Intl.Collator().compare).toHaveLength(2);
     });
 
+    test("name is empty string", () => {
+        expect(new Intl.Collator().compare.name).toBe("");
+    });
+
     test("basic functionality", () => {
         const collator = new Intl.Collator();
         expect(collator.compare("", "")).toBe(0);
