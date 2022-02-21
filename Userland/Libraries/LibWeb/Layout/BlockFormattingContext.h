@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,6 +57,8 @@ private:
     void layout_floating_child(Box const& child, BlockContainer const& containing_block);
 
     void apply_transformations_to_children(Box const&);
+
+    void layout_list_item_marker(ListItemBox const&);
 
     enum class FloatSide {
         Left,

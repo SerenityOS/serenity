@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +12,8 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/ListItemBox.h>
+#include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
@@ -146,6 +148,16 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
             create_layout_tree(dom_child, context);
         });
         pop_parent();
+    }
+
+    if (is<ListItemBox>(*layout_node)) {
+        int child_index = layout_node->parent()->index_of_child<ListItemBox>(*layout_node).value();
+        auto marker_style = static_cast<DOM::Element const&>(dom_node).specified_css_values();
+        auto list_item_marker = adopt_ref(*new ListItemMarkerBox(document, layout_node->computed_values().list_style_type(), child_index + 1, *marker_style));
+        if (layout_node->first_child())
+            list_item_marker->set_inline(layout_node->first_child()->is_inline());
+        static_cast<ListItemBox&>(*layout_node).set_marker(list_item_marker);
+        layout_node->append_child(move(list_item_marker));
     }
 }
 

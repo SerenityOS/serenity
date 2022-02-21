@@ -291,6 +291,8 @@ class Label;
 class LabelableNode;
 class LineBox;
 class LineBoxFragment;
+class ListItemBox;
+class ListItemMarkerBox;
 class Node;
 class NodeWithStyle;
 class NodeWithStyleAndBoxModelMetrics;

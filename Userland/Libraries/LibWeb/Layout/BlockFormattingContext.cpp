@@ -405,10 +405,9 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
             place_block_level_element_in_normal_flow_horizontally(child_box, block_container);
 
-        // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
-        //        Instead, we should generate the marker box during the tree build.
-        if (is<ListItemBox>(child_box))
-            verify_cast<ListItemBox>(child_box).layout_marker();
+        if (is<ListItemBox>(child_box)) {
+            layout_list_item_marker(static_cast<ListItemBox const&>(child_box));
+        }
 
         content_height = max(content_height, box_state.offset.y() + box_state.content_height + box_state.margin_box_bottom());
         content_width = max(content_width, box_state.content_width);
@@ -663,4 +662,36 @@ void BlockFormattingContext::layout_floating_child(Box const& box, BlockContaine
         float_box(FloatSide::Right, m_right_floats);
     }
 }
+
+void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_item_box)
+{
+    if (!list_item_box.marker())
+        return;
+
+    auto& marker = *list_item_box.marker();
+    auto& marker_state = m_state.ensure(marker);
+    auto& list_item_state = m_state.ensure(list_item_box);
+
+    int image_width = 0;
+    int image_height = 0;
+    if (auto const* list_style_image = marker.list_style_image_bitmap()) {
+        image_width = list_style_image->rect().width();
+        image_height = list_style_image->rect().height();
+    }
+
+    if (marker.text().is_empty()) {
+        marker_state.content_width = image_width + 4;
+    } else {
+        auto text_width = marker.font().width(marker.text());
+        marker_state.content_width = image_width + text_width;
+    }
+
+    marker_state.content_height = max(image_height, marker.line_height());
+
+    marker_state.offset = { -(marker_state.content_width + 4), 0 };
+
+    if (marker_state.content_height > list_item_state.content_height)
+        list_item_state.content_height = marker_state.content_height;
+}
+
 }
