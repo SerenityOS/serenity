@@ -19,6 +19,9 @@ class SubtleCrypto;
 }
 
 namespace Web::CSS {
+class Angle;
+class AnglePercentage;
+class AngleStyleValue;
 class BackgroundRepeatStyleValue;
 class BackgroundSizeStyleValue;
 class BackgroundStyleValue;

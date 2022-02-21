@@ -22,6 +22,7 @@
 #include <AK/WeakPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
+#include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
@@ -283,6 +284,7 @@ public:
     virtual ~StyleValue();
 
     enum class Type {
+        Angle,
         Background,
         BackgroundRepeat,
         BackgroundSize,
@@ -316,6 +318,7 @@ public:
 
     Type type() const { return m_type; }
 
+    bool is_angle() const { return type() == Type::Angle; }
     bool is_background() const { return type() == Type::Background; }
     bool is_background_repeat() const { return type() == Type::BackgroundRepeat; }
     bool is_background_size() const { return type() == Type::BackgroundSize; }
@@ -346,6 +349,7 @@ public:
 
     bool is_builtin() const { return is_inherit() || is_initial() || is_unset(); }
 
+    AngleStyleValue const& as_angle() const;
     BackgroundStyleValue const& as_background() const;
     BackgroundRepeatStyleValue const& as_background_repeat() const;
     BackgroundSizeStyleValue const& as_background_size() const;
@@ -374,6 +378,7 @@ public:
     UnsetStyleValue const& as_unset() const;
     StyleValueList const& as_value_list() const;
 
+    AngleStyleValue& as_angle() { return const_cast<AngleStyleValue&>(const_cast<StyleValue const&>(*this).as_angle()); }
     BackgroundStyleValue& as_background() { return const_cast<BackgroundStyleValue&>(const_cast<StyleValue const&>(*this).as_background()); }
     BackgroundRepeatStyleValue& as_background_repeat() { return const_cast<BackgroundRepeatStyleValue&>(const_cast<StyleValue const&>(*this).as_background_repeat()); }
     BackgroundSizeStyleValue& as_background_size() { return const_cast<BackgroundSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_background_size()); }
@@ -433,6 +438,35 @@ protected:
 
 private:
     Type m_type { Type::Invalid };
+};
+
+class AngleStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<AngleStyleValue> create(Angle angle)
+    {
+        return adopt_ref(*new AngleStyleValue(move(angle)));
+    }
+    virtual ~AngleStyleValue() override { }
+
+    Angle const& angle() const { return m_angle; }
+
+    virtual String to_string() const override { return m_angle.to_string(); }
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_angle == static_cast<AngleStyleValue const&>(other).m_angle;
+    }
+
+private:
+    explicit AngleStyleValue(Angle angle)
+        : StyleValue(Type::Angle)
+        , m_angle(move(angle))
+    {
+    }
+
+    Angle m_angle;
 };
 
 class BackgroundStyleValue final : public StyleValue {
@@ -696,11 +730,11 @@ public:
         float value;
     };
 
-    using PercentageBasis = Variant<Empty, Length>;
+    using PercentageBasis = Variant<Empty, Angle, Length>;
 
     class CalculationResult {
     public:
-        CalculationResult(Variant<Number, Length, Percentage> value)
+        CalculationResult(Variant<Number, Angle, Length, Percentage> value)
             : m_value(move(value))
         {
         }
@@ -709,11 +743,11 @@ public:
         void multiply_by(CalculationResult const& other, Layout::Node const*);
         void divide_by(CalculationResult const& other, Layout::Node const*);
 
-        Variant<Number, Length, Percentage> const& value() const { return m_value; }
+        Variant<Number, Angle, Length, Percentage> const& value() const { return m_value; }
 
     private:
         void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
-        Variant<Number, Length, Percentage> m_value;
+        Variant<Number, Angle, Length, Percentage> m_value;
     };
 
     struct CalcSum;
@@ -733,7 +767,7 @@ public:
     };
 
     struct CalcValue {
-        Variant<Number, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
+        Variant<Number, Angle, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
@@ -836,6 +870,9 @@ public:
     String to_string() const override;
     ResolvedType resolved_type() const { return m_resolved_type; }
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
+
+    Optional<Angle> resolve_angle() const;
+    Optional<AnglePercentage> resolve_angle_percentage(Angle const& percentage_basis) const;
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
     Optional<LengthPercentage> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
     Optional<Percentage> resolve_percentage() const;

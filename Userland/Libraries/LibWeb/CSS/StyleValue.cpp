@@ -27,6 +27,12 @@ StyleValue::~StyleValue()
 {
 }
 
+AngleStyleValue const& StyleValue::as_angle() const
+{
+    VERIFY(is_angle());
+    return static_cast<AngleStyleValue const&>(*this);
+}
+
 BackgroundStyleValue const& StyleValue::as_background() const
 {
     VERIFY(is_background());
@@ -309,6 +315,24 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
                 };
             }
         },
+        [&](Angle const& angle) {
+            auto this_degrees = angle.to_degrees();
+            if (other.m_value.has<Angle>()) {
+                auto other_degrees = other.m_value.get<Angle>().to_degrees();
+                if (op == SumOperation::Add)
+                    m_value = Angle::make_degrees(this_degrees + other_degrees);
+                else
+                    m_value = Angle::make_degrees(this_degrees - other_degrees);
+            } else {
+                VERIFY(percentage_basis.has<Angle>());
+
+                auto other_degrees = percentage_basis.get<Angle>().percentage_of(other.m_value.get<Percentage>()).to_degrees();
+                if (op == SumOperation::Add)
+                    m_value = Angle::make_degrees(this_degrees + other_degrees);
+                else
+                    m_value = Angle::make_degrees(this_degrees - other_degrees);
+            }
+        },
         [&](Length const& length) {
             auto this_px = length.to_px(*layout_node);
             if (other.m_value.has<Length>()) {
@@ -369,6 +393,9 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
                 *this = new_value;
             }
         },
+        [&](Angle const& angle) {
+            m_value = Angle::make_degrees(angle.to_degrees() * other.m_value.get<Number>().value);
+        },
         [&](Length const& length) {
             VERIFY(layout_node);
             m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value);
@@ -392,6 +419,9 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
                 .is_integer = false,
                 .value = number.value / denominator
             };
+        },
+        [&](Angle const& angle) {
+            m_value = Angle::make_degrees(angle.to_degrees() / denominator);
         },
         [&](Length const& length) {
             VERIFY(layout_node);
@@ -418,9 +448,8 @@ String CalculatedStyleValue::CalcValue::to_string() const
 {
     return value.visit(
         [](Number const& number) { return String::number(number.value); },
-        [](Length const& length) { return length.to_string(); },
-        [](Percentage const& percentage) { return percentage.to_string(); },
-        [](NonnullOwnPtr<CalcSum> const& sum) { return String::formatted("({})", sum->to_string()); });
+        [](NonnullOwnPtr<CalcSum> const& sum) { return String::formatted("({})", sum->to_string()); },
+        [](auto const& v) { return v.to_string(); });
 }
 
 String CalculatedStyleValue::CalcSum::to_string() const
@@ -482,20 +511,38 @@ String CalculatedStyleValue::CalcNumberSumPartWithOperator::to_string() const
     return String::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, value->to_string());
 }
 
+Optional<Angle> CalculatedStyleValue::resolve_angle() const
+{
+    auto result = m_expression->resolve(nullptr, {});
+
+    if (result.value().has<Angle>())
+        return result.value().get<Angle>();
+    return {};
+}
+
+Optional<AnglePercentage> CalculatedStyleValue::resolve_angle_percentage(Angle const& percentage_basis) const
+{
+    auto result = m_expression->resolve(nullptr, percentage_basis);
+
+    return result.value().visit(
+        [&](Angle const& angle) -> Optional<AnglePercentage> {
+            return angle;
+        },
+        [&](Percentage const& percentage) -> Optional<AnglePercentage> {
+            return percentage;
+        },
+        [&](auto const&) -> Optional<AnglePercentage> {
+            return {};
+        });
+}
+
 Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout_node) const
 {
     auto result = m_expression->resolve(&layout_node, {});
 
-    return result.value().visit(
-        [&](Number) -> Optional<Length> {
-            return {};
-        },
-        [&](Length const& length) -> Optional<Length> {
-            return length;
-        },
-        [&](Percentage const&) -> Optional<Length> {
-            return {};
-        });
+    if (result.value().has<Length>())
+        return result.value().get<Length>();
+    return {};
 }
 
 Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
@@ -503,14 +550,14 @@ Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layou
     auto result = m_expression->resolve(&layout_node, percentage_basis);
 
     return result.value().visit(
-        [&](Number) -> Optional<LengthPercentage> {
-            return {};
-        },
         [&](Length const& length) -> Optional<LengthPercentage> {
             return length;
         },
         [&](Percentage const& percentage) -> Optional<LengthPercentage> {
             return percentage;
+        },
+        [&](auto const&) -> Optional<LengthPercentage> {
+            return {};
         });
 }
 
@@ -697,6 +744,7 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::re
         [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
             return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
         },
+        [](Angle const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Angle }; },
         [](Length const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Length }; },
         [](Percentage const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Percentage }; },
         [](NonnullOwnPtr<CalcSum> const& sum) { return sum->resolved_type(); });
@@ -725,17 +773,11 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberValue::r
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value.visit(
-        [&](Number const& number) -> CalculatedStyleValue::CalculationResult {
-            return CalculatedStyleValue::CalculationResult { number };
-        },
-        [&](Length const& length) -> CalculatedStyleValue::CalculationResult {
-            return CalculatedStyleValue::CalculationResult { length };
-        },
-        [&](Percentage const& percentage) -> CalculatedStyleValue::CalculationResult {
-            return CalculatedStyleValue::CalculationResult { percentage };
-        },
         [&](NonnullOwnPtr<CalcSum> const& sum) -> CalculatedStyleValue::CalculationResult {
             return sum->resolve(layout_node, percentage_basis);
+        },
+        [&](auto const& v) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { v };
         });
 }
 
