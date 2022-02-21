@@ -30,6 +30,7 @@
 #include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/Resolution.h>
+#include <LibWeb/CSS/Time.h>
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/ImageResource.h>
@@ -314,6 +315,7 @@ public:
         Resolution,
         String,
         TextDecoration,
+        Time,
         Transformation,
         Unresolved,
         Unset,
@@ -348,6 +350,7 @@ public:
     bool is_resolution() const { return type() == Type::Resolution; }
     bool is_string() const { return type() == Type::String; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
+    bool is_time() const { return type() == Type::Time; }
     bool is_transformation() const { return type() == Type::Transformation; }
     bool is_unresolved() const { return type() == Type::Unresolved; }
     bool is_unset() const { return type() == Type::Unset; }
@@ -381,6 +384,7 @@ public:
     ResolutionStyleValue const& as_resolution() const;
     StringStyleValue const& as_string() const;
     TextDecorationStyleValue const& as_text_decoration() const;
+    TimeStyleValue const& as_time() const;
     TransformationStyleValue const& as_transformation() const;
     UnresolvedStyleValue const& as_unresolved() const;
     UnsetStyleValue const& as_unset() const;
@@ -412,6 +416,7 @@ public:
     ResolutionStyleValue& as_resolution() { return const_cast<ResolutionStyleValue&>(const_cast<StyleValue const&>(*this).as_resolution()); }
     StringStyleValue& as_string() { return const_cast<StringStyleValue&>(const_cast<StyleValue const&>(*this).as_string()); }
     TextDecorationStyleValue& as_text_decoration() { return const_cast<TextDecorationStyleValue&>(const_cast<StyleValue const&>(*this).as_text_decoration()); }
+    TimeStyleValue& as_time() { return const_cast<TimeStyleValue&>(const_cast<StyleValue const&>(*this).as_time()); }
     TransformationStyleValue& as_transformation() { return const_cast<TransformationStyleValue&>(const_cast<StyleValue const&>(*this).as_transformation()); }
     UnresolvedStyleValue& as_unresolved() { return const_cast<UnresolvedStyleValue&>(const_cast<StyleValue const&>(*this).as_unresolved()); }
     UnsetStyleValue& as_unset() { return const_cast<UnsetStyleValue&>(const_cast<StyleValue const&>(*this).as_unset()); }
@@ -740,11 +745,12 @@ public:
         float value;
     };
 
-    using PercentageBasis = Variant<Empty, Angle, Frequency, Length>;
+    using PercentageBasis = Variant<Empty, Angle, Frequency, Length, Time>;
 
     class CalculationResult {
     public:
-        CalculationResult(Variant<Number, Angle, Frequency, Length, Percentage> value)
+        using Value = Variant<Number, Angle, Frequency, Length, Percentage, Time>;
+        CalculationResult(Value value)
             : m_value(move(value))
         {
         }
@@ -753,11 +759,11 @@ public:
         void multiply_by(CalculationResult const& other, Layout::Node const*);
         void divide_by(CalculationResult const& other, Layout::Node const*);
 
-        Variant<Number, Angle, Frequency, Length, Percentage> const& value() const { return m_value; }
+        Value const& value() const { return m_value; }
 
     private:
         void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
-        Variant<Number, Angle, Frequency, Length, Percentage> m_value;
+        Value m_value;
     };
 
     struct CalcSum;
@@ -777,7 +783,7 @@ public:
     };
 
     struct CalcValue {
-        Variant<Number, Angle, Frequency, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
+        Variant<Number, Angle, Frequency, Length, Percentage, Time, NonnullOwnPtr<CalcSum>> value;
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
@@ -888,6 +894,8 @@ public:
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
     Optional<LengthPercentage> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
     Optional<Percentage> resolve_percentage() const;
+    Optional<Time> resolve_time() const;
+    Optional<TimePercentage> resolve_time_percentage(Time const& percentage_basis) const;
     Optional<float> resolve_number();
     Optional<i64> resolve_integer();
 
@@ -1453,6 +1461,35 @@ private:
     NonnullRefPtr<StyleValue> m_line;
     NonnullRefPtr<StyleValue> m_style;
     NonnullRefPtr<StyleValue> m_color;
+};
+
+class TimeStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<TimeStyleValue> create(Time time)
+    {
+        return adopt_ref(*new TimeStyleValue(move(time)));
+    }
+    virtual ~TimeStyleValue() override { }
+
+    Time const& time() const { return m_time; }
+
+    virtual String to_string() const override { return m_time.to_string(); }
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_time == static_cast<TimeStyleValue const&>(other).m_time;
+    }
+
+private:
+    explicit TimeStyleValue(Time time)
+        : StyleValue(Type::Time)
+        , m_time(move(time))
+    {
+    }
+
+    Time m_time;
 };
 
 class TransformationStyleValue final : public StyleValue {

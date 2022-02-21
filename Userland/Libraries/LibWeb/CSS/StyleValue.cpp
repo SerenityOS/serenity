@@ -183,6 +183,12 @@ TextDecorationStyleValue const& StyleValue::as_text_decoration() const
     return static_cast<TextDecorationStyleValue const&>(*this);
 }
 
+TimeStyleValue const& StyleValue::as_time() const
+{
+    VERIFY(is_time());
+    return static_cast<TimeStyleValue const&>(*this);
+}
+
 TransformationStyleValue const& StyleValue::as_transformation() const
 {
     VERIFY(is_transformation());
@@ -381,6 +387,24 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
                     m_value = Length::make_px(this_px - other_px);
             }
         },
+        [&](Time const& time) {
+            auto this_seconds = time.to_seconds();
+            if (other.m_value.has<Time>()) {
+                auto other_seconds = other.m_value.get<Time>().to_seconds();
+                if (op == SumOperation::Add)
+                    m_value = Time::make_seconds(this_seconds + other_seconds);
+                else
+                    m_value = Time::make_seconds(this_seconds - other_seconds);
+            } else {
+                VERIFY(percentage_basis.has<Time>());
+
+                auto other_seconds = percentage_basis.get<Time>().percentage_of(other.m_value.get<Percentage>()).to_seconds();
+                if (op == SumOperation::Add)
+                    m_value = Time::make_seconds(this_seconds + other_seconds);
+                else
+                    m_value = Time::make_seconds(this_seconds - other_seconds);
+            }
+        },
         [&](Percentage const& percentage) {
             if (other.m_value.has<Percentage>()) {
                 if (op == SumOperation::Add)
@@ -433,6 +457,9 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
             VERIFY(layout_node);
             m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value);
         },
+        [&](Time const& time) {
+            m_value = Time::make_seconds(time.to_seconds() * other.m_value.get<Number>().value);
+        },
         [&](Percentage const& percentage) {
             m_value = Percentage { percentage.value() * other.m_value.get<Number>().value };
         });
@@ -462,6 +489,9 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
         [&](Length const& length) {
             VERIFY(layout_node);
             m_value = Length::make_px(length.to_px(*layout_node) / denominator);
+        },
+        [&](Time const& time) {
+            m_value = Time::make_seconds(time.to_seconds() / denominator);
         },
         [&](Percentage const& percentage) {
             m_value = Percentage { percentage.value() / denominator };
@@ -628,6 +658,31 @@ Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
     if (result.value().has<Percentage>())
         return result.value().get<Percentage>();
     return {};
+}
+
+Optional<Time> CalculatedStyleValue::resolve_time() const
+{
+    auto result = m_expression->resolve(nullptr, {});
+
+    if (result.value().has<Time>())
+        return result.value().get<Time>();
+    return {};
+}
+
+Optional<TimePercentage> CalculatedStyleValue::resolve_time_percentage(Time const& percentage_basis) const
+{
+    auto result = m_expression->resolve(nullptr, percentage_basis);
+
+    return result.value().visit(
+        [&](Time const& time) -> Optional<TimePercentage> {
+            return time;
+        },
+        [&](Percentage const& percentage) -> Optional<TimePercentage> {
+            return percentage;
+        },
+        [&](auto const&) -> Optional<TimePercentage> {
+            return {};
+        });
 }
 
 Optional<float> CalculatedStyleValue::resolve_number()
@@ -809,6 +864,7 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::re
         [](Frequency const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Frequency }; },
         [](Length const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Length }; },
         [](Percentage const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Percentage }; },
+        [](Time const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Time }; },
         [](NonnullOwnPtr<CalcSum> const& sum) { return sum->resolved_type(); });
 }
 
