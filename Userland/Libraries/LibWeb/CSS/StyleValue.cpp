@@ -99,6 +99,12 @@ FontStyleValue const& StyleValue::as_font() const
     return static_cast<FontStyleValue const&>(*this);
 }
 
+FrequencyStyleValue const& StyleValue::as_frequency() const
+{
+    VERIFY(is_frequency());
+    return static_cast<FrequencyStyleValue const&>(*this);
+}
+
 IdentifierStyleValue const& StyleValue::as_identifier() const
 {
     VERIFY(is_identifier());
@@ -333,6 +339,24 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
                     m_value = Angle::make_degrees(this_degrees - other_degrees);
             }
         },
+        [&](Frequency const& frequency) {
+            auto this_hertz = frequency.to_hertz();
+            if (other.m_value.has<Frequency>()) {
+                auto other_hertz = other.m_value.get<Frequency>().to_hertz();
+                if (op == SumOperation::Add)
+                    m_value = Frequency::make_hertz(this_hertz + other_hertz);
+                else
+                    m_value = Frequency::make_hertz(this_hertz - other_hertz);
+            } else {
+                VERIFY(percentage_basis.has<Frequency>());
+
+                auto other_hertz = percentage_basis.get<Frequency>().percentage_of(other.m_value.get<Percentage>()).to_hertz();
+                if (op == SumOperation::Add)
+                    m_value = Frequency::make_hertz(this_hertz + other_hertz);
+                else
+                    m_value = Frequency::make_hertz(this_hertz - other_hertz);
+            }
+        },
         [&](Length const& length) {
             auto this_px = length.to_px(*layout_node);
             if (other.m_value.has<Length>()) {
@@ -396,6 +420,9 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
         [&](Angle const& angle) {
             m_value = Angle::make_degrees(angle.to_degrees() * other.m_value.get<Number>().value);
         },
+        [&](Frequency const& frequency) {
+            m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value);
+        },
         [&](Length const& length) {
             VERIFY(layout_node);
             m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value);
@@ -422,6 +449,9 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
         },
         [&](Angle const& angle) {
             m_value = Angle::make_degrees(angle.to_degrees() / denominator);
+        },
+        [&](Frequency const& frequency) {
+            m_value = Frequency::make_hertz(frequency.to_hertz() / denominator);
         },
         [&](Length const& length) {
             VERIFY(layout_node);
@@ -532,6 +562,31 @@ Optional<AnglePercentage> CalculatedStyleValue::resolve_angle_percentage(Angle c
             return percentage;
         },
         [&](auto const&) -> Optional<AnglePercentage> {
+            return {};
+        });
+}
+
+Optional<Frequency> CalculatedStyleValue::resolve_frequency() const
+{
+    auto result = m_expression->resolve(nullptr, {});
+
+    if (result.value().has<Frequency>())
+        return result.value().get<Frequency>();
+    return {};
+}
+
+Optional<FrequencyPercentage> CalculatedStyleValue::resolve_frequency_percentage(Frequency const& percentage_basis) const
+{
+    auto result = m_expression->resolve(nullptr, percentage_basis);
+
+    return result.value().visit(
+        [&](Frequency const& frequency) -> Optional<FrequencyPercentage> {
+            return frequency;
+        },
+        [&](Percentage const& percentage) -> Optional<FrequencyPercentage> {
+            return percentage;
+        },
+        [&](auto const&) -> Optional<FrequencyPercentage> {
             return {};
         });
 }
@@ -745,6 +800,7 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::re
             return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
         },
         [](Angle const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Angle }; },
+        [](Frequency const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Frequency }; },
         [](Length const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Length }; },
         [](Percentage const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Percentage }; },
         [](NonnullOwnPtr<CalcSum> const& sum) { return sum->resolved_type(); });

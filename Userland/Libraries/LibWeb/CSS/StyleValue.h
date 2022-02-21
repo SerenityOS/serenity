@@ -24,6 +24,7 @@
 #include <LibGfx/Color.h>
 #include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Display.h>
+#include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Percentage.h>
@@ -297,6 +298,7 @@ public:
         Flex,
         FlexFlow,
         Font,
+        Frequency,
         Identifier,
         Image,
         Inherit,
@@ -330,6 +332,7 @@ public:
     bool is_flex() const { return type() == Type::Flex; }
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
+    bool is_frequency() const { return type() == Type::Frequency; }
     bool is_identifier() const { return type() == Type::Identifier; }
     bool is_image() const { return type() == Type::Image; }
     bool is_inherit() const { return type() == Type::Inherit; }
@@ -361,6 +364,7 @@ public:
     FlexFlowStyleValue const& as_flex_flow() const;
     FlexStyleValue const& as_flex() const;
     FontStyleValue const& as_font() const;
+    FrequencyStyleValue const& as_frequency() const;
     IdentifierStyleValue const& as_identifier() const;
     ImageStyleValue const& as_image() const;
     InheritStyleValue const& as_inherit() const;
@@ -390,6 +394,7 @@ public:
     FlexFlowStyleValue& as_flex_flow() { return const_cast<FlexFlowStyleValue&>(const_cast<StyleValue const&>(*this).as_flex_flow()); }
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
     FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
+    FrequencyStyleValue& as_frequency() { return const_cast<FrequencyStyleValue&>(const_cast<StyleValue const&>(*this).as_frequency()); }
     IdentifierStyleValue& as_identifier() { return const_cast<IdentifierStyleValue&>(const_cast<StyleValue const&>(*this).as_identifier()); }
     ImageStyleValue& as_image() { return const_cast<ImageStyleValue&>(const_cast<StyleValue const&>(*this).as_image()); }
     InheritStyleValue& as_inherit() { return const_cast<InheritStyleValue&>(const_cast<StyleValue const&>(*this).as_inherit()); }
@@ -730,11 +735,11 @@ public:
         float value;
     };
 
-    using PercentageBasis = Variant<Empty, Angle, Length>;
+    using PercentageBasis = Variant<Empty, Angle, Frequency, Length>;
 
     class CalculationResult {
     public:
-        CalculationResult(Variant<Number, Angle, Length, Percentage> value)
+        CalculationResult(Variant<Number, Angle, Frequency, Length, Percentage> value)
             : m_value(move(value))
         {
         }
@@ -743,11 +748,11 @@ public:
         void multiply_by(CalculationResult const& other, Layout::Node const*);
         void divide_by(CalculationResult const& other, Layout::Node const*);
 
-        Variant<Number, Angle, Length, Percentage> const& value() const { return m_value; }
+        Variant<Number, Angle, Frequency, Length, Percentage> const& value() const { return m_value; }
 
     private:
         void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
-        Variant<Number, Angle, Length, Percentage> m_value;
+        Variant<Number, Angle, Frequency, Length, Percentage> m_value;
     };
 
     struct CalcSum;
@@ -767,7 +772,7 @@ public:
     };
 
     struct CalcValue {
-        Variant<Number, Angle, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
+        Variant<Number, Angle, Frequency, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
@@ -873,6 +878,8 @@ public:
 
     Optional<Angle> resolve_angle() const;
     Optional<AnglePercentage> resolve_angle_percentage(Angle const& percentage_basis) const;
+    Optional<Frequency> resolve_frequency() const;
+    Optional<FrequencyPercentage> resolve_frequency_percentage(Frequency const& percentage_basis) const;
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
     Optional<LengthPercentage> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
     Optional<Percentage> resolve_percentage() const;
@@ -1038,6 +1045,35 @@ private:
     NonnullRefPtr<StyleValue> m_line_height;
     NonnullRefPtr<StyleValue> m_font_families;
     // FIXME: Implement font-stretch and font-variant.
+};
+
+class FrequencyStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<FrequencyStyleValue> create(Frequency frequency)
+    {
+        return adopt_ref(*new FrequencyStyleValue(move(frequency)));
+    }
+    virtual ~FrequencyStyleValue() override { }
+
+    Frequency const& frequency() const { return m_frequency; }
+
+    virtual String to_string() const override { return m_frequency.to_string(); }
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_frequency == static_cast<FrequencyStyleValue const&>(other).m_frequency;
+    }
+
+private:
+    explicit FrequencyStyleValue(Frequency frequency)
+        : StyleValue(Type::Frequency)
+        , m_frequency(move(frequency))
+    {
+    }
+
+    Frequency m_frequency;
 };
 
 class IdentifierStyleValue final : public StyleValue {
