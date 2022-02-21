@@ -160,7 +160,8 @@ elif [ "$NATIVE_WINDOWS_QEMU" -eq "1" ]; then
 elif "$SERENITY_QEMU_BIN" -audio-help 2>&1 | grep -- "-audiodev id=sdl" >/dev/null; then
     SERENITY_AUDIO_BACKEND="-audiodev sdl,id=snd0"
 else
-    SERENITY_AUDIO_BACKEND="-audiodev pa,timer-period=2000,id=snd0"
+    [ -z "$SERENITY_AUDIO_TIMER_PERIOD" ] && SERENITY_AUDIO_TIMER_PERIOD=2000
+    SERENITY_AUDIO_BACKEND="-audiodev pa,timer-period=$SERENITY_AUDIO_TIMER_PERIOD,id=snd0"
 fi
 
 if [ "$installed_major_version" -eq 5 ] && [ "$installed_minor_version" -eq 0 ]; then
