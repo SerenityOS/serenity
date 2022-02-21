@@ -250,7 +250,7 @@ function R(fmt, ...args) {
     // ColRow:Col(Row)?(:ColStep:RowStep)?
     const start = thisSheet.parse_cell_name(parts[0]);
     let end = parts[1];
-    if (/^[a-zA-Z_]+$/.test(endPart)) end = { column: end, row: undefined };
+    if (/^[a-zA-Z_]+$/.test(end)) end = { column: end, row: undefined };
     else end = thisSheet.parse_cell_name(parts[1]);
     parts[2] ??= 1;
     parts[3] ??= 1;
