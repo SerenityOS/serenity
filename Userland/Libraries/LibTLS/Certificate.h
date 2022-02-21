@@ -55,10 +55,71 @@ public:
     ByteBuffer data {};
     CertificateKeyAlgorithm signature_algorithm { CertificateKeyAlgorithm::Unsupported };
     ByteBuffer signature_value {};
+    ByteBuffer original_asn1 {};
 
     static Optional<Certificate> parse_asn1(ReadonlyBytes, bool client_cert = false);
 
     bool is_valid() const;
+
+    String subject_identifier_string() const
+    {
+        StringBuilder cert_name;
+        if (!subject.country.is_empty()) {
+            cert_name.append("/C=");
+            cert_name.append(subject.country);
+        }
+        if (!subject.state.is_empty()) {
+            cert_name.append("/ST=");
+            cert_name.append(subject.state);
+        }
+        if (!subject.location.is_empty()) {
+            cert_name.append("/L=");
+            cert_name.append(subject.location);
+        }
+        if (!subject.entity.is_empty()) {
+            cert_name.append("/O=");
+            cert_name.append(subject.entity);
+        }
+        if (!subject.unit.is_empty()) {
+            cert_name.append("/OU=");
+            cert_name.append(subject.unit);
+        }
+        if (!subject.subject.is_empty()) {
+            cert_name.append("/CN=");
+            cert_name.append(subject.subject);
+        }
+        return cert_name.build();
+    }
+
+    String issuer_identifier_string() const
+    {
+        StringBuilder cert_name;
+        if (!issuer.country.is_empty()) {
+            cert_name.append("/C=");
+            cert_name.append(issuer.country);
+        }
+        if (!issuer.state.is_empty()) {
+            cert_name.append("/ST=");
+            cert_name.append(issuer.state);
+        }
+        if (!issuer.location.is_empty()) {
+            cert_name.append("/L=");
+            cert_name.append(issuer.location);
+        }
+        if (!issuer.entity.is_empty()) {
+            cert_name.append("/O=");
+            cert_name.append(issuer.entity);
+        }
+        if (!issuer.unit.is_empty()) {
+            cert_name.append("/OU=");
+            cert_name.append(issuer.unit);
+        }
+        if (!issuer.subject.is_empty()) {
+            cert_name.append("/CN=");
+            cert_name.append(issuer.subject);
+        }
+        return cert_name.build();
+    }
 };
 
 class DefaultRootCACertificates {

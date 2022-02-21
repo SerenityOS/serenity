@@ -91,6 +91,11 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
     } while (0)
 
     Certificate certificate;
+    auto copy_buffer_result = ByteBuffer::copy(buffer.data(), buffer.size());
+    if (copy_buffer_result.is_error())
+        return {};
+    certificate.original_asn1 = copy_buffer_result.release_value();
+
     Crypto::ASN1::Decoder decoder { buffer };
     // Certificate ::= Sequence {
     //     certificate          TBSCertificate,
