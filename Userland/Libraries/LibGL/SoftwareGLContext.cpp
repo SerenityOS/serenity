@@ -382,17 +382,18 @@ void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble botto
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_frustum, left, right, bottom, top, near_val, far_val);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(near_val < 0 || far_val < 0, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(left == right || bottom == top || near_val == far_val, GL_INVALID_VALUE);
 
     // Let's do some math!
-    // FIXME: Are we losing too much precision by doing this?
-    float a = static_cast<float>((right + left) / (right - left));
-    float b = static_cast<float>((top + bottom) / (top - bottom));
-    float c = static_cast<float>(-((far_val + near_val) / (far_val - near_val)));
-    float d = static_cast<float>(-((2 * (far_val * near_val)) / (far_val - near_val)));
+    auto a = static_cast<float>((right + left) / (right - left));
+    auto b = static_cast<float>((top + bottom) / (top - bottom));
+    auto c = static_cast<float>(-((far_val + near_val) / (far_val - near_val)));
+    auto d = static_cast<float>(-((2 * far_val * near_val) / (far_val - near_val)));
 
     FloatMatrix4x4 frustum {
-        ((2 * (float)near_val) / ((float)right - (float)left)), 0, a, 0,
-        0, ((2 * (float)near_val) / ((float)top - (float)bottom)), b, 0,
+        static_cast<float>(2 * near_val / (right - left)), 0, a, 0,
+        0, static_cast<float>(2 * near_val / (top - bottom)), b, 0,
         0, 0, c, d,
         0, 0, -1, 0
     };
