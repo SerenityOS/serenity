@@ -224,6 +224,8 @@ public:
     Optional<size_t> search_result_index() const { return m_search_result_index; }
     Vector<TextRange> const& search_results() const { return m_search_results; }
 
+    virtual Optional<UISize> calculated_min_size() const override;
+
 protected:
     explicit TextEditor(Type = Type::MultiLine);
 

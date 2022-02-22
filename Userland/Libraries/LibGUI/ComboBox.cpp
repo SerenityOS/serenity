@@ -56,8 +56,8 @@ ComboBox::ComboBox()
     REGISTER_STRING_PROPERTY("placeholder", editor_placeholder, set_editor_placeholder);
     REGISTER_BOOL_PROPERTY("model_only", only_allow_values_from_model, set_only_allow_values_from_model);
 
-    set_min_width(32);
-    set_fixed_height(22);
+    set_min_size({ 40, 22 });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
 
     m_editor = add<ComboBoxEditor>();
     m_editor->set_frame_thickness(0);

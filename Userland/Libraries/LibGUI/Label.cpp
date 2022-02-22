@@ -23,6 +23,8 @@ Label::Label(String text)
     REGISTER_TEXT_ALIGNMENT_PROPERTY("text_alignment", text_alignment, set_text_alignment);
     REGISTER_TEXT_WRAPPING_PROPERTY("text_wrapping", text_wrapping, set_text_wrapping);
 
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
+
     set_frame_thickness(0);
     set_frame_shadow(Gfx::FrameShadow::Plain);
     set_frame_shape(Gfx::FrameShape::NoFrame);
@@ -112,10 +114,15 @@ void Label::size_to_fit()
     set_fixed_width(font().width(m_text) + m_autosize_padding * 2);
 }
 
-int Label::preferred_height() const
+int Label::text_calculated_preferred_height() const
 {
     // FIXME: The 4 is taken from Gfx::Painter and should be available as
     //        a constant instead.
     return Gfx::TextLayout(&font(), Utf8View { m_text }, text_rect()).bounding_rect(Gfx::TextWrapping::Wrap, 4).height();
+}
+
+Optional<UISize> Label::calculated_preferred_size() const
+{
+    return GUI::UISize(SpecialDimension::Grow, text_calculated_preferred_height());
 }
 }
