@@ -30,6 +30,9 @@ static Vector<u32> supported_emoji_code_points()
         auto basename = lexical_path.basename();
         if (!basename.starts_with("U+"))
             continue;
+        // FIXME: Handle multi code point emojis.
+        if (basename.contains('_'))
+            continue;
         u32 code_point = strtoul(basename.to_string().characters() + 2, nullptr, 16);
         code_points.append(code_point);
     }
@@ -68,6 +71,12 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
         horizontal_layout.set_spacing(0);
         for (size_t column = 0; column < columns; ++column) {
             if (index < code_points.size()) {
+                // FIXME: Also emit U+FE0F for single code point emojis, currently
+                // they get shown as text glyphs if available.
+                // This will require buttons to don't calculate their length as 2,
+                // currently it just shows an ellipsis. It will also require some
+                // tweaking of the mechanism that is currently being used to insert
+                // which is a key event with a single code point.
                 StringBuilder builder;
                 builder.append(Utf32View(&code_points[index++], 1));
                 auto emoji_text = builder.to_string();
