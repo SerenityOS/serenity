@@ -1,3 +1,6 @@
+Faces & Misc Emoji
+------------------
+
 🍆 - U+1F346 EGGPLANT
 🍑 - U+1F351 PEACH
 🍒 - U+1F352 CHERRIES
@@ -33,3 +36,10 @@
 ❤ - U+2764 RED HEART
 ⬆ - U+2B06 UPWARDS BLACK ARROW
 ⬇ - U+2B07 DOWNWARDS BLACK ARROW
+
+ZWJ Sequence Flags
+------------------
+
+🏳️‍🌈 - U+1F3F3 U+FE0F U+200D U+1F308        Rainbow flag
+🏳️‍⚧️ - U+1F3F3 U+FE0F U+200D U+26A7 U+FE0F  Transgender flag
+🏴‍☠️ - U+1F3F4 U+200D U+2620 U+FE0F         Pirate flag
