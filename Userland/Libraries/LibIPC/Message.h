@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -40,6 +41,9 @@ struct MessageBuffer {
 enum class ErrorCode : u32 {
     PeerDisconnected
 };
+
+template<typename Value>
+using IPCErrorOr = ErrorOr<Value, ErrorCode>;
 
 class Message {
 public:
