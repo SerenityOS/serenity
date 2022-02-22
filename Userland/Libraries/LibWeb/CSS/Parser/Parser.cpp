@@ -2168,6 +2168,18 @@ Optional<Parser::Dimension> Parser::parse_dimension(StyleComponentValueRule cons
 
         if (auto length_type = Length::unit_from_name(unit_string); length_type.has_value())
             return Length { numeric_value, length_type.release_value() };
+
+        if (auto angle_type = Angle::unit_from_name(unit_string); angle_type.has_value())
+            return Angle { numeric_value, angle_type.release_value() };
+
+        if (auto frequency_type = Frequency::unit_from_name(unit_string); frequency_type.has_value())
+            return Frequency { numeric_value, frequency_type.release_value() };
+
+        if (auto resolution_type = Resolution::unit_from_name(unit_string); resolution_type.has_value())
+            return Resolution { numeric_value, resolution_type.release_value() };
+
+        if (auto time_type = Time::unit_from_name(unit_string); time_type.has_value())
+            return Time { numeric_value, time_type.release_value() };
     }
 
     if (component_value.is(Token::Type::Percentage))
@@ -2222,10 +2234,18 @@ RefPtr<StyleValue> Parser::parse_dimension_value(StyleComponentValueRule const& 
     if (!dimension.has_value())
         return {};
 
+    if (dimension->is_angle())
+        return AngleStyleValue::create(dimension->angle());
+    if (dimension->is_frequency())
+        return FrequencyStyleValue::create(dimension->frequency());
     if (dimension->is_length())
         return LengthStyleValue::create(dimension->length());
     if (dimension->is_percentage())
         return PercentageStyleValue::create(dimension->percentage());
+    if (dimension->is_resolution())
+        return ResolutionStyleValue::create(dimension->resolution());
+    if (dimension->is_time())
+        return TimeStyleValue::create(dimension->time());
     VERIFY_NOT_REACHED();
 }
 
@@ -4535,6 +4555,54 @@ RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext 
     return result.release_value();
 }
 
+bool Parser::Dimension::is_angle() const
+{
+    return m_value.has<Angle>();
+}
+
+Angle Parser::Dimension::angle() const
+{
+    return m_value.get<Angle>();
+}
+
+bool Parser::Dimension::is_angle_percentage() const
+{
+    return is_angle() || is_percentage();
+}
+
+AnglePercentage Parser::Dimension::angle_percentage() const
+{
+    if (is_angle())
+        return angle();
+    if (is_percentage())
+        return percentage();
+    VERIFY_NOT_REACHED();
+}
+
+bool Parser::Dimension::is_frequency() const
+{
+    return m_value.has<Frequency>();
+}
+
+Frequency Parser::Dimension::frequency() const
+{
+    return m_value.get<Frequency>();
+}
+
+bool Parser::Dimension::is_frequency_percentage() const
+{
+    return is_frequency() || is_percentage();
+}
+
+FrequencyPercentage Parser::Dimension::frequency_percentage() const
+{
+    if (is_frequency())
+        return frequency();
+    if (is_percentage())
+        return percentage();
+    VERIFY_NOT_REACHED();
+}
+
 bool Parser::Dimension::is_length() const
 {
     return m_value.has<Length>();
@@ -4543,6 +4611,20 @@ bool Parser::Dimension::is_length() const
 Length Parser::Dimension::length() const
 {
     return m_value.get<Length>();
+}
+
+bool Parser::Dimension::is_length_percentage() const
+{
+    return is_length() || is_percentage();
+}
+
+LengthPercentage Parser::Dimension::length_percentage() const
+{
+    if (is_length())
+        return length();
+    if (is_percentage())
+        return percentage();
+    VERIFY_NOT_REACHED();
 }
 
 bool Parser::Dimension::is_percentage() const
@@ -4555,15 +4637,35 @@ Percentage Parser::Dimension::percentage() const
     return m_value.get<Percentage>();
 }
 
-bool Parser::Dimension::is_length_percentage() const
+bool Parser::Dimension::is_resolution() const
 {
-    return is_length() || is_percentage();
+    return m_value.has<Resolution>();
 }
 
-LengthPercentage Parser::Dimension::length_percentage() const
+Resolution Parser::Dimension::resolution() const
 {
-    if (is_length())
-        return length();
+    return m_value.get<Resolution>();
+}
+
+bool Parser::Dimension::is_time() const
+{
+    return m_value.has<Time>();
+}
+
+Time Parser::Dimension::time() const
+{
+    return m_value.get<Time>();
+}
+
+bool Parser::Dimension::is_time_percentage() const
+{
+    return is_time() || is_percentage();
+}
+
+TimePercentage Parser::Dimension::time_percentage() const
+{
+    if (is_time())
+        return time();
     if (is_percentage())
         return percentage();
     VERIFY_NOT_REACHED();
