@@ -179,6 +179,7 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
     }
     m_context.premaster_key = premaster_key_result.release_value();
 
+    // RFC5246 section 7.4.2: The sender's certificate MUST come first in the list.
     auto& certificate = m_context.certificates.first();
     if constexpr (TLS_DEBUG) {
         dbgln("PreMaster secret");

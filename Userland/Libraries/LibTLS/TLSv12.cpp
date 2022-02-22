@@ -233,6 +233,12 @@ bool Context::verify_chain(StringView host) const
         return false;
     }
 
+    // RFC5246 section 7.4.2: The sender's certificate MUST come first in the list. Each following certificate
+    // MUST directly certify the one preceding it. Because certificate validation requires that root keys be
+    // distributed independently, the self-signed certificate that specifies the root certificate authority MAY be
+    // omitted from the chain, under the assumption that the remote end must already possess it in order to validate
+    // it in any case.
+
     if (!host.is_empty()) {
         auto first_certificate = local_chain->first();
         auto subject_matches = certificate_subject_matches_host(first_certificate, host);
