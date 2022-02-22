@@ -33,6 +33,8 @@ public:
     {
     }
 
+    SourceGenerator(SourceGenerator&&) = default;
+
     SourceGenerator fork() { return SourceGenerator { m_builder, m_mapping, m_opening, m_closing }; }
 
     void set(StringView key, String value) { m_mapping.set(key, value); }
