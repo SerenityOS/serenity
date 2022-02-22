@@ -25,6 +25,7 @@ String MediaFeatureValue::to_string() const
     return m_value.visit(
         [](String const& ident) { return serialize_an_identifier(ident); },
         [](Length const& length) { return length.to_string(); },
+        [](Resolution const& resolution) { return resolution.to_string(); },
         [](double number) { return String::number(number); });
 }
 
@@ -33,6 +34,7 @@ bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
     return m_value.visit(
         [&](String const&) { return other.is_ident(); },
         [&](Length const&) { return other.is_length(); },
+        [&](Resolution const&) { return other.is_resolution(); },
         [&](double) { return other.is_number(); });
 }
 
@@ -86,6 +88,8 @@ bool MediaFeature::evaluate(DOM::Window const& window) const
             return queried_value.number() != 0;
         if (queried_value.is_length())
             return queried_value.length().raw_value() != 0;
+        if (queried_value.is_resolution())
+            return queried_value.resolution().to_dots_per_pixel() != 0;
         if (queried_value.is_ident())
             return queried_value.ident() != "none";
         return false;
@@ -141,7 +145,6 @@ bool MediaFeature::compare(DOM::Window const& window, MediaFeatureValue left, Co
     }
 
     if (left.is_length()) {
-
         float left_px;
         float right_px;
         // Save ourselves some work if neither side is a relative length.
@@ -175,6 +178,25 @@ bool MediaFeature::compare(DOM::Window const& window, MediaFeatureValue left, Co
             return left_px >= right_px;
         }
 
+        VERIFY_NOT_REACHED();
+    }
+
+    if (left.is_resolution()) {
+        auto left_dppx = left.resolution().to_dots_per_pixel();
+        auto right_dppx = right.resolution().to_dots_per_pixel();
+
+        switch (comparison) {
+        case Comparison::Equal:
+            return left_dppx == right_dppx;
+        case Comparison::LessThan:
+            return left_dppx < right_dppx;
+        case Comparison::LessThanOrEqual:
+            return left_dppx <= right_dppx;
+        case Comparison::GreaterThan:
+            return left_dppx > right_dppx;
+        case Comparison::GreaterThanOrEqual:
+            return left_dppx >= right_dppx;
+        }
         VERIFY_NOT_REACHED();
     }
 
