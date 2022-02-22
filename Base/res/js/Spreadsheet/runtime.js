@@ -198,9 +198,9 @@ class Range {
             });
         }
 
-        for (const range of ranges) {
+        outer: for (const range of ranges) {
             for (let row = range.rowStart; row <= range.rowEnd; row += this.rowStep) {
-                callback(range.column + row);
+                if (callback(range.column + row) === Break) break outer;
             }
         }
     }
