@@ -145,7 +145,7 @@ void test_complete_includes()
     if (suggestions.size() != 1)
         FAIL(global include - bad size);
 
-    if (suggestions[0].completion != "cdefs.h")
+    if (suggestions[0].completion != "<sys/cdefs.h>")
         FAIL("global include - wrong results");
 
     PASS;
