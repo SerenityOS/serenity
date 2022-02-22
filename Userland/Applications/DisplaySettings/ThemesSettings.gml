@@ -23,13 +23,13 @@
         }
 
         @GUI::Widget {
-            shrink_to_fit: true
+            preferred_height: "fit"
             layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
                 text: "Theme:"
                 text_alignment: "CenterLeft"
-                fixed_width: 95
+                preferred_width: 95
             }
 
             @GUI::ComboBox {
