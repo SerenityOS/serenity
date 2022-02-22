@@ -43,3 +43,29 @@ ZWJ Sequence Flags
 🏳️‍🌈 - U+1F3F3 U+FE0F U+200D U+1F308        Rainbow flag
 🏳️‍⚧️ - U+1F3F3 U+FE0F U+200D U+26A7 U+FE0F  Transgender flag
 🏴‍☠️ - U+1F3F4 U+200D U+2620 U+FE0F         Pirate flag
+
+Regional Indicator Symbol Flags
+-------------------------------
+
+🇦🇶 - U+1F1E6 U+1F1F6 AQ Antarctica
+🇦🇹 - U+1F1E6 U+1F1F9 AT Austria
+🇨🇭 - U+1F1E8 U+1F1ED CH Switzerland
+🇩🇪 - U+1F1E9 U+1F1EA DE Germany
+🇩🇰 - U+1F1E9 U+1F1F0 DK Denmark
+🇪🇺 - U+1F1EA U+1F1FA EU European Union
+🇫🇮 - U+1F1EB U+1F1EE FI Finland
+🇫🇷 - U+1F1EB U+1F1F7 FR France
+🇬🇧 - U+1F1EC U+1F1E7 GB United Kingdom
+🇬🇷 - U+1F1EC U+1F1F7 GR Greece
+🇭🇺 - U+1F1ED U+1F1FA HU Hungary
+🇮🇱 - U+1F1EE U+1F1F1 IL Israel
+🇮🇷 - U+1F1EE U+1F1F7 IR Iran
+🇳🇱 - U+1F1F3 U+1F1F1 NL Netherlands
+🇳🇴 - U+1F1F3 U+1F1F4 NO Norway
+🇵🇱 - U+1F1F5 U+1F1F1 PL Poland
+🇷🇺 - U+1F1F7 U+1F1FA RU Russia
+🇸🇪 - U+1F1F8 U+1F1EA SE Sweden
+🇹🇷 - U+1F1F9 U+1F1F7 TR Turkey
+🇺🇦 - U+1F1FA U+1F1E6 UA Ukraine
+🇺🇳 - U+1F1FA U+1F1F3 UN United Nations
+🇺🇸 - U+1F1FA U+1F1F8 US United States
