@@ -133,4 +133,13 @@ void Toolbar::paint_event(PaintEvent& event)
     painter.fill_rect(event.rect(), palette().button());
 }
 
+Optional<UISize> Toolbar::calculated_preferred_size() const
+{
+    if (m_orientation == Gfx::Orientation::Horizontal)
+        return { { GUI::SpecialDimension::Grow, GUI::SpecialDimension::Fit } };
+    else
+        return { { GUI::SpecialDimension::Fit, GUI::SpecialDimension::Grow } };
+    VERIFY_NOT_REACHED();
+}
+
 }

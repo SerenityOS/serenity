@@ -23,8 +23,8 @@ namespace GUI {
 Button::Button(String text)
     : AbstractButton(move(text))
 {
-    set_min_width(32);
-    set_fixed_height(22);
+    set_min_size({ 40, 22 });
+    set_preferred_size({ GUI::SpecialDimension::OpportunisticGrow, 22 });
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 
     on_focus_change = [this](bool has_focus, auto) {
@@ -251,6 +251,28 @@ void Button::timer_event(Core::TimerEvent&)
 
         update();
     }
+}
+
+Optional<UISize> Button::calculated_min_size() const
+{
+    int horizontal = 0, vertical = 0;
+
+    if (!text().is_empty()) {
+        auto& font = this->font();
+        horizontal = font.width(text()) + 2;
+        vertical = font.glyph_height() + 4; // FIXME: Use actual maximum total height
+    }
+
+    if (m_icon) {
+        vertical = max(vertical, m_icon->height());
+
+        horizontal += m_icon->width() + icon_spacing();
+    }
+
+    horizontal += 8;
+    vertical += 4;
+
+    return UISize(horizontal, vertical);
 }
 
 }
