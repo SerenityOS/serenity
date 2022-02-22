@@ -333,7 +333,8 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(FlyString const& na
         return CSS::MediaFeatureValue(inner_height() >= inner_width() ? "portrait" : "landscape");
     if (name.equals_ignoring_case("overflow-block"sv))
         return CSS::MediaFeatureValue("scroll");
-    // FIXME: overflow-inline
+    if (name.equals_ignoring_case("overflow-inline"sv))
+        return CSS::MediaFeatureValue("scroll");
     if (name.equals_ignoring_case("pointer"sv))
         return CSS::MediaFeatureValue("fine");
     // FIXME: resolution
