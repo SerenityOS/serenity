@@ -625,6 +625,19 @@ if (BUILD_LAGOM)
         lagom_test(../../Tests/LibJS/test-invalid-unicode-js.cpp LIBS LagomJS)
         lagom_test(../../Tests/LibJS/test-bytecode-js.cpp LIBS LagomJS)
 
+        # Spreadsheet
+        add_executable(test-spreadsheet_lagom
+                ../../Tests/Spreadsheet/test-spreadsheet.cpp
+                ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
+        set_target_properties(test-spreadsheet_lagom PROPERTIES OUTPUT_NAME test-spreadsheet)
+        target_link_libraries(test-spreadsheet_lagom LagomCore LagomTest LagomJS)
+        add_test(
+                NAME Spreadsheet
+                COMMAND test-spreadsheet_lagom --show-progress=false
+        )
+        set_tests_properties(Spreadsheet PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
+
+
         # Markdown
         include(commonmark_spec)
         file(GLOB LIBMARKDOWN_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibMarkdown/*.cpp")
