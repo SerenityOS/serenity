@@ -248,7 +248,9 @@ String CppComprehensionEngine::type_of_property(const DocumentData& document, co
             continue;
 
         VERIFY(verify_cast<NamedType>(*type).name());
-        return verify_cast<NamedType>(*type).name()->full_name();
+        if (verify_cast<NamedType>(*type).name())
+            return verify_cast<NamedType>(*type).name()->full_name();
+        return String::empty();
     }
     return {};
 }
@@ -260,9 +262,11 @@ String CppComprehensionEngine::type_of_variable(const Identifier& identifier) co
         for (auto& decl : current->declarations()) {
             if (decl.is_variable_or_parameter_declaration()) {
                 auto& var_or_param = verify_cast<VariableOrParameterDeclaration>(decl);
-                if (var_or_param.name() == identifier.name() && var_or_param.type()->is_named_type()) {
+                if (var_or_param.full_name() == identifier.name() && var_or_param.type()->is_named_type()) {
                     VERIFY(verify_cast<NamedType>(*var_or_param.type()).name());
-                    return verify_cast<NamedType>(*var_or_param.type()).name()->full_name();
+                    if (verify_cast<NamedType>(*var_or_param.type()).name())
+                        return verify_cast<NamedType>(*var_or_param.type()).name()->full_name();
+                    return String::empty();
                 }
             }
         }
@@ -312,14 +316,14 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::properties_of_typ
     }
 
     auto& struct_or_class = verify_cast<StructOrClassDeclaration>(*decl);
-    VERIFY(struct_or_class.name() == type_symbol.name);
+    VERIFY(struct_or_class.full_name() == type_symbol.name);
 
     Vector<Symbol> properties;
     for (auto& member : struct_or_class.members()) {
         Vector<StringView> scope(type_symbol.scope);
         scope.append(type_symbol.name);
         // FIXME: We don't have to create the Symbol here, it should already exist in the 'm_symbol' table of some DocumentData we already parsed.
-        properties.append(Symbol::create(member.name(), scope, member, Symbol::IsLocal::No));
+        properties.append(Symbol::create(member.full_name(), scope, member, Symbol::IsLocal::No));
     }
     return properties;
 }
@@ -339,7 +343,7 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::get_child_symbols
     Vector<Symbol> symbols;
 
     for (auto& decl : node.declarations()) {
-        symbols.append(Symbol::create(decl.name(), scope, decl, is_local));
+        symbols.append(Symbol::create(decl.full_name(), scope, decl, is_local));
 
         bool should_recurse = decl.is_namespace() || decl.is_struct_or_class() || decl.is_function();
         bool are_child_symbols_local = decl.is_function();
@@ -348,7 +352,7 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::get_child_symbols
             continue;
 
         auto new_scope = scope;
-        new_scope.append(decl.name());
+        new_scope.append(decl.full_name());
         symbols.extend(get_child_symbols(decl, new_scope, are_child_symbols_local ? Symbol::IsLocal::Yes : is_local));
     }
 
@@ -453,11 +457,11 @@ static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node)
     }
 
     if (node.is_declaration()) {
-        return get_target_declaration(node, verify_cast<Declaration>(node).name());
+        return get_target_declaration(node, verify_cast<Declaration>(node).full_name());
     }
 
     if (node.is_type() && node.parent() && node.parent()->is_declaration()) {
-        return get_target_declaration(*node.parent(), verify_cast<Declaration>(node.parent())->name());
+        return get_target_declaration(*node.parent(), verify_cast<Declaration>(node.parent())->full_name());
     }
 
     dbgln("get_target_declaration: Invalid argument node of type: {}", node.class_name());
@@ -641,11 +645,11 @@ Vector<StringView> CppComprehensionEngine::scope_of_node(const ASTNode& node) co
 
     StringView containing_scope;
     if (parent_decl.is_namespace())
-        containing_scope = static_cast<NamespaceDeclaration&>(parent_decl).name();
+        containing_scope = static_cast<NamespaceDeclaration&>(parent_decl).full_name();
     if (parent_decl.is_struct_or_class())
-        containing_scope = static_cast<StructOrClassDeclaration&>(parent_decl).name();
+        containing_scope = static_cast<StructOrClassDeclaration&>(parent_decl).full_name();
     if (parent_decl.is_function())
-        containing_scope = static_cast<FunctionDeclaration&>(parent_decl).name();
+        containing_scope = static_cast<FunctionDeclaration&>(parent_decl).full_name();
 
     parent_scope.append(containing_scope);
     return parent_scope;
