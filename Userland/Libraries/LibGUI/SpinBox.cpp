@@ -15,8 +15,8 @@ namespace GUI {
 
 SpinBox::SpinBox()
 {
-    set_min_width(32);
-    set_fixed_height(22);
+    set_min_size({ 40, 22 });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
     m_editor = add<TextBox>();
     m_editor->set_text("0");
     m_editor->on_change = [this, weak_this = make_weak_ptr()] {

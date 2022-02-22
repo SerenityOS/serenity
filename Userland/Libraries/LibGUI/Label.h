@@ -39,7 +39,8 @@ public:
     bool is_autosize() const { return m_autosize; }
     void set_autosize(bool, size_t padding = 0);
 
-    int preferred_height() const;
+    virtual Optional<UISize> calculated_preferred_size() const override;
+    int text_calculated_preferred_height() const;
 
     Gfx::IntRect text_rect() const;
 

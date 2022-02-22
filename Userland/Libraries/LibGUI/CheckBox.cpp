@@ -30,8 +30,8 @@ CheckBox::CheckBox(String text)
         { CheckBoxPosition::Left, "Left" },
         { CheckBoxPosition::Right, "Right" });
 
-    set_min_width(32);
-    set_fixed_height(22);
+    set_min_size({ 22, 22 });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
 }
 
 void CheckBox::paint_event(PaintEvent& event)

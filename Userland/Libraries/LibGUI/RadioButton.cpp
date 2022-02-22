@@ -21,8 +21,8 @@ RadioButton::RadioButton(String text)
 {
     set_exclusive(true);
     set_checkable(true);
-    set_min_width(32);
-    set_fixed_height(22);
+    set_min_size({ 22, 22 });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
 }
 
 Gfx::IntSize RadioButton::circle_size()
@@ -59,6 +59,15 @@ void RadioButton::click(unsigned)
     if (!is_enabled())
         return;
     set_checked(true);
+}
+
+Optional<UISize> RadioButton::calculated_min_size() const
+{
+    int horizontal = 2 + 7, vertical = 0;
+    auto& font = this->font();
+    vertical = max(font.glyph_height(), circle_size().height());
+    horizontal += font.width(text());
+    return UISize(horizontal, vertical);
 }
 
 }

@@ -177,7 +177,7 @@ void MessageBox::build()
     width = max(width, text_width + icon_width + 56);
 
     // FIXME: Use shrink from new layout system
-    set_rect(x(), y(), width, 80 + label.preferred_height());
+    set_rect(x(), y(), width, 80 + label.text_calculated_preferred_height());
     set_resizable(false);
 }
 

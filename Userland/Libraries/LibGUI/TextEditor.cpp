@@ -743,6 +743,17 @@ void TextEditor::paint_event(PaintEvent& event)
         painter.fill_rect(cursor_content_rect(), palette().text_cursor());
 }
 
+Optional<UISize> TextEditor::calculated_min_size() const
+{
+    auto margins = content_margins();
+    int horizontal = margins.left() + margins.right(),
+        vertical = margins.top() + margins.bottom();
+    int vertical_content_size = font().glyph_height() + 4;
+    if (!is_multi_line() && m_icon)
+        vertical_content_size = max(vertical_content_size, icon_size() + 2);
+    return UISize(horizontal, vertical);
+}
+
 void TextEditor::select_all()
 {
     TextPosition start_of_document { 0, 0 };

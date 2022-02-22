@@ -18,8 +18,8 @@ namespace GUI {
 ColorInput::ColorInput()
     : TextEditor(TextEditor::SingleLine)
 {
-    set_min_width(32);
-    set_fixed_height(22);
+    set_min_size({ 40, 22 });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
     TextEditor::on_change = [this] {
         auto parsed_color = Color::from_string(text());
         if (parsed_color.has_value())
