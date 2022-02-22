@@ -37,7 +37,7 @@ public:
 
     SourceGenerator fork() { return SourceGenerator { m_builder, m_mapping, m_opening, m_closing }; }
 
-    void set(StringView key, String value) { m_mapping.set(key, value); }
+    void set(StringView key, String value) { m_mapping.set(key, move(value)); }
     String get(StringView key) const
     {
         auto result = m_mapping.get(key);
