@@ -105,9 +105,19 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, I
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
+static HashMap<String, String> s_resource_cache;
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_request_resource(String const& icon)
 {
-    // TODO: Cache this and invalidate the cache if a file can't be found.
+    // TODO: Invalidate the effected cached resources if the environment var changes.
+    if (s_resource_cache.contains(icon)) {
+        auto path = s_resource_cache.get(icon).value();
+
+        auto fd = Core::System::open(path, O_RDONLY);
+        if (!fd.is_error())
+            return try_load_from_fd_and_close(fd.value(), path);
+
+        // No cache-hit so let's try to find the requested resource :^)
+    }
 
     // TODO: Make this extensible by the caller instead of requiring
     // them to set an environment variable.
@@ -165,6 +175,12 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_request_resource(String const& icon)
         if (!final_path.is_empty())
             break;
     }
+
+    if (final_path.is_empty())
+        return Error::from_string_literal("Requested resource cannot be found");
+
+    // Cache
+    s_resource_cache.set(icon, final_path);
 
     auto fd = TRY(Core::System::open(final_path, O_RDONLY));
     return try_load_from_fd_and_close(fd, final_path);
