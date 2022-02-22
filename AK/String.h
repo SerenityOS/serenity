@@ -102,10 +102,10 @@ public:
     [[nodiscard]] static String roman_number_from(size_t value);
 
     template<class SeparatorType, class CollectionType>
-    [[nodiscard]] static String join(const SeparatorType& separator, const CollectionType& collection)
+    [[nodiscard]] static String join(const SeparatorType& separator, const CollectionType& collection, StringView fmtstr = "{}"sv)
     {
         StringBuilder builder;
-        builder.join(separator, collection);
+        builder.join(separator, collection, fmtstr);
         return builder.build();
     }
 
