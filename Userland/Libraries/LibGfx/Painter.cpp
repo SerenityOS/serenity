@@ -1249,21 +1249,56 @@ void Painter::draw_glyph_or_emoji(IntPoint const& point, u32 code_point, Font co
 
 void Painter::draw_glyph_or_emoji(IntPoint const& point, Utf8CodePointIterator& it, Font const& font, Color color)
 {
-    // FIXME: Handle variation selectors. Additionally, some emojis start with a 'regular' character,
-    //        so the 'font contains' check isn't sufficient for all of them - we'll have to peek.
+    // FIXME: These should live somewhere else.
+    constexpr u32 text_variation_selector = 0xFE0E;
+    constexpr u32 emoji_variation_selector = 0xFE0F;
+    constexpr u32 regional_indicator_symbol_a = 0x1F1E6;
+    constexpr u32 regional_indicator_symbol_z = 0x1F1FF;
 
+    auto initial_it = it;
     u32 code_point = *it;
+    auto next_code_point = it.peek(1);
 
-    if (font.contains_glyph(code_point)) {
+    ScopeGuard consume_variation_selector = [&] {
+        // If we advanced the iterator to consume an emoji sequence, don't look for another variation selector.
+        if (initial_it != it)
+            return;
+        // Otherwise, discard one code point if it's a variation selector.
+        auto next_code_point = it.peek(1);
+        if (next_code_point == text_variation_selector || next_code_point == emoji_variation_selector)
+            ++it;
+    };
+
+    auto code_point_is_regional_indicator = code_point >= regional_indicator_symbol_a && code_point <= regional_indicator_symbol_z;
+    auto font_contains_glyph = font.contains_glyph(code_point);
+
+    auto check_for_emoji = false
+        // Flag emojis consist of two regional indicators.
+        || code_point_is_regional_indicator
+        // U+00A9 (copyright) or U+00AE (registered) are text glyphs by default,
+        // keycap emojis ({#,*,0-9} U+FE0F U+20E3) start with a regular ASCII character.
+        // Both cases are handled by peeking for the variation selector.
+        || next_code_point == emoji_variation_selector;
+
+    // If the font contains the glyph, and we know it's not the start of an emoji, draw a text glyph.
+    if (font_contains_glyph && !check_for_emoji) {
         draw_glyph(point, code_point, font, color);
         return;
     }
 
+    // If we didn't find a text glyph, or have an emoji variation selector or regional indicator, try to draw an emoji glyph.
     if (auto const* emoji = Emoji::emoji_for_code_point_iterator(it)) {
         draw_emoji(point, *emoji, font);
         return;
     }
 
+    // If that failed, but we have a text glyph fallback, draw that.
+    if (font_contains_glyph) {
+        draw_glyph(point, code_point, font, color);
+        return;
+    }
+
+    // No suitable glyph found, draw a replacement character.
     dbgln_if(EMOJI_DEBUG, "Failed to find a glyph or emoji for code_point {}", code_point);
     draw_glyph(point, 0xFFFD, font, color);
 }
