@@ -38,21 +38,20 @@ SDLServer::SDLServer()
             if (event.window.windowID == 0)
                 continue;
 
+            u32 buttons = 0;
+            if (event.button.button == SDL_BUTTON_LEFT)
+                buttons = GUI::MouseButton::Primary;
+            if (event.button.button == SDL_BUTTON_RIGHT)
+                buttons = GUI::MouseButton::Secondary;
+
             switch (event.type) {
             case SDL_MOUSEMOTION: {
                 auto window = Window::from_window_id(get_window_from_sdl_id(event.window.windowID));
-                WindowServerConnection::the().mouse_move(window->window_id(), Gfx::IntPoint(event.motion.x, event.motion.y), 0, 0, 0, 0, 0, false, Vector<String>());
+                WindowServerConnection::the().mouse_move(window->window_id(), Gfx::IntPoint(event.motion.x, event.motion.y), 0, buttons, 0, 0, 0, false, Vector<String>());
                 break;
             }
             case SDL_MOUSEBUTTONDOWN: {
                 auto window = Window::from_window_id(get_window_from_sdl_id(event.window.windowID));
-
-                u32 buttons = 0;
-                if (event.button.button == SDL_BUTTON_LEFT)
-                    buttons = GUI::MouseButton::Primary;
-                if (event.button.button == SDL_BUTTON_RIGHT)
-                    buttons = GUI::MouseButton::Secondary;
-
                 if (buttons > 0)
                     WindowServerConnection::the().mouse_down(window->window_id(), Gfx::IntPoint(event.motion.x, event.motion.y), buttons, buttons, 0, 0, 0);
                 break;
