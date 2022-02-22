@@ -295,9 +295,21 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                         auto type_parts = type.as_string().split_view(' ');
                         auto type_name = type_parts.first();
                         auto type_args = type_parts.size() > 1 ? type_parts[1] : ""sv;
-                        if (type_name == "color") {
+                        if (type_name == "angle") {
+                            property_generator.append(R"~~~(
+        if (style_value.is_angle()
+            || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Angle))
+            return true;
+)~~~");
+                        } else if (type_name == "color") {
                             property_generator.append(R"~~~(
         if (style_value.has_color())
+            return true;
+)~~~");
+                        } else if (type_name == "frequency") {
+                            property_generator.append(R"~~~(
+        if (style_value.is_frequency()
+            || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Frequency))
             return true;
 )~~~");
                         } else if (type_name == "image") {
@@ -309,12 +321,6 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                             property_generator.append(R"~~~(
         if (style_value.has_length()
          || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Length))
-            return true;
-)~~~");
-                        } else if (type_name == "percentage") {
-                            property_generator.append(R"~~~(
-        if (style_value.is_percentage()
-        || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Percentage))
             return true;
 )~~~");
                         } else if (type_name == "number" || type_name == "integer") {
@@ -345,9 +351,26 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                             test_generator.append(R"~~~()))
             return true;
 )~~~");
+                        } else if (type_name == "percentage") {
+                            property_generator.append(R"~~~(
+        if (style_value.is_percentage()
+        || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Percentage))
+            return true;
+)~~~");
+                        } else if (type_name == "resolution") {
+                            property_generator.append(R"~~~(
+        if (style_value.is_resolution())
+            return true;
+)~~~");
                         } else if (type_name == "string") {
                             property_generator.append(R"~~~(
         if (style_value.is_string())
+            return true;
+)~~~");
+                        } else if (type_name == "time") {
+                            property_generator.append(R"~~~(
+        if (style_value.is_time()
+            || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Time))
             return true;
 )~~~");
                         } else if (type_name == "url") {
