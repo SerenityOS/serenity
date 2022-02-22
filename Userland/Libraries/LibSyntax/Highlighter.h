@@ -40,6 +40,7 @@ public:
     virtual ~Highlighter();
 
     virtual Language language() const = 0;
+    StringView language_string(Language) const;
     virtual void rehighlight(const Palette&) = 0;
     virtual void highlight_matching_token_pair();
 
