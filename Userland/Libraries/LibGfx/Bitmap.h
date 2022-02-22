@@ -123,6 +123,7 @@ public:
 
     ~Bitmap();
 
+    [[nodiscard]] u8 const* data() const { return reinterpret_cast<u8 const*>(m_data); }
     [[nodiscard]] u8* scanline_u8(int physical_y);
     [[nodiscard]] u8 const* scanline_u8(int physical_y) const;
     [[nodiscard]] ARGB32* scanline(int physical_y);
