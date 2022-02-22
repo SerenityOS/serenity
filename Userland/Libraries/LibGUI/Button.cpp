@@ -189,7 +189,10 @@ void Button::set_menu(RefPtr<GUI::Menu> menu)
 void Button::mousedown_event(MouseEvent& event)
 {
     if (m_menu) {
-        m_menu->popup(screen_relative_rect().top_left());
+        if (button_style() == Gfx::ButtonStyle::Tray)
+            m_menu->popup(screen_relative_rect().top_right());
+        else
+            m_menu->popup(screen_relative_rect().top_left());
         update();
         return;
     }
