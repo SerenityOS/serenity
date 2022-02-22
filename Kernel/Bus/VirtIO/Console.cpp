@@ -162,7 +162,9 @@ void Console::process_control_message(ControlMessage message)
                 return;
             }
 
-            m_ports.at(id) = MUST(DeviceManagement::the().try_create_device<VirtIO::ConsolePort>(id, *this));
+            auto port = MUST(DeviceManagement::the().try_create_device<VirtIO::ConsolePort>(id, *this));
+            port->init_receive_buffer({});
+            m_ports.at(id) = port;
 
             ControlMessage ready_event {
                 .id = static_cast<u32>(id),

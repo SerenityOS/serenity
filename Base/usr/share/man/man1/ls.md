@@ -32,6 +32,7 @@ If no *path* argument is provided the current working directory is used.
 * `-h`, `--human-readable`: Print human-readable sizes
 * `-K`, `--no-hyperlinks`: Disable hyperlinks
 * `-R`, `--recursive`: List subdirectories recursively
+* `-1`: List one file per line
 
 ## Arguments
 

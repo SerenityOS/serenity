@@ -14,9 +14,6 @@ gdt64ptr:
 code64_sel:
 .short 0
 
-.extern init_ap
-.type init_ap, @function
-
 /*
   The apic_ap_start function will be loaded to P0x00008000 where the APIC
   will boot the AP from in real mode. This code also contains space for
@@ -31,6 +28,7 @@ code64_sel:
 */
 .global apic_ap_start
 .type apic_ap_start, @function
+.align 8
 apic_ap_start:
 .code16
     cli
@@ -68,15 +66,11 @@ apic_ap_start32:
     lock; xaddl %eax, (ap_cpu_id - apic_ap_start)(%ebp) /* avoid relocation entries */
     movl %eax, %esi
 
-    /* find our allocated stack based on the generated id */
-    movl (ap_cpu_init_stacks - apic_ap_start)(%ebp, %eax, 4), %esp
-
     /* check if we support NX and enable it if we do */
     movl $0x80000001, %eax
     cpuid
     testl $0x100000, %edx
-    // TODO: Uncomment this
-    //je (1f - apic_ap_start + 0x8000)
+    je (1f - apic_ap_start + 0x8000)
     /* turn on IA32_EFER.NXE */
     movl $0xc0000080, %ecx
     rdmsr
@@ -105,15 +99,25 @@ apic_ap_start32:
     movl %eax, %cr0
 
     /* load the temporary 64-bit gdt from boot that points above 3GB */
-    // FIXME: uncomment this
-    //mov gdt64ptr, %eax
-    lgdt (%eax)
+    lgdt (ap_cpu_gdt64ptr - apic_ap_start + 0x8000)
 
-    /* jump above 3GB into our identity mapped area now */
-    // FIXME: this assumes that code64_sel is always 8
-    ljmpl $8, $(apic_ap_start64 - apic_ap_start + 0xc0008000)
+    /* Jump into our identity mapped area, stay in low memory for now.
+       We need to fully enable 64 bit mode before we can adjust rsp and rip
+       to values higher than 4GB */
+    ljmpl $(ap_cpu_gdt64code - ap_cpu_gdt64), $(apic_ap_start64 - apic_ap_start + 0x8000)
 .code64
 apic_ap_start64:
+    movq (ap_cpu_kernel_map_base - apic_ap_start)(%rbp), %rbp
+    addq $0x8000, %rbp
+
+    /* find our allocated stack based on the generated id */
+    movq (ap_cpu_init_stacks - apic_ap_start)(%rbp, %rsi, 8), %rsp
+
+    /* Now jump from our identity mapped area into high memory */
+    movq $(1f - apic_ap_start), %rax
+    addq %rbp, %rax
+    jmp *%rax
+1:
     mov $0, %ax
     mov %ax, %ss
     mov %ax, %ds
@@ -124,8 +128,6 @@ apic_ap_start64:
     /* flush the TLB */
     movq %cr3, %rax
     movq %rax, %cr3
-
-    movl $0xc0008000, %ebp
 
     /* now load the final gdt and idt from the identity mapped area */
     movq (ap_cpu_gdtr - apic_ap_start)(%rbp), %rax
@@ -139,28 +141,25 @@ apic_ap_start64:
     movq (ap_cpu_init_cr4 - apic_ap_start)(%rbp), %rax
     movq %rax, %cr4
 
-    /* push the Processor pointer this CPU is going to use */
-    movq (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %rax
-    leaq kernel_mapping_base(%rip), %r8
-    movq (%r8), %r8
-    addq %r8, %rax
-    movq 0(%rax, %rsi, 4), %rax
-    push %rax
 
-    /* push the cpu id, 0 representing the bsp and call into c++ */
-    incq %rsi
-    push %rsi
+    /* Save the cpu id into rdi (first argument), 0 representing the bsp */
+    movq %rsi, %rdi
+    incq %rdi
 
-    xor %ebp, %ebp
+    /* Save the Processor pointer this CPU is going to use into rsi (second argument) */
+    movq (ap_cpu_init_processor_info_array - apic_ap_start)(%rbp), %rax
+    movq 0(%rax, %rsi, 8), %rsi
+
+    /* Get the entry function */
+    movq (ap_cpu_kernel_entry_function - apic_ap_start)(%rbp), %r10
+
+    movq %rsp, %rbp
     cld
 
     /* We are in identity mapped P0x8000 and the BSP will unload this code
-       once all APs are initialized, so call init_ap but return to our
-       infinite loop */
-    leaq loop(%rip), %rax
-    pushq %rax
-    leaq init_ap(%rip), %rax
-    jmp *(%rax)
+       once all APs are initialized, so call the entry function and return to our
+       infinite loop if it ever were to return. */
+    call *%r10
 
 loop:
     hlt
@@ -186,6 +185,7 @@ ap_cpu_gdt_end:
 ap_cpu_gdtr_initial:
     .2byte ap_cpu_gdt_end - ap_cpu_gdt - 1
     .4byte (ap_cpu_gdt - apic_ap_start) + 0x8000
+.align 8
 .global ap_cpu_gdtr
 ap_cpu_gdtr:
     .8byte 0x0 /* will be set at runtime */
@@ -200,6 +200,28 @@ ap_cpu_init_cr3:
     .8byte 0x0 /* will be set at runtime */
 .global ap_cpu_init_cr4
 ap_cpu_init_cr4:
+    .8byte 0x0 /* will be set at runtime */
+.global ap_cpu_gdt64
+ap_cpu_gdt64:
+    .8byte 0x0
+.global ap_cpu_gdt64code
+ap_cpu_gdt64code:
+    .4byte 0xffff
+    .4byte 0xaf9a00
+.global ap_cpu_gdt64data
+ap_cpu_gdt64data:
+    .4byte 0xffff
+    .4byte 0xaf9200
+.global ap_cpu_gdt64ptr
+ap_cpu_gdt64ptr:
+    .2byte ap_cpu_gdt64ptr - ap_cpu_gdt64 - 1
+    .8byte (ap_cpu_gdt64 - apic_ap_start) + 0x8000
+.align 8
+.global ap_cpu_kernel_entry_function
+ap_cpu_kernel_entry_function:
+    .8byte 0x0 /* will be set at runtime */
+.global ap_cpu_kernel_map_base
+ap_cpu_kernel_map_base:
     .8byte 0x0 /* will be set at runtime */
 .global ap_cpu_init_processor_info_array
 ap_cpu_init_processor_info_array:

@@ -498,6 +498,8 @@ TEST_CASE(posix_extended_nested_capture_group)
     EXPECT_EQ(result.capture_group_matches[0][2].view, "llo"sv);
 }
 
+auto parse_test_case_long_disjunction_chain = String::repeated("a|"sv, 100000);
+
 TEST_CASE(ECMA262_parse)
 {
     struct _test {
@@ -506,7 +508,7 @@ TEST_CASE(ECMA262_parse)
         regex::ECMAScriptFlags flags {};
     };
 
-    constexpr _test tests[] {
+    _test const tests[] {
         { "^hello.$"sv },
         { "^(hello.)$"sv },
         { "^h{0,1}ello.$"sv },
@@ -599,6 +601,8 @@ TEST_CASE(ECMA262_parse)
         { "(?<$$_$$>a)"sv },
         { "(?<ÿ>a)"sv },
         { "(?<𝓑𝓻𝓸𝔀𝓷>a)"sv },
+        { "((?=lg)?[vl]k\\-?\\d{3}) bui| 3\\.[-\\w; ]{10}lg?-([06cv9]{3,4})"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended }, // #12373, quantifiable assertions.
+        { parse_test_case_long_disjunction_chain.view() },                                                                                 // A whole lot of disjunctions, should not overflow the stack.
     };
 
     for (auto& test : tests) {

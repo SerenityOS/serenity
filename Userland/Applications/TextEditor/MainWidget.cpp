@@ -267,10 +267,6 @@ MainWidget::MainWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
-        if (response.is_error())
-            return;
-
         if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
@@ -278,6 +274,10 @@ MainWidget::MainWidget()
             if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && editor().document().is_modified())
                 return;
         }
+
+        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
+        if (response.is_error())
+            return;
 
         read_file(*response.value());
     });

@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Collator.h>
+#include <LibJS/Runtime/Intl/CollatorCompareFunction.h>
 #include <LibJS/Runtime/Intl/CollatorPrototype.h>
 
 namespace JS::Intl {
@@ -26,7 +27,29 @@ void CollatorPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.Collator"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_accessor(vm.names.compare, compare_getter, {}, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
+}
+
+// 10.3.3 get Intl.Collator.prototype.compare, https://tc39.es/ecma402/#sec-intl.collator.prototype.compare
+JS_DEFINE_NATIVE_FUNCTION(CollatorPrototype::compare_getter)
+{
+    // 1. Let collator be the this value.
+    // 2. Perform ? RequireInternalSlot(collator, [[InitializedCollator]]).
+    auto* collator = TRY(typed_this_object(global_object));
+
+    // 3. If collator.[[BoundCompare]] is undefined, then
+    if (!collator->bound_compare()) {
+        // a. Let F be a new built-in function object as defined in 10.3.3.1.
+        // b. Set F.[[Collator]] to collator.
+        auto* function = CollatorCompareFunction::create(global_object, *collator);
+
+        // c. Set collator.[[BoundCompare]] to F.
+        collator->set_bound_compare(function);
+    }
+
+    // 4. Return collator.[[BoundCompare]].
+    return collator->bound_compare();
 }
 
 // 10.3.4 Intl.Collator.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.collator.prototype.resolvedoptions

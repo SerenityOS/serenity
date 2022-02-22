@@ -108,6 +108,8 @@ class Text;
 class Timer;
 class Window;
 enum class QuirksMode;
+struct EventListenerOptions;
+struct AddEventListenerOptions;
 
 template<typename ValueType>
 class ExceptionOr;
@@ -289,6 +291,8 @@ class Label;
 class LabelableNode;
 class LineBox;
 class LineBoxFragment;
+class ListItemBox;
+class ListItemMarkerBox;
 class Node;
 class NodeWithStyle;
 class NodeWithStyleAndBoxModelMetrics;

@@ -656,7 +656,6 @@ JsonObject Sheet::gather_documentation() const
         if (!value_object.has_own_property(doc_name).release_value())
             return;
 
-        dbgln("Found '{}'", it.key.to_display_string());
         auto doc = value_object.get(doc_name).release_value();
         if (!doc.is_string())
             return;

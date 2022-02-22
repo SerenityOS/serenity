@@ -13,14 +13,14 @@ namespace Web::Layout {
 
 class TableFormattingContext final : public BlockFormattingContext {
 public:
-    explicit TableFormattingContext(BlockContainer&, FormattingContext* parent);
+    explicit TableFormattingContext(FormattingState&, BlockContainer const&, FormattingContext* parent);
     ~TableFormattingContext();
 
-    virtual void run(Box&, LayoutMode) override;
+    virtual void run(Box const&, LayoutMode) override;
 
 private:
-    void calculate_column_widths(Box& row, Vector<float>& column_widths);
-    void layout_row(Box& row, Vector<float>& column_widths);
+    void calculate_column_widths(Box const& row, Vector<float>& column_widths);
+    void layout_row(Box const& row, Vector<float>& column_widths);
 };
 
 }

@@ -37,7 +37,7 @@ TimeManagement& TimeManagement::the()
     return *s_the;
 }
 
-bool TimeManagement::is_valid_clock_id(clockid_t clock_id)
+ErrorOr<void> TimeManagement::validate_clock_id(clockid_t clock_id)
 {
     switch (clock_id) {
     case CLOCK_MONOTONIC:
@@ -45,9 +45,9 @@ bool TimeManagement::is_valid_clock_id(clockid_t clock_id)
     case CLOCK_MONOTONIC_RAW:
     case CLOCK_REALTIME:
     case CLOCK_REALTIME_COARSE:
-        return true;
+        return {};
     default:
-        return false;
+        return EINVAL;
     };
 }
 

@@ -64,6 +64,14 @@ void Menu::add_action(NonnullRefPtr<Action> action)
     MUST(try_add_action(move(action)));
 }
 
+void Menu::remove_all_actions()
+{
+    for (auto& item : m_items) {
+        WindowServerConnection::the().async_remove_menu_item(m_menu_id, item.identifier());
+    }
+    m_items.clear();
+}
+
 ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(String name)
 {
     // NOTE: We grow the vector first, to get allocation failure handled immediately.

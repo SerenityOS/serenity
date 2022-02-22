@@ -36,11 +36,9 @@ public:
     const Gfx::FloatPoint& scroll_offset() const { return m_scroll_offset; }
     void set_scroll_offset(const Gfx::FloatPoint&);
 
-    Vector<LineBox>& line_boxes() { return m_line_boxes; }
     const Vector<LineBox>& line_boxes() const { return m_line_boxes; }
 
-    LineBox& ensure_last_line_box();
-    LineBox& add_line_box();
+    void set_line_boxes(Vector<LineBox>&& line_boxes) { m_line_boxes = move(line_boxes); }
 
 protected:
     Vector<LineBox> m_line_boxes;

@@ -88,6 +88,7 @@ set(SOURCES
     Runtime/IndexedProperties.cpp
     Runtime/Intl/AbstractOperations.cpp
     Runtime/Intl/Collator.cpp
+    Runtime/Intl/CollatorCompareFunction.cpp
     Runtime/Intl/CollatorConstructor.cpp
     Runtime/Intl/CollatorPrototype.cpp
     Runtime/Intl/DateTimeFormat.cpp

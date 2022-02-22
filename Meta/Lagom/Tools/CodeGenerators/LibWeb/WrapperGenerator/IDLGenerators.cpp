@@ -45,6 +45,8 @@ static bool is_wrappable_type(Type const& type)
         return true;
     if (type.name == "TextMetrics")
         return true;
+    if (type.name == "AbortSignal")
+        return true;
     return false;
 }
 
@@ -60,7 +62,7 @@ static StringView sequence_storage_type_to_cpp_storage_type_name(SequenceStorage
     }
 }
 
-CppType idl_type_name_to_cpp_type(Type const& type)
+CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 {
     if (is_wrappable_type(type)) {
         if (type.nullable)
@@ -93,7 +95,7 @@ CppType idl_type_name_to_cpp_type(Type const& type)
     if (type.name == "sequence") {
         auto& parameterized_type = verify_cast<ParameterizedType>(type);
         auto& sequence_type = parameterized_type.parameters.first();
-        auto sequence_cpp_type = idl_type_name_to_cpp_type(sequence_type);
+        auto sequence_cpp_type = idl_type_name_to_cpp_type(sequence_type, interface);
         auto storage_type_name = sequence_storage_type_to_cpp_storage_type_name(sequence_cpp_type.sequence_storage_type);
 
         if (sequence_cpp_type.sequence_storage_type == SequenceStorageType::MarkedVector)
@@ -106,15 +108,22 @@ CppType idl_type_name_to_cpp_type(Type const& type)
         auto& parameterized_type = verify_cast<ParameterizedType>(type);
         auto& record_key_type = parameterized_type.parameters[0];
         auto& record_value_type = parameterized_type.parameters[1];
-        auto record_key_cpp_type = idl_type_name_to_cpp_type(record_key_type);
-        auto record_value_cpp_type = idl_type_name_to_cpp_type(record_value_type);
+        auto record_key_cpp_type = idl_type_name_to_cpp_type(record_key_type, interface);
+        auto record_value_cpp_type = idl_type_name_to_cpp_type(record_value_type, interface);
 
         return { .name = String::formatted("OrderedHashMap<{}, {}>", record_key_cpp_type.name, record_value_cpp_type.name), .sequence_storage_type = SequenceStorageType::Vector };
     }
 
     if (is<UnionType>(type)) {
         auto& union_type = verify_cast<UnionType>(type);
-        return { .name = union_type.to_variant(), .sequence_storage_type = SequenceStorageType::Vector };
+        return { .name = union_type.to_variant(interface), .sequence_storage_type = SequenceStorageType::Vector };
+    }
+
+    if (!type.nullable) {
+        for (auto& dictionary : interface.dictionaries) {
+            if (type.name == dictionary.key)
+                return { .name = type.name, .sequence_storage_type = SequenceStorageType::Vector };
+        }
     }
 
     dbgln("Unimplemented type for idl_type_name_to_cpp_type: {}{}", type.name, type.nullable ? "?" : "");
@@ -335,24 +344,32 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
     } else if (IDL::is_wrappable_type(*parameter.type)) {
         if (!parameter.type->nullable) {
-            scoped_generator.append(R"~~~(
-    auto @cpp_name@_object = TRY(@js_name@@js_suffix@.to_object(global_object));
-
-    if (!is<@wrapper_name@>(@cpp_name@_object))
+            if (!optional) {
+                scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
-    auto& @cpp_name@ = static_cast<@wrapper_name@*>(@cpp_name@_object)->impl();
+    auto& @cpp_name@ = static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
 )~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+    Optional<NonnullRefPtr<@parameter.type.name@>> @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined()) {
+        if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
+            return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
+
+        @cpp_name@ = static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
+    }
+)~~~");
+            }
         } else {
             scoped_generator.append(R"~~~(
     @parameter.type.name@* @cpp_name@ = nullptr;
     if (!@js_name@@js_suffix@.is_nullish()) {
-        auto @cpp_name@_object = TRY(@js_name@@js_suffix@.to_object(global_object));
-
-        if (!is<@wrapper_name@>(@cpp_name@_object))
+        if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
             return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
-        @cpp_name@ = &static_cast<@wrapper_name@*>(@cpp_name@_object)->impl();
+        @cpp_name@ = &static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
     }
 )~~~");
         }
@@ -604,7 +621,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         //       4. Set result[typedKey] to typedValue.
         // 5. Return result.
 
-        auto record_cpp_type = IDL::idl_type_name_to_cpp_type(parameterized_type);
+        auto record_cpp_type = IDL::idl_type_name_to_cpp_type(parameterized_type, interface);
         record_generator.set("record.type", record_cpp_type.name);
 
         // If this is a recursive call to generate_to_cpp, assume that the caller has already handled converting the JS value to an object for us.
@@ -653,8 +670,43 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         auto union_generator = scoped_generator.fork();
 
         auto& union_type = verify_cast<IDL::UnionType>(*parameter.type);
-        union_generator.set("union_type", union_type.to_variant());
+        union_generator.set("union_type", union_type.to_variant(interface));
         union_generator.set("recursion_depth", String::number(recursion_depth));
+
+        // NOTE: This is handled out here as we need the dictionary conversion code for the {} optional default value.
+        // 3. Let types be the flattened member types of the union type.
+        auto types = union_type.flattened_member_types();
+
+        RefPtr<Type> dictionary_type;
+        for (auto& dictionary : interface.dictionaries) {
+            for (auto& type : types) {
+                if (type.name == dictionary.key) {
+                    dictionary_type = type;
+                    break;
+                }
+            }
+
+            if (dictionary_type)
+                break;
+        }
+
+        if (dictionary_type) {
+            auto dictionary_generator = union_generator.fork();
+            dictionary_generator.set("dictionary.type", dictionary_type->name);
+
+            // The lambda must take the JS::Value to convert as a parameter instead of capturing it in order to support union types being variadic.
+            dictionary_generator.append(R"~~~(
+    auto @js_name@@js_suffix@_to_dictionary = [&global_object, &vm](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@dictionary.type@> {
+)~~~");
+
+            IDL::Parameter dictionary_parameter { .type = *dictionary_type, .name = acceptable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
+            generate_to_cpp(dictionary_generator, dictionary_parameter, js_name, js_suffix, "dictionary_union_type"sv, interface, false, false, {}, false, recursion_depth + 1);
+
+            dictionary_generator.append(R"~~~(
+        return dictionary_union_type;
+    };
+)~~~");
+        }
 
         // A lambda is used because Variants without "Empty" can't easily be default initialized.
         // Plus, this would require the user of union types to always accept a Variant with an Empty type.
@@ -664,8 +716,17 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // Note that all the other types only throw on a condition.
 
         // The lambda must take the JS::Value to convert as a parameter instead of capturing it in order to support union types being variadic.
+
+        StringBuilder to_variant_captures;
+        to_variant_captures.append("&global_object, &vm"sv);
+
+        if (dictionary_type)
+            to_variant_captures.append(String::formatted(", &{}{}_to_dictionary", js_name, js_suffix));
+
+        union_generator.set("to_variant_captures", to_variant_captures.to_string());
+
         union_generator.append(R"~~~(
-    auto @js_name@@js_suffix@_to_variant = [&global_object, &vm](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@union_type@> {
+    auto @js_name@@js_suffix@_to_variant = [@to_variant_captures@](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@union_type@> {
         // These might be unused.
         (void)global_object;
         (void)vm;
@@ -679,29 +740,16 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
 
-        // 3. Let types be the flattened member types of the union type.
-        auto types = union_type.flattened_member_types();
-
-        bool contains_dictionary_type = false;
-        for (auto& dictionary : interface.dictionaries) {
-            for (auto& type : types) {
-                if (type.name == dictionary.key) {
-                    contains_dictionary_type = true;
-                    break;
-                }
-            }
-
-            if (contains_dictionary_type)
-                break;
-        }
-
         // FIXME: 2. If the union type includes a nullable type and V is null or undefined, then return the IDL value null.
         if (union_type.includes_nullable_type()) {
             TODO();
-        } else if (contains_dictionary_type) {
-            // FIXME: 4. If V is null or undefined, then
-            //              4.1 If types includes a dictionary type, then return the result of converting V to that dictionary type.
-            TODO();
+        } else if (dictionary_type) {
+            // 4. If V is null or undefined, then
+            //    4.1 If types includes a dictionary type, then return the result of converting V to that dictionary type.
+            union_generator.append(R"~~~(
+        if (@js_name@@js_suffix@.is_nullish())
+            return @union_type@ { TRY(@js_name@@js_suffix@_to_dictionary(@js_name@@js_suffix@)) };
+)~~~");
         }
 
         bool includes_object = false;
@@ -739,7 +787,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
                 auto union_platform_object_type_generator = union_generator.fork();
                 union_platform_object_type_generator.set("platform_object_type", String::formatted("{}Wrapper", type.name));
-                auto cpp_type = IDL::idl_type_name_to_cpp_type(type);
+                auto cpp_type = IDL::idl_type_name_to_cpp_type(type, interface);
                 union_platform_object_type_generator.set("refptr_type", cpp_type.name);
 
                 union_platform_object_type_generator.append(R"~~~(
@@ -810,9 +858,12 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         //           1. Let method be ? GetMethod(V, @@iterator).
         //           2. If method is not undefined, return the result of creating a frozen array of that type from V and method.
 
-        // FIXME: 3. If types includes a dictionary type, then return the result of converting V to that dictionary type.
-        if (contains_dictionary_type)
-            TODO();
+        // 3. If types includes a dictionary type, then return the result of converting V to that dictionary type.
+        if (dictionary_type) {
+            union_generator.append(R"~~~(
+        return @union_type@ { TRY(@js_name@@js_suffix@_to_dictionary(@js_name@@js_suffix@)) };
+)~~~");
+        }
 
         // 4. If types includes a record type, then return the result of converting V to that record type.
         RefPtr<IDL::ParameterizedType> record_type;
@@ -859,7 +910,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (includes_boolean) {
             union_generator.append(R"~~~(
         if (@js_name@@js_suffix@.is_boolean())
-            return @js_name@@js_suffix@.as_boolean();
+            return @union_type@ { @js_name@@js_suffix@.as_bool() };
 )~~~");
         }
 
@@ -932,7 +983,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // 4. Return the result of converting x to T.
 
             auto union_numeric_type_generator = union_generator.fork();
-            auto cpp_type = IDL::idl_type_name_to_cpp_type(*numeric_type);
+            auto cpp_type = IDL::idl_type_name_to_cpp_type(*numeric_type, interface);
             union_numeric_type_generator.set("numeric_type", cpp_type.name);
 
             union_numeric_type_generator.append(R"~~~(
@@ -964,7 +1015,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         } else if (includes_boolean) {
             // 17. If types includes boolean, then return the result of converting V to boolean.
             union_generator.append(R"~~~(
-        return @js_name@@js_suffix@.to_boolean();
+        return @union_type@ { @js_name@@js_suffix@.to_boolean() };
 )~~~");
         } else if (includes_bigint) {
             // 18. If types includes bigint, then return the result of converting V to bigint.
@@ -981,29 +1032,34 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         // Close the lambda and then perform the conversion.
         union_generator.append(R"~~~(
-        };
-
-    )~~~");
+    };
+)~~~");
 
         if (!variadic) {
             if (!optional) {
                 union_generator.append(R"~~~(
-        @union_type@ @cpp_name@ = TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
-    )~~~");
+    @union_type@ @cpp_name@ = TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
             } else {
                 if (!optional_default_value.has_value()) {
                     union_generator.append(R"~~~(
-        Optional<@union_type@> @cpp_name@;
-        if (!@js_name@@js_suffix@.is_undefined())
-            @cpp_name@ = TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
-    )~~~");
+    Optional<@union_type@> @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined())
+        @cpp_name@ = TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
                 } else {
-                    if (optional_default_value != "\"\"")
+                    if (optional_default_value == "\"\"") {
+                        union_generator.append(R"~~~(
+    @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? String::empty() : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
+                    } else if (optional_default_value == "{}") {
+                        VERIFY(dictionary_type);
+                        union_generator.append(R"~~~(
+    @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? TRY(@js_name@@js_suffix@_to_dictionary(@js_name@@js_suffix@)) : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
+                    } else {
                         TODO();
-
-                    union_generator.append(R"~~~(
-        @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? String::empty() : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
-    )~~~");
+                    }
                 }
             }
         } else {
@@ -1078,7 +1134,7 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
     sequence_generator.set("iterable_cpp_name", iterable_cpp_name);
     sequence_generator.set("iterator_method_cpp_name", iterator_method_cpp_name);
     sequence_generator.set("recursion_depth", String::number(recursion_depth));
-    auto sequence_cpp_type = idl_type_name_to_cpp_type(parameters.first());
+    auto sequence_cpp_type = idl_type_name_to_cpp_type(parameters.first(), interface);
     sequence_generator.set("sequence.type", sequence_cpp_type.name);
     sequence_generator.set("sequence.storage_type", sequence_storage_type_to_cpp_storage_type_name(sequence_cpp_type.sequence_storage_type));
 

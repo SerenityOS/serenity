@@ -14,6 +14,7 @@ namespace regex {
 class Optimizer {
 public:
     static void append_alternation(ByteCode& target, ByteCode&& left, ByteCode&& right);
+    static void append_alternation(ByteCode& target, Span<ByteCode> alternatives);
     static void append_character_class(ByteCode& target, Vector<CompareTypeAndValuePair>&& pairs);
 };
 

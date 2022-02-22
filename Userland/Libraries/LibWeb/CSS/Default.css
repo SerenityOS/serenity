@@ -46,6 +46,15 @@ b {
     font-weight: bold;
 }
 
+i,
+em,
+address,
+cite,
+dfn,
+var {
+    font-style: italic;
+}
+
 html,
 address,
 blockquote,

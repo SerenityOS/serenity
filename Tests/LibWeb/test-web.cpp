@@ -150,10 +150,10 @@ JS_DEFINE_NATIVE_FUNCTION(TestWebGlobalObject::wait_for_page_to_load)
     loader.load_sync(
         request,
         [&](auto data, auto&, auto) {
-            Web::HTML::HTMLParser parser(document, data, "utf-8");
+            auto parser = Web::HTML::HTMLParser::create(document, data, "utf-8");
             // Now parse the HTML page.
-            parser.run(next_page_to_load.value());
-            g_page_view->set_document(&parser.document());
+            parser->run(next_page_to_load.value());
+            g_page_view->set_document(&parser->document());
             // Note: Unhandled exceptions are just dropped here.
 
             // Run the "after" hooks

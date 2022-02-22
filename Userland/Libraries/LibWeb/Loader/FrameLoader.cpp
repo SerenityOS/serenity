@@ -46,8 +46,8 @@ static bool build_markdown_document(DOM::Document& document, const ByteBuffer& d
     if (!markdown_document)
         return false;
 
-    HTML::HTMLParser parser(document, markdown_document->render_to_html(), "utf-8");
-    parser.run(document.url());
+    auto parser = HTML::HTMLParser::create(document, markdown_document->render_to_html(), "utf-8");
+    parser->run(document.url());
     return true;
 }
 
@@ -116,8 +116,8 @@ static bool build_gemini_document(DOM::Document& document, const ByteBuffer& dat
     dbgln_if(GEMINI_DEBUG, "Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
     dbgln_if(GEMINI_DEBUG, "Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
 
-    HTML::HTMLParser parser(document, html_data, "utf-8");
-    parser.run(document.url());
+    auto parser = HTML::HTMLParser::create(document, html_data, "utf-8");
+    parser->run(document.url());
     return true;
 }
 
@@ -226,9 +226,9 @@ bool FrameLoader::load(const AK::URL& url, Type type)
 void FrameLoader::load_html(StringView html, const AK::URL& url)
 {
     auto document = DOM::Document::create(url);
-    HTML::HTMLParser parser(document, html, "utf-8");
-    parser.run(url);
-    browsing_context().set_active_document(&parser.document());
+    auto parser = HTML::HTMLParser::create(document, html, "utf-8");
+    parser->run(url);
+    browsing_context().set_active_document(&parser->document());
 }
 
 // FIXME: Use an actual templating engine (our own one when it's built, preferably

@@ -60,25 +60,44 @@ ThrowCompletionOr<Object*> ProxyConstructor::construct(FunctionObject&)
 // 28.2.2.1 Proxy.revocable ( target, handler ), https://tc39.es/ecma262/#sec-proxy.revocable
 JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
 {
+    // 1. Let p be ? ProxyCreate(target, handler).
     auto* proxy = TRY(proxy_create(global_object, vm.argument(0), vm.argument(1)));
 
-    // 28.2.2.1.1 Proxy Revocation Functions, https://tc39.es/ecma262/#sec-proxy-revocation-functions
-    auto* revoker = NativeFunction::create(global_object, "", [proxy_handle = make_handle(proxy)](auto&, auto&) -> ThrowCompletionOr<Value> {
+    // 2. Let revokerClosure be a new Abstract Closure with no parameters that captures nothing and performs the following steps when called:
+    auto revoker_closure = [proxy_handle = make_handle(proxy)](auto&, auto&) -> ThrowCompletionOr<Value> {
+        // a. Let F be the active function object.
+
+        // b. Let p be F.[[RevocableProxy]].
         auto& proxy = const_cast<ProxyObject&>(*proxy_handle.cell());
+
+        // c. If p is null, return undefined.
         if (proxy.is_revoked())
             return js_undefined();
-        // NOTE: The spec wants us to unset [[ProxyTarget]] and [[ProxyHandler]],
-        // which is their way of revoking the Proxy - this might affect GC-ability,
-        // but AFAICT not doing that should be ok compatibility-wise.
-        proxy.revoke();
-        return js_undefined();
-    });
-    revoker->define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-    revoker->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
+        // d. Set F.[[RevocableProxy]] to null.
+        // e. Assert: p is a Proxy object.
+        // f. Set p.[[ProxyTarget]] to null.
+        // g. Set p.[[ProxyHandler]] to null.
+        proxy.revoke();
+
+        // h. Return undefined.
+        return js_undefined();
+    };
+
+    // 3. Let revoker be ! CreateBuiltinFunction(revokerClosure, 0, "", « [[RevocableProxy]] »).
+    // 4. Set revoker.[[RevocableProxy]] to p.
+    auto* revoker = NativeFunction::create(global_object, move(revoker_closure), 0, "");
+
+    // 5. Let result be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* result = Object::create(global_object, global_object.object_prototype());
+
+    // 6. Perform ! CreateDataPropertyOrThrow(result, "proxy", p).
     MUST(result->create_data_property_or_throw(vm.names.proxy, proxy));
+
+    // 7. Perform ! CreateDataPropertyOrThrow(result, "revoke", revoker).
     MUST(result->create_data_property_or_throw(vm.names.revoke, revoker));
+
+    // 8. Return result.
     return result;
 }
 

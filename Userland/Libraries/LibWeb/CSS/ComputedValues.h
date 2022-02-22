@@ -14,6 +14,8 @@ namespace Web::CSS {
 
 class InitialValues {
 public:
+    static float font_size() { return 10; }
+    static int font_weight() { return 400; }
     static CSS::Float float_() { return CSS::Float::None; }
     static CSS::Clear clear() { return CSS::Clear::None; }
     static CSS::Cursor cursor() { return CSS::Cursor::Auto; }
@@ -146,6 +148,9 @@ public:
 
     Vector<CSS::Transformation> transformations() const { return m_noninherited.transformations; }
 
+    float font_size() const { return m_inherited.font_size; }
+    int font_weight() const { return m_inherited.font_weight; }
+
     ComputedValues clone_inherited_values() const
     {
         ComputedValues clone;
@@ -155,6 +160,8 @@ public:
 
 protected:
     struct {
+        float font_size { InitialValues::font_size() };
+        int font_weight { InitialValues::font_weight() };
         Color color { InitialValues::color() };
         CSS::Cursor cursor { InitialValues::cursor() };
         CSS::ImageRendering image_rendering { InitialValues::image_rendering() };
@@ -217,6 +224,8 @@ class ImmutableComputedValues final : public ComputedValues {
 
 class MutableComputedValues final : public ComputedValues {
 public:
+    void set_font_size(float font_size) { m_inherited.font_size = font_size; }
+    void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }
     void set_color(const Color& color) { m_inherited.color = color; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
     void set_image_rendering(CSS::ImageRendering value) { m_inherited.image_rendering = value; }

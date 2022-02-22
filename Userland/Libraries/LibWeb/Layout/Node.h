@@ -258,6 +258,9 @@ public:
     bool has_definite_height() const { return m_has_definite_height; }
     bool has_definite_width() const { return m_has_definite_width; }
 
+    void set_has_definite_height(bool b) { m_has_definite_height = b; }
+    void set_has_definite_width(bool b) { m_has_definite_width = b; }
+
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     NodeWithStyle(DOM::Document&, DOM::Node*, CSS::ComputedValues);

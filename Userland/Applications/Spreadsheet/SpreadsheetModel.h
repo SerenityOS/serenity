@@ -29,6 +29,8 @@ public:
 
     void update();
 
+    Function<void(Cell&, String&)> on_cell_data_change;
+
 private:
     explicit SheetModel(Sheet& sheet)
         : m_sheet(sheet)

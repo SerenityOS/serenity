@@ -1052,29 +1052,12 @@ void Object::set_prototype(Object* new_prototype)
 
 void Object::define_native_accessor(PropertyKey const& property_key, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> getter, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
 {
-    auto& vm = this->vm();
-    String formatted_property_key;
-    if (property_key.is_number()) {
-        formatted_property_key = property_key.to_string();
-    } else if (property_key.is_string()) {
-        formatted_property_key = property_key.as_string();
-    } else {
-        formatted_property_key = String::formatted("[{}]", property_key.as_symbol()->description());
-    }
     FunctionObject* getter_function = nullptr;
-    if (getter) {
-        auto name = String::formatted("get {}", formatted_property_key);
-        getter_function = NativeFunction::create(global_object(), name, move(getter));
-        getter_function->define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-        getter_function->define_direct_property(vm.names.name, js_string(vm, name), Attribute::Configurable);
-    }
+    if (getter)
+        getter_function = NativeFunction::create(global_object(), move(getter), 0, property_key, {}, {}, "get"sv);
     FunctionObject* setter_function = nullptr;
-    if (setter) {
-        auto name = String::formatted("set {}", formatted_property_key);
-        setter_function = NativeFunction::create(global_object(), name, move(setter));
-        setter_function->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-        setter_function->define_direct_property(vm.names.name, js_string(vm, name), Attribute::Configurable);
-    }
+    if (setter)
+        setter_function = NativeFunction::create(global_object(), move(setter), 1, property_key, {}, {}, "set"sv);
     return define_direct_accessor(property_key, getter_function, setter_function, attribute);
 }
 
@@ -1118,16 +1101,7 @@ Value Object::get_without_side_effects(const PropertyKey& property_key) const
 
 void Object::define_native_function(PropertyKey const& property_key, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
-    auto& vm = this->vm();
-    String function_name;
-    if (property_key.is_string()) {
-        function_name = property_key.as_string();
-    } else {
-        function_name = String::formatted("[{}]", property_key.as_symbol()->description());
-    }
-    auto* function = NativeFunction::create(global_object(), function_name, move(native_function));
-    function->define_direct_property(vm.names.length, Value(length), Attribute::Configurable);
-    function->define_direct_property(vm.names.name, js_string(vm, function_name), Attribute::Configurable);
+    auto* function = NativeFunction::create(global_object(), move(native_function), length, property_key);
     define_direct_property(property_key, function, attribute);
 }
 

@@ -86,7 +86,7 @@ public:
     static NonnullRefPtr<Buffer> create_empty()
     {
         // If we can't allocate an empty buffer, things are in a very bad state.
-        return MUST(adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(FixedArray<Sample>())));
+        return MUST(adopt_nonnull_ref_or_enomem(new (nothrow) Buffer));
     }
 
     Sample const* samples() const { return (const Sample*)data(); }
@@ -99,9 +99,7 @@ public:
 private:
     template<ArrayLike<Sample> ArrayT>
     explicit Buffer(ArrayT&& samples)
-        // FIXME: AnonymousBuffers can't be empty, so even for empty buffers we create a buffer of size 1 here,
-        //        although the sample count is set to 0 to mark this.
-        : m_buffer(Core::AnonymousBuffer::create_with_size(max(samples.size(), 1) * sizeof(Sample)).release_value())
+        : m_buffer(Core::AnonymousBuffer::create_with_size(samples.size() * sizeof(Sample)).release_value())
         , m_id(allocate_id())
         , m_sample_count(samples.size())
     {
@@ -115,11 +113,14 @@ private:
     {
     }
 
+    // Empty Buffer representation, to avoid tiny anonymous buffers in EOF states
+    Buffer() = default;
+
     static i32 allocate_id();
 
     Core::AnonymousBuffer m_buffer;
-    const i32 m_id;
-    const int m_sample_count;
+    const i32 m_id { -1 };
+    const int m_sample_count { 0 };
 };
 
 // This only works for double resamplers, and therefore cannot be part of the class

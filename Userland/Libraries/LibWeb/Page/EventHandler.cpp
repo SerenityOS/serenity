@@ -439,7 +439,7 @@ bool EventHandler::focus_previous_element()
 constexpr bool should_ignore_keydown_event(u32 code_point)
 {
     // FIXME: There are probably also keys with non-zero code points that should be filtered out.
-    return code_point == 0;
+    return code_point == 0 || code_point == 27;
 }
 
 bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
@@ -508,6 +508,16 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             if (!m_browsing_context.decrement_cursor_position_offset()) {
                 // FIXME: Move to the previous node.
             }
+            return true;
+        }
+        if (key == KeyCode::Key_Home) {
+            auto& node = *static_cast<DOM::Text*>(const_cast<DOM::Node*>(m_browsing_context.cursor_position().node()));
+            m_browsing_context.set_cursor_position(DOM::Position { node, 0 });
+            return true;
+        }
+        if (key == KeyCode::Key_End) {
+            auto& node = *static_cast<DOM::Text*>(const_cast<DOM::Node*>(m_browsing_context.cursor_position().node()));
+            m_browsing_context.set_cursor_position(DOM::Position { node, (unsigned)node.data().length() });
             return true;
         }
         if (!should_ignore_keydown_event(code_point)) {

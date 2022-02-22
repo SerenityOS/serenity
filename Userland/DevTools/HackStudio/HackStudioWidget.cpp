@@ -23,6 +23,7 @@
 #include "ProjectDeclarations.h"
 #include "TerminalWrapper.h"
 #include "ToDoEntries.h"
+#include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/API/InodeWatcherEvent.h>
@@ -192,6 +193,28 @@ void HackStudioWidget::on_action_tab_change()
     }
 }
 
+Vector<String> HackStudioWidget::read_recent_projects()
+{
+    auto json = Config::read_string("HackStudio", "Global", "RecentProjects");
+    AK::JsonParser parser(json);
+    auto value_or_error = parser.parse();
+    if (value_or_error.is_error())
+        return {};
+
+    auto value = value_or_error.release_value();
+    if (!value.is_array())
+        return {};
+
+    Vector<String> paths;
+    for (auto& json_value : value.as_array().values()) {
+        if (!json_value.is_string())
+            return {};
+        paths.append(json_value.as_string());
+    }
+
+    return paths;
+}
+
 void HackStudioWidget::open_project(const String& root_path)
 {
     if (warn_unsaved_changes("There are unsaved changes, do you want to save before closing current project?") == ContinueDecision::No)
@@ -229,6 +252,15 @@ void HackStudioWidget::open_project(const String& root_path)
             LexicalPath::relative_path(absolute_old_path, m_project->root_path()),
             LexicalPath::relative_path(absolute_new_path, m_project->root_path()));
     };
+
+    auto recent_projects = read_recent_projects();
+    recent_projects.remove_all_matching([&](auto& p) { return p == root_path; });
+    recent_projects.insert(0, root_path);
+    if (recent_projects.size() > recent_projects_history_size)
+        recent_projects.shrink(recent_projects_history_size);
+
+    Config::write_string("HackStudio", "Global", "RecentProjects", JsonArray(recent_projects).to_string());
+    update_recent_projects_submenu();
 }
 
 Vector<String> HackStudioWidget::selected_file_paths() const
@@ -1142,11 +1174,36 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
     };
 }
 
+void HackStudioWidget::update_recent_projects_submenu()
+{
+    if (!m_recent_projects_submenu)
+        return;
+
+    m_recent_projects_submenu->remove_all_actions();
+    auto recent_projects = read_recent_projects();
+
+    if (recent_projects.size() <= 1) {
+        auto empty_action = GUI::Action::create("Empty...", [](auto&) {});
+        empty_action->set_enabled(false);
+        m_recent_projects_submenu->add_action(empty_action);
+        return;
+    }
+
+    for (size_t i = 1; i < recent_projects.size(); i++) {
+        auto project_path = recent_projects[i];
+        m_recent_projects_submenu->add_action(GUI::Action::create(recent_projects[i], [this, project_path](auto&) {
+            open_project(project_path);
+        }));
+    }
+}
+
 void HackStudioWidget::create_file_menu(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File");
     file_menu.add_action(*m_new_project_action);
     file_menu.add_action(*m_open_action);
+    m_recent_projects_submenu = &file_menu.add_submenu("Open Recent");
+    update_recent_projects_submenu();
     file_menu.add_action(*m_save_action);
     file_menu.add_action(*m_save_as_action);
     file_menu.add_separator();

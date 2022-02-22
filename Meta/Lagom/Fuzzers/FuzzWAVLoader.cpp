@@ -10,8 +10,10 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    auto wav_data = ByteBuffer::copy(data, size).release_value();
-    auto wav = make<Audio::WavLoaderPlugin>(wav_data.bytes());
+    if (!data)
+        return 0;
+    auto wav_data = ReadonlyBytes { data, size };
+    auto wav = make<Audio::WavLoaderPlugin>(wav_data);
 
     for (;;) {
         auto samples = wav->get_more_samples();

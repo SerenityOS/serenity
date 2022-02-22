@@ -43,42 +43,38 @@ jobs:
         ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
           with_remote_data_caches: true
 
-    - script: |
-        mkdir -p Meta/Lagom/Build
-      displayName: 'Create Build Directory'
-
     - ${{ if eq(parameters.fuzzer, 'Fuzz') }}:
       - script: |
-          cmake -GNinja \
+          cmake -GNinja -B tools-build \
+              -DBUILD_LAGOM=OFF \
+              -DENABLE_LAGOM_CCACHE=ON \
+              -DCMAKE_INSTALL_PREFIX=tool-install
+          ninja -C tools-build install
+          cmake -GNinja -B Build \
             -DBUILD_LAGOM=ON \
             -DENABLE_LAGOM_CCACHE=ON \
             -DENABLE_FUZZER_SANITIZER=ON \
             -DENABLE_ADDRESS_SANITIZER=ON \
-            -DENABLE_PCI_IDS_DOWNLOAD=OFF \
-            -DENABLE_USB_IDS_DOWNLOAD=OFF \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
-            ..
+            -DCMAKE_PREFIX_PATH=tool-install
         displayName: 'Create Build Environment'
-        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
         env:
           CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
     - ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
       - script: |
-          cmake -GNinja \
+          cmake -GNinja -B Build \
             -DBUILD_LAGOM=ON \
             -DENABLE_LAGOM_CCACHE=ON \
             -DINCLUDE_WASM_SPEC_TESTS=ON \
             -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
             -DENABLE_UNDEFINED_SANITIZER=ON \
             -DENABLE_ADDRESS_SANITIZER=ON \
-            -DENABLE_PCI_IDS_DOWNLOAD=OFF \
-            -DENABLE_USB_IDS_DOWNLOAD=OFF \
             -DCMAKE_C_COMPILER=gcc-11 \
-            -DCMAKE_CXX_COMPILER=g++-11 \
-            ..
+            -DCMAKE_CXX_COMPILER=g++-11
         displayName: 'Create Build Environment'
-        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
         env:
           PATH: '$(PATH):$(Build.SourcesDirectory)/wabt-1.0.23/bin'
           CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'

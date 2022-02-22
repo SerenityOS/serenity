@@ -42,6 +42,10 @@ public:
 
     void initialize_menubar(GUI::Window&);
 
+    void undo();
+    void redo();
+    auto& undo_stack() { return m_undo_stack; }
+
 private:
     virtual void resize_event(GUI::ResizeEvent&) override;
 
@@ -60,6 +64,7 @@ private:
     RefPtr<GUI::Menu> m_tab_context_menu;
     RefPtr<SpreadsheetView> m_tab_context_menu_sheet_view;
     bool m_should_change_selected_cells { false };
+    GUI::UndoStack m_undo_stack;
 
     OwnPtr<Workbook> m_workbook;
 
@@ -69,11 +74,16 @@ private:
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
     RefPtr<GUI::Action> m_quit_action;
+
     RefPtr<GUI::Action> m_cut_action;
     RefPtr<GUI::Action> m_copy_action;
     RefPtr<GUI::Action> m_paste_action;
+    RefPtr<GUI::Action> m_undo_action;
+    RefPtr<GUI::Action> m_redo_action;
+
     RefPtr<GUI::Action> m_functions_help_action;
     RefPtr<GUI::Action> m_about_action;
+
     RefPtr<GUI::Action> m_rename_action;
 };
 

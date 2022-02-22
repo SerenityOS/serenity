@@ -153,12 +153,13 @@ bool MediaFeature::compare(DOM::Window const& window, MediaFeatureValue left, Co
 
             // FIXME: This isn't right - we want to query the initial-value font, which is the one used
             //        if no author styles are defined.
-            auto const& font = window.associated_document().root().layout_node()->font();
+            auto& root_layout_node = *window.associated_document().root().layout_node();
+            auto const& font = root_layout_node.font();
             Gfx::FontMetrics const& font_metrics = font.metrics('M');
-            float root_font_size = font.presentation_size();
+            float root_font_size = root_layout_node.computed_values().font_size();
 
-            left_px = left.length().to_px(viewport_rect, font_metrics, root_font_size);
-            right_px = right.length().to_px(viewport_rect, font_metrics, root_font_size);
+            left_px = left.length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
+            right_px = right.length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
         }
 
         switch (comparison) {

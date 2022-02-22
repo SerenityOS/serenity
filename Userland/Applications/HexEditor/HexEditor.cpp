@@ -378,67 +378,72 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
 {
     dbgln_if(HEX_DEBUG, "HexEditor::keydown_event key={}", static_cast<u8>(event.key()));
 
+    auto update_cursor_on_change = [&]() {
+        m_selection_start = m_selection_end = m_position;
+        m_cursor_at_low_nibble = false;
+        reset_cursor_blink_state();
+        scroll_position_into_view(m_position);
+        update();
+        update_status();
+    };
+
+    auto advance_cursor_backwards = [this, update_cursor_on_change](size_t cursor_location_change) -> void {
+        m_position -= cursor_location_change;
+        update_cursor_on_change();
+    };
+
+    auto advance_cursor_forward = [this, update_cursor_on_change](size_t cursor_location_change) -> void {
+        m_position += cursor_location_change;
+        update_cursor_on_change();
+    };
+
     if (event.key() == KeyCode::Key_Up) {
         if (m_position >= bytes_per_row()) {
-            m_position -= bytes_per_row();
-            m_selection_start = m_selection_end = m_position;
-            m_cursor_at_low_nibble = false;
-            reset_cursor_blink_state();
-            scroll_position_into_view(m_position);
-            update();
-            update_status();
+            advance_cursor_backwards(bytes_per_row());
         }
         return;
     }
 
     if (event.key() == KeyCode::Key_Down) {
         if (m_position + bytes_per_row() < m_document->size()) {
-            m_position += bytes_per_row();
-            m_selection_start = m_selection_end = m_position;
-            m_cursor_at_low_nibble = false;
-            reset_cursor_blink_state();
-            scroll_position_into_view(m_position);
-            update();
-            update_status();
+            advance_cursor_forward(bytes_per_row());
         }
         return;
     }
 
     if (event.key() == KeyCode::Key_Left) {
         if (m_position >= 1) {
-            m_position--;
-            m_selection_start = m_selection_end = m_position;
-            m_cursor_at_low_nibble = false;
-            reset_cursor_blink_state();
-            scroll_position_into_view(m_position);
-            update();
-            update_status();
+            advance_cursor_backwards(1);
         }
         return;
     }
 
     if (event.key() == KeyCode::Key_Right) {
         if (m_position + 1 < m_document->size()) {
-            m_position++;
-            m_selection_start = m_selection_end = m_position;
-            m_cursor_at_low_nibble = false;
-            reset_cursor_blink_state();
-            scroll_position_into_view(m_position);
-            update();
-            update_status();
+            advance_cursor_forward(1);
         }
         return;
     }
 
     if (event.key() == KeyCode::Key_Backspace) {
         if (m_position > 0) {
-            m_position--;
-            m_selection_start = m_selection_end = m_position;
-            m_cursor_at_low_nibble = false;
-            reset_cursor_blink_state();
-            scroll_position_into_view(m_position);
-            update();
-            update_status();
+            advance_cursor_backwards(1);
+        }
+        return;
+    }
+
+    if (event.key() == KeyCode::Key_PageUp) {
+        auto cursor_location_change = min(bytes_per_row() * visible_content_rect().height(), m_position);
+        if (cursor_location_change > 0) {
+            advance_cursor_backwards(cursor_location_change);
+        }
+        return;
+    }
+
+    if (event.key() == KeyCode::Key_PageDown) {
+        auto cursor_location_change = min(bytes_per_row() * visible_content_rect().height(), m_document->size() - m_position);
+        if (cursor_location_change > 0) {
+            advance_cursor_forward(cursor_location_change);
         }
         return;
     }

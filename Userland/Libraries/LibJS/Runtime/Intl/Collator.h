@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <LibJS/Runtime/Intl/CollatorCompareFunction.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS::Intl {
@@ -69,14 +70,20 @@ public:
     bool numeric() const { return m_numeric; }
     void set_numeric(bool numeric) { m_numeric = numeric; }
 
+    CollatorCompareFunction* bound_compare() const { return m_bound_compare; }
+    void set_bound_compare(CollatorCompareFunction* bound_compare) { m_bound_compare = bound_compare; }
+
 private:
-    String m_locale;                                    // [[Locale]]
-    Usage m_usage { Usage::Sort };                      // [[Usage]]
-    Sensitivity m_sensitivity { Sensitivity::Variant }; // [[Sensitivity]]
-    CaseFirst m_case_first { CaseFirst::False };        // [[CaseFirst]]
-    String m_collation;                                 // [[Collation]]
-    bool m_ignore_punctuation { false };                // [[IgnorePunctuation]]
-    bool m_numeric { false };                           // [[Numeric]]
+    virtual void visit_edges(Visitor&) override;
+
+    String m_locale;                                      // [[Locale]]
+    Usage m_usage { Usage::Sort };                        // [[Usage]]
+    Sensitivity m_sensitivity { Sensitivity::Variant };   // [[Sensitivity]]
+    CaseFirst m_case_first { CaseFirst::False };          // [[CaseFirst]]
+    String m_collation;                                   // [[Collation]]
+    bool m_ignore_punctuation { false };                  // [[IgnorePunctuation]]
+    bool m_numeric { false };                             // [[Numeric]]
+    CollatorCompareFunction* m_bound_compare { nullptr }; // [[BoundCompare]]
 };
 
 }

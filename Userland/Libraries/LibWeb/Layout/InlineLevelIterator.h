@@ -28,7 +28,7 @@ public:
             ForcedBreak,
         };
         Type type {};
-        Layout::Node* node { nullptr };
+        Layout::Node const* node { nullptr };
         size_t offset_in_node { 0 };
         size_t length_in_node { 0 };
         float width { 0.0f };
@@ -47,7 +47,7 @@ public:
         }
     };
 
-    InlineLevelIterator(Layout::InlineFormattingContext&, Layout::BlockContainer&, LayoutMode);
+    InlineLevelIterator(Layout::InlineFormattingContext&, FormattingState&, Layout::BlockContainer const&, LayoutMode);
 
     Optional<Item> next(float available_width);
 
@@ -55,19 +55,20 @@ private:
     void skip_to_next();
     void compute_next();
 
-    void enter_text_node(Layout::TextNode&, bool previous_is_empty_or_ends_in_whitespace);
+    void enter_text_node(Layout::TextNode const&, bool previous_is_empty_or_ends_in_whitespace);
 
-    void enter_node_with_box_model_metrics(Layout::NodeWithStyleAndBoxModelMetrics&);
+    void enter_node_with_box_model_metrics(Layout::NodeWithStyleAndBoxModelMetrics const&);
     void exit_node_with_box_model_metrics();
 
     void add_extra_box_model_metrics_to_item(Item&, bool add_leading_metrics, bool add_trailing_metrics);
 
-    Layout::Node* next_inline_node_in_pre_order(Layout::Node& current, Layout::Node const* stay_within);
+    Layout::Node const* next_inline_node_in_pre_order(Layout::Node const& current, Layout::Node const* stay_within);
 
     Layout::InlineFormattingContext& m_inline_formatting_context;
-    Layout::BlockContainer& m_container;
-    Layout::Node* m_current_node { nullptr };
-    Layout::Node* m_next_node { nullptr };
+    Layout::FormattingState& m_formatting_state;
+    Layout::BlockContainer const& m_container;
+    Layout::Node const* m_current_node { nullptr };
+    Layout::Node const* m_next_node { nullptr };
     LayoutMode const m_layout_mode;
 
     struct TextNodeContext {
@@ -91,7 +92,7 @@ private:
     Optional<ExtraBoxMetrics> m_extra_leading_metrics;
     Optional<ExtraBoxMetrics> m_extra_trailing_metrics;
 
-    Vector<NodeWithStyleAndBoxModelMetrics&> m_box_model_node_stack;
+    Vector<NodeWithStyleAndBoxModelMetrics const&> m_box_model_node_stack;
 };
 
 }
