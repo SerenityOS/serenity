@@ -4,6 +4,7 @@
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1240,20 +1241,31 @@ void Painter::draw_emoji(IntPoint const& point, Gfx::Bitmap const& emoji, Font c
 
 void Painter::draw_glyph_or_emoji(IntPoint const& point, u32 code_point, Font const& font, Color color)
 {
+    StringBuilder builder;
+    builder.append_code_point(code_point);
+    auto it = Utf8View { builder.string_view() }.begin();
+    return draw_glyph_or_emoji(point, it, font, color);
+}
+
+void Painter::draw_glyph_or_emoji(IntPoint const& point, Utf8CodePointIterator& it, Font const& font, Color color)
+{
+    // FIXME: Handle variation selectors. Additionally, some emojis start with a 'regular' character,
+    //        so the 'font contains' check isn't sufficient for all of them - we'll have to peek.
+
+    u32 code_point = *it;
+
     if (font.contains_glyph(code_point)) {
         draw_glyph(point, code_point, font, color);
         return;
     }
 
-    // Perhaps it's an emoji?
-    auto* emoji = Emoji::emoji_for_code_point(code_point);
-    if (emoji == nullptr) {
-        dbgln_if(EMOJI_DEBUG, "Failed to find an emoji for code_point {}", code_point);
-        draw_glyph(point, 0xFFFD, font, color);
+    if (auto const* emoji = Emoji::emoji_for_code_point_iterator(it)) {
+        draw_emoji(point, *emoji, font);
         return;
     }
 
-    draw_emoji(point, *emoji, font);
+    dbgln_if(EMOJI_DEBUG, "Failed to find a glyph or emoji for code_point {}", code_point);
+    draw_glyph(point, 0xFFFD, font, color);
 }
 
 template<typename DrawGlyphFunction>
@@ -1295,7 +1307,8 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
         space_width = -space_width;          // Draw spaces backwards
     }
 
-    for (u32 code_point : text) {
+    for (auto it = text.begin(); it != text.end(); ++it) {
+        auto code_point = *it;
         if (code_point == ' ') {
             point.translate_by(space_width, 0);
             continue;
@@ -1303,9 +1316,12 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
         IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.glyph_height());
         if (direction == TextDirection::RTL)
             point.translate_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
-        draw_glyph({ point, glyph_size }, code_point);
+        draw_glyph({ point, glyph_size }, it);
         if (direction == TextDirection::LTR)
             point.translate_by(glyph_size.width(), 0);
+        // The callback function might have exhausted the iterator.
+        if (it == text.end())
+            break;
     }
 }
 
@@ -1558,8 +1574,8 @@ void Painter::draw_text(IntRect const& rect, Utf32View const& text, TextAlignmen
 void Painter::draw_text(IntRect const& rect, StringView raw_text, Font const& font, TextAlignment alignment, Color color, TextElision elision, TextWrapping wrapping)
 {
     Utf8View text { raw_text };
-    do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, u32 code_point) {
-        draw_glyph_or_emoji(r.location(), code_point, font, color);
+    do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, Utf8CodePointIterator& it) {
+        draw_glyph_or_emoji(r.location(), it, font, color);
     });
 }
 
@@ -1570,31 +1586,31 @@ void Painter::draw_text(IntRect const& rect, Utf32View const& raw_text, Font con
     StringBuilder builder;
     builder.append(raw_text);
     auto text = Utf8View { builder.string_view() };
-    do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, u32 code_point) {
-        draw_glyph_or_emoji(r.location(), code_point, font, color);
+    do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, Utf8CodePointIterator& it) {
+        draw_glyph_or_emoji(r.location(), it, font, color);
     });
 }
 
-void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, Utf8View const& text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(Function<void(IntRect const&, Utf8CodePointIterator&)> draw_one_glyph, IntRect const& rect, Utf8View const& text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
-    do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, u32 code_point) {
-        draw_one_glyph(r, code_point);
+    do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, Utf8CodePointIterator& it) {
+        draw_one_glyph(r, it);
     });
 }
 
-void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, StringView raw_text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(Function<void(IntRect const&, Utf8CodePointIterator&)> draw_one_glyph, IntRect const& rect, StringView raw_text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     Utf8View text { raw_text };
-    do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, u32 code_point) {
-        draw_one_glyph(r, code_point);
+    do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, Utf8CodePointIterator& it) {
+        draw_one_glyph(r, it);
     });
 }
 
-void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, Utf32View const& raw_text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(Function<void(IntRect const&, Utf8CodePointIterator&)> draw_one_glyph, IntRect const& rect, Utf32View const& raw_text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
@@ -1603,8 +1619,8 @@ void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntR
     StringBuilder builder;
     builder.append(raw_text);
     auto text = Utf8View { builder.string_view() };
-    do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, u32 code_point) {
-        draw_one_glyph(r, code_point);
+    do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, Utf8CodePointIterator& it) {
+        draw_one_glyph(r, it);
     });
 }
 
