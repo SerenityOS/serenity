@@ -93,6 +93,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_shareable(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_wrapper(BitmapFormat, IntSize const&, int intrinsic_scale, size_t pitch, void*);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_request_resource(String const& name);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_file(String const& path, int scale_factor = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_fd_and_close(int fd, String const& path);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize const&, int intrinsic_scale, Vector<RGBA32> const& palette);

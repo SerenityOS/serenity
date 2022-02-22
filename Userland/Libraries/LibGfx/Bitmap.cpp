@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,8 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Try.h>
+#include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibGfx/Bitmap.h>
@@ -100,6 +103,71 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, I
     if (size_would_overflow(format, size, scale_factor))
         return Error::from_string_literal("Gfx::Bitmap::try_create_wrapper size overflow"sv);
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
+}
+
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_request_resource(String const& icon)
+{
+    // TODO: Cache this and invalidate the cache if a file can't be found.
+
+    // TODO: Make this extensible by the caller instead of requiring
+    // them to set an environment variable.
+    Vector<String> known_paths = {
+        "/res/icons/",
+        "/res/graphics/"
+    };
+
+    Vector<String> known_filetypes = {};
+#define __ENUMERATE_IMAGE_FORMAT(Name, Ext) \
+    known_filetypes.append(String(Ext).substring(1));
+    ENUMERATE_IMAGE_FORMATS
+#undef __ENUMERATE_IMAGE_FORMAT
+
+    char const* user_icon_dirs = getenv("SERENITY_ICON_DIRS");
+    if (user_icon_dirs != nullptr)
+        known_paths.prepend(String(user_icon_dirs).split(','));
+
+    // Find all subdirectories of paths in known_paths
+    Function<void(const String, Vector<String>&)> recursive;
+    recursive = [&](const String path, Vector<String>& known_paths) {
+        Core::DirIterator path_iterator(path, Core::DirIterator::Flags::SkipDots);
+        while (path_iterator.has_next()) {
+            auto path = path_iterator.next_full_path();
+            if (!Core::File::is_directory(path))
+                continue;
+
+            known_paths.append(path);
+            recursive(path, known_paths);
+        }
+    };
+
+    for (auto const& path : known_paths) {
+        recursive(path, known_paths);
+    }
+
+    // And finally add the current working directory as a last resort
+    known_paths.append(String(TRY(Core::System::getcwd())));
+
+    auto final_path = String();
+    for (auto& path : known_paths) {
+        if (!path.ends_with('/'))
+            path = String::formatted("{}/", path);
+
+        for (auto const& type : known_filetypes) {
+            auto name = String::formatted("{}{}.{}", path, icon, type);
+
+            if (!Core::File::exists(name))
+                continue;
+
+            final_path = name;
+            break;
+        }
+
+        if (!final_path.is_empty())
+            break;
+    }
+
+    auto fd = TRY(Core::System::open(final_path, O_RDONLY));
+    return try_load_from_fd_and_close(fd, final_path);
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, int scale_factor)
