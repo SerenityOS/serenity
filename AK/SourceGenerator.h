@@ -77,6 +77,12 @@ public:
         }
     }
 
+    void appendln(StringView pattern)
+    {
+        append(pattern);
+        m_builder.append('\n');
+    }
+
 private:
     StringBuilder& m_builder;
     MappingType m_mapping;
