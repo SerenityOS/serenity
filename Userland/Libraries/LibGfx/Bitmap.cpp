@@ -105,12 +105,22 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, I
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
+static inline int scale_to_size(int scale_factor)
+{
+    switch (scale_factor) {
+    case 2:
+        return 32;
+    case 1:
+    default:
+        return 16;
+    }
+}
 static HashMap<String, String> s_resource_cache;
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_request_resource(String const& icon)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_request_resource(String const& icon, int scale_factor, Vector<String> const& search_paths)
 {
     // TODO: Invalidate the effected cached resources if the environment var changes.
     if (s_resource_cache.contains(icon)) {
-        auto path = s_resource_cache.get(icon).value();
+        auto path = s_resource_cache.get(String::formatted("{}_{}", scale_to_size(scale_factor), icon)).value();
 
         auto fd = Core::System::open(path, O_RDONLY);
         if (!fd.is_error())
@@ -125,6 +135,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_request_resource(String const& icon)
         "/res/icons/",
         "/res/graphics/"
     };
+    known_paths.prepend((Vector<String>)search_paths);
 
     Vector<String> known_filetypes = {};
 #define __ENUMERATE_IMAGE_FORMAT(Name, Ext) \
@@ -144,6 +155,21 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_request_resource(String const& icon)
             auto path = path_iterator.next_full_path();
             if (!Core::File::is_directory(path))
                 continue;
+
+            // Exclude non-matching scales
+            auto size = scale_to_size(scale_factor);
+            auto name = path.split('/').last();
+            if (name.ends_with('/'))
+                name = name.substring(0, name.length() - 1);
+
+            // This could be done way more efficiently with regex,
+            // but this is a one-off and it doesn't make sense to bring
+            // in a whole library for one tiny check :^)
+            if (name.length() % 2 != 0 && name.substring((name.length() - 1) / 2, 1) == "x") {
+                auto path_scale = name.substring(0, (name.length() - 1) / 2).to_int().value_or(0);
+                if (path_scale != 0 && path_scale != size)
+                    continue;
+            }
 
             known_paths.append(path);
             recursive(path, known_paths);
@@ -180,7 +206,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_request_resource(String const& icon)
         return Error::from_string_literal("Requested resource cannot be found");
 
     // Cache
-    s_resource_cache.set(icon, final_path);
+    s_resource_cache.set(String::formatted("{}_{}", scale_to_size(scale_factor), icon), final_path);
 
     auto fd = TRY(Core::System::open(final_path, O_RDONLY));
     return try_load_from_fd_and_close(fd, final_path);
