@@ -280,7 +280,13 @@ class ExpectationError extends Error {
 
         toEqual(value) {
             this.__doMatcher(() => {
-                this.__expect(deepEquals(this.target, value));
+                this.__expect(
+                    deepEquals(this.target, value),
+                    () =>
+                        `Expected _${valueToString(value)}_, but got _${valueToString(
+                            this.target
+                        )}_`
+                );
             });
         }
 
