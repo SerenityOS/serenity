@@ -76,7 +76,7 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
     return JS::js_undefined();
 }
 
-TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter& interpreter)
+TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter& interpreter, JS::ExecutionContext&)
 {
     if (!test262_parser_tests)
         return Test::JS::RunFileHookResult::RunAsNormal;
