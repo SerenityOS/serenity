@@ -34,6 +34,8 @@ public:
         Vmin,
     };
 
+    static Optional<Type> unit_from_name(StringView);
+
     // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
     // this file already. To break the cyclic dependency, we must move all method definitions out.
     Length(int value, Type type);
