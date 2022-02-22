@@ -88,6 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
     text_widget->update_title();
+    text_widget->update_statusbar();
 
     return app->exec();
 }

@@ -41,6 +41,7 @@ public:
     void set_auto_detect_preview_mode(bool value) { m_auto_detect_preview_mode = value; }
 
     void update_title();
+    void update_statusbar();
     void initialize_menubar(GUI::Window&);
 
 private:
@@ -49,7 +50,6 @@ private:
     void update_preview();
     void update_markdown_preview();
     void update_html_preview();
-    void update_statusbar();
 
     Web::OutOfProcessWebView& ensure_web_view();
     void set_web_view_visible(bool);
@@ -84,6 +84,8 @@ private:
     RefPtr<GUI::Toolbar> m_toolbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
     RefPtr<GUI::Statusbar> m_statusbar;
+    RefPtr<GUI::Menu> m_line_column_statusbar_menu;
+    RefPtr<GUI::Menu> m_syntax_statusbar_menu;
 
     RefPtr<GUI::TextBox> m_find_textbox;
     RefPtr<GUI::TextBox> m_replace_textbox;
