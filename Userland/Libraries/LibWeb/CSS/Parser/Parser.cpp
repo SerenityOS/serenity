@@ -1149,8 +1149,12 @@ Optional<MediaFeatureValue> Parser::parse_media_feature_value(TokenStream<StyleC
         return MediaFeatureValue(first.token().number_value());
 
     // `<dimension>`
-    if (auto length = parse_length(first); length.has_value())
-        return MediaFeatureValue(length.release_value());
+    if (auto dimension = parse_dimension(first); dimension.has_value()) {
+        if (dimension->is_length())
+            return MediaFeatureValue(dimension->length());
+        if (dimension->is_resolution())
+            return MediaFeatureValue(dimension->resolution());
+    }
 
     // `<ident>`
     if (first.is(Token::Type::Ident))
