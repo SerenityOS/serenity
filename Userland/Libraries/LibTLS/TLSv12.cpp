@@ -193,11 +193,16 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
 
 static bool wildcard_matches(StringView host, StringView subject)
 {
-    if (host.matches(subject))
+    if (host == subject)
         return true;
 
-    if (subject.starts_with("*."))
-        return wildcard_matches(host, subject.substring_view(2));
+    if (subject.starts_with("*.")) {
+        auto maybe_first_dot_index = host.find('.');
+        if (maybe_first_dot_index.has_value()) {
+            auto first_dot_index = maybe_first_dot_index.release_value();
+            return wildcard_matches(host.substring_view(first_dot_index + 1), subject.substring_view(2));
+        }
+    }
 
     return false;
 }
