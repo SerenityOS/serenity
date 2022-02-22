@@ -19,6 +19,9 @@ template<typename T>
 concept FloatingPoint = IsFloatingPoint<T>;
 
 template<typename T>
+concept Fundamental = IsFundamental<T>;
+
+template<typename T>
 concept Arithmetic = IsArithmetic<T>;
 
 template<typename T>
@@ -109,6 +112,7 @@ using AK::Concepts::Arithmetic;
 using AK::Concepts::ArrayLike;
 using AK::Concepts::Enum;
 using AK::Concepts::FloatingPoint;
+using AK::Concepts::Fundamental;
 using AK::Concepts::Integral;
 using AK::Concepts::IterableContainer;
 using AK::Concepts::IteratorFunction;
