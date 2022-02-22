@@ -442,13 +442,13 @@ void Editor::clear_execution_position()
 
 const Gfx::Bitmap& Editor::breakpoint_icon_bitmap()
 {
-    static auto bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/breakpoint.png").release_value_but_fixme_should_propagate_errors();
+    static auto bitmap = Gfx::Bitmap::try_request_resource("breakpoint").release_value_but_fixme_should_propagate_errors();
     return *bitmap;
 }
 
 const Gfx::Bitmap& Editor::current_position_icon_bitmap()
 {
-    static auto bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors();
+    static auto bitmap = Gfx::Bitmap::try_request_resource("go-forward").release_value_but_fixme_should_propagate_errors();
     return *bitmap;
 }
 

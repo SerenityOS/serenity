@@ -114,7 +114,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
     Vector<String> const sorted_app_categories = TRY(discover_apps_and_categories());
     auto system_menu = TRY(GUI::Menu::try_create("\xE2\x9A\xA1")); // HIGH VOLTAGE SIGN
 
-    system_menu->add_action(GUI::Action::create("&About SerenityOS", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/ladyball.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+    system_menu->add_action(GUI::Action::create("&About SerenityOS", Gfx::Bitmap::try_request_resource("ladyball").release_value_but_fixme_should_propagate_errors(), [](auto&) {
         Core::Process::spawn("/bin/About"sv);
     }));
 
@@ -212,7 +212,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
     g_themes_group.set_unchecking_allowed(false);
 
     g_themes_menu = &system_menu->add_submenu("&Themes");
-    g_themes_menu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/themes.png").release_value_but_fixme_should_propagate_errors());
+    g_themes_menu->set_icon(Gfx::Bitmap::try_request_resource("themes").release_value_but_fixme_should_propagate_errors());
 
     {
         Core::DirIterator dt("/res/themes", Core::DirIterator::SkipDots);
@@ -243,15 +243,15 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
         }
     }
 
-    system_menu->add_action(GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-settings.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+    system_menu->add_action(GUI::Action::create("&Settings", Gfx::Bitmap::try_request_resource("app-settings").release_value_but_fixme_should_propagate_errors(), [](auto&) {
         Core::Process::spawn("/bin/Settings"sv);
     }));
 
     system_menu->add_separator();
-    system_menu->add_action(GUI::Action::create("&Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+    system_menu->add_action(GUI::Action::create("&Help", Gfx::Bitmap::try_request_resource("app-help").release_value_but_fixme_should_propagate_errors(), [](auto&) {
         Core::Process::spawn("/bin/Help"sv);
     }));
-    system_menu->add_action(GUI::Action::create("&Run...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-run.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+    system_menu->add_action(GUI::Action::create("&Run...", Gfx::Bitmap::try_request_resource("app-run").release_value_but_fixme_should_propagate_errors(), [](auto&) {
         posix_spawn_file_actions_t spawn_actions;
         posix_spawn_file_actions_init(&spawn_actions);
         auto home_directory = Core::StandardPaths::home_directory();
@@ -269,7 +269,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
         posix_spawn_file_actions_destroy(&spawn_actions);
     }));
     system_menu->add_separator();
-    system_menu->add_action(GUI::Action::create("E&xit...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/power.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+    system_menu->add_action(GUI::Action::create("E&xit...", Gfx::Bitmap::try_request_resource("power").release_value_but_fixme_should_propagate_errors(), [](auto&) {
         auto command = ShutdownDialog::show();
 
         if (command.size() == 0)

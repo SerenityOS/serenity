@@ -38,7 +38,7 @@ static Gfx::Bitmap& minimize_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png").release_value_but_fixme_should_propagate_errors();
+        s_icon = Gfx::Bitmap::try_request_resource("downward-triangle").release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -46,7 +46,7 @@ static Gfx::Bitmap& maximize_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png").release_value_but_fixme_should_propagate_errors();
+        s_icon = Gfx::Bitmap::try_request_resource("upward-triangle").release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -54,7 +54,7 @@ static Gfx::Bitmap& restore_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-restore.png").release_value_but_fixme_should_propagate_errors();
+        s_icon = Gfx::Bitmap::try_request_resource("window-restore").release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -62,7 +62,7 @@ static Gfx::Bitmap& close_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-close.png").release_value_but_fixme_should_propagate_errors();
+        s_icon = Gfx::Bitmap::try_request_resource("window-close").release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -70,7 +70,7 @@ static Gfx::Bitmap& pin_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-pin.png").release_value_but_fixme_should_propagate_errors();
+        s_icon = Gfx::Bitmap::try_request_resource("window-pin").release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 
@@ -78,7 +78,7 @@ static Gfx::Bitmap& move_icon()
 {
     static RefPtr<Gfx::Bitmap> s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/move.png").release_value_but_fixme_should_propagate_errors();
+        s_icon = Gfx::Bitmap::try_request_resource("move").release_value_but_fixme_should_propagate_errors();
     return *s_icon;
 }
 

@@ -53,7 +53,7 @@ FilterModel::FilterModel(ImageEditor* editor)
 
     m_filters.append(color_category);
 
-    auto filter_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/filter.png").release_value_but_fixme_should_propagate_errors();
+    auto filter_bitmap = Gfx::Bitmap::try_request_resource("filter").release_value_but_fixme_should_propagate_errors();
     m_filter_icon = GUI::Icon(filter_bitmap);
 }
 

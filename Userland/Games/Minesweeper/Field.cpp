@@ -118,13 +118,13 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
         m_time_label.set_text(String::formatted("{}.{}", m_time_elapsed / 10, m_time_elapsed % 10));
     };
     m_timer->set_interval(100);
-    m_mine_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/mine.png").release_value_but_fixme_should_propagate_errors();
-    m_flag_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/flag.png").release_value_but_fixme_should_propagate_errors();
-    m_badflag_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/badflag.png").release_value_but_fixme_should_propagate_errors();
-    m_consider_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/consider.png").release_value_but_fixme_should_propagate_errors();
-    m_default_face_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/face-default.png").release_value_but_fixme_should_propagate_errors();
-    m_good_face_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/face-good.png").release_value_but_fixme_should_propagate_errors();
-    m_bad_face_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/face-bad.png").release_value_but_fixme_should_propagate_errors();
+    m_mine_bitmap = Gfx::Bitmap::try_request_resource("mine").release_value_but_fixme_should_propagate_errors();
+    m_flag_bitmap = Gfx::Bitmap::try_request_resource("flag").release_value_but_fixme_should_propagate_errors();
+    m_badflag_bitmap = Gfx::Bitmap::try_request_resource("badflag").release_value_but_fixme_should_propagate_errors();
+    m_consider_bitmap = Gfx::Bitmap::try_request_resource("consider").release_value_but_fixme_should_propagate_errors();
+    m_default_face_bitmap = Gfx::Bitmap::try_request_resource("face-default").release_value_but_fixme_should_propagate_errors();
+    m_good_face_bitmap = Gfx::Bitmap::try_request_resource("face-good").release_value_but_fixme_should_propagate_errors();
+    m_bad_face_bitmap = Gfx::Bitmap::try_request_resource("face-bad").release_value_but_fixme_should_propagate_errors();
     for (int i = 0; i < 8; ++i)
         m_number_bitmap[i] = Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/minesweeper/{}.png", i + 1)).release_value_but_fixme_should_propagate_errors();
     // Square with mine will be filled with background color later, i.e. red

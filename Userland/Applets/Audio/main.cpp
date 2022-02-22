@@ -37,11 +37,11 @@ public:
     static ErrorOr<NonnullRefPtr<AudioWidget>> try_create()
     {
         Array<VolumeBitmapPair, 5> volume_level_bitmaps = {
-            { { 66, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-high.png")) },
-                { 33, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-medium.png")) },
-                { 1, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-low.png")) },
-                { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png")) },
-                { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png")) } }
+            { { 66, TRY(Gfx::Bitmap::try_request_resource("audio-volume-high")) },
+                { 33, TRY(Gfx::Bitmap::try_request_resource("audio-volume-medium")) },
+                { 1, TRY(Gfx::Bitmap::try_request_resource("audio-volume-low")) },
+                { 0, TRY(Gfx::Bitmap::try_request_resource("audio-volume-zero")) },
+                { 0, TRY(Gfx::Bitmap::try_request_resource("audio-volume-muted")) } }
         };
         auto audio_client = TRY(Audio::ClientConnection::try_create());
         NonnullRefPtr<AudioWidget> audio_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(audio_client), move(volume_level_bitmaps))));

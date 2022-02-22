@@ -227,7 +227,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto kill_action = GUI::Action::create(
-        "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/kill.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+        "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, Gfx::Bitmap::try_request_resource("kill").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -238,7 +238,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto stop_action = GUI::Action::create(
-        "&Stop Process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/stop-hand.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+        "&Stop Process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_request_resource("stop-hand").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -249,7 +249,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto continue_action = GUI::Action::create(
-        "&Continue Process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/continue.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+        "&Continue Process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_request_resource("continue").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1)
                 kill(pid, SIGCONT);
@@ -258,7 +258,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto profile_action = GUI::Action::create(
         "&Profile Process", { Mod_Ctrl, Key_P },
-        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        Gfx::Bitmap::try_request_resource("app-profiler").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1) {
                 auto pid_string = String::number(pid);

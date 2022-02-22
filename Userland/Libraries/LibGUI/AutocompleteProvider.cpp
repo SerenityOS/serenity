@@ -52,13 +52,13 @@ public:
             if (index.column() == Column::Icon) {
                 if (suggestion.language == GUI::AutocompleteProvider::Language::Cpp) {
                     if (!s_cpp_identifier_icon) {
-                        s_cpp_identifier_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/completion/cpp-identifier.png").release_value_but_fixme_should_propagate_errors();
+                        s_cpp_identifier_icon = Gfx::Bitmap::try_request_resource("completion/cpp-identifier").release_value_but_fixme_should_propagate_errors();
                     }
                     return *s_cpp_identifier_icon;
                 }
                 if (suggestion.language == GUI::AutocompleteProvider::Language::Unspecified) {
                     if (!s_unspecified_identifier_icon) {
-                        s_unspecified_identifier_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/completion/unspecified-identifier.png").release_value_but_fixme_should_propagate_errors();
+                        s_unspecified_identifier_icon = Gfx::Bitmap::try_request_resource("completion/unspecified-identifier").release_value_but_fixme_should_propagate_errors();
                     }
                     return *s_unspecified_identifier_icon;
                 }

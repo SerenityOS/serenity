@@ -136,7 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup board_theme_action_group;
     board_theme_action_group.set_exclusive(true);
     auto board_theme_menu = TRY(style_menu->try_add_submenu("Board Theme"));
-    board_theme_menu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/chess/mini-board.png").release_value_but_fixme_should_propagate_errors());
+    board_theme_menu->set_icon(Gfx::Bitmap::try_request_resource("mini-board").release_value_but_fixme_should_propagate_errors());
 
     for (auto const& theme : { "Beige", "Green", "Blue" }) {
         auto action = GUI::Action::create_checkable(theme, [&](auto& action) {

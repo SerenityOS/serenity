@@ -184,10 +184,10 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
         find_textbox->set_text(terminal.selected_text().replace("\n", " ", true));
     auto find_backwards = TRY(find->try_add<GUI::Button>());
     find_backwards->set_fixed_width(25);
-    find_backwards->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png").release_value_but_fixme_should_propagate_errors());
+    find_backwards->set_icon(Gfx::Bitmap::try_request_resource("upward-triangle").release_value_but_fixme_should_propagate_errors());
     auto find_forwards = TRY(find->try_add<GUI::Button>());
     find_forwards->set_fixed_width(25);
-    find_forwards->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png").release_value_but_fixme_should_propagate_errors());
+    find_forwards->set_icon(Gfx::Bitmap::try_request_resource("downward-triangle").release_value_but_fixme_should_propagate_errors());
 
     find_textbox->on_return_pressed = [find_backwards]() mutable {
         find_backwards->click();
@@ -322,7 +322,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto show_scroll_bar = Config::read_bool("Terminal", "Terminal", "ShowScrollBar", true);
     terminal->set_show_scrollbar(show_scroll_bar);
 
-    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
+    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_request_resource("settings").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             Core::Process::spawn("/bin/TerminalSettings");
         });
@@ -331,7 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(terminal->context_menu().try_add_action(open_settings_action));
 
     auto file_menu = TRY(window->try_add_menu("&File"));
-    TRY(file_menu->try_add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    TRY(file_menu->try_add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_request_resource("app-terminal").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         Core::Process::spawn("/bin/Terminal");
     })));
 
@@ -346,7 +346,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(edit_menu->try_add_action(terminal->copy_action()));
     TRY(edit_menu->try_add_action(terminal->paste_action()));
     TRY(edit_menu->try_add_separator());
-    TRY(edit_menu->try_add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(),
+    TRY(edit_menu->try_add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_request_resource("find").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             find_window->show();
             find_window->move_to_front();

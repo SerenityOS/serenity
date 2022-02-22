@@ -258,7 +258,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto& debug_button = *widget->find_descendant_of_type_named<GUI::Button>("debug_button");
-    debug_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png")));
+    debug_button.set_icon(TRY(Gfx::Bitmap::try_request_resource("app-hack-studio")));
     debug_button.on_click = [&](int) {
         pid_t child;
         const char* argv[4] = { "HackStudio", "-c", coredump_path, nullptr };

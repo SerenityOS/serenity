@@ -82,12 +82,12 @@ private:
 PreviewWidget::PreviewWidget(const Gfx::Palette& preview_palette)
     : m_preview_palette(preview_palette)
 {
-    m_active_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png").release_value_but_fixme_should_propagate_errors();
-    m_inactive_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png").release_value_but_fixme_should_propagate_errors();
+    m_active_window_icon = Gfx::Bitmap::try_request_resource("window").release_value_but_fixme_should_propagate_errors();
+    m_inactive_window_icon = Gfx::Bitmap::try_request_resource("window").release_value_but_fixme_should_propagate_errors();
 
-    m_default_close_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-close.png").release_value_but_fixme_should_propagate_errors();
-    m_default_maximize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png").release_value_but_fixme_should_propagate_errors();
-    m_default_minimize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png").release_value_but_fixme_should_propagate_errors();
+    m_default_close_bitmap = Gfx::Bitmap::try_request_resource("window-close").release_value_but_fixme_should_propagate_errors();
+    m_default_maximize_bitmap = Gfx::Bitmap::try_request_resource("upward-triangle").release_value_but_fixme_should_propagate_errors();
+    m_default_minimize_bitmap = Gfx::Bitmap::try_request_resource("downward-triangle").release_value_but_fixme_should_propagate_errors();
 
     VERIFY(m_active_window_icon);
     VERIFY(m_inactive_window_icon);
