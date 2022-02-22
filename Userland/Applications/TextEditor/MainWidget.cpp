@@ -236,7 +236,18 @@ MainWidget::MainWidget()
     m_editor->add_custom_context_menu_action(*m_find_next_action);
     m_editor->add_custom_context_menu_action(*m_find_previous_action);
 
+    m_line_column_statusbar_menu = GUI::Menu::construct();
+    m_syntax_statusbar_menu = GUI::Menu::construct();
+
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
+    m_statusbar->segment(1).set_clickable(true);
+    m_statusbar->segment(1).set_menu(m_syntax_statusbar_menu);
+    m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
+    auto width = font().width("Ln 0000, Col 000") + font().max_glyph_width();
+    m_statusbar->segment(2).set_fixed_width(width);
+    m_statusbar->segment(2).set_clickable(true);
+    m_statusbar->segment(2).set_menu(m_line_column_statusbar_menu);
 
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
         auto text = action.status_tip();
@@ -251,6 +262,7 @@ MainWidget::MainWidget()
 
     m_editor->on_cursor_change = [this] { update_statusbar(); };
     m_editor->on_selection_change = [this] { update_statusbar(); };
+    m_editor->on_highlighter_change = [this] { update_statusbar(); };
 
     m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [this](GUI::Action const&) {
         if (editor().document().is_modified()) {
@@ -414,6 +426,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
         action.is_checked() ? m_statusbar->set_visible(true) : m_statusbar->set_visible(false);
         Config::write_bool("TextEditor", "Layout", "ShowStatusbar", action.is_checked());
+        update_statusbar();
     });
     auto show_statusbar = Config::read_bool("TextEditor", "Layout", "ShowStatusbar", true);
     m_layout_statusbar_action->set_checked(show_statusbar);
@@ -536,10 +549,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     auto& syntax_menu = view_menu.add_submenu("&Syntax");
     m_plain_text_highlight = GUI::Action::create_checkable("&Plain Text", [&](auto&) {
+        m_statusbar->set_text(1, "Plain Text");
         m_editor->set_syntax_highlighter({});
         m_editor->update();
     });
     m_plain_text_highlight->set_checked(true);
+    m_statusbar->set_text(1, "Plain Text");
     syntax_actions.add_action(*m_plain_text_highlight);
     syntax_menu.add_action(*m_plain_text_highlight);
 
@@ -611,6 +626,32 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/TextEditor.md"), "/bin/Help");
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"), &window));
+
+    auto& wrapping_statusbar_menu = m_line_column_statusbar_menu->add_submenu("&Wrapping Mode");
+    wrapping_statusbar_menu.add_action(*m_no_wrapping_action);
+    wrapping_statusbar_menu.add_action(*m_wrap_anywhere_action);
+    wrapping_statusbar_menu.add_action(*m_wrap_at_words_action);
+
+    auto& tab_width_statusbar_menu = m_line_column_statusbar_menu->add_submenu("&Tab Width");
+    tab_width_statusbar_menu.add_action(*m_soft_tab_1_width_action);
+    tab_width_statusbar_menu.add_action(*m_soft_tab_2_width_action);
+    tab_width_statusbar_menu.add_action(*m_soft_tab_4_width_action);
+    tab_width_statusbar_menu.add_action(*m_soft_tab_8_width_action);
+    tab_width_statusbar_menu.add_action(*m_soft_tab_16_width_action);
+
+    m_line_column_statusbar_menu->add_separator();
+    m_line_column_statusbar_menu->add_action(*m_cursor_line_highlighting_action);
+
+    m_syntax_statusbar_menu->add_action(*m_plain_text_highlight);
+    m_syntax_statusbar_menu->add_action(*m_cpp_highlight);
+    m_syntax_statusbar_menu->add_action(*m_css_highlight);
+    m_syntax_statusbar_menu->add_action(*m_git_highlight);
+    m_syntax_statusbar_menu->add_action(*m_gml_highlight);
+    m_syntax_statusbar_menu->add_action(*m_html_highlight);
+    m_syntax_statusbar_menu->add_action(*m_ini_highlight);
+    m_syntax_statusbar_menu->add_action(*m_js_highlight);
+    m_syntax_statusbar_menu->add_action(*m_shell_highlight);
+    m_syntax_statusbar_menu->add_action(*m_sql_highlight);
 }
 
 void MainWidget::set_path(StringView path)
@@ -791,10 +832,10 @@ void MainWidget::update_html_preview()
 
 void MainWidget::update_statusbar()
 {
+    if (!m_statusbar->is_visible())
+        return;
+
     StringBuilder builder;
-    builder.appendff("Line: {}, Column: {}", m_editor->cursor().line() + 1, m_editor->cursor().column());
-    m_statusbar->set_text(0, builder.to_string());
-    builder.clear();
     if (m_editor->has_selection()) {
         String selected_text = m_editor->selected_text();
         auto word_count = m_editor->number_of_selected_words();
@@ -804,7 +845,13 @@ void MainWidget::update_statusbar()
         auto word_count = m_editor->number_of_words();
         builder.appendff("{} {} ({} {})", text.length(), text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
-    m_statusbar->set_text(1, builder.to_string());
+    m_statusbar->set_text(0, builder.to_string());
+
+    if (m_editor && m_editor->syntax_highlighter()) {
+        auto language = m_editor->syntax_highlighter()->language();
+        m_statusbar->set_text(1, m_editor->syntax_highlighter()->language_string(language));
+    }
+    m_statusbar->set_text(2, String::formatted("Ln {}, Col {}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
 }
 
 }
