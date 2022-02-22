@@ -107,6 +107,7 @@ public:
     Function<void()> on_selection_change;
     Function<void()> on_focusin;
     Function<void()> on_focusout;
+    Function<void()> on_highlighter_change;
 
     void set_text(StringView, AllowCallback = AllowCallback::Yes);
     void scroll_cursor_into_view();

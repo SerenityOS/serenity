@@ -1934,6 +1934,8 @@ void TextEditor::set_syntax_highlighter(OwnPtr<Syntax::Highlighter> highlighter)
         m_needs_rehighlight = true;
     } else
         document().set_spans({});
+    if (on_highlighter_change)
+        on_highlighter_change();
 }
 
 AutocompleteProvider const* TextEditor::autocomplete_provider() const

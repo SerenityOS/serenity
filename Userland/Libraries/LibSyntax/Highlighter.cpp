@@ -142,4 +142,30 @@ void Highlighter::register_nested_token_pairs(Vector<MatchingTokenPair> pairs)
         m_nested_token_pairs.set(pair);
 }
 
+StringView Highlighter::language_string(Language language) const
+{
+    switch (language) {
+    case Language::Cpp:
+        return "C++"sv;
+    case Language::CSS:
+        return "CSS"sv;
+    case Language::GitCommit:
+        return "Git"sv;
+    case Language::GML:
+        return "GML"sv;
+    case Language::HTML:
+        return "HTML"sv;
+    case Language::INI:
+        return "INI"sv;
+    case Language::JavaScript:
+        return "JavaScript"sv;
+    case Language::Shell:
+        return "Shell"sv;
+    case Language::SQL:
+        return "SQL"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 }
