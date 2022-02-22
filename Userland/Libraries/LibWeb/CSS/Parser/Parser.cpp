@@ -2165,45 +2165,9 @@ Optional<Parser::Dimension> Parser::parse_dimension(StyleComponentValueRule cons
     if (component_value.is(Token::Type::Dimension)) {
         float numeric_value = component_value.token().dimension_value();
         auto unit_string = component_value.token().dimension_unit();
-        Optional<Length::Type> length_type;
 
-        if (unit_string.equals_ignoring_case("px"sv)) {
-            length_type = Length::Type::Px;
-        } else if (unit_string.equals_ignoring_case("pt"sv)) {
-            length_type = Length::Type::Pt;
-        } else if (unit_string.equals_ignoring_case("pc"sv)) {
-            length_type = Length::Type::Pc;
-        } else if (unit_string.equals_ignoring_case("mm"sv)) {
-            length_type = Length::Type::Mm;
-        } else if (unit_string.equals_ignoring_case("rem"sv)) {
-            length_type = Length::Type::Rem;
-        } else if (unit_string.equals_ignoring_case("em"sv)) {
-            length_type = Length::Type::Em;
-        } else if (unit_string.equals_ignoring_case("ex"sv)) {
-            length_type = Length::Type::Ex;
-        } else if (unit_string.equals_ignoring_case("ch"sv)) {
-            length_type = Length::Type::Ch;
-        } else if (unit_string.equals_ignoring_case("vw"sv)) {
-            length_type = Length::Type::Vw;
-        } else if (unit_string.equals_ignoring_case("vh"sv)) {
-            length_type = Length::Type::Vh;
-        } else if (unit_string.equals_ignoring_case("vmax"sv)) {
-            length_type = Length::Type::Vmax;
-        } else if (unit_string.equals_ignoring_case("vmin"sv)) {
-            length_type = Length::Type::Vmin;
-        } else if (unit_string.equals_ignoring_case("cm"sv)) {
-            length_type = Length::Type::Cm;
-        } else if (unit_string.equals_ignoring_case("in"sv)) {
-            length_type = Length::Type::In;
-        } else if (unit_string.equals_ignoring_case("Q"sv)) {
-            length_type = Length::Type::Q;
-        } else if (unit_string.equals_ignoring_case("%"sv)) {
-            // A number followed by `%` must always result in a Percentage token.
-            VERIFY_NOT_REACHED();
-        }
-
-        if (length_type.has_value())
-            return Length { numeric_value, length_type.value() };
+        if (auto length_type = Length::unit_from_name(unit_string); length_type.has_value())
+            return Length { numeric_value, length_type.release_value() };
     }
 
     if (component_value.is(Token::Type::Percentage))
