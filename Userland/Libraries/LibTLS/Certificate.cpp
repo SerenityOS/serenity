@@ -306,9 +306,9 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
         if (!parse_algorithm_identifier(certificate.key_algorithm).has_value())
             return {};
 
-        READ_OBJECT_OR_FAIL(BitString, const BitmapView, value, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info");
+        READ_OBJECT_OR_FAIL(BitString, Crypto::ASN1::BitStringView, value, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info");
         // Note: Once we support other kinds of keys, make sure to check the kind here!
-        auto key = Crypto::PK::RSA::parse_rsa_key({ value.data(), value.size_in_bytes() });
+        auto key = Crypto::PK::RSA::parse_rsa_key(value.raw_bytes());
         if (!key.public_key.length()) {
             dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info: Invalid key");
             return {};
@@ -478,8 +478,8 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 
     // signature_value
     {
-        READ_OBJECT_OR_FAIL(BitString, const BitmapView, value, "Certificate");
-        auto signature_data_result = ByteBuffer::copy(value.data(), value.size_in_bytes());
+        READ_OBJECT_OR_FAIL(BitString, Crypto::ASN1::BitStringView, value, "Certificate");
+        auto signature_data_result = ByteBuffer::copy(value.raw_bytes());
         if (signature_data_result.is_error()) {
             dbgln("Certificate::signature_value: out of memory");
             return {};
