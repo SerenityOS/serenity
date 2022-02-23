@@ -108,7 +108,11 @@ run() {
 }
 
 run_replace_in_file() {
-    run perl -p -i -e "$1" $2
+    if [ "$(uname -s)" = "SerenityOS" ]; then
+        run sed -i "$1" $2
+    else
+        run perl -p -i -e "$1" $2
+    fi
 }
 
 get_new_config_sub() {
