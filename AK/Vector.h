@@ -13,6 +13,7 @@
 #include <AK/Forward.h>
 #include <AK/Iterator.h>
 #include <AK/Optional.h>
+#include <AK/ReverseIterator.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
@@ -693,12 +694,15 @@ public:
 
     using ConstIterator = SimpleIterator<Vector const, VisibleType const>;
     using Iterator = SimpleIterator<Vector, VisibleType>;
+    using ReverseIterator = SimpleReverseIterator<Vector, VisibleType>;
 
     ConstIterator begin() const { return ConstIterator::begin(*this); }
     Iterator begin() { return Iterator::begin(*this); }
+    ReverseIterator rbegin() { return ReverseIterator::rbegin(*this); }
 
     ConstIterator end() const { return ConstIterator::end(*this); }
     Iterator end() { return Iterator::end(*this); }
+    ReverseIterator rend() { return ReverseIterator::rend(*this); }
 
     template<typename TUnaryPredicate>
     ConstIterator find_if(TUnaryPredicate&& finder) const
