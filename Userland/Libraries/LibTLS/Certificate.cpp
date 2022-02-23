@@ -28,7 +28,9 @@ constexpr static Array<int, 7>
     rsa_sha512_encryption_oid { 1, 2, 840, 113549, 1, 1, 13 };
 
 constexpr static Array<int, 4>
-    subject_alternative_name_oid { 2, 5, 29, 17 };
+    key_usage_oid { 2, 5, 29, 15 },
+    subject_alternative_name_oid { 2, 5, 29, 17 },
+    basic_constraints_oid { 2, 5, 29, 19 };
 
 Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 {
@@ -457,6 +459,37 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                                     DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::???");
                             }
                         }
+                    } else if (extension_id == key_usage_oid) {
+                        // RFC5280 section 4.2.1.3: The keyCertSign bit is asserted when the subject public key is used
+                        // for verifying signatures on public key certificates. If the keyCertSign bit is asserted,
+                        // then the cA bit in the basic constraints extension MUST also be asserted.
+                        Crypto::ASN1::Decoder decoder { extension_value.bytes() };
+                        READ_OBJECT_OR_FAIL(BitString, Crypto::ASN1::BitStringView, usage, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::KeyUsage");
+
+                        // keyCertSign (5)
+                        certificate.is_allowed_to_sign_certificate = usage.get(5);
+                    } else if (extension_id == basic_constraints_oid) {
+                        // RFC5280 section 4.2.1.9: The cA boolean indicates whether the certified public key may be
+                        // used to verify certificate signatures. If the cA boolean is not asserted, then the keyCertSign
+                        // bit in the key usage extension MUST NOT be asserted. If the basic constraints extension is
+                        // not present in a version 3 certificate, or the extension is present but the cA boolean is
+                        // not asserted, then the certified public key MUST NOT be used to verify certificate signatures.
+                        Crypto::ASN1::Decoder decoder { extension_value.bytes() };
+                        ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::BasicConstraints");
+
+                        if (auto tag = decoder.peek(); !tag.is_error() && tag.value().kind == Crypto::ASN1::Kind::Boolean) {
+                            READ_OBJECT_OR_FAIL(Boolean, bool, is_certificate_authority, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::BasicConstraints::cA");
+                            certificate.is_certificate_authority = is_certificate_authority;
+
+                            if (auto tag = decoder.peek(); !tag.is_error() && tag.value().kind == Crypto::ASN1::Kind::Integer) {
+                                READ_OBJECT_OR_FAIL(Integer, Crypto::UnsignedBigInteger, path_length_constraint, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::BasicConstraints::pathLenConstraint");
+                                certificate.path_length_constraint = path_length_constraint.to_u64();
+                            }
+                        }
+                    } else {
+                        dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::Extensions::$::Extension::extension_id: unknown extension {} (critical: {})", extension_id, is_critical);
+                        if (is_critical)
+                            return {};
                     }
 
                     EXIT_SCOPE("Certificate::TBSCertificate::Extensions::$::Extension");

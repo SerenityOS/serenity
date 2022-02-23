@@ -56,6 +56,9 @@ public:
     CertificateKeyAlgorithm signature_algorithm { CertificateKeyAlgorithm::Unsupported };
     ByteBuffer signature_value {};
     ByteBuffer original_asn1 {};
+    bool is_allowed_to_sign_certificate { false };
+    bool is_certificate_authority { false };
+    Optional<size_t> path_length_constraint {};
 
     static Optional<Certificate> parse_asn1(ReadonlyBytes, bool client_cert = false);
 

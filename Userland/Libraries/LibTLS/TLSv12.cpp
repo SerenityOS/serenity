@@ -297,6 +297,15 @@ bool Context::verify_chain(StringView host) const
                 return false;
             }
 
+            if (!(parent_certificate.is_allowed_to_sign_certificate && parent_certificate.is_certificate_authority)) {
+                dbgln("verify_chain: {} is not marked as certificate authority", issuer_string);
+                return false;
+            }
+            if (parent_certificate.path_length_constraint.has_value() && cert_index > parent_certificate.path_length_constraint.value()) {
+                dbgln("verify_chain: Path length for certificate exceeded");
+                return false;
+            }
+
             bool verification_correct = verify_certificate_pair(cert, parent_certificate);
             if (!verification_correct) {
                 dbgln("verify_chain: Signature inconsistent, {} was not signed by {}", subject_string, issuer_string);
