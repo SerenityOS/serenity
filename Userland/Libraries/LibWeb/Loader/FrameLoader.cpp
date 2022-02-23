@@ -29,11 +29,29 @@ static RefPtr<Gfx::Bitmap> s_default_favicon_bitmap;
 
 FrameLoader::FrameLoader(HTML::BrowsingContext& browsing_context)
     : m_browsing_context(browsing_context)
+    , m_icon_loader()
 {
     if (!s_default_favicon_bitmap) {
-        s_default_favicon_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-browser.png").release_value_but_fixme_should_propagate_errors();
+        s_default_favicon_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-browser.png"sv).release_value_but_fixme_should_propagate_errors();
         VERIFY(s_default_favicon_bitmap);
     }
+
+    m_icon_loader.on_load = [this]() {
+        dbgln_if(SPAM_DEBUG, "Favicon downloaded");
+        load_favicon(m_icon_loader.bitmap(0));
+        m_icon_loader.set_visible_in_viewport(true);
+    };
+
+    m_icon_loader.on_animate = [this]() {
+        load_favicon(m_icon_loader.current_frame());
+    };
+
+    m_icon_loader.on_fail = [this]() {
+        dbgln_if(RESOURCE_DEBUG, "Favicon failed to load.");
+        load_favicon();
+    };
+
+    load_favicon();
 }
 
 FrameLoader::~FrameLoader()
@@ -153,6 +171,8 @@ bool FrameLoader::load(LoadRequest& request, Type type)
         return false;
     }
 
+    m_icon_loader.load("file:///res/icons/browser/spinner.gif");
+
     auto& url = request.url();
 
     if (type == Type::Navigation || type == Type::Reload) {
@@ -176,36 +196,6 @@ bool FrameLoader::load(LoadRequest& request, Type type)
 
     if (type == Type::IFrame)
         return true;
-
-    if (url.protocol() == "http" || url.protocol() == "https") {
-        AK::URL favicon_url;
-        favicon_url.set_protocol(url.protocol());
-        favicon_url.set_host(url.host());
-        favicon_url.set_port(url.port_or_default());
-        favicon_url.set_paths({ "favicon.ico" });
-
-        ResourceLoader::the().load(
-            favicon_url,
-            [this, favicon_url](auto data, auto&, auto) {
-                dbgln_if(SPAM_DEBUG, "Favicon downloaded, {} bytes from {}", data.size(), favicon_url);
-                if (data.is_empty())
-                    return;
-                RefPtr<Gfx::Bitmap> favicon_bitmap;
-                auto decoded_image = image_decoder_client().decode_image(data);
-                if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {
-                    dbgln("Could not decode favicon {}", favicon_url);
-                } else {
-                    favicon_bitmap = decoded_image->frames[0].bitmap;
-                    dbgln_if(IMAGE_DECODER_DEBUG, "Decoded favicon, {}", favicon_bitmap->size());
-                }
-                load_favicon(favicon_bitmap);
-            },
-            [this](auto&, auto) {
-                load_favicon();
-            });
-    } else {
-        load_favicon();
-    }
 
     return true;
 }
@@ -236,6 +226,7 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
 
 void FrameLoader::load_error_page(const AK::URL& failed_url, const String& error)
 {
+    m_icon_loader.load("file:///res/icons/16x16/app-crash-reporter.png"sv);
     auto error_page_url = "file:///res/html/error.html";
     ResourceLoader::the().load(
         error_page_url,
@@ -340,6 +331,20 @@ void FrameLoader::resource_did_load()
 
     if (auto* page = browsing_context().page())
         page->client().page_did_finish_loading(url);
+
+    if (url.protocol() == "http" || url.protocol() == "https") {
+        AK::URL favicon_url;
+        favicon_url.set_protocol(url.protocol());
+        favicon_url.set_host(url.host());
+        favicon_url.set_port(url.port_or_default());
+        favicon_url.set_paths({ "favicon.ico" });
+
+        dbgln_if(SPAM_DEBUG, "Downloading favicon, from {}", favicon_url.to_string());
+        m_icon_loader.load(favicon_url.to_string());
+    } else {
+        // NOTE: This has to actually call load() to stop the animation from the spinner
+        m_icon_loader.load("file:///res/icons/16x16/app-browser.png"sv);
+    }
 }
 
 void FrameLoader::resource_did_fail()

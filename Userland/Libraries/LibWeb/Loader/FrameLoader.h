@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Loader/ImageLoader.h>
 #include <LibWeb/Loader/Resource.h>
 
 namespace Web {
@@ -46,6 +47,7 @@ private:
     void store_response_cookies(AK::URL const& url, String const& cookies);
 
     HTML::BrowsingContext& m_browsing_context;
+    ImageLoader m_icon_loader;
     size_t m_redirects_count { 0 };
 };
 
