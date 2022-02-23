@@ -252,6 +252,7 @@ struct Options {
     OPTION_WITH_DEFAULTS(bool, use_sni, true)
     OPTION_WITH_DEFAULTS(bool, use_compression, false)
     OPTION_WITH_DEFAULTS(bool, validate_certificates, true)
+    OPTION_WITH_DEFAULTS(bool, allow_self_signed_certificates, false)
     OPTION_WITH_DEFAULTS(Optional<Vector<Certificate>>, root_certificates, )
     OPTION_WITH_DEFAULTS(Function<void(AlertDescription)>, alert_handler, [](auto) {})
     OPTION_WITH_DEFAULTS(Function<void()>, finish_callback, [] {})
