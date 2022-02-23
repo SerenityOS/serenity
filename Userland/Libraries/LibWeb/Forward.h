@@ -27,6 +27,7 @@ class BorderStyleValue;
 class BoxShadowStyleValue;
 class CalculatedStyleValue;
 class ColorStyleValue;
+class ContentStyleValue;
 class CSSImportRule;
 class CSSMediaRule;
 class CSSRule;
