@@ -474,6 +474,7 @@ GLAPI void glBegin(GLenum mode);
 GLAPI void glClear(GLbitfield mask);
 GLAPI void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
 GLAPI void glClearDepth(GLdouble depth);
+GLAPI void glClearDepthf(GLfloat depth);
 GLAPI void glClearStencil(GLint s);
 GLAPI void glColor3d(GLdouble r, GLdouble g, GLdouble b);
 GLAPI void glColor3dv(GLdouble const* v);

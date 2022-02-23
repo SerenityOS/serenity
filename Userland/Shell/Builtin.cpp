@@ -628,7 +628,7 @@ int Shell::builtin_disown(int argc, const char** argv)
 int Shell::builtin_history(int, const char**)
 {
     for (size_t i = 0; i < m_editor->history().size(); ++i) {
-        printf("%6zu  %s\n", i, m_editor->history()[i].entry.characters());
+        printf("%6zu  %s\n", i + 1, m_editor->history()[i].entry.characters());
     }
     return 0;
 }

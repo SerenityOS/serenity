@@ -104,8 +104,7 @@ NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration(ASTNode& p
     func->set_qualifiers(parse_function_qualifiers());
     func->set_return_type(parse_type(*func));
 
-    auto function_name = consume(Token::Type::Identifier);
-    func->set_name(text_of_token(function_name));
+    func->set_name(parse_name(*func));
 
     consume(Token::Type::LeftParen);
     auto parameters = parse_parameter_list(*func);
@@ -318,7 +317,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& p
         return var;
     }
     var->set_type(parse_type(var));
-    auto identifier_token = consume(Token::Type::Identifier);
+    auto name = parse_name(*var);
     RefPtr<Expression> initial_value;
 
     if (match(Token::Type::Equals)) {
@@ -334,7 +333,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& p
         consume(Token::Type::Semicolon);
 
     var->set_end(position());
-    var->set_name(text_of_token(identifier_token));
+    var->set_name(name);
     var->set_initial_value(move(initial_value));
 
     return var;
@@ -720,9 +719,10 @@ bool Parser::match_function_declaration()
     VERIFY(m_root_node);
     (void)parse_type(get_dummy_node());
 
-    if (!peek(Token::Type::Identifier).has_value())
+    if (!match_name())
         return false;
-    consume();
+
+    (void)parse_name(get_dummy_node());
 
     if (!peek(Token::Type::LeftParen).has_value())
         return false;
@@ -750,7 +750,7 @@ Optional<NonnullRefPtrVector<Parameter>> Parser::parse_parameter_list(ASTNode& p
     NonnullRefPtrVector<Parameter> parameters;
     while (peek().type() != Token::Type::RightParen && !eof()) {
         if (match_ellipsis()) {
-            auto param = create_ast_node<Parameter>(parent, position(), {}, StringView {});
+            auto param = create_ast_node<Parameter>(parent, position(), {}, RefPtr<Name> {});
             consume(Token::Type::Dot);
             consume(Token::Type::Dot);
             auto last_dot = consume(Token::Type::Dot);
@@ -760,15 +760,12 @@ Optional<NonnullRefPtrVector<Parameter>> Parser::parse_parameter_list(ASTNode& p
         } else {
             auto type = parse_type(parent);
 
-            auto name_identifier = peek(Token::Type::Identifier);
-            if (name_identifier.has_value())
-                consume(Token::Type::Identifier);
+            RefPtr<Name> name;
+            if (match_name()) {
+                name = parse_name(parent);
+            }
 
-            StringView name;
-            if (name_identifier.has_value())
-                name = text_of_token(name_identifier.value());
-
-            auto param = create_ast_node<Parameter>(parent, type->start(), name_identifier.has_value() ? name_identifier.value().end() : type->end(), name);
+            auto param = create_ast_node<Parameter>(parent, type->start(), !name.is_null() ? name->end() : type->end(), name);
             type->set_parent(*param.ptr());
 
             param->set_type(move(type));
@@ -1087,8 +1084,8 @@ NonnullRefPtr<EnumDeclaration> Parser::parse_enum_declaration(ASTNode& parent)
         enum_decl->set_type(EnumDeclaration::Type::RegularEnum);
     }
 
-    auto name_token = consume(Token::Type::Identifier);
-    enum_decl->set_name(text_of_token(name_token));
+    auto name = parse_name(*enum_decl);
+    enum_decl->set_name(name);
     consume(Token::Type::LeftCurly);
     while (!eof() && peek().type() != Token::Type::RightCurly) {
         auto name = text_of_token(consume(Token::Type::Identifier));
@@ -1149,8 +1146,8 @@ NonnullRefPtr<StructOrClassDeclaration> Parser::parse_class_declaration(ASTNode&
 
     auto decl = create_ast_node<StructOrClassDeclaration>(parent, position(), {}, type);
 
-    auto name_token = consume(Token::Type::Identifier);
-    decl->set_name(text_of_token(name_token));
+    auto name = parse_name(*decl);
+    decl->set_name(name);
 
     auto has_final = match_keyword("final");
 
@@ -1394,8 +1391,8 @@ NonnullRefPtr<NamespaceDeclaration> Parser::parse_namespace_declaration(ASTNode&
     if (!is_nested_namespace)
         consume(Token::Type::Keyword);
 
-    auto name_token = consume(Token::Type::Identifier);
-    namespace_decl->set_name(name_token.text());
+    auto name = parse_name(*namespace_decl);
+    namespace_decl->set_name(name);
 
     if (peek().type() == Token::Type::ColonColon) {
         consume(Token::Type::ColonColon);
@@ -1565,7 +1562,7 @@ NonnullRefPtr<BracedInitList> Parser::parse_braced_init_list(ASTNode& parent)
 }
 NonnullRefPtrVector<Declaration> Parser::parse_class_members(StructOrClassDeclaration& parent)
 {
-    auto class_name = parent.name();
+    auto class_name = parent.full_name();
 
     NonnullRefPtrVector<Declaration> members;
     while (!eof() && peek().type() != Token::Type::RightCurly) {
@@ -1652,11 +1649,8 @@ void Parser::parse_constructor_or_destructor_impl(FunctionDeclaration& func, Cto
         consume(Token::Type::Tilde);
     }
 
-    auto name_token = consume();
-    if (name_token.type() != Token::Type::Identifier && name_token.type() != Token::Type::KnownType) {
-        error("Unexpected constructor name");
-    }
-    func.set_name(name_token.text());
+    auto name = parse_name(func);
+    func.set_name(name);
 
     consume(Token::Type::LeftParen);
     auto parameters = parse_parameter_list(func);

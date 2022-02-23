@@ -208,7 +208,7 @@ private:
     Gfx::IntRect m_viewport;
 
     FloatVector4 m_clear_color { 0.0f, 0.0f, 0.0f, 0.0f };
-    double m_clear_depth { 1.0 };
+    float m_clear_depth { 1.f };
     u8 m_clear_stencil { 0 };
 
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };

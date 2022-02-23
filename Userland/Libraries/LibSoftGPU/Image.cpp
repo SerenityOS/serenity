@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,46 +9,34 @@
 
 namespace SoftGPU {
 
-Image::Image(ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers)
-    : m_format(format)
-    , m_width(width)
-    , m_height(height)
-    , m_depth(depth)
-    , m_num_layers(layers)
+Image::Image(unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers)
+    : m_num_layers(layers)
+    , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<ColorType>>>::must_create_but_fixme_should_propagate_errors(layers * max_levels))
 {
     VERIFY(width > 0);
     VERIFY(height > 0);
     VERIFY(depth > 0);
-    VERIFY(levels > 0);
+    VERIFY(max_levels > 0);
     VERIFY(layers > 0);
 
-    if ((width & (width - 1)) == 0)
-        m_width_is_power_of_two = true;
+    m_width_is_power_of_two = is_power_of_two(width);
+    m_height_is_power_of_two = is_power_of_two(height);
+    m_depth_is_power_of_two = is_power_of_two(depth);
 
-    if ((height & (height - 1)) == 0)
-        m_height_is_power_of_two = true;
+    unsigned level;
+    for (level = 0; level < max_levels; ++level) {
+        for (unsigned layer = 0; layer < layers; ++layer)
+            m_mipmap_buffers[layer * layers + level] = MUST(Typed3DBuffer<ColorType>::try_create(width, height, depth));
 
-    if ((depth & (depth - 1)) == 0)
-        m_depth_is_power_of_two = true;
+        if (width <= 1 && height <= 1 && depth <= 1)
+            break;
 
-    m_mipmap_sizes.append({ width, height, depth });
-    m_mipmap_offsets.append(0);
-
-    m_mipchain_size += width * height * depth * element_size(format);
-
-    while (--levels && (width > 1 || height > 1 || depth > 1)) {
         width = max(width / 2, 1);
         height = max(height / 2, 1);
         depth = max(depth / 2, 1);
-        m_mipmap_sizes.append({ width, height, depth });
-        m_mipmap_offsets.append(m_mipchain_size);
-
-        m_mipchain_size += width * height * depth * element_size(format);
     }
 
-    m_num_levels = m_mipmap_sizes.size();
-
-    m_data.resize(m_mipchain_size * m_num_layers);
+    m_num_levels = level + 1;
 }
 
 void Image::write_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void const* data, ImageDataLayout const& layout)

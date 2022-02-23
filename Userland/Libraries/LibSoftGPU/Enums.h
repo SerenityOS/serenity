@@ -6,7 +6,13 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace SoftGPU {
+
+using ColorType = u32; // BGRA:8888
+using DepthType = float;
+using StencilType = u8;
 
 enum class AlphaTestFunction {
     Never,
