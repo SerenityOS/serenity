@@ -26,6 +26,32 @@ enum class DecodeError {
     UnsupportedFormat,
 };
 
+class BitStringView {
+public:
+    BitStringView(ReadonlyBytes data, size_t unused_bits)
+        : m_data(data)
+        , m_unused_bits(unused_bits)
+    {
+    }
+
+    ReadonlyBytes raw_bytes() const
+    {
+        VERIFY(m_unused_bits == 0);
+        return m_data;
+    }
+
+    bool get(size_t index)
+    {
+        if (index >= 8 * m_data.size() - m_unused_bits)
+            return false;
+        return 0 != (m_data[index / 8] & (1u << (7 - (index % 8))));
+    }
+
+private:
+    ReadonlyBytes m_data;
+    size_t m_unused_bits;
+};
+
 class Decoder {
 public:
     Decoder(ReadonlyBytes data)
@@ -194,7 +220,7 @@ private:
     static Result<std::nullptr_t, DecodeError> decode_null(ReadonlyBytes);
     static Result<Vector<int>, DecodeError> decode_object_identifier(ReadonlyBytes);
     static Result<StringView, DecodeError> decode_printable_string(ReadonlyBytes);
-    static Result<const BitmapView, DecodeError> decode_bit_string(ReadonlyBytes);
+    static Result<BitStringView, DecodeError> decode_bit_string(ReadonlyBytes);
 
     Vector<ReadonlyBytes> m_stack;
     Optional<Tag> m_current_tag;
