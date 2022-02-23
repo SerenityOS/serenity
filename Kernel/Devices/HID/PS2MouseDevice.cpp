@@ -154,7 +154,6 @@ ErrorOr<u8> PS2MouseDevice::send_command(u8 command)
 
     if (response != I8042Response::Acknowledge) {
         dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, static_cast<u8>(I8042Response::Acknowledge));
-        // FIXME: Is this the correct errno value for this?
         return Error::from_errno(EIO);
     }
     return response;
@@ -165,7 +164,6 @@ ErrorOr<u8> PS2MouseDevice::send_command(u8 command, u8 data)
     u8 response = TRY(m_i8042_controller->send_command(instrument_type(), command, data));
     if (response != I8042Response::Acknowledge) {
         dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, static_cast<u8>(I8042Response::Acknowledge));
-        // FIXME: Is this the correct errno value for this?
         return Error::from_errno(EIO);
     }
     return response;
