@@ -35,7 +35,6 @@ You can watch videos of the system being developed on YouTube:
 * Pseudoterminals (with /dev/pts filesystem)
 * Filesystem notifications
 * CPU and memory profiling
-* SoundBlaster 16 driver
 * VMWare/QEMU mouse integration
 
 ## System services
