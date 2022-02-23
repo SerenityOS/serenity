@@ -569,9 +569,9 @@ void AbstractView::keydown_event(KeyEvent& event)
     if (is_searchable()) {
         if (event.key() == KeyCode::Key_Backspace) {
             if (!m_highlighted_search.is_null()) {
-                //if (event.modifiers() == Mod_Ctrl) {
-                // TODO: delete last word
-                //}
+                // if (event.modifiers() == Mod_Ctrl) {
+                //  TODO: delete last word
+                // }
                 Utf8View view(m_highlighted_search);
                 size_t n_code_points = view.length();
                 if (n_code_points > 1) {
@@ -704,7 +704,7 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, ModelIndex const& index
 
         // Highlight the text background first
         auto background_searching_length = searching_length;
-        painter.draw_text([&](Gfx::IntRect const& rect, u32) {
+        painter.draw_text([&](Gfx::IntRect const& rect, Utf8CodePointIterator&) {
             if (background_searching_length > 0) {
                 background_searching_length--;
                 painter.fill_rect(rect.inflated(0, 2), palette().highlight_searching());
@@ -716,12 +716,12 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, ModelIndex const& index
         auto text_searching_length = searching_length;
         auto highlight_text_color = palette().highlight_searching_text();
         searching_length = searching_text.length();
-        painter.draw_text([&](Gfx::IntRect const& rect, u32 code_point) {
+        painter.draw_text([&](Gfx::IntRect const& rect, Utf8CodePointIterator& it) {
             if (text_searching_length > 0) {
                 text_searching_length--;
-                painter.draw_glyph_or_emoji(rect.location(), code_point, font, highlight_text_color);
+                painter.draw_glyph_or_emoji(rect.location(), it, font, highlight_text_color);
             } else {
-                painter.draw_glyph_or_emoji(rect.location(), code_point, font, text_color);
+                painter.draw_glyph_or_emoji(rect.location(), it, font, text_color);
             }
         },
             text_rect, item_text, font, alignment, elision);
