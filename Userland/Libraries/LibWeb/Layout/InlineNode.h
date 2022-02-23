@@ -12,7 +12,7 @@ namespace Web::Layout {
 
 class InlineNode : public NodeWithStyleAndBoxModelMetrics {
 public:
-    InlineNode(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
+    InlineNode(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~InlineNode() override;
 
     virtual void paint(PaintContext&, PaintPhase) override;
