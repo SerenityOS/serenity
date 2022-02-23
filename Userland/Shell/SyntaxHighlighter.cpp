@@ -481,6 +481,7 @@ private:
         auto& span = span_for_node(node);
         span.attributes.underline = true;
         span.attributes.background_color = Color(Color::NamedColor::MidRed).lightened(1.3f).with_alpha(128);
+        span.attributes.color = m_palette.base_text();
     }
     virtual void visit(const AST::Tilde* node) override
     {
