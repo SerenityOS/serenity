@@ -546,6 +546,17 @@ void WindowManager::tell_wms_super_space_key_pressed()
     });
 }
 
+void WindowManager::tell_wms_super_digit_key_pressed(u8 digit)
+{
+    for_each_window_manager([digit](WMClientConnection& conn) {
+        if (conn.window_id() < 0)
+            return IterationDecision::Continue;
+
+        conn.async_super_digit_key_pressed(conn.window_id(), digit);
+        return IterationDecision::Continue;
+    });
+}
+
 void WindowManager::tell_wms_current_window_stack_changed()
 {
     for_each_window_manager([&](WMClientConnection& conn) {
@@ -1601,6 +1612,12 @@ void WindowManager::process_key_event(KeyEvent& event)
 
         if (event.type() == Event::KeyDown && event.key() == Key_Space) {
             tell_wms_super_space_key_pressed();
+            return;
+        }
+
+        if (event.type() == Event::KeyDown && event.key() >= Key_0 && event.key() <= Key_9) {
+            auto digit = event.key() - Key_0;
+            tell_wms_super_digit_key_pressed(digit);
             return;
         }
     }
