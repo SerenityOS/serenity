@@ -6,6 +6,7 @@
 
 #include "Certificate.h"
 #include <AK/Debug.h>
+#include <AK/IPv4Address.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/ASN1/PEM.h>
@@ -441,11 +442,13 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                                 certificate.SAN.append(name);
                                 break;
                             }
-                            case 7:
+                            case 7: {
                                 // IP Address
-                                // We can't handle these.
-                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::IPAddress");
+                                READ_OBJECT_OR_FAIL(OctetString, StringView, ip_addr_sv, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::IPAddress");
+                                IPv4Address ip_addr { ip_addr_sv.bytes().data() };
+                                certificate.SAN.append(ip_addr.to_string());
                                 break;
+                            }
                             case 8:
                                 // Registered ID
                                 // We can't handle these.
