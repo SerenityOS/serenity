@@ -23,9 +23,9 @@ class PS2KeyboardDevice final : public IRQHandler
     friend class DeviceManagement;
 
 public:
-    static RefPtr<PS2KeyboardDevice> try_to_initialize(const I8042Controller&);
+    static ErrorOr<NonnullRefPtr<PS2KeyboardDevice>> try_to_initialize(const I8042Controller&);
     virtual ~PS2KeyboardDevice() override;
-    bool initialize();
+    ErrorOr<void> initialize();
 
     virtual StringView purpose() const override { return class_name(); }
 

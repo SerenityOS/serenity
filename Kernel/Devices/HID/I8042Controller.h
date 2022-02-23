@@ -91,47 +91,39 @@ public:
 
     ErrorOr<void> detect_devices();
 
-    bool reset_device(HIDDevice::Type device)
+    ErrorOr<void> reset_device(HIDDevice::Type device)
     {
         SpinlockLocker lock(m_lock);
-        // FIXME: Propagate errors properly
-        if (auto result = do_reset_device(device); result.is_error())
-            return false;
-        return true;
+        return do_reset_device(device);
     }
 
-    u8 send_command(HIDDevice::Type device, u8 command)
+    ErrorOr<u8> send_command(HIDDevice::Type device, u8 command)
     {
         SpinlockLocker lock(m_lock);
-        // FIXME: Propagate errors properly
-        return MUST(do_send_command(device, command));
+        return do_send_command(device, command);
     }
-    u8 send_command(HIDDevice::Type device, u8 command, u8 data)
+    ErrorOr<u8> send_command(HIDDevice::Type device, u8 command, u8 data)
     {
         SpinlockLocker lock(m_lock);
-        // FIXME: Propagate errors properly
-        return MUST(do_send_command(device, command, data));
+        return do_send_command(device, command, data);
     }
 
-    u8 read_from_device(HIDDevice::Type device)
+    ErrorOr<u8> read_from_device(HIDDevice::Type device)
     {
         SpinlockLocker lock(m_lock);
-        // FIXME: Propagate errors properly
-        return MUST(do_read_from_device(device));
+        return do_read_from_device(device);
     }
 
-    void wait_then_write(u8 port, u8 data)
+    ErrorOr<void> wait_then_write(u8 port, u8 data)
     {
         SpinlockLocker lock(m_lock);
-        // FIXME: Propagate errors properly
-        MUST(do_wait_then_write(port, data));
+        return do_wait_then_write(port, data);
     }
 
-    u8 wait_then_read(u8 port)
+    ErrorOr<u8> wait_then_read(u8 port)
     {
         SpinlockLocker lock(m_lock);
-        // FIXME: Propagate errors properly
-        return MUST(do_wait_then_read(port));
+        return do_wait_then_read(port);
     }
 
     ErrorOr<void> prepare_for_output();

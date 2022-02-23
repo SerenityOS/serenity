@@ -86,23 +86,18 @@ bool PS2KeyboardDevice::handle_irq(const RegisterState&)
     return m_i8042_controller->irq_process_input_buffer(HIDDevice::Type::Keyboard);
 }
 
-UNMAP_AFTER_INIT RefPtr<PS2KeyboardDevice> PS2KeyboardDevice::try_to_initialize(const I8042Controller& ps2_controller)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<PS2KeyboardDevice>> PS2KeyboardDevice::try_to_initialize(const I8042Controller& ps2_controller)
 {
-    auto keyboard_device_or_error = DeviceManagement::try_create_device<PS2KeyboardDevice>(ps2_controller);
-    // FIXME: Find a way to propagate errors
-    VERIFY(!keyboard_device_or_error.is_error());
-    if (keyboard_device_or_error.value()->initialize())
-        return keyboard_device_or_error.release_value();
-    return nullptr;
+    auto keyboard_device = TRY(DeviceManagement::try_create_device<PS2KeyboardDevice>(ps2_controller));
+
+    TRY(keyboard_device->initialize());
+
+    return keyboard_device;
 }
 
-UNMAP_AFTER_INIT bool PS2KeyboardDevice::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> PS2KeyboardDevice::initialize()
 {
-    if (!m_i8042_controller->reset_device(HIDDevice::Type::Keyboard)) {
-        dbgln("KeyboardDevice: I8042 controller failed to reset device");
-        return false;
-    }
-    return true;
+    return m_i8042_controller->reset_device(HIDDevice::Type::Keyboard);
 }
 
 // FIXME: UNMAP_AFTER_INIT might not be correct, because in practice PS/2 devices
