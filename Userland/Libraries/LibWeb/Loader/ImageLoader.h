@@ -15,10 +15,12 @@ namespace Web {
 class ImageLoader : public ImageResourceClient {
 public:
     ImageLoader(DOM::Element& owner_element);
+    ImageLoader();
 
     void load(const AK::URL&);
 
     const Gfx::Bitmap* bitmap(size_t index) const;
+    const Gfx::Bitmap* current_frame() const { return bitmap(current_frame_index()); };
     size_t current_frame_index() const { return m_current_frame_index; }
 
     bool has_image() const;
@@ -51,7 +53,7 @@ private:
         Failed,
     };
 
-    DOM::Element& m_owner_element;
+    DOM::Element* m_owner_element { nullptr };
 
     mutable bool m_visible_in_viewport { false };
 

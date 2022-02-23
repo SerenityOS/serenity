@@ -15,8 +15,13 @@
 namespace Web {
 
 ImageLoader::ImageLoader(DOM::Element& owner_element)
-    : m_owner_element(owner_element)
+    : m_owner_element(&owner_element)
     , m_timer(Core::Timer::construct())
+{
+}
+
+ImageLoader::ImageLoader()
+    : m_timer(Core::Timer::construct())
 {
 }
 
@@ -28,9 +33,21 @@ void ImageLoader::load(const AK::URL& url)
 
 void ImageLoader::load_without_resetting_redirect_counter(AK::URL const& url)
 {
+    set_visible_in_viewport(false);
+
+    if (m_timer->is_active())
+        m_timer->stop();
+
     m_loading_state = LoadingState::Loading;
 
-    auto request = LoadRequest::create_for_url_on_page(url, m_owner_element.document().page());
+    LoadRequest request;
+
+    if (m_owner_element) {
+        request = LoadRequest::create_for_url_on_page(url, m_owner_element->document().page());
+    } else {
+        request.set_url(url);
+    }
+
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
 }
 
@@ -88,6 +105,8 @@ void ImageLoader::resource_did_load()
     }
 
     if (resource()->is_animated() && resource()->frame_count() > 1) {
+        m_current_frame_index = 0;
+        m_loops_completed = 0;
         m_timer->set_interval(resource()->frame_duration(0));
         m_timer->on_timeout = [this] { animate(); };
         m_timer->start();
