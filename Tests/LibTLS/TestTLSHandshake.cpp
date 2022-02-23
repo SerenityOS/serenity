@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Base64.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -46,17 +47,25 @@ Vector<Certificate> load_certificates()
     }
 
     auto config = Core::ConfigFile::open(ca_certs_filepath).release_value_but_fixme_should_propagate_errors();
-    auto now = Core::DateTime::now();
-    auto last_year = Core::DateTime::create(now.year() - 1);
-    auto next_year = Core::DateTime::create(now.year() + 1);
     for (auto& entity : config->groups()) {
-        Certificate cert;
-        cert.subject.subject = entity;
-        cert.issuer.subject = config->read_entry(entity, "issuer_subject", entity);
-        cert.subject.country = config->read_entry(entity, "country");
-        cert.not_before = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_before", "")).value_or(last_year);
-        cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
-        certificates.append(move(cert));
+        for (auto& subject : config->keys(entity)) {
+            auto certificate_base64 = config->read_entry(entity, subject);
+            auto certificate_data_result = decode_base64(certificate_base64);
+            if (certificate_data_result.is_error()) {
+                dbgln("Skipping CA Certificate {} {}: out of memory", entity, subject);
+                continue;
+            }
+            auto certificate_data = certificate_data_result.release_value();
+            auto certificate_result = Certificate::parse_asn1(certificate_data.bytes());
+            // If the certificate does not parse it is likely using elliptic curve keys/signatures, which are not
+            // supported right now. Currently, ca_certs.ini should only contain certificates with RSA keys/signatures.
+            if (!certificate_result.has_value()) {
+                dbgln("Skipping CA Certificate {} {}: unable to parse", entity, subject);
+                continue;
+            }
+            auto certificate = certificate_result.release_value();
+            certificates.append(move(certificate));
+        }
     }
     return certificates;
 }
