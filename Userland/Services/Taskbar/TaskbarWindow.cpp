@@ -334,6 +334,24 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             warnln("failed to spawn 'Assistant' when requested via Super+Space");
         break;
     }
+    case GUI::Event::WM_SuperDigitKeyPressed: {
+        auto& digit_event = static_cast<GUI::WMSuperDigitKeyPressedEvent&>(event);
+        auto index = digit_event.digit() != 0 ? digit_event.digit() - 1 : 9;
+
+        for (auto& widget : m_task_button_container->child_widgets()) {
+            // NOTE: The button might be invisible depending on the current workspace
+            if (!widget.is_visible())
+                continue;
+
+            if (index == 0) {
+                static_cast<TaskbarButton&>(widget).click();
+                break;
+            }
+
+            --index;
+        }
+        break;
+    }
     case GUI::Event::WM_WorkspaceChanged: {
         auto& changed_event = static_cast<GUI::WMWorkspaceChangedEvent&>(event);
         workspace_change_event(changed_event.current_row(), changed_event.current_column());
