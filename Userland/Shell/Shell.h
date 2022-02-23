@@ -53,6 +53,10 @@
     __ENUMERATE_SHELL_BUILTIN(kill)    \
     __ENUMERATE_SHELL_BUILTIN(noop)
 
+#define ENUMERATE_INTERNAL_SHELL_FUNCTIONS()          \
+    __ENUMERATE_INTERNAL_SHELL_FUNCTION(string_equal) \
+    __ENUMERATE_INTERNAL_SHELL_FUNCTION(number_equal)
+
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
     __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")
@@ -329,6 +333,13 @@ private:
     ENUMERATE_SHELL_BUILTINS();
 
 #undef __ENUMERATE_SHELL_BUILTIN
+
+#define __ENUMERATE_INTERNAL_SHELL_FUNCTION(fn) \
+    int builtin_internal_##fn(int argc, const char** argv);
+
+    ENUMERATE_INTERNAL_SHELL_FUNCTIONS();
+
+#undef __ENUMERATE_INTERNAL_SHELL_FUNCTION
 
     static constexpr Array builtin_names = {
 #define __ENUMERATE_SHELL_BUILTIN(builtin) #builtin##sv,

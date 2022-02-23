@@ -1118,6 +1118,42 @@ int Shell::builtin_kill(int argc, const char** argv)
     return exit_code;
 }
 
+int Shell::builtin_internal_number_equal(int argc, const char** argv)
+{
+    if (argc != 3) {
+        warnln("Invalid comparison argument count {} (expected 2)", argc - 1);
+        return 126;
+    }
+
+    auto lhs = StringView(argv[1]).to_int();
+    auto rhs = StringView(argv[2]).to_int();
+
+    if (!lhs.has_value()) {
+        warnln("Invalid comparison argument {} (not a number)", argv[1]);
+        return 126;
+    }
+    if (!rhs.has_value()) {
+        warnln("Invalid comparison argument {} (not a number)", argv[2]);
+        return 126;
+    }
+
+    if (lhs.value() == rhs.value())
+        return 0;
+    return 1;
+}
+
+int Shell::builtin_internal_string_equal(int argc, const char** argv)
+{
+    if (argc != 3) {
+        warnln("Invalid comparison argument count {} (expected 2)", argc - 1);
+        return 126;
+    }
+
+    if (StringView(argv[1]) == StringView(argv[2]))
+        return 0;
+    return 1;
+}
+
 bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings, int& retval)
 {
     if (command.argv.is_empty())
@@ -1160,9 +1196,21 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
         return true;                                                     \
     }
 
+#define __ENUMERATE_INTERNAL_SHELL_FUNCTION(fn)                          \
+    if (name == "internal:" #fn) {                                       \
+        retval = builtin_internal_##fn(argv.size() - 1, argv.data());    \
+        if (!has_error(ShellError::None))                                \
+            raise_error(m_error, m_error_description, command.position); \
+        fflush(stdout);                                                  \
+        fflush(stderr);                                                  \
+        return true;                                                     \
+    }
+
     ENUMERATE_SHELL_BUILTINS();
+    ENUMERATE_INTERNAL_SHELL_FUNCTIONS();
 
 #undef __ENUMERATE_SHELL_BUILTIN
+#undef __ENUMERATE_INTERNAL_SHELL_FUNCTION
     return false;
 }
 
@@ -1176,9 +1224,16 @@ bool Shell::has_builtin(StringView name) const
         return true;                       \
     }
 
+#define __ENUMERATE_INTERNAL_SHELL_FUNCTION(fn) \
+    if (name == "internal:" #fn) {              \
+        return true;                            \
+    }
+
     ENUMERATE_SHELL_BUILTINS();
+    ENUMERATE_INTERNAL_SHELL_FUNCTIONS();
 
 #undef __ENUMERATE_SHELL_BUILTIN
+#undef __ENUMERATE_INTERNAL_SHELL_FUNCTION
     return false;
 }
 
