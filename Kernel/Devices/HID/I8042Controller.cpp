@@ -164,29 +164,38 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
 
     // Try to detect and initialize the devices
     if (m_first_port_available) {
-        m_keyboard_device = PS2KeyboardDevice::try_to_initialize(*this);
-        if (!m_keyboard_device) {
+        auto error_or_device = PS2KeyboardDevice::try_to_initialize(*this);
+        if (error_or_device.is_error()) {
             dbgln("I8042: Keyboard device failed to initialize, disable");
             m_first_port_available = false;
             configuration &= ~I8042ConfigurationFlag::FirstPS2PortInterrupt;
             configuration |= I8042ConfigurationFlag::FirstPS2PortClock;
+            m_keyboard_device = nullptr;
             SpinlockLocker lock(m_lock);
             TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
             TRY(do_wait_then_write(I8042Port::Buffer, configuration));
+        } else {
+            m_keyboard_device = error_or_device.release_value();
         }
     }
     if (m_second_port_available) {
-        m_mouse_device = VMWareMouseDevice::try_to_initialize(*this);
-        if (!m_mouse_device) {
-            m_mouse_device = PS2MouseDevice::try_to_initialize(*this);
-            if (!m_mouse_device) {
+        auto vmmouse_device_or_error = VMWareMouseDevice::try_to_initialize(*this);
+        if (vmmouse_device_or_error.is_error()) {
+            // FIXME: is there something to do with the VMWare errors?
+            auto mouse_device_or_error = PS2MouseDevice::try_to_initialize(*this);
+            if (mouse_device_or_error.is_error()) {
                 dbgln("I8042: Mouse device failed to initialize, disable");
                 m_second_port_available = false;
                 configuration |= I8042ConfigurationFlag::SecondPS2PortClock;
+                m_mouse_device = nullptr;
                 SpinlockLocker lock(m_lock);
                 TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
                 TRY(do_wait_then_write(I8042Port::Buffer, configuration));
+            } else {
+                m_mouse_device = mouse_device_or_error.release_value();
             }
+        } else {
+            m_mouse_device = vmmouse_device_or_error.release_value();
         }
     }
 
