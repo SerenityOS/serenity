@@ -128,16 +128,26 @@ public:
     T* data() { return m_elements; }
     T const* data() const { return m_elements; }
 
-    T& operator[](size_t index)
+    T& at(size_t index)
     {
         VERIFY(index < m_size);
         return m_elements[index];
     }
 
-    T const& operator[](size_t index) const
+    T const& at(size_t index) const
     {
         VERIFY(index < m_size);
         return m_elements[index];
+    }
+
+    T& operator[](size_t index)
+    {
+        return at(index);
+    }
+
+    T const& operator[](size_t index) const
+    {
+        return at(index);
     }
 
     bool contains_slow(T const& value) const
