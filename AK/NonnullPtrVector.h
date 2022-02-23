@@ -31,12 +31,15 @@ public:
 
     using ConstIterator = SimpleIterator<const NonnullPtrVector, const T>;
     using Iterator = SimpleIterator<NonnullPtrVector, T>;
+    using ReverseIterator = SimpleReverseIterator<NonnullPtrVector, T>;
 
     ALWAYS_INLINE constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
     ALWAYS_INLINE constexpr Iterator begin() { return Iterator::begin(*this); }
+    ALWAYS_INLINE constexpr ReverseIterator rbegin() { return ReverseIterator::rbegin(*this); }
 
     ALWAYS_INLINE constexpr ConstIterator end() const { return ConstIterator::end(*this); }
     ALWAYS_INLINE constexpr Iterator end() { return Iterator::end(*this); }
+    ALWAYS_INLINE constexpr ReverseIterator rend() { return ReverseIterator::rend(*this); }
 
     ALWAYS_INLINE PtrType& ptr_at(size_t index) { return Base::at(index); }
     ALWAYS_INLINE const PtrType& ptr_at(size_t index) const { return Base::at(index); }
