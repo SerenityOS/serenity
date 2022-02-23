@@ -383,6 +383,76 @@ RefPtr<AST::Node> Shell::immediate_concat_lists(AST::ImmediateExpression& invoki
     return AST::make_ref_counted<AST::ListConcatenate>(invoking_node.position(), move(result));
 }
 
+RefPtr<AST::Node> Shell::immediate_filter_glob(AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>& arguments)
+{
+    // filter_glob string list
+    if (arguments.size() != 2) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly two arguments to filter_glob (<glob> <list>)", invoking_node.position());
+        return nullptr;
+    }
+
+    auto glob_list = const_cast<AST::Node&>(arguments[0]).run(*this)->resolve_as_list(*this);
+    if (glob_list.size() != 1) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected the <glob> argument to filter_glob to be a single string", arguments[0].position());
+        return nullptr;
+    }
+    auto& glob = glob_list.first();
+    auto& list_node = arguments[1];
+
+    NonnullRefPtrVector<AST::Node> result;
+
+    const_cast<AST::Node&>(list_node).for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) {
+        auto value = entry->resolve_as_list(*this);
+        if (value.size() == 0)
+            return IterationDecision::Continue;
+        if (value.size() == 1) {
+            if (!value.first().matches(glob))
+                return IterationDecision::Continue;
+            result.append(AST::make_ref_counted<AST::StringLiteral>(arguments[1].position(), value.first()));
+            return IterationDecision::Continue;
+        }
+
+        for (auto& entry : value) {
+            if (entry.matches(glob)) {
+                NonnullRefPtrVector<AST::Node> nodes;
+                for (auto& string : value)
+                    nodes.append(AST::make_ref_counted<AST::StringLiteral>(arguments[1].position(), string));
+                result.append(AST::make_ref_counted<AST::ListConcatenate>(arguments[1].position(), move(nodes)));
+                return IterationDecision::Continue;
+            }
+        }
+        return IterationDecision::Continue;
+    });
+
+    return AST::make_ref_counted<AST::ListConcatenate>(invoking_node.position(), move(result));
+}
+
+RefPtr<AST::Node> Shell::immediate_join(AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>& arguments)
+{
+    if (arguments.size() != 2) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 2 arguments to join", invoking_node.position());
+        return nullptr;
+    }
+
+    auto delimiter = const_cast<AST::Node&>(arguments[0]).run(this);
+    if (!delimiter->is_string()) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected the join delimiter string to be a string", arguments[0].position());
+        return nullptr;
+    }
+
+    auto value = const_cast<AST::Node&>(arguments[1]).run(this)->resolve_without_cast(this);
+    if (!value->is_list()) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected the joined list to be a list", arguments[1].position());
+        return nullptr;
+    }
+
+    auto delimiter_str = delimiter->resolve_as_list(this)[0];
+    StringBuilder builder;
+    builder.join(delimiter_str, value->resolve_as_list(*this));
+
+    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), builder.to_string());
+}
+
 RefPtr<AST::Node> Shell::run_immediate_function(StringView str, AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>& arguments)
 {
 #define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(name) \
