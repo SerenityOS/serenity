@@ -42,7 +42,7 @@ static size_t get_field_as_integral(const char (&field)[N])
 {
     size_t value = 0;
     for (size_t i = 0; i < N; ++i) {
-        if (field[i] == 0)
+        if (field[i] == 0 || field[i] == ' ')
             break;
 
         VERIFY(field[i] >= '0' && field[i] <= '7');
