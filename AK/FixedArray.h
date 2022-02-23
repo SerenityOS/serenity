@@ -11,6 +11,7 @@
 #include <AK/Iterator.h>
 #include <AK/Span.h>
 #include <AK/kmalloc.h>
+#include <initializer_list>
 
 namespace AK {
 
@@ -20,6 +21,17 @@ template<typename T>
 class FixedArray {
 public:
     FixedArray() = default;
+
+    static ErrorOr<FixedArray<T>> try_create(std::initializer_list<T> initializer)
+    {
+        auto array = TRY(try_create(initializer.size()));
+        auto it = initializer.begin();
+        for (size_t i = 0; i < array.size(); ++i) {
+            array[i] = move(*it);
+            ++it;
+        }
+        return array;
+    }
 
     static ErrorOr<FixedArray<T>> try_create(size_t size)
     {
