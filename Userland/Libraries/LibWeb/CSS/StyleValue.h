@@ -297,6 +297,7 @@ public:
         Calculated,
         Color,
         CombinedBorderRadius,
+        Content,
         Flex,
         FlexFlow,
         Font,
@@ -333,6 +334,7 @@ public:
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_color() const { return type() == Type::Color; }
+    bool is_content() const { return type() == Type::Content; }
     bool is_flex() const { return type() == Type::Flex; }
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
@@ -367,6 +369,7 @@ public:
     BoxShadowStyleValue const& as_box_shadow() const;
     CalculatedStyleValue const& as_calculated() const;
     ColorStyleValue const& as_color() const;
+    ContentStyleValue const& as_content() const;
     FlexFlowStyleValue const& as_flex_flow() const;
     FlexStyleValue const& as_flex() const;
     FontStyleValue const& as_font() const;
@@ -399,6 +402,7 @@ public:
     BoxShadowStyleValue& as_box_shadow() { return const_cast<BoxShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_box_shadow()); }
     CalculatedStyleValue& as_calculated() { return const_cast<CalculatedStyleValue&>(const_cast<StyleValue const&>(*this).as_calculated()); }
     ColorStyleValue& as_color() { return const_cast<ColorStyleValue&>(const_cast<StyleValue const&>(*this).as_color()); }
+    ContentStyleValue& as_content() { return const_cast<ContentStyleValue&>(const_cast<StyleValue const&>(*this).as_content()); }
     FlexFlowStyleValue& as_flex_flow() { return const_cast<FlexFlowStyleValue&>(const_cast<StyleValue const&>(*this).as_flex_flow()); }
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
     FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
@@ -967,6 +971,31 @@ private:
     NonnullRefPtr<BorderRadiusStyleValue> m_top_right;
     NonnullRefPtr<BorderRadiusStyleValue> m_bottom_right;
     NonnullRefPtr<BorderRadiusStyleValue> m_bottom_left;
+};
+
+class ContentStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<ContentStyleValue> create(NonnullRefPtr<StyleValueList> content, RefPtr<StyleValueList> alt_text)
+    {
+        return adopt_ref(*new ContentStyleValue(move(content), move(alt_text)));
+    }
+
+    StyleValueList const& content() const { return *m_content; }
+    bool has_alt_text() const { return !m_alt_text.is_null(); }
+    StyleValueList const* alt_text() const { return m_alt_text; }
+
+    virtual String to_string() const override;
+
+private:
+    ContentStyleValue(NonnullRefPtr<StyleValueList> content, RefPtr<StyleValueList> alt_text)
+        : StyleValue(Type::Content)
+        , m_content(move(content))
+        , m_alt_text(move(alt_text))
+    {
+    }
+
+    NonnullRefPtr<StyleValueList> m_content;
+    RefPtr<StyleValueList> m_alt_text;
 };
 
 class FlexStyleValue final : public StyleValue {
