@@ -100,7 +100,7 @@ Result<bool, DecodeError> Decoder::decode_boolean(ReadonlyBytes data)
     if (data.size() != 1)
         return DecodeError::InvalidInputFormat;
 
-    return data[0] == 0;
+    return data[0] != 0;
 }
 
 Result<UnsignedBigInteger, DecodeError> Decoder::decode_arbitrary_sized_integer(ReadonlyBytes data)
