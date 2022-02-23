@@ -283,7 +283,7 @@ bool Context::verify_chain(StringView host) const
         } else {
             if (subject_string == issuer_string) {
                 dbgln("verify_chain: Non-root self-signed certificate");
-                return false;
+                return options.allow_self_signed_certificates;
             }
             if ((cert_index + 1) >= local_chain->size()) {
                 dbgln("verify_chain: No trusted root certificate found before end of certificate chain");
