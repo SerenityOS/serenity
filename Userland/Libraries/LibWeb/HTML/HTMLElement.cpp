@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/ReverseIterator.h"
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
@@ -242,9 +243,7 @@ static void run_focus_update_steps(NonnullRefPtrVector<DOM::Node> old_chain, Non
     (void)new_focus_target;
 
     // 4. For each entry entry in new chain, in reverse order, run these substeps:
-    for (ssize_t i = new_chain.size() - 1; i >= 0; --i) {
-        auto& entry = new_chain[i];
-
+    for (auto& entry : new_chain.in_reverse()) {
         // 1. If entry is a focusable area: designate entry as the focused area of the document.
         // FIXME: This isn't entirely right.
         if (is<DOM::Element>(entry))
