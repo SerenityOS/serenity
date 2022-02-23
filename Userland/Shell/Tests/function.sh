@@ -6,15 +6,15 @@ source $(dirname "$0")/test-commons.inc
 fn() { echo $* }
 
 # Can we invoke that?
-if not test "$(fn 1)" = 1 { fail cannot invoke "'fn 1'" }
-if not test "$(fn 1 2)" = "1 2" { fail cannot invoke "'fn 1 2'" }
+if not internal:string_equal "$(fn 1)" 1 { fail cannot invoke "'fn 1'" }
+if not internal:string_equal "$(fn 1 2)" "1 2" { fail cannot invoke "'fn 1 2'" }
 
 # With explicit argument names?
 fn(a) { echo $a }
 
 # Can we invoke that?
-if not test "$(fn 1)" = 1 { fail cannot invoke "'fn 1'" with explicit names }
-if not test "$(fn 1 2)" = 1 { fail cannot invoke "'fn 1 2'" with explicit names and extra arguments }
+if not internal:string_equal "$(fn 1)" 1 { fail cannot invoke "'fn 1'" with explicit names }
+if not internal:string_equal "$(fn 1 2)" 1 { fail cannot invoke "'fn 1 2'" with explicit names and extra arguments }
 
 # FIXME: Reenable this when we have something akin to 'try'
 #        or when not-enough-args isn't a hard failure.
@@ -27,7 +27,7 @@ if not test "$(fn 1 2)" = 1 { fail cannot invoke "'fn 1 2'" with explicit names 
 # $0 in function should be its name
 fn() { echo $0 }
 
-if not test "$(fn)" = fn { fail '$0' in function not equal to its name }
+if not internal:string_equal "$(fn)" fn { fail '$0' in function not equal to its name }
 
 # Ensure ARGV does not leak from inner frames.
 fn() {
@@ -37,11 +37,11 @@ fn() {
 
 fn2() { }
 
-if not test "$(fn foobar)" = "foobar" { fail 'Frames are somehow messed up in nested functions' }
+if not internal:string_equal "$(fn foobar)" "foobar" { fail 'Frames are somehow messed up in nested functions' }
 
 fn(xfoo) { }
 xfoo=1
 fn 2
-if not test $xfoo -eq 1 { fail 'Functions overwrite parent scopes' }
+if not internal:number_equal $xfoo 1 { fail 'Functions overwrite parent scopes' }
 
 echo PASS

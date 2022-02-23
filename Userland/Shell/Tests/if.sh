@@ -4,7 +4,7 @@ source $(dirname "$0")/test-commons.inc
 
 setopt --verbose
 
-if test 1 -eq 1 {
+if internal:number_equal 1 1 {
     # Are comments ok?
     # Basic 'if' structure, empty block.
     if true {
@@ -48,7 +48,7 @@ if test 1 -eq 1 {
         fail "'if true && false' runs true branch"
     }
 } else {
-    fail "'if test 1 -eq 1' runs false branch"
+    fail "'if internal:number_equal 1 1' runs false branch"
 }
 
 echo PASS

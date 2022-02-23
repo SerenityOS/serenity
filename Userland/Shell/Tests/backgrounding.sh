@@ -25,7 +25,7 @@ unblock(idx) {
 assert_job_count(count) {
     ecount=$(jobs | wc -l)
     shift
-    if test $ecount -ne $count {
+    if not internal:number_equal $ecount $count {
         for $* {
             unblock $it
         }

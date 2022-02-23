@@ -20,27 +20,27 @@ for x in () { }
 for x in (1 2 3) { }
 
  # Single command in block
-for cmd in ((test 1 = 1) (test 2 = 2)) {
+for cmd in ((internal:string_equal 1 1) (internal:string_equal 2 2)) {
     $cmd || unset singlecommand_ok
 }
 
 # with index
 for index i val in (0 1 2) {
-    if not test "$i" -eq "$val" {
+    if not internal:number_equal "$i" "$val" {
         unset singlecommand_ok
     }
 }
 
 for index i val in (1 2 3) {
-    if not test "$i" -ne "$val" {
+    if internal:number_equal "$i" "$val" {
         unset singlecommand_ok
     }
 }
 
  # Multiple commands in block
-for cmd in ((test 1 = 1) (test 2 = 2)) {
-    test -z "$cmd"
-    test -z "$cmd" && unset multicommand_ok
+for cmd in ((internal:string_equal 1 1) (internal:string_equal 2 2)) {
+    internal:string_equal "$cmd" ""
+    internal:string_equal "$cmd" "" && unset multicommand_ok
 
 }
 
@@ -54,11 +54,11 @@ lst=()
 for line in $(cat $test_file) {
     lst=($lst $line)
 }
-test "$lst" = "1 2 3 4" || unset inlineexec_ok
+internal:string_equal "$lst" "1 2 3 4" || unset inlineexec_ok
 rm $test_file
 
 # Implicit var
-for ((test 1 = 1) (test 2 = 2)) {
+for ((internal:string_equal 1 1) (internal:string_equal 2 2)) {
     $it || unset implicit_ok
 }
 
@@ -81,18 +81,18 @@ for $(yes) {
     break
 }
 
-if not test $singlecommand_ok { fail Single command inside for body }
-if not test $multicommand_ok { fail Multiple commands inside for body }
-if not test $inlineexec_ok { fail Inline Exec }
-if not test $implicit_ok { fail implicit iter variable }
-if not test $infinite_ok { fail infinite loop }
-if not test $break_ok { fail break }
-if not test $continue_ok { fail continue }
-if not test $break_in_infinite_ok { fail break from external infinite loop }
+if internal:string_equal "" $singlecommand_ok { fail Single command inside for body }
+if internal:string_equal "" $multicommand_ok { fail Multiple commands inside for body }
+if internal:string_equal "" $inlineexec_ok { fail Inline Exec }
+if internal:string_equal "" $implicit_ok { fail implicit iter variable }
+if internal:string_equal "" $infinite_ok { fail infinite loop }
+if internal:string_equal "" $break_ok { fail break }
+if internal:string_equal "" $continue_ok { fail continue }
+if internal:string_equal "" $break_in_infinite_ok { fail break from external infinite loop }
 
-if not test \
+if not internal:string_equal \
     "$singlecommand_ok $multicommand_ok $inlineexec_ok $implicit_ok $infinite_ok $break_ok $continue_ok $break_in_infinite_ok" \
-    = "yes yes yes yes yes yes yes yes" {
+    "yes yes yes yes yes yes yes yes" {
 
     fail "Something failed :("
 }
