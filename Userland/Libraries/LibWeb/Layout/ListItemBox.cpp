@@ -10,8 +10,8 @@
 
 namespace Web::Layout {
 
-ListItemBox::ListItemBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
-    : Layout::BlockContainer(document, &element, move(style))
+ListItemBox::ListItemBox(DOM::Document& document, DOM::Element* element, NonnullRefPtr<CSS::StyleProperties> style)
+    : Layout::BlockContainer(document, element, move(style))
 {
 }
 

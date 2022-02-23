@@ -205,7 +205,7 @@ RefPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StylePropert
         return adopt_ref(*new Layout::TableBox(document(), this, move(style)));
 
     if (display.is_list_item())
-        return adopt_ref(*new Layout::ListItemBox(document(), *this, move(style)));
+        return adopt_ref(*new Layout::ListItemBox(document(), this, move(style)));
 
     if (display.is_table_row())
         return adopt_ref(*new Layout::TableRowBox(document(), this, move(style)));
@@ -214,7 +214,7 @@ RefPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StylePropert
         return adopt_ref(*new Layout::TableCellBox(document(), this, move(style)));
 
     if (display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group())
-        return adopt_ref(*new Layout::TableRowGroupBox(document(), *this, move(style)));
+        return adopt_ref(*new Layout::TableRowGroupBox(document(), this, move(style)));
 
     if (display.is_table_column() || display.is_table_column_group() || display.is_table_caption()) {
         // FIXME: This is just an incorrect placeholder until we improve table layout support.
@@ -228,10 +228,10 @@ RefPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StylePropert
             return block;
         }
         if (display.is_flow_inside())
-            return adopt_ref(*new Layout::InlineNode(document(), *this, move(style)));
+            return adopt_ref(*new Layout::InlineNode(document(), this, move(style)));
 
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Support display: {}", display.to_string());
-        return adopt_ref(*new Layout::InlineNode(document(), *this, move(style)));
+        return adopt_ref(*new Layout::InlineNode(document(), this, move(style)));
     }
 
     if (display.is_flow_inside() || display.is_flow_root_inside() || display.is_flex_inside())

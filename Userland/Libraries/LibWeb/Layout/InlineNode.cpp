@@ -17,8 +17,8 @@
 
 namespace Web::Layout {
 
-InlineNode::InlineNode(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
-    : Layout::NodeWithStyleAndBoxModelMetrics(document, &element, move(style))
+InlineNode::InlineNode(DOM::Document& document, DOM::Element* element, NonnullRefPtr<CSS::StyleProperties> style)
+    : Layout::NodeWithStyleAndBoxModelMetrics(document, element, move(style))
 {
     set_inline(true);
 }
