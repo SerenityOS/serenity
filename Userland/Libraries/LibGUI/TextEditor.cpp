@@ -334,8 +334,9 @@ int TextEditor::ruler_width() const
     if (!m_ruler_visible)
         return 0;
     int line_count_digits = static_cast<int>(log10(line_count())) + 1;
-    constexpr size_t padding = 5;
-    return line_count() < 10 ? (line_count_digits + 1) * font().glyph_width('x') + padding : line_count_digits * font().glyph_width('x') + padding;
+    auto padding = 5 + (font().is_fixed_width() ? 1 : (line_count_digits - (line_count() < 10 ? -1 : 0)));
+    auto widest_numeral = font().bold_variant().glyph_width('4');
+    return line_count() < 10 ? (line_count_digits + 1) * widest_numeral + padding : line_count_digits * widest_numeral + padding;
 }
 
 int TextEditor::gutter_width() const
