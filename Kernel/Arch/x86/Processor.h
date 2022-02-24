@@ -208,6 +208,17 @@ public:
         return IterationDecision::Continue;
     }
 
+    static inline ErrorOr<void> try_for_each(Function<ErrorOr<void>(Processor&)> callback)
+    {
+        auto& procs = processors();
+        size_t count = procs.size();
+        for (size_t i = 0; i < count; i++) {
+            if (procs[i] != nullptr)
+                TRY(callback(*procs[i]));
+        }
+        return {};
+    }
+
     ALWAYS_INLINE u8 physical_address_bit_width() const { return m_physical_address_bit_width; }
     ALWAYS_INLINE u8 virtual_address_bit_width() const { return m_virtual_address_bit_width; }
 
