@@ -98,7 +98,7 @@ LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_sy
 Locator::Locator(Core::Object* parent)
 {
     set_layout<GUI::VerticalBoxLayout>();
-    set_fixed_height(20);
+    set_fixed_height(22);
     m_textbox = add<GUI::TextBox>();
     m_textbox->on_change = [this] {
         update_suggestions();
