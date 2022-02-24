@@ -216,6 +216,9 @@ void ClassicStylePainter::paint_button(Painter& painter, IntRect const& rect, Pa
 
 void ClassicStylePainter::paint_frame(Painter& painter, IntRect const& rect, Palette const& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
 {
+    if (shape == Gfx::FrameShape::NoFrame)
+        return;
+
     Color top_left_color;
     Color bottom_right_color;
     Color dark_shade = palette.threed_shadow1();

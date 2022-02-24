@@ -10,6 +10,7 @@
 
 #include <AK/Vector.h>
 #include <LibConfig/Listener.h>
+#include <LibCore/DateTime.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Model.h>
 
@@ -23,12 +24,18 @@ public:
         Data,
         Type,
         Size,
+        Time,
         __Count
+    };
+
+    struct ClipboardItem {
+        GUI::Clipboard::DataAndType data_and_type;
+        Core::DateTime time;
     };
 
     virtual ~ClipboardHistoryModel() override = default;
 
-    const GUI::Clipboard::DataAndType& item_at(int index) const { return m_history_items[index]; }
+    const ClipboardItem& item_at(int index) const { return m_history_items[index]; }
     void remove_item(int index);
 
     // ^GUI::Model
@@ -49,6 +56,6 @@ private:
     // ^GUI::Clipboard::ClipboardClient
     virtual void clipboard_content_did_change(const String&) override { add_item(GUI::Clipboard::the().fetch_data_and_type()); }
 
-    Vector<GUI::Clipboard::DataAndType> m_history_items;
+    Vector<ClipboardItem> m_history_items;
     size_t m_history_limit;
 };

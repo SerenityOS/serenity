@@ -22,11 +22,15 @@
 #include <AK/WeakPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
+#include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Display.h>
+#include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/Resolution.h>
+#include <LibWeb/CSS/Time.h>
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/ImageResource.h>
@@ -283,6 +287,7 @@ public:
     virtual ~StyleValue();
 
     enum class Type {
+        Angle,
         Background,
         BackgroundRepeat,
         BackgroundSize,
@@ -295,6 +300,7 @@ public:
         Flex,
         FlexFlow,
         Font,
+        Frequency,
         Identifier,
         Image,
         Inherit,
@@ -306,8 +312,10 @@ public:
         Overflow,
         Percentage,
         Position,
+        Resolution,
         String,
         TextDecoration,
+        Time,
         Transformation,
         Unresolved,
         Unset,
@@ -316,6 +324,7 @@ public:
 
     Type type() const { return m_type; }
 
+    bool is_angle() const { return type() == Type::Angle; }
     bool is_background() const { return type() == Type::Background; }
     bool is_background_repeat() const { return type() == Type::BackgroundRepeat; }
     bool is_background_size() const { return type() == Type::BackgroundSize; }
@@ -327,6 +336,7 @@ public:
     bool is_flex() const { return type() == Type::Flex; }
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
+    bool is_frequency() const { return type() == Type::Frequency; }
     bool is_identifier() const { return type() == Type::Identifier; }
     bool is_image() const { return type() == Type::Image; }
     bool is_inherit() const { return type() == Type::Inherit; }
@@ -337,8 +347,10 @@ public:
     bool is_overflow() const { return type() == Type::Overflow; }
     bool is_percentage() const { return type() == Type::Percentage; }
     bool is_position() const { return type() == Type::Position; }
+    bool is_resolution() const { return type() == Type::Resolution; }
     bool is_string() const { return type() == Type::String; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
+    bool is_time() const { return type() == Type::Time; }
     bool is_transformation() const { return type() == Type::Transformation; }
     bool is_unresolved() const { return type() == Type::Unresolved; }
     bool is_unset() const { return type() == Type::Unset; }
@@ -346,6 +358,7 @@ public:
 
     bool is_builtin() const { return is_inherit() || is_initial() || is_unset(); }
 
+    AngleStyleValue const& as_angle() const;
     BackgroundStyleValue const& as_background() const;
     BackgroundRepeatStyleValue const& as_background_repeat() const;
     BackgroundSizeStyleValue const& as_background_size() const;
@@ -357,6 +370,7 @@ public:
     FlexFlowStyleValue const& as_flex_flow() const;
     FlexStyleValue const& as_flex() const;
     FontStyleValue const& as_font() const;
+    FrequencyStyleValue const& as_frequency() const;
     IdentifierStyleValue const& as_identifier() const;
     ImageStyleValue const& as_image() const;
     InheritStyleValue const& as_inherit() const;
@@ -367,13 +381,16 @@ public:
     OverflowStyleValue const& as_overflow() const;
     PercentageStyleValue const& as_percentage() const;
     PositionStyleValue const& as_position() const;
+    ResolutionStyleValue const& as_resolution() const;
     StringStyleValue const& as_string() const;
     TextDecorationStyleValue const& as_text_decoration() const;
+    TimeStyleValue const& as_time() const;
     TransformationStyleValue const& as_transformation() const;
     UnresolvedStyleValue const& as_unresolved() const;
     UnsetStyleValue const& as_unset() const;
     StyleValueList const& as_value_list() const;
 
+    AngleStyleValue& as_angle() { return const_cast<AngleStyleValue&>(const_cast<StyleValue const&>(*this).as_angle()); }
     BackgroundStyleValue& as_background() { return const_cast<BackgroundStyleValue&>(const_cast<StyleValue const&>(*this).as_background()); }
     BackgroundRepeatStyleValue& as_background_repeat() { return const_cast<BackgroundRepeatStyleValue&>(const_cast<StyleValue const&>(*this).as_background_repeat()); }
     BackgroundSizeStyleValue& as_background_size() { return const_cast<BackgroundSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_background_size()); }
@@ -385,6 +402,7 @@ public:
     FlexFlowStyleValue& as_flex_flow() { return const_cast<FlexFlowStyleValue&>(const_cast<StyleValue const&>(*this).as_flex_flow()); }
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
     FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
+    FrequencyStyleValue& as_frequency() { return const_cast<FrequencyStyleValue&>(const_cast<StyleValue const&>(*this).as_frequency()); }
     IdentifierStyleValue& as_identifier() { return const_cast<IdentifierStyleValue&>(const_cast<StyleValue const&>(*this).as_identifier()); }
     ImageStyleValue& as_image() { return const_cast<ImageStyleValue&>(const_cast<StyleValue const&>(*this).as_image()); }
     InheritStyleValue& as_inherit() { return const_cast<InheritStyleValue&>(const_cast<StyleValue const&>(*this).as_inherit()); }
@@ -395,8 +413,10 @@ public:
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
     PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
+    ResolutionStyleValue& as_resolution() { return const_cast<ResolutionStyleValue&>(const_cast<StyleValue const&>(*this).as_resolution()); }
     StringStyleValue& as_string() { return const_cast<StringStyleValue&>(const_cast<StyleValue const&>(*this).as_string()); }
     TextDecorationStyleValue& as_text_decoration() { return const_cast<TextDecorationStyleValue&>(const_cast<StyleValue const&>(*this).as_text_decoration()); }
+    TimeStyleValue& as_time() { return const_cast<TimeStyleValue&>(const_cast<StyleValue const&>(*this).as_time()); }
     TransformationStyleValue& as_transformation() { return const_cast<TransformationStyleValue&>(const_cast<StyleValue const&>(*this).as_transformation()); }
     UnresolvedStyleValue& as_unresolved() { return const_cast<UnresolvedStyleValue&>(const_cast<StyleValue const&>(*this).as_unresolved()); }
     UnsetStyleValue& as_unset() { return const_cast<UnsetStyleValue&>(const_cast<StyleValue const&>(*this).as_unset()); }
@@ -433,6 +453,35 @@ protected:
 
 private:
     Type m_type { Type::Invalid };
+};
+
+class AngleStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<AngleStyleValue> create(Angle angle)
+    {
+        return adopt_ref(*new AngleStyleValue(move(angle)));
+    }
+    virtual ~AngleStyleValue() override { }
+
+    Angle const& angle() const { return m_angle; }
+
+    virtual String to_string() const override { return m_angle.to_string(); }
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_angle == static_cast<AngleStyleValue const&>(other).m_angle;
+    }
+
+private:
+    explicit AngleStyleValue(Angle angle)
+        : StyleValue(Type::Angle)
+        , m_angle(move(angle))
+    {
+    }
+
+    Angle m_angle;
 };
 
 class BackgroundStyleValue final : public StyleValue {
@@ -696,11 +745,12 @@ public:
         float value;
     };
 
-    using PercentageBasis = Variant<Empty, Length>;
+    using PercentageBasis = Variant<Empty, Angle, Frequency, Length, Time>;
 
     class CalculationResult {
     public:
-        CalculationResult(Variant<Number, Length, Percentage> value)
+        using Value = Variant<Number, Angle, Frequency, Length, Percentage, Time>;
+        CalculationResult(Value value)
             : m_value(move(value))
         {
         }
@@ -709,11 +759,11 @@ public:
         void multiply_by(CalculationResult const& other, Layout::Node const*);
         void divide_by(CalculationResult const& other, Layout::Node const*);
 
-        Variant<Number, Length, Percentage> const& value() const { return m_value; }
+        Value const& value() const { return m_value; }
 
     private:
         void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
-        Variant<Number, Length, Percentage> m_value;
+        Value m_value;
     };
 
     struct CalcSum;
@@ -733,7 +783,7 @@ public:
     };
 
     struct CalcValue {
-        Variant<Number, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
+        Variant<Number, Angle, Frequency, Length, Percentage, Time, NonnullOwnPtr<CalcSum>> value;
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
@@ -836,9 +886,16 @@ public:
     String to_string() const override;
     ResolvedType resolved_type() const { return m_resolved_type; }
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
+
+    Optional<Angle> resolve_angle() const;
+    Optional<AnglePercentage> resolve_angle_percentage(Angle const& percentage_basis) const;
+    Optional<Frequency> resolve_frequency() const;
+    Optional<FrequencyPercentage> resolve_frequency_percentage(Frequency const& percentage_basis) const;
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
     Optional<LengthPercentage> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
     Optional<Percentage> resolve_percentage() const;
+    Optional<Time> resolve_time() const;
+    Optional<TimePercentage> resolve_time_percentage(Time const& percentage_basis) const;
     Optional<float> resolve_number();
     Optional<i64> resolve_integer();
 
@@ -1001,6 +1058,35 @@ private:
     NonnullRefPtr<StyleValue> m_line_height;
     NonnullRefPtr<StyleValue> m_font_families;
     // FIXME: Implement font-stretch and font-variant.
+};
+
+class FrequencyStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<FrequencyStyleValue> create(Frequency frequency)
+    {
+        return adopt_ref(*new FrequencyStyleValue(move(frequency)));
+    }
+    virtual ~FrequencyStyleValue() override { }
+
+    Frequency const& frequency() const { return m_frequency; }
+
+    virtual String to_string() const override { return m_frequency.to_string(); }
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_frequency == static_cast<FrequencyStyleValue const&>(other).m_frequency;
+    }
+
+private:
+    explicit FrequencyStyleValue(Frequency frequency)
+        : StyleValue(Type::Frequency)
+        , m_frequency(move(frequency))
+    {
+    }
+
+    Frequency m_frequency;
 };
 
 class IdentifierStyleValue final : public StyleValue {
@@ -1294,6 +1380,35 @@ private:
     LengthPercentage m_offset_y;
 };
 
+class ResolutionStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<ResolutionStyleValue> create(Resolution resolution)
+    {
+        return adopt_ref(*new ResolutionStyleValue(move(resolution)));
+    }
+    virtual ~ResolutionStyleValue() override { }
+
+    Resolution const& resolution() const { return m_resolution; }
+
+    virtual String to_string() const override { return m_resolution.to_string(); }
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_resolution == static_cast<ResolutionStyleValue const&>(other).m_resolution;
+    }
+
+private:
+    explicit ResolutionStyleValue(Resolution resolution)
+        : StyleValue(Type::Resolution)
+        , m_resolution(move(resolution))
+    {
+    }
+
+    Resolution m_resolution;
+};
+
 class StringStyleValue : public StyleValue {
 public:
     static NonnullRefPtr<StringStyleValue> create(String const& string)
@@ -1346,6 +1461,35 @@ private:
     NonnullRefPtr<StyleValue> m_line;
     NonnullRefPtr<StyleValue> m_style;
     NonnullRefPtr<StyleValue> m_color;
+};
+
+class TimeStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<TimeStyleValue> create(Time time)
+    {
+        return adopt_ref(*new TimeStyleValue(move(time)));
+    }
+    virtual ~TimeStyleValue() override { }
+
+    Time const& time() const { return m_time; }
+
+    virtual String to_string() const override { return m_time.to_string(); }
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_time == static_cast<TimeStyleValue const&>(other).m_time;
+    }
+
+private:
+    explicit TimeStyleValue(Time time)
+        : StyleValue(Type::Time)
+        , m_time(move(time))
+    {
+    }
+
+    Time m_time;
 };
 
 class TransformationStyleValue final : public StyleValue {

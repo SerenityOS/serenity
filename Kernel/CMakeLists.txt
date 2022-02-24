@@ -48,7 +48,6 @@ set(KERNEL_SOURCES
     Devices/Audio/AC97.cpp
     Devices/Audio/Channel.cpp
     Devices/Audio/Management.cpp
-    Devices/Audio/SB16.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
     Devices/ConsoleDevice.cpp

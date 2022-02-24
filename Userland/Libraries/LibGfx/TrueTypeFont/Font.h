@@ -129,6 +129,7 @@ public:
     virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_code_point(code_point) > 0; }
     virtual u8 glyph_width(u32 code_point) const override;
     virtual int glyph_or_emoji_width(u32 code_point) const override;
+    virtual int preferred_line_height() const override { return metrics().height() + metrics().line_gap; }
     virtual u8 glyph_height() const override { return m_point_height; }
     virtual int x_height() const override { return m_point_height; }      // FIXME: Read from font
     virtual u8 min_glyph_width() const override { return 1; }             // FIXME: Read from font

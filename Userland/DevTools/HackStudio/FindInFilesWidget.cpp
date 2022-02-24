@@ -118,7 +118,7 @@ FindInFilesWidget::FindInFilesWidget()
 
     auto& top_container = add<Widget>();
     top_container.set_layout<GUI::HorizontalBoxLayout>();
-    top_container.set_fixed_height(20);
+    top_container.set_fixed_height(22);
 
     m_textbox = top_container.add<GUI::TextBox>();
 

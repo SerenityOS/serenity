@@ -144,6 +144,22 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
     create_toolbar(toolbar_container);
 
     m_statusbar = add<GUI::Statusbar>(3);
+    m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
+    m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
+    auto width = font().width("Ln 0000, Col 000") + font().max_glyph_width();
+    m_statusbar->segment(2).set_fixed_width(width);
+    update_statusbar();
+
+    GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
+        auto text = action.status_tip();
+        if (text.is_empty())
+            text = Gfx::parse_ampersand_string(action.text());
+        m_statusbar->set_override_text(move(text));
+    };
+
+    GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
+        m_statusbar->set_override_text({});
+    };
 
     auto maybe_watcher = Core::FileWatcher::create();
     if (maybe_watcher.is_error()) {
@@ -1347,8 +1363,6 @@ void HackStudioWidget::initialize_menubar(GUI::Window& window)
 
 void HackStudioWidget::update_statusbar()
 {
-    m_statusbar->set_text(0, String::formatted("Ln {}, Col {}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
-
     StringBuilder builder;
     if (current_editor().has_selection()) {
         String selected_text = current_editor().selected_text();
@@ -1356,8 +1370,9 @@ void HackStudioWidget::update_statusbar()
         builder.appendff("Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
 
-    m_statusbar->set_text(1, builder.to_string());
-    m_statusbar->set_text(2, current_editor_wrapper().editor().code_document().language_name());
+    m_statusbar->set_text(0, builder.to_string());
+    m_statusbar->set_text(1, current_editor_wrapper().editor().code_document().language_name());
+    m_statusbar->set_text(2, String::formatted("Ln {}, Col {}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
 }
 
 void HackStudioWidget::handle_external_file_deletion(const String& filepath)

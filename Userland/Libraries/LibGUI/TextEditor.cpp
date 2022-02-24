@@ -334,8 +334,9 @@ int TextEditor::ruler_width() const
     if (!m_ruler_visible)
         return 0;
     int line_count_digits = static_cast<int>(log10(line_count())) + 1;
-    constexpr size_t padding = 5;
-    return line_count() < 10 ? (line_count_digits + 1) * font().glyph_width('x') + padding : line_count_digits * font().glyph_width('x') + padding;
+    auto padding = 5 + (font().is_fixed_width() ? 1 : (line_count_digits - (line_count() < 10 ? -1 : 0)));
+    auto widest_numeral = font().bold_variant().glyph_width('4');
+    return line_count() < 10 ? (line_count_digits + 1) * widest_numeral + padding : line_count_digits * widest_numeral + padding;
 }
 
 int TextEditor::gutter_width() const
@@ -464,10 +465,10 @@ void TextEditor::paint_event(PaintEvent& event)
             auto ruler_line_rect = ruler_content_rect(i);
             // NOTE: Use Painter::draw_text() directly here, as we want to always draw the line numbers in clear text.
             painter.draw_text(
-                ruler_line_rect.shrunken(2, 0).translated(0, m_line_spacing / 2),
+                ruler_line_rect.shrunken(2, 0),
                 String::number(i + 1),
                 is_current_line ? font().bold_variant() : font(),
-                Gfx::TextAlignment::TopRight,
+                Gfx::TextAlignment::CenterRight,
                 is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
         }
     }
@@ -1933,6 +1934,8 @@ void TextEditor::set_syntax_highlighter(OwnPtr<Syntax::Highlighter> highlighter)
         m_needs_rehighlight = true;
     } else
         document().set_spans({});
+    if (on_highlighter_change)
+        on_highlighter_change();
 }
 
 AutocompleteProvider const* TextEditor::autocomplete_provider() const
@@ -1976,7 +1979,7 @@ void TextEditor::set_editing_engine(OwnPtr<EditingEngine> editing_engine)
 
 int TextEditor::line_height() const
 {
-    return font().glyph_height() + m_line_spacing;
+    return font().preferred_line_height();
 }
 
 int TextEditor::fixed_glyph_width() const

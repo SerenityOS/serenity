@@ -19,6 +19,9 @@ class SubtleCrypto;
 }
 
 namespace Web::CSS {
+class Angle;
+class AnglePercentage;
+class AngleStyleValue;
 class BackgroundRepeatStyleValue;
 class BackgroundSizeStyleValue;
 class BackgroundStyleValue;
@@ -40,6 +43,9 @@ class ElementInlineCSSStyleDeclaration;
 class FlexFlowStyleValue;
 class FlexStyleValue;
 class FontStyleValue;
+class Frequency;
+class FrequencyPercentage;
+class FrequencyStyleValue;
 class IdentifierStyleValue;
 class ImageStyleValue;
 class InheritStyleValue;
@@ -58,6 +64,8 @@ class Percentage;
 class PercentageStyleValue;
 class PositionStyleValue;
 class PropertyOwningCSSStyleDeclaration;
+class Resolution;
+class ResolutionStyleValue;
 class Screen;
 class Selector;
 class StringStyleValue;
@@ -68,6 +76,9 @@ class StyleValue;
 class StyleValueList;
 class Supports;
 class TextDecorationStyleValue;
+class Time;
+class TimePercentage;
+class TimeStyleValue;
 class TransformationStyleValue;
 class UnresolvedStyleValue;
 class UnsetStyleValue;

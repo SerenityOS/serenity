@@ -109,8 +109,14 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::DeviceIdentifie
     m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
     GraphicsManagement::the().set_console(*m_framebuffer_console);
 
-    // Note: If we use VirtualBox graphics adapter (which is based on Bochs one), we need to use IO ports
-    if (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef)
+    auto vendor_id = pci_device_identifier.hardware_id().vendor_id;
+    auto device_id = pci_device_identifier.hardware_id().device_id;
+    auto revision_id = pci_device_identifier.revision_id();
+
+    auto is_bochs = vendor_id == PCI::VendorID::QEMUOld && device_id == 0x1111 && revision_id == 0;
+    auto is_virtualbox = vendor_id == PCI::VendorID::VirtualBox && device_id == 0xbeef;
+
+    if (is_bochs || is_virtualbox)
         m_io_required = true;
 
     if (pci_device_identifier.class_code().value() == 0x3 && pci_device_identifier.subclass_code().value() == 0x0)

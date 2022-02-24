@@ -30,6 +30,8 @@ String ClipboardHistoryModel::column_name(int column) const
         return "Type";
     case Column::Size:
         return "Size";
+    case Column::Time:
+        return "Time";
     default:
         VERIFY_NOT_REACHED();
     }
@@ -62,7 +64,9 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
 {
     if (role != GUI::ModelRole::Display)
         return {};
-    auto& data_and_type = m_history_items[index.row()];
+    auto& item = m_history_items[index.row()];
+    auto& data_and_type = item.data_and_type;
+    auto& time = item.time;
     switch (index.column()) {
     case Column::Data:
         if (data_and_type.mime_type.starts_with("text/"))
@@ -91,6 +95,8 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
         return data_and_type.mime_type;
     case Column::Size:
         return AK::human_readable_size(data_and_type.data.size());
+    case Column::Time:
+        return time.to_string();
     default:
         VERIFY_NOT_REACHED();
     }
@@ -98,14 +104,14 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
 
 void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
 {
-    m_history_items.remove_first_matching([&](GUI::Clipboard::DataAndType& existing) {
-        return existing.data == item.data && existing.mime_type == item.mime_type;
+    m_history_items.remove_first_matching([&](ClipboardItem& existing) {
+        return existing.data_and_type.data == item.data && existing.data_and_type.mime_type == item.mime_type;
     });
 
     if (m_history_items.size() == m_history_limit)
         m_history_items.take_last();
 
-    m_history_items.prepend(item);
+    m_history_items.prepend({ item, Core::DateTime::now() });
     invalidate();
 }
 

@@ -8,7 +8,10 @@
 
 #include <AK/String.h>
 #include <AK/Variant.h>
+#include <LibWeb/CSS/Angle.h>
+#include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
+#include <LibWeb/CSS/Time.h>
 
 namespace Web::CSS {
 
@@ -80,7 +83,7 @@ public:
         return m_value.template get<Percentage>();
     }
 
-    virtual T resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, [[maybe_unused]] T const& reference_value) const
+    virtual T resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, [[maybe_unused]] Layout::Node const&, [[maybe_unused]] T const& reference_value) const
     {
         VERIFY_NOT_REACHED();
     }
@@ -151,6 +154,24 @@ bool operator==(Percentage const& percentage, PercentageOr<T> const& percentage_
     return percentage == percentage_or;
 }
 
+class AnglePercentage : public PercentageOr<Angle> {
+public:
+    using PercentageOr<Angle>::PercentageOr;
+
+    bool is_angle() const { return is_t(); }
+    Angle const& angle() const { return get_t(); }
+    virtual Angle resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Angle const& reference_value) const override;
+};
+
+class FrequencyPercentage : public PercentageOr<Frequency> {
+public:
+    using PercentageOr<Frequency>::PercentageOr;
+
+    bool is_frequency() const { return is_t(); }
+    Frequency const& frequency() const { return get_t(); }
+    virtual Frequency resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Frequency const& reference_value) const override;
+};
+
 class LengthPercentage : public PercentageOr<Length> {
 public:
     using PercentageOr<Length>::PercentageOr;
@@ -158,6 +179,15 @@ public:
     bool is_length() const { return is_t(); }
     Length const& length() const { return get_t(); }
     virtual Length resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Length const& reference_value) const override;
+};
+
+class TimePercentage : public PercentageOr<Time> {
+public:
+    using PercentageOr<Time>::PercentageOr;
+
+    bool is_time() const { return is_t(); }
+    Time const& time() const { return get_t(); }
+    virtual Time resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Time const& reference_value) const override;
 };
 
 }
@@ -171,9 +201,33 @@ struct AK::Formatter<Web::CSS::Percentage> : Formatter<StringView> {
 };
 
 template<>
+struct AK::Formatter<Web::CSS::AnglePercentage> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::AnglePercentage const& angle_percentage)
+    {
+        return Formatter<StringView>::format(builder, angle_percentage.to_string());
+    }
+};
+
+template<>
+struct AK::Formatter<Web::CSS::FrequencyPercentage> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::FrequencyPercentage const& frequency_percentage)
+    {
+        return Formatter<StringView>::format(builder, frequency_percentage.to_string());
+    }
+};
+
+template<>
 struct AK::Formatter<Web::CSS::LengthPercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::LengthPercentage const& length_percentage)
     {
         return Formatter<StringView>::format(builder, length_percentage.to_string());
+    }
+};
+
+template<>
+struct AK::Formatter<Web::CSS::TimePercentage> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::TimePercentage const& time_percentage)
+    {
+        return Formatter<StringView>::format(builder, time_percentage.to_string());
     }
 };
