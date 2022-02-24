@@ -192,8 +192,8 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::
     case CSS::Selector::SimpleSelector::Type::PseudoClass:
         return matches_pseudo_class(component.pseudo_class, element);
     case CSS::Selector::SimpleSelector::Type::PseudoElement:
-        // FIXME: Implement pseudo-elements.
-        return false;
+        // Pseudo-element matching/not-matching is handled in the top level matches().
+        return true;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -241,9 +241,13 @@ static inline bool matches(CSS::Selector const& selector, int component_list_ind
     VERIFY_NOT_REACHED();
 }
 
-bool matches(CSS::Selector const& selector, DOM::Element const& element)
+bool matches(CSS::Selector const& selector, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
     VERIFY(!selector.compound_selectors().is_empty());
+    if (pseudo_element.has_value() && selector.pseudo_element() != pseudo_element)
+        return false;
+    if (!pseudo_element.has_value() && selector.pseudo_element().has_value())
+        return false;
     return matches(selector, selector.compound_selectors().size() - 1, element);
 }
 

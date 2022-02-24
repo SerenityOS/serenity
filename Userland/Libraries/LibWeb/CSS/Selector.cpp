@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,6 +17,19 @@ Selector::Selector(Vector<CompoundSelector>&& compound_selectors)
 
 Selector::~Selector()
 {
+}
+
+Optional<Selector::PseudoElement> Selector::pseudo_element() const
+{
+    // Note: This assumes that only one pseudo-element is allowed in a selector, and that it appears at the end.
+    //       This is true currently, and there are no current proposals to change this, but you never know!
+    if (compound_selectors().is_empty())
+        return {};
+    for (auto const& simple_selector : compound_selectors().last().simple_selectors) {
+        if (simple_selector.type == SimpleSelector::Type::PseudoElement)
+            return simple_selector.pseudo_element;
+    }
+    return {};
 }
 
 u32 Selector::specificity() const
