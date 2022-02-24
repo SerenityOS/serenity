@@ -35,6 +35,7 @@ You can watch videos of the system being developed on YouTube:
 * Pseudoterminals (with /dev/pts filesystem)
 * Filesystem notifications
 * CPU and memory profiling
+* AC97 audio driver
 * VMWare/QEMU mouse integration
 
 ## System services
