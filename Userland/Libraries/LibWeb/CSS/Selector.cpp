@@ -240,18 +240,18 @@ String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selec
     return builder.to_string();
 }
 
-constexpr StringView pseudo_element_name(Selector::SimpleSelector::PseudoElement pseudo_element)
+constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
 {
     switch (pseudo_element) {
-    case Selector::SimpleSelector::PseudoElement::Before:
+    case Selector::PseudoElement::Before:
         return "before"sv;
-    case Selector::SimpleSelector::PseudoElement::After:
+    case Selector::PseudoElement::After:
         return "after"sv;
-    case Selector::SimpleSelector::PseudoElement::FirstLine:
+    case Selector::PseudoElement::FirstLine:
         return "first-line"sv;
-    case Selector::SimpleSelector::PseudoElement::FirstLetter:
+    case Selector::PseudoElement::FirstLetter:
         return "first-letter"sv;
-    case Selector::SimpleSelector::PseudoElement::None:
+    case Selector::PseudoElement::None:
         break;
     }
     VERIFY_NOT_REACHED();

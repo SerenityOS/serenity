@@ -438,19 +438,19 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
                 char const* pseudo_element_description = "";
                 switch (simple_selector.pseudo_element) {
-                case CSS::Selector::SimpleSelector::PseudoElement::None:
+                case CSS::Selector::PseudoElement::None:
                     pseudo_element_description = "NONE";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoElement::Before:
+                case CSS::Selector::PseudoElement::Before:
                     pseudo_element_description = "before";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoElement::After:
+                case CSS::Selector::PseudoElement::After:
                     pseudo_element_description = "after";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoElement::FirstLine:
+                case CSS::Selector::PseudoElement::FirstLine:
                     pseudo_element_description = "first-line";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoElement::FirstLetter:
+                case CSS::Selector::PseudoElement::FirstLetter:
                     pseudo_element_description = "first-letter";
                     break;
                 }

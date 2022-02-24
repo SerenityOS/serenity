@@ -497,13 +497,13 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 return ParsingResult::IncludesIgnoredVendorPrefix;
 
             if (pseudo_name.equals_ignoring_case("after")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::After;
+                simple_selector.pseudo_element = Selector::PseudoElement::After;
             } else if (pseudo_name.equals_ignoring_case("before")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::Before;
+                simple_selector.pseudo_element = Selector::PseudoElement::Before;
             } else if (pseudo_name.equals_ignoring_case("first-letter")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLetter;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLetter;
             } else if (pseudo_name.equals_ignoring_case("first-line")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLine;
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
@@ -561,19 +561,19 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             } else if (pseudo_name.equals_ignoring_case("after")) {
                 // Single-colon syntax allowed for compatibility. https://www.w3.org/TR/selectors/#pseudo-element-syntax
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::After;
+                simple_selector.pseudo_element = Selector::PseudoElement::After;
             } else if (pseudo_name.equals_ignoring_case("before")) {
                 // See :after
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::Before;
+                simple_selector.pseudo_element = Selector::PseudoElement::Before;
             } else if (pseudo_name.equals_ignoring_case("first-letter")) {
                 // See :after
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLetter;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLetter;
             } else if (pseudo_name.equals_ignoring_case("first-line")) {
                 // See :after
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLine;
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class: ':{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
