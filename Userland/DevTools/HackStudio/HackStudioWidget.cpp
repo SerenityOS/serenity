@@ -417,14 +417,14 @@ void HackStudioWidget::set_edit_mode(EditMode mode)
 
 NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu()
 {
-    m_new_file_actions.append(create_new_file_action("C++ Source File", "/res/icons/16x16/filetype-cplusplus.png", "cpp"));
-    m_new_file_actions.append(create_new_file_action("C++ Header File", "/res/icons/16x16/filetype-header.png", "h"));
-    m_new_file_actions.append(create_new_file_action("GML File", "/res/icons/16x16/filetype-gml.png", "gml"));
-    m_new_file_actions.append(create_new_file_action("JavaScript Source File", "/res/icons/16x16/filetype-javascript.png", "js"));
-    m_new_file_actions.append(create_new_file_action("HTML File", "/res/icons/16x16/filetype-html.png", "html"));
-    m_new_file_actions.append(create_new_file_action("CSS File", "/res/icons/16x16/filetype-css.png", "css"));
+    m_new_file_actions.append(create_new_file_action("&C++ Source File", "/res/icons/16x16/filetype-cplusplus.png", "cpp"));
+    m_new_file_actions.append(create_new_file_action("C++ &Header File", "/res/icons/16x16/filetype-header.png", "h"));
+    m_new_file_actions.append(create_new_file_action("&GML File", "/res/icons/16x16/filetype-gml.png", "gml"));
+    m_new_file_actions.append(create_new_file_action("&JavaScript Source File", "/res/icons/16x16/filetype-javascript.png", "js"));
+    m_new_file_actions.append(create_new_file_action("HT&ML File", "/res/icons/16x16/filetype-html.png", "html"));
+    m_new_file_actions.append(create_new_file_action("C&SS File", "/res/icons/16x16/filetype-css.png", "css"));
 
-    m_new_plain_file_action = create_new_file_action("Plain File", "/res/icons/16x16/new.png", "");
+    m_new_plain_file_action = create_new_file_action("Plain &File", "/res/icons/16x16/new.png", "");
 
     m_open_selected_action = create_open_selected_action();
     m_show_in_file_manager_action = create_show_in_file_manager_action();
@@ -436,7 +436,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     });
     auto project_tree_view_context_menu = GUI::Menu::construct("Project Files");
 
-    auto& new_file_submenu = project_tree_view_context_menu->add_submenu("New");
+    auto& new_file_submenu = project_tree_view_context_menu->add_submenu("&New...");
     for (auto& new_file_action : m_new_file_actions) {
         new_file_submenu.add_action(new_file_action);
     }
@@ -528,7 +528,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_action()
 {
-    auto open_selected_action = GUI::Action::create("Open", [this](const GUI::Action&) {
+    auto open_selected_action = GUI::Action::create("&Open", [this](const GUI::Action&) {
         auto files = selected_file_paths();
         for (auto& file : files)
             open_file(file);
@@ -540,7 +540,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_show_in_file_manager_action()
 {
-    auto show_in_file_manager_action = GUI::Action::create("Show in File Manager", [this](const GUI::Action&) {
+    auto show_in_file_manager_action = GUI::Action::create("Show in File &Manager", [this](const GUI::Action&) {
         auto files = selected_file_paths();
         for (auto& file : files)
             Desktop::Launcher::open(URL::create_with_file_protocol(m_project->root_path(), file));
@@ -608,7 +608,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_project_action()
 {
-    return GUI::Action::create("&Project...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hackstudio-project.png").release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    return GUI::Action::create("&Project...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hackstudio-project.png").release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         auto dialog = NewProjectDialog::construct(window());
         dialog->set_icon(window()->icon());
         auto result = dialog->exec();
@@ -1201,7 +1201,7 @@ void HackStudioWidget::create_file_menu(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File");
 
-    auto& new_submenu = file_menu.add_submenu("New...");
+    auto& new_submenu = file_menu.add_submenu("&New...");
     new_submenu.add_action(*m_new_project_action);
     new_submenu.add_separator();
 
@@ -1214,7 +1214,8 @@ void HackStudioWidget::create_file_menu(GUI::Window& window)
     new_submenu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors());
 
     file_menu.add_action(*m_open_action);
-    m_recent_projects_submenu = &file_menu.add_submenu("Open Recent");
+    m_recent_projects_submenu = &file_menu.add_submenu("Open &Recent");
+    m_recent_projects_submenu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-recent.png").release_value_but_fixme_should_propagate_errors());
     update_recent_projects_submenu();
     file_menu.add_action(*m_save_action);
     file_menu.add_action(*m_save_as_action);
