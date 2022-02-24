@@ -22,6 +22,15 @@ void UDPSocket::for_each(Function<void(const UDPSocket&)> callback)
     });
 }
 
+ErrorOr<void> UDPSocket::try_for_each(Function<ErrorOr<void>(const UDPSocket&)> callback)
+{
+    return sockets_by_port().with_shared([&](const auto& sockets) -> ErrorOr<void> {
+        for (auto& socket : sockets)
+            TRY(callback(*socket.value));
+        return {};
+    });
+}
+
 static Singleton<MutexProtected<HashMap<u16, UDPSocket*>>> s_map;
 
 MutexProtected<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()

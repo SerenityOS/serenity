@@ -19,6 +19,7 @@ public:
 
     static RefPtr<UDPSocket> from_port(u16);
     static void for_each(Function<void(const UDPSocket&)>);
+    static ErrorOr<void> try_for_each(Function<ErrorOr<void>(const UDPSocket&)>);
 
 private:
     explicit UDPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
