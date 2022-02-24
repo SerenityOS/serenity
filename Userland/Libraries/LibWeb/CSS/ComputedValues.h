@@ -87,11 +87,24 @@ struct BoxShadowData {
     CSS::BoxShadowPlacement placement { CSS::BoxShadowPlacement::Outer };
 };
 
+struct ContentData {
+    enum class Type {
+        Normal,
+        None,
+        String,
+    } type { Type::Normal };
+
+    // FIXME: Data is a list of identifiers, strings and image values.
+    String data {};
+    String alt_text {};
+};
+
 class ComputedValues {
 public:
     CSS::Float float_() const { return m_noninherited.float_; }
     CSS::Clear clear() const { return m_noninherited.clear; }
     CSS::Cursor cursor() const { return m_inherited.cursor; }
+    CSS::ContentData content() const { return m_noninherited.content; }
     CSS::PointerEvents pointer_events() const { return m_inherited.pointer_events; }
     CSS::Display display() const { return m_noninherited.display; }
     Optional<int> const& z_index() const { return m_noninherited.z_index; }
@@ -216,6 +229,7 @@ protected:
         Vector<BoxShadowData> box_shadow {};
         Vector<CSS::Transformation> transformations {};
         CSS::BoxSizing box_sizing { InitialValues::box_sizing() };
+        CSS::ContentData content;
     } m_noninherited;
 };
 
@@ -227,6 +241,7 @@ public:
     void set_font_size(float font_size) { m_inherited.font_size = font_size; }
     void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }
     void set_color(const Color& color) { m_inherited.color = color; }
+    void set_content(ContentData const& content) { m_noninherited.content = content; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
     void set_image_rendering(CSS::ImageRendering value) { m_inherited.image_rendering = value; }
     void set_pointer_events(CSS::PointerEvents value) { m_inherited.pointer_events = value; }
