@@ -21,7 +21,7 @@ namespace Kernel {
 
 ErrorOr<void> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const
 {
-    JsonArraySerializer array { builder };
+    auto array = TRY(JsonArraySerializer<>::try_create(builder));
     auto thread = Thread::from_tid(thread_id);
     if (!thread)
         return ESRCH;
@@ -34,10 +34,10 @@ ErrorOr<void> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuilde
             address = 0xdeadc0de;
             kernel_address_added = true;
         }
-        array.add(address);
+        TRY(array.add(address));
     }
 
-    array.finish();
+    TRY(array.finish());
     return {};
 }
 
@@ -125,31 +125,31 @@ ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(const 
 
 ErrorOr<void> Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
 {
-    JsonObjectSerializer obj { builder };
-#define __ENUMERATE_PLEDGE_PROMISE(x)     \
-    if (has_promised(Pledge::x)) {        \
-        if (!builder.is_empty())          \
-            TRY(builder.try_append(' ')); \
-        TRY(builder.try_append(#x));      \
+    auto obj = TRY(JsonObjectSerializer<>::try_create(builder));
+#define __ENUMERATE_PLEDGE_PROMISE(x)              \
+    if (has_promised(Pledge::x)) {                 \
+        if (!promises_builder.is_empty())          \
+            TRY(promises_builder.try_append(' ')); \
+        TRY(promises_builder.try_append(#x));      \
     }
     if (has_promises()) {
-        StringBuilder builder;
+        StringBuilder promises_builder;
         ENUMERATE_PLEDGE_PROMISES
-        obj.add("promises", builder.string_view());
+        TRY(obj.add("promises", promises_builder.string_view()));
     }
 #undef __ENUMERATE_PLEDGE_PROMISE
-    obj.finish();
+    TRY(obj.finish());
     return {};
 }
 
 ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
 {
-    JsonArraySerializer array { builder };
-    TRY(unveiled_paths().for_each_node_in_tree_order([&](auto const& unveiled_path) {
+    auto array = TRY(JsonArraySerializer<>::try_create(builder));
+    TRY(unveiled_paths().for_each_node_in_tree_order([&](auto const& unveiled_path) -> ErrorOr<IterationDecision> {
         if (!unveiled_path.was_explicitly_unveiled())
-            return;
-        auto obj = array.add_object();
-        obj.add("path", unveiled_path.path());
+            return IterationDecision::Continue;
+        auto obj = TRY(array.add_object());
+        TRY(obj.add("path", unveiled_path.path()));
         StringBuilder permissions_builder;
         if (unveiled_path.permissions() & UnveilAccess::Read)
             permissions_builder.append('r');
@@ -161,9 +161,11 @@ ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
             permissions_builder.append('c');
         if (unveiled_path.permissions() & UnveilAccess::Browse)
             permissions_builder.append('b');
-        obj.add("permissions", permissions_builder.string_view());
+        TRY(obj.add("permissions", permissions_builder.string_view()));
+        TRY(obj.finish());
+        return IterationDecision::Continue;
     }));
-    array.finish();
+    TRY(array.finish());
     return {};
 }
 
@@ -179,76 +181,78 @@ ErrorOr<void> Process::procfs_get_perf_events(KBufferBuilder& builder) const
 
 ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const
 {
-    JsonArraySerializer array { builder };
+    auto array = TRY(JsonArraySerializer<>::try_create(builder));
 
     return fds().with_shared([&](auto& fds) -> ErrorOr<void> {
         if (fds.open_count() == 0) {
-            array.finish();
+            TRY(array.finish());
             return {};
         }
 
         size_t count = 0;
-        fds.enumerate([&](auto& file_description_metadata) {
+        TRY(fds.try_enumerate([&](auto& file_description_metadata) -> ErrorOr<void> {
             if (!file_description_metadata.is_valid()) {
                 count++;
-                return;
+                return {};
             }
             bool cloexec = file_description_metadata.flags() & FD_CLOEXEC;
             RefPtr<OpenFileDescription> description = file_description_metadata.description();
-            auto description_object = array.add_object();
-            description_object.add("fd", count);
+            auto description_object = TRY(array.add_object());
+            TRY(description_object.add("fd", count));
             // TODO: Better OOM handling.
             auto pseudo_path_or_error = description->pseudo_path();
-            description_object.add("absolute_path", pseudo_path_or_error.is_error() ? "???"sv : pseudo_path_or_error.value()->view());
-            description_object.add("seekable", description->file().is_seekable());
-            description_object.add("class", description->file().class_name());
-            description_object.add("offset", description->offset());
-            description_object.add("cloexec", cloexec);
-            description_object.add("blocking", description->is_blocking());
-            description_object.add("can_read", description->can_read());
-            description_object.add("can_write", description->can_write());
+            TRY(description_object.add("absolute_path", pseudo_path_or_error.is_error() ? "???"sv : pseudo_path_or_error.value()->view()));
+            TRY(description_object.add("seekable", description->file().is_seekable()));
+            TRY(description_object.add("class", description->file().class_name()));
+            TRY(description_object.add("offset", description->offset()));
+            TRY(description_object.add("cloexec", cloexec));
+            TRY(description_object.add("blocking", description->is_blocking()));
+            TRY(description_object.add("can_read", description->can_read()));
+            TRY(description_object.add("can_write", description->can_write()));
             Inode* inode = description->inode();
             if (inode != nullptr) {
-                auto inode_object = description_object.add_object("inode");
-                inode_object.add("fsid", inode->fsid().value());
-                inode_object.add("index", inode->index().value());
-                inode_object.finish();
+                auto inode_object = TRY(description_object.add_object("inode"));
+                TRY(inode_object.add("fsid", inode->fsid().value()));
+                TRY(inode_object.add("index", inode->index().value()));
+                TRY(inode_object.finish());
             }
+            TRY(description_object.finish());
             count++;
-        });
+            return {};
+        }));
 
-        array.finish();
+        TRY(array.finish());
         return {};
     });
 }
 
 ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) const
 {
-    JsonArraySerializer array { builder };
+    auto array = TRY(JsonArraySerializer<>::try_create(builder));
     {
         SpinlockLocker lock(address_space().get_lock());
         for (auto const& region : address_space().regions()) {
             if (!region->is_user() && !Process::current().is_superuser())
                 continue;
-            auto region_object = array.add_object();
-            region_object.add("readable", region->is_readable());
-            region_object.add("writable", region->is_writable());
-            region_object.add("executable", region->is_executable());
-            region_object.add("stack", region->is_stack());
-            region_object.add("shared", region->is_shared());
-            region_object.add("syscall", region->is_syscall_region());
-            region_object.add("purgeable", region->vmobject().is_anonymous());
+            auto region_object = TRY(array.add_object());
+            TRY(region_object.add("readable", region->is_readable()));
+            TRY(region_object.add("writable", region->is_writable()));
+            TRY(region_object.add("executable", region->is_executable()));
+            TRY(region_object.add("stack", region->is_stack()));
+            TRY(region_object.add("shared", region->is_shared()));
+            TRY(region_object.add("syscall", region->is_syscall_region()));
+            TRY(region_object.add("purgeable", region->vmobject().is_anonymous()));
             if (region->vmobject().is_anonymous()) {
-                region_object.add("volatile", static_cast<Memory::AnonymousVMObject const&>(region->vmobject()).is_volatile());
+                TRY(region_object.add("volatile", static_cast<Memory::AnonymousVMObject const&>(region->vmobject()).is_volatile()));
             }
-            region_object.add("cacheable", region->is_cacheable());
-            region_object.add("address", region->vaddr().get());
-            region_object.add("size", region->size());
-            region_object.add("amount_resident", region->amount_resident());
-            region_object.add("amount_dirty", region->amount_dirty());
-            region_object.add("cow_pages", region->cow_pages());
-            region_object.add("name", region->name());
-            region_object.add("vmobject", region->vmobject().class_name());
+            TRY(region_object.add("cacheable", region->is_cacheable()));
+            TRY(region_object.add("address", region->vaddr().get()));
+            TRY(region_object.add("size", region->size()));
+            TRY(region_object.add("amount_resident", region->amount_resident()));
+            TRY(region_object.add("amount_dirty", region->amount_dirty()));
+            TRY(region_object.add("cow_pages", region->cow_pages()));
+            TRY(region_object.add("name", region->name()));
+            TRY(region_object.add("vmobject", region->vmobject().class_name()));
 
             StringBuilder pagemap_builder;
             for (size_t i = 0; i < region->page_count(); ++i) {
@@ -260,10 +264,11 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
                 else
                     pagemap_builder.append('P');
             }
-            region_object.add("pagemap", pagemap_builder.string_view());
+            TRY(region_object.add("pagemap", pagemap_builder.string_view()));
+            TRY(region_object.finish());
         }
     }
-    array.finish();
+    TRY(array.finish());
     return {};
 }
 

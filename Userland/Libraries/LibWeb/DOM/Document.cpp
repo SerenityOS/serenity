@@ -1185,10 +1185,10 @@ void Document::set_cookie(String const& cookie_string, Cookie::Source source)
 String Document::dump_dom_tree_as_json() const
 {
     StringBuilder builder;
-    JsonObjectSerializer json(builder);
+    auto json = MUST(JsonObjectSerializer<>::try_create(builder));
     serialize_tree_as_json(json);
 
-    json.finish();
+    MUST(json.finish());
     return builder.to_string();
 }
 

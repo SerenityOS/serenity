@@ -602,20 +602,20 @@ void ImageEditor::save_project_as()
 Result<void, String> ImageEditor::save_project_to_file(Core::File& file) const
 {
     StringBuilder builder;
-    JsonObjectSerializer json(builder);
+    auto json = MUST(JsonObjectSerializer<>::try_create(builder));
     m_image->serialize_as_json(json);
-    auto json_guides = json.add_array("guides");
+    auto json_guides = MUST(json.add_array("guides"));
     for (const auto& guide : m_guides) {
-        auto json_guide = json_guides.add_object();
-        json_guide.add("offset"sv, (double)guide.offset());
+        auto json_guide = MUST(json_guides.add_object());
+        MUST(json_guide.add("offset"sv, (double)guide.offset()));
         if (guide.orientation() == Guide::Orientation::Vertical)
-            json_guide.add("orientation", "vertical");
+            MUST(json_guide.add("orientation", "vertical"));
         else if (guide.orientation() == Guide::Orientation::Horizontal)
-            json_guide.add("orientation", "horizontal");
-        json_guide.finish();
+            MUST(json_guide.add("orientation", "horizontal"));
+        MUST(json_guide.finish());
     }
-    json_guides.finish();
-    json.finish();
+    MUST(json_guides.finish());
+    MUST(json.finish());
 
     if (!file.write(builder.string_view()))
         return String { file.error_string() };

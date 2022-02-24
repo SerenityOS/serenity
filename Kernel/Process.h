@@ -488,12 +488,13 @@ public:
     Thread::WaitBlockerSet& wait_blocker_set() { return m_wait_blocker_set; }
 
     template<typename Callback>
-    void for_each_coredump_property(Callback callback) const
+    ErrorOr<void> for_each_coredump_property(Callback callback) const
     {
         for (auto const& property : m_coredump_properties) {
             if (property.key && property.value)
-                callback(*property.key, *property.value);
+                TRY(callback(*property.key, *property.value));
         }
+        return {};
     }
 
     ErrorOr<void> set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);

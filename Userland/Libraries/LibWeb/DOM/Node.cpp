@@ -723,47 +723,52 @@ bool Node::is_uninteresting_whitespace_node() const
 
 void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
 {
-    object.add("name", node_name().view());
-    object.add("id", id());
+    MUST(object.add("name", node_name().view()));
+    MUST(object.add("id", id()));
     if (is_document()) {
-        object.add("type", "document");
+        MUST(object.add("type", "document"));
     } else if (is_element()) {
-        object.add("type", "element");
+        MUST(object.add("type", "element"));
 
         auto const* element = static_cast<DOM::Element const*>(this);
         if (element->has_attributes()) {
-            auto attributes = object.add_object("attributes");
+            auto attributes = MUST(object.add_object("attributes"));
             element->for_each_attribute([&attributes](auto& name, auto& value) {
-                attributes.add(name, value);
+                MUST(attributes.add(name, value));
             });
+            MUST(attributes.finish());
         }
 
         if (element->is_browsing_context_container()) {
             auto const* container = static_cast<HTML::BrowsingContextContainer const*>(element);
             if (auto const* content_document = container->content_document()) {
-                auto children = object.add_array("children");
-                JsonObjectSerializer<StringBuilder> content_document_object = children.add_object();
+                auto children = MUST(object.add_array("children"));
+                JsonObjectSerializer<StringBuilder> content_document_object = MUST(children.add_object());
                 content_document->serialize_tree_as_json(content_document_object);
+                MUST(content_document_object.finish());
+                MUST(children.finish());
             }
         }
     } else if (is_text()) {
-        object.add("type", "text");
+        MUST(object.add("type", "text"));
 
         auto text_node = static_cast<DOM::Text const*>(this);
-        object.add("text", text_node->data());
+        MUST(object.add("text", text_node->data()));
     } else if (is_comment()) {
-        object.add("type"sv, "comment"sv);
-        object.add("data"sv, static_cast<DOM::Comment const&>(*this).data());
+        MUST(object.add("type"sv, "comment"sv));
+        MUST(object.add("data"sv, static_cast<DOM::Comment const&>(*this).data()));
     }
 
     if (has_child_nodes()) {
-        auto children = object.add_array("children");
+        auto children = MUST(object.add_array("children"));
         for_each_child([&children](DOM::Node& child) {
             if (child.is_uninteresting_whitespace_node())
                 return;
-            JsonObjectSerializer<StringBuilder> child_object = children.add_object();
+            JsonObjectSerializer<StringBuilder> child_object = MUST(children.add_object());
             child.serialize_tree_as_json(child_object);
+            MUST(child_object.finish());
         });
+        MUST(children.finish());
     }
 }
 
