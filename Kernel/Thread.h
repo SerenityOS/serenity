@@ -46,12 +46,6 @@ enum class DispatchSignalResult {
     Continue
 };
 
-struct SignalActionData {
-    VirtualAddress handler_or_sigaction;
-    u32 mask { 0 };
-    int flags { 0 };
-};
-
 struct ThreadSpecificData {
     ThreadSpecificData* self;
 };
@@ -1225,7 +1219,7 @@ private:
     NonnullOwnPtr<Memory::Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
     Optional<Memory::VirtualRange> m_thread_specific_range;
-    Array<SignalActionData, NSIG> m_signal_action_data;
+    Array<Optional<u32>, NSIG> m_signal_action_masks;
     Blocker* m_blocker { nullptr };
     Kernel::Mutex* m_blocking_mutex { nullptr };
     u32 m_lock_requested_count { 0 };

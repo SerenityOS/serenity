@@ -58,15 +58,17 @@ ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> 
         return EINVAL;
 
     InterruptDisabler disabler; // FIXME: This should use a narrower lock. Maybe a way to ignore signals temporarily?
-    auto& action = Thread::current()->m_signal_action_data[signum];
+    auto& action = m_signal_action_data[signum];
     if (user_old_act) {
         sigaction old_act {};
         old_act.sa_flags = action.flags;
         old_act.sa_sigaction = reinterpret_cast<decltype(old_act.sa_sigaction)>(action.handler_or_sigaction.as_ptr());
+        old_act.sa_mask = action.mask;
         TRY(copy_to_user(user_old_act, &old_act));
     }
     if (user_act) {
         auto act = TRY(copy_typed_from_user(user_act));
+        action.mask = act.sa_mask;
         action.flags = act.sa_flags;
         action.handler_or_sigaction = VirtualAddress { reinterpret_cast<void*>(act.sa_sigaction) };
     }

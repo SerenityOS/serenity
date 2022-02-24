@@ -790,7 +790,7 @@ void Thread::reset_signals_for_exec()
     // The signal mask is preserved across execve(2).
     // The pending signal set is preserved across an execve(2).
     m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
-    m_signal_action_data.fill({});
+    m_signal_action_masks.fill({});
     // A successful call to execve(2) removes any existing alternate signal stack
     m_alternative_signal_stack = 0;
     m_alternative_signal_stack_size = 0;
@@ -902,7 +902,7 @@ static DefaultSignalAction default_signal_action(u8 signal)
 bool Thread::should_ignore_signal(u8 signal) const
 {
     VERIFY(signal < 32);
-    auto const& action = m_signal_action_data[signal];
+    auto const& action = m_process->m_signal_action_data[signal];
     if (action.handler_or_sigaction.is_null())
         return default_signal_action(signal) == DefaultSignalAction::Ignore;
     return ((sighandler_t)action.handler_or_sigaction.get() == SIG_IGN);
@@ -911,7 +911,7 @@ bool Thread::should_ignore_signal(u8 signal) const
 bool Thread::has_signal_handler(u8 signal) const
 {
     VERIFY(signal < 32);
-    auto const& action = m_signal_action_data[signal];
+    auto const& action = m_process->m_signal_action_data[signal];
     return !action.handler_or_sigaction.is_null();
 }
 
@@ -975,7 +975,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         return DispatchSignalResult::Deferred;
     }
 
-    auto& action = m_signal_action_data[signal];
+    auto& action = m_process->m_signal_action_data[signal];
     // FIXME: Implement SA_SIGINFO signal handlers.
     VERIFY(!(action.flags & SA_SIGINFO));
 
@@ -1045,7 +1045,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     ScopedAddressSpaceSwitcher switcher(m_process);
 
     u32 old_signal_mask = m_signal_mask;
-    u32 new_signal_mask = action.mask;
+    u32 new_signal_mask = m_signal_action_masks[signal].value_or(action.mask);
     if ((action.flags & SA_NODEFER) == SA_NODEFER)
         new_signal_mask &= ~(1 << (signal - 1));
     else
@@ -1182,8 +1182,7 @@ RegisterState& Thread::get_register_dump_from_stack()
 ErrorOr<NonnullRefPtr<Thread>> Thread::try_clone(Process& process)
 {
     auto clone = TRY(Thread::try_create(process));
-    auto signal_action_data_span = m_signal_action_data.span();
-    signal_action_data_span.copy_to(clone->m_signal_action_data.span());
+    m_signal_action_masks.span().copy_to(clone->m_signal_action_masks);
     clone->m_signal_mask = m_signal_mask;
     clone->m_fpu_state = m_fpu_state;
     clone->m_thread_specific_data = m_thread_specific_data;

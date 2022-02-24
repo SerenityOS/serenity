@@ -612,10 +612,9 @@ void Process::finalize()
     m_state.store(State::Dead, AK::MemoryOrder::memory_order_release);
 
     {
-        // FIXME: PID/TID BUG
-        if (auto parent_thread = Thread::from_tid(ppid().value())) {
-            if (parent_thread->process().is_user_process() && (parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
-                parent_thread->send_signal(SIGCHLD, this);
+        if (auto parent_process = Process::from_pid(ppid())) {
+            if (parent_process->is_user_process() && (parent_process->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
+                (void)parent_process->send_signal(SIGCHLD, this);
         }
     }
 
