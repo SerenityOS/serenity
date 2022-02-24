@@ -827,6 +827,12 @@ private:
     NonnullRefPtrVector<Thread> m_threads_for_coredump;
 
     mutable RefPtr<ProcessProcFSTraits> m_procfs_traits;
+    struct SignalActionData {
+        VirtualAddress handler_or_sigaction;
+        int flags { 0 };
+        u32 mask { 0 };
+    };
+    Array<SignalActionData, NSIG> m_signal_action_data;
 
     static_assert(sizeof(ProtectedValues) < (PAGE_SIZE));
     alignas(4096) ProtectedValues m_protected_values;
