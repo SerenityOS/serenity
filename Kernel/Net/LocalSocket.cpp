@@ -34,6 +34,15 @@ void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
     });
 }
 
+ErrorOr<void> LocalSocket::try_for_each(Function<ErrorOr<void>(const LocalSocket&)> callback)
+{
+    return all_sockets().with_shared([&](const auto& sockets) -> ErrorOr<void> {
+        for (auto& socket : sockets)
+            TRY(callback(socket));
+        return {};
+    });
+}
+
 ErrorOr<NonnullRefPtr<LocalSocket>> LocalSocket::try_create(int type)
 {
     auto client_buffer = TRY(DoubleBuffer::try_create());
