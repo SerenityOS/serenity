@@ -660,6 +660,7 @@ public:
         OpenFileDescriptionAndFlags* get_if_valid(size_t i);
 
         void enumerate(Function<void(const OpenFileDescriptionAndFlags&)>) const;
+        ErrorOr<void> try_enumerate(Function<ErrorOr<void>(const OpenFileDescriptionAndFlags&)>) const;
         void change_each(Function<void(OpenFileDescriptionAndFlags&)>);
 
         ErrorOr<ScopedDescriptionAllocation> allocate(int first_candidate_fd = 0);

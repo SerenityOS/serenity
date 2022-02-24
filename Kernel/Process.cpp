@@ -446,6 +446,14 @@ void Process::OpenFileDescriptions::enumerate(Function<void(const OpenFileDescri
     }
 }
 
+ErrorOr<void> Process::OpenFileDescriptions::try_enumerate(Function<ErrorOr<void>(const OpenFileDescriptionAndFlags&)> callback) const
+{
+    for (auto const& file_description_metadata : m_fds_metadatas) {
+        TRY(callback(file_description_metadata));
+    }
+    return {};
+}
+
 void Process::OpenFileDescriptions::change_each(Function<void(OpenFileDescriptionAndFlags&)> callback)
 {
     for (auto& file_description_metadata : m_fds_metadatas) {
