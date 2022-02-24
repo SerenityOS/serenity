@@ -29,6 +29,15 @@ void TCPSocket::for_each(Function<void(const TCPSocket&)> callback)
     });
 }
 
+ErrorOr<void> TCPSocket::try_for_each(Function<ErrorOr<void>(const TCPSocket&)> callback)
+{
+    return sockets_by_tuple().with_shared([&](const auto& sockets) -> ErrorOr<void> {
+        for (auto& it : sockets)
+            TRY(callback(*it.value));
+        return {};
+    });
+}
+
 bool TCPSocket::unref() const
 {
     bool did_hit_zero = sockets_by_tuple().with_exclusive([&](auto& table) {
