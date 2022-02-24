@@ -35,6 +35,7 @@ public:
         return vformat(*this, fmtstr.view(), variadic_format_params);
     }
     ErrorOr<void> try_append(char const*, size_t);
+    ErrorOr<void> try_append_escaped_for_json(StringView);
 
     void append(StringView);
 #ifndef KERNEL

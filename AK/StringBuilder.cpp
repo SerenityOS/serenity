@@ -172,30 +172,36 @@ void StringBuilder::append_as_lowercase(char ch)
 
 void StringBuilder::append_escaped_for_json(StringView string)
 {
+    MUST(try_append_escaped_for_json(string));
+}
+
+ErrorOr<void> StringBuilder::try_append_escaped_for_json(StringView string)
+{
     for (auto ch : string) {
         switch (ch) {
         case '\b':
-            append("\\b");
+            TRY(try_append("\\b"));
             break;
         case '\n':
-            append("\\n");
+            TRY(try_append("\\n"));
             break;
         case '\t':
-            append("\\t");
+            TRY(try_append("\\t"));
             break;
         case '\"':
-            append("\\\"");
+            TRY(try_append("\\\""));
             break;
         case '\\':
-            append("\\\\");
+            TRY(try_append("\\\\"));
             break;
         default:
             if (ch >= 0 && ch <= 0x1f)
-                appendff("\\u{:04x}", ch);
+                TRY(try_appendff("\\u{:04x}", ch));
             else
-                append(ch);
+                TRY(try_append(ch));
         }
     }
+    return {};
 }
 
 }
